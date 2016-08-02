@@ -1,26 +1,19 @@
-# Build Switch Images - buildimage
+## Build Switch Images - buildimage
 
-# Description
-Build an [Open Network Install Environment (ONIE)](https://github.com/opencomputeproject/onie) compatiable network operating system (NOS) installer image for network switches, and also build docker images running inside the NOS.
+Build an [Open Network Install Environment (ONIE)](https://github.com/opencomputeproject/onie) compatible network operating system (NOS) installer image for network switches, and also build docker images running inside the NOS.
 
-# Prerequisite
-## 1. Build environment
-Preferably use [the Dockerfile](https://github.com/Azure/sonic-build-tools/blob/master/sonic-slave/Dockerfile), or use Debian Jessie and manually install packages appearing in the Dockerfile.
-## 2. Linux kernel with switch drivers
-Build the [Azure/sonic-linux-kernel](https://github.com/Azure/sonic-linux-kernel) project and copy the output .deb file into ./deps directory.
-
-## 3. initramfs-tools with loop device support
-Run the script to build the .deb file into ./deps directory.
+## Prerequisites
+**1.** Build environment - Preferably use [the Dockerfile](https://github.com/Azure/sonic-build-tools/blob/master/sonic-slave/Dockerfile), or use Debian Jessie and manually install packages appearing in the Dockerfile.
+**2.** Linux kernel with switch drivers - Build the [Azure/sonic-linux-kernel](https://github.com/Azure/sonic-linux-kernel) project and copy the output .deb file into ./deps directory.
+* initramfs-tools with loop device support - Run the script to build the .deb file into ./deps directory.
 
     ./get_deps.sh
     
-## 4. Fetch the git submodule
-If there is no files under ./docker-base, manually fetch them.
+**3.** Fetch the git submodule - If there is no files under ./docker-base, manually fetch them.
 
     git submodule update --init --recursive
 
-# Usage
-## Build NOS installer image
+## Build NOS Installer Image
 
     ./build_debian USERNAME PASSWORD_ENCRYPTED && ./build_image.sh
     
@@ -31,7 +24,7 @@ For example, the user name is 'admin' and the password is 'YourPaSsWoRd'.
 The root is disabled, but the created user could sudo.
 
 
-## Build docker images
+## Build Docker Images
 
     ./build_docker.sh docker-sswsyncd
     ./build_docker.sh docker-database
@@ -40,7 +33,7 @@ The root is disabled, but the created user could sudo.
     ./build_docker.sh docker-lldp
     ./build_docker.sh docker-basic_router
 
-# Contribution guide
+## Contribution Guide
 
 All contributors must sign a contribution license agreement before contributions can be accepted.  Contact daloher@microsoft.com.  Later this will be automated.
 
