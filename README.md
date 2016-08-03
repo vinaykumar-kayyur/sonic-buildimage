@@ -6,6 +6,7 @@ Build an [Open Network Install Environment (ONIE)](https://github.com/opencomput
 # Prerequisite
 ## 1. Build environment
 Preferably use [the Dockerfile](https://github.com/Azure/sonic-build-tools/blob/master/sonic-slave/Dockerfile), or use Debian Jessie and manually install packages appearing in the Dockerfile.
+
 ## 2. Linux kernel with switch drivers
 Build the [Azure/sonic-linux-kernel](https://github.com/Azure/sonic-linux-kernel) project and copy the output .deb file into ./deps directory.
 
