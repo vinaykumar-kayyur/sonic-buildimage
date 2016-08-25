@@ -1,0 +1,5 @@
+## Get vendor SAI SDK
+## https://github.com/Azure/sonic-buildimage/blob/master/README.md#3-get-vendor-sai-sdk
+
+libsai.deb
+libaapl.deb
