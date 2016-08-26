@@ -14,6 +14,7 @@ RUN apt-get install -f -y ifupdown bridge-utils
 COPY ["deps/orchagent","deps/swssconfig","deps/portsyncd","deps/intfsyncd","deps/neighsyncd","/usr/local/bin/"]
 
 COPY start.sh /usr/bin/start.sh
+COPY port_config_cavm.ini /usr/local/bin/
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y

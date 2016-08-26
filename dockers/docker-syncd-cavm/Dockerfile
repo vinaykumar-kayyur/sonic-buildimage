@@ -2,11 +2,12 @@ FROM docker-base
 
 RUN apt-get update
 
-COPY ["deps/libhiredis0.13*.deb", "deps/libswsscommon_*.deb", "deps/libsairedis_*.deb", "deps/syncd_*.deb", "deps/libsai*.deb", "deps/libaapl*.deb", "/deps/"]
+COPY ["deps/libhiredis0.13*.deb", "deps/libswsscommon_*.deb", "deps/libsairedis_*.deb", "deps/syncd_*.deb", "deps/sai*.deb", "deps/libsai*.deb", "deps/libaapl*.deb", "/deps/"]
 
 RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; \
     dpkg_apt /deps/libhiredis0.13*.deb    \
     && dpkg_apt /deps/libswsscommon_*.deb \
+    && dpkg_apt /deps/sai*.deb     \
     && dpkg_apt /deps/libsai*.deb     \
     && dpkg_apt /deps/libaapl*.deb     \
     && dpkg_apt /deps/libsairedis_*.deb   \
