@@ -6,7 +6,7 @@ MAC_ADDRESS=`ip link show eth0 | grep ether | awk '{print $2}'`
 
 ORCHAGENT_ARGS=""
 
-PORTSYNCD_ARGS="-p port_config_cavm.ini"
+PORTSYNCD_ARGS="-p /usr/local/bin/port_config_cavm.ini"
 
 service rsyslog start
 orchagent $ORCHAGENT_ARGS &
