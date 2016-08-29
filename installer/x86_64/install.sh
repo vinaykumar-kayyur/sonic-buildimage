@@ -59,6 +59,10 @@ elif [ "$onie_platform" == "x86_64-mlnx_x86-r5.0.1400" ]; then
 elif [ "$onie_platform" == "x86_64-dell_s6100_c2538-r0" ]; then
     CONSOLE_PORT=0x2f8
     CONSOLE_DEV=1
+elif [ "$onie_platform" == "x86_64-accton_as7512_32x-r0" ]; then
+    CONSOLE_PORT=0x2f8
+    CONSOLE_DEV=1
+    CONSOLE_SPEED=115200
 fi
 
 # Install demo on same block device as ONIE
