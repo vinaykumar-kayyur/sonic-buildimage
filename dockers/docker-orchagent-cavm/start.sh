@@ -4,7 +4,7 @@
 
 MAC_ADDRESS=`ip link show eth0 | grep ether | awk '{print $2}'`
 
-ORCHAGENT_ARGS=""
+ORCHAGENT_ARGS="-m $MAC_ADDRESS"
 
 PORTSYNCD_ARGS="-p /usr/local/bin/port_config_cavm.ini"
 
