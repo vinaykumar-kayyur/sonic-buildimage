@@ -9,6 +9,7 @@ ORCHAGENT_ARGS="-m $MAC_ADDRESS"
 PORTSYNCD_ARGS="-p /usr/local/bin/port_config_cavm.ini"
 
 service rsyslog start
+swssconfig /usr/local/bin/copp.json
 orchagent $ORCHAGENT_ARGS &
 sleep 5
 portsyncd $PORTSYNCD_ARGS &

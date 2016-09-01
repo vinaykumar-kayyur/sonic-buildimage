@@ -15,6 +15,7 @@ COPY ["deps/orchagent","deps/swssconfig","deps/portsyncd","deps/intfsyncd","deps
 
 COPY start.sh /usr/bin/start.sh
 COPY port_config_cavm.ini /usr/local/bin/
+COPY copp.json /usr/local/bin/
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y

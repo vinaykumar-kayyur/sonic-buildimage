@@ -1,0 +1,9 @@
+[
+		{
+			"COPP_TABLE:Group.P1": {
+				"trap_ids": "stp,arp_req,arp_resp,ttl_error,lacp,lldp,ip2me",
+				"trap_action": "trap"
+			},
+			"OP": "SET"
+		}
+	]

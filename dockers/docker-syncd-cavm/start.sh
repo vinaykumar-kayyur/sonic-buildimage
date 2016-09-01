@@ -1,4 +1,4 @@
 #!/bin/bash
 
 service rsyslog start
-syncd -p profile.ini -N
+syncd -p /usr/bin/profile.ini -N
