@@ -2,4 +2,6 @@
 ## https://github.com/Azure/sonic-buildimage/blob/master/README.md#3-get-vendor-sai-sdk
 
 libsai.deb
-libaapl.deb
+sai.deb
+xp-tools.deb
+xpshell.deb

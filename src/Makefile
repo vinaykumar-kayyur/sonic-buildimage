@@ -44,7 +44,7 @@ mlnx/syncd_1.0.0_amd64.deb mlnx/libsairedis_1.0.0_amd64.deb mlnx/libsairedis-dev
 	mkdir -p mlnx
 	cp syncd_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb libsairedis-dev_1.0.0_amd64.deb mlnx/
 
-cavm/syncd_1.0.0_amd64.deb cavm/libsairedis_1.0.0_amd64.deb cavm/libsairedis-dev_1.0.0_amd64.deb: libswsscommon_1.0.0_amd64.deb libswsscommon-dev_1.0.0_amd64.deb cavm-sdk/libsai.deb cavm-sdk/libaapl.deb
+cavm/syncd_1.0.0_amd64.deb cavm/libsairedis_1.0.0_amd64.deb cavm/libsairedis-dev_1.0.0_amd64.deb: libswsscommon_1.0.0_amd64.deb libswsscommon-dev_1.0.0_amd64.deb cavm-sdk/libsai.deb cavm-sdk/xp-tools.deb cavm-sdk/xpshell.deb
 	$(foreach dep, $^, $(call install_deb, $(dep)))
 	$(call build_project, sonic-sairedis)
 	mkdir -p cavm
