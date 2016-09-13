@@ -27,6 +27,7 @@ To build NOS installer image and docker images, run command line
 Supported VENDORs are:
 - brcm: Broadcom
 - mlnx: Mellanox
+- cavm: Cavium
 
 For example, the user name is 'admin' and the password is 'YourPaSsWoRd'. To build all the images for Broadcom platform, use the command:
 
