@@ -141,4 +141,4 @@ brcm-all: target/acs-generic.bin $(addprefix target/,docker-syncd.gz docker-orch
 mlnx-all: target/acs-generic.bin $(addprefix target/,docker-syncd-mlnx.gz docker-orchagent-mlnx.gz docker-fpm.gz)
 
 ## Note: docker-fpm.gz must be the last to build the implicit dependency fpmsyncd
-cavm-all: $(addprefix target/,docker-syncd-cavm.gz docker-orchagent-cavm.gz docker-fpm.gz)
+cavm-all: target/acs-generic.bin $(addprefix target/,docker-syncd-cavm.gz docker-orchagent-cavm.gz docker-fpm.gz)
