@@ -51,15 +51,7 @@ CONSOLE_SPEED=9600
 
 # Get platform specific linux kernel command line arguments
 ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
-# platform specific configurations
-if [ "$onie_platform" == "x86_64-dell_s6000_s1220-r0" ]; then
-    `pwd`/dell-s6000-replace-reboot.sh
-elif [ "$onie_platform" == "x86_64-mlnx_x86-r5.0.1400" ]; then
-    ONIE_PLATFORM_EXTRA_CMDLINE_LINUX="acpi_enforce_resources=lax acpi=noirq"
-elif [ "$onie_platform" == "x86_64-dell_s6100_c2538-r0" ]; then
-    CONSOLE_PORT=0x2f8
-    CONSOLE_DEV=1
-fi
+source platforms/$onie_platform
 
 # Install demo on same block device as ONIE
 onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
@@ -111,9 +103,10 @@ demo_type="%%DEMO_TYPE%%"
 # The build system prepares this script by replacing %%GIT_REVISION%%
 # with git revision hash as a version identifier
 git_revision="%%GIT_REVISION%%"
+timestamp="$(date -u +%Y%m%d)"
 
-demo_volume_label="ACS-${demo_type}"
-demo_volume_revision_label="ACS-${demo_type}-${git_revision}"
+demo_volume_label="SONiC-${demo_type}"
+demo_volume_revision_label="SONiC-${demo_type}-${timestamp}-${git_revision}"
 
 # auto-detect whether BIOS or UEFI
 if [ -d "/sys/firmware/efi/efivars" ] ; then
@@ -143,6 +136,8 @@ fi
 #
 # Returns the created partition number in $demo_part
 demo_part=""
+# TODO: remove reference to "ACS-OS" after all baseimages are upgraded
+legacy_volume_label="ACS-OS"
 create_demo_gpt_partition()
 {
     blk_dev="$1"
@@ -153,7 +148,7 @@ create_demo_gpt_partition()
     mkfifo -m 600 "$tmpfifo"
     
     # See if demo partition already exists
-    demo_part=$(sgdisk -p $blk_dev | grep "$demo_volume_label" | awk '{print $1}')
+    demo_part=$(sgdisk -p $blk_dev | grep -e "$demo_volume_label" -e "$legacy_volume_label" | awk '{print $1}')
     if [ -n "$demo_part" ] ; then
         # delete existing partitions
         # if there are multiple partitions matched, we should delete each one, except the current OS's
@@ -225,7 +220,7 @@ create_demo_msdos_partition()
 
     # See if demo partition already exists -- look for the filesystem
     # label.
-    part_info="$(blkid | grep $demo_volume_label | awk -F: '{print $1}')"
+    part_info="$(blkid | grep -e "$demo_volume_label" -e "$legacy_volume_label" | awk -F: '{print $1}')"
     if [ -n "$part_info" ] ; then
         # delete existing partition
         demo_part="$(echo -n $part_info | sed -e s#${blk_dev}##)"
@@ -268,7 +263,7 @@ create_demo_uefi_partition()
     create_demo_gpt_partition "$1"
 
     # erase any related EFI BootOrder variables from NVRAM.
-    for b in $(efibootmgr | grep "$demo_volume_label" | awk '{ print $1 }') ; do
+    for b in $(efibootmgr | grep -e "$demo_volume_label" -e "$legacy_volume_label" | awk '{ print $1 }') ; do
         local num=${b#Boot}
         # Remove trailing '*'
         num=${num%\*}
@@ -359,7 +354,7 @@ demo_install_uefi_grub()
     grub_install_log=$(mktemp)
     grub-install \
         --no-nvram \
-        --bootloader-id="$onie_initrd_tmp/$demo_volume_label" \
+        --bootloader-id="$demo_volume_label" \
         --efi-directory="/boot/efi" \
         --boot-directory="$demo_mnt" \
         --recheck \

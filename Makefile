@@ -127,18 +127,22 @@ target/docker-orchagent-cavm.gz: target/docker-base.gz target/docker-database.gz
 target/docker-fpm.gz: target/docker-base.gz $(addprefix dockers/docker-fpm/deps/,libswsscommon_1.0.0_amd64.deb libhiredis0.13_0.13.3-2_amd64.deb quagga_0.99.24.1-2_amd64.deb fpmsyncd)
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
+	
+target/docker-database.gz: target/docker-base.gz
+	docker load < $<
+	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
-target/acs-generic.bin: deps/linux-image-3.16.0-4-amd64_3.16.7-ckt11-2+acs8u2_amd64.deb deps/initramfs-tools_0.120_all.deb
+target/sonic-generic.bin: deps/linux-image-3.16.0-4-amd64_3.16.7-ckt11-2+acs8u2_amd64.deb deps/initramfs-tools_0.120_all.deb
 	./build_debian.sh "$(USERNAME)" "$(PASSWORD_ENCRYPTED)" && TARGET_MACHINE=generic ./build_image.sh
 
-target/acs-aboot.bin: deps/linux-image-3.16.0-4-amd64_3.16.7-ckt11-2+acs8u2_amd64.deb deps/initramfs-tools_0.120_all.deb
+target/sonic-aboot.bin: deps/linux-image-3.16.0-4-amd64_3.16.7-ckt11-2+acs8u2_amd64.deb deps/initramfs-tools_0.120_all.deb
 	./build_debian.sh "$(USERNAME)" "$(PASSWORD_ENCRYPTED)" && TARGET_MACHINE=aboot ./build_image.sh
 
 ## Note: docker-fpm.gz must be the last to build the implicit dependency fpmsyncd
-brcm-all: target/acs-generic.bin $(addprefix target/,docker-syncd.gz docker-orchagent.gz docker-fpm.gz)
+brcm-all: target/sonic-generic.bin $(addprefix target/,docker-syncd.gz docker-orchagent.gz docker-fpm.gz docker-database.gz)
 
 ## Note: docker-fpm.gz must be the last to build the implicit dependency fpmsyncd
-mlnx-all: target/acs-generic.bin $(addprefix target/,docker-syncd-mlnx.gz docker-orchagent-mlnx.gz docker-fpm.gz)
+mlnx-all: target/sonic-generic.bin $(addprefix target/,docker-syncd-mlnx.gz docker-orchagent-mlnx.gz docker-fpm.gz docker-database.gz)
 
 ## Note: docker-fpm.gz must be the last to build the implicit dependency fpmsyncd
 cavm-all: target/acs-generic.bin $(addprefix target/,docker-syncd-cavm.gz docker-orchagent-cavm.gz docker-fpm.gz)

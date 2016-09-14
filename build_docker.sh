@@ -1,5 +1,5 @@
 #!/bin/bash
-## This script is to automate the preparation for docker images for ACS.
+## This script is to automate the preparation for docker images for SONiC.
 ## If registry server and port provided, the images will be pushed there.
 
 set -e
@@ -9,7 +9,7 @@ set -e
 usage() {
     cat >&2 <<EOF
 Usage:
-  sudo ./build_docker.sh -i=DOCKER_IMAGE_NAME DOCKER_BUILD_DIR [REGISTRY_SERVER REGISTRY_PORT]
+  sudo ./build_docker.sh -i=DOCKER_IMAGE_NAME DOCKER_BUILD_DIR [REGISTRY_SERVER REGISTRY_PORT REGISTRY_USERNAME REGISTRY_PASSWD]
   
 Description:
   -i DOCKER_IMAGE_NAME
@@ -125,4 +125,5 @@ fi
 
 mkdir -p target
 rm -f target/$docker_image_name.*.gz
-docker save $docker_image_name | gzip -c > target/$docker_image_name.$image_sha.gz
+docker save $docker_image_name | gzip -c > target/$docker_image_name.$build_version.gz
+echo "Image sha256: $image_sha"

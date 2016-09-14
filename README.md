@@ -35,11 +35,12 @@ For example, the user name is 'admin' and the password is 'YourPaSsWoRd'. To bui
 The root is disabled, but the created user could sudo.
 
 The target directory is ./target, containing the NOS installer image and docker images.
-- acs-generic.bin: SONiC switch installer image (ONIE compatiable)
+- sonic-generic.bin: SONiC switch installer image (ONIE compatiable)
 - docker-base.gz: base docker image where others are built from (gzip tar archive)
 - docker-fpm.gz: docker image for quagga with fpm module enabled (gzip tar archive)
 - docker-orchagent.gz: docker image for SWitch State Service (SWSS)
-- docker-syncd.gz: docker image for the daemon to sync database and switch ASIC
+- docker-syncd.gz: docker image for the daemon to sync database and Broadcom switch ASIC
+- docker-syncd-mlnx.gz: docker image for the daemon to sync database and Mellanox switch ASIC
 
 # Contribution guide
 
