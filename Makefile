@@ -95,9 +95,6 @@ deps/initramfs-tools_%.deb: src/initramfs-tools/initramfs-tools_%.deb
 target/docker-base.gz:
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
-target/docker-database.gz:
-	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
-
 target/docker-syncd.gz: target/docker-base.gz $(addprefix dockers/docker-syncd/deps/,$(BRCM-SDK-DEBS) libhiredis0.13_0.13.3-2_amd64.deb libswsscommon_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb syncd_1.0.0_amd64.deb)
 	## TODO: remove placeholders for the dependencies
 	touch dockers/docker-syncd/deps/{dsserve,bcmcmd}
@@ -120,7 +117,7 @@ target/docker-orchagent-mlnx.gz: target/docker-base.gz $(addprefix dockers/docke
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
-target/docker-orchagent-cavm.gz: target/docker-base.gz target/docker-database.gz $(addprefix dockers/docker-orchagent-cavm/deps/,libhiredis0.13_0.13.3-2_amd64.deb libswsscommon_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb orchagent swssconfig portsyncd intfsyncd neighsyncd)
+target/docker-orchagent-cavm.gz: target/docker-base.gz $(addprefix dockers/docker-orchagent-cavm/deps/,libhiredis0.13_0.13.3-2_amd64.deb libswsscommon_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb orchagent swssconfig portsyncd intfsyncd neighsyncd)
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 	
@@ -145,4 +142,4 @@ brcm-all: target/sonic-generic.bin $(addprefix target/,docker-syncd.gz docker-or
 mlnx-all: target/sonic-generic.bin $(addprefix target/,docker-syncd-mlnx.gz docker-orchagent-mlnx.gz docker-fpm.gz docker-database.gz)
 
 ## Note: docker-fpm.gz must be the last to build the implicit dependency fpmsyncd
-cavm-all: target/acs-generic.bin $(addprefix target/,docker-syncd-cavm.gz docker-orchagent-cavm.gz docker-fpm.gz)
+cavm-all: $(addprefix target/,docker-syncd-cavm.gz docker-orchagent-cavm.gz docker-fpm.gz docker-database.gz)
