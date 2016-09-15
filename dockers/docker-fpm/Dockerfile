@@ -12,9 +12,6 @@ COPY deps/fpmsyncd /usr/local/bin/
 ## Get Quagga
 RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; dpkg_apt /deps/quagga_*.deb
 
-COPY daemons /etc/quagga
-COPY zebra.conf /etc/quagga
-COPY bgpd.conf /etc/quagga
 COPY start.sh /usr/bin/start.sh
 
 ## Clean up
