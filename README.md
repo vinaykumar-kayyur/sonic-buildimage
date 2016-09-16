@@ -37,7 +37,7 @@ The root is disabled, but the created user could sudo.
 The target directory is ./target, containing the NOS installer image and docker images.
 - sonic-generic.bin: SONiC switch installer image (ONIE compatiable)
 - sonic-aboot.bin: SONiC switch installer image (Aboot compatiable)
-- docker-base.gz: base docker image where other docker images are built from, only used in development (gzip tar archive)
+- docker-base.gz: base docker image where other docker images are built from, only used in build process (gzip tar archive)
 - docker-database.gz: docker image for in-memory key-value store, used as inter-process communication (gzip tar archive)
 - docker-fpm.gz: docker image for quagga with fpm module enabled (gzip tar archive)
 - docker-orchagent.gz: docker image for SWitch State Service (SWSS) (gzip tar archive)
