@@ -7,6 +7,11 @@ PASSWORD_ENCRYPTED=
 ## Select bash for commands
 SHELL := /bin/bash
 
+## Path to vendor linux patch folder
+ifeq ($(MAKECMDGOALS),cavm-all)
+export LINUX_PATCH=cavm-as7512
+endif
+
 ## Capture all the files in SDK directories
 MLNX-SDK-DEBS=$(notdir $(wildcard src/mlnx-sdk/*.deb))
 BRCM-SDK-DEBS=$(notdir $(wildcard src/brcm-sdk/*.deb))
@@ -20,7 +25,7 @@ define build_docker
 endef
 	
 ## Rules
-.phony : brcm-all mlnx-all
+.phony : brcm-all mlnx-all cavm-all
 
 src/%:
 	$(MAKE) -C src $(subst src/,,$@)
@@ -113,3 +118,5 @@ brcm-all: target/sonic-generic.bin $(addprefix target/,docker-syncd.gz docker-or
 
 ## Note: docker-fpm.gz must be the last to build the implicit dependency fpmsyncd
 mlnx-all: target/sonic-generic.bin $(addprefix target/,docker-syncd-mlnx.gz docker-orchagent-mlnx.gz docker-fpm.gz docker-database.gz)
+
+cavm-all: target/sonic-generic.bin
