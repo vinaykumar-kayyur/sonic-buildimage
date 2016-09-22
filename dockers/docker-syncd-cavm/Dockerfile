@@ -17,7 +17,6 @@ RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return
 RUN apt-get -y install libpcap-dev libxml2-dev python-dev swig libsensors4-dev
 
 COPY ["start.sh", "/usr/bin/"]
-COPY ["profile.ini", "/usr/bin/"]
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
