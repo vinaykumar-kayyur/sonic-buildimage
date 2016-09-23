@@ -2,7 +2,6 @@
 
 function clean_up {
     service rsyslog stop
-    exit
 }
 
 start_mlnx()

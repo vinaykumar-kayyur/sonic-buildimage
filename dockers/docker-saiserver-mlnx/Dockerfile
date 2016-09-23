@@ -2,7 +2,7 @@ FROM docker-base
 
 RUN apt-get update
 
-COPY deps /deps
+COPY ["deps/applibs_*.deb", "/deps/applibs-dev_*.deb", "/deps/sx-complib_*.deb", "/deps/sxd-libs_*.deb", "/deps/sx-scew_*.deb", "/deps/sx-examples_*.deb", "/deps/sx-gen-utils_*.deb", "/deps/python-sdk-api_*.deb", "/deps/sx-libnl_*.deb", "/deps/iproute2_*.deb", "/deps/mlnx-sai_*.deb", "/deps/libthrift-0.9.2_*.deb", "/deps/"]
 
 RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; \
     dpkg_apt /deps/applibs_*.deb           \
