@@ -6,9 +6,7 @@ function clean_up {
 
 start_mlnx()
 {
-    mkdir -p /dev/sxdevs
-
-    [ -e /dev/sxdevs/sxcdev ] || mknod /dev/sxdevs/sxcdev c 231 193
+    [ -e /dev/sxdevs/sxcdev ] || ( mkdir -p /dev/sxdevs && mknod /dev/sxdevs/sxcdev c 231 193 )
 }
 
 trap clean_up SIGTERM SIGKILL
