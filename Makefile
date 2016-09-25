@@ -65,7 +65,7 @@ dockers/docker-%-mlnx/deps/libsairedis_1.0.0_amd64.deb: src/mlnx/syncd_1.0.0_amd
 dockers/docker-%/deps/libsairedis_1.0.0_amd64.deb: src/brcm/syncd_1.0.0_amd64.deb
 	mkdir -p `dirname $@` && cp $< $@
 
-dockers/docker-%-cavm/deps/libsairedis_1.0.0_amd64.deb: src/cavm/syncd_1.0.0_amd64.deb
+dockers/docker-%-cavm/deps/libsairedis_1.0.0_amd64.deb: src/cavm/libsairedis_1.0.0_amd64.deb
 	mkdir -p `dirname $@` && cp $< $@
 	
 $(addprefix dockers/docker-syncd-mlnx/deps/,$(MLNX-SDK-DEBS)) : dockers/docker-syncd-mlnx/deps/%.deb : src/mlnx-sdk/%.deb
