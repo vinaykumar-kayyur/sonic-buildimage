@@ -64,6 +64,8 @@ $(addprefix dockers/docker-syncd-mlnx/deps/,$(MLNX-SDK-DEBS)) : dockers/docker-s
 	mkdir -p `dirname $@` && cp $< $(dir $@)
 $(addprefix dockers/docker-syncd-mlnx/deps/,syncd_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb) : dockers/docker-syncd-mlnx/deps/%.deb : src/mlnx/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
+dockers/docker-syncd-mlnx/deps/%.deb: src/%.deb
+	mkdir -p `dirname $@` && cp $< $(dir $@)
 
 ## Rules: docker-syncd-cavm
 $(addprefix dockers/docker-syncd-cavm/deps/,$(CAVM-SDK-DEBS)) : dockers/docker-syncd-cavm/deps/%.deb : src/cavm-sdk/%.deb
@@ -72,7 +74,7 @@ $(addprefix dockers/docker-syncd-cavm/deps/,syncd_1.0.0_amd64.deb libsairedis_1.
 	mkdir -p `dirname $@` && cp $< $(dir $@)
 dockers/docker-syncd-cavm/deps/%.deb: src/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
-	
+
 ## Rules: docker-syncd (brcm)
 $(addprefix dockers/docker-syncd/deps/,$(BRCM-SDK-DEBS)) : dockers/docker-syncd/deps/%.deb : src/brcm-sdk/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
@@ -82,15 +84,8 @@ dockers/docker-syncd/deps/%.deb: src/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
 
 ## Rules: docker-sonic (p4)
-dockers/docker-sonic-p4/deps/swss_1.0.0_amd64.deb: src/p4/swss_1.0.0_amd64.deb
+$(addprefix dockers/docker-sonic-p4/deps/,swss_1.0.0_amd64.deb syncd_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb) : dockers/docker-sonic-p4/deps/%.deb : src/p4/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
-
-dockers/docker-sonic-p4/deps/syncd_1.0.0_amd64.deb: src/p4/syncd_1.0.0_amd64.deb
-	mkdir -p `dirname $@` && cp $< $(dir $@)
-
-dockers/docker-sonic-p4/deps/libsairedis_1.0.0_amd64.deb: src/p4/libsairedis_1.0.0_amd64.deb
-	mkdir -p `dirname $@` && cp $< $(dir $@)
-
 dockers/docker-sonic-p4/deps/%.deb: src/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
 
