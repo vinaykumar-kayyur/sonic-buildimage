@@ -45,7 +45,7 @@ fi
 if [[ ${required_fw_version} == ${fw_version} ]]; then
 	echo "Mellanox firmware is up to date."
 else
-	echo "Mellanox firmware required version is ${required_fw_version}. Upgrading..."
+	echo "Mellanox firmware required version is ${required_fw_version}. Installing compatible version..."
 	run_or_fail "mlxfwmanager -i ${fw_file} -u -f -y"
 
 	# exit from here so that syncd service will restart
