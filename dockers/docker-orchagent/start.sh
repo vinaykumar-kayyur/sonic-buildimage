@@ -40,6 +40,8 @@ elif [ "$onie_platform" == "x86_64-accton_as7512_32x-r0" ]; then
     PORTSYNCD_ARGS+="-p /etc/ssw/AS7512/port_config.ini"
 fi
 
+# Remove rsyslogd pid file if it exists
+[ -e /var/run/rsyslogd.pid ] && rm /var/run/rsyslogd.pid
 service rsyslog start
 
 while true; do

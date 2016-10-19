@@ -12,6 +12,8 @@ trap clean_up SIGTERM SIGKILL
 # occures
 . mlnx-fw-upgrade.sh
 
+# Remove rsyslogd pid file if it exists
+[ -e /var/run/rsyslogd.pid ] && rm /var/run/rsyslogd.pid
 service rsyslog start
 service syncd start
 
