@@ -3,4 +3,4 @@ SERVERS=""
 INTERFACES=""
 
 #-a provides option 82 circuit id information
-OPTIONS=""
+OPTIONS="-a"
