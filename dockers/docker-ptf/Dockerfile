@@ -35,7 +35,7 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         python-dev          \
         wget                \
         cmake               \
-	 isc-dhcp-server     \
+        isc-dhcp-server     \
     && dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; } \
     && dpkg_apt /root/deps/python-ptf_*.deb \
     && dpkg_apt /root/deps/libthrift-0.9.2_*.deb \
