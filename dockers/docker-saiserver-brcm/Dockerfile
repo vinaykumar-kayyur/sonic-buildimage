@@ -16,8 +16,6 @@ COPY ["deps/saiserver", "start.sh", "/usr/bin/"]
 
 COPY ["profile.ini", "portmap.ini", "/etc/sai/"]
 
-COPY ["sai_2700.xml", "/usr/share/"]
-
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /deps
