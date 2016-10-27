@@ -4,11 +4,6 @@ function clean_up {
     service rsyslog stop
 }
 
-start_mlnx()
-{
-    [ -e /dev/sxdevs/sxcdev ] || ( mkdir -p /dev/sxdevs && mknod /dev/sxdevs/sxcdev c 231 193 )
-}
-
 start_bcm()
 {
     [ -e /dev/linux-bcm-knet ] || mknod /dev/linux-bcm-knet c 122 0
