@@ -1,8 +1,12 @@
 FROM docker-base
 
-## Pre-install the fundamental packages
+## TODO: remove if redis-server 3.2.4 comes into stable sources
+COPY backports.list /etc/apt/sources.list.d/
+
+## Install packages
 ## Clean up
-RUN apt-get -y install                                                              \
+RUN apt-get update &&                                                               \
+    apt-get -y -t jessie-backports install                                          \
         redis-server                                                                \
         &&                                                                          \
     apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y
