@@ -6,9 +6,7 @@ COPY backports.list /etc/apt/sources.list.d/
 ## Install packages
 ## Clean up
 RUN apt-get update &&                                                               \
-    apt-get -y -t jessie-backports install                                          \
-        redis-server                                                                \
-        &&                                                                          \
+    apt-get -y -t jessie-backports install redis-server &&                          \
     apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y
 
 RUN sed -ri 's/^daemonize yes$/daemonize no/' /etc/redis/redis.conf                 \
