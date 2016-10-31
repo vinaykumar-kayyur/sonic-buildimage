@@ -25,7 +25,7 @@ libnl-%.deb:
 libteam5_1.26-1_amd64.deb libteam-dev_1.26-1_amd64.deb libteam-utils_1.26-1_amd64.deb libteamdctl0_1.26-1_amd64.deb: libnl-%.deb
 	pushd libteam; ./build.sh; popd
 
-redis-server_3.0.7-2_amd64.deb redis-tools_3.0.7-2_amd64.deb redis-sentinel_3.0.7-2_amd64.deb:
+redis-sentinel_3.2.4-1~bpo8+1_amd64.deb redis-server_3.2.4-1~bpo8+1_amd64.deb redis-tools_3.2.4-1~bpo8+1_amd64.deb:
 	pushd redis; ./build.sh; popd
 	
 libhiredis0.13_0.13.3-2_amd64.deb libhiredis-dbg_0.13.3-2_amd64.deb libhiredis-dev_0.13.3-2_amd64.deb: redis-server_3.0.7-2_amd64.deb redis-tools_3.0.7-2_amd64.deb redis-sentinel_3.0.7-2_amd64.deb
