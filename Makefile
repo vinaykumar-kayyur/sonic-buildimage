@@ -4,6 +4,9 @@
 USERNAME=
 PASSWORD_ENCRYPTED=
 
+## Redis server/tools version
+REDIS_VERSION=3.2.4-1~bpo8+1_amd64
+
 ## Select bash for commands
 SHELL := /bin/bash
 
@@ -28,7 +31,7 @@ endef
 
 ## Rules: redirect to sub directory
 src/%:
-	$(MAKE) -C src $(subst src/,,$@)
+	$(MAKE) REDIS_VERSION=$(REDIS_VERSION) -C src $(subst src/,,$@)
 
 ## Rules: docker-fpm
 dockers/docker-fpm/deps/fpmsyncd: src/fpmsyncd
@@ -134,11 +137,11 @@ target/docker-team.gz: target/docker-base.gz $(addprefix dockers/docker-team/dep
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
-target/docker-database.gz: target/docker-base.gz $(addprefix dockers/docker-database/deps/,redis-server_3.2.4-1~bpo8+1_amd64.deb redis-tools_3.2.4-1~bpo8+1_amd64.deb)
+target/docker-database.gz: target/docker-base.gz $(addprefix dockers/docker-database/deps/,redis-server_$(REDIS_VERSION).deb redis-tools_$(REDIS_VERSION).deb)
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
-target/docker-sonic-p4.gz: target/docker-base.gz $(addprefix dockers/docker-sonic-p4/deps/,libswsscommon_1.0.0_amd64.deb libhiredis0.13_0.13.3-2_amd64.deb quagga_0.99.24.1-2_amd64.deb syncd_1.0.0_amd64.deb swss_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb libsaimetadata_1.0.0_amd64.deb libthrift-0.9.3_0.9.3-2_amd64.deb redis-server_3.2.4-1~bpo8+1_amd64.deb redis-tools_3.2.4-1~bpo8+1_amd64.deb p4-bmv2_1.0.0_amd64.deb p4-switch_1.0.0_amd64.deb)
+target/docker-sonic-p4.gz: target/docker-base.gz $(addprefix dockers/docker-sonic-p4/deps/,libswsscommon_1.0.0_amd64.deb libhiredis0.13_0.13.3-2_amd64.deb quagga_0.99.24.1-2_amd64.deb syncd_1.0.0_amd64.deb swss_1.0.0_amd64.deb libsairedis_1.0.0_amd64.deb libsaimetadata_1.0.0_amd64.deb libthrift-0.9.3_0.9.3-2_amd64.deb redis-server_$(REDIS_VERSION).deb redis-tools_$(REDIS_VERSION).deb p4-bmv2_1.0.0_amd64.deb p4-switch_1.0.0_amd64.deb)
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
