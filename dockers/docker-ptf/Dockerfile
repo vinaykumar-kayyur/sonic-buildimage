@@ -39,6 +39,11 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
     && dpkg_apt /root/deps/python-ptf_*.deb \
     && dpkg_apt /root/deps/libthrift-0.9.2_*.deb \
     && dpkg_apt /root/deps/python-thrift_*.deb \
+    && cd /root/deps \
+    && tar xvfz saithrift-0.9.tar.gz \
+    && cd saithrift-0.9 \
+    && python setup.py install \
+    && cd \
     && rm -rf /root/deps \
     && apt-get -y autoclean \
     && apt-get -y autoremove \
