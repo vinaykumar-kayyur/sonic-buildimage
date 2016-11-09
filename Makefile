@@ -15,7 +15,7 @@ MLNX-SDK-DEBS=$(notdir $(wildcard src/mlnx-sdk/*.deb))
 BRCM-SDK-DEBS=$(notdir $(wildcard src/brcm-sdk/*.deb))
 CAVM-SDK-DEBS=$(notdir $(wildcard src/cavm-sdk/*.deb))
 
-LIBNL-DEBS=libnl-3-200_3.2.27-1_amd64.deb libnl-genl-3-200_3.2.27-1_amd64.deb libnl-route-3-200_3.2.27-1_amd64.deb libnl-cli-3-200_3.2.27-1_amd64.deb libnl-nf-3-200_3.2.27-1_amd64.deb
+LIBNL-DEBS=libnl-3-200_3.2.27-1_amd64.deb libnl-3-dev_3.2.27-1_amd64.deb libnl-genl-3-200_3.2.27-1_amd64.deb libnl-genl-3-dev_3.2.27-1_amd64.deb libnl-route-3-200_3.2.27-1_amd64.deb libnl-route-3-dev_3.2.27-1_amd64.deb  libnl-nf-3-200_3.2.27-1_amd64.deb libnl-nf-3-dev_3.2.27-1_amd64.deb libnl-cli-3-200_3.2.27-1_amd64.deb libnl-cli-3-dev_3.2.27-1_amd64.deb
 LIBTEAM-DEBS=libteam5_1.26-1_amd64.deb libteam-dev_1.26-1_amd64.deb libteam-utils_1.26-1_amd64.deb libteamdctl0_1.26-1_amd64.deb
 
 ## Function: build_docker, image_name save_file
@@ -31,7 +31,11 @@ endef
 
 ## Rules: redirect to sub directory
 src/%:
-	$(MAKE) REDIS_VERSION=$(REDIS_VERSION) -C src $(subst src/,,$@)
+	$(MAKE) 											\
+	REDIS_VERSION=$(REDIS_VERSION)						\
+	LIBNL-DEBS="$(LIBNL-DEBS)"							\
+	LIBTEAM-DEBS="$(LIBTEAM-DEBS)"						\
+	-C src $(subst src/,,$@)
 
 ## Rules: docker-fpm
 dockers/docker-fpm/deps/fpmsyncd: src/fpmsyncd
