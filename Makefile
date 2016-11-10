@@ -62,7 +62,7 @@ dockers/docker-orchagent-cavm/deps/%.deb: src/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
 
 ## Rules: docker-orchagent (brcm)
-$(addprefix dockers/docker-orchagent/deps/,libsairedis_1.0.0_amd64.deb libsaimetadata_1.0.0_amd64.deb swss_1.0.0_amd64.deb) : dockers/docker-orchagent/deps/%.deb : src/%.deb
+$(addprefix dockers/docker-orchagent/deps/,libsairedis_1.0.0_amd64.deb libsaimetadata_1.0.0_amd64.deb swss_1.0.0_amd64.deb) : dockers/docker-orchagent/deps/%.deb : src/brcm/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
 dockers/docker-orchagent/deps/%.deb: src/%.deb
 	mkdir -p `dirname $@` && cp $< $(dir $@)
