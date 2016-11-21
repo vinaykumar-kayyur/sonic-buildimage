@@ -32,3 +32,6 @@
 [submodule "sonic-dbsyncd"]
 	path = src/sonic-dbsyncd
 	url = https://github.com/Azure/sonic-dbsyncd
+[submodule "src/sonic-py-swsssdk"]
+	path = src/sonic-py-swsssdk
+	url = https://github.com/Azure/sonic-py-swsssdk.git
