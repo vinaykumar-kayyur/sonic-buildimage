@@ -120,7 +120,7 @@ dockers/docker-sonic-p4/deps/%.deb: src/%.deb
 target/docker-base.gz:
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
-target/docker-snmp-sv2.gz: target/docker-base.gz $(addprefix dockers/docker-snmp-sv2/deps/,python3/sswsdk-2.0.1-py3-none-any.whl asyncsnmp-2.1.0-py3-none-any.whl libsnmp-base_5.7.3+dfsg-1.5_all.deb libsnmp30_5.7.3+dfsg-1.5_amd64.deb snmp_5.7.3+dfsg-1.5_amd64.deb snmpd_5.7.3+dfsg-1.5_amd64.deb)
+target/docker-snmp-sv2.gz: target/docker-base.gz $(addprefix dockers/docker-snmp-sv2/deps/,python3/sswsdk-2.0.1-py3-none-any.whl python3/asyncsnmp-2.1.0-py3-none-any.whl libsnmp-base_5.7.3+dfsg-1.5_all.deb libsnmp30_5.7.3+dfsg-1.5_amd64.deb snmp_5.7.3+dfsg-1.5_amd64.deb snmpd_5.7.3+dfsg-1.5_amd64.deb)
 	docker load < $<
 	$(call build_docker,$(patsubst target/%.gz,%,$@),$@)
 
