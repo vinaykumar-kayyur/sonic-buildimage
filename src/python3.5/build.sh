@@ -14,3 +14,5 @@ pushd python3.5-${PYTHON_VER}
 dpkg-buildpackage -us -uc -b
 
 popd
+
+cp *.deb ../

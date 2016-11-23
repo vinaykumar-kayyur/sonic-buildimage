@@ -16,3 +16,5 @@ sudo apt-get -y build-dep mpdecimal
 dpkg-buildpackage -us -uc -b
 
 popd
+
+cp *.deb ../
