@@ -1,0 +1,7 @@
+# Mellanox SAI
+
+MLNX_SAI = mlnx-sai_1.mlnx.160712_amd64.deb
+$(MLNX_SAI)_SRC_PATH = $(PLATFORM_PATH)/mlnx-sai
+$(MLNX_SAI)_DEPENDS += $(MLNX_SDK_DEBS)
+$(MLNX_SAI)_RDEPENDS += $(MLNX_SDK_RDEBS)
+SONIC_MAKE_DEBS += $(MLNX_SAI)
