@@ -35,6 +35,7 @@ PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
 	@exit 1
 
 configure :
+	@mkdir -p target/debs
 	@echo $(PLATFORM) > .platform
 
 distclean : .platform clean
