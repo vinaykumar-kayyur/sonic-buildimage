@@ -7,7 +7,7 @@ PWD := $(shell pwd)
 
 MAKEFLAGS += -B
 
-DOCKER_RUN := docker run --privileged \
+DOCKER_RUN := docker run --rm=true --privileged \
     -v $(PWD):/sonic \
     -it sonic-slave-$(USER)
 
