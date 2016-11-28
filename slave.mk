@@ -216,7 +216,7 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_DERIVED_DEBS)))
-$(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_DERIVED_FROM)))
+$(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_DERIVED_FROM)))
 	$(HEADER)
 	# remove derived targets if main one is removed, because we treat them
 	# as part of one package
@@ -226,7 +226,7 @@ $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : $$(addsuffix -clean,$$(addprefix $(
 SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_DOCKER_IMAGES) \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES)))
-$(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean :
+$(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean : .platform
 	$(HEADER)
 	rm -f $(TARGET_PATH)/$*
 	$(FOOTER)
@@ -240,7 +240,7 @@ clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_TARGETS)
 ## all
 ###############################################################################
 
-all : $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
+all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
 ###############################################################################
 ## Standard targets
