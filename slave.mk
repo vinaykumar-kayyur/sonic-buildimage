@@ -232,7 +232,7 @@ $(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean :
 	$(FOOTER)
 
 clean-logs : .platform
-	rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log
+	@rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log
 
 clean : .platform clean-logs $$(SONIC_CLEAN_DEBS)
 
