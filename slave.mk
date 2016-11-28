@@ -217,8 +217,8 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_DERIVED_DEBS)))
 $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_DERIVED_FROM)))
-	# remove derived targets if main one is removed, because we treat them
-	# as part of one package
+	@# remove derived targets if main one is removed, because we treat them
+	@# as part of one package
 	@rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS))
 
 SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
