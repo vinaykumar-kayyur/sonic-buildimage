@@ -8,8 +8,8 @@ wget -O redis_$REDIS_VERION_FULL.dsc -N "https://sonicstorage.blob.core.windows.
 
 wget -O redis_$REDIS_VERION_FULL.debian.tar.xz -N "https://sonicstorage.blob.core.windows.net/packages/redis_$REDIS_VERION_FULL.debian.tar.xz?sv=2015-04-05&sr=b&sig=I33UsbDHiffEkQRndpFwY9y3I%2FrKTu0wmG%2FMXB98kys%3D&se=2026-11-26T22%3A32%3A34Z&sp=r"
 
-dpkg-source -x redis_3.2.4-1~bpo8+1.dsc
+dpkg-source -x redis_$REDIS_VERION_FULL.dsc
 
-pushd redis-3.2.4; fakeroot debian/rules binary; popd
+pushd redis-$REDIS_VERION; fakeroot debian/rules binary; popd
 
 cp *.deb ..
