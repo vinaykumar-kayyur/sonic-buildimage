@@ -40,7 +40,7 @@ log_green = echo -e "$(GREEN)$(1)$(GRAY)"
 ###############################################################################
 
 ifeq ($(SONIC_CONFIG_LOG_TO_FILES),y)
-FLUSH_LOG = echo "" > $@.log
+FLUSH_LOG = rm -f $@.log
 
 LOG = &>> $(PROJECT_ROOT)/$@.log
 endif
