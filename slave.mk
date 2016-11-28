@@ -126,7 +126,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	rm -f $($*_SRC_PATH)/debian/*.debhelper.log
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
-	dpkg-buildpackage -rfakeroot -b -us -uc $(LOG)
+	dpkg-buildpackage -rfakeroot -b -us -uc $(LOG) || exit 1
 	popd $(LOG)
 	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS)) $(DEBS_PATH) $(LOG)
 	$(FOOTER)
