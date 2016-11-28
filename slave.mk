@@ -174,7 +174,7 @@ docker-start :
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
 	$(HEADER)
 	docker build --no-cache -t $* $($*.gz_PATH) $(LOG) || { rm -f $@ && exit 1 ; }
-	docker save $* | gzip -c > $@ $(LOG)
+	docker save $* | gzip -c > $@
 	$(FOOTER)
 
 # Targets for building docker images
@@ -184,7 +184,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/deps $(LOG)
 	sed 's/SED_DPKG/RUN cd deps \&\& dpkg -i $(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++')/g' $($*.gz_PATH)/Dockerfile.template > $($*.gz_PATH)/Dockerfile
 	docker build --no-cache -t $* $($*.gz_PATH) $(LOG) || { rm -f $@ && exit 1 ; }
-	docker save $* | gzip -c > $@ $(LOG)
+	docker save $* | gzip -c > $@
 	$(FOOTER)
 
 DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
