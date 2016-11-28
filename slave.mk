@@ -234,7 +234,7 @@ $(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean :
 clean-logs : .platform
 	@rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log
 
-clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_TARGETS)
+clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_TARGETS)
 
 ###############################################################################
 ## all
