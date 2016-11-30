@@ -55,6 +55,8 @@ RUN apt-get update && apt-get install -y augeas-tools
 # For p4 build
 RUN apt-get update && apt-get install -y libyaml-dev libevent-dev libjudy-dev libedit-dev libpcap-dev libnanomsg-dev
 RUN apt-get update && apt-get install -y python-stdeb
+RUN pip install ctypesgen
+RUN pip install crc16
 
 # For redis build
 RUN apt-get update && apt-get install -y libjemalloc-dev

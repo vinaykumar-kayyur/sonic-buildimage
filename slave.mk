@@ -131,6 +131,21 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS)) $(DEBS_PATH) $(LOG)
 	$(FOOTER)
 
+# Build project with python setup.py --command-packages=stdeb.command
+# Add new package for build:
+#     SOME_NEW_DEB = some_new_deb.deb
+#     $(SOME_NEW_DEB)_SRC_PATH = $(SRC_PATH)/project_name
+#     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
+#     SONIC_PYTHON_STDEB_DEBS += $(SOME_NEW_DEB)
+$(addprefix $(DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+	$(HEADER)
+	# Build project and take package
+	pushd $($*_SRC_PATH) $(LOG)
+	python setup.py --command-packages=stdeb.command bdist_deb || exit 1
+	popd $(LOG)
+	mv $(addprefix $($*_SRC_PATH)/deb_dist/, $* $($*_DERIVED_DEBS)) $(DEBS_PATH) $(LOG)
+	$(FOOTER)
+
 # Rules for derived debian packages (dev, dbg, etc.)
 # All noise takes place in main deb recipe, so we are just telling that
 # we depend on it and move our deb to other targets
@@ -150,6 +165,7 @@ SONIC_INSTALL_TARGETS = $(addsuffix -install,$(addprefix $(DEBS_PATH)/, \
 			$(SONIC_COPY_DEBS) \
 			$(SONIC_MAKE_DEBS) \
 			$(SONIC_DPKG_DEBS) \
+			$(SONIC_PYTHON_STDEB_DEBS) \
 			$(SONIC_DERIVED_DEBS)))
 $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) $(DEBS_PATH)/$$*
 	$(HEADER)
@@ -215,6 +231,7 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_COPY_DEBS) \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
+		   $(SONIC_PYTHON_STDEB_DEBS) \
 		   $(SONIC_DERIVED_DEBS)))
 $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_DERIVED_FROM)))
 	@# remove derived targets if main one is removed, because we treat them
