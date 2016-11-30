@@ -20,6 +20,10 @@ DOCKER_BUILD = docker build --no-cache \
 
 include rules/config
 
+.PHONY: sonic-slave-build sonic-slave-bash
+
+.DEFAULT_GOAL :=  all
+
 %::
 	@[ ! -z "`docker images | grep sonic-slave-$(USER)`" ] || $(DOCKER_BUILD)
 	@$(DOCKER_RUN) make \
