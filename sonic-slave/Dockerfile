@@ -76,6 +76,9 @@ RUN apt-get update && apt-get install -y cppcheck clang pylint python-pytest gco
 # For snmpd
 RUN apt-get update && apt-get install -y libmysqlclient-dev libmysqld-dev libperl-dev libpci-dev libpci3 libsensors4 libsensors4-dev libwrap0-dev
 
+# For mpdecimal
+RUN apt-get update && apt-get install -y docutils-common libjs-sphinxdoc libjs-underscore python-docutils python-jinja2 python-markupsafe python-pygments python-roman python-sphinx sphinx-common python3-sphinx
+
 # Install depot-tools (for git-retry)
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
