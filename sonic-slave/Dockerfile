@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y sudo dh-make dh-exec kmod libtinyxml2-2
 RUN apt-get update && apt-get install -y doxygen devscripts git-buildpackage perl-modules libswitch-perl dh-systemd
 
 # For quagga build
-RUN apt-get update && apt-get install -y libreadline-dev texlive-latex-base texlive-generic-recommended texlive-fonts-recommended libpam0g-dev libpam-dev libcap-dev imagemagick ghostscript groff libpcre3-dev gawk chrpath libsnmp-dev
+RUN apt-get update && apt-get install -y libreadline-dev texlive-latex-base texlive-generic-recommended texlive-fonts-recommended libpam0g-dev libpam-dev libcap-dev imagemagick ghostscript groff libpcre3-dev gawk chrpath
 
 # For libnl3 (local) build
 RUN apt-get install -y cdbs
@@ -72,6 +72,9 @@ RUN apt-get update && apt-get install -y libgtest-dev cmake && cd /usr/src/gtest
 
 # For Jenkins static analysis, unit testing and code coverage
 RUN apt-get update && apt-get install -y cppcheck clang pylint python-pytest gcovr python-pytest=2.6.3* python-pytest-cov python-parse
+
+# For snmpd
+RUN apt-get update && apt-get install -y libmysqlclient-dev libmysqld-dev libperl-dev libpci-dev libpci3 libsensors4 libsensors4-dev libwrap0-dev
 
 # Install depot-tools (for git-retry)
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
