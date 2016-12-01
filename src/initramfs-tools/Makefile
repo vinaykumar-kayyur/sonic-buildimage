@@ -1,7 +1,7 @@
 .ONESHELL:
 SHELL = /bin/bash
 
-MAIN_TARGET = initramfs-tools_0.120_all.deb
+MAIN_TARGET = initramfs-tools_$(INITRAMFS_TOOLS_VERSION)_all.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtaining the initramfs-tools

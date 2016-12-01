@@ -1,9 +1,10 @@
 .ONESHELL:
 SHELL = /bin/bash
 
-MAIN_TARGET = libteam5_1.26-1_amd64.deb
-DERIVED_TARGETS = libteam-dev_1.26-1_amd64.deb libteamdctl0_1.26-1_amd64.deb \
-		  libteam-utils_1.26-1_amd64.deb
+MAIN_TARGET = libteam5_$(LIBTEAM_VERSION)_amd64.deb
+DERIVED_TARGETS = libteam-dev_$(LIBTEAM_VERSION)_amd64.deb \
+		  libteamdctl0_$(LIBTEAM_VERSION)_amd64.deb \
+		  libteam-utils_$(LIBTEAM_VERSION)_amd64.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain libteam
