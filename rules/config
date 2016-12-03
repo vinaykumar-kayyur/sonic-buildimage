@@ -29,5 +29,5 @@ SONIC_CONFIG_LOG_TO_FILES = y
 # USERNAME - username for installer build
 USERNAME = admin
 
-# PASSWORD_ENCRYPTED - password for installer build
-PASSWORD_ENCRYPTED = admin
+# PASSWORD - password for installer build
+PASSWORD = admin

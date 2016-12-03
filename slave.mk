@@ -258,7 +258,7 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 # targets for building installers with base image
 $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform $$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))
 	$(HEADER)
-	{ ./build_debian.sh "$(USERNAME)" "$(PASSWORD_ENCRYPTED)" $(LOG) && TARGET_MACHINE=$($*_MACHINE) ./build_image.sh $(LOG) ; } || exit 1
+	{ ./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG) && TARGET_MACHINE=$($*_MACHINE) ./build_image.sh $(LOG) ; } || exit 1
 	$(FOOTER)
 
 ###############################################################################
