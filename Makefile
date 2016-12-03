@@ -20,8 +20,6 @@ DOCKER_BUILD = docker build --no-cache \
 	       -t sonic-slave-$(USER) \
 	       sonic-slave
 
-include rules/config
-
 .PHONY: sonic-slave-build sonic-slave-bash
 
 .DEFAULT_GOAL :=  all
@@ -31,7 +29,6 @@ include rules/config
 	@$(DOCKER_RUN) make \
 	    -C sonic \
 	    -f slave.mk \
-	    -j $(SONIC_CONFIG_BUILD_JOBS) \
 	    PLATFORM=$(PLATFORM) \
 	    $@
 

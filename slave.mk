@@ -54,6 +54,8 @@ ifneq ($(CONFIGURED_PLATFORM), undefined)
 include $(PLATFORM_PATH)/rules.mk
 endif
 
+MAKEFLAGS += -j $(SONIC_CONFIG_BUILD_JOBS)
+
 ###############################################################################
 ## Generic rules section
 ## All rules must go after includes for propper targets expansion
