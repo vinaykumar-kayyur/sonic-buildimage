@@ -24,7 +24,7 @@ SONIC_CONFIG_LOG_TO_FILES = y
 
 # SONIC_CONFIG_ENABLE_COLORS - enable colored output in build system.
 # Comment next line to disable:
-SONIC_CONFIG_ENABLE_COLORS = y
+# SONIC_CONFIG_ENABLE_COLORS = y
 
 # USERNAME - username for installer build
 USERNAME = admin
