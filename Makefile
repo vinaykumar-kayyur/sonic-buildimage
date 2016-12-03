@@ -2,6 +2,8 @@
 ## Wrapper for starting make inside sonic-slave container
 ###############################################################################
 
+SHELL = /bin/bash
+
 USER := $(shell id -un)
 PWD := $(shell pwd)
 
@@ -25,7 +27,7 @@ include rules/config
 .DEFAULT_GOAL :=  all
 
 %::
-	@[ ! -z "`docker images | grep sonic-slave-$(USER)`" ] || $(DOCKER_BUILD)
+	@docker inspect --type image sonic-slave-$(USER) &> /dev/null || $(DOCKER_BUILD)
 	@$(DOCKER_RUN) make \
 	    -C sonic \
 	    -f slave.mk \
