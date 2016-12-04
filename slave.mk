@@ -5,6 +5,7 @@
 # Select bash for commands
 .ONESHELL:
 SHELL = /bin/bash
+.SHELLFLAGS += -e
 
 .SECONDEXPANSION:
 
@@ -84,7 +85,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform
 #     SONIC_ONLINE_FILES += $(SOME_NEW_FILE)
 $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_FILES)) : $(DEBS_PATH)/% : .platform
 	$(HEADER)
-	wget -O  $@ $($*_URL) $(LOG) || exit 1
+	wget -O  $@ $($*_URL) $(LOG)
 	$(FOOTER)
 
 # Copy debian packages from local directory
@@ -115,7 +116,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# remove target to force rebuild
 	rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS))
 	# build project and take package
-	make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG) || exit 1
+	make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 	$(FOOTER)
 
 # Build project with dpkg-buildpackage
@@ -130,7 +131,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	rm -f $($*_SRC_PATH)/debian/*.debhelper.log
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
-	dpkg-buildpackage -rfakeroot -b -us -uc $(LOG) || exit 1
+	dpkg-buildpackage -rfakeroot -b -us -uc $(LOG)
 	popd $(LOG)
 	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS)) $(DEBS_PATH) $(LOG)
 	$(FOOTER)
@@ -145,7 +146,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(DEBS_PATH)/% : .platf
 	$(HEADER)
 	# Build project and take package
 	pushd $($*_SRC_PATH) $(LOG)
-	python setup.py --command-packages=stdeb.command bdist_deb || exit 1
+	python setup.py --command-packages=stdeb.command bdist_deb
 	popd $(LOG)
 	mv $(addprefix $($*_SRC_PATH)/deb_dist/, $* $($*_DERIVED_DEBS)) $(DEBS_PATH) $(LOG)
 	$(FOOTER)
@@ -197,7 +198,7 @@ $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -inst
 $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS)))
 	$(HEADER)
 	pushd $($*_SRC_PATH) $(LOG)
-	python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG) || exit 1
+	python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 	popd $(LOG)
 	mv $($*_SRC_PATH)/dist/$* $(PYTHON_WHEELS_PATH) $(LOG)
 	$(FOOTER)
@@ -227,7 +228,7 @@ docker-start :
 # targets for building simple docker images that do not depend on any debian packages
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
 	$(HEADER)
-	docker build --no-cache -t $* $($*.gz_PATH) $(LOG) || { rm -f $@ && exit 1 ; }
+	docker build --no-cache -t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	$(FOOTER)
 
@@ -239,7 +240,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/deps $(LOG)
 	sudo mount --bind $(PYTHON_WHEELS_PATH) $($*.gz_PATH)/python-wheels $(LOG)
 	sed 's/SED_DPKG/RUN cd deps \&\& dpkg -i $(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++')/g' $($*.gz_PATH)/Dockerfile.template > $($*.gz_PATH)/Dockerfile
-	docker build --no-cache -t $* $($*.gz_PATH) $(LOG) || { rm -f $@ && exit 1 ; }
+	docker build --no-cache -t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	$(FOOTER)
 
@@ -248,7 +249,7 @@ DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
 		      $(SONIC_DOCKER_IMAGES)))
 $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TARGET_PATH)/$$*.gz
 	$(HEADER)
-	docker load -i $(TARGET_PATH)/$*.gz $(LOG) || exit 1
+	docker load -i $(TARGET_PATH)/$*.gz $(LOG)
 	$(FOOTER)
 
 ###############################################################################
@@ -258,7 +259,8 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 # targets for building installers with base image
 $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform $$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))
 	$(HEADER)
-	{ ./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG) && TARGET_MACHINE=$($*_MACHINE) ./build_image.sh $(LOG) ; } || exit 1
+	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
+	TARGET_MACHINE=$($*_MACHINE) ./build_image.sh $(LOG)
 	$(FOOTER)
 
 ###############################################################################

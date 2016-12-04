@@ -1,5 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
+.SHELLFLAGS += -e
 
 MAIN_TARGET = initramfs-tools_$(INITRAMFS_TOOLS_VERSION)_all.deb
 

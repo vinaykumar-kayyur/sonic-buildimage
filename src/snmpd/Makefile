@@ -1,5 +1,6 @@
 SHELL = /bin/bash
 .ONESHELL:
+.SHELLFLAGS += -e
 
 MAIN_TARGET = libsnmp-base_$(SNMPD_VERSION_FULL)_all.deb
 DERIVED_TARGETS = snmptrapd_$(SNMPD_VERSION_FULL)_amd64.deb \

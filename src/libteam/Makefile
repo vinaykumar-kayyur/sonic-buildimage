@@ -1,5 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
+.SHELLFLAGS += -e
 
 MAIN_TARGET = libteam5_$(LIBTEAM_VERSION)_amd64.deb
 DERIVED_TARGETS = libteam-dev_$(LIBTEAM_VERSION)_amd64.deb \

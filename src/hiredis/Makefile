@@ -1,5 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
+.SHELLFLAGS += -e
 
 MAIN_TARGET = libhiredis0.13_$(HIREDIS_VERSION_FULL)_amd64.deb
 DERIVED_TARGETS = libhiredis-dbg_$(HIREDIS_VERSION_FULL)_amd64.deb libhiredis-dev_$(HIREDIS_VERSION_FULL)_amd64.deb

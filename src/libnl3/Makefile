@@ -1,5 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
+.SHELLFLAGS += -e
 
 MAIN_TARGET = libnl-3-200_$(LIBNL3_VERSION)_amd64.deb
 DERIVED_TARGETS = libnl-3-dev_$(LIBNL3_VERSION)_amd64.deb \

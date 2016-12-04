@@ -1,5 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
+.SHELLFLAGS += -e
 
 MAIN_TARGET = libmpdec2_$(MPDECIMAL_VERSION_FULL)_amd64.deb
 DERIVED_TARGETS = libmpdec-dev_$(MPDECIMAL_VERSION_FULL)_amd64.deb
