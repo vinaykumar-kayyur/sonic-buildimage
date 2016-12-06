@@ -29,6 +29,21 @@ Supported VENDORs are:
 
 You can find rules/config file useful. It contains configuration options for build process, like adding more verbosity or showing dependencies, username and password for base image etc.
 
+Every docker image is built and saved to target/ directory.
+So, for instance, to build only docker-database, execute
+
+    make target/docker-database.gz
+
+Same goes for debian packages, which are under target/debs/:
+
+    make target/debs/swss_1.0.0_amd64.deb
+
+Every target has a clean target, so in order to clean swss, execute
+
+    make target/debs/swss_1.0.0_amd64.deb-clean
+
+It is recommended to use clean targets to clean all packages, that are built together, like dev packages for instance.
+
 # Note:
 If you are running make for the first time, a sonic-slave-${USER} docker image will be built automatically.
 It is a one time action, so be patient.
