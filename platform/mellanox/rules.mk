@@ -16,6 +16,7 @@ SONIC_ALL += $(DOCKER_SYNCD_MLNX) \
 	     $(DOCKER_SNMP_SV2) \
 	     $(DOCKER_TEAMD) \
 	     $(DOCKER_PLATFORM_MONITOR) \
+	     $(DOCKER_DHCP_RELAY)
 	     debs/$(MLNX_HW_MANAGEMENT) \
 	     debs/$(SX_KERNEL)
 
