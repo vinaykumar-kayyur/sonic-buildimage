@@ -51,7 +51,7 @@ distclean : .platform clean
 include $(RULES_PATH)/config
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
-ifneq ($(CONFIGURED_PLATFORM), undefined)
+ifneq ($(wildcard $(PLATFORM_PATH)),)
 include $(PLATFORM_PATH)/rules.mk
 endif
 

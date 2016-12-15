@@ -166,6 +166,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
     file                    \
     ifupdown                \
     iproute2                \
+    iptables-persistent     \
     isc-dhcp-client         \
     sudo                    \
     vim                     \
