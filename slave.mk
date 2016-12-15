@@ -239,6 +239,15 @@ $(SONIC_INSTALL_WHEELS) : $(PYTHON_WHEELS_PATH)/%-install : .platform $$(addsuff
 docker-start :
 	@sudo service docker start &> /dev/null && sleep 1
 
+# targets for building squashed simple docker images that do not depend on any debian packages
+$(addprefix $(TARGET_PATH)/, $(SONIC_SQUASH_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
+	$(HEADER)
+	docker build --no-cache -t $* $($*.gz_PATH) $(LOG)
+	docker run --name $*.squash -d $* /bin/bash
+	docker export $*.squash | docker import - $*
+	docker save $* | gzip -c > $@
+	$(FOOTER)
+
 # targets for building simple docker images that do not depend on any debian packages
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
 	$(HEADER)
