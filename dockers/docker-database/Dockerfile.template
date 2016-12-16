@@ -4,10 +4,6 @@ RUN apt-get update
 
 COPY deps/ deps
 
-## Install redis-tools dependencies
-## TODO: implicitly install dependencies
-RUN apt-get -y install libjemalloc1
-
 SED_DPKG
 
 ## Clean up
