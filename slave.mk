@@ -255,7 +255,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
 	sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/deps $(LOG)
 	sudo mount --bind $(PYTHON_WHEELS_PATH) $($*.gz_PATH)/python-wheels $(LOG)
-	sed 's/SED_DPKG/RUN cd deps \&\& dpkg -i $(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++') || apt-get -y install -f/g' $($*.gz_PATH)/Dockerfile.template > $($*.gz_PATH)/Dockerfile
+	sed 's/SED_DPKG/RUN cd deps \&\& dpkg -i $(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++') || { o=$$(apt-get -y install -f | tee \/dev\/tty); !(echo $$o | grep "The following packages will be REMOVED:"); }/g' $($*.gz_PATH)/Dockerfile.template > $($*.gz_PATH)/Dockerfile
 	docker build --no-cache -t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	$(FOOTER)
