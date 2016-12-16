@@ -8,12 +8,6 @@ include $(PLATFORM_PATH)/docker-orchagent-mlnx.mk
 
 SONIC_ALL += $(DOCKER_SYNCD_MLNX) \
 	     $(DOCKER_ORCHAGENT_MLNX) \
-	     $(DOCKER_FPM) \
-	     $(DOCKER_DATABASE) \
-	     $(DOCKER_LLDP_SV2) \
-	     $(DOCKER_SNMP_SV2) \
-	     $(DOCKER_TEAM) \
-	     $(DOCKER_PLATFORM_MONITOR) \
 	     debs/$(MLNX_HW_MANAGEMENT)
 
 # Inject mlnx sai into sairedis
