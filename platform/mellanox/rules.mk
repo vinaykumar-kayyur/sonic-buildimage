@@ -1,3 +1,5 @@
+include $(PLATFORM_GENERIC_PATH)/rules.mk
+
 include $(PLATFORM_PATH)/sdk.mk
 include $(PLATFORM_PATH)/fw.mk
 include $(PLATFORM_PATH)/mft.mk
@@ -14,7 +16,8 @@ SONIC_ALL += $(DOCKER_SYNCD_MLNX) \
 	     $(DOCKER_SNMP_SV2) \
 	     $(DOCKER_TEAM) \
 	     $(DOCKER_PLATFORM_MONITOR) \
-	     debs/$(MLNX_HW_MANAGEMENT)
+	     debs/$(MLNX_HW_MANAGEMENT) \
+	     debs/$(SX_KERNEL)
 
 # Inject mlnx sai into sairedis
 $(LIBSAIREDIS)_DEPENDS += $(MLNX_SAI)

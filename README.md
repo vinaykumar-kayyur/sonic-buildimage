@@ -1,4 +1,6 @@
-Mellanox[![Mellanox](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all)Broadcom[![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
+Broadcom[![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
+Mellanox[![Mellanox](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all)
+P4[![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
 
 # Build SONiC Switch Images - buildimage
 
@@ -6,7 +8,10 @@ Mellanox[![Mellanox](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellano
 Build an [Open Network Install Environment (ONIE)](https://github.com/opencomputeproject/onie) compatiable network operating system (NOS) installer image for network switches, and also build docker images running inside the NOS.
 
 # Prerequisite
-## Clone or fetch the code repository with all git submodules
+# SAI Version 
+SONiC V2 is using [SAI 0.9.4](https://github.com/opencomputeproject/SAI/tree/v0.9.4). 
+
+# Clone or fetch the code repository with all git submodules
 To clone the code repository recursively, assuming git version 1.9 or newer
 
     git clone --recursive https://github.com/Azure/sonic-buildimage.git
@@ -16,6 +21,9 @@ If it is already cloned, however there is no files under ./dockers/docker-base/ 
     git submodule update --init --recursive
 
 # Usage
+
+**NOTE:** In order to be more familiar with build process and make some hanges to it, it is recommended to read this short [Documentation](README.buildsystem.md)
+
 To build NOS installer image and docker images, run command line
 
     make configure PLATFORM=[VENDOR]
