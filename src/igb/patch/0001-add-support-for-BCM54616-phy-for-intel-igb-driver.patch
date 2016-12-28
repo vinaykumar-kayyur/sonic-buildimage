@@ -16,7 +16,7 @@ index b4b973e..248c670 100644
  	case M88E1112_E_PHY_ID:
  	case M88E1340M_E_PHY_ID:
  	case M88E1111_I_PHY_ID:
-+    case BCM54616_E_PHY_ID:
++	case BCM54616_E_PHY_ID:
  		phy->type		= e1000_phy_m88;
  		phy->ops.check_polarity	= e1000_check_polarity_m88;
  		phy->ops.get_info	= e1000_get_phy_info_m88;
@@ -28,7 +28,7 @@ index 6de3988..d5da148 100644
  #define I210_I_PHY_ID		0x01410C00
  #define IGP04E1000_E_PHY_ID	0x02A80391
  #define M88_VENDOR		0x0141
-+#define BCM54616_E_PHY_ID   0x03625D10
++#define BCM54616_E_PHY_ID	0x03625D10
  
  /* M88E1000 Specific Registers */
  #define M88E1000_PHY_SPEC_CTRL		0x10  /* PHY Specific Control Reg */
