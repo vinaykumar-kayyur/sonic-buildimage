@@ -1,14 +1,13 @@
 # Cavium SAI
 
-CAVM_SAI_GITHUB = https://github.com/garyachy/OpenXPS/raw/sai_0.9.5/SAI/cavm-sai/
+CAVM_SAI_GITHUB = https://github.com/garyachy/OpenXPS/raw/3c2dbbee23ee76570bbdb11d4955882279cc3f9a/SAI/cavm-sai
 
 CAVM_LIBSAI = libsai.deb
 CAVM_SAI = sai.deb
 XP_TOOLS = xp-tools.deb
-XPSHELL = xpshell.deb
 
 $(CAVM_LIBSAI)_URL = $(CAVM_SAI_GITHUB)/$(CAVM_LIBSAI)
 $(CAVM_SAI)_URL = $(CAVM_SAI_GITHUB)/$(CAVM_SAI)
 $(XP_TOOLS)_URL = $(CAVM_SAI_GITHUB)/$(XP_TOOLS)
-$(XPSHELL)_URL = $(CAVM_SAI_GITHUB)/$(XPSHELL)
-SONIC_ONLINE_DEBS += $(CAVM_LIBSAI) $(CAVM_SAI) $(XP_TOOLS) $(XPSHELL)
+
+SONIC_ONLINE_DEBS += $(CAVM_LIBSAI) $(CAVM_SAI) $(XP_TOOLS)
