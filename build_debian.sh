@@ -81,13 +81,6 @@ echo '[INFO] Mount all'
 mount
 trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
-clean_sys() {
-    sudo umount $FILESYSTEM_ROOT/sys/fs/cgroup/*            \
-                $FILESYSTEM_ROOT/sys/fs/cgroup              \
-                $FILESYSTEM_ROOT/sys || true
-}
-trap_push clean_sys
-sudo LANG=C chroot $FILESYSTEM_ROOT mount sysfs /sys -t sysfs
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
 sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
@@ -255,8 +248,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 
 ## Umount all
 echo '[INFO] Umount all'
-sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
-sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc
 
