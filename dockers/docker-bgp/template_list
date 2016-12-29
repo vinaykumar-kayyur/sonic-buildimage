@@ -1,0 +1,4 @@
+bgpd.conf.j2  /etc/quagga/bgpd.conf    quagga:quaggavty  0644
+zebra.conf.j2 /etc/quagga/zebra.conf   root:root         0644
+isolate.j2    /usr/sbin/bgp-isolate    root:root         0755
+unisolate.j2  /usr/sbin/bgp-unisolate  root:root         0755
