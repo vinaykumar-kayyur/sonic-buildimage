@@ -132,6 +132,14 @@ sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 ## Install latest intel igb driver
 sudo cp target/debs/igb.ko $FILESYSTEM_ROOT/lib/modules/3.16.0-4-amd64/kernel/drivers/net/ethernet/intel/igb/igb.ko
 
+## Install package without starting service
+trap_push 'sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d'
+sudo tee -a $FILESYSTEM_ROOT/usr/sbin/policy-rc.d > /dev/null <<EOF
+#!/bin/sh
+exit 1
+EOF
+sudo chmod a+x $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
+
 ## Install docker
 echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
@@ -144,8 +152,6 @@ wget $docker_deb_url -qO $docker_deb_temp && {                                  
     sudo dpkg --root=$FILESYSTEM_ROOT -i $docker_deb_temp ||                                    \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f;   \
 }
-sudo chroot $FILESYSTEM_ROOT docker version
-sudo chroot $FILESYSTEM_ROOT service docker stop
 ## Add docker config drop-in to select aufs, otherwise it may select other storage driver
 sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
 ## Note: $_ means last argument of last command
