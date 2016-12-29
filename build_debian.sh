@@ -126,6 +126,7 @@ sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 sudo cp target/debs/igb.ko $FILESYSTEM_ROOT/lib/modules/3.16.0-4-amd64/kernel/drivers/net/ethernet/intel/igb/igb.ko
 
 ## Install package without starting service
+## ref: https://wiki.debian.org/chroot
 trap_push 'sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d'
 sudo tee -a $FILESYSTEM_ROOT/usr/sbin/policy-rc.d > /dev/null <<EOF
 #!/bin/sh
