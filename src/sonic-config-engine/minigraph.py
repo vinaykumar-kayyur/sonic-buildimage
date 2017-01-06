@@ -173,8 +173,8 @@ def parse_dpg(dpg, hname):
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
             pcintfmbr = pcintf.find(str(QName(ns, "AttachTo"))).text
-            mbr_list = pcintfmbr.split(';', 1)
-            pc_intfs.append({'name': pcintfname, 'members': mbr_list})
+            pcmbr_list = pcintfmbr.split(';', 1)
+            pc_intfs.append({'name': pcintfname, 'members': pcmbr_list})
 
         lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
         lo_intfs = []
@@ -208,9 +208,9 @@ def parse_dpg(dpg, hname):
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
-            members = vintf.find(str(QName(ns, "AttachTo"))).text
-            members = " ".join(members.split(';'))
-            vlan_attributes = {'name': vintfname, 'members': members, 'vlanid': vlanid}
+            vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
+            vmbr_list = vintfmbr.split(';'))
+            vlan_attributes = {'name': vintfname, 'members': vmbr_list, 'vlanid': vlanid}
             for addrtuple in vlan_map.get(vintfname, []):
                 vlan_attributes.update(addrtuple)
                 vlan_intfs.append(copy.deepcopy(vlan_attributes))
@@ -330,6 +330,14 @@ def parse_xml(filename):
             (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
             (u_neighbors, u_devices, _, _, _, _) = parse_png(child, hostname)
+
+    # Replace port with alias in Vlan interfaces members
+    for vlan in vlan_intfs:
+        for i,member in enumerate(vlan['members']):
+            vlan['members'][i] = port_alias_map[member]
+
+        # Convert vlan members into a space-delimited string
+        vlan['members'] = " ".join(vlan['members'])
 
     # Replace port with alias in port channel interfaces members
     for pc in pc_intfs:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='sonic-config-engine',
       version='1.0',
@@ -9,5 +9,6 @@ setup(name='sonic-config-engine',
       author_email='taoyl@microsoft.com',
       url='https://github.com/Azure/sonic-buildimage',
       py_modules=['minigraph'],
-      scripts=['render_config'],
+      scripts=['sonic-cfggen'],
+      install_requires=['lxml', 'jinja2', 'netaddr', 'ipaddr', 'yaml'],
      )
