@@ -9,10 +9,10 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
-COPY start.sh /usr/bin/start.sh
+COPY ["start.sh", "config.sh", "/usr/bin/"]
+COPY ["teamd.j2", "/etc/swss/teamd"]
 
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/bin/bash"]
-CMD ["/usr/bin/start.sh"]
+ENTRYPOINT /usr/bin/config.sh && /usr/bin/start.sh

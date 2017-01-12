@@ -10,5 +10,5 @@ setup(name='sonic-config-engine',
       url='https://github.com/Azure/sonic-buildimage',
       py_modules=['minigraph'],
       scripts=['sonic-cfggen'],
-      install_requires=['lxml', 'jinja2', 'netaddr', 'ipaddr', 'yaml'],
+      install_requires=['lxml', 'jinja2', 'netaddr', 'ipaddr', 'pyyaml'],
      )
