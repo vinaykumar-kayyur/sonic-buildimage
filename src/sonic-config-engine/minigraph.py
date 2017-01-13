@@ -285,6 +285,15 @@ def get_mgmt_info(devices, dev, port):
 
     return ret_val
 
+def get_alias_map_list(hwsku):
+    alias_map_json = os.path.join('/usr/share/sonic', hwsku, 'alias_map.json')
+    with open(alias_map_json) as data:
+        alias_map_dict = json.load(data)
+    alias_map_list = []
+    for k,v in alias_map_dict.items():
+        alias_map_list.append({'sonic': k, 'hardware': v})
+    return alias_map_list
+
 def parse_xml(filename):
     root = ET.parse(filename).getroot()
     mini_graph_path = filename
@@ -312,14 +321,9 @@ def parse_xml(filename):
             hostname = child.text
 
     # port_alias_map maps ngs port name to sonic port name
-    if hwsku == "Force10-S6000":
-        for i in range(0, 128, 4):
-            port_alias_map["fortyGigE0/%d" % i] = "Ethernet%d" % i
-    elif hwsku == "Arista-7050-QX32":
-        for i in range(1, 25):
-            port_alias_map["Ethernet%d/1" % i] = "Ethernet%d" % ((i - 1) * 4)
-        for i in range(25, 33):
-            port_alias_map["Ethernet%d" % i] = "Ethernet%d" % ((i - 1) * 4)
+    alias_map_list = get_alias_map_list(hwsku)
+    for item in alias_map_list:
+        port_alias_map[item['hardware']] = item['sonic']
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
@@ -367,6 +371,7 @@ def parse_xml(filename):
     results['minigraph_console'] = get_console_info(devices, console_dev, console_port)
     results['minigraph_mgmt'] = get_mgmt_info(devices, mgmt_dev, mgmt_port)
     results['inventory_hostname'] = hostname
+    results['alias_map'] = alias_map_list
 
     return results
 

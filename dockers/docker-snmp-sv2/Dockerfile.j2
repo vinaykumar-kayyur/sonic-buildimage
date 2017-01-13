@@ -39,8 +39,10 @@ RUN apt-get -y install build-essential wget libssl-dev openssl supervisor && \
     rm -rf ~/.cache
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ["*.j2", "/etc/swss/snmp/"]
+COPY ["config.sh", "/usr/bin/"]
 
 ## Although exposing ports is not need for host net mode, keep it for possible bridge mode
 EXPOSE 161/udp 162/udp
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT /usr/bin/config.sh && /usr/bin/supervisord 
