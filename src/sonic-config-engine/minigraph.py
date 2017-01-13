@@ -291,7 +291,7 @@ def get_alias_map_list(hwsku):
         alias_map_dict = json.load(data)
     alias_map_list = []
     for k,v in alias_map_dict.items():
-        alias_map_list.append({'sonic': k, 'hardware': v})
+        alias_map_list.append({'sonic': k, 'origin': v})
     return alias_map_list
 
 def parse_xml(filename):
@@ -323,7 +323,7 @@ def parse_xml(filename):
     # port_alias_map maps ngs port name to sonic port name
     alias_map_list = get_alias_map_list(hwsku)
     for item in alias_map_list:
-        port_alias_map[item['hardware']] = item['sonic']
+        port_alias_map[item['origin']] = item['sonic']
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
