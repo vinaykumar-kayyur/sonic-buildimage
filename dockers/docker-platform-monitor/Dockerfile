@@ -7,6 +7,7 @@ RUN apt-get update &&                                                           
         smartmontools                                                               \
         sensord                                                                     \
         debs/sonic-config-engine_1.0-1_all.deb                                      \ 
+        python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml          \
         &&                                                                          \
     apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y
 
