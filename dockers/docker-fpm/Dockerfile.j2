@@ -15,7 +15,7 @@ debs/{{ deb }}{{' '}}
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-COPY ["*.j2", "/etc/swss/bgp"]
+COPY ["*.j2", "/etc/swss/bgp/"]
 COPY ["start.sh", "config.sh", "/usr/bin/"]
 
 ENTRYPOINT /usr/bin/config.sh   \

@@ -10,7 +10,7 @@ debs/{{ deb }}{{' '}}
 {%- endfor %}
 
 COPY ["start.sh", "config.sh", "/usr/bin/"]
-COPY ["teamd.j2", "/etc/swss/teamd"]
+COPY ["teamd.j2", "/etc/swss/teamd/"]
 
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
