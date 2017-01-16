@@ -1,0 +1,25 @@
+FROM docker-base
+
+RUN apt-get update
+
+RUN apt-get install -y smartmontools sensord python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml
+
+COPY debs/ debs
+
+RUN dpkg -i \
+{% for deb in docker_fpm_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+
+## Clean up
+RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN rm -rf /debs
+
+COPY ["config.sh", "/usr/bin/"]
+
+ENTRYPOINT /usr/bin/config.sh       \
+    && service rsyslog start        \
+    && service lm-sensors start     \
+    && service smartmontools start  \
+    && service sensord start        \
+    && /bin/bash
