@@ -40,6 +40,7 @@ RUN apt-get -y install build-essential wget libssl-dev openssl supervisor && \
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ["*.j2", "/etc/swss/snmp/"]
+COPY ["snmpd", "/etc/default/"]
 COPY ["config.sh", "/usr/bin/"]
 
 ## Although exposing ports is not need for host net mode, keep it for possible bridge mode
