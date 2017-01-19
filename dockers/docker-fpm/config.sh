@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mkdir -p /etc/quagga
 sonic-cfggen -m /etc/sonic/minigraph.xml -t /etc/swss/bgp/bgpd.conf.j2 >/etc/quagga/bgpd.conf
 sonic-cfggen -m /etc/sonic/minigraph.xml -t /etc/swss/bgp/zebra.conf.j2 >/etc/quagga/zebra.conf
 
