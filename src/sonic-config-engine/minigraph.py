@@ -169,12 +169,12 @@ def parse_dpg(dpg, hname):
                 intfs.append(intf)
 
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
-        pc_intfs = []
+        pc_intfs = {}
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
             pcintfmbr = pcintf.find(str(QName(ns, "AttachTo"))).text
             pcmbr_list = pcintfmbr.split(';', 1)
-            pc_intfs.append({'name': pcintfname, 'members': pcmbr_list})
+            pc_intfs[pcintfname]=pcmbr_list
 
         lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
         lo_intfs = []
@@ -344,9 +344,9 @@ def parse_xml(filename):
         vlan['members'] = " ".join(vlan['members'])
 
     # Replace port with alias in port channel interfaces members
-    for pc in pc_intfs:
-        for i,member in enumerate(pc['members']):
-            pc['members'][i] = port_alias_map[member]
+    for pc in pc_intfs.keys():
+        for i,member in enumerate(pc_intfs[pc]):
+            pc_intfs[pc][i] = port_alias_map[member]
 
     Tree = lambda: defaultdict(Tree)
 

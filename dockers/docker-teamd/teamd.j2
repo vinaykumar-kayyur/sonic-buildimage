@@ -1,5 +1,5 @@
 {
-    "device": "{{ name }}",
+    "device": "{{ pc }}",
     "runner": {
         "name": "lacp",
         "active": true,
@@ -10,9 +10,9 @@
         "name": "ethtool"
     },
     "ports": {
-        {% for member in members %}
-        "{{member}}": {}{% if not loop.last %},
-        {% endif %}
+        {% for member in minigraph_portchannel_interfaces[pc] %}
+"{{member}}": {}{% if not loop.last %},{% endif %}
+
         {% endfor %}
     }
 }
