@@ -2,7 +2,11 @@ FROM docker-base
 
 RUN apt-get update
 
-COPY debs /debs
+COPY \
+{% for deb in docker_syncd_brcm_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
 
 RUN dpkg -i \
 {% for deb in docker_syncd_brcm_debs.split(' ') -%}
@@ -13,6 +17,7 @@ debs/{{ deb }}{{' '}}
 RUN apt-get install -f kmod
 
 COPY ["debs/dsserve", "debs/bcmcmd", "start.sh", "/usr/bin/"]
+RUN chmod +x /usr/bin/dsserve /usr/bin/bcmcmd
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
