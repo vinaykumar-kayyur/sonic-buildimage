@@ -287,6 +287,8 @@ def get_mgmt_info(devices, dev, port):
 
 def get_alias_map_list(hwsku):
     alias_map_json = os.path.join('/usr/share/sonic', hwsku, 'alias_map.json')
+    if not os.path.isfile(alias_map_json):
+        return None
     with open(alias_map_json) as data:
         alias_map_dict = json.load(data)
     alias_map_list = []
@@ -322,8 +324,9 @@ def parse_xml(filename):
 
     # port_alias_map maps ngs port name to sonic port name
     alias_map_list = get_alias_map_list(hwsku)
-    for item in alias_map_list:
-        port_alias_map[item['origin']] = item['sonic']
+    if alias_map_list != None:
+        for item in alias_map_list:
+            port_alias_map[item['origin']] = item['sonic']
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):

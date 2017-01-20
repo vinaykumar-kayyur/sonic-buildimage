@@ -2,7 +2,10 @@ FROM docker-base
 
 RUN apt-get update
 
-RUN apt-get install -y smartmontools sensord python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml
+RUN apt-get install -y smartmontools sensord 
+
+# Dependencies for sonic-cfggen                                                                                                                                                           
+RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml 
 
 COPY debs/ debs
 
