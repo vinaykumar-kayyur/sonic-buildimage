@@ -10,7 +10,7 @@ RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr py
 COPY debs/ debs
 
 RUN dpkg -i \
-{% for deb in docker_fpm_debs.split(' ') -%}
+{% for deb in docker_platform_monitor_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
