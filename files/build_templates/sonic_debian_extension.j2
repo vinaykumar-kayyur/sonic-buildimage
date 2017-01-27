@@ -1,4 +1,13 @@
 #!/bin/bash
+## This script is to automate loading of vendor specific docker images
+## and instalation of configuration files and vendor specific packages
+## to debian file system.
+##
+## USAGE:
+##   ./sonic_debian_extension.sh FILESYSTEM_ROOT
+## PARAMETERS:
+##   FILESYSTEM_ROOT
+##          Path to debian file system root directory
 
 FILESYSTEM_ROOT=$1
 [ -n "$FILESYSTEM_ROOT" ] || {
