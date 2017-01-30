@@ -315,7 +315,17 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 		chmod +x sonic_debian_extension.sh,
 	)
 
-	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
+	# Lock build_debian.sh execution to prevent issue with parallel accessing to docker engine.
+	INSTALLER_LOCK=/var/lock/sonic-buildimage-inіtaller.lock
+	while true; do
+	[ mkdir $(INSTALLER_LOCK) &>/dev/null ] && {
+		./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG) || {
+			rm -f $(INSTALLER_LOCK_FILE)
+			exit 1
+		}
+	}
+	done
+
 	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) ./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
