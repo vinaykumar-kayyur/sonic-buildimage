@@ -325,6 +325,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 		}
 
 		rm -rf $(INSTALLER_LOCK_FILE)
+		break
 	}
 	done
 
