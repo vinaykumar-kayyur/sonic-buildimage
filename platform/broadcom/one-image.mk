@@ -1,4 +1,4 @@
-# sonic mellanox single image installer
+# sonic broadcom one image installer
 
 SONIC_ONE_IMAGE = sonic-broadcom.bin
 $(SONIC_ONE_IMAGE)_MACHINE = broadcom

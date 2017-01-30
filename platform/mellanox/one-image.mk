@@ -1,4 +1,4 @@
-# sonic mellanox single image installer
+# sonic mellanox one image installer
 
 SONIC_ONE_IMAGE = sonic-mellanox.bin
 $(SONIC_ONE_IMAGE)_MACHINE = mellanox

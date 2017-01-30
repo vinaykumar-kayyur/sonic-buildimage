@@ -1,4 +1,4 @@
-# sonic mellanox single image installer
+# sonic cavium one image installer
 
 SONIC_ONE_IMAGE = sonic-cavium.bin
 $(SONIC_ONE_IMAGE)_MACHINE = cavium
