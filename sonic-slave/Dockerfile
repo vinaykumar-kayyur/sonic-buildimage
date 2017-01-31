@@ -115,3 +115,6 @@ RUN chmod go= /var/$user/.ssh -R
 RUN echo "$user ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers
 
 USER $user
+
+ENTRYPOINT sudo service ssh start && bash
+
