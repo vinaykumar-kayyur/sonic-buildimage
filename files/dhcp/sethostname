@@ -1,0 +1,21 @@
+#!/bin/bash
+# This script is to update hostname of the system.
+
+if [ "$reason" != BOUND ] && [ "$reason" != RENEW ] \
+     && [ "$reason" != REBIND ] && [ "$reason" != REBOOT ]
+then
+    exit 0
+fi
+
+if [ "$interface" != "eth0" ] && [ "$interface" != "eth1" ]
+then
+    exit 0
+fi
+
+current_host_name=`hostname -s`
+
+if [ "$current_host_name" != "$new_host_name" ]
+then
+    echo $new_host_name > /etc/hostname
+    hostname -F /etc/hostname
+fi
