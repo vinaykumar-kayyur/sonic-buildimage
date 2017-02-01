@@ -33,4 +33,4 @@ USERNAME = admin
 PASSWORD = YourPaSsWoRd
 
 # SONIC_CONFIG_DEBUG - install debug packages
-SONIC_CONFIG_DEBUG = y
+SONIC_CONFIG_DEBUG = n
