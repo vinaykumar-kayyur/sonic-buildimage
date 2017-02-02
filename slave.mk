@@ -309,6 +309,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 
 	export installer_start_scrips="$(foreach docker, $($*_DOCKERS),$(addsuffix .sh, $($(docker)_CONTAINER_NAME)))"
 	export installer_services="$(foreach docker, $($*_DOCKERS),$(addsuffix .service, $($(docker)_CONTAINER_NAME)))"
+	export installer_extra_files="$(foreach docker, $($*_DOCKERS), $(foreach file, $($(docker)_BASE_IMAGE_FILES), $($(docker)_PATH)/base_image_files/$(file)))"
 
 	$(if $($*_DOCKERS), 
 		j2 files/build_templates/sonic_debian_extension.j2 > sonic_debian_extension.sh
