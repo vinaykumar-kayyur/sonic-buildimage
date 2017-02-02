@@ -21,7 +21,6 @@ set -x -e
 . functions.sh
 BUILD_TEMPLATES=files/build_templates
 IMAGE_CONFIGS=files/image_config
-VENDOR_CONFIGS=src/sonic-config-engine/platform
 
 {% if installer_debs.strip() -%}
 clean_sys() {
