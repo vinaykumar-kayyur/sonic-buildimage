@@ -13,11 +13,12 @@
 }
 
 ## Retrieval short version of Git revision hash for partition metadata
-[ -z "$(git status --untracked-files=no -s --ignore-submodules)" ] || {
-    echo "Error: There is local changes not committed to git repo. Cannot get a revision hash for partition metadata."
-    exit 1
-}
-GIT_REVISION=$(git rev-parse --short HEAD)
+if [ -z "$(git status --untracked-files=no -s --ignore-submodules)" ]; then 
+    GIT_REVISION=$(git rev-parse --short HEAD)
+else
+    echo "Warning: There is local changes not committed to git repo. Cannot get a revision hash for partition metadata."
+    GIT_REVISION=$(git rev-parse --short HEAD)"_local_debug"
+fi
 
 mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
 sudo rm -f $OUTPUT_ONIE_IMAGE
