@@ -32,4 +32,5 @@ dockers/docker-team/Dockerfile
 dockers/docker-platform-monitor/Dockerfile
 dockers/docker-dhcp-relay/Dockerfile
 dockers/docker-teamd/Dockerfile
+dockers/docker-config-engine/Dockerfile
 platform/broadcom/docker-syncd-brcm/Dockerfile
