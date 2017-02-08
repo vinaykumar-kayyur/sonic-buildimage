@@ -14,15 +14,14 @@ ENV PYTHONOPTIMIZE 1
 
 # install supervisor
 # install libsnmp30 dependencies
-# install dependencies for sonic-cfggen
-# install libpython3.6-dev and pip dependencies
+# install libpython3.6-dev dependencies
+# install pip dependencies
 # TODO: remove libpython3.6-dev, its and pip's dependencies if we can get pip3 directly
 # install subagent
 # clean up
 RUN apt-get update && apt-get install -y supervisor \
             libperl5.20 libpci3 libwrap0 \
             libexpat1-dev \
-            python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml \
             curl gcc && \
     dpkg -i \
 {% for deb in docker_snmp_sv2_debs.split(' ') -%}
