@@ -1,5 +1,3 @@
-# python3.5.2+
-
 PYTHON_VER=3.6.0-1
 PYTHON_PNAME=python3.6
 
