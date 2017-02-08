@@ -47,6 +47,8 @@ elif [ "$HWSKU" == "Arista-7050-QX32" ]; then
     SWSSCONFIG_ARGS+="td2.32ports.buffers.1.json td2.32ports.buffers.2.json td2.32ports.buffers.3.json "
 elif [ "$HWSKU" == "AS7512" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
+elif [ "$HWSKU" == "ingrasys-s9100" ]; then
+    ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 fi
 
 service rsyslog start
