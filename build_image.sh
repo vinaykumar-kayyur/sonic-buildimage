@@ -15,7 +15,7 @@
 ## Retrieval short version of Git revision hash for partition metadata
 if [ -z "$(git status --untracked-files=no -s --ignore-submodules)" ]; then 
     GIT_REVISION=$(git rev-parse --short HEAD)
-elif [ -z "$DEBUG_BUILD" ]; then
+elif [ ! "$DEBUG_BUILD" = "y" ]; then
     echo "Error: There are local changes not committed to git repo. Cannot get a revision hash for partition metadata."
     exit 1
 else 
