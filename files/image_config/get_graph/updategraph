@@ -20,6 +20,6 @@ GRAPH_URL=`sed "s/{{\s*hostname\s*}}/$HOSTNAME/g" /etc/sonic/graph_service_url`
 echo "Getting minigraph from $GRAPH_URL"
 
 while true; do
-    wget -T 15 -c $GRAPH_URL -O /etc/sonic/minigraph.xml && break
+    curl -f $GRAPH_URL -o /etc/sonic/minigraph.xml --connect-timeout 15 && break
     sleep 5
 done
