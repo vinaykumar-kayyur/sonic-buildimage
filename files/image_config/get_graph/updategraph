@@ -12,7 +12,6 @@ fi
 
 if [ -f /etc/sonic/minigraph.xml ]; then
     echo "Renaming minigraph.xml to minigraph.old"
-    rm -rf /etc/sonic/minigraph.old
     mv /etc/sonic/minigraph.xml /etc/sonic/minigraph.old
 fi
 
