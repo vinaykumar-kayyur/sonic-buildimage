@@ -5,7 +5,7 @@ while [ ! -f /etc/sonic/graph_service_url ]; do
     sleep 1
 done
 
-if [ `cat /etc/sonic/graph_service_url` = "N/A" ]; then
+if [ `cat /etc/sonic/graph_service_url` = "disabled" ]; then
     echo "Graph service url not included in DHCP response, skip minigraph downloading"
     exit 0
 fi
