@@ -1,0 +1,26 @@
+#!/bin/bash
+
+while [ ! -f /etc/sonic/graph_service_url ]; do
+    echo "No graph service url speficied, waiting for DHCP response..."
+    sleep 1
+done
+
+if [ `cat /etc/sonic/graph_service_url` = "N/A" ]; then
+    echo "Graph service url not included in DHCP response, skip minigraph downloading"
+    exit 0
+fi
+
+if [ -f /etc/sonic/minigraph.xml ]; then
+    echo "Renaming minigraph.xml to minigraph.old"
+    rm -rf /etc/sonic/minigraph.old
+    mv /etc/sonic/minigraph.xml /etc/sonic/minigraph.old
+fi
+
+HOSTNAME=`hostname -s`
+GRAPH_URL=`sed "s/{{\s*hostname\s*}}/$HOSTNAME/g" /etc/sonic/graph_service_url`
+echo "Getting minigraph from $GRAPH_URL"
+
+while true; do
+    wget -T 15 -c $GRAPH_URL -O /etc/sonic/minigraph.xml && break
+    sleep 5
+done

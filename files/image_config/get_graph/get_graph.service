@@ -1,0 +1,12 @@
+[Unit]
+Description=get minigraph
+Before=ntp-config.service
+Before=rsyslog-config.service
+Before=interfaces-config.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/get_graph
+
+[Install]
+WantedBy=multi-user.target
