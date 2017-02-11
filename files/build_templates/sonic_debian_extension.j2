@@ -120,7 +120,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT depmod -a {{kversion}}
 {% for image in installer_images.strip().split(' ') -%}
 sudo LANG=C chroot $FILESYSTEM_ROOT docker load < {{image}}
 {% endfor %}
-sudo chroot $FILESYSTEM_ROOT service docker stop
+sudo chroot $FILESYSTEM_ROOT service docker stop || true
 {% for script in installer_start_scrips.split(' ') -%}
 sudo cp {{script}} $FILESYSTEM_ROOT/usr/bin/
 {% endfor %}
