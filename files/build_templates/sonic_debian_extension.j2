@@ -84,10 +84,10 @@ sudo cp $IMAGE_CONFIGS/interfaces/*.j2 $FILESYSTEM_ROOT/etc/sonic/templates/
 # Copy initial interfaces configuration file, will be overwritten on first boot
 sudo cp $IMAGE_CONFIGS/interfaces/init_interfaces $FILESYSTEM_ROOT/etc/network
 
-# Copy get graph script and service file
-sudo cp $IMAGE_CONFIGS/get_graph/get_graph.service  $FILESYSTEM_ROOT/etc/systemd/system/
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable get_graph.service
-sudo cp $IMAGE_CONFIGS/get_graph/updategraph $FILESYSTEM_ROOT/usr/bin/
+# Copy updategraph script and service file
+sudo cp $IMAGE_CONFIGS/updategraph/updategraph.service  $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable updategraph.service
+sudo cp $IMAGE_CONFIGS/updategraph/updategraph $FILESYSTEM_ROOT/usr/bin/
 {% if enable_dhcp_graph_service != "y" %}
 sudo bash -c "echo disabled > $FILESYSTEM_ROOT/etc/sonic/graph_service_url"
 {% endif %}
