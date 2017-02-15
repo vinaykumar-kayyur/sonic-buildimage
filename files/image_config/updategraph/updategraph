@@ -16,7 +16,7 @@ if [ -f /etc/sonic/minigraph.xml ]; then
 fi
 
 HOSTNAME=`hostname -s`
-GRAPH_URL=`sed "s/{{\s*hostname\s*}}/$HOSTNAME/g" /etc/sonic/graph_service_url`
+GRAPH_URL=`sonic-cfggen -t /etc/sonic/graph_service_url -a "{\"hostname\": \"$HOSTNAME\"}"`
 echo "Getting minigraph from $GRAPH_URL"
 
 while true; do
