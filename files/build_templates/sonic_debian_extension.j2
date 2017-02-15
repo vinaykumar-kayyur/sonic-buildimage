@@ -89,7 +89,7 @@ sudo cp $IMAGE_CONFIGS/updategraph/updategraph.service  $FILESYSTEM_ROOT/etc/sys
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable updategraph.service
 sudo cp $IMAGE_CONFIGS/updategraph/updategraph $FILESYSTEM_ROOT/usr/bin/
 {% if enable_dhcp_graph_service != "y" %}
-sudo bash -c "echo disabled > $FILESYSTEM_ROOT/etc/sonic/graph_service_url"
+sudo bash -c "echo disabled > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 {% endif %}
 
 # Copy SNMP configuration files

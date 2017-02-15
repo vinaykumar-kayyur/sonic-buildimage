@@ -1,11 +1,11 @@
 #!/bin/bash
 
-while [ ! -f /etc/sonic/graph_service_url ]; do
+while [ ! -f /etc/sonic/updategraph.conf ]; do
     echo "No graph service url speficied, waiting for DHCP response..."
     sleep 1
 done
 
-if [ `cat /etc/sonic/graph_service_url` = "disabled" ]; then
+if [ `cat /etc/sonic/updategraph.conf` = "disabled" ]; then
     echo "Graph service url not included in DHCP response, skip minigraph downloading"
     exit 0
 fi
@@ -16,7 +16,7 @@ if [ -f /etc/sonic/minigraph.xml ]; then
 fi
 
 HOSTNAME=`hostname -s`
-GRAPH_URL=`sonic-cfggen -t /etc/sonic/graph_service_url -a "{\"hostname\": \"$HOSTNAME\"}"`
+GRAPH_URL=`sonic-cfggen -t /etc/sonic/updategraph.conf -a "{\"hostname\": \"$HOSTNAME\"}"`
 echo "Getting minigraph from $GRAPH_URL"
 
 while true; do

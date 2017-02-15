@@ -1,11 +1,11 @@
 case $reason in
     BOUND|RENEW|REBIND|REBOOT)
-        if [ -f "/etc/sonic/graph_service_url" ] && [ -n `cat /etc/sonic/graph_service_url` ]; then
+        if [ -f "/etc/sonic/updategraph.conf" ] && [ -n `cat /etc/sonic/updategraph.conf` ]; then
             exit 0
-        elif [ -n "$new_minigraph_service_url" ]; then
-            echo $new_minigraph_service_url > /etc/sonic/graph_service_url
+        elif [ -n "$new_minigraph_url" ]; then
+            echo $new_minigraph_url > /etc/sonic/updategraph.conf
         else
-            echo "disabled" > /etc/sonic/graph_service_url
+            echo "disabled" > /etc/sonic/updategraph.conf
         fi
         ;;
 esac
