@@ -63,13 +63,17 @@ def main():
     data = {}
     machine_info = get_machine_info()
     data.update(machine_info)
+    if machine_info.has_key('onie_platform'):
+        data['platform'] = machine_info['onie_platform']
+    elif machine_info.has_key('aboot_platform'):
+        data['platform'] = machine_info['aboot_platform']
 
     if args.minigraph != None:
         minigraph = args.minigraph
-        if machine_info == None:
-            data.update(parse_xml(minigraph))
+        if data.has_key('platform'):
+            data.update(parse_xml(minigraph, data['platform']))
         else:
-            data.update(parse_xml(minigraph, machine_info['onie_platform']))
+            data.update(parse_xml(minigraph))
 
     if args.yaml != None:
         with open(args.yaml, 'r') as stream:
