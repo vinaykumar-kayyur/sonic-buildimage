@@ -34,6 +34,18 @@ def is_ipv6(value):
             return False
     return addr.version == 6
 
+def get_machine_info():
+    if not os.path.isfile('/host/machine.conf'):
+        return None
+    machine_vars = {}
+    with open('/host/machine.conf') as machine_file:
+        for line in machine_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+                continue
+            machine_vars[tokens[0]] = tokens[1].strip()
+    return machine_vars    
+
 
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
@@ -49,10 +61,15 @@ def main():
     args = parser.parse_args()
 
     data = {}
+    machine_info = get_machine_info()
+    data.update(machine_info)
 
     if args.minigraph != None:
         minigraph = args.minigraph
-        data.update(parse_xml(minigraph))
+        if machine_info == None:
+            data.update(parse_xml(minigraph))
+        else:
+            data.update(parse_xml(minigraph, machine_info['onie_platform']))
 
     if args.yaml != None:
         with open(args.yaml, 'r') as stream:
