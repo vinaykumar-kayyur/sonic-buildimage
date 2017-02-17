@@ -1,11 +1,9 @@
 case $reason in
     BOUND|RENEW|REBIND|REBOOT)
-        if [ -f "/etc/sonic/updategraph.conf" ] && [ -n `cat /etc/sonic/updategraph.conf` ]; then
-            exit 0
-        elif [ -n "$new_minigraph_url" ]; then
-            echo $new_minigraph_url > /etc/sonic/updategraph.conf
+        if [ -n "$new_minigraph_url" ]; then
+            echo $new_minigraph_url > /tmp/dhcp_graph_url
         else
-            echo "disabled" > /etc/sonic/updategraph.conf
+            echo "N/A" > /tmp/dhcp_graph_url
         fi
         ;;
 esac

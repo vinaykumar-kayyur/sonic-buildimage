@@ -1,13 +1,40 @@
 #!/bin/bash
 
-while [ ! -f /etc/sonic/updategraph.conf ]; do
-    echo "No graph service url speficied, waiting for DHCP response..."
-    sleep 1
-done
+if [ ! -f /etc/sonic/updategraph.conf ]; then
+    echo "No updategraph.conf found, generating a default one."
+    echo "enabled=false" >/etc/sonic/updategraph.conf
+fi
 
-if [ `cat /etc/sonic/updategraph.conf` = "disabled" ]; then
-    echo "Graph service url not included in DHCP response, skip minigraph downloading"
+. <(grep "=" /etc/sonic/updategraph.conf)
+
+if [ "$enabled" != "true" ]; then
+    echo "Disabled in updategraph.conf. Skipping graph update."
     exit 0
+fi
+
+if [ "$src" = "dhcp" ]; then
+    while [ ! -f /tmp/dhcp_graph_url ]; do
+        echo "Waiting for DHCP response..."
+        sleep 1
+    done
+
+    if [ "`cat /tmp/dhcp_graph_url`" = "N/A" ]; then
+        echo "No graph_url option in DHCP response. Skipping graph update."
+        if [ "$dhcp_as_static" = "true" ]; then
+            sed -i "/enabled=/d" /etc/sonic/updategraph.conf
+            echo "enabled=false" >> /etc/sonic/updategraph.conf
+        fi
+        exit 0
+    fi
+
+    HOSTNAME=`hostname -s`
+    GRAPH_URL=`sonic-cfggen -t /tmp/dhcp_graph_url -a "{\"hostname\": \"$HOSTNAME\"}"`
+    if [ "$dhcp_as_static" = "true" ]; then
+        sed -i "/src=d/d" /etc/sonic/updategraph.conf
+        echo "src=$GRAPH_URL" >> /etc/sonic/updategraph.conf
+    fi
+else
+    GRAPH_URL=$src
 fi
 
 if [ -f /etc/sonic/minigraph.xml ]; then
@@ -15,8 +42,6 @@ if [ -f /etc/sonic/minigraph.xml ]; then
     mv /etc/sonic/minigraph.xml /etc/sonic/minigraph.old
 fi
 
-HOSTNAME=`hostname -s`
-GRAPH_URL=`sonic-cfggen -t /etc/sonic/updategraph.conf -a "{\"hostname\": \"$HOSTNAME\"}"`
 echo "Getting minigraph from $GRAPH_URL"
 
 while true; do
