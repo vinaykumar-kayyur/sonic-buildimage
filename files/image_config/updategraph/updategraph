@@ -5,7 +5,7 @@ if [ ! -f /etc/sonic/updategraph.conf ]; then
     echo "enabled=false" >/etc/sonic/updategraph.conf
 fi
 
-. <(grep "=" /etc/sonic/updategraph.conf)
+. /etc/sonic/updategraph.conf
 
 if [ "$enabled" != "true" ]; then
     echo "Disabled in updategraph.conf. Skipping graph update."
