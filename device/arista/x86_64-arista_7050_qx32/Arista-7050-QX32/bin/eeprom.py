@@ -17,13 +17,13 @@ try:
     import warnings
     import os
     import sys
-    import eeprom_base
-    import eeprom_tlvinfo
     import subprocess
     import re
     import struct
     import zlib
     import StringIO
+    from sonic_eeprom import eeprom_base
+    from sonic_eeprom import eeprom_tlvinfo
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")
 

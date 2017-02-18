@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 try:
-    from sfputilbase import sfputilbase
+    from sonic_sfp.sfputilbase import sfputilbase
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")
 
