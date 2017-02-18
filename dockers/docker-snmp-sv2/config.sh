@@ -1,11 +1,7 @@
 #!/bin/bash
 
-mkdir -p /etc/ssw
-
-sonic-cfggen -m /etc/sonic/minigraph.xml -y /etc/sonic/sonic_version.yml -t /etc/swss/snmp/sysDescription.j2 >/etc/ssw/sysDescription
-
 mkdir -p /etc/snmp
-
+sonic-cfggen -m /etc/sonic/minigraph.xml -y /etc/sonic/sonic_version.yml -t /etc/swss/snmp/sysDescription.j2 >/etc/snmp/sysDescription
 sonic-cfggen -m /etc/sonic/minigraph.xml -y /etc/sonic/snmp.yml -t /etc/swss/snmp/snmpd.conf.j2 >/etc/snmp/snmpd.conf
 
 hwsku=`sonic-cfggen -m /etc/sonic/minigraph.xml -v minigraph_hwsku`
