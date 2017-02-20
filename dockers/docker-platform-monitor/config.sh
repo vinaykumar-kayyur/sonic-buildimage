@@ -9,6 +9,11 @@ then
   /bin/cp -rf /usr/share/sonic/$hwsku/sensors.conf /etc/sensors.d/
 fi
 
+if [ -e /usr/share/sonic/$hwsku/fancontrol ]
+then
+  /bin/cp -rf /usr/share/sonic/$hwsku/fancontrol /etc/fancontrol
+fi
+
 mkdir -p /var/sonic
 echo "# Config files managed by sonic-config-engine" >/var/sonic/config_status
 
