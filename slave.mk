@@ -298,6 +298,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 	export sonicadmin_user="$(USERNAME)"
 	export sonic_hwsku="$(CONFIGURED_SKU)"
 	export sonic_asic_platform="$(CONFIGURED_PLATFORM)"
+	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
+	
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
 		export docker_image_name="$(basename $(docker))"
@@ -321,7 +323,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 	)
 
 	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
-	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) ./build_image.sh $(LOG)
+	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) DEBUG_BUILD=$(DEBUG_BUILD) ./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm $($(docker)_CONTAINER_NAME).sh
