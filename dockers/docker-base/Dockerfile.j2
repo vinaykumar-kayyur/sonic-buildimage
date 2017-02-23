@@ -13,6 +13,9 @@ RUN rm -rf                              \
         /var/cache/man/*                \
         /usr/share/locale/*
 
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
 ## Set the apt source
 COPY sources.list /etc/apt/sources.list
 COPY dpkg_01_drop /etc/dpkg/dpkg.cfg.d/01_drop
@@ -33,9 +36,16 @@ RUN apt-get -y purge                    \
     exim4-config                        \
     exim4-daemon-light
 
+{% if docker_base_dbgs %}
+## Install common debug-packages
+RUN apt-get -y install \
+{% for dbg_pkg in docker_base_dbgs.split(' ') -%}
+    {{ dbg_pkg }}{{' '}}
+{%- endfor %}
+{% endif %}
+
 ## Clean up apt
 ## Remove /var/lib/apt/lists/*, could be obsoleted for derived images
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y;      \
     rm -rf /var/lib/apt/lists/*;                                        \
     rm -rf /tmp/*;
-

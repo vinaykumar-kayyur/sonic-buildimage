@@ -34,6 +34,18 @@ def is_ipv6(value):
             return False
     return addr.version == 6
 
+def get_machine_info():
+    if not os.path.isfile('/host/machine.conf'):
+        return None
+    machine_vars = {}
+    with open('/host/machine.conf') as machine_file:
+        for line in machine_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+                continue
+            machine_vars[tokens[0]] = tokens[1].strip()
+    return machine_vars    
+
 
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
@@ -42,6 +54,7 @@ def main():
     parser.add_argument("-a", "--additional-data", help="addition data, in json string")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--template", help="render the data with the template file")
+    group.add_argument("-s", "--alias-mapping", help="print alias mapping json if available", action='store_true')
     group.add_argument("-v", "--var", help="print the value of a variable")
     group.add_argument("--var-json", help="print the value of a variable, in json format")
     group.add_argument("--var-keys", help="print all keys of a map variable")
@@ -49,10 +62,20 @@ def main():
     args = parser.parse_args()
 
     data = {}
+    machine_info = get_machine_info()
+    if machine_info != None:
+        data.update(machine_info)
+        if machine_info.has_key('onie_platform'):
+            data['platform'] = machine_info['onie_platform']
+        elif machine_info.has_key('aboot_platform'):
+            data['platform'] = machine_info['aboot_platform']
 
     if args.minigraph != None:
         minigraph = args.minigraph
-        data.update(parse_xml(minigraph))
+        if data.has_key('platform'):
+            data.update(parse_xml(minigraph, data['platform']))
+        else:
+            data.update(parse_xml(minigraph))
 
     if args.yaml != None:
         with open(args.yaml, 'r') as stream:
@@ -79,6 +102,13 @@ def main():
     if args.var_keys != None:
         for key in data[args.var_keys].keys():
           print key
+    
+    if args.alias_mapping:
+        mapping = {}
+        if data.has_key('alias_map'):
+            for item in data['alias_map']:
+                mapping[item['sonic']] = item['origin']
+        print json.dumps(mapping)
 
     if args.print_data:
         print data
