@@ -12,6 +12,8 @@ def get_platform_file_list():
           files = ['platform/' + platform + '/port_config.ini']
           if os.path.isfile( os.path.join(data_path, platform, 'sensors.conf') ):
               files.append('platform/' + platform + '/sensors.conf')    #Not all platforms need to have a sensors.conf file
+          if os.path.isfile( os.path.join(data_path, platform, 'fancontrol') ):
+              files.append('platform/' + platform + '/fancontrol')       #Not all platforms need to have a fancontrol file
           data_files.append( (os.path.join('/usr/share/sonic', platform), files) )
       return data_files
 
