@@ -31,7 +31,7 @@ if [ "$src" = "dhcp" ]; then
     GRAPH_URL=`sonic-cfggen -t /tmp/dhcp_graph_url -a "{\"hostname\": \"$HOSTNAME\"}"`
     URL_REGEX='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$'
     if [[ ! $GRAPH_URL =~ $URL_REGEX ]]; then
-        echo "Invalid graph url. Skipping graph update."
+        echo "\"$GRAPH_URL\" is not a valid url. Skipping graph update."
         exit 0
     fi
     if [ "$dhcp_as_static" = "true" ]; then
