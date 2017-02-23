@@ -34,7 +34,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount sysfs /sys -t sysfs
 sudo chroot $FILESYSTEM_ROOT service docker start
 sudo chroot $FILESYSTEM_ROOT docker version
 
-# Install config engine dependencies
+# Install dependencies for SONiC config engine
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
     python-lxml    \
     python-jinja2  \
@@ -42,19 +42,21 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-ipaddr  \
     python-yaml
 
+# Install SONiC config engine
 sudo dpkg --root=$FILESYSTEM_ROOT -i {{config_engine}}
 
-# Python tabulate required for sonic-utilities
-python_tabulate_url=http://packages.microsoft.com/repos/sonic-dev/pool/main/p/python-tabulate/python-tabulate_0.7.7-1_all.deb
-python_template_deb_temp=`mktemp`
-trap_push "rm -f $python_template_deb_temp"
-wget $python_tabulate_url -qO $python_template_deb_temp && {                                  \
-    sudo dpkg --root=$FILESYSTEM_ROOT -i $python_template_deb_temp ||                         \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f; \
-}
+# Install dependencies for SONiC Utilities
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
+    python-tabulate     \
+    python-click        \
+    click-default-group
 
-# Sonic utilities
+# Install SONiC Utilities
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-utilities_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
+# Install SONiC Device Data
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # Create all needed directories
