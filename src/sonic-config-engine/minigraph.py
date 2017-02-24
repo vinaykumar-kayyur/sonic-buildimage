@@ -355,7 +355,8 @@ def parse_xml(filename, platform=None):
     # Replace port with alias in Vlan interfaces members
     for vlan in vlan_intfs:
         for i,member in enumerate(vlan['members']):
-            vlan['members'][i] = port_alias_map[member]
+            if port_alias_map.has_key(member):
+                vlan['members'][i] = port_alias_map[member]
 
         # Convert vlan members into a space-delimited string
         vlan['members'] = " ".join(vlan['members'])
@@ -363,7 +364,8 @@ def parse_xml(filename, platform=None):
     # Replace port with alias in port channel interfaces members
     for pc in pc_intfs.keys():
         for i,member in enumerate(pc_intfs[pc]):
-            pc_intfs[pc][i] = port_alias_map[member]
+            if port_alias_map.has_key(member):
+                pc_intfs[pc][i] = port_alias_map[member]
 
     Tree = lambda: defaultdict(Tree)
 
@@ -385,14 +387,14 @@ def parse_xml(filename, platform=None):
     results['minigraph_underlay_neighbors'] = u_neighbors
     results['minigraph_underlay_devices'] = u_devices
     results['minigraph_as_xml'] = mini_graph_path
-    results['minigraph_console'] = get_console_info(devices, console_dev, console_port)
-    results['minigraph_mgmt'] = get_mgmt_info(devices, mgmt_dev, mgmt_port)
+    if devices != None:
+        results['minigraph_console'] = get_console_info(devices, console_dev, console_port)
+        results['minigraph_mgmt'] = get_mgmt_info(devices, mgmt_dev, mgmt_port)
     results['minigraph_hostname'] = hostname
     results['inventory_hostname'] = hostname
     results['alias_map'] = alias_map_list
 
     return results
-
 
 port_alias_map = {}
 
