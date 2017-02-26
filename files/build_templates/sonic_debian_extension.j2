@@ -64,17 +64,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # Install SONiC config engine
 sudo dpkg --root=$FILESYSTEM_ROOT -i {{config_engine}}
 
-# Install dependencies for SONiC Utilities
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
-    python-click                \
-    python-click-default-group  \
-    python-tabulate
-
-# Install SONiC Utilities
+# Install SONiC Utilities (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-utilities_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
-# Install SONiC Device Data
+# Install SONiC Device Data  (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
