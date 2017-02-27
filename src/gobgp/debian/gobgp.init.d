@@ -25,7 +25,7 @@ case "$1" in
     start)
         if [ -f /etc/gobgp/gobgpd.conf ]
         then
-          /usr/sbin/gobgpd -t yaml -f /etc/gobgp/gobgpd.conf -r
+          /usr/sbin/gobgpd -f /etc/gobgp/gobgpd.conf -r
           echo $! > /var/run/gobgpd.pid
         else
           echo /etc/gobgp/gobgpd.conf not found
