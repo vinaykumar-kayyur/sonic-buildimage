@@ -13,8 +13,7 @@ gobgp:
 install:
 	$(INSTALL) -D ${GOPATH}/bin/gobgp $(DESTDIR)/usr/bin/gobgp
 	$(INSTALL) -D ${GOPATH}/bin/gobgpd $(DESTDIR)/usr/sbin/gobgpd
-	$(INSTALL) -D gobgpd.yml.sample $(DESTDIR)/etc/gobgp/gobgpd.yml.sample
-	$(INSTALL) -D gobgp.default $(DESTDIR)/etc/default/gobgp
+	$(INSTALL) -D gobgpd.conf.sample $(DESTDIR)/etc/gobgp/gobgpd.conf.sample
 
 deinstall:
 	rm $(DESTDIR)/usr/bin/gobgp

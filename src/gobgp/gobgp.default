@@ -1,1 +1,0 @@
-DAEMON_ARGS="-t yaml -f /etc/gobgp/gobgpd.yml -r"
