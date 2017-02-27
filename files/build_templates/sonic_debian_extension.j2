@@ -135,6 +135,7 @@ exit 101
 EOF
 sudo chmod a+x $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
+{% if installer_debs.strip() -%}
 {% for deb in installer_debs.strip().split(' ') -%}
 if [ $sonic_asic_platform == "mellanox" ]; then
 sudo dpkg --extract {{deb}} $FILESYSTEM_ROOT
@@ -142,6 +143,7 @@ else
 sudo dpkg --root=$FILESYSTEM_ROOT -i {{deb}} || sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 fi
 {% endfor %}
+{% endif %}
 
 ## Run depmod command for target kernel modules
 sudo LANG=C chroot $FILESYSTEM_ROOT depmod -a {{kversion}}
