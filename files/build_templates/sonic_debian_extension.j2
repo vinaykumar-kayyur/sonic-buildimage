@@ -147,6 +147,7 @@ fi
 sudo LANG=C chroot $FILESYSTEM_ROOT depmod -a {{kversion}}
 
 ## download all dependency packages for platform debian packages
+{% if lazy_installer_debs.strip() -%}
 {% for file in lazy_installer_debs.strip().split(' ') -%}
 
 {% set dev = file.split('@')[0] -%}
@@ -165,6 +166,7 @@ done
 sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
 {% endfor %}
+{% endif %}
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
