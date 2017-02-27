@@ -1,0 +1,23 @@
+global:
+  config:
+    as: 65501
+    router-id: 192.168.0.1
+  zebra:
+    enabled: true
+    redistribute-route-type-list:
+    - connect
+    url: unix:/var/run/quagga/zserv.api
+neighbors:
+- afi-safis:
+  - afi-safi-name: ipv4-unicast
+    mp-graceful-restart:
+      config:
+        enabled: true
+  config:
+    neighbor-address: 192.168.0.2
+    peer-as: 65502
+  graceful-restart:
+    config:
+      enabled: true
+      restart-time: 120
+
