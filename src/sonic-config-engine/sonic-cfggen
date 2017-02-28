@@ -8,6 +8,7 @@ import jinja2
 import netaddr
 import json
 from minigraph import parse_xml
+from minigraph import minigraph_encoder
 
 
 def is_ipv4(value):
@@ -98,7 +99,7 @@ def main():
         print template.render(data)
 
     if args.var_json != None:
-        print json.dumps(data[args.var_json], indent=4)
+        print json.dumps(data[args.var_json], indent=4, cls=minigraph_encoder)
 
     if args.var_keys != None:
         for key in data[args.var_keys].keys():
@@ -112,7 +113,7 @@ def main():
         print json.dumps(mapping)
 
     if args.print_data:
-        print data
+        print json.dumps(data, indent=4, cls=minigraph_encoder)
 
 if __name__ == "__main__":
     main()
