@@ -1,9 +1,9 @@
 [global.config]
   as = {{ minigraph_bgp_asn }}
   router-id = "{{ minigraph_lo_interfaces[0]['addr'] }}"
-[[neighbors]]
 {% for bgp_session in minigraph_bgp %}
 {% if bgp_session['asn'] != 0 %}
+[[neighbors]]
   [neighbors.config]
     peer-as = {{ bgp_session['asn'] }}
     neighbor-address = "{{ bgp_session['addr'] }}"
