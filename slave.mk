@@ -140,7 +140,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_FILES)) : $(DEBS_PATH)/% : .platform
 $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
 	$(HEADER)
 	# remove target to force rebuild
-	rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS))
+	rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_PEER_DEBS))
 	# build project and take package
 	make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 	$(FOOTER)
@@ -159,7 +159,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
 	dpkg-buildpackage -rfakeroot -b -us -uc $(LOG)
 	popd $(LOG)
-	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS)) $(DEBS_PATH) $(LOG)
+	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS) $($*_PEER_DEBS)) $(DEBS_PATH) $(LOG)
 	$(FOOTER)
 
 # Build project with python setup.py --command-packages=stdeb.command
@@ -183,6 +183,19 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(DEBS_PATH)/% : .platf
 # Add new dev package:
 #     $(eval $(call add_derived_package,$(ORIGINAL_DEB),derived_deb_file.deb))
 $(addprefix $(DEBS_PATH)/, $(SONIC_DERIVED_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+	$(HEADER)
+	# All noise takes place in main deb recipe, so we are just telling that
+	# we depend on it
+	# Put newer timestamp
+	[ -f $@ ] && touch $@
+	$(FOOTER)
+
+# Rules for peer debian packages
+# All noise takes place in main deb recipe, so we are just telling that
+# we depend on it and move our deb to other targets
+# Add new dev package:
+#     $(eval $(call add_derived_package,$(ORIGINAL_DEB),derived_deb_file.deb))
+$(addprefix $(DEBS_PATH)/, $(SONIC_PEER_DEBS)) : $(DEBS_PATH)/% : .platform $$(addprefix $(DEBS_PATH)/,$$($$*_MAIN_DEB))
 	$(HEADER)
 	# All noise takes place in main deb recipe, so we are just telling that
 	# we depend on it
@@ -351,11 +364,17 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_PYTHON_STDEB_DEBS) \
-		   $(SONIC_DERIVED_DEBS)))
+		   $(SONIC_DERIVED_DEBS) \
+		   $(SONIC_PEER_DEBS)))
 $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_DERIVED_FROM)))
 	@# remove derived targets if main one is removed, because we treat them
 	@# as part of one package
 	@rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS))
+
+$(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_MAIN_DEB)))
+	@# remove derived targets if main one is removed, because we treat them
+	@# as part of one package
+	@rm -f $(addprefix $(DEBS_PATH)/, $* $($*_PEER_DEBS))
 
 SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_DOCKER_IMAGES) \
