@@ -166,6 +166,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
 ## Note: gdisk is needed for sgdisk in install.sh
 ## Note: parted is needed for partprobe in install.sh
 ## Note: ca-certificates is needed for easy_install
+## Note: don't install python-apt by pip, older than Debian repo one
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     file                    \
     ifupdown                \
@@ -230,10 +231,12 @@ set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
+## Note: not ambigous docker-py version is supported, tested for Ansible v2.2.1.0
+## ref: https://github.com/ansible/ansible/issues/20380
+## ref: https://github.com/ansible/ansible/issues/21348
 sudo LANG=C chroot $FILESYSTEM_ROOT easy_install pip
-sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
-## Remove pip which is unnecessary in the base image
-sudo LANG=C chroot $FILESYSTEM_ROOT pip uninstall -y pip
+sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.10.6'
+## Note: keep pip installed for maintainance purpose
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF
