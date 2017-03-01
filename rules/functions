@@ -89,7 +89,7 @@ endef
 define add_derived_package
 $(2)_DEPENDS += $(1)
 $(2)_RDEPENDS += $($(1)_RDEPENDS)
-$(2)_DERIVED_FROM = $(1)
+$(2)_MAIN_DEB = $(1)
 $(1)_DERIVED_DEBS += $(2)
 $(2)_URL = $($(1)_URL)
 $(2)_SRC_PATH = $($(1)_SRC_PATH)
@@ -97,11 +97,11 @@ SONIC_DERIVED_DEBS += $(2)
 endef
 
 # call:
-#     add_peer_package some_deb.deb, some_peer_deb
-define add_peer_package
+#     add_extra_package some_deb.deb, some_extra_deb
+define add_extra_package
 $(2)_MAIN_DEB = $(1)
-$(1)_PEER_DEBS += $(2)
-SONIC_PEER_DEBS += $(2)
+$(1)_EXTRA_DEBS += $(2)
+SONIC_EXTRA_DEBS += $(2)
 endef
 
 ###############################################################################
