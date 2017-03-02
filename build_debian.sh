@@ -231,11 +231,8 @@ set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
-## Note: not ambigous docker-py version is supported, tested for Ansible v2.2.1.0
-## ref: https://github.com/ansible/ansible/issues/20380
-## ref: https://github.com/ansible/ansible/issues/21348
 sudo LANG=C chroot $FILESYSTEM_ROOT easy_install pip
-sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.10.6'
+sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
 ## Note: keep pip installed for maintainance purpose
 
 ## Config DHCP for eth0
