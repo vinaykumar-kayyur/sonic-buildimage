@@ -286,12 +286,22 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 	docker load -i $(TARGET_PATH)/$*.gz $(LOG)
 	$(FOOTER)
 
+
+###############################################################################
+## debian root filesystem
+###############################################################################
+$(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform onie-image.conf fsroot
+	$(HEADER)
+	export image_type="$($*_IMAGE_TYPE)"
+	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) DEBUG_BUILD=$(DEBUG_BUILD) ./build_image.sh $(LOG)
+	chmod a+x $@
+	$(FOOTER)
+
 ###############################################################################
 ## Installers
 ###############################################################################
-
 # targets for building installers with base image
-$(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform onie-image.conf $$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)) $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL) $(IGB_DRIVER) $(SONIC_CONFIG_ENGINE) $(SONIC_DEVICE_DATA) $(SONIC_UTILS)) $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS))
+fsroot : .platform onie-image.conf $$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)) $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL) $(IGB_DRIVER) $(SONIC_CONFIG_ENGINE) $(SONIC_DEVICE_DATA) $(SONIC_UTILS)) $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS))
 	$(HEADER)
 	## Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export initramfs_tools="$(DEBS_PATH)/$(INITRAMFS_TOOLS)"
@@ -301,7 +311,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 	export lazy_installer_debs="$(foreach deb, $($*_INSTALLS),$(addprefix $($(deb)_PLATFORM)@, $(DEBS_PATH)/$(deb)))"
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
 	export config_engine="$(addprefix $(DEBS_PATH)/,$(SONIC_CONFIG_ENGINE))"
-	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
 	export sonic_asic_platform="$(CONFIGURED_PLATFORM)"
 	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
@@ -331,7 +340,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 	)
 
 	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
-	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) DEBUG_BUILD=$(DEBUG_BUILD) ./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f $($(docker)_CONTAINER_NAME).sh
@@ -342,7 +350,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 		rm sonic_debian_extension.sh,
 	)
 
-	chmod a+x $@
 	$(FOOTER)
 
 ###############################################################################
