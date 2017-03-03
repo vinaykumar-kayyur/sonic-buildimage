@@ -172,12 +172,13 @@ sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
-# On Broadcom platforms, copy our shell scripts that reference Broadcom
-# executables inside the Broadcom syncd docker
+# Copy shell scripts which reference executables inside dockers
 if [ $sonic_asic_platform == "broadcom" ]; then
     sudo cp -f $IMAGE_CONFIGS/bin/bcmcmd $FILESYSTEM_ROOT/usr/bin
-    sudo cp -f $IMAGE_CONFIGS/bin/dsserve $FILESYSTEM_ROOT/usr/bin
 fi
+sudo cp -f $IMAGE_CONFIGS/bin/redis-cli $FILESYSTEM_ROOT/usr/bin
+sudo cp -f $IMAGE_CONFIGS/bin/teamdctl $FILESYSTEM_ROOT/usr/bin
+sudo cp -f $IMAGE_CONFIGS/bin/vtysh $FILESYSTEM_ROOT/usr/bin
 
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
