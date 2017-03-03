@@ -1,0 +1,32 @@
+FROM docker-base
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update
+
+COPY \
+{% for deb in docker_syncd_centec_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+
+RUN dpkg -i \
+{% for deb in docker_syncd_centec_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+
+## add kmod into Depends
+RUN apt-get install -f kmod
+RUN apt-get install -f gcc -y
+RUN apt-get install -f gdb -y
+RUN apt-get install -f make -y
+
+COPY ["start.sh", "/usr/bin/"]
+
+## Clean up
+RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN rm -rf /debs
+
+ENTRYPOINT ["/bin/bash"]
+CMD ["/usr/bin/start.sh"]
