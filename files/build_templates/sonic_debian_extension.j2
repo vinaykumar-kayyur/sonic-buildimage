@@ -172,6 +172,13 @@ sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
+# On Broadcom platforms, copy our shell scripts that reference Broadcom
+# executables inside the Broadcom syncd docker
+if [ $sonic_asic_platform == "broadcom" ]; then
+    sudo cp -f $IMAGE_CONFIGS/bin/bcmcmd $FILESYSTEM_ROOT/usr/bin
+    sudo cp -f $IMAGE_CONFIGS/bin/dsserve $FILESYSTEM_ROOT/usr/bin
+fi
+
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
 
