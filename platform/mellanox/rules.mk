@@ -10,7 +10,7 @@ include $(PLATFORM_PATH)/one-image.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM_GOBGP) \
-             $(DOCKER_SAISERVER_MLNX) \
+             $(DOCKER_SAISERVER_MLNX)
 
 # Inject mlnx sai into sairedis
 $(LIBSAIREDIS)_DEPENDS += $(MLNX_SAI)
