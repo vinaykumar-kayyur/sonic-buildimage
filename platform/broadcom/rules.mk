@@ -6,6 +6,7 @@ include $(PLATFORM_PATH)/platform-modules-arista.mk
 include $(PLATFORM_PATH)/platform-modules-ingrasys-s9100.mk
 include $(PLATFORM_PATH)/docker-orchagent-brcm.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm.mk
+include $(PLATFORM_PATH)/docker-saiserver-brcm.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/one-aboot.mk
 
@@ -18,10 +19,13 @@ $(DSSERVE)_URL = "https://sonicstorage.blob.core.windows.net/packages/dsserve?sv
 SONIC_ONLINE_FILES += $(BCMCMD) $(DSSERVE)
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT_IMAGE) \
-             $(DOCKER_FPM_GOBGP)
+             $(DOCKER_FPM_GOBGP) \
+             $(DOCKER_SAISERVER_BRCM)
 
 # Inject brcm sai into sairedis
 $(LIBSAIREDIS)_DEPENDS += $(BRCM_OPENNSL) $(BRCM_SAI) $(BRCM_SAI_DEV)
+$(SAISERVER)_DEPENDS += $(BRCM_SAI_DEV)
 
 # Runtime dependency on brcm sai is set only for syncd
-$(SYNCD)_RDEPENDS += $(BRCM_OPENNSL) $(BRCM_SAI)
+$(SYNCD)_RDEPENDS += $(BRCM_SAI)
+$(SAISERVER)_RDEPENDS += $(BRCM_SAI)

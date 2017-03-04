@@ -1,0 +1,36 @@
+FROM docker-base
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update
+
+{% if docker_saiserver_mlnx_debs.strip() -%}
+COPY \
+{% for deb in docker_saiserver_mlnx_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+
+RUN dpkg -i \
+{% for deb in docker_saiserver_mlnx_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %} || apt-get -y install -f
+{% endif %}
+
+## TODO: add kmod into Depends
+RUN apt-get install -f kmod
+
+COPY ["debs/saiserver", "start.sh", "/usr/bin/"]
+RUN chmod +x /usr/bin/saiserver
+
+COPY ["profile.ini", "portmap.ini", "/etc/sai/"]
+
+COPY ["sai_2700.xml", "/usr/share/"]
+
+## Clean up
+RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN rm -rf /debs
+
+ENTRYPOINT ["/bin/bash"]
+CMD ["/usr/bin/start.sh"]

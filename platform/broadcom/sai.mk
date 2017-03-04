@@ -7,4 +7,5 @@ $(BRCM_SAI_DEV)_URL = "https://sonicstorage.blob.core.windows.net/packages/libsa
 
 SONIC_ONLINE_DEBS += $(BRCM_SAI) $(BRCM_SAI_DEV)
 $(BRCM_SAI)_DEPENDS += $(BRCM_OPENNSL)
+$(BRCM_SAI)_RDEPENDS += $(BRCM_OPENNSL)
 $(BRCM_SAI_DEV)_DEPENDS += $(BRCM_SAI)
