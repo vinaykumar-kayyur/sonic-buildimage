@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 COPY \
-{% for deb in docker_syncd_mlnx_debs.split(' ') -%}
+{% for deb in docker_syncd_mlnx_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
@@ -14,7 +14,7 @@ debs/
 RUN apt-get install -y libxml2
 
 RUN dpkg -i \
-{% for deb in docker_syncd_mlnx_debs.split(' ') -%}
+{% for deb in docker_syncd_mlnx_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

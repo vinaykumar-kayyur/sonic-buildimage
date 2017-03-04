@@ -6,13 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 COPY \
-{% for deb in docker_syncd_brcm_debs.split(' ') -%}
+{% for deb in docker_syncd_brcm_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
 RUN dpkg -i \
-{% for deb in docker_syncd_brcm_debs.split(' ') -%}
+{% for deb in docker_syncd_brcm_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

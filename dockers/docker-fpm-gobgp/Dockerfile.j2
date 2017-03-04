@@ -6,13 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y supervisor
 
 COPY \
-{% for deb in docker_fpm_gobgp_debs.split(' ') -%}
+{% for deb in docker_fpm_gobgp_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
 RUN dpkg -i \
-{% for deb in docker_fpm_gobgp_debs.split(' ') -%}
+{% for deb in docker_fpm_gobgp_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

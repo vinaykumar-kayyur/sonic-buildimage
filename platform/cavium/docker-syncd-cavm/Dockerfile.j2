@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 COPY \
-{% for deb in docker_syncd_cavm_debs.split(' ') -%}
+{% for deb in docker_syncd_cavm_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
@@ -14,7 +14,7 @@ debs/
 RUN apt-get -y install libpcap-dev libxml2-dev python-dev swig libsensors4-dev libjemalloc1
 
 RUN dpkg -i \
-{% for deb in docker_syncd_cavm_debs.split(' ') -%}
+{% for deb in docker_syncd_cavm_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

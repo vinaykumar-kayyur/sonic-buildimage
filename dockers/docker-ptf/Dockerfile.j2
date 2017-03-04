@@ -4,7 +4,7 @@ MAINTAINER Pavel Shirshov
 
 ## Copy dependencies
 COPY \
-{% for deb in docker_ptf_debs.split(' ') -%}
+{% for deb in docker_ptf_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
@@ -43,7 +43,7 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         libqt5network5
 
 RUN dpkg -i \
-{% for deb in docker_ptf_debs.split(' ') -%}
+{% for deb in docker_ptf_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

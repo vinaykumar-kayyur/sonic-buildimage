@@ -1,7 +1,7 @@
 FROM docker-config-engine
 
 COPY \
-{% for deb in docker_lldp_sv2_debs.split(' ') -%}
+{% for deb in docker_lldp_sv2_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y python-pip supervisor libbsd0 libevent-
 ## Install LLDP Sync Daemon
 
 RUN dpkg -i \
-{% for deb in docker_lldp_sv2_debs.split(' ') -%}
+{% for deb in docker_lldp_sv2_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

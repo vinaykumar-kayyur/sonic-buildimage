@@ -9,13 +9,13 @@ RUN apt-get update
 RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml 
 
 COPY \
-{% for deb in docker_config_engine_debs.split(' ') -%}
+{% for deb in docker_config_engine_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
 RUN dpkg -i \
-{% for deb in docker_config_engine_debs.split(' ') -%}
+{% for deb in docker_config_engine_debs.strip().split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

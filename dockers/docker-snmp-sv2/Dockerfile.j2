@@ -1,7 +1,7 @@
 FROM docker-config-engine
 
 COPY [ \
-{% for deb in docker_snmp_sv2_debs.split(' ') -%}
+{% for deb in docker_snmp_sv2_debs.strip().split(' ') -%}
     "debs/{{ deb }}",
 {%- endfor %} \
     "/debs/"]
@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y supervisor \
             libexpat1-dev \
             curl gcc && \
     dpkg -i \
-{% for deb in docker_snmp_sv2_debs.split(' ') -%}
+{% for deb in docker_snmp_sv2_debs.strip().split(' ') -%}
         debs/{{ deb }}{{' '}}
 {%- endfor %} && \
     rm -rf /debs && \
