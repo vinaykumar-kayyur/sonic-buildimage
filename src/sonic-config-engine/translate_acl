@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+
+import openconfig_acl 
+import pyangbind.lib.pybindJSON as pybindJSON
+
+import sys
+import json
+
+def dump_json(filename, data):
+    with open(filename, 'w') as outfile:
+        json.dump(data, outfile, indent=4, sort_keys=True, separators=(',', ':'))
+
+def generate_rule_json(table_name, rule):
+    rule_idx = rule.config.sequence_id
+    rule_props = {}
+    rule_data = {}
+    rule_data["ACL_RULE_TABLE:"+table_name+":Rule_"+str(rule_idx)] = rule_props
+    rule_data["OP"] = "SET"
+    
+    rule_props["priority"] = 10000 - rule_idx
+    if rule.actions.config.forwarding_action == "ACCEPT":
+        rule_props["PACKET_ACTION"] = "FORWARD"
+    elif rule.actions.config.forwarding_action == "DROP":
+        rule_props["PACKET_ACTION"] = "DROP"
+    elif rule.actions.config.forwarding_action == "REJECT":
+        rule_props["PACKET_ACTION"] = "DROP"
+    else:
+        print "Unknown rule action %s in table %s, rule %d!" % (rule.actions.config.forwarding_action, table_name, rule_idx)
+        return {}
+    
+    if rule.ip.config.protocol == "":
+        pass
+    elif rule.ip.config.protocol == "IP_TCP":
+        rule_props["IP_PROTOCOL"] = "6" # TCP protocol
+    elif rule.ip.config.protocol == "IP_ICMP":
+        rule_props["IP_PROTOCOL"] = "1" # ICMP protocol
+    elif rule.ip.config.protocol == "IP_UDP":
+        rule_props["IP_PROTOCOL"] = "17" 
+    elif rule.ip.config.protocol == "IP_IGMP":
+        rule_props["IP_PROTOCOL"] = "2" 
+    elif rule.ip.config.protocol == "IP_PIM":
+        rule_props["IP_PROTOCOL"] = "103" 
+    elif rule.ip.config.protocol == "IP_RSVP":
+        rule_props["IP_PROTOCOL"] = "46" 
+    elif rule.ip.config.protocol == "IP_GRE":
+        rule_props["IP_PROTOCOL"] = "47" 
+    elif rule.ip.config.protocol == "IP_AUTH":
+        rule_props["IP_PROTOCOL"] = "51" 
+    elif rule.ip.config.protocol == "IP_L2TP":
+        rule_props["IP_PROTOCOL"] = "115" 
+    else:
+        try:
+            int(rule.ip.config.protocol)
+        except:
+            print "Unknown rule protocol %s in table %s, rule %d!" % (rule.ip.config.protocol, table_name, rule_idx)
+            return {}
+        else:
+            rule_props["IP_PROTOCOL"] = rule.ip.config.protocol
+    
+    if rule.ip.config.source_ip_address != "":
+        rule_props["SRC_IP"] = rule.ip.config.source_ip_address
+    if rule.ip.config.destination_ip_address != "":
+        rule_props["DST_IP"] = rule.ip.config.destination_ip_address
+
+    if rule.transport.config.source_port == "":
+        pass
+    elif str(rule.transport.config.source_port).find("..") < 0:
+        rule_props["L4_SRC_PORT"] = rule.transport.config.source_port
+    else:
+        rule_props["L4_SRC_PORT_RANGE"] = str(rule.transport.config.source_port).replace("..", "-")
+
+    if rule.transport.config.destination_port == "":
+        pass
+    elif str(rule.transport.config.destination_port).find("..") < 0:
+        rule_props["L4_DST_PORT"] = rule.transport.config.destination_port
+    else:
+        rule_props["L4_DST_PORT_RANGE"] = str(rule.transport.config.destination_port).replace("..", "-")
+    
+    tcp_flags = 0x00;
+    for flag in rule.transport.config.tcp_flags:
+        if flag == "TCP_SYN":
+            tcp_flags = tcp_flags | 0x02
+        if flag == "TCP_FIN":
+            tcp_flags = tcp_flags | 0x01
+        if flag == "TCP_RST":
+            tcp_flags = tcp_flags | 0x04
+        if flag == "TCP_PSH":
+            tcp_flags = tcp_flags | 0x08
+        if flag == "TCP_ACK":
+            tcp_flags = tcp_flags | 0x10
+        if flag == "TCP_URG":
+            tcp_flags = tcp_flags | 0x20
+        if flag == "TCP_ECE":
+            tcp_flags = tcp_flags | 0x40
+        if flag == "TCP_CWR":
+            tcp_flags = tcp_flags | 0x80
+    if tcp_flags != 0x00:
+        rule_props["TCP_FLAGS"] = '0x{:02x}'.format(tcp_flags)
+    return rule_data
+
+def generate_table_json(aclset, aclname):
+    table_name = aclname.replace(" ", "_")
+    #table_name = generate_random_table_name()
+
+    table_props = {}
+    table_props["policy_desc"] = table_name
+    table_props["type"] = "L3"
+    table_props["ports"] = "Ethernet0"
+
+    table_data = [{}]
+    table_data[0]["ACL_TABLE:"+table_name] = table_props
+    table_data[0]["OP"] = "SET"
+    dump_json("table_"+table_name+".json", table_data)
+
+    rule_data = []
+    for aclentryname in aclset.acl_entries.acl_entry:
+        aclentry = aclset.acl_entries.acl_entry[aclentryname]
+        rule_props = generate_rule_json(table_name, aclentry)
+        if rule_props:
+            rule_data.append(rule_props)
+
+    dump_json("rules_for_"+table_name+".json", rule_data)
+
+def translate(filename):
+    yang_acl = pybindJSON.load(filename, openconfig_acl, "openconfig_acl")
+    for aclsetname in yang_acl.acl.acl_sets.acl_set:
+         aclset = yang_acl.acl.acl_sets.acl_set[aclsetname]
+         generate_table_json(aclset, aclsetname)
+    return
+
+
+def main():
+    translate(sys.argv[1])
+
+if __name__ == "__main__":
+    main()
