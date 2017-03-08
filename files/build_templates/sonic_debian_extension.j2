@@ -58,7 +58,8 @@ sudo mkdir -p $FILESYSTEM_ROOT/usr/share/sonic/templates/
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
     python-dev     \
     python-lxml    \
-    python-yaml
+    python-yaml    \
+    python-bitarray
 
 # Install SONiC config engine
 CONFIG_ENGINE_WHL_NAME=`basename {{config_engine}}`
