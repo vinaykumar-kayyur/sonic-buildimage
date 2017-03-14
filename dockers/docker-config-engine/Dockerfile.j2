@@ -12,7 +12,7 @@ RUN pip install --upgrade pip
 
 RUN pip install netaddr ipaddr jinja2 pyangbind
 
-{% if docker_config_engine_debs != '' %}
+{% if docker_config_engine_debs.strip() %}
 COPY \
 {% for deb in docker_config_engine_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
@@ -20,14 +20,14 @@ debs/{{ deb }}{{' '}}
 debs/
 {%- endif -%}
 
-{% if docker_config_engine_debs != '' %}
+{% if docker_config_engine_debs.strip() %}
 RUN dpkg -i \
 {% for deb in docker_config_engine_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 {%- endif -%}
 
-{% if docker_config_engine_whls != '' %}
+{% if docker_config_engine_whls.strip() %}
 COPY \
 {% for whl in docker_config_engine_whls.split(' ') -%}
 python-wheels/{{ whl }}{{' '}}
@@ -35,7 +35,7 @@ python-wheels/{{ whl }}{{' '}}
 python-wheels/
 {%- endif -%}
 
-{% if docker_config_engine_whls != '' %}
+{% if docker_config_engine_whls.strip() %}
 RUN pip install \
 {% for whl in docker_config_engine_whls.split(' ') -%}
 python-wheels/{{ whl }}{{' '}}

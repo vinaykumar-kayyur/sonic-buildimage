@@ -4,20 +4,22 @@ import openconfig_acl
 import pyangbind.lib.pybindJSON as pybindJSON
 
 import sys
+import os.path
 import json
+import argparse
 
 def dump_json(filename, data):
     with open(filename, 'w') as outfile:
         json.dump(data, outfile, indent=4, sort_keys=True, separators=(',', ':'))
 
-def generate_rule_json(table_name, rule):
+def generate_rule_json(table_name, rule, max_priority):
     rule_idx = rule.config.sequence_id
     rule_props = {}
     rule_data = {}
     rule_data["ACL_RULE_TABLE:"+table_name+":Rule_"+str(rule_idx)] = rule_props
     rule_data["OP"] = "SET"
     
-    rule_props["priority"] = 10000 - rule_idx
+    rule_props["priority"] = max_priority - rule_idx
     if rule.actions.config.forwarding_action == "ACCEPT":
         rule_props["PACKET_ACTION"] = "FORWARD"
     elif rule.actions.config.forwarding_action == "DROP":
@@ -28,26 +30,22 @@ def generate_rule_json(table_name, rule):
         print "Unknown rule action %s in table %s, rule %d!" % (rule.actions.config.forwarding_action, table_name, rule_idx)
         return {}
     
-    if rule.ip.config.protocol == "":
+    ip_protocol_map = {
+        "IP_TCP" : 6,
+        "IP_ICMP" : 1,
+        "IP_UDP" : 17,
+        "IP_IGMP" : 2,
+        "IP_PIM" : 103,
+        "IP_RSVP" : 46,
+        "IP_GRE" : 47,
+        "IP_AUTH" : 51,
+        "IP_L2TP" : 115
+        }
+
+    if not rule.ip.config.protocol:
         pass
-    elif rule.ip.config.protocol == "IP_TCP":
-        rule_props["IP_PROTOCOL"] = "6" # TCP protocol
-    elif rule.ip.config.protocol == "IP_ICMP":
-        rule_props["IP_PROTOCOL"] = "1" # ICMP protocol
-    elif rule.ip.config.protocol == "IP_UDP":
-        rule_props["IP_PROTOCOL"] = "17" 
-    elif rule.ip.config.protocol == "IP_IGMP":
-        rule_props["IP_PROTOCOL"] = "2" 
-    elif rule.ip.config.protocol == "IP_PIM":
-        rule_props["IP_PROTOCOL"] = "103" 
-    elif rule.ip.config.protocol == "IP_RSVP":
-        rule_props["IP_PROTOCOL"] = "46" 
-    elif rule.ip.config.protocol == "IP_GRE":
-        rule_props["IP_PROTOCOL"] = "47" 
-    elif rule.ip.config.protocol == "IP_AUTH":
-        rule_props["IP_PROTOCOL"] = "51" 
-    elif rule.ip.config.protocol == "IP_L2TP":
-        rule_props["IP_PROTOCOL"] = "115" 
+    elif ip_protocol_map.has_key(rule.ip.config.protocol):
+        rule_props["IP_PROTOCOL"] = ip_protocol_map[rule.ip.config.protocol]
     else:
         try:
             int(rule.ip.config.protocol)
@@ -78,10 +76,10 @@ def generate_rule_json(table_name, rule):
     
     tcp_flags = 0x00;
     for flag in rule.transport.config.tcp_flags:
-        if flag == "TCP_SYN":
-            tcp_flags = tcp_flags | 0x02
         if flag == "TCP_FIN":
             tcp_flags = tcp_flags | 0x01
+        if flag == "TCP_SYN":
+            tcp_flags = tcp_flags | 0x02
         if flag == "TCP_RST":
             tcp_flags = tcp_flags | 0x04
         if flag == "TCP_PSH":
@@ -98,39 +96,44 @@ def generate_rule_json(table_name, rule):
         rule_props["TCP_FLAGS"] = '0x{:02x}'.format(tcp_flags)
     return rule_data
 
-def generate_table_json(aclset, aclname):
+def generate_table_json(aclset, aclname, port, max_priority, output_path='.'):
     table_name = aclname.replace(" ", "_")
     #table_name = generate_random_table_name()
 
     table_props = {}
     table_props["policy_desc"] = table_name
     table_props["type"] = "L3"
-    table_props["ports"] = "Ethernet0"
+    table_props["ports"] = port
 
     table_data = [{}]
     table_data[0]["ACL_TABLE:"+table_name] = table_props
     table_data[0]["OP"] = "SET"
-    dump_json("table_"+table_name+".json", table_data)
+    dump_json(os.path.join(output_path, "table_"+table_name+".json"), table_data)
 
     rule_data = []
     for aclentryname in aclset.acl_entries.acl_entry:
         aclentry = aclset.acl_entries.acl_entry[aclentryname]
-        rule_props = generate_rule_json(table_name, aclentry)
+        rule_props = generate_rule_json(table_name, aclentry, max_priority)
         if rule_props:
             rule_data.append(rule_props)
 
-    dump_json("rules_for_"+table_name+".json", rule_data)
+    dump_json(os.path.join(output_path, "rules_for_"+table_name+".json"), rule_data)
 
-def translate(filename):
+def translate_acl(filename, output_path, port, max_priority):
     yang_acl = pybindJSON.load(filename, openconfig_acl, "openconfig_acl")
     for aclsetname in yang_acl.acl.acl_sets.acl_set:
          aclset = yang_acl.acl.acl_sets.acl_set[aclsetname]
-         generate_table_json(aclset, aclsetname)
+         generate_table_json(aclset, aclsetname, port, max_priority, output_path)
     return
 
-
 def main():
-    translate(sys.argv[1])
+    parser = argparse.ArgumentParser(description="Translate openconfig ACL json into SONiC ACL jsons")
+    parser.add_argument('input', metavar='INPUT', help='input json file in openconfig format')
+    parser.add_argument('-p', '--port', default='Ethernet0', help='the port(s) that this ACL is binding to')
+    parser.add_argument('-m', '--max-priority', type=int, default=10000, help='the priority number of the first rule in ACL entries')
+    parser.add_argument('-o', '--output-path', default='.', help='output directory where SONiC ACL jsons will be generated')
+    args = parser.parse_args()
+    translate_acl(args.input, args.output_path, args.port, args.max_priority)
 
 if __name__ == "__main__":
     main()
