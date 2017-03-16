@@ -229,7 +229,12 @@ $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -inst
 $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS)))
 	$(HEADER)
 	pushd $($*_SRC_PATH) $(LOG)
+	stg branch --cleanup --force
+	stg init
+	[ -f ../$(notdir $($*_SRC_PATH)).patch/series ] && stg import -s ../$(notdir $($*_SRC_PATH)).patch/series
 	python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
+	[ -f ../$(notdir $($*_SRC_PATH)).patch/series ] && stg undo
+	stg branch --cleanup --force
 	popd $(LOG)
 	mv $($*_SRC_PATH)/dist/$* $(PYTHON_WHEELS_PATH) $(LOG)
 	$(FOOTER)
