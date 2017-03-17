@@ -89,8 +89,14 @@ RUN apt-get update && apt-get install -y libmysqlclient-dev libmysqld-dev libper
 # For mpdecimal
 RUN apt-get update && apt-get install -y docutils-common libjs-sphinxdoc libjs-underscore python-docutils python-jinja2 python-markupsafe python-pygments python-roman python-sphinx sphinx-common python3-sphinx
 
+# For sonic config engine testing
+RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml 
+
 # For templating
 RUN pip install j2cli
+
+# For lockfile
+RUN apt-get update && apt-get install -y procmail
 
 # Install depot-tools (for git-retry)
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
