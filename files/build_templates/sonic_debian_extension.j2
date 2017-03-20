@@ -125,6 +125,11 @@ sudo bash -c "echo enabled=false > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 # Copy SNMP configuration files
 sudo cp $IMAGE_CONFIGS/snmp/snmp.yml $FILESYSTEM_ROOT/etc/sonic/
 
+# Copy device-config script and service unit file, enable service
+sudo cp $IMAGE_CONFIGS/platform/device-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable device-config.service
+sudo cp $IMAGE_CONFIGS/platform/device-config.sh $FILESYSTEM_ROOT/usr/bin/
+
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
 
@@ -173,8 +178,6 @@ sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
-## copy platform rc.local
-sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
 
 {% if installer_images.strip() -%}
 {% for image in installer_images.strip().split(' ') -%}
