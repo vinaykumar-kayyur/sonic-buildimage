@@ -9,7 +9,7 @@
 # Install platform-dependent packages
 echo "Installing platform-dependent packages..."
 
-PLATFORM=`/usr/bin/sonic-cfggen -v platform`
+PLATFORM=`sonic-cfggen -v platform`
 
 if [ -n $PLATFORM ]; then
     echo "SONiC platform: $PLATFORM"
