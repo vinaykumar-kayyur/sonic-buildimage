@@ -1,5 +1,5 @@
 [Unit]
-Description=Configure device on first boot
+Description=First boot device configuration
 After=updategraph.service
 ConditionPathExists=/host/platform/firsttime
 
