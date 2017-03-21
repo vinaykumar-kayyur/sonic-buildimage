@@ -5,7 +5,7 @@ ConditionPathExists=/host/platform/firsttime
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin echo "First boot detected. Configuring device..."
+ExecStartPre=/bin/echo "First boot detected. Configuring device..."
 ExecStart=/usr/bin/device-config.sh
 ExecStartPost=/bin/rm -f /host/platform/firsttime
 
