@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# device-config.sh
+# role-config.sh
 #
-# Script to perform tasks which configure device based on its role, etc.
-# To be run by device-config.service
+# Script to perform tasks which configure device based on its role as determined by its minigraph
+# To be run by role-config.service
 #
 
 # Disable DHCP relay service if device does not require it

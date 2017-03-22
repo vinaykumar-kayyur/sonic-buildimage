@@ -130,10 +130,10 @@ sudo cp $IMAGE_CONFIGS/platform/platform-init.service  $FILESYSTEM_ROOT/etc/syst
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable platform-init.service
 sudo cp $IMAGE_CONFIGS/platform/platform-init.sh $FILESYSTEM_ROOT/usr/bin/
 
-# Copy device-config script and service unit file, enable service
-sudo cp $IMAGE_CONFIGS/platform/device-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable device-config.service
-sudo cp $IMAGE_CONFIGS/platform/device-config.sh $FILESYSTEM_ROOT/usr/bin/
+# Copy role-config script and service unit file, enable service
+sudo cp $IMAGE_CONFIGS/platform/role-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable role-config.service
+sudo cp $IMAGE_CONFIGS/platform/role-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/

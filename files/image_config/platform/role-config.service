@@ -1,10 +1,10 @@
 [Unit]
-Description=Device-specific configuration
+Description=Role-specific configuration
 After=updategraph.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/device-config.sh
+ExecStart=/usr/bin/role-config.sh
 
 [Install]
 WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 [Unit]
 Description=DHCP relay container
 Requires=docker.service
-After=device-config.service
+After=role-config.service
 After=interfaces-config.service
 
 [Service]
