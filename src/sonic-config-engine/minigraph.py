@@ -178,7 +178,7 @@ def parse_dpg(dpg, hname):
                 if peer_addr_val is not None:
                     intf['peer_addr'] = ipaddress.IPAddress(peer_addr_val)
                 intfs.append(intf)
-                intfnames[intf['alias']] = True
+                intfnames[intf['alias']] = { 'alias': intf['name'] }
 
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
@@ -258,7 +258,7 @@ def parse_dpg(dpg, hname):
             if acl_intfs:
                 acls[aclname] = acl_intfs
 
-        return intfs, lo_intfs, mgmt_intf, vlan_intfs, pc_intfs, vlans, pcs, acls
+        return intfs, lo_intfs, mgmt_intf, vlan_intfs, pc_intfs, intfnames, vlans, pcs, acls
     return None, None, None, None, None, None, None, None
 
 def parse_cpg(cpg, hname):
@@ -413,7 +413,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlan_intfs, pc_intfs, vlans, pcs, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mgmt_intf, vlan_intfs, pc_intfs, ports, vlans, pcs, acls) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -437,6 +437,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['minigraph_vlan_interfaces'] = vlan_intfs
     results['minigraph_portchannel_interfaces'] = pc_intfs
     results['minigraph_vlans'] = vlans
+    results['minigraph_ports'] = ports
     results['minigraph_portchannels'] = pcs
     results['minigraph_mgmt_interface'] = mgmt_intf
     results['minigraph_lo_interfaces'] = lo_intfs
