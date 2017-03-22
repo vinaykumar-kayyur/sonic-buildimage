@@ -1,7 +1,8 @@
 [Unit]
 Description=DHCP relay container
 Requires=docker.service
-After=device-config.service interfaces-config.service
+After=device-config.service
+After=interfaces-config.service
 
 [Service]
 User={{ sonicadmin_user }}
