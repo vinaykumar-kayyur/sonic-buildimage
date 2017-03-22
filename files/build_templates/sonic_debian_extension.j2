@@ -125,6 +125,11 @@ sudo bash -c "echo enabled=false > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 # Copy SNMP configuration files
 sudo cp $IMAGE_CONFIGS/snmp/snmp.yml $FILESYSTEM_ROOT/etc/sonic/
 
+# Copy platform-init script and service unit file, enable service
+sudo cp $IMAGE_CONFIGS/platform/platform-init.service  $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable platform-init.service
+sudo cp $IMAGE_CONFIGS/platform/platform-init.sh $FILESYSTEM_ROOT/usr/bin/
+
 # Copy device-config script and service unit file, enable service
 sudo cp $IMAGE_CONFIGS/platform/device-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable device-config.service

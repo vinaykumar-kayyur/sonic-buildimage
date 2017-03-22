@@ -1,0 +1,13 @@
+[Unit]
+Description=First boot platform initialization
+Before=updategraph.service
+ConditionPathExists=/host/platform/firsttime
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/echo "First boot detected. Initializing platform..."
+ExecStart=/usr/bin/platform-init.sh
+ExecStartPost=/bin/rm -f /host/platform/firsttime
+
+[Install]
+WantedBy=multi-user.target

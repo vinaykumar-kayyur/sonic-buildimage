@@ -1,13 +1,10 @@
 [Unit]
-Description=First boot device configuration
+Description=Device-specific configuration
 After=updategraph.service
-ConditionPathExists=/host/platform/firsttime
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/echo "First boot detected. Configuring device..."
 ExecStart=/usr/bin/device-config.sh
-ExecStartPost=/bin/rm -f /host/platform/firsttime
 
 [Install]
 WantedBy=multi-user.target
