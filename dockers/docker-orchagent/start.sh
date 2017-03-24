@@ -18,6 +18,7 @@ function config_acl {
         rm -rf /etc/swss/config.d/acl/*
         translate_acl -m /etc/sonic/minigraph.xml -o /etc/swss/config.d/acl /etc/sonic/acl.json
         for filename in /etc/swss/config.d/acl/*.json; do
+            [ -e "$filename" ] || break
             swssconfig $filename
         done
     fi
