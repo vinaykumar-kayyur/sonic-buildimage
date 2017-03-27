@@ -1,0 +1,5 @@
+# python-saithrift package
+
+PYTHON_SAITHRIFT_BRCM = python-saithrift_0.9.4_amd64.deb
+$(PYTHON_SAITHRIFT_BRCM)_SRC_PATH = $(SRC_PATH)/SAI
+SONIC_DPKG_DEBS += $(PYTHON_SAITHRIFT_BRCM)
