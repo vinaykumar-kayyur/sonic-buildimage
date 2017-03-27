@@ -59,4 +59,5 @@
 [submodule "src/SAI"]
 	path = src/SAI
 	url = https://github.com/opencomputeproject/SAI
-        branch = v0.9.4
+	branch = v0.9.4
+
