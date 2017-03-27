@@ -1,11 +1,11 @@
-FROM docker-base
+FROM docker-config-engine
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update
 
 RUN apt-get install -y libdbus-1-3 libdaemon0 libjansson4 
-
-# Dependencies for sonic-cfggen 
-RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml 
 
 COPY \
 {% for deb in docker_fpm_debs.split(' ') -%}
@@ -22,7 +22,7 @@ debs/{{ deb }}{{' '}}
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-COPY ["*.j2", "/etc/swss/bgp/"]
+COPY ["*.j2", "/usr/share/sonic/templates/"]
 COPY ["start.sh", "config.sh", "/usr/bin/"]
 COPY ["daemons", "/etc/quagga/"]
 

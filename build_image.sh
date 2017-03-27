@@ -13,15 +13,20 @@
 }
 
 ## Retrieval short version of Git revision hash for partition metadata
-[ -z "$(git status --untracked-files=no -s --ignore-submodules)" ] || {
-    echo "Error: There is local changes not committed to git repo. Cannot get a revision hash for partition metadata."
+if [ -z "$(git status --untracked-files=no -s --ignore-submodules)" ]; then 
+    GIT_REVISION=$(git rev-parse --short HEAD)
+elif [ ! "$DEBUG_BUILD" = "y" ]; then
+    echo "Error: There are local changes not committed to git repo. Cannot get a revision hash for partition metadata."
     exit 1
-}
-GIT_REVISION=$(git rev-parse --short HEAD)
+else 
+    echo "Warning: There are local changes not committed to git repo, revision hash won't be tracked. Never deploy this image for other than debugging purpose."
+    GIT_REVISION=$(git rev-parse --short HEAD)"_local_debug"
+fi
 
-mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
-sudo rm -f $OUTPUT_ONIE_IMAGE
 if [ "$IMAGE_TYPE" = "onie" ]; then
+    echo "Build ONIE installer"
+    mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
+    sudo rm -f $OUTPUT_ONIE_IMAGE
     ## Generate an ONIE installer image
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
@@ -29,15 +34,29 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
           $ONIE_INSTALLER_PAYLOAD
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
 elif [ "$IMAGE_TYPE" = "aboot" ]; then
-    ## Add Aboot boot0 file into the image
-    cp $ONIE_INSTALLER_PAYLOAD $OUTPUT_ONIE_IMAGE
-    pushd files/Aboot && sudo zip -g $OLDPWD/$OUTPUT_ONIE_IMAGE boot0; popd
+    echo "Build Aboot installer"
+    mkdir -p `dirname $OUTPUT_ABOOT_IMAGE`
+    sudo rm -f $OUTPUT_ABOOT_IMAGE
+    sudo rm -f $ABOOT_BOOT_IMAGE
+    ## Add main payload
+    cp $ONIE_INSTALLER_PAYLOAD $OUTPUT_ABOOT_IMAGE
+    ## Add Aboot boot0 file
+    j2 -f env files/Aboot/boot0.j2 ./onie-image.conf > files/Aboot/boot0
+    pushd files/Aboot && zip -g $OLDPWD/$OUTPUT_ABOOT_IMAGE boot0; popd
+    pushd files/Aboot && zip -g $OLDPWD/$ABOOT_BOOT_IMAGE boot0; popd
     echo "$GIT_REVISION" >> .imagehash
-    zip -g $OUTPUT_ONIE_IMAGE .imagehash
+    zip -g $OUTPUT_ABOOT_IMAGE .imagehash
+    zip -g $ABOOT_BOOT_IMAGE .imagehash
     rm .imagehash
     echo "SWI_VERSION=42.0.0" > version
-    zip -g $OUTPUT_ONIE_IMAGE version
+    echo "SWI_MAX_HWEPOCH=1" >> version
+    echo "SWI_VARIANT=US" >> version
+    zip -g $OUTPUT_ABOOT_IMAGE version
+    zip -g $ABOOT_BOOT_IMAGE version
     rm version
+
+    zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
+    rm $ABOOT_BOOT_IMAGE
 else
     echo "Error: Non supported target platform: $TARGET_PLATFORM"
     exit 1

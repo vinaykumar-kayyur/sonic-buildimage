@@ -11,10 +11,14 @@
 # Uncomment next line to enable:
 # SONIC_CONFIG_PRINT_DEPENDENCIES = y
 
+# DEBUG_BUILD - enable building image with uncommitted local changes.
+# Uncomment next line to enable:
+# DEBUG_BUILD = y
+
 # SONIC_CONFIG_BUILD_JOBS - set number of jobs for parallel build.
 # Corresponding -j argument will be passed to make command inside docker
 # container.
-SONIC_CONFIG_BUILD_JOBS = $(shell nproc)
+SONIC_CONFIG_BUILD_JOBS = 1
 
 # SONIC_CONFIG_LOG_TO_FILES - print output from execution of rule for each
 # target into separate log file under target/log/.
@@ -31,3 +35,13 @@ USERNAME = admin
 
 # PASSWORD - password for installer build
 PASSWORD = YourPaSsWoRd
+
+# ENABLE_DHCP_GRAPH_SERVICE - specify the source of minigraph to generate configuration file.
+# If set to y SONiC will get the minigraph from graph service. Graph service URL need to be 
+# passed through DHCP option 225.
+# If not set (default behavior) the default minigraph built into the image will be used.
+# ENABLE_DHCP_GRAPH_SERVICE = y
+
+# SONIC_CONFIG_DEBUG - install debug packages
+# Uncomment next line to enable:
+# SONIC_CONFIG_DEBUG = y

@@ -6,6 +6,10 @@ RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contr
 RUN echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list
 RUN echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
 RUN echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
+RUN echo 'deb http://debian-archive.trafficmanager.net/debian jessie-backports main' >> /etc/apt/sources.list
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get clean && apt-get update && apt-get install -y  apt-utils default-jre-headless openssh-server curl wget unzip git build-essential libtool lintian
 
@@ -67,6 +71,9 @@ RUN apt-get update && apt-get install -y dkms
 # For python3.5 build
 RUN apt-get update && apt-get install -y sharutils libncursesw5-dev libbz2-dev liblzma-dev libgdbm-dev tk-dev blt-dev libmpdec-dev libbluetooth-dev locales libsqlite3-dev libgpm2 time net-tools xvfb python-sphinx python3-sphinx
 
+# For gobgp build
+RUN apt-get -yt jessie-backports install golang-go golang-github-golang-mock-dev
+
 RUN mkdir /var/run/sshd
 EXPOSE 22
 
@@ -82,15 +89,22 @@ RUN apt-get update && apt-get install -y libmysqlclient-dev libmysqld-dev libper
 # For mpdecimal
 RUN apt-get update && apt-get install -y docutils-common libjs-sphinxdoc libjs-underscore python-docutils python-jinja2 python-markupsafe python-pygments python-roman python-sphinx sphinx-common python3-sphinx
 
+# For sonic config engine testing
+RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml 
+
 # For templating
 RUN pip install j2cli
+
+# For lockfile
+RUN apt-get update && apt-get install -y procmail
 
 # Install depot-tools (for git-retry)
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
 
-# Install docker engine 1.11.2 inside docker
-RUN curl -sSL https://get.docker.com/ | sh && apt-get install -y --force-yes -q docker-engine=1.11.2-0~jessie
+# Install docker engine 1.13.0 inside docker and enable experimental feature
+RUN curl -sSL https://get.docker.com/ | sh && apt-get install -y --force-yes -q docker-engine=1.13.0-0~debian-jessie
+RUN echo "DOCKER_OPTS=\"--experimental\"" >> /etc/default/docker
 
 # Add user
 ARG user

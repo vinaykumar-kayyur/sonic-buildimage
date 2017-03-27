@@ -1,10 +1,10 @@
-FROM docker-base
+FROM docker-config-engine
 
 RUN apt-get update && apt-get install -f -y libdbus-1-3 libdaemon0 libjansson4
 
-
-# Dependencies for sonic-cfggen                                                                                                                                                           
-RUN apt-get install -y python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml 
+## Install redis-tools dependencies
+## TODO: implicitly install dependencies
+RUN apt-get -y install libjemalloc1
 
 COPY \
 {% for deb in docker_teamd_debs.split(' ') -%}
@@ -18,9 +18,13 @@ debs/{{ deb }}{{' '}}
 {%- endfor %}
 
 COPY ["start.sh", "config.sh", "/usr/bin/"]
-COPY ["teamd.j2", "/etc/swss/teamd/"]
+COPY ["teamd.j2", "/usr/share/sonic/templates/"]
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT /usr/bin/config.sh && /usr/bin/start.sh
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["/usr/bin/config.sh && /usr/bin/start.sh"]

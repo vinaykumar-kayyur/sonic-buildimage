@@ -37,6 +37,7 @@ DOCKER_VERSION=1.11.1-0~jessie_amd64
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
+PLATFORM_DIR=platform
 ## Hostname for the linux image
 HOSTNAME=sonic
 DEFAULT_USERINFO="Default admin user,,,"
@@ -58,9 +59,11 @@ DEFAULT_USERINFO="Default admin user,,,"
 
 ## Prepare the file system directory
 if [[ -d $FILESYSTEM_ROOT ]]; then
-    sudo rm -r $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
+    sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
 fi
 mkdir -p $FILESYSTEM_ROOT
+mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
+touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
 ## Build a basic Debian system by debootstrap
 echo '[INFO] Debootstrap...'
@@ -163,10 +166,12 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
 ## Note: gdisk is needed for sgdisk in install.sh
 ## Note: parted is needed for partprobe in install.sh
 ## Note: ca-certificates is needed for easy_install
+## Note: don't install python-apt by pip, older than Debian repo one
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     file                    \
     ifupdown                \
     iproute2                \
+    bridge-utils            \
     isc-dhcp-client         \
     sudo                    \
     vim                     \
@@ -188,7 +193,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     usbutils                \
     pciutils                \
     iptables-persistent     \
-    logrotate
+    logrotate               \
+    curl                    \
+    kexec-tools
+
+## Disable kexec supported reboot which was installed by default
+sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
 
 ## Remove sshd host keys, and will regenerate on first sshd start
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
@@ -228,8 +238,10 @@ set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
 ## docker-py is needed by Ansible docker module
 sudo LANG=C chroot $FILESYSTEM_ROOT easy_install pip
 sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
-## Remove pip which is unnecessary in the base image
-sudo LANG=C chroot $FILESYSTEM_ROOT pip uninstall -y pip
+## Note: keep pip installed for maintainance purpose
+
+## Create /var/run/redis folder for docker-database to mount
+sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF
@@ -241,9 +253,12 @@ EOF
 
 sudo cp files/dhcp/rfc3442-classless-routes $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d
 sudo cp files/dhcp/sethostname $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
+sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
+sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
+sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 
 if [ -f sonic_debian_extension.sh ]; then
-    ./sonic_debian_extension.sh $FILESYSTEM_ROOT
+    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
 fi
 
 ## Clean up apt
@@ -264,14 +279,11 @@ sudo mkdir $FILESYSTEM_ROOT/host
 sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
 sudo du -hs $FILESYSTEM_ROOT
-sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker
+sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS var/lib/docker; popd
+pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C var/lib/docker .; popd
 
-## Compress together with /boot and /var/lib/docker as an installer payload zip file
-pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/; popd
+## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
+pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
 sudo zip -g $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
-
-## Remove fsroot
-sudo rm -rf $FILESYSTEM_ROOT

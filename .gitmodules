@@ -1,6 +1,3 @@
-[submodule "docker-base"]
-	path = dockers/docker-base
-	url = https://github.com/Azure/sonic-docker-base.git
 [submodule "sonic-swss-common"]
 	path = src/sonic-swss-common
 	url = https://github.com/Azure/sonic-swss-common
@@ -50,3 +47,12 @@
 [submodule "platform/broadcom/sonic-platform-modules-s6000"]
 	path = platform/broadcom/sonic-platform-modules-s6000
 	url = https://github.com/Azure/sonic-platform-modules-s6000
+[submodule "platform/broadcom/sonic-platform-modules-arista"]
+	path = platform/broadcom/sonic-platform-modules-arista
+	url = https://github.com/aristanetworks/sonic
+[submodule "platform/broadcom/sonic-platform-modules-dell"]
+	path = platform/broadcom/sonic-platform-modules-dell
+	url = https://github.com/Azure/sonic-platform-modules-dell
+[submodule "platform/broadcom/sonic-platform-modules-ingrasys-s9100"]
+	path = platform/broadcom/sonic-platform-modules-ingrasys-s9100
+	url = https://github.com/Ingrasys-sonic/sonic-platform-ingrasys-s9100

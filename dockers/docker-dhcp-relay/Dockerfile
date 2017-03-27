@@ -1,25 +1,23 @@
-FROM docker-base
+FROM docker-config-engine
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update APT package lists
+## Update APT package lists
 RUN apt-get update
 
-# Dependencies for sonic-cfggen
-RUN apt-get -y install python-lxml python-jinja2 python-netaddr python-ipaddr python-yaml
+## Install isc-dhcp-relay Debian package
+RUN apt-get -y install isc-dhcp-relay
 
-## Install isc-dhcp-relay and clean up afterward
-RUN apt-get -y install isc-dhcp-relay   \
-    && apt-get clean -y                 \
-    && apt-get autoclean -y             \
-    && apt-get autoremove -y
+## Clean up
+RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN rm -rf /debs
 
-COPY ["isc-dhcp-relay.j2", "/usr/share/dhcp-relay/"]
+COPY ["isc-dhcp-relay.j2", "/usr/share/sonic/templates/"]
 COPY ["config.sh", "/usr/bin/"]
+COPY ["start.sh", "/usr/bin/"]
 
-ENTRYPOINT /usr/bin/config.sh       \
-    && service rsyslog start        \
-    && service isc-dhcp-relay start \
+ENTRYPOINT /usr/bin/config.sh \
+    && service rsyslog start  \
+    && /usr/bin/start.sh      \
     && /bin/bash
-
