@@ -8,6 +8,10 @@
 ## PARAMETERS:
 ##   FILESYSTEM_ROOT
 ##          Path to debian file system root directory
+##   PLATFORM_DIR
+##          Path to debian platform directory
+##   GIT_REVISION
+##          Current build git revision
 
 FILESYSTEM_ROOT=$1
 [ -n "$FILESYSTEM_ROOT" ] || {
@@ -18,6 +22,12 @@ FILESYSTEM_ROOT=$1
 PLATFORM_DIR=$2
 [ -n "$PLATFORM_DIR" ] || {
     echo "Error: no or empty PLATFORM_DIR argument"
+    exit 1
+}
+
+GIT_REVISION=$3
+[ -n "$GIT_REVISION" ] || {
+    echo "Error: no or empty GIT_REVISION argument"
     exit 1
 }
 
@@ -175,6 +185,7 @@ sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
+sudo sed -i -e "s/%%GIT_REVISION%%/$GIT_REVISION/g" $FILESYSTEM_ROOT/etc/rc.local
 
 {% if installer_images.strip() -%}
 {% for image in installer_images.strip().split(' ') -%}

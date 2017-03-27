@@ -126,6 +126,8 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 ## Hook into initramfs: after partition mount and loop file mount
 ## 1. Prepare layered file system
 ## 2. Bind-mount docker working directory (docker aufs cannot work over aufs rootfs)
+GIT_REVISION=$(git rev-parse --short HEAD)
+sed -i -e "s/%%GIT_REVISION%%/$GIT_REVISION/g" files/initramfs-tools/union-mount
 sudo cp files/initramfs-tools/union-mount $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mount
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mount
 sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
@@ -195,7 +197,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     iptables-persistent     \
     logrotate               \
     curl                    \
-    kexec-tools
+    kexec-tools             \
+    unzip
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
@@ -271,7 +274,7 @@ built_by: $USER@$BUILD_HOSTNAME
 EOF
 
 if [ -f sonic_debian_extension.sh ]; then
-    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
+    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $GIT_REVISION
 fi
 
 ## Clean up apt
