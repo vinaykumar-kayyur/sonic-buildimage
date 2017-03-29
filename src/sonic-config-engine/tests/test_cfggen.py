@@ -40,11 +40,6 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'LeafRouter')
     
-    def test_print_alias_mapping(self):
-        argument = '-s'
-        output = self.run_script(argument)
-        self.assertTrue(len(output.strip()) > 0)
-    
     def test_additional_json_data(self):
         argument = '-a \'{"key1":"value1"}\' -v key1'
         output = self.run_script(argument)
