@@ -65,6 +65,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 CONFIG_ENGINE_WHL_NAME=`basename {{config_engine}}`
 sudo cp {{config_engine}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_WHL_NAME
 sudo LANG=C chroot $FILESYSTEM_ROOT pip install $CONFIG_ENGINE_WHL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_WHL_NAME
+
+# Install SwSS SDK Python packages (this should install both the Python 2 and Python 3 variants)
+sudo cp target/python-wheels/swsssdk-*.whl $FILESYSTEM_ROOT/
+sudo LANG=C chroot $FILESYSTEM_ROOT pip install swsssdk-*.whl
+sudo rm -rf $FILESYSTEM_ROOT/swsssdk-*.whl
 
 # Install Python client for Redis
 sudo LANG=C chroot $FILESYSTEM_ROOT pip install redis
