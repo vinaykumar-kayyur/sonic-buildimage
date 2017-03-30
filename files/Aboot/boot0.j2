@@ -41,7 +41,7 @@ parse_environment_config() {
 }
 
 extract_image() {
-    ## Remove all the other unnecssary files except swi file, boot-config and boot0
+    ## Remove all the other unnecssary files except swi file, boot-config
     for f in $(ls -A $target_path); do
         if [ $f != "${swipath##*/}" ] && [ $f != "boot-config" ]; then
             rm -rf "$target_path/$f"
