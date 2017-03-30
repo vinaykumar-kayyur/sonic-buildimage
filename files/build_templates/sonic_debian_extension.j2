@@ -118,6 +118,9 @@ sudo bash -c "echo enabled=false > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 # Copy SNMP configuration files
 sudo cp $IMAGE_CONFIGS/snmp/snmp.yml $FILESYSTEM_ROOT/etc/sonic/
 
+# Copy initial DHCP relay configuration file, will be overwritten after docker starts
+sudo cp $IMAGE_CONFIGS/dhcp_relay/dhcp_relay.yml $FILESYSTEM_ROOT/etc/sonic/
+
 # Generate build version file
 export git_revision=$(git rev-parse --short HEAD)
 export debian_version=`cat $FILESYSTEM_ROOT/etc/debian_version`
