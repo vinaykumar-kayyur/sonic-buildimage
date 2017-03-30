@@ -2,14 +2,14 @@ FROM docker-base
 
 COPY deps/swsssdk*.whl deps/lldpsyncd_*.deb deps/lldpd_*.deb /deps/
 
-## Make apt-get non-interactive
+# Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-## Pre-install the fundamental packages
-## Install Python SWSSSDK (lldpsyncd dependency)
-## Install LLDP Sync Daemon
-## Note: dpkg_apt function has the benefit to detect missing .deb file
-## Clean up
+# Pre-install the fundamental packages
+# Install Python SwSS SDK (lldpsyncd dependency)
+# Install LLDP Sync Daemon
+# Note: dpkg_apt function has the benefit to detect missing .deb file
+# Clean up
 RUN apt-get update && \
     dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; } && \
     dpkg_apt /deps/lldpd_*.deb && \
