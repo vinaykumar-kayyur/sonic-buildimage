@@ -58,7 +58,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), 'value1\nvalue2')
 
     def test_minigraph_acl(self):
-        argument = '-m "' + self.sample_graph_t0 + '" -v minigraph_acls'
+        argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v minigraph_acls'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'DataAcl': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124']}")
 
