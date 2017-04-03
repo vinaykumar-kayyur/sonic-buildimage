@@ -4,7 +4,7 @@ import subprocess
 
 from unittest import TestCase
 
-class TestJ2Files(TestCase):
+class TestAcl(TestCase):
     def setUp(self):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = os.path.join(self.test_dir, '..', 'sonic-cfggen')
@@ -16,11 +16,23 @@ class TestJ2Files(TestCase):
 
     def run_script(self, argument):
         print 'CMD: sonic-cfggen ' + argument
-        return subprocess.check_output(self.script_file + ' ' + argument, shell=True)
+        output = ''
+        try:
+            output = subprocess.check_output(self.script_file + ' ' + argument, shell=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, (p):
+            print 'subprocess.CalledProcessError: cmd:%s returncode:%s' % (p.cmd, p.returncode)
+            print output
+        return output
 
     def run_acl_script(self, argument):
         print 'CMD: translate_acl ' + argument
-        return subprocess.check_output(self.acl_script_file + ' ' + argument, shell=True)
+        output = ''
+        try:
+            output = subprocess.check_output(self.acl_script_file + ' ' + argument, shell=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError, (p):
+            print 'subprocess.CalledProcessError: cmd:%s returncode:%s' % (p.cmd, p.returncode)
+            print output
+        return output
 
     def test_translate_acl(self):
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -o ' + self.test_dir + ' ' + self.t0_acl
@@ -30,7 +42,7 @@ class TestJ2Files(TestCase):
             output_file = os.path.join(self.test_dir, filename)
             assert filecmp.cmp(sample_output_file, output_file)
 
-    def test_translate_everflor(self):
+    def test_translate_everflow(self):
         argument = '-m ' + self.t0_minigraph_everflow + ' -p ' + self.t0_port_config + ' -o ' + self.test_dir + ' ' + self.t0_acl
         self.run_acl_script(argument)
         for filename in ['rules_for_everflow.json','table_everflow.json']:
