@@ -1,0 +1,13 @@
+[
+    {
+        "TUNNEL_DECAP_TABLE:IPINIP_TUNNEL" : {
+            "tunnel_type":"IPINIP",
+            "src_ip":"{{ minigraph_lo_interfaces[0]['addr'] }}",
+            "dst_ip":"{{ minigraph_lo_interfaces[0]['addr'] }}",
+            "dscp_mode":"uniform",
+            "ecn_mode":"standard",
+            "ttl_mode":"pipe"
+        },
+        "OP": "SET"
+    }
+]
