@@ -1,6 +1,7 @@
 import filecmp
 import os
 import subprocess
+import json
 
 from unittest import TestCase
 
