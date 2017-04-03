@@ -49,3 +49,15 @@ docker_try_rmi() {
         docker rmi $image_name
     }
 }
+
+sonic_get_version() {
+    local describe=$(git describe --tags)
+    local latest_tag=$(git describe --tags --abbrev=0)
+    BUILD_NUMBER=${BUILD_NUMBER:-dev}
+    ## Cehck if we are on tagged commit
+    if [ "$describe" == "$latest_tag" ]; then
+        echo "$latest_tag"
+    else
+        echo "${latest_tag}.${BUILD_NUMBER}-$(git rev-parse --short HEAD)"
+    fi
+}
