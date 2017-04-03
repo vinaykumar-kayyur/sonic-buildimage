@@ -53,16 +53,13 @@ ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
 # Default var/log device size in MB
 VAR_LOG_SIZE=4096
 
-
-# simple detect whether script was run in SONiC
-# TODO: think of some other marker
-aufs_mnt=$(cat /proc/mounts | grep aufs || true)
-
-if [ -z "$aufs_mnt" ]; then
+if [ -d "/etc/sonic" ]; then
+    echo "Running in SONiC"
+    environment="sonic"
+else
+    echo "Running NOT in SONiC"
     environment="onie"
     [ -r platforms/$onie_platform ] && source platforms/$onie_platform
-else
-    environment="sonic"
 fi
 
 # Install demo on same block device as ONIE
@@ -118,7 +115,7 @@ git_revision="%%GIT_REVISION%%"
 timestamp="$(date -u +%Y%m%d)"
 
 demo_volume_label="SONiC-${demo_type}"
-demo_volume_revision_label="SONiC-${demo_type}"
+demo_volume_revision_label="SONiC-${demo_type}-${git_revision}"
 
 # auto-detect whether BIOS or UEFI
 if [ -d "/sys/firmware/efi/efivars" ] ; then
@@ -397,7 +394,7 @@ if [ "$environment" != "sonic" ]; then
     demo_dev=$(echo $blk_dev | sed -e 's/\(mmcblk[0-9]\)/\1p/')$demo_part
 
     # Make filesystem
-    mkfs.ext4 -L $demo_volume_revision_label $demo_dev
+    mkfs.ext4 -L $demo_volume_label $demo_dev
 
     # Mount demo filesystem
     demo_mnt=$(${onie_bin} mktemp -d) || {
@@ -416,10 +413,17 @@ fi
 sonic_dir="$SONIC_IMAGE_DIR_PREFIX-$git_revision"
 
 echo "Installing SONiC to $demo_mnt/$sonic_dir"
-mkdir $demo_mnt/$sonic_dir || {
-    echo "Error: Unable to create sonic directory"
-    exit 1
-}
+
+# Create target directory or clean it up if exists
+if [ -d $demo_mnt/$sonic_dir ]; then
+    echo "Directory $demo_mnt/$sonic_dir/ already exists. Cleaning up..."
+    rm -rf $demo_mnt/$sonic_dir/*
+else
+    mkdir $demo_mnt/$sonic_dir || {
+        echo "Error: Unable to create sonic directory"
+        exit 1
+    }
+fi
 
 # Decompress the file for the file system directly to the partition
 unzip $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$sonic_dir
@@ -514,7 +518,7 @@ fi
 
 # Add a menu entry for the DEMO OS
 # Note: assume that apparmor is supported in the kernel
-demo_grub_entry="$demo_volume_revision_label-${git_revision}"
+demo_grub_entry="$demo_volume_revision_label"
 if [ "$environment" = "sonic" ]; then
     running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
     old_grub_menuentry=$(cat /host/grub/grub.cfg | sed "/$running_sonic_revision/,/}/!d")
@@ -525,7 +529,7 @@ fi
 cat <<EOF >> $grub_cfg
 menuentry '$demo_grub_entry' {
         search --no-floppy --label --set=root $demo_volume_label
-        echo    'Loading $demo_volume_revision_label $demo_type kernel ...'
+        echo    'Loading $demo_volume_label $demo_type kernel ...'
         insmod gzio
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
@@ -533,7 +537,7 @@ menuentry '$demo_grub_entry' {
         linux   /$sonic_dir/boot/vmlinuz-3.16.0-4-amd64 root=$demo_dev rw $GRUB_CMDLINE_LINUX  \
                 loop=$sonic_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 apparmor=1 security=apparmor $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
-        echo    'Loading $demo_volume_revision_label $demo_type initial ramdisk ...'
+        echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
         initrd  /$sonic_dir/boot/initrd.img-3.16.0-4-amd64
 }
 EOF
@@ -564,4 +568,4 @@ fi
 
 cd /
 
-echo "Installed SONiC base image $demo_volume_revision_label successfully"
+echo "Installed SONiC base image $demo_volume_label successfully"
