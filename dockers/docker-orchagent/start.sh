@@ -50,7 +50,7 @@ elif [ "$HWSKU" == "AS7512" ]; then
 elif [ "$HWSKU" == "INGRASYS-S9100-C32" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 elif [ "$HWSKU" == "ACS-MSN2700" ]; then
-    SWSSCONFIG_ARGS+="msn2700.32ports.buffers.json msn2700.32ports.qos.json "
+    SWSSCONFIG_ARGS+="msn2700.32ports.buffers.json msn2700.32ports.qos.json ipinip.conf mirror.conf "
 fi
 
 rm -f /var/run/rsyslogd.pid
