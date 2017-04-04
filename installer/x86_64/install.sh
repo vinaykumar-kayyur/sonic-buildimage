@@ -54,11 +54,11 @@ ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
 VAR_LOG_SIZE=4096
 
 if [ -d "/etc/sonic" ]; then
-    echo "Running in SONiC"
-    environment="sonic"
+    echo "Installing SONiC in SONiC"
+    install_env="sonic"
 else
-    echo "Running NOT in SONiC"
-    environment="onie"
+    echo "Installing SONiC in ONIE"
+    install_env="onie"
     [ -r platforms/$onie_platform ] && source platforms/$onie_platform
 fi
 
@@ -124,7 +124,7 @@ else
     firmware="bios"
 fi
 
-if [ "$environment" != "sonic" ]; then
+if [ "$install_env" != "sonic" ]; then
     # determine ONIE partition type
     onie_partition_type=$(${onie_bin} onie-sysinfo -t)
     # demo partition size in MB
@@ -389,7 +389,9 @@ demo_install_uefi_grub()
 
 }
 
-if [ "$environment" != "sonic" ]; then
+image_dir="$SONIC_IMAGE_DIR_PREFIX-$git_revision"
+
+if [ "$install_env" != "sonic" ]; then
     eval $create_demo_partition $blk_dev
     demo_dev=$(echo $blk_dev | sed -e 's/\(mmcblk[0-9]\)/\1p/')$demo_part
 
@@ -408,49 +410,62 @@ if [ "$environment" != "sonic" ]; then
     }
 else
     demo_mnt="/host"
+    running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+    # Remove extra SONiC image if any
+    for f in /$demo_mnt/$SONIC_IMAGE_DIR_PREFIX* ; do
+        if [ -d $f ] && [ "$f" != "/$demo_mnt/$SONIC_IMAGE_DIR_PREFIX-$running_sonic_revision" ] && [ "$f" != "/$demo_mnt/$image_dir" ]; then
+            echo "Removing old SONiC installation $f"
+            rm -rf $f
+        fi
+    done
 fi
 
-sonic_dir="$SONIC_IMAGE_DIR_PREFIX-$git_revision"
-
-echo "Installing SONiC to $demo_mnt/$sonic_dir"
+echo "Installing SONiC to $demo_mnt/$image_dir"
 
 # Create target directory or clean it up if exists
-if [ -d $demo_mnt/$sonic_dir ]; then
-    echo "Directory $demo_mnt/$sonic_dir/ already exists. Cleaning up..."
-    rm -rf $demo_mnt/$sonic_dir/*
+if [ -d $demo_mnt/$image_dir ]; then
+    echo "Directory $demo_mnt/$image_dir/ already exists. Cleaning up..."
+    rm -rf $demo_mnt/$image_dir/*
 else
-    mkdir $demo_mnt/$sonic_dir || {
-        echo "Error: Unable to create sonic directory"
+    mkdir $demo_mnt/$image_dir || {
+        echo "Error: Unable to create SONiC directory"
         exit 1
     }
 fi
 
 # Decompress the file for the file system directly to the partition
-unzip $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$sonic_dir
+unzip $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$image_dir
 
-if [ -f $demo_mnt/$sonic_dir/$FILESYSTEM_DOCKERFS ]; then
-    cd $demo_mnt/$sonic_dir && mkdir -p $DOCKERFS_DIR && tar xf $FILESYSTEM_DOCKERFS -C $DOCKERFS_DIR && rm -f $FILESYSTEM_DOCKERFS; cd $OLDPWD
+if [ -f $demo_mnt/$image_dir/$FILESYSTEM_DOCKERFS ]; then
+    cd $demo_mnt/$image_dir && mkdir -p $DOCKERFS_DIR && tar xf $FILESYSTEM_DOCKERFS -C $DOCKERFS_DIR && rm -f $FILESYSTEM_DOCKERFS; cd $OLDPWD
 fi
 
 # Create loop device for /var/log to limit its size to $VAR_LOG_SIZE MB
-if [ ! -f $demo_mnt/disk-img/var-log.ext4 ]; then
-    if [ "$VAR_LOG_SIZE" != "0" ]; then
-        mkdir -p $demo_mnt/disk-img
-        dd if=/dev/zero of=$demo_mnt/disk-img/var-log.ext4 count=$((2048*$VAR_LOG_SIZE))
-        mkfs.ext4 -q $demo_mnt/disk-img/var-log.ext4 -F
+if [ -f $demo_mnt/disk-img/var-log.ext4 ]; then
+    current_log_size_mb=$(ls -l --block-size=M $demo_mnt/disk-img/var-log.ext4 | cut -f5 -d" ")
+    if [ "$current_log_size_mb" = "$VAR_LOG_SIZE"M ]; then
+        echo "Log file system already exists. Size: ${VAR_LOG_SIZE}MB"
+        VAR_LOG_SIZE=0
+    else
+        rm -rf $demo_mnt/disk-img
     fi
-else
-    echo "Log file system already exists. Skipping..."
 fi
 
-if [ "$environment" != "sonic" ]; then
+if [ "$VAR_LOG_SIZE" != "0" ]; then
+    echo "Creating new log file system. Size: ${VAR_LOG_SIZE}MB"
+    mkdir -p $demo_mnt/disk-img
+    dd if=/dev/zero of=$demo_mnt/disk-img/var-log.ext4 count=$((2048*$VAR_LOG_SIZE))
+    mkfs.ext4 -q $demo_mnt/disk-img/var-log.ext4 -F
+fi
+
+if [ "$install_env" != "sonic" ]; then
     # Store machine description in target file system
     cp /etc/machine.conf $demo_mnt
 
     # Store installation log in target file system
     rm -f $onie_initrd_tmp/tmp/onie-support.tar.bz2
     ${onie_bin} onie-support /tmp
-    mv $onie_initrd_tmp/tmp/onie-support.tar.bz2 $demo_mnt/$sonic_dir/
+    mv $onie_initrd_tmp/tmp/onie-support.tar.bz2 $demo_mnt/$image_dir/
 
     if [ "$firmware" = "uefi" ] ; then
         demo_install_uefi_grub "$demo_mnt" "$blk_dev"
@@ -519,11 +534,10 @@ fi
 # Add a menu entry for the DEMO OS
 # Note: assume that apparmor is supported in the kernel
 demo_grub_entry="$demo_volume_revision_label"
-if [ "$environment" = "sonic" ]; then
-    running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
-    old_grub_menuentry=$(cat /host/grub/grub.cfg | sed "/$running_sonic_revision/,/}/!d")
-    demo_dev=$(echo $old_grub_menuentry | sed -e "s/.*root\=\(.*\)rw.*/\1/")
-    grub_menuentry=$(cat /host/grub/grub.cfg | sed "/menuentry ONIE/,/}/!d")
+if [ "$install_env" = "sonic" ]; then
+    old_sonic_menuentry=$(cat /host/grub/grub.cfg | sed "/$running_sonic_revision/,/}/!d")
+    demo_dev=$(echo $old_sonic_menuentry | sed -e "s/.*root\=\(.*\)rw.*/\1/")
+    onie_menuentry=$(cat /host/grub/grub.cfg | sed "/menuentry ONIE/,/}/!d")
 fi
 
 cat <<EOF >> $grub_cfg
@@ -534,37 +548,27 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$sonic_dir/boot/vmlinuz-3.16.0-4-amd64 root=$demo_dev rw $GRUB_CMDLINE_LINUX  \
-                loop=$sonic_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
+        linux   /$image_dir/boot/vmlinuz-3.16.0-4-amd64 root=$demo_dev rw $GRUB_CMDLINE_LINUX  \
+                loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 apparmor=1 security=apparmor $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$sonic_dir/boot/initrd.img-3.16.0-4-amd64
+        initrd  /$image_dir/boot/initrd.img-3.16.0-4-amd64
 }
 EOF
 
-if [ "$environment" != "sonic" ]; then
+if [ "$install_env" != "sonic" ]; then
     # Add menu entries for ONIE -- use the grub fragment provided by the
     # ONIE distribution.
     $onie_root_dir/grub.d/50_onie_grub >> $grub_cfg
     mkdir -p $onie_initrd_tmp/$demo_mnt/grub
 else
 cat <<EOF >> $grub_cfg
-$old_grub_menuentry
-$grub_menuentry
+$old_sonic_menuentry
+$onie_menuentry
 EOF
 fi
 
 cp $grub_cfg $onie_initrd_tmp/$demo_mnt/grub/grub.cfg
-
-# Remove extra SONiC image if any
-if [ "$environment" = "sonic" ]; then
-    for f in /$demo_mnt/$SONIC_IMAGE_DIR_PREFIX* ; do
-        if [ -d $f ] && [ "$f" != "/$demo_mnt/$SONIC_IMAGE_DIR_PREFIX-$running_sonic_revision" ] && [ "$f" != "/$demo_mnt/$sonic_dir" ]; then
-            echo "Removing old SONiC installation $f"
-            rm -rf $f
-        fi
-    done
-fi
 
 cd /
 
