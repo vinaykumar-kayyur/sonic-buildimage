@@ -42,14 +42,14 @@ parse_environment_config() {
 
 extract_image() {
     ## Remove all the other unnecssary files except swi file, boot-config
-    for f in $(ls -A $target_path); do
+    for f in $(ls -A $target_path/image-%%GIT_REVISION%%); do
         if [ $f != "${swipath##*/}" ] && [ $f != "boot-config" ]; then
-            rm -rf "$target_path/$f"
+            rm -rf "$target_path/image-%%GIT_REVISION%%/$f"
         fi
     done
 
     ## Unzip the image
-    unzip -oq "$swipath" -x boot0 -d "$target_path"
+    unzip -oq "$swipath" -x boot0 -d "$target_path/image-%%GIT_REVISION%%"
 
     ## Remove installer swi as it has lots of redundunt contents
     rm -f $swipath
@@ -59,19 +59,19 @@ extract_image() {
 
     ## vfat does not support symbol link
     if [ $rootfs_type != "vfat" ]; then
-        mkdir -p "$target_path/{{ DOCKERFS_DIR }}"
+        mkdir -p "$target_path/image-%%GIT_REVISION%%/{{ DOCKERFS_DIR }}"
 
         ## extract docker archive
-        tar xf "$target_path/{{ FILESYSTEM_DOCKERFS }}" -C "$target_path/{{ DOCKERFS_DIR }}"
+        tar xf "$target_path/image-%%GIT_REVISION%%/{{ FILESYSTEM_DOCKERFS }}" -C "$target_path/image-%%GIT_REVISION%%/{{ DOCKERFS_DIR }}"
 
         ## clean up docker archive
-        rm -f "$target_path/{{ FILESYSTEM_DOCKERFS }}"
+        rm -f "$target_path/image-%%GIT_REVISION%%/{{ FILESYSTEM_DOCKERFS }}"
     else
         echo "/mnt/flash is $rootfs_type, extract {{ FILESYSTEM_DOCKERFS }} in later stage"
     fi
 
     ## replace with boot swi
-    mv "$target_path/{{ ABOOT_BOOT_IMAGE }}" "$swipath"
+    mv "$target_path/image-%%GIT_REVISION%%/{{ ABOOT_BOOT_IMAGE }}" "$swipath"
 
     ## sync disk operations
     sync
@@ -124,8 +124,8 @@ echo "rw loop=fs.squashfs loopfstype=squashfs apparmor=1 security=apparmor quiet
 platform_specific
 
 # use extra parameters from kernel-params hook if the file exists
-if [ -f "$target_path/$kernel_params" ]; then
-    cat "$target_path/$kernel_params" >>/tmp/append
+if [ -f "$target_path/image-%%GIT_REVISION%%/$kernel_params" ]; then
+    cat "$target_path/image-%%GIT_REVISION%%/$kernel_params" >>/tmp/append
 fi
 
 # setting root partition if not overridden by kernel-params
@@ -137,15 +137,15 @@ fi
 
 # check the hash file in the image, and determine to install or just skip
 GIT_REVISION=$(unzip -p "$swipath" .imagehash)
-LOCAL_IMAGEHASH=$(cat $target_path/.imagehash 2>/dev/null || true)
+LOCAL_IMAGEHASH=$(cat $target_path/image-%%GIT_REVISION%%/.imagehash 2>/dev/null || true)
 if [ "$GIT_REVISION" != "$LOCAL_IMAGEHASH" ]; then
     extract_image
     write_machine_config
 fi
 
 # chainloading using kexec
-initrd_path="$target_path/$initrd"
-kernel_path="$target_path/$kernel"
+initrd_path="$target_path/image-%%GIT_REVISION%%/$initrd"
+kernel_path="$target_path/image-%%GIT_REVISION%%/$kernel"
 cmdline="$(tr '\n' ' ' </tmp/append)"
 
 kexec --load --initrd="$initrd_path" --append="$cmdline" "$kernel_path"
