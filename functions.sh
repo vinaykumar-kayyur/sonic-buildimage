@@ -53,11 +53,14 @@ docker_try_rmi() {
 sonic_get_version() {
     local describe=$(git describe --tags)
     local latest_tag=$(git describe --tags --abbrev=0)
-    BUILD_NUMBER=${BUILD_NUMBER:-dev}
-    ## Cehck if we are on tagged commit
+    if [ -n "$(git status --untracked-files=no -s --ignore-submodules)" ]; then
+        local dirty="-dirty"
+    fi
+    BUILD_NUMBER=${BUILD_NUMBER:-0}
+    ## Check if we are on tagged commit
     if [ "$describe" == "$latest_tag" ]; then
-        echo "$latest_tag"
+        echo "${latest_tag}${dirty}"
     else
-        echo "${latest_tag}.${BUILD_NUMBER}-$(git rev-parse --short HEAD)"
+        echo "${latest_tag}.${BUILD_NUMBER}${dirty:--$(git rev-parse --short HEAD)}"
     fi
 }
