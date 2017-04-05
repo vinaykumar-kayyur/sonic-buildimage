@@ -20,8 +20,8 @@ class TestAcl(TestCase):
         try:
             output = subprocess.check_output(self.script_file + ' ' + argument, shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError, (p):
-            print 'subprocess.CalledProcessError: cmd:%s returncode:%s' % (p.cmd, p.returncode)
-            print output
+            print 'CalledProcessError: CMD:%s returncode:%s' % (p.cmd, p.returncode)
+            print p.output
         return output
 
     def run_acl_script(self, argument):
@@ -30,8 +30,8 @@ class TestAcl(TestCase):
         try:
             output = subprocess.check_output(self.acl_script_file + ' ' + argument, shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError, (p):
-            print 'subprocess.CalledProcessError: cmd:%s returncode:%s' % (p.cmd, p.returncode)
-            print output
+            print 'CalledProcessError: CMD:%s returncode:%s' % (p.cmd, p.returncode)
+            print p.output
         return output
 
     def test_translate_acl(self):
