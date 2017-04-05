@@ -262,7 +262,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
 build_version: $(sonic_get_version)
 debian_version: $(cat $FILESYSTEM_ROOT/etc/debian_version)
-kversion: $kversion
+kernel_version: $kversion
 asic_type: $sonic_asic_platform
 build_date: $(date -u)
 built_by: $USER@$BUILD_HOSTNAME
