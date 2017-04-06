@@ -232,6 +232,7 @@ def parse_dpg(dpg, hname):
                     acl_intfs.append(port_alias_map[member])
                 elif member.lower() == 'erspan':
                     is_mirror = True;
+                    # Erspan session will be attached to all front panel ports
                     acl_intfs = port_alias_map.values()
                     break;
             if acl_intfs:

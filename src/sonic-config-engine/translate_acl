@@ -100,14 +100,14 @@ def generate_rule_json(table_name, rule, max_priority, mirror):
         rule_props["TCP_FLAGS"] = '0x{:02x}'.format(tcp_flags)
     return rule_data
 
-def generate_table_json(aclset, aclname, port, mirror, max_priority, output_path='.'):
+def generate_table_json(aclset, aclname, ports, mirror, max_priority, output_path='.'):
     table_name = aclname.replace(" ", "_").replace("-", "_")
     #table_name = generate_random_table_name()
 
     table_props = {}
     table_props["policy_desc"] = table_name
     table_props["type"] = "mirror" if mirror else "L3"
-    table_props["ports"] = port
+    table_props["ports"] = ports
 
     table_data = [{}]
     table_data[0]["ACL_TABLE:"+table_name] = table_props
@@ -136,9 +136,9 @@ def translate_acl(filename, output_path, mini_acl, max_priority):
         tablename = aclsetname.replace(" ", "_").replace("-", "_")
         if mini_acl.has_key(tablename):
             is_mirror = mini_acl[tablename]['IsMirror']
-            port = ','.join(mini_acl[tablename]['AttachTo'])
+            ports = ','.join(mini_acl[tablename]['AttachTo'])
             aclset = yang_acl.acl.acl_sets.acl_set[aclsetname]
-            generate_table_json(aclset, aclsetname, port, is_mirror, max_priority, output_path)
+            generate_table_json(aclset, aclsetname, ports, is_mirror, max_priority, output_path)
     return
 
 def main():
