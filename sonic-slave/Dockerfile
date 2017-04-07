@@ -7,6 +7,7 @@ RUN echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main c
 RUN echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
 RUN echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
 RUN echo 'deb http://debian-archive.trafficmanager.net/debian jessie-backports main' >> /etc/apt/sources.list
+RUN echo 'Acquire::Check-Valid-Until "0";' >> /etc/apt/apt.conf.d/no-valid-check
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
