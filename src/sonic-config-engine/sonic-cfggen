@@ -7,9 +7,10 @@ import yaml
 import jinja2
 import netaddr
 import json
+
+from minigraph import get_machine_info
 from minigraph import parse_xml
 from minigraph import minigraph_encoder
-
 
 def is_ipv4(value):
     if not value:
@@ -43,19 +44,6 @@ def unique_name(l):
             name_list.append(item['name'])
             new_list.append(item)
     return new_list
-
-def get_machine_info():
-    if not os.path.isfile('/host/machine.conf'):
-        return None
-    machine_vars = {}
-    with open('/host/machine.conf') as machine_file:
-        for line in machine_file:
-            tokens = line.split('=')
-            if len(tokens) < 2:
-                continue
-            machine_vars[tokens[0]] = tokens[1].strip()
-    return machine_vars    
-
 
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
