@@ -59,6 +59,14 @@ def get_machine_info():
             machine_vars[tokens[0]] = tokens[1].strip()
     return machine_vars
 
+def get_platform_info(machine_info):
+    if machine_info != None:
+        if machine_info.has_key('onie_platform'):
+            return  machine_info['onie_platform']
+        elif machine_info.has_key('aboot_platform'):
+            return machine_info['aboot_platform']
+    return None
+
 def parse_png(png, hname):
     neighbors = {}
     devices = {}

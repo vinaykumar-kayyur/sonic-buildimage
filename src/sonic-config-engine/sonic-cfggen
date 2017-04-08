@@ -7,10 +7,10 @@ import yaml
 import jinja2
 import netaddr
 import json
-
 from minigraph import get_machine_info
-from minigraph import parse_xml
+from minigraph import get_platform_info
 from minigraph import minigraph_encoder
+from minigraph import parse_xml
 
 def is_ipv4(value):
     if not value:
@@ -62,10 +62,9 @@ def main():
     machine_info = get_machine_info()
     if machine_info != None:
         data.update(machine_info)
-        if machine_info.has_key('onie_platform'):
-            data['platform'] = machine_info['onie_platform']
-        elif machine_info.has_key('aboot_platform'):
-            data['platform'] = machine_info['aboot_platform']
+        platform_info = get_platform_info(machine_info)
+        if platform_info != None:
+            data['platform'] = platform_info
 
     if args.minigraph != None:
         minigraph = args.minigraph
