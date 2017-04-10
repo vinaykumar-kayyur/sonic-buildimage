@@ -7,10 +7,10 @@ import yaml
 import jinja2
 import netaddr
 import json
-from minigraph import get_machine_info
-from minigraph import get_platform_info
 from minigraph import minigraph_encoder
 from minigraph import parse_xml
+from sonic_platform import get_machine_info
+from sonic_platform import get_platform_info
 
 def is_ipv4(value):
     if not value:
