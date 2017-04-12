@@ -5,8 +5,6 @@
 #
 #  SPDX-License-Identifier:     GPL-2.0
 
-SONIC_IMAGE_DIR_PREFIX="image"
-
 # Appends a command to a trap, which is needed because default trap behavior is to replace
 # previous trap for the same signal
 # - 1st arg:  code to add
@@ -109,13 +107,13 @@ fi
 # with "OS" or "DIAG".
 demo_type="%%DEMO_TYPE%%"
 
-# The build system prepares this script by replacing %%GIT_REVISION%%
+# The build system prepares this script by replacing %%IMAGE_VERSION%%
 # with git revision hash as a version identifier
-git_revision="%%GIT_REVISION%%"
+image_version="%%IMAGE_VERSION%%"
 timestamp="$(date -u +%Y%m%d)"
 
 demo_volume_label="SONiC-${demo_type}"
-demo_volume_revision_label="SONiC-${demo_type}-${git_revision}"
+demo_volume_revision_label="SONiC-${demo_type}-${image_version}"
 
 # auto-detect whether BIOS or UEFI
 if [ -d "/sys/firmware/efi/efivars" ] ; then
@@ -139,7 +137,6 @@ if [ "$install_env" != "sonic" ]; then
         echo "ERROR: Unsupported partition type: $onie_partition_type"
         exit 1
     fi
-    echo "Part: $onie_partition_type"
 fi
 
 # Creates a new partition for the DEMO OS.
@@ -389,7 +386,7 @@ demo_install_uefi_grub()
 
 }
 
-image_dir="$SONIC_IMAGE_DIR_PREFIX-$git_revision"
+image_dir="image-$image_version"
 
 if [ "$install_env" != "sonic" ]; then
     eval $create_demo_partition $blk_dev
@@ -411,9 +408,9 @@ if [ "$install_env" != "sonic" ]; then
 else
     demo_mnt="/host"
     running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
-    # Remove extra SONiC image if any
-    for f in /$demo_mnt/$SONIC_IMAGE_DIR_PREFIX* ; do
-        if [ -d $f ] && [ "$f" != "/$demo_mnt/$SONIC_IMAGE_DIR_PREFIX-$running_sonic_revision" ] && [ "$f" != "/$demo_mnt/$image_dir" ]; then
+    # Remove extra SONiC images if any
+    for f in $demo_mnt/image-* ; do
+        if [ -d $f ] && [ "$f" != "$demo_mnt/image-$running_sonic_revision" ] && [ "$f" != "$demo_mnt/$image_dir" ]; then
             echo "Removing old SONiC installation $f"
             rm -rf $f
         fi
