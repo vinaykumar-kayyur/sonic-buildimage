@@ -43,7 +43,7 @@ ORCHAGENT_ARGS=""
 
 PORTSYNCD_ARGS="-p /usr/share/sonic/hwsku/port_config.ini"
 
-SWSSCONFIG_ARGS="00-copp.config.json "
+SWSSCONFIG_ARGS="00-copp.config.json ipinip.json mirror.json "
 
 if [ "$HWSKU" == "Force10-S6000" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
