@@ -72,35 +72,13 @@ cur_part=$(cat /proc/mounts | awk "{ if(\$2==\"/\") print \$1 }" | grep $blk_dev
 }
 
 # If running in ONIE
-if [ "$onie_dev" = "$cur_part" ] || [ -z "$cur_part" ]; then
+if [ "$install_env" = "onie" ]; then
     # The onie bin tool prefix
     onie_bin=
     # The persistent ONIE directory location
     onie_root_dir=/mnt/onie-boot/onie
     # The onie file system root
     onie_initrd_tmp=/
-# Else running in normal Linux
-else
-    # Mount ONIE-BOOT partition
-    onie_mnt=$(mktemp -d) || {
-        echo "Error: Unable to create file system mount point"
-        exit 1
-    }
-    trap_push "fuser -km $onie_mnt || umount $onie_mnt || rmdir $onie_mnt || true"
-    mount $onie_dev $onie_mnt
-    onie_root_dir=$onie_mnt/onie
-    
-    # Mount initrd inside ONIE-BOOT partition
-    onie_initrd_tmp=$(mktemp -d) || {
-        echo "Error: Unable to create file system mount point"
-        exit 1
-    }
-    trap_push "rm -rf $onie_initrd_tmp || true"
-    cd $onie_initrd_tmp
-    # Note: use wildcard in filename below to prevent hard-code version
-    cat $onie_mnt/onie/initrd.img-*-onie | unxz | cpio -id
-    cd -
-    onie_bin="chroot $onie_initrd_tmp"
 fi
 
 # The build system prepares this script by replacing %%DEMO-TYPE%%
