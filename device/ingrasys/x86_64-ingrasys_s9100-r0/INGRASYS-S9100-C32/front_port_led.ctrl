@@ -1,0 +1,465 @@
+int CMICE_TH_LEDUP0_CTRL             = 0x00020000;
+int CMICE_TH_LEDUP0_STATUS           = 0x00020004;
+int CMICE_TH_LEDUP0_PROGRAM_RAM_BASE = 0x00020800;
+int CMICE_TH_LEDUP0_DATA_RAM_BASE    = 0x00020400;
+
+int CMICE_TH_LEDUP1_CTRL             = 0x00021000;
+int CMICE_TH_LEDUP1_STATUS           = 0x00021004;
+int CMICE_TH_LEDUP1_PROGRAM_RAM_BASE = 0x00021800;
+int CMICE_TH_LEDUP1_DATA_RAM_BASE    = 0x00021400;
+
+int CMICE_TH_LEDUP2_CTRL             = 0x00029000;
+int CMICE_TH_LEDUP2_STATUS           = 0x00029004;
+int CMICE_TH_LEDUP2_PROGRAM_RAM_BASE = 0x00029800;
+int CMICE_TH_LEDUP2_DATA_RAM_BASE    = 0x00029400;
+
+int LED_PORT_LINKUP_GREEN        = 0x08;  /* 100G */
+int LED_PORT_LINKUP_YELLOW_2LEDS = 0x02;  /* 50G  */
+int LED_PORT_LINKUP_YELLOW       = 0x04;  /* 40G  */
+int LED_PORT_LINKUP_GREEN_1LED   = 0x10;  /* 25G  */
+int LED_PORT_LINKUP_YELLOW_1LED  = 0x01;  /* 10G  */
+int LED_PORT_LINKDOWN            = 0x00;  /* port link down. */
+
+/* This address is overlap with bcm_shell(led auto on). 
+ * So the led auto update process must be disabled. 
+ * The address of data RAM of LED processor that fills the link status for ports.
+ */
+int LED_LINK_STATUS_ADDR         = 0xA0;
+
+
+int E_LED_CHANNEL_0 = 0;
+int E_LED_CHANNEL_1 = 1;
+int E_LED_CHANNEL_2 = 2;
+int E_LED_CHANNEL_MAX = 3;
+
+/* Those values got from bcm sdk header file*/
+int CMIC_LED_PROGRAM_RAM_SIZE = 0x100;
+int CMIC_LED_DATA_RAM_SIZE = 0x100;
+int CMIC_LED_REG_SIZE = 4;
+
+char *led0_disable_cmd = "setreg PCIM 0x00020000 0x000002a8";
+char *led1_disable_cmd = "setreg PCIM 0x00021000 0x000001e8";
+char *led0_enable_cmd = "setreg PCIM 0x00020000 0x000002a9";
+char *led1_enable_cmd = "setreg PCIM 0x00021000 0x000001e9";
+
+int led_proc_used = 2;
+int logical_port_num = (32 + 32);
+
+
+/*
+ * LED processor images
+ * 
+ */
+uint8 led_proc[led_proc_used][CMIC_LED_PROGRAM_RAM_SIZE] = 
+{
+    {
+        0x02, 0x04, 0xD2, 0x01, 0x74, 0x0A, 0x12, 0x40,
+        0x77, 0x0C, 0x12, 0x00, 0x02, 0x04, 0xD2, 0x01,
+        0x74, 0x14, 0xEA, 0x03, 0x29, 0x61, 0xF1, 0x67,
+        0x35, 0x74, 0x1F, 0x67, 0x54, 0x67, 0x84, 0x02,
+        0x04, 0xD2, 0x01, 0x74, 0x2C, 0x91, 0xDA, 0x00,
+        0x74, 0x0C, 0x77, 0x31, 0x81, 0xDA, 0x40, 0x74,
+        0x0C, 0x86, 0xF0, 0x77, 0xD3, 0x06, 0xFD, 0xD2,
+        0x00, 0x70, 0x51, 0xD2, 0x01, 0x74, 0x43, 0x67,
+        0xBE, 0x77, 0x51, 0xD2, 0x03, 0x74, 0x4B, 0x67,
+        0xC5, 0x77, 0x51, 0xD2, 0x02, 0x74, 0x51, 0x67,
+        0xCC, 0xD2, 0x00, 0x57, 0x02, 0xA0, 0xF1, 0x04,
+        0xD2, 0x08, 0x70, 0x66, 0xD2, 0x04, 0x70, 0x66,
+        0xD2, 0x02, 0x70, 0x6B, 0x77, 0x70, 0x01, 0xC2,
+        0xFC, 0x77, 0x71, 0x01, 0xC2, 0xFE, 0x77, 0x71,
+        0x01, 0x28, 0x32, 0x00, 0x32, 0x01, 0xB7, 0x97,
+        0x75, 0x7F, 0x02, 0x01, 0x60, 0xFE, 0x57, 0x02,
+        0x00, 0x60, 0xFE, 0x57, 0x02, 0xA0, 0xF1, 0x04,
+        0xD2, 0x08, 0x70, 0xAE, 0xD2, 0x04, 0x70, 0x9E,
+        0xD2, 0x10, 0x70, 0xAE, 0xD2, 0x02, 0x70, 0x9E,
+        0xD2, 0x01, 0x70, 0x9E, 0x77, 0xBE, 0x06, 0xFE,
+        0xD2, 0x01, 0x70, 0xA6, 0x77, 0xC5, 0x06, 0xF0,
+        0xC2, 0x08, 0x74, 0xBE, 0x77, 0xC5, 0x06, 0xFE,
+        0xD2, 0x01, 0x70, 0xB6, 0x77, 0xCC, 0x06, 0xF0,
+        0xC2, 0x08, 0x74, 0xBE, 0x77, 0xCC, 0x22, 0x0E,
+        0x87, 0x22, 0x0E, 0x87, 0x57, 0x22, 0x0F, 0x87,
+        0x22, 0x0E, 0x87, 0x57, 0x22, 0x0E, 0x87, 0x22,
+        0x0F, 0x87, 0x57, 0x02, 0x04, 0xD2, 0x01, 0x70,
+        0xDD, 0x02, 0x80, 0x77, 0xDF, 0x02, 0x20, 0x38,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    },
+    {
+        0x02, 0x04, 0xD2, 0x01, 0x74, 0x0A, 0x12, 0x40,
+        0x77, 0x0C, 0x12, 0x00, 0x02, 0x04, 0xD2, 0x01,
+        0x74, 0x14, 0xEA, 0x03, 0x29, 0x61, 0xF1, 0x67,
+        0x35, 0x74, 0x1F, 0x67, 0x54, 0x67, 0x84, 0x02,
+        0x04, 0xD2, 0x01, 0x74, 0x2C, 0x91, 0xDA, 0x00,
+        0x74, 0x0C, 0x77, 0x31, 0x81, 0xDA, 0x40, 0x74,
+        0x0C, 0x86, 0xF0, 0x77, 0xD3, 0x06, 0xFD, 0xD2,
+        0x00, 0x70, 0x51, 0xD2, 0x01, 0x74, 0x43, 0x67,
+        0xBE, 0x77, 0x51, 0xD2, 0x03, 0x74, 0x4B, 0x67,
+        0xC5, 0x77, 0x51, 0xD2, 0x02, 0x74, 0x51, 0x67,
+        0xCC, 0xD2, 0x00, 0x57, 0x02, 0xA0, 0xF1, 0x04,
+        0xD2, 0x08, 0x70, 0x66, 0xD2, 0x04, 0x70, 0x66,
+        0xD2, 0x02, 0x70, 0x6B, 0x77, 0x70, 0x01, 0xC2,
+        0xFC, 0x77, 0x71, 0x01, 0xC2, 0xFE, 0x77, 0x71,
+        0x01, 0x28, 0x32, 0x00, 0x32, 0x01, 0xB7, 0x97,
+        0x75, 0x7F, 0x02, 0x01, 0x60, 0xFE, 0x57, 0x02,
+        0x00, 0x60, 0xFE, 0x57, 0x02, 0xA0, 0xF1, 0x04,
+        0xD2, 0x08, 0x70, 0xAE, 0xD2, 0x04, 0x70, 0x9E,
+        0xD2, 0x10, 0x70, 0xAE, 0xD2, 0x02, 0x70, 0x9E,
+        0xD2, 0x01, 0x70, 0x9E, 0x77, 0xBE, 0x06, 0xFE,
+        0xD2, 0x01, 0x70, 0xA6, 0x77, 0xC5, 0x06, 0xF0,
+        0xC2, 0x08, 0x74, 0xBE, 0x77, 0xC5, 0x06, 0xFE,
+        0xD2, 0x01, 0x70, 0xB6, 0x77, 0xCC, 0x06, 0xF0,
+        0xC2, 0x08, 0x74, 0xBE, 0x77, 0xCC, 0x22, 0x0E,
+        0x87, 0x22, 0x0E, 0x87, 0x57, 0x22, 0x0F, 0x87,
+        0x22, 0x0E, 0x87, 0x57, 0x22, 0x0E, 0x87, 0x22,
+        0x0F, 0x87, 0x57, 0x02, 0x04, 0xD2, 0x01, 0x70,
+        0xDD, 0x02, 0x80, 0x77, 0xDF, 0x02, 0x20, 0x38,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    },
+};
+
+struct physical_map_s {
+    uint32 speed;
+    uint32 lanes;
+    uint32 port_num;
+    int    bcm_port;
+    int    channel;
+    int    status;
+};
+
+physical_map_s logical_ports[logical_port_num] = 
+{
+    { 100000,  4,    0,    1,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    1,    2,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    2,    3,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    3,    4,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    4,    5,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    5,    6,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    6,    7,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    7,    8,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    8,   34,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,    9,   35,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   10,   36,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   11,   37,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   12,   38,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   13,   39,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   14,   40,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   15,   41,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   16,   68,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   17,   69,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   18,   70,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   19,   71,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   20,   72,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   21,   73,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   22,   74,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   23,   75,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   24,  102,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   25,  103,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   26,  104,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   27,  105,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   28,  106,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   29,  107,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   30,  108,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    { 100000,  4,   31,  109,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+               
+    {  40000,  4,    0,    1,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    1,    2,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    2,    3,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    3,    4,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    4,    5,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    5,    6,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    6,    7,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    7,    8,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    8,   34,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,    9,   35,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   10,   36,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   11,   37,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   12,   38,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   13,   39,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   14,   40,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   15,   41,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   16,   68,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   17,   69,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   18,   70,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   19,   71,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   20,   72,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   21,   73,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   22,   74,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   23,   75,   E_LED_CHANNEL_1,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   24,  102,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   25,  103,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   26,  104,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   27,  105,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   28,  106,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   29,  107,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   30,  108,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+    {  40000,  4,   31,  109,   E_LED_CHANNEL_0,  BCM_PORT_LINK_STATUS_DOWN},
+};
+
+
+int 
+led_data_ram_set(uint32 unit, int channel, uint8 offset, uint32 status)
+{
+    uint32 addr;
+    char cmd[64] = {0};
+
+    switch (channel)
+    {
+        case E_LED_CHANNEL_0:
+            addr = CMICE_TH_LEDUP0_DATA_RAM_BASE + 4 * offset;
+            break;
+        case E_LED_CHANNEL_1:
+            addr = CMICE_TH_LEDUP1_DATA_RAM_BASE + 4 * offset;
+            break;
+        case E_LED_CHANNEL_2:
+            addr = CMICE_TH_LEDUP2_DATA_RAM_BASE + 4 * offset;
+        default:    
+            /* default to channel 0 for now */
+            addr = CMICE_TH_LEDUP0_DATA_RAM_BASE + 4 * offset;
+            break;
+    }
+
+    /* Disable the LED processor. */
+    switch (channel)
+    {
+        case E_LED_CHANNEL_0:
+            bshell(unit, led0_disable_cmd);
+            break;
+        case E_LED_CHANNEL_1:
+            bshell(unit, led1_disable_cmd);
+            break;
+        case E_LED_CHANNEL_2:
+        default:    
+            /* default to channel 0 for now */
+            bshell(unit, led0_disable_cmd);
+            break;
+    }
+
+
+    /* Write the value into LED processor. */
+    sprintf(cmd, "setreg PCIM  0x%08x 0x%02x", addr, status);
+    bshell(unit, cmd);
+
+    /* Enabled the LED processor. */
+    switch (channel)
+    {
+        case E_LED_CHANNEL_0:
+            bshell(unit, led0_enable_cmd);
+            break;
+        case E_LED_CHANNEL_1:
+            bshell(unit, led1_enable_cmd);
+            break;
+        case E_LED_CHANNEL_2:
+        default:    
+            /* default to channel 0 for now */
+            bshell(unit, led0_enable_cmd);
+            break;
+    }
+
+
+    return 0;
+}
+
+/*
+ * LED control function for link change
+ * 
+ */
+void 
+led_ctrl_cb(int unit,  bcm_port_t bcm_port, bcm_port_info_t *info)
+{
+    uint8 link_data = LED_PORT_LINKDOWN;
+    int offset = LED_LINK_STATUS_ADDR;
+    int ch = E_LED_CHANNEL_0;
+    int physical_port;
+    int i, lanes, index;
+    
+    const int index_map[] =
+    {
+         0,
+         4,  0, 12,  8, 20, 16, 28, 24,                                 /* 1~8 on E_LED_CHANNEL_0 */
+         4,  0, 12,  8, 20, 16, 28, 24, 36, 32, 44, 40, 52, 48, 60, 56, /* 9~24 on E_LED_CHANNEL_1 */
+        36, 32, 44, 40, 52, 48, 60, 56,                                 /* 25~32 on E_LED_CHANNEL_0 */
+         4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11, 20, 21,  /* 33 ~ 64 on E_LED_CHANNEL_0 */
+        22, 23, 16, 17, 18, 19, 28, 29, 30, 31, 24, 25, 26, 27, 
+         4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11, 20, 21,  /* 65 ~ 96 on E_LED_CHANNEL_1 */
+        22, 23, 16, 17, 18, 19, 28, 29, 30, 31, 24, 25, 26, 27,         
+        36, 37, 38, 39, 32, 33, 34, 35, 44, 45, 46, 47, 40, 41, 42, 43, /* 97 ~ 128 on E_LED_CHANNEL_1 */
+        52, 53, 54, 55, 48, 49, 50, 51, 60, 61, 62, 63, 56, 57, 58, 59,   
+        36, 37, 38, 39, 32, 33, 34, 35, 44, 45, 46, 47, 40, 41, 42, 43, /* 129 ~ 160 on E_LED_CHANNEL_0 */
+        52, 53, 54, 55, 48, 49, 50, 51, 60, 61, 62, 63, 56, 57, 58, 59   
+    };
+
+   /* printf("\nbcm_port=%d, speed=%d, link=%s\n", 
+    *        bcm_port, info->speed,
+    *        (info->linkstatus == BCM_PORT_LINK_STATUS_UP) ? "Up":"Down");
+    */
+
+    physical_port = -1;
+
+    if (info->linkstatus == BCM_PORT_LINK_STATUS_UP) {   /* Link Up. */
+        for (i = 0; i < logical_port_num; i++) {
+            if (logical_ports[i].bcm_port == bcm_port &&
+                logical_ports[i].speed == info->speed) {
+                physical_port = logical_ports[i].port_num + 1;
+                ch = logical_ports[i].channel;
+                lanes = logical_ports[i].lanes;
+                logical_ports[i].status = BCM_PORT_LINK_STATUS_UP;
+                break;
+            }
+        }
+    } else {                                            /* Link Down. */
+        for (i = 0; i < logical_port_num; i++) {
+            if (logical_ports[i].bcm_port == bcm_port &&
+                logical_ports[i].status == BCM_PORT_LINK_STATUS_UP) {
+                physical_port = logical_ports[i].port_num + 1;
+                ch = logical_ports[i].channel;
+                lanes = logical_ports[i].lanes;
+                break;
+            }
+        }
+    }
+
+    if(physical_port < 0) {
+        return;
+    }
+    
+    index = index_map[physical_port];
+    offset = LED_LINK_STATUS_ADDR + index;
+
+    if (info->linkstatus == BCM_PORT_LINK_STATUS_UP) {  /* Link Up. */
+        switch (info->speed)
+        {
+            default:
+            case 100000:
+                link_data = LED_PORT_LINKUP_GREEN;
+                break;
+            case 40000:
+                link_data = LED_PORT_LINKUP_YELLOW;
+                break;
+        }
+    } else {                                           /* Link Down. */
+        link_data = LED_PORT_LINKDOWN;
+    }
+
+    for (i = 0; i < lanes ;i++) {
+        led_data_ram_set(unit, ch, offset, link_data);
+        offset++;
+    }
+
+    /* printf("\nbcm_port=%d, phy_port=%d, speed=%d, index=%d, link=%s\n", 
+     *       bcm_port, physical_port, info->speed, index, 
+     *      (info->linkstatus == BCM_PORT_LINK_STATUS_UP)?"Up":"Down");
+     */ 
+}
+
+/*
+ * 1. Initialize LED Processor
+ * 2. Register linkchange callback function
+ */
+int
+led_init(int unit)
+{
+    uint8 *led_img[led_proc_used];
+    uint32 led_prog_ram_base[led_proc_used] = {0};
+    uint32 led_data_ram_base[led_proc_used] = {0};
+    uint32 led_proc_idx;
+    uint32 offset = 0;
+    int rv = BCM_E_NONE;
+    bcm_port_config_t port_config;
+    bcm_pbmp_t pbmp;
+    char cmd[64] = {0};
+
+    led_data_ram_base[0] = CMICE_TH_LEDUP0_DATA_RAM_BASE;
+    led_data_ram_base[1] = CMICE_TH_LEDUP1_DATA_RAM_BASE;
+    led_prog_ram_base[0] = CMICE_TH_LEDUP0_PROGRAM_RAM_BASE;
+    led_prog_ram_base[1] = CMICE_TH_LEDUP1_PROGRAM_RAM_BASE;
+
+    for (led_proc_idx = 0 ; led_proc_idx < led_proc_used ; led_proc_idx++) {
+        led_img[led_proc_idx] = (auto)led_proc[led_proc_idx];
+    }
+
+    for (led_proc_idx = 0 ; led_proc_idx < led_proc_used ; led_proc_idx++) {
+        /* 1. Disable LEDuP */
+        if (led_proc_idx == 0) {
+            bshell(unit, led0_disable_cmd);
+        } else if (led_proc_idx == 1) {
+            bshell(unit, led1_disable_cmd);
+        }
+
+        /* 2. Make sure that the LEDuP image is downloaded to the switch chip */
+        for (offset = 0; offset < CMIC_LED_PROGRAM_RAM_SIZE; offset++) {
+            cmd[0] = '\0';
+            sprintf(cmd, "setreg PCIM 0x%08x 0x%x", 
+                    led_prog_ram_base[led_proc_idx] + (CMIC_LED_REG_SIZE * offset), 
+                    (auto)led_img[led_proc_idx][offset]);
+            bshell(unit, cmd);
+        }
+
+        /* 3. Clear all port status bytes */
+        for (offset = 0x80; offset < CMIC_LED_DATA_RAM_SIZE; offset++) {
+            /* This address might be wrong at SDK6.2.1, should use bcm shell to check */
+            cmd[0] = '\0';
+            sprintf(cmd, "setreg PCIM 0x%08x 0x0", 
+                    led_data_ram_base[led_proc_idx] + (CMIC_LED_REG_SIZE * offset));
+            bshell(unit, cmd);
+        }
+
+        /* 4. Enable LEDuP */
+        if (led_proc_idx == 0) {
+            bshell(unit, led0_enable_cmd);
+        } else if (led_proc_idx == 1) {
+            bshell(unit, led1_enable_cmd);
+        }
+
+    }
+
+    rv = bcm_linkscan_register(unit, led_ctrl_cb);
+    if (BCM_FAILURE(rv)) {
+        printf("bcm_linkscan_register: %s\n", bcm_errmsg(rv));
+        return rv;
+    }
+
+    rv = bcm_port_config_get(unit, &port_config);
+    if (BCM_FAILURE(rv)) {
+        printf("bcm_port_config: %s\n", bcm_errmsg(rv));
+        return rv;
+    }
+
+    BCM_PBMP_CLEAR(pbmp);
+    BCM_PBMP_OR(pbmp, port_config.all);
+
+    rv = bcm_link_change(unit, pbmp);
+    if (BCM_FAILURE(rv)) {
+        printf("bcm_link_change: %s \n", bcm_errmsg(rv));
+        return rv;
+    }
+
+    return BCM_E_NONE;
+}
+
+
+/*
+ * LED Control for Front Port
+ * 
+ */
+int
+led_ctrl_start(void)
+{
+    int rv = BCM_E_NONE;
+    int unit = 0;
+ 
+    rv = led_init(unit);
+    if (BCM_FAILURE(rv)) {
+        printf("LED init failed!\n");
+    } else {
+        printf("LED init done.\n");
+    }
+
+    return rv;
+}
+
+led_ctrl_start();
