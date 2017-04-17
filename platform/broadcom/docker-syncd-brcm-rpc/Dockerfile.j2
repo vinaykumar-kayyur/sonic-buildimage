@@ -44,7 +44,6 @@ RUN apt-get update \
  && mkdir -p /opt       \
  && cd /opt             \
  && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py \
- && dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; } \
  && apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y \
  && rm -rf /deps
 
