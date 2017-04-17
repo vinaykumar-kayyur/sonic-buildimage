@@ -2,13 +2,6 @@ FROM debian:jessie
 
 MAINTAINER Pavel Shirshov
 
-## Copy dependencies
-COPY \
-{% for deb in docker_ptf_debs.split(' ') -%}
-debs/{{ deb }}{{' '}}
-{%- endfor -%}
-debs/
-
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -41,11 +34,6 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         cmake               \
         libqt5core5a        \
         libqt5network5
-
-RUN dpkg -i \
-{% for deb in docker_ptf_debs.split(' ') -%}
-debs/{{ deb }}{{' '}}
-{%- endfor %}
 
 RUN rm -rf /debs \
     && apt-get -y autoclean \
