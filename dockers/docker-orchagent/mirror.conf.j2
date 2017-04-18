@@ -1,0 +1,13 @@
+[
+    {
+        "MIRROR_SESSION_TABLE:everflow": {
+            "src_ip": "{{ minigraph_lo_interfaces[0]['addr'] }}",
+            "dst_ip": "{{ erspan_dst[0] }}",
+            "gre_type": "0x88be",
+            "dscp": "8",
+            "ttl": "255",
+            "queue": "1"
+        },
+        "OP": "SET"
+    }
+]

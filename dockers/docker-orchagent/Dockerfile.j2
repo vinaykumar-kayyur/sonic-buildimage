@@ -23,10 +23,13 @@ debs/{{ deb }}{{' '}}
 {%- endfor %}
 
 COPY start.sh /usr/bin/start.sh
+COPY config.sh /usr/bin/config.sh
+COPY ipinip.conf.j2 /usr/share/sonic/templates/ipinip.conf.j2
+COPY mirror.conf.j2 /usr/share/sonic/templates/mirror.conf.j2
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/bin/bash"]
-CMD ["/usr/bin/start.sh"]
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["/usr/bin/config.sh && /usr/bin/start.sh"]
