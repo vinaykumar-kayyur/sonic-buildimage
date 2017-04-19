@@ -1,6 +1,7 @@
 /var/log/syslog
 /var/log/quagga/*
 /var/log/sonic/*
+/var/log/teamd.log
 {
     rotate 7
     daily
