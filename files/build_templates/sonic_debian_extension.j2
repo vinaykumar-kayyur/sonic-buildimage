@@ -88,6 +88,9 @@ sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
+# Copy crontab
+sudo cp -f $IMAGE_CONFIGS/cron/crontab $FILESYSTEM_ROOT/etc/
+
 # Copy NTP configuration files and templates
 sudo cp $IMAGE_CONFIGS/ntp/ntp-config.service $FILESYSTEM_ROOT/etc/systemd/system/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ntp-config.service

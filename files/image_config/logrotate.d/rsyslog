@@ -4,7 +4,9 @@
 /var/log/teamd.log
 {
     rotate 7
-    daily
+# Removed 'daily' interval, as we now call logrotate more frequently via cron
+# and we want to check these logs every time
+#    daily
     size 100M
     missingok
     notifempty
