@@ -13,6 +13,10 @@ SYNCD = syncd_1.0.0_amd64.deb
 $(SYNCD)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA)
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD)))
 
+SYNCD_RPC = syncd-rpc_1.0.0_amd64.deb
+$(SYNCD_RPC)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA) $(LIBTHRIFT)
+$(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD)))
+
 LIBSAIMETADATA = libsaimetadata_1.0.0_amd64.deb
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(LIBSAIMETADATA)))
 
