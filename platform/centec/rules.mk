@@ -6,7 +6,8 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/python-saithrift.mk
 
-SONIC_ALL += $(SONIC_ONE_IMAGE)
+SONIC_ALL += $(SONIC_ONE_IMAGE) \
+             $(DOCKER_SYNCD_CENTEC_RPC)
 
 # Inject centec sai into sairedis
 $(LIBSAIREDIS)_DEPENDS += $(CENTEC_SAI)
