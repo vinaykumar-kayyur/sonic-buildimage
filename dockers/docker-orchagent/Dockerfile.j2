@@ -31,5 +31,5 @@ COPY mirror.json.j2 /usr/share/sonic/templates/mirror.json.j2
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/bin/bash", "-c"]
-CMD ["/usr/bin/config.sh && /usr/bin/start.sh"]
+ENTRYPOINT ["/bin/bash"]
+CMD ["/usr/bin/start.sh"]

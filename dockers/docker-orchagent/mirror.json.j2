@@ -1,4 +1,5 @@
 [
+{% if erspan_dst %}
     {
         "MIRROR_SESSION_TABLE:everflow": {
             "src_ip": "{{ minigraph_lo_interfaces[0]['addr'] }}",
@@ -14,5 +15,6 @@
         },
         "OP": "SET"
     }
+{% endif %}
 ]
 

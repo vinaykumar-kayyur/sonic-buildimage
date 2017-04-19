@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. config.sh
+
 function start_app {
     orchagent $ORCHAGENT_ARGS &
     portsyncd $PORTSYNCD_ARGS &
