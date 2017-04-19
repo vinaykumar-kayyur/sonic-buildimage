@@ -15,7 +15,7 @@ $(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD)))
 
 SYNCD_RPC = syncd-rpc_1.0.0_amd64.deb
 $(SYNCD_RPC)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA)
-$(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD)))
+$(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD_RPC)))
 
 LIBSAIMETADATA = libsaimetadata_1.0.0_amd64.deb
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(LIBSAIMETADATA)))
