@@ -101,6 +101,12 @@ sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog-config.sh $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog.conf.j2 $FILESYSTEM_ROOT/usr/share/sonic/templates/
 sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog.d/* $FILESYSTEM_ROOT/etc/rsyslog.d/
 
+# Copy logrotate.d configuration files
+sudo cp -f $IMAGE_CONFIGS/logrotate.d/rsyslog $FILESYSTEM_ROOT/etc/logrotate.d/
+
+# Copy systemd-journald configuration files
+sudo cp -f $IMAGE_CONFIGS/systemd/journald.conf $FILESYSTEM_ROOT/etc/systemd/
+
 # Copy interfaces configuration files and templates
 sudo cp $IMAGE_CONFIGS/interfaces/interfaces-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable interfaces-config.service
