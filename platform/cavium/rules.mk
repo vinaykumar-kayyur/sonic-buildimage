@@ -9,7 +9,7 @@ include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/python-saithrift.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
-             $(DOCKER_FPM_GOBGP) \
+             $(DOCKER_FPM) \
              $(DOCKER_SYNCD_CAVM_RPC)
 
 # Inject cavium sai into sairedis
