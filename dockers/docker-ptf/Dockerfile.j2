@@ -72,7 +72,7 @@ RUN rm -rf /debs \
     && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py
     && wget https://launchpadlibrarian.net/265451319/iputils-ping_20150815-2ubuntu3_amd64.deb
     && dpkg -r inetutils-ping
-    && dpkg -i dpkg -i iputils-ping_20150815-2ubuntu3_amd64.deb
+    && dpkg -i iputils-ping_20150815-2ubuntu3_amd64.deb
 
 ## Adjust sshd settings
 RUN mkdir /var/run/sshd \
