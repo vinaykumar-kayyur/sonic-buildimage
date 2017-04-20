@@ -6,7 +6,7 @@ case $1 in
 esac
 
 ## Mount the aufs file system: rw layer over squashfs
-image_dir=$(cat /proc/cmdline | sed -e 's/BOOT_IMAGE=\/\(.*\)\/boot\(.*\)/\1/')
+image_dir=$(cat /proc/cmdline | sed -e 's/.*loop=\(\S*\)\/.*/\1/')
 mkdir -p ${rootmnt}/host/$image_dir/rw
 mount -n -o dirs=${rootmnt}/host/$image_dir/rw:${rootmnt}=ro -t aufs root-aufs ${rootmnt}
 ## Check if the root block device is still there
