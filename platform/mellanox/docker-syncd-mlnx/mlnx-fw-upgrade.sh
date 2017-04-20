@@ -1,8 +1,8 @@
 #!/bin/bash
 
 query_retry_count_max="10"
-required_fw_version="13.1220.0130"
-fw_file=/etc/mlnx/fw-SPC.mfa
+required_fw_version="13.1300.0130"
+fw_file=/etc/mlnx/fw-SPC-rel-13_1300_0130-EVB.mfa
 
 run_or_fail() {
 	$1
