@@ -4,9 +4,9 @@
             "src_ip": "10.1.0.32",
             "dst_ip": "2.2.2.2",
             "gre_type": "0x88be",
+            "queue": "0",
             "dscp": "8",
-            "ttl": "255",
-            "queue": "1"
+            "ttl": "255"
         },
         "OP": "SET"
     }
