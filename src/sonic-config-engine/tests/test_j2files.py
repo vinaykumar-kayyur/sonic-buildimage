@@ -10,6 +10,7 @@ class TestJ2Files(TestCase):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.t0_minigraph = os.path.join(self.test_dir, 't0-sample-graph.xml')
+        self.version_yml = os.path.join(self.test_dir, 'sonic_version.yml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
 
@@ -48,7 +49,7 @@ class TestJ2Files(TestCase):
 
     def test_ipinip(self):
         ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
-        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + ipinip_file + ' > ' + self.output_file
+        argument = '-m ' + self.t0_minigraph + ' -y ' + self.version_yml + ' -p ' + self.t0_port_config + ' -t ' + ipinip_file + ' > ' + self.output_file
         self.run_script(argument)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 'ipinip.json')
@@ -57,7 +58,7 @@ class TestJ2Files(TestCase):
 
     def test_everflow(self):
         everflow_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'mirror.json.j2')
-        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + everflow_file + ' > ' + self.output_file
+        argument = '-m ' + self.t0_minigraph + ' -y ' + self.version_yml + ' -p ' + self.t0_port_config + ' -t ' + everflow_file + ' > ' + self.output_file
         self.run_script(argument)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 'mirror.json')
