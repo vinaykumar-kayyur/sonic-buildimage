@@ -11,11 +11,11 @@ include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/python-saithrift.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
-             $(DOCKER_FPM_GOBGP) \
+             $(DOCKER_FPM) \
              $(DOCKER_SYNCD_MLNX_RPC)
 
 # Inject mlnx sai into sairedis
-$(LIBSAIREDIS)_DEPENDS += $(MLNX_SAI)
+$(LIBSAIREDIS)_DEPENDS += $(MLNX_SAI) $(LIBSAITHRIFT_DEV_MLNX)
 
 # Runtime dependency on mlnx sai is set only for syncd
 $(SYNCD)_RDEPENDS += $(MLNX_SAI)
