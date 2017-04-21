@@ -4,7 +4,7 @@
             "tunnel_type":"IPINIP",
             "src_ip":"10.1.0.32",
             "dst_ip":"10.1.0.32",
-            "dscp_mode":"uniform",
+            "dscp_mode":"pipe",
             "ecn_mode":"copy_from_outer",
             "ttl_mode":"pipe"
         },
