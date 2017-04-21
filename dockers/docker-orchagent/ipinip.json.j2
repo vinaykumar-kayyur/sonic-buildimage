@@ -4,10 +4,11 @@
             "tunnel_type":"IPINIP",
             "src_ip":"{{ minigraph_lo_interfaces[0]['addr'] }}",
             "dst_ip":"{{ minigraph_lo_interfaces[0]['addr'] }}",
-            "dscp_mode":"uniform",
 {% if minigraph_hwsku in [ 'ACS-MSN2700', 'ACS-MSN2410', 'ACS-MSN2100' ] %}
+            "dscp_mode":"uniform",
             "ecn_mode":"standard",
 {% else %}
+            "dscp_mode":"pipe",
             "ecn_mode":"copy_from_outer",
 {% endif %}
             "ttl_mode":"pipe"
