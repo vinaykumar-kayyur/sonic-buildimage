@@ -1,7 +1,9 @@
 [Unit]
 Description=DHCP relay container
 Requires=docker.service
+After=role-config.service
 After=interfaces-config.service
+ConditionPathExists=/etc/sonic/role/dhcp_relay
 
 [Service]
 User={{ sonicadmin_user }}

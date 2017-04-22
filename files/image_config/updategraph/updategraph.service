@@ -1,5 +1,6 @@
 [Unit]
 Description=download minigraph from graph service
+After=platform-init.service
 Before=ntp-config.service
 Before=rsyslog-config.service
 Before=interfaces-config.service

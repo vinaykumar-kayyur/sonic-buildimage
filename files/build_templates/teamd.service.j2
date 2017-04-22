@@ -1,7 +1,9 @@
 [Unit]
 Description=TEAMD container
 Requires=database.service
+After=role-config.service
 After=database.service
+ConditionPathExists=/etc/sonic/role/teamd
 
 [Service]
 User={{ sonicadmin_user }}

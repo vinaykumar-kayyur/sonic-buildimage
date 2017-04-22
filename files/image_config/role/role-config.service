@@ -1,0 +1,10 @@
+[Unit]
+Description=Role-specific configuration
+After=updategraph.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/role-config.sh
+
+[Install]
+WantedBy=multi-user.target
