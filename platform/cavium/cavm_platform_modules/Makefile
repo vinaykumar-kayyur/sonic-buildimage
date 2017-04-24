@@ -21,6 +21,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	cp SONiC/AS7512-32X/module/*.ko $(DEB_BUILD_DIR)/lib/modules/$(KVERSION)
 	cp SONiC/AS7512-32X/accton_as7512_util.py $(DEB_BUILD_DIR)/usr/bin
+	chmod +x $(DEB_BUILD_DIR)/usr/bin/accton_as7512_util.py
 	cp -r DEBIAN $(DEB_BUILD_DIR)
 	dpkg-deb -b  $(DEB_BUILD_DIR) $(MAIN_TARGET)
 
