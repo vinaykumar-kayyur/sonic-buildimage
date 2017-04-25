@@ -10,6 +10,10 @@
     compress
     delaycompress
     postrotate
+        # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
+        # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
+        # However, Debian Jessie is still using v1.22.
+        # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672218
         kill -HUP $(cat /var/run/rsyslogd.pid)
     endscript
 }
@@ -35,6 +39,10 @@
     delaycompress
     sharedscripts
     postrotate
+        # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
+        # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
+        # However, Debian Jessie is still using v1.22.
+        # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672218
         kill -HUP $(cat /var/run/rsyslogd.pid)
     endscript
 }
