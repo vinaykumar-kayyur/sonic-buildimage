@@ -1,7 +1,8 @@
-# docker platform monitor image
+# Docker image for SONiC platform monitoring tools
 
 DOCKER_PLATFORM_MONITOR = docker-platform-monitor.gz
 $(DOCKER_PLATFORM_MONITOR)_PATH = $(DOCKERS_PATH)/docker-platform-monitor
+$(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(LEDD) $(SWSSSDK_PY2)
 $(DOCKER_PLATFORM_MONITOR)_LOAD_DOCKERS = $(DOCKER_CONFIG_ENGINE)
 
 SONIC_SIMPLE_DOCKER_IMAGES += $(DOCKER_PLATFORM_MONITOR)

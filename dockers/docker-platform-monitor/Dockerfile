@@ -1,15 +1,54 @@
 FROM docker-config-engine
 
-## Make apt-get non-interactive
+# Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Update apt's package index files
 RUN apt-get update
 
 RUN apt-get install -y sensord
 
-## Clean up
-RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
-RUN rm -rf /debs
+# Dependencies for ledd
+# TODO: If needed
+
+# Copy built Debian packages
+{% if docker_ledd_debs.strip() %}
+COPY \
+{% for deb in docker_ledd_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+{%- endif -%}
+
+# Install built Debian packages
+{% if docker_ledd_debs.strip() %}
+RUN dpkg -i \
+{% for deb in docker_ledd_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+{%- endif -%}
+
+# Copy built Python wheels
+{% if docker_ledd_whls.strip() %}
+COPY \
+{% for whl in docker_ledd_whls.split(' ') -%}
+python-wheels/{{ whl }}{{' '}}
+{%- endfor -%}
+python-wheels/
+{%- endif -%}
+
+# Install built Python wheels
+{% if docker_ledd_whls.strip() %}
+RUN pip install \
+{% for whl in docker_ledd_whls.split(' ') -%}
+python-wheels/{{ whl }}{{' '}}
+{%- endfor %}
+{%- endif -%}
+
+
+# Clean up
+RUN apt-get remove -y python-pip python-dev; apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN rm -rf /debs /python-wheels
 
 COPY ["start.sh", "lm-sensors.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
