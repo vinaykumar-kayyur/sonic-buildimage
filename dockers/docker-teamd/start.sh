@@ -5,7 +5,7 @@
 TEAMD_CONF_PATH=/etc/teamd
 
 function start_app {
-    if [ -d $TEAMD_CONF_PATH ]; then
+    if [ "$(ls $TEAMD_CONF_PATH)" ]; then
         for f in $TEAMD_CONF_PATH/*; do
             teamd -f $f -d
         done
@@ -14,7 +14,7 @@ function start_app {
 }
 
 function clean_up {
-    if [ -d $TEAMD_CONF_PATH ]; then
+    if [ "$(ls $TEAMD_CONF_PATH)" ]; then
         for f in $TEAMD_CONF_PATH/*; do
             teamd -f $f -k
         done
