@@ -41,8 +41,7 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         cmake               \
         libqt5core5a        \
         libqt5network5      \
-    && dpkg -r inetutils-ping \
-    && apt-get install -y iputils-ping
+        iputils-ping
 
 
 RUN dpkg -i \
