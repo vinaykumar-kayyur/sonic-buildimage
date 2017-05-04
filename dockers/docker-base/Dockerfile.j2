@@ -16,12 +16,12 @@ RUN rm -rf               \
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-## Set the apt source
+## Configure data sources for apt/dpkg
 COPY ["sources.list", "/etc/apt/sources.list"]
 COPY ["dpkg_01_drop", "/etc/dpkg/dpkg.cfg.d/01_drop"]
 RUN apt-get clean && apt-get update
 
-## Pre-install the fundamental packages
+## Pre-install fundamental packages
 RUN apt-get -y install \
     rsyslog            \
     supervisor         \
@@ -51,3 +51,4 @@ RUN apt-get -y install \
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y; \
     rm -rf /var/lib/apt/lists/*;                                   \
     rm -rf /tmp/*;
+
