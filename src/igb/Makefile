@@ -12,6 +12,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Patch
 	pushd ./igb-$(IGB_DRIVER_VERSION)
 	patch -p1 < ../patch/0001-add-support-for-BCM54616-phy-for-intel-igb-driver.patch
+	patch -p1 < ../patch/0002-Force-disable-MII-isolate-mode-for-bcm54616.patch
 
 	# Build the package
 	pushd src
