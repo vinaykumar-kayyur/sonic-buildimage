@@ -27,7 +27,8 @@ $(SNMPD)_RDEPENDS += $(LIBSNMP)
 $(eval $(call add_derived_package,$(LIBSNMP_BASE),$(SNMPD)))
 
 LIBSNMP = libsnmp30_$(SNMPD_VERSION_FULL)_amd64.deb
-$(LIBSNMP)_RDEPENDS += $(LIBSNMP_BASE)
+$(LIBSNMP)_DEPENDS += $(LIBNL3_DEV)
+$(LIBSNMP)_RDEPENDS += $(LIBSNMP_BASE) $(LIBNL3)
 $(eval $(call add_derived_package,$(LIBSNMP_BASE),$(LIBSNMP)))
 
 LIBSNMP_DBG = libsnmp30-dbg_$(SNMPD_VERSION_FULL)_amd64.deb
