@@ -237,6 +237,8 @@ set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
+
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.disable_ipv6 1
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
