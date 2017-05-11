@@ -25,7 +25,7 @@ RUN apt-get clean && apt-get update
 RUN apt-get -y install \
     rsyslog            \
     supervisor         \
-    vim                \
+    vim-tiny           \
     perl               \
     python             \
     less
@@ -46,6 +46,8 @@ RUN apt-get -y install \
 {% for dbg_pkg in docker_base_dbgs.split(' ') -%}
     {{ dbg_pkg }}{{' '}}
 {%- endfor %}
+{% else %}
+RUN ln /usr/bin/vim.tiny /usr/bin/vim
 {% endif %}
 
 ## Clean up apt

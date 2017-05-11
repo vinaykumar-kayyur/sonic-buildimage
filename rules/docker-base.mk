@@ -5,10 +5,11 @@ $(DOCKER_BASE)_PATH = $(DOCKERS_PATH)/docker-base
 
 ifeq ($(SONIC_CONFIG_DEBUG),y)
 GDB = gdb
-STRACE = strace
+VIM = vim
 OPENSSH = openssh-client
 SSHPASS = sshpass
-$(DOCKER_BASE)_DBG_PACKAGES += $(GDB) $(STRACE) $(OPENSSH) $(SSHPASS)
+STRACE = strace
+$(DOCKER_BASE)_DBG_PACKAGES += $(GDB) $(VIM) $(OPENSSH) $(SSHPASS) $(STRACE)
 endif
 
 SONIC_DOCKER_IMAGES += $(DOCKER_BASE)
