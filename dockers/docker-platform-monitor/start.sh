@@ -12,4 +12,4 @@ rm -f /var/run/rsyslogd.pid
 
 supervisorctl start rsyslogd
 supervisorctl start lm-sensors
-supervisorctl start monit
+
