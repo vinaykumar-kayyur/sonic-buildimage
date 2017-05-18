@@ -66,3 +66,5 @@ RUN chmod go= /var/$user/.ssh -R
 RUN echo "$user ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers
 
 USER $user
+
+RUN cd /var/$user && git clone https://github.com/Azure/sonic-mgmt
