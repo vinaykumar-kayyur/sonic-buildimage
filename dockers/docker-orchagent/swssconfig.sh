@@ -21,9 +21,9 @@ function fast_reboot {
         rm -f /fdb.json
       fi
 
-      if [[ -f /arp1.json ]];
+      if [[ -f /arp.json ]];
       then
-        swssconfig /arp1.json
+        swssconfig /arp.json
         rm -f /arp.json
       fi
       ;;
