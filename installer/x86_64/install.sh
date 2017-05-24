@@ -385,7 +385,6 @@ if [ "$install_env" != "sonic" ]; then
     }
 else
     demo_mnt="/host"
-    TAR_EXTRA_OPTION="--numeric-owner"
     running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
     # Prevent installing existing SONiC if it is running
     if [ "$image_dir" = "image-$running_sonic_revision" ]; then
@@ -418,6 +417,7 @@ fi
 unzip $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$image_dir
 
 if [ -f $demo_mnt/$image_dir/$FILESYSTEM_DOCKERFS ]; then
+    TAR_EXTRA_OPTION="--numeric-owner"
     cd $demo_mnt/$image_dir && mkdir -p $DOCKERFS_DIR && tar x $TAR_EXTRA_OPTION -f $FILESYSTEM_DOCKERFS -C $DOCKERFS_DIR && rm -f $FILESYSTEM_DOCKERFS; cd $OLDPWD
 fi
 
