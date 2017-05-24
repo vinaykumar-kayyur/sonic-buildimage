@@ -105,6 +105,7 @@ allow-hotplug {{ pc_interface['attachto'] }}
 iface {{ pc_interface['attachto'] }} {{ 'inet' if pc_interface['addr'] | ipv4 else 'inet6' }} static
     address {{ pc_interface['addr'] }}
     netmask {{ pc_interface['mask'] }}
+    mtu 9216
 #
 {% endfor %}
 {% endblock pc_interfaces %}
