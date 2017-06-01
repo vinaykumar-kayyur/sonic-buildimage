@@ -44,7 +44,10 @@ parse_environment_config() {
 clean_flash() {
     ## Remove all the other unnecssary files except swi file, boot-config
     for f in $(ls -A $target_path); do
-        if [ $f != "${swipath##*/}" ] && [ $f != "boot-config" ]; then
+        if [ $f != "${swipath##*/}" ] &&
+           [ $f != "boot-config" ] &&
+           [ $f != "minigraph.xml" ]
+        then
             rm -rf "$target_path/$f"
         fi
     done
