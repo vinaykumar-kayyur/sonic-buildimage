@@ -8,4 +8,5 @@ NEW_MGMT_IP=`sonic-cfggen -m /etc/sonic/minigraph.xml  -v 'minigraph_mgmt_interf
 NEW_MGMT_MASK=`sonic-cfggen -m /etc/sonic/minigraph.xml  -v 'minigraph_mgmt_interface["mask"]'`
 
 ifconfig eth0 $NEW_MGMT_IP netmask $NEW_MGMT_MASK
+[ -f /var/run/dhclient.eth0.pid ] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
 
