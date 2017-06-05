@@ -41,7 +41,7 @@
     <Devices>
       <Device i:type="LeafRouter">
         <Hostname>switch1</Hostname>
-        <HwSku>AS7712-32X</HwSku>
+        <HwSku>Accton-AS7712-32X</HwSku>
       </Device>
     </Devices>
   </PngDec>
