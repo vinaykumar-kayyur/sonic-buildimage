@@ -71,5 +71,5 @@
     <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
   </MetadataDeclaration>
   <Hostname>switch1</Hostname>
-  <HwSku>AS7712-32X</HwSku>
+  <HwSku>Accton-AS7712-32X</HwSku>
 </DeviceMiniGraph>
