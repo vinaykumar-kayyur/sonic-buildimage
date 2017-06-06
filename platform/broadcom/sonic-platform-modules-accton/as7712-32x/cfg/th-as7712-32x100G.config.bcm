@@ -218,13 +218,13 @@ portmap_114=109:100
 portmap_118=113:100
 
 #FC29
-#portmap_122=117:100
+portmap_122=117:100
 
 #FC30
-#portmap_126=121:100
+portmap_126=121:100
 
 #FC31
-#portmap_130=125:100
+portmap_130=125:100
 
 
 
