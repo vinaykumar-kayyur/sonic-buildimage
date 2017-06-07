@@ -24,7 +24,7 @@ kernel_params=kernel-params
 
 aboot_machine="arista_unknown"
 
-target_path=/mnt/flash
+[ -z "$target_path" ] && target_path=/mnt/flash
 image_path="$target_path/image-%%IMAGE_VERSION%%"
 
 # expect the swi to be a non empty file
@@ -41,42 +41,48 @@ parse_environment_config() {
     done
 }
 
-extract_image() {
+clean_flash() {
     ## Remove all the other unnecssary files except swi file, boot-config
     for f in $(ls -A $target_path); do
-        if [ $f != "${swipath##*/}" ] && [ $f != "boot-config" ]; then
+        if [ $f != "${swipath##*/}" ] &&
+           [ $f != "boot-config" ] &&
+           [ $f != "minigraph.xml" ]
+        then
             rm -rf "$target_path/$f"
         fi
     done
+}
 
-    mkdir "$image_path"
+extract_image() {
 
-    ## Unzip the image
-    unzip -oq "$swipath" -x boot0 -d "$image_path"
+    mkdir -p "$image_path"
 
-    ## Remove installer swi as it has lots of redundunt contents
-    rm -f $swipath
+    ## Unzip the image except boot0 and dockerfs archive
+    unzip -oq "$swipath" -x boot0 {{ FILESYSTEM_DOCKERFS }} -d "$image_path"
 
     ## detect rootfs type
-    rootfs_type=`grep /mnt/flash /proc/mounts | cut -d' ' -f3`
+    rootfs_type=`grep " $target_path " /proc/mounts | cut -d' ' -f3`
 
     ## vfat does not support symbol link
-    if [ $rootfs_type != "vfat" ]; then
+    if [ -n "$sonic_upgrade" ] || [ "$rootfs_type" != "vfat" ]; then
         mkdir -p "$image_path/{{ DOCKERFS_DIR }}"
 
-        ## extract docker archive
-        tar xf "$image_path/{{ FILESYSTEM_DOCKERFS }}" -C "$image_path/{{ DOCKERFS_DIR }}"
+        if [ -n "$sonic_upgrade" ]; then
+            TAR_EXTRA_OPTION="--numeric-owner"
+        fi
 
-        ## clean up docker archive
-        rm -f "$image_path/{{ FILESYSTEM_DOCKERFS }}"
+        ## extract docker archive
+        unzip -oqp "$swipath" {{ FILESYSTEM_DOCKERFS }} | tar xzf - -C "$image_path/{{ DOCKERFS_DIR }}" $TAR_EXTRA_OPTION
     else
-        echo "/mnt/flash is $rootfs_type, extract {{ FILESYSTEM_DOCKERFS }} in later stage"
+        ## save dockerfs archive in the image directory
+        unzip -oq "$swipath" {{ FILESYSTEM_DOCKERFS }} -d "$image_path"
+        echo "$target_path is $rootfs_type, extract {{ FILESYSTEM_DOCKERFS }} in later stage"
     fi
 
     ## use new reduced-size boot swi
     echo "SWI=flash:image-%%IMAGE_VERSION%%/{{ ABOOT_BOOT_IMAGE }}" > "$target_path/boot-config"
 
-    ## remove original boot swi
+    ## Remove installer swi as it has lots of redundunt contents
     rm -f "$swipath"
 
     ## sync disk operations
@@ -100,6 +106,10 @@ EOF
 platform_specific() {
     local platform="$(grep -Eo 'platform=[^ ]+' /etc/cmdline | cut -f2 -d=)"
     local sid="$(grep -Eo 'sid=[^ ]+' /etc/cmdline | cut -f2 -d=)"
+
+    # set varlog size to 100MB
+    echo "varlog_size=100" >>/tmp/append
+
     # This is temporary as the platform= and sid= parameters don't provide enough
     # information to identify the SKU
     # An initramfs hook or a later processing done by the initscripts will be
@@ -107,8 +117,6 @@ platform_specific() {
     if [ "$platform" = "raven" ]; then
         aboot_machine=arista_7050_qx32
         echo "modprobe.blacklist=radeon" >>/tmp/append
-        # set varlog size to 100MB
-        echo "varlog_size=100" >>/tmp/append
     fi
     if [ "$platform" = "crow" ]; then
         aboot_machine=arista_7050_qx32s
@@ -120,6 +128,17 @@ platform_specific() {
     fi
 }
 
+# check the hash file in the image, and determine to install or just skip
+GIT_REVISION=$(unzip -p "$swipath" .imagehash)
+LOCAL_IMAGEHASH=$(cat $image_path/.imagehash 2>/dev/null || true)
+if [ "$GIT_REVISION" != "$LOCAL_IMAGEHASH" ]; then
+    [ -z "$sonic_upgrade" ] && clean_flash
+    extract_image
+fi
+
+[ -z "$sonic_upgrade" ] || exit 0
+
+# build the new cmdline
 echo "$append" >/tmp/append
 parse_environment_config >>/tmp/append
 cat /etc/cmdline | sed "/^\(${bootconfigvars// /\|}\|crashkernel\|loglevel\|ignore_loglevel\)\(\$\|=\)/d;/^\$/d" >>/tmp/append
@@ -128,6 +147,8 @@ echo "rw loop=image-%%IMAGE_VERSION%%/fs.squashfs loopfstype=squashfs apparmor=1
 
 # process platform specific operations
 platform_specific
+
+[ -e ${taget_path}/machine.conf ] || write_machine_config
 
 # use extra parameters from kernel-params hook if the file exists
 if [ -f "$image_path/$kernel_params" ]; then
@@ -139,14 +160,6 @@ if ! grep -q "root=" /tmp/append; then
    rootdev=$(mount | grep '/mnt/flash' | cut -f1 -d' ')
    rootfstype=$(mount | grep '/mnt/flash' | cut -f5 -d' ')
    echo "root=$rootdev" >>/tmp/append
-fi
-
-# check the hash file in the image, and determine to install or just skip
-GIT_REVISION=$(unzip -p "$swipath" .imagehash)
-LOCAL_IMAGEHASH=$(cat $image_path/.imagehash 2>/dev/null || true)
-if [ "$GIT_REVISION" != "$LOCAL_IMAGEHASH" ]; then
-    extract_image
-    write_machine_config
 fi
 
 # chainloading using kexec
