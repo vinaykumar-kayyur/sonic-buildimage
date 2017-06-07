@@ -1,0 +1,13 @@
+{
+    "debug": true,
+    "src_ip": "",
+    "authentication": {
+        "login": {
+            "pam_priority": [
+                "local"
+            ]
+        }
+    },
+    "tacacs_server_list": {},
+    "fail_through": false
+}

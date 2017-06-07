@@ -66,3 +66,9 @@
 [submodule "platform/broadcom/sonic-platform-modules-accton"]
 	path = platform/broadcom/sonic-platform-modules-accton
 	url = https://github.com/edge-core/sonic-platform-modules-accton.git
+[submodule "src/tacacs/sonic-pam-tacplus"]
+	path = src/tacacs/sonic-pam-tacplus
+	url = https://github.com/liuqu/sonic-pam-tacplus.git
+[submodule "src/tacacs/sonic-nss-tacplus"]
+	path = src/tacacs/sonic-nss-tacplus
+	url = https://github.com/liuqu/sonic-nss-tacplus.git

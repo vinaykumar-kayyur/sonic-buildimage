@@ -3,12 +3,14 @@
 ## an ONIE installer image.
 ##
 ## USAGE:
-##   ./build_debian USERNAME PASSWORD_ENCRYPTED
+##   ./build_debian USERNAME PASSWORD_ENCRYPTED SONIC_CONFIG_DEBUG
 ## PARAMETERS:
 ##   USERNAME
 ##          The name of the default admin user
 ##   PASSWORD_ENCRYPTED
 ##          The encrypted password, expected by chpasswd command
+##   SONIC_CONFIG_DEBUG
+##          The debug packages install flag
 
 ## Default user
 USERNAME=$1
@@ -157,6 +159,13 @@ sudo cp files/docker/docker.service.conf $_
 sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
 echo $USERNAME:$PASSWORD_ENCRYPTED | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd -e
+
+## Create remote user
+## TODO: remote_user's login shell will be changed to cli shell.
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G docker "remote_user" -u 1001 -g 999 -c  \
+    "remote user" -d /home/remote_user -m -s /bin/rbash
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker "remote_user_su" -u 1002 -g 1000 -c  \
+    "remote sudo user" -d /home/remote_user_su -m -s /bin/bash
 
 ## Pre-install hardware drivers
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
