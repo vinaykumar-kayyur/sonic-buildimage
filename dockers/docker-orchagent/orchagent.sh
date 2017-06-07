@@ -16,11 +16,6 @@ if [ "$ASIC" == "broadcom" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 elif [ "$ASIC" == "cavium" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
-elif [ "$HWSKU" == "Accton-AS7712-32X" ]; then
-    ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
-else
-    echo "Unsupported HWSKU:$HWSKU. Exiting..." > /dev/stderr
-    exit 1
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}
