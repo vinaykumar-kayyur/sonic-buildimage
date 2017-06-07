@@ -1,122 +1,15 @@
 # accton_as7710_32x 32x100G SDK config
 os=unix
 schan_intr_enable=0
-ccm_dma_enable=0
-ccmdma_intr_enable=0
 l2_mem_entries=40960
 l2xmsg_mode=1
 l3_mem_entries=40960
-mem_cache_enable=0
 parity_correction=0
 parity_enable=0
 mmu_lossless=1
 
 pbmp_oversubscribe=0x444444441111111104444444422222222
 pbmp_xport_xe=0x444444451111111144444444422222222
-
-# Map the hw port serdes lanes to front panel port numbers
-dport_map_direct=0
-dport_map_enable=1
-
-# port1
-dport_map_port_50=1
-
-# port2
-dport_map_port_54=2
-
-# port3
-dport_map_port_58=3
-
-# port4
-dport_map_port_62=4
-
-# port5
-dport_map_port_68=5
-
-# port6
-dport_map_port_72=6
-
-# port7
-dport_map_port_76=7
-
-# port8
-dport_map_port_80=8
-
-# port9
-dport_map_port_34=9
-
-# port10
-dport_map_port_38=10
-
-# port11
-dport_map_port_42=11
-
-# port12
-dport_map_port_46=12
-
-# port13
-dport_map_port_84=13
-
-# port14
-dport_map_port_88=14
-
-# port15
-dport_map_port_92=15
-
-# port16
-dport_map_port_96=16
-
-# port17
-dport_map_port_102=17
-
-# port18
-dport_map_port_106=18
-
-# port19
-dport_map_port_110=19
-
-# port20
-dport_map_port_114=20
-
-# port21
-dport_map_port_17=21
-
-# port22
-dport_map_port_21=22
-
-# port23
-dport_map_port_25=23
-
-# port24
-dport_map_port_29=24
-
-# port25
-dport_map_port_118=25
-
-# port26
-dport_map_port_122=26
-
-# port27
-dport_map_port_126=27
-
-# port28
-dport_map_port_130=28
-
-# port29
-dport_map_port_1=29
-
-# port30
-dport_map_port_5=30
-
-# port31
-dport_map_port_9=31
-
-# port32
-dport_map_port_13=32
-
-#TSC-E management port
-dport_map_port_66=33
-dport_map_port_100=34
 
 # portmap_0=x:xx
 #FC0
