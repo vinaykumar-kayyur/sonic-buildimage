@@ -8,6 +8,6 @@ SONIC_DOCKER_IMAGES += $(DOCKER_DATABASE)
 SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_DATABASE)
 
 $(DOCKER_DATABASE)_CONTAINER_NAME = database
-$(DOCKER_DATABASE)_RUN_OPT += --net=host --privileged -t
+$(DOCKER_DATABASE)_RUN_OPT += --net=host --privileged -t --log-driver=syslog --log-opt=tag="{{.ID}}({{.Name}})"
 
 $(DOCKER_DATABASE)_BASE_IMAGE_FILES += redis-cli:/usr/bin/redis-cli
