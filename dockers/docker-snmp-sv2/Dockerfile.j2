@@ -19,6 +19,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # install libsnmp30 dependencies
 # install libpython3.6-dev dependencies
 # install pip dependencies
+# Note: There is a breaking change during setuptools upgrading 35.0.2->36.0.0
+#       The required package 'six' is missing. Temporarily specify the version.
 # TODO: remove libpython3.6-dev, its and pip's dependencies if we can get pip3 directly
 # install subagent
 # clean up
@@ -30,7 +32,7 @@ RUN apt-get update && apt-get install -y libperl5.20 libpci3 libwrap0 \
         debs/{{ deb }}{{' '}}
 {%- endfor %} && \
     rm -rf /debs && \
-    curl https://bootstrap.pypa.io/get-pip.py | python3.6 && \
+    curl https://bootstrap.pypa.io/get-pip.py | python3.6 - 'setuptools==35.0.2' && \
     python3.6 -m pip install --no-cache-dir /python-wheels/*py3*.whl hiredis && \
     rm -rf /python-wheels && \
     python3.6 -m sonic_ax_impl install && \
