@@ -107,6 +107,7 @@ iface {{ pc_interface['attachto'] }} {{ 'inet' if pc_interface['addr'] | ipv4 el
     mtu 9216
     address {{ pc_interface['addr'] }}
     netmask {{ pc_interface['mask'] }}
+    mtu 9216
 #
 {% endfor %}
 {% endblock pc_interfaces %}
