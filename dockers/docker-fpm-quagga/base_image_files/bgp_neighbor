@@ -31,7 +31,7 @@ if [ "$NEIGHBOR_IP" == "0.0.0.0" ] ; then
         
         # Save admin state in config file
         sed -i "/^\s*$NEIGHBOR:/d" /etc/sonic/bgp_admin.yml
-        [ "$COMMAND" == "shutdown" ] || echo "  $NEIGHBOR: on" >> /etc/sonic/bgp_admin.yml
+        [ "$COMMAND" == "startup" ] || echo "  $NEIGHBOR: off" >> /etc/sonic/bgp_admin.yml
     done
 
 else
@@ -42,5 +42,5 @@ else
 
     # Save admin state in config file
     sed -i "/^\s*$NEIGHBOR_IP:/d" /etc/sonic/bgp_admin.yml
-    [ "$COMMAND" == "shutdown" ] || echo "  $NEIGHBOR_IP: on" >> /etc/sonic/bgp_admin.yml
+    [ "$COMMAND" == "startup" ] || echo "  $NEIGHBOR_IP: off" >> /etc/sonic/bgp_admin.yml
 fi
