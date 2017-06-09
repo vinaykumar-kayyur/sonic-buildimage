@@ -18,13 +18,14 @@ else
     usage
 fi
 
-ASN=`vtysh -c "show ip bgp su" | sed -n "s/.*AS number \([0-9]\+\).*/\1/p"`
+ASN=`vtysh -c "show ip bgp summary" | sed -n "s/.*AS number \([0-9]\+\).*/\1/p"`
 if [ -z "$ASN" ]; then
     exit 255
 fi
 
 [ -f /etc/sonic/bgp_admin.yml ] || echo "bgp_admin_state:" > /etc/sonic/bgp_admin.yml
 
+# Operate on all ipv4 neighbors when "neighbor_ip" = 0.0.0.0
 if [ "$NEIGHBOR_IP" == "0.0.0.0" ] ; then
     for NEIGHBOR in `vtysh -c "show run" | grep nei | grep -oE "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" | sort | uniq`; do
         vtysh -c "configure terminal" -c "router bgp $ASN" -c "$CMD_PREFIX neighbor $NEIGHBOR shutdown"
