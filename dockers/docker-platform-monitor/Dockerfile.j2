@@ -12,35 +12,35 @@ RUN apt-get install -y sensord
 # TODO: If needed
 
 # Copy built Debian packages
-{% if docker_ledd_debs.strip() %}
+{% if docker_platform_monitor_debs.strip() %}
 COPY \
-{% for deb in docker_ledd_debs.split(' ') -%}
+{% for deb in docker_platform_monitor_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 {%- endif -%}
 
 # Install built Debian packages
-{% if docker_ledd_debs.strip() %}
+{% if docker_platform_monitor_debs.strip() %}
 RUN dpkg -i \
-{% for deb in docker_ledd_debs.split(' ') -%}
+{% for deb in docker_platform_monitor_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 {%- endif -%}
 
 # Copy built Python wheels
-{% if docker_ledd_whls.strip() %}
+{% if docker_platform_monitor_whls.strip() %}
 COPY \
-{% for whl in docker_ledd_whls.split(' ') -%}
+{% for whl in docker_platform_monitor_whls.split(' ') -%}
 python-wheels/{{ whl }}{{' '}}
 {%- endfor -%}
 python-wheels/
 {%- endif -%}
 
 # Install built Python wheels
-{% if docker_ledd_whls.strip() %}
+{% if docker_platform_monitor_whls.strip() %}
 RUN pip install \
-{% for whl in docker_ledd_whls.split(' ') -%}
+{% for whl in docker_platform_monitor_whls.split(' ') -%}
 python-wheels/{{ whl }}{{' '}}
 {%- endfor %}
 {%- endif -%}
