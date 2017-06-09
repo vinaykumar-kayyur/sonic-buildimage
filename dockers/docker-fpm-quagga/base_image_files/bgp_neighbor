@@ -30,7 +30,7 @@ if [ "$NEIGHBOR_IP" == "0.0.0.0" ] ; then
         vtysh -c "configure terminal" -c "router bgp $ASN" -c "$CMD_PREFIX neighbor $NEIGHBOR shutdown"
         
         # Save admin state in config file
-        sed -i "/$NEIGHBOR:/d" /etc/sonic/bgp_admin.yml
+        sed -i "/^\s*$NEIGHBOR:/d" /etc/sonic/bgp_admin.yml
         [ "$COMMAND" == "shutdown" ] || echo "  $NEIGHBOR: on" >> /etc/sonic/bgp_admin.yml
     done
 
@@ -41,6 +41,6 @@ else
     vtysh -c "configure terminal" -c "router bgp $ASN" -c "$CMD_PREFIX neighbor $NEIGHBOR_IP shutdown"
 
     # Save admin state in config file
-    sed -i "/$NEIGHBOR_IP:/d" /etc/sonic/bgp_admin.yml
+    sed -i "/^\s*$NEIGHBOR_IP:/d" /etc/sonic/bgp_admin.yml
     [ "$COMMAND" == "shutdown" ] || echo "  $NEIGHBOR_IP: on" >> /etc/sonic/bgp_admin.yml
 fi
