@@ -179,6 +179,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     sudo                    \
     vim                     \
     tcpdump                 \
+    dbus                    \
     ntp                     \
     ntpstat                 \
     openssh-server          \
