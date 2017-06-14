@@ -1,4 +1,4 @@
-FROM docker-base
+FROM docker-config-engine
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,9 +22,11 @@ RUN apt-get install -f kmod
 COPY ["debs/dsserve", "debs/bcmcmd", "start.sh", "/usr/bin/"]
 RUN chmod +x /usr/bin/dsserve /usr/bin/bcmcmd
 
+COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/bin/bash"]
-CMD ["/usr/bin/start.sh"]
+ENTRYPOINT ["/usr/bin/supervisord"]
+

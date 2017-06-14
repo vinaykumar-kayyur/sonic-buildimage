@@ -116,11 +116,8 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/linux-image-3.16.0-4-amd64_*.de
 ## Update initramfs for booting with squashfs+aufs
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
 
-IMAGE_VERSION=$(. functions.sh && sonic_get_version)
-
 ## Hook into initramfs: change fs type from vfat to ext4 on arista switches
 sudo mkdir -p $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/
-sed -i -e "s/%%IMAGE_VERSION%%/$IMAGE_VERSION/g" files/initramfs-tools/arista-convertfs
 sudo cp files/initramfs-tools/arista-convertfs $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
 sudo cp files/initramfs-tools/mke2fs $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
@@ -186,6 +183,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python                  \
     python-setuptools       \
     rsyslog                 \
+    monit                   \
     python-apt              \
     traceroute              \
     iputils-ping            \
@@ -200,6 +198,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     logrotate               \
     curl                    \
     kexec-tools             \
+    less                    \
     unzip
 
 ## Disable kexec supported reboot which was installed by default
@@ -212,10 +211,34 @@ sudo cp -f files/sshd/sshd.service $FILESYSTEM_ROOT/lib/systemd/system/ssh.servi
 ## Config sshd
 sudo augtool --autosave "set /files/etc/ssh/sshd_config/UseDNS no" -r $FILESYSTEM_ROOT
 
+## Config monit
+sudo sed -i '
+    s/^# set logfile syslog/set logfile syslog/;
+    s/^\s*set logfile \/var/# set logfile \/var/;
+    s/^# set httpd port/set httpd port/;
+    s/^#    use address localhost/   use address localhost/;
+    s/^#    allow localhost/   allow localhost/;
+    s/^#    allow admin:monit/   allow admin:monit/;
+    s/^#    allow @monit/   allow @monit/;
+    s/^#    allow @users readonly/   allow @users readonly/
+    ' $FILESYSTEM_ROOT/etc/monit/monitrc
+
+sudo tee -a $FILESYSTEM_ROOT/etc/monit/monitrc > /dev/null <<'EOF'
+check filesystem root-aufs with path /
+  if space usage > 90% for 5 times within 10 cycles then alert
+check system $HOST
+  if memory usage > 90% for 5 times within 10 cycles then alert
+  if cpu usage (user) > 90% for 5 times within 10 cycles then alert
+  if cpu usage (system) > 90% for 5 times within 10 cycles then alert
+EOF
+
 ## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 sudo augtool --autosave "
 set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %p'
+
+set /files/etc/sysctl.conf/kernel.softlockup_panic 1
+set /files/etc/sysctl.conf/kernel.panic 10
 
 set /files/etc/sysctl.conf/net.ipv4.conf.default.forwarding 1
 set /files/etc/sysctl.conf/net.ipv4.conf.all.forwarding 1
@@ -232,12 +255,16 @@ set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_filter 0
 set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_notify 1
 set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_ignore 2
 
+set /files/etc/sysctl.conf/net.ipv4.neigh.default.base_reachable_time_ms 1800000
+
 set /files/etc/sysctl.conf/net.ipv6.conf.default.forwarding 1
 set /files/etc/sysctl.conf/net.ipv6.conf.all.forwarding 1
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
+
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
