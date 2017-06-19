@@ -1,1 +1,1 @@
-platform drivers for AS7712_32X for the SONiC project
+platform drivers for Accton as7712-32x for the SONiC project
