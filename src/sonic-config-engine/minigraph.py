@@ -276,10 +276,10 @@ def parse_cpg(cpg, hname):
 			addr = bgpPeer.find(str(QName(ns, "Address"))).text
                         if bgpPeer.find(str(QName(ns1, "PeersRange"))) is not None:
                             name = bgpPeer.find(str(QName(ns1, "Name"))).text
-                            range = bgpPeer.find(str(QName(ns1, "PeersRange"))).text
+                            ip_range = bgpPeer.find(str(QName(ns1, "PeersRange"))).text
                             bgp_peers_with_range.append({
                                 'name': name,
-                                'range': range
+                                'ip_range': ip_range
                             })
                 else:
                     for bgp_session in bgp_sessions:
@@ -295,7 +295,7 @@ def parse_meta(meta, hname):
     ntp_servers = []
     mgmt_routes = []
     erspan_dst = []
-    deploymentId = None
+    deployment_id = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text == hname:
@@ -315,8 +315,8 @@ def parse_meta(meta, hname):
                 elif name == "ErspanDestinationIpv4":
                     erspan_dst = value_group
                 elif name == "DeploymentId":
-                    deploymentId = value
-    return syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deploymentId
+                    deployment_id = value
+    return syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id
 
 
 def get_console_info(devices, dev, port):
@@ -411,7 +411,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     mgmt_routes = []
     erspan_dst = []
     bgp_peers_with_range = None
-    deploymentId = None
+    deployment_id = None
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
@@ -433,7 +433,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "UngDec")):
             (u_neighbors, u_devices, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
-            (syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deploymentId) = parse_meta(child, hostname)
+            (syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
 
     Tree = lambda: defaultdict(Tree)
 
@@ -483,7 +483,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['ntp_servers'] = ntp_servers
     results['forced_mgmt_routes'] = mgmt_routes
     results['erspan_dst'] = erspan_dst
-    results['deploymentId'] = deploymentId
+    results['deployment_id'] = deployment_id
 
     return results
 
