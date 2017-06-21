@@ -50,7 +50,6 @@ def main():
     parser.add_argument("-m", "--minigraph", help="minigraph xml file")
     parser.add_argument("-p", "--port-config", help="port config file, used with -m")
     parser.add_argument("-y", "--yaml", help="yaml file that contains addtional variables", action='append', default=[])
-    parser.add_argument("-Y", "--optional-yaml", help="optional yaml file that contains addtional variables", action='append', default=[])
     parser.add_argument("-a", "--additional-data", help="addition data, in json string")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--template", help="render the data with the template file")
@@ -84,12 +83,6 @@ def main():
         with open(yaml_file, 'r') as stream:
             additional_data = yaml.load(stream)      
             data.update(additional_data)
-
-    for optional_yaml in args.optional_yaml:
-        if os.path.isfile(optional_yaml):
-            with open(optional_yaml, 'r') as stream:
-                additional_data = yaml.load(stream)      
-                data.update(additional_data)
 
     if args.additional_data != None:
         data.update(json.loads(args.additional_data))
