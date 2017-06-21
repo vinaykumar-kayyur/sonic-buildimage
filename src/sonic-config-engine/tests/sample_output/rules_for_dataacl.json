@@ -34,5 +34,12 @@
             "priority":9996
         },
         "OP":"SET"
+    },
+    {
+        "ACL_RULE_TABLE:dataacl:default_rule":{
+            "PACKET_ACTION":"DROP",
+            "priority":1
+        },
+        "OP":"SET"
     }
 ]
