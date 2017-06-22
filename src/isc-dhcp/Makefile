@@ -22,3 +22,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc
 	popd
 
+	# Move the newly-built .deb package to the destination directory
+	mv $* $(DEST)/
+
