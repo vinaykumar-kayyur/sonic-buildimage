@@ -16,9 +16,10 @@ def dump_json(filename, data):
 def default_deny_rule(table_name):
     rule_props = {}
     rule_data = {}
-    rule_data["ACL_RULE_TABLE:"+table_name+":default_rule"] = rule_props
+    rule_data["ACL_RULE_TABLE:"+table_name.upper()+":DEFAULT_RULE"] = rule_props
     rule_data["OP"] = "SET"
     rule_props["priority"] = 1
+    rule_props["ETHER_TYPE"] = "0x0800"
     rule_props["PACKET_ACTION"] = "DROP"
     return rule_data
 
@@ -26,7 +27,7 @@ def generate_rule_json(table_name, rule, max_priority, mirror):
     rule_idx = rule.config.sequence_id
     rule_props = {}
     rule_data = {}
-    rule_data["ACL_RULE_TABLE:"+table_name+":Rule_"+str(rule_idx)] = rule_props
+    rule_data["ACL_RULE_TABLE:"+table_name.upper()+":RULE_"+str(rule_idx)] = rule_props
     rule_data["OP"] = "SET"
     
     rule_props["priority"] = max_priority - rule_idx
