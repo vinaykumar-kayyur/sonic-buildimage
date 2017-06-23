@@ -3,14 +3,12 @@
 ## an ONIE installer image.
 ##
 ## USAGE:
-##   ./build_debian USERNAME PASSWORD_ENCRYPTED SONIC_CONFIG_DEBUG
+##   ./build_debian USERNAME PASSWORD_ENCRYPTED
 ## PARAMETERS:
 ##   USERNAME
 ##          The name of the default admin user
 ##   PASSWORD_ENCRYPTED
 ##          The encrypted password, expected by chpasswd command
-##   SONIC_CONFIG_DEBUG
-##          The debug packages install flag
 
 ## Default user
 USERNAME=$1
