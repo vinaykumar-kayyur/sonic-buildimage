@@ -9,7 +9,7 @@ RUN apt-get update
 {% if docker_dhcp_relay_debs.strip() -%}
 # Copy built Debian packages
 {%- for deb in docker_dhcp_relay_debs.split(' ') %}
-COPY debs/{{ deb }}{{' '}} debs/
+COPY debs/{{ deb }} debs/
 {%- endfor %}
 
 # Install built Debian packages and implicitly install their dependencies
