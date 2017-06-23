@@ -2,7 +2,8 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = isc-dhcp-relay_4.3.1-6_amd64.deb
+MAIN_TARGET = isc-dhcp-common_$(ISC_DHCP_VERSION)_amd64.deb
+DERIVED_TARGETS = isc-dhcp-relay_$(ISC_DHCP_VERSION)_amd64.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
@@ -22,6 +23,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc
 	popd
 
-	# Move the newly-built .deb package to the destination directory
-	mv $* $(DEST)/
+	# Move the newly-built .deb packages to the destination directory
+	mv $* $(DERIVED_TARGETS) $(DEST)/
+
+$(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
 
