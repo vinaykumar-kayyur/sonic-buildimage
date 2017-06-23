@@ -14,7 +14,6 @@ COPY debs/{{ deb }}{{' '}} debs/
 
 # Install built Debian packages and implicitly install their dependencies
 {%- for deb in docker_dhcp_relay_debs.split(' ') %}
-#RUN dpkg -i debs/{{ deb }}
 RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; dpkg_apt debs/{{ deb }}
 {%- endfor %}
 {%- endif %}
