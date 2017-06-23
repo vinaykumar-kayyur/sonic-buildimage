@@ -6,18 +6,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update apt's cache of available packages
 RUN apt-get update
 
-# Install dependencies of isc-dhcp-relay
-RUN apt-get -y install libdns-export100 libirs-export91 libisc-export95
-
 {% if docker_dhcp_relay_debs.strip() -%}
 # Copy built Debian packages
 {%- for deb in docker_dhcp_relay_debs.split(' ') %}
 COPY debs/{{ deb }}{{' '}} debs/
 {%- endfor %}
 
-# Install built Debian packages
+# Install built Debian packages and implicitly install their dependencies
 {%- for deb in docker_dhcp_relay_debs.split(' ') %}
-RUN dpkg -i debs/{{ deb }}{{' '}}
+#RUN dpkg -i debs/{{ deb }}
+RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; dpkg_apt debs/{{ deb }}
 {%- endfor %}
 {%- endif %}
 
