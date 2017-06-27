@@ -17,6 +17,20 @@
         kill -HUP $(cat /var/run/rsyslogd.pid)
     endscript
 }
+/var/log/swss/*.rec
+{
+    rotate 7
+    daily
+    maxsize 20M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
+    endscript
+}
 /var/log/mail.info
 /var/log/mail.warn
 /var/log/mail.err

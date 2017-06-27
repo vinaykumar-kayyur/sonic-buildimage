@@ -36,7 +36,14 @@ if [ $(id -u) -ne 0 ]
 fi
 
 # get running machine from conf file
-[ -r /etc/machine.conf ] && . /etc/machine.conf
+if [ -r /etc/machine.conf ]; then
+    . /etc/machine.conf
+elif [ -r /host/machine.conf ]; then
+    . /host/machine.conf
+else
+    echo "cannot find machine.conf"
+    exit 1
+fi
 
 echo "onie_platform: $onie_platform"
 
@@ -57,8 +64,9 @@ if [ -d "/etc/sonic" ]; then
 else
     echo "Installing SONiC in ONIE"
     install_env="onie"
-    [ -r platforms/$onie_platform ] && source platforms/$onie_platform
 fi
+
+[ -r platforms/$onie_platform ] && . platforms/$onie_platform
 
 # Install demo on same block device as ONIE
 onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
@@ -414,12 +422,11 @@ else
 fi
 
 # Decompress the file for the file system directly to the partition
-unzip $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$image_dir
+unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
 
-if [ -f $demo_mnt/$image_dir/$FILESYSTEM_DOCKERFS ]; then
-    TAR_EXTRA_OPTION="--numeric-owner"
-    cd $demo_mnt/$image_dir && mkdir -p $DOCKERFS_DIR && tar x $TAR_EXTRA_OPTION -f $FILESYSTEM_DOCKERFS -C $DOCKERFS_DIR && rm -f $FILESYSTEM_DOCKERFS; cd $OLDPWD
-fi
+TAR_EXTRA_OPTION="--numeric-owner"
+mkdir -p $demo_mnt/$image_dir/$DOCKERFS_DIR
+unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 
 # Create loop device for /var/log to limit its size to $VAR_LOG_SIZE MB
 if [ -f $demo_mnt/disk-img/var-log.ext4 ]; then
