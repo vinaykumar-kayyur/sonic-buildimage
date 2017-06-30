@@ -34,6 +34,14 @@ COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
 COPY ["etc/rsyslog.d/*", "/etc/rsyslog.d/"]
 COPY ["root/.vimrc", "/root/.vimrc"]
 
+# Install dependencies of supervisor
+RUN apt-get -y install python-pkg-resources python-meld3
+
+RUN mkdir -p /etc/supervisor
+RUN mkdir -p /var/log/supervisor
+
+COPY ["etc/supervisor/supervisord.conf", "/etc/supervisor/"]
+
 RUN apt-get -y purge   \
     exim4              \
     exim4-base         \
