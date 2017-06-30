@@ -24,6 +24,8 @@ class LedControl(LedControlBase):
     QSFP_NO_BREAKOUT_START_IDX = 25
     QSFP_NO_BREAKOUT_END_IDX = 32
 
+    LED_QSFP_OFFSET = 4
+
     LED_COLOR_OFF = 0
     LED_COLOR_GREEN = 1
     LED_COLOR_YELLOW = 2
@@ -52,9 +54,9 @@ class LedControl(LedControlBase):
         # whereas indices 25-32 are not breakout-capable, and only have one
         if qsfp_index <= self.QSFP_BREAKOUT_END_IDX:
             # assuming 40G, then we need to control four lanes
-            led_sysfs_paths = [ self.LED_SYSFS_PATH_BREAKOUT_CAPABLE.format(qsfp_index, i) for i in range(1, 5) ]
+            led_sysfs_paths = [ self.LED_SYSFS_PATH_BREAKOUT_CAPABLE.format(qsfp_index + self.LED_QSFP_OFFSET, i) for i in range(1, 5) ]
         else:
-            led_sysfs_paths = [ self.LED_SYSFS_PATH_NO_BREAKOUT.format(qsfp_index) ]
+            led_sysfs_paths = [ self.LED_SYSFS_PATH_NO_BREAKOUT.format(qsfp_index + self.LED_QSFP_OFFSET) ]
 
         for led_sysfs_path in led_sysfs_paths:
             led_file = open(led_sysfs_path, "w")
@@ -71,12 +73,12 @@ class LedControl(LedControlBase):
         # Initialize: Turn all front panel QSFP LEDs off
         for qsfp_index in range(self.QSFP_BREAKOUT_START_IDX, self.QSFP_BREAKOUT_END_IDX + 1):
             for lane in range(1, 5):
-                led_sysfs_path = self.LED_SYSFS_PATH_BREAKOUT_CAPABLE.format(qsfp_index, lane)
+                led_sysfs_path = self.LED_SYSFS_PATH_BREAKOUT_CAPABLE.format(qsfp_index + self.LED_QSFP_OFFSET, lane)
                 with open(led_sysfs_path, 'w') as led_file:
                     led_file.write("%d" % self.LED_COLOR_OFF)
 
         for qsfp_index in range(self.QSFP_NO_BREAKOUT_START_IDX, self.QSFP_NO_BREAKOUT_END_IDX + 1):
-            led_sysfs_path = self.LED_SYSFS_PATH_NO_BREAKOUT.format(qsfp_index)
+            led_sysfs_path = self.LED_SYSFS_PATH_NO_BREAKOUT.format(qsfp_index + self.LED_QSFP_OFFSET)
             with open(led_sysfs_path, 'w') as led_file:
                 led_file.write("%d" % self.LED_COLOR_OFF)
 
