@@ -1,0 +1,10 @@
+[
+{% for port in port_properties %}
+    {
+        "PORT_TABLE:{{ port['name'] }}": {
+            "speed": "{{ port['speed'] }}",
+        },
+        "OP": "SET"
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+]
