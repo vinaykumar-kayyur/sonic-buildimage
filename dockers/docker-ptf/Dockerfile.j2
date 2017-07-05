@@ -55,6 +55,7 @@ RUN rm -rf /debs \
     && rm -rf /var/lib/apt/lists/* \
     && wget --https-only https://bootstrap.pypa.io/get-pip.py \
     && python get-pip.py \
+    && rm -f get-pip.py \
     && pip install setuptools \
     && pip install supervisor \
     && pip install ipython==5.4.1 \
@@ -80,7 +81,6 @@ RUN rm -rf /debs \
     && pip install dpkt    \
     && pip install ipaddress \
     && pip install pysubnettree \
-    && pip install parallel-ssh \
     && pip install paramiko \
     && pip install flask   \
     && pip install exabgp==3.4.17\
