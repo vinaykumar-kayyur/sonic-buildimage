@@ -339,17 +339,6 @@ static int dx010_i2c_access(struct i2c_adapter *a, u16 addr,
               int size, union i2c_smbus_data *data)
 {
 
-//    dev_info(&a->dev, "%s was called with the "
-//             "following parameters:\n",
-//             __FUNCTION__);
-//    dev_info(&a->dev, "addr = %.4x\n", addr);
-//    dev_info(&a->dev, "flags = %.4x\n", flags);
-//    dev_info(&a->dev, "read_write = %s\n",
-//             rw == I2C_SMBUS_WRITE ?
-//             "write" : "read");
-//    dev_info(&a->dev, "command = %d\n",
-//             cmd);
-
         int error = 0;
 
         struct dx010_i2c_data *new_data;
@@ -369,12 +358,7 @@ static int dx010_i2c_access(struct i2c_adapter *a, u16 addr,
                 size = HST_CNTL2_BYTE_DATA;
         break;
         case I2C_SMBUS_WORD_DATA:
-//            dev_info(&a->dev,
-//                         "size = I2C_SMBUS_WORD_DATA\n");
-//            if (rw == I2C_SMBUS_WRITE)
-//                dev_info(&a->dev,
-//                    "data = %.4x\n", data->word);
-            size = HST_CNTL2_WORD_DATA;
+            	size = HST_CNTL2_WORD_DATA;
         break;
         case I2C_SMBUS_BLOCK_DATA:
                 size = HST_CNTL2_BLOCK;
@@ -384,23 +368,6 @@ static int dx010_i2c_access(struct i2c_adapter *a, u16 addr,
                 error = -EOPNOTSUPP;
                 goto Done;
         }
-
-        // switch (size) {
-        // case HST_CNTL2_BYTE:
-        // if (rw == I2C_SMBUS_WRITE)
-        //     /* Beware it uses DAT0 register and not CMD! */
-        // break;
-        // case HST_CNTL2_BYTE_DATA:
-
-        // if (rw == I2C_SMBUS_WRITE)
-        // break;
-        // case HST_CNTL2_WORD_DATA:
-        // if (rw == I2C_SMBUS_WRITE) {
-        // }
-        // break;
-        // case HST_CNTL2_BLOCK:
-        //         goto Done;
-        // }
 
         switch (size) {
         case HST_CNTL2_BYTE:    /* Result put in SMBHSTDAT0 */
