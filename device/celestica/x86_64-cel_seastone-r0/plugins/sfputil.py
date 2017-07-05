@@ -43,10 +43,10 @@ class sfputil(sfputilbase):
         26: 51,
         27: 52,
         28: 53,
-        29: 47,
-        30: 48,
-        31: 49,
-        32: 50
+        29: 54,
+        30: 55,
+        31: 56,
+        32: 57
     }
 
     _qsfp_ports = range(0, ports_in_block + 1)
