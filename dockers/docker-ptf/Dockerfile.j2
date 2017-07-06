@@ -75,8 +75,7 @@ RUN rm -rf /debs \
     && cd ../..            \
     && rm -fr nanomsg-1.0.0 \
     && rm -f 1.0.0.tar.gz  \
-    && pip install cffi==1.7.0    \
-    && pip install --upgrade cffi==1.7.0 \
+    && pip install cffi    \
     && pip install nnpy    \
     && pip install dpkt    \
     && pip install ipaddress \
