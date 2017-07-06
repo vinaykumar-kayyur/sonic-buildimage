@@ -49,6 +49,7 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
+# Install all python modules from pypi. python-scapy is exception, ptf debian package requires python-scapy
 RUN rm -rf /debs \
     && apt-get -y autoclean \
     && apt-get -y autoremove \
@@ -92,8 +93,7 @@ RUN mkdir /var/run/sshd \
  && echo 'root:root' | chpasswd \
  && sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
  && sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config \
- && sed -i '$aUseDNS no' /etc/ssh/sshd_config \
- && mkdir /root/deps
+ && sed -i '$aUseDNS no' /etc/ssh/sshd_config
 
 COPY ["supervisord.conf", "sshd.conf", "ptf_nn_agent.conf", "/etc/supervisor/conf.d/"]
 
