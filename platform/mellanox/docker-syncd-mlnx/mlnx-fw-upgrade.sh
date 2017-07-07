@@ -2,7 +2,7 @@
 
 query_retry_count_max="10"
 required_fw_version="13.1400.0126"
-fw_file=/etc/mlnx/fw-SPC-rel-13_1400_0126-EVB.mfa
+fw_file=/etc/mlnx/fw-SPC.mfa
 
 run_or_fail() {
 	$1
