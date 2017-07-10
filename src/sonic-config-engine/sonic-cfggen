@@ -49,10 +49,11 @@ def unique_name(l):
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-m", "--minigraph", help="minigraph xml file")
+    group.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
     group.add_argument("-M", "--device-description", help="device description xml file")
     parser.add_argument("-p", "--port-config", help="port config file, used with -m")
-    parser.add_argument("-y", "--yaml", help="yaml file that contains addtional variables", action='append', default=[])
+    parser.add_argument("-y", "--yaml", help="yaml file that contains additional variables", action='append', default=[])
+    parser.add_argument("-j", "--json", help="json file that contains additional variables", action='append', default=[])
     parser.add_argument("-a", "--additional-data", help="addition data, in json string")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--template", help="render the data with the template file")
@@ -89,6 +90,10 @@ def main():
         with open(yaml_file, 'r') as stream:
             additional_data = yaml.load(stream)      
             data.update(additional_data)
+
+    for json_file in args.json:
+        with open(json_file, 'r') as stream:
+            data.update(json.load(stream))
 
     if args.additional_data != None:
         data.update(json.loads(args.additional_data))
