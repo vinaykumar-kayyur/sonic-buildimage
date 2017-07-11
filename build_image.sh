@@ -35,6 +35,11 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
     ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
           installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
           $ONIE_INSTALLER_PAYLOAD
+
+    if [[ "$TARGET_MACHINE" == "broadcom" ]] && [[ -n "$DELL_Z9100_PLATFORM_MODULE_VERSION" || -n "$DELL_S6100_PLATFORM_MODULE_VERSION" ]]; then
+	sudo platform/broadcom/sonic-platform-modules-dell/scripts/build_dd_image.sh
+    fi
+
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
 elif [ "$IMAGE_TYPE" = "aboot" ]; then
     echo "Build Aboot installer"
