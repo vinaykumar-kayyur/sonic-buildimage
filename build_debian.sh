@@ -317,7 +317,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 ## Umount all
 echo '[INFO] Umount all'
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
-sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc
+sudo umount $FILESYSTEM_ROOT/proc || true
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
