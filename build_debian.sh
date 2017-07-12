@@ -316,7 +316,12 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 
 ## Umount all
 echo '[INFO] Umount all'
+## Display all process details access /proc
+sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
+## Kill the processes
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
+## Wait fuser fully kill the processes
+sleep 15
 sudo umount $FILESYSTEM_ROOT/proc || true
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
@@ -325,7 +330,8 @@ sudo mkdir $FILESYSTEM_ROOT/host
 ## Compress most file system into squashfs file
 sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
-sudo du -hs $FILESYSTEM_ROOT
+## Note: -x to skip directories on different file systems, such as /proc
+sudo du -hsx $FILESYSTEM_ROOT
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 ## Compress docker files
