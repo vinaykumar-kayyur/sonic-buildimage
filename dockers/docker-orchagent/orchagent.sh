@@ -23,4 +23,3 @@ elif [ "$ASIC" == "cavium" ]; then
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}
-
