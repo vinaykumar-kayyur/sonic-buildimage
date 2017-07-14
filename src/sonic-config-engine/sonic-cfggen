@@ -74,8 +74,6 @@ TODO(taoyl): Current version of config db only supports BGP admin states.
     @staticmethod
     def db_to_output(db_data):
         data_bgp_admin = {}
-        output_data = {'bgp_admin_state': data_bgp_admin}
-
         for table_name, content in db_data.iteritems():
             if table_name == 'BGP_NEIGHBOR':
                 for key, value in content.iteritems():
@@ -84,22 +82,26 @@ TODO(taoyl): Current version of config db only supports BGP admin states.
             elif table_name == 'DEVICE_METADATA':
                 if content['localhost'].has_key('bgp_default_status'):
                     data_bgp_admin['all'] = (content['localhost']['bgp_default_status'] == 'up')
+
+        output_data = {'bgp_admin_state': data_bgp_admin} if data_bgp_admin else {}
         return output_data
 
     @staticmethod
     def output_to_db(output_data):
         db_data = {}
-        for neighbor, state in output_data['bgp_admin_state'].iteritems():
-            if neighbor == 'all':
-                if not db_data.has_key('DEVICE_METADATA'):
-                    db_data['DEVICE_METADATA'] = {'localhost': {}}
-                db_data['DEVICE_METADATA']['localhost']['bgp_default_state'] = 'up' if state else 'down'
-            else:
-                if not db_data.has_key('BGP_NEIGHBOR'):
-                    db_data['BGP_NEIGHBOR'] = {}
-                if not db_data['BGP_NEIGHBOR'].has_key(neighbor):
-                    db_data['BGP_NEIGHBOR'][neighbor] = {}
-                db_data['BGP_NEIGHBOR'][neighbor]['admin_status'] = 'up' if state else 'down'
+        for key, value in output_data.iteritems():
+            if key == 'bgp_admin_state':
+                for neighbor, state in value.iteritems():
+                    if neighbor == 'all':
+                        if not db_data.has_key('DEVICE_METADATA'):
+                            db_data['DEVICE_METADATA'] = {'localhost': {}}
+                        db_data['DEVICE_METADATA']['localhost']['bgp_default_status'] = 'up' if state else 'down'
+                    else:
+                        if not db_data.has_key('BGP_NEIGHBOR'):
+                            db_data['BGP_NEIGHBOR'] = {}
+                        if not db_data['BGP_NEIGHBOR'].has_key(neighbor):
+                            db_data['BGP_NEIGHBOR'][neighbor] = {}
+                        db_data['BGP_NEIGHBOR'][neighbor]['admin_status'] = 'up' if state else 'down'
         return db_data
 
 
