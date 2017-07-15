@@ -14,14 +14,13 @@
 case "$1" in
 start)
 	echo -n "Setting up board... "
-
-        depmod -a
-        modprobe inv_platform
+	
+	depmod -a
+	modprobe inv_platform
 	modprobe inv_psoc
 	modprobe inv_cpld
 	
-	
-        /usr/local/bin/onie-syseeprom -S /tmp/eeprom
+	/usr/local/bin/onie-syseeprom -S /tmp/eeprom
 	# Attach 32 instances of EEPROM driver QSFP ports on IO module 1
 	#eeprom can dump data using below command
 	for ((i=22;i<=29;i++));
