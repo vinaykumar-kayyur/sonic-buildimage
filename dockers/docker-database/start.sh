@@ -2,7 +2,7 @@
 
 supervisorctl start redis-server
 
-# If this platform has an initialization file for the Broadcom LED microprocessor, load it
+# If there is a config db dump file, load it
 if [ -r /etc/sonic/config_db.json ]; then
     # Wait until redis starts
     while true; do
