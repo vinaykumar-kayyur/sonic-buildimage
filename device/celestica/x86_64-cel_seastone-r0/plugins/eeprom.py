@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Dell DX010
+# Celestica DX010
 #
 # Platform and model specific eeprom subclass, inherits from the base class,
 # and provides the followings:
