@@ -119,8 +119,8 @@ def main():
     group.add_argument("-t", "--template", help="render the data with the template file")
     group.add_argument("-v", "--var", help="print the value of a variable, support jinja2 expression")
     group.add_argument("--var-json", help="print the value of a variable, in json format")
-    group.add_argument("-D", "--write-to-db", help="write config into configdb", action='store_true')
-    group.add_argument("-P", "--print-data", help="print all data", action='store_true')
+    group.add_argument("--write-to-db", help="write config into configdb", action='store_true')
+    group.add_argument("--print-data", help="print all data", action='store_true')
     args = parser.parse_args()
 
     data = {}
@@ -182,7 +182,7 @@ def main():
 
     if args.write_to_db:
         configdb = ConfigDBConnector()
-        configdb.connect()
+        configdb.connect(False)
         configdb.set_config(FormatConverter.output_to_db(data))
 
     if args.print_data:
