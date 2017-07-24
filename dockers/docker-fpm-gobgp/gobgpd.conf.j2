@@ -1,7 +1,7 @@
 [global.config]
-  as = {{ minigraph_bgp_asn }}
+  as = {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   router-id = "{{ minigraph_lo_interfaces[0]['addr'] }}"
-{% for bgp_session in minigraph_bgp %}
+{% for bgp_session in BGP_NEIGHBOR.values() %}
 {% if bgp_session['asn'] != 0 %}
 [[neighbors]]
   [neighbors.config]

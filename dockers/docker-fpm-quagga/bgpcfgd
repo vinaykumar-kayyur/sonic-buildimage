@@ -6,18 +6,6 @@ import subprocess
 import syslog
 from swsssdk import ConfigDBConnector
 
-# Returns BGP ASN as a string
-def _get_bgp_asn_from_minigraph():
-    # Get BGP ASN from minigraph
-    proc = subprocess.Popen(
-            ['sonic-cfggen', '-m', '/etc/sonic/minigraph.xml', '-v', 'minigraph_bgp_asn'],
-            stdout=subprocess.PIPE,
-            shell=False,
-            stderr=subprocess.STDOUT)
-    stdout = proc.communicate()[0]
-    proc.wait()
-    return stdout.rstrip('\n')
-
 def bgp_config(asn, ip, config):
     syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(ip, config))
     # Currently dynamic config is supported only for bgp admin status
@@ -33,10 +21,10 @@ def bgp_config(asn, ip, config):
 
 def main():
     sub = ConfigDBConnector()
-    bgp_asn = _get_bgp_asn_from_minigraph()
+    sub.connect()
+    bgp_asn = sub.get_entry('DEVICE_METADATA', 'localhost')['bgp_asn']
     handler = lambda table, key, data: bgp_config(bgp_asn, key, data)
     sub.subscribe('BGP_NEIGHBOR', handler)
-    sub.connect()
     sub.listen()
 
 main()
