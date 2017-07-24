@@ -103,4 +103,4 @@ RUN mkdir -p /var/log/supervisor
 
 EXPOSE 22
 
-ENTRYPOINT ["/usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf"]
+ENTRYPOINT ["/usr/local/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
