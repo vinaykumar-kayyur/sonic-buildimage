@@ -200,23 +200,33 @@ RUN apt-get update && apt-get install -y \
         procmail \
 # For gtest
         libgtest-dev \
-        cmake \
-# For linux build
-        && apt-get -y build-dep linux \
-# For gobgp build
-        && apt-get -yt jessie-backports install \
-        golang-go \
-        golang-github-golang-mock-dev \
-# For p4 build
-        && pip install \
-        ctypesgen \
-        crc16 \
-# For templating
-        j2cli \
-# For sonic config engine testing
-        pyangbind
+        cmake
 
-# Install dependencies for building isc-dhcp-relay
+# For linux build
+RUN apt-get -y build-dep linux
+
+# For gobgp build
+RUN export VERSION=1.8.3 \
+ && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
+ && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
+ && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
+ && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc
+
+# For p4 build
+RUN pip install \
+        ctypesgen \
+        crc16
+
+# For templating
+RUN pip install j2cli
+
+# For sonic config engine testing
+RUN pip install pyangbind
+
+# For supervisor build
+RUN pip install meld3 mock
+
+# Install dependencies for isc-dhcp-relay build
 RUN apt-get -y build-dep isc-dhcp
 
 RUN cd /usr/src/gtest && cmake . && make -C /usr/src/gtest
