@@ -167,32 +167,23 @@ def parse_dpg(dpg, hname):
                 intf['peer_addr'] = ipaddress.IPAddress(peer_addr_val)
             intfs.append(intf)
 
-        lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
-        lo_intfs = []
-        for lointf in lointfs.findall(str(QName(ns1, "LoopbackIPInterface"))):
-            intfname = lointf.find(str(QName(ns, "AttachTo"))).text
-            ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
-            ipn = ipaddress.IPNetwork(ipprefix)
-            ipaddr = ipn.ip
-            prefix_len = ipn.prefixlen
-            ipmask = ipn.netmask
-            lo_intf = {'name': intfname, 'addr': ipaddr, 'prefixlen': prefix_len}
-            if isinstance(ipn, ipaddress.IPv4Network):
-                lo_intf['mask'] = ipmask
-            else:
-                lo_intf['mask'] = str(prefix_len)
-            lo_intfs.append(lo_intf)
+        def _parse_ip_interface(interfaces, interface):
+            intfs = child.find(str(QName(ns, interfaces)))
+            rv = []
+            for intf in intfs.findall(str(QName(ns1, interface))):
+                intf_name = intf.find(str(QName(ns, "AttachTo"))).text
+                intf_ip = ipaddress.IPNetwork(intf.find(str(QName(ns1, "PrefixStr"))).text)
+                intf = {'name': intf_name, 'addr': intf_ip.ip, 'prefixlen': intf_ip.prefixlen}
+                if intf_ip.version == 4:
+                    intf['mask'] = intf_ip.netmask
+                else:
+                    intf['mask'] = str(intf_ip.prefixlen)
+                intf['gwaddr'] = ipaddress.IPAddress(int(intf_ip.network) + 1)
+                rv.append(intf)
+            return rv
 
-        mgmtintfs = child.find(str(QName(ns, "ManagementIPInterfaces")))
-        mgmt_intf = None
-        for mgmtintf in mgmtintfs.findall(str(QName(ns1, "ManagementIPInterface"))):
-            ipprefix = mgmtintf.find(str(QName(ns1, "PrefixStr"))).text
-            mgmtipn = ipaddress.IPNetwork(ipprefix)
-            ipaddr = mgmtipn.ip
-            prefix_len = str(mgmtipn.prefixlen)
-            ipmask = mgmtipn.netmask
-            gwaddr = ipaddress.IPAddress(int(mgmtipn.network) + 1)
-            mgmt_intf = {'addr': ipaddr, 'prefixlen': prefix_len, 'mask': ipmask, 'gwaddr': gwaddr}
+        lo_intfs = _parse_ip_interface("LoopbackIPInterfaces", "LoopbackIPInterface")
+        mgmt_intfs = _parse_ip_interface("ManagementIPInterfaces", "ManagementIPInterface")
 
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
@@ -241,7 +232,7 @@ def parse_dpg(dpg, hname):
                     break;
             if acl_intfs:
                 acls[aclname] = { 'AttachTo': acl_intfs, 'IsMirror': is_mirror }
-        return intfs, lo_intfs, mgmt_intf, vlans, pcs, acls
+        return intfs, lo_intfs, mgmt_intfs, vlans, pcs, acls
     return None, None, None, None, None, None
 
 
@@ -404,8 +395,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
     pc_intfs = None
     vlans = None
     pcs = None
-    mgmt_intf = None
-    lo_intf = None
+    lo_intfs = None
+    mgmt_intfs = None
     neighbors = None
     devices = None
     hostname = None
@@ -429,7 +420,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, pcs, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mgmt_intfs, vlans, pcs, acls) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -467,7 +458,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['minigraph_ports'] = ports
     results['minigraph_vlans'] = vlans
     results['minigraph_portchannels'] = pcs
-    results['minigraph_mgmt_interface'] = mgmt_intf
+    results['minigraph_mgmt_interfaces'] = mgmt_intfs
     results['minigraph_lo_interfaces'] = lo_intfs
     results['minigraph_acls'] = acls
     results['minigraph_neighbors'] = neighbors

@@ -20,11 +20,13 @@ iface lo {{ 'inet' if minigraph_lo_interface['addr'] | ipv4 else 'inet6' }} stat
 {% block mgmt_interface %}
 # The management network interface
 auto eth0
-{% if minigraph_mgmt_interface['addr'] %}
+{% if minigraph_mgmt_interfaces | length %}
+{% for minigraph_mgmt_interface in minigraph_mgmt_interfaces %}
+{% if minigraph_mgmt_interface['addr'] | ipv4 %}
 iface eth0 inet static
     address {{ minigraph_mgmt_interface['addr'] }}
     netmask {{ minigraph_mgmt_interface['mask'] }}
-    ########## management network policy routing rules
+    ## management network policy routing rules ##
     # management port up rules
     up ip route add default via {{ minigraph_mgmt_interface['gwaddr'] }} dev eth0 table default
     up ip rule add from {{ minigraph_mgmt_interface['addr'] }}/32 table default
@@ -39,9 +41,16 @@ iface eth0 inet static
 {% endfor %}
 {# TODO: COPP policy type rules #}
 {% else %}
-iface eth0 inet dhcp
+iface eth0 inet6 static
+    address {{ minigraph_mgmt_interface['addr'] }}
+    netmask {{ minigraph_mgmt_interface['mask'] }}
 {% endif %}
 #
+{% endfor %}
+{% else %}
+iface eth0 inet dhcp
+#
+{% endif %}
 {% endblock mgmt_interface %}
 {% block front_panel_interfaces %}
 # The switch front panel interfaces
