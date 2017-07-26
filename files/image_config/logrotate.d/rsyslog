@@ -3,8 +3,7 @@
 /var/log/teamd.log
 {
     rotate 7
-    daily
-    maxsize 100M
+    size 100M
     missingok
     notifempty
     compress
@@ -22,8 +21,7 @@
 /var/log/swss/*.rec
 {
     rotate 7
-    daily
-    maxsize 20M
+    size 20M
     missingok
     notifempty
     compress
@@ -34,6 +32,8 @@
     endscript
 }
 
+# These log files should no longer be created, but we should attempt to rotate
+# them anyway, just in case they happen to get created.
 /var/log/mail.info
 /var/log/mail.warn
 /var/log/mail.err
@@ -47,9 +47,8 @@
 /var/log/debug
 /var/log/messages
 {
-    rotate 4
-    daily
-    maxsize 50M
+    rotate 1
+    size 1k
     missingok
     notifempty
     compress
