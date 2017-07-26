@@ -6,6 +6,9 @@
 .ONESHELL:
 SHELL = /bin/bash
 .SHELLFLAGS += -e
+USER = $(shell id -un)
+UID = $(shell id -u)
+GUID = $(shell id -g)
 
 .SECONDEXPANSION:
 
@@ -71,18 +74,27 @@ override PASSWORD := $(DEFAULT_PASSWORD)
 endif
 
 MAKEFLAGS += -j $(SONIC_CONFIG_BUILD_JOBS)
+export SONIC_CONFIG_MAKE_JOBS
 
 ###############################################################################
 ## Dumping key config attributes associated to current building exercise
 ###############################################################################
 
-ifndef $(CONFIGURED_PLATFORM)
-$(info CONFIGURED_PLATFORM is $(CONFIGURED_PLATFORM))
-endif
-
-ifndef $(SONIC_ROUTING_STACK)
-$(info ROUTING_STACK is $(SONIC_ROUTING_STACK))
-endif
+$(info SONiC Build System)
+$(info )
+$(info Build Configuration)
+$(info "CONFIGURED_PLATFORM"             : "$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))")
+$(info "SONIC_CONFIG_PRINT_DEPENDENCIES" : "$(SONIC_CONFIG_PRINT_DEPENDENCIES)")
+$(info "SONIC_CONFIG_BUILD_JOBS"         : "$(SONIC_CONFIG_BUILD_JOBS)")
+$(info "SONIC_CONFIG_MAKE_JOBS"          : "$(SONIC_CONFIG_MAKE_JOBS)")
+$(info "DEFAULT_USERNAME"                : "$(DEFAULT_USERNAME)")
+$(info "DEFAULT_PASSWORD"                : "$(DEFAULT_PASSWORD)")
+$(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
+$(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
+$(info "SONIC_CONFIG_DEBUG"              : "$(SONIC_CONFIG_DEBUG)")
+$(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
+$(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
+$(info )
 
 ###############################################################################
 ## Generic rules section
@@ -126,7 +138,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_COPY_FILES)) : $(DEBS_PATH)/% : .platform
 $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform
 	$(HEADER)
 	$(foreach deb,$* $($*_DERIVED_DEBS), \
-	    { wget -O $(DEBS_PATH)/$(deb) $($(deb)_URL) $(LOG) || exit 1 ; } ; )
+	    { wget --no-use-server-timestamps -O $(DEBS_PATH)/$(deb) $($(deb)_URL) $(LOG) || exit 1 ; } ; )
 	$(FOOTER)
 
 # Download regular files from online location
@@ -137,7 +149,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform
 #     SONIC_ONLINE_FILES += $(SOME_NEW_FILE)
 $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_FILES)) : $(DEBS_PATH)/% : .platform
 	$(HEADER)
-	wget -O  $@ $($*_URL) $(LOG)
+	wget --no-use-server-timestamps -O  $@ $($*_URL) $(LOG)
 	$(FOOTER)
 
 ###############################################################################
@@ -178,7 +190,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
-	dpkg-buildpackage -rfakeroot -b -us -uc $(LOG)
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
 	popd $(LOG)
 	# clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
@@ -237,7 +249,7 @@ SONIC_INSTALL_TARGETS = $(addsuffix -install,$(addprefix $(DEBS_PATH)/, \
 			$(SONIC_EXTRA_DEBS)))
 $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) $(DEBS_PATH)/$$*
 	$(HEADER)
-	[ -f $(DEBS_PATH)/$* ] || { echo $(DEBS_PATH)/$* does not exist $(LOG) && exit 1; }
+	[ -f $(DEBS_PATH)/$* ] || { echo $(DEBS_PATH)/$* does not exist $(LOG) && false $(LOG) }
 	# put a lock here because dpkg does not allow installing packages in parallel
 	while true; do
 	if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
@@ -296,7 +308,7 @@ docker-start :
 # targets for building simple docker images that do not depend on any debian packages
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
 	$(HEADER)
-	docker build --squash --no-cache -t $* $($*.gz_PATH) $(LOG)
+	docker build --squash --no-cache --build-arg user=$(USER) --build-arg uid=$(UID) --build-arg guid=$(GUID) -t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	$(FOOTER)
 
@@ -312,7 +324,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_whls=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_PYTHON_WHEELS)))\n" | awk '!a[$$0]++'))
 	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
 	j2 $($*.gz_PATH)/Dockerfile.j2 > $($*.gz_PATH)/Dockerfile
-	docker build --squash --no-cache -t $* $($*.gz_PATH) $(LOG)
+	docker build --squash --no-cache --build-arg user=$(USER) --build-arg uid=$(UID) --build-arg guid=$(GUID) -t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	$(FOOTER)
 

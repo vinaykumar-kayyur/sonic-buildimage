@@ -202,21 +202,34 @@ RUN apt-get update && apt-get install -y \
         autoconf-archive \
 # For gtest
         libgtest-dev \
-        cmake \
+        cmake
+
 # For linux build
-        && apt-get -y build-dep linux \
+RUN apt-get -y build-dep linux
+
 # For gobgp build
-        && apt-get -yt jessie-backports install \
-        golang-go \
-        golang-github-golang-mock-dev \
+RUN export VERSION=1.8.3 \
+ && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
+ && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
+ && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
+ && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc
+
 # For p4 build
-        && pip install \
+RUN pip install \
         ctypesgen \
-        crc16 \
+        crc16
+
 # For templating
-        j2cli \
+RUN pip install j2cli
+
 # For sonic config engine testing
-        pyangbind
+RUN pip install pyangbind
+
+# For supervisor build
+RUN pip install meld3 mock
+
+# Install dependencies for isc-dhcp-relay build
+RUN apt-get -y build-dep isc-dhcp
 
 RUN cd /usr/src/gtest && cmake . && make -C /usr/src/gtest
 
@@ -227,8 +240,21 @@ EXPOSE 22
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
 
-# Install docker engine 1.13.0 inside docker and enable experimental feature
-RUN curl -sSL https://get.docker.com/ | sh && apt-get install -y --force-yes -q docker-engine=1.13.0-0~debian-jessie
+# Install docker engine 17.03.2~ce-0 inside docker and enable experimental feature
+RUN apt-get update
+RUN apt-get install -y \
+           apt-transport-https \
+           ca-certificates \
+           curl \
+           gnupg2 \
+           software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+RUN add-apt-repository \
+           "deb [arch=amd64] https://download.docker.com/linux/debian \
+           $(lsb_release -cs) \
+           stable"
+RUN apt-get update
+RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
 RUN echo "DOCKER_OPTS=\"--experimental\"" >> /etc/default/docker
 
 # Add user

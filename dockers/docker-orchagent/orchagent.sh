@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Export platform information. Required to be able to write
+# vendor specific code.
+export platform=`sonic-cfggen -m /etc/sonic/minigraph.xml -v onie_switch_asic`
+
 ASIC=`sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type`
 
 MAC_ADDRESS=`ip link show eth0 | grep ether | awk '{print $2}'`
@@ -19,4 +23,3 @@ elif [ "$ASIC" == "cavium" ]; then
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}
-
