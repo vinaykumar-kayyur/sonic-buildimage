@@ -9,6 +9,7 @@
     notifempty
     compress
     delaycompress
+    sharedscripts
     postrotate
         # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
         # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
@@ -17,6 +18,7 @@
         kill -HUP $(cat /var/run/rsyslogd.pid)
     endscript
 }
+
 /var/log/swss/*.rec
 {
     rotate 7
@@ -31,6 +33,7 @@
         pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
     endscript
 }
+
 /var/log/mail.info
 /var/log/mail.warn
 /var/log/mail.err
