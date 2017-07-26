@@ -158,13 +158,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 ## Create password for the default user
 echo $USERNAME:$PASSWORD_ENCRYPTED | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd -e
 
-## Create remote user
-## TODO: remote_user's login shell will be changed to cli shell.
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G docker "remote_user" -u 1001 -g 999 -c  \
-    "remote user" -d /home/remote_user -m -s /bin/rbash
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker "remote_user_su" -u 1002 -g 1000 -c  \
-    "remote sudo user" -d /home/remote_user_su -m -s /bin/bash
-
 ## Pre-install hardware drivers
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
     firmware-linux-nonfree

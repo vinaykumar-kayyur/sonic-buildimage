@@ -1,0 +1,228 @@
+From 6aab5b6cafb65763e297f99e889418677528cd35 Mon Sep 17 00:00:00 2001
+From: Liuqu <chenchen.qcc@alibaba-inc.com>
+Date: Thu, 22 Jun 2017 23:09:54 -0700
+Subject: [PATCH] Add config for source ip address
+
+* Support to set source ip address for tacacs
+* Modify libpam-tacplus postinstall, don't update pam-auth temporarily
+  when libpam-tacplus install
+* Fix libtac2-bin dpkg-build error
+---
+ debian/libpam-tacplus.postinst |  2 +-
+ debian/libtac2-bin.install     |  2 +-
+ debian/tacplus                 |  4 ----
+ pam_tacplus.c                  | 21 ++++++++++++++++-----
+ support.c                      | 27 ++++++++++++++++++++++++++-
+ support.h                      |  2 ++
+ 6 files changed, 46 insertions(+), 12 deletions(-)
+
+diff --git a/debian/libpam-tacplus.postinst b/debian/libpam-tacplus.postinst
+index 7e37590..b008b7a 100644
+--- a/debian/libpam-tacplus.postinst
++++ b/debian/libpam-tacplus.postinst
+@@ -2,6 +2,6 @@
+ 
+ set -e
+ 
+-pam-auth-update --package
++#pam-auth-update --package
+ 
+ #DEBHELPER#
+diff --git a/debian/libtac2-bin.install b/debian/libtac2-bin.install
+index 236670a..1df36c6 100644
+--- a/debian/libtac2-bin.install
++++ b/debian/libtac2-bin.install
+@@ -1 +1 @@
+-usr/sbin
++usr/bin/*
+diff --git a/debian/tacplus b/debian/tacplus
+index 5296cf6..985395e 100644
+--- a/debian/tacplus
++++ b/debian/tacplus
+@@ -3,13 +3,9 @@ Default: yes
+ Priority: 257
+ Auth-Type: Primary
+ Auth:
+-	sufficient			pam_tacplus.so
+ Account-Type: Primary
+ Account:
+-	sufficient			pam_tacplus.so
+ Password-Type: Primary
+ Password:
+- 	sufficient			pam_tacplus.so
+ Session-Type: Additional
+ Session:
+-	optional			pam_tacplus.so
+diff --git a/pam_tacplus.c b/pam_tacplus.c
+index 324cd5d..b9188b8 100644
+--- a/pam_tacplus.c
++++ b/pam_tacplus.c
+@@ -134,6 +134,7 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv, int type,
+ 	char *typemsg;
+ 	int status = PAM_SESSION_ERR;
+ 	int srv_i, tac_fd;
++    struct addrinfo *source_address = NULL;
+ 
+ 	typemsg = tac_acct_flag2str(type);
+ 	ctrl = _pam_parse(argc, argv);
+@@ -185,8 +186,9 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv, int type,
+ 
+ 	status = PAM_SESSION_ERR;
+ 	for (srv_i = 0; srv_i < tac_srv_no; srv_i++) {
++        set_source_ip(tac_source_ip, &source_address);
+ 		tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key,
+-				NULL, tac_timeout);
++				source_address, tac_timeout);
+ 		if (tac_fd < 0) {
+ 			_pam_log(LOG_WARNING, "%s: error sending %s (fd)", __FUNCTION__,
+ 					typemsg);
+@@ -240,6 +242,8 @@ int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
+ 	int srv_i;
+ 	int tac_fd, status, msg, communicating;
+ 
++    struct addrinfo *source_address = NULL;
++
+ 	user = pass = tty = r_addr = NULL;
+ 
+ 	ctrl = _pam_parse(argc, argv);
+@@ -281,13 +285,16 @@ int pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
+ 	if (ctrl & PAM_TAC_DEBUG)
+ 		syslog(LOG_DEBUG, "%s: rhost [%s] obtained", __FUNCTION__, r_addr);
+ 
++    /* set the source ip address for the tacacs packets */
++	set_source_ip(tac_source_ip, &source_address);
++
+ 	status = PAM_AUTHINFO_UNAVAIL;
+ 	for (srv_i = 0; srv_i < tac_srv_no; srv_i++) {
+ 		if (ctrl & PAM_TAC_DEBUG)
+ 			syslog(LOG_DEBUG, "%s: trying srv %d", __FUNCTION__, srv_i);
+ 
+ 		tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key,
+-				NULL, tac_timeout);
++				source_address, tac_timeout);
+ 		if (tac_fd < 0) {
+ 			_pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
+ 			active_server.addr = NULL;
+@@ -548,6 +555,7 @@ int pam_sm_acct_mgmt(pam_handle_t * pamh, int flags, int argc,
+ 	struct areply arep;
+ 	struct tac_attrib *attr = NULL;
+ 	int tac_fd;
++    struct addrinfo *source_address = NULL;
+ 
+ 	flags = flags;				/* unused */
+ 
+@@ -606,9 +614,10 @@ int pam_sm_acct_mgmt(pam_handle_t * pamh, int flags, int argc,
+ 	tac_add_attrib(&attr, "service", tac_service);
+ 	if (tac_protocol[0] != '\0')
+ 		tac_add_attrib(&attr, "protocol", tac_protocol);
+-
+-	tac_fd = tac_connect_single(active_server.addr, active_server.key, NULL,
++    set_source_ip(tac_source_ip, &source_address);
++	tac_fd = tac_connect_single(active_server.addr, active_server.key, source_address,
+ 			tac_timeout);
++
+ 	if (tac_fd < 0) {
+ 		_pam_log(LOG_ERR, "TACACS+ server unavailable");
+ 		if (arep.msg != NULL)
+@@ -751,6 +760,7 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc,
+ 	const void *pam_pass = NULL;
+ 	int srv_i;
+ 	int tac_fd, status, msg, communicating;
++	struct addrinfo *source_address = NULL;
+ 
+ 	user = pass = tty = r_addr = NULL;
+ 
+@@ -800,8 +810,9 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc,
+ 		if (ctrl & PAM_TAC_DEBUG)
+ 			syslog(LOG_DEBUG, "%s: trying srv %d", __FUNCTION__, srv_i);
+ 
++        set_source_ip(tac_source_ip, &source_address);
+ 		tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key,
+-				NULL, tac_timeout);
++				source_address, tac_timeout);
+ 		if (tac_fd < 0) {
+ 			_pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
+ 			continue;
+diff --git a/support.c b/support.c
+index 2406b32..41a45af 100644
+--- a/support.c
++++ b/support.c
+@@ -39,6 +39,7 @@ char tac_prompt[64];
+ struct addrinfo tac_srv_addr[TAC_PLUS_MAXSERVERS];
+ struct sockaddr tac_sock_addr[TAC_PLUS_MAXSERVERS];
+ char tac_srv_key[TAC_PLUS_MAXSERVERS][TAC_SECRET_MAX_LEN+1];
++char tac_source_ip[64];
+ 
+ void _pam_log(int err, const char *format,...) {
+     char msg[256];
+@@ -228,7 +229,7 @@ int _pam_parse (int argc, const char **argv) {
+     tac_protocol[0] = 0;
+     tac_prompt[0] = 0;
+     tac_login[0] = 0;
+-
++    tac_source_ip[0] = 0;
+     for (ctrl = 0; argc-- > 0; ++argv) {
+         if (!strcmp (*argv, "debug")) { /* all */
+             ctrl |= PAM_TAC_DEBUG;
+@@ -318,6 +319,9 @@ int _pam_parse (int argc, const char **argv) {
+             } else { 
+                 tac_readtimeout_enable = 1;
+             }
++        } else if (!strncmp (*argv, "source_ip=", strlen("source_ip="))) {
++            /* source ip for the packets */
++            strncpy (tac_source_ip, *argv + strlen("source_ip="), sizeof(tac_source_ip));
+         } else {
+             _pam_log (LOG_WARNING, "unrecognized option: %s", *argv);
+         }
+@@ -336,8 +340,29 @@ int _pam_parse (int argc, const char **argv) {
+         _pam_log(LOG_DEBUG, "tac_protocol='%s'", tac_protocol);
+         _pam_log(LOG_DEBUG, "tac_prompt='%s'", tac_prompt);
+         _pam_log(LOG_DEBUG, "tac_login='%s'", tac_login);
++        _pam_log(LOG_DEBUG, "tac_source_ip='%s'", tac_source_ip);
+     }
+ 
+     return ctrl;
+ }    /* _pam_parse */
+ 
++/* set source ip address for the outgoing tacacs packets */
++void set_source_ip(const char *tac_source_ip,
++    struct addrinfo **source_address) {
++
++    struct addrinfo hints;
++    int rv;
++
++    /* set the source ip address for the tacacs packets */
++    if (tac_source_ip != NULL) {
++        memset(&hints, 0, sizeof(hints));
++        hints.ai_family = AF_UNSPEC;
++        hints.ai_socktype = SOCK_STREAM;
++        if ((rv = getaddrinfo(tac_source_ip, NULL, &hints,
++             source_address)) != 0) {
++            _pam_log(LOG_ERR, "error setting the source ip information");
++        } else {
++            _pam_log(LOG_DEBUG, "source ip is set");
++        }
++    }
++}
+diff --git a/support.h b/support.h
+index 07c2f9d..4217618 100644
+--- a/support.h
++++ b/support.h
+@@ -39,6 +39,7 @@ extern int tac_srv_no;
+ extern char tac_service[64];
+ extern char tac_protocol[64];
+ extern char tac_prompt[64];
++extern char tac_source_ip[64];
+ void tac_copy_addr_info (struct addrinfo *p_dst, const struct addrinfo *p_src);
+ 
+ int _pam_parse (int, const char **);
+@@ -52,5 +53,6 @@ char *_pam_get_user(pam_handle_t *);
+ char *_pam_get_terminal(pam_handle_t *);
+ char *_pam_get_rhost(pam_handle_t *);
+ 
++void set_source_ip(const char *tac_source_ip, struct addrinfo **source_address);
+ #endif  /* PAM_TACPLUS_SUPPORT_H */
+ 
+-- 
+2.7.4
+

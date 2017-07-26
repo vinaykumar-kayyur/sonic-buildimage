@@ -89,15 +89,10 @@ sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
-# Install pam-tacplus
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libtac2_1.4.1-1_amd64.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libpam-tacplus_1.4.1-1_amd64.deb
-
-# Install nss-tacplus
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libnss-tacplus_1.0.3-1_amd64.deb
-
-# Copy aaa configuration files
-sudo cp -f $IMAGE_CONFIGS/aaa/aaa.json $FILESYSTEM_ROOT/etc/sonic/
+# Install pam-tacplus and nss-tacplus
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libtac2_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libpam-tacplus_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libnss-tacplus_*.deb
 
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
