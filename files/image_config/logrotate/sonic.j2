@@ -1,9 +1,18 @@
+{% block banner %}
+#
+# =========== Managed by SONiC Config Engine - DO NOT EDIT MANUALLY! ===========
+# Generated from:
+#   /usr/share/sonic/templates/logrotate.d/sonic.conf.j2 using sonic-cfggen
+#
+# file: /etc/logrotate.d/sonic.conf
+#   Logrotate configuration file for SONiC
+#
+{% endblock banner %}
+
 /var/log/syslog
-/var/log/quagga/*.log
-/var/log/teamd.log
 {
-    rotate 7
-    size 100M
+    rotate {{ num_archive_files }}
+    size {{ size_limit_syslog_kb }}k
     missingok
     notifempty
     compress
@@ -18,10 +27,30 @@
     endscript
 }
 
+/var/log/quagga/*.log
+/var/log/teamd.log
+{
+    rotate {{ num_archive_files }}
+    size {{ size_limit_quagga_teamd_kb }}k
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
+        # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
+        # However, Debian Jessie is still using v1.22.
+        # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672218
+        kill -HUP $(cat /var/run/rsyslogd.pid)
+    endscript
+}
+
+# SwSS logs (written by orchagent, not rsyslog)
 /var/log/swss/*.rec
 {
-    rotate 7
-    size 20M
+    rotate {{ num_archive_files }}
+    size {{ size_limit_swss_kb }}k
     missingok
     notifempty
     compress
@@ -32,8 +61,9 @@
     endscript
 }
 
-# These log files should no longer be created, but we should attempt to rotate
-# them anyway, just in case they happen to get created.
+# Of these rsyslog-written log files, only auth.log and cron.log should still
+# be created. However, we should attempt to rotate all of them anyway, just
+# in case others happen to get created.
 /var/log/mail.info
 /var/log/mail.warn
 /var/log/mail.err
@@ -48,7 +78,7 @@
 /var/log/messages
 {
     rotate 1
-    size 1k
+    size 10k
     missingok
     notifempty
     compress
