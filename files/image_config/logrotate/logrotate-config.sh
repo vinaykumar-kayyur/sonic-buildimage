@@ -7,7 +7,7 @@ RESERVED_SPACE_KB=1024
 # Number of rotated archive files to keep per log file
 NUM_ARCHIVES_PER_LOG_FILE=7
 
-# Number of files to rotate in each block within sonic.j2 template
+# Number of files to rotate in each block within rsyslog.j2 template
 NUM_LOG_FILES_SYSLOG=1
 NUM_LOG_FILES_QUAGGA_TEAMD=3
 NUM_LOG_FILES_SWSS=2
@@ -31,4 +31,4 @@ ADDITIONAL_DATA_JSON+="\"size_limit_quagga_teamd_kb\":$SIZE_LIMIT_QUAGGA_TEAMD_F
 ADDITIONAL_DATA_JSON+="\"size_limit_swss_kb\":$SIZE_LIMIT_SWSS_FILES_KB"
 ADDITIONAL_DATA_JSON+="}"
 
-sonic-cfggen -a "$ADDITIONAL_DATA_JSON" -t /usr/share/sonic/templates/logrotate.d/sonic.j2 > /etc/logrotate.d/sonic
+sonic-cfggen -a "$ADDITIONAL_DATA_JSON" -t /usr/share/sonic/templates/logrotate.d/rsyslog.j2 > /etc/logrotate.d/rsyslog
