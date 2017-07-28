@@ -38,15 +38,13 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
 
     ## Generate a compressed 8GB partition dump that can be used to 'dd' in-lieu of using the onie-nos-installer
     ## The 'build' install mode of the installer is used to generate this dump.
-    if [[ "$TARGET_MACHINE" == "broadcom" ]] && [[ -n "$DELL_Z9100_PLATFORM_MODULE_VERSION" || -n "$DELL_S6100_PLATFORM_MODULE_VERSION" ]]; then
-        sudo chmod a+x $OUTPUT_ONIE_IMAGE
-        sudo ./$OUTPUT_ONIE_IMAGE
+    sudo chmod a+x $OUTPUT_ONIE_IMAGE
+    sudo ./$OUTPUT_ONIE_IMAGE
 
-        if [ -r /tmp/sonic-${TARGET_MACHINE}_8GB_dd.img.gz ]; then
-            sudo mv /tmp/sonic-${TARGET_MACHINE}_8GB_dd.img.gz target
-        else
-            echo "/tmp/sonic-${TARGET_MACHINE}_8GB_dd.img.gz not found !\n"
-        fi
+    if [ -r /tmp/sonic-${TARGET_MACHINE}_8GB_dd.img.gz ]; then
+        sudo mv /tmp/sonic-${TARGET_MACHINE}_8GB_dd.img.gz target
+    else
+        echo "/tmp/sonic-${TARGET_MACHINE}_8GB_dd.img.gz not found !\n"
     fi
 
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
