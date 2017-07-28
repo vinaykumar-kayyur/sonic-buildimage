@@ -13,6 +13,7 @@ NUM_LOG_FILES_QUAGGA_TEAMD=3
 NUM_LOG_FILES_SWSS=2
 
 # Percentage of usable /var/log/ space to allocate to each block in template
+# NOTE: These must sum to 100!
 PERCENT_ALLOCATED_SYSLOG=75
 PERCENT_ALLOCATED_QUAGGA_TEAMD=15
 PERCENT_ALLOCATED_SWSS=10
