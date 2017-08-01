@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-supervisorctl start redis-server
-
 # Wait until redis starts
 while true; do
     if [ `redis-cli ping` == "PONG" ]; then
