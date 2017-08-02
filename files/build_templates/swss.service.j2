@@ -18,7 +18,6 @@ ExecStartPre=/usr/bin/docker exec database redis-cli -n 1 FLUSHDB
 ExecStartPre=/usr/bin/docker exec database redis-cli -n 2 FLUSHDB
 
 {% if sonic_asic_platform == 'mellanox' %}
-Environment=FAST_BOOT=1
 ExecStartPre=/etc/init.d/sxdkernel start
 ExecStartPre=/usr/bin/mst start
 ExecStartPre=/sbin/modprobe i2c-dev
