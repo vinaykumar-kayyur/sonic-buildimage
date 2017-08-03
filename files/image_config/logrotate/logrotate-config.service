@@ -1,0 +1,10 @@
+[Unit]
+Description=Update logrotate configuration
+After=basic.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logrotate-config.sh
+
+[Install]
+WantedBy=multi-user.target

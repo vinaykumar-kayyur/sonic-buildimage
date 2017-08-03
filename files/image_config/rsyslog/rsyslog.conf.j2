@@ -1,12 +1,13 @@
-###############################################################################
-# Managed by Ansible
-# file: ansible/roles/acs/templates/rsyslog.conf.j2
-###############################################################################
+{% block banner %}
 #
-#  /etc/rsyslog.conf    Configuration file for rsyslog.
+# =========== Managed by SONiC Config Engine - DO NOT EDIT MANUALLY! ===========
+# Generated from /usr/share/sonic/templates/rsyslog.conf.j2 using sonic-cfggen
+#
+# file: /etc/rsyslog.conf    Configuration file for rsyslog.
 #
 #                       For more information see
 #                       /usr/share/doc/rsyslog-doc/html/rsyslog_conf.html
+{% endblock banner %}
 
 
 #################
@@ -50,7 +51,7 @@ $ActionFileDefaultTemplate SONiCFileFormat
 #
 $FileOwner root
 $FileGroup adm
-$FileCreateMode 0640
+$FileCreateMode 0644
 $DirCreateMode 0755
 $Umask 0022
 

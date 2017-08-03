@@ -1,14 +1,23 @@
+{% block banner %}
+#
+# =========== Managed by SONiC Config Engine - DO NOT EDIT MANUALLY! ===========
+# Generated from:
+#   /usr/share/sonic/templates/logrotate.d/rsyslog.j2 using sonic-cfggen
+#
+# file: /etc/logrotate.d/rsyslog
+#   Logrotate configuration file for SONiC
+#
+{% endblock banner %}
+
 /var/log/syslog
-/var/log/quagga/*.log
-/var/log/teamd.log
 {
-    rotate 7
-    daily
-    maxsize 100M
+    rotate {{ num_archive_files }}
+    size {{ size_limit_syslog_kb }}k
     missingok
     notifempty
     compress
     delaycompress
+    sharedscripts
     postrotate
         # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
         # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
@@ -17,11 +26,31 @@
         kill -HUP $(cat /var/run/rsyslogd.pid)
     endscript
 }
+
+/var/log/quagga/*.log
+/var/log/teamd.log
+{
+    rotate {{ num_archive_files }}
+    size {{ size_limit_quagga_teamd_kb }}k
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
+        # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
+        # However, Debian Jessie is still using v1.22.
+        # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672218
+        kill -HUP $(cat /var/run/rsyslogd.pid)
+    endscript
+}
+
+# SwSS logs (written by orchagent, not rsyslog)
 /var/log/swss/*.rec
 {
-    rotate 7
-    daily
-    maxsize 20M
+    rotate {{ num_archive_files }}
+    size {{ size_limit_swss_kb }}k
     missingok
     notifempty
     compress
@@ -31,6 +60,10 @@
         pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
     endscript
 }
+
+# Of these rsyslog-written log files, only auth.log and cron.log should still
+# be created. However, we should attempt to rotate all of them anyway, just
+# in case others happen to get created.
 /var/log/mail.info
 /var/log/mail.warn
 /var/log/mail.err
@@ -44,9 +77,8 @@
 /var/log/debug
 /var/log/messages
 {
-    rotate 4
-    daily
-    maxsize 50M
+    rotate 1
+    size 10k
     missingok
     notifempty
     compress
