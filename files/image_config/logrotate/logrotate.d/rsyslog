@@ -59,12 +59,8 @@
         # of caution, giving us a bit of a cushion if a log grows quickly and passes its rotation size
         THRESHOLD_KB=$((USABLE_SPACE_KB - (512 * NUM_LOGS_TO_ROTATE * 2)))
 
-        echo "Rotating $1..."
-
         while true; do
             USED_KB=$(du -s /var/log | awk '{ print $1; }')
-
-            echo "Threshold: $THRESHOLD_KB, Used: $USED_KB"
 
             if [ $USED_KB -lt $THRESHOLD_KB ]; then
                 break
@@ -76,7 +72,6 @@
                     break
                 fi
 
-                echo "Deleting $OLDEST_ARCHIVE_FILE"
                 logger -p syslog.info -t "logrotate" "Deleting archive file $OLDEST_ARCHIVE_FILE to free up space"
                 rm -rf "$OLDEST_ARCHIVE_FILE"
             fi
@@ -84,14 +79,12 @@
     endscript
     postrotate
         if [ $(echo $1 | grep -c "/var/log/swss/") -gt 0 ]; then
-            echo "Sending HUP to orchagent"
             pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
         else
             # Calling kill directly instead of 'service rsyslog rotate >/dev/null' due
             # to bug in init-system-helpers. Bug has apparently been fixed in v1.47.
             # However, Debian Jessie is still using v1.22.
             # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672218
-            echo "Sending HUP to rsyslog"
             kill -HUP $(cat /var/run/rsyslogd.pid)
         fi
     endscript
