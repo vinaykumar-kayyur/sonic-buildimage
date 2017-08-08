@@ -263,12 +263,12 @@ def parse_cpg(cpg, hname):
                 if end_router == hname:
                     bgp_sessions[start_peer] = {
                         'name': start_router,
-                        'peer_addr': end_peer
+                        'local_addr': end_peer
                     }
                 else:
                     bgp_sessions[end_peer] = {
                         'name': end_router,
-                        'peer_addr': start_peer
+                        'local_addr': start_peer
                     }
         elif child.tag == str(QName(ns, "Routers")):
             for router in child.findall(str(QName(ns1, "BGPRouterDeclaration"))):
