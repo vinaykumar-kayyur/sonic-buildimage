@@ -18,13 +18,11 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
-COPY ["start.sh", "mlnx-fw-upgrade.sh", "/usr/bin/"]
+COPY ["start.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
-COPY ["/debs/fw-SPC-rel-13_1400_0126-EVB.mfa", "/etc/mlnx/"]
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
 ENTRYPOINT ["/usr/bin/supervisord"]
-

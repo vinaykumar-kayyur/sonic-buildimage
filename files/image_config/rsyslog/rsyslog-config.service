@@ -1,6 +1,5 @@
 [Unit]
 Description=Update rsyslog configuration
-Before=rsyslog.service
 
 [Service]
 Type=oneshot
@@ -8,4 +7,3 @@ ExecStart=/usr/bin/rsyslog-config.sh
 
 [Install]
 WantedBy=multi-user.target
-
