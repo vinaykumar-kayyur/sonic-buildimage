@@ -161,13 +161,3 @@ led 1 prog \
  57 32 0F 87 32 0F 87 32 0F 87 32 0F 87 57 00 00
 led 1 start
 
-# Init procedure could have some unexpective behavior for portd state.
-# So we need to disable all ports and then enable all ports to reset the ports s
-tate.
-port xe enable=no
-port xe enable=yes
-
-m xlmac_tx_ctrl average_ipg=0xc
-# Set default interface mode for 10G SFP ports
-port xe sp=10000 if=SFI
-console off; port xe sp=40000 if=CR4; console on
