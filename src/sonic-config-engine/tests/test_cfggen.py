@@ -123,4 +123,4 @@ class TestCfgGen(TestCase):
     def test_minigraph_ethernet_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v ethernet_interfaces'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "[{'speed': '10000', 'name': 'Ethernet0'}, {'speed': '25000', 'name': 'Ethernet4'}, {'speed': '40000', 'name': 'Ethernet8'}, {'speed': '1000000', 'name': 'Ethernet12'}]")
+        self.assertEqual(output.strip(), "[{'speed': '10000', 'name': 'fortyGigE0/0'}, {'speed': '25000', 'name': 'fortyGigE0/4'}, {'speed': '40000', 'name': 'fortyGigE0/8'}, {'speed': '1000000', 'name': 'fortyGigE0/12'}]")

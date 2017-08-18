@@ -210,7 +210,7 @@
           <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
-          <InterfaceName>Ethernet0</InterfaceName>
+          <InterfaceName>fortyGigE0/0</InterfaceName>
           <InterfaceType i:nil="true"/>
           <MultiPortsInterface>false</MultiPortsInterface>
           <PortName>0</PortName>
@@ -223,7 +223,7 @@
           <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
-          <InterfaceName>Ethernet4</InterfaceName>
+          <InterfaceName>fortyGigE0/4</InterfaceName>
           <InterfaceType i:nil="true"/>
           <MultiPortsInterface>false</MultiPortsInterface>
           <PortName>0</PortName>
@@ -236,7 +236,7 @@
           <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
-          <InterfaceName>Ethernet8</InterfaceName>
+          <InterfaceName>fortyGigE0/8</InterfaceName>
           <InterfaceType i:nil="true"/>
           <MultiPortsInterface>false</MultiPortsInterface>
           <PortName>0</PortName>
@@ -249,7 +249,7 @@
           <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
-          <InterfaceName>Ethernet12</InterfaceName>
+          <InterfaceName>fortyGigE0/12</InterfaceName>
           <InterfaceType i:nil="true"/>
           <MultiPortsInterface>false</MultiPortsInterface>
           <PortName>0</PortName>
@@ -257,6 +257,9 @@
           <Speed>1000000</Speed>
         </a:EthernetInterface>
       </EthernetInterfaces>
+      <FlowControl>true</FlowControl>
+      <Height>0</Height>
+      <HwSku>Force10-S6000</HwSku>
     </DeviceInfo>
   </DeviceInfos>
   <Hostname>switch-t0</Hostname>
