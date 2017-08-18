@@ -13,6 +13,8 @@ supervisorctl start rsyslogd
 
 supervisorctl start orchagent
 
+supervisorctl start cfgagentd
+
 supervisorctl start portsyncd
 
 supervisorctl start intfsyncd

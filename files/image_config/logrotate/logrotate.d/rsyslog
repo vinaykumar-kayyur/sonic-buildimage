@@ -35,6 +35,7 @@
 /var/log/quagga/zebra.log
 /var/log/swss/sairedis.rec
 /var/log/swss/swss.rec
+/var/log/swss/swss.cfg.rec
 {
     size 1M
     rotate 5000

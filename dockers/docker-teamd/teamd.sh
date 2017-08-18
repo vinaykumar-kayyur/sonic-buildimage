@@ -10,6 +10,7 @@ function start_app {
         done
     fi
     teamsyncd &
+    redis-cli -n 0 HSET LAG_TABLE:ConfigDone admin_status "up"
 }
 
 function clean_up {
@@ -19,6 +20,7 @@ function clean_up {
         done
     fi
     pkill -9 teamsyncd
+    redis-cli -n 0 DEL LAG_TABLE:ConfigDone
     exit
 }
 
