@@ -11,11 +11,29 @@
 #
 # By default this script does nothing.
 
+sonic_version=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+
+if [ -f /host/image-$sonic_version/platform/migration ]; then
+
+    # Extract the machine.conf from ONIE
+    if [ ! -e /host/machine.conf ]; then
+        onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
+        mkdir -p /mnt/onie-boot
+        mount $onie_dev /mnt/onie-boot
+
+        if [ ! -e /mnt/onie-boot/onie/grub/grub-machine.cfg ]; then
+            echo "/mnt/onie-boot/onie/grub/grub-machine.cfg not found" >> /etc/migration.log
+        else        
+            grep "=" /mnt/onie-boot/onie/grub/grub-machine.cfg > /host/machine.conf
+        fi
+    fi
+
+    rm /host/image-$sonic_version/platform/migration
+fi
+
 . /host/machine.conf
 
 echo "install platform dependent packages at the first boot time"
-
-sonic_version=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
 
 if [ -f /host/image-$sonic_version/platform/firsttime ]; then
 
