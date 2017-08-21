@@ -11,6 +11,22 @@
 #
 # By default this script does nothing.
 
+# If the machine.conf is absent, it indicates that the unit booted
+# into SONiC from another NOS. Extract the machine.conf from ONIE.
+if [ ! -e /host/machine.conf ]; then
+    onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
+    mkdir -p /mnt/onie-boot
+    mount $onie_dev /mnt/onie-boot
+
+    if [ ! -e /mnt/onie-boot/onie/grub/grub-machine.cfg ]; then
+        echo "/mnt/onie-boot/onie/grub/grub-machine.cfg not found" >> /etc/migration.log
+    else
+        grep "=" /mnt/onie-boot/onie/grub/grub-machine.cfg > /host/machine.conf
+    fi
+
+    umount /mnt/onie-boot
+fi
+
 . /host/machine.conf
 
 echo "install platform dependent packages at the first boot time"
