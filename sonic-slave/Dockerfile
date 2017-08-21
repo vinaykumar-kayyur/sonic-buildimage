@@ -198,8 +198,6 @@ RUN apt-get update && apt-get install -y \
         python-yaml \
 # For lockfile
         procmail \
-# For pam-tacplus build
-        autoconf-archive \
 # For gtest
         libgtest-dev \
         cmake

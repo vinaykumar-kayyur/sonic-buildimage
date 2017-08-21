@@ -1,4 +1,4 @@
-From 3a293e757232aa801386b671c21f25cdd14cacbd Mon Sep 17 00:00:00 2001
+From b8ed986b2ee17c0d3253a685a8ac2e4850a2a159 Mon Sep 17 00:00:00 2001
 From: Liuqu <chenchen.qcc@alibaba-inc.com>
 Date: Wed, 16 Aug 2017 06:24:45 -0700
 Subject: [PATCH 2/2] Add nss-tacplus
@@ -9,7 +9,7 @@ Subject: [PATCH 2/2] Add nss-tacplus
 ---
  Makefile.am                             |  36 ++
  configure.ac                            |   1 +
- debian/control                          |   6 +
+ debian/control                          |   8 +-
  debian/libnss-tacplus.install           |   2 +
  debian/libnss-tacplus.lintian-overrides |   8 +
  debian/libnss-tacplus.postinst          |  32 ++
@@ -17,7 +17,7 @@ Subject: [PATCH 2/2] Add nss-tacplus
  debian/rules                            |   2 +
  nss_tacplus.c                           | 838 ++++++++++++++++++++++++++++++++
  tacplus_nss.conf                        |  50 ++
- 10 files changed, 977 insertions(+)
+ 10 files changed, 978 insertions(+), 1 deletion(-)
  create mode 100644 debian/libnss-tacplus.install
  create mode 100644 debian/libnss-tacplus.lintian-overrides
  create mode 100644 debian/libnss-tacplus.postinst
@@ -89,9 +89,18 @@ index e34c769..bd683a8 100644
  AM_CONDITIONAL(MY_MD5, [test "$ac_cv_header_openssl_md5_h" = "no" ])
  AM_CONDITIONAL(TACC, [test "$ac_cv_lib_crypto_RAND_pseudo_bytes" = "yes"])
 diff --git a/debian/control b/debian/control
-index 2e851b1..1e0b25d 100644
+index 2e851b1..7e914e3 100644
 --- a/debian/control
 +++ b/debian/control
+@@ -2,7 +2,7 @@ Source: libpam-tacplus
+ Section: admin
+ Priority: extra
+ Maintainer: Jeroen Nijhof <jeroen@jeroennijhof.nl>
+-Build-Depends: debhelper (>= 9), libpam-dev, dh-autoreconf, autoconf-archive
++Build-Depends: debhelper (>= 9), libpam-dev, dh-autoreconf
+ Standards-Version: 3.9.5
+ Homepage: https://github.com/jeroennijhof/pam_tacplus
+ 
 @@ -34,3 +34,9 @@ Depends: ${misc:Depends}, libtac2 (= ${binary:Version}), libc6-dev|libc-dev
  Description: Development files for TACACS+ protocol library 
   Contains C header files and development files for libtac, a TACACS+ protocol
