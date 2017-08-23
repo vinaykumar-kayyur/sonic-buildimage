@@ -2,7 +2,7 @@
 {% if erspan_dst %}
     {
         "MIRROR_SESSION_TABLE:everflow": {
-            "src_ip": "{{ minigraph_lo_interfaces[0]['addr'] }}",
+            "src_ip": "{{ LOOPBACK_INTERFACE.keys()[0][1] | ip }}",
             "dst_ip": "{{ erspan_dst[0] }}",
 {% if onie_switch_asic == "mlnx" %}
             "gre_type": "0x6558",

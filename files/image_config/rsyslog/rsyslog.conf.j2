@@ -31,7 +31,7 @@ $UDPServerRun 514
 #### GLOBAL DIRECTIVES ####
 ###########################
 #Set remote syslog server
-{% for server in syslog_servers %}
+{% for server in SYSLOG_SERVER %}
 *.* @{{ server }}:514
 {% endfor %}
 
