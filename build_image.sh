@@ -27,7 +27,7 @@ generate_onie_installer_image()
 
             if [ "$IMAGE_TYPE" = "raw" ] && [ -f ./device/$VENDOR/$PLATFORM/nos_to_sonic_grub.cfg ]; then
                 sed -i -e "s/%%IMAGE_VERSION%%/$IMAGE_VERSION/g" ./device/$VENDOR/$PLATFORM/nos_to_sonic_grub.cfg
-                echo "IMAGE_VERSION is $IMAGE_VERSION/g"
+                echo "IMAGE_VERSION is $IMAGE_VERSION"
             fi
         done
     done

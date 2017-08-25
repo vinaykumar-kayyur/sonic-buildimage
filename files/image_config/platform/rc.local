@@ -17,11 +17,16 @@ if [ ! -e /host/machine.conf ]; then
     onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
     mkdir -p /mnt/onie-boot
     mount $onie_dev /mnt/onie-boot
-
-    if [ ! -e /mnt/onie-boot/onie/grub/grub-machine.cfg ]; then
-        echo "/mnt/onie-boot/onie/grub/grub-machine.cfg not found" >> /etc/migration.log
+    onie_grub_cfg=/mnt/onie-boot/onie/grub/grub-machine.cfg
+    
+    if [ ! -e $onie_grub_cfg ]; then
+        echo "$onie_grub_cfg not found" >> /etc/migration.log
     else
-        grep "=" /mnt/onie-boot/onie/grub/grub-machine.cfg > /host/machine.conf
+        . ./$onie_grub_cfg
+        grep = $onie_grub_cfg | sed -e 's/onie_//' -e 's/=.*$//' | while read var ; do
+            eval val='$'onie_$var
+            echo "onie_${var}=${val}" >> /host/machine.conf
+        done
     fi
 
     umount /mnt/onie-boot
