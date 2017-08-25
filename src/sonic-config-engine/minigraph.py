@@ -178,7 +178,9 @@ def parse_dpg(dpg, hname):
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
-            vlan_attributes = {'members': vmbr_list, 'vlanid': vlanid}
+            vintfdhcpservers = vintf.find(str(QName(ns, "DhcpRelays"))).text
+            vdhcpserver_list = vintfdhcpservers.split(';')
+            vlan_attributes = {'members': vmbr_list, 'vlanid': vlanid, 'dhcp_servers': vdhcpserver_list}
             sonic_vlan_name = "Vlan%s" % vlanid
             vlans[sonic_vlan_name] = vlan_attributes
 
