@@ -47,9 +47,9 @@ elif [ "$HWSKU" == "Force10-S6000-Q32" ]; then
 elif [ "$HWSKU" == "Arista-7050-QX32" ]; then
     SWSSCONFIG_ARGS+="td2.32ports.buffers.json td2.32ports.qos.json "
 elif [ "$HWSKU" == "ACS-MSN2700" ]; then
-    SWSSCONFIG_ARGS+="msn2700.32ports.buffers.json msn2700.32ports.qos.json "
+    SWSSCONFIG_ARGS+="msn27xx.32ports.buffers.json msn2700.32ports.qos.json "
 elif [ "$HWSKU" == "ACS-MSN2740" ]; then
-    SWSSCONFIG_ARGS+="msn2740.32ports.buffers.json msn2740.32ports.qos.json "
+    SWSSCONFIG_ARGS+="msn27xx.32ports.buffers.json msn2740.32ports.qos.json "
 fi
 
 for file in $SWSSCONFIG_ARGS; do
