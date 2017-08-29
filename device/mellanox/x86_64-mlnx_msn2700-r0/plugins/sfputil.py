@@ -1,62 +1,28 @@
-# sfputil.py
-#
-# Platform-specific SFP transceiver interface for SONiC
-#
+#! /usr/bin/python
 
 try:
-    import time
-    from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError as e:
-    raise ImportError("%s - required module not found" % str(e))
+    from sonic_sfp.sfputilbase import sfputilbase
+except ImportError, e:
+    raise ImportError (str(e) + "- required module not found")
 
 
-class SfpUtil(SfpUtilBase):
-    """Platform-specific SfpUtil class"""
+class sfputil(sfputilbase):
+    """Platform specific sfputil class"""
 
-    PORT_START = 0
-    PORT_END = 31
-    PORTS_IN_BLOCK = 32
+    port_start = 0
+    port_end = 31
+    ports_in_block = 32
 
-    EEPROM_OFFSET = 1
+    eeprom_offset = 1
 
-    _port_to_eeprom_mapping = {}
+    port_to_eeprom_mapping = {}
 
-    @property
-    def port_start(self):
-        return self.PORT_START
+    _qsfp_ports = range(0, ports_in_block + 1)
 
-    @property
-    def port_end(self):
-        return self.PORT_END
-
-    @property
-    def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
-
-    @property
-    def port_to_eeprom_mapping(self):
-        return self._port_to_eeprom_mapping
-
-    def __init__(self):
-        eeprom_path = "/bsp/qsfp/qsfp{0}"
-
+    def __init__(self, port_num):
+        # Override port_to_eeprom_mapping for class initialization
+        eeprom_path = '/bsp/qsfp/qsfp{0}'
         for x in range(0, self.port_end + 1):
-            self._port_to_eeprom_mapping[x] = eeprom_path.format(x + self.EEPROM_OFFSET)
-
-        SfpUtilBase.__init__(self)
-
-    def get_presence(self, port_num):
-
-        raise NotImplementedError
-
-    def get_low_power_mode(self, port_num):
-
-        raise NotImplementedError
-
-    def set_low_power_mode(self, port_num, lpmode):
-
-        raise NotImplementedError
-
-    def reset(self, port_num):
-
-        raise NotImplementedError
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(x + self.eeprom_offset)
+        sfputilbase.__init__(self, port_num)
+        
