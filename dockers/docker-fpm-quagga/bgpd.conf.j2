@@ -65,10 +65,10 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   neighbor {{ neighbor_addr }} shutdown
 {% endif %}
 {% if neighbor_addr | ipv4 %}
-{% if minigraph_devices[inventory_hostname]['type'] == 'ToRRouter' %}
-  neighbor {{ neighbor_addr }} allowas-in 1
-{% endif %}
   address-family ipv4
+{% if minigraph_devices[inventory_hostname]['type'] == 'ToRRouter' %}
+    neighbor {{ neighbor_addr }} allowas-in 1
+{% endif %}
     neighbor {{ neighbor_addr }} activate
     maximum-paths 64
   exit-address-family
