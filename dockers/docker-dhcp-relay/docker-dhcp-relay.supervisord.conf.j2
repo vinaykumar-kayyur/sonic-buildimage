@@ -36,7 +36,7 @@ isc-dhcp-relay-{{ vlan['name'] }}
 {# Create a program entry for each DHCP relay agent instance #}
 {% for vlan in minigraph_vlans.values() %}
 [program:isc-dhcp-relay-{{ vlan['name'] }}]
-command=/usr/sbin/dhcrelay -d -q -a %%h:%%p %%P -i {{ vlan['name'] }}
+command=/usr/sbin/dhcrelay -d -a %%h:%%p %%P -i {{ vlan['name'] }}
 {%- for interface in minigraph_interfaces -%}
 {%- if interface['addr'] | ipv4 %} -i {{ interface['attachto'] }}{% endif -%}
 {%- endfor -%}
