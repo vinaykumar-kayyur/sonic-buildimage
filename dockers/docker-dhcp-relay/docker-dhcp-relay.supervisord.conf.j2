@@ -20,12 +20,12 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 
 {# If our configuration has VLANs... #}
-{% if minigraph_vlans | length > 0 %}
+{% if minigraph_vlans is defined and minigraph_vlans | length > 0 %}
 [group:isc-dhcp-relay]
 programs=
 {%- set add_preceding_comma = { 'flag': False } -%}
 {%- for vlan in minigraph_vlans.values() -%}
-{%- if vlan['dhcp_servers'] | length > 0 -%}
+{%- if vlan['dhcp_servers'] is defined and vlan['dhcp_servers'] | length > 0 -%}
 {%- if add_preceding_comma.flag %},{% endif -%}
 {%- set _dummy = add_preceding_comma.update({'flag': True}) -%}
 isc-dhcp-relay-{{ vlan['name'] }}
@@ -35,6 +35,7 @@ isc-dhcp-relay-{{ vlan['name'] }}
 
 {# Create a program entry for each DHCP relay agent instance #}
 {% for vlan in minigraph_vlans.values() %}
+{%- if vlan['dhcp_servers'] is defined and vlan['dhcp_servers'] | length > 0 -%}
 [program:isc-dhcp-relay-{{ vlan['name'] }}]
 command=/usr/sbin/dhcrelay -d -a %%h:%%p %%P -i {{ vlan['name'] }}
 {%- for interface in minigraph_interfaces -%}
@@ -51,5 +52,6 @@ autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 
+{% endif %}
 {% endfor %}
 {% endif %}
