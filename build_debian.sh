@@ -280,6 +280,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
+## Create /var/run/quagga folder for docker-bgp to mount
+sudo mkdir -p $FILESYSTEM_ROOT/var/run/quagga
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF

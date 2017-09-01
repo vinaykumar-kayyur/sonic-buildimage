@@ -22,6 +22,10 @@ supervisorctl start bgpcfgd
 
 supervisorctl start rsyslogd
 
+# Hotfix to quagga to run as root
+mkdir -p /var/run/quagga
+chown root:root /var/run/quagga
+
 # Start Quagga processes
 supervisorctl start zebra
 supervisorctl start bgpd
