@@ -284,6 +284,19 @@ def parse_meta(meta, hname):
                     deployment_id = value
     return syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id
 
+def parse_deviceinfo(meta, hwsku):
+    ethernet_interfaces = []
+
+    for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
+        dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
+        if dev_sku == hwsku:
+            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces")))
+            for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
+                name = interface.find(str(QName(ns, "InterfaceName"))).text
+                speed = interface.find(str(QName(ns, "Speed"))).text
+                ethernet_interfaces.append({ 'name':name, 'speed':speed })
+
+    return ethernet_interfaces
 
 def parse_port_config(hwsku, platform=None, port_config_file=None):
     port_config_candidates = []
@@ -338,6 +351,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
+    ethernet_interfaces = []
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -367,6 +381,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
             (u_neighbors, u_devices, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
+        elif child.tag == str(QName(ns, "DeviceInfos")):
+            ethernet_interfaces = parse_deviceinfo(child, hwsku)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': { 
@@ -410,6 +426,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     results['minigraph_acls'] = acls
     results['erspan_dst'] = erspan_dst
+    results['ethernet_interfaces'] = ethernet_interfaces
 
     return results
 
