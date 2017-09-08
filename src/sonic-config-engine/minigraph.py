@@ -425,7 +425,19 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
 
     results['minigraph_acls'] = acls
-    results['erspan_dst'] = erspan_dst
+    mirror_sessions = {}
+    if erspan_dst:
+        lo_addr = '0.0.0.0'
+        for lo in lo_intfs:
+            lo_network = ipaddress.IPNetwork(lo[1])
+            if lo_network.version == 4:
+                lo_addr = str(lo_network.ip)
+                break
+        count = 0
+        for dst in erspan_dst:
+            mirror_sessions['everflow{}'.format(count)] = {"dst_ip": dst, "src_ip": lo_addr}
+            count += 1
+        results['MIRROR_SESSION'] = mirror_sessions
 
     return results
 
