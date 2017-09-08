@@ -71,9 +71,9 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), 'value1\nvalue2')
 
     def test_minigraph_acl(self):
-        argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v minigraph_acls'
+        argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v ACL_TABLE'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'dataacl': {'IsMirror': False, 'AttachTo': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124']}}")
+        self.assertEqual(output.strip(), "{'dataacl': {'type': 'L3', 'policy_desc': 'dataacl', 'ports': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124']}}")
 
     def test_minigraph_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v \'INTERFACE.keys()\''

@@ -202,7 +202,7 @@ def parse_dpg(dpg, hname):
                     acl_intfs = port_alias_map.values()
                     break;
             if acl_intfs:
-                acls[aclname] = { 'AttachTo': acl_intfs, 'IsMirror': is_mirror }
+                acls[aclname] = { 'policy_desc': aclname, 'ports': acl_intfs, 'type': 'mirror' if is_mirror else 'L3'}
         return intfs, lo_intfs, mgmt_intf, vlans, pcs, acls
     return None, None, None, None, None, None
 
@@ -424,7 +424,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
 
-    results['minigraph_acls'] = acls
+    results['ACL_TABLE'] = acls
     mirror_sessions = {}
     if erspan_dst:
         lo_addr = '0.0.0.0'
