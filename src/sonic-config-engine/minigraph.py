@@ -285,17 +285,15 @@ def parse_meta(meta, hname):
     return syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id
 
 def parse_deviceinfo(meta, hwsku):
-    ethernet_interfaces = []
-
+    ethernet_interfaces = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
             interfaces = device_info.find(str(QName(ns, "EthernetInterfaces")))
             for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
-                name = interface.find(str(QName(ns, "InterfaceName"))).text
+                alias = interface.find(str(QName(ns, "InterfaceName"))).text
                 speed = interface.find(str(QName(ns, "Speed"))).text
-                ethernet_interfaces.append({ 'name':name, 'speed':speed })
-
+                ethernet_interfaces[port_alias_map.get(alias, alias)] = speed
     return ethernet_interfaces
 
 def parse_port_config(hwsku, platform=None, port_config_file=None):
@@ -351,7 +349,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
-    ethernet_interfaces = []
+    port_speeds = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -382,7 +380,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
-            ethernet_interfaces = parse_deviceinfo(child, hwsku)
+            port_speeds = parse_deviceinfo(child, hwsku)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': { 
@@ -415,6 +413,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['VLAN_INTERFACE'] = vlan_intfs
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
+    for port_name in port_speeds:
+        ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
     results['PORT'] = ports
     results['PORTCHANNEL'] = pcs
     results['VLAN'] = vlans
@@ -426,7 +426,6 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     results['minigraph_acls'] = acls
     results['erspan_dst'] = erspan_dst
-    results['ethernet_interfaces'] = ethernet_interfaces
 
     return results
 
