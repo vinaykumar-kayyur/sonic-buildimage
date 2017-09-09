@@ -29,6 +29,7 @@ if [ ! -e /host/machine.conf ]; then
         done
     fi
 
+    migration="TRUE"
     umount /mnt/onie-boot
 fi
 
@@ -74,6 +75,57 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
 
     if [ -d /host/image-$sonic_version/platform/$platform ]; then
         dpkg -i /host/image-$sonic_version/platform/$platform/*.deb
+    fi
+
+    # If the unit booted into SONiC from another NOS's grub, we now
+    # install a grub for SONiC based on ONIE grub.
+    if [ -n "$onie_platform" ] && [ -n "$migration" ]; then
+        mkdir -p /host/image-$sonic_version/tmp
+        cd /host/image-$sonic_version/tmp
+
+        # Extract ONIE's ramdisk which contain's the ONIE grub
+        mount $onie_dev /mnt/onie-boot
+        cp /mnt/onie-boot/onie/initrd.img-3.2.69-onie initrd.img-3.2.69-onie.xz
+        xz -d initrd.img-3.2.69-onie.xz 
+        mv initrd.img-3.2.69-onie initrd.img-3.2.69-onie.cpio
+        cpio -idv < initrd.img-3.2.69-onie.cpio
+        cpio_retval=$?
+
+        # Get the device and grub directory to be used for grub-install
+        sonic_dev=$(blkid | grep SONiC-OS | head -n 1 | awk '{print $1}' |  sed -e 's/[0-9]:.*$//')
+        grub_platform_dir=`find . -name kernel.img -print`
+        grub_platform_dir=$(dirname "${grub_platform_dir}")
+
+        # Install the grub for SONiC
+        if [ "$cpio_retval" -eq 0 ] && [ -n "$sonic_dev" ] && [ -n "$grub_platform_dir" ]; then
+            grub-install --boot-directory=/host --recheck $sonic_dev --directory=/host/image-$sonic_version/tmp/$grub_platform_dir 2>/dev/null
+        else
+            echo "Unable install grub" >> /etc/migration.log
+        fi
+
+        # The SONiC "raw" build mode has already generated a proto grub.cfg
+        # as part of the migration. Platform specific constants need to be
+        # retrieved from installer.conf and assigned.
+        . /usr/share/sonic/device/$platform/installer.conf
+
+        sed -i -e "s/%%CONSOLE_PORT%%/$CONSOLE_PORT/g" /host/grub.cfg
+        sed -i -e "s/%%CONSOLE_DEV%%/$CONSOLE_DEV/g" /host/grub.cfg
+
+        # Set the root based on the label
+        sonic_root=$(blkid | grep SONiC-OS | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
+        sonic_root=$(echo "$sonic_root" | sed 's/\//\\\//g')
+        sed -i -e "s/%%SONIC_ROOT%%/$sonic_root/g" /host/grub.cfg
+
+        # Add the Diag and ONIE entries
+        . /mnt/onie-boot/onie/grub.d/50_onie_grub >> /host/grub.cfg
+
+        # Set the SONiC's grub config
+        mv /host/grub.cfg /host/grub/grub.cfg
+
+        # Cleanup
+        cd /host/image-$sonic_version
+        rm -fr /host/image-$sonic_version/tmp
+        umount /mnt/onie-boot
     fi
 
     rm /host/image-$sonic_version/platform/firsttime

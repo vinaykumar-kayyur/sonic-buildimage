@@ -205,7 +205,10 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     curl                    \
     kexec-tools             \
     less                    \
-    unzip
+    unzip                   \
+    xz-utils                \
+    gdisk
+
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
