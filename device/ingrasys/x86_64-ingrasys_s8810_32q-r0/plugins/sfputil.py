@@ -84,7 +84,6 @@ class SfpUtil(SfpUtilBase):
             lpmode_val_device_file = self.BASE_VAL_PATH.format(
                     port_num + self.LP_GPIO_BASE)
             val_file = open(lpmode_val_device_file)
-            print "lpmode_val_device_file=%s" % lpmode_val_device_file
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
@@ -106,7 +105,6 @@ class SfpUtil(SfpUtilBase):
             lpmode_val_device_file = self.BASE_VAL_PATH.format(
                     port_num + self.LP_GPIO_BASE)
             val_file = open(lpmode_val_device_file, "w")
-            print "lpmode_val_device_file=%s" % lpmode_val_device_file
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
