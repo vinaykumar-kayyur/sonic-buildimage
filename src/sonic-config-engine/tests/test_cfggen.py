@@ -111,6 +111,11 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), "{'mgmt_addr': None, 'hwsku': 'Arista', 'lo_addr': None, 'local_port': 'Ethernet112', 'type': 'LeafRouter', 'port': 'Ethernet1/1'}")
 
     def test_minigraph_peers_with_range(self):
+        argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v "BGP_NEIGHBORS[\'10.0.0.59\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "{'rrclient': '0', 'local_addr': '10.0.0.58', 'asn': '64600', 'name': 'ARISTA02T1'}")
+
+    def test_minigraph_peers_with_range(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v BGP_PEER_RANGE.values\(\)'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "[{'name': 'BGPSLBPassive', 'ip_range': ['10.10.10.10/26', '100.100.100.100/26']}]")
