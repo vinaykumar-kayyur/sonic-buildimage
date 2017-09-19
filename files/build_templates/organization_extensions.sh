@@ -5,31 +5,48 @@
 ## to include in ONIE installer image					#
 ##									#
 ## USAGE:								#
-##   ./organization_extensions.sh FILESYSTEM_ROOT HOSTNAME		#
+##   ./organization_extensions.sh -f<filesystem_root> -n<hostname> 	#
+##   ./organization_extensions.sh 	\				#
+##			--fsroot <filesystem_root> 	\		#
+##			--hostname <hostname>				#
 ## PARAMETERS:								#
-##   FILESYSTEM_ROOT							#
+##   -f FILESYSTEM_ROOT							#
 ##          The location of the root file system			#
-##   HOSTNAME								#
+##   -h HOSTNAME							#
 ##          The hostname of the target system				#
 #########################################################################
 
-## Default Root Filesystem
-FILESYSTEM_ROOT=$1
-[ -n "$FILESYSTEM_ROOT" ] || {
-    echo "Error: no or empty FILESYSTEM_ROOT argument"
-    exit 1
-}
+## Initialize the arguments to default values.
+## The values get updated to user provided value, if supplied
+FILESYSTEM_ROOT=./fsroot
+HOSTNAME=sonic
 
-## Default Hostname
-HOSTNAME=$2
-[ -n "$HOSTNAME" ] || {
-    echo "Error: no or empty HOSTNAME argument"
-    exit 1
-}
+# read the options
+TEMP=`getopt -o f:h: --long fsroot:,hostname: -- "$@"`
+eval set -- "$TEMP"
 
-echo "##### SONIC Organization Extensions #####"
+# extract options and their arguments into variables.
+while true ; do
+    case "$1" in
+        -f|--fsroot)
+            case "$2" in
+                "") shift 2 ;;
+                *) FILESYSTEM_ROOT=$2 ; shift 2 ;;
+            esac ;;
+        -h|--hostname)
+            case "$2" in
+                "") shift 2 ;;
+                *) HOSTNAME=$2 ; shift 2 ;;
+            esac ;;
+        --) shift ; break ;;
+        *) echo "Internal error!" ; exit 1 ;;
+    esac
+done
+
+echo "Executing SONIC Organization Extensions"
+
 ## Place your Organization specific code / scipts here ... 
 
 
-echo "##### SONIC Organization Extensions - Done #####"
+echo "SONIC Organization Extensions - Done"
 

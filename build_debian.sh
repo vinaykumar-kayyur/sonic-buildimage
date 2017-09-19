@@ -312,7 +312,7 @@ fi
 if [ "${enable_organization_extensions}" = "y" ]; then
    if [ -f files/build_templates/organization_extensions.sh ]; then
       sudo chmod 755 files/build_templates/organization_extensions.sh 
-      ./files/build_templates/organization_extensions.sh $FILESYSTEM_ROOT $HOSTNAME
+      ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
    fi
 fi
 
