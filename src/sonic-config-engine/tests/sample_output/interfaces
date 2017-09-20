@@ -33,10 +33,10 @@ iface eth0 inet6 static
     ########## management network policy routing rules
     # management port up rules
     up ip -6 route add default via 2603:10e2:0:2902::1 dev eth0 table default
-    up ip -6 rule add from 2603:10e2:0:2902::8/32 table default
+    up ip -6 rule add from 2603:10e2:0:2902::8/128 table default
     # management port down rules
     down ip -6 route delete default via 2603:10e2:0:2902::1 dev eth0 table default
-    down ip -6 rule delete from 2603:10e2:0:2902::8/32 table default
+    down ip -6 rule delete from 2603:10e2:0:2902::8/128 table default
 #
 # The switch front panel interfaces
 # "|| true" is added to suppress the error when interface is already a member of VLAN
