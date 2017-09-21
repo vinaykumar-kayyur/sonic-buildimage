@@ -28,7 +28,7 @@ agentAddress udp:{{ prefix | ip }}:161
 {% endif %}
 {% endfor %}
 {% else %}
-# Listen on all addresses as mgmt ip not specified 
+# Listen on all addresses as mgmt ip not specified
 agentAddress udp:161
 {% endif %}
 
@@ -114,7 +114,7 @@ load   12 10 5
 #  Event MIB - automatically generate alerts
 #
 # Remember to activate the 'createUser' lines above
-#iquerySecName   internalUser       
+#iquerySecName   internalUser
 #rouser          internalUser
 # generate traps on UCD error conditions
 #defaultMonitors          yes
