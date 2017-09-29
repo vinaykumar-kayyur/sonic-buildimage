@@ -2,7 +2,7 @@
 
 # Generate supervisord config file
 mkdir -p /etc/supervisor/conf.d/
-sonic-cfggen -m /etc/sonic/minigraph.xml -t /usr/share/sonic/templates/docker-dhcp-relay.supervisord.conf.j2 > /etc/supervisor/conf.d/docker-dhcp-relay.supervisord.conf
+sonic-cfggen -d -t /usr/share/sonic/templates/docker-dhcp-relay.supervisord.conf.j2 > /etc/supervisor/conf.d/docker-dhcp-relay.supervisord.conf
 
 # Generate the script that waits for all interfaces to come up and make it executable
 sonic-cfggen -d -t /usr/share/sonic/templates/wait_for_intf.sh.j2 > /usr/bin/wait_for_intf.sh
