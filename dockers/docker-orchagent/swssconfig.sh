@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 function config_acl {
     if [ -f "/etc/sonic/acl.json" ]; then
         mkdir -p /etc/swss/config.d/acl
@@ -46,7 +48,7 @@ elif [ "$HWSKU" == "Force10-S6000-Q32" ]; then
 elif [ "$HWSKU" == "Arista-7050-QX32" ]; then
     SWSSCONFIG_ARGS+="td2.32ports.buffers.json td2.32ports.qos.json "
 elif [[ "$HWSKU" == "ACS-MSN27"* ]]; then
-    sonic-cfggen -m /etc/sonic/minigraph.xml -t /usr/share/sonic/templates/msn27xx.32ports.buffers.json.j2 > /etc/swss/config.d/msn27xx.32ports.buffers.json || exit 1
+    sonic-cfggen -m /etc/sonic/minigraph.xml -t /usr/share/sonic/templates/msn27xx.32ports.buffers.json.j2 > /etc/swss/config.d/msn27xx.32ports.buffers.json
     SWSSCONFIG_ARGS+="msn27xx.32ports.buffers.json msn2700.32ports.qos.json "
 fi
 
