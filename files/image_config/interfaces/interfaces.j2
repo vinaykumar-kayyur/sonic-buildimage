@@ -62,7 +62,7 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 allow-hotplug {{ member }}
 iface {{ member }} inet manual
     pre-up ifconfig {{ member }} up mtu 9100
-    post-up brctl addif {{ vlan }} {{ member }} || true
+    post-up brctl addif Vlan{{ VLAN[vlan]['vlanid'] }} {{ member }} || true
     post-down ifconfig {{ member }} down
 #
 {% endfor %}
@@ -87,8 +87,8 @@ iface {{ member }} inet manual
 {% if VLAN_INTERFACE %}
 # Vlan interfaces
 {% for (name, prefix) in VLAN_INTERFACE.keys() | sort %}
-auto {{ name }}
-iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
+auto Vlan{{ VLAN[name]['vlanid'] }}
+iface Vlan{{ VLAN[name]['vlanid'] }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
     bridge_ports none
     address {{ prefix | ip }}
     netmask {{ prefix | netmask if prefix | ipv4 else prefix | prefixlen }}
