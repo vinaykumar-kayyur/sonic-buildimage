@@ -236,6 +236,7 @@ def parse_cpg(cpg, hname):
                     bgp_sessions[start_peer] = {
                         'name': start_router,
                         'local_addr': end_peer,
+                        'rrclient': rrclient,
                         'holdtime': holdtime,
                         'keepalive': keepalive,
                         'nhopself': nhopself
@@ -244,6 +245,7 @@ def parse_cpg(cpg, hname):
                     bgp_sessions[end_peer] = {
                         'name': end_router,
                         'local_addr': start_peer,
+                        'rrclient': rrclient,
                         'holdtime': holdtime,
                         'keepalive': keepalive,
                         'nhopself': nhopself
