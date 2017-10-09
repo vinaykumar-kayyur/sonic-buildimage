@@ -216,24 +216,42 @@ def parse_cpg(cpg, hname):
                 start_peer = session.find(str(QName(ns, "StartPeer"))).text
                 end_router = session.find(str(QName(ns, "EndRouter"))).text
                 end_peer = session.find(str(QName(ns, "EndPeer"))).text
+                if session.find(str(QName(ns, "RRClient"))) is not None:
+                    rrclient = 1
+                else:
+                    rrclient = 0
+                if session.find(str(QName(ns, "HoldTime"))) is not None:
+                    holdtime = session.find(str(QName(ns, "HoldTime"))).text
+                else:
+                    holdtime = 180
+                if session.find(str(QName(ns, "KeepAliveTime"))) is not None:
+                    keepalive = session.find(str(QName(ns, "KeepAliveTime"))).text
+                else:
+                    keepalive = 60
+                if session.find(str(QName(ns, "NextHopSelf"))) is not None:
+                    nhopself = 1
+                else:
+                    nhopself = 0
                 if end_router == hname:
                     bgp_sessions[start_peer] = {
                         'name': start_router,
-                        'local_addr': end_peer
+                        'local_addr': end_peer,
+                        'holdtime': holdtime,
+                        'keepalive': keepalive,
+                        'nhopself': nhopself
                     }
                 else:
                     bgp_sessions[end_peer] = {
                         'name': end_router,
-                        'local_addr': start_peer
+                        'local_addr': start_peer,
+                        'holdtime': holdtime,
+                        'keepalive': keepalive,
+                        'nhopself': nhopself
                     }
         elif child.tag == str(QName(ns, "Routers")):
             for router in child.findall(str(QName(ns1, "BGPRouterDeclaration"))):
                 asn = router.find(str(QName(ns1, "ASN"))).text
                 hostname = router.find(str(QName(ns1, "Hostname"))).text
-                if router.find(str(QName(ns1, "RRClient"))):
-                    rrclient = '1'
-                else:
-                    rrclient = '0'
                 if hostname == hname:
                     myasn = asn
                     peers = router.find(str(QName(ns1, "Peers")))
@@ -252,7 +270,6 @@ def parse_cpg(cpg, hname):
                         bgp_session = bgp_sessions[peer]
                         if hostname == bgp_session['name']:
                             bgp_session['asn'] = asn
-                        bgp_session['rrclient'] = rrclient
 
     return bgp_sessions, myasn, bgp_peers_with_range
 
