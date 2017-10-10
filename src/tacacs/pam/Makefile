@@ -4,19 +4,18 @@ SHELL = /bin/bash
 
 MAIN_TARGET = libpam-tacplus_$(PAM_TACPLUS_VERSION)_amd64.deb
 DERIVED_TARGETS = libtac2_$(PAM_TACPLUS_VERSION)_amd64.deb \
-		  libtac-dev_$(PAM_TACPLUS_VERSION)_amd64.deb \
-		  libnss-tacplus_$(PAM_TACPLUS_VERSION)_amd64.deb
+		  libtac-dev_$(PAM_TACPLUS_VERSION)_amd64.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain pam_tacplus
 	rm -rf ./pam_tacplus
 	git clone https://github.com/jeroennijhof/pam_tacplus.git 
 	pushd ./pam_tacplus
-	git checkout -f v1.5.0-beta.1
+	git checkout -f v1.4.1
 
 	# Apply patch
-	git apply ../0001-Don-t-enable-pam-tacplus-by-default.patch 
-	git apply ../0002-Add-nss-tacplus-plugin.patch
+	git apply ../0001-Don-t-init-declarations-in-a-for-loop.patch
+	git apply ../0002-Fix-libtac2-bin-install-directory-error.patch
 
 	dpkg-buildpackage -rfakeroot -b -us -uc
 	popd

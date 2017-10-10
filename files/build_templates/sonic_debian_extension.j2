@@ -95,6 +95,9 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libtac2_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libpam-tacplus_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libnss-tacplus_*.deb
+# Disable tacplus by default
+sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
+sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
@@ -126,10 +129,6 @@ sudo cp $IMAGE_CONFIGS/interfaces/*.j2 $FILESYSTEM_ROOT/usr/share/sonic/template
 
 # Copy initial interfaces configuration file, will be overwritten on first boot
 sudo cp $IMAGE_CONFIGS/interfaces/init_interfaces $FILESYSTEM_ROOT/etc/network
-
-# Copy hostcfgd files
-sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd.service $FILESYSTEM_ROOT/etc/systemd/system/
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable hostcfgd.service
 
 # Copy updategraph script and service file
 sudo cp $IMAGE_CONFIGS/updategraph/updategraph.service  $FILESYSTEM_ROOT/etc/systemd/system/
