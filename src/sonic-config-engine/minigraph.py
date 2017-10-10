@@ -216,10 +216,7 @@ def parse_cpg(cpg, hname):
                 start_peer = session.find(str(QName(ns, "StartPeer"))).text
                 end_router = session.find(str(QName(ns, "EndRouter"))).text
                 end_peer = session.find(str(QName(ns, "EndPeer"))).text
-                if session.find(str(QName(ns, "RRClient"))) is not None:
-                    rrclient = 1
-                else:
-                    rrclient = 0
+                rrclient = 1 if session.find(str(QName(ns, "RRClient"))) is not None else 0
                 if session.find(str(QName(ns, "HoldTime"))) is not None:
                     holdtime = session.find(str(QName(ns, "HoldTime"))).text
                 else:
@@ -228,10 +225,7 @@ def parse_cpg(cpg, hname):
                     keepalive = session.find(str(QName(ns, "KeepAliveTime"))).text
                 else:
                     keepalive = 60
-                if session.find(str(QName(ns, "NextHopSelf"))) is not None:
-                    nhopself = 1
-                else:
-                    nhopself = 0
+                nhopself = 1 if session.find(str(QName(ns, "NextHopSelf"))) is not None else 0
                 if end_router == hname:
                     bgp_sessions[start_peer] = {
                         'name': start_router,
