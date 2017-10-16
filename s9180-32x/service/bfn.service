@@ -1,7 +1,7 @@
 [Unit]
 Description=Barefoot Kernel Module
 After=local-fs.target
-Before=syncd.service
+Before=docker.service
 
 [Service]
 Type=oneshot
