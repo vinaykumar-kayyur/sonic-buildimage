@@ -23,7 +23,9 @@ EXEC_FUNC=${1}
 QSFP_PORT=${2}
 QSFP_ACTION=${2}
 MB_EEPROM_ACTION=${2}
-COLOR_LED=${3}
+COLOR_PORT_LED=${3}
+ONOFF_LED=${3}
+COLOR_SYS_LED=${2}
 BLINK_LED=${4}
 FAN_TRAY=${4}
 
@@ -56,9 +58,20 @@ NUM_MUX4_CHAN0_DEVICE=$(( ${NUM_MUX3_CHAN0_DEVICE} + 8 )) # zQSFP I/O 8-15
 NUM_MUX5_CHAN0_DEVICE=$(( ${NUM_MUX4_CHAN0_DEVICE} + 8 )) # zQSFP I/O 16-23
 NUM_MUX6_CHAN0_DEVICE=$(( ${NUM_MUX5_CHAN0_DEVICE} + 8 )) # zQSFP I/O 24-31
 NUM_MUX7_CHAN0_DEVICE=$(( ${NUM_MUX6_CHAN0_DEVICE} + 8 )) # Temp Sensor 0x48-0x4D
+NUM_MAIN_MUX_CHAN0_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 8 )) # System LED HWMON
+NUM_MAIN_MUX_CHAN1_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 1 )) # System LED
+NUM_MAIN_MUX_CHAN2_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 2 )) # Board ID
+NUM_MAIN_MUX_CHAN3_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 3 )) # MAX_Slave
+NUM_MAIN_MUX_CHAN4_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 4 )) # TEMP Sensor
+NUM_MAIN_MUX_CHAN5_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 5 )) # CLK GEN
+NUM_MAIN_MUX_CHAN6_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 6 )) # VDD CORE
+NUM_MAIN_MUX_CHAN7_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 7 )) # HWMON
+NUM_FRU_MUX_CHAN0_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 8 )) # PSU1
+NUM_FRU_MUX_CHAN1_DEVICE=$(( ${NUM_FRU_MUX_CHAN0_DEVICE} + 1 )) # PSU2
+NUM_FRU_MUX_CHAN2_DEVICE=$(( ${NUM_FRU_MUX_CHAN0_DEVICE} + 2 )) # FAN
 NUM_CPLD_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 3 )) # CPLD
 NUM_SFP1_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 4 )) # CPLD
-NUM_SFP2_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 7 )) # CPLD
+NUM_SFP2_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 5 )) # CPLD
 
 PATH_SYS_I2C_DEVICES="/sys/bus/i2c/devices"
 PATH_HWMON_ROOT_DEVICES="/sys/class/hwmon"
@@ -74,6 +87,7 @@ PATH_MUX_CHAN5_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN5_DEVICE}"
 PATH_MUX_CHAN6_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN6_DEVICE}"
 PATH_MUX_CHAN7_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN7_DEVICE}"
 PATH_MUX7_CHAN0_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX7_CHAN0_DEVICE}"
+PATH_MAIN_MUX_CHAN0_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MAIN_MUX_CHAN0_DEVICE}"
 
 #Power Supply Status
 PSU_DC_ON=1
@@ -99,6 +113,7 @@ function _help {
 
     echo "         : ${0} i2c_psu_eeprom_get"
     echo "         : ${0} i2c_mb_eeprom_get"
+    echo "         : ${0} i2c_cpu_eeprom_get"
     echo "         : ${0} i2c_qsfp_eeprom_get [1-34]"
     echo "         : ${0} i2c_qsfp_eeprom_init new|delete"
     echo "         : ${0} i2c_sfp_eeprom_init new|delete"
@@ -107,16 +122,13 @@ function _help {
     echo "         : ${0} i2c_qsfp_type_get [1-34]"
     echo "         : ${0} i2c_board_type_get"
     echo "         : ${0} i2c_psu_status"
-    echo "         : ${0} i2c_led_psu_status_set"
     echo "         : ${0} i2c_led_fan_status_set"
     echo "         : ${0} i2c_led_fan_tray_status_set"
     echo "         : ${0} i2c_cpld_version"
     echo "         : ${0} i2c_port_led_set [1-34] green|yellow|off blink|noblink"
     echo "         : ${0} i2c_test_all"
-    echo "         : ${0} i2c_sys_led green|amber on|off"
+    echo "         : ${0} i2c_sys_led green|amber"
     echo "         : ${0} i2c_fan_led green|amber on|off"
-    echo "         : ${0} i2c_psu1_led green|amber on|off"
-    echo "         : ${0} i2c_psu2_led green|amber on|off"
     echo "         : ${0} i2c_fan_tray_led green|amber on|off [1-4]"
     echo "----------------------------------------------------"
 }
@@ -143,7 +155,7 @@ function _i2c_init {
 
     rmmod eeprom
     rmmod i2c_i801
-    modprobe i2c_i801 disable_features=0x10
+    modprobe i2c_i801
     modprobe i2c_dev
     modprobe i2c_mux_pca954x force_deselect_on_exit=1
 
@@ -177,6 +189,16 @@ function _i2c_init {
     else
         echo "${PATH_MUX_CHAN6_DEVICE} 0x71 already init."
     fi
+    if [ ! -e "${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MAIN_MUX_CHAN0_DEVICE}" ]; then
+        _retry "echo 'pca9548 0x76' > ${PATH_I801_DEVICE}/new_device"
+    else
+        echo "${PATH_MAIN_MUX_CHAN0_DEVICE} 0x76 already init."
+    fi
+    if [ ! -e "${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}" ]; then
+        _retry "echo 'pca9545 0x72' > ${PATH_I801_DEVICE}/new_device"
+    else
+        echo "${PATH_MAIN_MUX_CHAN0_DEVICE} 0x72 already init."
+    fi
 
     rmmod coretemp
     rmmod jc42
@@ -188,24 +210,23 @@ function _i2c_init {
     modprobe w83795
     modprobe lm75
     modprobe lm90
-    modprobe jc42
     modprobe eeprom_mb
     modprobe gpio-pca953x
     _i2c_io_exp_init
+    _i2c_fan_init
+    _i2c_volmon_init
+    _i2c_fan_speed_init
     _i2c_temp_init
+    modprobe jc42
     _i2c_gpio_init
     _i2c_mb_eeprom_init "new"
     _i2c_qsfp_eeprom_init "new"
     _i2c_sfp_eeprom_init "new"
-    _i2c_led_psu_status_set
     _i2c_led_fan_status_set
-    COLOR_LED="green"
-    ONOFF_LED="on"
-    echo "${COLOR_LED} ${ONOFF_LED}"
-    _i2c_sys_led
-    COLOR_LED="amber"
-    ONOFF_LED="off"
-    echo "${COLOR_LED} ${ONOFF_LED}"
+    _i2c_led_fan_tray_status_set
+
+    #SYS LED set green
+    COLOR_SYS_LED="green"
     _i2c_sys_led
 }
 
@@ -218,8 +239,8 @@ function _i2c_deinit {
     done
 }
 
-#FAN Init # TBD
-function _i2c_fan_init {
+#FAN Init
+function _i2c_fan_speed_init {
     echo -n "FAN INIT..."
     if [ -e "${PATH_HWMON_W83795_DEVICE}" ]; then
         echo 120 > ${PATH_HWMON_W83795_DEVICE}/device/pwm1
@@ -231,13 +252,25 @@ function _i2c_fan_init {
 
 }
 
-#VOLMON Init # TBD
+#VOLMON Init
 function _i2c_volmon_init {
-    echo -n "VOLMON INIT..."
-    i2cset -y -r ${NUM_I801_DEVICE} 0x2F 0x00 0x80
-    i2cset -y -r ${NUM_I801_DEVICE} 0x2F 0x02 0xFF
-    i2cset -y -r ${NUM_I801_DEVICE} 0x2F 0x03 0x50
-    i2cset -y -r ${NUM_I801_DEVICE} 0x2F 0x04 0x0A
+    echo "VOLMON INIT..."
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x00 0x80
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x01 0x1C
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x00 0x80
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x02 0xFF
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x03 0x50
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x04 0x0A
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x00 0x80
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x01 0x1D
+
+    # add w83795 to sysfs
+    dev_path="${PATH_SYS_I2C_DEVICES}/${NUM_MAIN_MUX_CHAN7_DEVICE}-0x2f"
+    if ! [ -L ${dev_path} ]; then
+        echo "w83795adg 0x2f" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MAIN_MUX_CHAN7_DEVICE}/new_device #hwmon
+    else
+        echo "${dev_path} already exist"
+    fi
     echo "Done"
 }
 
@@ -246,6 +279,21 @@ function _i2c_io_exp_init {
     echo "========================================================="
     echo "# Description: I2C IO Expender Init"
     echo "========================================================="
+
+    #Golden Finger to active CPLD
+    i2cget -y ${NUM_CPLD_DEVICE} 0x74 2
+    #BMC dummy board reset
+    echo "BMC dummy board reset"
+    i2cset -y -r ${NUM_I801_DEVICE} 0x26 4 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x26 5 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x26 2 0x3F
+    i2cset -y -r ${NUM_I801_DEVICE} 0x26 3 0x1F
+    i2cset -y -r ${NUM_I801_DEVICE} 0x26 6 0xC0
+    i2cset -y -r ${NUM_I801_DEVICE} 0x26 7 0x00
+
+    #CPU Baord
+    i2cset -y -r ${NUM_I801_DEVICE} 0x77 6 0xFF
+    i2cset -y -r ${NUM_I801_DEVICE} 0x77 7 0xFF
 
     #SMBUS1
     #ABS
@@ -267,14 +315,18 @@ function _i2c_io_exp_init {
 
     i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 4 0x00
     i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 5 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 6 0xFF
-    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 7 0xFF
-    
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 2 0xCF
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 3 0xF0
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 6 0xCF
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x23 7 0xF0
+
     #SFP+ PRES, TX FAULT, TX DIS, RX LOS, RS, TS
-    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x24 4 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x24 5 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x24 6 0xFF
-    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x24 7 0xFF
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x27 4 0x00
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x27 5 0x00
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x27 2 0x00
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x27 3 0x00
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x27 6 0xCF
+    i2cset -y -r ${NUM_MUX1_CHAN4_DEVICE} 0x27 7 0xF0
 
 
     echo "Init ZQSFP IO Expender"
@@ -310,30 +362,90 @@ function _i2c_io_exp_init {
     i2cset -y -r ${NUM_MUX1_CHAN5_DEVICE} 0x23 6 0x00
     i2cset -y -r ${NUM_MUX1_CHAN5_DEVICE} 0x23 7 0x00
 
-    #LED board after PVT (S9100_IO_EXP_LED_ID) # TBD
+    #0.0: TH_RST_L - 0:Reset
+    #0.1: TH_PCIE_RST_L - 0:Reset
+    #0.2: LED_CLR - 0: Off, 1:On
+    #0.3: Host to BMC
+    #0.4: UART_SEL - 0:Host
+    #0.5: USB_SEL - 0: Host
+    #0.[7:6]: TH_CLK_FSEL (00)
+    #1.0: TH_INT_L
+    #1.1: QSFP0_INT_L - 0:Interrupt
+    #1.2: QSFP1_INT_L - 0:Interrupt
+    #1.3: QSFP2_INT_L - 0:Interrupt
+    #1.4: QSFP3_INT_L - 0:Interrupt
+    #1.5: TH_CLK_SEL (0)
+    #1.6: I210_RST_L - 0:Reset
+    #1.6: I210_PE_RST_L - 0:Reset
+    echo "Init HOST GPIO"
+    i2cset -y -r ${NUM_I801_DEVICE} 0x74 4 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x74 5 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x74 2 0x0F
+    i2cset -y -r ${NUM_I801_DEVICE} 0x74 3 0xDF
+    i2cset -y -r ${NUM_I801_DEVICE} 0x74 6 0x08
+    i2cset -y -r ${NUM_I801_DEVICE} 0x74 7 0x1F
+
+
+    #LED board after PVT (BAREFOOT_IO_EXP_LED_ID)
     echo "Init LED IO Expender"
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 4 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 5 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 6 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 7 0x00
+    echo "LED_CHANNEL=${NUM_MAIN_MUX_CHAN1_DEVICE}"
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 4 0x00
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 5 0x00
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 6 0x00
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 7 0xFF
 
-    #PSU I/O (S9100_IO_EXP_PSU_ID) # TBD
+    #Board ID
+    echo "Init Board ID"
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN2_DEVICE} 0x27 4 0x00
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN2_DEVICE} 0x27 5 0x00
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN2_DEVICE} 0x27 6 0xFF
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN2_DEVICE} 0x27 7 0xFF
+
+    #Board ID of dummy card
+    echo "Init Board ID of dummy card"
+    i2cset -y -r ${NUM_I801_DEVICE} 0x24 4 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x24 5 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x24 6 0xFF
+    i2cset -y -r ${NUM_I801_DEVICE} 0x24 7 0xFF
+
+    #PSU I/O (BAREFOOT_IO_EXP_PSU_ID)
     echo "Init PSU IO Expender"
-    i2cset -y -r ${NUM_MUX1_CHAN6_DEVICE} 0x23 4 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN6_DEVICE} 0x23 5 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN6_DEVICE} 0x23 2 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN6_DEVICE} 0x23 3 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN6_DEVICE} 0x23 6 0xBB
-    i2cset -y -r ${NUM_MUX1_CHAN6_DEVICE} 0x23 7 0xFF
+    i2cset -y -r ${NUM_I801_DEVICE} 0x25 4 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x25 5 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x25 2 0x00
+    i2cset -y -r ${NUM_I801_DEVICE} 0x25 3 0x1D
+    i2cset -y -r ${NUM_I801_DEVICE} 0x25 6 0xDB
+    i2cset -y -r ${NUM_I801_DEVICE} 0x25 7 0x03
 
-    #FAN I/O (S9100_IO_EXP_FAN_ID) # TBD
+    #FAN I/O (BAREFOOT_IO_EXP_FAN_ID)
     echo "Init FAN IO Expender"
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x20 4 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x20 5 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x20 2 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x20 3 0x00
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x20 6 0xCC
-    i2cset -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x20 7 0xCC
+    i2cset -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 4 0x00
+    i2cset -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 5 0x00
+    i2cset -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 2 0x11
+    i2cset -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 3 0x11
+    i2cset -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 6 0xCC
+    i2cset -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 7 0xCC
+
+}
+
+#FANIN Init
+function _i2c_fan_init {
+    echo "FANIN INIT..."
+    # enable fan monitor on w83795
+    # 4 fantray with 8 FANIN
+    # select bank0
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x00 0x80
+    # enable FANIN1~8
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x06 0xFF
+    # disable FANIN9~14
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x07 0x00
+
+    # select bank 2
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x00 0x82
+    # set PWM mode in FOMC
+    i2cset -y -r ${NUM_MAIN_MUX_CHAN7_DEVICE} 0x2F 0x0F 0x00
+
+    echo "Done"
 }
 
 #GPIO Init
@@ -370,9 +482,9 @@ function _i2c_gpio_init {
         echo $i > /sys/class/gpio/export
         echo 1 > /sys/class/gpio/gpio${i}/active_low
     done
-    
+
     #SFP+
-    echo "pca9535 0x24" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN4_DEVICE}/new_device
+    echo "pca9535 0x27" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN4_DEVICE}/new_device
     for i in {176..191};
     do
         echo $i > /sys/class/gpio/export
@@ -384,7 +496,7 @@ function _i2c_gpio_init {
                 echo out > /sys/class/gpio/gpio${i}/direction
             ;;
         esac
-        
+    
     done
     #echo 176 > /sys/class/gpio/export
     #echo 177 > /sys/class/gpio/export
@@ -434,8 +546,8 @@ function _i2c_gpio_init {
         echo $i > /sys/class/gpio/export
         echo out > /sys/class/gpio/gpio${i}/direction
     done
-    
-    #TBD: RST Port 0-15
+
+    #RST Port 0-15
     echo "pca9535 0x22" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/new_device
     for i in {128..143};
     do
@@ -445,7 +557,6 @@ function _i2c_gpio_init {
         echo 0 > /sys/class/gpio/gpio${i}/value
     done
 
-    # TBD
     #RST Port 16-31
     echo "pca9535 0x23" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/new_device
     for i in {112..127};
@@ -463,8 +574,11 @@ function _i2c_gpio_deinit {
     echo "0x21" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN4_DEVICE}/delete_device
     echo "0x22" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN4_DEVICE}/delete_device
     echo "0x23" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN4_DEVICE}/delete_device
+    echo "0x27" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN4_DEVICE}/delete_device
     echo "0x20" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
     echo "0x21" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
+    echo "0x22" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
+    echo "0x23" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
 }
 
 #TMP75 Init
@@ -472,9 +586,169 @@ function _i2c_temp_init {
     echo "tmp75 0x4f" > ${PATH_I801_DEVICE}/new_device #CPU Board
     echo "tmp75 0x48" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near PSU1
     echo "tmp75 0x4a" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Rear MAC
-    echo "tmp75 0x4e" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near Port 32
+    echo "tmp75 0x4b" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near Port 32
     echo "tmp75 0x4d" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near PSU2
     echo "lm86 0x4c" > ${PATH_MUX7_CHAN0_DEVICE}/new_device  # ASIC Coretemp and Front MAC
+}
+
+#Set FAN Tray LED
+function _i2c_led_fan_tray_status_set {
+    echo "FAN Tray Status Setup"
+    #FAN Status get
+    FAN1_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan1_alarm`
+    FAN2_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan2_alarm`
+    FAN3_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan3_alarm`
+    FAN4_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan4_alarm`
+    FAN5_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan5_alarm`
+    FAN6_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan6_alarm`
+    FAN7_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan7_alarm`
+    FAN8_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan8_alarm`
+
+    # check if io expander for fan tray exist
+    #i2cset -m $mask -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} $i2cAddr $ioPort 0x33
+    result=`i2cget -y ${NUM_FRU_MUX_CHAN2_DEVICE} 0x20 0 2>/dev/null`
+    err_code=$?
+    if [ "$err_code" != "0" ]; then
+        echo "fan tray not exist!"
+        return
+    fi
+
+    if [ "${FAN1_ALARM}" == "0" ] && [ "${FAN2_ALARM}" == "0" ]; then
+        FAN_TRAY=1
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    else
+	FAN_TRAY=1
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    fi
+
+    if [ "${FAN3_ALARM}" == "0" ] && [ "${FAN4_ALARM}" == "0" ]; then
+	FAN_TRAY=2
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    else
+	FAN_TRAY=2
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    fi
+
+    if [ "${FAN5_ALARM}" == "0" ] && [ "${FAN6_ALARM}" == "0" ]; then
+	FAN_TRAY=3
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    else
+	FAN_TRAY=3
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    fi
+
+    if [ "${FAN7_ALARM}" == "0" ] && [ "${FAN8_ALARM}" == "0" ]; then
+	FAN_TRAY=4
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    else
+	FAN_TRAY=4
+	echo "FAN_TRAY${FAN_TRAY}..."
+        COLOR_SYS_LED="green"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_tray_led
+    fi
+}
+
+#Set FAN LED
+function _i2c_led_fan_status_set {
+    echo "FAN Status Setup"
+    #PSU Status set
+    FAN1_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan1_alarm`
+    FAN2_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan2_alarm`
+    FAN3_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan3_alarm`
+    FAN4_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan4_alarm`
+    FAN5_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan5_alarm`
+    FAN6_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan6_alarm`
+    FAN7_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan7_alarm`
+    FAN8_ALARM=`cat ${PATH_HWMON_W83795_DEVICE}/device/fan8_alarm`
+
+    echo "led_fan setup..."
+    # all fan ok
+    if [ "${FAN1_ALARM}" == "0" ] && [ "${FAN2_ALARM}" == "0" ] \
+       && [ "${FAN3_ALARM}" == "0" ] && [ "${FAN4_ALARM}" == "0" ] \
+       && [ "${FAN5_ALARM}" == "0" ] && [ "${FAN6_ALARM}" == "0" ] \
+       && [ "${FAN7_ALARM}" == "0" ] && [ "${FAN8_ALARM}" == "0" ]; then
+        COLOR_SYS_LED="green"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_led
+    # all fan fail
+    elif [  "${FAN1_ALARM}" == "1" ] && [ "${FAN2_ALARM}" == "1" ] \
+       && [ "${FAN3_ALARM}" == "1" ] && [ "${FAN4_ALARM}" == "1" ] \
+       && [ "${FAN5_ALARM}" == "1" ] && [ "${FAN6_ALARM}" == "1" ] \
+       && [ "${FAN7_ALARM}" == "1" ] && [ "${FAN8_ALARM}" == "1" ]; then
+        COLOR_SYS_LED="green"
+        ONOFF_LED="off"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_led
+    # partial fan fail
+    else
+        COLOR_SYS_LED="amber"
+        ONOFF_LED="on"
+        echo "${COLOR_SYS_LED} ${ONOFF_LED}"
+        _i2c_fan_led
+    fi
 }
 
 #Set QSFP Port variable
@@ -511,13 +785,13 @@ function _qsfp_port_i2c_var_set {
         ;;
         33)
             i2cbus=${NUM_MUX1_CHAN7_DEVICE}
-            regAddr=0x24
+            regAddr=0x27
             dataAddr=0
             gpioBase=145
         ;;
         34)
             i2cbus=${NUM_MUX1_CHAN7_DEVICE}
-            regAddr=0x24
+            regAddr=0x27
             dataAddr=1
             gpioBase=143
         ;;
@@ -653,6 +927,14 @@ function _i2c_mb_eeprom_init {
            [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_I801_DEVICE}-0051 ]; then
         echo "0x51" > ${PATH_I801_DEVICE}/delete_device
     fi
+    #Init MB EEPROM
+    if [ "${action}" == "new" ] && \
+           ! [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_I801_DEVICE}-0055 ]; then
+        echo "mb_eeprom 0x55" > ${PATH_I801_DEVICE}/new_device
+    elif [ "${action}" == "delete" ] && \
+           [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_I801_DEVICE}-0055 ]; then
+        echo "0x55" > ${PATH_I801_DEVICE}/delete_device
+    fi
     echo "DONE"
 }
 
@@ -687,6 +969,17 @@ function _i2c_sfp_eeprom_init {
 
 #Get MotherBoard EEPROM Information
 function _i2c_mb_eeprom_get {
+    echo "========================================================="
+    echo "# Description: I2C MB EEPROM Get..."
+    echo "========================================================="
+
+    ## MB EEPROM
+    cat ${PATH_SYS_I2C_DEVICES}/${NUM_I801_DEVICE}-0055/eeprom | hexdump -C
+    echo "done..."
+}
+
+#Get CPU EEPROM Information
+function _i2c_cpu_eeprom_get {
     echo "========================================================="
     echo "# Description: I2C MB EEPROM Get..."
     echo "========================================================="
@@ -812,24 +1105,24 @@ function _i2c_port_led_set {
     fi
 
     if [ ${QSFP_PORT} -lt 33 ]; then
-        if [ "${COLOR_LED}" == "green" ]; then
+        if [ "${COLOR_PORT_LED}" == "green" ]; then
             i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0xaa
-        elif [ "${COLOR_LED}" == "yellow" ]; then
+        elif [ "${COLOR_PORT_LED}" == "yellow" ]; then
             i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0x55
-        elif [ "${COLOR_LED}" == "off" ]; then
+        elif [ "${COLOR_PORT_LED}" == "off" ]; then
             i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0xff
             return
         fi
     elif [ ${QSFP_PORT} -ge 33 ]; then
-        if [ "${COLOR_LED}" == "green" ] ||
-           [ "${COLOR_LED}" == "yellow" ]; then
+        if [ "${COLOR_PORT_LED}" == "green" ] ||
+           [ "${COLOR_PORT_LED}" == "yellow" ]; then
             i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} $value
-        elif [ "${COLOR_LED}" == "off" ]; then
+        elif [ "${COLOR_PORT_LED}" == "off" ]; then
             i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} $((! ${value} ))
             return
         fi
     fi
-    
+
     #Set Blink/Unblink
     if [ ${QSFP_PORT} -lt 33 ]; then
         mask=$((  0x1  <<  $(( $((${QSFP_PORT} - 0x1))  % 0x4 )) ))
@@ -838,7 +1131,7 @@ function _i2c_port_led_set {
     elif [ ${QSFP_PORT} = 34 ]; then
         value=2
     fi
-    
+
     if [ "${BLINK_LED}" == "blink"  ]; then
         i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${bl_offset} 0x00
     elif [ "${BLINK_LED}" == "noblink"  ]; then
@@ -847,7 +1140,7 @@ function _i2c_port_led_set {
 
 }
 
-#Get PSU EEPROM Information # TBD
+#Get PSU EEPROM Information
 function _i2c_psu_eeprom_get {
     echo "========================================================="
     echo "# Description: I2C PSU EEPROM Get..."
@@ -856,103 +1149,81 @@ function _i2c_psu_eeprom_get {
     ## modprobe eeprom
     modprobe eeprom
     ## PUS(0) EEPROM
-    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN6_DEVICE}/new_device
-    dd if=${PATH_SYS_I2C_DEVICES}/${NUM_MUX1_CHAN6_DEVICE}-0050/eeprom  of=psu0.rom
-    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN6_DEVICE}/delete_device
+    echo "========PSU1========="
+    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/new_device
+    cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN0_DEVICE}-0050/eeprom | hexdump -C
+    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/delete_device
 
     ## PUS(1) EEPROM
-    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN7_DEVICE}/new_device
-    dd if=${PATH_SYS_I2C_DEVICES}/${NUM_MUX1_CHAN7_DEVICE}-0050/eeprom  of=psu1.rom
-    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN7_DEVICE}/delete_device
+    echo "========PSU2========="
+    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/new_device
+    cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN1_DEVICE}-0050/eeprom | hexdump -C
+    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/delete_device
 
     echo "done..."
 }
 
-#Get MotherBoard EEPROM Information # TBD
-function _i2c_mb_eeprom_get {
-    echo "========================================================="
-    echo "# Description: I2C MB EEPROM Get..."
-    echo "========================================================="
-
-    ## MB EEPROM
-    cat ${PATH_SYS_I2C_DEVICES}/${NUM_MUX1_CHAN7_DEVICE}-0054/eeprom | hexdump -C
-    echo "done..."
-}
-
-#Set System Status LED # TBD
+#Set System Status LED
 function _i2c_sys_led {
-    if [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x80 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x80 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x40 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x40 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
+
+    if [ "${COLOR_SYS_LED}" == "green" ]; then
+        # set sys_led_g (0.7) = 1
+        output_reg=2
+        mask=0x01
+        value=0x01
+    elif [ "${COLOR_SYS_LED}" == "amber" ]; then
+        # set sys_led_g (0.7) = 0
+        output_reg=2
+        mask=0x01
+        value=0x00
     else
         echo "Invalid Parameters, Exit!!!"
         _help
         exit ${FALSE}
     fi
 
-    echo "done..."
+    #apply to io expander
+    i2cset -m ${mask} -y ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 2 ${value}
+    echo "Done"
+
 }
 
-#Set PSU2 LED # TBD
-function _i2c_psu2_led {
-    if [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x20 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x20 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x10 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x10 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
-    else
-        echo "Invalid Parameters, Exit!!!"
-        _help
-        exit ${FALSE}
-    fi
-
-    echo "done..."
-}
-
-#Set FAN Tray LED # TBD
+#Set FAN Tray LED
 function _i2c_fan_tray_led {
     case ${FAN_TRAY} in
         1)
             i2cAddr=0x20
             ioPort=2
-            if [ "${COLOR_LED}" == "green" ]; then
+            if [ "${COLOR_SYS_LED}" == "green" ]; then
                 mask=0x01
-            elif [ "${COLOR_LED}" == "amber" ]; then
+            elif [ "${COLOR_SYS_LED}" == "amber" ]; then
                 mask=0x02
             fi
             ;;
         2)
             i2cAddr=0x20
             ioPort=2
-            if [ "${COLOR_LED}" == "green" ]; then
+            if [ "${COLOR_SYS_LED}" == "green" ]; then
                 mask=0x10
-            elif [ "${COLOR_LED}" == "amber" ]; then
+            elif [ "${COLOR_SYS_LED}" == "amber" ]; then
                 mask=0x20
             fi
             ;;
         3)
             i2cAddr=0x20
             ioPort=3
-            if [ "${COLOR_LED}" == "green" ]; then
+            if [ "${COLOR_SYS_LED}" == "green" ]; then
                 mask=0x01
-            elif [ "${COLOR_LED}" == "amber" ]; then
+            elif [ "${COLOR_SYS_LED}" == "amber" ]; then
                 mask=0x02
             fi
             ;;
         4)
             i2cAddr=0x20
             ioPort=3
-            if [ "${COLOR_LED}" == "green" ]; then
+            if [ "${COLOR_SYS_LED}" == "green" ]; then
                 mask=0x10
-            elif [ "${COLOR_LED}" == "amber" ]; then
+            elif [ "${COLOR_SYS_LED}" == "amber" ]; then
                 mask=0x20
             fi
             ;;
@@ -962,14 +1233,14 @@ function _i2c_fan_tray_led {
         ;;
     esac
 
-    if [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m $mask -y -r ${NUM_MUX1_CHAN7_DEVICE} $i2cAddr $ioPort 0x33
-    elif [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m $mask -y -r ${NUM_MUX1_CHAN7_DEVICE} $i2cAddr $ioPort 0x00
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m $mask -y -r ${NUM_MUX1_CHAN7_DEVICE} $i2cAddr $ioPort 0x33
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m $mask -y -r ${NUM_MUX1_CHAN7_DEVICE} $i2cAddr $ioPort 0x00
+    if [ "${COLOR_SYS_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
+        i2cset -m $mask -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} $i2cAddr $ioPort 0x33
+    elif [ "${COLOR_SYS_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
+        i2cset -m $mask -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} $i2cAddr $ioPort 0x00
+    elif [ "${COLOR_SYS_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
+        i2cset -m $mask -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} $i2cAddr $ioPort 0x33
+    elif [ "${COLOR_SYS_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
+        i2cset -m $mask -y -r ${NUM_FRU_MUX_CHAN2_DEVICE} $i2cAddr $ioPort 0x00
     else
         echo "Invalid Parameters, Exit!!!"
         _help
@@ -979,35 +1250,16 @@ function _i2c_fan_tray_led {
     echo "done..."
 }
 
-#Set FAN LED # TBD
+#Set FAN LED
 function _i2c_fan_led {
-    if [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x08 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x08 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x04 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x04 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
-    else
-        echo "Invalid Parameters, Exit!!!"
-        _help
-        exit ${FALSE}
-    fi
-
-    echo "done..."
-}
-
-#Set PSU1 LED # TBD
-function _i2c_psu1_led {
-    if [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x02 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x02 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
-        i2cset -m 0x01 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0x00
-    elif [ "${COLOR_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
-        i2cset -m 0x01 -y -r ${NUM_MUX1_CHAN7_DEVICE} 0x22 2 0xFF
+    if [ "${COLOR_SYS_LED}" == "green" ] && [ "${ONOFF_LED}" == "on" ]; then
+        i2cset -m 0x06 -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 2 0x02
+    elif [ "${COLOR_SYS_LED}" == "green" ] && [ "${ONOFF_LED}" == "off" ]; then
+        i2cset -m 0x06 -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 2 0x00
+    elif [ "${COLOR_SYS_LED}" == "amber" ] && [ "${ONOFF_LED}" == "on" ]; then
+        i2cset -m 0x06 -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 2 0x06
+    elif [ "${COLOR_SYS_LED}" == "amber" ] && [ "${ONOFF_LED}" == "off" ]; then
+        i2cset -m 0x06 -y -r ${NUM_MAIN_MUX_CHAN1_DEVICE} 0x75 2 0x00
     else
         echo "Invalid Parameters, Exit!!!"
         _help
@@ -1018,20 +1270,20 @@ function _i2c_psu1_led {
 }
 
 
-#Get PSU Status # TBD
+#Get PSU Status
 function _i2c_psu_status {
-    psuPresent=`i2cget -y ${NUM_I801_DEVICE} 0x33 0x03`
-    psu1Exist=$(($((($psuPresent) & 0x01))?0:1))
-    psu2Exist=$(($((($psuPresent) & 0x02))?0:1))
-    psuPwGood=`i2cget -y ${NUM_I801_DEVICE} 0x33 0x02`
-    psu1PwGood=$(($((($psuPwGood) >> 3 & 0x01))?1:0))
-    psu2PwGood=$(($((($psuPwGood) >> 3 & 0x02))?1:0))
+    psuStat=`i2cget -y ${NUM_I801_DEVICE} 0x25 0x00`
+    psu2PwGood=$(($((($psuStat) & 0x01))?1:0)) # PSU0_PWROK (0.0)
+    psu2Exist=$(($((($psuStat) >> 1 & 0x01))?0:1)) # PSU0_PRSNT_L (0.1)
+
+    psu1PwGood=$(($((($psuStat) >> 3 & 0x01))?1:0)) # PSU1_PWROK (0.3)
+    psu1Exist=$(($((($psuStat) >> 4 & 0x01))?0:1)) # PSU1_PRSNT_L (0.4)
     printf "PSU1 Exist:%x PSU1 PW Good:%d\n" $psu1Exist $psu1PwGood
     printf "PSU2 Exist:%d PSU2 PW Good:%d\n" $psu2Exist $psu2PwGood
 }
 
 
-#Main Function 
+#Main Function
 function _main {
     start_time_str=`date`
     start_time_sec=$(date +%s)
@@ -1058,6 +1310,8 @@ function _main {
         _i2c_temp_init
     elif [ "${EXEC_FUNC}" == "i2c_mb_eeprom_get" ]; then
         _i2c_mb_eeprom_get
+    elif [ "${EXEC_FUNC}" == "i2c_cpu_eeprom_get" ]; then
+        _i2c_cpu_eeprom_get
     elif [ "${EXEC_FUNC}" == "i2c_psu_eeprom_get" ]; then
         _i2c_psu_eeprom_get
     elif [ "${EXEC_FUNC}" == "i2c_qsfp_eeprom_get" ]; then
@@ -1072,8 +1326,6 @@ function _main {
         _i2c_qsfp_status_get
     elif [ "${EXEC_FUNC}" == "i2c_qsfp_type_get" ]; then
         _i2c_qsfp_type_get
-    elif [ "${EXEC_FUNC}" == "i2c_led_psu_status_set" ]; then
-        _i2c_led_psu_status_set
     elif [ "${EXEC_FUNC}" == "i2c_led_fan_status_set" ]; then
         _i2c_led_fan_status_set
     elif [ "${EXEC_FUNC}" == "i2c_led_fan_tray_status_set" ]; then
@@ -1084,10 +1336,6 @@ function _main {
         _i2c_fan_led
     elif [ "${EXEC_FUNC}" == "i2c_fan_tray_led" ]; then
         _i2c_fan_tray_led
-    elif [ "${EXEC_FUNC}" == "i2c_psu1_led" ]; then
-        _i2c_psu1_led
-    elif [ "${EXEC_FUNC}" == "i2c_psu2_led" ]; then
-        _i2c_psu2_led
     elif [ "${EXEC_FUNC}" == "i2c_board_type_get" ]; then
         _i2c_board_type_get
     elif [ "${EXEC_FUNC}" == "i2c_cpld_version" ]; then
@@ -1103,6 +1351,7 @@ function _main {
         _i2c_io_exp_init
         _i2c_psu_eeprom_get
         _i2c_mb_eeprom_get
+        _i2c_cpu_eeprom_get
         _i2c_board_type_get
         _i2c_cpld_version
         _i2c_psu_status
