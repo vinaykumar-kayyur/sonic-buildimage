@@ -1106,11 +1106,11 @@ function _i2c_port_led_set {
 
     if [ ${QSFP_PORT} -lt 33 ]; then
         if [ "${COLOR_PORT_LED}" == "green" ]; then
-            i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0xaa
-        elif [ "${COLOR_PORT_LED}" == "yellow" ]; then
             i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0x55
+        elif [ "${COLOR_PORT_LED}" == "yellow" ]; then
+            i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0xaa
         elif [ "${COLOR_PORT_LED}" == "off" ]; then
-            i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0xff
+            i2cset -m $mask -y -r ${NUM_CPLD_DEVICE} 0x33 ${gy_offset} 0x00
             return
         fi
     elif [ ${QSFP_PORT} -ge 33 ]; then
