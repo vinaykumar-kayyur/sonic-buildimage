@@ -6,6 +6,7 @@ if [ -d /run/systemd/system ]; then
 # Automatically added by dh_installinit
 if [ "$1" = "purge" ] ; then
     update-rc.d s9180-32x-monitor remove >/dev/null
+    update-rc.d bfn remove >/dev/null
     update-rc.d qsfp-monitor remove >/dev/null
 fi
 
@@ -20,6 +21,7 @@ fi
 if [ "$1" = "remove" ]; then
     if [ -x "/usr/bin/deb-systemd-helper" ]; then
         deb-systemd-helper mask s9180-32x-monitor.service >/dev/null
+        deb-systemd-helper mask bfn.service >/dev/null
         deb-systemd-helper mask qsfp-monitor.service >/dev/null
     fi
 fi
@@ -28,6 +30,8 @@ if [ "$1" = "purge" ]; then
     if [ -x "/usr/bin/deb-systemd-helper" ]; then
         deb-systemd-helper purge s9180-32x-monitor.service >/dev/null
         deb-systemd-helper unmask s9180-32x-monitor.service >/dev/null
+        deb-systemd-helper purge bfn.service >/dev/null
+        deb-systemd-helper unmask bfn.service >/dev/null
         deb-systemd-helper purge qsfp-monitor.service >/dev/null
         deb-systemd-helper unmask qsfp-monitor.service >/dev/null
     fi
