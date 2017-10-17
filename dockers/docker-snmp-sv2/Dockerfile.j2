@@ -1,5 +1,8 @@
 FROM docker-config-engine
 
+RUN echo 'deb http://debian-archive.trafficmanager.net/debian jessie-backports main' >> /etc/apt/sources.list && \
+        echo 'deb [arch=amd64] http://packages.microsoft.com/repos/sonic-dev/ jessie main' >> /etc/apt/sources.list
+
 COPY [ \
 {% for deb in docker_snmp_sv2_debs.split(' ') -%}
     "debs/{{ deb }}",
@@ -22,9 +25,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # TODO: remove libpython3.6-dev, its and pip's dependencies if we can get pip3 directly
 # install subagent
 # clean up
-RUN apt-get update && apt-get install -y libperl5.20 libpci3 libwrap0 \
-            libexpat1-dev \
-            curl gcc && \
+RUN apt-get update && apt-get install -y --force-yes libperl5.20 libpci3 libwrap0 \
+            libexpat1-dev grub2-common bash-completion curl gcc \
+            python-pip python-click-default-group python-click python-natsort python-tabulate && \
     dpkg -i \
 {% for deb in docker_snmp_sv2_debs.split(' ') -%}
         debs/{{ deb }}{{' '}}
