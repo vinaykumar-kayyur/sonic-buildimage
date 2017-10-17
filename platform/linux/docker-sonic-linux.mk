@@ -1,6 +1,6 @@
 # docker image for linux sonic docker image
 
-LIBSAIREDIS_DPKG_TARGET = binary-syncd-vs
+$(LIBSAIREDIS)_DPKG_TARGET = binary-syncd-vs
 
 DOCKER_SONIC_LINUX = docker-sonic-linux.gz
 $(DOCKER_SONIC_LINUX)_PATH = $(PLATFORM_PATH)/docker-sonic-linux
