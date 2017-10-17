@@ -583,12 +583,12 @@ function _i2c_gpio_deinit {
 
 #TMP75 Init
 function _i2c_temp_init {
+    echo "lm86 0x4c" > ${PATH_MUX7_CHAN0_DEVICE}/new_device  # ASIC Coretemp and Front MAC
     echo "tmp75 0x4f" > ${PATH_I801_DEVICE}/new_device #CPU Board
     echo "tmp75 0x48" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near PSU1
     echo "tmp75 0x4a" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Rear MAC
     echo "tmp75 0x4b" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near Port 32
     echo "tmp75 0x4d" > ${PATH_MUX7_CHAN0_DEVICE}/new_device # Near PSU2
-    echo "lm86 0x4c" > ${PATH_MUX7_CHAN0_DEVICE}/new_device  # ASIC Coretemp and Front MAC
 }
 
 #Set FAN Tray LED
