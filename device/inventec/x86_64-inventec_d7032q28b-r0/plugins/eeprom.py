@@ -10,7 +10,6 @@
 #############################################################################
 
 try:
-    import os
     from sonic_eeprom import eeprom_tlvinfo
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")

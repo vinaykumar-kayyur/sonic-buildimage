@@ -103,7 +103,7 @@ static struct i2c_board_info i2c_device_info5[] __initdata = {
 
 static struct inv_i2c_board_info i2cdev_list[] = {
     {0, ARRAY_SIZE(i2c_device_info0),  i2c_device_info0 },  //smbus 0
-    /*{1, ARRAY_SIZE(i2c_device_info1),  i2c_device_info1 },  //smbus 1 or gpio11+12*/
+    {1, ARRAY_SIZE(i2c_device_info1),  i2c_device_info1 },  //smbus 1 or gpio11+12
     
     {bus_id(2), ARRAY_SIZE(i2c_device_info2),  i2c_device_info2 },  //mux 0
     {bus_id(3), ARRAY_SIZE(i2c_device_info3),  i2c_device_info3 },  //mux 1
