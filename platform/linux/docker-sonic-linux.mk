@@ -1,7 +1,5 @@
 # docker image for linux sonic docker image
 
-$(LIBSAIREDIS)_DPKG_TARGET = binary-syncd-vs
-
 DOCKER_SONIC_LINUX = docker-sonic-linux.gz
 $(DOCKER_SONIC_LINUX)_PATH = $(PLATFORM_PATH)/docker-sonic-linux
 $(DOCKER_SONIC_LINUX)_DEPENDS += $(SWSS) $(SYNCD_VS) $(REDIS_SERVER) $(REDIS_TOOLS) $(LIBTEAMDCT) $(LIBTEAM_UTILS) 
