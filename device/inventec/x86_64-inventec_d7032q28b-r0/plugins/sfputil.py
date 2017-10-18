@@ -15,7 +15,7 @@ class SfpUtil(SfpUtilBase):
 
     PORT_START = 0
     PORT_END = 31
-    PORTS_IN_BLOCK = 32    
+    PORTS_IN_BLOCK = 32
 
     _port_to_eeprom_mapping = {}
     port_to_i2c_mapping = {
@@ -51,7 +51,7 @@ class SfpUtil(SfpUtilBase):
         29: 19,
         30: 20,
         31: 21
-       }
+    }
 
     @property
     def port_start(self):
@@ -91,7 +91,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = int(reg_file.readline().rstrip())
 
         if reg_value == 0:
-            return True     
+            return True  
 
         return False
 
@@ -108,7 +108,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = int(reg_file.readline().rstrip())
 
         if reg_value == 0:
-            return False       
+            return False
 
         return True
 
@@ -124,13 +124,13 @@ class SfpUtil(SfpUtilBase):
             return False
 
         reg_value = int(reg_file.readline().rstrip())
-               
+
         # LPMode is active high; set or clear the bit accordingly
         if lpmode is True:
             reg_value = 1
         else:
-            reg_value = 0   
-        
+            reg_value = 0
+
         reg_file.write(hex(reg_value))
         reg_file.close()
 
@@ -167,4 +167,3 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
-
