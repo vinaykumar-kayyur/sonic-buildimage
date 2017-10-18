@@ -167,4 +167,3 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
-    
