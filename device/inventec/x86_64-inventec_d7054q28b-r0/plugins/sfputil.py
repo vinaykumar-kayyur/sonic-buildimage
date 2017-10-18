@@ -123,7 +123,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = int(reg_file.readline().rstrip())
 
         if reg_value == 0:
-            return True     
+            return True
 
         return False
 
@@ -142,7 +142,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = int(reg_file.readline().rstrip())
 
         if reg_value == 0:
-            return False       
+            return False
 
         return True
 
@@ -161,13 +161,13 @@ class SfpUtil(SfpUtilBase):
             return False
 
         reg_value = int(reg_file.readline().rstrip())
-               
+
         # LPMode is active high; set or clear the bit accordingly
         if lpmode is True:
             reg_value = 1
         else:
-            reg_value = 0   
-        
+            reg_value = 0
+
         reg_file.write(hex(reg_value))
         reg_file.close()
 
@@ -207,4 +207,3 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
-
