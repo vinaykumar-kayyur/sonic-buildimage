@@ -91,7 +91,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = int(reg_file.readline().rstrip())
 
         if reg_value == 0:
-            return True  
+            return True
 
         return False
 
