@@ -20,16 +20,22 @@ class TestJ2Files(TestCase):
 
     def test_interfaces(self):
         interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
-        argument = '-m ' + self.t0_minigraph + ' -t ' + interfaces_template + ' > ' + self.output_file
+        argument = '-m ' + self.t0_minigraph + ' -a \'{\"hwaddr\":\"e4:1d:2d:a5:f3:ad\"}\' -t ' + interfaces_template + ' > ' + self.output_file
         self.run_script(argument)
         self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'interfaces'), self.output_file))
 
     def test_alias_map(self):
         alias_map_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-snmp-sv2', 'alias_map.j2')
-        argument = '-m "' + self.t0_minigraph + '" -p "' + self.t0_port_config + '" -t "' + alias_map_template + '"'
+        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + alias_map_template
         output = self.run_script(argument)
         data = json.loads(output)
         self.assertEqual(data["Ethernet4"], "fortyGigE0/4")        
+
+    def test_lldp(self):
+        lldpd_conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-lldp-sv2', 'lldpd.conf.j2')
+        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + lldpd_conf_template + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'lldpd.conf'), self.output_file))
         
     def test_teamd(self):
 

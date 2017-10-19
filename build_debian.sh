@@ -207,7 +207,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     kexec-tools             \
     less                    \
     unzip                   \
-    gdisk
+    gdisk                   \
+    grub2-common
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
     grub-pc-bin
@@ -320,6 +321,14 @@ EOF
 
 if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
+fi
+
+## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...
+if [ "${enable_organization_extensions}" = "y" ]; then
+   if [ -f files/build_templates/organization_extensions.sh ]; then
+      sudo chmod 755 files/build_templates/organization_extensions.sh 
+      ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
+   fi
 fi
 
 ## Clean up apt

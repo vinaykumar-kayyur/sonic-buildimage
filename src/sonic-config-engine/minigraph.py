@@ -91,20 +91,17 @@ def parse_png(png, hname):
                 if enddevice == hname:
                     if port_alias_map.has_key(endport):
                         endport = port_alias_map[endport]
-                    neighbors[startdevice] = {'local_port': endport, 'port': startport}
+                    neighbors[endport] = {'name': startdevice, 'port': startport}
                 else:
                     if port_alias_map.has_key(startport):
                         startport = port_alias_map[startport]
-                    neighbors[enddevice] = {'local_port': startport, 'port': endport}
+                    neighbors[startport] = {'name': enddevice, 'port': endport}
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
                 (lo_prefix, mgmt_prefix, name, hwsku, d_type) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku } 
-                if neighbors.has_key(name):
-                    neighbors[name].update(device_data)
-                else:
-                    devices[name] = device_data
+                devices[name] = device_data
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for if_link in child.findall(str(QName(ns, 'DeviceLinkBase'))):
@@ -178,6 +175,14 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
             vlan_attributes = {'members': vmbr_list, 'vlanid': vlanid}
+
+            # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
+            # containing a list of DHCP server IPs
+            if vintf.find(str(QName(ns, "DhcpRelays"))) is not None:
+                vintfdhcpservers = vintf.find(str(QName(ns, "DhcpRelays"))).text
+                vdhcpserver_list = vintfdhcpservers.split(';')
+                vlan_attributes['dhcp_servers'] = vdhcpserver_list
+
             sonic_vlan_name = "Vlan%s" % vlanid
             vlans[sonic_vlan_name] = vlan_attributes
 
@@ -219,24 +224,38 @@ def parse_cpg(cpg, hname):
                 start_peer = session.find(str(QName(ns, "StartPeer"))).text
                 end_router = session.find(str(QName(ns, "EndRouter"))).text
                 end_peer = session.find(str(QName(ns, "EndPeer"))).text
+                rrclient = 1 if session.find(str(QName(ns, "RRClient"))) is not None else 0
+                if session.find(str(QName(ns, "HoldTime"))) is not None:
+                    holdtime = session.find(str(QName(ns, "HoldTime"))).text
+                else:
+                    holdtime = 180
+                if session.find(str(QName(ns, "KeepAliveTime"))) is not None:
+                    keepalive = session.find(str(QName(ns, "KeepAliveTime"))).text
+                else:
+                    keepalive = 60
+                nhopself = 1 if session.find(str(QName(ns, "NextHopSelf"))) is not None else 0
                 if end_router == hname:
                     bgp_sessions[start_peer] = {
                         'name': start_router,
-                        'local_addr': end_peer
+                        'local_addr': end_peer,
+                        'rrclient': rrclient,
+                        'holdtime': holdtime,
+                        'keepalive': keepalive,
+                        'nhopself': nhopself
                     }
                 else:
                     bgp_sessions[end_peer] = {
                         'name': end_router,
-                        'local_addr': start_peer
+                        'local_addr': start_peer,
+                        'rrclient': rrclient,
+                        'holdtime': holdtime,
+                        'keepalive': keepalive,
+                        'nhopself': nhopself
                     }
         elif child.tag == str(QName(ns, "Routers")):
             for router in child.findall(str(QName(ns1, "BGPRouterDeclaration"))):
                 asn = router.find(str(QName(ns1, "ASN"))).text
                 hostname = router.find(str(QName(ns1, "Hostname"))).text
-                if router.find(str(QName(ns1, "RRClient"))):
-                    rrclient = '1'
-                else:
-                    rrclient = '0'
                 if hostname == hname:
                     myasn = asn
                     peers = router.find(str(QName(ns1, "Peers")))
@@ -255,7 +274,6 @@ def parse_cpg(cpg, hname):
                         bgp_session = bgp_sessions[peer]
                         if hostname == bgp_session['name']:
                             bgp_session['asn'] = asn
-                        bgp_session['rrclient'] = rrclient
 
     return bgp_sessions, myasn, bgp_peers_with_range
 
