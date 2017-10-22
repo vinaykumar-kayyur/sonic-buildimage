@@ -38,17 +38,11 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
-ADD port_config.ini /port_config.ini
-ADD startup.sh /scripts/startup.sh
-
-ADD rsyslog.conf /etc/rsyslog.conf
-
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-RUN sed -ri 's/^daemonize yes$/daemonize no/;                                           \
-             s/^logfile .*$/logfile ""/;                                                \
+RUN sed -ri 's/^logfile .*$/logfile ""/;                                                \
              s/^# syslog-enabled no$/syslog-enabled no/;                                \
              s/^# unixsocket/unixsocket/                                                \
             ' /etc/redis/redis.conf
