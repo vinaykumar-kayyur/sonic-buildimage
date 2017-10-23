@@ -29,7 +29,8 @@ for srv in `seq 0 $SERVERS`; do
     ip link set $IF netns ${pid}
 
     echo "Bring ${SRV}eth0 up"
-    $NSS ip link set dev ${SRV}eth0 up
+    $NSS ip link set dev ${SRV}eth0 name eth0
+    $NSS ip link set dev eth0 up
 
     echo "Bring $IF up in the virtual switch docker"
     nsenter -t $pid -n ip link set dev $IF up
