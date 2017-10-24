@@ -205,7 +205,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
 	$(if $($*_DPKG_TARGET),
 		dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
-		dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG),
+		dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
 	)
 	popd $(LOG)
 	# Clean up
