@@ -15,7 +15,7 @@ $(eval $(call add_derived_package,$(LIBSAIREDIS),$(LIBSAIVS)))
 LIBSAIVS_DEV = libsaivs-dev_1.0.0_amd64.deb
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(LIBSAIVS_DEV)))
 
-ifneq ($(CONFIGURED_PLATFORM),linux)
+ifneq ($(CONFIGURED_PLATFORM),vs)
 SYNCD = syncd_1.0.0_amd64.deb
 $(SYNCD)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA)
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD)))
@@ -42,7 +42,7 @@ $(LIBSAIVS_DBG)_DEPENDS += $(LIBSAIVS)
 $(LIBSAIVS_DBG)_RDEPENDS += $(LIBSAIVS)
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(LIBSAIVS_DBG)))
 
-ifneq ($(CONFIGURED_PLATFORM),linux)
+ifneq ($(CONFIGURED_PLATFORM),vs)
 SYNCD_DBG = syncd-dbg_1.0.0_amd64.deb
 $(SYNCD_DBG)_DEPENDS += $(SYNCD)
 $(SYNCD_DBG)_RDEPENDS += $(SYNCD)

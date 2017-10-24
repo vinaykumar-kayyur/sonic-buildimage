@@ -11,7 +11,7 @@ sudo ./create_vnet.sh sw
 2. Create sonic virtual switch docker
 
 ```
-docker run --privileged --network container:sw -d docker-sonic-linux
+docker run --privileged --network container:sw -d docker-sonic-vs
 ```
 
 3. Run test in virtual switch docker (TBD)
