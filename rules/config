@@ -71,3 +71,15 @@ ENABLE_ORGANIZATION_EXTENSIONS = y
 #   build:    build kernel from source
 #   download: download pre-built kernel from Azure storage.
 DEFAULT_KERNEL_PROCURE_METHOD = build
+
+# SONIC_USER_UID/GID - A special user ('sonic') will be always created during
+# image compilation. This special user will be in charged of running SONiC's
+# critical applications, provided that these applications are willing to run
+# with non-root privileges -- which should be encouraged.  This user will have
+# no login capabilities and will be created across all the execution contexts
+# of the system: both docker containers and host. As we want this user to have
+# the same privileges across all different contexts, we must rely on a unique
+# 'uid:gid' pair to identify him in the system. In consequence, explicit
+# uid:gid values must be provided at build time.
+SONIC_USER_UID = 888
+SONIC_USER_GID = 888

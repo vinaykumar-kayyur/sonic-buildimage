@@ -134,6 +134,15 @@ $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info )
 
+# Exporting ROUTING_STACK as an env-var to allow build-infra to conditionaly compile
+# routing stack dependent components.
+export SONIC_ROUTING_STACK
+
+# Exporting SONIC_USER_UID/GID values.
+export SONIC_USER_UID
+export SONIC_USER_GID
+
+
 ###############################################################################
 ## Generic rules section
 ## All rules must go after includes for propper targets expansion
