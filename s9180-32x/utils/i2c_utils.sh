@@ -66,8 +66,8 @@ NUM_MAIN_MUX_CHAN4_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 4 )) # TEMP Sensor
 NUM_MAIN_MUX_CHAN5_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 5 )) # CLK GEN
 NUM_MAIN_MUX_CHAN6_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 6 )) # VDD CORE
 NUM_MAIN_MUX_CHAN7_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 7 )) # HWMON
-NUM_FRU_MUX_CHAN0_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 8 )) # PSU1
-NUM_FRU_MUX_CHAN1_DEVICE=$(( ${NUM_FRU_MUX_CHAN0_DEVICE} + 1 )) # PSU2
+NUM_FRU_MUX_CHAN0_DEVICE=$(( ${NUM_MAIN_MUX_CHAN0_DEVICE} + 8 )) # PSU2
+NUM_FRU_MUX_CHAN1_DEVICE=$(( ${NUM_FRU_MUX_CHAN0_DEVICE} + 1 )) # PSU1
 NUM_FRU_MUX_CHAN2_DEVICE=$(( ${NUM_FRU_MUX_CHAN0_DEVICE} + 2 )) # FAN
 NUM_CPLD_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 3 )) # CPLD
 NUM_SFP1_DEVICE=$(( ${NUM_MUX7_CHAN0_DEVICE} + 4 )) # CPLD
@@ -1150,15 +1150,15 @@ function _i2c_psu_eeprom_get {
     modprobe eeprom
     ## PUS(0) EEPROM
     echo "========PSU1========="
-    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/new_device
-    cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN0_DEVICE}-0050/eeprom | hexdump -C
-    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/delete_device
-
-    ## PUS(1) EEPROM
-    echo "========PSU2========="
     echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/new_device
     cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN1_DEVICE}-0050/eeprom | hexdump -C
     echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/delete_device
+
+    ## PUS(1) EEPROM
+    echo "========PSU2========="
+    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/new_device
+    cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN0_DEVICE}-0050/eeprom | hexdump -C
+    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/delete_device
 
     echo "done..."
 }
