@@ -5,7 +5,6 @@ include $(PLATFORM_PATH)/docker-orchagent-nephos.mk
 include $(PLATFORM_PATH)/docker-syncd-nephos.mk
 include $(PLATFORM_PATH)/docker-syncd-nephos-rpc.mk
 include $(PLATFORM_PATH)/one-image.mk
-include $(PLATFORM_PATH)/one-aboot.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/python-saithrift.mk
 include $(PLATFORM_PATH)/docker-ptf-nephos.mk
@@ -18,7 +17,7 @@ $(DSSERVE)_URL = "https://sonicstorage.blob.core.windows.net/packages/20170518/d
 
 SONIC_ONLINE_FILES += $(NPX_DIAG) $(DSSERVE)
 
-SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT_IMAGE) \
+SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM) \
              $(DOCKER_PTF_NEPHOS) \
              $(DOCKER_SYNCD_NEPHOS_RPC)

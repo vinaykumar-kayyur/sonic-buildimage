@@ -1,4 +1,4 @@
-# sonic broadcom one image installer
+# sonic nephos one image installer
 
 SONIC_ONE_IMAGE = sonic-nephos.bin
 $(SONIC_ONE_IMAGE)_MACHINE = nephos
