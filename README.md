@@ -47,6 +47,7 @@ The SONiC installer contains all docker images needed. SONiC uses one image for 
 - PLATFORM=cavium
 - PLATFORM=centec
 - PLATFORM=p4
+- PLATFORM=vs
 
 For Broadcom ASIC, we build ONIE and EOS image. EOS image is used for Arista devices, ONIE image is used for all other Broadcom ASIC based devices. 
 
@@ -92,6 +93,7 @@ This may take a while, but it is a one-time action, so please be patient.
   - docker-syncd-cavm.gz: docker image for the daemon to sync database and Cavium switch ASIC (gzip tar archive)
   - docker-syncd-mlnx.gz: docker image for the daemon to sync database and Mellanox switch ASIC (gzip tar archive)
   - docker-sonic-p4.gz: docker image for all-in-one for p4 software switch (gzip tar archive)
+  - docker-sonic-vs.gz: docker image for all-in-one for software virtual switch (gzip tar archive)
 
 ## Contribution Guide
 
