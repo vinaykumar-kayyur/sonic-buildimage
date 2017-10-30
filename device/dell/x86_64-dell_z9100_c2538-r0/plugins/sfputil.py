@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # sfputil.py
 #
 # Platform-specific SFP transceiver interface for SONiC
@@ -17,7 +16,6 @@ class SfpUtil(SfpUtilBase):
     PORT_START = 0
     PORT_END = 31
     PORTS_IN_BLOCK = 32
-    
     IOM_1_PORT_START = 0
     IOM_1_PORT_END = 11
     IOM_2_PORT_START = 12
@@ -25,43 +23,43 @@ class SfpUtil(SfpUtilBase):
     IOM_3_PORT_START = 22
     IOM_3_PORT_END = 31
 
-    BASE_VAL_PATH="/sys/class/i2c-adapter/i2c-{0}/{0}-003e/"
+    BASE_VAL_PATH = "/sys/class/i2c-adapter/i2c-{0}/{0}-003e/"
 
     _port_to_eeprom_mapping = {}
     _port_to_i2c_mapping = {
-           0: [9,18],
-           1: [9,19],
-           2: [9,20],
-           3: [9,21],
-           4: [9,22],
-           5: [9,23],
-           6: [9,24],
-           7: [9,25],
-           8: [8,26],
-           9: [8,27],
-           10: [8,28],
-           11: [8,29],
-           12: [8,31],#reordered 
-           13: [8,30],
-           14: [8,33],#reordered
-           15: [8,32],
-           16: [7,34],
-           17: [7,35],
-           18: [7,36],
-           19: [7,37],
-           20: [7,38],
-           21: [7,39],
-           22: [7,40],
-           23: [7,41],
-           24: [6,42],
-           25: [6,43],
-           26: [6,44],
-           27: [6,45],
-           28: [6,46],
-           29: [6,47],
-           30: [6,48],
-           31: [6,49]
-}
+           0: [9, 18],
+           1: [9, 19],
+           2: [9, 20],
+           3: [9, 21],
+           4: [9, 22],
+           5: [9, 23],
+           6: [9, 24],
+           7: [9, 25],
+           8: [8, 26],
+           9: [8, 27],
+           10: [8, 28],
+           11: [8, 29],
+           12: [8, 31], #reordered 
+           13: [8, 30],
+           14: [8, 33], #reordered
+           15: [8, 32],
+           16: [7, 34],
+           17: [7, 35],
+           18: [7, 36],
+           19: [7, 37],
+           20: [7, 38],
+           21: [7, 39],
+           22: [7, 40],
+           23: [7, 41],
+           24: [6, 42],
+           25: [6, 43],
+           26: [6, 44],
+           27: [6, 45],
+           28: [6, 46],
+           29: [6, 47],
+           30: [6, 48],
+           31: [6, 49]
+           }
 
     @property
     def port_start(self):
@@ -74,7 +72,7 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_ports(self):
         return range(0, self.PORTS_IN_BLOCK + 1)
-    
+
     @property
     def iom1_port_start(self):
         return self.IOM_1_PORT_START
@@ -116,6 +114,7 @@ class SfpUtil(SfpUtilBase):
 
         SfpUtilBase.__init__(self)
 
+
     def get_presence(self, port_num):
 
         global i2c_line
@@ -123,18 +122,17 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-
-	#port_num and i2c match
+        # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
-            i2c_line=14
+            i2c_line = 14
         elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            i2c_line=15
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            i2c_line=16
+            i2c_line = 15
+        elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+            i2c_line = 16
 
         try:
-		qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_modprs"
-                reg_file = open(qsfp_path, "r")
+            qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_modprs"
+            reg_file = open(qsfp_path, "r")
 
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
@@ -142,18 +140,18 @@ class SfpUtil(SfpUtilBase):
 
         content = reg_file.readline().rstrip()
 
-        #Absence of IOM throws read error
+        # Absence of IOM throws read error
         if (content == 'read error'):
             return False
 
         # content is a string containing the hex representation of the register
         reg_value = int(content, 16)
 
-        #Rationalize port settings
+        # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            port_num=port_num%12
+            port_num = port_num % 12
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            port_num=port_num%22
+            port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
         mask = (1 << port_num)
@@ -164,19 +162,20 @@ class SfpUtil(SfpUtilBase):
 
         return False
 
+
     def get_low_power_mode(self, port_num):
 
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-	#port_num and i2c match
+        # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
-            i2c_line=14
+            i2c_line = 14
         elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            i2c_line=15
+            i2c_line = 15
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            i2c_line=16
+            i2c_line = 16
 
         try:
                 qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_lpmode"
@@ -188,18 +187,18 @@ class SfpUtil(SfpUtilBase):
 
         content = reg_file.readline().rstrip()
 
-        #Absence of IOM throws read error
+        # Absence of IOM throws read error
         if (content == 'read error'):
             return False
 
         # content is a string containing the hex representation of the register
         reg_value = int(content, 16)
 
-	#Rationalize port settings
+        # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            port_num=port_num%12
+            port_num = port_num % 12
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            port_num=port_num%22
+            port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
         mask = (1 << port_num)
@@ -210,19 +209,20 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
+
     def set_low_power_mode(self, port_num, lpmode):
 
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-	#port_num and i2c match
+        # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
-            i2c_line=14
+            i2c_line = 14
         elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            i2c_line=15
+            i2c_line = 15
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            i2c_line=16
+            i2c_line = 16
 
         try:
                 qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_lpmode"
@@ -234,22 +234,21 @@ class SfpUtil(SfpUtilBase):
 
         content = reg_file.readline().rstrip()
 
-        #Absence of IOM throws read error
+        # Absence of IOM throws read error
         if (content == 'read error'):
             return False
 
         # content is a string containing the hex representation of the register
         reg_value = int(content, 16)
 
-	#Rationalize port settings
+        # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            port_num=port_num%12
+            port_num = port_num % 12
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            port_num=port_num%22
+            port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
         mask = (1 << port_num)
-        
         # LPMode is active high; set or clear the bit accordingly
         if lpmode is True:
             reg_value = reg_value | mask
@@ -265,19 +264,20 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
+
     def reset(self, port_num):
 
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-	#port_num and i2c match
+        # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
-            i2c_line=14
+            i2c_line = 14
         elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            i2c_line=15
+            i2c_line = 15
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            i2c_line=16
+            i2c_line = 16
 
         try:
                 qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_lpmode"
@@ -289,14 +289,14 @@ class SfpUtil(SfpUtilBase):
 
         content = reg_file.readline().rstrip()
 
-        # File content is a string containing the hex representation of the register
+        # File content is a string containing the hex representation of th
         reg_value = int(content, 16)
 
-	#Rationalize port settings
+        # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            port_num=port_num%12
+            port_num = port_num % 12
 	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
-            port_num=port_num%22
+            port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
         mask = (1 << port_num)
@@ -312,7 +312,8 @@ class SfpUtil(SfpUtilBase):
         # Sleep 1 second to allow it to settle
         time.sleep(1)
 
-        # Flip the bit back high and write back to the register to take port out of reset
+        # Flip the bit back high and write back to the register to take
+	# port out of reset
         try:
                 qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_lpmode"
                 reg_file = open(qsfp_path, "w+")
@@ -327,3 +328,4 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
+
