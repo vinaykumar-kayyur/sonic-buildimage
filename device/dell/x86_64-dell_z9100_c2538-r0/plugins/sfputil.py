@@ -39,9 +39,9 @@ class SfpUtil(SfpUtilBase):
            9: [8, 27],
            10: [8, 28],
            11: [8, 29],
-           12: [8, 31], #reordered 
+           12: [8, 31],  # reordered
            13: [8, 30],
-           14: [8, 33], #reordered
+           14: [8, 33],  # reordered
            15: [8, 32],
            16: [7, 34],
            17: [7, 35],
@@ -105,15 +105,15 @@ class SfpUtil(SfpUtilBase):
     def port_to_i2c_mapping(self):
         return self._port_to_i2c_mapping
 
-
     def __init__(self):
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/i2c-{1}/{1}-0050/eeprom"
 
         for x in range(0, self.port_end+1):
-            self.port_to_eeprom_mapping[x] = eeprom_path.format(self.port_to_i2c_mapping[x][0], self.port_to_i2c_mapping[x][1])
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(
+                self.port_to_i2c_mapping[x][0],
+                self.port_to_i2c_mapping[x][1])
 
         SfpUtilBase.__init__(self)
-
 
     def get_presence(self, port_num):
 
@@ -125,9 +125,11 @@ class SfpUtil(SfpUtilBase):
         # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
             i2c_line = 14
-        elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
+        elif (port_num >= self.iom2_port_start and
+                port_num <= self.iom2_port_end):
             i2c_line = 15
-        elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             i2c_line = 16
 
         try:
@@ -150,7 +152,8 @@ class SfpUtil(SfpUtilBase):
         # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
             port_num = port_num % 12
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
@@ -162,7 +165,6 @@ class SfpUtil(SfpUtilBase):
 
         return False
 
-
     def get_low_power_mode(self, port_num):
 
         # Check for invalid port_num
@@ -172,9 +174,11 @@ class SfpUtil(SfpUtilBase):
         # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
             i2c_line = 14
-        elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
+        elif (port_num >= self.iom2_port_start and
+                port_num <= self.iom2_port_end):
             i2c_line = 15
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             i2c_line = 16
 
         try:
@@ -197,7 +201,8 @@ class SfpUtil(SfpUtilBase):
         # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
             port_num = port_num % 12
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
@@ -209,7 +214,6 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
-
     def set_low_power_mode(self, port_num, lpmode):
 
         # Check for invalid port_num
@@ -219,9 +223,11 @@ class SfpUtil(SfpUtilBase):
         # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
             i2c_line = 14
-        elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
+        elif (port_num >= self.iom2_port_start and
+                port_num <= self.iom2_port_end):
             i2c_line = 15
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             i2c_line = 16
 
         try:
@@ -244,7 +250,8 @@ class SfpUtil(SfpUtilBase):
         # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
             port_num = port_num % 12
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
@@ -264,7 +271,6 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
-
     def reset(self, port_num):
 
         # Check for invalid port_num
@@ -274,9 +280,11 @@ class SfpUtil(SfpUtilBase):
         # port_num and i2c match
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
             i2c_line = 14
-        elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
+        elif (port_num >= self.iom2_port_start and
+                port_num <= self.iom2_port_end):
             i2c_line = 15
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             i2c_line = 16
 
         try:
@@ -295,7 +303,8 @@ class SfpUtil(SfpUtilBase):
         # Rationalize port settings
         if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
             port_num = port_num % 12
-	elif port_num >= self.iom3_port_start and port_num <= self.iom3_port_end:
+        elif (port_num >= self.iom3_port_start and
+                port_num <= self.iom3_port_end):
             port_num = port_num % 22
 
         # Mask off the bit corresponding to our port
@@ -313,7 +322,7 @@ class SfpUtil(SfpUtilBase):
         time.sleep(1)
 
         # Flip the bit back high and write back to the register to take
-	# port out of reset
+        # port out of reset
         try:
                 qsfp_path = self.BASE_VAL_PATH.format(i2c_line)+"qsfp_lpmode"
                 reg_file = open(qsfp_path, "w+")
@@ -328,4 +337,3 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
-
