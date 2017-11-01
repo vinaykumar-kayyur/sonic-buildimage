@@ -12,27 +12,13 @@ from collections import defaultdict
 from lxml import etree as ET
 from lxml.etree import QName
 
-DOCUMENTATION = '''
----
-module: minigraph_facts
+from portconfig import get_port_config
+
+"""minigraph.py
 version_added: "1.9"
 author: Guohan Lu (gulv@microsoft.com)
-short_description: Retrive minigraph facts for a device.
-description:
-    - Retrieve minigraph facts for a device, the facts will be
-      inserted to the ansible_facts key.
-options:
-    host:
-        description:
-            - Set to target snmp server (normally {{inventory_hostname}})
-        required: true
-'''
-
-EXAMPLES = '''
-# Gather minigraph facts
-- name: Gathering minigraph facts about the device
-  minigraph_facts: host={{ hostname }}
-'''
+short_description: Parse minigraph xml file and device description xml file
+"""
 
 ns = "Microsoft.Search.Autopilot.Evolution"
 ns1 = "http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"
@@ -224,24 +210,38 @@ def parse_cpg(cpg, hname):
                 start_peer = session.find(str(QName(ns, "StartPeer"))).text
                 end_router = session.find(str(QName(ns, "EndRouter"))).text
                 end_peer = session.find(str(QName(ns, "EndPeer"))).text
+                rrclient = 1 if session.find(str(QName(ns, "RRClient"))) is not None else 0
+                if session.find(str(QName(ns, "HoldTime"))) is not None:
+                    holdtime = session.find(str(QName(ns, "HoldTime"))).text
+                else:
+                    holdtime = 180
+                if session.find(str(QName(ns, "KeepAliveTime"))) is not None:
+                    keepalive = session.find(str(QName(ns, "KeepAliveTime"))).text
+                else:
+                    keepalive = 60
+                nhopself = 1 if session.find(str(QName(ns, "NextHopSelf"))) is not None else 0
                 if end_router == hname:
                     bgp_sessions[start_peer] = {
                         'name': start_router,
-                        'local_addr': end_peer
+                        'local_addr': end_peer,
+                        'rrclient': rrclient,
+                        'holdtime': holdtime,
+                        'keepalive': keepalive,
+                        'nhopself': nhopself
                     }
                 else:
                     bgp_sessions[end_peer] = {
                         'name': end_router,
-                        'local_addr': start_peer
+                        'local_addr': start_peer,
+                        'rrclient': rrclient,
+                        'holdtime': holdtime,
+                        'keepalive': keepalive,
+                        'nhopself': nhopself
                     }
         elif child.tag == str(QName(ns, "Routers")):
             for router in child.findall(str(QName(ns1, "BGPRouterDeclaration"))):
                 asn = router.find(str(QName(ns1, "ASN"))).text
                 hostname = router.find(str(QName(ns1, "Hostname"))).text
-                if router.find(str(QName(ns1, "RRClient"))):
-                    rrclient = '1'
-                else:
-                    rrclient = '0'
                 if hostname == hname:
                     myasn = asn
                     peers = router.find(str(QName(ns1, "Peers")))
@@ -260,8 +260,7 @@ def parse_cpg(cpg, hname):
                         bgp_session = bgp_sessions[peer]
                         if hostname == bgp_session['name']:
                             bgp_session['asn'] = asn
-                        bgp_session['rrclient'] = rrclient
-
+    bgp_sessions = { key: bgp_sessions[key] for key in bgp_sessions if bgp_sessions[key].has_key('asn') and int(bgp_sessions[key]['asn']) != 0 }
     return bgp_sessions, myasn, bgp_peers_with_range
 
 
@@ -306,40 +305,6 @@ def parse_deviceinfo(meta, hwsku):
                 ethernet_interfaces[port_alias_map.get(alias, alias)] = speed
     return ethernet_interfaces
 
-def parse_port_config(hwsku, platform=None, port_config_file=None):
-    port_config_candidates = []
-    if port_config_file != None:
-        port_config_candidates.append(port_config_file)
-    port_config_candidates.append('/usr/share/sonic/hwsku/port_config.ini')
-    if platform != None:
-        port_config_candidates.append(os.path.join('/usr/share/sonic/device', platform, hwsku, 'port_config.ini'))
-    port_config_candidates.append(os.path.join('/usr/share/sonic/platform', hwsku, 'port_config.ini'))
-    port_config_candidates.append(os.path.join('/usr/share/sonic', hwsku, 'port_config.ini'))
-    port_config = None
-    for candidate in port_config_candidates:
-        if os.path.isfile(candidate):
-            port_config = candidate
-            break
-    if port_config == None:
-        return None
-
-    ports = {}
-    with open(port_config) as data:
-        for line in data:
-            if line.startswith('#'):
-                continue
-            tokens = line.split()
-            if len(tokens) < 2:
-                continue
-            name = tokens[0].strip()
-            if len(tokens) == 2:
-                alias = name
-            else:
-                alias = tokens[2].strip()
-            ports[name] = {'alias': alias}
-            port_alias_map[alias] = name
-    return ports
-
 def parse_xml(filename, platform=None, port_config_file=None):
     root = ET.parse(filename).getroot()
     mini_graph_path = filename
@@ -376,8 +341,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
         if child.tag == str(hostname_qn):
             hostname = child.text
 
-    ports = parse_port_config(hwsku, platform, port_config_file)
-
+    (ports, alias_map) = get_port_config(hwsku, platform, port_config_file)
+    port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
             (intfs, lo_intfs, mgmt_intf, vlans, pcs, acls) = parse_dpg(child, hostname)
@@ -430,6 +395,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['VLAN'] = vlans
 
     results['DEVICE_NEIGHBOR'] = neighbors
+    results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key != hostname }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)

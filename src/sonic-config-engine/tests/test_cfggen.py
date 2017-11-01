@@ -113,7 +113,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_bgp(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v "BGP_NEIGHBOR[\'10.0.0.59\']"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'rrclient': '0', 'local_addr': '10.0.0.58', 'asn': '64600', 'name': 'ARISTA02T1'}")
+        self.assertEqual(output.strip(), "{'rrclient': 0, 'name': 'ARISTA02T1', 'local_addr': '10.0.0.58', 'nhopself': 0, 'holdtime': '180', 'asn': '64600', 'keepalive': '60'}")
 
     def test_minigraph_peers_with_range(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v BGP_PEER_RANGE.values\(\)'
@@ -128,4 +128,4 @@ class TestCfgGen(TestCase):
     def test_minigraph_ethernet_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet8\']"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'alias': 'fortyGigE0/8', 'speed': '40000'}")
+        self.assertEqual(output.strip(), "{'alias': 'fortyGigE0/8', 'lanes': '37,38,39,40', 'speed': '40000'}")

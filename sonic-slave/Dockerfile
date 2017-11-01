@@ -202,7 +202,9 @@ RUN apt-get update && apt-get install -y \
         libgtest-dev \
         cmake \
 # For pam_tacplus build
-        autoconf-archive
+        autoconf-archive \
+# For python-based swsscommon
+        swig3.0
 
 # For linux build
 RUN apt-get -y build-dep linux
@@ -224,6 +226,9 @@ RUN pip install j2cli
 
 # For sonic config engine testing
 RUN pip install pyangbind==0.5.10
+
+# For sonic utilities testing
+RUN pip install click-default-group click natsort tabulate
 
 # For supervisor build
 RUN pip install meld3 mock

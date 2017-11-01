@@ -77,11 +77,9 @@ sudo cp {{swsssdk_py2_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
 sudo LANG=C chroot $FILESYSTEM_ROOT pip install $SWSSSDK_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
 
-# Install SONiC Utilities Python package
-SONIC_UTILITIES_WHEEL_NAME=$(basename {{sonic_utilities_wheel_path}})
-sudo cp {{sonic_utilities_wheel_path}} $FILESYSTEM_ROOT/$SONIC_UTILITIES_WHEEL_NAME
-sudo LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_UTILITIES_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_UTILITIES_WHEEL_NAME
+# Install SONiC Utilities (and its dependencies via 'apt-get -y install -f')
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-sonic-utilities_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # SONiC utilities installs bash-completion as a dependency. However, it is disabled by default
 # in bash.bashrc, so we copy a version of the file with it enabled here.
@@ -198,12 +196,20 @@ sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
+## Revise /etc/init.d/networking for Arista switches
+if [ "$image_type" = "aboot" ]; then
+    sudo sed -i 's/udevadm settle/udevadm settle -E \/sys\/class\/net\/eth0/' $FILESYSTEM_ROOT/etc/init.d/networking
+fi
+
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
 
 {% if installer_images.strip() -%}
 {% for image in installer_images.strip().split(' ') -%}
+{% set imagefilename = image.split('/')|last -%}
+{% set imagename = imagefilename.split('.')|first -%}
 sudo LANG=C chroot $FILESYSTEM_ROOT docker load < {{image}}
+sudo LANG=C chroot $FILESYSTEM_ROOT docker tag {{imagename}}:latest {{imagename}}:$(sonic_get_version)
 {% endfor %}
 sudo chroot $FILESYSTEM_ROOT service docker stop
 {% for script in installer_start_scripts.split(' ') -%}

@@ -59,10 +59,6 @@ list :
 ## Include other rules
 ###############################################################################
 
-ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
-ENABLE_SYNCD_RPC = y
-endif
-
 include $(RULES_PATH)/config
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
@@ -207,7 +203,10 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# Build project
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
-	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
+	$(if $($*_DPKG_TARGET),
+		dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
+		dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
+	)
 	popd $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
@@ -223,7 +222,8 @@ SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS))
 #     $(SOME_NEW_DEB)_SRC_PATH = $(SRC_PATH)/project_name
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_PYTHON_STDEB_DEBS += $(SOME_NEW_DEB)
-$(addprefix $(DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+$(addprefix $(DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
+                                                                                    $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS)))
 	$(HEADER)
 	# Apply series of patches if exist
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
@@ -380,7 +380,7 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 ###############################################################################
 
 # targets for building installers with base image
-$(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform onie-image.conf $$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)) $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL) $(IGB_DRIVER) $(SONIC_DEVICE_DATA) $(LIBPAM_TACPLUS) $(LIBNSS_TACPLUS)) $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES))
+$(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform onie-image.conf $$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)) $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL) $(IGB_DRIVER) $(SONIC_DEVICE_DATA) $(SONIC_UTILS) $(LIBPAM_TACPLUS) $(LIBNSS_TACPLUS)) $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export initramfs_tools="$(DEBS_PATH)/$(INITRAMFS_TOOLS)"
@@ -397,7 +397,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : .platform
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
-	export sonic_utilities_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES))"
 	
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
