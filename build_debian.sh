@@ -289,6 +289,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT easy_install pip
 sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
 ## Note: keep pip installed for maintainance purpose
 
+## pexpect is needed by Ansible pexpect module
+sudo LANG=C chroot $FILESYSTEM_ROOT pip install 'pexpect'
+
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
 
