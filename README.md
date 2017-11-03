@@ -2,7 +2,8 @@ Broadcom: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/broad
 Cavium: [![Cavium](https://sonic-jenkins.westus.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/)
 Centec: [![Centec](https://sonic-jenkins.westus.cloudapp.azure.com/job/centec/job/buildimage-centec-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/centec/job/buildimage-centec-all/)
 Mellanox: [![Mellanox](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all)
-P4: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
+P4: [![P4](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
+VS: [![VS](https://sonic-jenkins.westus.cloudapp.azure.com/job/vs/job/buildimage-vs-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/vs/job/buildimage-vs-all)
 
 # sonic-buildimage
 
@@ -10,7 +11,7 @@ P4: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buil
 
 # Description 
 
-Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatiable network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [document](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all).
+Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatiable network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [list](https://github.com/Azure/SONiC/wiki/Supported-Devices-and-Platforms)
 
 # Hardware
 Any server can be a build image server. We are using a server with 1T hard disk. The OS is Ubuntu 16.04.
