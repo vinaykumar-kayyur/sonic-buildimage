@@ -54,4 +54,7 @@ COPY ["start.sh", "orchagent.sh", "/usr/bin/"]
 COPY ["brcm.profile.ini", "/usr/share/sonic/device/vswitch/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
+RUN echo "docker-sonic-vs" > /etc/hostname
+RUN hostname -F /etc/hostname
+
 ENTRYPOINT ["/usr/bin/supervisord"]
