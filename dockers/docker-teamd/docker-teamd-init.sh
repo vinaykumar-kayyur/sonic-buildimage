@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TEAMD_CONF_PATH=/etc/teamd
+TEAMD_CONF_PATH="/etc/teamd"
 
 rm -rf $TEAMD_CONF_PATH
 mkdir -p $TEAMD_CONF_PATH
@@ -25,11 +25,18 @@ for pc in `sonic-cfggen -d -v "PORTCHANNEL.keys() | join(' ') if PORTCHANNEL"`; 
     done
 done
 
-mkdir -p /var/sonic
-echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
+# Create a Python dictionary where the key is the Jinja2 variable name
+# "lags" and the value is a list of dctionaries containing the name of
+# the LAG and the path of the LAG config file. Then output this in
+# JSON format, as we will pass it to sonic-cfggen as additional data
+# below for generating the supervisord config file.
+LAG_INFO_DICT=$(python -c "import json,os,sys; lags_dict = {}; lags_dict['lags'] = [{'name': os.path.basename(file).split('.')[0], 'file': os.path.join('${TEAMD_CONF_PATH}', file)} for file in os.listdir('${TEAMD_CONF_PATH}')]; sys.stdout.write(json.dumps(lags_dict))")
 
-rm -f /var/run/rsyslogd.pid
+# Generate supervisord config file
+mkdir -p /etc/supervisor/conf.d/
+sonic-cfggen -d -a "${LAG_INFO_DICT}" -t /usr/share/sonic/templates/docker-teamd.supervisord.conf.j2 > /etc/supervisor/conf.d/docker-teamd.supervisord.conf
 
-supervisorctl start rsyslogd
-
-supervisorctl start teamd
+# The Docker container should start this script as PID 1, so now that we
+# have generated the proper supervisord configuration, we exec supervisord
+# so that it runs as PID 1 for the duration of the container's lifetime
+exec /usr/bin/supervisord
