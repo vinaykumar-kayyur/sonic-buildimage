@@ -150,7 +150,12 @@ mkdir -p ${rootmnt}/boot
 mount --bind ${rootmnt}/host/$image_dir/boot ${rootmnt}/boot
 
 ## Mount loop device or tmpfs for /var/log
-if $logs_inram; then
+onie_platform=""
+. ${rootmnt}/host/machine.conf
+if $logs_inram ||
+   [ X"$onie_platform"  = X"x86_64-m3000-r0" ] ||
+   [ X"$onie_platform"  = X"x86_64-m3000-r1" ]
+then
   # NOTE: some platforms, when reaching initramfs stage, have a small
   #       limit of mounting tmpfs partition, potentially due to amount
   #       of RAM available in this stage. e.g. Arista 7050-qx32[s] and 7060-cx32s
