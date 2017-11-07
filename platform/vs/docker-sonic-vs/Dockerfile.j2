@@ -43,10 +43,12 @@ debs/{{ deb }}{{' '}}
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-RUN sed -ri 's/^daemonize yes$/daemonize no/;                                           \
+RUN sed -ri 's/^(save .*$)/# \1/g;                                                      \
+             s/^daemonize yes$/daemonize no/;                                           \
              s/^logfile .*$/logfile ""/;                                                \
              s/^# syslog-enabled no$/syslog-enabled no/;                                \
-             s/^# unixsocket/unixsocket/                                                \
+             s/^# unixsocket/unixsocket/;                                               \
+             s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/ \
             ' /etc/redis/redis.conf
 
 COPY ["50-default.conf", "/etc/rsyslog.d/"]
@@ -55,6 +57,5 @@ COPY ["brcm.profile.ini", "/usr/share/sonic/device/vswitch/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
 RUN echo "docker-sonic-vs" > /etc/hostname
-RUN hostname -F /etc/hostname
 
 ENTRYPOINT ["/usr/bin/supervisord"]
