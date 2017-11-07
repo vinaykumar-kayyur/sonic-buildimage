@@ -44,7 +44,6 @@
 [submodule "src/sonic-utilities"]
 	path = src/sonic-utilities
 	url = https://github.com/Azure/sonic-utilities
-	branch = v1.0.3
 [submodule "platform/broadcom/sonic-platform-modules-s6000"]
 	path = platform/broadcom/sonic-platform-modules-s6000
 	url = https://github.com/Azure/sonic-platform-modules-s6000
@@ -66,3 +65,6 @@
 [submodule "platform/broadcom/sonic-platform-modules-cel"]
 	path = platform/broadcom/sonic-platform-modules-cel
 	url = https://github.com/celestica-Inc/sonic-platform-modules-cel.git
+[submodule "src/sonic-frr/frr"]
+	path = src/sonic-frr/frr
+	url = https://github.com/FRRouting/frr.git
