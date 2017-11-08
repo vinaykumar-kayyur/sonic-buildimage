@@ -1,4 +1,4 @@
-FROM docker-base
+FROM docker-config-engine
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -19,12 +19,10 @@ debs/{{ deb }}{{' '}}
 {%- endfor %}
 
 COPY ["start.sh", "/usr/bin/"]
-COPY ["mlnx-fw-upgrade.sh", "/usr/bin/"]
-COPY ["/debs/fw-SPC.mfa", "/etc/mlnx/"]
+COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/bin/bash"]
-CMD ["/usr/bin/start.sh"]
+ENTRYPOINT ["/usr/bin/supervisord"]

@@ -1,15 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# Remove stale rsyslog PID file if it exists
 rm -f /var/run/rsyslogd.pid
-service rsyslog start
 
-VLAN_IFACE_NAME=`sonic-cfggen -m /etc/sonic/minigraph.xml -v "minigraph_vlan_interfaces[0]['attachto']"`
+# Start rsyslog
+supervisorctl start rsyslogd
 
-# Wait for the VLAN to come up (i.e., 'ip link show' returns 0)
-until ip link show $VLAN_IFACE_NAME > /dev/null 2>&1; do
-    sleep 1
-done
+# Wait for all interfaces to come up before starting the DHCP relay agent(s)
+/usr/bin/wait_for_intf.sh
 
-# Start the DHCP relay
-service isc-dhcp-relay start
-
+# Start the DHCP relay agent(s)
+supervisorctl start isc-dhcp-relay:*

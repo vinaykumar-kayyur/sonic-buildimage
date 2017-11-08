@@ -1,8 +1,12 @@
-Broadcom: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
-Cavium: [![Cavium](https://sonic-jenkins.westus.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/)
-Centec: [![Centec](https://sonic-jenkins.westus.cloudapp.azure.com/job/centec/job/buildimage-centec-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/centec/job/buildimage-centec-all/)
+*master*: Broadcom: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
 Mellanox: [![Mellanox](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all)
-P4: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
+P4: [![P4](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
+VS: [![VS](https://sonic-jenkins.westus.cloudapp.azure.com/job/vs/job/buildimage-vs-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/vs/job/buildimage-vs-all)
+
+*201709*: Cavium: [![Cavium](https://sonic-jenkins.westus.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/)
+Centec: [![Centec](https://sonic-jenkins.westus.cloudapp.azure.com/job/centec/job/buildimage-centec-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/centec/job/buildimage-centec-all/)
+Nephos: [![Nephos](https://sonic-jenkins.westus.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/)
+Marvell: [![Marvell](https://sonic-jenkins.westus.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-all/badge/icon)](https://sonic-jenkins.westus.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-all/)
 
 # sonic-buildimage
 
@@ -10,43 +14,44 @@ P4: [![Broadcom](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buil
 
 # Description 
 
-Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatiable network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [document](https://sonic-jenkins.westus.cloudapp.azure.com/job/p4/job/buildimage-p4-all).
+Following is the instruction on how to build an [(ONIE)](https://github.com/opencomputeproject/onie) compatiable network operating system (NOS) installer image for network switches, and also how to build docker images running inside the NOS. Note that SONiC image are build per ASIC platform. Switches using the same ASIC platform share a common image. For a list of supported switches and ASIC, please refer to this [list](https://github.com/Azure/SONiC/wiki/Supported-Devices-and-Platforms)
+
+# Hardware
+Any server can be a build image server. We are using a server with 1T hard disk. The OS is Ubuntu 16.04.
 
 # Prerequisites
 
 ## SAI Version 
-SONiC V2 is using [SAI 0.9.4](https://github.com/opencomputeproject/SAI/tree/v0.9.4). 
+Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release. 
 
 ## Clone or fetch the code repository with all git submodules
 To clone the code repository recursively, assuming git version 1.9 or newer:
 
     git clone --recursive https://github.com/Azure/sonic-buildimage.git
 
-NOTE: If the repo has already been cloned, however there are no files under the submodule directories (e.g., src/lldpd, src/ptf, src/sonic-linux-kernel, etc.), you can manually fetch all the git submodules as follows:
-
-    git submodule update --init --recursive
-
-You also need to change all git paths to relative path as we build all submodules inside the docker:
-
-    git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $(realpath --relative-to=. $(cut -d" " -f2 .git))" > .git'
-    
 ## Usage
 
 To build SONiC installer image and docker images, run the following commands:
 
+    # Execute make init once after cloning the repo, or fetched remote repo with submodule updates
+    make init
+
+    # Execute make configure once to configure ASIC
     make configure PLATFORM=[ASIC_VENDOR]
+
     make
 
  **NOTE**: We recommend reserving 50G free space to build one platform.
     
-The SONIiC installer contains all docker images needed. SONiC use one image for all switches devices of a same ASIC vendor. The supported ASIC vendors are:
+The SONiC installer contains all docker images needed. SONiC uses one image for all devices of a same ASIC vendor. The supported ASIC vendors are:
 
 - PLATFORM=broadcom
-- PLATFORM=marvell (*pending*)
+- PLATFORM=marvell 
 - PLATFORM=mellanox
 - PLATFORM=cavium
 - PLATFORM=centec
 - PLATFORM=p4
+- PLATFORM=vs
 
 For Broadcom ASIC, we build ONIE and EOS image. EOS image is used for Arista devices, ONIE image is used for all other Broadcom ASIC based devices. 
 
@@ -92,6 +97,7 @@ This may take a while, but it is a one-time action, so please be patient.
   - docker-syncd-cavm.gz: docker image for the daemon to sync database and Cavium switch ASIC (gzip tar archive)
   - docker-syncd-mlnx.gz: docker image for the daemon to sync database and Mellanox switch ASIC (gzip tar archive)
   - docker-sonic-p4.gz: docker image for all-in-one for p4 software switch (gzip tar archive)
+  - docker-sonic-vs.gz: docker image for all-in-one for software virtual switch (gzip tar archive)
 
 ## Contribution Guide
 

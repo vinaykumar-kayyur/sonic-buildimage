@@ -1,10 +1,17 @@
+{# only IPv4 decapsulation is supported #}
+{% set ipv4_loopback_addresses = [] %}
+{% for (name, prefix) in LOOPBACK_INTERFACE %}
+    {%- if prefix | ipv4 %}
+        {%- set ipv4_loopback_addresses = ipv4_loopback_addresses.append(prefix) %}
+    {%- endif %}
+{% endfor %}
 [
     {
         "TUNNEL_DECAP_TABLE:IPINIP_TUNNEL" : {
             "tunnel_type":"IPINIP",
-            "src_ip":"{{ minigraph_lo_interfaces[0]['addr'] }}",
-            "dst_ip":"{{ minigraph_lo_interfaces[0]['addr'] }}",
-{% if minigraph_hwsku in [ 'ACS-MSN2700', 'ACS-MSN2410', 'ACS-MSN2100' ] %}
+            "src_ip":"{{ ipv4_loopback_addresses | first | ip }}",
+            "dst_ip":"{% for prefix in ipv4_loopback_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
+{% if onie_switch_asic == "mlnx" %}
             "dscp_mode":"uniform",
             "ecn_mode":"standard",
 {% else %}
@@ -16,4 +23,3 @@
         "OP": "SET"
     }
 ]
-

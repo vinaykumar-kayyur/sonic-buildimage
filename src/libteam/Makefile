@@ -17,6 +17,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Apply patch
 	git apply ../0001-libteam-Add-team_get_port_enabled-function.patch
 	git apply ../0002-libteam-Temporarily-remove-redundant-debug-mes.patch
+	git apply ../0003-teamd-lacp-runner-will-send-lacp-update-right-after-.patch
 	git apply ../0004-libteam-Add-lacp-fallback-support-for-single-member-.patch
 	popd
 
@@ -29,7 +30,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	mv tmp/debian libteam/
 	rm -rf tmp
 	pushd ./libteam
-	dpkg-buildpackage -rfakeroot -b -us -uc
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/

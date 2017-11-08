@@ -63,6 +63,7 @@ if [[ -d $FILESYSTEM_ROOT ]]; then
 fi
 mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
+mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
 ## Build a basic Debian system by debootstrap
@@ -116,21 +117,24 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/linux-image-3.16.0-4-amd64_*.de
 ## Update initramfs for booting with squashfs+aufs
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
 
-IMAGE_VERSION=$(. functions.sh && sonic_get_version)
-
 ## Hook into initramfs: change fs type from vfat to ext4 on arista switches
 sudo mkdir -p $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/
-sed -i -e "s/%%IMAGE_VERSION%%/$IMAGE_VERSION/g" files/initramfs-tools/arista-convertfs
 sudo cp files/initramfs-tools/arista-convertfs $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
 sudo cp files/initramfs-tools/mke2fs $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
+
+# Hook into initramfs: rename the management interfaces on arista switches
+sudo cp files/initramfs-tools/arista-net $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-net
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-net
 
 ## Hook into initramfs: after partition mount and loop file mount
 ## 1. Prepare layered file system
 ## 2. Bind-mount docker working directory (docker aufs cannot work over aufs rootfs)
 sudo cp files/initramfs-tools/union-mount $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mount
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mount
+sudo cp files/initramfs-tools/varlog $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
@@ -179,12 +183,14 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     sudo                    \
     vim                     \
     tcpdump                 \
+    dbus                    \
     ntp                     \
     ntpstat                 \
     openssh-server          \
     python                  \
     python-setuptools       \
     rsyslog                 \
+    monit                   \
     python-apt              \
     traceroute              \
     iputils-ping            \
@@ -199,7 +205,15 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     logrotate               \
     curl                    \
     kexec-tools             \
-    unzip
+    less                    \
+    unzip                   \
+    gdisk                   \
+    grub2-common
+
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
+    grub-pc-bin
+
+sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
@@ -211,10 +225,35 @@ sudo cp -f files/sshd/sshd.service $FILESYSTEM_ROOT/lib/systemd/system/ssh.servi
 ## Config sshd
 sudo augtool --autosave "set /files/etc/ssh/sshd_config/UseDNS no" -r $FILESYSTEM_ROOT
 
+## Config monit
+sudo sed -i '
+    s/^# set logfile syslog/set logfile syslog/;
+    s/^\s*set logfile \/var/# set logfile \/var/;
+    s/^# set httpd port/set httpd port/;
+    s/^#    use address localhost/   use address localhost/;
+    s/^#    allow localhost/   allow localhost/;
+    s/^#    allow admin:monit/   allow admin:monit/;
+    s/^#    allow @monit/   allow @monit/;
+    s/^#    allow @users readonly/   allow @users readonly/
+    ' $FILESYSTEM_ROOT/etc/monit/monitrc
+
+sudo tee -a $FILESYSTEM_ROOT/etc/monit/monitrc > /dev/null <<'EOF'
+check filesystem root-aufs with path /
+  if space usage > 90% for 5 times within 10 cycles then alert
+check system $HOST
+  if memory usage > 90% for 5 times within 10 cycles then alert
+  if cpu usage (user) > 90% for 5 times within 10 cycles then alert
+  if cpu usage (system) > 90% for 5 times within 10 cycles then alert
+EOF
+
 ## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %p'
+set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p'
+
+set /files/etc/sysctl.conf/kernel.softlockup_panic 1
+set /files/etc/sysctl.conf/kernel.panic 10
+set /files/etc/sysctl.conf/fs.suid_dumpable 2
 
 set /files/etc/sysctl.conf/net.ipv4.conf.default.forwarding 1
 set /files/etc/sysctl.conf/net.ipv4.conf.all.forwarding 1
@@ -231,12 +270,18 @@ set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_filter 0
 set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_notify 1
 set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_ignore 2
 
+set /files/etc/sysctl.conf/net.ipv4.neigh.default.base_reachable_time_ms 1800000
+
 set /files/etc/sysctl.conf/net.ipv6.conf.default.forwarding 1
 set /files/etc/sysctl.conf/net.ipv6.conf.all.forwarding 1
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
+
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
+
+set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
@@ -278,6 +323,14 @@ if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
 fi
 
+## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...
+if [ "${enable_organization_extensions}" = "y" ]; then
+   if [ -f files/build_templates/organization_extensions.sh ]; then
+      sudo chmod 755 files/build_templates/organization_extensions.sh 
+      ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
+   fi
+fi
+
 ## Clean up apt
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoremove
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoclean
@@ -286,8 +339,13 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/
 
 ## Umount all
 echo '[INFO] Umount all'
+## Display all process details access /proc
+sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
+## Kill the processes
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
-sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc
+## Wait fuser fully kill the processes
+sleep 15
+sudo umount $FILESYSTEM_ROOT/proc || true
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
@@ -295,7 +353,8 @@ sudo mkdir $FILESYSTEM_ROOT/host
 ## Compress most file system into squashfs file
 sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
-sudo du -hs $FILESYSTEM_ROOT
+## Note: -x to skip directories on different file systems, such as /proc
+sudo du -hsx $FILESYSTEM_ROOT
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 ## Compress docker files

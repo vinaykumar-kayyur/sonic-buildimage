@@ -1,45 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 TEAMD_CONF_PATH=/etc/teamd
 
-# Before teamd could automatically add newly created host interfaces into the
-# LAG, this workaround will be needed. It will remove the obsolete files and
-# net devices that are failed to be removed in the previous run.
-function start_app {
-    # Remove *.pid and *.sock files if there are any
-    rm -f /var/run/teamd/*
-    if [ -d $TEAMD_CONF_PATH ]; then
-        for f in $TEAMD_CONF_PATH/*; do
-            # Remove netdevs if there are any
-            intf=`echo $f | awk -F'[/.]' '{print $4}'`
-            ip link del $intf
-            teamd -f $f -d
-        done
-    fi
-    teamsyncd &
-}
+rm -rf $TEAMD_CONF_PATH
+mkdir -p $TEAMD_CONF_PATH
 
-function clean_up {
-    pkill -9 teamd
-    pkill -9 teamsyncd
-    service rsyslog stop
-    exit
-}
+SONIC_ASIC_TYPE=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type)
+MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
 
-trap clean_up SIGTERM SIGKILL
+# Align last byte
+if [ "$SONIC_ASIC_TYPE" == "mellanox" -o "$SONIC_ASIC_TYPE" == "centec" ]; then
+    last_byte=$(python -c "print '$MAC_ADDRESS'[-2:]")
+    aligned_last_byte=$(python -c "print format(int(int('$last_byte', 16) & 0b11000000), '02x')")  # put mask and take away the 0x prefix
+    MAC_ADDRESS=$(python -c "print '$MAC_ADDRESS'[:-2] + '$aligned_last_byte'")                    # put aligned byte into the end of MAC
+fi
+
+for pc in `sonic-cfggen -d -v "PORTCHANNEL.keys() | join(' ') if PORTCHANNEL"`; do
+    sonic-cfggen -d -a '{"pc":"'$pc'","hwaddr":"'$MAC_ADDRESS'"}' -t /usr/share/sonic/templates/teamd.j2 > $TEAMD_CONF_PATH/$pc.conf
+    # bring down all member ports before starting teamd
+    for member in $(sonic-cfggen -d -v "PORTCHANNEL['$pc']['members'] | join(' ')" ); do
+        if [ -L /sys/class/net/$member ]; then
+            ip link set $member down
+        fi
+    done
+done
+
+mkdir -p /var/sonic
+echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
 
 rm -f /var/run/rsyslogd.pid
-service rsyslog start
 
-# Before teamd could automatically add newly created host interfaces into the
-# LAG, this workaround will wait until the host interfaces are created and then
-# the processes will be started.
-while true; do
-    # Check if front-panel ports are configured
-    result=`echo -en "SELECT 0\nHGETALL PORT_TABLE:ConfigDone" | redis-cli | sed -n 3p`
-    if [ "$result" == "0" ]; then
-        start_app
-        read
-    fi
-    sleep 1
-done
+supervisorctl start rsyslogd
+
+supervisorctl start teamd

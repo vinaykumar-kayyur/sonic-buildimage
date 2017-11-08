@@ -2,10 +2,6 @@
 ## Configuration parameters for SONiC build system
 ###############################################################################
 
-# SONIC_CONFIG_VERBOSE - enable echoing for rules commands.
-# Uncomment next line to enable:
-# SONIC_CONFIG_VERBOSE = y
-
 # SONIC_CONFIG_PRINT_DEPENDENCIES - show dependencies for each invoked target.
 # Before executing rule for each target its dependencies are printed to console.
 # Uncomment next line to enable:
@@ -16,11 +12,9 @@
 # container.
 SONIC_CONFIG_BUILD_JOBS = 1
 
-# SONIC_CONFIG_LOG_TO_FILES - print output from execution of rule for each
-# target into separate log file under target/log/.
-# Useful when executing parallel build
-# Uncomment next line to enable:
-SONIC_CONFIG_LOG_TO_FILES = y
+# SONIC_CONFIG_MAKE_JOBS - set number of parallel make jobs per package.
+# Corresponding -j argument will be passed to make/dpkg commands that build separate packages
+SONIC_CONFIG_MAKE_JOBS = $(shell nproc)
 
 # SONIC_CONFIG_ENABLE_COLORS - enable colored output in build system.
 # Comment next line to disable:
@@ -38,6 +32,10 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # If not set (default behavior) the default minigraph built into the image will be used.
 # ENABLE_DHCP_GRAPH_SERVICE = y
 
+# SHUTDOWN_BGP_ON_START - if set to y all bgp sessions will be in admin down state when 
+# bgp service starts.
+# SHUTDOWN_BGP_ON_START = y
+
 # SONIC_CONFIG_DEBUG - install debug packages
 # Uncomment next line to enable:
 # SONIC_CONFIG_DEBUG = y
@@ -46,3 +44,10 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # Quagga will be the default routing-stack for all the SONiC platforms. Other supported
 # routing-stacks: frr, gobgp.
 SONIC_ROUTING_STACK = quagga
+
+# ENABLE_SYNCD_RPC - build docker-syncd with rpc packages for testing purposes.
+# Uncomment to enable:
+# ENABLE_SYNCD_RPC = y
+ 
+# Enable Origanization Extensions - Specific to the deployment scenarios of the Organization
+ENABLE_ORGANIZATION_EXTENSIONS = y
