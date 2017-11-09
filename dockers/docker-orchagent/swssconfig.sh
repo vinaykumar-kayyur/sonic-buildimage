@@ -38,6 +38,8 @@ elif [ "$HWSKU" == "Arista-7050-QX32" ]; then
 elif [[ "$HWSKU" == "ACS-MSN27"* ]]; then
     sonic-cfggen -m /etc/sonic/minigraph.xml -t /usr/share/sonic/templates/msn27xx.32ports.buffers.json.j2 > /etc/swss/config.d/msn27xx.32ports.buffers.json
     SWSSCONFIG_ARGS+="msn27xx.32ports.buffers.json msn27xx.32ports.qos.json "
+elif [ "$HWSKU" == "Arista-7260CX3-D108C8" ]; then
+    SWSSCONFIG_ARGS+="th2.118ports.buffers.json th2.118ports.qos.json "
 fi
 
 for file in $SWSSCONFIG_ARGS; do
