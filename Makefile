@@ -25,8 +25,8 @@ $(shell rm -f .screen)
 
 MAKEFLAGS += -B
 
-SLAVE_BASE_TAG = $(shell shasum sonic-slave/Dockerfile | awk '{print substr($$1,0,11);}')
-SLAVE_TAG = $(shell cat sonic-slave/Dockerfile.user sonic-slave/Dockerfile | shasum | awk '{print substr($$1,0,11);}')
+SLAVE_BASE_TAG = $(shell sha1sum sonic-slave/Dockerfile | awk '{print substr($$1,0,11);}')
+SLAVE_TAG = $(shell cat sonic-slave/Dockerfile.user sonic-slave/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
 SLAVE_BASE_IMAGE = sonic-slave-base
 SLAVE_IMAGE = sonic-slave-$(USER)
 
@@ -56,11 +56,11 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
-                           SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
+                           ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME)
 
-.PHONY: sonic-slave-build sonic-slave-bash
+.PHONY: sonic-slave-build sonic-slave-bash init
 
 .DEFAULT_GOAL :=  all
 
@@ -89,3 +89,7 @@ sonic-slave-bash :
 	    { echo Image $(SLAVE_IMAGE):$(SLAVE_TAG) not found. Building... ; \
 	    $(DOCKER_BUILD) ; }
 	@$(DOCKER_RUN) -t $(SLAVE_IMAGE):$(SLAVE_TAG) bash
+
+init :
+	git submodule update --init --recursive
+	git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
