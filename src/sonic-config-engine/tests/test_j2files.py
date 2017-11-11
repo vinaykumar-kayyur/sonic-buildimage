@@ -86,7 +86,7 @@ class TestJ2Files(TestCase):
         teamd_conf_dir = os.path.join(self.test_dir, 'sample_output', 't0_sample_output')
 
         lags_dict = {}
-        lags_dict['lags'] = [{'name': os.path.basename(file).split('.')[0], 'file': os.path.join(teamd_conf_dir, file)} for file in os.listdir(teamd_conf_dir)]
+        lags_dict['lags'] = [{'name': os.path.basename(file).split('.')[0], 'file': os.path.join(teamd_conf_dir, file)} for file in sorted(os.listdir(teamd_conf_dir))]
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -a \'' + json.dumps(lags_dict) + '\' -t ' + template_path + ' > ' + self.output_file
 
         self.run_script(argument)

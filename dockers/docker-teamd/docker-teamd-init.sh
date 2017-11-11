@@ -31,7 +31,7 @@ done
 # JSON format, as we will pass it to sonic-cfggen as additional data
 # below for generating the supervisord config file.
 # Example output: {"lags": [{"name": "PortChannel1", "file": "/etc/teamd/PortChannel1.conf"}, {"name": "PortChannel2", "file": "/etc/teamd/PortChannel2.conf"}]}
-LAG_INFO_DICT=$(python -c "import json,os,sys; lags_dict = {}; lags_dict['lags'] = [{'name': os.path.basename(file).split('.')[0], 'file': os.path.join('${TEAMD_CONF_PATH}', file)} for file in os.listdir('${TEAMD_CONF_PATH}')]; sys.stdout.write(json.dumps(lags_dict))")
+LAG_INFO_DICT=$(python -c "import json,os,sys; lags_dict = {}; lags_dict['lags'] = [{'name': os.path.basename(file).split('.')[0], 'file': os.path.join('${TEAMD_CONF_PATH}', file)} for file in sorted(os.listdir('${TEAMD_CONF_PATH}'))]; sys.stdout.write(json.dumps(lags_dict))")
 
 # Generate supervisord config file
 mkdir -p /etc/supervisor/conf.d/
