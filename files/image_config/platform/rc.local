@@ -97,11 +97,6 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
         sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'"}}}' --print-data > /etc/sonic/init_cfg.json
     fi
 
-    if [ -f /usr/share/sonic/device/$platform/qos.json ]; then
-        sonic-cfggen -j /etc/sonic/init_cfg.json -j /usr/share/sonic/device/$platform/qos.json --print-data > /tmp/init_cfg.json
-        mv /tmp/init_cfg.json /etc/sonic/init_cfg.json
-    fi
-
     # Try to take old configuration saved during installation
     if test_config; then
         rm -f /host/old_config/sonic_version.yml
@@ -118,6 +113,13 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
         # Use default minigraph.xml
         cp /usr/share/sonic/device/$platform/minigraph.xml /etc/sonic/
         sonic-cfggen -m -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
+    fi
+
+    HWSKU=`sonic-cfggen -m /etc/sonic/minigraph.xml -d -v "DEVICE_METADATA['localhost']['hwsku']"`
+
+    if [ -f /usr/share/sonic/device/$platform/$HWSKU/qos.json ]; then
+        sonic-cfggen -j /etc/sonic/init_cfg.json -j /usr/share/sonic/device/$platform/$HWSKU/qos.json --print-data > /tmp/init_cfg.json
+        mv /tmp/init_cfg.json /etc/sonic/init_cfg.json
     fi
 
     if [ -d /host/image-$sonic_version/platform/$platform ]; then
