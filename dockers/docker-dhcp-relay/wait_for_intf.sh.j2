@@ -30,7 +30,7 @@ function wait_until_iface_ready
 }
 
 
-# Wait for all interfaces to come up before starting the DHCP relay
+# Wait for all interfaces to come up and have IPv4 addresses assigned
 {% for (name, prefix) in INTERFACE %}
 wait_until_iface_ready {{ name }}
 {% endfor %}
