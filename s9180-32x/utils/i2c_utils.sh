@@ -1125,7 +1125,7 @@ function _i2c_port_led_set {
 
     #Set Blink/Unblink
     if [ ${QSFP_PORT} -lt 33 ]; then
-        mask=$((  0x1  <<  $(( $((${QSFP_PORT} - 0x1))  % 0x4 )) ))
+        mask=$((  0x1  <<  $(( $((${QSFP_PORT} - 0x1))  % 0x8 )) ))
     elif [ ${QSFP_PORT} = 33 ]; then
         value=1
     elif [ ${QSFP_PORT} = 34 ]; then
