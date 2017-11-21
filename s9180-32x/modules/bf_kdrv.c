@@ -61,6 +61,7 @@
 #include <linux/sched.h>
 #include <linux/cdev.h>
 #include <linux/aer.h>
+#include <linux/string.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 16, 0)
 //#error unsupported linux kernel version
@@ -71,7 +72,8 @@ extern int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
 extern int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries, int minvec, int maxvec);
 
 #define PCI_VENDOR_ID_BF                0x1d1c
-#define TOFINO_DEV_ID                   1
+#define TOFINO_DEV_ID_A0                0x01
+#define TOFINO_DEV_ID_B0                0x10
 
 #ifndef PCI_MSIX_ENTRY_SIZE
 #define PCI_MSIX_ENTRY_SIZE             16
@@ -114,7 +116,6 @@ struct bf_dev_info {
   struct device           *dev;
   int                     minor;
   atomic_t                event[BF_MSIX_ENTRY_CNT];
-  struct fasync_struct    *async_queue;
   wait_queue_head_t       wait;
   const char              *version;
   struct bf_dev_mem       mem[BF_MAX_BAR_MAPS];
@@ -145,12 +146,22 @@ struct bf_pci_dev {
   struct bf_int_vector bf_int_vec[BF_MSIX_ENTRY_CNT];
 };
 
+/* Keep any global information here that must survive even after the
+ * bf_pci_dev is free-ed up.
+ */
+struct bf_global {
+  struct bf_pci_dev *bfdev ;
+  struct fasync_struct *async_queue;
+};
+
 static int bf_major;
 static int bf_minor[BF_MAX_DEVICE_CNT] = {0};
 static struct class *bf_class = NULL;
 static char *intr_mode = NULL;
 static enum bf_intr_mode bf_intr_mode_default = BF_INTR_MODE_MSI;
 static spinlock_t bf_nonisr_lock;
+/* dev->minor should index into this array */
+static struct bf_global bf_global[BF_MAX_DEVICE_CNT];
 
 /* a pool of minor numbers is maintained */
 /* return the first available minor number */
@@ -348,6 +359,7 @@ static irqreturn_t bf_interrupt(int irq, void *bfdev_id)
 struct bf_listener {
   struct bf_pci_dev *bfdev;
   s32 event_count[BF_MSIX_ENTRY_CNT];
+  int minor;
 };
 
 static unsigned int bf_poll(struct file *filep, poll_table *wait)
@@ -442,12 +454,19 @@ static int bf_mmap(struct file *filep, struct vm_area_struct *vma)
 
 static int bf_fasync(int fd, struct file *filep, int mode)
 {
-  struct bf_pci_dev *bfdev = ((struct bf_listener *)filep->private_data)->bfdev;
+  int minor;
 
-  if (mode == 0 && &bfdev->info.async_queue == NULL) {
+  if (!filep->private_data) {
+    return (-EINVAL);
+  }
+  minor = ((struct bf_listener *)filep->private_data)->minor;
+  if (minor >= BF_MAX_DEVICE_CNT) {
+    return (-EINVAL);
+  }
+  if (mode == 0 && &bf_global[minor].async_queue == NULL) {
     return 0; /* nothing to do */
   }
-  return (fasync_helper(fd, filep, mode, &bfdev->info.async_queue));
+  return (fasync_helper(fd, filep, mode, &bf_global[minor].async_queue));
 }
 
 static int bf_open(struct inode *inode, struct file *filep)
@@ -460,6 +479,7 @@ static int bf_open(struct inode *inode, struct file *filep)
   listener = kmalloc(sizeof(*listener), GFP_KERNEL);
   if (listener) {
     listener->bfdev = bfdev;
+    listener->minor = bfdev->info.minor;
     for (i = 0; i < BF_MSIX_ENTRY_CNT; i++)
       listener->event_count[i] = atomic_read(&bfdev->info.event[i]);
     filep->private_data = listener;
@@ -806,6 +826,8 @@ bf_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
   int err, pci_use_highmem;
   int i, num_irq;
 
+  memset(bf_global, 0, sizeof(bf_global));
+
   bfdev = kzalloc(sizeof(struct bf_pci_dev), GFP_KERNEL);
   if (!bfdev)
     return -ENOMEM;
@@ -815,8 +837,6 @@ bf_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
     bfdev->bf_int_vec[i].int_vec_offset = i;
     bfdev->bf_int_vec[i].bf_dev = bfdev;
   }
-
-  bfdev->info.async_queue = NULL;
 
   /* initialize intr_mode to none */
   bfdev->mode = BF_INTR_MODE_NONE;
@@ -960,6 +980,8 @@ bf_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
   sprintf(bfdev->name, "bf_%d", bfdev->info.minor);
   pci_set_drvdata(pdev, bfdev);
 
+  bf_global[bfdev->info.minor].async_queue = NULL;
+
   dev_info(&pdev->dev, "bf device %d registered with irq %ld\n",
   bfdev->instance, bfdev->info.irq);
   printk(KERN_ALERT "bf probe ok\n");
@@ -1020,16 +1042,18 @@ static pci_ers_result_t bf_pci_error_detected(struct pci_dev *pdev,
                                               pci_channel_state_t state)
 {
   struct bf_pci_dev *bfdev = pci_get_drvdata(pdev);
+  int minor;
 
   if (!bfdev) {
     return PCI_ERS_RESULT_NONE;
   }
-  printk(KERN_ERR "pci_err_detected state %d asyncQ %p\n", state, &bfdev->info.async_queue);
+  printk(KERN_ERR "pci_err_detected state %d\n", state);
   if (state == pci_channel_io_perm_failure || state == pci_channel_io_frozen) {
     bfdev->info.pci_error_state = 1;
     /* send a signal to the user space program of the error */
-    if (bfdev->info.async_queue) {
-      kill_fasync(&bfdev->info.async_queue, SIGIO, POLL_ERR);
+    minor = bfdev->info.minor;
+    if (minor < BF_MAX_DEVICE_CNT && bf_global[minor].async_queue) {
+      kill_fasync(&bf_global[minor].async_queue, SIGIO, POLL_ERR);
     }
     return PCI_ERS_RESULT_DISCONNECT;
   } else {
@@ -1096,7 +1120,8 @@ bf_config_intr_mode(char *intr_str)
 }
 
 static const struct pci_device_id bf_pci_tbl[] = {
-  {PCI_VDEVICE(BF, TOFINO_DEV_ID), 0},
+  {PCI_VDEVICE(BF, TOFINO_DEV_ID_A0), 0},
+  {PCI_VDEVICE(BF, TOFINO_DEV_ID_B0), 0},
   /* required last entry */
   { .device = 0 }
 };
@@ -1140,7 +1165,7 @@ module_exit(bfdrv_exit);
 
 module_param(intr_mode, charp, S_IRUGO);
 MODULE_PARM_DESC(intr_mode,
-"bf interrupt mode (default=msi):\n"
+"bf interrupt mode (default=msix):\n"
 "    " BF_INTR_MODE_MSIX_NAME "       Use MSIX interrupt\n"
 "    " BF_INTR_MODE_MSI_NAME "        Use MSI interrupt\n"
 "    " BF_INTR_MODE_LEGACY_NAME "     Use Legacy interrupt\n"
