@@ -1,7 +1,6 @@
 FROM docker-config-engine
 
-RUN echo 'deb http://debian-archive.trafficmanager.net/debian jessie-backports main' >> /etc/apt/sources.list && \
-        echo 'deb [arch=amd64] http://packages.microsoft.com/repos/sonic-dev/ jessie main' >> /etc/apt/sources.list
+RUN echo 'deb [arch=amd64] http://packages.microsoft.com/repos/sonic-dev/ jessie main' >> /etc/apt/sources.list
 
 COPY [ \
 {% for deb in docker_snmp_sv2_debs.split(' ') -%}
