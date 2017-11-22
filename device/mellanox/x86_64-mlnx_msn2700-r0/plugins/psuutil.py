@@ -15,7 +15,7 @@ try:
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")
 
-class PSUutil(PsuBase):
+class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
     def __init__(self):
