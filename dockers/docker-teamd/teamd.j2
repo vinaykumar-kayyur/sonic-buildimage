@@ -4,6 +4,9 @@
     "runner": {
         "name": "lacp",
         "active": true,
+{% if PORTCHANNEL[pc]['fallback'] %}
+        "fallback": {{ PORTCHANNEL[pc]['fallback'] }},
+{% endif %}
 {# Use 75% links upperbound as min-links #}
         "min_ports": {{ (PORTCHANNEL[pc]['members'] | length * 0.75) | round(0, 'ceil') | int }},
         "tx_hash": ["eth", "ipv4", "ipv6"]
