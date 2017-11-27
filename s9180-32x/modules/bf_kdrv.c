@@ -110,6 +110,13 @@ struct bf_dev_mem {
   void __iomem            *internal_addr;
 };
 
+struct bf_listener {
+  struct bf_pci_dev *bfdev;
+  s32 event_count[BF_MSIX_ENTRY_CNT];
+  int minor;
+  struct bf_listener *next;
+};
+
 /* device information */
 struct bf_dev_info {
   struct module           *owner;
@@ -139,11 +146,12 @@ struct bf_int_vector {
 struct bf_pci_dev {
 	struct bf_dev_info info;
 	struct pci_dev *pdev;
-  struct cdev cdev;
 	enum   bf_intr_mode mode;
 	u8     instance;
 	char   name[16];
   struct bf_int_vector bf_int_vec[BF_MSIX_ENTRY_CNT];
+  struct bf_listener *listener_head; /* head of a singly linked list of
+                                        listeners */
 };
 
 /* Keep any global information here that must survive even after the
@@ -151,6 +159,7 @@ struct bf_pci_dev {
  */
 struct bf_global {
   struct bf_pci_dev *bfdev ;
+  struct cdev *bf_cdev;
   struct fasync_struct *async_queue;
 };
 
@@ -162,6 +171,53 @@ static enum bf_intr_mode bf_intr_mode_default = BF_INTR_MODE_MSI;
 static spinlock_t bf_nonisr_lock;
 /* dev->minor should index into this array */
 static struct bf_global bf_global[BF_MAX_DEVICE_CNT];
+
+static void bf_add_listener(struct bf_pci_dev *bfdev,
+                            struct bf_listener *listener)
+{
+  struct bf_listener **cur_listener = &bfdev->listener_head;
+
+  if (!listener) {
+    return;
+  }
+  spin_lock(&bf_nonisr_lock);
+
+  while (*cur_listener) {
+      cur_listener = &((*cur_listener)->next);
+  }
+  *cur_listener = listener;
+  listener->next = NULL;
+
+  spin_unlock(&bf_nonisr_lock);
+}
+
+static void bf_remove_listener(struct bf_pci_dev *bfdev,
+                               struct bf_listener *listener)
+{
+  struct bf_listener **cur_listener = &bfdev->listener_head;
+
+  /* in case of certain error conditions, this function might be called after      bf_pci_remove()
+   */
+  if (!bfdev || !listener) {
+    return;
+  }
+  spin_lock(&bf_nonisr_lock);
+
+  if (*cur_listener == listener) {
+    *cur_listener = listener->next;
+  } else {
+    while (*cur_listener) {
+      if ((*cur_listener)->next == listener) {
+        (*cur_listener)->next = listener->next;
+        break;
+      }
+      cur_listener = &((*cur_listener)->next);
+    }
+    listener->next = NULL;
+  }
+
+  spin_unlock(&bf_nonisr_lock);
+}
 
 /* a pool of minor numbers is maintained */
 /* return the first available minor number */
@@ -356,18 +412,15 @@ static irqreturn_t bf_interrupt(int irq, void *bfdev_id)
   return ret;
 }
 
-struct bf_listener {
-  struct bf_pci_dev *bfdev;
-  s32 event_count[BF_MSIX_ENTRY_CNT];
-  int minor;
-};
-
 static unsigned int bf_poll(struct file *filep, poll_table *wait)
 {
   struct bf_listener *listener = (struct bf_listener *)filep->private_data;
   struct bf_pci_dev *bfdev = listener->bfdev;
   int i;
     
+  if (!bfdev) {
+    return -ENODEV;
+  }
   if (!bfdev->info.irq)
     return -EIO;
     
@@ -434,6 +487,9 @@ static int bf_mmap(struct file *filep, struct vm_area_struct *vma)
   int bar;
   unsigned long requested_pages, actual_pages;
    
+  if (!bfdev) {
+    return -ENODEV;
+  }
   if (vma->vm_end < vma->vm_start)
     return -EINVAL;
     
@@ -475,11 +531,13 @@ static int bf_open(struct inode *inode, struct file *filep)
   struct bf_listener *listener;
   int i;
 
-  bfdev = container_of(inode->i_cdev, struct bf_pci_dev, cdev);
+  bfdev = bf_global[iminor(inode)].bfdev;
   listener = kmalloc(sizeof(*listener), GFP_KERNEL);
   if (listener) {
     listener->bfdev = bfdev;
     listener->minor = bfdev->info.minor;
+    listener->next =  NULL;
+    bf_add_listener(bfdev, listener);
     for (i = 0; i < BF_MSIX_ENTRY_CNT; i++)
       listener->event_count[i] = atomic_read(&bfdev->info.event[i]);
     filep->private_data = listener;
@@ -494,6 +552,9 @@ static int bf_release(struct inode *inode, struct file *filep)
   struct bf_listener *listener = filep->private_data;
 
   bf_fasync(-1, filep, 0); /* empty any process id in the notification list */
+  if (listener->bfdev) {
+    bf_remove_listener(listener->bfdev, listener);
+  }
   kfree(listener);
   return 0;
 }
@@ -508,6 +569,9 @@ static ssize_t bf_read(struct file *filep, char __user *buf,
   int i, mismatch_found = 0;  /* OR of per vector mismatch */
   unsigned char cnt_match[BF_MSIX_ENTRY_CNT]; /* per vector mismatch */
 
+  if (!bfdev) {
+    return -ENODEV;
+  }
   /* irq must be setup for read() to work */
   if (!bfdev->info.irq)
     return -EIO;
@@ -613,8 +677,9 @@ static const struct file_operations bf_fops = {
   .fasync         = bf_fasync,
 };
 
-static int bf_major_init(struct bf_pci_dev *bfdev)
+static int bf_major_init(struct bf_pci_dev *bfdev, int minor)
 {
+  struct cdev *cdev;
   static const char name[] = "bf";
   dev_t bf_dev = 0;
   int result;
@@ -624,26 +689,20 @@ static int bf_major_init(struct bf_pci_dev *bfdev)
     return result;
 
   result = -ENOMEM;
-/* following code useful if we chose to allocate cdev here
- *
- *struct cdev *cdev = NULL;
- * cdev = cdev_alloc();
- * if (!cdev)
- *   goto fail_unregister;
- * cdev->ops = &bf_fops;
- * cdev->owner = THIS_MODULE;
- * kobject_set_name(&cdev->kobj, "%s", name);
- *  result = cdev_add(cdev, bf_dev, BF_MAX_DEVICE_CNT);
- */
-  cdev_init(&bfdev->cdev, &bf_fops);
-  bfdev->cdev.owner = THIS_MODULE;
-  bfdev->cdev.ops = &bf_fops;
+  cdev = cdev_alloc();
+  if (!cdev) {
+    goto fail_dev_add;
+  }
+  cdev->ops = &bf_fops;
+  cdev->owner = THIS_MODULE;
+  kobject_set_name(&cdev->kobj, "%s", name);
+  result = cdev_add(cdev, bf_dev, BF_MAX_DEVICE_CNT);
 
-  result = cdev_add(&bfdev->cdev, bf_dev, BF_MAX_DEVICE_CNT);
   if (result)
     goto fail_dev_add;
 
   bf_major = MAJOR(bf_dev);
+  bf_global[minor].bf_cdev = cdev;
   return 0;
 
 fail_dev_add:
@@ -651,16 +710,16 @@ fail_dev_add:
   return result;
 }
 
-static void bf_major_cleanup(struct bf_pci_dev *bfdev)
+static void bf_major_cleanup(struct bf_pci_dev *bfdev, int minor)
 {
   unregister_chrdev_region(MKDEV(bf_major, 0), BF_MAX_DEVICE_CNT);
-  cdev_del(&bfdev->cdev);
+  cdev_del(bf_global[minor].bf_cdev);
 }
 
-static int bf_init_cdev(struct bf_pci_dev *bfdev)
+static int bf_init_cdev(struct bf_pci_dev *bfdev, int minor)
 {
   int ret;
-  ret = bf_major_init(bfdev);
+  ret = bf_major_init(bfdev, minor);
   if (ret)
    return ret;
   
@@ -673,14 +732,14 @@ static int bf_init_cdev(struct bf_pci_dev *bfdev)
   return 0;
 
 err_class_register:
-  bf_major_cleanup(bfdev);
+  bf_major_cleanup(bfdev, minor);
   return ret;
 }
 
 static void bf_remove_cdev(struct bf_pci_dev *bfdev)
 {
   class_destroy(bf_class);
-  bf_major_cleanup(bfdev);
+  bf_major_cleanup(bfdev, bfdev->info.minor);
 }
 
 
@@ -706,14 +765,14 @@ int bf_register_device(struct device *parent, struct bf_pci_dev *bfdev)
     atomic_set(&info->event[i], 0);
   }
 
-  ret = bf_init_cdev(bfdev);
+  if (bf_get_next_minor_no(&minor)) {
+    return -EINVAL;
+  }
+
+  ret = bf_init_cdev(bfdev, minor);
   if (ret) {
     printk(KERN_ERR "BF: device cdev creation failed\n");
     return ret;
-  }
-
-  if (bf_get_next_minor_no(&minor)) {
-    return -EINVAL;
   }
 
   info->dev = device_create(bf_class, parent,
@@ -973,14 +1032,15 @@ bf_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
     goto fail_clear_pci_master;
   }
 
+  pci_set_drvdata(pdev, bfdev);
+  sprintf(bfdev->name, "bf_%d", bfdev->info.minor);
   /* register bf driver */
   err = bf_register_device(&pdev->dev, bfdev);
   if (err != 0)
     goto fail_release_irq;
-  sprintf(bfdev->name, "bf_%d", bfdev->info.minor);
-  pci_set_drvdata(pdev, bfdev);
 
   bf_global[bfdev->info.minor].async_queue = NULL;
+  bf_global[bfdev->info.minor].bfdev = bfdev;
 
   dev_info(&pdev->dev, "bf device %d registered with irq %ld\n",
   bfdev->instance, bfdev->info.irq);
@@ -988,6 +1048,7 @@ bf_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
   return 0;
 
 fail_release_irq:
+  pci_set_drvdata(pdev, NULL);
   if (bfdev->mode == BF_INTR_MODE_MSIX) {
     pci_disable_msix(bfdev->pdev);
     kfree(bfdev->info.msix_entries);
@@ -1013,6 +1074,7 @@ static void
 bf_pci_remove(struct pci_dev *pdev)
 {
   struct bf_pci_dev *bfdev = pci_get_drvdata(pdev);
+  struct bf_listener *cur_listener;
 
   bf_unregister_device(bfdev);
   if (bfdev->mode == BF_INTR_MODE_MSIX) {
@@ -1028,6 +1090,16 @@ bf_pci_remove(struct pci_dev *pdev)
   pci_disable_pcie_error_reporting(pdev);
   pci_disable_device(pdev);
   pci_set_drvdata(pdev, NULL);
+  bf_global[bfdev->info.minor].bfdev = NULL;
+  /* existing filep structures in open file(s) must be informed that
+   * bf_pci_dev is no longer valid */
+  spin_lock(&bf_nonisr_lock);
+  cur_listener = bfdev->listener_head;
+  while (cur_listener) {
+    cur_listener->bfdev = NULL;
+    cur_listener = cur_listener->next;
+  }
+  spin_unlock(&bf_nonisr_lock);
   kfree(bfdev);
 }
 
