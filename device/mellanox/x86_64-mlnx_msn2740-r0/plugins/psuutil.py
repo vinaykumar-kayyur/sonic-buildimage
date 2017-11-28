@@ -45,8 +45,11 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
-        with open(self.psu_path + self.psu_oper_status.format(index), 'r') as power_status:
-            status = int(power_status.read())
+        try:
+            with open(self.psu_path + self.psu_oper_status.format(index), 'r') as power_status:
+                status = int(power_status.read())
+        except IOError:
+            return False
 
         return status == 1
 
@@ -62,7 +65,10 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
-        with open(self.psu_path + self.psu_presence.format(index), 'r') as presence_status:
-            status = int(presence_status.read())
+        try:
+            with open(self.psu_path + self.psu_presence.format(index), 'r') as presence_status:
+                status = int(presence_status.read())
+        except IOError:
+            return False
 
         return status == 1
