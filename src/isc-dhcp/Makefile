@@ -10,13 +10,13 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./isc-dhcp
 
 	# Clone isc-dhcp repo
-	git clone git://anonscm.debian.org/pkg-dhcp/isc-dhcp.git
+	git clone https://anonscm.debian.org/cgit/pkg-dhcp/isc-dhcp.git
 	pushd ./isc-dhcp
-	git checkout -f debian/4.3.1-6
+	git checkout -f debian/$(ISC_DHCP_VERSION)
 	popd
 
 	# Apply patch
-	patch -p1 < isc-dhcp-4.3.1_dhcrelay-custom-circuit_id-remote_id-and-bridge-iface-support.patch
+	patch -p1 < isc-dhcp-$(ISC_DHCP_VERSION)_dhcrelay-custom-circuit_id-remote_id-and-bridge-iface-support.patch
 
 	# Build source and Debian packages
 	pushd ./isc-dhcp
