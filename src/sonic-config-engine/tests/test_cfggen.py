@@ -73,7 +73,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_acl(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v ACL_TABLE'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'DATAACL': {'type': 'L3', 'policy_desc': 'DATAACL', 'ports': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124']}}")
+        self.assertEqual(output.strip(), "{'DATAACL': {'type': 'L3', 'policy_desc': 'DATAACL', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04']}}")
 
     def test_minigraph_everflow(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v MIRROR_SESSION'

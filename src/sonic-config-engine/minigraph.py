@@ -185,16 +185,32 @@ def parse_dpg(dpg, hname):
             is_mirror = False
             for member in aclattach:
                 member = member.strip()
-                if pcs.has_key(member):
-                    acl_intfs.extend(pcs[member]['members'])  # For ACL attaching to port channels, we break them into port channel members
-                elif vlans.has_key(member):
-                    print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a Vlan interface, which is currently not supported"
-                elif port_alias_map.has_key(member):
-                    acl_intfs.append(port_alias_map[member])
+                if port_alias_map.has_key(member):
+                    allowed = True
+                    for pc, pc_data in pcs.iteritems():
+                        if port_alias_map[member] in pc_data['members']:
+                            print >> sys.stderr, member + " interface is attached to port channel. ACL table bind to port channel members is not allowed."
+                            allowed = False
+                    if allowed:
+                        acl_intfs.append(port_alias_map[member])
+                elif pcs.has_key(member) or vlans.has_key(member):
+                    acl_intfs.append(member)
                 elif member.lower() == 'erspan':
                     is_mirror = True;
-                    # Erspan session will be attached to all front panel ports
-                    acl_intfs = port_alias_map.values()
+                    # Erspan session should not be attached to port channel or VLAN members
+                    deny_list  = []
+                    for pc_data in pcs.values():
+                        deny_list += pc_data['members']
+
+                    print vlan_members
+                    for member in vlan_members.keys():
+                        deny_list.append(member.split(KEY_SEPARATOR)[1])
+
+                    print deny_list
+
+                    acl_intfs = [p for p in port_alias_map.values() if p not in deny_list]
+                    acl_intfs += pcs.keys()
+                    acl_intfs += vlans.keys()
                     break;
             if acl_intfs:
                 acls[aclname] = { 'policy_desc': aclname, 'ports': acl_intfs, 'type': 'MIRROR' if is_mirror else 'L3'}
