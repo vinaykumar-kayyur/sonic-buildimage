@@ -45,8 +45,11 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
-        with open(self.psu_path + self.psu_oper_status.format(index), 'r') as power_status:
-            status = int(power_status.read())
+        try:
+            with open(self.psu_path + self.psu_oper_status.format(index), 'r') as power_status:
+                status = int(power_status.read())
+        except IOError:
+            return False
 
         return status == 1
 
@@ -58,11 +61,7 @@ class PsuUtil(PsuBase):
         :param index: An integer, index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
-        if index is None:
-            return False
+        if index and index > 0 and index <= self.get_num_psus():
+            return True
 
-        status = 0
-        with open(self.psu_path + self.psu_presence.format(index), 'r') as presence_status:
-            status = int(presence_status.read())
-
-        return status == 1
+        return False
