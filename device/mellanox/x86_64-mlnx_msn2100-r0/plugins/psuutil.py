@@ -12,7 +12,7 @@ import os.path
 
 try:
     from sonic_psu.psu_base import PsuBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 class PsuUtil(PsuBase):
@@ -36,9 +36,9 @@ class PsuUtil(PsuBase):
     def get_psu_status(self, index):
         """
         Retrieves the oprational status of power supply unit (PSU) defined
-                by index <index>
+                by 1-based index <index>
 
-        :param index: An integer, index of the PSU of which to query status
+        :param index: An integer, 1-based index of the PSU of which to query status
         :return: Boolean, True if PSU is operating properly, False if PSU is faulty
         """
         if index is None:
@@ -56,12 +56,9 @@ class PsuUtil(PsuBase):
     def get_psu_presence(self, index):
         """
         Retrieves the presence status of power supply unit (PSU) defined
-                by index <index>
+                by 1-based index <index>
 
-        :param index: An integer, index of the PSU of which to query status
+        :param index: An integer, 1-based index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
-        if index and index > 0 and index <= self.get_num_psus():
-            return True
-
-        return False
+        return isinstance(index, int) and index > 0 and index <= self.get_num_psus()
