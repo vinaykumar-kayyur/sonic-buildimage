@@ -24,7 +24,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # TODO: remove libpython3.6-dev, its and pip's dependencies if we can get pip3 directly
 # install subagent
 # clean up
-## TODO: remove click modules and grub2-common bash-completion if we can use PSU util directly
+## TODO: remove grub2-common, bash-completion, python-pip, python-click-default-group, 
+#  python-click, python-natsort and python-tabulate once we no longer need to install 
+#  sonic-utilities for PSU plugin support
 RUN apt-get update && apt-get install -y --force-yes libperl5.20 libpci3 libwrap0 \
             libexpat1-dev grub2-common bash-completion curl gcc \
             python-pip python-click-default-group python-click python-natsort python-tabulate && \
