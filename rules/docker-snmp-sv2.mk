@@ -3,7 +3,8 @@
 DOCKER_SNMP_SV2 = docker-snmp-sv2.gz
 $(DOCKER_SNMP_SV2)_PATH = $(DOCKERS_PATH)/docker-snmp-sv2
 ## TODO: remove LIBPY3_DEV if we can get pip3 directly
-## TODO: replace SONIC_UTILS if we can use PSU util directly
+## TODO: replace SONIC_UTILS with appropriate target once 
+#  SONiC Python modules are moved to their own package
 $(DOCKER_SNMP_SV2)_DEPENDS += $(SNMP) $(SNMPD) $(PY3) $(LIBPY3_DEV) $(SONIC_UTILS)
 $(DOCKER_SNMP_SV2)_PYTHON_WHEELS += $(ASYNCSNMP_PY3)
 $(DOCKER_SNMP_SV2)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE)
