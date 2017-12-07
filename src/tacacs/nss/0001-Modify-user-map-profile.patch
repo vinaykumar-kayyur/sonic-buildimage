@@ -1,4 +1,4 @@
-From 433eff1df95a7dbef48278f101844dabb3fdc364 Mon Sep 17 00:00:00 2001
+From 43096cf9813d6def1d1f8f1d8a0c122466c8c06b Mon Sep 17 00:00:00 2001
 From: Liuqu <chenchen.qcc@alibaba-inc.com>
 Date: Mon, 9 Oct 2017 02:44:37 -0700
 Subject: [PATCH] Modify user map profile
@@ -17,9 +17,9 @@ Subject: [PATCH] Modify user map profile
  debian/changelog              |   11 +
  debian/control                |   11 +-
  debian/libnss-tacplus.symbols |    1 -
- nss_tacplus.c                 | 1027 +++++++++++++++++++----------------------
+ nss_tacplus.c                 | 1004 +++++++++++++++++++----------------------
  tacplus_nss.conf              |   91 ++--
- 8 files changed, 545 insertions(+), 604 deletions(-)
+ 8 files changed, 518 insertions(+), 608 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
 index 293951e..b33c455 100644
@@ -123,18 +123,21 @@ index 2bf9b88..f476e7d 100644
   _nss_tacplus_getpwnam_r@Base 1.0.1
 - _nss_tacplus_getpwuid_r@Base 1.0.1
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index 79e62b9..f37bcd5 100644
+index 79e62b9..ecfa0b0 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
-@@ -2,6 +2,7 @@
-  * Copyright (C) 2014, 2015, 2016, 2017 Cumulus Networks, Inc.
+@@ -1,7 +1,9 @@
+ /*
+- * Copyright (C) 2014, 2015, 2016, 2017 Cumulus Networks, Inc.
++ * Copyright (C) 2014, 2015, 2016 Cumulus Networks, Inc.
++ * Copyright (C) 2017 Chenchen Qi
   * All rights reserved.
   * Author: Dave Olson <olson@cumulusnetworks.com>
 + *         Chenchen Qi <chenchen.qcc@alibaba-inc.com>
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
-@@ -18,15 +19,9 @@
+@@ -18,15 +20,9 @@
   */
  
  /*
@@ -151,7 +154,7 @@ index 79e62b9..f37bcd5 100644
  #include <string.h>
  #include <syslog.h>
  #include <stdbool.h>
-@@ -35,18 +30,18 @@
+@@ -35,18 +31,18 @@
  #include <errno.h>
  #include <fcntl.h>
  #include <ctype.h>
@@ -172,11 +175,11 @@ index 79e62b9..f37bcd5 100644
  static const char *nssname = "nss_tacplus"; /* for syslogs */
  static const char *config_file = "/etc/tacplus_nss.conf";
 +static const char *user_conf = "/etc/tacplus_user";
-+static const char *user_conf_tmp = "/etc/tacplus_user_tmp";
++static const char *user_conf_tmp = "/tmp/tacplus_user_tmp";
  
  /*
   * pwbuf is used to reduce number of arguments passed around; the strings in
-@@ -63,255 +58,239 @@ struct pwbuf {
+@@ -63,255 +59,239 @@ struct pwbuf {
  typedef struct {
      struct addrinfo *addr;
      char *key;
@@ -433,11 +436,8 @@ index 79e62b9..f37bcd5 100644
 +                    syslog(LOG_ERR, "%s: invalid server: %s (getaddrinfo: %s)",
 +                        nssname, srv, gai_strerror(rv));
 +                    return -1;
-                 }
-             }
--            else {
--                syslog(LOG_WARNING, "%s: maximum number of servers (%d) "
--                    "exceeded, skipping", nssname, TAC_PLUS_MAXSERVERS);
++                }
++            }
 +            else if(!strncmp(token, "secret=", 7)) {
 +                if(tac_srv[tac_srv_no].key)
 +                    free(tac_srv[tac_srv_no].key);
@@ -451,15 +451,11 @@ index 79e62b9..f37bcd5 100644
 +                 * for a long time*/
 +                if(tac_srv[tac_srv_no].timeout > 5)
 +                    tac_srv[tac_srv_no].timeout = 5;
-             }
-         }
--        else if(debug) /* ignore unrecognized lines, unless debug on */
--            syslog(LOG_WARNING, "%s: unrecognized parameter: %s",
--                nssname, lbuf);
++            }
++        }
 +        token = strsep(&srv_buf, delim);
-     }
--    fclose(conf);
- 
++    }
++
 +    return 0;
 +}
 +
@@ -483,8 +479,11 @@ index 79e62b9..f37bcd5 100644
 +                    priv = 0;
 +                    syslog(LOG_WARNING, "%s: user_priv %d out of range",
 +                        nssname, priv);
-+                }
-+            }
+                 }
+             }
+-            else {
+-                syslog(LOG_WARNING, "%s: maximum number of servers (%d) "
+-                    "exceeded, skipping", nssname, TAC_PLUS_MAXSERVERS);
 +            else if(!strncmp(token, "pw_info=", 8)) {
 +                if(!info)
 +                    info = strdup(token + 8);
@@ -499,11 +498,15 @@ index 79e62b9..f37bcd5 100644
 +            else if(!strncmp(token, "shell=", 6)) {
 +                if(!shell)
 +                    shell = strdup(token + 6);
-+            }
-+        }
+             }
+         }
+-        else if(debug) /* ignore unrecognized lines, unless debug on */
+-            syslog(LOG_WARNING, "%s: unrecognized parameter: %s",
+-                nssname, lbuf);
 +        token = strsep(&buf, delim);
-+    }
-+
+     }
+-    fclose(conf);
+ 
 +    if(priv && gid && info && group && shell) {
 +        useradd_info_t *user = &useradd_grp_list[priv];
 +        if(user->info)
@@ -637,7 +640,7 @@ index 79e62b9..f37bcd5 100644
  }
  
  /*
-@@ -324,15 +303,13 @@ static void print_servers(void)
+@@ -324,15 +304,13 @@ static void print_servers(void)
   */
  static int
  pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
@@ -657,7 +660,7 @@ index 79e62b9..f37bcd5 100644
  
      needlen = usename ? strlen(usename) + 1 : 1 +
          srcpw->pw_dir ? strlen(srcpw->pw_dir) + 1 : 1 +
-@@ -341,8 +318,8 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
+@@ -341,8 +319,8 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
          srcpw->pw_passwd ? strlen(srcpw->pw_passwd) + 1 : 1;
      if(needlen > len) {
          if(debug)
@@ -668,7 +671,7 @@ index 79e62b9..f37bcd5 100644
          return 1;
      }
  
-@@ -354,21 +331,14 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
+@@ -354,21 +332,14 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
      cnt++; /* allow for null byte also */
      buf += cnt;
      len -= cnt;
@@ -692,7 +695,7 @@ index 79e62b9..f37bcd5 100644
      cnt++;
      buf += cnt;
      len -= cnt;
-@@ -377,148 +347,227 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
+@@ -377,148 +348,227 @@ pwcopy(char *buf, size_t len, struct passwd *srcpw, struct passwd *destpw,
      cnt++;
      buf += cnt;
      len -= cnt;
@@ -865,7 +868,8 @@ index 79e62b9..f37bcd5 100644
 +        syslog(LOG_ERR, "%s: %s fopen failed", nssname, user_conf);
 +        return -1;
 +    }
-+
+ 
+-    if(!tacuser) {
 +    while(fgets(buf, sizeof buf, fp)) {
 +        if('#' == *buf || isspace(*buf))
 +            continue;
@@ -877,8 +881,7 @@ index 79e62b9..f37bcd5 100644
 +            break;
 +        }
 +    }
- 
--    if(!tacuser) {
++
 +    /*
 +     * If user is found in user_conf, it means that getpwnam is called by
 +     * useradd in this NSS module.
@@ -923,14 +926,8 @@ index 79e62b9..f37bcd5 100644
 +            return 0;
 +        }
 +        lvl--;
-     }
- 
--    pb->pw->pw_name = NULL; /* be paranoid */
--    for(ret = 1; ret && (ent = fgetpwent(pwfile)); ) {
--        if(!ent->pw_name)
--            continue; /* shouldn't happen */
--        if(!strcmp(ent->pw_name, tacuser)) {
--            ret = pwcopy(pb->buf, pb->buflen, ent, pb->pw, logname, usetachome);
++    }
++
 +    return -1;
 +}
 +
@@ -946,8 +943,14 @@ index 79e62b9..f37bcd5 100644
 +    if(!username) {
 +        syslog(LOG_ERR, "%s: username invalid in check passwd", nssname);
 +        return -1;
-+    }
-+
+     }
+ 
+-    pb->pw->pw_name = NULL; /* be paranoid */
+-    for(ret = 1; ret && (ent = fgetpwent(pwfile)); ) {
+-        if(!ent->pw_name)
+-            continue; /* shouldn't happen */
+-        if(!strcmp(ent->pw_name, tacuser)) {
+-            ret = pwcopy(pb->buf, pb->buflen, ent, pb->pw, logname, usetachome);
 +    fp = fopen("/etc/passwd", "r");
 +    if(!fp) {
 +        syslog(LOG_ERR, "%s: /etc/passwd fopen failed", nssname);
@@ -1031,7 +1034,7 @@ index 79e62b9..f37bcd5 100644
  
      return ret;
  }
-@@ -532,6 +581,7 @@ static int
+@@ -532,6 +582,7 @@ static int
  got_tacacs_user(struct tac_attrib *attr, struct pwbuf *pb)
  {
      unsigned long priv_level = 0;
@@ -1039,7 +1042,7 @@ index 79e62b9..f37bcd5 100644
  
      while(attr != NULL)  {
          /* we are looking for the privilege attribute, can be in several forms,
-@@ -550,14 +600,20 @@ got_tacacs_user(struct tac_attrib *attr, struct pwbuf *pb)
+@@ -550,14 +601,20 @@ got_tacacs_user(struct tac_attrib *attr, struct pwbuf *pb)
              /* if this fails, we leave priv_level at 0, which is
               * least privileged, so that's OK, but at least report it
               */
@@ -1064,7 +1067,7 @@ index 79e62b9..f37bcd5 100644
  }
  
  /*
-@@ -570,9 +626,13 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
+@@ -570,9 +627,13 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
  {
      int fd;
  
@@ -1079,7 +1082,7 @@ index 79e62b9..f37bcd5 100644
          tac_add_attrib(attr, "service", tac_service);
          if(tac_protocol[0])
              tac_add_attrib(attr, "protocol", tac_protocol);
-@@ -598,34 +658,9 @@ lookup_tacacs_user(struct pwbuf *pb)
+@@ -598,34 +659,9 @@ lookup_tacacs_user(struct pwbuf *pb)
  {
      struct areply arep;
      int ret = 1, done = 0;
@@ -1115,7 +1118,7 @@ index 79e62b9..f37bcd5 100644
      for(srvr=0; srvr < tac_srv_no && !done; srvr++) {
          arep.msg = NULL;
          arep.attr = NULL;
-@@ -636,14 +671,13 @@ lookup_tacacs_user(struct pwbuf *pb)
+@@ -636,14 +672,13 @@ lookup_tacacs_user(struct pwbuf *pb)
                  syslog(LOG_WARNING, "%s: failed to connect TACACS+ server %s,"
                      " ret=%d: %m", nssname, tac_srv[srvr].addr ?
                      tac_ntop(tac_srv[srvr].addr->ai_addr) : "unknown", tac_fd);
@@ -1133,7 +1136,7 @@ index 79e62b9..f37bcd5 100644
                      tac_ntop(tac_srv[srvr].addr->ai_addr) : "unknown", ret,
                      pb->name);
          }
-@@ -668,14 +702,11 @@ lookup_tacacs_user(struct pwbuf *pb)
+@@ -668,14 +703,11 @@ lookup_tacacs_user(struct pwbuf *pb)
          if(arep.status == AUTHOR_STATUS_PASS_ADD ||
             arep.status == AUTHOR_STATUS_PASS_REPL) {
              ret = got_tacacs_user(arep.attr, pb);
@@ -1150,18 +1153,16 @@ index 79e62b9..f37bcd5 100644
              done = 1; /* break out of loop after arep cleanup */
          }
          else {
-@@ -692,30 +723,49 @@ lookup_tacacs_user(struct pwbuf *pb)
+@@ -692,30 +724,12 @@ lookup_tacacs_user(struct pwbuf *pb)
              tac_free_attrib(&arep.attr);
      }
  
 -    return ret < 0? 1 : ret;
-+    return ret;
- }
- 
+-}
+-
 -static int
 -lookup_mapped_uid(struct pwbuf *pb, uid_t uid, uid_t auid, int session)
-+static bool is_valid_name (const char *name)
- {
+-{
 -    char *loginname, mappedname[256];
 -    uint16_t flag;
 -
@@ -1171,39 +1172,7 @@ index 79e62b9..f37bcd5 100644
 -    if(loginname)
 -        return find_pw_user(loginname, mappedname, pb, flag & MAP_USERHOMEDIR);
 -    return 1;
-+    /*
-+    * User/group names must match [a-z_][a-z0-9_-]*[$]
-+    */
-+    if(('\0' == *name) ||
-+        !((('a' <= *name) && ('z' >= *name)) || ('_' == *name))) {
-+            return false;
-+    }
-+
-+    while('\0' != *++name) {
-+        if(!(( ('a' <= *name) && ('z' >= *name) ) ||
-+            ( ('0' <= *name) && ('9' >= *name) ) ||
-+            ('_' == *name) ||
-+            ('-' == *name) ||
-+            ( ('$' == *name) && ('\0' == *(name + 1)) )
-+            )) {
-+            return false;
-+        }
-+    }
-+
-+    return true;
-+}
-+
-+static bool is_valid_user_name (const char *name)
-+{
-+    /*
-+    * User names are limited by whatever utmp can
-+    * handle.
-+    */
-+    if(strlen (name) > 32) {
-+        return false;
-+    }
-+
-+    return is_valid_name (name);
++    return ret;
  }
  
  /*
@@ -1217,13 +1186,18 @@ index 79e62b9..f37bcd5 100644
   *
   * We try the lookup to the tacacs server first.  If we can't make a
   * connection to the server for some reason, we also try looking up
-@@ -730,20 +780,20 @@ enum nss_status _nss_tacplus_getpwnam_r(const char *name, struct passwd *pw,
+@@ -730,20 +744,25 @@ enum nss_status _nss_tacplus_getpwnam_r(const char *name, struct passwd *pw,
      int result;
      struct pwbuf pbuf;
  
 -    result = nss_tacplus_config(errnop, config_file, 1);
 -    conf_parsed = result == 0 ? 2 : 1;
-+    if(!is_valid_user_name(name))
++    /*
++     * When filename completion is used with the tab key in bash, getpwnam
++     * is invoked. And the parameter "name" is '*'. In order not to connect to
++     * TACACS+ server frequently, check user name whether is valid.
++     */
++    if(!strcmp(name, "*"))
 +        return NSS_STATUS_NOTFOUND;
  
 -    get_remote_addr();
@@ -1247,7 +1221,7 @@ index 79e62b9..f37bcd5 100644
          /* marshal the args for the lower level functions */
          pbuf.name = (char *)name;
          pbuf.pw = pw;
-@@ -751,126 +801,13 @@ enum nss_status _nss_tacplus_getpwnam_r(const char *name, struct passwd *pw,
+@@ -751,126 +770,13 @@ enum nss_status _nss_tacplus_getpwnam_r(const char *name, struct passwd *pw,
          pbuf.buflen = buflen;
          pbuf.errnop = errnop;
  
