@@ -24,12 +24,12 @@ ns = "Microsoft.Search.Autopilot.Evolution"
 ns1 = "http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"
 ns2 = "Microsoft.Search.Autopilot.NetMux"
 ns3 = "http://www.w3.org/2001/XMLSchema-instance"
-
+KEY_SEPARATOR = '|'
 
 class minigraph_encoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (
-            ipaddress.IPv4Network, ipaddress.IPv6Network, 
+            ipaddress.IPv4Network, ipaddress.IPv6Network,
             ipaddress.IPv4Address, ipaddress.IPv6Address
             )):
             return str(obj)
@@ -86,7 +86,7 @@ def parse_png(png, hname):
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
                 (lo_prefix, mgmt_prefix, name, hwsku, d_type) = parse_device(device)
-                device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku } 
+                device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
                 devices[name] = device_data
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
@@ -129,7 +129,7 @@ def parse_dpg(dpg, hname):
             intfname = lointf.find(str(QName(ns, "AttachTo"))).text
             ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
             lo_intfs[(intfname, ipprefix)] = {}
-            
+
         mgmtintfs = child.find(str(QName(ns, "ManagementIPInterfaces")))
         mgmt_intf = {}
         for mgmtintf in mgmtintfs.findall(str(QName(ns1, "ManagementIPInterface"))):
@@ -153,6 +153,7 @@ def parse_dpg(dpg, hname):
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlan_intfs = []
         vlans = {}
+        vlan_members = {}
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
@@ -160,7 +161,10 @@ def parse_dpg(dpg, hname):
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
-            vlan_attributes = {'members': vmbr_list, 'vlanid': vlanid}
+                sonic_vlan_member_name = "Vlan%s%s%s" % (vlanid, KEY_SEPARATOR, vmbr_list[i])
+                vlan_members[sonic_vlan_member_name] = {'tagging_mode': 'untagged'}
+
+            vlan_attributes = {'vlanid': vlanid}
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
@@ -175,7 +179,7 @@ def parse_dpg(dpg, hname):
         aclintfs = child.find(str(QName(ns, "AclInterfaces")))
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
-            aclname = aclintf.find(str(QName(ns, "InAcl"))).text.lower().replace(" ", "_").replace("-", "_")
+            aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
@@ -193,9 +197,9 @@ def parse_dpg(dpg, hname):
                     acl_intfs = port_alias_map.values()
                     break;
             if acl_intfs:
-                acls[aclname] = { 'policy_desc': aclname, 'ports': acl_intfs, 'type': 'mirror' if is_mirror else 'L3'}
-        return intfs, lo_intfs, mgmt_intf, vlans, pcs, acls
-    return None, None, None, None, None, None
+                acls[aclname] = { 'policy_desc': aclname, 'ports': acl_intfs, 'type': 'MIRROR' if is_mirror else 'L3'}
+        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls
+    return None, None, None, None, None, None, None
 
 
 def parse_cpg(cpg, hname):
@@ -294,7 +298,8 @@ def parse_meta(meta, hname):
     return syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id
 
 def parse_deviceinfo(meta, hwsku):
-    ethernet_interfaces = {}
+    port_speeds = {}
+    port_descriptions = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -302,8 +307,11 @@ def parse_deviceinfo(meta, hwsku):
             for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
                 alias = interface.find(str(QName(ns, "InterfaceName"))).text
                 speed = interface.find(str(QName(ns, "Speed"))).text
-                ethernet_interfaces[port_alias_map.get(alias, alias)] = speed
-    return ethernet_interfaces
+                desc  = interface.find(str(QName(ns, "Description")))
+                if desc != None:
+                    port_descriptions[port_alias_map.get(alias, alias)] = desc.text
+                port_speeds[port_alias_map.get(alias, alias)] = speed
+    return port_speeds, port_descriptions
 
 def parse_xml(filename, platform=None, port_config_file=None):
     root = ET.parse(filename).getroot()
@@ -318,6 +326,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     vlan_intfs = None
     pc_intfs = None
     vlans = None
+    vlan_members = None
     pcs = None
     mgmt_intf = None
     lo_intf = None
@@ -325,6 +334,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     devices = None
     hostname = None
     port_speeds = {}
+    port_descriptions = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -345,7 +355,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, pcs, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -355,10 +365,10 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
-            port_speeds = parse_deviceinfo(child, hwsku)
+            (port_speeds, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     results = {}
-    results['DEVICE_METADATA'] = {'localhost': { 
+    results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
         'hostname': hostname,
@@ -390,9 +400,13 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     for port_name in port_speeds:
         ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
+    for port_name in port_descriptions:
+        ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
+
     results['PORT'] = ports
     results['PORTCHANNEL'] = pcs
     results['VLAN'] = vlans
+    results['VLAN_MEMBER'] = vlan_members
 
     results['DEVICE_NEIGHBOR'] = neighbors
     results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key != hostname }
@@ -423,13 +437,13 @@ def parse_device_desc_xml(filename):
     (lo_prefix, mgmt_prefix, hostname, hwsku, d_type) = parse_device(root)
 
     results = {}
-    results['DEVICE_METADATA'] = {'localhost': { 
+    results['DEVICE_METADATA'] = {'localhost': {
         'hostname': hostname,
         'hwsku': hwsku,
         }}
 
     results['LOOPBACK_INTERFACE'] = {('lo', lo_prefix): {}}
-            
+
     mgmt_intf = {}
     mgmtipn = ipaddress.IPNetwork(mgmt_prefix)
     gwaddr = ipaddress.IPAddress(int(mgmtipn.network) + 1)
