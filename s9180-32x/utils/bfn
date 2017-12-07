@@ -17,6 +17,7 @@ start)
 	echo -n "Load Barefoot kernel modules... "
 
         modprobe bf_kdrv
+        modprobe bf_tun
 
 	echo "done."
 	;;
@@ -24,6 +25,7 @@ start)
 stop)
 	echo -n "Unload Barefoot kernel modules... "
 
+        rmmod bf_tun
         rmmod bf_kdrv
 
 	echo "done."
