@@ -329,7 +329,7 @@ index 15b4997..86443c9 100644
 +                                              ifname,
 +                                              &vlanid);
 +
-+                        // If we failed to failed to find a physical interface using the source mac, default
++                        // If we failed to find a physical interface using the source mac, default
 +                        // to the interface name we received it on.
 +                        if (ret < 0) {
 +                            //log_debug("MAC Address: %s (interface:%s vlan:%d) not found in bridge fdb show",
