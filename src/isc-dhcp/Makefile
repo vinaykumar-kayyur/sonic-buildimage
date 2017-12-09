@@ -13,13 +13,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git clone https://anonscm.debian.org/cgit/pkg-dhcp/isc-dhcp.git
 	pushd ./isc-dhcp
 	git checkout -f debian/$(ISC_DHCP_VERSION)
-	popd
 
-	# Apply patch
-	patch -p1 < isc-dhcp-$(ISC_DHCP_VERSION)_dhcrelay-custom-circuit_id-remote_id-and-bridge-iface-support.patch
+	# Apply patches
+	git am ../*.patch
 
 	# Build source and Debian packages
-	pushd ./isc-dhcp
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
