@@ -398,10 +398,13 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['VLAN_INTERFACE'] = vlan_intfs
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
+    # TODO: the speed (if exits) in port_config.ini shall align with the speed in minigraph
     for port_name in port_speeds:
         ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
     for port_name in port_descriptions:
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
+    # if the speed is not defined, the port shall be removed from the ports list
+    ports = { key: value for key, value in ports.iteritems() if 'speed' in value.keys() }
 
     results['PORT'] = ports
     results['PORTCHANNEL'] = pcs
