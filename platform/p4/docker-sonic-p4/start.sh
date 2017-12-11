@@ -85,7 +85,7 @@ supervisorctl start zebra
 echo "Start bgpd"
 supervisorctl start bgpd
 
-if [ -f /etc/swss/config.d/default_config.json]; then
+if [ -f /etc/swss/config.d/default_config.json ]; then
 	swssconfig /etc/swss/config.d/default_config.json
 fi
 
