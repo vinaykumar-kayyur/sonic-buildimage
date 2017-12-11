@@ -1,7 +1,6 @@
 [
 {% if PORT %}
 {% for port in PORT %}
-{% if PORT[port].has_key('speed') %}
     {
         "PORT_TABLE:{{ port }}": {
             "speed": "{{ PORT[port]['speed'] }}",
@@ -10,7 +9,6 @@
         "OP": "SET"
     }{% if not loop.last %},{% endif %}
 
-{% endif %}
 {% endfor %}
 {% endif %}
 ]
