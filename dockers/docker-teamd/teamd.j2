@@ -4,7 +4,7 @@
     "runner": {
         "name": "lacp",
         "active": true,
-{% if PORTCHANNEL[pc]['fallback'] %}
+{% if PORTCHANNEL[pc]['fallback'] and ((PORTCHANNEL[pc]['members'] | length) == 1) %}
         "fallback": {{ PORTCHANNEL[pc]['fallback'] }},
 {% else %}
 {# Use 75% links upperbound as min-links #}
