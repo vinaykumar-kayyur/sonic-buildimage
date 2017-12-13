@@ -82,6 +82,7 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
     # setup initial switch mac
     SONIC_ASIC_TYPE=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type)
     SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
+    CHASSIS_SERIAL_NUMBER=$(decode-syseeprom -s)
 
     # Align last byte of MAC if necessary
     if [ "$SONIC_ASIC_TYPE" = "mellanox" ] || [ "$SONIC_ASIC_TYPE" = "centec" ]; then
@@ -91,10 +92,10 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
     fi
 
     if [ -f /etc/sonic/init_cfg.json ]; then
-        sonic-cfggen -j /etc/sonic/init_cfg.json -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'"}}}' --print-data > /tmp/init_cfg.json
+        sonic-cfggen -j /etc/sonic/init_cfg.json -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'", "chassis_serial_number": "'$CHASSIS_SERIAL_NUMBER'"}}}' --print-data > /tmp/init_cfg.json
         mv /tmp/init_cfg.json /etc/sonic/init_cfg.json
     else
-        sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'"}}}' --print-data > /etc/sonic/init_cfg.json
+        sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'", "chassis_serial_number": "'$CHASSIS_SERIAL_NUMBER'"}}}' --print-data > /etc/sonic/init_cfg.json
     fi
 
     # Try to take old configuration saved during installation
