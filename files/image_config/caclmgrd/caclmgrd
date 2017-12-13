@@ -62,12 +62,10 @@ class ControlPlaneAclManager(object):
 
     # To specify a port range, use iptables format: separate start and end
     # ports with a colon, e.g., "1000:2000"
-    # TODO: Rename ACL services to "SNMP" and "SSH" once ACL data is unified
-    #       and we can key off of ACL type
     ACL_SERVICES = {
         "NTP": {"ip_protocols": ["udp"], "dst_ports": ["123"]},
-        "SNMP_ACL": {"ip_protocols": ["tcp", "udp"], "dst_ports": ["161"]},
-        "SSH_ONLY": {"ip_protocols": ["tcp"], "dst_ports": ["22"]}
+        "SNMP": {"ip_protocols": ["tcp", "udp"], "dst_ports": ["161"]},
+        "SSH": {"ip_protocols": ["tcp"], "dst_ports": ["22"]}
     }
 
     def __init__(self):
@@ -125,17 +123,19 @@ class ControlPlaneAclManager(object):
             if table_data["type"] != self.ACL_TABLE_TYPE_CTRLPLANE:
                 continue
 
-            # Convert table_name to uppercase and replace hyphens with underscores
-            # TODO: Remove this once ACL data is unified
-            table_name = table_name.upper().replace("-", "_")
+            acl_service = table_data["service"]
 
-            if table_name not in self.ACL_SERVICES:
-                log_warning("Ignoring unrecognized control plane ACL: '{}'".format(table_name))
+            if acl_service not in self.ACL_SERVICES:
+                log_warning("Ignoring control plane ACL '{}' with unrecognized service '{}'"
+                        .format(table_name, acl_service))
                 continue
 
+            log_info("Translating ACL rules for control plane ACL '{}' (service: '{}')"
+                    .format(table_name, acl_service))
+
             # Obtain default IP protocol(s) and destination port(s) for this service
-            ip_protocols = self.ACL_SERVICES[table_name]["ip_protocols"]
-            dst_ports = self.ACL_SERVICES[table_name]["dst_ports"]
+            ip_protocols = self.ACL_SERVICES[acl_service]["ip_protocols"]
+            dst_ports = self.ACL_SERVICES[acl_service]["dst_ports"]
 
             acl_rules = {}
 
@@ -215,7 +215,7 @@ class ControlPlaneAclManager(object):
         self.run_commands(iptables_cmds)
 
     def notification_handler(self, key, data):
-        log_info("ACL configuration changed. Updating iptables rules for control plane ACLs")
+        log_info("ACL configuration changed. Updating iptables rules for control plane ACLs...")
         self.update_control_plane_acls()
 
     def run(self):
