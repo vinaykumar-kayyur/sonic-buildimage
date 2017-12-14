@@ -1,0 +1,124 @@
+From 9494f71bc5f04b28b790ab25f1729b480ca18879 Mon Sep 17 00:00:00 2001
+From: Liuqu <chenchen.qcc@alibaba-inc.com>
+Date: Thu, 14 Dec 2017 18:30:46 +0800
+Subject: [PATCH] Add support for source ip address
+
+---
+ pam_tacplus.c |  8 ++++----
+ support.c     | 31 +++++++++++++++++++++++++++++++
+ support.h     |  1 +
+ 3 files changed, 36 insertions(+), 4 deletions(-)
+
+diff --git a/pam_tacplus.c b/pam_tacplus.c
+index 2b7d2cd..4369306 100644
+--- a/pam_tacplus.c
++++ b/pam_tacplus.c
+@@ -175,7 +175,7 @@ int _pam_account(pam_handle_t *pamh, int argc, const char **argv,
+ 
+     status = PAM_SESSION_ERR;
+     for(srv_i = 0; srv_i < tac_srv_no; srv_i++) {
+-        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL, tac_timeout);
++        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, tac_source_addr, tac_timeout);
+         if (tac_fd < 0) {
+             _pam_log(LOG_WARNING, "%s: error sending %s (fd)",
+                 __FUNCTION__, typemsg);
+@@ -274,7 +274,7 @@ int pam_sm_authenticate (pam_handle_t * pamh, int flags,
+         if (ctrl & PAM_TAC_DEBUG)
+             syslog(LOG_DEBUG, "%s: trying srv %d", __FUNCTION__, srv_i );
+ 
+-        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL, tac_timeout);
++        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, tac_source_addr, tac_timeout);
+         if (tac_fd < 0) {
+             _pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
+             continue;
+@@ -577,7 +577,7 @@ int pam_sm_acct_mgmt (pam_handle_t * pamh, int flags,
+     if(tac_protocol[0] != '\0')
+       tac_add_attrib(&attr, "protocol", tac_protocol);
+ 
+-    tac_fd = tac_connect_single(active_server.addr, active_server.key, NULL, tac_timeout);
++    tac_fd = tac_connect_single(active_server.addr, active_server.key, tac_source_addr, tac_timeout);
+     if(tac_fd < 0) {
+         _pam_log (LOG_ERR, "TACACS+ server unavailable");
+         if(arep.msg != NULL)
+@@ -760,7 +760,7 @@ int pam_sm_chauthtok(pam_handle_t * pamh, int flags,
+         if (ctrl & PAM_TAC_DEBUG)
+             syslog(LOG_DEBUG, "%s: trying srv %d", __FUNCTION__, srv_i );
+ 
+-        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, NULL, tac_timeout);
++        tac_fd = tac_connect_single(tac_srv[srv_i].addr, tac_srv[srv_i].key, tac_source_addr, tac_timeout);
+         if (tac_fd < 0) {
+             _pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
+             continue;
+diff --git a/support.c b/support.c
+index 44efee3..14bfca1 100644
+--- a/support.c
++++ b/support.c
+@@ -36,6 +36,8 @@ int tac_srv_no = 0;
+ char tac_service[64];
+ char tac_protocol[64];
+ char tac_prompt[64];
++char tac_source_ip[64];
++struct addrinfo *tac_source_addr = NULL;
+ 
+ void _pam_log(int err, const char *format,...) {
+     char msg[256];
+@@ -271,6 +273,10 @@ int _pam_parse (int argc, const char **argv) {
+             } else { 
+                 tac_readtimeout_enable = 1;
+             }
++        } else if (!strncmp (*argv, "source_ip=", strlen("source_ip="))) {
++            /* source ip for the packets */
++            strncpy (tac_source_ip, *argv + strlen("source_ip="), sizeof(tac_source_ip));
++            set_source_ip (tac_source_ip, &tac_source_addr);
+         } else {
+             _pam_log (LOG_WARNING, "unrecognized option: %s", *argv);
+         }
+@@ -289,8 +295,33 @@ int _pam_parse (int argc, const char **argv) {
+         _pam_log(LOG_DEBUG, "tac_protocol='%s'", tac_protocol);
+         _pam_log(LOG_DEBUG, "tac_prompt='%s'", tac_prompt);
+         _pam_log(LOG_DEBUG, "tac_login='%s'", tac_login);
++        _pam_log(LOG_DEBUG, "tac_source_ip='%s'", tac_source_ip);
+     }
+ 
+     return ctrl;
+ }    /* _pam_parse */
+ 
++/* set source ip address for the outgoing tacacs packets */
++void set_source_ip(const char *tac_source_ip,
++    struct addrinfo **source_address) {
++
++    struct addrinfo hints;
++    int rv;
++
++    /* check if source address is configured */
++    if (*tac_source_ip == 0)
++        return;
++
++    /* set the source ip address for the tacacs packets */
++    if (tac_source_ip != NULL) {
++        memset(&hints, 0, sizeof(hints));
++        hints.ai_family = AF_UNSPEC;
++        hints.ai_socktype = SOCK_STREAM;
++        if ((rv = getaddrinfo(tac_source_ip, NULL, &hints,
++             source_address)) != 0) {
++            _pam_log(LOG_ERR, "error setting the source ip information");
++        } else {
++            _pam_log(LOG_DEBUG, "source ip is set");
++        }
++    }
++}
+diff --git a/support.h b/support.h
+index 9cbd040..09b8a85 100644
+--- a/support.h
++++ b/support.h
+@@ -37,6 +37,7 @@ extern int tac_srv_no;
+ extern char tac_service[64];
+ extern char tac_protocol[64];
+ extern char tac_prompt[64];
++extern struct addrinfo *tac_source_addr;
+ 
+ int _pam_parse (int, const char **);
+ unsigned long _resolve_name (char *);
+-- 
+1.9.1
+

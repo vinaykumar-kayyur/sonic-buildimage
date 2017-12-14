@@ -13,6 +13,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Apply patch
 	git apply ../0001-Modify-user-map-profile.patch
+	git apply ../0002-Add-support-for-TACACS-source-address.patch
 
 	dpkg-buildpackage -rfakeroot -b -us -uc
 	popd
