@@ -22,16 +22,12 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
         super(board, self).__init__(self.eeprom_path, 0, '', True)
 
     def serial_number_str(self, e):
-        """Return Service Tag instead of serial number"""
+        """Return service tag instead of serial number"""
 
-        if self._TLV_HDR_ENABLED:
-            tlv_no_header = e[self._TLV_INFO_HDR_LEN:] if self._TLV_HDR_ENABLED else e
-
-        (is_valid, t) = self.get_tlv_index(tlv_no_header, self._TLV_CODE_SERVICE_TAG)
-
-        if not is_valid:
+        (is_valid, results) = self.get_tlv_field(e, self._TLV_CODE_SERVICE_TAG)
+        if is_valid == False:
             return "Bad service tag"
 
-        t = tlv_no_header[t:]
-
-        return t[2:2 + ord(t[1])]
+        # 'results' is a list containing 3 elements, type (int), length (int),
+        # and value (string) of the requested TLV
+        return  results[2]
