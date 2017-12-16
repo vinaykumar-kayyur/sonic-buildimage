@@ -1,16 +1,16 @@
-From 08f4c83a6960fd922d1baac2293a95250f36fa96 Mon Sep 17 00:00:00 2001
+From ec966f9a0229bd7226e3abe15b56659b36af9d66 Mon Sep 17 00:00:00 2001
 From: Haiyang Zheng <haiyang.z@alibaba-inc.com>
-Date: Mon, 6 Nov 2017 00:24:00 -0800
-Subject: [patch libteam] libteam: Add lacp fallback support for
- single-member-port LAG
+Date: Fri, 15 Dec 2017 21:07:53 -0800
+Subject: [patch libteam] [libteam] Add fallback support for single-member-port
+ LAG
 
 Signed-off-by: Haiyang Zheng <haiyang.z@alibaba-inc.com>
 ---
- teamd/teamd_runner_lacp.c | 67 ++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 61 insertions(+), 6 deletions(-)
+ teamd/teamd_runner_lacp.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 2 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 9c77fae..872af8a 100644
+index 9c77fae..a3646a6 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -138,6 +138,8 @@ struct lacp {
@@ -48,7 +48,7 @@ index 9c77fae..872af8a 100644
 +	teamd_log_dbg("%s fallback eligible state \"%d \" cfg \"%d\".",
 +				lacp_port->tdport->ifname, lacp_port->state,
 +				lacp_port->lacp->cfg.fallback);
-+	return lacp_port->state == PORT_STATE_DEFAULTED && 
++	return lacp_port->state == PORT_STATE_DEFAULTED &&
 +		lacp_port->lacp->cfg.fallback;
 +}
 +
@@ -70,54 +70,7 @@ index 9c77fae..872af8a 100644
  		return false;
  	return true;
  }
-@@ -1002,6 +1025,12 @@ static int lacp_port_link_update(struct lacp_port *lacp_port)
- 	uint32_t speed = team_get_port_speed(team_port);
- 	uint8_t duplex = team_get_port_duplex(team_port);
- 	int err;
-+	bool admin_state;
-+
-+	admin_state = team_get_ifinfo_admin_state(lacp_port->ctx->ifinfo);
-+	teamd_log_dbg("%s admin_state  \"%d\" link_up \"%d\".",
-+				lacp_port->tdport->ifname,
-+				admin_state, linkup);
- 
- 	if (linkup != lacp_port->__link_last.up ||
- 	    duplex != lacp_port->__link_last.duplex) {
-@@ -1011,8 +1040,9 @@ static int lacp_port_link_update(struct lacp_port *lacp_port)
- 		 * will provide speed == 0 and duplex == 0. If that is the
- 		 * case now, do not set disabled state and allow such devices
- 		 * to work properly.
-+		 * Only enable port if the it is admin_up and link_up.
- 		 */
--		if (linkup && (!duplex == !speed))
-+		if (linkup && (!duplex == !speed) && admin_state)
- 			err = lacp_port_set_state(lacp_port, PORT_STATE_EXPIRED);
- 		else
- 			err = lacp_port_set_state(lacp_port, PORT_STATE_DISABLED);
-@@ -1344,9 +1374,19 @@ static int lacp_event_watch_admin_state_changed(struct teamd_context *ctx,
- 
- 	teamd_for_each_tdport(tdport, ctx) {
- 		struct lacp_port *lacp_port = lacp_port_get(lacp, tdport);
--
--		err = lacp_port_set_state(lacp_port,
--					  admin_state?PORT_STATE_EXPIRED:PORT_STATE_DISABLED);
-+		/* Only enable port if it is admin_up and link_up.*/
-+		if (lacp_port->__link_last.up) {
-+			teamd_log_dbg("%s admin_state  \"%d\" link_up.",
-+						lacp_port->tdport->ifname,
-+						admin_state);
-+			err = lacp_port_set_state(lacp_port,
-+					  	admin_state?PORT_STATE_EXPIRED:PORT_STATE_DISABLED);
-+		} else {
-+			teamd_log_dbg("%s admin_state  \"%d\" link_down.",
-+						lacp_port->tdport->ifname,
-+						admin_state);
-+			err = lacp_port_set_state(lacp_port, PORT_STATE_DISABLED);
-+		}
- 		if (err)
- 			return err;
- 	}
-@@ -1452,6 +1492,16 @@ static int lacp_state_fast_rate_get(struct teamd_context *ctx,
+@@ -1452,6 +1475,16 @@ static int lacp_state_fast_rate_get(struct teamd_context *ctx,
  	return 0;
  }
  
@@ -134,7 +87,7 @@ index 9c77fae..872af8a 100644
  static int lacp_state_select_policy_get(struct teamd_context *ctx,
  					struct team_state_gsc *gsc,
  					void *priv)
-@@ -1479,6 +1529,11 @@ static const struct teamd_state_val lacp_state_vals[] = {
+@@ -1479,6 +1512,11 @@ static const struct teamd_state_val lacp_state_vals[] = {
  		.getter = lacp_state_fast_rate_get,
  	},
  	{
