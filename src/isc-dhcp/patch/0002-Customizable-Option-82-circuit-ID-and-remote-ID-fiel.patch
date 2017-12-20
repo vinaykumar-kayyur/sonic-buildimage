@@ -1,4 +1,4 @@
-From 248342f92727fc66511ceb2f7269bc286fe5bffe Mon Sep 17 00:00:00 2001
+From c2361e2bf24408cc21a4691c3897cc64c95372f1 Mon Sep 17 00:00:00 2001
 From: Joe LeVeque <jolevequ@microsoft.com>
 Date: Mon, 11 Dec 2017 23:21:08 +0000
 Subject: [PATCH 2/4] Customizable Option 82 circuit ID and remote ID fields
