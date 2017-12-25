@@ -29,6 +29,8 @@ HWSKU=`sonic-cfggen -d -v "DEVICE_METADATA['localhost']['hwsku']"`
 
 SWSSCONFIG_ARGS="00-copp.config.json ipinip.json ports.json switch.json "
 
+if [ "$HWSKU" == "E582-48x6q" ]; then
+    SWSSCONFIG_ARGS="" 
 if [ "$HWSKU" == "Force10-S6000" ]; then
     SWSSCONFIG_ARGS+="td2.32ports.buffers.json td2.32ports.qos.json "
 elif [ "$HWSKU" == "Force10-S6000-Q32" ]; then
