@@ -8,7 +8,7 @@ import os.path
 
 try:
     from sonic_psu.psu_base import PsuBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
