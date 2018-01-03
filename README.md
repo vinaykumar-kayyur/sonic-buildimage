@@ -37,8 +37,9 @@ To clone the code repository recursively, assuming git version 1.9 or newer:
 
 To build SONiC installer image and docker images, run the following commands:
 
-    # (Optional) Checkout a specific branch. By default, it uses master branch
     cd sonic-buildimage
+
+    # (Optional) Checkout a specific branch. By default, it uses master branch
     git checkout [branch_name]
 
     # Execute make init once after cloning the repo, or fetched remote repo with submodule updates
