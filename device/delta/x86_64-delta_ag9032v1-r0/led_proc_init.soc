@@ -1,3 +1,1027 @@
+phy ce0 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce0 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce0 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce0 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce0 txfir_ctl1r.0 txfir_post2=0
+phy ce0 txfir_ctl2r.0 txfir_post3=0
+
+phy ce0 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce0 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce0 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce0 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce0 txfir_ctl1r.1 txfir_post2=0
+phy ce0 txfir_ctl2r.1 txfir_post3=0
+
+phy ce0 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce0 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce0 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce0 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce0 txfir_ctl1r.2 txfir_post2=0
+phy ce0 txfir_ctl2r.2 txfir_post3=0
+
+phy ce0 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce0 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce0 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce0 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce0 txfir_ctl1r.3 txfir_post2=0
+phy ce0 txfir_ctl2r.3 txfir_post3=0
+
+phy ce1 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce1 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce1 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce1 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce1 txfir_ctl1r.0 txfir_post2=0
+phy ce1 txfir_ctl2r.0 txfir_post3=0
+
+phy ce1 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce1 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce1 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce1 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce1 txfir_ctl1r.1 txfir_post2=0
+phy ce1 txfir_ctl2r.1 txfir_post3=0
+
+phy ce1 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce1 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce1 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce1 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce1 txfir_ctl1r.2 txfir_post2=0
+phy ce1 txfir_ctl2r.2 txfir_post3=0
+
+phy ce1 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce1 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce1 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce1 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce1 txfir_ctl1r.3 txfir_post2=0
+phy ce1 txfir_ctl2r.3 txfir_post3=0
+
+phy ce2 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce2 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce2 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce2 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce2 txfir_ctl1r.0 txfir_post2=0
+phy ce2 txfir_ctl2r.0 txfir_post3=0
+
+phy ce2 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce2 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce2 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce2 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce2 txfir_ctl1r.1 txfir_post2=0
+phy ce2 txfir_ctl2r.1 txfir_post3=0
+
+phy ce2 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce2 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce2 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce2 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce2 txfir_ctl1r.2 txfir_post2=0
+phy ce2 txfir_ctl2r.2 txfir_post3=0
+
+phy ce2 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce2 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce2 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce2 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce2 txfir_ctl1r.3 txfir_post2=0
+phy ce2 txfir_ctl2r.3 txfir_post3=0
+
+phy ce3 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce3 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce3 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce3 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce3 txfir_ctl1r.0 txfir_post2=0
+phy ce3 txfir_ctl2r.0 txfir_post3=0
+
+phy ce3 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce3 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce3 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce3 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce3 txfir_ctl1r.1 txfir_post2=0
+phy ce3 txfir_ctl2r.1 txfir_post3=0
+
+phy ce3 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce3 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce3 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce3 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce3 txfir_ctl1r.2 txfir_post2=0
+phy ce3 txfir_ctl2r.2 txfir_post3=0
+
+phy ce3 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce3 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce3 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce3 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce3 txfir_ctl1r.3 txfir_post2=0
+phy ce3 txfir_ctl2r.3 txfir_post3=0
+
+phy ce4 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce4 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce4 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce4 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce4 txfir_ctl1r.0 txfir_post2=0
+phy ce4 txfir_ctl2r.0 txfir_post3=0
+
+phy ce4 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce4 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce4 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce4 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce4 txfir_ctl1r.1 txfir_post2=0
+phy ce4 txfir_ctl2r.1 txfir_post3=0
+
+phy ce4 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xd
+noe programming the tx fir for lane=2
+phy ce4 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce4 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce4 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce4 txfir_ctl1r.2 txfir_post2=0
+phy ce4 txfir_ctl2r.2 txfir_post3=0
+
+phy ce4 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xd
+noe programming the tx fir for lane=3
+phy ce4 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce4 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce4 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce4 txfir_ctl1r.3 txfir_post2=0
+phy ce4 txfir_ctl2r.3 txfir_post3=0
+
+phy ce5 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce5 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce5 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce5 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce5 txfir_ctl1r.0 txfir_post2=0
+phy ce5 txfir_ctl2r.0 txfir_post3=0
+
+phy ce5 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce5 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce5 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce5 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce5 txfir_ctl1r.1 txfir_post2=0
+phy ce5 txfir_ctl2r.1 txfir_post3=0
+
+phy ce5 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce5 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce5 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce5 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce5 txfir_ctl1r.2 txfir_post2=0
+phy ce5 txfir_ctl2r.2 txfir_post3=0
+
+phy ce5 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce5 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce5 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce5 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce5 txfir_ctl1r.3 txfir_post2=0
+phy ce5 txfir_ctl2r.3 txfir_post3=0
+
+phy ce6 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce6 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce6 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce6 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce6 txfir_ctl1r.0 txfir_post2=0
+phy ce6 txfir_ctl2r.0 txfir_post3=0
+
+phy ce6 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce6 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce6 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce6 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce6 txfir_ctl1r.1 txfir_post2=0
+phy ce6 txfir_ctl2r.1 txfir_post3=0
+
+phy ce6 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce6 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce6 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce6 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce6 txfir_ctl1r.2 txfir_post2=0
+phy ce6 txfir_ctl2r.2 txfir_post3=0
+
+phy ce6 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce6 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce6 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce6 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce6 txfir_ctl1r.3 txfir_post2=0
+phy ce6 txfir_ctl2r.3 txfir_post3=0
+
+phy ce7 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce7 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce7 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce7 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce7 txfir_ctl1r.0 txfir_post2=0
+phy ce7 txfir_ctl2r.0 txfir_post3=0
+
+phy ce7 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce7 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce7 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce7 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce7 txfir_ctl1r.1 txfir_post2=0
+phy ce7 txfir_ctl2r.1 txfir_post3=0
+
+phy ce7 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce7 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce7 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce7 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce7 txfir_ctl1r.2 txfir_post2=0
+phy ce7 txfir_ctl2r.2 txfir_post3=0
+
+phy ce7 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce7 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce7 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce7 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce7 txfir_ctl1r.3 txfir_post2=0
+phy ce7 txfir_ctl2r.3 txfir_post3=0
+
+phy ce8 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce8 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce8 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce8 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce8 txfir_ctl1r.0 txfir_post2=0
+phy ce8 txfir_ctl2r.0 txfir_post3=0
+
+phy ce8 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce8 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce8 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce8 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce8 txfir_ctl1r.1 txfir_post2=0
+phy ce8 txfir_ctl2r.1 txfir_post3=0
+
+phy ce8 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce8 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce8 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce8 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce8 txfir_ctl1r.2 txfir_post2=0
+phy ce8 txfir_ctl2r.2 txfir_post3=0
+
+phy ce8 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce8 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce8 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce8 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce8 txfir_ctl1r.3 txfir_post2=0
+phy ce8 txfir_ctl2r.3 txfir_post3=0
+
+phy ce9 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce9 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce9 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce9 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce9 txfir_ctl1r.0 txfir_post2=0
+phy ce9 txfir_ctl2r.0 txfir_post3=0
+
+phy ce9 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce9 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce9 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce9 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce9 txfir_ctl1r.1 txfir_post2=0
+phy ce9 txfir_ctl2r.1 txfir_post3=0
+
+phy ce9 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce9 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce9 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce9 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce9 txfir_ctl1r.2 txfir_post2=0
+phy ce9 txfir_ctl2r.2 txfir_post3=0
+
+phy ce9 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce9 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce9 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce9 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce9 txfir_ctl1r.3 txfir_post2=0
+phy ce9 txfir_ctl2r.3 txfir_post3=0
+
+phy ce10 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce10 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce10 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce10 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce10 txfir_ctl1r.0 txfir_post2=0
+phy ce10 txfir_ctl2r.0 txfir_post3=0
+
+phy ce10 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce10 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce10 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce10 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce10 txfir_ctl1r.1 txfir_post2=0
+phy ce10 txfir_ctl2r.1 txfir_post3=0
+
+phy ce10 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce10 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce10 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce10 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce10 txfir_ctl1r.2 txfir_post2=0
+phy ce10 txfir_ctl2r.2 txfir_post3=0
+
+phy ce10 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce10 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce10 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce10 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce10 txfir_ctl1r.3 txfir_post2=0
+phy ce10 txfir_ctl2r.3 txfir_post3=0
+
+phy ce11 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce11 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce11 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce11 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce11 txfir_ctl1r.0 txfir_post2=0
+phy ce11 txfir_ctl2r.0 txfir_post3=0
+
+phy ce11 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce11 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce11 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce11 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce11 txfir_ctl1r.1 txfir_post2=0
+phy ce11 txfir_ctl2r.1 txfir_post3=0
+
+phy ce11 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce11 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce11 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce11 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce11 txfir_ctl1r.2 txfir_post2=0
+phy ce11 txfir_ctl2r.2 txfir_post3=0
+
+phy ce11 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce11 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce11 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce11 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce11 txfir_ctl1r.3 txfir_post2=0
+phy ce11 txfir_ctl2r.3 txfir_post3=0
+
+phy ce12 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce12 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce12 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce12 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce12 txfir_ctl1r.0 txfir_post2=0
+phy ce12 txfir_ctl2r.0 txfir_post3=0
+
+phy ce12 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce12 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce12 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce12 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce12 txfir_ctl1r.1 txfir_post2=0
+phy ce12 txfir_ctl2r.1 txfir_post3=0
+
+phy ce12 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce12 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce12 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce12 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce12 txfir_ctl1r.2 txfir_post2=0
+phy ce12 txfir_ctl2r.2 txfir_post3=0
+
+phy ce12 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce12 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce12 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce12 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce12 txfir_ctl1r.3 txfir_post2=0
+phy ce12 txfir_ctl2r.3 txfir_post3=0
+
+phy ce13 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce13 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce13 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce13 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce13 txfir_ctl1r.0 txfir_post2=0
+phy ce13 txfir_ctl2r.0 txfir_post3=0
+
+phy ce13 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce13 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce13 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce13 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce13 txfir_ctl1r.1 txfir_post2=0
+phy ce13 txfir_ctl2r.1 txfir_post3=0
+
+phy ce13 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce13 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce13 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce13 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce13 txfir_ctl1r.2 txfir_post2=0
+phy ce13 txfir_ctl2r.2 txfir_post3=0
+
+phy ce13 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce13 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce13 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce13 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce13 txfir_ctl1r.3 txfir_post2=0
+phy ce13 txfir_ctl2r.3 txfir_post3=0
+
+phy ce14 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce14 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce14 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce14 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce14 txfir_ctl1r.0 txfir_post2=0
+phy ce14 txfir_ctl2r.0 txfir_post3=0
+
+phy ce14 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce14 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce14 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce14 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce14 txfir_ctl1r.1 txfir_post2=0
+phy ce14 txfir_ctl2r.1 txfir_post3=0
+
+phy ce14 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce14 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce14 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce14 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce14 txfir_ctl1r.2 txfir_post2=0
+phy ce14 txfir_ctl2r.2 txfir_post3=0
+
+phy ce14 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce14 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce14 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce14 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce14 txfir_ctl1r.3 txfir_post2=0
+phy ce14 txfir_ctl2r.3 txfir_post3=0
+
+phy ce15 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce15 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce15 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce15 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce15 txfir_ctl1r.0 txfir_post2=0
+phy ce15 txfir_ctl2r.0 txfir_post3=0
+
+phy ce15 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce15 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce15 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce15 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce15 txfir_ctl1r.1 txfir_post2=0
+phy ce15 txfir_ctl2r.1 txfir_post3=0
+
+phy ce15 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce15 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce15 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce15 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce15 txfir_ctl1r.2 txfir_post2=0
+phy ce15 txfir_ctl2r.2 txfir_post3=0
+
+phy ce15 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce15 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce15 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce15 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce15 txfir_ctl1r.3 txfir_post2=0
+phy ce15 txfir_ctl2r.3 txfir_post3=0
+
+phy ce16 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce16 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce16 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce16 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce16 txfir_ctl1r.0 txfir_post2=0
+phy ce16 txfir_ctl2r.0 txfir_post3=0
+
+phy ce16 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce16 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce16 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce16 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce16 txfir_ctl1r.1 txfir_post2=0
+phy ce16 txfir_ctl2r.1 txfir_post3=0
+
+phy ce16 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce16 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce16 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce16 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce16 txfir_ctl1r.2 txfir_post2=0
+phy ce16 txfir_ctl2r.2 txfir_post3=0
+
+phy ce16 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce16 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce16 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce16 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce16 txfir_ctl1r.3 txfir_post2=0
+phy ce16 txfir_ctl2r.3 txfir_post3=0
+
+phy ce17 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce17 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce17 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce17 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce17 txfir_ctl1r.0 txfir_post2=0
+phy ce17 txfir_ctl2r.0 txfir_post3=0
+
+phy ce17 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce17 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce17 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce17 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce17 txfir_ctl1r.1 txfir_post2=0
+phy ce17 txfir_ctl2r.1 txfir_post3=0
+
+phy ce17 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce17 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce17 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce17 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce17 txfir_ctl1r.2 txfir_post2=0
+phy ce17 txfir_ctl2r.2 txfir_post3=0
+
+phy ce17 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce17 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce17 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce17 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce17 txfir_ctl1r.3 txfir_post2=0
+phy ce17 txfir_ctl2r.3 txfir_post3=0
+
+phy ce18 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce18 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce18 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce18 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce18 txfir_ctl1r.0 txfir_post2=0
+phy ce18 txfir_ctl2r.0 txfir_post3=0
+
+phy ce18 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce18 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce18 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce18 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce18 txfir_ctl1r.1 txfir_post2=0
+phy ce18 txfir_ctl2r.1 txfir_post3=0
+
+phy ce18 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce18 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce18 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce18 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce18 txfir_ctl1r.2 txfir_post2=0
+phy ce18 txfir_ctl2r.2 txfir_post3=0
+
+phy ce18 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce18 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce18 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce18 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce18 txfir_ctl1r.3 txfir_post2=0
+phy ce18 txfir_ctl2r.3 txfir_post3=0
+
+phy ce19 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce19 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce19 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce19 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce19 txfir_ctl1r.0 txfir_post2=0
+phy ce19 txfir_ctl2r.0 txfir_post3=0
+
+phy ce19 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce19 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce19 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce19 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce19 txfir_ctl1r.1 txfir_post2=0
+phy ce19 txfir_ctl2r.1 txfir_post3=0
+
+phy ce19 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce19 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce19 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce19 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce19 txfir_ctl1r.2 txfir_post2=0
+phy ce19 txfir_ctl2r.2 txfir_post3=0
+
+phy ce19 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce19 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce19 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce19 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce19 txfir_ctl1r.3 txfir_post2=0
+phy ce19 txfir_ctl2r.3 txfir_post3=0
+
+phy ce20 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce20 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce20 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce20 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce20 txfir_ctl1r.0 txfir_post2=0
+phy ce20 txfir_ctl2r.0 txfir_post3=0
+
+phy ce20 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce20 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce20 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce20 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce20 txfir_ctl1r.1 txfir_post2=0
+phy ce20 txfir_ctl2r.1 txfir_post3=0
+
+phy ce20 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce20 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce20 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce20 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce20 txfir_ctl1r.2 txfir_post2=0
+phy ce20 txfir_ctl2r.2 txfir_post3=0
+
+phy ce20 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce20 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce20 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce20 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce20 txfir_ctl1r.3 txfir_post2=0
+phy ce20 txfir_ctl2r.3 txfir_post3=0
+
+phy ce21 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce21 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce21 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce21 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce21 txfir_ctl1r.0 txfir_post2=0
+phy ce21 txfir_ctl2r.0 txfir_post3=0
+
+phy ce21 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce21 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce21 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce21 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce21 txfir_ctl1r.1 txfir_post2=0
+phy ce21 txfir_ctl2r.1 txfir_post3=0
+
+phy ce21 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce21 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce21 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce21 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce21 txfir_ctl1r.2 txfir_post2=0
+phy ce21 txfir_ctl2r.2 txfir_post3=0
+
+phy ce21 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce21 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce21 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce21 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce21 txfir_ctl1r.3 txfir_post2=0
+phy ce21 txfir_ctl2r.3 txfir_post3=0
+
+phy ce22 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce22 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=3
+phy ce22 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce22 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce22 txfir_ctl1r.0 txfir_post2=0
+phy ce22 txfir_ctl2r.0 txfir_post3=0
+
+phy ce22 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce22 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=3
+phy ce22 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce22 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce22 txfir_ctl1r.1 txfir_post2=0
+phy ce22 txfir_ctl2r.1 txfir_post3=0
+
+phy ce22 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce22 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=3
+phy ce22 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce22 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce22 txfir_ctl1r.2 txfir_post2=0
+phy ce22 txfir_ctl2r.2 txfir_post3=0
+
+phy ce22 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce22 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce22 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce22 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce22 txfir_ctl1r.3 txfir_post2=0
+phy ce22 txfir_ctl2r.3 txfir_post3=0
+
+phy ce23 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce23 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce23 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=97
+phy ce23 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=10
+phy ce23 txfir_ctl1r.0 txfir_post2=0
+phy ce23 txfir_ctl2r.0 txfir_post3=0
+
+phy ce23 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce23 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce23 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=97
+phy ce23 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=10
+phy ce23 txfir_ctl1r.1 txfir_post2=0
+phy ce23 txfir_ctl2r.1 txfir_post3=0
+
+phy ce23 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce23 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce23 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=97
+phy ce23 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=10
+phy ce23 txfir_ctl1r.2 txfir_post2=0
+phy ce23 txfir_ctl2r.2 txfir_post3=0
+
+phy ce23 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce23 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce23 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=97
+phy ce23 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=10
+phy ce23 txfir_ctl1r.3 txfir_post2=0
+phy ce23 txfir_ctl2r.3 txfir_post3=0
+
+phy ce24 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce24 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce24 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce24 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce24 txfir_ctl1r.0 txfir_post2=0
+phy ce24 txfir_ctl2r.0 txfir_post3=0
+
+phy ce24 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce24 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce24 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce24 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce24 txfir_ctl1r.1 txfir_post2=0
+phy ce24 txfir_ctl2r.1 txfir_post3=0
+
+phy ce24 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce24 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce24 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce24 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce24 txfir_ctl1r.2 txfir_post2=0
+phy ce24 txfir_ctl2r.2 txfir_post3=0
+
+phy ce24 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce24 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce24 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce24 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce24 txfir_ctl1r.3 txfir_post2=0
+phy ce24 txfir_ctl2r.3 txfir_post3=0
+
+phy ce25 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce25 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce25 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce25 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce25 txfir_ctl1r.0 txfir_post2=0
+phy ce25 txfir_ctl2r.0 txfir_post3=0
+
+phy ce25 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce25 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce25 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce25 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce25 txfir_ctl1r.1 txfir_post2=0
+phy ce25 txfir_ctl2r.1 txfir_post3=0
+
+phy ce25 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce25 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce25 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce25 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce25 txfir_ctl1r.2 txfir_post2=0
+phy ce25 txfir_ctl2r.2 txfir_post3=0
+
+phy ce25 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce25 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce25 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce25 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce25 txfir_ctl1r.3 txfir_post2=0
+phy ce25 txfir_ctl2r.3 txfir_post3=0
+
+phy ce26 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce26 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce26 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce26 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce26 txfir_ctl1r.0 txfir_post2=0
+phy ce26 txfir_ctl2r.0 txfir_post3=0
+
+phy ce26 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce26 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce26 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce26 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce26 txfir_ctl1r.1 txfir_post2=0
+phy ce26 txfir_ctl2r.1 txfir_post3=0
+
+phy ce26 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce26 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce26 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce26 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce26 txfir_ctl1r.2 txfir_post2=0
+phy ce26 txfir_ctl2r.2 txfir_post3=0
+
+phy ce26 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce26 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce26 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce26 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce26 txfir_ctl1r.3 txfir_post2=0
+phy ce26 txfir_ctl2r.3 txfir_post3=0
+
+phy ce27 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce27 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce27 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce27 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce27 txfir_ctl1r.0 txfir_post2=0
+phy ce27 txfir_ctl2r.0 txfir_post3=0
+
+phy ce27 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce27 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce27 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce27 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce27 txfir_ctl1r.1 txfir_post2=0
+phy ce27 txfir_ctl2r.1 txfir_post3=0
+
+phy ce27 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce27 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce27 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce27 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce27 txfir_ctl1r.2 txfir_post2=0
+phy ce27 txfir_ctl2r.2 txfir_post3=0
+
+phy ce27 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce27 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce27 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce27 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce27 txfir_ctl1r.3 txfir_post2=0
+phy ce27 txfir_ctl2r.3 txfir_post3=0
+
+phy ce28 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce28 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce28 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce28 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce28 txfir_ctl1r.0 txfir_post2=0
+phy ce28 txfir_ctl2r.0 txfir_post3=0
+
+phy ce28 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce28 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce28 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce28 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce28 txfir_ctl1r.1 txfir_post2=0
+phy ce28 txfir_ctl2r.1 txfir_post3=0
+
+phy ce28 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce28 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce28 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce28 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce28 txfir_ctl1r.2 txfir_post2=0
+phy ce28 txfir_ctl2r.2 txfir_post3=0
+
+phy ce28 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce28 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce28 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce28 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce28 txfir_ctl1r.3 txfir_post2=0
+phy ce28 txfir_ctl2r.3 txfir_post3=0
+
+phy ce29 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce29 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce29 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce29 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce29 txfir_ctl1r.0 txfir_post2=0
+phy ce29 txfir_ctl2r.0 txfir_post3=0
+
+phy ce29 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce29 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce29 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce29 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce29 txfir_ctl1r.1 txfir_post2=0
+phy ce29 txfir_ctl2r.1 txfir_post3=0
+
+phy ce29 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce29 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce29 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce29 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce29 txfir_ctl1r.2 txfir_post2=0
+phy ce29 txfir_ctl2r.2 txfir_post3=0
+
+phy ce29 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce29 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce29 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce29 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce29 txfir_ctl1r.3 txfir_post2=0
+phy ce29 txfir_ctl2r.3 txfir_post3=0
+
+phy ce30 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce30 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=17
+phy ce30 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=102
+phy ce30 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=5
+phy ce30 txfir_ctl1r.0 txfir_post2=0
+phy ce30 txfir_ctl2r.0 txfir_post3=0
+
+phy ce30 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce30 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=17
+phy ce30 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=102
+phy ce30 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=5
+phy ce30 txfir_ctl1r.1 txfir_post2=0
+phy ce30 txfir_ctl2r.1 txfir_post3=0
+
+phy ce30 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce30 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=17
+phy ce30 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=102
+phy ce30 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=5
+phy ce30 txfir_ctl1r.2 txfir_post2=0
+phy ce30 txfir_ctl2r.2 txfir_post3=0
+
+phy ce30 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce30 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=17
+phy ce30 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=102
+phy ce30 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=5
+phy ce30 txfir_ctl1r.3 txfir_post2=0
+phy ce30 txfir_ctl2r.3 txfir_post3=0
+
+phy ce31 AMS_TX_CTL2r.0  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=0
+phy ce31 cl93n72_ut_ctl2r.0 cl93n72_txfir_pre=15
+phy ce31 cl93n72_ut_ctl3r.0 cl93n72_txfir_main=110
+phy ce31 cl93n72_ut_ctl2r.0 cl93n72_txfir_post=2
+phy ce31 txfir_ctl1r.0 txfir_post2=0
+phy ce31 txfir_ctl2r.0 txfir_post3=0
+
+phy ce31 AMS_TX_CTL2r.1  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=1
+phy ce31 cl93n72_ut_ctl2r.1 cl93n72_txfir_pre=15
+phy ce31 cl93n72_ut_ctl3r.1 cl93n72_txfir_main=110
+phy ce31 cl93n72_ut_ctl2r.1 cl93n72_txfir_post=2
+phy ce31 txfir_ctl1r.1 txfir_post2=0
+phy ce31 txfir_ctl2r.1 txfir_post3=0
+
+phy ce31 AMS_TX_CTL2r.2  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=2
+phy ce31 cl93n72_ut_ctl2r.2 cl93n72_txfir_pre=15
+phy ce31 cl93n72_ut_ctl3r.2 cl93n72_txfir_main=110
+phy ce31 cl93n72_ut_ctl2r.2 cl93n72_txfir_post=2
+phy ce31 txfir_ctl1r.2 txfir_post2=0
+phy ce31 txfir_ctl2r.2 txfir_post3=0
+
+phy ce31 AMS_TX_CTL2r.3  AMS_TX_AMP_CTL=0xf
+noe programming the tx fir for lane=3
+phy ce31 cl93n72_ut_ctl2r.3 cl93n72_txfir_pre=15
+phy ce31 cl93n72_ut_ctl3r.3 cl93n72_txfir_main=110
+phy ce31 cl93n72_ut_ctl2r.3 cl93n72_txfir_post=2
+phy ce31 txfir_ctl1r.3 txfir_post2=0
+phy ce31 txfir_ctl2r.3 txfir_post3=0
+
 s CMIC_LEDUP0_PROGRAM_RAM 0
 s CMIC_LEDUP1_PROGRAM_RAM 0
 
