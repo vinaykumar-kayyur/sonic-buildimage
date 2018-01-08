@@ -15,8 +15,7 @@ except ImportError as e:
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
-    SYSFS_PSU_DIR = ["/sys/bus/i2c/devices/i2c-18/18-0050",
-                     "/sys/bus/i2c/devices/i2c-17/17-0050"]
+    PSU_CPLD_DIR = "/sys/bus/i2c/devices/0-0033"
 
     def __init__(self):
         PsuBase.__init__(self)
@@ -55,15 +54,16 @@ class PsuUtil(PsuBase):
         faulty
         """
         status = 0
-        attr_file = 'psu_pg'        
-        attr_path = self.SYSFS_PSU_DIR[index-1] +'/' + attr_file
+        mask = [ 0x08, 0x10 ]
+        attr_file = 'cpld_pw_good'        
+        attr_path = self.PSU_CPLD_DIR +'/'+ attr_file
                   
         attr_value = self.get_attr_value(attr_path)
         
         if (attr_value != 'ERR'):
             attr_value = int(attr_value, 16)
             # Check for PSU status
-            if (attr_value == 1):
+            if (attr_value & mask[index-1]):
                     status = 1
 
         return status
@@ -76,16 +76,16 @@ class PsuUtil(PsuBase):
         :return: Boolean, True if PSU is plugged, False if not
         """
         status = 0
-        psu_absent = 0
-        attr_file ='psu_abs'
-        attr_path = self.SYSFS_PSU_DIR[index-1] +'/' + attr_file
+        mask = [ 0x01, 0x02 ]
+        attr_file ='cpld_pw_abs'
+        attr_path = self.PSU_CPLD_DIR +'/'+ attr_file
         
         attr_value = self.get_attr_value(attr_path)
 
         if (attr_value != 'ERR'):
             attr_value = int(attr_value, 16)
             # Check for PSU presence
-            if (attr_value == 0):
+            if (~attr_value & mask[index-1]):
                     status = 1
 
         return status
