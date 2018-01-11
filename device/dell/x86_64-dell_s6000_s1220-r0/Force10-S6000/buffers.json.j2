@@ -7,9 +7,9 @@
 {# Each record describes mapping of DUT (DUT port) role and neighbor role to cable length #}
 {# Roles described in the minigraph #}
 {% set ports2cable = {
-        'ToRRouter_Server'       : '5m',
-        'LeafRouter_ToRRouter'   : '40m',
-        'SpineRouter_LeafRouter' : '300m'
+        'torrouter_server'       : '5m',
+        'leafrouter_torrouter'   : '40m',
+        'spinerouter_leafrouter' : '300m'
         }
 %}
 
@@ -22,6 +22,8 @@
                 {%- set neighbor_role = neighbor.type -%}
                 {%- set roles1 = switch_role + '_' + neighbor_role %}
                 {%- set roles2 = neighbor_role + '_' + switch_role -%}
+                {%- set roles1 = roles1 | lower -%}
+                {%- set roles2 = roles2 | lower -%}
                 {%- if roles1 in ports2cable -%}
                     {%- if cable_len.append(ports2cable[roles1]) -%}{%- endif -%}
                 {%- elif roles2 in ports2cable -%}
