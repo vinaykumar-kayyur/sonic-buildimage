@@ -35,25 +35,24 @@
             "Ethernet24": "300m"
         }
     },
-
     "BUFFER_POOL": {
         "ingress_lossless_pool": {
-            "size": "6764966",
+            "size": "2097152",
             "type": "ingress",
             "mode": "dynamic"
         },
         "ingress_lossy_pool": {
-            "size": "6422528",
+            "size": "5242880",
             "type": "ingress",
             "mode": "dynamic"
         },
         "egress_lossless_pool": {
-            "size": "7291456",
+            "size": "16777152",
             "type": "egress",
             "mode": "dynamic"
         },
         "egress_lossy_pool": {
-            "size": "8254464",
+            "size": "5242880",
             "type": "egress",
             "mode": "dynamic"
         }
@@ -62,12 +61,12 @@
         "ingress_lossless_profile": {
             "pool":"[BUFFER_POOL|ingress_lossless_pool]",
             "size":"0",
-            "dynamic_th":"1"
+            "dynamic_th":"0"
         },
         "ingress_lossy_profile": {
             "pool":"[BUFFER_POOL|ingress_lossy_pool]",
             "size":"0",
-            "dynamic_th":"7"
+            "dynamic_th":"3"
         },
         "egress_lossless_profile": {
             "pool":"[BUFFER_POOL|egress_lossless_pool]",
@@ -77,12 +76,12 @@
         "egress_lossy_profile": {
             "pool":"[BUFFER_POOL|egress_lossy_pool]",
             "size":"4096",
-            "dynamic_th":"7"
+            "dynamic_th":"3"
         },
         "pg_lossy_profile": {
             "pool":"[BUFFER_POOL|ingress_lossy_pool]",
             "size":"0",
-            "dynamic_th":"7"
+            "dynamic_th":"3"
         },
         "q_lossless_profile": {
             "pool":"[BUFFER_POOL|egress_lossless_pool]",
@@ -92,7 +91,7 @@
         "q_lossy_profile": {
             "pool":"[BUFFER_POOL|egress_lossy_pool]",
             "size":"0",
-            "dynamic_th":"7"
+            "dynamic_th":"3"
         }
     },
     "BUFFER_PORT_INGRESS_PROFILE_LIST": {
