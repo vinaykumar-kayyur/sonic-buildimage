@@ -1,0 +1,28 @@
+From 9ce7c3273d78dc412e3a1e3c95307a63846bad39 Mon Sep 17 00:00:00 2001
+From: Joe LeVeque <jolevequ@microsoft.com>
+Date: Tue, 16 Jan 2018 20:42:13 +0000
+Subject: [PATCH] Prevent 'supervisorctl start' from hanging if system time
+ rolls backward
+
+---
+ supervisor/process.py | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/supervisor/process.py b/supervisor/process.py
+index f9ddcd9..d292421 100644
+--- a/supervisor/process.py
++++ b/supervisor/process.py
+@@ -588,6 +588,10 @@ class Subprocess:
+ 
+         logger = self.config.options.logger
+ 
++        # If system clock has moved backward, reset self.laststart to current system time
++        if now < self.laststart:
++            self.laststart = now;
++
+         if self.config.options.mood > SupervisorStates.RESTARTING:
+             # dont start any processes if supervisor is shutting down
+             if state == ProcessStates.EXITED:
+-- 
+2.1.4
+
