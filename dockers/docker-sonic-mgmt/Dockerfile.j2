@@ -96,3 +96,14 @@ RUN tar -xvzf azure-cli_bundle.tar.gz
 RUN azure-cli_bundle_*/installer
 
 RUN git clone https://github.com/Azure/sonic-mgmt
+
+# Forward all proxy settings from 'docker run' command line to container scope startup script.
+# So even ssh client has them. All env variables are optional
+# Sample command:
+#   docker run -e "http_proxy=ip1" -e "ftp_proxy=ip2" -it <image>
+#
+ENTRYPOINT bash -c "touch /etc/profile.d/proxy.sh \
+    && echo 'export http_proxy=${http_proxy}' >> /etc/profile.d/proxy.sh \
+    && echo 'export https_proxy=${http_proxy}' >> /etc/profile.d/proxy.sh \
+    && echo 'export ftp_proxy=${http_proxy}' >> /etc/profile.d/proxy.sh \
+    && bash"
