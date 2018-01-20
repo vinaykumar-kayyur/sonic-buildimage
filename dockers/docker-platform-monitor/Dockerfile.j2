@@ -15,15 +15,7 @@ COPY \
 {% for deb in docker_platform_monitor_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor -%}
-debs/
-{%- endif %}
-
-{% if docker_platform_monitor_debs.strip() %}
-# Install built Debian packages
-RUN dpkg -i \
-{% for deb in docker_platform_monitor_debs.split(' ') -%}
-debs/{{ deb }}{{' '}}
-{%- endfor %}
+/debs/
 {%- endif %}
 
 {% if docker_platform_monitor_whls.strip() %}
@@ -32,21 +24,17 @@ COPY \
 {% for whl in docker_platform_monitor_whls.split(' ') -%}
 python-wheels/{{ whl }}{{' '}}
 {%- endfor -%}
-python-wheels/
+/python-wheels/
 {%- endif %}
 
-{% if docker_platform_monitor_whls.strip() %}
-# Install built Python wheels
-RUN pip install \
-{% for whl in docker_platform_monitor_whls.split(' ') -%}
-python-wheels/{{ whl }}{{' '}}
-{%- endfor %}
-{%- endif %}
+# Copy dependencies of sonic-ledd
+COPY ["python-wheels/sonic_platform_common-*-py2-*.whl", "python-wheels/swsssdk-*-py2-*.whl", "/python-wheels/"]
 
-COPY python-wheels /python-wheels
+# Install all copied .deb packages
+RUN dpkg -i /debs/*.deb
 
-# Install Python SwSS SDK (dependency of sonic-ledd)
-RUN pip install /python-wheels/swsssdk-2.0.1-py2-none-any.whl
+# Install all copied .whl packages
+RUN pip install /python-wheels/*.whl
 
 # Clean up
 RUN apt-get remove -y python-pip
