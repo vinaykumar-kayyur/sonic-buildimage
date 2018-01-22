@@ -68,3 +68,6 @@
 [submodule "platform/p4/SAI-P4-BM"]
 	path = platform/p4/SAI-P4-BM
 	url = https://github.com/Mellanox/SAI-P4-BM.git
+[submodule "platform/centec/sonic-platform-modules-e582-48x6q"]
+	path = platform/platform/centec/sonic-platform-modules-e582-48x6q
+	url = https://github.com/CentecNetworks/sonic-platform-modules-e582
