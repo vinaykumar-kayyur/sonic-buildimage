@@ -145,7 +145,7 @@ class ConfigUpdater(object):
         self.restart_snmp_processes()
 
     def notification_handler(self, key, data):
-        log_info("ACL configuration changed. Updating sshd config accordingly...")
+        log_info("ACL configuration changed. Updating {} config accordingly...".format(self.SERVICE))
         self.write_configuration_file(self.get_src_ip_allow_list())
 
     def run(self):

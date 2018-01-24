@@ -1,6 +1,6 @@
 [Unit]
 Description=Takes care of updates to SSH config file with respect to the SSH allow list
-After=network.target auditd.service
+After=database.service
 ConditionPathExists=!/etc/ssh/sshd_not_to_be_run
 
 [Service]
