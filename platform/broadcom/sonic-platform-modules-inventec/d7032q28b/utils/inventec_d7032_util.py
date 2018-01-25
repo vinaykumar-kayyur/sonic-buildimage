@@ -124,6 +124,7 @@ drivers =[
 'inv_platform',
 'inv_psoc',
 'inv_cpld',
+'optoe',
 'swps']
  
 
@@ -152,29 +153,44 @@ def system_install():
 	      return status   
     
     for i in range(22,30):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-4/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-4/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status   
     for i in range(30,38):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-5/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-5/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status     
     for i in range(6,14):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-2/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-2/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status     
     for i in range(14,22):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-3/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-3/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
-                return status     				
+                return status
+    #Initialize the port_name 
+    for i in range(22,38):
+        port=i-22        
+        status, output =exec_cmd("echo port"+str(port)+"> /sys/bus/i2c/devices/"+str(i)+"-0050/port_name", 1)
+        if status:
+            print output
+            if FORCE == 0:            
+                return status
+    for i in range(6,22):
+        port=i+10        
+        status, output =exec_cmd("echo port"+str(port)+"> /sys/bus/i2c/devices/"+str(i)+"-0050/port_name", 1)
+        if status:
+            print output
+            if FORCE == 0:            
+                return status      				
     return 
      
         
