@@ -138,7 +138,7 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-	print port_num
+	
         present_path = self.BASE_VAL_PATH + "sfp_is_present"
         self.__port_to_is_present = present_path.format(self._port_to_i2c_mapping[port_num], self._port_to_i2c_mapping[port_num])
         try:
