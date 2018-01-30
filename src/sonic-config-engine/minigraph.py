@@ -148,7 +148,10 @@ def parse_dpg(dpg, hname):
             pcmbr_list = pcintfmbr.split(';')
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
-            pcs[pcintfname] = {'members': pcmbr_list}
+            if pcintf.find(str(QName(ns, "Fallback"))) != None:
+                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
+            else:
+                pcs[pcintfname] = {'members': pcmbr_list}
 
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlan_intfs = []
@@ -197,7 +200,16 @@ def parse_dpg(dpg, hname):
                     acl_intfs = port_alias_map.values()
                     break;
             if acl_intfs:
-                acls[aclname] = { 'policy_desc': aclname, 'ports': acl_intfs, 'type': 'MIRROR' if is_mirror else 'L3'}
+                acls[aclname] = {'policy_desc': aclname,
+                                 'ports': acl_intfs,
+                                 'type': 'MIRROR' if is_mirror else 'L3'}
+            else:
+                # This ACL has no interfaces to attach to -- consider this a control plane ACL
+                aclservice = aclintf.find(str(QName(ns, "Type"))).text
+                acls[aclname] = {'policy_desc': aclname,
+                                 'ports': acl_intfs,
+                                 'type': 'CTRLPLANE',
+                                 'service': aclservice if aclservice is not None else 'UNKNOWN'}
         return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls
     return None, None, None, None, None, None, None
 
@@ -298,7 +310,8 @@ def parse_meta(meta, hname):
     return syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id
 
 def parse_deviceinfo(meta, hwsku):
-    ethernet_interfaces = {}
+    port_speeds = {}
+    port_descriptions = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -306,8 +319,11 @@ def parse_deviceinfo(meta, hwsku):
             for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
                 alias = interface.find(str(QName(ns, "InterfaceName"))).text
                 speed = interface.find(str(QName(ns, "Speed"))).text
-                ethernet_interfaces[port_alias_map.get(alias, alias)] = speed
-    return ethernet_interfaces
+                desc  = interface.find(str(QName(ns, "Description")))
+                if desc != None:
+                    port_descriptions[port_alias_map.get(alias, alias)] = desc.text
+                port_speeds[port_alias_map.get(alias, alias)] = speed
+    return port_speeds, port_descriptions
 
 def parse_xml(filename, platform=None, port_config_file=None):
     root = ET.parse(filename).getroot()
@@ -330,6 +346,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     devices = None
     hostname = None
     port_speeds = {}
+    port_descriptions = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -360,7 +377,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
-            port_speeds = parse_deviceinfo(child, hwsku)
+            (port_speeds, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
@@ -395,6 +412,9 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     for port_name in port_speeds:
         ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
+    for port_name in port_descriptions:
+        ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
+
     results['PORT'] = ports
     results['PORTCHANNEL'] = pcs
     results['VLAN'] = vlans
