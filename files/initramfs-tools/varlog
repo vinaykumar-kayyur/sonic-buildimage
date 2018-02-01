@@ -17,12 +17,6 @@ for x in "$@"; do
     case "$x" in
         varlog_size=*)
             varlog_size="${x#varlog_size=}"
-            ;;
-        resize2fs-host)
-            resize_dev=`cat /proc/mounts | ${rootmnt}/bin/grep "/root/host" | ${rootmnt}/usr/bin/cut -d' ' -f1`
-            [ -z "$resize_dev" ] && exit 0
-            ${rootmnt}/sbin/resize2fs $resize_dev
-            ;;
     esac
 done
 
