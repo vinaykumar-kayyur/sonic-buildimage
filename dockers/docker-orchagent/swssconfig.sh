@@ -39,9 +39,6 @@ elif [ "$HWSKU" == "Arista-7050-QX32" ]; then
     SWSSCONFIG_ARGS+="td2.32ports.buffers.json td2.32ports.qos.json "
 elif [ "$HWSKU" == "Arista-7050-QX-32S" ]; then
     SWSSCONFIG_ARGS+="td2.32ports.buffers.json td2.32ports.qos.json "
-elif [[ "$HWSKU" == "ACS-MSN27"* ]] || [[ "$HWSKU" == "Mellanox-SN2700" ]]; then
-    sonic-cfggen -d -t /usr/share/sonic/templates/msn27xx.32ports.buffers.json.j2 > /etc/swss/config.d/msn27xx.32ports.buffers.json
-    SWSSCONFIG_ARGS+="msn27xx.32ports.buffers.json "
 fi
 
 for file in $SWSSCONFIG_ARGS; do
