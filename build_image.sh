@@ -67,32 +67,14 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
         exit 1
     }
 
-    if [ $CHUNK_SIZE = "0" ]; then
-        # Create a single compressed partition dump
-        gzip $OUTPUT_RAW_IMAGE
+    gzip $OUTPUT_RAW_IMAGE
 
-        [ -r $OUTPUT_RAW_IMAGE.gz ] || {
-            echo "Error : gzip $OUTPUT_RAW_IMAGE failed!"
-            exit 1
-        }
+    [ -r $OUTPUT_RAW_IMAGE.gz ] || {
+        echo "Error : gzip $OUTPUT_RAW_IMAGE failed!"
+        exit 1
+    }
 
-        mv $OUTPUT_RAW_IMAGE.gz $OUTPUT_RAW_IMAGE
-    else
-        # Split the partition dump into chunks, compress each chunk
-        # and tar the chunks to be used as the raw image
-        split -a 4 -b "$CHUNK_SIZE"M -d $OUTPUT_RAW_IMAGE sonic-$TARGET_MACHINE-chunk
-        rm $OUTPUT_RAW_IMAGE
-        gzip sonic-$TARGET_MACHINE-chunk*
-        tar -cf sonic-$TARGET_MACHINE.tar --remove-files sonic-$TARGET_MACHINE-chunk*
-
-        [ -r sonic-$TARGET_MACHINE.tar ] || {
-            echo "Error : tar sonic-$TARGET_MACHINE.tar failed!"
-            exit 1
-        }
-
-        mv sonic-$TARGET_MACHINE.tar $OUTPUT_RAW_IMAGE
-    fi
-
+    mv $OUTPUT_RAW_IMAGE.gz $OUTPUT_RAW_IMAGE
     echo "The compressed raw image is in $OUTPUT_RAW_IMAGE"
 
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
