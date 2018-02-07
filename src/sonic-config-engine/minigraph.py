@@ -400,7 +400,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     phyport_intfs = {}
     vlan_intfs = {}
     pc_intfs = {}
-    vlan_invert_mapping = dict([[v['alias'],k] for k,v in vlans.items() if v.has_key('alias')])
+    vlan_invert_mapping = { v['alias']:k for k,v in vlans.items() if v.has_key('alias') }
 
     for intf in intfs:
         if intf[0][0:4] == 'Vlan':
