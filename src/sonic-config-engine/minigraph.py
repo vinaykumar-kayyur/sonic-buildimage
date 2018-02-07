@@ -148,7 +148,10 @@ def parse_dpg(dpg, hname):
             pcmbr_list = pcintfmbr.split(';')
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
-            pcs[pcintfname] = {'members': pcmbr_list}
+            if pcintf.find(str(QName(ns, "Fallback"))) != None:
+                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
+            else:
+                pcs[pcintfname] = {'members': pcmbr_list}
 
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlan_intfs = []
@@ -197,7 +200,16 @@ def parse_dpg(dpg, hname):
                     acl_intfs = port_alias_map.values()
                     break;
             if acl_intfs:
-                acls[aclname] = { 'policy_desc': aclname, 'ports': acl_intfs, 'type': 'MIRROR' if is_mirror else 'L3'}
+                acls[aclname] = {'policy_desc': aclname,
+                                 'ports': acl_intfs,
+                                 'type': 'MIRROR' if is_mirror else 'L3'}
+            else:
+                # This ACL has no interfaces to attach to -- consider this a control plane ACL
+                aclservice = aclintf.find(str(QName(ns, "Type"))).text
+                acls[aclname] = {'policy_desc': aclname,
+                                 'ports': acl_intfs,
+                                 'type': 'CTRLPLANE',
+                                 'service': aclservice if aclservice is not None else 'UNKNOWN'}
         return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls
     return None, None, None, None, None, None, None
 
