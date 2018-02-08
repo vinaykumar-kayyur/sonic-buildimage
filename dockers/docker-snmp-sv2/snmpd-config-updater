@@ -83,7 +83,7 @@ try:
              f.write("%s\n" % this_community)
     f.close()
     os.rename(filename_tmp, filename)
-    os.system("service snmpd reload") # TODO: check return code and log error somewhere
+    os.system("kill -HUP $(pgrep snmpd) > /dev/null 2> /dev/null || :")
 
   # write initial configuration
   write_configuration_file(r.lrange(redis_key, 0, -1))
