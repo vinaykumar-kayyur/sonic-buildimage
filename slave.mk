@@ -235,6 +235,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(DEBS_PATH)/% : .platf
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 	# Build project
 	pushd $($*_SRC_PATH) $(LOG)
+	rm -rf deb_dist/* $(LOG)
 	python setup.py --command-packages=stdeb.command bdist_deb $(LOG)
 	popd $(LOG)
 	# Clean up
@@ -413,6 +414,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(IXGBE_DRIVER) \
                 $(SONIC_DEVICE_DATA) \
                 $(SONIC_UTILS) \
+                $(LIBWRAP) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
