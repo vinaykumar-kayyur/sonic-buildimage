@@ -1,182 +1,128 @@
-# sfputil.py
-#
-# Platform-specific SFP transceiver interface for SONiC
-#
+#!/usr/bin/env python
 
 try:
     import time
-    from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError as e:
-    raise ImportError("%s - required module not found" % str(e))
+    from sonic_sfp.sfputilbase import SfpUtilBase 
+except ImportError, e:
+    raise ImportError (str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
-    """Platform-specific SfpUtill class"""
+    """Platform specific SfpUtill class"""
 
-    PORT_START = 0
-    PORT_END = 71
-    PORTS_IN_BLOCK = 72
-    QSFP_PORT_START = 48
-    QSFP_PORT_END = 72
-
-    BASE_VAL_PATH = "/sys/class/i2c-adapter/i2c-{0}/{1}-0050/"
-
-    _port_to_is_present = {}
-    _port_to_lp_mode = {}
+    _port_start = 0
+    _port_end = 31
+    ports_in_block = 32
 
     _port_to_eeprom_mapping = {}
-    _port_to_i2c_mapping = {
-           0:  18, 
-           1:  19, 
-           2:  20, 
-           3:  21, 
-           4:  22, 
-           5:  23, 
-           6:  24, 
-           7:  25, 
-           8:  26,
-           9:  27,
-           10: 28,
-           11: 29,
-           12: 30,
-           13: 31,
-           14: 32,
-           15: 33,
-           16: 34,
-           17: 35,
-           18: 36,
-           19: 37,
-           20: 38,
-           21: 39,
-           22: 40,
-           23: 41,
-           24: 42,
-           25: 43,
-           26: 44,
-           27: 45,
-           28: 46,
-           29: 47,
-           30: 48,
-           31: 49,
-           32: 50,
-           33: 51,
-           34: 52,
-           35: 53,
-           36: 54,
-           37: 55,
-           38: 56,
-           39: 57,
-           40: 58,
-           41: 59,
-           42: 60,
-           43: 61,
-           44: 62,
-           45: 63,
-           46: 64,
-           47: 65,
-           48: 66, #QSFP49
-           49: 66,
-           50: 66,
-           51: 66,
-           52: 67, #QSFP50
-           53: 67,
-           54: 67,
-           55: 67,
-           56: 68, #QSFP51
-           57: 68,
-           58: 68,
-           59: 68,
-           60: 69, #QSFP52
-           61: 69,
-           62: 69,
-           63: 69,
-           64: 70, #QSFP53
-           65: 70,
-           66: 70,
-           67: 70,
-           68: 71, #QSFP54
-           69: 71,
-           70: 71,
-           71: 71,
-           }
+    port_to_i2c_mapping = {
+         9 : 18,
+        10 : 19,
+        11 : 20,
+        12 : 21,
+         1 : 22,
+         2 : 23,
+         3 : 24,
+         4 : 25,
+         6 : 26,
+         5 : 27,
+         8 : 28,
+         7 : 29,
+        13 : 30,
+        14 : 31,
+        15 : 32,
+        16 : 33,
+        17 : 34,
+        18 : 35,
+        19 : 36,
+        20 : 37,
+        25 : 38,
+        26 : 39,
+        27 : 40,
+        28 : 41,
+        29 : 42,
+        30 : 43,
+        31 : 44,
+        32 : 45,
+        21 : 46,
+        22 : 47,
+        23 : 48,
+        24 : 49,
+    }
 
-    @property
-    def port_start(self):
-        return self.PORT_START
-
-    @property
-    def port_end(self):
-        return self.PORT_END
-
-    @property
-    def qsfp_port_start(self):
-        return self.QSFP_PORT_START
-
-    @property
-    def qsfp_port_end(self):
-        return self.QSFP_PORT_END
-    
-    @property
-    def qsfp_ports(self):
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
-
-    @property
-    def port_to_eeprom_mapping(self):
-        return self._port_to_eeprom_mapping
+    _qsfp_ports = range(0, ports_in_block + 1)
 
     def __init__(self):
-        eeprom_path = self.BASE_VAL_PATH + "sfp_eeprom"
-
-        for x in range(0, self.port_end+1):
-            self.port_to_eeprom_mapping[x] = eeprom_path.format(
-                self._port_to_i2c_mapping[x],
-                self._port_to_i2c_mapping[x])
-
+        eeprom_path = '/sys/bus/i2c/devices/{0}-0050/sfp_eeprom'
+        for x in range(0, self._port_end + 1):
+            port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x+1])
+            self._port_to_eeprom_mapping[x] = port_eeprom_path
         SfpUtilBase.__init__(self)
 
+    def reset(self, port_num):
+        # Check for invalid port_num
+        if port_num < self._port_start or port_num > self._port_end:
+            return False
+
+        path = "/sys/bus/i2c/devices/{0}-0050/sfp_port_reset"
+        port_ps = path.format(self.port_to_i2c_mapping[port_num+1])
+          
+        try:
+            reg_file = open(port_ps, 'w')
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        #toggle reset
+        reg_file.seek(0)
+        reg_file.write('1')
+        time.sleep(1)
+        reg_file.seek(0)
+        reg_file.write('0')
+        reg_file.close()
+        return True
+
+    def set_low_power_mode(self, port_nuM, lpmode):
+        raise NotImplementedError
+
+    def get_low_power_mode(self, port_num):
+        raise NotImplementedError
+        
     def get_presence(self, port_num):
         # Check for invalid port_num
-        if port_num < self.port_start or port_num > self.port_end:
+        if port_num < self._port_start or port_num > self._port_end:
             return False
 
-        present_path = self.BASE_VAL_PATH + "sfp_is_present"
-        self.__port_to_is_present = present_path.format(self._port_to_i2c_mapping[port_num], self._port_to_i2c_mapping[port_num])
+        path = "/sys/bus/i2c/devices/{0}-0050/sfp_is_present"
+        port_ps = path.format(self.port_to_i2c_mapping[port_num+1])
+
+          
         try:
-            val_file = open(self.__port_to_is_present)
+            reg_file = open(port_ps)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print "Error: unable to open file: %s" % str(e)
             return False
 
-        content = val_file.readline().rstrip()
-        val_file.close()
-
-        # content is a string, either "0" or "1"
-        if content == "1":
+        reg_value = reg_file.readline().rstrip()
+        if reg_value == '1':
             return True
 
         return False
 
-    def get_low_power_mode(self, port_num):             
-        raise NotImplementedError
+    @property
+    def port_start(self):
+        return self._port_start
 
-    def set_low_power_mode(self, port_num, lpmode):                
-        raise NotImplementedError
+    @property
+    def port_end(self):
+        return self._port_end
+	
+    @property
+    def qsfp_ports(self):
+        return range(0, self.ports_in_block + 1)
 
-    def reset(self, port_num):
-        if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
-            return False
-         
-        mod_rst_path = self.BASE_VAL_PATH + "sfp_mod_rst"
-        self.__port_to_mod_rst = mod_rst_path.format(self._port_to_i2c_mapping[port_num], self._port_to_i2c_mapping[port_num])
-        try:
-            reg_file = open(self.__port_to_mod_rst, 'w')
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
-            return False
+    @property 
+    def port_to_eeprom_mapping(self):
+         return self._port_to_eeprom_mapping
 
-        reg_value = '0' #This bit will auto reset to 1 after written.
 
-        reg_file.write(reg_value)
-        reg_file.close()
-        
-        return True
