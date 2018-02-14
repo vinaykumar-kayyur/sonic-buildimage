@@ -25,7 +25,7 @@ class PsuUtil(PsuBase):
         self.psu_presence = "/psu_present"
         self.psu_oper_status = "/psu_power_good"
         self.psu_mapping = {
-            2: "11-0051",
+            2: "11-0053",
             1: "10-0050",
         }
 

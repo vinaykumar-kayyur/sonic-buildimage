@@ -25,6 +25,11 @@ class SfpUtil(SfpUtilBase):
     _port_to_lp_mode = {}
 
     _port_to_eeprom_mapping = {}
+    _cpld_mapping = {
+	   0:  "4-0060",
+	   1:  "5-0062",
+	   2:  "6-0064",
+           }		
     _port_to_i2c_mapping = {
            0:  18, 
            1:  19, 
@@ -125,11 +130,9 @@ class SfpUtil(SfpUtilBase):
         return self._port_to_eeprom_mapping
 
     def __init__(self):
-        eeprom_path = self.BASE_VAL_PATH + "sfp_eeprom"
-
+        eeprom_path = '/sys/bus/i2c/devices/{0}-0050/eeprom'
         for x in range(0, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
-                self._port_to_i2c_mapping[x],
                 self._port_to_i2c_mapping[x])
 
         SfpUtilBase.__init__(self)
@@ -138,11 +141,27 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
+        
+	# For cage 0~23 and 48~51 are at cpld2, others are at cpld3.
+        # For port 48~51 are QSFP, here presumed they are all broken-out to 4 lanes.
+        cage_num = port_num 
+	cpld_i = 1	
+        if (port_num > 23):
+            cpld_i = 2
+		
+        if (port_num >= self.QSFP_PORT_START):
+	    cpld_i = 1	
+            cage_num = (port_num - self.QSFP_PORT_START)/4
+            cage_num = cage_num + self.QSFP_PORT_START
+            if (cage_num >= 52): 
+                cpld_i = 2
+
+        cpld_ps = self._cpld_mapping[cpld_i]
+        path = "/sys/bus/i2c/devices/{0}/module_present_{1}"
+        port_ps = path.format(cpld_ps, cage_num+1)
 	
-        present_path = self.BASE_VAL_PATH + "sfp_is_present"
-        self.__port_to_is_present = present_path.format(self._port_to_i2c_mapping[port_num], self._port_to_i2c_mapping[port_num])
         try:
-            val_file = open(self.__port_to_is_present)
+            val_file = open(port_ps)
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
@@ -166,10 +185,11 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
          
-        mod_rst_path = self.BASE_VAL_PATH + "sfp_mod_rst"
-        self.__port_to_mod_rst = mod_rst_path.format(self._port_to_i2c_mapping[port_num], self._port_to_i2c_mapping[port_num])
+        
+        path = "/sys/bus/i2c/devices/5-0062/module_reset_{0}"
+        port_ps = path.format(port_num+1)
         try:
-            reg_file = open(self.__port_to_mod_rst, 'r+')
+            reg_file = open(port_ps, 'w')
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
