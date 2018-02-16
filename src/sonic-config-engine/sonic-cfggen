@@ -188,7 +188,7 @@ def main():
         configdb.connect()
         deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
 
-    if args.platform_info != None:
+    if args.platform_info:
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'platform': platform,
             'mac': get_system_mac()

@@ -79,6 +79,11 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
         firsttime_exit
     fi
 
+    if [ ! -f /etc/sonic/init_cfg.json ]; then
+        # Generate an empty init_cfg.json
+        echo '{}' > /etc/sonic/init_cfg.json
+    fi
+
     # Try to take old configuration saved during installation
     if test_config; then
         rm -f /host/old_config/sonic_version.yml
