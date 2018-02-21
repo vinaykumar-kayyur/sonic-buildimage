@@ -25,7 +25,6 @@ def
 {%- import 'buffers_defaults_%s.j2' % filename_postfix as defs %}
 
 {%- set default_cable = defs.default_cable %}
-{%- set default_speed = defs.default_speed %}
 
 {# Port configuration to cable length look-up table #}
 {# Each record describes mapping of DUT (DUT port) role and neighbor role to cable length #}
@@ -56,7 +55,7 @@ def
             {%- endif %}
         {%- endif %}
     {%- endfor %}
-    {%- if cable_len %}
+    {%- if cable_len -%}
         {{ cable_len.0 }}
     {%- else %}
         {%- if switch_role.lower() == 'torrouter' %}
@@ -70,69 +69,26 @@ def
                     {%- endif %}
                 {%- endif %}
             {%- endfor %}
-            {%- if cable_len %}
+            {%- if cable_len -%}
                 {{ cable_len.0 }}
-            {%- else %}
+            {%- else -%}
                 {{ default_cable }}
             {%- endif %}
-        {%- else %}
+        {%- else -%}
             {{ default_cable }}
         {%- endif %}
     {%- endif %}
 {%- endmacro %}
 
 {%- set PORT_ALL  = [] %}
-{%- set PORT_10G  = [] %}
-{%- set PORT_25G  = [] %}
-{%- set PORT_40G  = [] %}
-{%- set PORT_50G  = [] %}
-{%- set PORT_100G = [] %}
 
 {%- if PORT is not defined %}
-    {%- if defs.generate_port_lists(PORT_10G, PORT_25G, PORT_40G, PORT_50G, PORT_100G) %} {% endif %}
+    {%- if defs.generate_port_lists(PORT_ALL) %} {% endif %}
 {%- else %}
-    {# Determine the default speed set according to the default speed #}
-    {%- if default_speed == '10G' %}
-        {%- set default_set = PORT_10G %}
-    {%- elif default_speed == '25G' %}
-        {%- set default_set = PORT_25G %}
-    {%- elif default_speed == '40G' %}
-        {%- set default_set = PORT_40G %}
-    {%- elif default_speed == '50G' %}
-        {%- set default_set = PORT_50G %}
-    {%- elif default_speed == '100G' %}
-        {%- set default_set = PORT_100G %}
-    {%- else %}
-        {%- set default_set = PORT_50G %}
-    {%- endif %}
-
-    {# Distribute ports to speed sets #}
     {%- for port in PORT %}
-        {%- if 'speed' in PORT[port] %}
-            {%- set speed = PORT[port]['speed'] %}
-            {%- if speed == '100000' %}
-                {%- if PORT_100G.append(port) %}{%- endif %}
-            {%- elif speed == '50000' %}
-                {%- if PORT_50G.append(port) %}{%- endif %}
-            {%- elif speed == '40000' %}
-                {%- if PORT_40G.append(port) %}{%- endif %}
-            {%- elif speed == '25000' %}
-                {%- if PORT_25G.append(port) %}{%- endif %}
-            {%- elif speed == '10000' %}
-                {%- if PORT_10G.append(port) %}{%- endif %}
-            {%- else %}
-                {%- if default_set.append(port) %}{%- endif %}
-            {%- endif %}
-        {%- else %}
-            {%- if default_set.append(port) %}{%- endif %}
-        {%- endif %}
+        {%- if PORT_ALL.append(port) %}{%- endif %}
     {%- endfor %}
 {%- endif %}
-
-{# Put all ports in PORT_ALL #}
-{%- for port in PORT_10G + PORT_25G + PORT_40G + PORT_50G + PORT_100G %}
-    {%- if PORT_ALL.append(port) %}{%- endif %}
-{%- endfor %}
 
 {%- set port_names_list_all  = [] %}
 {%- for port in PORT_ALL %}
@@ -153,36 +109,9 @@ def
 {% set bufs = defs.generate_buffer_pool_and_profiles() %}
 {{ bufs }}
     "BUFFER_PG": {
-{% for port in PORT_10G %}
-        "{{ port }}|3-4": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossless_profile_10g]"
-        },
-{% endfor %}
-{% for port in PORT_25G %}
-        "{{ port }}|3-4": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossless_profile_25g]"
-        },
-{% endfor %}
-{% for port in PORT_40G %}
-        "{{ port }}|3-4": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossless_profile_40g]"
-        },
-{% endfor %}
-{% for port in PORT_50G %}
-        "{{ port }}|3-4": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossless_profile_50g]"
-        },
-{% endfor %}
-{% for port in PORT_100G %}
-        "{{ port }}|3-4": {
-            "profile" : "[BUFFER_PROFILE|ingress_lossless_profile_100g]"
-        },
-{% endfor %}
-{% if port_names_all|length > 0 %}
         "{{ port_names_all }}|0-1": {
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
         }
-{% endif %}
     },
     "BUFFER_QUEUE": {
         "{{ port_names_all }}|3-4": {

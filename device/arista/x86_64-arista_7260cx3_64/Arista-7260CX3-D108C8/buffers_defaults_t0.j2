@@ -1,18 +1,17 @@
 {%- set default_cable = '5m' %}
-{%- set default_speed = '50G' %}
 
-{%- macro generate_port_lists(PORT_10G, PORT_25G, PORT_40G, PORT_50G, PORT_100G) %}
+{%- macro generate_port_lists(PORT_ALL) %}
     {# Generate list of ports #}
     {%- for port_idx in range(0,12) %}
-        {%- if PORT_50G.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_50G.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
     {%- endfor %}
     {%- for port_idx in range(20,64) %}
-        {%- if PORT_50G.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_50G.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
     {%- endfor %}
     {%- for port_idx in range(12,20) %}
-        {%- if PORT_100G.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
     {%- endfor %}
 {%- endmacro %}
 
@@ -36,22 +35,6 @@
         }
     },
     "BUFFER_PROFILE": {
-        "ingress_lossless_profile_50g": {
-            "pool": "[BUFFER_POOL|ingress_lossless_pool]",
-            "xon": "1248",
-            "xon_offset": "2496",
-            "xoff": "56160",
-            "size": "1248",
-            "dynamic_th": "-3"
-        },
-        "ingress_lossless_profile_100g": {
-            "pool": "[BUFFER_POOL|ingress_lossless_pool]",
-            "xon": "1248",
-            "xon_offset": "2496",
-            "xoff": "96928",
-            "size": "1248",
-            "dynamic_th": "-3"
-        },
         "ingress_lossy_profile": {
             "pool":"[BUFFER_POOL|ingress_lossless_pool]",
             "size":"0",
