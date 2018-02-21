@@ -409,8 +409,8 @@ elif [ "$install_env" = "sonic" ]; then
     running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
     # Prevent installing existing SONiC if it is running
     if [ "$image_dir" = "image-$running_sonic_revision" ]; then
-        echo "Error: Unable to install SONiC version $running_sonic_revision. Running SONiC has the same version"
-        exit 1
+        echo "Not installing SONiC version $running_sonic_revision, as current running SONiC has the same version"
+        exit 0
     fi
     # Remove extra SONiC images if any
     for f in $demo_mnt/image-* ; do
@@ -549,11 +549,11 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-3.16.0-4-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-3.16.0-5-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-3.16.0-4-amd64
+        initrd  /$image_dir/boot/initrd.img-3.16.0-5-amd64
 }
 EOF
 
