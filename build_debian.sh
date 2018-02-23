@@ -315,7 +315,7 @@ sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF
 
 auto eth0
 allow-hotplug eth0
-iface eth0 inet dhcp
+iface eth0 inet static
 EOF
 
 sudo cp files/dhcp/rfc3442-classless-routes $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d

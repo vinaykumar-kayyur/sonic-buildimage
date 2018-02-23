@@ -11,6 +11,16 @@
 #
 # By default this script does nothing.
 
+# In case the unit is migrating from another NOS, save the logs
+log_migration() {
+    echo $1 >> /etc/migration.log
+}
+
+# Import files from another NOS's partition onto SONiC
+nos_migration_import() {
+    [ -f $1 ] && cp $1 $2 || log_migration "ERROR: $1 not found!"
+}
+
 # If the machine.conf is absent, it indicates that the unit booted
 # into SONiC from another NOS. Extract the machine.conf from ONIE.
 if [ ! -e /host/machine.conf ]; then
@@ -20,7 +30,7 @@ if [ ! -e /host/machine.conf ]; then
     onie_grub_cfg=/mnt/onie-boot/onie/grub/grub-machine.cfg
     
     if [ ! -e $onie_grub_cfg ]; then
-        echo "$onie_grub_cfg not found" >> /etc/migration.log
+        log_migration "$onie_grub_cfg not found"
     else
         . ./$onie_grub_cfg
         grep = $onie_grub_cfg | sed -e 's/onie_//' -e 's/=.*$//' | while read var ; do
@@ -29,8 +39,60 @@ if [ ! -e /host/machine.conf ]; then
         done
     fi
 
+    # Extract the previous NOS's partition that contains the migration artifacts
+    set -- $(cat /proc/cmdline)
+    for x in "$@"; do
+        case "$x" in
+            nos-config-part=*)
+                nos_val="${x#nos-config-part=}"
+                ;;
+        esac
+    done
+
+    if [ -n "$nos_val" ]; then
+        nos_dev=$(findfs $nos_val)
+        if [ $? != 0 ]; then
+            log_migration "ERROR: nos_dev not found. Check grub parameters"
+        fi
+    else
+        log_migration "ERROR: nos_val not found. Check grub parameters"
+    fi
+
+    if [ -n "$nos_dev" ]; then
+        # Mount the previous NOS's partition
+        mkdir -p /mnt/nos_migration
+        mount $nos_dev /mnt/nos_migration
+        mkdir -p /etc/sonic/migration
+
+        # Copy relevant files
+        nos_migration_import /mnt/nos_migration/minigraph.xml /etc/sonic/migration
+        nos_migration_import /mnt/nos_migration/arp.json /etc/sonic/migration
+        nos_migration_import /mnt/nos_migration/fdb.json /etc/sonic/migration
+        nos_migration_import /mnt/nos_migration/mgmt_interface.mac /etc/sonic/migration
+
+        umount /mnt/nos_migration
+        rmdir /mnt/nos_migration
+    fi
+
+    # Extract, validate and set the eth0's mac address
+    if [ -f /etc/sonic/migration/mgmt_interface.mac ]; then
+       eth0_mac=$(grep "macaddr" /etc/sonic/migration/mgmt_interface.mac | awk -F'=' '{print $2}')
+       log_migration "Setting eth0 mac as $eth0_mac."
+       if [ `echo $eth0_mac | egrep "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"` ]; then
+           ifconfig eth0 down
+           ip link set eth0 address $eth0_mac
+           ifconfig eth0 up
+           rm /etc/sonic/migration/mgmt_interface.mac
+       else
+           log_migration "ERROR: $eth0_mac: invalid MAC!"
+       fi
+    fi
+
     migration="TRUE"
     umount /mnt/onie-boot
+else
+    # this is a reboot post NOS migration : remove stale imported files that were used during migration.
+    rm -fr /etc/sonic/migration
 fi
 
 . /host/machine.conf
@@ -96,6 +158,10 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
         # Combine information in minigraph and init_cfg.json to form initiate config DB dump file.
         # TODO: After moving all information from minigraph to DB, sample config DB dump should be provide
         sonic-cfggen -H -m -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
+    elif [ -n "$migration" ] && [ -f /etc/sonic/migration/minigraph.xml ];  then
+        # Use the minigraph that was imported from the NOS
+        mv /etc/sonic/migration/minigraph.xml /etc/sonic/
+        sonic-cfggen -m -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
     else
         # Use default minigraph.xml
         cp /usr/share/sonic/device/$platform/minigraph.xml /etc/sonic/
@@ -127,26 +193,26 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
 
         grub_bin=$(ls /host/image-$sonic_version/platform/x86_64-grub/grub-pc-bin*.deb 2> /dev/null)
         if [ -z "$grub_bin" ]; then
-            echo "Unable to locate grub package !" >> /etc/migration.log
+            log_migration "Unable to locate grub package !"
             firsttime_exit
         fi
 
         dpkg -i $grub_bin > /dev/null 2>&1
         if [ $? != 0 ]; then
-            echo "Unable to install grub package !" >> /etc/migration.log
+            log_migration "Unable to install grub package !"
             firsttime_exit
         fi
 
         # Determine the block device to install grub
         sonic_dev=$(blkid | grep SONiC-OS | head -n 1 | awk '{print $1}' |  sed -e 's/[0-9]:.*$//')
         if [ -z "$sonic_dev" ]; then
-            echo "Unable to determine sonic partition !" >> /etc/migration.log
+            log_migration "Unable to determine sonic partition !"
             firsttime_exit
         fi
 
         grub-install --boot-directory=/host --recheck $sonic_dev 2>/dev/null
         if [ $? != 0 ]; then
-            echo "grub install failed !" >> /etc/migration.log
+            log_migration "grub install failed !"
             firsttime_exit
         fi
 
@@ -163,7 +229,7 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
             if [ ! -z "$console_port" ] && [ "$console_port" != "$CONSOLE_PORT" ]; then
                 sed -i -e "s/\-\-port=$console_port/\-\-port=$CONSOLE_PORT/g" /host/grub.cfg
             fi
-            echo "grub.cfg console port=$console_port & installer.conf CONSOLE_PORT=$CONSOLE_PORT" >> /etc/migration.log
+            log_migration "grub.cfg console port=$console_port & installer.conf CONSOLE_PORT=$CONSOLE_PORT"
         fi
 
         if [ ! -z "$CONSOLE_DEV" ]; then
@@ -175,7 +241,7 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
             if [ "$console_dev" != "$CONSOLE_DEV" ]; then
                 sed -i -e "s/console=ttyS$console_dev/console=ttyS$CONSOLE_DEV/g" /host/grub.cfg
             fi
-            echo "grub.cfg console dev=$console_dev & installer.conf CONSOLE_DEV=$CONSOLE_DEV" >> /etc/migration.log
+            log_migration "grub.cfg console dev=$console_dev & installer.conf CONSOLE_DEV=$CONSOLE_DEV"
         fi
 
         if [ ! -z "$VAR_LOG_SIZE" ]; then
@@ -186,7 +252,7 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
             if [ ! -z "$var_log_size" ] && [ "$var_log_size" != "$VAR_LOG_SIZE" ]; then
                 sed -i -e "s/var_log_size=$var_log_size/var_log_size=$VAR_LOG_SIZE/g" /host/grub.cfg
             fi
-            echo "grub.cfg var_log_size=$var_log_size & installer.conf VAR_LOG_SIZE=$VAR_LOG_SIZE" >> /etc/migration.log
+            log_migration "grub.cfg var_log_size=$var_log_size & installer.conf VAR_LOG_SIZE=$VAR_LOG_SIZE"
         fi
 
         # Set the root based on the label
