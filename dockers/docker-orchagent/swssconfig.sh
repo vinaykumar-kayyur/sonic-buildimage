@@ -30,7 +30,7 @@ function fast_reboot {
 }
 
 # Wait until swss.sh in the host system create file swss:/ready
-until [[ ! -e /ready ]]; do
+until [[ -e /ready ]]; do
     sleep 0.1;
 done
 
