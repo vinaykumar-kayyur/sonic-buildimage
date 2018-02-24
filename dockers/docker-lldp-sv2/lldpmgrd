@@ -1,0 +1,188 @@
+#!/usr/bin/env python
+
+"""
+    lldpmgrd
+
+    LLDP manager daemon for SONiC
+
+    Daemon which listens for changes in the PORT table of the State DB
+    and updates LLDP configuration accordingly for that port by calling
+    lldpcli.
+"""
+
+
+try:
+    import os
+    import signal
+    import subprocess
+    import sys
+    import syslog
+    from swsscommon import swsscommon
+except ImportError as err:
+    raise ImportError("%s - required module not found" % str(err))
+
+VERSION = "1.0"
+
+SYSLOG_IDENTIFIER = "lldpmgrd"
+
+
+# ========================== Syslog wrappers ==========================
+
+def log_info(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_INFO, msg)
+    syslog.closelog()
+
+
+def log_warning(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_WARNING, msg)
+    syslog.closelog()
+
+
+def log_error(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_ERR, msg)
+    syslog.closelog()
+
+
+# ========================== Signal Handling ==========================
+
+def signal_handler(sig, frame):
+    if sig == signal.SIGHUP:
+        log_info("Caught SIGHUP - ignoring...")
+        return
+    elif sig == signal.SIGINT:
+        log_info("Caught SIGINT - exiting...")
+        sys.exit(128 + sig)
+    elif sig == signal.SIGTERM:
+        log_info("Caught SIGTERM - exiting...")
+        sys.exit(128 + sig)
+    else:
+        log_warning("Caught unhandled signal '" + sig + "'")
+
+
+# ============================== Classes ==============================
+
+class LldpManager(object):
+    """
+    Class which subscribes to notifications of changes in the PORT table of
+    the Redis State database and updates LLDP configuration accordingly for
+    that port by calling lldpcli.
+    Attributes:
+        state_db: Handle to Redis State database via swsscommon lib
+        config_db: Handle to Redis Config database via swsscommon lib
+    """
+    REDIS_HOSTNAME = "localhost"
+    REDIS_PORT = 6379
+    REDIS_TIMEOUT_USECS = 0
+
+    def __init__(self):
+        # Open a handle to the State database
+        self.state_db = swsscommon.DBConnector(swsscommon.STATE_DB,
+                                               self.REDIS_HOSTNAME,
+                                               self.REDIS_PORT,
+                                               self.REDIS_TIMEOUT_USECS)
+
+        # Open a handle to the Config database
+        self.config_db = swsscommon.DBConnector(swsscommon.CONFIG_DB,
+                                                self.REDIS_HOSTNAME,
+                                                self.REDIS_PORT,
+                                                self.REDIS_TIMEOUT_USECS)
+
+    def update_lldp_config_for_port(self, port_name):
+        """
+        For port `port_name`, look up the neighboring device's hostname and
+        corresponding port alias in the Config database, then form the
+        appropriate lldpcli configuration command and run it.
+        """
+        CMD_FMT = "lldpcli configure ports {0} lldp portidsubtype local {1} description {2}:{3}"
+        TABLE_SEPARATOR = "|"
+
+        # Retrieve all entires from the Device Neighbor table
+        device_neighbor_table = swsscommon.Table(self.config_db, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME, TABLE_SEPARATOR)
+        (status, fvp) = device_neighbor_table.get(port_name)
+        if status is False:
+            log_info("Port '{}' not found in {} table in Config DB. Not updating LLDP config for this port.".format(port_name, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME))
+            return
+
+        # Convert list of tuples to a dictionary
+        device_neighbor_table_dict = dict(fvp)
+
+        neighbor_hostname = device_neighbor_table_dict["name"]
+        if not neighbor_hostname:
+            log_error("Failed to obtain neighbor hostname for port '{}'".format(port_name))
+            return
+
+        neighbor_portname = device_neighbor_table_dict["port"]
+        if not neighbor_hostname:
+            log_error("Failed to obtain neighbor port name for port '{}'".format(port_name))
+            return
+
+        # Retrieve all entires from the Port table
+        port_table = swsscommon.Table(self.config_db, swsscommon.CFG_PORT_TABLE_NAME, TABLE_SEPARATOR)
+        (status, fvp) = port_table.get(port_name)
+        if status is False:
+            log_error("Port '{}' not found in {} table in Config DB.".format(port_name, swsscommon.CFG_PORT_TABLE_NAME))
+            return
+
+        # Convert list of tuples to a dictionary
+        port_table_dict = dict(fvp)
+
+        port_alias = port_table_dict["alias"]
+        if not port_alias:
+            log_error("Failed to obtain port alias for port '{}'".format(port_name))
+            return
+
+        cmd = CMD_FMT.format(port_name, port_alias, neighbor_hostname, neighbor_portname)
+
+        log_info("Running command: '{}'".format(cmd))
+
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        (stdout, stderr) = proc.communicate()
+
+        if proc.returncode != 0:
+            log_error("Error running command '{}': {}".format(cmd, stderr))
+
+    def run(self):
+        """
+        Infinite loop. Subscribes to notifications of changes in the PORT table
+        of the Redis State database. When we are notified of the creation of an
+        interface, update LLDP configuration accordingly.
+        """
+        # Subscribe to PORT table notifications in the State DB
+        sel = swsscommon.Select()
+        sst = swsscommon.SubscriberStateTable(self.state_db, swsscommon.STATE_PORT_TABLE_NAME)
+        sel.addSelectable(sst)
+
+        # Listen indefinitely for changes to the PORT table in the State DB
+        while True:
+            (state, c, fd) = sel.select()
+            (key, op, fvp) = sst.pop()
+
+            if len(fvp) == 1 and fvp[0][0] == "state" and fvp[0][1] == "ok":
+                self.update_lldp_config_for_port(key)
+
+
+# ============================= Functions =============================
+
+def main():
+    log_info("Starting up...")
+
+    if not os.geteuid() == 0:
+        log_error("Must be root to run this daemon")
+        print "Error: Must be root to run this daemon"
+        sys.exit(1)
+
+    # Register our signal handlers
+    signal.signal(signal.SIGHUP, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    # Instantiate a LldpManager object
+    lldpmgr = LldpManager()
+    lldpmgr.run()
+
+if __name__ == "__main__":
+    main()
