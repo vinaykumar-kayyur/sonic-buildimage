@@ -2,18 +2,6 @@
 
 set -e
 
-function fast_migration {
-  if [[ -f /etc/sonic/migration/fdb.json ]];
-  then
-      cp /etc/sonic/migration/fdb.json /fdb.json
-  fi
-
-  if [[ -f /etc/sonic/migration/arp.json ]];
-  then
-      cp /etc/sonic/migration/arp.json /arp.json
-  fi
-}
-
 function fast_reboot {
   case "$(cat /proc/cmdline)" in
     *fast-reboot*)
@@ -40,9 +28,6 @@ function fast_reboot {
       ;;
   esac
 }
-
-# If we are migrating, import the dumps from the previous NOS
-fast_migration
 
 # Restore FDB and ARP table ASAP
 fast_reboot

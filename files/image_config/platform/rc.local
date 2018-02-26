@@ -13,7 +13,7 @@
 
 # In case the unit is migrating from another NOS, save the logs
 log_migration() {
-    echo $1 >> /etc/migration.log
+    echo $1 >> /host/migration/migration.log
 }
 
 # Import files from another NOS's partition onto SONiC
@@ -21,9 +21,74 @@ nos_migration_import() {
     [ -f $1 ] && cp $1 $2 || log_migration "ERROR: $1 not found!"
 }
 
+# While migrating form another NOS, we need to preserve the MAC addresses
+# of eth0 (and eventually switchports).
+# Update the eth0 mac and also the EEPROM using ethtool so that subsequent
+# reboots use the NOS's mac.
+# Input : mgmt_interface.cfg file imported from the previous NOS.
+update_mgmt_interface_macaddr() {
+    mgmt_config=$1
+    if [ ! -f "$mgmt_config" ]; then
+        log_migration "ERROR : unable update eth0 MAC : $mgmt_config not found!"
+        return
+    fi
+
+    # Save the previous NOS's mac
+    old_mac=`ip link show eth0 | grep ether | awk '{print $2}'`
+    [ -z "$old_mac" ] && log_migration "Unable to retrieve old mac address !" && return
+
+    # Extract, validate and set the eth0's mac address for the current session
+    new_mac=$(grep "macaddr" $mgmt_config | awk -F'=' '{print $2}')
+    log_migration "Setting eth0 mac as $new_mac."
+    if [ `echo $new_mac | egrep "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"` ]; then
+        ip link set eth0 down
+        ip link set eth0 address $new_mac
+        ip link set eth0 up
+    else
+        log_migration "ERROR: mac imported from NOS is invalid : $new_mac !"
+        return
+    fi
+
+    # Get the ethtool magic and offset for changing the mac address in the EEPROM
+    ethtool_magic=$(grep "ethtool_magic" $mgmt_config | awk -F'=' '{print $2}') 
+    ethtool_offset=$(grep "ethtool_offset" $mgmt_config | awk -F'=' '{print $2}') 
+    if [ -z "$ethtool_magic" ] || [ -z "$ethtool_offset" ]; then
+        log_migration "Unable to retrieve ethtool params ($ethtool_magic,ethtool_offset)"
+        return
+    fi
+
+    log_migration "eth0 mac in EEPROM before update:"
+    ethtool -e eth0 offset $ethtool_offset length 6 >> /host/migration/migration.log
+
+    # Update the mac address in the EEPROM for subsequent reboots
+    # Write only changed octets
+    for i in 1 2 3 4 5 6; do
+        offset=$(($ethtool_offset+$i-1))
+        old_mac_octet="$(echo $old_mac | cut -d":" -f$i)"
+        new_mac_octet="$(echo $new_mac | cut -d":" -f$i)"
+
+        if [ "$old_mac_octet" != "$new_mac_octet" ]; then
+            ethtool -E eth0 magic $ethtool_magic offset $offset value 0x$new_mac_octet
+            if [ $? != 0 ]; then
+                log_migration "ERROR: unable to update eth0 EEPROM!"
+                log_migration "index $i, magic $ethtool_magic offset $offset, value $new_mac_octet"
+                return
+            fi
+    done
+
+    log_migration "eth0 mac in EEPROM after update:"
+    ethtool -e eth0 offset $ethtool_offset length 6 >> /host/migration/migration.log
+
+    # Update the 70-persistent-net.rules with the new mac for eth0
+    log_migration "/etc/udev/rules.d/70-persistent-net.rules : replacing $old_mac with $new_mac for eth0"
+    sed -i "/eth0/ s/ATTR{address}==\"$old_mac\"/ATTR{address}==\"$new_mac\"/g" /etc/udev/rules.d/70-persistent-net.rules
+}
+
 # If the machine.conf is absent, it indicates that the unit booted
 # into SONiC from another NOS. Extract the machine.conf from ONIE.
 if [ ! -e /host/machine.conf ]; then
+    mkdir -p /host/migration
+
     onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
     mkdir -p /mnt/onie-boot
     mount $onie_dev /mnt/onie-boot
@@ -62,37 +127,23 @@ if [ ! -e /host/machine.conf ]; then
         # Mount the previous NOS's partition
         mkdir -p /mnt/nos_migration
         mount $nos_dev /mnt/nos_migration
-        mkdir -p /etc/sonic/migration
+        mkdir -p /host/fast-reboot
 
         # Copy relevant files
-        nos_migration_import /mnt/nos_migration/minigraph.xml /etc/sonic/migration
-        nos_migration_import /mnt/nos_migration/arp.json /etc/sonic/migration
-        nos_migration_import /mnt/nos_migration/fdb.json /etc/sonic/migration
-        nos_migration_import /mnt/nos_migration/mgmt_interface.mac /etc/sonic/migration
+        nos_migration_import /mnt/nos_migration/mgmt_interface.cfg /host/migration
+        nos_migration_import /mnt/nos_migration/minigraph.xml /host/migration
+        nos_migration_import /mnt/nos_migration/arp.json /host/fast-reboot
+        nos_migration_import /mnt/nos_migration/fdb.json /host/fast-reboot
+        nos_migration_import /mnt/nos_migration/default_routes.json /host/fast-reboot
 
         umount /mnt/nos_migration
         rmdir /mnt/nos_migration
     fi
 
-    # Extract, validate and set the eth0's mac address
-    if [ -f /etc/sonic/migration/mgmt_interface.mac ]; then
-       eth0_mac=$(grep "macaddr" /etc/sonic/migration/mgmt_interface.mac | awk -F'=' '{print $2}')
-       log_migration "Setting eth0 mac as $eth0_mac."
-       if [ `echo $eth0_mac | egrep "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"` ]; then
-           ifconfig eth0 down
-           ip link set eth0 address $eth0_mac
-           ifconfig eth0 up
-           rm /etc/sonic/migration/mgmt_interface.mac
-       else
-           log_migration "ERROR: $eth0_mac: invalid MAC!"
-       fi
-    fi
+    update_mgmt_interface_macaddr /host/migration/mgmt_interface.cfg
 
     migration="TRUE"
     umount /mnt/onie-boot
-else
-    # this is a reboot post NOS migration : remove stale imported files that were used during migration.
-    rm -fr /etc/sonic/migration
 fi
 
 . /host/machine.conf
@@ -158,9 +209,9 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
         # Combine information in minigraph and init_cfg.json to form initiate config DB dump file.
         # TODO: After moving all information from minigraph to DB, sample config DB dump should be provide
         sonic-cfggen -H -m -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
-    elif [ -n "$migration" ] && [ -f /etc/sonic/migration/minigraph.xml ];  then
+    elif [ -n "$migration" ] && [ -f /host/migration/minigraph.xml ];  then
         # Use the minigraph that was imported from the NOS
-        mv /etc/sonic/migration/minigraph.xml /etc/sonic/
+        mv /host/migration/minigraph.xml /etc/sonic/
         sonic-cfggen -m -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
     else
         # Use default minigraph.xml
