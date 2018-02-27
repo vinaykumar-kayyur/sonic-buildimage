@@ -1,0 +1,13 @@
+
+# Local source path abbreviations (for convenience).
+##
+driver_name := i2c-mei
+
+# Fill the variables used in common rules
+#
+
+$(driver_name)_make   := $(bsp_driver_dir)/$(driver_name)/Makefile
+$(driver_name)_srcs   += $(wildcard $(bsp_driver_dir)/$(driver_name)/*.c)
+$(driver_name)_hdrs   += $(wildcard $(bsp_driver_dir)/$(driver_name)/*.h)
+$(driver_name)_cflags := -DCOMMON_IVB=1 -DNO_PTP_SUPPORT=1
+
