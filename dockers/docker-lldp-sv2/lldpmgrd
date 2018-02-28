@@ -159,6 +159,10 @@ class LldpManager(object):
         # Listen indefinitely for changes to the PORT table in the State DB
         while True:
             (state, c, fd) = sel.select()
+            if state != swsscommon.Select.OBJECT:
+                log_warning("sel.select() did not return swsscommon.Select.OBJECT")
+                continue
+
             (key, op, fvp) = sst.pop()
             fvp_dict = dict(fvp)
 
