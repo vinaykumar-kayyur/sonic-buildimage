@@ -36,6 +36,10 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # bgp service starts.
 # SHUTDOWN_BGP_ON_START = y
 
+# ENABLE_PFC_WD_ON_START - if set to y PFC WD will be enabled all server-facing ports when
+# service starts.
+# ENABLE_PFC_WD_ON_START = y
+
 # SONIC_CONFIG_DEBUG - install debug packages
 # Uncomment next line to enable:
 # SONIC_CONFIG_DEBUG = y
