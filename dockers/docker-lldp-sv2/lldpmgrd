@@ -160,8 +160,9 @@ class LldpManager(object):
         while True:
             (state, c, fd) = sel.select()
             (key, op, fvp) = sst.pop()
+            fvp_dict = dict(fvp)
 
-            if len(fvp) == 1 and fvp[0][0] == "state" and fvp[0][1] == "ok":
+            if op == "SET" and fvp_dict["state"] == "ok":
                 self.update_lldp_config_for_port(key)
 
 
