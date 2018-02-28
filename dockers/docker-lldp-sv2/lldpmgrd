@@ -102,7 +102,7 @@ class LldpManager(object):
         # Retrieve all entires from the Device Neighbor table
         device_neighbor_table = swsscommon.Table(self.config_db, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME, TABLE_SEPARATOR)
         (status, fvp) = device_neighbor_table.get(port_name)
-        if status is False:
+        if not status:
             log_info("Port '{}' not found in {} table in Config DB. Not updating LLDP config for this port.".format(port_name, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME))
             return
 
@@ -122,7 +122,7 @@ class LldpManager(object):
         # Retrieve all entires from the Port table
         port_table = swsscommon.Table(self.config_db, swsscommon.CFG_PORT_TABLE_NAME, TABLE_SEPARATOR)
         (status, fvp) = port_table.get(port_name)
-        if status is False:
+        if not status:
             log_error("Port '{}' not found in {} table in Config DB.".format(port_name, swsscommon.CFG_PORT_TABLE_NAME))
             return
 
