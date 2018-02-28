@@ -162,7 +162,7 @@ class LldpManager(object):
             (key, op, fvp) = sst.pop()
             fvp_dict = dict(fvp)
 
-            if op == "SET" and fvp_dict["state"] == "ok":
+            if op == "SET" and "state" in fvp_dict and fvp_dict["state"] == "ok":
                 self.update_lldp_config_for_port(key)
 
 
