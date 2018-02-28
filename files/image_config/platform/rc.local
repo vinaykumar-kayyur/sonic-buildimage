@@ -53,7 +53,7 @@ update_mgmt_interface_macaddr() {
     ethtool_magic=$(grep "ethtool_magic" $mgmt_config | awk -F'=' '{print $2}') 
     ethtool_offset=$(grep "ethtool_offset" $mgmt_config | awk -F'=' '{print $2}') 
     if [ -z "$ethtool_magic" ] || [ -z "$ethtool_offset" ]; then
-        log_migration "Unable to retrieve ethtool params ($ethtool_magic,ethtool_offset)"
+        log_migration "Unable to retrieve ethtool params ($ethtool_magic,$ethtool_offset)"
         return
     fi
 
@@ -74,6 +74,7 @@ update_mgmt_interface_macaddr() {
                 log_migration "index $i, magic $ethtool_magic offset $offset, value $new_mac_octet"
                 return
             fi
+        fi
     done
 
     log_migration "eth0 mac in EEPROM after update:"
