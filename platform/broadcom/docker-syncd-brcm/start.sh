@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 PLATFORM_DIR=/usr/share/sonic/platform
 
 rm -f /var/run/rsyslogd.pid

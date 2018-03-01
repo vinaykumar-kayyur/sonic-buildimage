@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+dpkg-reconfigure -f noninteractive tzdata
+
 # generate configuration
 [ -d /etc/sonic ] || mkdir -p /etc/sonic
 

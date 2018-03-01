@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 mkdir -p /etc/quagga
 sonic-cfggen -d -t /usr/share/sonic/templates/gobgpd.conf.j2 > /etc/gobgp/gobgpd.conf
 sonic-cfggen -d -t /usr/share/sonic/templates/zebra.conf.j2 > /etc/quagga/zebra.conf
