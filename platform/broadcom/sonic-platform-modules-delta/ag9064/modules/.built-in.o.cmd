@@ -1,1 +1,0 @@
-cmd_/sonic/platform/broadcom/sonic-platform-modules-delta/ag9064/modules/built-in.o :=  rm -f /sonic/platform/broadcom/sonic-platform-modules-delta/ag9064/modules/built-in.o; ar rcsD /sonic/platform/broadcom/sonic-platform-modules-delta/ag9064/modules/built-in.o
