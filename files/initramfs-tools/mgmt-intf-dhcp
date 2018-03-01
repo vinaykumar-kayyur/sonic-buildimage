@@ -24,9 +24,9 @@ for x in "$@"; do
             fi
 
             if [ -e "${rootmnt}/etc/network/interfaces" ]; then
-                if [ "$val" == "off" ]; then
+                if [ "$val" = "off" ]; then
                     sed -i 's/iface eth0 inet dhcp/iface eth0 inet static/g' ${rootmnt}/etc/network/interfaces
-                elif [ "$val" == "on" ]; then
+                elif [ "$val" = "on" ]; then
                     sed -i 's/iface eth0 inet static/iface eth0 inet dhcp/g' ${rootmnt}/etc/network/interfaces
                 fi
             fi
