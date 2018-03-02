@@ -8,6 +8,9 @@
     Daemon which listens for changes in the PORT table of the State DB
     and updates LLDP configuration accordingly for that port by calling
     lldpcli.
+
+    TODO: Also listen for changes in DEVICE_NEIGHBOR and PORT tables in
+          Config DB and update LLDP config upon changes.
 """
 
 
@@ -96,49 +99,52 @@ class LldpManager(object):
         corresponding port alias in the Config database, then form the
         appropriate lldpcli configuration command and run it.
         """
-        CMD_FMT = "lldpcli configure ports {0} lldp portidsubtype local {1} description {2}:{3}"
         TABLE_SEPARATOR = "|"
 
-        # Retrieve all entires from the Device Neighbor table
-        device_neighbor_table = swsscommon.Table(self.config_db, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME, TABLE_SEPARATOR)
-        (status, fvp) = device_neighbor_table.get(port_name)
-        if not status:
-            log_info("Port '{}' not found in {} table in Config DB. Not updating LLDP config for this port.".format(port_name, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME))
-            return
-
-        # Convert list of tuples to a dictionary
-        device_neighbor_table_dict = dict(fvp)
-
-        neighbor_hostname = device_neighbor_table_dict["name"]
-        if not neighbor_hostname:
-            log_error("Failed to obtain neighbor hostname for port '{}'".format(port_name))
-            return
-
-        neighbor_portname = device_neighbor_table_dict["port"]
-        if not neighbor_hostname:
-            log_error("Failed to obtain neighbor port name for port '{}'".format(port_name))
-            return
-
-        # Retrieve all entires from the Port table
+        # Retrieve all entires for this port from the Port table
         port_table = swsscommon.Table(self.config_db, swsscommon.CFG_PORT_TABLE_NAME, TABLE_SEPARATOR)
         (status, fvp) = port_table.get(port_name)
-        if not status:
-            log_error("Port '{}' not found in {} table in Config DB.".format(port_name, swsscommon.CFG_PORT_TABLE_NAME))
-            return
+        if status:
+            # Convert list of tuples to a dictionary
+            port_table_dict = dict(fvp)
 
-        # Convert list of tuples to a dictionary
-        port_table_dict = dict(fvp)
+            # Get the port alias. If None or empty string, use port name instead
+            port_alias = port_table_dict.get("alias")
+            if not port_alias:
+                log_info("Unable to retrieve port alias for port '{}'. Using port name instead.".format(port_name))
+                port_alias = port_name
+        else:
+            log_error("Port '{}' not found in {} table in Config DB. Using port name instead of port alias.".format(port_name, swsscommon.CFG_PORT_TABLE_NAME))
+            port_alias = port_name
 
-        port_alias = port_table_dict["alias"]
-        if not port_alias:
-            log_error("Failed to obtain port alias for port '{}'".format(port_name))
-            return
+        lldpcli_cmd = "lldpcli configure ports {0} lldp portidsubtype local {1}".format(port_name, port_alias)
 
-        cmd = CMD_FMT.format(port_name, port_alias, neighbor_hostname, neighbor_portname)
+        # Retrieve all entires for this port from the Device Neighbor table
+        device_neighbor_table = swsscommon.Table(self.config_db, swsscommon.CFG_DEVICE_NEIGHBOR_TABLE_NAME, TABLE_SEPARATOR)
+        (status, fvp) = device_neighbor_table.get(port_name)
+        if status:
+            # Convert list of tuples to a dictionary
+            device_neighbor_table_dict = dict(fvp)
 
-        log_info("Running command: '{}'".format(cmd))
+            # Get neighbor host name and port name
+            neighbor_hostname = device_neighbor_table_dict.get("name")
+            neighbor_portname = device_neighbor_table_dict.get("port")
 
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # If we sucessfully obtained the neighbor's host name and port name, append a port description to the command
+            if neighbor_hostname and neighbor_portname:
+                lldpcli_cmd += " description {0}:{1}".format(neighbor_hostname, neighbor_portname)
+            else:
+                if not neighbor_hostname:
+                    log_info("Failed to retrieve neighbor host name for port '{}'. Not adding port description.".format(port_name))
+
+                if not neighbor_portname:
+                    log_info("Failed to retrieve neighbor port name for port '{}'. Not adding port description.".format(port_name))
+        else:
+            log_info("Unable to retrieve neighbor information for port '{}'. Not adding port description.".format(port_name))
+
+        log_info("Running command: '{}'".format(lldpcli_cmd))
+
+        proc = subprocess.Popen(lldpcli_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         (stdout, stderr) = proc.communicate()
 
@@ -166,7 +172,7 @@ class LldpManager(object):
             (key, op, fvp) = sst.pop()
             fvp_dict = dict(fvp)
 
-            if op == "SET" and "state" in fvp_dict and fvp_dict["state"] == "ok":
+            if op == "SET" and fvp_dict.get("state") == "ok":
                 self.update_lldp_config_for_port(key)
 
 
