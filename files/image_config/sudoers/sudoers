@@ -31,8 +31,8 @@ Cmnd_Alias      READ_ONLY_CMDS = /usr/bin/decode-syseeprom, \
                                  /bin/cat /var/log/syslog, \
                                  /usr/bin/tail -f /var/log/syslog
 
-Cmnd_Alias      PASSWD_CMD = /usr/bin/config tacacs passkey *, \
-                             /usr/sbin/chpasswd *
+Cmnd_Alias      PASSWD_CMDS = /usr/bin/config tacacs passkey *, \
+                              /usr/sbin/chpasswd *
 
 # User privilege specification
 root    ALL=(ALL:ALL) ALL
@@ -41,7 +41,7 @@ root    ALL=(ALL:ALL) ALL
 %sudo   ALL=(ALL:ALL) NOPASSWD: ALL
 
 # Prevent password related command into syslog
-Defaults!PASSWD_CMD !syslog
+Defaults!PASSWD_CMDS !syslog
 
 # See sudoers(5) for more information on "#include" directives:
 
