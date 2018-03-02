@@ -118,6 +118,7 @@ function _help {
     echo "         : ${0} i2c_qsfp_eeprom_init new|delete"
     echo "         : ${0} i2c_sfp_eeprom_init new|delete"
     echo "         : ${0} i2c_mb_eeprom_init new|delete"
+    echo "         : ${0} i2c_psu_eeprom_init new|delete"
     echo "         : ${0} i2c_qsfp_status_get [1-34]"
     echo "         : ${0} i2c_qsfp_type_get [1-34]"
     echo "         : ${0} i2c_board_type_get"
@@ -222,6 +223,7 @@ function _i2c_init {
     _i2c_mb_eeprom_init "new"
     _i2c_qsfp_eeprom_init "new"
     _i2c_sfp_eeprom_init "new"
+    _i2c_psu_eeprom_init "new"
     _i2c_led_fan_status_set
     _i2c_led_fan_tray_status_set
 
@@ -566,6 +568,21 @@ function _i2c_gpio_init {
         echo 1 > /sys/class/gpio/gpio${i}/active_low
         echo 0 > /sys/class/gpio/gpio${i}/value
     done
+    
+    #PSU I/O on Dummy Board 0x25
+    echo "pca9535 0x25" > /sys/bus/i2c/devices/i2c-${NUM_I801_DEVICE}/new_device
+    for i in {96..111};
+    do
+        echo $i > /sys/class/gpio/export
+        case ${i} in
+            97|98|100|101|102|105|106|108)
+                echo 1 > /sys/class/gpio/gpio${i}/active_low
+            ;;
+            98|101|106|107|108)
+                echo out > /sys/class/gpio/gpio${i}/direction
+            ;;
+        esac
+    done
 }
 
 #GPIO DeInit
@@ -579,6 +596,7 @@ function _i2c_gpio_deinit {
     echo "0x21" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
     echo "0x22" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
     echo "0x23" > /sys/bus/i2c/devices/i2c-${NUM_MUX1_CHAN5_DEVICE}/delete_device
+    echo "0x25" > /sys/bus/i2c/devices/i2c-${NUM_I801_DEVICE}/delete_device
 }
 
 #TMP75 Init
@@ -938,6 +956,42 @@ function _i2c_mb_eeprom_init {
     echo "DONE"
 }
 
+#Init PSU EEPROM
+function _i2c_psu_eeprom_init {
+    echo -n "PSU EEPROM INIT..."
+
+    ## modprobe eeprom
+    modprobe eeprom
+
+    #Action check
+    action=$1
+    if [ -z "${action}" ]; then
+        echo "No action, skip"
+        return
+    elif [ "${action}" != "new" ] && [ "${action}" != "delete" ]; then
+        echo "Error action, skip"
+        return
+    fi
+
+    #Init PSU EEPROM
+    if [ "${action}" == "new" ] && \
+           ! [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN1_DEVICE}-0050 ] || \
+           ! [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN0_DEVICE}-0050 ]; then
+        ## PUS(0) EEPROM
+        echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/new_device
+        ## PUS(1) EEPROM
+        echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/new_device
+    elif [ "${action}" == "delete" ] && \
+           [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN1_DEVICE}-0050 ] || \
+           [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN0_DEVICE}-0050 ]; then
+        ## PUS(0) EEPROM
+        echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/delete_device
+        ## PUS(1) EEPROM
+        echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/delete_device
+    fi
+    echo "DONE"
+}
+
 #Init SFP EEPROM
 function _i2c_sfp_eeprom_init {
     echo -n "SFP EEPROM INIT..."
@@ -1146,19 +1200,13 @@ function _i2c_psu_eeprom_get {
     echo "# Description: I2C PSU EEPROM Get..."
     echo "========================================================="
 
-    ## modprobe eeprom
-    modprobe eeprom
     ## PUS(0) EEPROM
     echo "========PSU1========="
-    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/new_device
     cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN1_DEVICE}-0050/eeprom | hexdump -C
-    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN1_DEVICE}/delete_device
 
     ## PUS(1) EEPROM
     echo "========PSU2========="
-    echo "eeprom 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/new_device
     cat ${PATH_SYS_I2C_DEVICES}/${NUM_FRU_MUX_CHAN0_DEVICE}-0050/eeprom | hexdump -C
-    echo "0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_FRU_MUX_CHAN0_DEVICE}/delete_device
 
     echo "done..."
 }
@@ -1272,13 +1320,12 @@ function _i2c_fan_led {
 
 #Get PSU Status
 function _i2c_psu_status {
-    psuStat=`i2cget -y ${NUM_I801_DEVICE} 0x25 0x00`
-    psu2PwGood=$(($((($psuStat) & 0x01))?1:0)) # PSU0_PWROK (0.0)
-    psu2Exist=$(($((($psuStat) >> 1 & 0x01))?0:1)) # PSU0_PRSNT_L (0.1)
+    psu2PwGood=`cat /sys/class/gpio/gpio96/value` # PSU0_PWROK (0.0)
+    psu2Exist=`cat /sys/class/gpio/gpio97/value` # PSU0_PRSNT_L (0.1)
 
-    psu1PwGood=$(($((($psuStat) >> 3 & 0x01))?1:0)) # PSU1_PWROK (0.3)
-    psu1Exist=$(($((($psuStat) >> 4 & 0x01))?0:1)) # PSU1_PRSNT_L (0.4)
-    printf "PSU1 Exist:%x PSU1 PW Good:%d\n" $psu1Exist $psu1PwGood
+    psu1PwGood=`cat /sys/class/gpio/gpio99/value` # PSU1_PWROK (0.3)
+    psu1Exist=`cat /sys/class/gpio/gpio100/value` # PSU1_PRSNT_L (0.4)
+    printf "PSU1 Exist:%d PSU1 PW Good:%d\n" $psu1Exist $psu1PwGood
     printf "PSU2 Exist:%d PSU2 PW Good:%d\n" $psu2Exist $psu2PwGood
 }
 
@@ -1322,6 +1369,8 @@ function _main {
         _i2c_sfp_eeprom_init ${QSFP_ACTION}
     elif [ "${EXEC_FUNC}" == "i2c_mb_eeprom_init" ]; then
         _i2c_mb_eeprom_init ${MB_EEPROM_ACTION}
+    elif [ "${EXEC_FUNC}" == "i2c_psu_eeprom_init" ]; then
+        _i2c_psu_eeprom_init ${MB_EEPROM_ACTION}
     elif [ "${EXEC_FUNC}" == "i2c_qsfp_status_get" ]; then
         _i2c_qsfp_status_get
     elif [ "${EXEC_FUNC}" == "i2c_qsfp_type_get" ]; then
