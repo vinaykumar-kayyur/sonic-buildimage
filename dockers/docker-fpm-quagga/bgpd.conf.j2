@@ -67,7 +67,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
       or  (bgp_session['holdtime'] is defined  and bgp_session['holdtime']  | int != 180) %}
   neighbor {{ neighbor_addr }} timers {{ bgp_session['keepalive'] }} {{ bgp_session['holdtime'] }}
 {% endif %}
-{% if 'admin_status' in bgp_session and bgp_session['admin_status'] == 'down' or 'admin_status' not in bgp_session and 'default_bgp_status' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['default_bgp_status'] == 'down' %}
+{% if 'admin_status' in bgp_session and bgp_session['admin_status'] == 'down' or 'admin_status' not in bgp_session and 'default_bgp_status' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['default_bgp_status'] == 'down' and DEVICE_METADATA.localhost.type != 'ToRRouter' %}
   neighbor {{ neighbor_addr }} shutdown
 {% endif %}
 {% if neighbor_addr | ipv4 %}
