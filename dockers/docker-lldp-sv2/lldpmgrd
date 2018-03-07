@@ -156,7 +156,7 @@ class LldpManager(object):
         # previous pending command for this port
         self.pending_cmds[port_name] = lldpcli_cmd
 
-    def run_pending_cmds(self):
+    def process_pending_cmds(self):
         # List of port names (keys of elements) to delete from self.pending_cmds
         to_delete = []
 
@@ -207,8 +207,8 @@ class LldpManager(object):
                 if op == "SET" and fvp_dict.get("state") == "ok":
                     self.generate_pending_lldp_config_cmd_for_port(key)
 
-            # Run all pending commands
-            self.run_pending_cmds()
+            # Process all pending commands
+            self.process_pending_cmds()
 
 
 # ============================= Functions =============================
