@@ -31,6 +31,12 @@ SYSLOG_IDENTIFIER = "lldpmgrd"
 
 # ========================== Syslog wrappers ==========================
 
+def log_debug(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_DEBUG, msg)
+    syslog.closelog()
+
+
 def log_info(msg):
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_INFO, msg)
@@ -155,7 +161,7 @@ class LldpManager(object):
         to_delete = []
 
         for (port_name, cmd) in self.pending_cmds.iteritems():
-            log_info("Running command: '{}'".format(cmd))
+            log_debug("Running command: '{}'".format(cmd))
 
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -169,7 +175,7 @@ class LldpManager(object):
             if proc.returncode == 0:
                 to_delete.append(port_name)
             else:
-                log_error("Error running command '{}': {}".format(cmd, stderr))
+                log_warning("Command failed '{}': {}".format(cmd, stderr))
 
         # Delete all successful commands from self.pending_cmds
         for port_name in to_delete:
@@ -181,7 +187,8 @@ class LldpManager(object):
         of the Redis State database. When we are notified of the creation of an
         interface, update LLDP configuration accordingly.
         """
-        SELECT_TIMEOUT_MS = 1000
+        # Set select timeout to 10 seconds
+        SELECT_TIMEOUT_MS = 1000 * 10
 
         # Subscribe to PORT table notifications in the State DB
         sel = swsscommon.Select()
