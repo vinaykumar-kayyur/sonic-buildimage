@@ -140,7 +140,7 @@ class SfpUtil(SfpUtilBase):
 
     # For port 48~51 are QSFP, here presumed they're all split to 4 lanes.
     def get_cage_num(self, port_num):             
-    cage_num = port_num
+        cage_num = port_num
         if (port_num >= self.QSFP_PORT_START):
             cage_num = (port_num - self.QSFP_PORT_START)/4
             cage_num = cage_num + self.QSFP_PORT_START
