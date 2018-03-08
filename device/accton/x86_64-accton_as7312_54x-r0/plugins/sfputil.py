@@ -26,10 +26,10 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     _cpld_mapping = {
-	   0:  "4-0060",
-	   1:  "5-0062",
-	   2:  "6-0064",
-           }		
+       0:  "4-0060",
+       1:  "5-0062",
+       2:  "6-0064",
+           }
     _port_to_i2c_mapping = {
            0:  18, 
            1:  19, 
@@ -140,7 +140,7 @@ class SfpUtil(SfpUtilBase):
 
     # For port 48~51 are QSFP, here presumed they're all split to 4 lanes.
     def get_cage_num(self, port_num):             
-	cage_num = port_num 
+    cage_num = port_num
         if (port_num >= self.QSFP_PORT_START):
             cage_num = (port_num - self.QSFP_PORT_START)/4
             cage_num = cage_num + self.QSFP_PORT_START
@@ -149,8 +149,8 @@ class SfpUtil(SfpUtilBase):
 
     # For cage 0~23 and 48~51 are at cpld2, others are at cpld3.
     def get_cpld_num(self, port_num):             
-	cpld_i = 1
-        cage_num = self.get_cage_num(port_num)	
+        cpld_i = 1
+        cage_num = self.get_cage_num(port_num)
         if (port_num > 23 and port_num < self.QSFP_PORT_START):
             cpld_i = 2
 
@@ -159,19 +159,18 @@ class SfpUtil(SfpUtilBase):
 
         return cpld_i
 
-
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
         
         cage_num = self.get_cage_num(port_num)
-	cpld_i = self.get_cpld_num(port_num)
+        cpld_i = self.get_cpld_num(port_num)
 
         cpld_ps = self._cpld_mapping[cpld_i]
         path = "/sys/bus/i2c/devices/{0}/module_present_{1}"
         port_ps = path.format(cpld_ps, cage_num+1)
-	
+
         try:
             val_file = open(port_ps)
         except IOError as e:
@@ -198,7 +197,7 @@ class SfpUtil(SfpUtilBase):
             return False
          
         cage_num = self.get_cage_num(port_num)
-	cpld_i = self.get_cpld_num(port_num)
+        cpld_i = self.get_cpld_num(port_num)
         cpld_ps = self._cpld_mapping[cpld_i]
         path = "/sys/bus/i2c/devices/{0}/module_reset_{1}"
         port_ps = path.format(cpld_ps, cage_num+1)
