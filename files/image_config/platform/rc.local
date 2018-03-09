@@ -188,17 +188,17 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
     # and create a flag in /tmp/ to let updategraph service know
     if [ -d /host/old_config ]; then
         mv -f /host/old_config /etc/sonic/
-        touch /tmp/migration
+        touch /tmp/pending_config_migration
     elif [ -f /host/minigraph.xml ]; then
         mkdir -p /etc/sonic/old_config
         mv /host/minigraph.xml /etc/sonic/old_config/
-        touch /tmp/migration
+        touch /tmp/pending_config_migration
     elif [ -n "$migration" ] && [ -f /host/migration/minigraph.xml ];  then
         mkdir -p /etc/sonic/old_config
         mv /host/migration/minigraph.xml /etc/sonic/old_config/
-        touch /tmp/migration
+        touch /tmp/pending_config_migration
     else
-        touch /tmp/firstboot
+        touch /tmp/pending_config_initialization
     fi
 
     if [ -d /host/image-$sonic_version/platform/$platform ]; then

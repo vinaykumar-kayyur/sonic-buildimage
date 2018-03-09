@@ -40,7 +40,7 @@ fi
 
 . /etc/sonic/updategraph.conf
 
-if [ -f /tmp/migration ]; then
+if [ -f /tmp/pending_config_migration ]; then
     if [ "$enabled" = "true" ]; then
         echo "Use minigraph.xml from old system..."
         cp /etc/sonic/old_config/minigraph.xml /etc/sonic/
@@ -60,17 +60,17 @@ if [ -f /tmp/migration ]; then
         cp /etc/sonic/old_config/config_db.json /etc/sonic/
         sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
     fi
-    rm -f /tmp/migration
+    rm -f /tmp/pending_config_migration
     sed -i "/enabled=/d" /etc/sonic/updategraph.conf
     echo "enabled=false" >> /etc/sonic/updategraph.conf
     exit 0
 fi
 
-if [ -f /tmp/firstboot ] && [ "$enabled" != "true" ]; then 
+if [ -f /tmp/pending_config_initialization ] && [ "$enabled" != "true" ]; then 
     copy_default_minigraph
     reload_minigraph
     sonic-cfggen -d --print-data > /etc/sonic/config_db.json
-    rm -f /tmp/firstboot
+    rm -f /tmp/pending_config_initialization
     exit 0
 fi
 
