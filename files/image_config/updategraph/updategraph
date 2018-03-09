@@ -55,18 +55,22 @@ if [ -f /tmp/migration ]; then
         fi
         reload_minigraph
         sonic-cfggen -d --print-data > /etc/sonic/config_db.json
-    elif [ -f /etc/sonic/old_config/config_db.json ]; then
+    else
         echo "Use config_db.json from old system..."
         cp /etc/sonic/old_config/config_db.json /etc/sonic/
         sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
-    else
-        copy_default_minigraph
-        reload_minigraph
-        sonic-cfggen -d --print-data > /etc/sonic/config_db.json
     fi
     rm -f /tmp/migration
     sed -i "/enabled=/d" /etc/sonic/updategraph.conf
     echo "enabled=false" >> /etc/sonic/updategraph.conf
+    exit 0
+fi
+
+if [ -f /tmp/firstboot ] && [ "$enabled" != "true" ]; then 
+    copy_default_minigraph
+    reload_minigraph
+    sonic-cfggen -d --print-data > /etc/sonic/config_db.json
+    rm -f /tmp/firstboot
     exit 0
 fi
 

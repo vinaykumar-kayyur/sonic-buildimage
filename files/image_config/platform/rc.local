@@ -185,7 +185,7 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
     fi
 
     # Try to take old configuration saved during installation
-    # If taken, create a flag in /tmp/ to let updategraph service know
+    # and create a flag in /tmp/ to let updategraph service know
     if [ -d /host/old_config ]; then
         mv -f /host/old_config /etc/sonic/
         touch /tmp/migration
@@ -197,6 +197,8 @@ if [ -f /host/image-$sonic_version/platform/firsttime ]; then
         mkdir -p /etc/sonic/old_config
         mv /host/migration/minigraph.xml /etc/sonic/old_config/
         touch /tmp/migration
+    else
+        touch /tmp/firstboot
     fi
 
     if [ -d /host/image-$sonic_version/platform/$platform ]; then
