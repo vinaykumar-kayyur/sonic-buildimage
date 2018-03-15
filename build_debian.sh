@@ -248,7 +248,7 @@ sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/ss
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
 ## Copy fstrim service
-cp $FILESYSTEM_ROOT/usr/share/doc/util-linux/examples/fstrim.{service,timer} $FILESYSTEM_ROOT/etc/systemd/system
+sudo cp $FILESYSTEM_ROOT/usr/share/doc/util-linux/examples/fstrim.{service,timer} $FILESYSTEM_ROOT/etc/systemd/system
 
 ## Config monit
 sudo sed -i '
