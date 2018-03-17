@@ -247,6 +247,9 @@ sudo augtool --autosave "set /files/etc/ssh/sshd_config/UseDNS no" -r $FILESYSTE
 sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
+## Copy fstrim service
+sudo cp $FILESYSTEM_ROOT/usr/share/doc/util-linux/examples/fstrim.{service,timer} $FILESYSTEM_ROOT/etc/systemd/system
+
 ## Config monit
 sudo sed -i '
     s/^# set logfile syslog/set logfile syslog/;
@@ -304,6 +307,7 @@ set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
 
 set /files/etc/sysctl.conf/net.core.rmem_max 2097152
+set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
@@ -331,11 +335,11 @@ sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
-build_version: $(sonic_get_version)
+build_version: '$(sonic_get_version)'
 debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
-kernel_version: $kversion
+kernel_version: '$kversion'
 asic_type: $sonic_asic_platform
-commit_id: $(git rev-parse --short HEAD)
+commit_id: '$(git rev-parse --short HEAD)'
 build_date: $(date -u)
 build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME
