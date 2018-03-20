@@ -406,7 +406,7 @@ if [ "$install_env" = "onie" ]; then
     
 elif [ "$install_env" = "sonic" ]; then
     demo_mnt="/host"
-    running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+    eval running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
     # Prevent installing existing SONiC if it is running
     if [ "$image_dir" = "image-$running_sonic_revision" ]; then
         echo "Not installing SONiC version $running_sonic_revision, as current running SONiC has the same version"
@@ -452,7 +452,13 @@ unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPT
 
 if [ "$install_env" = "onie" ]; then
     # Store machine description in target file system
-    cp /etc/machine.conf $demo_mnt
+    if [ -f /etc/machine-build.conf ]; then
+        # onie_ variable are generate at runtime.
+        # they are no longer hardcoded in /etc/machine.conf
+        set | grep ^onie_ > $demo_mnt/machine.conf
+    else
+        cp /etc/machine.conf $demo_mnt
+    fi
 
     # Store installation log in target file system
     rm -f $onie_initrd_tmp/tmp/onie-support*.tar.bz2
