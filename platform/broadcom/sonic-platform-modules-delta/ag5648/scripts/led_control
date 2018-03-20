@@ -143,12 +143,12 @@ catpsufanspeed(){
 setfanled(){
     if [ "${fan_eeprom_num}" -eq "4" ] && [ "${fan_rpm_normal_num}" -eq "4" ]; then
         echo "fan_green" > $LED_CONTROL
-    elif [ "${fan_eeprom_num}" -eq "4" ] && [ "${fan_rpm_normal_num}" -lt "4" ]; then
+    elif [ "${fan_eeprom_num}" -lt "4" ] && [ "${fan_rpm_normal_num}" -eq "4" ]; then
         echo "fan_Amber" > $LED_CONTROL
-    elif [ "${fan_eeprom_num}" -gt "0" ]; then
-        echo "pwr_Blinking_yellow" > $LED_CONTROL
-    else
+    elif [ "${psu1_eeprom_num}" -eq "0" ] && [ "${psu2_eeprom_num}" -eq "0" ]; then    
         echo "fan_off" > $LED_CONTROL
+    else
+        echo "fan_Blinking_yellow" > $LED_CONTROL
     fi
 }
 
