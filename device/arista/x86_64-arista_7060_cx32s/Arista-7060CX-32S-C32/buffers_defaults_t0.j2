@@ -1,9 +1,9 @@
 
-{%- set default_cable = '40m' %}
+{%- set default_cable = '5m' %}
 
 {%- macro generate_port_lists(PORT_ALL) %}
     {# Generate list of ports #}
-    {%- for port_idx in range(0,64) %}
+    {%- for port_idx in range(0,128,4) %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
     {%- endfor %}
 {%- endmacro %}
@@ -11,13 +11,13 @@
 {%- macro generate_buffer_pool_and_profiles() %}
     "BUFFER_POOL": {
         "ingress_lossless_pool": {
-            "size": "10443264",
+            "size": "11213696",
             "type": "ingress",
             "mode": "dynamic",
-            "xoff": "4625920"
+            "xoff": "3855488"
         },
         "egress_lossy_pool": {
-            "size": "8877440",
+            "size": "9532224",
             "type": "egress",
             "mode": "dynamic"
         },
