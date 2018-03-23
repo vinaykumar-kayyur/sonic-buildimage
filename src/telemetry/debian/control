@@ -1,0 +1,12 @@
+Source: telemetry
+Maintainer: Jipan Yang <jipan.yang@alibaba-inc.com>
+Build-Depends: debhelper (>= 8.0.0),
+               dh-systemd
+Standards-Version: 0.0.1
+Section: net
+
+Package: telemetry
+Priority: extra
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: telemetry daemon
