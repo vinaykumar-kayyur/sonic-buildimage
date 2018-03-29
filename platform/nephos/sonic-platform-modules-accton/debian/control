@@ -1,7 +1,7 @@
 Source: sonic-accton-platform-modules
 Section: main
 Priority: extra
-Maintainer: 
+Maintainer: simon.ji@nephosinc.com
 Build-Depends: debhelper (>= 8.0.0), bzip2
 Standards-Version: 3.9.3
 
