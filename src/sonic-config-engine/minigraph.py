@@ -297,7 +297,7 @@ def parse_meta(meta, hname):
             for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
                 name = device_property.find(str(QName(ns1, "Name"))).text
                 value = device_property.find(str(QName(ns1, "Value"))).text
-                value_group = value.split(';') if value and value != "" else []
+                value_group = value.strip().split(';') if value and value != "" else []
                 if name == "DhcpResources":
                     dhcp_servers = value_group
                 elif name == "NtpResources":
