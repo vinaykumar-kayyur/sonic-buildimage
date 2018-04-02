@@ -36,9 +36,7 @@ from natsort import natsorted
 def sift_up_ipv4(value):
     if not value:
         return None
-    k_aug = [k + (4,) if is_ipv4(k[1]) else k + (6,) for k in value.keys()]
-    k_aug.sort(key = lambda k_aug: (k_aug[0], k_aug[2]))
-    return [(k[0], k[1]) for k in k_aug]
+    return sorted(value.keys(), key = lambda k: k + (4,) if is_ipv4(k[1]) else k + (6,))
 
 def is_ipv4(value):
     if not value:
