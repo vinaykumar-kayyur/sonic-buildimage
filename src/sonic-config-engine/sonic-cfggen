@@ -33,6 +33,13 @@ from swsssdk import ConfigDBConnector
 from collections import OrderedDict
 from natsort import natsorted
 
+def sift_up_ipv4(value):
+    if not value:
+        return None
+    k_aug = [k + (4,) if is_ipv4(k[1]) else k + (6,) for k in value.keys()]
+    k_aug.sort(key = lambda k_aug: (k_aug[0], k_aug[2]))
+    return [(k[0], k[1]) for k in k_aug]
+
 def is_ipv4(value):
     if not value:
         return False
@@ -204,6 +211,7 @@ def main():
         loader = jinja2.FileSystemLoader(paths)
 
         env = jinja2.Environment(loader=loader, trim_blocks=True)
+        env.filters['siftupipv4'] = sift_up_ipv4
         env.filters['ipv4'] = is_ipv4
         env.filters['ipv6'] = is_ipv6
         env.filters['unique_name'] = unique_name
