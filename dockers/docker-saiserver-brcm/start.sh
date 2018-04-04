@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 start_bcm()
 {
     [ -e /dev/linux-bcm-knet ] || mknod /dev/linux-bcm-knet c 122 0

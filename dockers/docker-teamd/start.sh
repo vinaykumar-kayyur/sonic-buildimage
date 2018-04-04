@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 TEAMD_CONF_PATH=/etc/teamd
 
 rm -rf $TEAMD_CONF_PATH

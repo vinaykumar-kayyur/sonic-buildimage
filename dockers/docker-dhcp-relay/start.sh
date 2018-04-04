@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 # Remove stale rsyslog PID file if it exists
 rm -f /var/run/rsyslogd.pid
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 sonic-cfggen -d -t /usr/share/sonic/templates/lldpd.conf.j2 > /etc/lldpd.conf
 
 mkdir -p /var/sonic

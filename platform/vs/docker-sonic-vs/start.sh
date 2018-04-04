@@ -2,6 +2,8 @@
 
 # generate configuration
 
+dpkg-reconfigure -f noninteractive tzdata
+
 [ -d /etc/sonic ] || mkdir -p /etc/sonic
 
 SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')

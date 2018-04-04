@@ -72,6 +72,7 @@ start() {
         -v /var/log/mellanox/sniffer:/var/log/mellanox/sniffer:rw \
 {%- endif %}
         -v /var/run/redis:/var/run/redis:rw \
+        -v /etc/timezone:/etc/timezone:rw \
         -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/platform:ro \
 {%- if docker_container_name != "database" %}
         -v /usr/share/sonic/device/$PLATFORM/$HWSKU:/usr/share/sonic/hwsku:ro \

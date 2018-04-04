@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 mkdir -p /etc/ssw
 sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t /usr/share/sonic/templates/sysDescription.j2 > /etc/ssw/sysDescription
 

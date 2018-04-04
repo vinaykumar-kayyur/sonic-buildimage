@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+dpkg-reconfigure -f noninteractive tzdata
+
 mkdir -p /etc/swss/config.d/
 
 sonic-cfggen -d -t /usr/share/sonic/templates/switch.json.j2 > /etc/swss/config.d/switch.json
