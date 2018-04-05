@@ -215,6 +215,10 @@ write_boot_configs() {
     platform_specific
     echo "rw loop=$image_name/fs.squashfs loopfstype=squashfs apparmor=1 security=apparmor quiet" >> /tmp/append
 
+    # Pass the MAC address to the new kernel as a command line parameter. This makes it
+    # possible to restore the MAC address in the new kernel without requiring driver modifications.
+    [ "${NETDEV}" ] || NETDEV=ma1
+    echo "hwaddr_${NETDEV}=$(cat /sys/class/net/${NETDEV}/address)" >> /tmp/append
 
     # use extra parameters from kernel-params hook if the file exists
     if [ -f "$target_path/$kernel_params" ]; then
