@@ -406,7 +406,7 @@ if [ "$install_env" = "onie" ]; then
     
 elif [ "$install_env" = "sonic" ]; then
     demo_mnt="/host"
-    running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+    eval running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
     # Prevent installing existing SONiC if it is running
     if [ "$image_dir" = "image-$running_sonic_revision" ]; then
         echo "Not installing SONiC version $running_sonic_revision, as current running SONiC has the same version"
@@ -446,7 +446,11 @@ fi
 # Decompress the file for the file system directly to the partition
 unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
 
-TAR_EXTRA_OPTION="--numeric-owner"
+if [ "$install_env" = "onie" ]; then
+    TAR_EXTRA_OPTION="--numeric-owner"
+else
+    TAR_EXTRA_OPTION="--numeric-owner --warning=no-timestamp"
+fi
 mkdir -p $demo_mnt/$image_dir/$DOCKERFS_DIR
 unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 
@@ -455,7 +459,8 @@ if [ "$install_env" = "onie" ]; then
     if [ -f /etc/machine-build.conf ]; then
         # onie_ variable are generate at runtime.
         # they are no longer hardcoded in /etc/machine.conf
-        set | grep ^onie_ > $demo_mnt/machine.conf
+        # also remove single quotes around the value
+        set | grep ^onie | sed -e "s/='/=/" -e "s/'$//" > $demo_mnt/machine.conf
     else
         cp /etc/machine.conf $demo_mnt
     fi

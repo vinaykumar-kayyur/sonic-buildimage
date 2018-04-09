@@ -14,7 +14,7 @@
 #  * USERNAME: Desired username -- default at rules/config
 #  * PASSWORD: Desired password -- default at rules/config
 #  * KEEP_SLAVE_ON: Keeps slave container up after building-process concludes.
-#  * SOURCE_FOLDER: host path to be mount as /var/src, only effective when KEEP_SLAVE_ON=yes
+#  * SOURCE_FOLDER: host path to be mount as /var/$(USER)/src, only effective when KEEP_SLAVE_ON=yes
 #  * SONIC_BUILD_JOB: Specifying number of concurrent build job(s) to run
 #
 ###############################################################################
@@ -70,7 +70,8 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            USERNAME=$(USERNAME) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
                            HTTP_PROXY=$(http_proxy) \
-                           HTTPS_PROXY=$(https_proxy)
+                           HTTPS_PROXY=$(https_proxy) \
+                           ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 
@@ -85,7 +86,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 	    $(DOCKER_BUILD) ; }
 ifeq "$(KEEP_SLAVE_ON)" "yes"
     ifdef SOURCE_FOLDER
-		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
+		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/$(USER)/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
     else
 		@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
     endif
