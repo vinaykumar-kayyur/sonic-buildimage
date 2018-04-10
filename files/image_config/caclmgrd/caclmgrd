@@ -152,12 +152,7 @@ class ControlPlaneAclManager(object):
                         log_error("ACL rule does not contain PACKET_ACTION property")
                         continue
 
-                    # If the rule contains an IP protocol, we will use it.
-                    # Otherwise, we will apply the rule to the default
-                    # protocol(s) for this ACL service
-                    if "IP_PROTOCOL" in rule_props:
-                        ip_protocols = [rule_props["IP_PROTOCOL"]]
-
+                    # Apply the rule to the default protocol(s) for this ACL service
                     for ip_protocol in ip_protocols:
                         for dst_port in dst_ports:
                             rule_cmd = "iptables -A INPUT -p {}".format(ip_protocol)
