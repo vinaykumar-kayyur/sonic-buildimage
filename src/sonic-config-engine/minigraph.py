@@ -188,6 +188,10 @@ def parse_dpg(dpg, hname):
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
+
+            # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
+            # maybe we should explicity ignore management and loopback interfaces?) because we
+            # decide an ACL is a Control Plane ACL if acl_intfs is empty below.
             for member in aclattach:
                 member = member.strip()
                 if pcs.has_key(member):
