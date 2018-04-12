@@ -452,13 +452,16 @@ def parse_xml(filename, platform=None, port_config_file=None):
             continue
 
         ports.setdefault(port_name, {})['speed'] = port_speeds_default[port_name]
+
     for port_name in port_speed_png:
+        # if port_name is not in port_config.ini, still consider it.
+        # and later swss will pick up and behave on-demand port break-up.
+        # if on-deman port break-up is not supported on a specific platform, swss will return error.
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
+
     for port_name, port in ports.items():
         if port.get('speed') == '100000':
             port['fec'] = 'rs'
-    for port_name in port_descriptions:
-        ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
     for port_name in port_descriptions:
         # ignore port not in port_config.ini
