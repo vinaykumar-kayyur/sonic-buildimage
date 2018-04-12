@@ -375,8 +375,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
-    port_speeds = {}
-    port_speeds1 = {}
+    port_speeds_default = {}
+    port_speed_png = {}
     port_descriptions = {}
     syslog_servers = []
     dhcp_servers = []
@@ -403,13 +403,13 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds1) = parse_png(child, hostname)
+            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
             (u_neighbors, u_devices, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
-            (port_speeds, port_descriptions) = parse_deviceinfo(child, hwsku)
+            (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
@@ -446,14 +446,14 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['VLAN_INTERFACE'] = vlan_intfs
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    for port_name in port_speeds:
+    for port_name in port_speeds_default:
         # ignore port not in port_config.ini
         if not ports.has_key(port_name):
             continue
 
-        ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
-    for port_name in port_speeds1:
-        ports.setdefault(port_name, {})['speed'] = port_speeds1[port_name]
+        ports.setdefault(port_name, {})['speed'] = port_speeds_default[port_name]
+    for port_name in port_speed_png:
+        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
     for port_name, port in ports.items():
         if port.get('speed') == '100000':
             port['fec'] = 'rs'
