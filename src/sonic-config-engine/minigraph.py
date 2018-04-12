@@ -78,17 +78,17 @@ def parse_png(png, hname):
                 bandwidth = bandwidth_node.text if bandwidth_node is not None else None
 
                 if enddevice == hname:
-                    if bandwidth:
-                        port_speeds[endport] = bandwidth
                     if port_alias_map.has_key(endport):
                         endport = port_alias_map[endport]
                     neighbors[endport] = {'name': startdevice, 'port': startport}
-                else:
                     if bandwidth:
-                        port_speeds[startport] = bandwidth
+                        port_speeds[endport] = bandwidth
+                else:
                     if port_alias_map.has_key(startport):
                         startport = port_alias_map[startport]
                     neighbors[startport] = {'name': enddevice, 'port': endport}
+                    if bandwidth:
+                        port_speeds[startport] = bandwidth
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):

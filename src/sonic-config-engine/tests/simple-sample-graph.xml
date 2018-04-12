@@ -190,7 +190,7 @@
         <EndPort>et1</EndPort>
         <FlowControl>true</FlowControl>
         <StartDevice>switch-t0</StartDevice>
-        <StartPort>Ethernet8</StartPort>
+        <StartPort>fortyGigE0/8</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
