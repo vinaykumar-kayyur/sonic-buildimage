@@ -62,6 +62,7 @@ def parse_png(png, hname):
     console_port = ''
     mgmt_dev = ''
     mgmt_port = ''
+    port_speeds = {}
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -73,15 +74,21 @@ def parse_png(png, hname):
                 endport = link.find(str(QName(ns, "EndPort"))).text
                 startdevice = link.find(str(QName(ns, "StartDevice"))).text
                 startport = link.find(str(QName(ns, "StartPort"))).text
+                bandwidth_node = link.find(str(QName(ns, "Bandwidth")))
+                bandwidth = bandwidth_node.text if bandwidth_node is not None else None
 
                 if enddevice == hname:
                     if port_alias_map.has_key(endport):
                         endport = port_alias_map[endport]
                     neighbors[endport] = {'name': startdevice, 'port': startport}
+                    if bandwidth:
+                        port_speeds[endport] = bandwidth
                 else:
                     if port_alias_map.has_key(startport):
                         startport = port_alias_map[startport]
                     neighbors[startport] = {'name': enddevice, 'port': endport}
+                    if bandwidth:
+                        port_speeds[startport] = bandwidth
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
@@ -106,7 +113,7 @@ def parse_png(png, hname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds)
 
 
 def parse_dpg(dpg, hname):
@@ -188,6 +195,10 @@ def parse_dpg(dpg, hname):
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
+
+            # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
+            # maybe we should explicity ignore management and loopback interfaces?) because we
+            # decide an ACL is a Control Plane ACL if acl_intfs is empty below.
             for member in aclattach:
                 member = member.strip()
                 if pcs.has_key(member):
@@ -209,12 +220,22 @@ def parse_dpg(dpg, hname):
                 # This ACL has no interfaces to attach to -- consider this a control plane ACL
                 try:
                     aclservice = aclintf.find(str(QName(ns, "Type"))).text
-                    acls[aclname] = {'policy_desc': aclname,
-                                     'ports': acl_intfs,
-                                     'type': 'CTRLPLANE',
-                                     'service': aclservice if aclservice is not None else 'UNKNOWN'}
+
+                    # If we already have an ACL with this name and this ACL is bound to a different service,
+                    # append the service to our list of services
+                    if aclname in acls:
+                        if acls[aclname]['type'] != 'CTRLPLANE':
+                            print >> sys.stderr, "Warning: ACL '%s' type mismatch. Not updating ACL." % aclname
+                        elif acls[aclname]['services'] == aclservice:
+                            print >> sys.stderr, "Warning: ACL '%s' already contains service '%s'. Not updating ACL." % (aclname, aclservice)
+                        else:
+                            acls[aclname]['services'].append(aclservice)
+                    else:
+                        acls[aclname] = {'policy_desc': aclname,
+                                         'type': 'CTRLPLANE',
+                                         'services': [aclservice]}
                 except:
-                    print >> sys.stderr, "Warning: Ingore Control Plane ACL %s without type" % aclname
+                    print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
         return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls
     return None, None, None, None, None, None, None
@@ -354,7 +375,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
-    port_speeds = {}
+    port_speeds_default = {}
+    port_speed_png = {}
     port_descriptions = {}
     syslog_servers = []
     dhcp_servers = []
@@ -381,13 +403,13 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port) = parse_png(child, hostname)
+            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
-            (u_neighbors, u_devices, _, _, _, _) = parse_png(child, hostname)
+            (u_neighbors, u_devices, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
-            (port_speeds, port_descriptions) = parse_deviceinfo(child, hwsku)
+            (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
@@ -424,11 +446,28 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['VLAN_INTERFACE'] = vlan_intfs
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    for port_name in port_speeds:
-        ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
-        if port_speeds[port_name] == '100000':
-            ports.setdefault(port_name, {})['fec'] = 'rs'
+    for port_name in port_speeds_default:
+        # ignore port not in port_config.ini
+        if not ports.has_key(port_name):
+            continue
+
+        ports.setdefault(port_name, {})['speed'] = port_speeds_default[port_name]
+
+    for port_name in port_speed_png:
+        # if port_name is not in port_config.ini, still consider it.
+        # and later swss will pick up and behave on-demand port break-up.
+        # if on-deman port break-up is not supported on a specific platform, swss will return error.
+        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
+
+    for port_name, port in ports.items():
+        if port.get('speed') == '100000':
+            port['fec'] = 'rs'
+
     for port_name in port_descriptions:
+        # ignore port not in port_config.ini
+        if not ports.has_key(port_name):
+            continue
+
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
     results['PORT'] = ports
