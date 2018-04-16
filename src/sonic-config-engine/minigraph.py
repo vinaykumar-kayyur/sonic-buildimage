@@ -149,12 +149,17 @@ def parse_dpg(dpg, hname):
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
         pcs = {}
+        intfs_inpc = [] # List to hold all the LAG member interfaces 
+        intf_to_pc_map = {} # dict for interface to LAG map
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
             pcintfmbr = pcintf.find(str(QName(ns, "AttachTo"))).text
             pcmbr_list = pcintfmbr.split(';')
+            pc_intfs.append(pcintfname)
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
+                intfs_inpc.append(pcmbr_list[i])
+                intf_to_pc_map[pcmbr_list[i]] = pcintfname
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
             else:
@@ -202,15 +207,31 @@ def parse_dpg(dpg, hname):
             for member in aclattach:
                 member = member.strip()
                 if pcs.has_key(member):
-                    acl_intfs.extend(pcs[member]['members'])  # For ACL attaching to port channels, we break them into port channel members
+                    # If try to attach ACL to a LAG interface then we shall add the LAG to
+                    # to acl_intfs directly instead of break it into member ports, ACL attach
+                    # to LAG will be applied to all the LAG members internally by SAI/SDK
+                    acl_intfs.append(member)
                 elif vlans.has_key(member):
                     print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a Vlan interface, which is currently not supported"
                 elif port_alias_map.has_key(member):
-                    acl_intfs.append(port_alias_map[member])
+                    # ACL can not be attached to a interface if it already has been added to a LAG.
+                    # Give a warning to the user when detected that trying to attach ACL to a LAG member port, and replace it with LAG
+                    if member in intfs_inpc:
+                        pc_int = intf_to_pc_map[member]
+                        print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a LAG member interface: " + member + ", replace it with the LAG interface " + pc_int
+                        if pc_int not in acl_intfs:
+                            acl_intfs.append(pc_int)
+                    else:
+                        acl_intfs.append(port_alias_map[member])
                 elif member.lower() == 'erspan':
                     is_mirror = True;
-                    # Erspan session will be attached to all front panel ports
-                    acl_intfs = port_alias_map.values()
+                    # Erspan session will be attached to all front panel ports,
+                    # if panel ports is a member port of LAG, should add the LAG 
+                    # to acl table instead of the panel ports
+                    acl_intfs = pc_intfs
+                    for panel_port in port_alias_map.values():
+                        if panel_port not in intfs_inpc:
+                            acl_intfs.append(panel_port)
                     break;
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
