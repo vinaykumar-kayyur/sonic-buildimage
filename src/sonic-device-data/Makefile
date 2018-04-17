@@ -14,14 +14,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	mkdir ./device
 	cp -r ../../../device/*/* ./device/
 
-	# Execute Broadcom config file test
-	pushd ../tests/
-	for f in `find ../../../device -name "*.config.bcm"`; do
-		echo ./config_checker $$f
-		./config_checker $$f
-	done
-	popd
-
 	# Build the package
 	dpkg-buildpackage -rfakeroot -b -us -uc
 
