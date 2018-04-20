@@ -3,6 +3,7 @@
 from setuptools import setup
 import os.path
 import unittest
+import glob
 
 def get_test_suite():
       test_loader = unittest.TestLoader()
@@ -19,4 +20,7 @@ setup(name='sonic-config-engine',
       scripts=['sonic-cfggen'],
       install_requires=['lxml', 'jinja2', 'netaddr', 'ipaddr', 'pyyaml', 'pyangbind==0.6.0'],
       test_suite='setup.get_test_suite',
+      data_files=[
+        ('/usr/share/sonic/templates', glob.glob('data/*')),
+      ],
      )
