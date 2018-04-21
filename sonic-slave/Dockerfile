@@ -30,11 +30,9 @@ RUN apt-get update && apt-get install -y \
         libboost-program-options1.55-dev \
         libtinyxml2-dev \
         python \
-        python-pip \
         libncurses5-dev \
         texinfo \
         dh-autoreconf \
-        python3-pip \
         doxygen \
         devscripts \
         git-buildpackage \
@@ -224,6 +222,11 @@ RUN export VERSION=1.8.3 \
  && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
  && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc
+
+# For latest version pip
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3
+# Note: install pip2 later, so pip will be pip2 by default
+RUN curl https://bootstrap.pypa.io/get-pip.py | python2
 
 # For p4 build
 RUN pip install \
