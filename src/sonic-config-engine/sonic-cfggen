@@ -173,7 +173,7 @@ def main():
             }}}
         deep_update(data, hardware_data)
         (ports, _) = get_port_config(hwsku, platform, args.port_config)
-        if not bool(ports):
+        if not ports:
             print('Failed to get port config', file=sys.stderr)
             sys.exit(1)
         deep_update(data, {'PORT': ports})
