@@ -184,16 +184,12 @@ RUN apt-get update && apt-get install -y \
         libjs-sphinxdoc \
         libjs-underscore \
         python-docutils \
-        python-jinja2 \
         python-markupsafe \
         python-pygments \
         python-roman \
-        python-sphinx \
         sphinx-common \
-        python3-sphinx \
 # For sonic config engine testing
         python-lxml \
-        python-jinja2 \
         python-netaddr \
         python-ipaddr \
         python-yaml \
@@ -234,11 +230,13 @@ RUN pip install \
         ctypesgen \
         crc16
 
-# For templating
-RUN pip install j2cli
-
 # For sonic config engine testing
 RUN pip install pyangbind==0.5.10
+# Note: force upgrade debian packaged jinja2, if installed
+RUN pip install --force-reinstall jinja2>=2.10
+
+# For templating (requiring jinja2)
+RUN pip install j2cli
 
 # For sonic utilities testing
 RUN pip install click-default-group click natsort tabulate
