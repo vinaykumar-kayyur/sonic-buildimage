@@ -227,6 +227,8 @@ RUN export VERSION=1.8.3 \
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3
 # Note: install pip2 later, so pip will be pip2 by default
 RUN curl https://bootstrap.pypa.io/get-pip.py | python2
+# Note: downgrade pip2 so pyangbind 0.6.0 will work
+RUN python2 -m pip install --upgrade pip==9.0.3
 
 # For p4 build
 RUN pip install \
@@ -234,7 +236,7 @@ RUN pip install \
         crc16
 
 # For sonic config engine testing
-RUN pip install pyangbind==0.5.10
+RUN pip install pyangbind==0.6.0
 # Note: force upgrade debian packaged jinja2, if installed
 RUN pip install --force-reinstall jinja2>=2.10
 
