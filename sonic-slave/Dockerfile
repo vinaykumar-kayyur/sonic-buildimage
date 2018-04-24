@@ -30,9 +30,11 @@ RUN apt-get update && apt-get install -y \
         libboost-program-options1.55-dev \
         libtinyxml2-dev \
         python \
+        python-pip \
         libncurses5-dev \
         texinfo \
         dh-autoreconf \
+        python3-pip \
         doxygen \
         devscripts \
         git-buildpackage \
@@ -223,12 +225,9 @@ RUN export VERSION=1.8.3 \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
  && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc
 
-# For latest version pip
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3
-# Note: install pip2 later, so pip will be pip2 by default
-RUN curl https://bootstrap.pypa.io/get-pip.py | python2
-# Note: downgrade pip2 so pyangbind 0.6.0 will work
-RUN python2 -m pip install --upgrade pip==9.0.3
+# Upgrade pip2
+# Note: use pip2 specific version so jinja2 2.10 will install
+RUN python2 -m pip install -U pip==9.0.3
 
 # For p4 build
 RUN pip install \
