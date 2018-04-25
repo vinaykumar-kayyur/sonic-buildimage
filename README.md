@@ -1,14 +1,23 @@
 *master*: Broadcom: [![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-all)
 Mellanox: [![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-all)
+Nephos: [![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all)
 P4: [![P4](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/p4/job/buildimage-p4-all)
 VS: [![VS](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/vs/job/buildimage-vs-all)
 
+*201712*:
+Broadcom: [![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201712/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201712/)
+Barefoot: [![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-201712/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/barefoot/job/buildimage-bf-201712/)
+Centec: [![Centec](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-201712/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-201712/)
+Nephos: [![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201712/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201712/)
+Marvell: [![Marvell](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-201712/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-201712/)
+Mellanox: [![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201712/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201712/)
+
 *201709*: 
 Broadcom: [![Broadcom](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201709/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/broadcom/job/buildimage-brcm-201709/)
-Cavium: [![Cavium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/cavium/job/buildimage-cavm-all/)
-Centec: [![Centec](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-all/)
-Nephos: [![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-all/)
-Marvell: [![Marvell](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-all/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-all/)
+Cavium: [![Cavium](https://sonic-jenkins.westus2.cloudapp.azure.com/job/cavium/job/buildimage-cavm-201709/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/cavium/job/buildimage-cavm-201709/)
+Centec: [![Centec](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-201709/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/centec/job/buildimage-centec-201709/)
+Nephos: [![Nephos](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201709/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/nephos/job/buildimage-nephos-201709/)
+Marvell: [![Marvell](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-201709/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/marvell/job/buildimage-mrvl-201709/)
 Mellanox: [![Mellanox](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201709/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/mellanox/job/buildimage-mlnx-201709/)
 
 # sonic-buildimage
@@ -30,11 +39,16 @@ Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadma
 ## Clone or fetch the code repository with all git submodules
 To clone the code repository recursively, assuming git version 1.9 or newer:
 
-    git clone --recursive https://github.com/Azure/sonic-buildimage.git
+    git clone https://github.com/Azure/sonic-buildimage.git
 
 ## Usage
 
 To build SONiC installer image and docker images, run the following commands:
+
+    cd sonic-buildimage
+
+    # (Optional) Checkout a specific branch. By default, it uses master branch
+    git checkout [branch_name]
 
     # Execute make init once after cloning the repo, or fetched remote repo with submodule updates
     make init
@@ -46,8 +60,9 @@ To build SONiC installer image and docker images, run the following commands:
 
  **NOTE**:
 
-- We recommend reserving 50G free space to build one platform.
-- Use ```http_proxy=[your_proxy] https_proxy=[your_proxy] make``` to enable http(s) proxy in the build process.
+- Recommend reserving 50G free space to build one platform.
+- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
+- Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
 The SONiC installer contains all docker images needed. SONiC uses one image for all devices of a same ASIC vendor. The supported ASIC vendors are:
 

@@ -23,6 +23,9 @@ src/libnl3/*
 !src/libnl3/Makefile
 src/libteam/*
 !src/libteam/Makefile
+src/lldpd/*
+!src/lldpd/Makefile
+!src/lldpd/patch/
 src/mpdecimal/*
 !src/mpdecimal/Makefile
 src/python3/*
@@ -35,6 +38,7 @@ src/sonic-device-data/src/device/
 src/sonic-device-data/src/debian/
 src/supervisor/*
 !src/supervisor/Makefile
+!src/supervisor/patch/
 src/thrift/*
 !src/thrift/Makefile
 
@@ -53,6 +57,7 @@ dockers/docker-router-advertiser/Dockerfile
 dockers/docker-snmp-sv2/Dockerfile
 dockers/docker-teamd/Dockerfile
 dockers/docker-sonic-mgmt/Dockerfile
+dockers/docker-sonic-telemetry/Dockerfile
 platform/*/docker-syncd-*/Dockerfile
 platform/*/docker-syncd-*-rpc/Dockerfile
 platform/vs/docker-sonic-vs/Dockerfile

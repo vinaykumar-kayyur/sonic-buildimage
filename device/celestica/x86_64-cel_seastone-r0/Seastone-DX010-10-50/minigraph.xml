@@ -5,14 +5,14 @@
       <BGPSession>
         <StartRouter>ARISTA01T0</StartRouter>
         <StartPeer>10.0.0.33</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.32</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.0</StartPeer>
         <EndRouter>ARISTA01T2</EndRouter>
         <EndPeer>10.0.0.1</EndPeer>
@@ -23,14 +23,14 @@
       <BGPSession>
         <StartRouter>ARISTA02T0</StartRouter>
         <StartPeer>10.0.0.35</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.34</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.2</StartPeer>
         <EndRouter>ARISTA02T2</EndRouter>
         <EndPeer>10.0.0.3</EndPeer>
@@ -41,14 +41,14 @@
       <BGPSession>
         <StartRouter>ARISTA03T0</StartRouter>
         <StartPeer>10.0.0.37</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.36</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.4</StartPeer>
         <EndRouter>ARISTA03T2</EndRouter>
         <EndPeer>10.0.0.5</EndPeer>
@@ -59,14 +59,14 @@
       <BGPSession>
         <StartRouter>ARISTA04T0</StartRouter>
         <StartPeer>10.0.0.39</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.38</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.6</StartPeer>
         <EndRouter>ARISTA04T2</EndRouter>
         <EndPeer>10.0.0.7</EndPeer>
@@ -77,14 +77,14 @@
       <BGPSession>
         <StartRouter>ARISTA05T0</StartRouter>
         <StartPeer>10.0.0.41</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.40</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.8</StartPeer>
         <EndRouter>ARISTA05T2</EndRouter>
         <EndPeer>10.0.0.9</EndPeer>
@@ -95,14 +95,14 @@
       <BGPSession>
         <StartRouter>ARISTA06T0</StartRouter>
         <StartPeer>10.0.0.43</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.42</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.10</StartPeer>
         <EndRouter>ARISTA06T2</EndRouter>
         <EndPeer>10.0.0.11</EndPeer>
@@ -113,14 +113,14 @@
       <BGPSession>
         <StartRouter>ARISTA07T0</StartRouter>
         <StartPeer>10.0.0.45</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.44</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.12</StartPeer>
         <EndRouter>ARISTA07T2</EndRouter>
         <EndPeer>10.0.0.13</EndPeer>
@@ -131,14 +131,14 @@
       <BGPSession>
         <StartRouter>ARISTA08T0</StartRouter>
         <StartPeer>10.0.0.47</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.46</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.14</StartPeer>
         <EndRouter>ARISTA08T2</EndRouter>
         <EndPeer>10.0.0.15</EndPeer>
@@ -149,14 +149,14 @@
       <BGPSession>
         <StartRouter>ARISTA09T0</StartRouter>
         <StartPeer>10.0.0.49</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.48</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.16</StartPeer>
         <EndRouter>ARISTA09T2</EndRouter>
         <EndPeer>10.0.0.17</EndPeer>
@@ -167,14 +167,14 @@
       <BGPSession>
         <StartRouter>ARISTA10T0</StartRouter>
         <StartPeer>10.0.0.51</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.50</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.18</StartPeer>
         <EndRouter>ARISTA10T2</EndRouter>
         <EndPeer>10.0.0.19</EndPeer>
@@ -185,14 +185,14 @@
       <BGPSession>
         <StartRouter>ARISTA11T0</StartRouter>
         <StartPeer>10.0.0.53</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.52</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.20</StartPeer>
         <EndRouter>ARISTA11T2</EndRouter>
         <EndPeer>10.0.0.21</EndPeer>
@@ -203,14 +203,14 @@
       <BGPSession>
         <StartRouter>ARISTA12T0</StartRouter>
         <StartPeer>10.0.0.55</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.54</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.22</StartPeer>
         <EndRouter>ARISTA12T2</EndRouter>
         <EndPeer>10.0.0.23</EndPeer>
@@ -221,14 +221,14 @@
       <BGPSession>
         <StartRouter>ARISTA13T0</StartRouter>
         <StartPeer>10.0.0.57</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.56</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.24</StartPeer>
         <EndRouter>ARISTA13T2</EndRouter>
         <EndPeer>10.0.0.25</EndPeer>
@@ -239,14 +239,14 @@
       <BGPSession>
         <StartRouter>ARISTA14T0</StartRouter>
         <StartPeer>10.0.0.59</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.58</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.26</StartPeer>
         <EndRouter>ARISTA14T2</EndRouter>
         <EndPeer>10.0.0.27</EndPeer>
@@ -257,14 +257,14 @@
       <BGPSession>
         <StartRouter>ARISTA15T0</StartRouter>
         <StartPeer>10.0.0.61</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.60</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.28</StartPeer>
         <EndRouter>ARISTA15T2</EndRouter>
         <EndPeer>10.0.0.29</EndPeer>
@@ -275,14 +275,14 @@
       <BGPSession>
         <StartRouter>ARISTA16T0</StartRouter>
         <StartPeer>10.0.0.63</StartPeer>
-        <EndRouter>switch1</EndRouter>
+        <EndRouter>sonic</EndRouter>
         <EndPeer>10.0.0.62</EndPeer>
         <Multihop>1</Multihop>
         <HoldTime>180</HoldTime>
         <KeepAliveTime>60</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch1</StartRouter>
+        <StartRouter>sonic</StartRouter>
         <StartPeer>10.0.0.30</StartPeer>
         <EndRouter>ARISTA16T2</EndRouter>
         <EndPeer>10.0.0.31</EndPeer>
@@ -294,7 +294,7 @@
     <Routers xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
       <a:BGPRouterDeclaration>
         <a:ASN>65100</a:ASN>
-        <a:Hostname>switch1</a:Hostname>
+        <a:Hostname>sonic</a:Hostname>
         <a:Peers>
           <BGPPeer>
             <Address>10.0.0.33</Address>
@@ -639,568 +639,568 @@
       <MplsInterfaces/>
       <MplsTeInterfaces/>
       <RsvpInterfaces/>
-      <Hostname>switch1</Hostname>
+      <Hostname>sonic</Hostname>
       <PortChannelInterfaces/>
       <VlanInterfaces/>
       <IPInterfaces>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/1</AttachTo>
+          <AttachTo>Eth1/1</AttachTo>
           <Prefix>10.0.0.0/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/2</AttachTo>
+          <AttachTo>Eth1/2</AttachTo>
           <Prefix>10.0.0.2/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/3</AttachTo>
+          <AttachTo>Eth1/3</AttachTo>
           <Prefix>10.0.0.4/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/4</AttachTo>
+          <AttachTo>Eth1/4</AttachTo>
           <Prefix>10.0.0.6/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/5</AttachTo>
+          <AttachTo>Eth2/1</AttachTo>
           <Prefix>10.0.0.8/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/6</AttachTo>
+          <AttachTo>Eth2/2</AttachTo>
           <Prefix>10.0.0.10/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/7</AttachTo>
+          <AttachTo>Eth2/3</AttachTo>
           <Prefix>10.0.0.12/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/8</AttachTo>
+          <AttachTo>Eth2/4</AttachTo>
           <Prefix>10.0.0.14/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/9</AttachTo>
+          <AttachTo>Eth3/1</AttachTo>
           <Prefix>10.0.0.16/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/10</AttachTo>
+          <AttachTo>Eth3/2</AttachTo>
           <Prefix>10.0.0.18/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/11</AttachTo>
+          <AttachTo>Eth3/3</AttachTo>
           <Prefix>10.0.0.20/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/12</AttachTo>
+          <AttachTo>Eth3/4</AttachTo>
           <Prefix>10.0.0.22/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/13</AttachTo>
+          <AttachTo>Eth4/1</AttachTo>
           <Prefix>10.0.0.24/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/14</AttachTo>
+          <AttachTo>Eth4/2</AttachTo>
           <Prefix>10.0.0.26/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/15</AttachTo>
+          <AttachTo>Eth4/3</AttachTo>
           <Prefix>10.0.0.28/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/16</AttachTo>
+          <AttachTo>Eth4/4</AttachTo>
           <Prefix>10.0.0.30/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/17</AttachTo>
+          <AttachTo>Eth5/1</AttachTo>
           <Prefix>10.0.0.32/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/18</AttachTo>
+          <AttachTo>Eth5/2</AttachTo>
           <Prefix>10.0.0.34/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/19</AttachTo>
+          <AttachTo>Eth5/3</AttachTo>
           <Prefix>10.0.0.36/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/20</AttachTo>
+          <AttachTo>Eth5/4</AttachTo>
           <Prefix>10.0.0.38/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/21</AttachTo>
+          <AttachTo>Eth6/1</AttachTo>
           <Prefix>10.0.0.40/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/22</AttachTo>
+          <AttachTo>Eth6/2</AttachTo>
           <Prefix>10.0.0.42/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/23</AttachTo>
+          <AttachTo>Eth6/3</AttachTo>
           <Prefix>10.0.0.44/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/24</AttachTo>
+          <AttachTo>Eth6/4</AttachTo>
           <Prefix>10.0.0.46/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/25</AttachTo>
+          <AttachTo>Eth7/1</AttachTo>
           <Prefix>10.0.0.48/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/26</AttachTo>
+          <AttachTo>Eth7/2</AttachTo>
           <Prefix>10.0.0.50/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/27</AttachTo>
+          <AttachTo>Eth7/3</AttachTo>
           <Prefix>10.0.0.52/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/28</AttachTo>
+          <AttachTo>Eth7/4</AttachTo>
           <Prefix>10.0.0.54/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/29</AttachTo>
+          <AttachTo>Eth8/1</AttachTo>
           <Prefix>10.0.0.56/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/30</AttachTo>
+          <AttachTo>Eth8/2</AttachTo>
           <Prefix>10.0.0.58/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/31</AttachTo>
+          <AttachTo>Eth8/3</AttachTo>
           <Prefix>10.0.0.60/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/32</AttachTo>
+          <AttachTo>Eth8/4</AttachTo>
           <Prefix>10.0.0.62/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/33</AttachTo>
+          <AttachTo>Eth9/1</AttachTo>
           <Prefix>10.0.0.64/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/34</AttachTo>
+          <AttachTo>Eth9/2</AttachTo>
           <Prefix>10.0.0.66/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/35</AttachTo>
+          <AttachTo>Eth9/3</AttachTo>
           <Prefix>10.0.0.68/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/36</AttachTo>
+          <AttachTo>Eth9/4</AttachTo>
           <Prefix>10.0.0.70/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/37</AttachTo>
+          <AttachTo>Eth10/1</AttachTo>
           <Prefix>10.0.0.72/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/38</AttachTo>
+          <AttachTo>Eth10/2</AttachTo>
           <Prefix>10.0.0.74/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/39</AttachTo>
+          <AttachTo>Eth10/3</AttachTo>
           <Prefix>10.0.0.76/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/40</AttachTo>
+          <AttachTo>Eth10/4</AttachTo>
           <Prefix>10.0.0.78/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/41</AttachTo>
+          <AttachTo>Eth11/1</AttachTo>
           <Prefix>10.0.0.80/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/42</AttachTo>
+          <AttachTo>Eth11/2</AttachTo>
           <Prefix>10.0.0.82/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/43</AttachTo>
+          <AttachTo>Eth11/3</AttachTo>
           <Prefix>10.0.0.84/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/44</AttachTo>
+          <AttachTo>Eth11/4</AttachTo>
           <Prefix>10.0.0.86/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/45</AttachTo>
+          <AttachTo>Eth12/1</AttachTo>
           <Prefix>10.0.0.88/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/46</AttachTo>
+          <AttachTo>Eth12/2</AttachTo>
           <Prefix>10.0.0.90/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/47</AttachTo>
+          <AttachTo>Eth12/3</AttachTo>
           <Prefix>10.0.0.92/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/48</AttachTo>
+          <AttachTo>Eth12/4</AttachTo>
           <Prefix>10.0.0.94/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/49</AttachTo>
+          <AttachTo>Eth13/1</AttachTo>
           <Prefix>10.0.0.96/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/50</AttachTo>
+          <AttachTo>Eth13/2</AttachTo>
           <Prefix>10.0.0.98/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/51</AttachTo>
+          <AttachTo>Eth13/3</AttachTo>
           <Prefix>10.0.0.100/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/52</AttachTo>
+          <AttachTo>Eth13/4</AttachTo>
           <Prefix>10.0.0.102/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/53</AttachTo>
+          <AttachTo>Eth14/1</AttachTo>
           <Prefix>10.0.0.104/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/54</AttachTo>
+          <AttachTo>Eth14/2</AttachTo>
           <Prefix>10.0.0.106/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/55</AttachTo>
+          <AttachTo>Eth14/3</AttachTo>
           <Prefix>10.0.0.108/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/56</AttachTo>
+          <AttachTo>Eth14/4</AttachTo>
           <Prefix>10.0.0.110/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/57</AttachTo>
+          <AttachTo>Eth15/1</AttachTo>
           <Prefix>10.0.0.112/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/58</AttachTo>
+          <AttachTo>Eth15/2</AttachTo>
           <Prefix>10.0.0.114/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/59</AttachTo>
+          <AttachTo>Eth15/3</AttachTo>
           <Prefix>10.0.0.116/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/60</AttachTo>
+          <AttachTo>Eth15/4</AttachTo>
           <Prefix>10.0.0.118/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/61</AttachTo>
+          <AttachTo>Eth16/1</AttachTo>
           <Prefix>10.0.0.120/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/62</AttachTo>
+          <AttachTo>Eth16/2</AttachTo>
           <Prefix>10.0.0.122/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/63</AttachTo>
+          <AttachTo>Eth16/3</AttachTo>
           <Prefix>10.0.0.124/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/64</AttachTo>
+          <AttachTo>Eth16/4</AttachTo>
           <Prefix>10.0.0.126/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/65</AttachTo>
+          <AttachTo>Eth17/1</AttachTo>
           <Prefix>10.0.0.128/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/66</AttachTo>
+          <AttachTo>Eth17/2</AttachTo>
           <Prefix>10.0.0.130/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/67</AttachTo>
+          <AttachTo>Eth17/3</AttachTo>
           <Prefix>10.0.0.132/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/68</AttachTo>
+          <AttachTo>Eth17/4</AttachTo>
           <Prefix>10.0.0.134/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/69</AttachTo>
+          <AttachTo>Eth18/1</AttachTo>
           <Prefix>10.0.0.136/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/70</AttachTo>
+          <AttachTo>Eth18/2</AttachTo>
           <Prefix>10.0.0.138/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/71</AttachTo>
+          <AttachTo>Eth18/3</AttachTo>
           <Prefix>10.0.0.140/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/72</AttachTo>
+          <AttachTo>Eth18/4</AttachTo>
           <Prefix>10.0.0.142/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/73</AttachTo>
+          <AttachTo>Eth19/1</AttachTo>
           <Prefix>10.0.0.144/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/74</AttachTo>
+          <AttachTo>Eth19/2</AttachTo>
           <Prefix>10.0.0.146/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/75</AttachTo>
+          <AttachTo>Eth19/3</AttachTo>
           <Prefix>10.0.0.148/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/76</AttachTo>
+          <AttachTo>Eth19/4</AttachTo>
           <Prefix>10.0.0.150/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/77</AttachTo>
+          <AttachTo>Eth20/1</AttachTo>
           <Prefix>10.0.0.152/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/78</AttachTo>
+          <AttachTo>Eth20/2</AttachTo>
           <Prefix>10.0.0.154/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/79</AttachTo>
+          <AttachTo>Eth20/3</AttachTo>
           <Prefix>10.0.0.156/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/80</AttachTo>
+          <AttachTo>Eth20/4</AttachTo>
           <Prefix>10.0.0.158/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/81</AttachTo>
+          <AttachTo>Eth21/1</AttachTo>
           <Prefix>10.0.0.160/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/82</AttachTo>
+          <AttachTo>Eth21/2</AttachTo>
           <Prefix>10.0.0.162/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/83</AttachTo>
+          <AttachTo>Eth21/3</AttachTo>
           <Prefix>10.0.0.164/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/84</AttachTo>
+          <AttachTo>Eth21/4</AttachTo>
           <Prefix>10.0.0.166/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/85</AttachTo>
+          <AttachTo>Eth22/1</AttachTo>
           <Prefix>10.0.0.168/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/86</AttachTo>
+          <AttachTo>Eth22/2</AttachTo>
           <Prefix>10.0.0.170/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/87</AttachTo>
+          <AttachTo>Eth22/3</AttachTo>
           <Prefix>10.0.0.172/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/88</AttachTo>
+          <AttachTo>Eth22/4</AttachTo>
           <Prefix>10.0.0.174/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/89</AttachTo>
+          <AttachTo>Eth23/1</AttachTo>
           <Prefix>10.0.0.176/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/90</AttachTo>
+          <AttachTo>Eth23/2</AttachTo>
           <Prefix>10.0.0.178/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/91</AttachTo>
+          <AttachTo>Eth23/3</AttachTo>
           <Prefix>10.0.0.180/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/92</AttachTo>
+          <AttachTo>Eth23/4</AttachTo>
           <Prefix>10.0.0.182/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/93</AttachTo>
+          <AttachTo>Eth24/1</AttachTo>
           <Prefix>10.0.0.184/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/94</AttachTo>
+          <AttachTo>Eth24/2</AttachTo>
           <Prefix>10.0.0.186/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/95</AttachTo>
+          <AttachTo>Eth24/3</AttachTo>
           <Prefix>10.0.0.188/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>tenGigE1/96</AttachTo>
+          <AttachTo>Eth24/4</AttachTo>
           <Prefix>10.0.0.190/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/1</AttachTo>
+          <AttachTo>Eth25/1</AttachTo>
           <Prefix>10.0.1.0/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/2</AttachTo>
+          <AttachTo>Eth25/2</AttachTo>
           <Prefix>10.0.1.2/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/3</AttachTo>
+          <AttachTo>Eth26/1</AttachTo>
           <Prefix>10.0.1.4/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/4</AttachTo>
+          <AttachTo>Eth26/2</AttachTo>
           <Prefix>10.0.1.6/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/5</AttachTo>
+          <AttachTo>Eth27/1</AttachTo>
           <Prefix>10.0.1.8/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/6</AttachTo>
+          <AttachTo>Eth27/2</AttachTo>
           <Prefix>10.0.1.10/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/7</AttachTo>
+          <AttachTo>Eth28/1</AttachTo>
           <Prefix>10.0.1.12/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/8</AttachTo>
+          <AttachTo>Eth28/2</AttachTo>
           <Prefix>10.0.1.14/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/9</AttachTo>
+          <AttachTo>Eth29/1</AttachTo>
           <Prefix>10.0.1.16/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/10</AttachTo>
+          <AttachTo>Eth29/2</AttachTo>
           <Prefix>10.0.1.18/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/11</AttachTo>
+          <AttachTo>Eth30/1</AttachTo>
           <Prefix>10.0.1.20/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/12</AttachTo>
+          <AttachTo>Eth30/2</AttachTo>
           <Prefix>10.0.1.22/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/13</AttachTo>
+          <AttachTo>Eth31/1</AttachTo>
           <Prefix>10.0.1.24/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/14</AttachTo>
+          <AttachTo>Eth31/2</AttachTo>
           <Prefix>10.0.1.26/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/15</AttachTo>
+          <AttachTo>Eth32/1</AttachTo>
           <Prefix>10.0.1.28/31</Prefix>
         </IPInterface>
         <IPInterface>
           <Name i:Name="true"/>
-          <AttachTo>fiftyGigE1/16</AttachTo>
+          <AttachTo>Eth32/2</AttachTo>
           <Prefix>10.0.1.30/31</Prefix>
         </IPInterface>
       </IPInterfaces>
@@ -1211,235 +1211,9 @@
     </DeviceDataPlaneInfo>
   </DpgDec>
   <PngDec>
-    <DeviceInterfaceLinks>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/1</EndPort>
-        <StartDevice>ARISTA01T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/2</EndPort>
-        <StartDevice>ARISTA02T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/3</EndPort>
-        <StartDevice>ARISTA03T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/4</EndPort>
-        <StartDevice>ARISTA04T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/5</EndPort>
-        <StartDevice>ARISTA05T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/6</EndPort>
-        <StartDevice>ARISTA06T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/7</EndPort>
-        <StartDevice>ARISTA07T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/8</EndPort>
-        <StartDevice>ARISTA08T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/9</EndPort>
-        <StartDevice>ARISTA09T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/10</EndPort>
-        <StartDevice>ARISTA10T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/11</EndPort>
-        <StartDevice>ARISTA11T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/12</EndPort>
-        <StartDevice>ARISTA12T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/13</EndPort>
-        <StartDevice>ARISTA13T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/14</EndPort>
-        <StartDevice>ARISTA14T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/15</EndPort>
-        <StartDevice>ARISTA15T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/16</EndPort>
-        <StartDevice>ARISTA16T2</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/17</EndPort>
-        <StartDevice>ARISTA01T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/18</EndPort>
-        <StartDevice>ARISTA02T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/19</EndPort>
-        <StartDevice>ARISTA03T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/20</EndPort>
-        <StartDevice>ARISTA04T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/21</EndPort>
-        <StartDevice>ARISTA05T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/22</EndPort>
-        <StartDevice>ARISTA06T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/23</EndPort>
-        <StartDevice>ARISTA07T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/24</EndPort>
-        <StartDevice>ARISTA08T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/25</EndPort>
-        <StartDevice>ARISTA09T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/26</EndPort>
-        <StartDevice>ARISTA10T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/27</EndPort>
-        <StartDevice>ARISTA11T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/28</EndPort>
-        <StartDevice>ARISTA12T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/29</EndPort>
-        <StartDevice>ARISTA13T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/30</EndPort>
-        <StartDevice>ARISTA14T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/31</EndPort>
-        <StartDevice>ARISTA15T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-      <DeviceLinkBase>
-        <ElementType>DeviceInterfaceLink</ElementType>
-        <EndDevice>switch1</EndDevice>
-        <EndPort>tenGigE1/32</EndPort>
-        <StartDevice>ARISTA16T0</StartDevice>
-        <StartPort>Ethernet1</StartPort>
-      </DeviceLinkBase>
-    </DeviceInterfaceLinks>
     <Devices>
       <Device i:type="LeafRouter">
-        <Hostname>switch1</Hostname>
+        <Hostname>sonic</Hostname>
         <HwSku>Seastone-DX010-10-50</HwSku>
       </Device>
     </Devices>
@@ -1447,7 +1221,7 @@
   <MetadataDeclaration>
     <Devices xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
       <a:DeviceMetadata>
-        <a:Name>switch1</a:Name>
+        <a:Name>sonic</a:Name>
         <a:Properties>
           <a:DeviceProperty>
             <a:Name>DhcpResources</a:Name>
@@ -1474,6 +1248,6 @@
     </Devices>
     <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
   </MetadataDeclaration>
-  <Hostname>switch1</Hostname>
+  <Hostname>sonic</Hostname>
   <HwSku>Seastone-DX010-10-50</HwSku>
 </DeviceMiniGraph>

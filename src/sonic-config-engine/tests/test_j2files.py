@@ -40,6 +40,19 @@ class TestJ2Files(TestCase):
         self.run_script(argument)
         self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'ports.json'), self.output_file))
 
+    def test_dhcp_relay(self):
+        # Test generation of wait_for_intf.sh
+        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'wait_for_intf.sh.j2')
+        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + template_path + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'wait_for_intf.sh'), self.output_file))
+
+        # Test generation of docker-dhcp-relay.supervisord.conf
+        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'docker-dhcp-relay.supervisord.conf.j2')
+        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + template_path + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'docker-dhcp-relay.supervisord.conf'), self.output_file))
+
     def test_lldp(self):
         lldpd_conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-lldp-sv2', 'lldpd.conf.j2')
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + lldpd_conf_template + ' > ' + self.output_file
@@ -85,7 +98,7 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_msn27xx_32ports_buffers(self):
-        buffer_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'msn27xx.32ports.buffers.json.j2')
+        buffer_file = os.path.join(self.test_dir, '..', '..', '..', 'device', 'mellanox', 'x86_64-mlnx_msn2700-r0', 'ACS-MSN2700', 'buffers.json.j2')
         argument = '-m ' + self.t1_mlnx_minigraph + ' -p ' + self.mlnx_port_config + ' -t ' + buffer_file + ' > ' + self.output_file
         self.run_script(argument)
 
@@ -93,6 +106,13 @@ class TestJ2Files(TestCase):
 
         self.assertTrue(filecmp.cmp(sample_output_file, self.output_file))
 
+    def test_sku_render_template(self):
+        argument = '-k Mellanox-SN2700 -t ' + os.path.join(self.test_dir, '../data/l2switch.j2') + ' -p ' + self.t0_port_config + ' > ' + self.output_file
+        self.run_script(argument)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', 'l2switch.json')
+
+        self.assertTrue(filecmp.cmp(sample_output_file, self.output_file))
 
     def tearDown(self):
         try:
