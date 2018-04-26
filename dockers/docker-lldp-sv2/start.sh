@@ -6,6 +6,7 @@ mkdir -p /var/sonic
 echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
 
 rm -f /var/run/rsyslogd.pid
+rm -f /var/run/lldpd.socket
 
 supervisorctl start rsyslogd
 supervisorctl start lldpd
