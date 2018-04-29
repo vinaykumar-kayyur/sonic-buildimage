@@ -194,7 +194,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     ifupdown                \
     iproute2                \
     bridge-utils            \
-    isc-dhcp-client         \
+    isc-dhcp-client=4.3.1-6+deb8u3      \
     sudo                    \
     vim                     \
     tcpdump                 \
