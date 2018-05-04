@@ -7,7 +7,6 @@ where:
 
 banner="Press Enter to show prompt.
 Press Ctrl+C to exit.
-Run command 'exit' will shutdown bcm service.
 "
 
 # Default verbose
