@@ -8,9 +8,7 @@ include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/python-saithrift.mk
 include $(PLATFORM_PATH)/docker-ptf-centec.mk
 
-SONIC_ALL += $(SONIC_ONE_IMAGE) \
-             $(DOCKER_PTF_CENTEC) \
-             $(DOCKER_SYNCD_CENTEC_RPC)
+SONIC_ALL += $(SONIC_ONE_IMAGE)
 
 # Inject centec sai into sairedis
 $(LIBSAIREDIS)_DEPENDS += $(CENTEC_SAI) $(LIBSAITHRIFT_DEV_CENTEC)
