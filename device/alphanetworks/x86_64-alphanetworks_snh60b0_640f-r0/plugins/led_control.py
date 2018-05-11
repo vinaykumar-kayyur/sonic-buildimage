@@ -24,7 +24,7 @@ class LedControlBase(object):
         """
         return
 
-### Goereme specificed ###
+### Goreme specified ###
 read_fan_fault = 0
 is_fan_all_OK = 0
 read_power_status = 0

@@ -10,12 +10,12 @@ except ImportError, e:
 class SfpUtil(SfpUtilBase):
     """Platform specific SfpUtill class"""
 
-    _port_start = 0
-    _port_end = 65
-    ports_in_block = 63
+    port_start = 0
+    port_end = 65
+    port_num = 63
 
-    _port_to_eeprom_mapping = {}
-    port_to_i2c_mapping = {
+    port_to_eeprom_mapping = {}
+    i2c_addr_mapping = {
          1 : 13,
          2 : 14,
          3 : 15,
@@ -23,46 +23,69 @@ class SfpUtil(SfpUtilBase):
          5 : 23,
     }
 
-    _qsfp_ports = range(0, ports_in_block)
+	eeprom_path_1 = "/sys/bus/i2c/devices/{0}-0020/sfp{1}_eeprom"
+	eeprom_path = "/sys/bus/i2c/devices/{0}-005f/sfp{1}_eeprom"
+	port_reset_path_1 = "/sys/bus/i2c/devices/{0}-0020/sfp{1}_port_reset"
+	port_reset_path = "/sys/bus/i2c/devices/{0}-005f/sfp{1}_port_reset"
+	present_path_1 = "/sys/bus/i2c/devices/{0}-0020/sfp{1}_is_present"
+	present_path = "/sys/bus/i2c/devices/{0}-005f/sfp{1}_is_present"
+
+    _qsfp_ports = range(port_start, port_num)
+
+    @property
+    def port_start(self):
+        return self.port_start
+
+    @property
+    def port_end(self):
+        return self.port_end
+
+    @property
+    def qsfp_ports(self):
+        return range(self.port_start, self.port_num + 1)
+
+    @property 
+    def port_to_eeprom_mapping(self):
+         return self.port_to_eeprom_mapping
 
     def __init__(self):
-        for x in range(0, self._port_end + 1):
+        for x in range(self.port_start, self._port_end + 1):
             cpld_index = (x / 16) + 1
             index = (x % 16) + 1
             if cpld_index == 5:
-                eeprom_path = '/sys/bus/i2c/devices/{0}-0020/sfp{1}_eeprom'
+                path = self.eeprom_path_1
             else:
-                eeprom_path = '/sys/bus/i2c/devices/{0}-005f/sfp{1}_eeprom'
-            port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[cpld_index], index)
-            self._port_to_eeprom_mapping[x] = port_eeprom_path
+                path = self.eeprom_path
+            self.port_to_eeprom_mapping[x] = path.format(self.i2c_addr_mapping[cpld_index], index)
         SfpUtilBase.__init__(self)
 
     def reset(self, port_num):
         # Check for invalid port_num
-        if port_num < self._port_start or port_num > self._port_end:
+        if port_num < self.port_start or port_num > self.port_end:
             return False
 
         cpld_index = (port_num / 16) + 1
         index = (port_num % 16) + 1
         if cpld_index == 5:
-            path = "/sys/bus/i2c/devices/{0}-0020/sfp{1}_port_reset"
+            path = self.port_reset_path_1
         else:
-            path = "/sys/bus/i2c/devices/{0}-005f/sfp{1}_port_reset"
-        port_ps = path.format(self.port_to_i2c_mapping[cpld_index], index)
+            path = self.port_reset_path
+		port_path = path.format(self.i2c_addr_mapping[cpld_index], index)
           
         try:
-            reg_file = open(port_ps, 'w')
+            reg_file = open(port_path, 'w')
         except IOError as e:
             if cpld_index < 5:
                 print "Error: unable to open file: %s" % str(e)
             return False
 
-        #toggle reset
-        reg_file.seek(0)
+        # reset
         reg_file.write('1')
+
         time.sleep(1)
-        reg_file.seek(0)
+
         reg_file.write('0')
+
         reg_file.close()
         return True
 
@@ -74,20 +97,20 @@ class SfpUtil(SfpUtilBase):
         
     def get_presence(self, port_num):
         # Check for invalid port_num
-        if port_num < self._port_start or port_num > self._port_end:
+        if port_num < self.port_start or port_num > self.port_end:
             return False
 
         cpld_index = (port_num / 16) + 1
         index = (port_num % 16) + 1
         if cpld_index == 5:
-            path = "/sys/bus/i2c/devices/{0}-0020/sfp{1}_is_present"
+            path = self.present_path_1
         else:
-            path = "/sys/bus/i2c/devices/{0}-005f/sfp{1}_is_present"
-        port_ps = path.format(self.port_to_i2c_mapping[cpld_index], index)
+            path = self.present_path
+        port_path = path.format(self.i2c_addr_mapping[cpld_index], index)
 
           
         try:
-            reg_file = open(port_ps)
+            reg_file = open(port_path)
         except IOError as e:
             if cpld_index < 5:
                 print "Error: unable to open file: %s" % str(e)
@@ -98,22 +121,4 @@ class SfpUtil(SfpUtilBase):
             return True
 
         return False
-
-    @property
-    def port_start(self):
-        return self._port_start
-
-    @property
-    def port_end(self):
-        return self._port_end
-	
-    @property
-    def qsfp_ports(self):
-        return range(0, self.ports_in_block + 1)
-
-    @property 
-    def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
-
-
 

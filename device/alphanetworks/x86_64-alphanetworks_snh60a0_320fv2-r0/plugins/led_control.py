@@ -24,7 +24,7 @@ class LedControlBase(object):
         """
         return
 
-### Goereme specificed ###
+### Zion specified ###
 read_fan_fault = 0
 is_fan_all_OK = 0
 read_power_status = 0
@@ -69,7 +69,7 @@ class LedControl(LedControlBase):
         # Arista QSFP indices are 1-based and increment by 1
         return (((sonic_port_num/4) + 1), sonic_port_num%4, len(lanes.split(',')))
 
-    ########## BUBU
+    ### Zion specified ###
     def port_link_state_change(self, port, state):
         global read_fan_fault, read_power_status, is_fan_all_OK, is_power_all_OK, is_thermal_high, is_reset_button_push
         is_fan_all_OK = 1
