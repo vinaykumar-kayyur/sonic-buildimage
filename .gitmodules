@@ -77,3 +77,6 @@
 [submodule "platform/broadcom/sonic-platform-modules-mitac"]
 	path = platform/broadcom/sonic-platform-modules-mitac
 	url = https://github.com/MiTAC-EBU/sonic-platform-modules-mitac.git
+[submodule "platform/centec/sonic-platform-modules-e582"]
+	path = platform/centec/sonic-platform-modules-e582
+	url = https://github.com/CentecNetworks/sonic-platform-modules-e582
