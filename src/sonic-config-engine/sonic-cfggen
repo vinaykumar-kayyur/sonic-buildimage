@@ -35,6 +35,13 @@ from swsssdk import ConfigDBConnector
 from collections import OrderedDict
 from natsort import natsorted
 
+# Sort by interface name. For configs to the same interface (name),
+# sort by prefix to put v4 address ahead of v6 address in the list
+def sort_by_prefix(value):
+    if not value:
+        return None
+    return sorted(value.keys(), key = lambda k: (k[0], 4) if is_ipv4(k[1]) else (k[0], 6))
+
 def is_ipv4(value):
     if not value:
         return False
@@ -221,6 +228,7 @@ def main():
         loader = jinja2.FileSystemLoader(paths)
 
         env = jinja2.Environment(loader=loader, trim_blocks=True)
+        env.filters['sort_by_prefix'] = sort_by_prefix
         env.filters['ipv4'] = is_ipv4
         env.filters['ipv6'] = is_ipv6
         env.filters['unique_name'] = unique_name

@@ -175,9 +175,9 @@
           <Name>HostIP</Name>
           <AttachTo>eth0</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.Evolution">
-            <b:IPPrefix>2603:10e2:0:2902::8/64</b:IPPrefix>
+            <b:IPPrefix>603:10e2:0:2902::8/64</b:IPPrefix>
           </a:Prefix>
-          <a:PrefixStr>2603:10e2:0:2902::8/64</a:PrefixStr>
+          <a:PrefixStr>603:10e2:0:2902::8/64</a:PrefixStr>
         </a:ManagementIPInterface>
       </ManagementIPInterfaces>
       <ManagementVIPInterfaces xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
