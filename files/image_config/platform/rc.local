@@ -126,19 +126,25 @@ if [ ! -e /host/machine.conf ]; then
 
     if [ -n "$nos_dev" ]; then
         # Mount the previous NOS's partition
-        mkdir -p /mnt/nos_migration
-        mount $nos_dev /mnt/nos_migration
+        NOS_DIR=/mnt/nos_migration
+        MG_GZFILE=$NOS_DIR/minigraph.xml.gz.base64.txt
+        MG_FILE=$NOS_DIR/minigraph.xml
+        mkdir -p $NOS_DIR
+        mount $nos_dev $NOS_DIR
         mkdir -p /host/fast-reboot
 
-        # Copy relevant files
-        nos_migration_import /mnt/nos_migration/mgmt_interface.cfg /host/migration
-        nos_migration_import /mnt/nos_migration/minigraph.xml /host/migration
-        nos_migration_import /mnt/nos_migration/arp.json /host/fast-reboot
-        nos_migration_import /mnt/nos_migration/fdb.json /host/fast-reboot
-        nos_migration_import /mnt/nos_migration/default_routes.json /host/fast-reboot
+        # decode & unzip minigraph.xml.gz.base64.txt
+        [ -f $MG_GZFILE ] && /usr/bin/base64 -d $MG_GZFILE | /bin/gunzip > $MG_FILE
 
-        umount /mnt/nos_migration
-        rmdir /mnt/nos_migration
+        # Copy relevant files
+        nos_migration_import $NOS_DIR/mgmt_interface.cfg /host/migration
+        nos_migration_import $MG_FILE /host/migration
+        nos_migration_import $NOS_DIR/arp.json /host/fast-reboot
+        nos_migration_import $NOS_DIR/fdb.json /host/fast-reboot
+        nos_migration_import $NOS_DIR/default_routes.json /host/fast-reboot
+
+        umount $NOS_DIR
+        rmdir $NOS_DIR
     fi
 
     update_mgmt_interface_macaddr /host/migration/mgmt_interface.cfg
