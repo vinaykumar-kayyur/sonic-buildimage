@@ -31,6 +31,7 @@ PROJECT_ROOT = $(shell pwd)
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
 export BUILD_NUMBER
+export SAI_HEADER_DIR = $(PROJECT_ROOT)/$(SRC_PATH)/sonic-sairedis/SAI/inc
 
 ###############################################################################
 ## Utility rules
