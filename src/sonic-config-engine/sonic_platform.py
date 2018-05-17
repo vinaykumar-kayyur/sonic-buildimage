@@ -53,6 +53,11 @@ def get_system_mac():
         mac = mac[:-2] + aligned_last_byte
     return mac
 
+#
+# Function to obtain the routing-stack being utilized. Function is not
+# platform-specific; it's being placed in this file temporarily till a more
+# suitable location is identified as part of upcoming refactoring efforts.
+#
 def get_system_routing_stack():
     command = "sudo docker ps | grep bgp | awk '{print$2}' | cut -d'-' -f3 | cut -d':' -f1"
 
