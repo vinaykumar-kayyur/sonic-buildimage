@@ -447,7 +447,6 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     results['INTERFACE'] = phyport_intfs
     results['VLAN_INTERFACE'] = vlan_intfs
-    results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
     for port_name in port_speeds_default:
         # ignore port not in port_config.ini
@@ -474,11 +473,33 @@ def parse_xml(filename, platform=None, port_config_file=None):
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
     results['PORT'] = ports
+
+    port_set = set(ports.keys())
+    for (pc_name, mbr_map) in pcs.items():
+        # remove portchannels that contain ports not existing in port_config.ini
+        if not set(mbr_map['members']).issubset(port_set):
+            del pcs[pc_name]
+
     results['PORTCHANNEL'] = pcs
+
+
+    for pc_intf in pc_intfs.keys():
+        # remove portchannels not in PORTCHANNEL dictionary
+        if pc_intf[0] not in pcs:
+            del pc_intfs[pc_intf]
+
+    results['PORTCHANNEL_INTERFACE'] = pc_intfs
+
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
+    for nghbr in neighbors.keys():
+        # remove port not in port_config.ini
+        if nghbr not in ports:
+            del neighbors[nghbr]
+
     results['DEVICE_NEIGHBOR'] = neighbors
+
     results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key.lower() != hostname.lower() }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)

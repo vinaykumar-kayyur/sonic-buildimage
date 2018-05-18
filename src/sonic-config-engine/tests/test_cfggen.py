@@ -130,6 +130,15 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'name': 'ARISTA04T1', 'port': 'Ethernet1/1'}")
 
+    def test_minigraph_extra_neighbors(self):
+        argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v DEVICE_NEIGHBOR'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), \
+                "{'Ethernet116': {'name': 'ARISTA02T1', 'port': 'Ethernet1/1'}, "
+                "'Ethernet124': {'name': 'ARISTA04T1', 'port': 'Ethernet1/1'}, "
+                "'Ethernet112': {'name': 'ARISTA01T1', 'port': 'Ethernet1/1'}, "
+                "'Ethernet120': {'name': 'ARISTA03T1', 'port': 'Ethernet1/1'}}")
+
     def test_minigraph_bgp(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v "BGP_NEIGHBOR[\'10.0.0.59\']"'
         output = self.run_script(argument)
