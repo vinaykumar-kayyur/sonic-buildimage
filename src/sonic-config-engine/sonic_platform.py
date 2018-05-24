@@ -55,4 +55,4 @@ def get_system_mac():
 
 def get_fast_reboot_status():
     with open('/proc/cmdline') as fp:
-        return 'fast-reboot' in fp.readlines()
+        return 'fast-reboot' in fp.read()
