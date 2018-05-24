@@ -183,15 +183,24 @@ for x in "$@"; do
 done
 }
 
-eval sonic_version=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
-
-if [ -f /host/image-$sonic_version/platform/firsttime ]; then
-
+setup_platform()
+{
     if [ -n "$aboot_platform" ]; then
         platform=$aboot_platform
     elif [ -n "$onie_platform" ]; then
         platform=$onie_platform
     else
+        platform=''
+    fi
+}
+
+eval sonic_version=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+
+setup_platform
+
+if [ -f /host/image-$sonic_version/platform/firsttime ]; then
+
+    if [ -z "$platform" ]; then
         echo "Unknown sonic platform"
         firsttime_exit
     fi
