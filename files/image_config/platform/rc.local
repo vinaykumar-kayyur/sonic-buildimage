@@ -198,6 +198,8 @@ setup_platform()
 # installer.conf could override the value set in this function.
 setup_platform_defaults()
 {
+    # Default serial port: ttyS0
+    CONSOLE_DEV=0
 }
 
 load_platform_installer_config()
@@ -208,11 +210,20 @@ load_platform_installer_config()
     fi
 }
 
+program_serial_port()
+{
+    sed -i "s|ttyS.|ttyS$CONSOLE_DEV|g" /etc/systemd/system/serial-port-watchdog.service
+    systemctl daemon-reload
+    systemctl restart serial-port-watchdog.service
+}
+
 eval sonic_version=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
 
 setup_platform
 setup_platform_defaults
 load_platform_installer_config
+
+program_serial_port
 
 if [ -f /host/image-$sonic_version/platform/firsttime ]; then
 
