@@ -20,11 +20,13 @@ remote_image_name=$REGISTRY_SERVER:$REGISTRY_PORT/$docker_image_name:$DOCKER_IMA
 timestamp="$(date -u +%Y%m%d)"
 build_version="${timestamp}.bld-${BUILD_NUMBER}"
 build_remote_image_name=$REGISTRY_SERVER:$REGISTRY_PORT/$docker_image_name:$build_version
+remote_image_name_latest=$REGISTRY_SERVER:$REGISTRY_PORT/$docker_image_name:latest
 
 ## Add registry information as tag, so will push as latest
 ## Add additional tag with build information
 docker tag $docker_image_name $remote_image_name
 docker tag $docker_image_name $build_remote_image_name
+docker tag $docker_image_name $remote_image_name_latest
 
 ## Login the docker image registry server
 ## Note: user name and password are passed from command line
@@ -39,4 +41,6 @@ echo "Image sha256: $image_sha"
 echo "Pushing $build_remote_image_name"
 docker push $build_remote_image_name
 docker rmi $build_remote_image_name || true
+docker push $remote_image_name_latest
+docker rmi $remote_image_name_latest || true
 docker rmi $docker_image_name || true
