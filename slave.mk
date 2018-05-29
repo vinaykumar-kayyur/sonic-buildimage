@@ -76,10 +76,14 @@ endif
 
 ifeq ($(USERNAME),)
 override USERNAME := $(DEFAULT_USERNAME)
+else
+$(warning USERNAME given on command line: could be visible to other users)
 endif
 
 ifeq ($(PASSWORD),)
 override PASSWORD := $(DEFAULT_PASSWORD)
+else
+$(warning PASSWORD given on command line: could be visible to other users)
 endif
 
 ifeq ($(SONIC_BUILD_JOBS),)
@@ -484,8 +488,14 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 
 	DIRTY_SUFFIX="$(shell date +%Y%m%d\.%H%M%S)"
 	export DIRTY_SUFFIX
-	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
-	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) ./build_image.sh $(LOG)
+
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+		./build_debian.sh $(LOG)
+
+	TARGET_MACHINE=$($*_MACHINE) \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+		./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f $($(docker)_CONTAINER_NAME).sh
