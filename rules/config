@@ -56,5 +56,11 @@ SONIC_ROUTING_STACK = quagga
 # Enable Origanization Extensions - Specific to the deployment scenarios of the Organization
 ENABLE_ORGANIZATION_EXTENSIONS = y
 
+# Debugging option allows sonic debian packages to get built including symbols
+# information. Profiling option, disables compiler optimizations (-O0) as well
+# as includes symbols information too.
+#SONIC_DEBUGGING_ON = y
+#SONIC_PROFILING_ON = y
+
 # ENABLE_SYSTEM_TELEMETRY - build docker-sonic-telemetry for system telemetry support
 # ENABLE_SYSTEM_TELEMETRY = y
