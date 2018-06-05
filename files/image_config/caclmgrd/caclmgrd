@@ -11,6 +11,7 @@
 #
 
 try:
+    import ipaddr as ipaddress
     import os
     import subprocess
     import sys
@@ -113,12 +114,22 @@ class ControlPlaneAclManager(object):
         # Add iptables command to delete all non-default chains
         iptables_cmds.append("iptables -X")
 
+        # Add same set of commands for ip6tables
+        iptables_cmds.append("ip6tables -P INPUT ACCEPT")
+        iptables_cmds.append("ip6tables -P FORWARD ACCEPT")
+        iptables_cmds.append("ip6tables -P OUTPUT ACCEPT")
+        iptables_cmds.append("ip6tables -F")
+        iptables_cmds.append("ip6tables -X")
+
         # Get current ACL tables and rules from Config DB
         self._tables_db_info = self.config_db.get_table(self.ACL_TABLE)
         self._rules_db_info = self.config_db.get_table(self.ACL_RULE)
 
         # Walk the ACL tables
         for (table_name, table_data) in self._tables_db_info.iteritems():
+
+            table_ip_version = None
+
             # Ignore non-control-plane ACL tables
             if table_data["type"] != self.ACL_TABLE_TYPE_CTRLPLANE:
                 continue
@@ -152,10 +163,22 @@ class ControlPlaneAclManager(object):
                         log_error("ACL rule does not contain PACKET_ACTION property")
                         continue
 
+                    # If we haven't determined the IP version for this ACL table yet,
+                    # do it now. We determine heuristically based on whether the
+                    # src IP is a v4 or v6 address.
+                    if not table_ip_version:
+                        if "SRC_IP" in rule_props and rule_props["SRC_IP"]:
+                            ip_addr = ipaddress.IPAddress(rule_props["SRC_IP"].split("/")[0])
+                            if isinstance(ip_addr, ipaddress.IPv6Address):
+                                table_ip_version = 6
+                            else:
+                                table_ip_version = 4
+
                     # Apply the rule to the default protocol(s) for this ACL service
                     for ip_protocol in ip_protocols:
                         for dst_port in dst_ports:
-                            rule_cmd = "iptables -A INPUT -p {}".format(ip_protocol)
+                            rule_cmd = "ip6tables" if table_ip_version == 6 else "iptables"
+                            rule_cmd += " -A INPUT -p {}".format(ip_protocol)
 
                             if "SRC_IP" in rule_props and rule_props["SRC_IP"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IP"])
