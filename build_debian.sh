@@ -225,7 +225,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     gdisk                   \
     sysfsutils              \
     grub2-common            \
-    ethtool
+    ethtool                 \
+    screen
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
     grub-pc-bin
@@ -237,6 +238,12 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libwrap0_*.deb || \
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
+
+## Fix ping tools permission so non root user can directly use them
+## Note: this is a workaround since aufs doesn't support extended attributes
+## Ref: https://github.com/moby/moby/issues/5650#issuecomment-303499489
+## TODO: remove workaround when the overlay filesystem support extended attributes
+sudo chmod u+s $FILESYSTEM_ROOT/bin/ping{,6}
 
 ## Remove sshd host keys, and will regenerate on first sshd start
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
@@ -300,6 +307,7 @@ set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_dad 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
 

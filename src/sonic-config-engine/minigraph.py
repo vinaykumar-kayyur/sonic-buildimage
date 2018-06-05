@@ -62,6 +62,7 @@ def parse_png(png, hname):
     console_port = ''
     mgmt_dev = ''
     mgmt_port = ''
+    port_speeds = {}
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -73,15 +74,21 @@ def parse_png(png, hname):
                 endport = link.find(str(QName(ns, "EndPort"))).text
                 startdevice = link.find(str(QName(ns, "StartDevice"))).text
                 startport = link.find(str(QName(ns, "StartPort"))).text
+                bandwidth_node = link.find(str(QName(ns, "Bandwidth")))
+                bandwidth = bandwidth_node.text if bandwidth_node is not None else None
 
-                if enddevice == hname:
+                if enddevice.lower() == hname.lower():
                     if port_alias_map.has_key(endport):
                         endport = port_alias_map[endport]
                     neighbors[endport] = {'name': startdevice, 'port': startport}
+                    if bandwidth:
+                        port_speeds[endport] = bandwidth
                 else:
                     if port_alias_map.has_key(startport):
                         startport = port_alias_map[startport]
                     neighbors[startport] = {'name': enddevice, 'port': endport}
+                    if bandwidth:
+                        port_speeds[startport] = bandwidth
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
@@ -106,13 +113,13 @@ def parse_png(png, hname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds)
 
 
 def parse_dpg(dpg, hname):
     for child in dpg:
         hostname = child.find(str(QName(ns, "Hostname")))
-        if hostname.text != hname:
+        if hostname.text.lower() != hname.lower():
             continue
 
         ipintfs = child.find(str(QName(ns, "IPInterfaces")))
@@ -142,12 +149,15 @@ def parse_dpg(dpg, hname):
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
         pcs = {}
+        intfs_inpc = [] # List to hold all the LAG member interfaces 
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
             pcintfmbr = pcintf.find(str(QName(ns, "AttachTo"))).text
             pcmbr_list = pcintfmbr.split(';')
+            pc_intfs.append(pcintfname)
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
+                intfs_inpc.append(pcmbr_list[i])
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
             else:
@@ -195,20 +205,33 @@ def parse_dpg(dpg, hname):
             for member in aclattach:
                 member = member.strip()
                 if pcs.has_key(member):
-                    acl_intfs.extend(pcs[member]['members'])  # For ACL attaching to port channels, we break them into port channel members
+                    # If try to attach ACL to a LAG interface then we shall add the LAG to
+                    # to acl_intfs directly instead of break it into member ports, ACL attach
+                    # to LAG will be applied to all the LAG members internally by SAI/SDK
+                    acl_intfs.append(member)
                 elif vlans.has_key(member):
                     print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a Vlan interface, which is currently not supported"
                 elif port_alias_map.has_key(member):
                     acl_intfs.append(port_alias_map[member])
+                    # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
+                    if port_alias_map[member] in intfs_inpc:
+                        print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface"
                 elif member.lower() == 'erspan':
                     is_mirror = True;
-                    # Erspan session will be attached to all front panel ports
-                    acl_intfs = port_alias_map.values()
+                    # Erspan session will be attached to all front panel ports,
+                    # if panel ports is a member port of LAG, should add the LAG 
+                    # to acl table instead of the panel ports
+                    acl_intfs = pc_intfs
+                    for panel_port in port_alias_map.values():
+                        if panel_port not in intfs_inpc:
+                            acl_intfs.append(panel_port)
                     break;
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
                                  'ports': acl_intfs,
                                  'type': 'MIRROR' if is_mirror else 'L3'}
+            elif is_mirror:
+                acls[aclname] = {'policy_desc': aclname, 'type': 'MIRROR'}
             else:
                 # This ACL has no interfaces to attach to -- consider this a control plane ACL
                 try:
@@ -256,7 +279,7 @@ def parse_cpg(cpg, hname):
                 else:
                     keepalive = 60
                 nhopself = 1 if session.find(str(QName(ns, "NextHopSelf"))) is not None else 0
-                if end_router == hname:
+                if end_router.lower() == hname.lower():
                     bgp_sessions[start_peer.lower()] = {
                         'name': start_router,
                         'local_addr': end_peer.lower(),
@@ -278,7 +301,7 @@ def parse_cpg(cpg, hname):
             for router in child.findall(str(QName(ns1, "BGPRouterDeclaration"))):
                 asn = router.find(str(QName(ns1, "ASN"))).text
                 hostname = router.find(str(QName(ns1, "Hostname"))).text
-                if hostname == hname:
+                if hostname.lower() == hname.lower():
                     myasn = asn
                     peers = router.find(str(QName(ns1, "Peers")))
                     for bgpPeer in peers.findall(str(QName(ns, "BGPPeer"))):
@@ -294,7 +317,7 @@ def parse_cpg(cpg, hname):
                 else:
                     for peer in bgp_sessions:
                         bgp_session = bgp_sessions[peer]
-                        if hostname == bgp_session['name']:
+                        if hostname.lower() == bgp_session['name'].lower():
                             bgp_session['asn'] = asn
     bgp_sessions = { key: bgp_sessions[key] for key in bgp_sessions if bgp_sessions[key].has_key('asn') and int(bgp_sessions[key]['asn']) != 0 }
     return bgp_sessions, myasn, bgp_peers_with_range
@@ -310,7 +333,7 @@ def parse_meta(meta, hname):
     deployment_id = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
-        if device.find(str(QName(ns1, "Name"))).text == hname:
+        if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
             properties = device.find(str(QName(ns1, "Properties")))
             for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
                 name = device_property.find(str(QName(ns1, "Name"))).text
@@ -368,7 +391,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
-    port_speeds = {}
+    port_speeds_default = {}
+    port_speed_png = {}
     port_descriptions = {}
     syslog_servers = []
     dhcp_servers = []
@@ -395,21 +419,22 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port) = parse_png(child, hostname)
+            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
-            (u_neighbors, u_devices, _, _, _, _) = parse_png(child, hostname)
+            (u_neighbors, u_devices, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
-            (port_speeds, port_descriptions) = parse_deviceinfo(child, hwsku)
+            (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
+    current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
         'hostname': hostname,
         'hwsku': hwsku,
-        'type': devices[hostname]['type']
+        'type': current_device['type']
         }}
     results['BGP_NEIGHBOR'] = bgp_sessions
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
@@ -436,22 +461,66 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     results['INTERFACE'] = phyport_intfs
     results['VLAN_INTERFACE'] = vlan_intfs
-    results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    for port_name in port_speeds:
-        ports.setdefault(port_name, {})['speed'] = port_speeds[port_name]
-        if port_speeds[port_name] == '100000':
-            ports.setdefault(port_name, {})['fec'] = 'rs'
+    for port_name in port_speeds_default:
+        # ignore port not in port_config.ini
+        if not ports.has_key(port_name):
+            continue
+
+        ports.setdefault(port_name, {})['speed'] = port_speeds_default[port_name]
+
+    for port_name in port_speed_png:
+        # not consider port not in port_config.ini
+        if port_name not in ports:
+            print >> sys.stderr, "Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name
+            continue
+
+        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
+
+    for port_name, port in ports.items():
+        if port.get('speed') == '100000':
+            port['fec'] = 'rs'
+
     for port_name in port_descriptions:
+        # ignore port not in port_config.ini
+        if not ports.has_key(port_name):
+            continue
+
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
     results['PORT'] = ports
+
+    if port_config_file:
+        port_set = set(ports.keys())
+        for (pc_name, mbr_map) in pcs.items():
+            # remove portchannels that contain ports not existing in port_config.ini
+            # when port_config.ini exists
+            if not set(mbr_map['members']).issubset(port_set):
+                print >> sys.stderr, "Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name
+                del pcs[pc_name]
+
     results['PORTCHANNEL'] = pcs
+
+
+    for pc_intf in pc_intfs.keys():
+        # remove portchannels not in PORTCHANNEL dictionary
+        if pc_intf[0] not in pcs:
+            print >> sys.stderr, "Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0])
+            del pc_intfs[pc_intf]
+
+    results['PORTCHANNEL_INTERFACE'] = pc_intfs
+
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
+    for nghbr in neighbors.keys():
+        # remove port not in port_config.ini
+        if nghbr not in ports:
+            print >> sys.stderr, "Warning: ignore interface '%s' in DEVICE_NEIGHBOR as it is not in the port_config.ini" % nghbr
+            del neighbors[nghbr]
+
     results['DEVICE_NEIGHBOR'] = neighbors
-    results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key != hostname }
+    results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key.lower() != hostname.lower() }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
