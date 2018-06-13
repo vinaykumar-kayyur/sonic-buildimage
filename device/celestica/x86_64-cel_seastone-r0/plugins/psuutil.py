@@ -3,7 +3,8 @@
 # Platform-specific PSU status interface for SONiC
 #
 
-import os.path
+import os
+import logging
 
 try:
     from sonic_psu.psu_base import PsuBase
@@ -22,6 +23,14 @@ class PsuUtil(PsuBase):
             {'abs':27, 'power':22},
             {'abs':28, 'power':25}
         ]
+        self.psu[0]['base'] = self.get_gpio_base()
+
+    def get_gpio_base(self):
+        sys_gpio_dir = "/sys/class/gpio"
+        for r in os.listdir(sys_gpio_dir):
+            if "gpiochip" in r:
+                return int(r[8:],10)
+
 
     def init_psu_gpio(self, pinnum):
         # export pin, input as default
@@ -33,14 +42,14 @@ class PsuUtil(PsuBase):
             with open(export_file, 'w') as fd:
                 fd.write(str(gpio_base+pinnum))
         except Exception as error:
-            logging.error("Unable to export gpio ", pinnum)
+            logging.error("Unable to export gpio ", str(gpio_base+pinnum))
 
 
     # Get a psu status and presence
     def read_psu_statuses(self, pinnum):
         sys_gpio_dir = "/sys/class/gpio"
-        retval = 'ERR'
         gpio_base = self.psu[0]['base']
+        retval = 'ERR'
 
         gpio_dir = sys_gpio_dir + '/gpio' + str(gpio_base+pinnum)
         gpio_file = gpio_dir + "/value"
