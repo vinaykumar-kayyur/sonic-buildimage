@@ -5,7 +5,6 @@
 
 import os
 import logging
-import sys
 
 
 try:
@@ -34,7 +33,6 @@ class PsuUtil(PsuBase):
                     return int(r[8:],10)
         except Exception as error:
             logging.error("Unable to get gpio base")
-            sys.exit(0)
 
 
     def init_psu_gpio(self, pinnum):
@@ -46,7 +44,6 @@ class PsuUtil(PsuBase):
                 fd.write(str(gpio_base+pinnum))
         except Exception as error:
             logging.error("Unable to export gpio ", str(gpio_base+pinnum))
-            sys.exit(0)
 
 
     # Get a psu status and presence
@@ -67,7 +64,6 @@ class PsuUtil(PsuBase):
                 retval = fd.read()
         except Exception as error:
             logging.error("Unable to open ", gpio_file, "file !")
-            sys.exit(0)
 
         retval = retval.rstrip('\r\n')
         return retval
