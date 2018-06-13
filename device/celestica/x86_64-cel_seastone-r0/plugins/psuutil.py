@@ -7,6 +7,7 @@ import os
 import logging
 import sys
 
+
 try:
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:
@@ -40,7 +41,6 @@ class PsuUtil(PsuBase):
         # export pin, input as default
         gpio_base = self.psu[0]['base']
         export_file = "/sys/class/gpio/export"
-
         try:
             with open(export_file, 'w') as fd:
                 fd.write(str(gpio_base+pinnum))
