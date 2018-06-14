@@ -41,12 +41,19 @@ def get_sonic_version_info():
     return data
 
 def get_system_mac():
-    proc = subprocess.Popen("ip link show eth0 | grep ether | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
+    get_mac_cmd = "ip link show eth0 | grep ether | awk '{print $2}'"
+    version_info = get_sonic_version_info()
+
+    if (version_info['asic_type'] == 'mellanox'):
+        eeprom_file = "/sys/bus/i2c/devices/8-0051/eeprom"
+        if (os.access(eeprom_file, os.R_OK)):
+            get_mac_cmd = "od -vt x1 -An " + eeprom_file + "| xargs printf \"0x%s \" | xargs printf \"%02x:\" | awk 'BEGIN { FS=\":\"; i=8+1+2+1} {while(i<NF) {type=$i; len=(\"0x\"$(i+1));if(type!=\"24\") {i=i+2+len} else {print substr($0, (i+1)*3+1, len*3-1); break}}}'"
+
+    proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE)
     (mac, err) = proc.communicate()
     mac = mac.strip()
     
     # Align last byte of MAC if necessary
-    version_info = get_sonic_version_info()
     if version_info and (version_info['asic_type'] == 'mellanox' or version_info['asic_type'] == 'centec'):
         last_byte = mac[-2:]
         aligned_last_byte = format(int(int(last_byte, 16) & 0b11000000), '02x')
