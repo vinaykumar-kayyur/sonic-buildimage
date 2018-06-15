@@ -43,7 +43,7 @@ class PsuUtil(PsuBase):
             with open(export_file, 'w') as fd:
                 fd.write(str(gpio_base+pinnum))
         except Exception as error:
-            logging.error("Unable to export gpio ", str(gpio_base+pinnum))
+            logging.error("Unable to export gpio " + str(gpio_base+pinnum))
 
 
     # Get a psu status and presence
@@ -63,7 +63,7 @@ class PsuUtil(PsuBase):
             with open(gpio_file, 'r') as fd:
                 retval = fd.read()
         except Exception as error:
-            logging.error("Unable to open ", gpio_file, "file !")
+            logging.error("Unable to open " + gpio_file + "file !")
 
         retval = retval.rstrip('\r\n')
         return retval
