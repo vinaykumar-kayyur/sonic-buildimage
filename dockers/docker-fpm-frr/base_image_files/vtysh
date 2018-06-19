@@ -3,12 +3,11 @@
 # Determine whether stdout is on a terminal
 if [ -t 1 ] ; then
   # Prepare a function to send HUP signal to vtysh in the container
-  # we mark the new instance of vtysh with current tty as a tag
+  # we mark the new instance of vtysh with the current tty as a tag
   TTY=$(tty)
   function cleanup
   {
-    PID_FOR_HUP=$(docker exec -i bgp ps a | grep "vtysh $TTY" | awk '{print $1; }')
-    docker exec -i bgp kill -HUP $PID_FOR_HUP
+    docker exec -i bgp pkill -HUP -f "vtysh $TTY"
   }
   trap cleanup HUP
   docker exec -ti bgp vtysh "$TTY" "$@"
