@@ -4,7 +4,6 @@
 #
 
 import os
-import logging
 
 
 try:
@@ -27,12 +26,10 @@ class PsuUtil(PsuBase):
 
     def get_gpio_base(self):
         sys_gpio_dir = "/sys/class/gpio"
-        try:
-            for r in os.listdir(sys_gpio_dir):
-                if "gpiochip" in r:
-                    return int(r[8:],10)
-        except Exception as error:
-            logging.error("Unable to get gpio base")
+        for r in os.listdir(sys_gpio_dir):
+            if "gpiochip" in r:
+                return int(r[8:],10)
+        return 216 #Reserve
 
 
     def init_psu_gpio(self, pinnum):
@@ -42,15 +39,14 @@ class PsuUtil(PsuBase):
         try:
             with open(export_file, 'w') as fd:
                 fd.write(str(gpio_base+pinnum))
-        except Exception as error:
-            logging.error("Unable to export gpio " + str(gpio_base+pinnum))
+        except IOError:
+            raise IOError("Unable to export gpio " + str(gpio_base+pinnum))
 
 
     # Get a psu status and presence
     def read_psu_statuses(self, pinnum):
         sys_gpio_dir = "/sys/class/gpio"
         gpio_base = self.psu[0]['base']
-        retval = 'ERR'
 
         gpio_dir = sys_gpio_dir + '/gpio' + str(gpio_base+pinnum)
         gpio_file = gpio_dir + "/value"
@@ -62,8 +58,8 @@ class PsuUtil(PsuBase):
         try:
             with open(gpio_file, 'r') as fd:
                 retval = fd.read()
-        except Exception as error:
-            logging.error("Unable to open " + gpio_file + "file !")
+        except IOError:
+            raise IOError("Unable to open " + gpio_file + "file !")
 
         retval = retval.rstrip('\r\n')
         return retval
@@ -86,11 +82,10 @@ class PsuUtil(PsuBase):
         """
         status = 0
         psu_status = self.read_psu_statuses(self.psu[index]['power'])
-        if (psu_status != 'ERR'):
-            psu_status = int(psu_status, 10)
-            # Check for PSU status
-            if (psu_status == 1):
-                    status = 1
+        psu_status = int(psu_status, 10)
+        # Check for PSU status
+        if (psu_status == 1):
+             status = 1
 
         return status
 
@@ -103,10 +98,9 @@ class PsuUtil(PsuBase):
         """
         status = 0
         psu_absence = self.read_psu_statuses(self.psu[index]['abs'])
-        if (psu_absence != 'ERR'):
-            psu_absence = (int(psu_absence, 10))
-            # Check for PSU presence
-            if (psu_absence == 0):
-                    status = 1
+        psu_absence = (int(psu_absence, 10))
+        # Check for PSU presence
+        if (psu_absence == 0):
+            status = 1
 
         return status
