@@ -32,17 +32,6 @@ class PsuUtil(PsuBase):
         return 216 #Reserve
 
 
-    def init_psu_gpio(self, pinnum):
-        # export pin, input as default
-        gpio_base = self.psu[0]['base']
-        export_file = "/sys/class/gpio/export"
-        try:
-            with open(export_file, 'w') as fd:
-                fd.write(str(gpio_base+pinnum))
-        except IOError:
-            raise IOError("Unable to export gpio " + str(gpio_base+pinnum))
-
-
     # Get a psu status and presence
     def read_psu_statuses(self, pinnum):
         sys_gpio_dir = "/sys/class/gpio"
@@ -50,10 +39,6 @@ class PsuUtil(PsuBase):
 
         gpio_dir = sys_gpio_dir + '/gpio' + str(gpio_base+pinnum)
         gpio_file = gpio_dir + "/value"
-
-        # init gpio 
-        if (not os.path.isdir(gpio_dir)):
-            self.init_psu_gpio(pinnum)
 
         try:
             with open(gpio_file, 'r') as fd:
