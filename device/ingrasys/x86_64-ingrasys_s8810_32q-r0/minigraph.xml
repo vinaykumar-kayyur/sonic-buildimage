@@ -96,7 +96,7 @@
         <Bandwidth>40000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
-        <EndPort>Ethernet48</EndPort>
+        <EndPort>Ethernet0</EndPort>
         <StartDevice>OCPSCH01040HHLF</StartDevice>
         <StartPort>Ethernet48</StartPort>
       </DeviceLinkBase>
@@ -104,7 +104,7 @@
         <Bandwidth>40000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104002MS</EndDevice>
-        <EndPort>Ethernet0</EndPort>
+        <EndPort>Ethernet4</EndPort>
         <StartDevice>OCPSCH01040HHLF</StartDevice>
         <StartPort>Ethernet52</StartPort>
       </DeviceLinkBase>

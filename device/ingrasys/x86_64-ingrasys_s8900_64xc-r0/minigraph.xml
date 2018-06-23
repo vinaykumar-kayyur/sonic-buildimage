@@ -279,7 +279,7 @@
   <PngDec>
     <DeviceInterfaceLinks>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet48</EndPort>
@@ -287,7 +287,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet52</EndPort>
@@ -295,7 +295,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet56</EndPort>
@@ -303,7 +303,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet60</EndPort>
@@ -311,7 +311,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet64</EndPort>
@@ -319,7 +319,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet68</EndPort>
@@ -327,7 +327,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet72</EndPort>
@@ -335,7 +335,7 @@
         <StartPort>Ethernet0</StartPort>
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
-        <Bandwidth>40000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>OCPSCH0104001MS</EndDevice>
         <EndPort>Ethernet76</EndPort>
