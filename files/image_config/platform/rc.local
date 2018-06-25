@@ -11,7 +11,7 @@
 #
 # By default this script does nothing.
 
-eval SONIC_VERSION=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+SONIC_VERSION=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version)
 FIRST_BOOT_FILE="/host/image-${SONIC_VERSION}/platform/firsttime"
 
 # In case the unit is migrating from another NOS, save the logs
