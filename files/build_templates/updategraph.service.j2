@@ -7,7 +7,8 @@ Requires=database.service
 [Service]
 Type=oneshot
 {% if sonic_asic_platform == 'mellanox' -%}
-ExecStartPre=/bin/bash -c "/usr/share/sonic/device/$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)/hw-management start"
+EnvironmentFile=/host/machine.conf
+ExecStartPre=/bin/bash -c "/usr/share/sonic/device/$onie_platform/hw-management start"
 {% endif -%}
 ExecStart=/usr/bin/updategraph
 RemainAfterExit=yes

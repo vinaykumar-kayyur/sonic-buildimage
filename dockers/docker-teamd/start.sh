@@ -8,7 +8,7 @@ mkdir -p $TEAMD_CONF_PATH
 SONIC_ASIC_TYPE=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type)
 
 if [ "$SONIC_ASIC_TYPE" == "mellanox" ]; then
-    MAC_ADDRESS=$(od -vt x1 -An /sys/bus/i2c/devices/8-0051/eeprom | xargs printf "0x%s " | xargs printf "%02x:" | awk 'BEGIN { FS=":"; i=8+1+2+1} {while(i<NF) {type=$i; len=("0x"$(i+1));if(type!="24") {i=i+2+len} else {print substr($0, (i+1)*3+1, len*3-1); break}}}')
+    MAC_ADDRESS=$(sonic-cfggen -d -v DEVICE_METADATA.localhost.mac)
 else
     MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
 fi
