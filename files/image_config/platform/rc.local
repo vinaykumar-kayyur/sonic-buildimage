@@ -112,12 +112,12 @@ process_reboot_cause() {
     PREVIOUS_REBOOT_CAUSE_FILE="/var/cache/sonic/previous-reboot-cause.txt"
 
     # Set the previous reboot cause accordingly
-    # If this is the first boot after an image upgrade, state that as the
+    # If this is the first boot after an image install, state that as the
     # cause. Otherwise, move REBOOT_CAUSE_FILE to PREVIOUS_REBOOT_CAUSE_FILE.
     # REBOOT_CAUSE_FILE should always exist, but we add the else case
     # to ensure we always generate PREVIOUS_REBOOT_CAUSE_FILE here
     if [ -f $FIRST_BOOT_FILE ]; then
-        echo "SONiC firmware upgrade" > $PREVIOUS_REBOOT_CAUSE_FILE
+        echo "SONiC image installation" > $PREVIOUS_REBOOT_CAUSE_FILE
     elif [ -f $REBOOT_CAUSE_FILE ]; then
         mv -f $REBOOT_CAUSE_FILE $PREVIOUS_REBOOT_CAUSE_FILE
     else
