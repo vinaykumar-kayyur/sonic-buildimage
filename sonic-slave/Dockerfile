@@ -211,7 +211,7 @@ RUN apt-get update && apt-get install -y \
         linuxdoc-tools \
         lynx \
         texlive-latex-extra \
-        texlive-latex-recommended\
+        texlive-latex-recommended \
 # For python-click build
         python-sphinx \
         python-docutils \
