@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 PLATFORM_DIR=/usr/share/sonic/platform
 HWSKU_DIR=/usr/share/sonic/hwsku
@@ -34,5 +34,5 @@ wait_syncd() {
 # If this platform has an initialization file for the Broadcom LED microprocessor, load it
 if [ -r ${PLATFORM_DIR}/led_proc_init.soc ]; then
     wait_syncd
-    supervisorctl start bcmcmd
+    supervisorctl start ledinit
 fi
