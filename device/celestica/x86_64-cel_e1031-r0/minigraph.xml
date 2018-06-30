@@ -201,7 +201,7 @@
         <VlanInterface>
           <ElementType>VlanInterface</ElementType>
           <Name>Vlan2</Name>
-          <AttachTo>Ethernet0;Ethernet1;Ethernet2;Ethernet3;Ethernet4;Ethernet5;Ethernet6;Ethernet7;Ethernet8;Ethernet9;Ethernet10;Ethernet11;Ethernet12;Ethernet13;Ethernet14;Ethernet15;Ethernet16;Ethernet17;Ethernet18;Ethernet19;Ethernet20;Ethernet21;Ethernet22;Ethernet23;Ethernet24;Ethernet25;Ethernet26;Ethernet27;Ethernet28;Ethernet29;Ethernet30;Ethernet31;Ethernet32;Ethernet33;Ethernet34;Ethernet35;Ethernet36;Ethernet37;Ethernet38;Ethernet39;Ethernet40;Ethernet41;Ethernet42;Ethernet43;Ethernet44;Ethernet45;Ethernet46;Ethernet47</AttachTo>
+          <AttachTo>etp1;etp2;etp3;etp4;etp5;etp6;etp7;etp8;etp9;etp10;etp11;etp12;etp13;etp14;etp15;etp16;etp17;etp18;etp19;etp20;etp21;etp22;etp23;etp24;etp25;etp26;etp27;etp28;etp29;etp30;etp31;etp32;etp33;etp34;etp35;etp36;etp37;etp38;etp39;etp40;etp41;etp42;etp43;etp44;etp45;etp46;etp47;etp48</AttachTo>
           <NoDhcpRelay>False</NoDhcpRelay>
           <StaticDHCPRelay>0.0.0.0/0</StaticDHCPRelay>
           <Type i:nil="true"/>
@@ -214,49 +214,49 @@
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet48</AttachTo>
+          <AttachTo>etp49</AttachTo>
           <Prefix>10.0.0.0/31</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet49</AttachTo>
+          <AttachTo>etp50</AttachTo>
           <Prefix>10.0.0.4/31</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet50</AttachTo>
+          <AttachTo>etp51</AttachTo>
           <Prefix>10.0.0.8/31</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet51</AttachTo>
+          <AttachTo>etp52</AttachTo>
           <Prefix>10.0.0.12/31</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet48</AttachTo>
+          <AttachTo>etp49</AttachTo>
           <Prefix>FC00::1/126</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet49</AttachTo>
+          <AttachTo>etp50</AttachTo>
           <Prefix>FC00::9/126</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet50</AttachTo>
+          <AttachTo>etp51</AttachTo>
           <Prefix>FC00::11/126</Prefix>
         </IPInterface>
         <IPInterface>
           <ElementType>IPInterface</ElementType>
           <Name i:Name="true"/>
-          <AttachTo>Ethernet51</AttachTo>
+          <AttachTo>etp52</AttachTo>
           <Prefix>FC00::19/126</Prefix>
         </IPInterface>
         <IPInterface>
@@ -282,7 +282,7 @@
                 <EndPort>Ethernet1</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>sonic</StartDevice>
-                <StartPort>Ethernet48</StartPort>
+                <StartPort>etp49</StartPort>
             </DeviceLinkBase>
             <DeviceLinkBase i:type="DeviceInterfaceLink">
                 <ElementType>DeviceInterfaceLink</ElementType>
@@ -292,7 +292,7 @@
                 <EndPort>Ethernet1</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>sonic</StartDevice>
-                <StartPort>Ethernet49</StartPort>
+                <StartPort>etp50</StartPort>
             </DeviceLinkBase>
             <DeviceLinkBase i:type="DeviceInterfaceLink">
                 <ElementType>DeviceInterfaceLink</ElementType>
@@ -302,7 +302,7 @@
                 <EndPort>Ethernet1</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>sonic</StartDevice>
-                <StartPort>Ethernet50</StartPort>
+                <StartPort>etp51</StartPort>
             </DeviceLinkBase>
             <DeviceLinkBase i:type="DeviceInterfaceLink">
                 <ElementType>DeviceInterfaceLink</ElementType>
@@ -312,14 +312,14 @@
                 <EndPort>Ethernet1</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>sonic</StartDevice>
-                <StartPort>Ethernet51</StartPort>
+                <StartPort>etp52</StartPort>
             </DeviceLinkBase>
             <DeviceLinkBase i:type="DeviceInterfaceLink">
                 <ElementType>DeviceInterfaceLink</ElementType>
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet0</EndPort>
+                <EndPort>etp1</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-01</StartDevice>
                 <StartPort>0</StartPort>
@@ -329,7 +329,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet1</EndPort>
+                <EndPort>etp2</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-02</StartDevice>
                 <StartPort>0</StartPort>
@@ -339,7 +339,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet2</EndPort>
+                <EndPort>etp3</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-03</StartDevice>
                 <StartPort>0</StartPort>
@@ -349,7 +349,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet3</EndPort>
+                <EndPort>etp4</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-04</StartDevice>
                 <StartPort>0</StartPort>
@@ -359,7 +359,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet4</EndPort>
+                <EndPort>etp5</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-05</StartDevice>
                 <StartPort>0</StartPort>
@@ -369,7 +369,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet5</EndPort>
+                <EndPort>etp6</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-06</StartDevice>
                 <StartPort>0</StartPort>
@@ -379,7 +379,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet6</EndPort>
+                <EndPort>etp7</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-07</StartDevice>
                 <StartPort>0</StartPort>
@@ -389,7 +389,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet7</EndPort>
+                <EndPort>etp8</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-08</StartDevice>
                 <StartPort>0</StartPort>
@@ -399,7 +399,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet8</EndPort>
+                <EndPort>etp9</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-09</StartDevice>
                 <StartPort>0</StartPort>
@@ -409,7 +409,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet9</EndPort>
+                <EndPort>etp10</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-10</StartDevice>
                 <StartPort>0</StartPort>
@@ -419,7 +419,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet10</EndPort>
+                <EndPort>etp11</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-11</StartDevice>
                 <StartPort>0</StartPort>
@@ -429,7 +429,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet11</EndPort>
+                <EndPort>etp12</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-12</StartDevice>
                 <StartPort>0</StartPort>
@@ -439,7 +439,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet12</EndPort>
+                <EndPort>etp13</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-13</StartDevice>
                 <StartPort>0</StartPort>
@@ -449,7 +449,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet13</EndPort>
+                <EndPort>etp14</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-14</StartDevice>
                 <StartPort>0</StartPort>
@@ -459,7 +459,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet14</EndPort>
+                <EndPort>etp15</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-15</StartDevice>
                 <StartPort>0</StartPort>
@@ -469,7 +469,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet15</EndPort>
+                <EndPort>etp16</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-16</StartDevice>
                 <StartPort>0</StartPort>
@@ -479,7 +479,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet16</EndPort>
+                <EndPort>etp17</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-17</StartDevice>
                 <StartPort>0</StartPort>
@@ -489,7 +489,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet17</EndPort>
+                <EndPort>etp18</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-18</StartDevice>
                 <StartPort>0</StartPort>
@@ -499,7 +499,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet18</EndPort>
+                <EndPort>etp19</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-19</StartDevice>
                 <StartPort>0</StartPort>
@@ -509,7 +509,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet19</EndPort>
+                <EndPort>etp20</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-20</StartDevice>
                 <StartPort>0</StartPort>
@@ -519,7 +519,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet20</EndPort>
+                <EndPort>etp21</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-21</StartDevice>
                 <StartPort>0</StartPort>
@@ -529,7 +529,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet21</EndPort>
+                <EndPort>etp22</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-22</StartDevice>
                 <StartPort>0</StartPort>
@@ -539,7 +539,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet22</EndPort>
+                <EndPort>etp23</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-23</StartDevice>
                 <StartPort>0</StartPort>
@@ -549,7 +549,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet23</EndPort>
+                <EndPort>etp24</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-24</StartDevice>
                 <StartPort>0</StartPort>
@@ -559,7 +559,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet24</EndPort>
+                <EndPort>etp25</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-25</StartDevice>
                 <StartPort>0</StartPort>
@@ -569,7 +569,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet25</EndPort>
+                <EndPort>etp26</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-26</StartDevice>
                 <StartPort>0</StartPort>
@@ -579,7 +579,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet26</EndPort>
+                <EndPort>etp27</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-27</StartDevice>
                 <StartPort>0</StartPort>
@@ -589,7 +589,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet27</EndPort>
+                <EndPort>etp28</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-28</StartDevice>
                 <StartPort>0</StartPort>
@@ -599,7 +599,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet28</EndPort>
+                <EndPort>etp29</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-29</StartDevice>
                 <StartPort>0</StartPort>
@@ -609,7 +609,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet29</EndPort>
+                <EndPort>etp30</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-30</StartDevice>
                 <StartPort>0</StartPort>
@@ -619,7 +619,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet30</EndPort>
+                <EndPort>etp31</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-31</StartDevice>
                 <StartPort>0</StartPort>
@@ -629,7 +629,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet31</EndPort>
+                <EndPort>etp32</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-32</StartDevice>
                 <StartPort>0</StartPort>
@@ -639,7 +639,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet32</EndPort>
+                <EndPort>etp33</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-33</StartDevice>
                 <StartPort>0</StartPort>
@@ -649,7 +649,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet33</EndPort>
+                <EndPort>etp34</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-34</StartDevice>
                 <StartPort>0</StartPort>
@@ -659,7 +659,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet34</EndPort>
+                <EndPort>etp35</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-35</StartDevice>
                 <StartPort>0</StartPort>
@@ -669,7 +669,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet35</EndPort>
+                <EndPort>etp36</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-36</StartDevice>
                 <StartPort>0</StartPort>
@@ -679,7 +679,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet36</EndPort>
+                <EndPort>etp37</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-37</StartDevice>
                 <StartPort>0</StartPort>
@@ -689,7 +689,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet37</EndPort>
+                <EndPort>etp38</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-38</StartDevice>
                 <StartPort>0</StartPort>
@@ -699,7 +699,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet38</EndPort>
+                <EndPort>etp39</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-39</StartDevice>
                 <StartPort>0</StartPort>
@@ -709,7 +709,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet39</EndPort>
+                <EndPort>etp40</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-40</StartDevice>
                 <StartPort>0</StartPort>
@@ -719,7 +719,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet40</EndPort>
+                <EndPort>etp41</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-41</StartDevice>
                 <StartPort>0</StartPort>
@@ -729,7 +729,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet41</EndPort>
+                <EndPort>etp42</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-42</StartDevice>
                 <StartPort>0</StartPort>
@@ -739,7 +739,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet42</EndPort>
+                <EndPort>etp43</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-43</StartDevice>
                 <StartPort>0</StartPort>
@@ -749,7 +749,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet43</EndPort>
+                <EndPort>etp44</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-44</StartDevice>
                 <StartPort>0</StartPort>
@@ -759,7 +759,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet44</EndPort>
+                <EndPort>etp45</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-45</StartDevice>
                 <StartPort>0</StartPort>
@@ -769,7 +769,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet45</EndPort>
+                <EndPort>etp46</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-46</StartDevice>
                 <StartPort>0</StartPort>
@@ -779,7 +779,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet46</EndPort>
+                <EndPort>etp47</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-47</StartDevice>
                 <StartPort>0</StartPort>
@@ -789,7 +789,7 @@
                 <AutoNegotiation>true</AutoNegotiation>
                 <Bandwidth>1000</Bandwidth>
                 <EndDevice>sonic</EndDevice>
-                <EndPort>Ethernet47</EndPort>
+                <EndPort>etp48</EndPort>
                 <FlowControl>true</FlowControl>
                 <StartDevice>server-48</StartDevice>
                 <StartPort>0</StartPort>
@@ -798,7 +798,7 @@
     <Devices>
       <Device i:type="ToRRouter">
         <Hostname>sonic</Hostname>
-        <HwSku>E1031-T48S4</HwSku>
+        <HwSku>Celestica-E1031-T48S4</HwSku>
         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
           <a:IPPrefix>10.251.0.243</a:IPPrefix>
         </ManagementAddress>
@@ -806,5 +806,5 @@
     </Devices>
   </PngDec>
   <Hostname>sonic</Hostname>
-  <HwSku>E1031-T48S4</HwSku>
+  <HwSku>Celestica-E1031-T48S4</HwSku>
 </DeviceMiniGraph>
