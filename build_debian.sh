@@ -226,7 +226,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     hping3                  \
     python-scapy            \
     tcptraceroute           \
-    nmap                    \
     mtr-tiny
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
