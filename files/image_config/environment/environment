@@ -1,1 +1,2 @@
 VTYSH_PAGER=more
+IFMODE=default
