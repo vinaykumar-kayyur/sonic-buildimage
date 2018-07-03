@@ -10,6 +10,34 @@ try:
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
+def determine_in_docker():
+    with open('/proc/self/cgroup') as f:
+        lines = [line.rstrip('\n') for line in f]
+    for line in lines:
+        words = line.split('/')
+        if len(words) > 1 and words[1] == 'docker':
+            return True
+
+    return False
+
+INSIDE_DOCKER = determine_in_docker()
+
+if INSIDE_DOCKER:
+    from swsscommon import swsscommon
+    REDIS_HOSTNAME = "localhost"
+    REDIS_PORT = 6379
+    REDIS_TIMEOUT_USECS = 0
+
+    state_db = swsscommon.DBConnector(swsscommon.STATE_DB,
+                                     REDIS_HOSTNAME,
+                                     REDIS_PORT,
+                                     REDIS_TIMEOUT_USECS)
+
+    # Subscribe to state table for SFP change notifications
+    sel = swsscommon.Select()
+    sel_tbl = swsscommon.NotificationConsumer(state_db, 'TRANSCEIVER_NOTIFY')
+    sel.addSelectable(sel_tbl)
+
 
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
@@ -39,7 +67,7 @@ class SfpUtil(SfpUtilBase):
         return self._port_to_eeprom_mapping
 
     def __init__(self):
-        eeprom_path = "/bsp/qsfp/qsfp{0}"
+        eeprom_path = "/sys/class/i2c-adapter/i2c-2/2-0048/hwmon/hwmon6/qsfp{0}_eeprom"
 
         for x in range(0, self.port_end + 1):
             self._port_to_eeprom_mapping[x] = eeprom_path.format(x + self.EEPROM_OFFSET)
@@ -64,6 +92,22 @@ class SfpUtil(SfpUtilBase):
             return True
 
         return False
+        
+    def get_presence_status_file_path(self, port_num):
+        # Check for invalid port_num
+        if port_num < self.port_start or port_num > self.port_end:
+            return ""
+
+        try:
+            path = "/sys/class/i2c-adapter/i2c-2/2-0048/hwmon/hwmon6/qsfp%d_status" % (port_num+1)
+            #path = "/bsp/qsfp/qsfp%d_status" % (port_num+1)
+            reg_file = open(path)
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return ""
+
+        reg_file.close()
+        return path
 
     def get_low_power_mode(self, port_num):
         # Check for invalid port_num
@@ -149,3 +193,21 @@ class SfpUtil(SfpUtilBase):
             return False
 
         return False
+
+    def get_transceiver_change_event(self, timeout=0):
+        phy_port_dict = {}
+        if INSIDE_DOCKER:
+            status = True
+            (state, c) = sel.select(timeout)
+            
+            if state == swsscommon.Select.TIMEOUT:
+                status = true
+            elif state != swsscommon.Select.OBJECT:
+                status = False
+            else:
+                (key, op, fvp) = sel_tbl.pop()             
+                phy_port_dict[key] = op
+
+            return status, phy_port_dict
+        else:
+            return False, phy_port_dict
