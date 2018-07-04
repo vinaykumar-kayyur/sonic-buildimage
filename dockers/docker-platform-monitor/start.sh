@@ -7,8 +7,6 @@ rm -f /var/run/rsyslogd.pid
 
 supervisorctl start rsyslogd
 
-supervisorctl start xcvrd
-
 # If this platform has an lm-sensors config file, copy it to it's proper place
 # and start lm-sensors
 if [ -e /usr/share/sonic/platform/sensors.conf ]; then
@@ -28,3 +26,5 @@ if [ -e /usr/share/sonic/platform/fancontrol ]; then
 fi
 
 supervisorctl start ledd
+
+supervisorctl start xcvrd
