@@ -89,6 +89,12 @@ sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 
+# Install built Python Click package (and its dependencies via 'apt-get -y install -f')
+# Do this before installing sonic-utilities so that it doesn't attempt to install
+# an older version as part of its dependencies
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-click*_all.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
 # Install SONiC Utilities (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-sonic-utilities_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
@@ -165,9 +171,12 @@ sudo bash -c "echo dhcp_as_static=true >> $FILESYSTEM_ROOT/etc/sonic/updategraph
 {% else %}
 sudo bash -c "echo enabled=false > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 {% endif %}
-{% if shutdown_bgp_on_start == "y" %}
-sudo bash -c "echo '{ \"DEVICE_METADATA\": { \"localhost\": { \"default_bgp_status\": \"down\" } } }' >> $FILESYSTEM_ROOT/etc/sonic/init_cfg.json"
-{% endif %}
+sudo bash -c "echo '{ \"DEVICE_METADATA\": { \"localhost\": { \"default_bgp_status\": {% if shutdown_bgp_on_start == "y" %}\"down\"{% else %}\"up\"{% endif %}, \"default_pfcwd_status\": {% if enable_pfcwd_on_start == "y" %}\"enable\"{% else %}\"disable\"{% endif %}  } },
+{%- print ' \\"CRM\\": { \\"Config\\": { \\"polling_interval\\": \\"300\\", ' %}
+{%- for crm_res in ["ipv4_route", "ipv6_route", "ipv4_nexthop", "ipv6_nexthop", "ipv4_neighbor", "ipv6_neighbor", "nexthop_group_member", "nexthop_group", "acl_table", "acl_group", "acl_entry", "acl_counter", "fdb_entry"] -%}
+\"{{crm_res}}_threshold_type\": \"percentage\", \"{{crm_res}}_low_threshold\": \"70\", \"{{crm_res}}_high_threshold\": \"85\"{% if not loop.last %}, {% endif %}
+{%- endfor %} } } }' >> $FILESYSTEM_ROOT/etc/sonic/init_cfg.json"
+
 # Copy SNMP configuration files
 sudo cp $IMAGE_CONFIGS/snmp/snmp.yml $FILESYSTEM_ROOT/etc/sonic/
 
@@ -176,6 +185,7 @@ sudo cp $IMAGE_CONFIGS/asn/deployment_id_asn_map.yml $FILESYSTEM_ROOT/etc/sonic/
 
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
+sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
 
 # Copy control plane ACL management daemon files
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/system/
@@ -243,7 +253,10 @@ sudo cp $IMAGE_CONFIGS/ssh/sshd-config-updater $FILESYSTEM_ROOT/usr/bin/
 sudo chmod +x $FILESYSTEM_ROOT/usr/bin/sshd-config-updater
 sudo cp $IMAGE_CONFIGS/ssh/sshd-clear-denied-sessions $FILESYSTEM_ROOT/usr/bin
 sudo chmod +x $FILESYSTEM_ROOT/usr/bin/sshd-clear-denied-sessions
-sudo cp src/libwrap/tcp-wrappers-7.6.q/tcpdmatch $FILESYSTEM_ROOT/usr/bin
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libwrap0_*_amd64.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/tcpd_*_amd64.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
@@ -268,6 +281,14 @@ fi
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
+
+# Copy systemd timer configuration
+# It implements delayed start of services
+sudo cp $BUILD_TEMPLATES/enable_counters.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo cp $BUILD_TEMPLATES/enable_counters.service $FILESYSTEM_ROOT/etc/systemd/system/
+sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable enable_counters.timer
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable snmp.timer
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get remove -y python-dev 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y

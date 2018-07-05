@@ -1,11 +1,13 @@
 [Unit]
-Description=download minigraph from graph service
+Description=Update minigraph and set configuration based on minigraph
 After=rc-local.service
-Before=database.service
+After=database.service
+Requires=database.service
 
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/updategraph
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

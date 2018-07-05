@@ -1,7 +1,9 @@
 # libnl3
 
-LIBNL3_VERSION = 3.2.27-1
+LIBNL3_VERSION_BASE = 3.2.27
+LIBNL3_VERSION = $(LIBNL3_VERSION_BASE)-2
 
+export LIBNL3_VERSION_BASE
 export LIBNL3_VERSION
 
 LIBNL3 = libnl-3-200_$(LIBNL3_VERSION)_amd64.deb
@@ -12,6 +14,7 @@ LIBNL3_DEV = libnl-3-dev_$(LIBNL3_VERSION)_amd64.deb
 $(eval $(call add_derived_package,$(LIBNL3),$(LIBNL3_DEV)))
 
 LIBNL_GENL3 = libnl-genl-3-200_$(LIBNL3_VERSION)_amd64.deb
+$(LIBNL_GENL3)_RDEPENDS += $(LIBNL3)
 $(eval $(call add_derived_package,$(LIBNL3),$(LIBNL_GENL3)))
 
 LIBNL_GENL3_DEV = libnl-genl-3-dev_$(LIBNL3_VERSION)_amd64.deb
@@ -19,6 +22,7 @@ $(LIBNL_GENL3_DEV)_DEPENDS += $(LIBNL_GENL3) $(LIBNL3_DEV)
 $(eval $(call add_derived_package,$(LIBNL3),$(LIBNL_GENL3_DEV)))
 
 LIBNL_ROUTE3 = libnl-route-3-200_$(LIBNL3_VERSION)_amd64.deb
+$(LIBNL_ROUTE3)_RDEPENDS += $(LIBNL3)
 $(eval $(call add_derived_package,$(LIBNL3),$(LIBNL_ROUTE3)))
 
 LIBNL_ROUTE3_DEV = libnl-route-3-dev_$(LIBNL3_VERSION)_amd64.deb

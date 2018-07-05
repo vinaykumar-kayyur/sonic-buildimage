@@ -3,26 +3,22 @@
 ## an ONIE installer image.
 ##
 ## USAGE:
-##   ./build_debian USERNAME PASSWORD_ENCRYPTED
-## PARAMETERS:
+##   USERNAME=username PASSWORD=password ./build_debian
+## ENVIRONMENT:
 ##   USERNAME
 ##          The name of the default admin user
-##   PASSWORD_ENCRYPTED
-##          The encrypted password, expected by chpasswd command
+##   PASSWORD
+##          The password, expected by chpasswd command
 
 ## Default user
-USERNAME=$1
 [ -n "$USERNAME" ] || {
-    echo "Error: no or empty USERNAME argument"
+    echo "Error: no or empty USERNAME"
     exit 1
 }
 
-## Password for the default user, customizable by environment variable
-## By default it is an empty password
-## You may get a crypted password by: perl -e 'print crypt("YourPaSsWoRd", "salt"),"\n"'
-PASSWORD_ENCRYPTED=$2
-[ -n "$PASSWORD_ENCRYPTED" ] || {
-    echo "Error: no or empty PASSWORD_ENCRYPTED argument"
+## Password for the default user
+[ -n "$PASSWORD" ] || {
+    echo "Error: no or empty PASSWORD"
     exit 1
 }
 
@@ -144,6 +140,9 @@ sudo cp files/initramfs-tools/union-mount $FILESYSTEM_ROOT/etc/initramfs-tools/s
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mount
 sudo cp files/initramfs-tools/varlog $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
+# Management interface (eth0) dhcp can be optionally turned off (during a migration from another NOS to SONiC)
+sudo cp files/initramfs-tools/mgmt-intf-dhcp $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
 sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
@@ -175,7 +174,7 @@ sudo cp files/docker/docker.service.conf $_
 ## Note: user should be in the group with the same name, and also in sudo/docker group
 sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
-echo $USERNAME:$PASSWORD_ENCRYPTED | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd -e
+echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
 ## Pre-install hardware drivers
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
@@ -221,7 +220,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     unzip                   \
     gdisk                   \
     sysfsutils              \
-    grub2-common
+    grub2-common            \
+    ethtool                 \
+    screen                  \
+    hping3                  \
+    python-scapy            \
+    tcptraceroute           \
+    mtr-tiny
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
     grub-pc-bin
@@ -233,6 +238,12 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libwrap0_*.deb || \
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
+
+## Fix ping tools permission so non root user can directly use them
+## Note: this is a workaround since aufs doesn't support extended attributes
+## Ref: https://github.com/moby/moby/issues/5650#issuecomment-303499489
+## TODO: remove workaround when the overlay filesystem support extended attributes
+sudo chmod u+s $FILESYSTEM_ROOT/bin/ping{,6}
 
 ## Remove sshd host keys, and will regenerate on first sshd start
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
@@ -257,6 +268,8 @@ sudo sed -i '
 
 sudo tee -a $FILESYSTEM_ROOT/etc/monit/monitrc > /dev/null <<'EOF'
 check filesystem root-aufs with path /
+  if space usage > 90% for 5 times within 10 cycles then alert
+check filesystem var-log with path /var/log
   if space usage > 90% for 5 times within 10 cycles then alert
 check system $HOST
   if memory usage > 90% for 5 times within 10 cycles then alert
@@ -296,10 +309,12 @@ set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_dad 0
 
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
 
 set /files/etc/sysctl.conf/net.core.rmem_max 2097152
+set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
 
 ## docker-py is needed by Ansible docker module
@@ -327,11 +342,11 @@ sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
-build_version: $(sonic_get_version)
+build_version: '$(sonic_get_version)'
 debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
-kernel_version: $kversion
+kernel_version: '$kversion'
 asic_type: $sonic_asic_platform
-commit_id: $(git rev-parse --short HEAD)
+commit_id: '$(git rev-parse --short HEAD)'
 build_date: $(date -u)
 build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME
