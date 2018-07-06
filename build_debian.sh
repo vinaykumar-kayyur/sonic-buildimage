@@ -222,7 +222,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     sysfsutils              \
     grub2-common            \
     ethtool                 \
-    screen
+    screen                  \
+    hping3                  \
+    python-scapy            \
+    tcptraceroute           \
+    mtr-tiny
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
     grub-pc-bin
@@ -264,6 +268,8 @@ sudo sed -i '
 
 sudo tee -a $FILESYSTEM_ROOT/etc/monit/monitrc > /dev/null <<'EOF'
 check filesystem root-aufs with path /
+  if space usage > 90% for 5 times within 10 cycles then alert
+check filesystem var-log with path /var/log
   if space usage > 90% for 5 times within 10 cycles then alert
 check system $HOST
   if memory usage > 90% for 5 times within 10 cycles then alert
