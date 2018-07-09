@@ -100,7 +100,6 @@ class SfpUtil(SfpUtilBase):
 
         try:
             path = "/sys/class/i2c-adapter/i2c-2/2-0048/hwmon/hwmon4/qsfp%d_status" % (port_num+1)
-            #path = "/bsp/qsfp/qsfp%d_status" % (port_num+1)
             reg_file = open(path)
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
