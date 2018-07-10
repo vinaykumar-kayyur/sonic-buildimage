@@ -58,6 +58,7 @@ sudo cp $IMAGE_CONFIGS/environment/motd $FILESYSTEM_ROOT/etc/
 
 # Create all needed directories
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic/
+sudo mkdir -p $FILESYSTEM_ROOT/var/cache/sonic/
 sudo mkdir -p $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
 # Install dependencies for SONiC config engine 
@@ -88,6 +89,12 @@ PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{platform_common_py2_wheel_path}})
 sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
+
+# Install built Python Click package (and its dependencies via 'apt-get -y install -f')
+# Do this before installing sonic-utilities so that it doesn't attempt to install
+# an older version as part of its dependencies
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-click*_all.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # Install SONiC Utilities (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-sonic-utilities_*.deb || \
@@ -179,6 +186,7 @@ sudo cp $IMAGE_CONFIGS/asn/deployment_id_asn_map.yml $FILESYSTEM_ROOT/etc/sonic/
 
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
+sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
 
 # Copy control plane ACL management daemon files
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/system/
@@ -274,6 +282,14 @@ fi
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
+
+# Copy systemd timer configuration
+# It implements delayed start of services
+sudo cp $BUILD_TEMPLATES/enable_counters.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo cp $BUILD_TEMPLATES/enable_counters.service $FILESYSTEM_ROOT/etc/systemd/system/
+sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable enable_counters.timer
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable snmp.timer
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get remove -y python-dev 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y
