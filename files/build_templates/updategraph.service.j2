@@ -3,13 +3,13 @@ Description=Update minigraph and set configuration based on minigraph
 After=rc-local.service
 After=database.service
 Requires=database.service
+{% if sonic_asic_platform == 'mellanox' -%}
+Requires=hw-management.service
+{% endif -%}
+
 
 [Service]
 Type=oneshot
-{% if sonic_asic_platform == 'mellanox' -%}
-EnvironmentFile=/host/machine.conf
-ExecStartPre=/bin/bash -c "/usr/share/sonic/device/$onie_platform/hw-management start"
-{% endif -%}
 ExecStart=/usr/bin/updategraph
 RemainAfterExit=yes
 
