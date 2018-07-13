@@ -1,4 +1,6 @@
-CKER_EXEC_FLAGS="i"
+#!/bin/bash
+
+DOCKER_EXEC_FLAGS="i"
 
 # Determine whether stdout is on a terminal
 if [ -t 1 ] ; then
