@@ -48,8 +48,11 @@ def get_system_mac():
     else:
         get_mac_cmd = "ip link show eth0 | grep ether | awk '{print $2}'"
 
-    proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (mac, err) = proc.communicate()
+    if err:
+        return None
+
     mac = mac.strip()
     
     # Align last byte of MAC if necessary
