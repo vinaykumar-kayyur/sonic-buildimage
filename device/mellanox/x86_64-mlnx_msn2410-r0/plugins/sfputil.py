@@ -21,7 +21,6 @@ class SfpUtil(SfpUtilBase):
     PORT_END = 55
     PORTS_IN_BLOCK = 56
     QSFP_PORT_START = 48
-
     EEPROM_OFFSET = 1
 
     _port_to_eeprom_mapping = {}
