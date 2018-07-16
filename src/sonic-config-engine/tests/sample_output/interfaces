@@ -19,10 +19,6 @@ iface lo inet static
     address 10.10.0.99
     netmask 255.255.255.255
 #
-# BMC interface
-auto usb0
-iface usb0 inet6 auto
-up ifconfig usb0 txqueuelen 64
 
 # The management network interface
 auto eth0
