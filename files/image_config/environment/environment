@@ -1,2 +1,2 @@
 VTYSH_PAGER=more
-IFMODE=default
+SONIC_CLI_IFACE_MODE=default
