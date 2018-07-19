@@ -76,10 +76,22 @@ endif
 
 ifeq ($(USERNAME),)
 override USERNAME := $(DEFAULT_USERNAME)
+else
+$(warning USERNAME given on command line: could be visible to other users)
 endif
 
 ifeq ($(PASSWORD),)
 override PASSWORD := $(DEFAULT_PASSWORD)
+else
+$(warning PASSWORD given on command line: could be visible to other users)
+endif
+
+ifeq ($(SONIC_DEBUGGING_ON),y)
+DEB_BUILD_OPTIONS_GENERIC := "nostrip"
+endif
+
+ifeq ($(SONIC_PROFILING_ON),y)
+DEB_BUILD_OPTIONS_GENERIC := "nostrip noopt"
 endif
 
 ifeq ($(SONIC_BUILD_JOBS),)
@@ -100,18 +112,20 @@ $(info "CONFIGURED_PLATFORM"             : "$(if $(PLATFORM),$(PLATFORM),$(CONFI
 $(info "SONIC_CONFIG_PRINT_DEPENDENCIES" : "$(SONIC_CONFIG_PRINT_DEPENDENCIES)")
 $(info "SONIC_BUILD_JOBS"                : "$(SONIC_BUILD_JOBS)")
 $(info "SONIC_CONFIG_MAKE_JOBS"          : "$(SONIC_CONFIG_MAKE_JOBS)")
-$(info "DEFAULT_USERNAME"                : "$(DEFAULT_USERNAME)")
-$(info "DEFAULT_PASSWORD"                : "$(DEFAULT_PASSWORD)")
+$(info "USERNAME"                        : "$(USERNAME)")
+$(info "PASSWORD"                        : "$(PASSWORD)")
 $(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
 $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
-$(info "SONIC_CONFIG_DEBUG"              : "$(SONIC_CONFIG_DEBUG)")
+$(info "SONIC_INSTALL_DEBUG_TOOLS"       : "$(SONIC_INSTALL_DEBUG_TOOLS)")
 $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
 $(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
+$(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
+$(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info )
 
 ###############################################################################
@@ -197,7 +211,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# Apply series of patches if exist
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 	# Build project and take package
-	make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
+	DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
 	$(FOOTER)
@@ -220,8 +234,8 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
 	$(if $($*_DPKG_TARGET),
-		DEB_BUILD_OPTIONS=$($*_DEB_BUILD_OPTIONS) dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
-		DEB_BUILD_OPTIONS=$($*_DEB_BUILD_OPTIONS) dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
 	)
 	popd $(LOG)
 	# Clean up
@@ -368,6 +382,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 		--build-arg user=$(USER) \
 		--build-arg uid=$(UID) \
 		--build-arg guid=$(GUID) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	# Clean up
@@ -398,6 +413,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 		--build-arg user=$(USER) \
 		--build-arg uid=$(UID) \
 		--build-arg guid=$(GUID) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	# Clean up
@@ -431,6 +447,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(IGB_DRIVER) \
                 $(IXGBE_DRIVER) \
                 $(SONIC_DEVICE_DATA) \
+                $(PYTHON_CLICK) \
                 $(SONIC_UTILS) \
                 $(LIBWRAP) \
                 $(LIBPAM_TACPLUS) \
@@ -484,8 +501,14 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 
 	DIRTY_SUFFIX="$(shell date +%Y%m%d\.%H%M%S)"
 	export DIRTY_SUFFIX
-	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
-	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) ./build_image.sh $(LOG)
+
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+		./build_debian.sh $(LOG)
+
+	TARGET_MACHINE=$($*_MACHINE) \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+		./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f $($(docker)_CONTAINER_NAME).sh
