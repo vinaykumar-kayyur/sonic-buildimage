@@ -3,26 +3,22 @@
 ## an ONIE installer image.
 ##
 ## USAGE:
-##   ./build_debian USERNAME PASSWORD_ENCRYPTED
-## PARAMETERS:
+##   USERNAME=username PASSWORD=password ./build_debian
+## ENVIRONMENT:
 ##   USERNAME
 ##          The name of the default admin user
-##   PASSWORD_ENCRYPTED
-##          The encrypted password, expected by chpasswd command
+##   PASSWORD
+##          The password, expected by chpasswd command
 
 ## Default user
-USERNAME=$1
 [ -n "$USERNAME" ] || {
-    echo "Error: no or empty USERNAME argument"
+    echo "Error: no or empty USERNAME"
     exit 1
 }
 
-## Password for the default user, customizable by environment variable
-## By default it is an empty password
-## You may get a crypted password by: perl -e 'print crypt("YourPaSsWoRd", "salt"),"\n"'
-PASSWORD_ENCRYPTED=$2
-[ -n "$PASSWORD_ENCRYPTED" ] || {
-    echo "Error: no or empty PASSWORD_ENCRYPTED argument"
+## Password for the default user
+[ -n "$PASSWORD" ] || {
+    echo "Error: no or empty PASSWORD"
     exit 1
 }
 
@@ -178,7 +174,7 @@ sudo cp files/docker/docker.service.conf $_
 ## Note: user should be in the group with the same name, and also in sudo/docker group
 sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
-echo $USERNAME:$PASSWORD_ENCRYPTED | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd -e
+echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
 ## Pre-install hardware drivers
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
@@ -226,7 +222,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     sysfsutils              \
     grub2-common            \
     ethtool                 \
-    screen
+    screen                  \
+    hping3                  \
+    python-scapy            \
+    tcptraceroute           \
+    mtr-tiny
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
     grub-pc-bin
@@ -268,6 +268,8 @@ sudo sed -i '
 
 sudo tee -a $FILESYSTEM_ROOT/etc/monit/monitrc > /dev/null <<'EOF'
 check filesystem root-aufs with path /
+  if space usage > 90% for 5 times within 10 cycles then alert
+check filesystem var-log with path /var/log
   if space usage > 90% for 5 times within 10 cycles then alert
 check system $HOST
   if memory usage > 90% for 5 times within 10 cycles then alert
