@@ -25,7 +25,7 @@ def test_bounce(dvs):
     p1 = dvs.servers[0].runcmd_async("exabgp -d bgp/files/no_export/exabgp1.conf")
     p2 = dvs.servers[1].runcmd_async("exabgp -d bgp/files/no_export/exabgp2.conf")
 
-    time.sleep(20)
+    time.sleep(60)
 
     sum_res =  dvs.runcmd(["vtysh", "-c", "show ip bgp sum"])
     all_route = dvs.runcmd(["vtysh", "-c", "show ip bgp"])
