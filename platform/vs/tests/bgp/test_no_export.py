@@ -6,7 +6,7 @@ import json
 
 def test_bounce(dvs):
     dvs.servers[0].runcmd("pkill -f exabgp")
-    dvs.copy_file("/etc/quagga/", "bounce/files/bgpd.conf")
+    dvs.copy_file("/etc/quagga/", "bgp/files/no_export/bgpd.conf")
     dvs.runcmd("supervisorctl start bgpd")
     dvs.runcmd("ip addr add 10.0.0.0/31 dev Ethernet0") 
     dvs.runcmd("ifconfig Ethernet0 up")
@@ -22,8 +22,8 @@ def test_bounce(dvs):
 
     time.sleep(5)
 
-    p1 = dvs.servers[0].runcmd_async("exabgp -d bounce/files/exabgp1.conf")
-    p2 = dvs.servers[1].runcmd_async("exabgp -d bounce/files/exabgp2.conf")
+    p1 = dvs.servers[0].runcmd_async("exabgp -d bgp/files/no_export/exabgp1.conf")
+    p2 = dvs.servers[1].runcmd_async("exabgp -d bgp/files/no_export/exabgp2.conf")
 
     time.sleep(20)
 
