@@ -66,7 +66,7 @@
 {%- macro generate_pg_profils(port_names) %}
     "BUFFER_PG": {
         "{{ port_names }}|3-4": {
-            "profile" : "[BUFFER_PROFILE|pg_lossless_100000_5m_profile]"
+            "profile" : "[BUFFER_PROFILE|ingress_lossless_profile]"
         }
     },
 {%- endmacro %}
