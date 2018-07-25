@@ -220,7 +220,10 @@ class DockerVirtualSwitch(object):
         tar = tarfile.open(fileobj=tarstr, mode="w")
         tar.add(filename, os.path.basename(filename))
         tar.close()
+<<<<<<< HEAD
         self.ctn.exec_run("mkdir -p %s" % path)
+=======
+>>>>>>> 14a0de768d532fa55bc58d3df7075786d2ae1876
         self.ctn.put_archive(path, tarstr.getvalue())
         tarstr.close()
 

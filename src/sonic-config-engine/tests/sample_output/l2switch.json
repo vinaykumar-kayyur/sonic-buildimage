@@ -7,6 +7,7 @@
         }
     },
     "VLAN_MEMBER": {
+<<<<<<< HEAD
         "Vlan1000|Ethernet0": {
             "tagging_mode": "untagged"
         },
@@ -44,6 +45,39 @@
             "tagging_mode": "untagged"
         },
         "Vlan1000|Ethernet48": {
+=======
+        "Vlan1000|Ethernet8": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet0": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet4": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet108": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet100": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet104": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet68": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet96": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet124": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet92": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet120": {
+>>>>>>> 14a0de768d532fa55bc58d3df7075786d2ae1876
             "tagging_mode": "untagged"
         },
         "Vlan1000|Ethernet52": {
@@ -52,6 +86,7 @@
         "Vlan1000|Ethernet56": {
             "tagging_mode": "untagged"
         },
+<<<<<<< HEAD
         "Vlan1000|Ethernet60": {
             "tagging_mode": "untagged"
         },
@@ -71,11 +106,33 @@
             "tagging_mode": "untagged"
         },
         "Vlan1000|Ethernet84": {
+=======
+        "Vlan1000|Ethernet76": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet72": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet64": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet32": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet16": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet36": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet12": {
+>>>>>>> 14a0de768d532fa55bc58d3df7075786d2ae1876
             "tagging_mode": "untagged"
         },
         "Vlan1000|Ethernet88": {
             "tagging_mode": "untagged"
         },
+<<<<<<< HEAD
         "Vlan1000|Ethernet92": {
             "tagging_mode": "untagged"
         },
@@ -101,6 +158,39 @@
             "tagging_mode": "untagged"
         },
         "Vlan1000|Ethernet124": {
+=======
+        "Vlan1000|Ethernet116": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet80": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet112": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet84": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet48": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet44": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet40": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet28": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet60": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet20": {
+            "tagging_mode": "untagged"
+        },
+        "Vlan1000|Ethernet24": {
+>>>>>>> 14a0de768d532fa55bc58d3df7075786d2ae1876
             "tagging_mode": "untagged"
         }
     }
