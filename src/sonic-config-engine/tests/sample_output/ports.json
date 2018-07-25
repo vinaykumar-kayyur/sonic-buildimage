@@ -1,5 +1,15 @@
 [
     {
+<<<<<<< HEAD
+=======
+        "PORT_TABLE:Ethernet8": {
+            "speed": "1000",
+            "description": "Interface description"
+        },
+        "OP": "SET"
+    },
+    {
+>>>>>>> 14a0de768d532fa55bc58d3df7075786d2ae1876
         "PORT_TABLE:Ethernet0": {
             "speed": "10000",
             "description": ""
