@@ -1,6 +1,7 @@
 {
     "TC_TO_PRIORITY_GROUP_MAP": {
         "AZURE": {
+<<<<<<< HEAD:device/dell/x86_64-dell_s6100_c2538-r0/Force10-S6100/qos.json
             "0": "0",
             "1": "1",
             "2": "2",
@@ -9,10 +10,17 @@
             "5": "5",
             "6": "6",
             "7": "7"
+=======
+            "0": "1",
+            "1": "0",
+            "3": "3",
+            "4": "4"
+>>>>>>> 5568712... add qos and buffer file for device and add sensor driver for 7116:device/accton/x86_64-accton_as7116_54x-r0/Accton-AS7116-54X/qos.json.j2
         }
     },
     "MAP_PFC_PRIORITY_TO_QUEUE": {
         "AZURE": {
+<<<<<<< HEAD:device/dell/x86_64-dell_s6100_c2538-r0/Force10-S6100/qos.json
             "0": "0",
             "1": "1",
             "2": "2",
@@ -21,10 +29,15 @@
             "5": "5",
             "6": "6",
             "7": "7"
+=======
+            "3": "3",
+            "4": "4"
+>>>>>>> 5568712... add qos and buffer file for device and add sensor driver for 7116:device/accton/x86_64-accton_as7116_54x-r0/Accton-AS7116-54X/qos.json.j2
         }
     },
     "TC_TO_QUEUE_MAP": {
         "AZURE": {
+<<<<<<< HEAD:device/dell/x86_64-dell_s6100_c2538-r0/Force10-S6100/qos.json
             "0": "0",
             "1": "1",
             "2": "2",
@@ -33,11 +46,21 @@
             "5": "5",
             "6": "6",
             "7": "7"
+=======
+            "0": "1",
+            "1": "0",
+            "3": "3",
+            "4": "4"
+>>>>>>> 5568712... add qos and buffer file for device and add sensor driver for 7116:device/accton/x86_64-accton_as7116_54x-r0/Accton-AS7116-54X/qos.json.j2
         }
     },
     "DSCP_TO_TC_MAP": {
         "AZURE": {
+<<<<<<< HEAD:device/dell/x86_64-dell_s6100_c2538-r0/Force10-S6100/qos.json
             "0":"0",
+=======
+            "0":"1",
+>>>>>>> 5568712... add qos and buffer file for device and add sensor driver for 7116:device/accton/x86_64-accton_as7116_54x-r0/Accton-AS7116-54X/qos.json.j2
             "1":"0",
             "2":"0",
             "3":"3",
@@ -118,6 +141,7 @@
         }
     },
     "PORT_QOS_MAP": {
+<<<<<<< HEAD:device/dell/x86_64-dell_s6100_c2538-r0/Force10-S6100/qos.json
         "Ethernet0,Ethernet1,Ethernet2,Ethernet3,Ethernet4,Ethernet5,Ethernet6,Ethernet7,Ethernet8,Ethernet9,Ethernet10,Ethernet11,Ethernet12,Ethernet13,Ethernet14,Ethernet15,Ethernet16,Ethernet17,Ethernet18,Ethernet19,Ethernet20,Ethernet21,Ethernet22,Ethernet23,Ethernet24,Ethernet25,Ethernet26,Ethernet27,Ethernet28,Ethernet29,Ethernet30,Ethernet31,Ethernet32,Ethernet33,Ethernet34,Ethernet35,Ethernet36,Ethernet37,Ethernet38,Ethernet39,Ethernet40,Ethernet41,Ethernet42,Ethernet43,Ethernet44,Ethernet45,Ethernet46,Ethernet47,Ethernet48,Ethernet49,Ethernet50,Ethernet51,Ethernet52,Ethernet53,Ethernet54,Ethernet55,Ethernet56,Ethernet57,Ethernet58,Ethernet59,Ethernet60,Ethernet61,Ethernet62,Ethernet63": {
             "dscp_to_tc_map"  : "[DSCP_TO_TC_MAP|AZURE]",
             "tc_to_queue_map" : "[TC_TO_QUEUE_MAP|AZURE]",
@@ -127,11 +151,28 @@
         }
     },
     "WRED_PROFILE": {
+=======
+    },
+    "WRED_PROFILE": {
+        "AZURE_LOSSY" : {
+            "wred_green_enable":"true",
+            "wred_yellow_enable":"true",
+            "wred_red_enable":"true",
+            "ecn":"ecn_all",
+            "red_max_threshold":"613984",  
+            "red_min_threshold":"76608",
+            "yellow_max_threshold":"628320",
+            "yellow_min_threshold":"78400",
+            "green_max_threshold": "642656",
+            "green_min_threshold": "80192"
+        },
+>>>>>>> 5568712... add qos and buffer file for device and add sensor driver for 7116:device/accton/x86_64-accton_as7116_54x-r0/Accton-AS7116-54X/qos.json.j2
         "AZURE_LOSSLESS" : {
             "wred_green_enable":"true",
             "wred_yellow_enable":"true",
             "wred_red_enable":"true",
             "ecn":"ecn_all",
+<<<<<<< HEAD:device/dell/x86_64-dell_s6100_c2538-r0/Force10-S6100/qos.json
             "red_max_threshold":"312000",
             "red_min_threshold":"104000",
             "yellow_max_threshold":"312000",
@@ -159,5 +200,16 @@
         "Ethernet0,Ethernet1,Ethernet2,Ethernet3,Ethernet4,Ethernet5,Ethernet6,Ethernet7,Ethernet8,Ethernet9,Ethernet10,Ethernet11,Ethernet12,Ethernet13,Ethernet14,Ethernet15,Ethernet16,Ethernet17,Ethernet18,Ethernet19,Ethernet20,Ethernet21,Ethernet22,Ethernet23,Ethernet24,Ethernet25,Ethernet26,Ethernet27,Ethernet28,Ethernet29,Ethernet30,Ethernet31,Ethernet32,Ethernet33,Ethernet34,Ethernet35,Ethernet36,Ethernet37,Ethernet38,Ethernet39,Ethernet40,Ethernet41,Ethernet42,Ethernet43,Ethernet44,Ethernet45,Ethernet46,Ethernet47,Ethernet48,Ethernet49,Ethernet50,Ethernet51,Ethernet52,Ethernet53,Ethernet54,Ethernet55,Ethernet56,Ethernet57,Ethernet58,Ethernet59,Ethernet60,Ethernet61,Ethernet62,Ethernet63|1" : {
             "scheduler"     :   "[SCHEDULER|scheduler.2]"
         }
+=======
+            "red_max_threshold":"613984",  
+            "red_min_threshold":"76608",
+            "yellow_max_threshold":"628320",
+            "yellow_min_threshold":"78400",
+            "green_max_threshold": "642656",
+            "green_min_threshold": "80192"
+        }
+    },
+    "QUEUE": {
+>>>>>>> 5568712... add qos and buffer file for device and add sensor driver for 7116:device/accton/x86_64-accton_as7116_54x-r0/Accton-AS7116-54X/qos.json.j2
     }
 }
