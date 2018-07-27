@@ -226,7 +226,7 @@ RUN apt-get update && apt-get install -y \
         python3-docutils \
         python3-requests \
         python3-pytest \
-        python3-colorama
+        python3-colorama \
 # For bash
         texi2html
 
