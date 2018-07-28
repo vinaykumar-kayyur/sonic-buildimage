@@ -80,6 +80,3 @@
 [submodule "platform/p4/sonic-platform-modules-arista"]
 	path = platform/p4/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
-[submodule "platform/barefoot/sonic-platform-modules-ingrasys"]
-	path = platform/barefoot/sonic-platform-modules-ingrasys
-	url = https://github.com/Ingrasys-sonic/sonic-platform-modules-ingrasys-barefoot
