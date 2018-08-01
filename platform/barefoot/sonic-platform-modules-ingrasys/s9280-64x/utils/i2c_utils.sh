@@ -131,6 +131,7 @@ I2C_BUS_CPLD2=${NUM_MUX_9548_0_CH1}
 I2C_BUS_CPLD3=${NUM_MUX_9548_0_CH2}
 I2C_BUS_CPLD4=${NUM_MUX_9548_0_CH3}
 I2C_BUS_CPLD5=${NUM_MUX_9548_0_CH4}
+I2C_BUS_ROV=${NUM_MUX_9548_1_CH6}
 
 # I2C BUS path
 PATH_SYS_I2C_DEVICES="/sys/bus/i2c/devices"
@@ -230,6 +231,7 @@ I2C_ADDR_TMP75_BB=0x4A # on bmc board
 I2C_ADDR_QSFP_EEPROM=0x50
 I2C_ADDR_SFP_EEPROM=0x50
 I2C_ADDR_CPLD=0x33
+I2C_ADDR_ROV=0x76
 
 #sysfs
 PATH_SYSFS_PSU1="${PATH_SYS_I2C_DEVICES}/${I2C_BUS_PSU1_EEPROM}-$(printf "%04x" $I2C_ADDR_PSU1_EEPROM)"
@@ -271,6 +273,8 @@ MIN_SFP_PORT_NUM=1
 MAX_SFP_PORT_NUM=2
 
 # CPLD access
+# ROV status
+CPLD_ROV_STATUS_KEY=cpld_rov_status
 # port status
 CPLD_QSFP_STATUS_KEY=cpld_qsfp_port_status
 CPLD_SFP_STATUS_KEY=cpld_sfp_port_status
@@ -289,6 +293,10 @@ fp2led_array=( 1  2  5  6  9 10 13 14  1  2  5  6  9 10 13 14
                1  2  5  6  9 10 13 14  1  2  5  6  9 10 13 14
                3  4  7  8 11 12 15 16  3  4  7  8 11 12 15 16
                3  4  7  8 11 12 15 16  3  4  7  8 11 12 15 16)
+# vdd value for mac
+rov_val_array=( 0.85 0.82 0.77 0.87 0.74 0.84 0.79 0.89 )
+rov_reg_array=( 0x79 0x73 0x69 0x7D 0x63 0x77 0x6D 0x81 )
+
 # Help usage function
 function _help {
     echo "========================================================="
@@ -501,6 +509,9 @@ function _i2c_init {
     # clear port led
     _util_port_led_clear
 
+    # rov for mac init
+    _mac_vdd_init
+
     # trun on sys led
     echo "led_sys setup..."
     COLOR_LED="green"
@@ -509,6 +520,27 @@ function _i2c_init {
     _i2c_sys_led
 
     _config_rmem
+}
+
+function _mac_vdd_init {
+    # read mac vid register value from CPLD
+    cpld_index=1
+    _i2c_cpld_reg_read ${cpld_index} ${CPLD_ROV_STATUS_KEY}
+    # get vid form register value [0:2]
+    vid=$(($cpld_reg_val & 0x7))
+    # get rov val and reg according to vid
+    rov_val=${rov_val_array[$vid]}
+    rov_reg=${rov_reg_array[$vid]}
+    echo "vid=${vid}, rov_val=${rov_val}, rov_reg=${rov_reg}"
+
+    # write the rov reg to rov
+    i2cset -y -r ${I2C_BUS_ROV} ${I2C_ADDR_ROV} 0x21 ${rov_reg} w
+
+    if [ $? -eq 0 ]; then
+        echo "set ROV for mac vdd done"
+    else
+        echo "set ROV for mac vdd fail"
+    fi
 }
 
 #I2C Deinit
