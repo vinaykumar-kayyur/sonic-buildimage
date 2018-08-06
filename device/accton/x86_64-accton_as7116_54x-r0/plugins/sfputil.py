@@ -148,5 +148,3 @@ class SfpUtil(SfpUtilBase):
     @property 
     def port_to_eeprom_mapping(self):
          return self._port_to_eeprom_mapping
-
-
