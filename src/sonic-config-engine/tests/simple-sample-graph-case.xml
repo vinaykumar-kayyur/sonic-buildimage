@@ -181,7 +181,17 @@
     </DeviceDataPlaneInfo>
   </DpgDec>
   <PngDec>
-    <DeviceInterfaceLinks/>
+    <DeviceInterfaceLinks>
+      <DeviceLinkBase i:type="DeviceSerialLink">
+        <ElementType>DeviceSerialLink</ElementType>
+        <Bandwidth>9600</Bandwidth>
+        <EndDevice>switch-t0</EndDevice>
+        <EndPort>1</EndPort>
+        <FlowControl>true</FlowControl>
+        <StartDevice>managed_device</StartDevice>
+        <StartPort>console</StartPort>
+      </DeviceLinkBase>
+    </DeviceInterfaceLinks>
     <Devices>
       <Device i:type="ToRRouter">
         <Hostname>switch-t0</Hostname>
