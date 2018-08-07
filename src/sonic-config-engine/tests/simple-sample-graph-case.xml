@@ -190,6 +190,7 @@
         <FlowControl>true</FlowControl>
         <StartDevice>managed_device</StartDevice>
         <StartPort>console</StartPort>
+      </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
