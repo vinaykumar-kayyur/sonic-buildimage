@@ -94,7 +94,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "1")
 
-    def test_minigraph_deployment_id(self):
+    def test_minigraph_neighbor_metadata(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_NEIGHBOR_METADATA"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'switch-01t1': {'lo_addr': '10.1.0.186/32', 'mgmt_addr': '10.7.0.196/26', 'hwsku': 'Force10-S6000', 'type': 'LeafRouter', 'deployment_id': '2'}}")
