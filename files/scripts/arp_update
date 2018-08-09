@@ -11,17 +11,11 @@ while /bin/true; do
   # find L3 interfaces which are UP, send ipv6 multicast pings
   echo "{% for (name, prefix) in INTERFACE %} {{name}} {% endfor %}" > /tmp/intf_tmp.j2
   INTERFACE=`sonic-cfggen -d -t /tmp/intf_tmp.j2`
-  for intf in $INTERFACE; do
-      ping6cmd="ping6 -I $intf -n -q -i 0 -c 1 -W 0 ff02::1 >/dev/null"
-      intf_up=$(ip link show $intf | grep "state UP")
-      if [[ -n "$intf_up" ]]; then
-          eval $ping6cmd
-      fi
-  done
-
   echo "{% for (name, prefix) in PORTCHANNEL_INTERFACE %} {{name}} {% endfor %}" > /tmp/pc_intf_tmp.j2
   PC_INTERFACE=`sonic-cfggen -d -t /tmp/pc_intf_tmp.j2`
-  for intf in $PC_INTERFACE; do
+
+  ALL_INTERFACE="$INTERFACE $PC_INTERFACE"
+  for intf in $ALL_INTERFACE; do
       ping6cmd="ping6 -I $intf -n -q -i 0 -c 1 -W 0 ff02::1 >/dev/null"
       intf_up=$(ip link show $intf | grep "state UP")
       if [[ -n "$intf_up" ]]; then
