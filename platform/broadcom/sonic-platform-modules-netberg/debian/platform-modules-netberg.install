@@ -1,0 +1,2 @@
+netberg/cfg/netberg-modprobe.conf etc/modprobe.d
+netberg/cfg/netberg-modules-load.conf etc/modules-load.d
