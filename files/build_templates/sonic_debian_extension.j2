@@ -93,6 +93,11 @@ sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-sonic-utilities_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
+# Install customized bash version to patch memory-leak issue. This instruction shall be removed
+# once the migration to Debian-9 (Stretch) is completed.
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/bash_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
 # SONiC utilities installs bash-completion as a dependency. However, it is disabled by default
 # in bash.bashrc, so we copy a version of the file with it enabled here.
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
@@ -179,6 +184,7 @@ sudo cp $IMAGE_CONFIGS/asn/deployment_id_asn_map.yml $FILESYSTEM_ROOT/etc/sonic/
 
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
+sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
 
 # Copy control plane ACL management daemon files
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/system/
@@ -274,10 +280,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 
 # Copy systemd timer configuration
 # It implements delayed start of services
-sudo cp $BUILD_TEMPLATES/enable_counters.timer $FILESYSTEM_ROOT/etc/systemd/system/
-sudo cp $BUILD_TEMPLATES/enable_counters.service $FILESYSTEM_ROOT/etc/systemd/system/
 sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT/etc/systemd/system/
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable enable_counters.timer
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable snmp.timer
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get remove -y python-dev 
