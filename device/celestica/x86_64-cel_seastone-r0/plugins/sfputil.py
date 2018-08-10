@@ -13,12 +13,11 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 0
-    PORT_END = 31
+    PORT_START = 1
+    PORT_END = 32
     PORTS_IN_BLOCK = 32
 
     _port_to_eeprom_mapping = {}
-    qsfp_ports = range(0, PORTS_IN_BLOCK + 1)
 
     @property
     def port_start(self):
@@ -30,7 +29,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
+        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
 
     @property
     def port_to_eeprom_mapping(self):
@@ -41,7 +40,10 @@ class SfpUtil(SfpUtilBase):
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
 
         for x in range(self.PORT_START, self.PORT_END + 1):
-            self.port_to_eeprom_mapping[x] = eeprom_path.format( x + 26 )
+            if self.port_start == 1:
+                self.port_to_eeprom_mapping[x] = eeprom_path.format( (x-1) + 26 )
+            else:
+                self.port_to_eeprom_mapping[x] = eeprom_path.format( x + 26 )
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
@@ -60,8 +62,14 @@ class SfpUtil(SfpUtilBase):
         # content is a string containing the hex representation of the register
         reg_value = int(content, 16)
 
+	# Determind if port_num start from 1 or 0
+        if self.port_start == 1:
+            bit_index = port_num - 1
+        else:
+            bit_index = port_num
+	
         # Mask off the bit corresponding to our port
-        mask = (1 << port_num)
+        mask = (1 << bit_index)
 
         # ModPrsL is active low
         if reg_value & mask == 0:
@@ -85,6 +93,12 @@ class SfpUtil(SfpUtilBase):
         # content is a string containing the hex representation of the register
         reg_value = int(content, 16)
 
+        # Determind if port_num start from 1 or 0
+        if self.port_start == 1:
+            bit_index = port_num - 1
+        else:
+            bit_index = port_num
+
         # Mask off the bit corresponding to our port
         mask = (1 << port_num)
 
@@ -99,4 +113,3 @@ class SfpUtil(SfpUtilBase):
 
     def reset(self, port_num):
         raise NotImplementedError
-
