@@ -25,6 +25,8 @@ elif [ "$platform" == "centec" ]; then
     aligned_last_byte=$(python -c "print format(int(int('$last_byte', 16) + 1), '02x')")  # put mask and take away the 0x prefix
     ALIGNED_MAC_ADDRESS=$(python -c "print '$MAC_ADDRESS'[:-2] + '$aligned_last_byte'")          # put aligned byte into the end of MAC
     ORCHAGENT_ARGS+="-m $ALIGNED_MAC_ADDRESS"
+elif [ "$platform" == "barefoot" ]; then
+    ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}

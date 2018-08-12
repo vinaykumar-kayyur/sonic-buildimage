@@ -54,8 +54,21 @@ class AsicDbValidator(object):
         atbl = swsscommon.Table(self.adb, "ASIC_STATE:SAI_OBJECT_TYPE_ACL_TABLE")
         keys = atbl.getKeys()
 
-        assert len(keys) == 1
-        self.default_acl_table = keys[0]
+        assert len(keys) >= 1
+        # Filter out DTel Acl tables
+        default_table_found = False
+        for k in keys:
+            if default_table_found:
+                break
+            (status, fvs) = atbl.get(k)
+            for item in fvs:
+                if item[0] == "SAI_ACL_TABLE_ATTR_ACL_BIND_POINT_TYPE_LIST":
+                    if 'SAI_ACL_BIND_POINT_TYPE_PORT' in item[1]:
+                        self.default_acl_table = k
+                        default_table_found = True
+                        break
+                    else:
+                        break
 
         atbl = swsscommon.Table(self.adb, "ASIC_STATE:SAI_OBJECT_TYPE_ACL_ENTRY")
         keys = atbl.getKeys()
@@ -90,6 +103,11 @@ class VirtualServer(object):
 
     def __del__(self):
         if self.cleanup:
+            pids = subprocess.check_output("ip netns pids %s" % (self.nsname), shell=True)
+            if pids:
+                for pid in pids.split('\n'):
+                    if len(pid) > 0:
+                        os.system("kill %s" % int(pid))
             os.system("ip netns delete %s" % self.nsname)
 
     def runcmd(self, cmd):
@@ -220,6 +238,7 @@ class DockerVirtualSwitch(object):
         tar = tarfile.open(fileobj=tarstr, mode="w")
         tar.add(filename, os.path.basename(filename))
         tar.close()
+        self.ctn.exec_run("mkdir -p %s" % path)
         self.ctn.put_archive(path, tarstr.getvalue())
         tarstr.close()
 
