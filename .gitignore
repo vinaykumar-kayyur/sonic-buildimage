@@ -8,6 +8,7 @@ fs.*
 target/
 *.deb
 *.changes
+*.buildinfo
 
 # Subdirectories in src
 src/hiredis/*
@@ -28,6 +29,8 @@ src/lldpd/*
 !src/lldpd/patch/
 src/mpdecimal/*
 !src/mpdecimal/Makefile
+src/python-click/*
+!src/python-click/Makefile
 src/python3/*
 !src/python3/Makefile
 src/redis/*
