@@ -7,12 +7,21 @@ FAN2_RPM="/sys/bus/i2c/devices/0-002e/fan2_input"
 FAN_TRAY1_LED="/sys/devices/platform/delta-et6248brb-gpio.0/FAN/fan1_led_ag"
 FAN_TRAY2_LED="/sys/devices/platform/delta-et6248brb-gpio.0/FAN/fan2_led_ag"
 
-SYS_LED_G="/sys/class/gpio/gpio197/value"
-SYS_LED_R="/sys/class/gpio/gpio198/value"
-PWR_LED_G="/sys/class/gpio/gpio199/value"
-PWR_LED_R="/sys/class/gpio/gpio233/value"
-FAN_LED_G="/sys/class/gpio/gpio229/value"
-FAN_LED_R="/sys/class/gpio/gpio238/value"
+if [ `uname -a | awk '{print $3}'` = "4.9.0-5-amd64" ]; then
+    SYS_LED_G="/sys/class/gpio/gpio453/value"
+    SYS_LED_R="/sys/class/gpio/gpio454/value"
+    PWR_LED_G="/sys/class/gpio/gpio455/value"
+    PWR_LED_R="/sys/class/gpio/gpio489/value"
+    FAN_LED_G="/sys/class/gpio/gpio485/value"
+    FAN_LED_R="/sys/class/gpio/gpio494/value"
+else
+    SYS_LED_G="/sys/class/gpio/gpio197/value"
+    SYS_LED_R="/sys/class/gpio/gpio198/value"
+    PWR_LED_G="/sys/class/gpio/gpio199/value"
+    PWR_LED_R="/sys/class/gpio/gpio233/value"
+    FAN_LED_G="/sys/class/gpio/gpio229/value"
+    FAN_LED_R="/sys/class/gpio/gpio238/value"
+fi
 
 PSU1_EEPROM="-y 2 0x50 0x00"
 PSU2_EEPROM="-y 3 0x51 0x00"

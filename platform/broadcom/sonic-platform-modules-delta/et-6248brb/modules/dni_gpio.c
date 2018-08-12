@@ -20,6 +20,12 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
+#else // #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+#include <linux/ioport.h>
+#endif // #if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
+
 #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/gpio.h>
@@ -177,6 +183,14 @@ static bool ichx_gpio_check_available(struct gpio_chip *gpio, unsigned nr)
 	return !!(ichx_priv.use_gpio & (1 << (nr / 32)));
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
+#else // #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+static int ichx_gpio_get_direction(struct gpio_chip *gpio, unsigned nr)
+{
+        return ichx_read_bit(GPIO_IO_SEL, nr) ? GPIOF_DIR_IN : GPIOF_DIR_OUT;
+}
+#endif // #if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
+
 static int ichx_gpio_direction_input(struct gpio_chip *gpio, unsigned nr)
 {
 	/*
@@ -281,7 +295,13 @@ static void ichx_gpiolib_setup(struct gpio_chip *chip)
 {
 	chip->owner = THIS_MODULE;
 	chip->label = DRV_NAME;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
 	chip->dev = &ichx_priv.dev->dev;
+#else // #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+        chip->parent = &ichx_priv.dev->dev;
+        chip->get_direction = ichx_gpio_get_direction;
+#endif // #if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
 
 	/* Allow chip-specific overrides of request()/get() */
 	chip->request = ichx_priv.desc->request ?
@@ -382,6 +402,7 @@ static struct ichx_desc avoton_desc = {
 	.use_outlvl_cache = true,
 };
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
 static int ichx_gpio_request_regions(struct resource *res_base,
 						const char *name, u8 use_gpio)
 {
@@ -539,9 +560,129 @@ static int ichx_gpio_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#else // #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+static int ichx_gpio_request_regions(struct device *dev,
+        struct resource *res_base, const char *name, u8 use_gpio)
+{
+        int i;
+
+        if (!res_base || !res_base->start || !res_base->end)
+                return -ENODEV;
+
+        for (i = 0; i < ARRAY_SIZE(ichx_priv.desc->regs[0]); i++) {
+                if (!(use_gpio & (1 << i)))
+                        continue;
+                if (!devm_request_region(dev,
+                                res_base->start + ichx_priv.desc->regs[0][i],
+                                ichx_priv.desc->reglen[i], name))
+                        return -EBUSY;
+        }
+        return 0;
+}
+
+static int ichx_gpio_probe(struct platform_device *pdev)
+{
+        struct resource *res_base, *res_pm;
+        int err;
+        struct lpc_ich_info *ich_info = dev_get_platdata(&pdev->dev);
+
+        if (!ich_info)
+                return -ENODEV;
+
+        ichx_priv.dev = pdev;
+
+        switch (ich_info->gpio_version) {
+        case ICH_I3100_GPIO:
+                ichx_priv.desc = &i3100_desc;
+                break;
+        case ICH_V5_GPIO:
+                ichx_priv.desc = &intel5_desc;
+                break;
+        case ICH_V6_GPIO:
+                ichx_priv.desc = &ich6_desc;
+                break;
+        case ICH_V7_GPIO:
+                ichx_priv.desc = &ich7_desc;
+                break;
+        case ICH_V9_GPIO:
+                ichx_priv.desc = &ich9_desc;
+                break;
+        case ICH_V10CORP_GPIO:
+                ichx_priv.desc = &ich10_corp_desc;
+                break;
+        case ICH_V10CONS_GPIO:
+                ichx_priv.desc = &ich10_cons_desc;
+                break;
+        case AVOTON_GPIO:
+                ichx_priv.desc = &avoton_desc;
+                ichx_priv.outlvl_cache[0] = 0x06; /*core output values*/
+                ichx_priv.outlvl_cache[1] = 0x7c0008; /*sus output values*/
+                ichx_priv.outlvl_cache[2] = 0x0; /*no used*/
+                break;
+        default:
+                return -ENODEV;
+        }
+
+        spin_lock_init(&ichx_priv.lock);
+        res_base = platform_get_resource(pdev, IORESOURCE_IO, ICH_RES_GPIO);
+        ichx_priv.use_gpio = ich_info->use_gpio;
+        err = ichx_gpio_request_regions(&pdev->dev, res_base, pdev->name,
+                                        ichx_priv.use_gpio);
+        if (err)
+                return err;
+
+        ichx_priv.gpio_base = res_base;
+
+        /*
+         * If necessary, determine the I/O address of ACPI/power management
+         * registers which are needed to read the the GPE0 register for GPI pins
+         * 0 - 15 on some chipsets.
+         */
+        if (!ichx_priv.desc->uses_gpe0)
+                goto init;
+
+        res_pm = platform_get_resource(pdev, IORESOURCE_IO, ICH_RES_GPE0);
+        if (!res_pm) {
+                pr_warn("ACPI BAR is unavailable, GPI 0 - 15 unavailable\n");
+                goto init;
+        }
+
+        if (!devm_request_region(&pdev->dev, res_pm->start,
+                        resource_size(res_pm), pdev->name)) {
+                pr_warn("ACPI BAR is busy, GPI 0 - 15 unavailable\n");
+                goto init;
+        }
+
+        ichx_priv.pm_base = res_pm;
+
+init:
+        ichx_gpiolib_setup(&ichx_priv.chip);
+        err = gpiochip_add_data(&ichx_priv.chip, NULL);
+        if (err) {
+                pr_err("Failed to register GPIOs\n");
+                return err;
+        }
+
+        pr_info("GPIO from %d to %d on %s\n", ichx_priv.chip.base,
+               ichx_priv.chip.base + ichx_priv.chip.ngpio - 1, DRV_NAME);
+
+        return 0;
+}
+
+static int ichx_gpio_remove(struct platform_device *pdev)
+{
+        gpiochip_remove(&ichx_priv.chip);
+
+        return 0;
+}
+#endif // #if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
+
 static struct platform_driver ichx_gpio_driver = {
 	.driver		= {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
 		.owner	= THIS_MODULE,
+#else // #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+#endif // #if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
 		.name	= DRV_NAME,
 	},
 	.probe		= ichx_gpio_probe,
