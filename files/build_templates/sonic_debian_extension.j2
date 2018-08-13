@@ -42,7 +42,9 @@ clean_sys() {
 trap_push clean_sys
 sudo LANG=C chroot $FILESYSTEM_ROOT mount sysfs /sys -t sysfs
 
+sudo bash -c "echo \"DOCKER_OPTS=\"--storage-driver=overlay\"\" >> $FILESYSTEM_ROOT/etc/default/docker"
 sudo chroot $FILESYSTEM_ROOT service docker start
+sudo chroot $FILESYSTEM_ROOT docker info
 
 # Apply apt configuration files
 sudo cp $IMAGE_CONFIGS/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
@@ -58,6 +60,7 @@ sudo cp $IMAGE_CONFIGS/environment/motd $FILESYSTEM_ROOT/etc/
 
 # Create all needed directories
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic/
+sudo mkdir -p $FILESYSTEM_ROOT/var/cache/sonic/
 sudo mkdir -p $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
 # Install dependencies for SONiC config engine 
@@ -89,6 +92,12 @@ sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 
+# Install built Python Click package (and its dependencies via 'apt-get -y install -f')
+# Do this before installing sonic-utilities so that it doesn't attempt to install
+# an older version as part of its dependencies
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-click*_all.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
 # Install SONiC Utilities (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/python-sonic-utilities_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
@@ -102,9 +111,12 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # Install pam-tacplus and nss-tacplus
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libtac2_*.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libpam-tacplus_*.deb
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libnss-tacplus_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libtac2_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libpam-tacplus_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libnss-tacplus_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 # Disable tacplus by default
 sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
 sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
@@ -155,7 +167,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable hostname-config.service
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy updategraph script and service file
-sudo cp $IMAGE_CONFIGS/updategraph/updategraph.service  $FILESYSTEM_ROOT/etc/systemd/system/
+j2 files/build_templates/updategraph.service.j2 | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/updategraph.service
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable updategraph.service
 sudo cp $IMAGE_CONFIGS/updategraph/updategraph $FILESYSTEM_ROOT/usr/bin/
 {% if enable_dhcp_graph_service == "y" %}
@@ -179,6 +191,7 @@ sudo cp $IMAGE_CONFIGS/asn/deployment_id_asn_map.yml $FILESYSTEM_ROOT/etc/sonic/
 
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
+sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
 
 # Copy control plane ACL management daemon files
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/system/
@@ -246,7 +259,10 @@ sudo cp $IMAGE_CONFIGS/ssh/sshd-config-updater $FILESYSTEM_ROOT/usr/bin/
 sudo chmod +x $FILESYSTEM_ROOT/usr/bin/sshd-config-updater
 sudo cp $IMAGE_CONFIGS/ssh/sshd-clear-denied-sessions $FILESYSTEM_ROOT/usr/bin
 sudo chmod +x $FILESYSTEM_ROOT/usr/bin/sshd-clear-denied-sessions
-sudo cp src/libwrap/tcp-wrappers-7.6.q/tcpdmatch $FILESYSTEM_ROOT/usr/bin
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libwrap0_*_amd64.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/tcpd_*_amd64.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
@@ -271,6 +287,11 @@ fi
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
+
+# Copy systemd timer configuration
+# It implements delayed start of services
+sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable snmp.timer
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get remove -y python-dev 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y

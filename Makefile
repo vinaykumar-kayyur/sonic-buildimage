@@ -15,7 +15,8 @@
 #  * PASSWORD: Desired password -- default at rules/config
 #  * KEEP_SLAVE_ON: Keeps slave container up after building-process concludes.
 #  * SOURCE_FOLDER: host path to be mount as /var/$(USER)/src, only effective when KEEP_SLAVE_ON=yes
-#  * SONIC_BUILD_JOB: Specifying number of concurrent build job(s) to run
+#  * SONIC_BUILD_JOBS: Specifying number of concurrent build job(s) to run
+#  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
 #
 ###############################################################################
 
@@ -29,11 +30,21 @@ $(shell rm -f .screen)
 
 MAKEFLAGS += -B
 
+ifeq ($(BLDENV), stretch)
+SLAVE_BASE_TAG = $(shell sha1sum sonic-slave-stretch/Dockerfile | awk '{print substr($$1,0,11);}')
+SLAVE_TAG = $(shell cat sonic-slave-stretch/Dockerfile.user sonic-slave-stretch/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
+SLAVE_BASE_IMAGE = sonic-slave-stretch-base
+SLAVE_IMAGE = sonic-slave-stretch-$(USER)
+SLAVE_DIR = sonic-slave-stretch
+else
 SLAVE_BASE_TAG = $(shell sha1sum sonic-slave/Dockerfile | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat sonic-slave/Dockerfile.user sonic-slave/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
 SLAVE_BASE_IMAGE = sonic-slave-base
 SLAVE_IMAGE = sonic-slave-$(USER)
+SLAVE_DIR = sonic-slave
+endif
 
+INSMOD_OVERLAY := sudo modprobe overlay
 DOCKER_RUN := docker run --rm=true --privileged \
     -v $(PWD):/sonic \
     -w /sonic \
@@ -45,7 +56,7 @@ DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE) \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
-		    sonic-slave && \
+		    $(SLAVE_DIR) && \
 		    docker tag $(SLAVE_BASE_IMAGE):latest $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
 
 DOCKER_BUILD = docker build --no-cache \
@@ -54,8 +65,8 @@ DOCKER_BUILD = docker build --no-cache \
 	       --build-arg guid=$(shell id -g) \
 	       --build-arg hostname=$(shell echo $$HOSTNAME) \
 	       -t $(SLAVE_IMAGE) \
-	       -f sonic-slave/Dockerfile.user \
-	       sonic-slave && \
+	       -f $(SLAVE_DIR)/Dockerfile.user \
+	       $(SLAVE_DIR) && \
 	       docker tag $(SLAVE_IMAGE):latest $(SLAVE_IMAGE):$(SLAVE_TAG)
 
 SONIC_BUILD_INSTRUCTION :=  make \
@@ -69,9 +80,10 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
+                           KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
-                           ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY)
+                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 
@@ -84,6 +96,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 	@docker inspect --type image $(SLAVE_IMAGE):$(SLAVE_TAG) &> /dev/null || \
 	    { echo Image $(SLAVE_IMAGE):$(SLAVE_TAG) not found. Building... ; \
 	    $(DOCKER_BUILD) ; }
+	@$(INSMOD_OVERLAY)
 ifeq "$(KEEP_SLAVE_ON)" "yes"
     ifdef SOURCE_FOLDER
 		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/$(USER)/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
@@ -105,7 +118,12 @@ sonic-slave-bash :
 	@docker inspect --type image $(SLAVE_IMAGE):$(SLAVE_TAG) &> /dev/null || \
 	    { echo Image $(SLAVE_IMAGE):$(SLAVE_TAG) not found. Building... ; \
 	    $(DOCKER_BUILD) ; }
+	@$(INSMOD_OVERLAY)
 	@$(DOCKER_RUN) -t $(SLAVE_IMAGE):$(SLAVE_TAG) bash
+
+showtag:
+	@echo $(SLAVE_IMAGE):$(SLAVE_TAG)
+	@echo $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
 
 init :
 	@git submodule update --init --recursive
