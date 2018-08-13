@@ -6,7 +6,7 @@ RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contr
         echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb http://debian-archive.trafficmanager.net/debian jessie-backports main' >> /etc/apt/sources.list
+        echo "deb http://debian-archive.trafficmanager.net/debian/ jessie-backports main contrib non-free" >> /etc/apt/sources.list
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -114,6 +114,11 @@ RUN apt-get update && apt-get install -y \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
+# For BFN sdk build
+        libusb-1.0-0-dev \
+        libcurl3-nss-dev \
+        libunwind8-dev \
+        telnet \
 # For build image
         cpio \
         squashfs-tools \
@@ -193,8 +198,6 @@ RUN apt-get update && apt-get install -y \
         python-netaddr \
         python-ipaddr \
         python-yaml \
-# For sonic utilities
-        python3-netaddr \
 # For lockfile
         procmail \
 # For gtest
@@ -213,7 +216,21 @@ RUN apt-get update && apt-get install -y \
         linuxdoc-tools \
         lynx \
         texlive-latex-extra \
-        texlive-latex-recommended
+        texlive-latex-recommended \
+# For python-click build
+        python-sphinx \
+        python-docutils \
+        python3-all \
+        python3-setuptools \
+        python3-sphinx \
+        python3-docutils \
+        python3-requests \
+        python3-pytest \
+        python3-colorama \
+# For bash
+        texi2html \
+# For initramfs
+        bash-completion
 
 # For linux build
 RUN apt-get -y build-dep linux
