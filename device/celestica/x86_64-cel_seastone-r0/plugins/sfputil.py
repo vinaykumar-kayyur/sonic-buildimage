@@ -41,7 +41,8 @@ class SfpUtil(SfpUtilBase):
 
         for x in range(self.PORT_START, self.PORT_END + 1):
             if self.port_start == 1:
-                self.port_to_eeprom_mapping[x] = eeprom_path.format((x - 1) + 26)
+                self.port_to_eeprom_mapping[
+                    x] = eeprom_path.format((x - 1) + 26)
             else:
                 self.port_to_eeprom_mapping[x] = eeprom_path.format(x + 26)
         SfpUtilBase.__init__(self)
@@ -203,3 +204,6 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
+
+    def get_transceiver_change_event(self, timeout=0):
+        raise NotImplementedError
