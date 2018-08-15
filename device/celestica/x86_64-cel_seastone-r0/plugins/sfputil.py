@@ -41,8 +41,7 @@ class SfpUtil(SfpUtilBase):
 
         for x in range(self.PORT_START, self.PORT_END + 1):
             if self.port_start == 1:
-                self.port_to_eeprom_mapping[
-                    x] = eeprom_path.format((x - 1) + 26)
+                self.port_to_eeprom_mapping[x] = eeprom_path.format((x - 1) + 26)
             else:
                 self.port_to_eeprom_mapping[x] = eeprom_path.format(x + 26)
         SfpUtilBase.__init__(self)
@@ -53,8 +52,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         try:
-            reg_file = open(
-                "/sys/devices/platform/dx010_cpld/qsfp_modprs", "r")
+            reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_modprs", "r")
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
@@ -85,8 +83,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         try:
-            reg_file = open(
-                "/sys/devices/platform/dx010_cpld/qsfp_lpmode", "r")
+            reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_lpmode", "r")
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
@@ -117,8 +114,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         try:
-            reg_file = open(
-                "/sys/devices/platform/dx010_cpld/qsfp_lpmode", "r+")
+            reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_lpmode", "r+")
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
@@ -158,8 +154,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         try:
-            reg_file = open(
-                "/sys/devices/platform/dx010_cpld/qsfp_reset", "r+")
+            reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_reset", "r+")
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
