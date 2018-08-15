@@ -1,6 +1,6 @@
 # bcm56340 setting :
 # Specifies the base port and phy index of a multi slice phy chip.
-#phy_port_primary_and_offset_<port>=0xPPOO 0xPP=primary port number 0xOO=offset of the slice
+#phy_port_primary_and_offset_<port> value is 0xPPOO 0xPP is primary port number 0xOO is offset of the slice
 # bcm56340 QG0 port setting
 phy_port_primary_and_offset_1=0x0100
 phy_port_primary_and_offset_2=0x0101
@@ -149,7 +149,7 @@ port_phy_addr_53=0x43
 
 # Fiber prefer setting for bcm54285
 phy_automedium=1
-#phy_fiber_pref=1
+#phy_fiber_pref value is 1
 phy_ext_rom_boot=0
 phy_sgmii_autoneg_ge=1
 
