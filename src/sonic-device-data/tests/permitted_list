@@ -108,6 +108,7 @@ schan_timeout_usec
 serdes_automed
 serdes_automedium
 serdes_driver_current
+serdes_post2_driver_current
 serdes_fiber_pref
 serdes_firmware_mode
 serdes_if_type
