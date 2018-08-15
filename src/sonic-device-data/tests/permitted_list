@@ -108,6 +108,7 @@ schan_timeout_usec
 serdes_automed
 serdes_automedium
 serdes_driver_current
+serdes_post2_driver_current
 serdes_fiber_pref
 serdes_firmware_mode
 serdes_if_type
@@ -132,3 +133,10 @@ xgxs_lcpll_xtal_refclk
 xgxs_pdetect_1
 xgxs_rx_lane_map
 xgxs_tx_lane_map
+cancun_dir
+led_fw_dir
+ifp_inports_support_enable
+pdma_dv_free_count
+pdma_dv_free_size
+pdma_descriptor_prefetch_enable
+port_flex_enable
