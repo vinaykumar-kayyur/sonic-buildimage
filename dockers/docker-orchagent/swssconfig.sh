@@ -41,6 +41,18 @@ fast_reboot
 
 HWSKU=`sonic-cfggen -d -v "DEVICE_METADATA['localhost']['hwsku']"`
 
+# Don't load json config if system warm start or
+# swss docker warm start is enabled, the data already exists in appDB.
+WARM_START=`redis-cli -n 4 hget "WARM_RESTART|system" enable`
+if [ "$WARM_START" == "true" ]; then
+  exit 0
+fi
+
+WARM_START=`redis-cli -n 4 hget "WARM_RESTART|swss" enable`
+if [ "$WARM_START" == "true" ]; then
+  exit 0
+fi
+
 SWSSCONFIG_ARGS="00-copp.config.json ipinip.json ports.json switch.json "
 
 for file in $SWSSCONFIG_ARGS; do
