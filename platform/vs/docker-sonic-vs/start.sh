@@ -1,5 +1,13 @@
 #!/bin/bash -e
 
+# Set correct platform string
+
+HWSKU=$(sonic-cfggen -m -v DEVICE_METADATA.localhost.hwsku)
+platform=$(find /usr/share/sonic/device -name $HWSKU | sed 's/.*\(x86.*\)\/.*/\1/')
+
+mkdir -p /host
+echo "onie_platform=$platform" > /host/machine.conf
+
 # generate configuration
 
 [ -d /etc/sonic ] || mkdir -p /etc/sonic
