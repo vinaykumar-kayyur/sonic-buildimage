@@ -37,3 +37,5 @@ if [ -r ${PLATFORM_DIR}/led_proc_init.soc ]; then
     sleep 60 # wait until bcm sdk is ready to get a request
     supervisorctl start ledinit
 fi
+
+exit 0
