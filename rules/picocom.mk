@@ -1,0 +1,9 @@
+# picocom packages
+
+PICOCOM_VERSION = 3.1-2
+
+export PICOCOM_VERSION
+
+PICOCOM = picocom_$(PICOCOM_VERSION)_amd64.deb
+$(PICOCOM)_SRC_PATH = $(SRC_PATH)/picocom
+SONIC_MAKE_DEBS += $(PICOCOM)
