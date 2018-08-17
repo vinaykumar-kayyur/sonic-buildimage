@@ -18,6 +18,7 @@ start)
         depmod -a
         modprobe i2c-dev
         modprobe i2c-mux-pca954x
+	modprobe smc
 
         (cd /usr/local/etc && ./lpc_cpld_x64_64 blu w 0x222 0x1f)
         
