@@ -82,6 +82,9 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin"]
 
+COPY ["../../../dockers/docker-teamd/teamd.sh", "/usr/bin/"]
+COPY ["../../../dockers/docker-teamd/teamd.j2", "/usr/share/sonic/templates/"]
+
 RUN echo "docker-sonic-vs" > /etc/hostname
 RUN touch /etc/quagga/zebra.conf
 
