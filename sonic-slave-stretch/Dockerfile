@@ -6,7 +6,7 @@ RUN echo "deb http://debian-archive.trafficmanager.net/debian/ stretch main cont
         echo "deb-src http://debian-archive.trafficmanager.net/debian/ stretch main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb http://debian-archive.trafficmanager.net/debian-security/ stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb http://debian-archive.trafficmanager.net/debian stretch-backports main' >> /etc/apt/sources.list
+        echo "deb http://debian-archive.trafficmanager.net/debian stretch-backports main" >> /etc/apt/sources.list
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive

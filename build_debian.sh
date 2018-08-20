@@ -30,7 +30,7 @@ set -x -e
 
 ## docker engine version (with platform)
 DOCKER_VERSION=1.11.1-0~stretch_amd64
-LINUX_KERNEL_VERSION=4.9.0-5
+LINUX_KERNEL_VERSION=4.9.0-7
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -227,7 +227,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     hping3                  \
     python-scapy            \
     tcptraceroute           \
-    mtr-tiny                \
+    mtr-tiny
+
+# Install certain fundamental packages from stretch-backports in order to get
+# more up-to-date (but potentially less stable) versions
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t stretch-backports install \
     picocom
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
