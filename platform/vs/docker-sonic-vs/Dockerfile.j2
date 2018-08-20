@@ -82,6 +82,7 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin"]
 
+COPY ["files/image_config/asn/deployment_id_asn_map.yml", "/etc/sonic/"]
 COPY ["../../../dockers/docker-teamd/teamd.sh", "/usr/bin/"]
 COPY ["../../../dockers/docker-teamd/teamd.j2", "/usr/share/sonic/templates/"]
 
