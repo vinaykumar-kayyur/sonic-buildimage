@@ -62,6 +62,8 @@ supervisorctl start teamsyncd
 # started by quagga below
 # supervisorctl start fpmsyncd
 
+supervisorctl start portmgrd
+
 supervisorctl start intfmgrd
 
 supervisorctl start vlanmgrd
