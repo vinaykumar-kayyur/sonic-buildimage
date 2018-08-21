@@ -36,6 +36,15 @@ supervisorctl start redis-server
 
 /usr/bin/configdb-load.sh
 
+# from interfaces-config.sh
+# not adding usb0 interface for bfn platform
+ifdown --force eth0
+sonic-cfggen -d -t /usr/share/sonic/templates/interfaces.j2 > /etc/network/interfaces
+[ -f /var/run/dhclient.eth0.pid ] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
+service networking restart
+ifdown lo && ifup lo
+#
+
 supervisorctl start syncd
 
 supervisorctl start orchagent
@@ -105,4 +114,4 @@ echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
 #supervisorctl start rsyslogd
 
 supervisorctl start teamd
-
+#
