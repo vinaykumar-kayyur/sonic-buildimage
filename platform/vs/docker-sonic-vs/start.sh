@@ -38,6 +38,8 @@ supervisorctl start redis-server
 
 # from interfaces-config.sh
 # not adding usb0 interface for bfn platform
+# to add support for ipv6
+sysctl -w net.ipv6.conf.all.disable_ipv6=0
 ifdown --force eth0
 sonic-cfggen -d -t /usr/share/sonic/templates/interfaces.j2 > /etc/network/interfaces
 [ -f /var/run/dhclient.eth0.pid ] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
@@ -57,13 +59,15 @@ supervisorctl start neighsyncd
 
 supervisorctl start teamsyncd
 
-supervisorctl start fpmsyncd
+# started by quagga below
+# supervisorctl start fpmsyncd
 
 supervisorctl start intfmgrd
 
 supervisorctl start vlanmgrd
 
-supervisorctl start zebra
+# started by quagga below
+# supervisorctl start zebra
 
 supervisorctl start buffermgrd
 
@@ -115,3 +119,35 @@ echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
 
 supervisorctl start teamd
 #
+
+# from quagga start.sh
+mkdir -p /etc/quagga
+sonic-cfggen -d -y /etc/sonic/deployment_id_asn_map.yml -t /usr/share/sonic/templates/bgpd.conf.j2 > /etc/quagga/bgpd.conf
+sonic-cfggen -d -t /usr/share/sonic/templates/zebra.conf.j2 > /etc/quagga/zebra.conf
+
+sonic-cfggen -d -t /usr/share/sonic/templates/isolate.j2 > /usr/sbin/bgp-isolate
+chown root:root /usr/sbin/bgp-isolate
+chmod 0755 /usr/sbin/bgp-isolate
+
+sonic-cfggen -d -t /usr/share/sonic/templates/unisolate.j2 > /usr/sbin/bgp-unisolate
+chown root:root /usr/sbin/bgp-unisolate
+chmod 0755 /usr/sbin/bgp-unisolate
+
+mkdir -p /var/sonic
+echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
+
+# rm -f /var/run/rsyslogd.pid
+
+supervisorctl start bgpcfgd
+
+# started already
+# supervisorctl start rsyslogd
+
+# Start Quagga processes
+
+supervisorctl start zebra
+
+supervisorctl start bgpd
+
+supervisorctl start fpmsyncd
+
