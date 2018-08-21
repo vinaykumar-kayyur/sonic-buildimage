@@ -1,5 +1,6 @@
 core_clock_frequency=1700
 dport_map_enable=1
+bcm_tunnel_term_compatible_mode=1
 dport_map_port_102=31
 dport_map_port_103=32
 dport_map_port_104=64

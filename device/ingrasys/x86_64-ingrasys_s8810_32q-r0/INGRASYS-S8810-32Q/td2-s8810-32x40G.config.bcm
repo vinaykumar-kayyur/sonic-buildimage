@@ -1,5 +1,6 @@
 #2017/09/12
 os=unix
+bcm_tunnel_term_compatible_mode=1
 
 module_64ports=0
 scache_filename=/tmp/scache

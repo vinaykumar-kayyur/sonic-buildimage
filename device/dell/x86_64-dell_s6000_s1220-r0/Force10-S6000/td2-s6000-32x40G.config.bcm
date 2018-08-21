@@ -1,5 +1,6 @@
 # Old LPM only configuration
 # l2_mem_entries=163840
+bcm_tunnel_term_compatible_mode=1
 # l3_mem_entries=90112
 # l3_alpm_enable=0
 # ipv6_lpm_128b_enable=0

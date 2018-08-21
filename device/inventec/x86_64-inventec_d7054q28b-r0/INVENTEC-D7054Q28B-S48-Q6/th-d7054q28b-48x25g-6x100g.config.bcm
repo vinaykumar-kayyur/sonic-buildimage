@@ -1,5 +1,6 @@
 # Cypress BCM Shell config / 25G * 48 ports; 100G * 6 ports
 
+bcm_tunnel_term_compatible_mode=1
 # Define default OS / SAL
 os=unix
 

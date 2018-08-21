@@ -1,5 +1,6 @@
 # Arista 7060CX-32S
 
+bcm_tunnel_term_compatible_mode=1
 phy_an_allow_pll_change=1
 arl_clean_timeout_usec=15000000
 asf_mem_profile=2

@@ -1,5 +1,6 @@
 # Sequoia BCM Shell config / 100G * 64 ports
 
+bcm_tunnel_term_compatible_mode=1
 core_clock_frequency=1700
 dpp_clock_ratio=2:3
 load_firmware=1

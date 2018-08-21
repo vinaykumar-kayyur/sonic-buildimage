@@ -1,5 +1,6 @@
 #/******************************************************************************
 # *
+bcm_tunnel_term_compatible_mode=1
 # *      File:   config.bcm.clearlake (7050-QX32S)
 # *      Name:
 # *

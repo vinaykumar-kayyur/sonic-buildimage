@@ -1,5 +1,6 @@
 os=unix
 schan_intr_enable=0
+bcm_tunnel_term_compatible_mode=1
 l2_mem_entries=40960
 l2xmsg_mode=1
 l3_mem_entries=40960

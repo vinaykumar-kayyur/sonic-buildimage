@@ -1,5 +1,6 @@
 #TH2 Z9264F 64x100G
 os=unix
+bcm_tunnel_term_compatible_mode=1
 core_clock_frequency=1700
 dpp_clock_ratio=2:3
 pbmp_xport_xe=0x3FFFD0000FFFF40003FFFC0001FFFE

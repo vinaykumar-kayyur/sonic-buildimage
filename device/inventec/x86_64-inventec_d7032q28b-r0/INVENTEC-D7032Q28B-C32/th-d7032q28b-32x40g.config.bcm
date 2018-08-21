@@ -1,5 +1,6 @@
 # Redwood BCM Shell config / all 100G 32 ports
 
+bcm_tunnel_term_compatible_mode=1
 # Define default OS / SAL
 os=unix
 

@@ -1,5 +1,6 @@
 ctr_evict_enable=0x0
 l2_mem_entries=0x8000
+bcm_tunnel_term_compatible_mode=1
 l3_intf_vlan_split_egress=0x1
 l3_mem_entries=0x4000
 mdio_output_delay=0xb

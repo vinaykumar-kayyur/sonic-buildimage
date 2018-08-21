@@ -1,5 +1,6 @@
 #TH Z9100 32x100
 l3_alpm_enable=2
+bcm_tunnel_term_compatible_mode=1
 bcm_num_cos=8
 switch_bypass_mode=0
 mmu_lossless=0

@@ -1,5 +1,6 @@
 os=unix
 bcm_stat_flags=0
+bcm_tunnel_term_compatible_mode=1
 parity_enable=0
 parity_correction=0
 

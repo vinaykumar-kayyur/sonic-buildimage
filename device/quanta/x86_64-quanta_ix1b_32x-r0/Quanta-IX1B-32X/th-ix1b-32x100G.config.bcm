@@ -1,5 +1,6 @@
 os=unix
 
+bcm_tunnel_term_compatible_mode=1
 pbmp_xport_xe=0x3fd000000ff4000003fc000001fe
 pbmp_oversubscribe=0x3fd000000ff4000003fc000001fe
 l2xmsg_mode=1
