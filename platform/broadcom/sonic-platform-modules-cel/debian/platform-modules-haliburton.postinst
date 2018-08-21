@@ -1,1 +1,3 @@
 chmod +x /usr/local/etc/lpc_cpld_x64_64
+systemctl enable platform-modules-haliburton.service
+systemctl start platform-modules-haliburton.service
