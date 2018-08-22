@@ -1,5 +1,5 @@
 /*
- * dx010-fan-led.c - Kernel module for Seastone DX010 fan LEDs
+ * dx010-gpio.c - Kernel module for Seastone DX010 gpios.
  *
  * Copyright (C) 2018 Celestica Corp.
  *
@@ -19,13 +19,12 @@
  */
 
 #include <linux/module.h>
-#include <linux/workqueue.h>
 #include <linux/gpio.h>
 #include <linux/kernel.h>
 #include <linux/err.h>
 #include <linux/printk.h>
 
-#define MODULE_NAME "dx010-fan-led"
+#define MODULE_NAME "dx010-gpio"
 
 #define NUM_FAN 5
 #define NUM_PSU 2
@@ -46,9 +45,6 @@ struct psu_gpio {
     unsigned char powerok_pin;
 };
 
-static int count;
-static struct workqueue_struct *dx010_fan_led_workqueue;
-static struct delayed_work fan_update;
 static struct gpio_chip *gc;
 static struct fan_gpio fan_gpios[NUM_FAN] = {
   {.presence_pin = 10,
@@ -100,6 +96,9 @@ static void init_fan_gpio(void){
     gpio_direction_input(gc->base+fan_gpios[index].presence_pin);
     gpio_direction_output(gc->base+fan_gpios[index].red_led_pin, 1);
     gpio_direction_output(gc->base+fan_gpios[index].yel_led_pin, 0);
+    gpio_export(gc->base+fan_gpios[index].presence_pin,0);
+    gpio_export(gc->base+fan_gpios[index].red_led_pin,0);
+    gpio_export(gc->base+fan_gpios[index].yel_led_pin,0);
   }
 }
 
@@ -115,51 +114,12 @@ static void init_psu_gpio(void){
   }
 }
 
-static void update_led(void){
-  int index;
-  int presence;
-  int delay_ms;
-  struct gpio_chip *find;
-
-  /* Check for gpio chip exist every CHECK_MS */
-  if(count <= 0){
-    find = gpiochip_find("pca9505", chip_match_name);
-    if(find){
-      /* Skip check routine, Update the leds */
-      if(gc != find){
-        gc = find;
-        init_fan_gpio();
-        init_psu_gpio();
-      }
-      count = CHECK_COUNTER;
-      delay_ms = UPDATE_MS;
-    }else{
-      /* Put the check routine to the queue */
-      delay_ms = CHECK_MS;
-    }
-  }else{
-    for (index=0; index < NUM_FAN; index++){
-      presence = !gpio_get_value_cansleep(gc->base+fan_gpios[index].presence_pin);
-      if( presence != fan_gpios[index].prs ){
-        if( presence ){
-          gpio_set_value_cansleep(gc->base+fan_gpios[index].red_led_pin, 1);
-          gpio_set_value_cansleep(gc->base+fan_gpios[index].yel_led_pin, 0);
-        }else{
-          gpio_set_value_cansleep(gc->base+fan_gpios[index].red_led_pin, 0);
-          gpio_set_value_cansleep(gc->base+fan_gpios[index].yel_led_pin, 1);
-        }
-      }
-      fan_gpios[index].prs = presence;
-    }
-    count--;
-  }
-  queue_delayed_work(dx010_fan_led_workqueue, &fan_update,
-                     msecs_to_jiffies(delay_ms));
-}
-
 static void deinit_fan_gpio(void){
   int index;
   for( index=0; index < NUM_PSU; index++){
+    gpio_unexport(gc->base+fan_gpios[index].presence_pin);
+    gpio_unexport(gc->base+fan_gpios[index].red_led_pin);
+    gpio_unexport(gc->base+fan_gpios[index].yel_led_pin);
     gpio_free(gc->base+fan_gpios[index].presence_pin);
     gpio_free(gc->base+fan_gpios[index].red_led_pin);
     gpio_free(gc->base+fan_gpios[index].yel_led_pin);
@@ -176,34 +136,32 @@ static void deinit_psu_gpio(void){
   }
 }
 
-static int __init dx010_fan_led_init(void){
-  count = 0;
-  gc = NULL;
-  dx010_fan_led_workqueue = create_singlethread_workqueue(MODULE_NAME);
-  if (IS_ERR(dx010_fan_led_workqueue)) {
-    printk(KERN_INFO "failed to inittialize workqueue\n");
-    return PTR_ERR(dx010_fan_led_workqueue);
-  }
+static int __init dx010_gpio_init(void){
 
-  INIT_DELAYED_WORK(&fan_update, update_led);
-  queue_delayed_work(dx010_fan_led_workqueue, &fan_update,
-                     msecs_to_jiffies(UPDATE_MS));
+
+  struct gpio_chip *find;
+  gc = NULL;  
+  find = gpiochip_find("pca9505", chip_match_name);
+  if(!find){
+    printk(KERN_ERR "DX010 GPIO Chip not found!");
+    return -ENODEV;
+  }
+  gc = find;
+  init_fan_gpio();
+  init_psu_gpio();
   return 0;
 }
 
-static void __exit dx010_fan_led_exit(void){
-  cancel_delayed_work_sync(&fan_update);
-  destroy_workqueue(dx010_fan_led_workqueue);
+static void __exit dx010_gpio_exit(void){
   deinit_fan_gpio();
   deinit_psu_gpio();
-  dx010_fan_led_workqueue = NULL;
   gc = NULL;
 }
 
-module_init(dx010_fan_led_init);
-module_exit(dx010_fan_led_exit);
+module_init(dx010_gpio_init);
+module_exit(dx010_gpio_exit);
 
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Celestica Inc.");
-MODULE_DESCRIPTION("DX010 fan led control");
+MODULE_DESCRIPTION("DX010 gpio driver");
