@@ -41,6 +41,9 @@ get_flash_dev() {
 wait_for_root_dev() {
     local try_rounds=30
     while [ $try_rounds -gt 0 ]; do
+        if blkid | sed 's/"//g' | grep -q "$root_dev"; then
+            return 0
+        fi
         if [ -e "$root_dev" ]; then
             return 0
         fi
@@ -182,7 +185,7 @@ cmd="wait_for_root_dev"
 run_cmd "$cmd" "$err_msg"
 
 err_msg="Error: formatting to ext4 failed"
-cmd="mke2fs -t ext4 -m2 -F -O '^huge_file' $root_dev"
+cmd="mke2fs -t ext4 -F -O '^huge_file,^metadata_csum' $root_dev"
 run_cmd "$cmd" "$err_msg"
 
 err_msg="Error: mounting $root_dev to $root_mnt failed"
