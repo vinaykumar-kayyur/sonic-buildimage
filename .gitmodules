@@ -80,3 +80,6 @@
 [submodule "platform/p4/sonic-platform-modules-arista"]
 	path = platform/p4/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
+[submodule "src/gnmi-svr/my_gnmi_server"]
+	path = src/gnmi-svr/my_gnmi_server
+	url = https://github.com/SquidRo/my_gnmi_server.git
