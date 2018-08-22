@@ -17,8 +17,6 @@ start)
 
         depmod -a
 	modprobe smc
-
-        (cd /usr/local/etc && ./lpc_cpld_x64_64 blu w 0x222 0x1f)
         
         found=0
         for devnum in 0 1; do
