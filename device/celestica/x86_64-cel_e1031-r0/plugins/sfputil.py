@@ -111,13 +111,13 @@ class SfpUtil(SfpUtilBase):
 
 
     def get_low_power_mode(self, port_num):
-	raise NotImplementedError
+	    raise NotImplementedError
 
     def set_low_power_mode(self, port_num, lpmode):
-	raise NotImplementedError
+	    raise NotImplementedError
 
     def reset(self, port_num):
-	raise NotImplementedError
+	    raise NotImplementedError
 
     def get_transceiver_change_event(self):
         raise NotImplementedError

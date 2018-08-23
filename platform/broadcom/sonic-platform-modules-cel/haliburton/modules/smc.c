@@ -37,6 +37,17 @@
 #define SCRATCH         0x0201
 #define BROAD_ID        0x0202
 
+/* SEPERATE RESET
+ * [7:5] RESERVED
+ * [4]   RESET PCIE
+ * [3]   RESET USBHUB
+ * [2]   RESET B50282
+ * [1]   RESET PCA9548
+ * [0]   RESET BCM54616
+ * 1: not reset, 0: reset
+ */
+#define SPR_RESET       0x0222
+
 /* PSU STATUS
  * [7]  PSUR_ACOK
  * [6]  PSUR_PWOK
@@ -709,6 +720,9 @@ static int cpld_drv_probe(struct platform_device *pdev)
     for ( i = 0; i < 4; i++) {
         cpld_data->sfp_devices[i] = sfp_init(i);
     }
+
+    // Clear all reset signals
+    outb(0xFF, SPR_RESET);
     return 0;
 }
 
