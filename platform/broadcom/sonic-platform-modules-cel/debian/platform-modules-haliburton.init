@@ -15,7 +15,6 @@ case "$1" in
 start)
         echo -n "Setting up board... "
 
-        depmod -a
 	modprobe smc
         
         found=0
