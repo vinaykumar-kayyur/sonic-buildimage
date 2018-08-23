@@ -37,7 +37,8 @@ def check_file(file_name):
                 # Remove trailing port name example
                 p = re.sub(r"_<port>$", '', p)
                 # Remove trailing port number
-                p = re.sub(r"_(port)?\d+$", '', p)
+                if p != "phy_84752" and p != "phy_84328":
+                    p = re.sub(r"_(port)?\d+$", '', p)
                 # Remove trailing higig port
                 p = re.sub(r"_hg$", '', p)
                 # Remove trailing lane number
