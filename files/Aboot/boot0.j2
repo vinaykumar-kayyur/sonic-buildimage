@@ -63,6 +63,7 @@ cmdline_base="$target_path/kernel-params-base"
 cmdline_image="$image_path/kernel-cmdline"
 
 bootconfigvars="KERNEL INITRD CONSOLESPEED PASSWORD NETDEV NETAUTO NETIP NETMASK NETGW NETDOMAIN NETDNS NETHW memtest"
+flash_re=" /mnt/flash| /host"
 
 parse_environment_config() {
     for n in ${bootconfigvars}; do
@@ -148,17 +149,18 @@ platform_specific() {
     # set varlog size to 100MB
     local varlog_size=100
 
-    local flash_size=$(($(df | grep -E '/mnt/flash|/host' | tr -s ' ' | cut -f2 -d' ') / 1000))
+    # detect the size of the flash partition from name in Aboot/EOS/SONiC
+    local flash_size=$(($(df | grep -E "$flash_re" | tr -s ' ' | cut -f2 -d' ') / 1000))
 
     if [ "$platform" = "raven" ]; then
         aboot_machine=arista_7050_qx32
         flash_size=2000
-        echo "modprobe.blacklist=radeon" >>/tmp/append
+        echo "modprobe.blacklist=radeon,sp5100_tco acpi=off" >>/tmp/append
     fi
     if [ "$platform" = "crow" ]; then
         aboot_machine=arista_7050_qx32s
         flash_size=3700
-        echo "modprobe.blacklist=radeon" >>/tmp/append
+        echo "modprobe.blacklist=radeon,sp5100_tco" >>/tmp/append
     fi
     if [ "$sid" = "Upperlake" ] || [ "$sid" = "UpperlakeES" ]; then
         aboot_machine=arista_7060_cx32s
@@ -175,6 +177,8 @@ platform_specific() {
         echo "hugepages=128" >> /tmp/append
     fi
     if [ "$platform" = "rook" ]; then
+        echo "iommu=on intel_iommu=on tsc=reliable pcie_ports=native" >>/tmp/append
+        echo "rhash_entries=1 usb-storage.delay_use=0" >>/tmp/append
         if [ -x /bin/readprefdl ]; then
            readprefdl -f /tmp/.system-prefdl -d > /mnt/flash/.system-prefdl
         elif [ -f /etc/prefdl ]; then
@@ -191,6 +195,8 @@ platform_specific() {
     fi
 
     echo "varlog_size=$varlog_size" >>/tmp/append
+    # disable deterministic interface naming
+    echo "net.ifnames=0" >>/tmp/append
 }
 
 get_uuid_for() {
@@ -237,8 +243,8 @@ write_boot_configs() {
 
     # setting root partition if not overridden by kernel-params
     if ! grep -q "root=" /tmp/append; then
-        rootdev="$(mount | grep -E '/mnt/flash|/host' | cut -f1 -d' ')"
-        rootfstype="$(mount | grep -E '/mnt/flash|/host' | cut -f5 -d' ')"
+        rootdev="$(mount | grep -E "$flash_re" | cut -f1 -d' ')"
+        rootfstype="$(mount | grep -E "$flash_re" | cut -f5 -d' ')"
         rootuuid="$(get_uuid_for $rootdev)"
         if [ -z "$rootuuid" ] || [ "$rootfstype" = "vfat" ] ; then
             echo "root=$rootdev" >> /tmp/append

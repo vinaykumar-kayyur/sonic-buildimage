@@ -13,6 +13,7 @@ RUN apt-get update
 
 RUN apt-get install -y net-tools \
                        arping \
+                       ndisc6 \
                        ethtool \
                        tcpdump \
                        ifupdown \
@@ -45,6 +46,7 @@ RUN apt-get install -y net-tools \
 
 RUN pip install setuptools
 RUN pip install py2_ipaddress
+RUN pip install six
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies

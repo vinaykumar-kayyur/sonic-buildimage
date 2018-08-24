@@ -29,6 +29,9 @@ wait_syncd() {
         fi
         sleep 1
     done
+
+    # wait until bcm sdk is ready to get a request
+    sleep 3
 }
 
 # If this platform has an initialization file for the Broadcom LED microprocessor, load it

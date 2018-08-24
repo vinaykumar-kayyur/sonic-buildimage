@@ -41,6 +41,7 @@ def parse_device(device):
     d_type = None   # don't shadow type()
     hwsku = None
     name = None
+    deployment_id = None
     if str(QName(ns3, "type")) in device.attrib:
         d_type = device.attrib[str(QName(ns3, "type"))]
 
@@ -53,7 +54,9 @@ def parse_device(device):
             name = node.text
         elif node.tag == str(QName(ns, "HwSku")):
             hwsku = node.text
-    return (lo_prefix, mgmt_prefix, name, hwsku, d_type)
+        elif node.tag == str(QName(ns, "DeploymentId")):
+            deployment_id = node.text
+    return (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id)
 
 def parse_png(png, hname):
     neighbors = {}
@@ -63,10 +66,32 @@ def parse_png(png, hname):
     mgmt_dev = ''
     mgmt_port = ''
     port_speeds = {}
+    console_ports = {}
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
                 linktype = link.find(str(QName(ns, "ElementType"))).text
+                if linktype == "DeviceSerialLink":
+                    enddevice = link.find(str(QName(ns, "EndDevice"))).text
+                    endport = link.find(str(QName(ns, "EndPort"))).text
+                    startdevice = link.find(str(QName(ns, "StartDevice"))).text
+                    startport = link.find(str(QName(ns, "StartPort"))).text
+                    baudrate = link.find(str(QName(ns, "Bandwidth"))).text
+                    flowcontrol = 1 if link.find(str(QName(ns, "FlowControl"))) is not None and link.find(str(QName(ns, "FlowControl"))).text == 'true' else 0
+                    if enddevice.lower() == hname.lower():
+                        console_ports[endport] = {
+                            'remote_device': startdevice,
+                            'baud_rate': baudrate,
+                            'flow_control': flowcontrol
+                            }
+                    else:
+                        console_ports[startport] = {
+                            'remote_device': enddevice,
+                            'baud_rate': baudrate,
+                            'flow_control': flowcontrol
+                            }
+                    continue
+
                 if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink":
                     continue
 
@@ -92,8 +117,10 @@ def parse_png(png, hname):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, mgmt_prefix, name, hwsku, d_type) = parse_device(device)
+                (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
+                if deployment_id:
+                    device_data['deployment_id'] = deployment_id
                 devices[name] = device_data
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
@@ -113,7 +140,7 @@ def parse_png(png, hname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports)
 
 
 def parse_dpg(dpg, hname):
@@ -394,6 +421,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_speeds_default = {}
     port_speed_png = {}
     port_descriptions = {}
+    console_ports = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -419,9 +447,9 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png) = parse_png(child, hostname)
+            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
-            (u_neighbors, u_devices, _, _, _, _, _) = parse_png(child, hostname)
+            (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -488,7 +516,17 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
+    # set default port MTU as 9100
+    for port in ports.itervalues():
+        port['mtu'] = '9100'
+
+    # set physical port default admin status up
+    for port in phyport_intfs:
+        if port[0] in ports:
+            ports.get(port[0])['admin_status'] = 'up'
+
     results['PORT'] = ports
+    results['CONSOLE_PORT'] = console_ports
 
     if port_config_file:
         port_set = set(ports.keys())
@@ -498,6 +536,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
             if not set(mbr_map['members']).issubset(port_set):
                 print >> sys.stderr, "Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name
                 del pcs[pc_name]
+
+    # set default port channel MTU as 9100 and admin status up
+    for pc in pcs.itervalues():
+        pc['mtu'] = '9100'
+        pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
 
@@ -546,7 +589,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()
-    (lo_prefix, mgmt_prefix, hostname, hwsku, d_type) = parse_device(root)
+    (lo_prefix, mgmt_prefix, hostname, hwsku, d_type, _) = parse_device(root)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
