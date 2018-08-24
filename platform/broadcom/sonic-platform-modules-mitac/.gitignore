@@ -7,6 +7,7 @@ ly1200-32x/modules/*.cmd
 ly1200-32x/modules/Module.symvers
 ly1200-32x/modules/modules.order
 ly1200-32x/modules/.tmp_versions
+!ly1200-32x/opt/debs/*.deb
 
 debian/sonic-platform-mitac-ly1200-32x/
 debian/sonic-platform-mitac-ly1200-32x.debhelper.log
