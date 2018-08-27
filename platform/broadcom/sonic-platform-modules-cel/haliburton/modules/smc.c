@@ -719,6 +719,8 @@ static int cpld_drv_probe(struct platform_device *pdev)
     // Creae SFP devices
     for ( i = 0; i < 4; i++) {
         cpld_data->sfp_devices[i] = sfp_init(i);
+        if(cpld_data->sfp_devices[i] == NULL)
+            printk("KERN_ALERT" "NULL @SFP%d\n",i);
     }
 
     // Clear all reset signals
@@ -733,12 +735,12 @@ static int cpld_drv_remove(struct platform_device *pdev)
 
     for ( i = 0; i < 4; i++ ) {
         rem_data = dev_get_drvdata(cpld_data->sfp_devices[i]);
-        put_device(cpld_data->sfp_devices[i]);
         device_unregister(cpld_data->sfp_devices[i]);
+        put_device(cpld_data->sfp_devices[i]);
         kzfree(rem_data);
     }
-    put_device(cpld_data->fpp_node);
     device_unregister(cpld_data->fpp_node);
+    put_device(cpld_data->fpp_node);
     sysfs_remove_group(&pdev->dev.kobj, &cpld_group);
     class_destroy(celplatform);
     return 0;
@@ -773,5 +775,5 @@ module_exit(cpld_exit);
 
 MODULE_AUTHOR("Celestica Inc.");
 MODULE_DESCRIPTION("Celestica E1031 SMC driver");
-MODULE_VERSION("0.0.3");
+MODULE_VERSION("0.0.4");
 MODULE_LICENSE("GPL");
