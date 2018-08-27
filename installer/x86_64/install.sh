@@ -67,7 +67,12 @@ echo "onie_platform: $onie_platform"
 # default console settings
 CONSOLE_PORT=0x3f8
 CONSOLE_DEV=0
-CONSOLE_SPEED=9600
+
+# Pick up console speed from install enviroment, if failed, set it to 9600
+CONSOLE_SPEED=$(stty -F /dev/ttyS0 | grep speed | cut -d " " -f2)
+if [ -z "$CONSOLE_SPEED" ]; then
+    CONSOLE_SPEED=9600
+fi
 
 # Get platform specific linux kernel command line arguments
 ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
