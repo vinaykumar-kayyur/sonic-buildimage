@@ -356,6 +356,8 @@ sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 
+fi #squid
+
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
@@ -369,7 +371,6 @@ build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME
 EOF
 
-fi #squid
 
 #### don't do this when creating shadow
 if [ $IS_DONE == true ]; then
