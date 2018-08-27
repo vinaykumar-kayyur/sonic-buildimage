@@ -227,7 +227,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     hping3                  \
     python-scapy            \
     tcptraceroute           \
-    mtr-tiny
+    mtr-tiny                \
+    locales
+
+#Adds a locale to a debian system in non-interactive mode
+sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
+    sudo sed -i "\$aLANG=en_US.UTF-8" $FILESYSTEM_ROOT/etc/default/locale && \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT locale-gen "en_US.UTF-8"
 
 # Install certain fundamental packages from stretch-backports in order to get
 # more up-to-date (but potentially less stable) versions
@@ -378,7 +384,7 @@ sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoremove
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoclean
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get clean
-sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
+sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /var/lib/apt/lists/* /tmp/*'
 
 ## Clean up proxy
 [ -n "$http_proxy" ] && sudo rm -f $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy
