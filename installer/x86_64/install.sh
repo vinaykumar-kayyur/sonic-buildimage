@@ -68,12 +68,6 @@ echo "onie_platform: $onie_platform"
 CONSOLE_PORT=0x3f8
 CONSOLE_DEV=0
 
-# Pick up console speed from install enviroment, if failed, set it to 9600
-CONSOLE_SPEED=$(stty -F /dev/ttyS0 | grep speed | cut -d " " -f2)
-if [ -z "$CONSOLE_SPEED" ]; then
-    CONSOLE_SPEED=9600
-fi
-
 # Get platform specific linux kernel command line arguments
 ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
 
@@ -81,6 +75,13 @@ ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
 VAR_LOG_SIZE=4096
 
 [ -r platforms/$onie_platform ] && . platforms/$onie_platform
+
+# Pick up console speed from install enviroment if not defined yet.
+# Console speed setting in cmdline is like "console=ttyS0,9600n",
+# so we can use pattern 'console=ttyS[0-9]+,[0-9]+' to match it
+if [ -z "$CONSOLE_SPEED" ]; then
+    CONSOLE_SPEED=$(cat /proc/cmdline | grep -Eo 'console=ttyS[0-9]+,[0-9]+' | cut -d "," -f2)
+fi
 
 # Install demo on same block device as ONIE
 if [ "$install_env" != "build" ]; then
