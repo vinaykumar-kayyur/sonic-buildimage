@@ -117,7 +117,7 @@ process_reboot_cause() {
     # REBOOT_CAUSE_FILE should always exist, but we add the else case
     # to ensure we always generate PREVIOUS_REBOOT_CAUSE_FILE here
     if [ -f $FIRST_BOOT_FILE ]; then
-        echo "SONiC image installation" > $PREVIOUS_REBOOT_CAUSE_FILE
+        echo "VESTA image installation" > $PREVIOUS_REBOOT_CAUSE_FILE
     elif [ -f $REBOOT_CAUSE_FILE ]; then
         mv -f $REBOOT_CAUSE_FILE $PREVIOUS_REBOOT_CAUSE_FILE
     else
@@ -218,7 +218,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     elif [ -n "$onie_platform" ]; then
         platform=$onie_platform
     else
-        echo "Unknown SONiC platform"
+        echo "Unknown VESTA platform"
         firsttime_exit
     fi
 
@@ -263,7 +263,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
         fi
 
         # Determine the block device to install grub
-        sonic_dev=$(blkid | grep SONiC-OS | head -n 1 | awk '{print $1}' |  sed -e 's/[0-9]:.*$//')
+        sonic_dev=$(blkid | grep VESTA-OS | head -n 1 | awk '{print $1}' |  sed -e 's/[0-9]:.*$//')
         if [ -z "$sonic_dev" ]; then
             log_migration "Unable to determine sonic partition !"
             firsttime_exit
@@ -315,7 +315,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
         fi
 
         # Set the root based on the label
-        sonic_root=$(blkid | grep SONiC-OS | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
+        sonic_root=$(blkid | grep VESTA-OS | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
         sonic_root=$(echo "$sonic_root" | sed 's/\//\\\//g')
         sed -i -e "s/%%SONIC_ROOT%%/$sonic_root/g" /host/grub.cfg
 

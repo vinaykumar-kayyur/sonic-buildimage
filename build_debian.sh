@@ -57,6 +57,23 @@ DEFAULT_USERINFO="Default admin user,,,"
 if [[ -d $FILESYSTEM_ROOT ]]; then
     sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
 fi
+
+ROOTFS_SHADOW=${FILESYSTEM_ROOT}_no_dimg
+IS_DONE=false
+while [ $IS_DONE == false ];  do
+
+if [[ -d ${ROOTFS_SHADOW} ]]; then #squid
+    ### shadow rootfs exists
+    IS_DONE=true
+
+    sudo cp -ax ${ROOTFS_SHADOW} ${FILESYSTEM_ROOT}
+
+    trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
+    sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
+    
+else #squid
+    ### create shadow rootfs
+
 mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
@@ -106,7 +123,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 ## However, 'dpkg -i' plus 'apt-get install -f' will ignore the recommended dependency. So
 ## we install busybox explicitly
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox
-echo '[INFO] Install SONiC linux kernel image'
+echo '[INFO] Install VESTA linux kernel image'
 ## Note: duplicate apt-get command to ensure every line return zero
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
@@ -339,6 +356,8 @@ sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 
+fi #squid
+
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
@@ -352,6 +371,10 @@ build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME
 EOF
 
+
+#### don't do this when creating shadow
+if [ $IS_DONE == true ]; then
+
 if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
 fi
@@ -363,6 +386,11 @@ if [ "${enable_organization_extensions}" = "y" ]; then
       ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
    fi
 fi
+
+fi ### IS_DONE
+
+## Update initramfs
+sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 
 ## Clean up apt
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoremove
@@ -382,6 +410,13 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
 ## Wait fuser fully kill the processes
 sleep 15
 sudo umount $FILESYSTEM_ROOT/proc || true
+
+### shadow complete ??? squid 
+if [ $IS_DONE == false ]; then
+    sudo cp -ax ${FILESYSTEM_ROOT} ${ROOTFS_SHADOW}
+fi
+
+done ### end of while
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
