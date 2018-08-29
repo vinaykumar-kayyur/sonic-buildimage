@@ -120,5 +120,16 @@ class SfpUtil(SfpUtilBase):
     def reset(self, port_num):
         raise NotImplementedError
 
-    def get_transceiver_change_event(self):
-        raise NotImplementedError
+    def get_transceiver_change_event(self, timeout=0):
+        modabs_interrupt_path = '/sys/devices/platform/e1031.smc/SFP/modabs_int'
+        ports_evt = {}
+        try:
+            with open(modabs_interrupt_path, 'r') as port_changes:
+                changes = int(port_changes.read(), 16)
+                for port_num in self._sfp_port:
+                    change = (changes >> ( port_num - 49)) & 1
+                    if change == 1:
+                        ports_evt[str(port_num)] = str(self.get_presence(port_num))
+        except IOError:
+            return False, {}
+        return True, ports_evt
