@@ -41,6 +41,7 @@ def parse_device(device):
     d_type = None   # don't shadow type()
     hwsku = None
     name = None
+    deployment_id = None
     if str(QName(ns3, "type")) in device.attrib:
         d_type = device.attrib[str(QName(ns3, "type"))]
 
@@ -53,7 +54,9 @@ def parse_device(device):
             name = node.text
         elif node.tag == str(QName(ns, "HwSku")):
             hwsku = node.text
-    return (lo_prefix, mgmt_prefix, name, hwsku, d_type)
+        elif node.tag == str(QName(ns, "DeploymentId")):
+            deployment_id = node.text
+    return (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id)
 
 def parse_png(png, hname):
     neighbors = {}
@@ -63,10 +66,32 @@ def parse_png(png, hname):
     mgmt_dev = ''
     mgmt_port = ''
     port_speeds = {}
+    console_ports = {}
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
                 linktype = link.find(str(QName(ns, "ElementType"))).text
+                if linktype == "DeviceSerialLink":
+                    enddevice = link.find(str(QName(ns, "EndDevice"))).text
+                    endport = link.find(str(QName(ns, "EndPort"))).text
+                    startdevice = link.find(str(QName(ns, "StartDevice"))).text
+                    startport = link.find(str(QName(ns, "StartPort"))).text
+                    baudrate = link.find(str(QName(ns, "Bandwidth"))).text
+                    flowcontrol = 1 if link.find(str(QName(ns, "FlowControl"))) is not None and link.find(str(QName(ns, "FlowControl"))).text == 'true' else 0
+                    if enddevice.lower() == hname.lower():
+                        console_ports[endport] = {
+                            'remote_device': startdevice,
+                            'baud_rate': baudrate,
+                            'flow_control': flowcontrol
+                            }
+                    else:
+                        console_ports[startport] = {
+                            'remote_device': enddevice,
+                            'baud_rate': baudrate,
+                            'flow_control': flowcontrol
+                            }
+                    continue
+
                 if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink":
                     continue
 
@@ -92,8 +117,10 @@ def parse_png(png, hname):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, mgmt_prefix, name, hwsku, d_type) = parse_device(device)
+                (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
+                if deployment_id:
+                    device_data['deployment_id'] = deployment_id
                 devices[name] = device_data
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
@@ -113,7 +140,7 @@ def parse_png(png, hname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports)
 
 
 def parse_dpg(dpg, hname):
@@ -149,12 +176,15 @@ def parse_dpg(dpg, hname):
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
         pcs = {}
+        intfs_inpc = [] # List to hold all the LAG member interfaces 
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
             pcintfmbr = pcintf.find(str(QName(ns, "AttachTo"))).text
             pcmbr_list = pcintfmbr.split(';')
+            pc_intfs.append(pcintfname)
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
+                intfs_inpc.append(pcmbr_list[i])
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
             else:
@@ -202,15 +232,26 @@ def parse_dpg(dpg, hname):
             for member in aclattach:
                 member = member.strip()
                 if pcs.has_key(member):
-                    acl_intfs.extend(pcs[member]['members'])  # For ACL attaching to port channels, we break them into port channel members
+                    # If try to attach ACL to a LAG interface then we shall add the LAG to
+                    # to acl_intfs directly instead of break it into member ports, ACL attach
+                    # to LAG will be applied to all the LAG members internally by SAI/SDK
+                    acl_intfs.append(member)
                 elif vlans.has_key(member):
                     print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a Vlan interface, which is currently not supported"
                 elif port_alias_map.has_key(member):
                     acl_intfs.append(port_alias_map[member])
+                    # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
+                    if port_alias_map[member] in intfs_inpc:
+                        print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface"
                 elif member.lower() == 'erspan':
                     is_mirror = True;
-                    # Erspan session will be attached to all front panel ports
-                    acl_intfs = port_alias_map.values()
+                    # Erspan session will be attached to all front panel ports,
+                    # if panel ports is a member port of LAG, should add the LAG 
+                    # to acl table instead of the panel ports
+                    acl_intfs = pc_intfs
+                    for panel_port in port_alias_map.values():
+                        if panel_port not in intfs_inpc:
+                            acl_intfs.append(panel_port)
                     break;
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
@@ -380,6 +421,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_speeds_default = {}
     port_speed_png = {}
     port_descriptions = {}
+    console_ports = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -405,16 +447,16 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png) = parse_png(child, hostname)
+            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
-            (u_neighbors, u_devices, _, _, _, _, _) = parse_png(child, hostname)
+            (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
             (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
-    results = {}    
+    results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
@@ -447,7 +489,6 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     results['INTERFACE'] = phyport_intfs
     results['VLAN_INTERFACE'] = vlan_intfs
-    results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
     for port_name in port_speeds_default:
         # ignore port not in port_config.ini
@@ -457,9 +498,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
         ports.setdefault(port_name, {})['speed'] = port_speeds_default[port_name]
 
     for port_name in port_speed_png:
-        # if port_name is not in port_config.ini, still consider it.
-        # and later swss will pick up and behave on-demand port break-up.
-        # if on-deman port break-up is not supported on a specific platform, swss will return error.
+        # not consider port not in port_config.ini
+        if port_name not in ports:
+            print >> sys.stderr, "Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name
+            continue
+
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in ports.items():
@@ -473,10 +516,51 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
+    # set default port MTU as 9100
+    for port in ports.itervalues():
+        port['mtu'] = '9100'
+
+    # set physical port default admin status up
+    for port in phyport_intfs:
+        if port[0] in ports:
+            ports.get(port[0])['admin_status'] = 'up'
+
     results['PORT'] = ports
+    results['CONSOLE_PORT'] = console_ports
+
+    if port_config_file:
+        port_set = set(ports.keys())
+        for (pc_name, mbr_map) in pcs.items():
+            # remove portchannels that contain ports not existing in port_config.ini
+            # when port_config.ini exists
+            if not set(mbr_map['members']).issubset(port_set):
+                print >> sys.stderr, "Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name
+                del pcs[pc_name]
+
+    # set default port channel MTU as 9100 and admin status up
+    for pc in pcs.itervalues():
+        pc['mtu'] = '9100'
+        pc['admin_status'] = 'up'
+
     results['PORTCHANNEL'] = pcs
+
+
+    for pc_intf in pc_intfs.keys():
+        # remove portchannels not in PORTCHANNEL dictionary
+        if pc_intf[0] not in pcs:
+            print >> sys.stderr, "Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0])
+            del pc_intfs[pc_intf]
+
+    results['PORTCHANNEL_INTERFACE'] = pc_intfs
+
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
+
+    for nghbr in neighbors.keys():
+        # remove port not in port_config.ini
+        if nghbr not in ports:
+            print >> sys.stderr, "Warning: ignore interface '%s' in DEVICE_NEIGHBOR as it is not in the port_config.ini" % nghbr
+            del neighbors[nghbr]
 
     results['DEVICE_NEIGHBOR'] = neighbors
     results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key.lower() != hostname.lower() }
@@ -505,7 +589,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()
-    (lo_prefix, mgmt_prefix, hostname, hwsku, d_type) = parse_device(root)
+    (lo_prefix, mgmt_prefix, hostname, hwsku, d_type, _) = parse_device(root)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
