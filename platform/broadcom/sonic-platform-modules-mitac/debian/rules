@@ -1,15 +1,6 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
-# Sample debian/rules that uses debhelper.
-# This file was originally written by Joey Hess and Craig Small.
-# As a special exception, when this file is copied by dh-make into a
-# dh-make output file, you may use that output file without restriction.
-# This special exception was added by Craig Small in version 0.37 of dh-make.
-
-include /usr/share/dpkg/pkg-info.mk
-
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DH_VERBOSE=1
 
 export INSTALL_MOD_DIR:=extra
 
@@ -23,27 +14,18 @@ SERVICE_DIR := service
 %:
 		dh $@ --with systemd
 
-clean:
-	dh_testdir
-	dh_testroot
-	dh_clean
-
-build:
+override_dh_auto_build:
 	(for mod in $(MODULE_DIRS); do \
 		make -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
+		make -C $(MOD_SRC_DIR)/$${mod}/opt/xcvr-serv; \
+		make -C $(MOD_SRC_DIR)/$${mod}/opt/sys-serv; \
 	done)
 
 binary: binary-arch binary-indep
-	# Nothing to do
+       # Nothing to do
 
-binary-arch: 
+binary-arch:
 	# Nothing to do
-
-#install: build
-	#dh_testdir
-	#dh_testroot
-	#dh_clean -k 
-	#dh_installdirs
 
 binary-indep:
 	dh_testdir
@@ -62,6 +44,8 @@ binary-indep:
 					debian/$(PACKAGE_PRE_NAME)-$${mod}/etc; \
 			dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system; \
 			cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service  debian/$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system/; \
+			(cd debian/$(PACKAGE_PRE_NAME)-$${mod}/opt/xcvr-serv; rm -f *.[cho]; rm -f Makefile); \
+			(cd debian/$(PACKAGE_PRE_NAME)-$${mod}/opt/sys-serv; rm -f *.[cho]; rm -f Makefile); \
 	done)
 	# Resuming debhelper scripts
 	dh_testroot
@@ -79,4 +63,3 @@ binary-indep:
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
-.PHONY: build binary binary-arch binary-indep clean

@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+# Automatically added by dh_installinit
+update-rc.d xcvr_servd remove >/dev/null
+if [ "$1" = "purge" ] ; then
+	update-rc.d sonic-platform-mitac-ly1200-32x remove >/dev/null
+fi
+
+
+# In case this system is running systemd, we make systemd reload the unit files
+# to pick up changes.
+if [ -d /run/systemd/system ] ; then
+	systemctl --system daemon-reload >/dev/null || true
+fi
+# End automatically added section
