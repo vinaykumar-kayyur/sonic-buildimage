@@ -1,3 +1,9 @@
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ */
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>
 #include <linux/init.h>
@@ -106,29 +112,29 @@ static struct pca954x_platform_data mux_data_0_6 = {
 };
 
 static struct i2c_board_info i2c_device_info0[] __initdata = {
-        {"pca9548",          0, 0x70, &mux_data_0, 0, 0},	
+        {"pca9548",          0, 0x70, &mux_data_0, 0, 0},    
 };
 
 static struct i2c_board_info i2c_device_info2[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_0, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_0, 0, 0},    
 };
 static struct i2c_board_info i2c_device_info3[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_1, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_1, 0, 0},    
 };
 static struct i2c_board_info i2c_device_info4[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_2, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_2, 0, 0},    
 };
 static struct i2c_board_info i2c_device_info5[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_3, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_3, 0, 0},    
 };
 static struct i2c_board_info i2c_device_info6[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_4, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_4, 0, 0},    
 };
 static struct i2c_board_info i2c_device_info7[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_5, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_5, 0, 0},    
 };
 static struct i2c_board_info i2c_device_info8[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_6, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_6, 0, 0},    
 };
 
 
@@ -145,20 +151,20 @@ static struct inv_i2c_board_info i2cdev_list[] = {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-static struct 	i2c_gpio_platform_data 	i2c_gpio_platdata0 = {
-	.scl_pin = 238,
-	.sda_pin = 255,
+static struct i2c_gpio_platform_data i2c_gpio_platdata0 = {
+    .scl_pin = 238,
+    .sda_pin = 255,
     
-	.udelay  = 5, //5:100kHz
-	.sda_is_open_drain = 0,
-	.scl_is_open_drain = 0,
-	.scl_is_output_only = 0
+    .udelay  = 5, //5:100kHz
+    .sda_is_open_drain = 0,
+    .scl_is_open_drain = 0,
+    .scl_is_output_only = 0
 };
 
-static struct 	platform_device 	device_i2c_gpio0 = {
-	.name 	= "i2c-gpio",
-	.id  	= 1, // adapter number
-	.dev.platform_data = &i2c_gpio_platdata0,
+static struct platform_device device_i2c_gpio0 = {
+    .name    = "i2c-gpio",
+    .id      = 1, // adapter number
+    .dev.platform_data = &i2c_gpio_platdata0,
 };
 
 static int __init inv_platform_init(void)
@@ -167,8 +173,6 @@ static int __init inv_platform_init(void)
     struct i2c_client *e = NULL;
     int ret = 0;
     int i,j,k;
-
-    //printk("%s  \n", __func__);
 
     //use i2c-gpio    
     //register i2c gpio
@@ -183,7 +187,7 @@ static int __init inv_platform_init(void)
 
     ret = platform_device_register(&device_i2c_gpio0);
     if (ret) {
-	printk(KERN_ERR "i2c-gpio: device_i2c_gpio0 register fail %d\n", ret);
+        printk(KERN_ERR "i2c-gpio: device_i2c_gpio0 register fail %d\n", ret);
     }
     mdelay(500); //wait for device_i2c_gpio register successfully
 

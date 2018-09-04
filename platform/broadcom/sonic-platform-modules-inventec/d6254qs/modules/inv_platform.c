@@ -1,5 +1,11 @@
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ */
+
 #include <linux/i2c.h>
-//#include <linux/i2c-algo-bit.h>
 #include <linux/i2c-gpio.h>
 #include <linux/init.h>
 #include <linux/module.h>
@@ -7,12 +13,6 @@
 #include <linux/platform_device.h>
 
 #include <linux/i2c/pca954x.h>
-//#include <linux/i2c/pca953x.h>
-//#include <linux/i2c/at24.h>
-
-//#include <asm/gpio.h>
-//#define IO_EXPAND_BASE    64
-//#define IO_EXPAND_NGPIO   16
 
 struct inv_i2c_board_info {
     int ch;
@@ -21,22 +21,6 @@ struct inv_i2c_board_info {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-#if 0
-static struct at24_platform_data at24c64_eeprom_data = {
-        .byte_len = 256,//SZ_64K/8
-        .page_size = 1,
-        .flags = 0,//AT24_FLAG_ADDR8,
-};
-
-
-static int	pca9555_setup(struct i2c_client *client, unsigned gpio, unsigned ngpio, void *context)
-{
-    //TBD
-    printk("%s : gpio=%d, ngpio=%d\n ", __func__, gpio, ngpio);
-    return 0;
-}
-#endif
-
 static struct pca954x_platform_mode mux_modes_0[] = {
     {.adap_id = 2,},    {.adap_id = 3,},
     {.adap_id = 4,},    {.adap_id = 5,},
@@ -128,93 +112,11 @@ static struct pca954x_platform_data mux_data_0_6 = {
         .num_modes      = 8,
 };
 
-#if 0
-#define IO_EXPAND_BASE_CHIP    (IO_EXPAND_BASE) //64
-#define IO_EXPAND_BASE_CHIP00  (IO_EXPAND_BASE + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP01  (IO_EXPAND_BASE_CHIP00 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP10  (IO_EXPAND_BASE_CHIP01 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP11  (IO_EXPAND_BASE_CHIP10 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP20  (IO_EXPAND_BASE_CHIP11 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP21  (IO_EXPAND_BASE_CHIP20 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP30  (IO_EXPAND_BASE_CHIP21 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP31  (IO_EXPAND_BASE_CHIP30 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP40  (IO_EXPAND_BASE_CHIP31 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP41  (IO_EXPAND_BASE_CHIP40 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP50  (IO_EXPAND_BASE_CHIP41 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP51  (IO_EXPAND_BASE_CHIP50 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP60  (IO_EXPAND_BASE_CHIP51 + IO_EXPAND_NGPIO)
-#define IO_EXPAND_BASE_CHIP61  (IO_EXPAND_BASE_CHIP60 + IO_EXPAND_NGPIO)
-
-static struct pca953x_platform_data   pca9555_data = {
-    .gpio_base = IO_EXPAND_BASE_CHIP,
-    .setup     = pca9555_setup,
-};
-
-
-static struct pca953x_platform_data   pca9555_data00 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP00,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data01 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP01,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data10 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP10,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data11 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP11,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data20 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP20,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data21 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP21,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data30 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP30,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data31 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP31,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data40 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP40,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data41 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP41,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data50 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP50,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data51 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP51,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data60 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP60,
-    .setup     = pca9555_setup,
-};
-static struct pca953x_platform_data   pca9555_data61 = {
-    .gpio_base = IO_EXPAND_BASE_CHIP61,
-    .setup     = pca9555_setup,
-};
-#endif
 
 static struct i2c_board_info xlp_i2c_device_info0[] __initdata = {
-//        {"24c02",            0, 0x57, &at24c64_eeprom_data, 0, 0},	//VPD
         {"inv_psoc",         0, 0x66, 0, 0, 0},//psoc
         {"inv_cpld",         0, 0x55, 0, 0, 0},//cpld
-//        {"pca9555",          0, 0x22, &pca9555_data, 0, 0},	
-        {"pca9548",          0, 0x71, &mux_data_0, 0, 0},	
+        {"pca9548",          0, 0x71, &mux_data_0, 0, 0},    
 };
 
 static struct i2c_board_info xlp_i2c_device_info1[] __initdata = {
@@ -223,48 +125,33 @@ static struct i2c_board_info xlp_i2c_device_info1[] __initdata = {
 };
 
 static struct i2c_board_info xlp_i2c_device_info2[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_0, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data00, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data01, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_0, 0, 0},    
 };
 
 static struct i2c_board_info xlp_i2c_device_info3[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_1, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data10, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data11, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_1, 0, 0},    
 };
 
 static struct i2c_board_info xlp_i2c_device_info4[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_2, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data20, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data21, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_2, 0, 0},    
 };
 
 static struct i2c_board_info xlp_i2c_device_info5[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_3, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data30, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data31, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_3, 0, 0},    
 };
 static struct i2c_board_info xlp_i2c_device_info6[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_4, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data40, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data41, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_4, 0, 0},    
 };
 static struct i2c_board_info xlp_i2c_device_info7[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_5, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data50, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data51, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_5, 0, 0},    
 };
 static struct i2c_board_info xlp_i2c_device_info8[] __initdata = {
-        {"pca9548",         0, 0x72, &mux_data_0_6, 0, 0},	
-//        {"pca9555",         0, 0x20, &pca9555_data60, 0, 0},	
-//        {"pca9555",         0, 0x21, &pca9555_data61, 0, 0},	
+        {"pca9548",         0, 0x72, &mux_data_0_6, 0, 0},    
 };
 
 
 static struct inv_i2c_board_info i2cdev_list[] = {
     {0, ARRAY_SIZE(xlp_i2c_device_info0),  xlp_i2c_device_info0 },  //smbus 0
-//    {1, ARRAY_SIZE(xlp_i2c_device_info1),  xlp_i2c_device_info1 },  //smbus 1 or gpio11+12
     
     {2, ARRAY_SIZE(xlp_i2c_device_info2),  xlp_i2c_device_info2 },  //mux 0
     {3, ARRAY_SIZE(xlp_i2c_device_info3),  xlp_i2c_device_info3 },  //mux 1
@@ -276,20 +163,20 @@ static struct inv_i2c_board_info i2cdev_list[] = {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-static struct 	i2c_gpio_platform_data 	i2c_gpio_platdata = {
-	.scl_pin = 8,
-	.sda_pin = 9,
+static struct i2c_gpio_platform_data i2c_gpio_platdata = {
+    .scl_pin = 8,
+    .sda_pin = 9,
     
-	.udelay  = 5, //5:100kHz
-	.sda_is_open_drain = 0,
-	.scl_is_open_drain = 0,
-	.scl_is_output_only = 0
+    .udelay  = 5, //5:100kHz
+    .sda_is_open_drain = 0,
+    .scl_is_open_drain = 0,
+    .scl_is_output_only = 0
 };
 
-static struct 	platform_device 	magnolia_device_i2c_gpio = {
-	.name 	= "i2c-gpio",
-	.id  	= 0, // adapter number
-	.dev.platform_data = &i2c_gpio_platdata,
+static struct platform_device magnolia_device_i2c_gpio = {
+    .name    = "i2c-gpio",
+    .id      = 0, // adapter number
+    .dev.platform_data = &i2c_gpio_platdata,
 };
 
 #define PLAT_MAX_I2C_CLIENTS 32
@@ -319,20 +206,6 @@ static int __init plat_magnolia_init(void)
     int ret = 0;
     int i,j;
 
-    printk("el6661 plat_magnolia_init  \n");
-
-#if 0  //disable for ICOS
-    //use i2c-gpio    
-    //register i2c gpio
-    //config gpio8,9 to gpio function
-    outl( inl(0x500) | (1<<8 | 1<<9), 0x500);
-    
-	ret = platform_device_register(&magnolia_device_i2c_gpio);
-	if (ret) {
-		printk(KERN_ERR "i2c-gpio: magnolia_device_i2c_gpio register fail %d\n", ret);
-	}
-#endif
-    
     for(i=0; i<ARRAY_SIZE(i2cdev_list); i++) {
         
         adap = i2c_get_adapter( i2cdev_list[i].ch );
@@ -364,7 +237,6 @@ static void __exit plat_magnolia_exit(void)
 
 module_init(plat_magnolia_init);
 module_exit(plat_magnolia_exit);
-//arch_initcall(plat_magnolia_init);
 
 MODULE_AUTHOR("Inventec");
 MODULE_DESCRIPTION("Magnolia Platform devices");
