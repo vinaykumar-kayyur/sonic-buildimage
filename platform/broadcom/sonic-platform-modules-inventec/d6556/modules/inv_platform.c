@@ -1,5 +1,4 @@
 #include <linux/i2c.h>
-//#include <linux/i2c-algo-bit.h>
 #include <linux/i2c-gpio.h>
 #include <linux/init.h>
 #include <linux/module.h>
@@ -7,12 +6,6 @@
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/i2c/pca954x.h>
-//#include <linux/i2c/pca953x.h>
-//#include <linux/i2c/at24.h>
-
-//#include <asm/gpio.h>
-//#define IO_EXPAND_BASE    64
-//#define IO_EXPAND_NGPIO   16
 
 struct inv_i2c_board_info {
     int ch;
@@ -113,8 +106,6 @@ static struct pca954x_platform_data mux_data_0_6 = {
 };
 
 static struct i2c_board_info i2c_device_info0[] __initdata = {
-//        {"inv_psoc",         0, 0x66, 0, 0, 0},//psoc
-//        {"inv_cpld",         0, 0x55, 0, 0, 0},//cpld
         {"pca9548",          0, 0x70, &mux_data_0, 0, 0},	
 };
 
@@ -155,13 +146,8 @@ static struct inv_i2c_board_info i2cdev_list[] = {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 static struct 	i2c_gpio_platform_data 	i2c_gpio_platdata0 = {
-#if 0
-	.scl_pin = 494,//58,
-	.sda_pin = 511,//75,
-#else
 	.scl_pin = 238,
 	.sda_pin = 255,
-#endif
     
 	.udelay  = 5, //5:100kHz
 	.sda_is_open_drain = 0,
@@ -219,7 +205,6 @@ static int __init inv_platform_init(void)
 }
 
 module_init(inv_platform_init);
-//arch_initcall(inv_platform_init);
 
 MODULE_AUTHOR("Inventec");
 MODULE_DESCRIPTION("Maple Platform devices");
