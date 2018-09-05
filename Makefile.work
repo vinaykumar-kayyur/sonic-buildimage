@@ -48,7 +48,7 @@ SLAVE_IMAGE = sonic-slave-$(USER)
 SLAVE_DIR = sonic-slave
 endif
 
-OVERLAY_MODULE_CHECK := lsmod | grep "^overlay" > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
+OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
 
 DOCKER_RUN := docker run --rm=true --privileged \
     -v $(PWD):/sonic \
