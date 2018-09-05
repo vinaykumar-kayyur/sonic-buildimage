@@ -24,7 +24,9 @@ supervisorctl start rsyslogd
 
 mkdir -p /var/run/redis
 
-supervisorctl start redis-server
+supervisorctl start redis-servers:redis-server
+
+supervisorctl start redis-servers:redis-server-secondary
 
 /usr/bin/configdb-load.sh
 

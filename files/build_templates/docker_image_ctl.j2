@@ -11,6 +11,10 @@ function postStartAction()
     until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]]; do
       sleep 1;
     done
+
+    until [[ $(/usr/bin/docker exec database redis-cli -p 6380 ping | grep -c PONG) -gt 0 ]]; do
+      sleep 1;
+    done
 {%- elif docker_container_name == "swss" %}
     docker exec swss rm -f /ready   # remove cruft
     if [[ -d /host/fast-reboot ]];

@@ -27,13 +27,37 @@ RUN apt-get autoclean -y
 RUN apt-get autoremove -y
 RUN rm -rf /debs ~/.cache
 
-RUN sed -ri 's/^(save .*$)/# \1/g;                       \
-             s/^daemonize yes$/daemonize no/;            \
-             s/^logfile .*$/logfile ""/;                 \
-             s/^# syslog-enabled no$/syslog-enabled no/; \
-             s/^# unixsocket/unixsocket/;                \
+RUN sed -ri 's/^(save .*$)/# \1/g;                                 \
+             s/^daemonize yes$/daemonize no/;                      \
+             s/^logfile .*$/logfile ""/;                           \
+             s/^# syslog-enabled no$/syslog-enabled no/;           \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/ \
             ' /etc/redis/redis.conf
+
+
+RUN cp /etc/redis/redis.conf /etc/redis/redis-secondary.conf
+RUN cp /etc/redis/redis.conf /etc/redis/redis-server.conf
+RUN mkdir /var/lib/redis/redis-server
+RUN mkdir /var/lib/redis/redis-secondary
+
+RUN sed -ri 's/^# unixsocket .*/unixsocket \/var\/run\/redis\/redis.sock/; \
+             s/dir .*/dir \/var\/lib\/redis\/redis-server/;                \
+             s/pidfile .*/pidfile \/var\/run\/redis\/redis-server.pid/;    \
+            ' /etc/redis/redis-server.conf
+
+RUN sed -ri 's/port 6379/port 6380/;                                                 \
+             s/^# unixsocket .*/unixsocket \/var\/run\/redis\/redis-secondary.sock/; \
+             s/dir .*/dir \/var\/lib\/redis\/redis-secondary/;                       \
+             s/pidfile .*/pidfile \/var\/run\/redis\/redis-secondary.pid/;           \
+            ' /etc/redis/redis-secondary.conf
+
+RUN sed -ri 's/DAEMON_ARGS=.*/DAEMON_ARGS=\/etc\/redis\/\`basename ${0}\`.conf/;        \
+             s/NAME=.*/NAME=`basename ${0}`/;                                           \
+             s/DESC=.*/DESC=`basename ${0}`/;                                           \
+             s/PIDFILE=.*/PIDFILE=$RUNDIR\/`basename ${0}`.pid/;                        \
+             ' /etc/init.d/redis-server
+
+RUN cp /etc/init.d/redis-server /etc/init.d/redis-secondary
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]

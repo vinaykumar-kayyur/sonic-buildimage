@@ -6,6 +6,10 @@ start() {
         do sleep 1;
     done
 
+    until [[ $(/usr/bin/docker exec database redis-cli -p 6380 ping | grep -c PONG) -gt 0 ]];
+        do sleep 1;
+    done
+
     # Wait for configDB initialization
     until [[ $(/usr/bin/docker exec database redis-cli -n 4 GET "CONFIG_DB_INITIALIZED") ]];
         do sleep 1;
@@ -27,7 +31,7 @@ start() {
 
     # Flush DB
     /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
-    /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
+    /usr/bin/docker exec database redis-cli -p 6380 -n 1 FLUSHDB
     /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
     /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
     /usr/bin/docker exec database redis-cli -n 6 FLUSHDB
