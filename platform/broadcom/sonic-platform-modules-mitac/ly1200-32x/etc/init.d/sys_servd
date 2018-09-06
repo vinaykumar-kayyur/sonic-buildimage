@@ -3,8 +3,8 @@
 # Provides:          sys-servd
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
-# Default-Start:     rc.local
-# Default-Stop:      0 1 6
+# Default-Start:
+# Default-Stop:
 # Short-Description: Daemon sys-servd
 ### END INIT INFO
 

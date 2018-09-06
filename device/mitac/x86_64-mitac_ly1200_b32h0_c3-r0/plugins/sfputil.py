@@ -180,3 +180,6 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
+    
+    def get_transceiver_change_event(self, timeout=0):
+        raise NotImplementedError

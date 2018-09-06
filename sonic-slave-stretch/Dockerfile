@@ -77,6 +77,7 @@ RUN apt-get update && apt-get install -y \
         stgit \
 # For platform-modules build
         module-assistant \
+        libi2c-dev \
 # For thrift build\
         gem2deb \
         libboost-all-dev \
