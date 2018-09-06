@@ -33,7 +33,7 @@
 #define SLAVE_CPLD_START_PORT 17
 
 /* MIC_FEAT_XCVR_INT : 1 means interrupt, 0 means polling */
-#define MIC_FEAT_XCVR_INT 1
+#define MIC_FEAT_XCVR_INT 0
 
 #if MIC_FEAT_XCVR_INT == 1
 #include <sys/types.h>

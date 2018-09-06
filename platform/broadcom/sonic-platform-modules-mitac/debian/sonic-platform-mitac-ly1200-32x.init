@@ -6,8 +6,8 @@
 # Required-Stop:
 # Should-Start:
 # Should-Stop:
-# Default-Start:     S
-# Default-Stop:      0 6
+# Default-Start:
+# Default-Stop:
 # Short-Description: Setup ly1200-32x board.
 ### END INIT INFO
 
@@ -16,26 +16,24 @@ start)
     echo -n "Setting up board... "
 
     echo 0 > /proc/sys/kernel/perf_cpu_time_max_percent
-    echo 0 > /sys/bus/i2c/devices/1-0031/wd_en
-
-    /etc/init.d/gpe start
     /etc/init.d/i2c_init start
     /etc/init.d/sys_polld start
-    /opt/script/start_service.sh &
+    /etc/init.d/xcvr_servd start
+    /etc/init.d/sys_servd start
+    echo 0 > /sys/bus/i2c/devices/1-0031/wd_en
+
     echo "done."
     ;;
 
 stop)
     echo -n "cleaning... "
 
-    /etc/init.d/gpe stop
     /etc/init.d/i2c_init stop
     /etc/init.d/xcvr_servd stop
     /etc/init.d/sys_servd stop
     /etc/init.d/sys_polld stop
 
     echo "done."
-
     ;;
 
 force-reload|restart)
@@ -43,7 +41,7 @@ force-reload|restart)
     ;;
 
 *)
-    echo "Usage: /etc/init.d/sonic-platform-mitac-ly1200-32x.init {start|stop}"
+    echo "Usage: /etc/init.d/sonic-platform-mitac-ly1200-32x {start|stop}"
     exit 1
     ;;
 esac

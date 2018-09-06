@@ -3,7 +3,7 @@
 # Provides:          sys-polld
 # Required-Start:
 # Required-Stop:
-# Default-Start:     rc.local
+# Default-Start:
 # Default-Stop:
 # Short-Description: Daemon sys-polld
 ### END INIT INFO

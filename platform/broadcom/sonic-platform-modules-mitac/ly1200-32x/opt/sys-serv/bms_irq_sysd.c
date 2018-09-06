@@ -35,7 +35,7 @@
 #define PROC_PRIORITY   90
 
 /* MIC_FEAT_SYS_INT : 1 means interrupt, 0 means polling */
-#define MIC_FEAT_SYS_INT 1
+#define MIC_FEAT_SYS_INT 0
 
 
 

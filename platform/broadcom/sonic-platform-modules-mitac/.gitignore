@@ -9,6 +9,8 @@ ly1200-32x/modules/modules.order
 ly1200-32x/modules/.tmp_versions
 ly1200-32x/opt/xcvr-serv/*.o
 ly1200-32x/opt/sys-serv/*.o
+ly1200-32x/opt/xcvr-serv/xcvr-servd
+ly1200-32x/opt/sys-serv/sys-servd
 
 debian/sonic-platform-mitac-ly1200-32x/
 debian/sonic-platform-mitac-ly1200-32x.debhelper.log
