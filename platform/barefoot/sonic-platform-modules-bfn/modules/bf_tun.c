@@ -1808,7 +1808,11 @@ static int tun_set_iff(struct net *net, struct file *file, struct ifreq *ifr)
 
 		if (!dev)
 			return -ENOMEM;
-
+#if 0
+		err = dev_get_valid_name(net, dev, name);
+		if (err < 0)
+			goto err_free_dev;
+#endif
 		dev_net_set(dev, net);
 		dev->rtnl_link_ops = &tun_link_ops;
 		dev->ifindex = tfile->ifindex;
@@ -2436,8 +2440,8 @@ static const struct file_operations tun_fops = {
 
 static struct miscdevice tun_miscdev = {
 	.minor = TUN_MINOR1,
-	.name = "tun",
-	.nodename = "net/tun",
+	.name = "bf_tun",
+	.nodename = "net/bf_tun",
 	.fops = &tun_fops,
 };
 
@@ -2609,4 +2613,4 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR(DRV_COPYRIGHT);
 MODULE_LICENSE("GPL");
 MODULE_ALIAS_MISCDEV(TUN_MINOR1);
-MODULE_ALIAS("devname:net/tun");
+MODULE_ALIAS("devname:net/bf_tun");
