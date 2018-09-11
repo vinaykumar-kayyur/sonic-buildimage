@@ -121,15 +121,36 @@ class SfpUtil(SfpUtilBase):
         raise NotImplementedError
 
     def get_transceiver_change_event(self, timeout=0):
-        modabs_interrupt_path = '/sys/devices/platform/e1031.smc/SFP/modabs_int'
+        status = False
         ports_evt = {}
-        try:
-            with open(modabs_interrupt_path, 'r') as port_changes:
-                changes = int(port_changes.read(), 16)
-                for port_num in self._sfp_port:
-                    change = (changes >> ( port_num - 49)) & 1
-                    if change == 1:
-                        ports_evt[str(port_num)] = str(self.get_presence(port_num))
-        except IOError:
-            return False, {}
-        return True, ports_evt
+        modabs_interrupt_path = '/sys/devices/platform/e1031.smc/SFP/modabs_int'
+        current_milli_time = lambda: int(round(time.time() * 1000))
+
+        if timeout < 0:
+            return status, ports_evt
+
+        time_started = current_milli_time()
+        time_target = time_started + timeout
+
+        found_flag = 0
+        first_flag = 0
+        while True:
+            try:
+                with open(modabs_interrupt_path, 'r') as port_changes:
+                    changes = int(port_changes.read(), 16)
+                    for port_num in self._sfp_port:
+                        change = (changes >> ( port_num - 49)) & 1
+                        if change == 1:
+                            ports_evt[str(port_num)] = str(int(self.get_presence(port_num)))
+                            found_flag = 1 if first_flag else 0
+                first_flag = 1
+            except IOError:
+                status = False
+                break
+
+            if (timeout == 0 and found_flag) or (timeout !=0 and current_milli_time() >= time_target):
+                status = True
+                break
+
+            time.sleep(0.1)
+        return status, ports_evt
