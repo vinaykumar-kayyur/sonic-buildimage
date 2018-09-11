@@ -14,6 +14,14 @@
 #  * USERNAME: Desired username -- default at rules/config
 #  * PASSWORD: Desired password -- default at rules/config
 #  * KEEP_SLAVE_ON: Keeps slave container up after building-process concludes.
+#  *                Please note that with current stretch build structure,
+#  *                user of KEEP_SLAVE_ON feature will have to be concious
+#  *                about which docker to stay on.
+#  *                - If user desire to stay on stretch docker, please issue
+#  *                  make KEEP_SLAVE_ON=yes stretch
+#  *                - If user desire to stay on jessie docker, please issue
+#  *                  (a susccessful "make stretch" may needed before following)
+#  *                  make NOSTRETCH=1 KEEP_SLAVE_ON=yes <any jessie target>
 #  * SOURCE_FOLDER: host path to be mount as /var/$(USER)/src, only effective when KEEP_SLAVE_ON=yes
 #  * SONIC_BUILD_JOBS: Specifying number of concurrent build job(s) to run
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
