@@ -364,10 +364,7 @@ common_ioexp_init(struct ioexp_obj_s *self) {
 
     int chip_id, offset, err_code;
     struct ioexp_addr_s *addr_p;
-
-    if (self->mode == IOEXP_MODE_DIRECT) { ///important
-        goto update_common_ioexp_init;
-    }
+    
     /* Setup default value to each physical IO Expander */
     for (chip_id=0; chip_id<(self->ioexp_map_p->chip_amount); chip_id++){
         /* Get address mapping */
@@ -390,7 +387,6 @@ common_ioexp_init(struct ioexp_obj_s *self) {
         }
     }
 
-update_common_ioexp_init:
     /* Check and update info to object */
     err_code = self->update_all(self, 1, "common_ioexp_init");
     if (err_code < 0) {
