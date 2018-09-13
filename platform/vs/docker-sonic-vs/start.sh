@@ -10,6 +10,10 @@ echo "onie_platform=$platform" > /host/machine.conf
 
 # generate configuration
 
+if [ -r /etc/sonic/minigraph.xml ]; then
+   sonic-cfggen -m -H --write-to-db
+fi
+
 [ -d /etc/sonic ] || mkdir -p /etc/sonic
 
 SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
