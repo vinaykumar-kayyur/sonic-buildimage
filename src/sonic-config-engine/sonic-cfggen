@@ -208,7 +208,7 @@ def main():
     if args.from_db:
         configdb = ConfigDBConnector(**db_kwargs)
         configdb.connect()
-        presetdeep_update(data, FormatConverter.db_to_output(configdb.get_config()))
+        deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
 
     if args.platform_info:
         hardware_data = {'DEVICE_METADATA': {'localhost': {
