@@ -227,7 +227,14 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     hping3                  \
     python-scapy            \
     tcptraceroute           \
-    mtr-tiny
+    mtr-tiny                \
+    locales
+
+#Adds a locale to a debian system in non-interactive mode
+sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT locale-gen "en_US.UTF-8"
+sudo LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT update-locale "LANG=en_US.UTF-8"
+sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -name 'en_US' -type f -exec rm -f {} +"
 
 # Install certain fundamental packages from stretch-backports in order to get
 # more up-to-date (but potentially less stable) versions
@@ -317,6 +324,10 @@ set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
 set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_dad 0
+
+set /files/etc/sysctl.conf/net.ipv6.conf.default.keep_addr_on_down 1
+set /files/etc/sysctl.conf/net.ipv6.conf.all.keep_addr_on_down 1
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.keep_addr_on_down 1
 
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
 
