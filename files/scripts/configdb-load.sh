@@ -10,8 +10,4 @@ if [ -r /etc/sonic/config_db.json ]; then
     sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
 fi
 
-if [ -r /etc/sonic/minigraph.xml ]; then
-   sonic-cfggen -m -H --write-to-db
-fi
-
 redis-cli -n 4 SET "CONFIG_DB_INITIALIZED" "1"
