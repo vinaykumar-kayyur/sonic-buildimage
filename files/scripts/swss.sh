@@ -1,6 +1,12 @@
 #!/bin/bash
 
 SERVICE="swss"
+DEBUGLOG="/tmp/swss-syncd-debug.log"
+
+function debug()
+{
+    /bin/echo `date` "- $1" >> ${DEBUGLOG}
+}
 
 function check_warm_boot()
 {
@@ -38,9 +44,13 @@ function wait_for_database_service()
 }
 
 start() {
+    debug "Starting ${SERVICE} service..."
+
     wait_for_database_service
     check_warm_boot
     validate_restart_count
+
+    debug "Warm boot flag: ${WARM_START}."
 
     # Don't flush DB during warm boot
     if [[ x"$WARM_START" != x"true" ]]; then
@@ -65,6 +75,8 @@ start() {
 
     # start swss and syncd docker
     /usr/bin/swss.sh start
+    debug "Started ${SERVICE} service..."
+
     if [[ x"$WARM_START" != x"true" ]]; then
         /usr/bin/syncd.sh start
     fi
@@ -72,9 +84,13 @@ start() {
 }
 
 stop() {
+    debug "Stopping ${SERVICE} service..."
+
     check_warm_boot
+    debug "Warm boot flag: ${WARM_START}."
 
     /usr/bin/swss.sh stop
+    debug "Stopped ${SERVICE} service..."
 
     # if warm start enabled, just stop swss docker, then return
     if [[ x"$WARM_START" != x"true" ]]; then
