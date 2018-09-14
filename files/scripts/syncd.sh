@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SERVICE="swss"
-PEER="syncd"
+SERVICE="syncd"
+PEER="swss"
 DEBUGLOG="/tmp/swss-syncd-debug.log"
 
 function debug()
@@ -72,19 +72,29 @@ start() {
 
     # Don't flush DB during warm boot
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 6 FLUSHDB
+        /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
+
+        # platform specific tasks
+        if [ x$sonic_asic_platform == x'mellanox' ]; then
+            FAST_BOOT=1
+            /usr/bin/mst start
+            /usr/bin/mlnx-fw-upgrade.sh
+            /etc/init.d/sxdkernel start
+            /sbin/modprobe i2c-dev
+            /etc/mlnx/mlnx-hw-management start
+        elif [ x$sonic_asic_platform == x'cavium' ]; then
+            /etc/init.d/xpnet.sh start
+        fi
+    fi
+
+    # Don't start peer service during warm boot, or if peer lock exists
+    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
+        /bin/systemctl start ${PEER}
     fi
 
     # start service docker
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
-
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
-        /bin/systemctl start ${PEER}
-    fi
 
     unlock_service_state_change
     /usr/bin/${SERVICE}.sh attach
@@ -97,12 +107,25 @@ stop() {
     check_warm_boot
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
+    # Don't stop peer service during warm boot, or if peer lock exists
+    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
+        /bin/systemctl stop ${PEER}
+    fi
+
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
-    # if warm start enabled or peer lock exists, don't stop peer service docker
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
-        /bin/systemctl stop ${PEER}
+    # if warm start enabled, don't stop peer service docker
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        # platform specific tasks
+        if [ x$sonic_asic_platform == x'mellanox' ]; then
+            /etc/mlnx/mlnx-hw-management stop
+            /etc/init.d/sxdkernel stop
+            /usr/bin/mst stop
+        elif [ x$sonic_asic_platform == x'cavium' ]; then
+            /etc/init.d/xpnet.sh stop
+            /etc/init.d/xpnet.sh start
+        fi
     fi
 
     unlock_service_state_change
