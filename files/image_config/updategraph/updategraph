@@ -17,21 +17,6 @@ reload_minigraph()
     config qos reload
 }
 
-copy_default_minigraph()
-{
-    . /host/machine.conf
-    if [ -n "$aboot_platform" ]; then
-        platform=$aboot_platform
-    elif [ -n "$onie_platform" ]; then
-        platform=$onie_platform
-    else
-        echo "Unknown sonic platform."
-        exit 1
-    fi
-    echo "Copying default minigraph..."
-    cp /usr/share/sonic/device/$platform/minigraph.xml /etc/sonic/
-}
-
 
 if [ ! -f /etc/sonic/updategraph.conf ]; then
     echo "No updategraph.conf found, generating a default one."
@@ -67,15 +52,15 @@ if [ -f /tmp/pending_config_initialization ]; then
     rm -f /tmp/pending_config_initialization
     if [ "$enabled" != "true" ]; then 
         PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
-        if [ -f /usr/share/sonic/device/$platform/default_sku ]; then
-            PRESET=(`head -n 1 /usr/share/sonic/device/$platform/default_sku`)
+        if [ -f /usr/share/sonic/device/$PLATFORM/default_sku ]; then
+            PRESET=(`head -n 1 /usr/share/sonic/device/$PLATFORM/default_sku`)
             sonic-cfggen -H -k ${PRESET[0]} --preset ${PRESET[1]} > /etc/sonic/config_db.json
             redis-cli -n $CONFIG_DB_INDEX FLUSHDB
             sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
             redis-cli -n $CONFIG_DB_INDEX SET "CONFIG_DB_INITIALIZED" "1"
         else
             echo "Copying default minigraph..."
-            cp /usr/share/sonic/device/$platform/minigraph.xml /etc/sonic/
+            cp /usr/share/sonic/device/$PLATFORM/minigraph.xml /etc/sonic/
             reload_minigraph
             sonic-cfggen -d --print-data > /etc/sonic/config_db.json
         fi
@@ -116,11 +101,11 @@ if [ "$src" = "dhcp" ]; then
         PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
         if [ -f /etc/sonic/minigraph.xml ]; then
             sonic-cfggen -H -m /etc/sonic/minigraph.xml --preset empty > /tmp/device_meta.json
-        elif [ -f /usr/share/sonic/device/$platform/default_sku ]; then
-            PRESET=(`head -n 1 /usr/share/sonic/device/$platform/default_sku`)
+        elif [ -f /usr/share/sonic/device/$PLATFORM/default_sku ]; then
+            PRESET=(`head -n 1 /usr/share/sonic/device/$PLATFORM/default_sku`)
             sonic-cfggen -H -k ${PRESET[0]} --preset empty > /tmp/device_meta.json
         else
-            sonic-cfggen -H -m /usr/share/sonic/device/$platform/minigraph.xml --preset empty > /tmp/device_meta.json
+            sonic-cfggen -H -m /usr/share/sonic/device/$PLATFORM/minigraph.xml --preset empty > /tmp/device_meta.json
         fi
         if [ -f /etc/sonic/init_cfg.json ]; then
             sonic-cfggen -j /tmp/device_meta.json -j /etc/sonic/init_cfg.json --print-data > /etc/sonic/config_db.json
