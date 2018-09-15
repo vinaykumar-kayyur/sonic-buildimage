@@ -27,23 +27,7 @@ function unlock_service_state_change()
 function check_warm_boot()
 {
     SYSTEM_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|system" enable`
-    SERVICE_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|${SERVICE}" enable`
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
-        WARM_BOOT="true"
-    else
-        WARM_BOOT="false"
-    fi
-}
-
-function validate_restart_count()
-{
-    if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTART_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restart_count`
-        # We have to make sure db data has not been flushed.
-        if [[ -z "$RESTART_COUNT" ]]; then
-            WARM_BOOT="false"
-        fi
-    fi
+    WARM_BOOT=${SYSTEM_WARM_START}
 }
 
 function wait_for_database_service()
@@ -66,7 +50,6 @@ start() {
 
     wait_for_database_service
     check_warm_boot
-    validate_restart_count
 
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
