@@ -51,15 +51,12 @@ docker_try_rmi() {
 }
 
 sonic_get_version() {
+    DIRTY_SUFFIX="$(date +%Y%m%d\.%H%M%S)"
     local describe=$(git describe --tags)
     local latest_tag=$(git describe --tags --abbrev=0)
     local branch_name=$(git rev-parse --abbrev-ref HEAD)
     if [ -n "$(git status --untracked-files=no -s --ignore-submodules)" ]; then
-        if [ -z "$DIRTY_SUFFIX" ]; then
-            local dirty="-dirty-"$(date +%Y%m%d\.%H%M%S)
-        else
-            local dirty="-dirty-$DIRTY_SUFFIX"
-        fi
+        local dirty="-dirty-$DIRTY_SUFFIX"
     fi
     BUILD_NUMBER=${BUILD_NUMBER:-0}
     ## Check if we are on tagged commit

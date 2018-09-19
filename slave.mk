@@ -517,9 +517,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x sonic_debian_extension.sh,
 	)
 
-	DIRTY_SUFFIX="$(shell date +%Y%m%d\.%H%M%S)"
-	export DIRTY_SUFFIX
-
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
 		./build_debian.sh $(LOG)
