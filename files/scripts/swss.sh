@@ -18,12 +18,12 @@ function lock_service_state_change()
     /usr/bin/flock -x ${LOCKFD}
     trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
 
-    debug "Locked ${LOCKFILE} ($LOCKFD}) from ${SERVICE} service"
+    debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE} service"
 }
 
 function unlock_service_state_change()
 {
-    debug "Unlocking ${LOCKFILE} ($LOCKFD}) from ${SERVICE} service"
+    debug "Unlocking ${LOCKFILE} (${LOCKFD}) from ${SERVICE} service"
     /usr/bin/flock -u ${LOCKFD}
 }
 
