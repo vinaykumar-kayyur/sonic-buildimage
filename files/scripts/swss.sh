@@ -3,6 +3,7 @@
 SERVICE="swss"
 PEER="syncd"
 DEBUGLOG="/tmp/swss-syncd-debug.log"
+LOCKFILE="/tmp/swss-syncd-lock"
 
 function debug()
 {
@@ -11,17 +12,19 @@ function debug()
 
 function lock_service_state_change()
 {
-    debug "Locking ${SERVICE} service"
-    svclock=$(/bin/mktemp /tmp/${SERVICE}-service-lock.XXXXXX)
-    trap "/bin/rm -f $svclock" 0 2 3 15
-    peerlock=`/bin/ls /tmp/${PEER}-service-lock* 2>/dev/null`
-    [[ -n "$peerlock" ]] && debug "Found ${PEER} service lock: $peerlock"
+    debug "Locking ${LOCKFILE} from ${SERVICE} service"
+
+    exec {LOCKFD}>${LOCKFILE}
+    /usr/bin/flock -x ${LOCKFD}
+    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+
+    debug "Locked ${LOCKFILE} ($LOCKFD}) from ${SERVICE} service"
 }
 
 function unlock_service_state_change()
 {
-    debug "Unlocking ${SERVICE} service"
-    /bin/rm -f $svclock
+    debug "Unlocking ${LOCKFILE} ($LOCKFD}) from ${SERVICE} service"
+    /usr/bin/flock -u ${LOCKFD}
 }
 
 function check_warm_boot()
@@ -82,16 +85,19 @@ start() {
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
 
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
+    # Unlock has to happen before reaching out to peer service
+    unlock_service_state_change
+
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl start ${PEER}
     fi
-
-    unlock_service_state_change
     /usr/bin/${SERVICE}.sh attach
 }
 
 stop() {
     debug "Stopping ${SERVICE} service..."
+
+    [[ -f ${LOCKFILE} ]] || /usr/bin/touch ${LOCKFILE}
 
     lock_service_state_change
     check_warm_boot
@@ -100,12 +106,13 @@ stop() {
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
+    # Unlock has to happen before reaching out to peer service
+    unlock_service_state_change
+
     # if warm start enabled or peer lock exists, don't stop peer service docker
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl stop ${PEER}
     fi
-
-    unlock_service_state_change
 }
 
 case "$1" in

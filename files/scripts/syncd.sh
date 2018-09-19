@@ -3,6 +3,7 @@
 SERVICE="syncd"
 PEER="swss"
 DEBUGLOG="/tmp/swss-syncd-debug.log"
+LOCKFILE="/tmp/swss-syncd-lock"
 
 function debug()
 {
@@ -11,23 +12,30 @@ function debug()
 
 function lock_service_state_change()
 {
-    debug "Locking ${SERVICE} service"
-    svclock=$(/bin/mktemp /tmp/${SERVICE}-service-lock.XXXXXX)
-    trap "/bin/rm -f $svclock" 0 2 3 15
-    peerlock=`/bin/ls /tmp/${PEER}-service-lock* 2>/dev/null`
-    [[ -n "$peerlock" ]] && debug "Found ${PEER} service lock: $peerlock"
+    debug "Locking ${LOCKFILE} from ${SERVICE} service"
+
+    exec {LOCKFD}>${LOCKFILE}
+    /usr/bin/flock -x ${LOCKFD}
+    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+
+    debug "Locked ${LOCKFILE} ($LOCKFD}) from ${SERVICE} service"
 }
 
 function unlock_service_state_change()
 {
-    debug "Unlocking ${SERVICE} service"
-    /bin/rm -f $svclock
+    debug "Unlocking ${LOCKFILE} ($LOCKFD}) from ${SERVICE} service"
+    /usr/bin/flock -u ${LOCKFD}
 }
 
 function check_warm_boot()
 {
     SYSTEM_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|system" enable`
-    WARM_BOOT=${SYSTEM_WARM_START}
+    # SYSTEM_WARM_START could be empty, always make WARM_BOOT meaningful.
+    if [[ x"$SYSTEM_WARM_START" == x"true" ]]; then
+        WARM_BOOT="true"
+    else
+        WARM_BOOT="false"
+    fi
 }
 
 function wait_for_database_service()
@@ -70,11 +78,6 @@ start() {
         fi
     fi
 
-    # Don't start peer service during warm boot, or if peer lock exists
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
-        /bin/systemctl start ${PEER}
-    fi
-
     # start service docker
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
@@ -89,11 +92,6 @@ stop() {
     lock_service_state_change
     check_warm_boot
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
-
-    # Don't stop peer service during warm boot, or if peer lock exists
-    if [[ x"$WARM_BOOT" != x"true" ]] && [[ -z "$peerlock" ]]; then
-        /bin/systemctl stop ${PEER}
-    fi
 
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
