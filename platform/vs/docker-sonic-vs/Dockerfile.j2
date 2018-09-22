@@ -92,6 +92,7 @@ COPY ["teamd.j2", "/usr/share/sonic/templates/"]
 COPY ["bgpcfgd", "/usr/bin/"]
 COPY ["sonic_version.yml", "/etc/sonic/sonic_version.yml"]
 COPY ["*.j2", "/usr/share/sonic/templates/"]
+COPY ["minigraph.xml", "/etc/sonic/"]
 
 RUN echo "docker-sonic-vs" > /etc/hostname
 RUN touch /etc/quagga/zebra.conf

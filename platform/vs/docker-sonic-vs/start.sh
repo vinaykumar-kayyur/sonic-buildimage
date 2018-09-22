@@ -1,16 +1,14 @@
 #!/bin/bash -e
 
-# Set correct platform string
+# generate configuration
+[ -d /etc/sonic ] || mkdir -p /etc/sonic
 
+# Set correct platform string
 HWSKU=$(sonic-cfggen -m -v DEVICE_METADATA.localhost.hwsku)
 platform=$(find /usr/share/sonic/device -name $HWSKU | sed 's/.*\(x86.*\)\/.*/\1/')
 
 mkdir -p /host
 echo "onie_platform=$platform" > /host/machine.conf
-
-# generate configuration
-
-[ -d /etc/sonic ] || mkdir -p /etc/sonic
 
 SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
 sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'"}}}' --print-data > /etc/sonic/init_cfg.json
