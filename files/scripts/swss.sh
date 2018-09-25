@@ -41,7 +41,7 @@ function check_warm_boot()
 function validate_restart_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTART_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restart_count`
+        RESTART_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTART_COUNT" ]]; then
             WARM_BOOT="false"
