@@ -56,6 +56,8 @@ start() {
 
     lock_service_state_change
 
+    mkdir -p /host/warmboot
+
     wait_for_database_service
     check_warm_boot
 
