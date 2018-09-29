@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import calendar
+import math
 import os
 import sys
 import socket
@@ -176,6 +177,7 @@ def parse_dpg(dpg, hname):
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
         pcs = {}
+        pc_members = {}
         intfs_inpc = [] # List to hold all the LAG member interfaces 
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
@@ -185,10 +187,11 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
                 intfs_inpc.append(pcmbr_list[i])
+                pc_members[pcintfname + KEY_SEPARATOR + pcmbr_list[i]] = {'NULL': 'NULL'}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
-                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
+                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
-                pcs[pcintfname] = {'members': pcmbr_list}
+                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75)))}
 
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlan_intfs = []
@@ -280,7 +283,7 @@ def parse_dpg(dpg, hname):
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
-        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls
+        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls
     return None, None, None, None, None, None, None
 
 
@@ -443,7 +446,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -469,7 +472,20 @@ def parse_xml(filename, platform=None, port_config_file=None):
     if mgmt_routes:
         # TODO: differentiate v4 and v6
         mgmt_intf.itervalues().next()['forced_mgmt_routes'] = mgmt_routes
-    results['MGMT_INTERFACE'] = mgmt_intf
+    results['MGMT_PORT'] = {}
+    results['MGMT_INTERFACE'] = {}
+    mgmt_intf_count = 0
+    mgmt_alias_reverse_mapping = {}
+    for key in mgmt_intf:
+        alias = key[0]
+        if mgmt_alias_reverse_mapping.has_key(alias):
+            name = mgmt_alias_reverse_mapping[alias]
+        else:
+            name = 'eth' + str(mgmt_intf_count)
+            mgmt_intf_count += 1
+            mgmt_alias_reverse_mapping[alias] = name
+        results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up'}
+        results['MGMT_INTERFACE'][(name, key[1])] = mgmt_intf[key]
     results['LOOPBACK_INTERFACE'] = lo_intfs
 
     phyport_intfs = {}
@@ -543,7 +559,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
-
+    results['PORTCHANNEL_MEMBER'] = pc_members
 
     for pc_intf in pc_intfs.keys():
         # remove portchannels not in PORTCHANNEL dictionary

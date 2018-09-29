@@ -230,7 +230,20 @@ RUN apt-get update && apt-get install -y \
 # For bash
         texi2html \
 # For initramfs
-        bash-completion
+        bash-completion \
+#For Mellanox CRIU build
+        libprotobuf-dev \
+        libprotobuf-c0-dev \
+        protobuf-c-compiler \
+        protobuf-compiler \
+        python-protobuf \
+        pkg-config \
+        libnet1-dev \
+        libnet-dev \
+        libaio-dev \
+        asciidoc \
+        xmlto \
+        checkinstall
 
 # For linux build
 RUN apt-get -y build-dep linux
@@ -298,4 +311,4 @@ RUN add-apt-repository \
            stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
-RUN echo "DOCKER_OPTS=\"--experimental\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
