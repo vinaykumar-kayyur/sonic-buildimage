@@ -30,9 +30,12 @@ function wait_until_iface_ready
 }
 
 
-# Wait for all interfaces to come up and have IPv4 addresses assigned
+# Wait for all interfaces to come up and have IPv4 addresses assigned. Skip
+# waiting on interfaces that are not configured with an IPv4 address.
 {% for (name, prefix) in INTERFACE %}
+{% if prefix != '0.0.0.0/0' %}
 wait_until_iface_ready {{ name }}
+{% endif %}
 {% endfor %}
 {% for (name, prefix) in VLAN_INTERFACE %}
 wait_until_iface_ready {{ name }}
