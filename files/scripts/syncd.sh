@@ -105,7 +105,7 @@ stop() {
         done
 
         /usr/bin/docker exec -i syncd /bin/sync
-        debug "Finihsed warm shutdown syncd process ..."
+        debug "Finished warm shutdown syncd process ..."
     fi
 
     /usr/bin/${SERVICE}.sh stop
