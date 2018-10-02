@@ -5,11 +5,11 @@ query_retry_count_max="10"
 fw_file=/etc/mlnx/fw-SPC.mfa
 
 run_or_fail() {
-	$1
-	if [[ $? != 0 ]]; then
-		echo $1 failed
-		exit 1
-	fi
+    $1
+    if [[ $? != 0 ]]; then
+        echo $1 failed
+        exit 1
+    fi
 }
 
 # wait until devices will be available
@@ -18,12 +18,12 @@ query_cmd="mlxfwmanager --query"
 ${query_cmd} > /dev/null
 
 while [[ (${query_retry_count} -lt ${query_retry_count_max}) && ($? -ne "0") ]]; do
-	sleep 1
-	query_retry_count=$[${query_retry_count}+1]
-	${query_cmd} > /dev/null
+    sleep 1
+    query_retry_count=$[${query_retry_count}+1]
+    ${query_cmd} > /dev/null
 done
 
-function upgrade() {
+upgrade() {
     if [ ! -z "$1" ]; then
         fw_file="$1"
         if [ ! -f "$fw_file" ]; then
@@ -46,17 +46,17 @@ function upgrade() {
         fw_info=$(grep FW /tmp/mlnxfwmanager-query.txt)
         fw_current=$(echo $fw_info | cut -f2 -d' ')
     fi
-    
+
     if [[ -z ${fw_current} ]]; then
         echo "Could not retreive current FW version."
         exit 1
     fi
-    
+
     if [[ -z ${fw_required} ]]; then
         echo "Could not retreive required FW version."
         exit 1
     fi
-    
+
     if [[ ${fw_current} == ${fw_required} ]]; then
         echo "Mellanox firmware is up to date."
     else
