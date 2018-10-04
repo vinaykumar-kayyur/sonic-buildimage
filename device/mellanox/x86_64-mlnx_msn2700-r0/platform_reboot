@@ -1,13 +1,13 @@
 #!/bin/bash
 
-FW_UPGRADE_SCRIPT="/usr/bin/mlnx-fw-upgrade.sh"
+declare -r EXIT_SUCCESS="0"
+declare -r EXIT_ERROR="1"
 
-NEXT_SONIC_IMAGE="$(sonic_installer list | grep "Next: " | cut -d ' ' -f 2)"
-CURRENT_SONIC_IMAGE="$(sonic_installer list | grep "Current: " | cut -d ' ' -f 2)"
+declare -r FW_UPGRADE_SCRIPT="/usr/bin/mlnx-fw-upgrade.sh"
 
 FORCE_REBOOT="no"
 
-ParseArguments() {
+function ParseArguments() {
     while [ $# -ge 1 ]; do
         case "$1" in
             -f|--force)
@@ -18,30 +18,17 @@ ParseArguments() {
     done
 }
 
-ParseArguments $@
+ParseArguments "$@"
 
-if [[ "${CURRENT_SONIC_IMAGE}" != "${NEXT_SONIC_IMAGE}" ]]; then
-    echo "Prepare ASIC to reboot: install new FW if required"
+${FW_UPGRADE_SCRIPT} --upgrade
+EXIT_CODE="$?"
+if [[ "${EXIT_CODE}" != "${EXIT_SUCCESS}" ]]; then
+    echo "Failed to burn MLNX FW: errno=${EXIT_CODE}"
 
-    NEXT_IMAGE_FS_PATH="/host/image-${NEXT_SONIC_IMAGE#SONiC-OS-}/fs.squashfs"
-    FS_MOUNTPOINT="/tmp/image-${NEXT_SONIC_IMAGE#SONiC-OS-}-fs"
-
-    mkdir -p "${FS_MOUNTPOINT}"
-    mount -t squashfs "${NEXT_IMAGE_FS_PATH}" "${FS_MOUNTPOINT}"
-
-    ${FW_UPGRADE_SCRIPT} "${FS_MOUNTPOINT}/etc/mlnx/fw-SPC.mfa"
-    EXIT_CODE=$?
-
-    umount "${FS_MOUNTPOINT}"
-
-    if [[ ${EXIT_CODE} != 0 ]]; then
-        echo "Failed to burn FW: errno=${EXIT_CODE}"
-
-        if [[ ${FORCE_REBOOT} != "yes" ]]; then
-            echo "Reboot is interrupted: use -f|--force to override"
-            exit 1
-        fi
+    if [[ "${FORCE_REBOOT}" != "yes" ]]; then
+        echo "Reboot is interrupted: use -f|--force to override"
+        exit "${EXIT_ERROR}"
     fi
 fi
 
-/sbin/reboot $@
+exec /sbin/reboot $@
