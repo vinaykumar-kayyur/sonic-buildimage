@@ -59,6 +59,8 @@ SLAVE_DIR = sonic-slave
 endif
 
 OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
+SONIC_SET_BUILD_TIMESTAMP = . functions.sh && sonic_set_build_timestamp
+SONIC_CLEAR_BUILD_TIMESTAMP = . functions.sh && sonic_clear_build_timestamp
 
 DOCKER_RUN := docker run --rm=true --privileged \
     -v $(PWD):/sonic \
@@ -114,12 +116,12 @@ SONIC_BUILD_INSTRUCTION :=  make \
 	    $(DOCKER_BUILD) ; }
 ifeq "$(KEEP_SLAVE_ON)" "yes"
     ifdef SOURCE_FOLDER
-		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/$(USER)/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
+		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/$(USER)/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_SET_BUILD_TIMESTAMP); $(SONIC_BUILD_INSTRUCTION) $@; $(SONIC_CLEAR_BUILD_TIMESTAMP); /bin/bash"
     else
-		@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
+		@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_SET_BUILD_TIMESTAMP); $(SONIC_BUILD_INSTRUCTION) $@; $(SONIC_CLEAR_BUILD_TIMESTAMP); /bin/bash"
     endif
 else
-	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) $(SONIC_BUILD_INSTRUCTION) $@
+	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_SET_BUILD_TIMESTAMP); $(SONIC_BUILD_INSTRUCTION) $@"
 endif
 
 sonic-slave-build :
