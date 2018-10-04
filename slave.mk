@@ -32,6 +32,7 @@ PROJECT_ROOT = $(shell pwd)
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
 export BUILD_NUMBER
+export BUILD_TIMESTAMP
 export CONFIGURED_PLATFORM
 
 ###############################################################################
