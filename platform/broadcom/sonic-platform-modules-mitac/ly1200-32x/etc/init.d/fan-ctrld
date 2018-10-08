@@ -3,7 +3,7 @@
 # Provides:          fan-ctrld
 # Required-Start:
 # Required-Stop:
-# Default-Start:     rc.local
+# Default-Start:
 # Default-Stop:
 # Short-Description: Daemon fan-ctrld
 ### END INIT INFO

@@ -1,0 +1,3 @@
+depmod -a
+systemctl enable sonic-platform-mitac-ly1200-32x.service
+systemctl start sonic-platform-mitac-ly1200-32x.service
