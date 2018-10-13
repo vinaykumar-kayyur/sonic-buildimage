@@ -37,7 +37,7 @@
     {%- endif %}
 {% endfor %}
 [
-{% if ipv6_loopback_addresses %}
+{% if ipv4_loopback_addresses %}
     {
         "TUNNEL_DECAP_TABLE:IPINIP_TUNNEL" : {
             "tunnel_type":"IPINIP",
