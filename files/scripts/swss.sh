@@ -1,6 +1,56 @@
 #!/bin/bash
 
-start() {
+SERVICE="swss"
+PEER="syncd"
+DEBUGLOG="/tmp/swss-syncd-debug.log"
+LOCKFILE="/tmp/swss-syncd-lock"
+
+function debug()
+{
+    /bin/echo `date` "- $1" >> ${DEBUGLOG}
+}
+
+function lock_service_state_change()
+{
+    debug "Locking ${LOCKFILE} from ${SERVICE} service"
+
+    exec {LOCKFD}>${LOCKFILE}
+    /usr/bin/flock -x ${LOCKFD}
+    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
+
+    debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE} service"
+}
+
+function unlock_service_state_change()
+{
+    debug "Unlocking ${LOCKFILE} (${LOCKFD}) from ${SERVICE} service"
+    /usr/bin/flock -u ${LOCKFD}
+}
+
+function check_warm_boot()
+{
+    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|system" enable`
+    SERVICE_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|${SERVICE}" enable`
+    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
+        WARM_BOOT="true"
+    else
+        WARM_BOOT="false"
+    fi
+}
+
+function validate_restore_count()
+{
+    if [[ x"$WARM_BOOT" == x"true" ]]; then
+        RESTORE_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restore_count`
+        # We have to make sure db data has not been flushed.
+        if [[ -z "$RESTORE_COUNT" ]]; then
+            WARM_BOOT="false"
+        fi
+    fi
+}
+
+function wait_for_database_service()
+{
     # Wait for redis server start before database clean
     until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]];
         do sleep 1;
@@ -10,66 +60,58 @@ start() {
     until [[ $(/usr/bin/docker exec database redis-cli -n 4 GET "CONFIG_DB_INITIALIZED") ]];
         do sleep 1;
     done
+}
 
-    SYSTEM_WARM_START=`/usr/bin/docker exec database redis-cli -n 4 HGET "WARM_RESTART|system" enable`
-    SWSS_WARM_START=`/usr/bin/docker exec database redis-cli -n 4 HGET "WARM_RESTART|swss" enable`
-    # if warm start enabled, just do swss docker start.
-    # Don't flush DB or try to start other modules.
-    if [[ "$SYSTEM_WARM_START" == "true" ]] || [[ "$SWSS_WARM_START" == "true" ]]; then
-      RESTART_COUNT=`redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restart_count`
-      # We have to make sure db data has not been flushed.
-      if [[ -n "$RESTART_COUNT" ]]; then
-        /usr/bin/swss.sh start
-        /usr/bin/swss.sh attach
-        return 0
-      fi
+start() {
+    debug "Starting ${SERVICE} service..."
+
+    lock_service_state_change
+
+    wait_for_database_service
+    check_warm_boot
+    validate_restore_count
+
+    debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
+
+    # Don't flush DB during warm boot
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
+        /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
+        /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
+        /usr/bin/docker exec database redis-cli -n 6 FLUSHDB
     fi
 
-    # Flush DB
-    /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
-    /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
-    /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
-    /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
-    /usr/bin/docker exec database redis-cli -n 6 FLUSHDB
+    # start service docker
+    /usr/bin/${SERVICE}.sh start
+    debug "Started ${SERVICE} service..."
 
-    # platform specific tasks
-    if [ x$sonic_asic_platform == x'mellanox' ]; then
-        FAST_BOOT=1
-        /usr/bin/mst start
-        /usr/bin/mlnx-fw-upgrade.sh
-        /etc/init.d/sxdkernel start
-        /sbin/modprobe i2c-dev
-        /etc/mlnx/mlnx-hw-management start
-    elif [ x$sonic_asic_platform == x'cavium' ]; then
-        /etc/init.d/xpnet.sh start
+    # Unlock has to happen before reaching out to peer service
+    unlock_service_state_change
+
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        /bin/systemctl start ${PEER}
     fi
-
-    # start swss and syncd docker
-    /usr/bin/swss.sh start
-    /usr/bin/syncd.sh start
-    /usr/bin/swss.sh attach
+    /usr/bin/${SERVICE}.sh attach
 }
 
 stop() {
-    /usr/bin/swss.sh stop
+    debug "Stopping ${SERVICE} service..."
 
-    SYSTEM_WARM_START=`redis-cli -n 4 hget "WARM_RESTART|system" enable`
-    SWSS_WARM_START=`redis-cli -n 4 hget "WARM_RESTART|swss" enable`
-    # if warm start enabled, just stop swss docker, then return
-    if [[ "$SYSTEM_WARM_START" == "true" ]] || [[ "$SWSS_WARM_START" == "true" ]]; then
-        return 0
-    fi
+    [[ -f ${LOCKFILE} ]] || /usr/bin/touch ${LOCKFILE}
 
-    /usr/bin/syncd.sh stop
+    lock_service_state_change
+    check_warm_boot
+    debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
-    # platform specific tasks
-    if [ x$sonic_asic_platform == x'mellanox' ]; then
-        /etc/mlnx/mlnx-hw-management stop
-        /etc/init.d/sxdkernel stop
-        /usr/bin/mst stop
-    elif [ x$sonic_asic_platform == x'cavium' ]; then
-        /etc/init.d/xpnet.sh stop
-        /etc/init.d/xpnet.sh start
+    /usr/bin/${SERVICE}.sh stop
+    debug "Stopped ${SERVICE} service..."
+
+    # Unlock has to happen before reaching out to peer service
+    unlock_service_state_change
+
+    # if warm start enabled or peer lock exists, don't stop peer service docker
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        /bin/systemctl stop ${PEER}
     fi
 }
 

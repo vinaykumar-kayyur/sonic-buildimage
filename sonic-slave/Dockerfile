@@ -63,6 +63,7 @@ RUN apt-get update && apt-get install -y \
         libjson0-dev \
         libsystemd-dev \
         python-ipaddr \
+        install-info \
 # For libnl3 (local) build
         cdbs \
 # For SAI meta build
@@ -230,7 +231,20 @@ RUN apt-get update && apt-get install -y \
 # For bash
         texi2html \
 # For initramfs
-        bash-completion
+        bash-completion \
+#For Mellanox CRIU build
+        libprotobuf-dev \
+        libprotobuf-c0-dev \
+        protobuf-c-compiler \
+        protobuf-compiler \
+        python-protobuf \
+        pkg-config \
+        libnet1-dev \
+        libnet-dev \
+        libaio-dev \
+        asciidoc \
+        xmlto \
+        checkinstall
 
 # For linux build
 RUN apt-get -y build-dep linux

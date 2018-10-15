@@ -92,8 +92,13 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'everflow0': {'src_ip': '10.1.0.32', 'dst_ip': '2.2.2.2'}}")
 
+    def test_minigraph_mgmt_ports(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v MGMT_PORT'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "{'eth0': {'alias': 'Management0', 'admin_status': 'up'}}")
+
     def test_minigraph_interfaces(self):
-        argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v \'INTERFACE.keys()\''
+        argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "INTERFACE.keys()"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "[('Ethernet0', '10.0.0.58/31'), ('Ethernet0', 'FC00::75/126')]")
 
@@ -115,12 +120,17 @@ class TestCfgGen(TestCase):
     def test_minigraph_portchannels(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v PORTCHANNEL'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'PortChannel01': {'admin_status': 'up', 'members': ['Ethernet4'], 'mtu': '9100'}}")
+        self.assertEqual(output.strip(), "{'PortChannel01': {'admin_status': 'up', 'min_links': '1', 'members': ['Ethernet4'], 'mtu': '9100'}}")
 
-    def test_minigraph_portchannels_more_member(self):
+    def test_minigraph_portchannel_with_more_member(self):
         argument = '-m "' + self.sample_graph_pc_test + '" -p "' + self.port_config + '" -v PORTCHANNEL'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'PortChannel01': {'admin_status': 'up', 'members': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124'], 'mtu': '9100'}}")
+        self.assertEqual(output.strip(), "{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'members': ['Ethernet112', 'Ethernet116', 'Ethernet120', 'Ethernet124'], 'mtu': '9100'}}")
+
+    def test_minigraph_portchannel_members(self):
+        argument = '-m "' + self.sample_graph_pc_test + '" -p "' + self.port_config + '" -v "PORTCHANNEL_MEMBER.keys()"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "['PortChannel01|Ethernet112', 'PortChannel01|Ethernet124', 'PortChannel01|Ethernet116', 'PortChannel01|Ethernet120']")
 
     def test_minigraph_portchannel_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORTCHANNEL_INTERFACE.keys()"'
