@@ -211,7 +211,8 @@ def parse_dpg(dpg, hname):
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
-            if vintf.find(str(QName(ns, "DhcpRelays"))) is not None:
+            if vintf.find(str(QName(ns, "DhcpRelays"))) is not None and
+               vintf.find(str(QName(ns, "DhcpRelays"))).text is not None:
                 vintfdhcpservers = vintf.find(str(QName(ns, "DhcpRelays"))).text
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
