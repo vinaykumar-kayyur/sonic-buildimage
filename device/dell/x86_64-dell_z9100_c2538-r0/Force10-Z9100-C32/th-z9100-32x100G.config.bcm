@@ -1,19 +1,28 @@
 #TH Z9100 32x100
+
 l3_alpm_enable=2
+pfc_deadlock_seq_control=1
+bcm_stat_interval=2000000
 bcm_num_cos=8
 switch_bypass_mode=0
 mmu_lossless=0
 lpm_scaling_enable=0
+lpm_scaling_enable=0
 lpm_ipv6_128b_reserved=0
 ipv6_lpm_128b_enable=1
-
+l2xmsg_mode=1
+oversubscribe_mode=1
 os=unix
+
+pbmp_oversubscribe=0x3fd000000ff4000003fc000001fe
+pbmp_xport_xe=0x3fd000000ff4000003fc000001fe
+
+serdes_if_type_xe=14
+serdes_if_type_ce=14
 
 #Parity
 parity_correction=1
 parity_enable=1
-
-scache_filename=/tmp/scache
 
 #Port configuration
 portmap_38=49:100
@@ -219,9 +228,5 @@ dport_map_port_2=29
 dport_map_port_1=30
 dport_map_port_4=31
 dport_map_port_3=32
-oversubscribe_mode=1
-pbmp_xport_xe=0x3fd000000ff4000003fc000001fe
-serdes_if_type_xe=14
-serdes_if_type_ce=14
 
 mmu_init_config="MSFT-TH-Tier1"
