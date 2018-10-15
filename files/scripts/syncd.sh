@@ -56,6 +56,8 @@ start() {
 
     lock_service_state_change
 
+    mkdir -p /host/warmboot
+
     wait_for_database_service
     check_warm_boot
 
@@ -72,7 +74,6 @@ start() {
             /usr/bin/mlnx-fw-upgrade.sh
             /etc/init.d/sxdkernel start
             /sbin/modprobe i2c-dev
-            /etc/mlnx/mlnx-hw-management start
         elif [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh start
         fi
@@ -93,6 +94,19 @@ stop() {
     check_warm_boot
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
+    if [[ x"$WARM_BOOT" == x"true" ]]; then
+        debug "Warm shutdown syncd process ..."
+        /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --warm
+
+        # wait until syncd quits gracefully
+        while docker top syncd | grep -q /usr/bin/syncd; do
+            sleep 0.1
+        done
+
+        /usr/bin/docker exec -i syncd /bin/sync
+        debug "Finished warm shutdown syncd process ..."
+    fi
+
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
@@ -100,7 +114,6 @@ stop() {
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         # platform specific tasks
         if [ x$sonic_asic_platform == x'mellanox' ]; then
-            /etc/mlnx/mlnx-hw-management stop
             /etc/init.d/sxdkernel stop
             /usr/bin/mst stop
         elif [ x$sonic_asic_platform == x'cavium' ]; then
