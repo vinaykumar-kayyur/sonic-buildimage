@@ -36,7 +36,6 @@ else
     fi
 fi
 
-rm -f /var/run/sswsyncd/sswsyncd.socket
 supervisorctl start syncd
 
 # If this platform has an initialization file for the Broadcom LED microprocessor, load it
