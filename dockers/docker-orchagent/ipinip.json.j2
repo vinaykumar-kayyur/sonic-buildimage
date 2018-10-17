@@ -41,7 +41,6 @@
     {
         "TUNNEL_DECAP_TABLE:IPINIP_TUNNEL" : {
             "tunnel_type":"IPINIP",
-            "src_ip":"{{ ipv4_loopback_addresses | first | ip }}",
             "dst_ip":"{% for prefix in ipv4_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
 {% if "mlnx" in DEVICE_METADATA.localhost.platform %}
             "dscp_mode":"uniform",
@@ -61,7 +60,6 @@
     {
         "TUNNEL_DECAP_TABLE:IPINIP_V6_TUNNEL" : {
             "tunnel_type":"IPINIP",
-            "src_ip":"{{ ipv6_loopback_addresses | first | ip }}",
             "dst_ip":"{% for prefix in ipv6_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
 {% if "mlnx" in DEVICE_METADATA.localhost.platform %}
             "dscp_mode":"uniform",
