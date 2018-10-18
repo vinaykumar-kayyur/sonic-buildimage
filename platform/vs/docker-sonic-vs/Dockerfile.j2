@@ -45,11 +45,15 @@ RUN apt-get install -y net-tools \
                        libmnl0 \
                        logrotate \
                        apt-utils \
-                       psmisc
+                       psmisc \
+                       tcpdump \
+                       python-scapy
 
 RUN pip install setuptools
 RUN pip install py2_ipaddress
 RUN pip install six
+RUN pip install pyroute2
+RUN pip install netifaces
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -86,6 +90,10 @@ COPY ["pg_profile_lookup.ini", "/usr/share/sonic/device/vswitch/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin"]
+COPY ["files/restore_neighbors.py", "/usr/bin"]
+
+# Workaround the tcpdump issue
+RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 
 RUN echo "docker-sonic-vs" > /etc/hostname
 RUN touch /etc/quagga/zebra.conf
