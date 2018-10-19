@@ -30,7 +30,8 @@ set -x -e
 
 ## docker engine version (with platform)
 DOCKER_VERSION=1.11.1-0~stretch_amd64
-LINUX_KERNEL_VERSION=4.9.0-7
+LINUX_KERNEL_ABI_MINOR_VERSION=1
+LINUX_KERNEL_VERSION=4.9.0-7-$LINUX_KERNEL_ABI_MINOR_VERSION
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
