@@ -66,7 +66,6 @@ struct as6712_32x_cpld_data {
     enum cpld_mux_type type;
     struct i2c_client *client;
     u8 last_chan;  /* last register value */
-    struct i2c_mux_core *muxc;
     struct device      *hwmon_dev;
     struct mutex        update_lock;
 };
@@ -379,7 +378,8 @@ static ssize_t show_present_all(struct device *dev, struct device_attribute *da,
     u8 values[2] = {0};
     u8 regs[] = {0xA, 0xB};
     struct i2c_client *client = to_i2c_client(dev);
-    struct as6712_32x_cpld_data *data = i2c_get_clientdata(client);
+    struct i2c_mux_core *muxc = i2c_get_clientdata(client);
+    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);
 
     mutex_lock(&data->update_lock);
 
@@ -408,7 +408,9 @@ static ssize_t set_status(struct device *dev, struct device_attribute *da,
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
-    struct as6712_32x_cpld_data *data = i2c_get_clientdata(client);
+    struct i2c_mux_core *muxc = i2c_get_clientdata(client);
+    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);
+    
     int status = 0;
     u8  reg = 0, mask = 0;
         u32 val, para;
@@ -452,7 +454,8 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
-    struct as6712_32x_cpld_data *data = i2c_get_clientdata(client);
+    struct i2c_mux_core *muxc = i2c_get_clientdata(client);
+    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);    
     int status = 0;
     u8 reg = 0, mask = 0;
 
@@ -501,7 +504,8 @@ static ssize_t access(struct device *dev, struct device_attribute *da,
     int status;
     u32 addr, val;
     struct i2c_client *client = to_i2c_client(dev);
-    struct as6712_32x_cpld_data *data = i2c_get_clientdata(client);
+    struct i2c_mux_core *muxc = i2c_get_clientdata(client);
+    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);
 
     if (sscanf(buf, "0x%x 0x%x", &addr, &val) != 2) {
         return -EINVAL;
@@ -668,13 +672,13 @@ static int as6712_32x_cpld_mux_probe(struct i2c_client *client,
     if (!muxc)
         return -ENOMEM;
 
+    i2c_set_clientdata(client, muxc);
     data = i2c_mux_priv(muxc);
-    i2c_set_clientdata(client, data);
-    data->muxc = muxc;
     data->client = client;
-
+    mutex_init(&data->update_lock);
+    
     if (data->type == as6712_32x_cpld2 || data->type == as6712_32x_cpld3) {
-    data->type = id->driver_data;
+        data->type = id->driver_data;
         data->last_chan = chips[data->type].deselectChan; /* force the first selection */
 
         /* Now create an adapter for each channel */
@@ -739,8 +743,8 @@ exit_mux_register:
 
 static int as6712_32x_cpld_mux_remove(struct i2c_client *client)
 {
-    struct as6712_32x_cpld_data *data = i2c_get_clientdata(client);
-    struct i2c_mux_core *muxc = data->muxc;
+    struct i2c_mux_core *muxc = i2c_get_clientdata(client);
+    struct as6712_32x_cpld_data *data = i2c_mux_priv(muxc);
     const struct attribute_group *group = NULL;
 
     as6712_32x_cpld_remove_client(client);
