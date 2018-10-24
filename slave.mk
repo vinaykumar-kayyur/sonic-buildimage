@@ -9,7 +9,7 @@ SHELL = /bin/bash
 USER = $(shell id -un)
 UID = $(shell id -u)
 GUID = $(shell id -g)
-SONIC_GET_VERSION=$(shell . functions.sh && sonic_get_version)
+SONIC_GET_VERSION=$(shell export BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) && . functions.sh && sonic_get_version)
 
 .SECONDEXPANSION:
 
