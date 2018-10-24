@@ -99,6 +99,10 @@ stop() {
         debug "Warm shutdown syncd process ..."
         /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --warm
 
+        if [ x$sonic_asic_platform == x'mellanox' ]; then
+            /usr/bin/docker exec -i syncd /usr/bin/checkpoint.sh
+        fi
+
         # wait until syncd quits gracefully
         while docker top syncd | grep -q /usr/bin/syncd; do
             sleep 0.1
