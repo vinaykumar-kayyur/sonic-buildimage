@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-PACKAGE_NAME := platform-modules-bfn-montara
+PACKAGE_NAME := sonic-platform-modules-bfn-montara
 SCRIPT_SRC := $(shell pwd)/scripts
 
 %:

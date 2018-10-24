@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-PACKAGE_NAME := platform-modules-bfn
+PACKAGE_NAME := sonic-platform-modules-bfn
 SCRIPT_SRC := $(shell pwd)/scripts
 
 %:
