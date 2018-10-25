@@ -40,7 +40,7 @@
 static struct as7716_32x_fan_data *as7716_32x_fan_update_device(struct device *dev);
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
-            const char *buf, size_t count);
+                              const char *buf, size_t count);
 static ssize_t get_enable(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t set_enable(struct device *dev, struct device_attribute *da,
                           const char *buf, size_t count);
@@ -233,13 +233,13 @@ static int as7716_32x_fan_write_value(struct i2c_client *client, u8 reg, u8 valu
 
 /* fan utility functions
  */
-static u32 reg_val_to_duty_cycle(u8 reg_val) 
+static u32 reg_val_to_duty_cycle(u8 reg_val)
 {
     reg_val &= FAN_DUTY_CYCLE_REG_MASK;
     return ((u32)(reg_val+1) * 625 + 75)/ 100;
 }
 
-static u8 duty_cycle_to_reg_val(u8 duty_cycle) 
+static u8 duty_cycle_to_reg_val(u8 duty_cycle)
 {
     return ((u32)duty_cycle * 100 / 625) - 1;
 }
@@ -272,10 +272,10 @@ static u8 is_fan_fault(struct as7716_32x_fan_data *data, enum fan_id id)
     int front_fan_index = FAN1_FRONT_SPEED_RPM + id;
     int rear_fan_index  = FAN1_REAR_SPEED_RPM  + id;
 
-    /* Check if the speed of front or rear fan is ZERO,  
+    /* Check if the speed of front or rear fan is ZERO,
      */
     if (reg_val_to_speed_rpm(data->reg_val[front_fan_index]) &&
-        reg_val_to_speed_rpm(data->reg_val[rear_fan_index]))  {
+            reg_val_to_speed_rpm(data->reg_val[rear_fan_index]))  {
         ret = 0;
     }
 
@@ -313,85 +313,85 @@ static ssize_t get_enable(struct device *dev, struct device_attribute *da,
 }
 
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
-            const char *buf, size_t count) 
+                              const char *buf, size_t count)
 {
     int error, value;
     struct i2c_client *client = to_i2c_client(dev);
-    
+
     error = kstrtoint(buf, 10, &value);
     if (error)
         return error;
-        
+
     if (value < 0 || value > FAN_MAX_DUTY_CYCLE)
         return -EINVAL;
-	
+
     as7716_32x_fan_write_value(client, 0x33, 0); /* Disable fan speed watch dog */
     as7716_32x_fan_write_value(client, fan_reg[FAN_DUTY_CYCLE_PERCENTAGE], duty_cycle_to_reg_val(value));
     return count;
 }
 
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
-             char *buf)
+                              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct as7716_32x_fan_data *data = as7716_32x_fan_update_device(dev);
     ssize_t ret = 0;
-    
+
     if (data->valid) {
         switch (attr->index) {
-            case FAN_DUTY_CYCLE_PERCENTAGE:
-            {
-                u32 duty_cycle = reg_val_to_duty_cycle(data->reg_val[FAN_DUTY_CYCLE_PERCENTAGE]);
-                ret = sprintf(buf, "%u\n", duty_cycle);
-                break;
-            }
-            case FAN1_FRONT_SPEED_RPM:
-            case FAN2_FRONT_SPEED_RPM:
-            case FAN3_FRONT_SPEED_RPM:
-            case FAN4_FRONT_SPEED_RPM:
-            case FAN5_FRONT_SPEED_RPM:
-            case FAN6_FRONT_SPEED_RPM:
-            case FAN1_REAR_SPEED_RPM:
-            case FAN2_REAR_SPEED_RPM:
-            case FAN3_REAR_SPEED_RPM:
-            case FAN4_REAR_SPEED_RPM:
-            case FAN5_REAR_SPEED_RPM:
-            case FAN6_REAR_SPEED_RPM:
-                ret = sprintf(buf, "%u\n", reg_val_to_speed_rpm(data->reg_val[attr->index]));
-                break;
-            case FAN1_PRESENT:
-            case FAN2_PRESENT:
-            case FAN3_PRESENT:
-            case FAN4_PRESENT:
-            case FAN5_PRESENT:
-            case FAN6_PRESENT:
-                ret = sprintf(buf, "%d\n",
-                              reg_val_to_is_present(data->reg_val[FAN_PRESENT_REG],
-                              attr->index - FAN1_PRESENT));
-                break;
-            case FAN1_FAULT:
-            case FAN2_FAULT:
-            case FAN3_FAULT:
-            case FAN4_FAULT:
-            case FAN5_FAULT:
-            case FAN6_FAULT:
-                ret = sprintf(buf, "%d\n", is_fan_fault(data, attr->index - FAN1_FAULT));
-                break;
-            case FAN1_DIRECTION:
-            case FAN2_DIRECTION:
-            case FAN3_DIRECTION:
-            case FAN4_DIRECTION:
-            case FAN5_DIRECTION:
-            case FAN6_DIRECTION:
-                ret = sprintf(buf, "%d\n",
-                              reg_val_to_direction(data->reg_val[FAN_DIRECTION_REG],
-                              attr->index - FAN1_DIRECTION));
-                break;
-            default:
-                break;
-        }        
+        case FAN_DUTY_CYCLE_PERCENTAGE:
+        {
+            u32 duty_cycle = reg_val_to_duty_cycle(data->reg_val[FAN_DUTY_CYCLE_PERCENTAGE]);
+            ret = sprintf(buf, "%u\n", duty_cycle);
+            break;
+        }
+        case FAN1_FRONT_SPEED_RPM:
+        case FAN2_FRONT_SPEED_RPM:
+        case FAN3_FRONT_SPEED_RPM:
+        case FAN4_FRONT_SPEED_RPM:
+        case FAN5_FRONT_SPEED_RPM:
+        case FAN6_FRONT_SPEED_RPM:
+        case FAN1_REAR_SPEED_RPM:
+        case FAN2_REAR_SPEED_RPM:
+        case FAN3_REAR_SPEED_RPM:
+        case FAN4_REAR_SPEED_RPM:
+        case FAN5_REAR_SPEED_RPM:
+        case FAN6_REAR_SPEED_RPM:
+            ret = sprintf(buf, "%u\n", reg_val_to_speed_rpm(data->reg_val[attr->index]));
+            break;
+        case FAN1_PRESENT:
+        case FAN2_PRESENT:
+        case FAN3_PRESENT:
+        case FAN4_PRESENT:
+        case FAN5_PRESENT:
+        case FAN6_PRESENT:
+            ret = sprintf(buf, "%d\n",
+                          reg_val_to_is_present(data->reg_val[FAN_PRESENT_REG],
+                                                attr->index - FAN1_PRESENT));
+            break;
+        case FAN1_FAULT:
+        case FAN2_FAULT:
+        case FAN3_FAULT:
+        case FAN4_FAULT:
+        case FAN5_FAULT:
+        case FAN6_FAULT:
+            ret = sprintf(buf, "%d\n", is_fan_fault(data, attr->index - FAN1_FAULT));
+            break;
+        case FAN1_DIRECTION:
+        case FAN2_DIRECTION:
+        case FAN3_DIRECTION:
+        case FAN4_DIRECTION:
+        case FAN5_DIRECTION:
+        case FAN6_DIRECTION:
+            ret = sprintf(buf, "%d\n",
+                          reg_val_to_direction(data->reg_val[FAN_DIRECTION_REG],
+                                               attr->index - FAN1_DIRECTION));
+            break;
+        default:
+            break;
+        }
     }
-    
+
     return ret;
 }
 
@@ -406,18 +406,18 @@ static struct as7716_32x_fan_data *as7716_32x_fan_update_device(struct device *d
 
     mutex_lock(&data->update_lock);
 
-    if (time_after(jiffies, data->last_updated + HZ + HZ / 2) || 
-        !data->valid) {
+    if (time_after(jiffies, data->last_updated + HZ + HZ / 2) ||
+            !data->valid) {
         int i;
 
         dev_dbg(&client->dev, "Starting as7716_32x_fan update\n");
         data->valid = 0;
-        
+
         /* Update fan data
          */
         for (i = 0; i < ARRAY_SIZE(data->reg_val); i++) {
             int status = as7716_32x_fan_read_value(client, fan_reg[i]);
-            
+
             if (status < 0) {
                 data->valid = 0;
                 mutex_unlock(&data->update_lock);
@@ -428,18 +428,18 @@ static struct as7716_32x_fan_data *as7716_32x_fan_update_device(struct device *d
                 data->reg_val[i] = status;
             }
         }
-        
+
         data->last_updated = jiffies;
         data->valid = 1;
     }
-    
+
     mutex_unlock(&data->update_lock);
 
     return data;
 }
 
 static int as7716_32x_fan_probe(struct i2c_client *client,
-            const struct i2c_device_id *dev_id)
+                                const struct i2c_device_id *dev_id)
 {
     struct as7716_32x_fan_data *data;
     int status;
@@ -474,8 +474,8 @@ static int as7716_32x_fan_probe(struct i2c_client *client,
     }
 
     dev_info(&client->dev, "%s: fan '%s'\n",
-         dev_name(data->hwmon_dev), client->name);
-    
+             dev_name(data->hwmon_dev), client->name);
+
     return 0;
 
 exit_remove:
@@ -483,7 +483,7 @@ exit_remove:
 exit_free:
     kfree(data);
 exit:
-    
+
     return status;
 }
 
@@ -492,7 +492,7 @@ static int as7716_32x_fan_remove(struct i2c_client *client)
     struct as7716_32x_fan_data *data = i2c_get_clientdata(client);
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &as7716_32x_fan_group);
-    
+
     return 0;
 }
 
