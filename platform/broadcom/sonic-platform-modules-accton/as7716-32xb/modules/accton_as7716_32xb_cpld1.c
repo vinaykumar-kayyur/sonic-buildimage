@@ -65,7 +65,7 @@ static int as7716_32xb_cpld_write_internal(struct i2c_client *client, u8 reg, u8
 static ssize_t sfp_value_show(struct device *dev, struct device_attribute *da,
              char *buf);  
 static ssize_t sfp_value_store(struct device *dev, struct device_attribute *da,
-             char *buf, size_t size);
+             const char *buf, size_t size);
 
 
 #define PORT_NUM_MAX 32
@@ -496,7 +496,7 @@ static int sfp_array_index_get(int attr_idx)
   
 
 static ssize_t sfp_value_store(struct device *dev, struct device_attribute *da,
-             char *buf, size_t size)
+             const char *buf, size_t size)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
