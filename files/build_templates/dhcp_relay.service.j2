@@ -9,5 +9,7 @@ ExecStartPre=/usr/bin/{{ docker_container_name }}.sh start
 ExecStart=/usr/bin/{{ docker_container_name }}.sh attach
 ExecStop=/usr/bin/{{ docker_container_name }}.sh stop
 
+Restart=always
+
 [Install]
 WantedBy=multi-user.target teamd.service

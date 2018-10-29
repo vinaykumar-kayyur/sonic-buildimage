@@ -20,5 +20,7 @@ Environment=sonic_asic_platform={{ sonic_asic_platform }}
 ExecStart=/usr/local/bin/syncd.sh start
 ExecStop=/usr/local/bin/syncd.sh stop
 
+Restart=always
+
 [Install]
 WantedBy=multi-user.target
