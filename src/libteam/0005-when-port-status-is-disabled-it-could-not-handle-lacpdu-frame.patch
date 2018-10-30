@@ -1,0 +1,15 @@
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index 9c77fae..276b3b0 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -1091,6 +1112,10 @@ static int lacpdu_recv(struct lacp_port *lacp_port)
+ 			return err;
+ 	}
+ 
++	/* Bug, if lacp_port status is PORT_STATE_DISABLED, We should not handle any LACPDU */
++	if ( lacp_port->state == PORT_STATE_DISABLED )
++		return 0;
++
+ 	err = lacp_port_set_state(lacp_port, PORT_STATE_CURRENT);
+ 	if (err)
+ 		return err;
