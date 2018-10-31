@@ -28,7 +28,7 @@ function postStartAction()
     until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]]; do
       sleep 1;
     done
-    if [[ "$REBOOT_TYPE" == "warm" && -d /host/warm-reboot ]]; then
+    if [[ "$REBOOT_TYPE" == "warm" && -d /host/warmboot ]]; then
         WARM_DIR=/host/warmboot
         function redisLoadAndDelete()
         {
