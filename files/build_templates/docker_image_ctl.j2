@@ -23,20 +23,21 @@ function getBootType()
 
 function postStartAction()
 {
-    BOOT_TYPE=`getBootType`
 {%- if docker_container_name == "database" %}
-    until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]]; do
+    REDIS_SOCK="/var/run/redis/redis.sock"
+    until [[ $(/usr/bin/docker exec database redis-cli -s $REDIS_SOCK ping | grep -c PONG) -gt 0 ]]; do
       sleep 1;
     done
     WARM_DIR=/host/warmboot
-    SUDO=sudo -n
+    SUDO="sudo -n"
+    BOOT_TYPE=`getBootType`
     if [[ "$BOOT_TYPE" == "warm" && -d $WARM_DIR ]]; then
         function redisLoadAndDelete()
         {
             DB="$1"
             FILENAME="$2"
             test -e $FILENAME || { echo "No file $FILENAME" >&2; exit 10; }
-            $SUDO redis-load -s /var/run/redis/redis.sock -d $DB -e EMPTY $FILENAME || { echo "Failed to redis-load $FILENAME" >&2; exit 11; }
+            $SUDO redis-load -s $REDIS_SOCK -d $DB -e EMPTY $FILENAME || { echo "Failed to redis-load $FILENAME" >&2; exit 11; }
             $SUDO rm $FILENAME || exit 12
         }
         # Load applDB from /host/warm-reboot/appl_db.json
