@@ -28,12 +28,16 @@ function postStartAction()
     until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]]; do
       sleep 1;
     done
-    if [[ "$REBOOT_TYPE" == "warm" && -d /host/warmboot ]]; then
-        WARM_DIR=/host/warmboot
+    WARM_DIR=/host/warmboot
+    SUDO=sudo -n
+    if [[ "$REBOOT_TYPE" == "warm" && -d $WARM_DIR ]]; then
         function redisLoadAndDelete()
         {
-            FILENAME="$1"
-            test -e $FILENAME && redis-load -s /var/run/redis/redis.sock -e EMPTY $FILENAME && rm $FILENAME
+            DB="$1"
+            FILENAME="$2"
+            test -e $FILENAME || { echo "No file $FILENAME" >&2; exit 10; }
+            $SUDO redis-load -s /var/run/redis/redis.sock -d $DB -e EMPTY $FILENAME || { echo "Failed to redis-load $FILENAME" >&2; exit 11; }
+            $SUDO rm $FILENAME || exit 12
         }
         # Load applDB from /host/warm-reboot/appl_db.json
         redisLoadAndDelete $WARM_DIR/appl_db.json
