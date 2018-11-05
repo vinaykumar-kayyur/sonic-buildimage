@@ -261,7 +261,7 @@ index 81324de..1d908db 100644
 +		return err;
 +	}
 +
-+        return lacpdu_process(lacp_port, &lacpdu);
++	return lacpdu_process(lacp_port, &lacpdu);
 +}
 +
  static int lacp_callback_timeout(struct teamd_context *ctx, int events,
