@@ -30,8 +30,7 @@ $(DOCKER_SONIC_VS)_DEPENDS += $(GOBGP)
 endif
 
 $(DOCKER_SONIC_VS)_FILES += $(CONFIGDB_LOAD_SCRIPT) \
-                            $(ARP_UPDATE_SCRIPT) \
-                            $(RESTORE_NEIGHS_SCRIPT)
+                            $(ARP_UPDATE_SCRIPT)
 
 $(DOCKER_SONIC_VS)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE)
 SONIC_DOCKER_IMAGES += $(DOCKER_SONIC_VS)
