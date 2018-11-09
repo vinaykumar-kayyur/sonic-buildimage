@@ -106,7 +106,8 @@ start() {
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl start ${PEER}
     fi
-    /usr/bin/${SERVICE}.sh attach
+    /usr/bin/${SERVICE}.sh attach || debug "Docker ${SERVICE} exited with $?"
+    /usr/bin/${PEER}.sh attach || debug "Docker ${PEER} exited with $?"
 }
 
 stop() {
