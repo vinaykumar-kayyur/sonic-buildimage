@@ -157,7 +157,7 @@ index 5c2ef56..50e5a08 100644
  			   struct teamd_port *tdport)
  {
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 81324de..6087c0d 100644
+index 81324de..519f5e2 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -174,6 +174,8 @@ struct lacp_port {
@@ -258,7 +258,7 @@ index 81324de..6087c0d 100644
 +	strcat(filename, lacp_port->tdport->ifname);
 +
 +	/* check that file is readable. if there is no file, don't do anything */
-+	if (access(ctx->lacp_directory, R_OK) != 0) {
++	if (access(filename, R_OK) != 0) {
 +		return 0;
 +	}
 +
