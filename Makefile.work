@@ -63,12 +63,26 @@ OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERRO
 
 BUILD_TIMESTAMP := $(shell date +%Y%m%d\.%H%M%S)
 
+ifeq ($(DOCKER_BUILDER_MOUNT),)
+override DOCKER_BUILDER_MOUNT := "$(PWD):/sonic"
+endif
+
+ifeq ($(DOCKER_BUILDER_WORKDIR),)
+override DOCKER_BUILDER_WORKDIR := "/sonic"
+endif
+
 DOCKER_RUN := docker run --rm=true --privileged \
-    -v $(PWD):/sonic \
-    -w /sonic \
+    -v $(DOCKER_BUILDER_MOUNT) \
+    -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
     -i$(if $(TERM),t,)
+
+include rules/config
+
+ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
+    DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
+endif
 
 DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE) \
