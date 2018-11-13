@@ -5,9 +5,8 @@ After=updategraph.service
 
 [Service]
 User={{ sonicadmin_user }}
-ExecStartPre=/usr/bin/{{docker_container_name}}.sh start
-ExecStart=/usr/bin/{{docker_container_name}}.sh attach
-ExecStop=/usr/bin/{{docker_container_name}}.sh stop
+ExecStart=/usr/local/bin/{{docker_container_name}}.sh attach
+ExecStop=/usr/local/bin/{{docker_container_name}}.sh stop
 
 [Install]
 WantedBy=multi-user.target
