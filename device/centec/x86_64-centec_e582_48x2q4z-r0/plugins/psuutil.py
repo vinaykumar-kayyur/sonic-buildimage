@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Mellanox
+# Centec
 #
 # Module contains an implementation of SONiC PSU Base API and
 # provides the PSUs status which are available in the platform
