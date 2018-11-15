@@ -61,6 +61,8 @@ if [ -z "$target_path" ]; then
     target_path=$(df "$swipath" | tail -1 | tr -s " " | cut -d ' ' -f6)
 fi
 image_path="$target_path/$image_name"
+hook_path="$image_path/platform/hooks"
+data_path="$image_path/platform/data"
 
 cmdline_base="$target_path/kernel-params-base"
 cmdline_image="$image_path/kernel-cmdline"
@@ -315,6 +317,21 @@ run_kexec() {
     kexec --exec
 }
 
+get_sorted_hooks() {
+    echo $(find "$1" -name '[0-9][0-9]-*' -type f)
+}
+
+run_hooks() {
+    if [ -d "$hook_path/$1" ]; then
+        for hook in $(get_sorted_hooks "$hook_path/$1"); do
+            if [ ! -z "$hook" ]; then
+                info "Running hook $hook"
+                . "$hook"
+            fi
+        done
+    fi
+}
+
 # In Aboot no option will be provided therefore these are the default values to use
 in_aboot=true
 do_clean=true
@@ -378,6 +395,8 @@ if $do_install; then
 
         info "Generating boot-config, machine.conf and cmdline"
         write_boot_configs
+
+        run_hooks post-install
     else
         info "Using previously installed image"
     fi
@@ -385,6 +404,7 @@ fi
 
 # chainloading using kexec
 if $do_kexec; then
+    run_hooks pre-kexec
     update_next_boot
     run_kexec
 fi
