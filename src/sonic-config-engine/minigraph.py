@@ -624,7 +624,7 @@ def parse_device_desc_xml(filename):
     mgmt_intf = {}
     mgmtipn = ipaddress.IPNetwork(mgmt_prefix)
     gwaddr = ipaddress.IPAddress(int(mgmtipn.network) + 1)
-    results['MGMT_INTERFACE'] = {('eth0', mgmt_prefix): {'gwaddr': gwaddr}}
+    results['MGMT_INTERFACE'] = {('eth0', mgmt_prefix): {'gwaddr': str(gwaddr)}}
 
     return results
 
