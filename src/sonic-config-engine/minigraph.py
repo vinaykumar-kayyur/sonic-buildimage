@@ -211,8 +211,9 @@ def parse_dpg(dpg, hname):
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
-            if vintf.find(str(QName(ns, "DhcpRelays"))) is not None:
-                vintfdhcpservers = vintf.find(str(QName(ns, "DhcpRelays"))).text
+            vintf_node = vintf.find(str(QName(ns, "DhcpRelays")))
+            if vintf_node is not None and vintf_node.text is not None:
+                vintfdhcpservers = vintf_node.text
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
 
@@ -540,6 +541,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
     for port in phyport_intfs:
         if port[0] in ports:
             ports.get(port[0])['admin_status'] = 'up'
+
+    for member in pc_members.keys() + vlan_members.keys():
+        port = ports.get(member.split(KEY_SEPARATOR)[1])
+        if port:
+            port['admin_status'] = 'up'
 
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
