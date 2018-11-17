@@ -11,10 +11,10 @@
 import os
 import sys
 import logging
+from asic_sensors import *
 
 Z9100_MAX_FAN_TRAYS = 5
 Z9100_MAX_PSUS = 2
-S6100_MAX_IOMS = 4
 
 MAILBOX_DIR = "/sys/devices/platform/SMF.512/hwmon/hwmon0"
 
@@ -322,3 +322,6 @@ for psu in range(1, Z9100_MAX_PSUS + 1):
         logging.error('Unable to check PSU presence')
 
 print '\n  Total Power:      ', get_pmc_register('current_total_power'), 'W'
+
+print_asic_sensors()
+

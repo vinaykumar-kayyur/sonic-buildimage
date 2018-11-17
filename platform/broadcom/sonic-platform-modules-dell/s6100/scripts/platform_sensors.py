@@ -11,6 +11,7 @@
 import os
 import sys
 import logging
+from asic_sensors import *
 
 S6100_MAX_FAN_TRAYS = 4
 S6100_MAX_PSUS = 2
@@ -319,4 +320,4 @@ print('\nIO Modules:')
 for iom in range(1, S6100_MAX_IOMS+1):
     print '  IOM ' + str(iom) + ' :' + iom_status_list[iom - 1]
 
-print '\n'
+print_asic_sensors()
