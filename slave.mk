@@ -213,6 +213,32 @@ $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES)) : $(FILES_PATH)/% : .platform
 SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES))
 
 ###############################################################################
+## Build targets
+###############################################################################
+
+# Build project using build.sh script
+# They are essentially a one-time build projects that get sources from some URL
+# and compile them
+# Add new file for build:
+#     SOME_NEW_FILE = some_new_deb.deb
+#     $(SOME_NEW_FILE)_SRC_PATH = $(SRC_PATH)/project_name
+#     $(SOME_NEW_FILE)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
+#     SONIC_MAKE_FILES += $(SOME_NEW_FILE)
+$(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES)) : $(FILES_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+	$(HEADER)
+	# Remove target to force rebuild
+	rm -f $(addprefix $(FILES_PATH)/, $*)
+	# Apply series of patches if exist
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
+	# Build project and take package
+	make DEST=$(shell pwd)/$(FILES_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(FILES_PATH)/$* $(LOG)
+	# Clean up
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
+
+###############################################################################
 ## Debian package related targets
 ###############################################################################
 
@@ -468,9 +494,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) \
         $$(addprefix $(DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
+        $(addprefix $(FILES_PATH)/,$(IXGBE_DRIVER)) \
         $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
-                $(IXGBE_DRIVER) \
                 $(SONIC_DEVICE_DATA) \
                 $(PYTHON_CLICK) \
                 $(SONIC_UTILS) \
@@ -554,9 +580,7 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS))
 
 SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_ONLINE_DEBS) \
-		   $(SONIC_ONLINE_FILES) \
 		   $(SONIC_COPY_DEBS) \
-		   $(SONIC_COPY_FILES) \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_PYTHON_STDEB_DEBS) \
@@ -565,7 +589,8 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 
 SONIC_CLEAN_FILES = $(addsuffix -clean,$(addprefix $(FILES_PATH)/, \
 		   $(SONIC_ONLINE_FILES) \
-		   $(SONIC_COPY_FILES)))
+		   $(SONIC_COPY_FILES) \
+		   $(SONIC_MAKE_FILES)))
 
 $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_MAIN_DEB)))
 	@# remove derived or extra targets if main one is removed, because we treat them
@@ -598,7 +623,9 @@ clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC
 
 all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
-stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS))
+stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
+          $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES))
+
 
 ###############################################################################
 ## Standard targets
