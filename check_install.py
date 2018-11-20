@@ -3,6 +3,7 @@
 import pexpect
 import argparse
 import sys
+import time
 
 def main():
 
@@ -45,9 +46,9 @@ def main():
             break
 
     # check version
+    time.sleep(5)
     p.sendline('show version')
     p.expect([cmd_prompt])
-    print p.before
 
 if __name__ == '__main__':
     main()

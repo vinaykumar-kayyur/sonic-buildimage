@@ -81,7 +81,7 @@ elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
     echo "Build KVM image"
     KVM_IMAGE_DISK=${OUTPUT_KVM_IMAGE%.gz}
-    sudo rm -f $OUTPUT_KVM_IMAGE $KVM_IMAGE_DISK
+    sudo rm -f $KVM_IMAGE_DISK $KVM_IMAGE_DISK.gz
 
     generate_onie_installer_image
 
@@ -94,12 +94,12 @@ elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
     gzip $KVM_IMAGE_DISK
 
-    [ -r $OUTPUT_KVM_IMAGE ] || {
+    [ -r $KVM_IMAGE_DISK.gz ] || {
         echo "Error : gzip $KVM_IMAGE_DISK failed!"
         exit 1
     }
 
-    echo "The compressed kvm image is in $OUTPUT_KVM_IMAGE"
+    echo "The compressed kvm image is in $KVM_IMAGE_DISK.gz"
 
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
 elif [ "$IMAGE_TYPE" = "aboot" ]; then
