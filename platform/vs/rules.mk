@@ -4,5 +4,7 @@ include $(PLATFORM_PATH)/docker-sonic-vs.mk
 include $(PLATFORM_PATH)/docker-syncd-vs.mk
 include $(PLATFORM_PATH)/docker-orchagent-vs.mk
 include $(PLATFORM_PATH)/one-image.mk
+include $(PLATFORM_PATH)/onie.mk
+include $(PLATFORM_PATH)/kvm-image.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) $(DOCKER_SONIC_VS)

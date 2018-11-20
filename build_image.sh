@@ -77,6 +77,30 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     mv $OUTPUT_RAW_IMAGE.gz $OUTPUT_RAW_IMAGE
     echo "The compressed raw image is in $OUTPUT_RAW_IMAGE"
 
+elif [ "$IMAGE_TYPE" = "kvm" ]; then
+
+    echo "Build KVM image"
+    sudo rm -f $OUTPUT_KVM_IMAGE $OUTPUT_KVM_IMAGE.gz
+
+    generate_onie_installer_image
+
+    SONIC_USERNAME=$USERNAME PASSWD=$PASSWORD sudo -E ./build_kvm_image.sh $OUTPUT_KVM_IMAGE $onie_recovery_image $OUTPUT_ONIE_IMAGE $KVM_IMAGE_DISK_SIZE
+
+    [ -r $OUTPUT_KVM_IMAGE ] || {
+        echo "Error : $OUTPUT_KVM_IMAGE not generated!"
+        exit 1
+    }
+
+    gzip $OUTPUT_KVM_IMAGE
+
+    [ -r $OUTPUT_KVM_IMAGE.gz ] || {
+        echo "Error : gzip $OUTPUT_KVM_IMAGE failed!"
+        exit 1
+    }
+
+    mv $OUTPUT_KVM_IMAGE.gz $OUTPUT_KVM_IMAGE
+    echo "The compressed kvm image is in $OUTPUT_KVM_IMAGE"
+
 ## Use 'aboot' as target machine category which includes Aboot as bootloader
 elif [ "$IMAGE_TYPE" = "aboot" ]; then
     echo "Build Aboot installer"
@@ -104,6 +128,6 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE
 else
-    echo "Error: Non supported target platform: $TARGET_PLATFORM"
+    echo "Error: Non supported image type $IMAGE_TYPE"
     exit 1
 fi
