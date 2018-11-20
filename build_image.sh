@@ -80,7 +80,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
     echo "Build KVM image"
-    KVM_IMAGE_DISK = ${OUTPUT_KVM_IMAGE%.gz}
+    KVM_IMAGE_DISK=${OUTPUT_KVM_IMAGE%.gz}
     sudo rm -f $OUTPUT_KVM_IMAGE $KVM_IMAGE_DISK
 
     generate_onie_installer_image
