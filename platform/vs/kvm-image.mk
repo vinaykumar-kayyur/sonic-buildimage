@@ -1,6 +1,6 @@
 # sonic kvm image
 
-SONIC_KVM_IMAGE = sonic-vs.img
+SONIC_KVM_IMAGE = sonic-vs.img.gz
 $(SONIC_KVM_IMAGE)_MACHINE = vs
 $(SONIC_KVM_IMAGE)_IMAGE_TYPE = kvm
 $(SONIC_KVM_IMAGE)_DOCKERS += $(SONIC_INSTALL_DOCKER_IMAGES)
