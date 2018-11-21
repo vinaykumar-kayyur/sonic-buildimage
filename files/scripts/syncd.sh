@@ -70,7 +70,7 @@ start() {
     else
         rm -f /host/warmboot/warm-starting
 
-        # Don't flush DB during warm boot
+        # Flush DB during non-warm start
         /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
 
         # platform specific tasks
