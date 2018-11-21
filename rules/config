@@ -75,3 +75,8 @@ ENABLE_ORGANIZATION_EXTENSIONS = y
 #   build:    build kernel from source
 #   download: download pre-built kernel from Azure storage.
 DEFAULT_KERNEL_PROCURE_METHOD = build
+
+# FRR user and group id values. These only take effect when SONIC_ROUTING_STACK is frr.
+FRR_USER_UID = 300
+FRR_USER_GID = 300
+FRR_VTY_GID = 301

@@ -177,6 +177,13 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
+if [ "$SONIC_ROUTING_STACK" == "frr" ]; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -g $FRR_USER_GID frr
+    sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -g $FRR_VTY_GID frrvty
+    sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $FRR_USER_UID -g $FRR_USER_GID -M -s /bin/false frr
+    sudo LANG=C chroot $FILESYSTEM_ROOT usermod -a -G frr,frrvty frr
+fi
+
 ## Pre-install hardware drivers
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
     firmware-linux-nonfree
