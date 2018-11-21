@@ -123,7 +123,6 @@ export SONIC_CONFIG_MAKE_JOBS
 export SONIC_ROUTING_STACK
 export FRR_USER_UID
 export FRR_USER_GID
-export FRR_VTY_GID
 
 ###############################################################################
 ## Dumping key config attributes associated to current building exercise
@@ -146,7 +145,6 @@ $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
 ifeq ($(SONIC_ROUTING_STACK),frr)
 $(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
 $(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
-$(info "FRR_VTY_GID"                     : "$(FRR_VTY_GID)")
 endif
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
@@ -453,7 +451,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 		--build-arg frr_user_uid=$(FRR_USER_UID) \
 		--build-arg frr_user_gid=$(FRR_USER_GID) \
-		--build-arg frr_vty_gid=$(FRR_VTY_GID) \
 		--label Tag=$(SONIC_GET_VERSION) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
