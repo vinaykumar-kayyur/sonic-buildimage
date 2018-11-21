@@ -21,36 +21,26 @@ function getBootType()
     echo $TYPE
 }
 
+function preStartAction()
+{
+{%- if docker_container_name == "database" %}
+    WARM_DIR=/host/warmboot
+    BOOT_TYPE=`getBootType`
+    if [[ "$BOOT_TYPE" == "warm" && -d $WARM_DIR ]]; then
+        # Load redis content from /host/warm-reboot/dump.rdb
+        test -e $WARM_DIR/dump.rdb && docker cp $WARM_DIR/dump.rdb database:/var/lib/redis/dump.rdb
+        rm -f $WARM_DIR/dump.rdb
+    fi
+{%- endif %}
+}
+
 function postStartAction()
 {
 {%- if docker_container_name == "database" %}
     REDIS_SOCK="/var/run/redis/redis.sock"
     until [[ $(/usr/bin/docker exec database redis-cli -s $REDIS_SOCK ping | grep -c PONG) -gt 0 ]]; do
-      sleep 1;
+        sleep 1;
     done
-    WARM_DIR=/host/warmboot
-    SUDO="sudo -n"
-    BOOT_TYPE=`getBootType`
-    if [[ "$BOOT_TYPE" == "warm" && -d $WARM_DIR ]]; then
-        function redisLoadAndDelete()
-        {
-            DB="$1"
-            FILENAME="$2"
-            test -e $FILENAME || { echo "No file $FILENAME" >&2; exit 10; }
-            $SUDO redis-load -s $REDIS_SOCK -d $DB -e EMPTY $FILENAME || { echo "Failed to redis-load $FILENAME" >&2; exit 11; }
-            $SUDO rm $FILENAME || exit 12
-        }
-        # Load applDB from /host/warm-reboot/appl_db.json
-        redisLoadAndDelete 0 $WARM_DIR/appl_db.json
-        # Load configDB from /host/warm-reboot/config_db.json
-        redisLoadAndDelete 4 $WARM_DIR/config_db.json
-        # Load stateDB from /host/warm-reboot/state_db.json
-        redisLoadAndDelete 6 $WARM_DIR/state_db.json
-        # Load asicDB from /host/warm-reboot/asic_db.json
-        redisLoadAndDelete 1 $WARM_DIR/asic_db.json
-        # Load loglevelDB from /host/warm-reboot/loglevel_db.json
-        redisLoadAndDelete 3 $WARM_DIR/loglevel_db.json
-    fi
 {%- elif docker_container_name == "swss" %}
     docker exec swss rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" && -d /host/fast-reboot ]]; then
@@ -95,6 +85,7 @@ start() {
         DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
         if [ "$DOCKERMOUNT" == "$HWSKU" ]; then
             echo "Starting existing {{docker_container_name}} container with HWSKU $HWSKU"
+            preStartAction
             docker start {{docker_container_name}}
             postStartAction
             exit $?
@@ -106,11 +97,11 @@ start() {
     fi
 
 {%- if docker_container_name == "database" %}
-    echo "Starting new {{docker_container_name}} container"
+    echo "Creating new {{docker_container_name}} container"
 {%- else %}
-    echo "Starting new {{docker_container_name}} container with HWSKU $HWSKU"
+    echo "Creating new {{docker_container_name}} container with HWSKU $HWSKU"
 {%- endif %}
-    docker run -d {{docker_image_run_opt}} \
+    docker create {{docker_image_run_opt}} \
 {%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
         --log-opt max-size=2M --log-opt max-file=5 \
 {%- endif %}
@@ -133,6 +124,8 @@ start() {
             exit 4
     }
 
+    preStartAction
+    docker start {{docker_container_name}}
     postStartAction
 }
 
