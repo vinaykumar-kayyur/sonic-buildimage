@@ -1602,10 +1602,10 @@ static ssize_t show_psu(struct device *dev,
 
                 case 0:
                         pow = smf_read_reg16(data, PSU_1_MAX_POWER);
-			            /* TODO Fix */
-			            if (data->kind == s6100smf)
+                        /* TODO Fix */
+                        if (data->kind == s6100smf)
                             ret = 1000000 * 1100;
-			            else
+                        else
                             ret = 1000000 * 750;
                         break;
                 case 1:
@@ -1636,10 +1636,10 @@ static ssize_t show_psu(struct device *dev,
                 case 5:
                         pow = smf_read_reg16(data, PSU_2_MAX_POWER);
                         ret = 1000000 * pow;
-			            /* TODO Fix */
-			            if (data->kind == s6100smf)
+                        /* TODO Fix */
+                        if (data->kind == s6100smf)
                             ret = 1000000 * 1100;
-			            else
+                        else
                             ret = 1000000 * 750;
                         break;
                 case 6:
