@@ -31,6 +31,8 @@ function preStartAction()
         test -e $WARM_DIR/dump.rdb && docker cp $WARM_DIR/dump.rdb database:/var/lib/redis/dump.rdb
         rm -f $WARM_DIR/dump.rdb
     fi
+{%- else %}
+    : # nothing
 {%- endif %}
 }
 
