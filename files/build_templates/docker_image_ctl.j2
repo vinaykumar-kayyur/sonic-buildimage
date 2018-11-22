@@ -28,7 +28,6 @@ function preStartAction()
     if [[ "$BOOT_TYPE" == "warm" && -f $WARM_DIR/dump.rdb ]]; then
         # Load redis content from /host/warm-reboot/dump.rdb
         docker cp $WARM_DIR/dump.rdb database:/var/lib/redis/dump.rdb
-        rm -f $WARM_DIR/dump.rdb
     else
         # Create an emtpy file and overwrite any RDB if already there
         echo -n > /tmp/dump.rdb
@@ -48,7 +47,9 @@ function postStartAction()
         sleep 1;
     done
 
-    if [[ "$BOOT_TYPE" == "cold" ]]; then
+    if [[ "$BOOT_TYPE" == "warm" && -f $WARM_DIR/dump.rdb ]]; then
+        rm -f $WARM_DIR/dump.rdb
+    else
         # If there is a config db dump file, load it
         if [ -r /etc/sonic/config_db.json ]; then
             sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
