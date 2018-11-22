@@ -16,7 +16,7 @@ function getBootType()
         TYPE='warm'
         ;;
     *)
-        TYPE="normal"
+        TYPE='cold'
     esac
     echo $TYPE
 }
@@ -25,11 +25,14 @@ function preStartAction()
 {
 {%- if docker_container_name == "database" %}
     WARM_DIR=/host/warmboot
-    BOOT_TYPE=`getBootType`
-    if [[ "$BOOT_TYPE" == "warm" && -d $WARM_DIR ]]; then
+    if [[ "$BOOT_TYPE" == "warm" && -f $WARM_DIR/dump.rdb ]]; then
         # Load redis content from /host/warm-reboot/dump.rdb
-        test -e $WARM_DIR/dump.rdb && docker cp $WARM_DIR/dump.rdb database:/var/lib/redis/dump.rdb
+        docker cp $WARM_DIR/dump.rdb database:/var/lib/redis/dump.rdb
         rm -f $WARM_DIR/dump.rdb
+    else
+        # Create an emtpy file and overwrite any RDB if already there
+        echo -n > /tmp/dump.rdb
+        docker cp /tmp/dump.rdb database:/var/lib/redis/
     fi
 {%- else %}
     : # nothing
@@ -39,10 +42,20 @@ function preStartAction()
 function postStartAction()
 {
 {%- if docker_container_name == "database" %}
+    # Wait until redis starts
     REDIS_SOCK="/var/run/redis/redis.sock"
     until [[ $(/usr/bin/docker exec database redis-cli -s $REDIS_SOCK ping | grep -c PONG) -gt 0 ]]; do
         sleep 1;
     done
+
+    if [[ "$BOOT_TYPE" == "cold" ]]; then
+        # If there is a config db dump file, load it
+        if [ -r /etc/sonic/config_db.json ]; then
+            sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
+        fi
+
+        redis-cli -n 4 SET "CONFIG_DB_INITIALIZED" "1"
+    fi
 {%- elif docker_container_name == "swss" %}
     docker exec swss rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" && -d /host/fast-reboot ]]; then
@@ -71,6 +84,9 @@ function postStartAction()
 }
 
 start() {
+    # Obtain boot type from kernel arguments
+    BOOT_TYPE=`getBootType`
+
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
 
