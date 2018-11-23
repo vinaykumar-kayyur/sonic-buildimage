@@ -10,5 +10,6 @@ setup(
     maintainer_email='stepanb@mellanox.com',
     scripts=[
         'scripts/issu',
+        'scripts/ffb',
     ]
 )
