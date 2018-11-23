@@ -30,8 +30,9 @@ function unlock_service_state_change()
 function check_warm_boot()
 {
     SYSTEM_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|system" enable`
+    SERVICE_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|${SERVICE}" enable`
     # SYSTEM_WARM_START could be empty, always make WARM_BOOT meaningful.
-    if [[ x"$SYSTEM_WARM_START" == x"true" ]]; then
+    if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
         WARM_BOOT="true"
     else
         WARM_BOOT="false"
@@ -63,13 +64,18 @@ start() {
 
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
-    # Don't flush DB during warm boot
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
+    if [[ x"$WARM_BOOT" == x"true" ]]; then
+        # Leave a mark for syncd scripts running inside docker.
+        touch /host/warmboot/warm-starting
+    else
+        rm -f /host/warmboot/warm-starting
+
+        # Flush DB during non-warm start
         /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
 
         # platform specific tasks
         if [ x$sonic_asic_platform == x'mellanox' ]; then
-            FAST_BOOT=1
+            export FAST_BOOT=1
             /usr/bin/mst start
             /usr/bin/mlnx-fw-upgrade.sh
             /etc/init.d/sxdkernel start
@@ -95,17 +101,21 @@ stop() {
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        debug "Warm shutdown syncd process ..."
-        /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --warm
-
-        # wait until syncd quits gracefully
-        while docker top syncd | grep -q /usr/bin/syncd; do
-            sleep 0.1
-        done
-
-        /usr/bin/docker exec -i syncd /bin/sync
-        debug "Finished warm shutdown syncd process ..."
+        TYPE=warm
+    else
+        TYPE=cold
     fi
+
+    debug "${TYPE} shutdown syncd process ..."
+    /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --${TYPE}
+
+    # wait until syncd quits gracefully
+    while docker top syncd | grep -q /usr/bin/syncd; do
+        sleep 0.1
+    done
+
+    /usr/bin/docker exec -i syncd /bin/sync
+    debug "Finished ${TYPE} shutdown syncd process ..."
 
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
