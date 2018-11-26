@@ -548,25 +548,15 @@ function _gpio_export {
     #export gpio
     echo ${gpio_n} > ${PATH_SYS_GPIO}/export
 
+    #set gpio direction
+    echo ${direction} > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
+
     #set gpio active_low
     echo ${active_low} > ${PATH_SYS_GPIO}/gpio${gpio_n}/active_low
 
-    #set gpio direction and value
-    if [ "${direction}" == "out" ]; then
-        if [ -z "${value}" ]; then
-            echo ${direction} > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        elif [ "${value}" == "0" ]; then
-            echo low > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        else
-            echo high > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        fi
-    elif [ "${direction}" == "in" ]; then
-        echo ${direction} > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        if [ ! -z "${value}" ]; then
-            echo "Warning!! Unused Value (${value})"
-        fi
-    else
-        echo "Error!! Unknow Direction (${direction})"
+    #set value
+    if [ ! -z "${value}" ]; then
+        echo ${value} > ${PATH_SYS_GPIO}/gpio${gpio_n}/value
     fi
 }
 

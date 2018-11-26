@@ -85,6 +85,7 @@ I2C_BUS_PSU1_EEPROM=${NUM_MUX_9545_1_CH1}
 I2C_BUS_PSU2_EEPROM=${NUM_MUX_9545_1_CH0}
 
 PATH_SYS_I2C_DEVICES="/sys/bus/i2c/devices"
+PATH_SYS_GPIO="/sys/class/gpio"
 PATH_HWMON_ROOT_DEVICES="/sys/class/hwmon"
 PATH_HWMON_W83795_DEVICE="${PATH_HWMON_ROOT_DEVICES}/hwmon5" 
 PATH_I801_DEVICE="${PATH_SYS_I2C_DEVICES}/i2c-${NUM_I801_DEVICE}"
@@ -1593,33 +1594,20 @@ function _util_gpio_export {
         echo "[gpio_init]  gpio_n(${gpio_n}) is not provided"
         return
     fi
-    if [[ ${gpio_n} < 0 || ${gpio_n} > 255 ]]; then
+    if [[ ${gpio_n} < 0 || ${gpio_n} > $(( 255+${GPIO_OFFSET} )) ]]; then
         echo "[gpio_init]  gpio_n(${gpio_n}) is invalid value"
         return    
     fi
 
-    #export gpio     
+    #export gpio
     echo ${gpio_n} > /sys/class/gpio/export
-
-    #set gpio active_low    
-    echo ${active_low} > /sys/class/gpio/gpio${gpio_n}/active_low    
-
-    #set gpio direction and value
-    if [ "${direction}" == "out" ]; then 
-        if [ -z "${value}" ]; then 
-            echo ${direction} > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        elif [ "${value}" == "0" ]; then 
-            echo low > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        else 
-            echo high > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        fi   
-    elif [ "${direction}" == "in" ]; then 
-        echo ${direction} > ${PATH_SYS_GPIO}/gpio${gpio_n}/direction
-        if [ ! -z "${value}" ]; then 
-            echo "Warning!! Unused Value (${value})"
-        fi   
-    else 
-        echo "Error!! Unknow Direction (${direction})"
+    #set gpio direction
+    echo ${direction} > /sys/class/gpio/gpio${gpio_n}/direction
+    #set gpio active_low
+    echo ${active_low} > /sys/class/gpio/gpio${gpio_n}/active_low
+    #set value
+    if [ ! -z "${value}" ]; then
+        echo ${value} > /sys/class/gpio/gpio${gpio_n}/value
     fi
 }
 
