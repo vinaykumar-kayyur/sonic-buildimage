@@ -259,9 +259,10 @@ sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
 sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
-## Revise /etc/init.d/networking for Arista switches
+## Revise /etc/init.d/networking and /lib/systemd/system/networking.service for Arista switches
 if [ "$image_type" = "aboot" ]; then
     sudo sed -i 's/udevadm settle/udevadm settle -E \/sys\/class\/net\/eth0/' $FILESYSTEM_ROOT/etc/init.d/networking
+    sudo sed -i 's/udevadm settle/udevadm settle -E \/sys\/class\/net\/eth0/' $FILESYSTEM_ROOT/lib/systemd/system/networking.service
 fi
 
 ## copy platform rc.local
@@ -319,3 +320,14 @@ sudo cp target/files/$MLNX_FW_FILE $FILESYSTEM_ROOT/etc/mlnx/fw-SPC.mfa
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 {% endif %}
+
+{%- if SONIC_ROUTING_STACK == "frr" %}
+sudo mkdir $FILESYSTEM_ROOT/etc/sonic/frr
+sudo touch $FILESYSTEM_ROOT/etc/sonic/frr/frr.conf
+sudo touch $FILESYSTEM_ROOT/etc/sonic/frr/vtysh.conf
+sudo cp dockers/docker-fpm-frr/daemons.conf $FILESYSTEM_ROOT/etc/sonic/frr/
+sudo cp dockers/docker-fpm-frr/daemons $FILESYSTEM_ROOT/etc/sonic/frr/
+sudo chown -R $FRR_USER_UID:$FRR_USER_GID $FILESYSTEM_ROOT/etc/sonic/frr
+sudo chmod 750 $FILESYSTEM_ROOT/etc/sonic/frr
+sudo chmod -R 640 $FILESYSTEM_ROOT/etc/sonic/frr/
+{%- endif %}
