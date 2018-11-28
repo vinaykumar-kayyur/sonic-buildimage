@@ -117,6 +117,14 @@ MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
 ###############################################################################
+## Routing stack related exports
+###############################################################################
+
+export SONIC_ROUTING_STACK
+export FRR_USER_UID
+export FRR_USER_GID
+
+###############################################################################
 ## Dumping key config attributes associated to current building exercise
 ###############################################################################
 
@@ -134,6 +142,10 @@ $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
 $(info "INSTALL_DEBUG_TOOLS"             : "$(INSTALL_DEBUG_TOOLS)")
 $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
+ifeq ($(SONIC_ROUTING_STACK),frr)
+$(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
+$(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
+endif
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
@@ -211,6 +223,32 @@ $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES)) : $(FILES_PATH)/% : .platform
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES))
+
+###############################################################################
+## Build targets
+###############################################################################
+
+# Build project using build.sh script
+# They are essentially a one-time build projects that get sources from some URL
+# and compile them
+# Add new file for build:
+#     SOME_NEW_FILE = some_new_deb.deb
+#     $(SOME_NEW_FILE)_SRC_PATH = $(SRC_PATH)/project_name
+#     $(SOME_NEW_FILE)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
+#     SONIC_MAKE_FILES += $(SOME_NEW_FILE)
+$(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES)) : $(FILES_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+	$(HEADER)
+	# Remove target to force rebuild
+	rm -f $(addprefix $(FILES_PATH)/, $*)
+	# Apply series of patches if exist
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
+	# Build project and take package
+	make DEST=$(shell pwd)/$(FILES_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(FILES_PATH)/$* $(LOG)
+	# Clean up
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
 
 ###############################################################################
 ## Debian package related targets
@@ -437,6 +475,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 		--build-arg uid=$(UID) \
 		--build-arg guid=$(GUID) \
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+		--build-arg frr_user_uid=$(FRR_USER_UID) \
+		--build-arg frr_user_gid=$(FRR_USER_GID) \
 		--label Tag=$(SONIC_GET_VERSION) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
@@ -468,9 +508,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) \
         $$(addprefix $(DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
+        $(addprefix $(FILES_PATH)/,$(IXGBE_DRIVER)) \
         $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
-                $(IXGBE_DRIVER) \
                 $(SONIC_DEVICE_DATA) \
                 $(PYTHON_CLICK) \
                 $(SONIC_UTILS) \
@@ -479,11 +519,13 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
-        $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))
+        $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
+        $$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export initramfs_tools="$(DEBS_PATH)/$(INITRAMFS_TOOLS)"
 	export linux_kernel="$(DEBS_PATH)/$(LINUX_KERNEL)"
+	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
 	export kversion="$(KVERSION)"
 	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
@@ -498,6 +540,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
+	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
@@ -530,6 +573,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	PASSWORD="$(PASSWORD)" \
 		./build_debian.sh $(LOG)
 
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
 	TARGET_MACHINE=$($*_MACHINE) \
 	IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		./build_image.sh $(LOG)
@@ -554,9 +599,7 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS))
 
 SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_ONLINE_DEBS) \
-		   $(SONIC_ONLINE_FILES) \
 		   $(SONIC_COPY_DEBS) \
-		   $(SONIC_COPY_FILES) \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_PYTHON_STDEB_DEBS) \
@@ -565,7 +608,8 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 
 SONIC_CLEAN_FILES = $(addsuffix -clean,$(addprefix $(FILES_PATH)/, \
 		   $(SONIC_ONLINE_FILES) \
-		   $(SONIC_COPY_FILES)))
+		   $(SONIC_COPY_FILES) \
+		   $(SONIC_MAKE_FILES)))
 
 $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_MAIN_DEB)))
 	@# remove derived or extra targets if main one is removed, because we treat them
@@ -598,12 +642,14 @@ clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC
 
 all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
-stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS))
+stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
+          $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES))
+
 
 ###############################################################################
 ## Standard targets
 ###############################################################################
 
-.PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_WHEELS) clean distclean configure
+.PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_WHEELS) $(SONIC_PHONY_TARGETS) clean distclean configure
 
 .INTERMEDIATE : $(SONIC_INSTALL_TARGETS) $(SONIC_INSTALL_WHEELS) $(DOCKER_LOAD_TARGETS) docker-start .platform
