@@ -12,7 +12,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 HWMON_DIR = "/sys/devices/platform/SMF.512/hwmon/"
-HWMON_NODE = ', '.join(os.listdir(HWMON_DIR))
+HWMON_NODE = os.listdir(HWMON_DIR)[0]
 
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
