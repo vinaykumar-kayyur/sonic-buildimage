@@ -128,9 +128,9 @@ class SfpUtil(SfpUtilBase):
 
     def __del__(self):
         if self.oir_fd != -1:
-               self.epoll.unregister(self.oir_fd.fileno())
-               self.epoll.close()
-               self.oir_fd.close()
+                self.epoll.unregister(self.oir_fd.fileno())
+                self.epoll.close()
+                self.oir_fd.close()
 
     def get_presence(self, port_num):
 
@@ -376,17 +376,23 @@ class SfpUtil(SfpUtilBase):
             retval = 0
             is_port_dict_updated = False
             # Read the QSFP ABS interrupt & status registers
-            cpld2_abs_int = self.get_register("/sys/class/i2c-adapter/i2c-14/14-003e/qsfp_abs_int")
-            cpld2_abs_sta = self.get_register("/sys/class/i2c-adapter/i2c-14/14-003e/qsfp_abs_sta")
-            cpld3_abs_int = self.get_register("/sys/class/i2c-adapter/i2c-15/15-003e/qsfp_abs_int")
-            cpld3_abs_sta = self.get_register("/sys/class/i2c-adapter/i2c-15/15-003e/qsfp_abs_sta")
-            cpld4_abs_int = self.get_register("/sys/class/i2c-adapter/i2c-16/16-003e/qsfp_abs_int")
-            cpld4_abs_sta = self.get_register("/sys/class/i2c-adapter/i2c-16/16-003e/qsfp_abs_sta")
+            cpld2_abs_int = self.get_register(
+                        "/sys/class/i2c-adapter/i2c-14/14-003e/qsfp_abs_int")
+            cpld2_abs_sta = self.get_register(
+                        "/sys/class/i2c-adapter/i2c-14/14-003e/qsfp_abs_sta")
+            cpld3_abs_int = self.get_register(
+                        "/sys/class/i2c-adapter/i2c-15/15-003e/qsfp_abs_int")
+            cpld3_abs_sta = self.get_register(
+                        "/sys/class/i2c-adapter/i2c-15/15-003e/qsfp_abs_sta")
+            cpld4_abs_int = self.get_register(
+                        "/sys/class/i2c-adapter/i2c-16/16-003e/qsfp_abs_int")
+            cpld4_abs_sta = self.get_register(
+                        "/sys/class/i2c-adapter/i2c-16/16-003e/qsfp_abs_sta")
 
-            if (cpld2_abs_int == 'ERR' or cpld2_abs_sta == 'ERR' or \
-                cpld3_abs_int == 'ERR' or cpld3_abs_sta == 'ERR' or \
-                cpld4_abs_int == 'ERR' or cpld4_abs_sta == 'ERR' ):
-                   return -1
+            if (cpld2_abs_int == 'ERR' or cpld2_abs_sta == 'ERR' or
+                    cpld3_abs_int == 'ERR' or cpld3_abs_sta == 'ERR' or
+                    cpld4_abs_int == 'ERR' or cpld4_abs_sta == 'ERR'):
+                return -1
 
             cpld2_abs_int = int(cpld2_abs_int, 16)
             cpld2_abs_sta = int(cpld2_abs_sta, 16)
@@ -396,16 +402,20 @@ class SfpUtil(SfpUtilBase):
             cpld4_abs_sta = int(cpld4_abs_sta, 16)
 
             # Make it contiguous (discard reserved bits)
-            interrupt_reg = (cpld2_abs_int & 0xfff) | ((cpld3_abs_int & 0x3ff) << 12) | ((cpld4_abs_int & 0x3ff) << 22)
-            status_reg    = (cpld2_abs_sta & 0xfff) | ((cpld3_abs_sta & 0x3ff) << 12) | ((cpld4_abs_sta & 0x3ff) << 22)
+            interrupt_reg = (cpld2_abs_int & 0xfff) |\
+                            ((cpld3_abs_int & 0x3ff) << 12) |\
+                            ((cpld4_abs_int & 0x3ff) << 22)
+            status_reg = (cpld2_abs_sta & 0xfff) |\
+                         ((cpld3_abs_sta & 0x3ff) << 12) |\
+                         ((cpld4_abs_sta & 0x3ff) << 22)
 
-            port=self.port_start
+            port = self.port_start
             while port <= self.port_end:
-                if interrupt_reg & (1<<port):
+                if interrupt_reg & (1 << port):
                     # update only if atleast one port has generated
                     # interrupt
                     is_port_dict_updated = True
-                    if status_reg & (1<<port):
+                    if status_reg & (1 << port):
                         # status reg 1 => optics is removed
                         port_dict[port] = '0'
                     else:
@@ -417,24 +427,26 @@ class SfpUtil(SfpUtilBase):
     def get_transceiver_change_event(self, timeout=0):
             port_dict = {}
             try:
-               # We get notified when there is an SCI interrupt from GPIO SUS6
-               # Check for missed interrupts by invoking self.check_interrupts,
-               # it will update the port_dict.
-               # Then poll for new xcvr insertion/removal and
-               # call self.check_interrupts again and return
-               retval, is_port_dict_updated = self.check_interrupts(port_dict)
-               if ((retval == 0) and (is_port_dict_updated is True)):
-                  return True, port_dict
+                # We get notified when there is an SCI interrupt from GPIO SUS6
+                # Check for missed interrupts by invoking self.check_interrupts
+                # it will update the port_dict.
+                # Then poll for new xcvr insertion/removal and
+                # call self.check_interrupts again and return
+                retval, is_port_dict_updated = self.check_interrupts(port_dict)
+                if ((retval == 0) and (is_port_dict_updated is True)):
+                    return True, port_dict
 
-               # Block until an xcvr is inserted or removed with timeout = -1
-               events = self.epoll.poll(timeout=timeout if timeout != 0 else -1)
-               if events:
-                  # check interrupts and return the port_dict
-                  retval, is_port_dict_updated = \
+                # Block until an xcvr is inserted or removed with timeout = -1
+                events = self.epoll.poll(
+                    timeout=timeout if timeout != 0 else -1)
+                if events:
+                    # check interrupts and return the port_dict
+                    retval, is_port_dict_updated = \
                                               self.check_interrupts(port_dict)
-                  if (retval != 0) :
-                     return False, {}
-               return True, port_dict
+                    if (retval != 0):
+                        return False, {}
+                return True, port_dict
             except:
                 return False, {}
             return False, {}
+
