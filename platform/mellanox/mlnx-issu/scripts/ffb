@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Part of MLNX platform specific fast-fast boot implementation for warm-boot.
+Part of Mellanox platform specific fastfast boot implementation for warm-boot.
 Notifies SYNCD proccess once boot is finished after warm-reboot.
 Once SYNCD received such notification it should set appropriate SAI attribute.
 Then SAI will notify SDK to end ISSU mode for the FFB.
@@ -13,7 +13,7 @@ from threading import Timer
 
 
 class FFB(object):
-    """Provides implementation for MLNX fast-fast boot"""
+    """Provides implementation for Mellanox fastfast boot"""
     DB_WARM_TABLE_KEY = 'WARM_RESTART_TABLE|bgp'
     DB_STATE_ENTRY_NAME = 'state'
     DB_STATE_TYPE_RECONCILED = 'reconciled'

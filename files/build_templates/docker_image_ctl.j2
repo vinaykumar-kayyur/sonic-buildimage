@@ -12,8 +12,8 @@ function getBootType()
     warm*)
         TYPE='warm'
         ;;
-    fast-fast)
-        TYPE='fast-fast'
+    fastfast)
+        TYPE='fastfast'
         ;;
     fast*)
         TYPE='fast'
@@ -61,7 +61,7 @@ function postStartAction()
     fi
 {%- elif docker_container_name == "swss" %}
     docker exec swss rm -f /ready   # remove cruft
-    if [[ "$BOOT_TYPE" == "fast" || "$BOOT_TYPE" == "fast-fast" ]] && [[ -d /host/fast-reboot ]]; then
+    if [[ "$BOOT_TYPE" == "fast" || "$BOOT_TYPE" == "fastfast" ]] && [[ -d /host/fast-reboot ]]; then
         test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss:/
         test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss:/
         test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss:/
