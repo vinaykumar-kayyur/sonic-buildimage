@@ -108,7 +108,7 @@ instantiate =[
 #turn on module power
 'echo 53 > /sys/class/gpio/export',
 'echo out > /sys/class/gpio/gpio53/direction',
-'echo 1 >/sys/class/gpio/gpio53/value',
+'echo 1 > /sys/class/gpio/gpio53/value',
 #turn on 100G led by default
 'i2cset -y 0x13 0x38 0x00 0xff',
 'i2cset -y 0x13 0x38 0x01 0xff',
@@ -124,15 +124,17 @@ drivers =[
 'gpio-pca953x',
 'qci_pmbus',
 'leds-gpio',
+'optoe',
 'qci_cpld_qsfp28',
 'qci_platform_ix1b'
 ]
- 
 
-                    
+
+
 def system_install():
     global FORCE
-	
+
+    time.sleep(3)
     #remove default drivers to avoid modprobe order conflicts
     status, output = exec_cmd("rmmod i2c_ismt ", 1)
     status, output = exec_cmd("rmmod i2c-i801 ", 1)
@@ -142,27 +144,24 @@ def system_install():
     for i in range(0,len(drivers)):
        status, output = exec_cmd("modprobe "+drivers[i], 1)
     if status:
-	   print output
-	   if FORCE == 0:                
-	      return status             
-    				 
+       print output
+       if FORCE == 0:
+          return status
+
     #instantiate devices
     for i in range(0,len(instantiate)):
-       time.sleep(1)
        status, output = exec_cmd(instantiate[i], 1)
     if status:
-	   print output
-	   if FORCE == 0:                
-	      return status   
-    
-    #for i in range(22,30):
-    #    status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-4/i2c-"+str(i)+"/new_device", 1)
-    #    if status:
-    #        print output
-    #        if FORCE == 0:            
-    #            return status   
-    
-    return 
+       print output
+       if FORCE == 0:
+          return status
+
+    #QSFP for 1~32 port
+    for port_number in range(1,33):
+        bus_number = port_number + 31
+        os.system("echo %d >/sys/bus/i2c/devices/%d-0050/port_name" % (port_number, bus_number))
+
+    return
      
         
 def system_ready():

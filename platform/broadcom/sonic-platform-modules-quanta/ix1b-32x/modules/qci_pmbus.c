@@ -327,6 +327,7 @@ static int qci_pmbus_identify(struct i2c_client *client,
 				break;
 			case 1:
 				info->format[PSC_VOLTAGE_OUT] = vid;
+				info->vrm_version = vr11;
 				break;
 			case 2:
 				info->format[PSC_VOLTAGE_OUT] = direct;
@@ -411,7 +412,7 @@ static int qci_pmbus_probe(struct i2c_client *client,
 {
 	struct device *dev = &client->dev;
 	struct pmbus_driver_info *info;
-	int ret, i;
+	int ret;
 
 	dev_info(dev, "qci_pmbus_probe\n");
 
@@ -419,8 +420,7 @@ static int qci_pmbus_probe(struct i2c_client *client,
 				     I2C_FUNC_SMBUS_READ_WORD_DATA))
 		return -ENODEV;
 
-	info = devm_kzalloc(&client->dev, sizeof(struct pmbus_driver_info),
-			    GFP_KERNEL);
+	info = devm_kzalloc(dev, sizeof(struct pmbus_driver_info), GFP_KERNEL);
 
 	if (!info)
 		return -ENOMEM;
