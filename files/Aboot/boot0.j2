@@ -130,7 +130,7 @@ extract_image() {
         mkdir -p "$image_path/{{ DOCKERFS_DIR }}"
 
         if [ -n "$sonic_upgrade" ]; then
-            TAR_EXTRA_OPTION="--numeric-owner"
+            TAR_EXTRA_OPTION="--numeric-owner --warning=no-timestamp"
         fi
 
         ## extract docker archive
