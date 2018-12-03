@@ -90,6 +90,7 @@ clean_flash() {
            [ $f != "boot-config" ] &&
            [ $f != "$kernel_params" ] &&
            [ $f != "$cmdline_base" ] &&
+           [ $f != "aquota.user" ] &&
            [ $f != "old_config" ] &&
            [ $f != "minigraph.xml" ]
         then
