@@ -2,7 +2,7 @@
 
 mkdir -p /etc/swss/config.d/
 
-sonic-cfggen -d -t /usr/share/sonic/templates/switch.json.j2 > /etc/swss/config.d/switch.json
+sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t /usr/share/sonic/templates/switch.json.j2 > /etc/swss/config.d/switch.json
 sonic-cfggen -d -t /usr/share/sonic/templates/ipinip.json.j2 > /etc/swss/config.d/ipinip.json
 sonic-cfggen -d -t /usr/share/sonic/templates/ports.json.j2 > /etc/swss/config.d/ports.json
 
@@ -40,6 +40,8 @@ supervisorctl start buffermgrd
 supervisorctl start enable_counters
 
 supervisorctl start vrfmgrd
+
+supervisorctl start nbrmgrd
 
 # Start arp_update when VLAN exists
 VLAN=`sonic-cfggen -d -v 'VLAN.keys() | join(" ") if VLAN'`
