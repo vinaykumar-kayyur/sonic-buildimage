@@ -4,7 +4,7 @@ if [ -s /usr/local/bin/done_idt_init ];then
     echo "There is a done_idt_init file"
 else
     
-    cat /etc/init.d/opennsl-modules-4.9.0-7-amd64|grep mac_handle.sh
+    cat /etc/init.d/opennsl-modules-4.9.0-7-amd64|grep idt_init.sh
     if [ $? -ne 0 ];then
         echo "Add idt_init.sh to opennsl-modules for TD3 MAC"
         sed -i '/modprobe linux-kernel-bde/i     sleep 1' /etc/init.d/opennsl-modules-4.9.0-7-amd64
