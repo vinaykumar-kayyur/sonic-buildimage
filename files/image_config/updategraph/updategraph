@@ -22,7 +22,10 @@ function copy_config_files()
 {
     for file in $@; do
         if [ -f /etc/sonic/old_config/${file} ]; then
+            logger "Copying SONiC configuration ${file} ..."
             cp /etc/sonic/old_config/${file} /etc/sonic/
+        else
+            logger "Missing SONiC configuration ${file} ..."
         fi
     done
 }
