@@ -5,56 +5,525 @@ import redis
 import subprocess
 import syslog
 from swsssdk import ConfigDBConnector
+import re
+from netaddr.ip import IPAddress
 
 class BGPConfigDaemon:
+
+    def _init_helper(self):
+        _localhost = self.config_db.get_entry('DEVICE_METADATA', 'localhost')
+        if _localhost and _localhost.has_key('bgp_asn') and _localhost['bgp_asn'].isdigit() and int(_localhost['bgp_asn']) > 0:
+            self.bgp_asn = _localhost['bgp_asn']
+        else:
+            self.bgp_asn = -1
+        self.bgp_neighbor = self.config_db.get_table('BGP_NEIGHBOR')
+        self.bgp_peer_range = self.config_db.get_table('BGP_PEER_RANGE')
+        self.vlan_interface = self.config_db.get_table('VLAN_INTERFACE')
+        self.loopback_interface = self.config_db.get_table('LOOPBACK_INTERFACE')
+        self.l3_interface = self.config_db.get_table('INTERFACE')
+        self.bgp_metadata = self.config_db.get_table('BGP_METADATA')
+        self.static_route = self.config_db.get_table('STATIC_ROUTE')
+        self.bgp_as_set = self.config_db.get_table('BGP_AS_SET')
+        self.bgp_community = self.config_db.get_table('BGP_COMMUNITY_SET')
+        self.bgp_policy = self.config_db.get_table('BGP_POLICY_ROUTE_MAP')
+        self.prefix_list = self.config_db.get_table('BGP_PREFIX_SET')
+        self.ip_access_list = self.config_db.get_table('IP_ACCESS_LIST')
 
     def __init__(self):
         self.config_db = ConfigDBConnector()
         self.config_db.connect()
-        self.bgp_asn = self.config_db.get_entry('DEVICE_METADATA', 'localhost')['bgp_asn']
-        self.bgp_neighbor = self.config_db.get_table('BGP_NEIGHBOR')
+        self._init_helper()
 
     def __run_command(self, command):
 #        print command
+        syslog.syslog(syslog.LOG_INFO, 'cmd: {}'.format(command))
         p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         stdout = p.communicate()[0]
         p.wait()
         if p.returncode != 0:
             syslog.syslog(syslog.LOG_ERR, '[bgp cfgd] command execution returned {}. Command: "{}", stdout: "{}"'.format(p.returncode, command, stdout))
 
-    def metadata_handler(self, key, data):
+    def _common_check(self):
+        if self.bgp_asn == -1:
+            syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] No bgp_asn config.')
+            return False
+        else:
+            return True
+
+    def bgp_retain_reboot(self):
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] run bgp_retain_reboot.sh')
+        self.__run_command("sh /usr/bin/bgp_retain_reboot.sh")
+
+    def metadata_handler(self, key, data, op_str):
         if key == 'localhost' and data.has_key('bgp_asn'):
             if data['bgp_asn'] != self.bgp_asn:
                 syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] ASN changed to {} from {}, restart BGP...'.format(data['bgp_asn'], self.bgp_asn))
-                self.__run_command("supervisorctl restart start.sh")
-                self.__run_command("service quagga restart")
-                self.bgp_asn = data['bgp_asn']
+                self.bgp_retain_reboot()
+                self._init_helper()
 
-    def bgp_handler(self, key, data):
+    def _ipaddr_type(self, cfgstr):
+        '''
+        return ip address version, or return False.
+        '''
+        ip_type = False
+        # process prefix
+        if '/' in cfgstr:
+            text = cfgstr[:cfgstr.rfind('/')]
+        else:
+            text = cfgstr
+        # process addr
+        try:
+            addr = IPAddress(text)
+            ip_type = True
+        except:
+            ip_type = False
+        # return result
+        if ip_type:
+            return addr.version
+        else:
+            return False
+
+    def _bgp_handler_add_common(self, key, data, address_type):
+        # add peer
+        if data.has_key('asn'):
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} remote-as {}'".format(self.bgp_asn, key, data['asn'])
+            self.__run_command(command)
+        # add name
+        if data.has_key('name'):
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} description {}'".format(self.bgp_asn, key, data['name'])
+            self.__run_command(command)
+        # add admin status
+        if data.has_key('admin_status'):
+            command_mod = 'no ' if data['admin_status'] == 'up' else ''
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c '{} neighbor {} shutdown'".format(self.bgp_asn, command_mod, key)
+            self.__run_command(command)
+        # add policy-in
+        if data.has_key('policy_in'):
+            policy_in_name_arr = data['policy_in'].split('|')
+            for name in policy_in_name_arr:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} route-map {} in'".format(self.bgp_asn, key, name)
+                self.__run_command(command)
+        # add policy-out
+        if data.has_key('policy_out'):
+            policy_out_name_arr = data['policy_out'].split('|')
+            for name in policy_out_name_arr:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} route-map {} out'".format(self.bgp_asn, key, name)
+                self.__run_command(command)
+        # add policy-import
+        if data.has_key('policy_import'):
+            policy_import_name_arr = data['policy_import'].split('|')
+            for name in policy_import_name_arr:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} route-map {} import'".format(self.bgp_asn, key, name)
+                self.__run_command(command)
+        # add policy-export
+        if data.has_key('policy_export'):
+            policy_export_name_arr = data['policy_export'].split('|')
+            for name in policy_export_name_arr:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} route-map {} export'".format(self.bgp_asn, key, name)
+                self.__run_command(command)
+        # add address-family
+        if address_type != "peer_group":
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'address-family {} unicast'".format(self.bgp_asn, address_type)
+            self.__run_command(command)
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} activate'".format(self.bgp_asn, key)
+            self.__run_command(command)
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'maximum-paths 64'".format(self.bgp_asn)
+            self.__run_command(command)
+            # no need to do 'exit-address-family' in quagga command line mode
+
+    def bgp_handler(self, key, data, op_str):
+        '''
+        handle bgp peer add/del.
+        '''
+        if self._common_check() == False:
+            return
         syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
-        if not data:
+        if op_str == 'del':
             # Neighbor is deleted
             command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no neighbor {}'".format(self.bgp_asn, key)
             self.__run_command(command)
-            self.bgp_neighbor.pop(key)
+            if self.bgp_neighbor.has_key(key):
+                self.bgp_neighbor.pop(key)
         else:
-            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} remote-as {}'".format(self.bgp_asn, key, data['asn'])
-            self.__run_command(command)
-            if data.has_key('name'):
-                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} description {}'".format(self.bgp_asn, key, data['name'])
+            # Neighbor is added
+            address_type = ""
+            if self._ipaddr_type(key) == 4:
+                address_type = "ipv4"
+            elif self._ipaddr_type(key) == 6:
+                address_type = "ipv6"
+            else:
+                address_type = "peer_group"
+            # add peer-group
+            if address_type == "peer_group":
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} peer-group'".format(self.bgp_asn, key)
                 self.__run_command(command)
-            if data.has_key('admin_status'):
-                command_mod = 'no ' if data['admin_status'] == 'up' else ''
-                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c '{}neighbor {} shutdown'".format(self.bgp_asn, command_mod, key)
-                self.__run_command(command)
+            else:
+                if data.has_key('peer_group'):
+                    command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} peer-group {}'".format(self.bgp_asn, key, data['peer_group'])
+                    self.__run_command(command)
+            # add common config
+            self._bgp_handler_add_common(key, data, address_type)
+            # store in local
             self.bgp_neighbor[key] = data
 
+    def bgp_peer_range_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        if op_str == 'del':
+            for ip in self.bgp_peer_range.get(key, {}).get("ip_range", []):
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no bgp listen range {} peer-group {}'".format(self.bgp_asn, ip, key)
+                self.__run_command(command)
+            if self.bgp_peer_range.has_key(key):
+                self.bgp_peer_range.pop(key)
+        else:
+            for ip in self.bgp_peer_range.get(key, {}).get("ip_range", []):
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'bgp listen range {} peer-group {}'".format(self.bgp_asn, ip, key)
+                self.__run_command(command)
+            self.bgp_peer_range[key] = data
+
+    def vlan_interface_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        ip = ""
+        tmp = key.split('|')
+        if len(tmp) is 2:
+            ip = tmp[1]
+        if op_str == 'del':
+            if ip != '':
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no network {}'".format(self.bgp_asn, ip)
+                self.__run_command(command)
+            if self.vlan_interface.has_key(key):
+                self.vlan_interface.pop(key)
+        else:
+            if ip != '':
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'network {}'".format(self.bgp_asn, ip)
+                self.__run_command(command)
+            self.vlan_interface[key] = data
+
+    def l3_interface_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        # handle 1.1.1.1/24 or 1.1.1.1 format ip address
+        ip = key
+        tmp = key.split('|')
+        if len(tmp) == 2:
+            ip = tmp[1]
+        if op_str == 'del':
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no network {}'".format(self.bgp_asn, ip)
+            self.__run_command(command)
+            if self.l3_interface.has_key(key):
+                self.l3_interface.pop(key)
+        else:
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'network {}'".format(self.bgp_asn, ip)
+            self.__run_command(command)
+            self.l3_interface[key] = data
+
+    def loopback_interface_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        ip = ""
+        tmp = key.split('|')
+        if len(tmp) is 2:
+            ip = tmp[1]
+        if op_str == 'del':
+            if ip != '':
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no network {}'".format(self.bgp_asn, ip)
+                self.__run_command(command)
+            if self.loopback_interface.has_key(key):
+                self.loopback_interface.pop(key)
+        else:
+            if ip != '':
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'network {}'".format(self.bgp_asn, ip)
+                self.__run_command(command)
+            self.loopback_interface[key] = data
+
+    def _bgp_redistribute_handle_update(self, request_str, local_str):
+        '''
+        handle redistribute update
+        @request_str is array of request values, like 'connected|static'
+        @local_str is local stored array, same format of @request_str
+        '''
+        r_arr = request_str.split('|')
+        l_arr = local_str.split('|')
+        # delete old value
+        for lv in l_arr:
+            if lv != '' and lv not in r_arr:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no redistribute {}'".format(self.bgp_asn, lv)
+                self.__run_command(command)
+        # add new value
+        for rv in r_arr:
+            if rv != '' and rv not in l_arr:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'redistribute {}'".format(self.bgp_asn, rv)
+                self.__run_command(command)
+
+    def bgp_metadata_handler(self, key, data, op_str):
+        '''
+        handle bgp metadata, now only handle redistribute.
+        '''
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        # handle redistribute
+        if key == 'localhost':
+            self._bgp_redistribute_handle_update(data.get('redistribute', ''),
+                self.bgp_metadata.get(key, {}).get('redistribute', ''))
+            self.bgp_metadata[key] = data
+
+    def get_redistribute_attr(self):
+        bgp_metadata = self.config_db.get_table('BGP_METADATA')
+        res = bgp_metadata.get('localhost', {}).get('redistribute', '')
+        return res
+
+    def _static_route_handler_helper(self, dip_np_str, metric_str):
+        arr = dip_np_str.split('|')
+        if len(arr) != 2:
+            return None, None, None
+        dst_arr = arr[0].split(':')
+        if len(dst_arr) != 2:
+            return None, None, None
+        np_str = arr[1].split(':')
+        if len(np_str) != 2:
+            return None, None, None
+        return dst_arr[1], np_str[1], metric_str.get('metric', '')
+
+    def static_route_handler(self, key, data, op_str):
+        '''
+        handle static route
+        '''
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        if op_str == 'del':
+            if self.static_route.has_key(key):
+                dst_ip, nexthop_val, metric_val = self._static_route_handler_helper(
+                    key, self.static_route[key])
+                if dst_ip:
+                    command = "vtysh -c 'configure terminal' -c 'no ip route {} {} {}'".format(
+                        dst_ip, nexthop_val, metric_val)
+                    self.__run_command(command)
+                self.static_route.pop(key)
+        else:
+            if not self.static_route.has_key(key):
+                dst_ip, nexthop_val, metric_val = self._static_route_handler_helper(
+                    key, data)
+                if dst_ip:
+                    command = "vtysh -c 'configure terminal' -c 'ip route {} {} {}'".format(
+                        dst_ip, nexthop_val, metric_val)
+                    self.__run_command(command)
+                self.static_route[key] = data
+                # set redistribute to trigger
+                res = self.get_redistribute_attr()
+                res = res.split('|')
+                for rv in res:
+                    if rv == 'static':
+                        command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'redistribute {}'".format(
+                            self.bgp_asn, rv)
+                        self.__run_command(command)
+
+    def bgp_as_path_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        if op_str == 'del':
+            if self.bgp_as_set.has_key(key):
+                command = "vtysh -c 'configure terminal' -c 'no ip as-path access-list {}'".format(key)
+                self.__run_command(command)
+                self.bgp_as_set.pop(key)
+        else:
+            as_path_action = data.get('action', '')
+            as_path_line = data.get('line', '')
+            command = "vtysh -c 'configure terminal' -c 'ip as-path access-list {} {} {}'".format(key, as_path_action, as_path_line)
+            self.__run_command(command)
+            self.bgp_as_set[key] = data
+
+    def bgp_community_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        command = ''
+        if op_str == 'del':
+            if self.bgp_community.has_key(key):
+                data = self.bgp_community[key]
+                bgp_community_action = data.get('action', '')
+                bgp_community_line = data.get('line', '')
+                bgp_community_type = data.get('name_type', 'standard')
+                if key.isdigit():
+                    command = "vtysh -c 'configure terminal' -c 'no ip community-list {} {} {}'".format(key, bgp_community_action, bgp_community_line)
+                else:
+                    command = "vtysh -c 'configure terminal' -c 'no ip community-list {} {} {} {}'".format(bgp_community_type, key, bgp_community_action, bgp_community_line)
+                self.__run_command(command)
+                self.bgp_community.pop(key)
+        else:
+            bgp_community_action = data.get('action', '')
+            bgp_community_line = data.get('line', '')
+            bgp_community_type = data.get('name_type', 'standard')
+            if key.isdigit():
+                command = "vtysh -c 'configure terminal' -c 'ip community-list {} {} {}'".format(key, bgp_community_action, bgp_community_line)
+            else:
+                command = "vtysh -c 'configure terminal' -c 'ip community-list {} {} {} {}'".format(bgp_community_type, key, bgp_community_action, bgp_community_line)
+            self.__run_command(command)
+            self.bgp_community[key] = data
+
+    def bgp_policy_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        if op_str == 'del':
+            if self.bgp_policy.has_key(key):
+                route_map_key_arr = key.split('|')
+                if len(route_map_key_arr) == 3:
+                    command = "vtysh -c 'configure terminal' -c 'no route-map {}'".format(
+                        route_map_key_arr[0], route_map_key_arr[1], route_map_key_arr[2])
+                    self.__run_command(command)
+                self.bgp_policy.pop(key)
+        else:
+            # get name, action, term
+            route_map_key_arr = key.split('|')
+            if len(route_map_key_arr) != 3:
+                syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] got error in key {}'.format(key))
+                return
+            route_map_name = route_map_key_arr[0]
+            route_map_action = route_map_key_arr[1]
+            route_map_term = route_map_key_arr[2]
+            # get others
+            route_map_description = data.get('description', '')
+            route_map_match_as_path = data.get('match_as_path', '')
+            route_map_set_as_path = data.get('set_as_path', '')
+            route_map_match_prefix_list = data.get('match_prefix_list', '')
+            route_map_set_metric = data.get('set_metric', '')
+            route_map_set_community = data.get('set_community', '')
+            route_map_set_local_preference = data.get('set_local_preference', '')
+            route_map_set_ip_next_hop = data.get('set_ip_next_hop', '')
+            # add route-map
+            command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}'".format(route_map_name, route_map_action, route_map_term)
+            self.__run_command(command)
+            if route_map_description != '':
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'description {}'".format(
+                    route_map_name, route_map_action, route_map_term, route_map_description)
+                self.__run_command(command)
+            if route_map_match_as_path != '':
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'match as-path {}'".format(
+                    route_map_name, route_map_action, route_map_term, route_map_match_as_path)
+                self.__run_command(command)
+            if route_map_set_as_path != '':
+                if route_map_set_as_path.isdigit():
+                    command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'set as-path prepend last-as {}'".format(
+                        route_map_name, route_map_action, route_map_term, route_map_set_as_path)
+                else:
+                    command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'set as-path prepend {}'".format(
+                        route_map_name, route_map_action, route_map_term, route_map_set_as_path)
+                self.__run_command(command)
+            if route_map_match_prefix_list != '':
+                name_arr = route_map_match_prefix_list.split('|')
+                ip_version = 'ip'
+                prefix_list_name = ''
+                if len(name_arr) >= 2:
+                    ip_version = name_arr[0]
+                    prefix_list_name = name_arr[1]
+                else:
+                    prefix_list_name = name_arr[0]
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'match {} address prefix-list {}'".format(
+                    route_map_name, route_map_action, route_map_term, ip_version, prefix_list_name)
+                self.__run_command(command)
+            if route_map_set_metric != '':
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'set metric {}'".format(
+                    route_map_name, route_map_action, route_map_term, route_map_set_metric)
+                self.__run_command(command)
+            if route_map_set_community != '':
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'set community {}'".format(
+                    route_map_name, route_map_action, route_map_term, route_map_set_community)
+                self.__run_command(command)
+            if route_map_set_local_preference != '':
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'set local-preference {}'".format(
+                    route_map_name, route_map_action, route_map_term, route_map_set_local_preference)
+                self.__run_command(command)
+            if route_map_set_ip_next_hop != '':
+                command = "vtysh -c 'configure terminal' -c 'route-map {} {} {}' -c 'set ip next-hop {}'".format(
+                    route_map_name, route_map_action, route_map_term, route_map_set_ip_next_hop)
+                self.__run_command(command)
+            self.bgp_policy[key] = data
+
+    def bgp_prefix_list_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        arr = key.split('|')
+        if op_str == 'del':
+            if self.prefix_list.has_key(key):
+                if len(arr) == 3:
+                    name = arr[1]
+                    command = "vtysh -c 'configure terminal' -c 'no ip prefix-list {}'".format(name)
+                    self.__run_command(command)
+                self.prefix_list.pop(key)
+        else:
+            if len(arr) == 3:
+                ip_addr = arr[0]
+                name = arr[1]
+                action = arr[2]
+                compare = data.get('compare', '')
+                length = data.get('length', '')
+                if compare != '' and length != '':
+                    compare = compare + ' ' + length
+                else:
+                    compare = ''
+                seq = data.get('seq', '')
+                if seq != '':
+                    seq = 'seq ' + seq
+                command = "vtysh -c 'configure terminal' -c 'ip prefix-list {} {} {} {} {}'".format(name, seq, action, ip_addr, compare)
+                self.__run_command(command)
+                self.prefix_list[key] = data
+
+    def ip_access_list_handler(self, key, data, op_str):
+        if self._common_check() == False:
+            return
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+        if op_str == 'del':
+            if self.ip_access_list.has_key(key):
+                acc_arr = key.split('|')
+                if len(acc_arr) == 2:
+                    command = "vtysh -c 'configure terminal' -c 'no access-list {} {}'".format(acc_arr[0], acc_arr[1])
+                    self.__run_command(command)
+                    self.ip_access_list.pop(key)
+        else:
+            if not self.ip_access_list.has_key(key):
+                acc_arr = key.split('|')
+                if len(acc_arr) == 2:
+                    command = "vtysh -c 'configure terminal' -c 'access-list {} {}'".format(acc_arr[0], acc_arr[1])
+                    self.__run_command(command)
+                    self.ip_access_list[key] = data
+
     def start(self):
-        self.config_db.subscribe('BGP_NEIGHBOR', 
-                lambda table, key, data: self.bgp_handler(key, data))
+        self.config_db.subscribe('BGP_NEIGHBOR',
+                lambda table, key, data, op_str: self.bgp_handler(key, data, op_str))
         self.config_db.subscribe('DEVICE_METADATA',
-                lambda table, key, data: self.metadata_handler(key, data))
-        self.config_db.listen()
+                lambda table, key, data, op_str: self.metadata_handler(key, data, op_str))
+        self.config_db.subscribe('BGP_PEER_RANGE',
+                lambda table, key, data, op_str: self.bgp_peer_range_handler(key, data, op_str))
+        self.config_db.subscribe('VLAN_INTERFACE',
+                lambda table, key, data, op_str: self.vlan_interface_handler(key, data, op_str))
+        self.config_db.subscribe('INTERFACE',
+                lambda table, key, data, op_str: self.l3_interface_handler(key, data, op_str))
+        self.config_db.subscribe('LOOPBACK_INTERFACE',
+                lambda table, key, data, op_str: self.loopback_interface_handler(key, data, op_str))
+        self.config_db.subscribe('BGP_METADATA',
+                lambda table, key, data, op_str: self.bgp_metadata_handler(key, data, op_str))
+        self.config_db.subscribe('STATIC_ROUTE',
+                lambda table, key, data, op_str: self.static_route_handler(key, data, op_str))
+        self.config_db.subscribe('BGP_AS_SET',
+                lambda table, key, data, op_str: self.bgp_as_path_handler(key, data, op_str))
+        self.config_db.subscribe('BGP_COMMUNITY_SET',
+                lambda table, key, data, op_str: self.bgp_community_handler(key, data, op_str))
+        self.config_db.subscribe('BGP_POLICY_ROUTE_MAP',
+                lambda table, key, data, op_str: self.bgp_policy_handler(key, data, op_str))
+        self.config_db.subscribe('BGP_PREFIX_SET',
+                lambda table, key, data, op_str: self.bgp_prefix_list_handler(key, data, op_str))
+        self.config_db.subscribe('IP_ACCESS_LIST',
+                lambda table, key, data, op_str: self.ip_access_list_handler(key, data, op_str))
+        self.config_db.listen_with_op()
 
 
 def main():
