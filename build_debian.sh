@@ -225,6 +225,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     screen                  \
     hping3                  \
     python-scapy            \
+    python-ptyprocess       \
+    python-pexpect          \
     tcptraceroute           \
     mtr-tiny
 
