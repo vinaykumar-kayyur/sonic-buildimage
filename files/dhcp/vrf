@@ -1,3 +1,9 @@
+# DHCLIENT exit hook for vrf support.
+#
+# Code ported from https://github.com/CumulusNetworks/vrf under GPLv2 license
+# (see https://github.com/CumulusNetworks/vrf/blob/master/debian/copyright).
+#
+
 get_vrf_arg()
 {
 	local vrf
