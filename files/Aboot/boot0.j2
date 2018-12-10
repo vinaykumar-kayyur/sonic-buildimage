@@ -326,7 +326,7 @@ run_hooks() {
     if [ -d "$hook_path/$1" ]; then
         for hook in $(get_sorted_hooks "$hook_path/$1"); do
             if [ ! -z "$hook" ]; then
-                info "Running hook $hook"
+                info "Running hook $(basename $hook)"
                 . "$hook"
             fi
         done
