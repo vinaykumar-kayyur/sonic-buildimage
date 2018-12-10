@@ -9,11 +9,12 @@ SHELL = /bin/bash
 USER = $(shell id -un)
 UID = $(shell id -u)
 GUID = $(shell id -g)
+SONIC_GET_VERSION=$(shell export BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) && export BUILD_NUMBER=$(BUILD_NUMBER) && . functions.sh && sonic_get_version)
 
 .SECONDEXPANSION:
 
-SPACE := 
-SPACE += 
+NULL :=
+SPACE := $(NULL) $(NULL)
 
 ###############################################################################
 ## General definitions
@@ -31,6 +32,8 @@ PROJECT_ROOT = $(shell pwd)
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
 export BUILD_NUMBER
+export BUILD_TIMESTAMP
+export CONFIGURED_PLATFORM
 
 ###############################################################################
 ## Utility rules
@@ -59,6 +62,22 @@ list :
 ## Include other rules
 ###############################################################################
 
+ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
+ENABLE_PFCWD_ON_START = y
+endif
+
+ifeq ($(SONIC_ENABLE_SYSTEM_TELEMETRY),y)
+ENABLE_SYSTEM_TELEMETRY = y
+endif
+
+ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
+ENABLE_SYNCD_RPC = y
+endif
+
+ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
+INSTALL_DEBUG_TOOLS = y
+endif
+
 include $(RULES_PATH)/config
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
@@ -68,18 +87,42 @@ endif
 
 ifeq ($(USERNAME),)
 override USERNAME := $(DEFAULT_USERNAME)
+else
+$(warning USERNAME given on command line: could be visible to other users)
 endif
 
 ifeq ($(PASSWORD),)
 override PASSWORD := $(DEFAULT_PASSWORD)
+else
+$(warning PASSWORD given on command line: could be visible to other users)
+endif
+
+ifeq ($(SONIC_DEBUGGING_ON),y)
+DEB_BUILD_OPTIONS_GENERIC := "nostrip"
+endif
+
+ifeq ($(SONIC_PROFILING_ON),y)
+DEB_BUILD_OPTIONS_GENERIC := "nostrip noopt"
 endif
 
 ifeq ($(SONIC_BUILD_JOBS),)
 override SONIC_BUILD_JOBS := $(SONIC_CONFIG_BUILD_JOBS)
 endif
 
+ifeq ($(KERNEL_PROCURE_METHOD),)
+override KERNEL_PROCURE_METHOD := $(DEFAULT_KERNEL_PROCURE_METHOD)
+endif
+
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
+
+###############################################################################
+## Routing stack related exports
+###############################################################################
+
+export SONIC_ROUTING_STACK
+export FRR_USER_UID
+export FRR_USER_GID
 
 ###############################################################################
 ## Dumping key config attributes associated to current building exercise
@@ -92,22 +135,34 @@ $(info "CONFIGURED_PLATFORM"             : "$(if $(PLATFORM),$(PLATFORM),$(CONFI
 $(info "SONIC_CONFIG_PRINT_DEPENDENCIES" : "$(SONIC_CONFIG_PRINT_DEPENDENCIES)")
 $(info "SONIC_BUILD_JOBS"                : "$(SONIC_BUILD_JOBS)")
 $(info "SONIC_CONFIG_MAKE_JOBS"          : "$(SONIC_CONFIG_MAKE_JOBS)")
-$(info "DEFAULT_USERNAME"                : "$(DEFAULT_USERNAME)")
-$(info "DEFAULT_PASSWORD"                : "$(DEFAULT_PASSWORD)")
+$(info "USERNAME"                        : "$(USERNAME)")
+$(info "PASSWORD"                        : "$(PASSWORD)")
 $(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
 $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
-$(info "SONIC_CONFIG_DEBUG"              : "$(SONIC_CONFIG_DEBUG)")
+$(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
+$(info "INSTALL_DEBUG_TOOLS"             : "$(INSTALL_DEBUG_TOOLS)")
 $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
+ifeq ($(SONIC_ROUTING_STACK),frr)
+$(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
+$(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
+endif
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
+$(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
+$(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
+$(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
+$(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
+$(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info )
 
 ###############################################################################
 ## Generic rules section
 ## All rules must go after includes for propper targets expansion
 ###############################################################################
+
+export kernel_procure_method=$(KERNEL_PROCURE_METHOD)
 
 ###############################################################################
 ## Local targets
@@ -123,6 +178,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_COPY_DEBS)) : $(DEBS_PATH)/% : .platform
 	$(foreach deb,$* $($*_DERIVED_DEBS), \
 	    { cp $($(deb)_PATH)/$(deb) $(DEBS_PATH)/ $(LOG) || exit 1 ; } ; )
 	$(FOOTER)
+
 
 SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_COPY_DEBS))
 
@@ -169,6 +225,32 @@ $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES)) : $(FILES_PATH)/% : .platform
 SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_ONLINE_FILES))
 
 ###############################################################################
+## Build targets
+###############################################################################
+
+# Build project using build.sh script
+# They are essentially a one-time build projects that get sources from some URL
+# and compile them
+# Add new file for build:
+#     SOME_NEW_FILE = some_new_deb.deb
+#     $(SOME_NEW_FILE)_SRC_PATH = $(SRC_PATH)/project_name
+#     $(SOME_NEW_FILE)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
+#     SONIC_MAKE_FILES += $(SOME_NEW_FILE)
+$(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES)) : $(FILES_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+	$(HEADER)
+	# Remove target to force rebuild
+	rm -f $(addprefix $(FILES_PATH)/, $*)
+	# Apply series of patches if exist
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
+	# Build project and take package
+	make DEST=$(shell pwd)/$(FILES_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(FILES_PATH)/$* $(LOG)
+	# Clean up
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
+
+###############################################################################
 ## Debian package related targets
 ###############################################################################
 
@@ -187,7 +269,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# Apply series of patches if exist
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 	# Build project and take package
-	make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
+	DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
 	$(FOOTER)
@@ -210,8 +292,8 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
 	$(if $($*_DPKG_TARGET),
-		DEB_BUILD_OPTIONS=$($*_DEB_BUILD_OPTIONS) dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
-		DEB_BUILD_OPTIONS=$($*_DEB_BUILD_OPTIONS) dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
 	)
 	popd $(LOG)
 	# Clean up
@@ -345,19 +427,26 @@ $(SONIC_INSTALL_WHEELS) : $(PYTHON_WHEELS_PATH)/%-install : .platform $$(addsuff
 docker-start :
 	@sudo sed -i '/http_proxy/d' /etc/default/docker
 	@sudo bash -c "echo \"export http_proxy=$$http_proxy\" >> /etc/default/docker"
-	@sudo service docker status &> /dev/null || ( sudo service docker start &> /dev/null && sleep 1 )
+	@test x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) != x"y" && sudo service docker status &> /dev/null || ( sudo service docker start &> /dev/null && sleep 1 )
 
 # targets for building simple docker images that do not depend on any debian packages
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
 	$(HEADER)
+	# Apply series of patches if exist
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi
+	docker info $(LOG)
 	docker build --squash --no-cache \
 		--build-arg http_proxy=$(HTTP_PROXY) \
 		--build-arg https_proxy=$(HTTPS_PROXY) \
 		--build-arg user=$(USER) \
 		--build-arg uid=$(UID) \
 		--build-arg guid=$(GUID) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+		--label Tag=$(SONIC_GET_VERSION) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
+	# Clean up
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES))
@@ -365,6 +454,8 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES))
 # Targets for building docker images
 $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addprefix $(DEBS_PATH)/,$$($$*.gz_DEPENDS)) $$(addprefix $(FILES_PATH)/,$$($$*.gz_FILES)) $$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*.gz_PYTHON_WHEELS)) $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS))) $$($$*.gz_PATH)/Dockerfile.j2
 	$(HEADER)
+	# Apply series of patches if exist
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi
 	mkdir -p $($*.gz_PATH)/debs $(LOG)
 	mkdir -p $($*.gz_PATH)/files $(LOG)
 	mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
@@ -376,14 +467,21 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_whls=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_PYTHON_WHEELS)))\n" | awk '!a[$$0]++'))
 	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
 	j2 $($*.gz_PATH)/Dockerfile.j2 > $($*.gz_PATH)/Dockerfile
+	docker info $(LOG)
 	docker build --squash --no-cache \
 		--build-arg http_proxy=$(HTTP_PROXY) \
 		--build-arg https_proxy=$(HTTPS_PROXY) \
 		--build-arg user=$(USER) \
 		--build-arg uid=$(UID) \
 		--build-arg guid=$(GUID) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+		--build-arg frr_user_uid=$(FRR_USER_UID) \
+		--build-arg frr_user_gid=$(FRR_USER_GID) \
+		--label Tag=$(SONIC_GET_VERSION) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
+	# Clean up
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES))
@@ -404,39 +502,46 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         .platform \
         onie-image.conf \
+        build_debian.sh \
+        build_image.sh \
         $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
         $$(addprefix $(DEBS_PATH)/,$$($$*_INSTALLS)) \
         $$(addprefix $(DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
+        $(addprefix $(FILES_PATH)/,$(IXGBE_DRIVER)) \
         $(addprefix $(DEBS_PATH)/,$(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
-                $(IGB_DRIVER) \
-                $(IXGBE_DRIVER) \
                 $(SONIC_DEVICE_DATA) \
+                $(PYTHON_CLICK) \
                 $(SONIC_UTILS) \
+                $(BASH) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
-        $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))
+        $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
+        $$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export initramfs_tools="$(DEBS_PATH)/$(INITRAMFS_TOOLS)"
 	export linux_kernel="$(DEBS_PATH)/$(LINUX_KERNEL)"
+	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
 	export kversion="$(KVERSION)"
 	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
 	export sonic_asic_platform="$(CONFIGURED_PLATFORM)"
-	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)" 
+	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
+	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
 	export installer_debs="$(addprefix $(DEBS_PATH)/,$($*_INSTALLS))"
 	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(DEBS_PATH)/$(deb))))"
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
-	
+	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
+
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
 		export docker_image_name="$(basename $(docker))"
@@ -457,15 +562,22 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
 	j2 -f env files/initramfs-tools/arista-convertfs.j2 onie-image.conf > files/initramfs-tools/arista-convertfs
 
-	$(if $($*_DOCKERS), 
+	j2 files/build_templates/updategraph.service.j2 > updategraph.service
+
+	$(if $($*_DOCKERS),
 		j2 files/build_templates/sonic_debian_extension.j2 > sonic_debian_extension.sh
 		chmod +x sonic_debian_extension.sh,
 	)
 
-	DIRTY_SUFFIX="$(shell date +%Y%m%d\.%H%M%S)"
-	export DIRTY_SUFFIX
-	./build_debian.sh "$(USERNAME)" "$(shell perl -e 'print crypt("$(PASSWORD)", "salt"),"\n"')" $(LOG)
-	TARGET_MACHINE=$($*_MACHINE) IMAGE_TYPE=$($*_IMAGE_TYPE) ./build_image.sh $(LOG)
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+		./build_debian.sh $(LOG)
+
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+	TARGET_MACHINE=$($*_MACHINE) \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+		./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f $($(docker)_CONTAINER_NAME).sh
@@ -487,9 +599,7 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS))
 
 SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_ONLINE_DEBS) \
-		   $(SONIC_ONLINE_FILES) \
 		   $(SONIC_COPY_DEBS) \
-		   $(SONIC_COPY_FILES) \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_PYTHON_STDEB_DEBS) \
@@ -498,7 +608,8 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 
 SONIC_CLEAN_FILES = $(addsuffix -clean,$(addprefix $(FILES_PATH)/, \
 		   $(SONIC_ONLINE_FILES) \
-		   $(SONIC_COPY_FILES)))
+		   $(SONIC_COPY_FILES) \
+		   $(SONIC_MAKE_FILES)))
 
 $(SONIC_CLEAN_DEBS) : $(DEBS_PATH)/%-clean : .platform $$(addsuffix -clean,$$(addprefix $(DEBS_PATH)/,$$($$*_MAIN_DEB)))
 	@# remove derived or extra targets if main one is removed, because we treat them
@@ -531,10 +642,14 @@ clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC
 
 all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
+stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
+          $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES))
+
+
 ###############################################################################
 ## Standard targets
 ###############################################################################
 
-.PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_WHEELS) clean distclean configure
+.PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_WHEELS) $(SONIC_PHONY_TARGETS) clean distclean configure
 
 .INTERMEDIATE : $(SONIC_INSTALL_TARGETS) $(SONIC_INSTALL_WHEELS) $(DOCKER_LOAD_TARGETS) docker-start .platform

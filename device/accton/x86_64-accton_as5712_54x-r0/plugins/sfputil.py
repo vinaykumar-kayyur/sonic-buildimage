@@ -2,9 +2,9 @@
 #
 # Platform-specific SFP transceiver interface for SONiC
 #
-
 try:
     import time
+    import os
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -20,84 +20,93 @@ class SfpUtil(SfpUtilBase):
     QSFP_PORT_END = 72
 
     BASE_VAL_PATH = "/sys/class/i2c-adapter/i2c-{0}/{1}-0050/"
+    BASE_OOM_PATH = "/sys/bus/i2c/devices/{0}-0050/"
+    BASE_CPLD2_PATH = "/sys/bus/i2c/devices/{0}-0061/"
+    BASE_CPLD3_PATH = "/sys/bus/i2c/devices/{0}-0062/"
+    I2C_BUS_ORDER = -1
+
+    #The sidebands of QSFP is different. 
+    #present is in-order. 
+    #But lp_mode and reset are not. 	
+    qsfp_sb_map = [1, 3, 5, 2, 4, 6]
 
     _port_to_is_present = {}
     _port_to_lp_mode = {}
 
     _port_to_eeprom_mapping = {}
     _port_to_i2c_mapping = {
-           0: [2, 2],
-           1: [3, 3],
-           2: [4, 4],
-           3: [5, 5],
-           4: [6, 6],
-           5: [7, 7],
-           6: [8, 8],
-           7: [9, 9],
-           8: [10, 10],
-           9: [11, 11],
-           10: [12, 12],
-           11: [13, 13],
-           12: [14, 14],
-           13: [15, 15],
-           14: [16, 16],
-           15: [17, 17],
-           16: [18, 18],
-           17: [19, 19],
-           18: [20, 20],
-           19: [21, 21],
-           20: [22, 22],
-           21: [23, 23],
-           22: [24, 24],
-           23: [25, 25],
-           24: [26, 26],
-           25: [27, 27],
-           26: [28, 28],
-           27: [29, 29],
-           28: [30, 30],
-           29: [31, 31],
-           30: [32, 32],
-           31: [33, 33],
-           32: [34, 34],
-           33: [35, 35],
-           34: [36, 36],
-           35: [37, 37],
-           36: [38, 38],
-           37: [39, 39],
-           38: [40, 40],
-           39: [41, 41],
-           40: [42, 42],
-           41: [43, 43],
-           42: [44, 44],
-           43: [45, 45],
-           44: [46, 46],
-           45: [47, 47],
-           46: [48, 48],
-           47: [49, 49],
-           48: [50, 50], #QSFP49
-           49: [50, 50],
-           50: [50, 50],
-           51: [50, 50],
-           52: [52, 52], #QSFP50
-           53: [52, 52],
-           54: [52, 52],
-           55: [52, 52],
-           56: [54, 54], #QSFP51
-           57: [54, 54],
-           58: [54, 54],
-           59: [54, 54],
-           60: [51, 51], #QSFP52
-           61: [51, 51],
-           62: [51, 51],
-           63: [51, 51],
+           0: [1, 2],
+           1: [2, 3],
+           2: [3, 4],
+           3: [4, 5],
+           4: [5, 6],
+           5: [6, 7],
+           6: [7, 8],
+           7: [8, 9],
+           8: [9, 10],            
+           9: [10, 11],
+           10: [11, 12],
+           11: [12, 13],
+           12: [13, 14],
+           13: [14, 15],
+           14: [15, 16],
+           15: [16, 17],
+           16: [17, 18],
+           17: [18, 19],
+           18: [19, 20],
+           19: [20, 21],            
+           20: [21, 22],
+           21: [22, 23],
+           22: [23, 24],
+           23: [24, 25],
+           24: [25, 26],
+           25: [26, 27],
+           26: [27, 28],
+           27: [28, 29],
+           28: [29, 30],
+           29: [30, 31],
+           30: [31, 32],
+           31: [32, 33],
+           32: [33, 34],
+           33: [34, 35],
+           34: [35, 36],
+           35: [36, 37],
+           36: [37, 38],
+           37: [38, 39],
+           38: [39, 40],
+           39: [40, 41],
+           40: [41, 42],
+           41: [42, 43],
+           42: [43, 44],
+           43: [44, 45],
+           44: [45, 46],
+           45: [46, 47],
+           46: [47, 48],
+           47: [48, 49],
+           48: [49, 50],#QSFP49
+           49: [49, 50],
+           50: [49, 50],
+           51: [49, 50],            
+           52: [50, 52],#QSFP50
+           53: [50, 52],
+           54: [50, 52],
+           55: [50, 52],
+           56: [51, 54],#QSFP51
+           57: [51, 54],
+           58: [51, 54],
+           59: [51, 54],
+           60: [52, 51],#QSFP52
+           61: [52, 51],
+           62: [52, 51],
+           63: [52, 51], 
            64: [53, 53], #QSFP53
            65: [53, 53],
            66: [53, 53],
            67: [53, 53],
-           68: [55, 55], #QSFP54
-           69: [55, 55],
-           70: [55, 55],
-           71: [55, 55],
+           68: [54, 55],#QSFP54          
+           69: [54, 55],          
+           70: [54, 55],          
+           71: [54, 55],          
            }
 
     @property
@@ -125,22 +134,39 @@ class SfpUtil(SfpUtilBase):
         return self._port_to_eeprom_mapping
 
     def __init__(self):
-        eeprom_path = self.BASE_VAL_PATH + "sfp_eeprom"
+        eeprom_path = self.BASE_OOM_PATH + "eeprom"
 
         for x in range(0, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
-                self._port_to_i2c_mapping[x][0],
-                self._port_to_i2c_mapping[x][1])
+                self._port_to_i2c_mapping[x][1]
+                )
 
         SfpUtilBase.__init__(self)
+
+    #Two i2c buses might get flipped order, check them both.
+    def update_i2c_order(self):
+        if self.I2C_BUS_ORDER < 0:
+            eeprom_path = "/sys/bus/i2c/devices/1-0057/eeprom"
+            if os.path.exists(eeprom_path):
+                self.I2C_BUS_ORDER = 0
+            eeprom_path = "/sys/bus/i2c/devices/0-0057/eeprom"
+            if os.path.exists(eeprom_path):
+                self.I2C_BUS_ORDER = 1
+        return self.I2C_BUS_ORDER 
 
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        present_path = self.BASE_VAL_PATH + "sfp_is_present"
-        self.__port_to_is_present = present_path.format(self._port_to_i2c_mapping[port_num][0], self._port_to_i2c_mapping[port_num][1])
+        order = self.update_i2c_order()
+        if port_num < 24:
+            present_path = self.BASE_CPLD2_PATH.format(order)         
+        else:
+            present_path = self.BASE_CPLD3_PATH.format(order)
+        
+        present_path = present_path + "module_present_" + str(self._port_to_i2c_mapping[port_num][0])            
+        self.__port_to_is_present = present_path
 
         try:
             val_file = open(self.__port_to_is_present)
@@ -157,15 +183,24 @@ class SfpUtil(SfpUtilBase):
 
         return False
 
+    def qsfp_sb_remap(self, port_num):
+        qsfp_start = self.qsfp_port_start
+        qsfp_index = self._port_to_i2c_mapping[port_num][0] - qsfp_start
+        qsfp_index = self.qsfp_sb_map[qsfp_index-1]
+        return qsfp_start+qsfp_index
+
     def get_low_power_mode(self, port_num):             
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
         
-        lp_mode_path = self.BASE_VAL_PATH + "sfp_lp_mode"        
-        self.__port_to_lp_mode = lp_mode_path.format(self._port_to_i2c_mapping[port_num][0], self._port_to_i2c_mapping[port_num][1])
+        order = self.update_i2c_order()
+        lp_mode_path = self.BASE_CPLD3_PATH.format(order)
+        lp_mode_path = lp_mode_path + "module_lp_mode_" 
+        q = self.qsfp_sb_remap(port_num)
+        lp_mode_path = lp_mode_path + str(q)
         
         try:
-            val_file = open(self.__port_to_lp_mode)
+            val_file = open(lp_mode_path)
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
@@ -183,11 +218,14 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False    
               
-        lp_mode_path = self.BASE_VAL_PATH + "sfp_lp_mode"     
-        self.__port_to_lp_mode = lp_mode_path.format(self._port_to_i2c_mapping[port_num][0], self._port_to_i2c_mapping[port_num][1])
+        order = self.update_i2c_order()
+        lp_mode_path = self.BASE_CPLD3_PATH.format(order)
+        lp_mode_path = lp_mode_path + "module_lp_mode_" 
+        q = self.qsfp_sb_remap(port_num)
+        lp_mode_path = lp_mode_path + str(q)
         
         try:
-            reg_file = open(self.__port_to_lp_mode, 'r+')
+            reg_file = open(lp_mode_path, 'r+')
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
@@ -206,17 +244,32 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
          
-        mod_rst_path = self.BASE_VAL_PATH + "sfp_mod_rst"
-        self.__port_to_mod_rst = mod_rst_path.format(self._port_to_i2c_mapping[port_num][0], self._port_to_i2c_mapping[port_num][1])
+        order = self.update_i2c_order()
+        lp_mode_path = self.BASE_CPLD3_PATH.format(order)
+        mod_rst_path = lp_mode_path + "module_reset_" 
+        q = self.qsfp_sb_remap(port_num)
+        mod_rst_path = mod_rst_path + str(q)
+        
         try:
-            reg_file = open(self.__port_to_mod_rst, 'r+')
+            reg_file = open(mod_rst_path, 'r+')
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
 
-        reg_value = '1'
-
-        reg_file.write(reg_value)
+        #toggle reset
+        reg_file.seek(0)
+        reg_file.write('0')
+        time.sleep(1)
+        reg_file.seek(0)
+        reg_file.write('1')
         reg_file.close()
-        
         return True
+        
+    def get_transceiver_change_event(self):
+        """
+        TODO: This function need to be implemented
+        when decide to support monitoring SFP(Xcvrd)
+        on this platform.
+        """
+        raise NotImplementedError
+

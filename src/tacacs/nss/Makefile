@@ -12,7 +12,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git checkout -f 19008ab
 
 	# Apply patch
-	git apply ../0001-Modify-user-map-profile.patch
+	git am ../0001-Modify-user-map-profile.patch
+	git am ../0002-Enable-modifying-local-user-permission.patch
+	git am ../0003-management-vrf-support.patch
 
 	dpkg-buildpackage -rfakeroot -b -us -uc
 	popd

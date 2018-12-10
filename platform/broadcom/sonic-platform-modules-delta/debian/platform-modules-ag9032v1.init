@@ -25,9 +25,9 @@ start)
     modprobe dni_emc2305
     modprobe at24
     modprobe delta_ag9032v1_platform
+    modprobe delta_ag9032v1_cpupld
 
     /usr/local/bin/ag9032v1_platform_init.sh
-
     echo "done."
     ;;
 
