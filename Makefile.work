@@ -10,7 +10,8 @@
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
-#  * SONIC_ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
+#  * ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
+#  * INSTALL_DEBUG_TOOLS: Install debug tools and debug symbol packeages.
 #  * USERNAME: Desired username -- default at rules/config
 #  * PASSWORD: Desired password -- default at rules/config
 #  * KEEP_SLAVE_ON: Keeps slave container up and active after building process concludes.
@@ -60,12 +61,28 @@ endif
 
 OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
 
+BUILD_TIMESTAMP := $(shell date +%Y%m%d\.%H%M%S)
+
+ifeq ($(DOCKER_BUILDER_MOUNT),)
+override DOCKER_BUILDER_MOUNT := "$(PWD):/sonic"
+endif
+
+ifeq ($(DOCKER_BUILDER_WORKDIR),)
+override DOCKER_BUILDER_WORKDIR := "/sonic"
+endif
+
 DOCKER_RUN := docker run --rm=true --privileged \
-    -v $(PWD):/sonic \
-    -w /sonic \
+    -v $(DOCKER_BUILDER_MOUNT) \
+    -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
     -i$(if $(TERM),t,)
+
+include rules/config
+
+ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
+    DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
+endif
 
 DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE) \
@@ -88,10 +105,12 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
                            PLATFORM=$(PLATFORM) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
+                           BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
-                           ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
+                           SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
+                           SONIC_INSTALL_DEBUG_TOOLS=$(INSTALL_DEBUG_TOOLS) \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \

@@ -110,7 +110,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_vlan_members(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v VLAN_MEMBER'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'Vlan1000|Ethernet8': {'tagging_mode': 'untagged'}}")
+        self.assertEqual(output.strip(), "{('Vlan1000', 'Ethernet8'): {'tagging_mode': 'untagged'}}")
 
     def test_minigraph_vlan_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "VLAN_INTERFACE.keys()"'
@@ -130,7 +130,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_portchannel_members(self):
         argument = '-m "' + self.sample_graph_pc_test + '" -p "' + self.port_config + '" -v "PORTCHANNEL_MEMBER.keys()"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "['PortChannel01|Ethernet112', 'PortChannel01|Ethernet124', 'PortChannel01|Ethernet116', 'PortChannel01|Ethernet120']")
+        self.assertEqual(output.strip(), "[('PortChannel01', 'Ethernet120'), ('PortChannel01', 'Ethernet116'), ('PortChannel01', 'Ethernet124'), ('PortChannel01', 'Ethernet112')]")
 
     def test_minigraph_portchannel_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORTCHANNEL_INTERFACE.keys()"'
@@ -169,7 +169,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_ethernet_interfaces(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet8\']"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'alias': 'fortyGigE0/8', 'lanes': '37,38,39,40', 'description': 'Interface description', 'speed': '1000', 'mtu': '9100'}")
+        self.assertEqual(output.strip(), "{'lanes': '37,38,39,40', 'description': 'Interface description', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000'}")
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet12\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'lanes': '33,34,35,36', 'description': 'Interface description', 'mtu': '9100', 'alias': 'fortyGigE0/12', 'speed': '100000', 'fec': 'rs'}")
@@ -178,9 +178,9 @@ class TestCfgGen(TestCase):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORT"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), \
-                "{'Ethernet8': {'alias': 'fortyGigE0/8', 'lanes': '37,38,39,40', 'description': 'Interface description', 'speed': '1000', 'mtu': '9100'}, "
+                "{'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000'}, "
                 "'Ethernet0': {'alias': 'fortyGigE0/0', 'admin_status': 'up', 'lanes': '29,30,31,32', 'speed': '10000', 'mtu': '9100'}, "
-                "'Ethernet4': {'alias': 'fortyGigE0/4', 'lanes': '25,26,27,28', 'speed': '25000', 'mtu': '9100'}, "
+                "'Ethernet4': {'alias': 'fortyGigE0/4', 'admin_status': 'up', 'lanes': '25,26,27,28', 'speed': '25000', 'mtu': '9100'}, "
                 "'Ethernet108': {'alias': 'fortyGigE0/108', 'lanes': '81,82,83,84', 'mtu': '9100'}, "
                 "'Ethernet100': {'alias': 'fortyGigE0/100', 'lanes': '125,126,127,128', 'mtu': '9100'}, "
                 "'Ethernet104': {'alias': 'fortyGigE0/104', 'lanes': '85,86,87,88', 'mtu': '9100'}, "

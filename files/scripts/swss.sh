@@ -62,6 +62,21 @@ function wait_for_database_service()
     done
 }
 
+# This function cleans up the tables with specific prefixes from the database
+# $1 the index of the database
+# $2 the string of a list of table prefixes
+function clean_up_tables()
+{
+    redis-cli -n $1 EVAL "
+    local tables = {$2}
+    for i = 1, table.getn(tables) do
+        local matches = redis.call('KEYS', tables[i])
+        for j,name in ipairs(matches) do
+            redis.call('DEL', name)
+        end
+    end" 0
+}
+
 start() {
     debug "Starting ${SERVICE} service..."
 
@@ -75,10 +90,14 @@ start() {
 
     # Don't flush DB during warm boot
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
+        # Don't flush APP_DB during MLNX fastfast boot
+        BOOT_TYPE="$(cat /proc/cmdline | grep -o 'SONIC_BOOT_TYPE=\S*' | cut -d'=' -f2)"
+        if [[ x"$BOOT_TYPE" != x"fastfast" ]] && [[ ! -f /var/warmboot/issu_started ]]; then
+            /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
+        fi
         /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
         /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 6 FLUSHDB
+        clean_up_tables 6 "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*'"
     fi
 
     # start service docker

@@ -2,19 +2,66 @@
 
 function getMountPoint()
 {
-    echo $1 |  python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.basename(mnts[0]['Source'])" 2>/dev/null
+    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.basename(mnts[0]['Source'])" 2>/dev/null
+}
+
+function getBootType()
+{
+    local BOOT_TYPE
+    case "$(cat /proc/cmdline | grep -o 'SONIC_BOOT_TYPE=\S*' | cut -d'=' -f2)" in
+    warm*)
+        TYPE='warm'
+        ;;
+    fastfast)
+        TYPE='fastfast'
+        ;;
+    fast*)
+        TYPE='fast'
+        ;;
+    *)
+        TYPE='cold'
+    esac
+    echo "${TYPE}"
+}
+
+function preStartAction()
+{
+{%- if docker_container_name == "database" %}
+    WARM_DIR=/host/warmboot
+    if [[ "$BOOT_TYPE" == "warm" && -f $WARM_DIR/dump.rdb ]]; then
+        # Load redis content from /host/warmboot/dump.rdb
+        docker cp $WARM_DIR/dump.rdb database:/var/lib/redis/dump.rdb
+    else
+        # Create an emtpy file and overwrite any RDB if already there
+        echo -n > /tmp/dump.rdb
+        docker cp /tmp/dump.rdb database:/var/lib/redis/
+    fi
+{%- else %}
+    : # nothing
+{%- endif %}
 }
 
 function postStartAction()
 {
 {%- if docker_container_name == "database" %}
-    until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]]; do
-      sleep 1;
+    # Wait until redis starts
+    REDIS_SOCK="/var/run/redis/redis.sock"
+    until [[ $(/usr/bin/docker exec database redis-cli -s $REDIS_SOCK ping | grep -c PONG) -gt 0 ]]; do
+        sleep 1;
     done
+    if [[ "$BOOT_TYPE" == "warm" && -f $WARM_DIR/dump.rdb ]]; then
+        rm -f $WARM_DIR/dump.rdb
+    else
+        # If there is a config db dump file, load it
+        if [ -r /etc/sonic/config_db.json ]; then
+            sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
+        fi
+
+        redis-cli -n 4 SET "CONFIG_DB_INITIALIZED" "1"
+    fi
 {%- elif docker_container_name == "swss" %}
     docker exec swss rm -f /ready   # remove cruft
-    if [[ -d /host/fast-reboot ]];
-    then
+    if [[ "$BOOT_TYPE" == "fast" || "$BOOT_TYPE" == "fastfast" ]] && [[ -d /host/fast-reboot ]]; then
         test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss:/
         test -e /host/fast-reboot/arp.json && docker cp /host/fast-reboot/arp.json swss:/
         test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss:/
@@ -39,26 +86,30 @@ function postStartAction()
 {%- endif %}
 }
 
-# Obtain our platform as we will mount directories with these names in each docker
-PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
-
-{%- if docker_container_name == "database" %}
-# Don't mount HWSKU in {{docker_container_name}} container.
-HWSKU=""
-{%- else %}
-# Obtain our HWSKU as we will mount directories with these names in each docker
-HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
-{%- endif %}
-
 start() {
+    # Obtain boot type from kernel arguments
+    BOOT_TYPE=`getBootType`
+
+    # Obtain our platform as we will mount directories with these names in each docker
+    PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+
+    {%- if docker_container_name == "database" %}
+    # Don't mount HWSKU in {{docker_container_name}} container.
+    HWSKU=""
+    {%- else %}
+    # Obtain our HWSKU as we will mount directories with these names in each docker
+    HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
+    {%- endif %}
+
     DOCKERCHECK=`docker inspect --type container {{docker_container_name}} 2>/dev/null`
     if [ "$?" -eq "0" ]; then
         DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
         if [ "$DOCKERMOUNT" == "$HWSKU" ]; then
             echo "Starting existing {{docker_container_name}} container with HWSKU $HWSKU"
+            preStartAction
             docker start {{docker_container_name}}
             postStartAction
-            exit 0
+            exit $?
         fi
 
         # docker created with a different HWSKU, remove and recreate
@@ -67,11 +118,11 @@ start() {
     fi
 
 {%- if docker_container_name == "database" %}
-    echo "Starting new {{docker_container_name}} container"
+    echo "Creating new {{docker_container_name}} container"
 {%- else %}
-    echo "Starting new {{docker_container_name}} container with HWSKU $HWSKU"
+    echo "Creating new {{docker_container_name}} container with HWSKU $HWSKU"
 {%- endif %}
-    docker run -d {{docker_image_run_opt}} \
+    docker create {{docker_image_run_opt}} \
 {%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
         --log-opt max-size=2M --log-opt max-file=5 \
 {%- endif %}
@@ -94,6 +145,8 @@ start() {
             exit 4
     }
 
+    preStartAction
+    docker start {{docker_container_name}}
     postStartAction
 }
 
