@@ -94,6 +94,8 @@ start() {
 
     # platform specific tasks
 
+    # start mellanox drivers regardless of
+    # boot type
     if [ x"$sonic_asic_platform" == x"mellanox" ]; then
         BOOT_TYPE=`getBootType`
         if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
@@ -151,6 +153,8 @@ stop() {
 
     # platform specific tasks
 
+    # stop mellanox driver regardless of
+    # shutdown type
     if [ x$sonic_asic_platform == x'mellanox' ]; then
         /etc/init.d/sxdkernel stop
         /usr/bin/mst stop
