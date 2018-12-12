@@ -16,7 +16,11 @@ start)
         echo -n "Setting up board... "
 
 	modprobe smc
-        
+        sleep 1
+        modprobe -r gpio_ich
+        sleep 1
+        modprobe hlx_gpio_ich
+
         found=0
         for devnum in 0 1; do
                 devname=`cat /sys/bus/i2c/devices/i2c-${devnum}/name`
