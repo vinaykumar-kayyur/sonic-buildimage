@@ -1,3 +1,5 @@
 {% if MGMT_INTERFACE %}
+{% set ipv4 = MGMT_INTERFACE.keys()[0][1].split('/')[0] %}
 configure ports eth0 lldp portidsubtype local {{ MGMT_INTERFACE.keys()[0][0] }}
+configure system ip management pattern {{ ipv4 }}
 {% endif %}
