@@ -49,9 +49,9 @@ check_sdk_upgrade()
             break;
         }
 
-        ISSU_CHECK_CMD="docker exec -t syncd issu --check ${NEXT_SDK_VERSION}"
-
-        ${ISS_CHECK_CMD} > /dev/null && CHECK_RESULT="${FFB_SUCCESS}"
+        # TODO: Place a call to SDK check script
+        # for now assume check succeeded
+        CHECK_RESULT="${FFB_SUCCESS}"
 
         break
     done
@@ -68,6 +68,7 @@ check_ffb()
         echo "ISSU is not enabled on this HWSKU"
         return "${FFB_FAILURE}"
     }
+
     check_sdk_upgrade || {
         echo "SDK upgrade check failued"
         return "${FFB_FAILURE}"
@@ -75,24 +76,3 @@ check_ffb()
     return "${FFB_SUCCESS}";
 }
 
-# Perform ISSU start
-issu_start()
-{
-    ISSU_START_CMD="docker exec -t syncd issu --start"
-    ${ISSU_START_CMD} > /dev/null
-
-    EXIT_CODE=$?
-
-    return $EXIT_CODE
-}
-
-# Perform ISSU end
-issu_end()
-{
-    ISSU_END_CMD="docker exec -t syncd issu --end"
-    ${ISSU_END_CMD} > /dev/null
-
-    EXIT_CODE=$?
-
-    return $EXIT_CODE
-}
