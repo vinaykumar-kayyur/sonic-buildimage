@@ -11,14 +11,17 @@
 # Author: Eddy Weng <eddy.weng@mic.com.tw>
 
 DESC="Service script for /opt/sys-serv/sys-servd"
-DAEMON=/opt/sys-serv/sys-servd
+DAEMON='/usr/bin/python -m /usr/lib/python2.7/dist-packages/sys_serv_pkg'
+DAEMON_OPTS='-dinfo'
+
+PIDFILE=/var/run/sys-serv.pid
 
 case "$1" in
   start)
-    start-stop-daemon --start --exec $DAEMON
+    start-stop-daemon --start --make-pidfile --pidfile $PIDFILE --background -N-20 --exec $DAEMON -- $DAEMON_OPTS
     ;;
   stop)
-    start-stop-daemon --stop --name sys-servd
+    start-stop-daemon --stop --pidfile $PIDFILE
     ;;
   *)
     exit 1
