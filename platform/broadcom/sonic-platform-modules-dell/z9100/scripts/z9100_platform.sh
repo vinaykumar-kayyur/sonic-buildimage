@@ -21,9 +21,9 @@ init_devnum() {
 # Attach/Detach CPU board mux @ 0x70
 cpu_board_mux() {
     case $1 in
-        "new_device")    i2c_mux_create "echo pca9547 0x70 > /sys/bus/i2c/devices/i2c-${devnum}/$1" 2
+        "new_device")    i2c_mux_create pca9547 0x70 $devnum 2
                          ;;
-        "delete_device") i2c_config "echo 0x70 > /sys/bus/i2c/devices/i2c-${devnum}/$1"
+        "delete_device") i2c_mux_delete 0x70 $devnum
                          ;;
         *)               echo "z9100_platform: cpu_board_mux: invalid command !"
                          ;;
@@ -33,9 +33,9 @@ cpu_board_mux() {
 # Attach/Detach switch board MUX to IOM CPLDs @ 0x71
 switch_board_mux() {
     case $1 in
-        "new_device")    i2c_mux_create "echo pca9548 0x71 > /sys/bus/i2c/devices/i2c-4/$1" 10
+        "new_device")    i2c_mux_create pca9548 0x71 4 10
                          ;;
-        "delete_device") i2c_config "echo 0x71 > /sys/bus/i2c/devices/i2c-4/$1"
+        "delete_device") i2c_mux_delete 0x71 4
                          ;;
         *)               echo "z9100_platform: switch_board_mux : invalid command !"
                          ;;
@@ -86,7 +86,7 @@ switch_board_qsfp_mux() {
                           # 0x71 mux on the IOM 1
                           mux_index=$(expr $i - 5)
                           echo "Attaching PCA9548 $mux_index"
-                          i2c_mux_create "echo pca9548 0x71 > /sys/bus/i2c/devices/i2c-$i/$1" $channel_first
+                          i2c_mux_create pca9548 0x71 $i $channel_first
                           channel_first=$(expr $channel_first + 8)
                       done
                       ;;
@@ -96,7 +96,7 @@ switch_board_qsfp_mux() {
                           # 0x71 mux on the IOM 1
                           mux_index=$(expr $i - 5)
                           echo "Detaching PCA9548 $mux_index"
-                          i2c_config "echo 0x71 > /sys/bus/i2c/devices/i2c-$devnum/i2c-$i/$1"
+                          i2c_mux_delete 0x71 $i
                       done
                       ;;
         *)            echo "z9100_platform: switch_board_qsfp_mux: invalid command !"

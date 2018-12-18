@@ -18,7 +18,7 @@ i2c_config() {
     done
 
     if [[ "$count" -eq "$MAX_BUS_RETRY" ]]; then
-        echo "ERROR: $@ : i2c bus not created"
+        echo "dell_i2c_utils : ERROR: $@ : i2c bus not created"
         return
     fi
 
@@ -31,7 +31,7 @@ i2c_config() {
     done
 
     if [[ "$count" -eq "$MAX_I2C_OP_RETRY" ]]; then
-        echo "ERROR: $@ : i2c operation failed"
+        echo "dell_i2c_utils : ERROR: $@ : i2c operation failed"
         return
     fi
 }
@@ -53,7 +53,7 @@ i2c_poll_bus_exists() {
     done
 
     if [[ "$count" -eq "$MAX_BUS_RETRY" ]]; then
-        echo "ERROR: $@ : i2c bus not created"
+        echo "dell_i2c_utils : ERROR: $@ : i2c bus not created"
         return 1
     else
         return 0
@@ -62,38 +62,33 @@ i2c_poll_bus_exists() {
 
 # Perform an i2c mux device create
 # Input is of the form:
-# "echo [mux driver] <i2c-mux-address> >  <i2c-bus/operation>" i2c-channel-first
-# where operation = "new_device"
-# i2c-channel-first is the first of the 8 channels that this mux should create
+# i2c_mux_create mux_driver i2c_addr i2c_bus_num i2c_child_bus_num_start
+# where i2c_bus_num is the bus number in which the mux is to be created and
+# i2c_child_bus_num_start is the first of the 8 bus channels that this mux should create
 i2c_mux_create() {
-    local MAX_MUX_CHANNEL_RETRY=5
+    local MAX_MUX_CHANNEL_RETRY=3
     local MAX_MUX_CHANNELS=8
     local count=0
     local i
-    local i2c_bus_op
-    local i2c_bus
-    local i2c_bus_num
-    local i2c_mux
-    local i2c_mux_channel_first
-    local i2c_mux_channel_last
+    local mux_driver=$1
+    local i2c_addr=$2
+    local i2c_bus_num=$3
+    local i2c_child_bus_num_start=$4
 
-    # Extract the i2c parameters from the command line
-    i2c_bus_op=`echo "$1" | cut -d'>' -f 2`
-    i2c_bus=$(dirname $i2c_bus_op)
-    i2c_bus_num=`echo $(basename $i2c_bus) | cut -d'-' -f 2`
-    i2c_mux=`echo "$1" | cut -d' ' -f 3 | sed 's/^0x//'`
-    i2c_mux_channel_first=$i2c_bus/i2c-$2
-    i2c_mux_channel_last=$i2c_bus/i2c-$(expr $2 + $MAX_MUX_CHANNELS - 1)
+    # Construct the i2c bus, the first and last bus channels that will be created under the MUX
+    i2c_bus=/sys/bus/i2c/devices/i2c-$i2c_bus_num
+    i2c_mux_channel_first=$i2c_bus/i2c-$i2c_child_bus_num_start
+    i2c_mux_channel_last=$i2c_bus/i2c-$(expr $i2c_child_bus_num_start + $MAX_MUX_CHANNELS - 1)
 
     if  i2c_poll_bus_exists  $i2c_bus; then
         while [[ "$count" -lt "$MAX_MUX_CHANNEL_RETRY" ]]; do
-            eval "$1" > /dev/null 2>&1
+            eval "echo $mux_driver $i2c_addr > /sys/bus/i2c/devices/i2c-$i2c_bus_num/new_device" > /dev/null 2>&1
             ret=$?
 
             # Give more time for the mux channels to get created based on retries
             i=0
             while [[ "$i" -lt "$count" ]]; do
-                sleep .5
+                sleep 1
                 i=$((i+1))
             done
 
@@ -102,7 +97,8 @@ i2c_mux_create() {
                 break;
             else
                 # If the channel did not get created, remove the mux, reset the mux tree and retry
-                i2c_config "echo 0x$i2c_mux > /sys/bus/i2c/devices/i2c-$devnum/i2c-$i2c_bus_num/delete_device"
+                echo "dell_i2c_utils :  ERROR: i2c mux channel not created for $mux_driver,$i2c_addr,$i2c_bus_num"
+                i2c_mux_delete $i2c_addr $i2c_bus_num
                 reset_muxes
             fi
 
@@ -111,9 +107,21 @@ i2c_mux_create() {
     fi
 
     if [[ "$count" -eq "$MAX_MUX_CHANNEL_RETRY" ]]; then
-        echo "ERROR: $1,$2 : i2c mux channel not created"
+        echo "dell_i2c_utils : ERROR: $1,$2 : i2c mux channel not created"
         return
     fi
 
     return
+}
+
+# Perform an i2c mux device delete
+# Input is of the form:
+# i2c_mux_delete i2c_addr i2c_bus_num
+i2c_mux_delete() {
+    local i2c_addr
+    local i2c_bus_num
+
+    i2c_addr=$1
+    i2c_bus_num=$2
+    i2c_config "echo $i2c_addr > /sys/bus/i2c/devices/i2c-$i2c_bus_num/delete_device"
 }
