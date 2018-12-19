@@ -148,7 +148,7 @@ class LldpManager(object):
         if port_desc:
             lldpcli_cmd += " description {}".format(port_desc)
         else:
-            log_info("Unable to retrive description for port '{}'. Not adding port description")
+            log_info("Unable to retrieve description for port '{}'. Not adding port description")
 
         # Add the command to our dictionary of pending commands, overwriting any
         # previous pending command for this port
@@ -211,11 +211,11 @@ class LldpManager(object):
 
                 fvp_dict = dict(fvp)
 
-                # handle on creation
+                # handle creation
                 if op == "SET" and fvp_dict.get("state") == "ok":
                     self.generate_pending_lldp_config_cmd_for_port(key)
 
-                # handle on config change
+                # handle config change
                 if op in ["SET", "DEL"] and (fvp_dict.get("alias") or fvp_dict.get("description")) :
                     self.generate_pending_lldp_config_cmd_for_port(key)
 
