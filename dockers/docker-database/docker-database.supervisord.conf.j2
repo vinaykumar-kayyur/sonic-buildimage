@@ -19,3 +19,16 @@ autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 
+{% if DATABASE %}
+{% for redis_inst in DATABASE %}
+[program: {{ redis_inst }}]
+command=/bin/bash -c "{ [[ -s /var/lib/redis/{{ redis_inst }}/dump.rdb ]] || rm -f /var/lib/redis/{{ redis_inst }}/dump.rdb; } && exec /usr/bin/redis-server /etc/redis/{{ redis_inst }}.conf"
+priority=2
+autostart=true
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+
+{% endfor %}
+{% endif %}
+

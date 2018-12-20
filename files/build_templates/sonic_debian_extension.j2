@@ -157,6 +157,11 @@ sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
 
+## copy database instances checking script and config
+sudo cp $IMAGE_CONFIGS/database/ping_pong_single_db_inst.sh $FILESYSTEM_ROOT/usr/local/bin/
+sudo cp $IMAGE_CONFIGS/database/ping_pong_db_insts $FILESYSTEM_ROOT/usr/local/bin/
+sudo cp -L $IMAGE_CONFIGS/database/database_config.json $FILESYSTEM_ROOT/etc/sonic/
+
 # Copy NTP configuration files and templates
 sudo cp $IMAGE_CONFIGS/ntp/ntp-config.service $FILESYSTEM_ROOT/etc/systemd/system/
 echo "ntp-config.service" | sudo tee -a $GENERATED_SERVICE_FILE

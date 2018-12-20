@@ -1,0 +1,24 @@
+{
+    "DATABASE": {
+        "redis_ins_001":{
+            "port": 6380,
+            "databases" : ["LOGLEVEL_DB","SYSMON_DB","COUNTERS_DB"]
+        },
+        "redis_ins_002":{
+            "port": 6381,
+            "databases" : ["APPL_DB"]
+        },
+        "redis_ins_003":{
+            "port": 6382,
+            "databases" : ["STATE_DB","FLEX_COUNTER_DB","PFC_WD_DB"]
+        },
+        "redis_ins_004":{
+            "port": 6383,
+            "databases" : ["ASIC_DB"]
+        },
+        "redis_ins_005":{
+            "port": 6384,
+            "databases" : ["CONFIG_DB"]
+        }
+    }
+}
