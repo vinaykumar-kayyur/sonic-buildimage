@@ -1,3 +1,11 @@
+sonic-platform-netberg (0.6) unstable; urgency=low
+
+  * Support lm-sensors compatible sysfs ABI.
+  * Make sure coretemp and jc42 kernel drivers loaded.
+  * Bump version to 0.6.
+
+ -- Sergey Popovich <sergey.popovich@ordnance.co>  Sat, 22 Dec 2018 17:18:52 +0200
+
 sonic-platform-netberg (0.5) unstable; urgency=low
 
   * Fix dependency on linux-image after switching from jessie to stretch

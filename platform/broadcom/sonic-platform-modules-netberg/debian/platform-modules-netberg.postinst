@@ -1,6 +1,7 @@
 # postinst script for Netberg devices
 
 # Unload hardware monitoring module, if any
+modprobe -q -r jc42 ||:
 modprobe -q -r hardware_monitor ||:
 
 # Unload modules required for hardware monitoring
@@ -18,6 +19,8 @@ modprobe -q -r i2c-dev ||:
 #DEBHELPER#
 
 # Load hardware monitoring module
+modprobe -q coretemp ||:
+modprobe -q jc42 ||:
 modprobe -q hardware_monitor ||:
 
 # Make sure modprobe.d(5) is in initramfs
