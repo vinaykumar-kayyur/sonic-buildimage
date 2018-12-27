@@ -1,11 +1,28 @@
 #!/usr/bin/env python
 
 import sys, errno
-import time
 import os
 from python_sdk_api.sxd_api import *
 from python_sdk_api.sx_api import *
 
+def get_port_admin_status_by_log_port(log_port):
+    oper_state_p = new_sx_port_oper_state_t_p()
+    admin_state_p = new_sx_port_admin_state_t_p()
+    module_state_p = new_sx_port_module_state_t_p()
+    rc = sx_api_port_state_get(handle, log_port, oper_state_p, admin_state_p, module_state_p)
+    assert rc == SXD_STATUS_SUCCESS, "sx_api_port_state_get failed, rc = %d" % rc
+
+    admin_state = sx_port_admin_state_t_p_value(admin_state_p)
+    if admin_state == SX_PORT_ADMIN_STATUS_UP:
+        return 1
+    else:
+        return 0
+
+def set_port_admin_status_by_log_port(handle, log_port, admin_status):
+    rc = sx_api_port_state_set(handle, log_port, admin_status)
+    assert rc == SX_STATUS_SUCCESS, "sx_api_port_state_set failed, rc = %d" % rc
+
+# Get all the ports related to the sfp, if port admin status is up, put it to list
 def get_log_ports(handle, sfp_module):
     port_attributes_list = new_sx_port_attributes_t_arr(64)
     port_cnt_p = new_uint32_t_p()
@@ -19,14 +36,18 @@ def get_log_ports(handle, sfp_module):
     for i in range(0, port_cnt):
         port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list, i)
         if port_attributes.port_mapping.module_port == sfp_module:
-            log_port_list.append(port_attributes.log_port)
+            if get_port_admin_status_by_log_port(port_attributes.log_port):
+                log_port_list.append(port_attributes.log_port)
 
     return log_port_list
 
-def set_sfp_admin_status(handle, meta, sfp_module, sfp_log_port_list, admin_status):
+def set_sfp_admin_status(sfp_module, admin_status):
     # Get PMAOS
     pmaos = ku_pmaos_reg()
     pmaos.module = sfp_module
+    meta = sxd_reg_meta_t()
+    meta.dev_id = 1
+    meta.swid = 0
     meta.access_cmd = SXD_ACCESS_CMD_GET
     rc = sxd_access_reg_pmaos(pmaos, meta, 1, None, None)
     assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
@@ -44,6 +65,28 @@ def set_sfp_admin_status(handle, meta, sfp_module, sfp_log_port_list, admin_stat
     meta.access_cmd = SXD_ACCESS_CMD_SET
     rc = sxd_access_reg_pmaos(pmaos, meta, 1, None, None)
     assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
+
+def set_sfp_lpmode(sfp_module, lpm_enable):
+    # Get PMMP
+    pmmp = ku_pmmp_reg()
+    pmmp.module = sfp_module
+    meta = sxd_reg_meta_t()
+    meta.dev_id = 1
+    meta.swid = 0
+    meta.access_cmd = SXD_ACCESS_CMD_GET
+    rc = sxd_access_reg_pmmp(pmmp, meta, 1, None, None)
+    assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
+
+    # Set low power mode status
+    lpm_mask = 1 << 8
+    if lpm_enable:
+        pmmp.eeprom_override = pmmp.eeprom_override | lpm_mask
+    else:
+        pmmp.eeprom_override = pmmp.eeprom_override & (~lpm_mask)
+
+    meta.access_cmd = SXD_ACCESS_CMD_SET
+    rc = sxd_access_reg_pmmp(pmmp, meta, 1, None, None)
+    assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
 
 # Check if SFP port number is provided
 if len(sys.argv) < 3:
@@ -72,36 +115,25 @@ if (rc != 0):
     print "Failed to initializing register access.\nPlease check that SDK is running."
     sys.exit(errno.EACCES);
 
-# Get SFP module and log ports number and LPM status
+# Get SFP module
 sfp_module = int(sys.argv[1])
-log_port_list = get_log_ports(handle, sfp_module)
-if not log_port_list:
-    print "Failed to get log ports"
-    sys.exit(errno.EACCES)
 
-# Get PMMP
-pmmp = ku_pmmp_reg()
-pmmp.module = sfp_module
-meta = sxd_reg_meta_t()
-meta.dev_id = 1
-meta.swid = 0
-meta.access_cmd = SXD_ACCESS_CMD_GET
-rc = sxd_access_reg_pmmp(pmmp, meta, 1, None, None)
-assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
+# Get all ports at admin up status that related to the SFP module
+log_port_list = get_log_ports(handle, sfp_module)
+
+# SET SFP related ports to admin down status
+for log_port in log_port_list:
+    set_port_admin_status_by_log_port(handle, log_port, SX_PORT_ADMIN_STATUS_DOWN)
 
 # Disable admin status before LPM settings
-set_sfp_admin_status(handle, meta, sfp_module, log_port_list, SX_PORT_ADMIN_STATUS_DOWN)
+set_sfp_admin_status(sfp_module, SX_PORT_ADMIN_STATUS_DOWN)
 
 # Set low power mode status
-lpm_mask = 1 << 8
-if lpm_enable:
-    pmmp.eeprom_override = pmmp.eeprom_override | lpm_mask
-else:
-    pmmp.eeprom_override = pmmp.eeprom_override & (~lpm_mask)
-
-meta.access_cmd = SXD_ACCESS_CMD_SET
-rc = sxd_access_reg_pmmp(pmmp, meta, 1, None, None)
-assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
+set_sfp_lpmode(sfp_module, lpm_enable)
 
 # Enable admin status after LPM settings
-set_sfp_admin_status(handle, meta, sfp_module, log_port_list, SX_PORT_ADMIN_STATUS_UP)
+set_sfp_admin_status(sfp_module, SX_PORT_ADMIN_STATUS_UP)
+
+# SET SFP related ports to admin up status
+for log_port in log_port_list:
+    set_port_admin_status_by_log_port(handle, log_port, SX_PORT_ADMIN_STATUS_UP)
