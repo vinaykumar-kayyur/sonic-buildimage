@@ -1,0 +1,76 @@
+#!/bin/sh
+# filename: 
+
+set -e
+
+
+if [ -n "${IF_PEER_NETNS}" -a -n "${IF_PEER_IFACE}" ]
+then
+    logger "if_up_netns: User is enabling management VRF. interfaces.j2 has set the required variables. management namespace was already created and eth0 is already moved to management namespace in if_pre_up_netns."
+
+	# Bring up the remote end of the veth
+	ip netns exec ${IF_PEER_NETNS} ip link set ${IF_PEER_IFACE} up
+
+	case "${IF_CONFIGURE_INTERFACES}" in
+		true|yes|on)
+            logger "if_up_netns: Configuring the veth pair and internal IP addresses for the internal interfaces."
+			ip netns exec ${IF_PEER_NETNS} ifconfig ${IF_PEER_IFACE} ${IF_IF1_IP}/${IF_IF1_PREFIXLEN}
+			ifconfig ${IFACE} ${IF_IF2_IP}/${IF_IF2_PREFIXLEN}
+
+			# Ifup the interfaces in the netns and inside
+			# a mount namespace with /run/network.nsname mounted
+			# on /run/network
+			unshare -m /bin/sh <<-EOF
+				mount --make-rprivate /
+				mount --bind /run/network.${IF_PEER_NETNS} /run/network
+            	logger "if_up_netns: Doing ifup for the interfaces present in management namespace."
+				ip netns exec ${IF_PEER_NETNS} ifup -i /etc/network/interfaces.${IF_PEER_NETNS} -a
+			EOF
+			;;
+	esac
+
+	logger "if_up_netns: flushing rules from MgmtVrfChain"
+	ip netns exec ${IF_PEER_NETNS} iptables -t nat -F ${IF_MGMT_VRF_CHAIN} >/dev/null 2>&1 || true
+    # In case if the MgmtVrfChain exists, creating it again will result in the script failing & exiting. Delete is before creating.
+	logger "if_up_netns: Deleting MgmtVrfChain before creating it"
+	ip netns exec ${IF_PEER_NETNS} iptables -t nat -X ${IF_MGMT_VRF_CHAIN} >/dev/null 2>&1 || true 
+	logger "if_up_netns: Creating MgmtVrfChain in management VRF."
+	ip netns exec ${IF_PEER_NETNS} iptables -t nat -N ${IF_MGMT_VRF_CHAIN}
+	logger "if_up_netns: Creating iptables rules in management VRF into MgmtVrfChain"
+	/usr/bin/create-mgmt-vrf-iptables.sh
+	
+    	# When 127 NW is used, default NS does not reply for the ARP request sent from management NS when default NS
+    	# loopback interface netmask is 255.0.0.0. Change it to 255.255.255.0 in both namespaces.
+
+    	ifconfig lo 127.0.0.1 netmask 255.255.255.0
+    	ip netns exec ${IF_PEER_NETNS} ifconfig lo 127.0.0.1 netmask 255.255.255.0
+
+	# route_localnet should be set to 1 to force the linux to route packets for IP addresses 127.100.100.x
+	logger "if_up_netns: Setting route_localnet for if2 in default VRF."
+	sysctl -w net.ipv4.conf.$IFACE.route_localnet=1
+
+	logger "if_up_netns: Setting route_localnet for all interfaces in management VRF."
+	ip netns exec ${IF_PEER_NETNS} sysctl -w net.ipv4.conf.all.route_localnet=1
+fi
+
+if [ $IFACE = "lo" ];
+then
+        logger "if_up_netns: ifup for lo is executed."
+	EXIST=`ip address show lo | grep "127.0.0.1/8" | wc -l`
+	if [ $EXIST -eq 1 ]
+	then
+		logger "if_up_netns: 8 bit 127 address is there."
+		EXIST2=`ip address show lo | grep "127.0.0.1/24" | wc -l`
+		if [ $EXIST2 -eq 1 ]
+		then
+			logger "if_up_netns: 24 bit 127 address is also there."
+			logger "if_up_netns: ifup for lo is executed. Deleting the 8 bit address which is conflicting with 24 bit mask"
+			ip address del 127.0.0.1/8 dev lo
+		else
+			logger "if_up_netns: 24 bit 127 address is NOT there."
+		fi
+	else
+		logger "if_up_netns: ifup for lo is executed. 8 bit address doe not exist and hence nothing to delete"
+	fi
+fi
+
