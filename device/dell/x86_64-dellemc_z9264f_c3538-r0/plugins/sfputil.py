@@ -59,13 +59,33 @@ class SfpUtil(SfpUtilBase):
     def pci_set_value(self, resource, val, offset):
 	fd=open(resource,O_RDWR)
 	mm=mmap(fd,0)
-	return self.pci_mem_write(mm,offset,val)
+	val=self.pci_mem_write(mm,offset,val)
+        mm.close()
+        close(fd)
+        return val
 
     def pci_get_value(self, resource, offset):
 	fd=open(resource,O_RDWR)
 	mm=mmap(fd,0)
-	return self.pci_mem_read(mm, offset)
+	val = self.pci_mem_read(mm, offset)
+        mm.close()
+        close(fd)
+        return val
 	
+    def enable_oir_interrupts(self):
+        for port_num in range(self.port_start, (self.port_end +1)):
+            status_offset = 16396 + ((port_num) * 16)
+            status = self.pci_get_value(self.BASE_RES_PATH, status_offset)
+            reg_value = int(status)
+
+            if (reg_value == "" ):
+                return False
+
+            #4th bit to turn on transceiver interrupts
+            mask = (1 << 4)
+            reg_value = reg_value | mask
+            self.pci_set_value(self.BASE_RES_PATH, reg_value, status_offset)
+ 
     def __init__(self):
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
@@ -74,6 +94,7 @@ class SfpUtil(SfpUtilBase):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                         port_num)
             port_num = 0
+        self.enable_oir_interrupts()
         
         SfpUtilBase.__init__(self)
 
@@ -192,9 +213,35 @@ class SfpUtil(SfpUtilBase):
         return True
 
     def get_transceiver_change_event(self):
-        """
-        TODO: This function need to be implemented
-        when decide to support monitoring SFP(Xcvrd)
-        on this platform.
-        """
-        raise NotImplementedError
+	port_dict = {}
+        notify = False
+        try:
+            while (notify != True):
+            # Check for invalid port_num
+                for port_num in range(self.port_start, (self.port_end +1)):
+	            # Interrupt offset starts with 0x4008
+    	            status_offset = 16392 + ((port_num) * 16)
+                    status = self.pci_get_value(self.BASE_RES_PATH, status_offset)
+                    reg_value = int(status)
+
+                    # Absence of status throws error
+                    if (reg_value == "" ):
+                        return False
+
+                    # Mask off 4th bit for presence interrupt
+                    mask = (1 << 4)
+	            if reg_value & mask:
+                        if(self.get_presence(port_num)):
+		            port_dict[port_num] = '1'
+                        else:
+                            port_dict[port_num] = '0'
+                        notify = True
+                        reg_value = reg_value | mask
+                        self.pci_set_value(self.BASE_RES_PATH, reg_value, status_offset)
+
+                if(notify):
+                    return True, port_dict
+                time.sleep(0.5)
+        except:
+            return False, {}
+        return False, {}

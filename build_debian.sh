@@ -228,6 +228,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-scapy            \
     tcptraceroute           \
     mtr-tiny                \
+    ipmitool                \
     locales
 
 #Adds a locale to a debian system in non-interactive mode
