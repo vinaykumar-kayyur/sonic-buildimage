@@ -5,6 +5,19 @@ import os
 from python_sdk_api.sxd_api import *
 from python_sdk_api.sx_api import *
 
+REGISTER_NUM = 1
+SXD_LOG_VERBOSITY_LEVEL = 0
+DEVICE_ID = 1
+SWITCH_ID = 0
+SX_PORT_ATTR_ARR_SIZE = 64
+
+PMAOS_ASE = 1
+PMAOS_EE = 1
+PMAOS_E = 2
+PMAOS_RST = 0
+PMAOS_ENABLE = 1
+PMAOS_DISABLE = 2
+
 def get_port_admin_status_by_log_port(log_port):
     oper_state_p = new_sx_port_oper_state_t_p()
     admin_state_p = new_sx_port_admin_state_t_p()
@@ -14,9 +27,9 @@ def get_port_admin_status_by_log_port(log_port):
 
     admin_state = sx_port_admin_state_t_p_value(admin_state_p)
     if admin_state == SX_PORT_ADMIN_STATUS_UP:
-        return 1
+        return True
     else:
-        return 0
+        return False
 
 def set_port_admin_status_by_log_port(handle, log_port, admin_status):
     rc = sx_api_port_state_set(handle, log_port, admin_status)
@@ -24,11 +37,11 @@ def set_port_admin_status_by_log_port(handle, log_port, admin_status):
 
 # Get all the ports related to the sfp, if port admin status is up, put it to list
 def get_log_ports(handle, sfp_module):
-    port_attributes_list = new_sx_port_attributes_t_arr(64)
+    port_attributes_list = new_sx_port_attributes_t_arr(SX_PORT_ATTR_ARR_SIZE)
     port_cnt_p = new_uint32_t_p()
-    uint32_t_p_assign(port_cnt_p, 64)
+    uint32_t_p_assign(port_cnt_p, SX_PORT_ATTR_ARR_SIZE)
 
-    rc = sx_api_port_device_get(handle, 1 , 0, port_attributes_list,  port_cnt_p)
+    rc = sx_api_port_device_get(handle, DEVICE_ID , SWITCH_ID, port_attributes_list,  port_cnt_p)
     assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
 
     port_cnt = uint32_t_p_value(port_cnt_p)
@@ -41,40 +54,42 @@ def get_log_ports(handle, sfp_module):
 
     return log_port_list
 
+def init_sx_meta_data():
+    meta = sxd_reg_meta_t()
+    meta.dev_id = DEVICE_ID
+    meta.swid = SWITCH_ID
+    return meta
+
 def set_sfp_admin_status(sfp_module, admin_status):
     # Get PMAOS
     pmaos = ku_pmaos_reg()
     pmaos.module = sfp_module
-    meta = sxd_reg_meta_t()
-    meta.dev_id = 1
-    meta.swid = 0
+    meta = init_sx_meta_data()
     meta.access_cmd = SXD_ACCESS_CMD_GET
-    rc = sxd_access_reg_pmaos(pmaos, meta, 1, None, None)
+    rc = sxd_access_reg_pmaos(pmaos, meta, REGISTER_NUM, None, None)
     assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
 
     # Set admin status to PMAOS
-    pmaos.ase = 1
-    pmaos.ee = 1
-    pmaos.e = 2
-    pmaos.rst = 0
+    pmaos.ase = PMAOS_ASE
+    pmaos.ee = PMAOS_EE
+    pmaos.e = PMAOS_E
+    pmaos.rst = PMAOS_RST
     if admin_status == SX_PORT_ADMIN_STATUS_DOWN:
-        pmaos.admin_status = 2
+        pmaos.admin_status = PMAOS_DISABLE
     else:
-        pmaos.admin_status = 1
+        pmaos.admin_status = PMAOS_ENABLE
 
     meta.access_cmd = SXD_ACCESS_CMD_SET
-    rc = sxd_access_reg_pmaos(pmaos, meta, 1, None, None)
+    rc = sxd_access_reg_pmaos(pmaos, meta, REGISTER_NUM, None, None)
     assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
 
 def set_sfp_lpmode(sfp_module, lpm_enable):
     # Get PMMP
     pmmp = ku_pmmp_reg()
     pmmp.module = sfp_module
-    meta = sxd_reg_meta_t()
-    meta.dev_id = 1
-    meta.swid = 0
+    meta = init_sx_meta_data()
     meta.access_cmd = SXD_ACCESS_CMD_GET
-    rc = sxd_access_reg_pmmp(pmmp, meta, 1, None, None)
+    rc = sxd_access_reg_pmmp(pmmp, meta, REGISTER_NUM, None, None)
     assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
 
     # Set low power mode status
@@ -85,7 +100,7 @@ def set_sfp_lpmode(sfp_module, lpm_enable):
         pmmp.eeprom_override = pmmp.eeprom_override & (~lpm_mask)
 
     meta.access_cmd = SXD_ACCESS_CMD_SET
-    rc = sxd_access_reg_pmmp(pmmp, meta, 1, None, None)
+    rc = sxd_access_reg_pmmp(pmmp, meta, REGISTER_NUM, None, None)
     assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
 
 # Check if SFP port number is provided
@@ -110,8 +125,8 @@ if (rc != SX_STATUS_SUCCESS):
     sys.exit(errno.EACCES)
 
 pid = os.getpid()
-rc = sxd_access_reg_init(pid, None, 0)
-if (rc != 0):
+rc = sxd_access_reg_init(pid, None, SXD_LOG_VERBOSITY_LEVEL)
+if (rc != SXD_STATUS_SUCCESS):
     print "Failed to initializing register access.\nPlease check that SDK is running."
     sys.exit(errno.EACCES);
 
