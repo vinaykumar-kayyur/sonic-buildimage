@@ -19,3 +19,5 @@ debian/sonic-platform-mitac-ly1200-32x.substvars
 debian/files
 debian/.debhelper
 debian/debhelper-build-stamp
+
+ly1200-32x/classes/fan_ctrl_pkg/*.pyc

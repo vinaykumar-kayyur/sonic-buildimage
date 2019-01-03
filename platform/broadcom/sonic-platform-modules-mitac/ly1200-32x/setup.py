@@ -10,7 +10,8 @@ setup(
    version='1.0',
    description='Module to initialize Mitac LY1200-32X platforms',
 
-   packages=['sys_serv_pkg'],
-   package_dir={'sys_serv_pkg': 'ly1200-32x/classes/sys_serv_pkg'},
+   packages=['sys_serv_pkg', 'fan_ctrl_pkg'],
+   package_dir={'sys_serv_pkg': 'ly1200-32x/classes/sys_serv_pkg',
+                'fan_ctrl_pkg': 'ly1200-32x/classes/fan_ctrl_pkg'}
 )
 
