@@ -124,6 +124,8 @@ sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-device-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
+# Install sonic-cli
+sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/sonic-cli*.deb
 # Install pam-tacplus and nss-tacplus
 sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/libtac2_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f

@@ -304,6 +304,35 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 
 SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS))
 
+# Build project with cmake
+# Add new package for build:
+#     SOME_NEW_DEB = some_new_deb.deb
+#     $(SOME_NEW_DEB)_SRC_PATH = $(SRC_PATH)/project_name
+#     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
+#     SONIC_CMAKE_DEBS += $(SOME_NEW_DEB)
+$(addprefix $(DEBS_PATH)/, $(SONIC_CMAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+	$(HEADER)
+	# Build project and take package 
+	pushd $($*_SRC_PATH) $(LOG)
+	pwd
+	rm -rf build
+	mkdir build
+	cd build
+	if [ $(ENABLE_DEBUG) == y ]; then
+		cmake -DCMAKE_BUILD_TYPE=Debug ..
+	else
+		cmake ..
+	fi
+
+	make package
+	popd $(LOG)
+
+	# clean up
+	mv $(addprefix $($*_SRC_PATH)/build/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS)) $(DEBS_PATH) $(LOG)
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS))
+
 # Build project with python setup.py --command-packages=stdeb.command
 # Add new package for build:
 #     SOME_NEW_DEB = some_new_deb.deb
@@ -516,7 +545,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(SONIC_UTILS) \
                 $(BASH) \
                 $(LIBPAM_TACPLUS) \
-                $(LIBNSS_TACPLUS)) \
+                $(LIBNSS_TACPLUS) \
+                $(SONIC_CLI)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
@@ -604,6 +634,7 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_DPKG_DEBS) \
 		   $(SONIC_PYTHON_STDEB_DEBS) \
 		   $(SONIC_DERIVED_DEBS) \
+		   $(SONIC_CMAKE_DEBS) \
 		   $(SONIC_EXTRA_DEBS)))
 
 SONIC_CLEAN_FILES = $(addsuffix -clean,$(addprefix $(FILES_PATH)/, \

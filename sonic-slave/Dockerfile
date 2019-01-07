@@ -55,6 +55,8 @@ RUN apt-get update && apt-get install -y \
         libpcre3-dev \
         gawk \
         chrpath \
+# For sonic-cli
+        libaudit-dev \
 # For frr build
         libc-ares-dev \
         hardening-wrapper \

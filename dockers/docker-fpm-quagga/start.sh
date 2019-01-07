@@ -22,6 +22,9 @@ supervisorctl start bgpcfgd
 
 supervisorctl start rsyslogd
 
+chmod 777 -R /var/run/quagga
+chown -R quagga /var/run/quagga
+chgrp -R quagga /var/run/quagga
 # Start Quagga processes
 supervisorctl start zebra
 supervisorctl start bgpd
