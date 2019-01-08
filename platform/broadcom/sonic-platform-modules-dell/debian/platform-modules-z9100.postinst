@@ -1,0 +1,13 @@
+# postinst script for Z9100
+
+# Enable fstrim
+systemctl enable fstrim.timer
+systemctl start fstrim.timer
+
+# Enable Dell-Z9100-platform-service
+depmod -a 
+systemctl enable platform-modules-z9100.service
+systemctl start platform-modules-z9100.service
+
+
+#DEBHELPER#
