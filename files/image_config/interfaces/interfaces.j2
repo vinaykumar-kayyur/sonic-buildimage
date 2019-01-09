@@ -19,18 +19,6 @@ iface lo {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {% endblock loopback %}
 {% block mgmt_interface %}
 
-{% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
-auto if2
-iface if2 inet manual
-   peer-netns mgmt
-   peer-iface if1
-   configure-interfaces yes
-   if1-ip 127.100.100.1
-   if1-prefixlen 24
-   if2-ip 127.100.100.2
-   if2-prefixlen 24
-   mgmt-vrf-chain MgmtVrfChain
-{% else %}
 # The management network interface
 auto eth0
 {% if MGMT_INTERFACE %}
@@ -57,7 +45,6 @@ iface eth0 {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {% endfor %}
 {% else %}
 iface eth0 inet dhcp
-{% endif %}
 {% endif %}
 #
 {% endblock mgmt_interface %}

@@ -171,18 +171,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable hostcfgd.service
 sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
-# Copy the management VRF related scripts
-sudo cp $IMAGE_CONFIGS/interfaces/if_pre_up_netns $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/interfaces/if_up_netns $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/interfaces/if_down_netns $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/interfaces/create-mgmt-vrf-iptables.sh $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/interfaces/delete-mgmt-vrf-iptables.sh $FILESYSTEM_ROOT/usr/bin/
-
-# Copy vrfcfgd files
-sudo cp $IMAGE_CONFIGS/vrfcfgd/vrfcfgd.service $FILESYSTEM_ROOT/etc/systemd/system/
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable vrfcfgd.service
-sudo cp $IMAGE_CONFIGS/vrfcfgd/vrfcfgd $FILESYSTEM_ROOT/usr/bin/
-
 # Copy the buffer configuration template
 sudo cp $BUILD_TEMPLATES/buffers_config.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
