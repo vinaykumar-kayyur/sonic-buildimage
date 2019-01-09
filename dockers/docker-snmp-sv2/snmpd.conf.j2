@@ -90,11 +90,23 @@ load   12 10 5
 # Note: disabled snmp traps due to side effect of causing snmpd to listen on all ports (0.0.0.0)
 #
 #   send SNMPv1  traps
+{%if v1_trap_dest != 'default' %}
+trapsink {{ v1_trap_dest }} public
+{% else %}
 #trapsink     localhost public
+{% endif %}
 #   send SNMPv2c traps
+{%if v2_trap_dest != 'default' %}
+trap2sink {{ v2_trap_dest }} public
+{% else %}
 #trap2sink    localhost public
+{% endif %}
 #   send SNMPv2c INFORMs
+{%if v3_trap_dest != 'default' %}
+informsink {{ v3_trap_dest }} public
+{% else %}
 #informsink   localhost public
+{% endif %}
 
 #  Note that you typically only want *one* of these three lines
 #  Uncommenting two (or all three) will result in multiple copies of each notification.

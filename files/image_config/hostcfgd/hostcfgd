@@ -21,6 +21,10 @@ TACPLUS_SERVER_PASSKEY_DEFAULT = ""
 TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
 
+MAX_TACPLUS_SERVERS=10
+TACPLUS_SERVER_LOCAL_IP="127.100.100.1"
+TACPLUS_LOCAL_PORT_START=62000
+
 
 def is_true(val):
     if val == 'True' or val == 'true':
@@ -55,7 +59,30 @@ class AaaCfg(object):
         self.auth = {}
         self.tacplus_global = {}
         self.tacplus_servers = {}
+        # Maintain the mapping between user configured tacacs server publicIP to localport
+        self.localport_for_server_publicip = {}
+        # Maintain the mapping between user configured tacacs server publicPort for the serverIP
+        self.publicport_for_server_publicip = {}
+        # Maintain the local_port_status for all 10 servers as either "free" or "used"
+        self.local_port_status = {}
         self.debug = False
+        # next_free_local_port shows the next least numbered free port between 62000 and 62009
+        #Initializing next_free_PORT as 62000
+        self.next_free_local_port = TACPLUS_LOCAL_PORT_START
+        for x in range (MAX_TACPLUS_SERVERS):
+            #Initializing all the available 10 ports as "free"
+            self.local_port_status[x]="free"
+
+
+    def update_next_free_local_port(self):
+        # Check all the status of 10 ports and find the next available free port
+        for x in range (MAX_TACPLUS_SERVERS):
+            local_port = TACPLUS_LOCAL_PORT_START + x
+            if self.local_port_status[x]=='free':
+                #Chaning the next free port to this free local port
+                self.next_free_local_port = local_port
+                break
+
 
     # Load conf from ConfigDb
     def load(self, aaa_conf, tac_global_conf, tacplus_conf):
@@ -86,8 +113,47 @@ class AaaCfg(object):
     def tacacs_server_update(self, key, data, modify_conf=True):
         if data == {}:
             if key in self.tacplus_servers:
+                #Deleting tacplus_server
+                if (self.tacplus_servers[key]['vrf'] == "mgmt"):
+                    #Tacacs Server in Management VRF has to be deleted
+                    local_port_used = self.localport_for_server_publicip[key]
+                    user_configured_port = self.publicport_for_server_publicip[key]
+                    # Compose the ip netns command to remove the previously created DNAT rule from management VRF iptables.
+                    cmd2 = "ip netns exec mgmt iptables -t nat -D PREROUTING -i if1 -p tcp -d {0} --dport {1} -j DNAT --to-destination {2}:{3}".format(TACPLUS_SERVER_LOCAL_IP, local_port_used, key, user_configured_port)
+                    os.system(cmd2) 
+                    # Marking local_port as free
+                    self.local_port_status[local_port_used-TACPLUS_LOCAL_PORT_START] = "free"
+                    # If the self.next_free_local_port is greater than the currently freed port, update it with this least port number
+                    if (self.next_free_local_port > local_port_used):
+                        #Changing next free from old value to new value
+                        self.next_free_local_port = self.localport_for_server_publicip[key]
+
+                # Irrespectie of server in management VRF or default VRF, delete it from our tacplus_server list.
                 del self.tacplus_servers[key]
+
         else:
+            if (data['vrf'] == "mgmt") :
+                # tacplus_server need to be added in management VRF.
+                # Save the user configured publicPort that is required later while adding DNAT rule.
+                data['user_configured_server_port'] = data['tcp_port']
+                # set the tcp_port in data to the local port to be used in the tacacs config file.
+                data['tcp_port'] = str(self.next_free_local_port)
+
+                # Compose the iptables rule to be added to in management namespace.
+                cmd = "ip netns exec mgmt iptables -t nat -A PREROUTING -i if1 -p tcp -d {0} --dport {1} -j DNAT --to-destination {2}:{3}".format(TACPLUS_SERVER_LOCAL_IP, self.next_free_local_port, key, data['user_configured_server_port'])
+                os.system(cmd)
+
+                #Update the mapping table with the local port that is used and the actual publicIP configured by user.
+                # mapping table is index using the tacplus server publicIP (which is the "key").
+                self.localport_for_server_publicip[key] = self.next_free_local_port
+                self.publicport_for_server_publicip[key] = data['user_configured_server_port']
+
+                # Mark the local_port array element as "used"
+                self.local_port_status[self.next_free_local_port-TACPLUS_LOCAL_PORT_START]="used"
+                # Call the function to update the next available free port.
+                self.update_next_free_local_port()
+
+            # Update internal data structure tacplus_servers with the data.
             self.tacplus_servers[key] = data
 
         if modify_conf:
@@ -103,7 +169,16 @@ class AaaCfg(object):
         if self.tacplus_servers:
             for addr in self.tacplus_servers:
                 server = tacplus_global.copy()
-                server['ip'] = addr
+                # It is expected that user configured ports are less than 62000. Value about 62000 until 62009 are local ports
+                # used for NAT that is requried for supporting management VRF.
+                # If localport has been assigned as part of NAT, use that local IP & local port instead of publicIP and publicPort.
+                # This will update the tacplus server configuration file with local IP and local port if the server is reachable via the management VRF.
+                if (int(self.tacplus_servers[addr]['tcp_port']) >= TACPLUS_LOCAL_PORT_START):
+                    if (int(self.tacplus_servers[addr]['tcp_port']) < TACPLUS_LOCAL_PORT_START+MAX_TACPLUS_SERVERS):
+                        # This means that the publicIP is already mapped to local IP and local port
+                        server['ip'] = TACPLUS_SERVER_LOCAL_IP
+                else :
+                    server['ip'] = addr
                 server.update(self.tacplus_servers[addr])
                 servers_conf.append(server)
             sorted(servers_conf, key=lambda t: t['priority'], reverse=True)
