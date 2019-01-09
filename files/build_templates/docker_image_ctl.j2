@@ -36,62 +36,6 @@ function preStartAction()
         echo -n > /tmp/dump.rdb
         docker cp /tmp/dump.rdb database:/var/lib/redis/
     fi
-{%- elif docker_container_name == "snmp" %}
-    localhost="localhost"
-    snmpUdpPort=162
-    vrfenabled=`/usr/bin/redis-cli -n 4 hget "MGMT_VRF_CONFIG|vrf_global" mgmtVrfEnabled`
-    v1SnmpTrapIp=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v1TrapDest" DestIp`
-    v1SnmpTrapPort=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v1TrapDest" DestPort`
-    v1MgmtVrf=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v1TrapDest" vrf`
-    v2SnmpTrapIp=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v2TrapDest" DestIp`
-    v2SnmpTrapPort=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v2TrapDest" DestPort`
-    v2MgmtVrf=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v2TrapDest" vrf`
-    v3SnmpTrapIp=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v3TrapDest" DestIp`
-    v3SnmpTrapPort=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v3TrapDest" DestPort`
-    v3MgmtVrf=`/usr/bin/redis-cli -n 4 hget "SNMP_TRAP_CONFIG|v3TrapDest" vrf`
-
-    if [ "$v1MgmtVrf" == "mgmt" ]
-    then
-        ip netns exec mgmt iptables -t nat -D PREROUTING -i if1 -p udp -d 127.100.100.1 --dport 62101 -j DNAT --to-destination $v1SnmpTrapIp:$v1SnmpTrapPort
-        ip netns exec mgmt iptables -t nat -A PREROUTING -i if1 -p udp -d 127.100.100.1 --dport 62101 -j DNAT --to-destination $v1SnmpTrapIp:$v1SnmpTrapPort
-        sed -i 's/v1_trap_dest:.*/v1_trap_dest: 127.100.100.1:62101/' "/etc/sonic/snmp.yml"
-    elif [ "${v1SnmpTrapIp}" != "" ] && [ "${v1SnmpTrapIp}" != "${localhost}" ] && [ "${v1SnmpTrapIp}" != "default" ]
-    then
-        sed -i "s/v1_trap_dest:.*/v1_trap_dest: ${v1SnmpTrapIp}:${v1SnmpTrapPort}/" "/etc/sonic/snmp.yml"
-    elif [ "${v1SnmpTrapIp}" == "${localhost}" ]
-    then
-        sed -i "s/v1_trap_dest:.*/v1_trap_dest: ${localhost}:${snmpUdpPort}/" "/etc/sonic/snmp.yml"
-    else
-        sed -i "s/v1_trap_dest:.*/v1_trap_dest: default/" "etc/sonic/snmp.yml"
-    fi
-    if [ "$v2MgmtVrf" == "mgmt" ]
-    then
-        ip netns exec mgmt iptables -t nat -D PREROUTING -i if1 -p udp -d 127.100.100.1 --dport 62102 -j DNAT --to-destination $v2SnmpTrapIp:$v2SnmpTrapPort
-        ip netns exec mgmt iptables -t nat -A PREROUTING -i if1 -p udp -d 127.100.100.1 --dport 62102 -j DNAT --to-destination $v2SnmpTrapIp:$v2SnmpTrapPort
-        sed -i 's/v2_trap_dest:.*/v2_trap_dest: 127.100.100.1:62102/' "/etc/sonic/snmp.yml"
-    elif [ "${v2SnmpTrapIp}" != "" ] && [ "${v2SnmpTrapIp}" != "${localhost}" ] && [ "${v2SnmpTrapIp}" != "default" ]
-    then
-        sed -i "s/v2_trap_dest:.*/v2_trap_dest: ${v2SnmpTrapIp}:${v2SnmpTrapPort}/" "/etc/sonic/snmp.yml"
-    elif [ "${v2SnmpTrapIp}" == "${localhost}" ]
-    then
-        sed -i "s/v2_trap_dest:.*/v2_trap_dest: ${localhost}:${snmpUdpPort}/" "/etc/sonic/snmp.yml"
-    else
-        sed -i "s/v2_trap_dest:.*/v2_trap_dest: default/" "etc/sonic/snmp.yml"
-    fi
-    if [ "$v3MgmtVrf" == "mgmt" ]
-    then
-        ip netns exec mgmt iptables -t nat -D PREROUTING -i if1 -p udp -d 127.100.100.1 --dport 62103 -j DNAT --to-destination $v3SnmpTrapIp:$v3SnmpTrapPort
-        ip netns exec mgmt iptables -t nat -A PREROUTING -i if1 -p udp -d 127.100.100.1 --dport 62103 -j DNAT --to-destination $v3SnmpTrapIp:$v3SnmpTrapPort
-        sed -i 's/v3_trap_dest:.*/v3_trap_dest: 127.100.100.1:62103/' "/etc/sonic/snmp.yml"
-    elif [ "${v3SnmpTrapIp}" != "" ] && [ "${v3SnmpTrapIp}" != "${localhost}" ] && [ "${v3SnmpTrapIp}" != "default" ]
-    then
-        sed -i "s/v3_trap_dest:.*/v3_trap_dest: ${v3SnmpTrapIp}:${v3SnmpTrapPort}/" "/etc/sonic/snmp.yml"
-    elif [ "${v3SnmpTrapIp}" == "${localhost}" ]
-    then
-        sed -i "s/v3_trap_dest:.*/v3_trap_dest: ${localhost}:${snmpUdpPort}/" "etc/sonic/snmp.yml"
-    else
-        sed -i "s/v3_trap_dest:.*/v3_trap_dest: default/" "etc/sonic/snmp.yml"
-    fi
 {%- else %}
     : # nothing
 {%- endif %}

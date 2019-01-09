@@ -1,5 +1,2 @@
 snmp_rocommunity: public
 snmp_location: public
-v1_trap_dest: default
-v2_trap_dest: default
-v3_trap_dest: default
