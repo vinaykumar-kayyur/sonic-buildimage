@@ -38,14 +38,11 @@ RUN sed -ri 's%DAEMON_ARGS=.*%DAEMON_ARGS=/etc/redis/`basename ${0}`.conf%;     
              s%PIDFILE=.*%PIDFILE=$RUNDIR/`basename ${0}`.pid%;                    \
              ' /etc/init.d/redis-server
 
+RUN mkdir -p /etc/supervisor/conf.d/
+
+COPY ["docker_init.sh", "/usr/bin/"]
 COPY ["create_single_redis_config.sh", "/usr/local/bin/"]
 COPY ["create_all_redis_config", "/usr/local/bin/"]
 COPY ["docker-database.supervisord.conf.j2", "/usr/share/sonic/templates/"]
-COPY ["database_config.json", "/etc/sonic/"]
 
-RUN mkdir -p /etc/supervisor/conf.d/
-RUN sonic-cfggen -j /etc/sonic/database_config.json -t /usr/share/sonic/templates/docker-database.supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
-
-RUN create_all_redis_config
-
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/bin/docker_init.sh"]
