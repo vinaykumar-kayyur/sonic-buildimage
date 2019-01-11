@@ -37,21 +37,26 @@ check_sdk_upgrade()
         mkdir -p "${FS_MOUNTPOINT}"
         mount -t squashfs "${FS_PATH}" "${FS_MOUNTPOINT}" || {
             >&2 echo "Failed to mount next SONiC image"
+            break
+        }
+
+        ISSU_VERSION_FILE_PATH="/etc/mlnx/issu-version"
+
+        [ -f "${SDK_VERSION_FILE_PATH}" ] || {
+            >&2 echo "No ISSU version file found ${ISSU_VERSION_FILE_PATH}"
             break;
         }
 
-        SDK_VERSION_FILE_PATH="${FS_MOUNTPOINT}/etc/mlnx/sdk-version"
+        CURRENT_ISSU_VERSION="$(cat ${ISSU_VERSION_FILE_PATH})"
+        NEXT_ISSU_VERSION="$(cat ${FS_MOUNTPOINT}/${ISSU_VERSION_FILE_PATH})"
 
-        [ -f "${SDK_VERSION_FILE_PATH}" ] && {
-            NEXT_SDK_VERSION="$(cat ${FS_MOUNTPOINT}/etc/mlnx/sdk-version)"
-        } || {
-            >&2 echo "No SDK version file ${SDK_VERSION_FILE_PATH}"
-            break;
-        }
-
-        # TODO: Place a call to SDK check script
-        # for now assume check succeeded
-        CHECK_RESULT="${FFB_SUCCESS}"
+        if [[ "${CURRENT_ISSU_VERSION}" == "${NEXT_ISSU_VERSION}" ]]; then
+            CHECK_RESULT="${FFB_SUCCESS}"
+        else
+            >&2 echo "Current and next ISSU version do not match:"
+            >&2 echo "Current ISSU version: ${CURRENT_ISSU_VERSION}"
+            >&2 echo "Next ISSU version: ${NEXT_ISSU_VERSION}"
+        fi
 
         break
     done
@@ -65,14 +70,15 @@ check_sdk_upgrade()
 check_ffb()
 {
     check_issu_enabled || {
-        echo "ISSU is not enabled on this HWSKU"
+        >&2 echo "ISSU is not enabled on this HWSKU"
         return "${FFB_FAILURE}"
     }
 
     check_sdk_upgrade || {
-        echo "SDK upgrade check failued"
+        >&2 echo "SDK upgrade check failued"
         return "${FFB_FAILURE}"
     }
+
     return "${FFB_SUCCESS}";
 }
 
