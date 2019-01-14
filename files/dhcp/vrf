@@ -1,9 +1,59 @@
+#
 # DHCLIENT exit hook for vrf support.
 #
 # Code ported from https://github.com/CumulusNetworks/vrf under GPLv2 license
 # (see https://github.com/CumulusNetworks/vrf/blob/master/debian/copyright).
 #
 
+# Get table_id for device enslaved to a vrf.
+vrf_get_table_dev()
+{
+	local table_id
+
+	# If vrf_slave is not in the output, device is not enslaved.
+	table_id=$(ip -o -d link show dev ${1} 2>/dev/null |\
+		egrep ' vrf_slave table [0-9]*' |\
+		sed -e 's/.*vrf_slave table \([0-9]*\) .*/\1/')
+
+	[ -z "${table_id}" ] && return 1
+
+	echo ${table_id}
+
+	return 0
+}
+
+# Get table_id for vrf device.
+vrf_get_table()
+{
+	local table_id
+
+	table_id=$(ip -o -d link show dev ${1} 2>/dev/null |\
+		egrep ' vrf table [0-9]*' |\
+		sed -e 's/.*vrf table \([0-9]*\) .*/\1/')
+
+	[ -z "${table_id}" ] && return 1
+
+	echo ${table_id}
+
+	return 0
+}
+
+vrf_exists()
+{
+	local vrf=${1}
+	local n
+
+	[ "$vrf" = "default" ] && return 0
+
+	# ip link show dev <name> type vrf happily returns 0 even though
+	# <name> is not of type vrf. Hence the wc -l.
+	n=$(ip -br link show dev ${vrf} type vrf 2>/dev/null | wc -l)
+	[ ${n} -eq 1 ] && return 0
+
+	return $?
+}
+
+# Check vrf device contains only alphanumeric characters.
 get_vrf_arg()
 {
 	local vrf
