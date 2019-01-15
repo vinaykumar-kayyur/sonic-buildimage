@@ -1,0 +1,38 @@
+From 12528607db866fe84b870127de64d40efb0a98a0 Mon Sep 17 00:00:00 2001
+From: Shu0T1an ChenG <shuche@microsoft.com>
+Date: Mon, 14 Jan 2019 16:58:36 -0800
+Subject: [PATCH] Set buffer size of netlink cli sockets
+
+Set both netlink cli sock and netlink cli event sock receive buffer
+size to 98304.
+
+Signed-off-by: Shu0T1an ChenG <shuche@microsoft.com>
+---
+ libteam/libteam.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/libteam/libteam.c b/libteam/libteam.c
+index 106e5cf..f7010b9 100644
+--- a/libteam/libteam.c
++++ b/libteam/libteam.c
+@@ -600,6 +600,17 @@ int team_init(struct team_handle *th, uint32_t ifindex)
+ 		return -nl2syserr(err);
+ 	}
+ 
++    err = nl_socket_set_buffer_size(th->nl_cli.sock, 98304, 0);
++    if (err) {
++        err(th, "Failed to set buffer size of netlink cli sock.");
++        return -nl2syserr(err);
++    }
++    err = nl_socket_set_buffer_size(th->nl_cli.sock_event, 98304, 0);
++    if (err) {
++        err(th, "Failed to set buffer size of netlink cli event sock.");
++        return -nl2syserr(err);
++    }
++
+ 	th->family = genl_ctrl_resolve(th->nl_sock, TEAM_GENL_NAME);
+ 	if (th->family < 0) {
+ 		err(th, "Failed to resolve netlink family.");
+-- 
+2.1.4
+
