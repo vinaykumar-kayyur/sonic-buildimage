@@ -44,7 +44,7 @@ check_sdk_upgrade()
 
         [ -f "${SDK_VERSION_FILE_PATH}" ] || {
             >&2 echo "No ISSU version file found ${ISSU_VERSION_FILE_PATH}"
-            break;
+            break
         }
 
         CURRENT_ISSU_VERSION="$(cat ${ISSU_VERSION_FILE_PATH})"
@@ -79,6 +79,6 @@ check_ffb()
         return "${FFB_FAILURE}"
     }
 
-    return "${FFB_SUCCESS}";
+    return "${FFB_SUCCESS}"
 }
 
