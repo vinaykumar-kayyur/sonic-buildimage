@@ -1,0 +1,23 @@
+#!/usr/bin/python
+import json
+import os
+
+database_config_file = "/etc/sonic/database_config.json"
+
+with open(database_config_file, "r") as read_file:
+    data = json.load(read_file)
+
+p = os.fork()
+# parent, continue goto loop
+if p > 0:
+    if 'DATABASE' in data:
+        for inst in data["DATABASE"]:
+            pp = os.fork()
+            # parent, continue to start next redis server
+            if pp == 0:
+                # child, start redis server and break
+                os.system("start_single_redis_server.sh " + inst)
+                break
+else:
+    # start default redis server
+    os.system("start_single_redis_server.sh redis")
