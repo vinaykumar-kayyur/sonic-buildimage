@@ -1,0 +1,32 @@
+sonic-platform-netberg (0.6) unstable; urgency=low
+
+  * Support lm-sensors compatible sysfs ABI.
+  * Make sure coretemp and jc42 kernel drivers loaded.
+  * Bump version to 0.6.
+
+ -- Sergey Popovich <sergey.popovich@ordnance.co>  Sat, 22 Dec 2018 17:18:52 +0200
+
+sonic-platform-netberg (0.5) unstable; urgency=low
+
+  * Fix dependency on linux-image after switching from jessie to stretch
+  * Fix module load order on second and next reboots (requires call to
+    update-initramfs(8) at postinst) to ensure correct device detection.
+  * Adjust postinstall modules unload/load to match with order given in
+    modules-load.d(5) and modprobe.d(5) and get rid of explicit depmod(8).
+  * Add post remove script to unload module on remove and regenerate
+    initramfs. This is to implement platform drivers upgrade.
+  * Bump version to 0.5.
+
+ -- Sergey Popovich <sergey.popovich@ordnance.co>  Tue, 18 Dec 2018 23:38:52 +0200
+
+sonic-platform-netberg (0.4) unstable; urgency=low
+
+  * Bump version to 0.4 due to fixes presented earlier
+
+ -- Sergey Popovich <sergey.popovich@ordnance.co>  Thu, 09 Aug 2018 16:23:13 +0300
+
+sonic-platform-netberg (0.3) unstable; urgency=low
+
+  * Initial release
+
+ -- Sergey Popovich <sergey.popovich@ordnance.co>  Fri, 23 Mar 2018 13:07:10 +0200

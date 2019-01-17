@@ -17,4 +17,7 @@ $(DOCKER_PLATFORM_MONITOR)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 # Mount Arista python library on Aboot images to be used by plugins
 $(DOCKER_PLATFORM_MONITOR)_aboot_RUN_OPT += -v /usr/lib/python2.7/dist-packages/arista:/usr/lib/python2.7/dist-packages/arista:ro
 
+# Mount syncd socket to be able to use drivshell
+$(DOCKER_PLATFORM_MONITOR)_RUN_OPT += -v /var/run/docker-syncd:/var/run/sswsyncd:ro
+
 $(DOCKER_PLATFORM_MONITOR)_BASE_IMAGE_FILES += sensors:/usr/bin/sensors

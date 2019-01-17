@@ -1,0 +1,11 @@
+Source: sonic-platform-netberg
+Section: main
+Priority: extra
+Maintainer: Sergey Popovich <sergey.popovich@ordnance.co>
+Build-Depends: debhelper (>= 8.0.0), bzip2
+Standards-Version: 3.9.3
+
+Package: platform-modules-netberg
+Architecture: amd64
+Depends: linux-image-4.9.0-8-amd64
+Description: kernel modules for platform devices such as fan, led, sfp

@@ -1,0 +1,9 @@
+# postrm script for Netberg devices
+
+#DEBHELPER#
+
+# Load hardware monitoring module
+modprobe -q -r hardware_monitor ||:
+
+# Make sure modprobe.d(5) is in initramfs
+update-initramfs -u

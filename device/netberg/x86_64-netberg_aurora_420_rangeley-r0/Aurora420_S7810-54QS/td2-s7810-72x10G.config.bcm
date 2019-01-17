@@ -1,0 +1,497 @@
+os=unix
+skip_L2_USER_ENTRY=0
+schan_intr_enable=0
+miim_intr_enable=0
+tdma_intr_enable=0
+tslam_intr_enable=0
+tdma_timeout_usec=3000000
+cdma_timeout_usec=3000000
+bcm_stat_interval=2000000
+bcm_stat_flags=0
+bcm_num_cos=8
+parity_enable=0
+parity_correction=0
+
+l2_mem_entries=163840
+l3_mem_entries=81920
+lpm_scaling_enable=1
+lpm_ipv6_128b_reserved=0
+
+mmu_lossless=0
+lls_num_l2uc=12
+module_64ports=0
+
+phy_an_c37_xe=3
+phy_an_c73_xe=0
+
+xgxs_lcpll_xtal_refclk=1
+tslam_dma_enable=0
+table_dma_enable=0
+
+#for 72 ports with 48 10G ports and 6 40G ports for breakout mode
+oversubscribe_mode=1
+pbmp_oversubscribe=0x1fffffffffffffffffe
+pbmp_xport_xe=0x1fffffffffffffffffe
+
+#SFP+ 1-4 from WC3
+portmap_1=13:10
+portmap_2=14:10
+portmap_3=15:10
+portmap_4=16:10
+
+#SFP+ 5-8 from WC5
+portmap_5=21:10
+portmap_6=22:10
+portmap_7=23:10
+portmap_8=24:10
+
+#SFP+ 9-12 from WC6
+portmap_9=25:10
+portmap_10=26:10
+portmap_11=27:10
+portmap_12=28:10
+
+#SFP+ 13-16 from WC7
+portmap_13=29:10
+portmap_14=30:10
+portmap_15=31:10
+portmap_16=32:10
+
+#SFP+ 17-20 from WC11
+portmap_17=45:10
+portmap_18=46:10
+portmap_19=47:10
+portmap_20=48:10
+
+#SFP+ 21-24 from WC12
+portmap_21=49:10
+portmap_22=50:10
+portmap_23=51:10
+portmap_24=52:10
+
+#SFP+ 25-28 from WC13
+portmap_25=53:10
+portmap_26=54:10
+portmap_27=55:10
+portmap_28=56:10
+
+#SFP+ 29-32 from WC14
+portmap_29=57:10
+portmap_30=58:10
+portmap_31=59:10
+portmap_32=60:10
+
+#SFP+ 33-36 from WC15
+portmap_33=61:10
+portmap_34=62:10
+portmap_35=63:10
+portmap_36=64:10
+
+#SFP+ 37-40 from WC16
+portmap_37=65:10
+portmap_38=66:10
+portmap_39=67:10
+portmap_40=68:10
+
+#SFP+ 41-44 from WC17
+portmap_41=69:10
+portmap_42=70:10
+portmap_43=71:10
+portmap_44=72:10
+
+#SFP+ 45-48 from WC18
+portmap_45=73:10
+portmap_46=74:10
+portmap_47=75:10
+portmap_48=76:10
+
+#QSFP+ 49 (49-52) from WC19
+portmap_49=77:10
+portmap_50=78:10
+portmap_51=79:10
+portmap_52=80:10
+
+#QSFP+ 50 (53-56) from WC20
+portmap_53=81:10
+portmap_54=82:10
+portmap_55=83:10
+portmap_56=84:10
+
+#QSFP+ 51 (57-60) from WC24
+portmap_57=97:10
+portmap_58=98:10
+portmap_59=99:10
+portmap_60=100:10
+
+#QSFP+ 52 (61-64) from WC25
+portmap_61=101:10
+portmap_62=102:10
+portmap_63=103:10
+portmap_64=104:10
+
+#QSFP+ 53 (65-68) from WC26
+portmap_65=105:10
+portmap_66=106:10
+portmap_67=107:10
+portmap_68=108:10
+
+#QSFP+ 54 (69-72) from WC27
+portmap_69=109:10
+portmap_70=110:10
+portmap_71=111:10
+portmap_72=112:10
+
+# L3 ECMP
+# - In Trident2, VP LAGs share the same table as ECMP group table.
+#   The first N entries are reserved for VP LAGs, where N is the value of the
+#   config property "max_vp_lags". By default this was set to 256
+l3_max_ecmp_mode=1
+max_vp_lags=0
+
+stable_size=0x2000000
+
+#SFI
+serdes_if_type=9
+#serdes_rx_los_xe=1
+
+# xe0
+serdes_preemphasis_xe0=0xfe00
+serdes_pre_driver_current_xe0=0xb
+serdes_driver_current_xe0=0xb
+
+# xe1
+serdes_preemphasis_xe1=0xfe00
+serdes_pre_driver_current_xe1=0xc
+serdes_driver_current_xe1=0xc
+
+# xe2
+serdes_preemphasis_xe2=0xfe00
+serdes_pre_driver_current_xe2=0x7
+serdes_driver_current_xe2=0x7
+
+# xe3
+serdes_preemphasis_xe3=0xfe00
+serdes_pre_driver_current_xe3=0xb
+serdes_driver_current_xe3=0xb
+
+# xe4
+serdes_preemphasis_xe4=0xfa10
+serdes_pre_driver_current_xe4=0x7
+serdes_driver_current_xe4=0x7
+
+# xe5
+serdes_preemphasis_xe5=0xfa10
+serdes_pre_driver_current_xe5=0x7
+serdes_driver_current_xe5=0x7
+
+# xe6
+serdes_preemphasis_xe6=0xf210
+serdes_pre_driver_current_xe6=0x6
+serdes_driver_current_xe6=0x6
+
+# xe7
+serdes_preemphasis_xe7=0xf210
+serdes_pre_driver_current_xe7=0x6
+serdes_driver_current_xe7=0x6
+
+# xe8
+serdes_preemphasis_xe8=0xda90
+serdes_pre_driver_current_xe8=0x4
+serdes_driver_current_xe8=0x4
+
+# xe9
+serdes_preemphasis_xe9=0xda90
+serdes_pre_driver_current_xe9=0x4
+serdes_driver_current_xe9=0x4
+
+# xe10
+serdes_preemphasis_xe10=0xda90
+serdes_pre_driver_current_xe10=0x4
+serdes_driver_current_xe10=0x4
+
+# xe11
+serdes_preemphasis_xe11=0xda90
+serdes_pre_driver_current_xe11=0x4
+serdes_driver_current_xe11=0x4
+
+# xe12
+serdes_preemphasis_xe12=0xda90
+serdes_pre_driver_current_xe12=0x4
+serdes_driver_current_xe12=0x4
+
+# xe13
+serdes_preemphasis_xe13=0xda90
+serdes_pre_driver_current_xe13=0x4
+serdes_driver_current_xe13=0x4
+
+# xe14
+serdes_preemphasis_xe14=0xda90
+serdes_pre_driver_current_xe14=0x4
+serdes_driver_current_xe14=0x4
+
+# xe15
+serdes_preemphasis_xe15=0xda90
+serdes_pre_driver_current_xe15=0x4
+serdes_driver_current_xe15=0x4
+
+# xe16
+serdes_preemphasis_xe16=0xb330
+serdes_pre_driver_current_xe16=0x3
+serdes_driver_current_xe16=0x3
+
+# xe17
+serdes_preemphasis_xe17=0xbb10
+serdes_pre_driver_current_xe17=0x5
+serdes_driver_current_xe17=0x5
+
+# xe18
+serdes_preemphasis_xe18=0xb330
+serdes_pre_driver_current_xe18=0x3
+serdes_driver_current_xe18=0x3
+
+# xe19
+serdes_preemphasis_xe19=0xb330
+serdes_pre_driver_current_xe19=0x3
+serdes_driver_current_xe19=0x3
+
+# xe20
+serdes_preemphasis_xe20=0xb330
+serdes_pre_driver_current_xe20=0x3
+serdes_driver_current_xe20=0x3
+
+# xe21
+serdes_preemphasis_xe21=0xb330
+serdes_pre_driver_current_xe21=0x3
+serdes_driver_current_xe21=0x3
+
+# xe22
+serdes_preemphasis_xe22=0xb330
+serdes_pre_driver_current_xe22=0x2
+serdes_driver_current_xe22=0x2
+
+# xe23
+serdes_preemphasis_xe23=0xb330
+serdes_pre_driver_current_xe23=0x4
+serdes_driver_current_xe23=0x4
+
+# xe24
+serdes_preemphasis_xe24=0xb330
+serdes_pre_driver_current_xe24=0x2
+serdes_driver_current_xe24=0x2
+
+# xe25
+serdes_preemphasis_xe25=0xb330
+serdes_pre_driver_current_xe25=0x2
+serdes_driver_current_xe25=0x2
+
+# xe26
+serdes_preemphasis_xe26=0xb330
+serdes_pre_driver_current_xe26=0x2
+serdes_driver_current_xe26=0x2
+
+# xe27
+serdes_preemphasis_xe27=0xb330
+serdes_pre_driver_current_xe27=0x2
+serdes_driver_current_xe27=0x2
+
+# xe28
+serdes_preemphasis_xe28=0xb330
+serdes_pre_driver_current_xe28=0x2
+serdes_driver_current_xe28=0x2
+
+# xe29
+serdes_preemphasis_xe29=0xb330
+serdes_pre_driver_current_xe29=0x2
+serdes_driver_current_xe29=0x2
+
+# xe30
+serdes_preemphasis_xe30=0xb330
+serdes_pre_driver_current_xe30=0x2
+serdes_driver_current_xe30=0x2
+
+# xe31
+serdes_preemphasis_xe31=0xb330
+serdes_pre_driver_current_xe31=0x2
+serdes_driver_current_xe31=0x2
+
+# xe32
+serdes_preemphasis_xe32=0xd2b0
+serdes_pre_driver_current_xe32=0x3
+serdes_driver_current_xe32=0x3
+
+# xe33
+serdes_preemphasis_xe33=0xd2b0
+serdes_pre_driver_current_xe33=0x3
+serdes_driver_current_xe33=0x3
+
+# xe34
+serdes_preemphasis_xe34=0xd2b0
+serdes_pre_driver_current_xe34=0x3
+serdes_driver_current_xe34=0x3
+
+# xe35
+serdes_preemphasis_xe35=0xd2b0
+serdes_pre_driver_current_xe35=0x3
+serdes_driver_current_xe35=0x3
+
+# xe36
+serdes_preemphasis_xe36=0xd2b0
+serdes_pre_driver_current_xe36=0x3
+serdes_driver_current_xe36=0x3
+
+# xe37
+serdes_preemphasis_xe37=0xd2b0
+serdes_pre_driver_current_xe37=0x3
+serdes_driver_current_xe37=0x3
+
+# xe38
+serdes_preemphasis_xe38=0xd2b0
+serdes_pre_driver_current_xe38=0x3
+serdes_driver_current_xe38=0x3
+
+# xe39
+serdes_preemphasis_xe39=0xd2b0
+serdes_pre_driver_current_xe39=0x3
+serdes_driver_current_xe39=0x3
+
+# xe40
+serdes_preemphasis_xe40=0xcad0
+serdes_pre_driver_current_xe40=0x5
+serdes_driver_current_xe40=0x5
+
+# xe41
+serdes_preemphasis_xe41=0xcad0
+serdes_pre_driver_current_xe41=0x5
+serdes_driver_current_xe41=0x5
+
+# xe42
+serdes_preemphasis_xe42=0xd2b0
+serdes_pre_driver_current_xe42=0x6
+serdes_driver_current_xe42=0x6
+
+# xe43
+serdes_preemphasis_xe43=0xd2b0
+serdes_pre_driver_current_xe43=0x6
+serdes_driver_current_xe43=0x6
+
+# xe44
+serdes_preemphasis_xe44=0xd2b0
+serdes_pre_driver_current_xe44=0x4
+serdes_driver_current_xe44=0x4
+
+# xe45
+serdes_preemphasis_xe45=0xd2b0
+serdes_pre_driver_current_xe45=0x4
+serdes_driver_current_xe45=0x4
+
+# xe46
+serdes_preemphasis_xe46=0xd6a0
+serdes_pre_driver_current_xe46=0x9
+serdes_driver_current_xe46=0x9
+
+# xe47
+serdes_preemphasis_xe47=0xd6a0
+serdes_pre_driver_current_xe47=0x9
+serdes_driver_current_xe47=0x9
+
+# xe48
+serdes_preemphasis_lane0_xe48=0xc2f0
+serdes_pre_driver_current_lane0_xe48=0x4
+serdes_driver_current_lane0_xe48=0x4
+
+serdes_preemphasis_lane1_xe48=0xc2f0
+serdes_pre_driver_current_lane1_xe48=0x5
+serdes_driver_current_lane1_xe48=0x5
+
+serdes_preemphasis_lane2_xe48=0xc2f0
+serdes_pre_driver_current_lane2_xe48=0x6
+serdes_driver_current_lane2_xe48=0x6
+
+serdes_preemphasis_lane3_xe48=0xc2f0
+serdes_pre_driver_current_lane3_xe48=0x5
+serdes_driver_current_lane3_xe48=0x5
+
+# xe52
+serdes_preemphasis_lane0_xe52=0xc2f0
+serdes_pre_driver_current_lane0_xe52=0x5
+serdes_driver_current_lane0_xe52=0x5
+
+serdes_preemphasis_lane1_xe52=0xc6e0
+serdes_pre_driver_current_lane1_xe52=0x7
+serdes_driver_current_lane1_xe52=0x7
+
+serdes_preemphasis_lane2_xe52=0xbb10
+serdes_pre_driver_current_lane2_xe52=0x6
+serdes_driver_current_lane2_xe52=0x6
+
+serdes_preemphasis_lane3_xe52=0xbb10
+serdes_pre_driver_current_lane3_xe52=0x6
+serdes_driver_current_lane3_xe52=0x6
+
+# xe56
+serdes_preemphasis_lane0_xe56=0xc2f0
+serdes_pre_driver_current_lane0_xe56=0x6
+serdes_driver_current_lane0_xe56=0x6
+
+serdes_preemphasis_lane1_xe56=0xbb10
+serdes_pre_driver_current_lane1_xe56=0x6
+serdes_driver_current_lane1_xe56=0x6
+
+serdes_preemphasis_lane2_xe56=0xc2f0
+serdes_pre_driver_current_lane2_xe56=0x6
+serdes_driver_current_lane2_xe56=0x6
+
+serdes_preemphasis_lane3_xe56=0xc2f0
+serdes_pre_driver_current_lane3_xe56=0x6
+serdes_driver_current_lane3_xe56=0x6
+
+# xe60
+serdes_preemphasis_lane0_xe60=0xc2f0
+serdes_pre_driver_current_lane0_xe60=0x6
+serdes_driver_current_lane0_xe60=0x6
+
+serdes_preemphasis_lane1_xe60=0xcad0
+serdes_pre_driver_current_lane1_xe60=0x6
+serdes_driver_current_lane1_xe60=0x6
+
+serdes_preemphasis_lane2_xe60=0xc2f0
+serdes_pre_driver_current_lane2_xe60=0x6
+serdes_driver_current_lane2_xe60=0x6
+
+serdes_preemphasis_lane3_xe60=0xc2f0
+serdes_pre_driver_current_lane3_xe60=0x6
+serdes_driver_current_lane3_xe60=0x6
+
+# xe64
+serdes_preemphasis_lane0_xe64=0xc2f0
+serdes_pre_driver_current_lane0_xe64=0x6
+serdes_driver_current_lane0_xe64=0x6
+
+serdes_preemphasis_lane1_xe64=0xcad0
+serdes_pre_driver_current_lane1_xe64=0x6
+serdes_driver_current_lane1_xe64=0x6
+
+serdes_preemphasis_lane2_xe64=0xc2f0
+serdes_pre_driver_current_lane2_xe64=0x6
+serdes_driver_current_lane2_xe64=0x6
+
+serdes_preemphasis_lane3_xe64=0xc6e0
+serdes_pre_driver_current_lane3_xe64=0x6
+serdes_driver_current_lane3_xe64=0x6
+
+# xe68
+serdes_preemphasis_lane0_xe68=0xc6e0
+serdes_pre_driver_current_lane0_xe68=0x6
+serdes_driver_current_lane0_xe68=0x6
+
+serdes_preemphasis_lane1_xe68=0xcec0
+serdes_pre_driver_current_lane1_xe68=0x6
+serdes_driver_current_lane1_xe68=0x6
+
+serdes_preemphasis_lane2_xe68=0xcad0
+serdes_pre_driver_current_lane2_xe68=0x6
+serdes_driver_current_lane2_xe68=0x6
+
+serdes_preemphasis_lane3_xe68=0xc6e0
+serdes_pre_driver_current_lane3_xe68=0x6
+serdes_driver_current_lane3_xe68=0x6
