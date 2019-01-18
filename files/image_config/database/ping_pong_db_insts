@@ -4,7 +4,6 @@ import os
 
 database_config_file = "/etc/sonic/database_config.json"
 
-os.system("ping_pong_single_db_inst.sh 6379")
 with open(database_config_file, "r") as read_file:
     data = json.load(read_file)
 
@@ -12,3 +11,6 @@ if 'DATABASE' in data:
     for inst in data["DATABASE"]:
         port = data["DATABASE"][inst]["port"]
         os.system("ping_pong_single_db_inst.sh " + str(port))
+# if nothing configured, there is a default redis server
+else:
+    os.system("ping_pong_single_db_inst.sh 6379")

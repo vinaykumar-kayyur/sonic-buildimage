@@ -42,9 +42,9 @@ RUN sed -ri 's%DAEMON_ARGS=.*%DAEMON_ARGS=/etc/`basename ${0}`/`basename ${0}`.c
 
 RUN cp /etc/init.d/redis-server /etc/init.d/redis
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["supervisord_database.conf.j2", "/usr/share/sonic/templates/"]
+COPY ["start.sh", "/usr/local/bin/"]
 COPY ["create_single_redis_config.sh", "/usr/local/bin/"]
 COPY ["create_all_redis_config", "/usr/local/bin/"]
-COPY ["start_single_redis_server.sh", "/usr/local/bin/"]
-COPY ["start_all_redis_servers", "/usr/local/bin/"]
 
 ENTRYPOINT ["/usr/bin/supervisord"]
