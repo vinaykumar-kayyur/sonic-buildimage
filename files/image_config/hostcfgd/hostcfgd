@@ -43,7 +43,7 @@ def obfuscate(data):
 class AaaCfg(object):
     def __init__(self):
         self.auth_default = {
-            'login': 'local',
+            'login': 'local'
         }
         self.tacplus_global_default = {
             'auth_type': TACPLUS_SERVER_AUTH_TYPE_DEFAULT,
