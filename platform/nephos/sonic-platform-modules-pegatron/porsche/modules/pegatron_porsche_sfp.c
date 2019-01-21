@@ -62,9 +62,9 @@
 enum cpld_croups { cpld_group_a, cpld_group_b, cpld_group_c};
 
 static const unsigned short normal_i2c[] = { SFP_EEPROM_A0_ADDR, SFP_EEPROM_A2_ADDR, I2C_CLIENT_END };
-static char *SFP_CPLD_GROUPA_MAPPING[CPLDA_SFP_NUM][16]={0};
-static char *SFP_CPLD_GROUPB_MAPPING[CPLDB_SFP_NUM][16]={0};
-static char *SFP_CPLD_GROUPC_MAPPING[CPLDC_SFP_NUM][16]={0};
+static char SFP_CPLD_GROUPA_MAPPING[CPLDA_SFP_NUM][16]={0};
+static char SFP_CPLD_GROUPB_MAPPING[CPLDB_SFP_NUM][16]={0};
+static char SFP_CPLD_GROUPC_MAPPING[CPLDC_SFP_NUM][16]={0};
 
 /*
  * This parameter is to help this driver avoid blocking other drivers out

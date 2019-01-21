@@ -31,6 +31,7 @@ CPLDC_SFP_NUM = 18
 kernel_module = ['i2c_dev', 'i2c-mux-pca954x force_deselect_on_exit=1', 'at24', 'pegatron_porsche_cpld', 'pegatron_hwmon_mcu', 'pegatron_porsche_sfp']
 moduleID = ['pca9544', 'pca9544', '24c02', 'porsche_hwmon_mcu', 'porsche_cpld', 'porsche_cpld', 'porsche_cpld', 'porsche_sfpA', 'porsche_sfpB', 'porsche_sfpC']
 i2c_check_node = ['i2c-0', 'i2c-1']
+uninstall_check_node = ['-0072', '-0073']
 device_address = ['0x72', '0x73', '0x54', '0x70', '0x74', '0x75', '0x76', '0x50', '0x50', '0x50']
 device_node= ['i2c-2', 'i2c-6', 'i2c-4', 'i2c-5', 'i2c-6', 'i2c-7', 'i2c-8', 'i2c-6', 'i2c-7', 'i2c-8']
 
@@ -53,6 +54,16 @@ def do_cmd(cmd, show):
 		if show:
 			print('Failed :' + cmd)
 	return  status, output
+
+def install_driver():
+	status, output = do_cmd("depmod -a", 1)
+
+	for i in range(0, len(kernel_module)):
+		status, output = do_cmd("modprobe " + kernel_module[i], 1)
+		if status:       
+			return status
+
+	return
 
 def check_device_position(num):  
 	for i in range(0, len(i2c_check_node)):
@@ -94,10 +105,17 @@ def do_install():
 
 def do_uninstall():
 	for i in range(0, len(kernel_module)):
-		status, output = do_cmd("modprobe -r " + kernel_module[i], 1)
+	    status, output = do_cmd("modprobe -rq " + kernel_module[i], 0)
 
 	for i in range(0, len(moduleID)):
-		status, output = do_cmd("echo " + device_address[i] + " > " + i2c_prefix + i2c_check_node[i] + "/delete_device", 0)
+            if moduleID[i] == "pca9544":
+                for node in range(0, len(i2c_check_node)):
+                    status, output = do_cmd("ls " + i2c_prefix + str(node) + uninstall_check_node[i], 0)
+                    if not status:
+                        status, output = do_cmd("echo " + device_address[i] + " > " + i2c_prefix + i2c_check_node[node] + "/delete_device", 0)
+
+            else:
+                status, output = do_cmd("echo " + device_address[i] + " > " + i2c_prefix + device_node[i] + "/delete_device", 0)
 
 	return
 
@@ -177,7 +195,7 @@ def main():
 
 	command:
 		install     : install drivers and generate related sysfs nodes
-		clean       : uninstall drivers and remove related sysfs nodes  
+		uninstall   : uninstall drivers and remove related sysfs nodes  
 		set         : change board setting [led]
 		debug       : debug info [on/off]
 	"""
