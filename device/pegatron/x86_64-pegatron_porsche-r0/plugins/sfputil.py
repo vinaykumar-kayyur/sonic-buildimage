@@ -234,6 +234,14 @@ class SfpUtil(SfpUtilBase):
         print "logical to physical: " + self.logical_to_physical
         print "physical to logical: " + self.physical_to_logical
         """
+        
+    def get_transceiver_change_event(self):
+        """
+        TODO: This function need to be implemented
+        when decide to support monitoring SFP(Xcvrd)
+        on this platform.
+        """
+        raise NotImplementedError
 
 
 
