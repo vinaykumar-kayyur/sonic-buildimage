@@ -36,7 +36,6 @@ RUN apt-get clean -y                                  && \
 RUN sed -ri 's%DAEMON_ARGS=.*%DAEMON_ARGS=/etc/`basename ${0}`/`basename ${0}`.conf%;  \
              s/NAME=.*/NAME=`basename ${0}`/;                                          \
              s/DESC=.*/DESC=`basename ${0}`/;                                          \
-             s%RUNDIR=.*%RUNDIR=/var/run/`basename ${0}`%;                             \
              s%PIDFILE=.*%PIDFILE=$RUNDIR/`basename ${0}`.pid%;                        \
              ' /etc/init.d/redis-server
 
