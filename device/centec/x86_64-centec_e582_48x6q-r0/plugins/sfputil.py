@@ -158,3 +158,5 @@ class SfpUtil(SfpUtilBase):
 
         return False
 
+    def get_transceiver_change_event(self, timeout=0):
+        return False, {}

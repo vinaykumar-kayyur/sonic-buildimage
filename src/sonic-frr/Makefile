@@ -2,18 +2,21 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = frr_$(FRR_VERSION)_amd64.deb
+MAIN_TARGET = frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-        # Replacing frr's rules/install files with SONiC's own versions to activate
-        # specific knobs and adjust install process to address SONiC's needs.
-	cp sonic_frr.rules frr/debian/rules
-	cp sonic_frr.install frr/debian/frr.install
 
-        # Build the package
+	# Build the package
 	pushd ./frr
-	rm -f debian/*.debhelper.log
-	dpkg-buildpackage -rfakeroot -b -us -uc
+
+	# This could very well be tools/tarsource.sh -V -e sonic
+	tools/tarsource.sh -V
+	# This is a no-op but here in case the changelog stops being a symlink
+	debchange -b -v $(FRR_VERSION)-1~sonic.debian8+1 'SONiC FRR debian package build'
+	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib
+	cd ..
+	mv frr_$(FRR_VERSION)-*_amd64.deb frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
+	mv $* $(DEST)/
+
 	popd
 
-	mv $* $(DEST)/

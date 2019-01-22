@@ -63,6 +63,7 @@ RUN apt-get update && apt-get install -y \
         libjson0-dev \
         libsystemd-dev \
         python-ipaddr \
+        install-info \
 # For libnl3 (local) build
         cdbs \
 # For SAI meta build
@@ -230,13 +231,17 @@ RUN apt-get update && apt-get install -y \
 # For bash
         texi2html \
 # For initramfs
-        bash-completion
+        bash-completion \
+# For sonic vs image build
+        dosfstools \
+        qemu-kvm \
+        libvirt-bin
 
 # For linux build
 RUN apt-get -y build-dep linux
 
 # For gobgp build
-RUN export VERSION=1.8.3 \
+RUN export VERSION=1.11.2 \
  && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
  && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
@@ -260,10 +265,13 @@ RUN pip install --force-reinstall --upgrade jinja2>=2.10
 RUN pip install j2cli
 
 # For sonic utilities testing
-RUN pip install click-default-group click natsort tabulate
+RUN pip install click-default-group click natsort tabulate netifaces==0.10.7
 
 # For supervisor build
 RUN pip install meld3 mock
+
+# For vs image build
+RUN pip install pexpect==4.6.0
 
 # Install dependencies for isc-dhcp-relay build
 RUN apt-get -y build-dep isc-dhcp
@@ -298,4 +306,4 @@ RUN add-apt-repository \
            stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
-RUN echo "DOCKER_OPTS=\"--experimental\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker

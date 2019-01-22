@@ -132,6 +132,9 @@ class SfpUtil(SfpUtilBase):
             return True
 
         return False
+    
+    def get_transceiver_change_event(self, timeout=0):
+        raise NotImplementedError
 
     @property
     def port_start(self):

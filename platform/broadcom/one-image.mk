@@ -20,6 +20,8 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(ACCTON_AS7312_54X_PLATFORM_MODULE) \
                                $(ACCTON_AS7326_56X_PLATFORM_MODULE) \
                                $(ACCTON_AS7716_32XB_PLATFORM_MODULE) \
+                               $(ACCTON_AS6712_32X_PLATFORM_MODULE) \
+                               $(ACCTON_AS7726_32X_PLATFORM_MODULE) \
                                $(INVENTEC_D7032Q28B_PLATFORM_MODULE) \
                                $(INVENTEC_D7054Q28B_PLATFORM_MODULE) \
                                $(INVENTEC_D7264Q28B_PLATFORM_MODULE) \
@@ -30,6 +32,8 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(DELTA_AG5648_PLATFORM_MODULE) \
                                $(DELTA_ET6248BRB_PLATFORM_MODULE) \
                                $(QUANTA_IX1B_32X_PLATFORM_MODULE) \
-                               $(MITAC_LY1200_32X_PLATFORM_MODULE)
+                               $(MITAC_LY1200_32X_PLATFORM_MODULE) \
+                               $(ALPHANETWORKS_SNH60A0_320FV2_PLATFORM_MODULE) \
+                               $(ALPHANETWORKS_SNH60B0_640F_PLATFORM_MODULE)
 $(SONIC_ONE_IMAGE)_DOCKERS += $(SONIC_INSTALL_DOCKER_IMAGES)
 SONIC_INSTALLERS += $(SONIC_ONE_IMAGE)

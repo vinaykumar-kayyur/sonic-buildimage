@@ -4,7 +4,7 @@ import re
 import time
 import json
 
-def test_bounce(dvs):
+def test_bounce(dvs, testlog):
     dvs.servers[0].runcmd("pkill -f exabgp")
     dvs.copy_file("/etc/quagga/", "bgp/files/no_export/bgpd.conf")
     dvs.runcmd("supervisorctl start bgpd")
@@ -27,9 +27,9 @@ def test_bounce(dvs):
 
     time.sleep(60)
 
-    sum_res =  dvs.runcmd(["vtysh", "-c", "show ip bgp sum"])
-    all_route = dvs.runcmd(["vtysh", "-c", "show ip bgp"])
-    announce_route = dvs.runcmd(["vtysh", "-c", "show ip bgp neighbors 10.0.0.3 advertised-routes"])
+    (exit_code, sum_res) =  dvs.runcmd(["vtysh", "-c", "show ip bgp sum"])
+    (exit_code, all_route) = dvs.runcmd(["vtysh", "-c", "show ip bgp"])
+    (exit_code, announce_route) = dvs.runcmd(["vtysh", "-c", "show ip bgp neighbors 10.0.0.3 advertised-routes"])
  
     p1.terminate()
     p1 = p1.wait()
