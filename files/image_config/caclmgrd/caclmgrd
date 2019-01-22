@@ -182,6 +182,10 @@ class ControlPlaneAclManager(object):
                 acl_rules = {}
 
                 for ((rule_table_name, rule_id), rule_props) in self._rules_db_info.iteritems():
+                    if not rule_props:
+                        log_warning("rule_props for rule_id {} empty or null!".format(rule_id))
+                        continue
+
                     if rule_table_name == table_name:
                         acl_rules[rule_props["PRIORITY"]] = rule_props
 
