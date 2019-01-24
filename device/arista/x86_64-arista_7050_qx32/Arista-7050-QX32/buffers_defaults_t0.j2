@@ -1,30 +1,28 @@
-
-{%- set default_cable = '40m' %}
+{%- set default_cable = '300m' %}
 
 {%- macro generate_port_lists(PORT_ALL) %}
     {# Generate list of ports #}
-    {%- for port_idx in range(0,32) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx*4)) %}{%- endif %}
-    {%- endfor %}
+    {% for port_idx in range(0,32) %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{% endif %}
+    {% endfor %}
 {%- endmacro %}
 
 {%- macro generate_buffer_pool_and_profiles() %}
     "BUFFER_POOL": {
         "ingress_lossless_pool": {
-            "size": "10443264",
+            "size": "12766208",
             "type": "ingress",
-            "mode": "dynamic",
-            "xoff": "7335744"
-        },
-        "egress_lossy_pool": {
-            "size": "8877440",
-            "type": "egress",
             "mode": "dynamic"
         },
         "egress_lossless_pool": {
-            "size": "15982720",
+            "size": "12766208",
             "type": "egress",
             "mode": "static"
+        },
+        "egress_lossy_pool": {
+            "size": "7582515",
+            "type": "egress",
+            "mode": "dynamic"
         }
     },
     "BUFFER_PROFILE": {
@@ -35,8 +33,8 @@
         },
         "egress_lossless_profile": {
             "pool":"[BUFFER_POOL|egress_lossless_pool]",
-            "size":"1518",
-            "static_th":"3995680"
+            "size":"0",
+            "static_th":"12766208"
         },
         "egress_lossy_profile": {
             "pool":"[BUFFER_POOL|egress_lossy_pool]",

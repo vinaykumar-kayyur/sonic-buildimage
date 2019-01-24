@@ -52,6 +52,24 @@ function wait_for_database_service()
     done
 }
 
+function getBootType()
+{
+    case "$(cat /proc/cmdline | grep -o 'SONIC_BOOT_TYPE=\S*' | cut -d'=' -f2)" in
+    warm*)
+        TYPE='warm'
+        ;;
+    fastfast)
+        TYPE='fastfast'
+        ;;
+    fast*)
+        TYPE='fast'
+        ;;
+    *)
+        TYPE='cold'
+    esac
+    echo "${TYPE}"
+}
+
 start() {
     debug "Starting ${SERVICE} service..."
 
@@ -72,18 +90,29 @@ start() {
 
         # Flush DB during non-warm start
         /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
+    fi
 
-        # platform specific tasks
-        if [ x$sonic_asic_platform == x'mellanox' ]; then
+    # platform specific tasks
+
+    # start mellanox drivers regardless of
+    # boot type
+    if [ x"$sonic_asic_platform" == x"mellanox" ]; then
+        BOOT_TYPE=`getBootType`
+        if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
             export FAST_BOOT=1
-            /usr/bin/mst start
-            /usr/bin/mlnx-fw-upgrade.sh
-            /etc/init.d/sxdkernel start
-            /sbin/modprobe i2c-dev
-        elif [ x$sonic_asic_platform == x'cavium' ]; then
+        fi
+        /usr/bin/mst start
+        /usr/bin/mlnx-fw-upgrade.sh
+        /etc/init.d/sxdkernel start
+        /sbin/modprobe i2c-dev
+    fi
+
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        if [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh start
         fi
     fi
+
 
     # start service docker
     /usr/bin/${SERVICE}.sh start
@@ -106,27 +135,34 @@ stop() {
         TYPE=cold
     fi
 
-    debug "${TYPE} shutdown syncd process ..."
-    /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --${TYPE}
+    if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
+        debug "${TYPE} shutdown syncd process ..."
+        /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --${TYPE}
 
-    # wait until syncd quits gracefully
-    while docker top syncd | grep -q /usr/bin/syncd; do
-        sleep 0.1
-    done
+        # wait until syncd quits gracefully
+        while docker top syncd | grep -q /usr/bin/syncd; do
+            sleep 0.1
+        done
 
-    /usr/bin/docker exec -i syncd /bin/sync
-    debug "Finished ${TYPE} shutdown syncd process ..."
+        /usr/bin/docker exec -i syncd /bin/sync
+        debug "Finished ${TYPE} shutdown syncd process ..."
+    fi
 
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
-    # if warm start enabled, don't stop peer service docker
+    # platform specific tasks
+
+    # stop mellanox driver regardless of
+    # shutdown type
+    if [ x$sonic_asic_platform == x'mellanox' ]; then
+        /etc/init.d/sxdkernel stop
+        /usr/bin/mst stop
+    fi
+
+
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        # platform specific tasks
-        if [ x$sonic_asic_platform == x'mellanox' ]; then
-            /etc/init.d/sxdkernel stop
-            /usr/bin/mst stop
-        elif [ x$sonic_asic_platform == x'cavium' ]; then
+        if [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh stop
             /etc/init.d/xpnet.sh start
         fi

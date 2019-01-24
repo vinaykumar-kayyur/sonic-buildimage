@@ -29,7 +29,7 @@
 set -x -e
 
 ## docker engine version (with platform)
-DOCKER_VERSION=1.11.1-0~stretch_amd64
+DOCKER_VERSION=5:18.09.0~3-0~debian-stretch
 LINUX_KERNEL_VERSION=4.9.0-8
 
 ## Working directory to prepare the file system
@@ -62,6 +62,11 @@ mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
+
+## make / as a mountpoint in chroot env, needed by dockerd
+pushd $FILESYSTEM_ROOT
+sudo mount --bind . .
+popd
 
 ## Build a basic Debian system by debootstrap
 echo '[INFO] Debootstrap...'
@@ -159,17 +164,26 @@ echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
 ## Otherwise Docker will fail to start
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
-docker_deb_url=https://apt.dockerproject.org/repo/pool/main/d/docker-engine/docker-engine_${DOCKER_VERSION}.deb
-docker_deb_temp=`mktemp`
-trap_push "rm -f $docker_deb_temp"
-wget $docker_deb_url -qO $docker_deb_temp
-sudo dpkg --root=$FILESYSTEM_ROOT -i $docker_deb_temp || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
+                                                       ca-certificates \
+                                                       curl \
+                                                       gnupg2 \
+                                                       software-properties-common
+sudo LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.gpg -fsSL https://download.docker.com/linux/debian/gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/docker.gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
+                                    "deb [arch=amd64] https://download.docker.com/linux/debian stretch stable"
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
 ## Add docker config drop-in to select aufs, otherwise it may select other storage driver
 sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
 ## Note: $_ means last argument of last command
 sudo cp files/docker/docker.service.conf $_
+## Fix systemd race between docker and containerd
+sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
 ## Create default user
 ## Note: user should be in the group with the same name, and also in sudo/docker group
@@ -188,7 +202,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
 ## Note: don't install python-apt by pip, older than Debian repo one
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     file                    \
-    ifupdown                \
+    ifupdown2               \
     iproute2                \
     bridge-utils            \
     isc-dhcp-client         \
@@ -220,6 +234,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     unzip                   \
     gdisk                   \
     sysfsutils              \
+    squashfs-tools          \
     grub2-common            \
     rsyslog                 \
     ethtool                 \
@@ -328,6 +343,8 @@ set /files/etc/sysctl.conf/net.ipv6.conf.eth0.keep_addr_on_down 1
 
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
 
+set /files/etc/sysctl.conf/net.ipv4.tcp_l3mdev_accept 1
+
 set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
@@ -336,6 +353,10 @@ set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT easy_install pip
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
 ## Note: keep pip installed for maintainance purpose
+
+## Get gcc and python dev pkgs
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gcc libpython2.7-dev
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'netifaces==0.10.7'
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
@@ -352,6 +373,7 @@ sudo cp files/dhcp/rfc3442-classless-routes $FILESYSTEM_ROOT/etc/dhcp/dhclient-e
 sudo cp files/dhcp/sethostname $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
+sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 
 ## Version file
@@ -379,11 +401,14 @@ if [ "${enable_organization_extensions}" = "y" ]; then
    fi
 fi
 
+## Remove gcc and python dev pkgs
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev
+
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 
 ## Clean up apt
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoremove
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y autoremove
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoclean
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get clean
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
