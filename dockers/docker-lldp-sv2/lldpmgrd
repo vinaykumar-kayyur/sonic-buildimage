@@ -148,7 +148,7 @@ class LldpManager(object):
         if port_desc:
             lldpcli_cmd += " description {}".format(port_desc)
         else:
-            log_info("Unable to retrieve description for port '{}'. Not adding port description")
+            log_info("Unable to retrieve description for port '{}'. Not adding port description".format(port_name))
 
         # Add the command to our dictionary of pending commands, overwriting any
         # previous pending command for this port
