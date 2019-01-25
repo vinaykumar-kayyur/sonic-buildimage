@@ -143,17 +143,6 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 {% endfor %}
 {% endblock vlan_advertisement %}
-{% block l3_interface_advertisement %}
-{% for (name, prefix) in INTERFACE %}
-{% if prefix | ipv4 %}
-  network {{ prefix }}
-{% elif prefix | ipv6 %}
-  address-family ipv6
-   network {{ prefix }}
-  exit-address-family
-{% endif %}
-{% endfor %}
-{% endblock l3_interface_advertisement %}
 {% block bgp_sessions %}
 {% if BGP_NEIGHBOR %}
 {% for neighbor_addr, bgp_session in BGP_NEIGHBOR.iteritems() %}

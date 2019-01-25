@@ -1,3 +1,70 @@
+{# bgp_neighbor_detail #}
+{% macro bgp_neighbor_detail(neighbor_addr, bgp_session) -%}
+{% if bgp_session.has_key('asn') and bgp_session['asn'] | int != 0 %}
+  neighbor {{ neighbor_addr }} remote-as {{ bgp_session['asn'] }}
+  neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
+{% if bgp_session.has_key('policy_in') %}
+{% set policy_in_arr = bgp_session['policy_in'].split('|') %}
+{% for policy_in in policy_in_arr %}
+  neighbor {{ neighbor_addr }} route-map {{ policy_in }} in
+{% endfor %}
+{% endif %}
+{% if bgp_session.has_key('policy_out') %}
+{% set policy_out_arr = bgp_session['policy_out'].split('|') %}
+{% for policy_out in policy_out_arr %}
+  neighbor {{ neighbor_addr }} route-map {{ policy_out }} out
+{% endfor %}
+{% endif %}
+{% if bgp_session.has_key('policy_import') %}
+{% set policy_import_arr = bgp_session['policy_import'].split('|') %}
+{% for policy_import in policy_import_arr %}
+  neighbor {{ neighbor_addr }} route-map {{ policy_import }} import
+{% endfor %}
+{% endif %}
+{% if bgp_session.has_key('policy_export') %}
+{% set policy_export_arr = bgp_session['policy_export'].split('|') %}
+{% for policy_export in policy_export_arr %}
+  neighbor {{ neighbor_addr }} route-map {{ policy_export }} export
+{% endfor %}
+{% endif %}
+{% if bgp_session.has_key('password') %}
+  neighbor {{ neighbor_addr }} password {{ bgp_session['password'] }}
+{% endif %}
+{% if bgp_session.has_key('ebgp_multihop') %}
+  neighbor {{ neighbor_addr }} ebgp-multihop {{ bgp_session['ebgp_multihop'] }}
+{% endif %}
+{% if bgp_session.has_key('prefix_in') %}
+{% set prefix_in_arr = bgp_session['prefix_in'].split('|') %}
+{% for prefix_in in prefix_in_arr %}
+  neighbor {{ neighbor_addr }} prefix-list {{ prefix_in }} in
+{% endfor %}
+{% endif %}
+{% if bgp_session.has_key('prefix_out') %}
+{% set prefix_out_arr = bgp_session['prefix_out'].split('|') %}
+{% for prefix_out in prefix_out_arr %}
+  neighbor {{ neighbor_addr }} prefix-list {{ prefix_out }} out
+{% endfor %}
+{% endif %}
+{% if bgp_session.has_key('admin_status') and bgp_session['admin_status'] == 'down' or not bgp_session.has_key('admin_status') and DEVICE_METADATA['localhost'].has_key('default_bgp_status') and DEVICE_METADATA['localhost']['default_bgp_status'] == 'down' %}
+  neighbor {{ neighbor_addr }} shutdown
+{% endif %}
+{% set default_maximum_paths = 32 %}
+{% if bgp_session.has_key('maximum_paths') %}
+{% set default_maximum_paths = bgp_session['maximum_paths'] %}
+{% endif %}
+{% if neighbor_addr | ipv4 %}
+  address-family ipv4
+    neighbor {{ neighbor_addr }} activate
+    maximum-paths {{ default_maximum_paths }}
+  exit-address-family
+{% elif neighbor_addr | ipv6 %}
+  address-family ipv6
+    neighbor {{ neighbor_addr }} activate
+    maximum-paths {{ default_maximum_paths }}
+  exit-address-family
+{% endif %}
+{% endif %}
+{%- endmacro %}
 !
 {% block banner %}
 ! =========== Managed by sonic-cfggen DO NOT edit manually! ====================
@@ -28,15 +95,6 @@ link-detect
 {% endfor %}
 {% endblock interfaces %}
 !
-{% block default_route %}
-! set static default route to mgmt gateway as a backup to learned default
-{% for (name, prefix) in MGMT_INTERFACE %}
-{% if prefix | ipv4 %}
-ip route 0.0.0.0/0 {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} 200
-{% endif %}
-{% endfor %}
-{% endblock default_route %}
-!
 {% block source_loopback %}
 {% set lo_ipv4_addrs = [] %}
 {% set lo_ipv6_addrs = [] %}
@@ -57,7 +115,7 @@ ip route 0.0.0.0/0 {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} 200
 route-map RM_SET_SRC permit 10
     set src {{ lo_ipv4_addrs[0] | ip }}
 !
-{% if lo_ipv6_addrs|length > 0 %} 
+{% if lo_ipv6_addrs|length > 0 %}
 route-map RM_SET_SRC6 permit 10
     set src {{ lo_ipv6_addrs[0] | ip }}
 !
@@ -70,7 +128,8 @@ ipv6 protocol bgp route-map RM_SET_SRC6
 {% endif %}
 {% endblock source_loopback %}
 !
-{% if DEVICE_METADATA['localhost'].has_key('bgp_asn') %}
+{# BGP local and session configures #}
+{% if DEVICE_METADATA['localhost'].has_key('bgp_asn') and DEVICE_METADATA['localhost']['bgp_asn'] | int %}
 {% block bgp_init %}
 !
 ! bgp multiple-instance
@@ -83,27 +142,44 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   bgp log-neighbor-changes
   bgp bestpath as-path multipath-relax
   no bgp default ipv4-unicast
-{# Advertise graceful restart capability for ToR #}
-{% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
-  bgp graceful-restart
+{% if BGP_METADATA and BGP_METADATA.has_key('localhost') %}
+{# distribute route #}
+{% if BGP_METADATA['localhost']['redistribute'] and BGP_METADATA['localhost']['redistribute'] != '' %}
+{% set redistribute_arr = BGP_METADATA['localhost']['redistribute'].split('|') %}
+{% for arr in redistribute_arr %}
+  redistribute {{ arr }}
+{% endfor %}
 {% endif %}
+{# Advertise graceful restart capability #}
+{% if BGP_METADATA['localhost'].has_key('graceful_restart_param') %}
+  bgp graceful-restart
+{% set gr_params = BGP_METADATA['localhost']['graceful_restart_param'].split('|') %}
+{% for gr_param in gr_params %}
+  bgp graceful-restart {{ gr_param }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{# Router ID #}
+{% if BGP_METADATA and BGP_METADATA.has_key('localhost') and BGP_METADATA['localhost'].has_key('router_id') %}
+  bgp router-id {{ BGP_METADATA['localhost']['router_id'] }}
+{% else %}
 {% for (name, prefix) in LOOPBACK_INTERFACE %}
 {% if prefix | ipv4 and name == 'Loopback0' %}
   bgp router-id {{ prefix | ip }}
 {% endif %}
 {% endfor %}
+{% endif %}
 {# advertise loopback #}
 {% for (name, prefix) in LOOPBACK_INTERFACE %}
 {% if prefix | ipv4 and name == 'Loopback0' %}
   network {{ prefix | ip }}/32
 {% elif prefix | ipv6 and name == 'Loopback0' %}
   address-family ipv6
-    network {{ prefix | ip }}/128
+    network {{ prefix | ip }}/64
   exit-address-family
 {% endif %}
 {% endfor %}
 {% endblock bgp_init %}
-{% endif %}
 {% block vlan_advertisement %}
 {% for (name, prefix) in VLAN_INTERFACE %}
 {% if prefix | ipv4 %}
@@ -116,55 +192,20 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endfor %}
 {% endblock vlan_advertisement %}
 {% block bgp_sessions %}
+{% if BGP_NEIGHBOR %}
 {% for neighbor_addr, bgp_session in BGP_NEIGHBOR.iteritems() %}
-{% if bgp_session['asn'] | int != 0 %}
-  neighbor {{ neighbor_addr }} remote-as {{ bgp_session['asn'] }}
-  neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
-{# set the bgp neighbor timers if they have not default values #}
-{% if     (bgp_session['keepalive'] is defined and bgp_session['keepalive'] | int != 60)
-      or  (bgp_session['holdtime'] is defined  and bgp_session['holdtime']  | int != 180) %}
-  neighbor {{ neighbor_addr }} timers {{ bgp_session['keepalive'] }} {{ bgp_session['holdtime'] }}
+{# add peer-group block: if neighbor_addr is not IPADDR, then it's peer_group #}
+{% if neighbor_addr | ipv4 or neighbor_addr | ipv6 %}
+{% if bgp_session.has_key('peer_group') %}
+  neighbor {{ neighbor_addr }} peer-group {{ bgp_session['peer_group'] }}
 {% endif %}
-{% if bgp_session.has_key('admin_status') and bgp_session['admin_status'] == 'down' or not bgp_session.has_key('admin_status') and DEVICE_METADATA['localhost'].has_key('default_bgp_status') and DEVICE_METADATA['localhost']['default_bgp_status'] == 'down' %}
-  neighbor {{ neighbor_addr }} shutdown
-{% endif %}
-{% if neighbor_addr | ipv4 %}
-  address-family ipv4
-{% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
-    neighbor {{ neighbor_addr }} allowas-in 1
-{% endif %}
-    neighbor {{ neighbor_addr }} activate
-    neighbor {{ neighbor_addr }} soft-reconfiguration inbound
-{% if bgp_session['rrclient'] | int != 0 %}
-    neighbor {{ neighbor_addr }} route-reflector-client
-{% endif %}
-{% if bgp_session['nhopself'] | int != 0 %}
-    neighbor {{ neighbor_addr }} next-hop-self
-{% endif %}
-    maximum-paths 64
-  exit-address-family
-{% endif %}
-{% if neighbor_addr | ipv6 %}
-  address-family ipv6
-{% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
-    neighbor {{ neighbor_addr }} allowas-in 1
-{% endif %}
-    neighbor {{ neighbor_addr }} activate
-    neighbor {{ neighbor_addr }} soft-reconfiguration inbound
-{% if bgp_session['rrclient'] | int != 0 %}
-    neighbor {{ neighbor_addr }} route-reflector-client
-{% endif %}
-{% if bgp_session['nhopself'] | int != 0 %}
-    neighbor {{ neighbor_addr }} next-hop-self
-{% endif %}
-{% if bgp_session['asn'] != DEVICE_METADATA['localhost']['bgp_asn'] %}
-    neighbor {{ neighbor_addr }} route-map set-next-hop-global-v6 in
-{% endif %}
-    maximum-paths 64
-  exit-address-family
-{% endif %}
+{{ bgp_neighbor_detail(neighbor_addr, bgp_session) }}
+{% else %}
+  neighbor {{ neighbor_addr }} peer-group
+{{ bgp_neighbor_detail(neighbor_addr, bgp_session) }}
 {% endif %}
 {% endfor %}
+{% endif %}
 {% endblock bgp_sessions %}
 {% block bgp_peers_with_range %}
 {% if BGP_PEER_RANGE %}
@@ -173,37 +214,104 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   neighbor {{ bgp_peer['name'] }} passive
   neighbor {{ bgp_peer['name'] }} remote-as {{ deployment_id_asn_map[DEVICE_METADATA['localhost']['deployment_id']] }}
   neighbor {{ bgp_peer['name'] }} ebgp-multihop 255
+  neighbor {{ bgp_peer['name'] }} soft-reconfiguration inbound
 {% for (name, prefix) in LOOPBACK_INTERFACE %}
 {% if name == 'Loopback1' %}
   neighbor {{ bgp_peer['name'] }} update-source {{ prefix | ip }}
 {% endif %}
 {% endfor %}
+  neighbor {{ bgp_peer['name'] }} route-map FROM_BGP_SPEAKER_V4 in
+  neighbor {{ bgp_peer['name'] }} route-map TO_BGP_SPEAKER_V4 out
 {% for ip_range in bgp_peer['ip_range'] %}
   bgp listen range {{ip_range}} peer-group {{ bgp_peer['name'] }}
 {% endfor %}
   address-family ipv4
     neighbor {{ bgp_peer['name'] }} activate
-    neighbor {{ bgp_peer['name'] }} soft-reconfiguration inbound
-    neighbor {{ bgp_peer['name'] }} route-map FROM_BGP_SPEAKER_V4 in
-    neighbor {{ bgp_peer['name'] }} route-map TO_BGP_SPEAKER_V4 out
     maximum-paths 64
   exit-address-family
   address-family ipv6
     neighbor {{ bgp_peer['name'] }} activate
-    neighbor {{ bgp_peer['name'] }} soft-reconfiguration inbound
     maximum-paths 64
   exit-address-family
 {% endfor %}
 {% endif %}
 {% endblock bgp_peers_with_range %}
+{% endif %}
 !
+{# BGP policies #}
 {% if DEVICE_METADATA['localhost'].has_key('bgp_asn') %}
-maximum-paths 64
+{% set default_maximum_paths = 32 %}
+{% if BGP_METADATA and BGP_METADATA.has_key('localhost') and BGP_METADATA['localhost'].has_key('maximum_paths') %}
+{% set default_maximum_paths = BGP_METADATA['localhost']['maximum_paths'] %}
+{% endif %}
+maximum-paths {{ default_maximum_paths }}
 !
 route-map ISOLATE permit 10
 set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+!
+{# access-list block #}
+{% if IP_ACCESS_LIST %}
+{% for (name, rules) in IP_ACCESS_LIST.iteritems() %}
+{% for rule in rules %}
+access-list {{ name }} {{ rule }}
+{% endfor %}
+{% endfor %}
 {% endif %}
 !
-route-map set-next-hop-global-v6 permit 10
-set ipv6 next-hop prefer-global
+{# ip prefix block #}
+{% if BGP_PREFIX_SET %}
+{% for name, name_data in BGP_PREFIX_SET.iteritems() %}
+{% if name_data.has_key('seq') %}
+{% set seq_str = 'seq ' + name_data['seq'] %}
+{% endif %}
+ip prefix-list {{ name[1] }} {{ seq_str }} {{ name[2] }} prefix {{ name[0] }} {{ name_data['compare'] }} {{ name_data['length'] }}
+{% endfor %}
+{% endif %}
 !
+{# ip community block #}
+{% if BGP_COMMUNITY_SET %}
+{% for name, name_data in BGP_COMMUNITY_SET.iteritems() %}
+ip community-list {{ name }} {{ name_data['action'] }} {{ name_data['line'] }}
+{% endfor %}
+{% endif %}
+!
+{# ip as_path block #}
+{% if BGP_AS_SET %}
+{% for name, name_data in BGP_AS_SET.iteritems() %}
+ip as-path access-list {{ name }} {{ name_data['action'] }} {{ name_data['line'] }}
+{% endfor %}
+{% endif %}
+!
+{# route-map block #}
+{% if BGP_POLICY_ROUTE_MAP %}
+{% for policy_name, policy_body in BGP_POLICY_ROUTE_MAP.iteritems() %}
+route-map {{ policy_name[0] }} {{ policy_name[1] }} {{ policy_name[2] }}
+{% for match_name, action_term in policy_body.iteritems() %}
+{% if match_name == "description" %}
+  description {{ action_term }}
+{% elif match_name == "match_as_path" %}
+  match as-path {{ action_term }}
+{% elif match_name == "set_as_path" %}
+{% if action_term | int %}
+  set as-path prepend last-as {{ action_term }}
+{% else %}
+  set as-path prepend {{ action_term }}
+{% endif %}
+{% elif match_name == "match_prefix_list" %}
+{% set action_term_arr = action_term.split('|') %}
+  match {{ action_term_arr[0] }} address prefix-list {{ action_term_arr[1] }}
+{% elif match_name == "set_metric" %}
+  set metric {{ action_term }}
+{% elif match_name == "set_community" %}
+  set community {{ action_term }}
+{% elif match_name == "set_local_preference" %}
+  set local-preference {{ action_term }}
+{% elif match_name == "set_ip_next_hop" %}
+  set ip next-hop {{ action_term }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{# end of route-map block #}
+!
+{% endif %}
