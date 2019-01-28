@@ -2,8 +2,6 @@
 
 ifdown --force eth0
 
-sysctl -w net.ipv6.conf.eth0.accept_ra=0
-
 sonic-cfggen -d -t /usr/share/sonic/templates/interfaces.j2 > /etc/network/interfaces
 
 # Add usb0 interface for bfn platforms
