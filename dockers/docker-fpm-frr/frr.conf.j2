@@ -131,12 +131,10 @@ ipv6 protocol bgp route-map RM_SET_SRC6
 {% block static_route %}
 ! set static route by user
 {% for sr in STATIC_ROUTE %}
-{% set dstip_val_raw_str = sr[0] %}
-{% set dstip_val = dstip_val_raw_str.split(':')[1]|default('') %}
-{% set nexthop_val_raw_str = sr[1] %}
-{% set nexthop_val = nexthop_val_raw_str.split(':')[1]|default('') %}
+{% set dstip_val = sr[0] %}
+{% set nexthop_val = sr[1] %}
 {% if dstip_val | ipv4 or dstip_val | ipv6 %}
-ip route {{ dstip_val }} {{ nexthop_val }} {{ STATIC_ROUTE[sr]['metric']|default('') }}
+ip route {{ dstip_val }} {{ nexthop_val }} {{ STATIC_ROUTE[sr]['ad']|default('') }}
 {% endif %}
 {% endfor %}
 {% endblock static_route %}

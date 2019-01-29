@@ -259,13 +259,7 @@ class BGPConfigDaemon:
         arr = dip_np_str.split('|')
         if len(arr) != 2:
             return None, None, None
-        dst_arr = arr[0].split(':')
-        if len(dst_arr) != 2:
-            return None, None, None
-        np_str = arr[1].split(':')
-        if len(np_str) != 2:
-            return None, None, None
-        return dst_arr[1], np_str[1], metric_str.get('metric', '')
+        return arr[1], arr[1], metric_str.get('metric', '')
 
     def static_route_handler(self, key, data, op_str):
         '''
