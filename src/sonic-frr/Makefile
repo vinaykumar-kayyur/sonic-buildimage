@@ -3,6 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
+DERIVED_TARGET = frr-pythontools_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
@@ -16,7 +17,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib
 	cd ..
 	mv frr_$(FRR_VERSION)-*_amd64.deb frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
-	mv $* $(DEST)/
+	mv frr-pythontools_$(FRR_VERSION)-*_all.deb frr-pythontools_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
+	mv $(DERIVED_TARGET) $* $(DEST)/
 
 	popd
 
+$(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
