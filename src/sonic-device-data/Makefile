@@ -15,8 +15,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	cp -r -L ../../../device/*/* ./device/
 
 	# Create hwsku for virtual switch
-	for d in `find ../../../device -maxdepth 3 -mindepth 3 -type d | grep -vE "(plugins|led-code)"`; do \
-		cp -r $$d device/x86_64-kvm_x86_64-r0/ ; \
+	for d in `find -L ../../../device -maxdepth 3 -mindepth 3 -type d | grep -vE "(plugins|led-code)"`; do \
+		cp -Lr $$d device/x86_64-kvm_x86_64-r0/ ; \
 		cp ./sai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai.profile; \
 		grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$2}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini
 	done;
