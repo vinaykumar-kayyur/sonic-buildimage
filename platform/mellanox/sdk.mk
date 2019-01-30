@@ -1,5 +1,5 @@
-MLNX_SDK_BASE_URL = https://github.com/Mellanox/SAI-Implementation/raw/8bdec819ad01450c08addd69e43ed36bf0941aad/sdk
-MLNX_SDK_VERSION = 4.2.9108
+MLNX_SDK_BASE_URL = https://github.com/Mellanox/SAI-Implementation/raw/e791ebf6e88933da35aa4bf11dda57655322bae5/sdk
+MLNX_SDK_VERSION = 4.3.0134
 MLNX_SDK_RDEBS += $(APPLIBS) $(IPROUTE2_MLNX) $(SX_ACL_RM) $(SX_COMPLIB) \
 		  $(SX_EXAMPLES) $(SX_GEN_UTILS) $(SX_SCEW) $(SX_SDN_HAL) \
 		  $(SXD_LIBS) $(TESTX)
@@ -56,4 +56,3 @@ $(eval $(foreach deb,$(PYTHON_SDK_API) $(SX_KERNEL) $(SX_KERNEL_DEV),$(call make
 
 SONIC_ONLINE_DEBS += $(MLNX_SDK_RDEBS) $(PYTHON_SDK_API) $(SX_KERNEL)
 
-export MLNX_SDK_VERSION
