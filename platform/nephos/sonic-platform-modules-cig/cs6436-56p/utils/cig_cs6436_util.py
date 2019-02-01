@@ -205,8 +205,8 @@ hwmon_nodes = {'led': ['brightness'] }
 hwmon_prefix ={'led': led_prefix}
 
 i2c_prefix = '/sys/bus/i2c/devices/'
-i2c_bus = {'thermal': ['3-0048','3-0049', '4-004a', '4-004b'] ,
-           'psu': ['4-005a','4-005b'], 
+i2c_bus = {'thermal': ['4-0048','4-0049', '5-004a', '5-004b'] ,
+           'psu': ['5-005a','5-005b'],
            'sfp': ['-0050']}
 i2c_nodes = {'thermal': ['hwmon/hwmon*/temp1_input'] ,
            'psu': ['psu_present ', 'psu_power_good']    ,
@@ -217,28 +217,30 @@ fan_types = {'fan': ['fan1','fan2', 'fan3', 'fan4', 'fan5']}
 fan_nodes = {'fan': ['state', 'front_speed_rpm', 'rear_speed_rpm', 'fault']}
 
 
-sfp_map =  [7,8,9,10,11,12,13,14,15,16,
+sfp_map =  [8,9,10,11,12,13,14,15,16,
             17,18,19,20,21,22,23,24,25,26,
             27,28,29,30,31,32,33,34,35,36,
             37,38,39,40,41,42,43,44,45,46,
             47,48,49,50,51,52,53,54,55,56,
-            57,58,59,60,61,62]
+            57,58,59,60,61,62,63]
 
 mknod =[
-    'echo pca9548 0x71 > /sys/bus/i2c/devices/i2c-1/new_device',
-    'echo pca9548 0x72 > /sys/bus/i2c/devices/i2c-1/new_device',
-    'echo pca9548 0x73 > /sys/bus/i2c/devices/i2c-1/new_device',
-    'echo pca9548 0x74 > /sys/bus/i2c/devices/i2c-1/new_device',
-    'echo pca9548 0x75 > /sys/bus/i2c/devices/i2c-2/new_device',
-    'echo pca9548 0x76 > /sys/bus/i2c/devices/i2c-2/new_device',
-    'echo pca9548 0x77 > /sys/bus/i2c/devices/i2c-2/new_device',
-    'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-3/new_device',
-    'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-3/new_device',
-    'echo lm75 0x4a > /sys/bus/i2c/devices/i2c-4/new_device',
-    'echo lm75 0x4b > /sys/bus/i2c/devices/i2c-4/new_device',
-    'echo cs6436_56p_psu1 0x5a > /sys/bus/i2c/devices/i2c-4/new_device',
-    'echo cs6436_56p_psu2 0x5b > /sys/bus/i2c/devices/i2c-4/new_device',
-    'echo 24c128 0x57 > /sys/bus/i2c/devices/i2c-6/new_device']
+    'echo pca9548 0x71 > /sys/bus/i2c/devices/i2c-2/new_device',
+    'echo pca9548 0x72 > /sys/bus/i2c/devices/i2c-2/new_device',
+    'echo pca9548 0x73 > /sys/bus/i2c/devices/i2c-2/new_device',
+    'echo pca9548 0x74 > /sys/bus/i2c/devices/i2c-2/new_device',
+    'echo pca9548 0x75 > /sys/bus/i2c/devices/i2c-3/new_device',
+    'echo pca9548 0x76 > /sys/bus/i2c/devices/i2c-3/new_device',
+    'echo pca9548 0x77 > /sys/bus/i2c/devices/i2c-3/new_device',
+    'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-4/new_device',
+    'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-4/new_device',
+    'echo lm75 0x4a > /sys/bus/i2c/devices/i2c-5/new_device',
+    'echo lm75 0x4b > /sys/bus/i2c/devices/i2c-5/new_device',
+    'echo cs6436_56p_psu1 0x5a > /sys/bus/i2c/devices/i2c-5/new_device',
+    'echo cs6436_56p_psu2 0x5b > /sys/bus/i2c/devices/i2c-5/new_device',
+    'echo cs6436_56p_psu1 0x52 > /sys/bus/i2c/devices/i2c-5/new_device',
+    'echo cs6436_56p_psu2 0x53 > /sys/bus/i2c/devices/i2c-5/new_device',
+    'echo 24c128 0x57 > /sys/bus/i2c/devices/i2c-7/new_device']
 
 
 def device_install():
@@ -528,7 +530,7 @@ def device_traversal():
             
 def device_exist():
     ret1, log = log_os_system("ls "+i2c_prefix+"*0077", 0)
-    ret2, log = log_os_system("ls "+i2c_prefix+"i2c-2", 0)
+    ret2, log = log_os_system("ls "+i2c_prefix+"i2c-3", 0)
     return not(ret1 or ret2)
 
 

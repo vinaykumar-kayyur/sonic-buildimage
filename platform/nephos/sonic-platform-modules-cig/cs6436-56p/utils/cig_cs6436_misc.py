@@ -24,18 +24,18 @@ import time
 from collections import namedtuple
 from threading import Thread
 
-DEBUG = False  
+DEBUG = False
 i2c_prefix = '/sys/bus/i2c/devices/'
 cs6436__prefix = '/sys/devices/platform/cs6436_56p_led/leds/'
 
 def my_log(txt):
     if DEBUG == True:
-        print "[ROY]"+txt    
-    return 
+        print "[ROY]"+txt
+    return
 
 def device_exist():
-    ret1, log = log_os_system("ls "+i2c_prefix+"4-005a", 0)
-    ret2, log = log_os_system("ls "+i2c_prefix+"4-005b", 0)
+    ret1, log = log_os_system("ls "+i2c_prefix+"5-005a", 0)
+    ret2, log = log_os_system("ls "+i2c_prefix+"5-005b", 0)
     ret3, log = log_os_system("ls "+cs6436__prefix+"cs6436_56p_led*", 0)
     return not(ret1 or ret2 or ret3)
     
@@ -67,9 +67,9 @@ def system_misc_polling(threadName,delay):
     status, output = log_os_system("hwconfig -cfp 1", 1)
 
     while 1:
-        status, output = log_os_system("cat /sys/bus/i2c/devices/4-005a/psu_present", 1)
+        status, output = log_os_system("cat /sys/bus/i2c/devices/5-005a/psu_present", 1)
         if status:
-          print "failed to check status for 4-005a/psu_present"
+          print "failed to check status for 5-005a/psu_present"
           continue
           
         if output=='1':
@@ -77,9 +77,9 @@ def system_misc_polling(threadName,delay):
         else:
            log_os_system("echo 0 > /sys/devices/platform/cs6436_56p_led/leds/cs6436_56p_led::psu1/brightness", 1)
            
-        status, output = log_os_system("cat /sys/bus/i2c/devices/4-005b/psu_present", 1)
+        status, output = log_os_system("cat /sys/bus/i2c/devices/5-005b/psu_present", 1)
         if status:
-          print "failed to check status for 4-005b/psu_present"
+          print "failed to check status for 5-005b/psu_present"
           continue     
           
         if output=='1':

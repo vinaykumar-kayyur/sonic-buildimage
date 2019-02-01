@@ -15,17 +15,17 @@ except ImportError as e:
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
-    SYSFS_PSU_DIR = ["/sys/bus/i2c/devices/4-005a",
-                     "/sys/bus/i2c/devices/4-005b"]
+    SYSFS_PSU_DIR = ["/sys/bus/i2c/devices/5-005a",
+                     "/sys/bus/i2c/devices/5-005b"]
 
     def __init__(self):
         PsuBase.__init__(self)
-    
-             
+
+
     # Get sysfs attribute
     def get_attr_value(self, attr_path):
-        
-        retval = 'ERR'        
+
+        retval = 'ERR'
         if (not os.path.isfile(attr_path)):
             return retval
 
@@ -55,11 +55,11 @@ class PsuUtil(PsuBase):
         faulty
         """
         status = 0
-        attr_file = 'psu_power_good'        
+        attr_file = 'psu_power_good'
         attr_path = self.SYSFS_PSU_DIR[index-1] +'/' + attr_file
-                  
+
         attr_value = self.get_attr_value(attr_path)
-        
+
         if (attr_value != 'ERR'):
             attr_value = int(attr_value, 16)
             # Check for PSU status
@@ -79,7 +79,7 @@ class PsuUtil(PsuBase):
         psu_absent = 0
         attr_file ='psu_present'
         attr_path = self.SYSFS_PSU_DIR[index-1] +'/' + attr_file
-        
+
         attr_value = self.get_attr_value(attr_path)
 
         if (attr_value != 'ERR'):
