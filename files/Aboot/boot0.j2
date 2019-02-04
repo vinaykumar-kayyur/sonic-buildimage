@@ -313,7 +313,10 @@ run_kexec() {
     local kernel="${KERNEL:-$(find $image_path/boot -name 'vmlinuz-*' -type f | head -n 1)}"
     local initrd="${INITRD:-$(find $image_path/boot -name 'initrd.img-*' -type f | head -n 1)}"
 
-    if ! $verbose; then
+    if $verbose; then
+       # show systemd showdown sequence when verbose is set
+       cmdline="$cmdline systemd.show_status=true"
+    else
        # Start showing systemd information from the first failing unit if any.
        # systemd.show_status=false or quiet can be used to silence systemd entierly
        cmdline="$cmdline systemd.show_status=auto"
