@@ -121,7 +121,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $python_debs_path/python-sonic-utilities_*.
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 
 # Install NTP version 4.2.6 this way until required fix is available for Jessie.
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/ntp_4.2.6*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/ntp_4.2.6*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
 # Install SONiC Device Data  (and its dependencies via 'apt-get -y install -f')

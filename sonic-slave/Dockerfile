@@ -237,12 +237,6 @@ RUN apt-get update && apt-get install -y \
         qemu-kvm \
         libvirt-bin
 
-# For ntp
-        autogen \
-        libopts25-dev \
-        pps-tools \
-        dh-apparmor
-
 # For jenkins slave
 RUN apt-get -y install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk
 

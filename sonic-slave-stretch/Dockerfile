@@ -213,6 +213,11 @@ RUN apt-get update && apt-get install -y \
         python3-colorama \
 # For initramfs
         bash-completion
+# For ntp
+        autogen \
+        libopts25-dev \
+        pps-tools \
+        dh-apparmor
 
 # For linux build
 RUN apt-get -y build-dep linux
