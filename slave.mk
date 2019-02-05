@@ -533,8 +533,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LINUX_KERNEL) \
                 $(SONIC_DEVICE_DATA) \
                 $(PYTHON_CLICK) \
-                $(SONIC_UTILS) \
-                $(BASH) \
                 $(NTP) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS)) \
