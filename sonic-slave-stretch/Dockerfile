@@ -212,7 +212,7 @@ RUN apt-get update && apt-get install -y \
         python3-pytest \
         python3-colorama \
 # For initramfs
-        bash-completion
+        bash-completion \
 # For ntp
         autogen \
         libopts25-dev \
