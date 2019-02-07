@@ -244,7 +244,10 @@ def main():
         print(template.render(data))
 
     if args.var_json != None:
-        print(json.dumps(FormatConverter.to_serialized(data[args.var_json]), indent=4, cls=minigraph_encoder))
+        try :
+            print(json.dumps(FormatConverter.to_serialized(data[args.var_json]), indent=4, cls=minigraph_encoder))
+        except KeyError:
+            return
 
     if args.write_to_db:
         configdb = ConfigDBConnector(**db_kwargs)
