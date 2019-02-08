@@ -30,7 +30,7 @@ set -x -e
 
 ## docker engine version (with platform)
 DOCKER_VERSION=5:18.09.0~3-0~debian-stretch
-LINUX_KERNEL_VERSION=4.9.0-8
+LINUX_KERNEL_VERSION=4.9.0-8-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -114,11 +114,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox
 echo '[INFO] Install SONiC linux kernel image'
 ## Note: duplicate apt-get command to ensure every line return zero
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools-core_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/linux-image-${LINUX_KERNEL_VERSION}-amd64_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-amd64_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
 
@@ -157,7 +157,7 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 pushd $FILESYSTEM_ROOT/usr/share/initramfs-tools/scripts/init-bottom && sudo patch -p1 < $OLDPWD/files/initramfs-tools/udev.patch; popd
 
 ## Install latest intel ixgbe driver
-sudo cp target/files/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
+sudo cp target/files/stretch/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -243,7 +243,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-scapy            \
     tcptraceroute           \
     mtr-tiny                \
-    locales
+    locales                 \
+    cgroup-tools
 
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
@@ -342,8 +343,10 @@ set /files/etc/sysctl.conf/net.ipv6.conf.all.keep_addr_on_down 1
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.keep_addr_on_down 1
 
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra 0
 
 set /files/etc/sysctl.conf/net.ipv4.tcp_l3mdev_accept 1
+set /files/etc/sysctl.conf/net.ipv4.udp_l3mdev_accept 1
 
 set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 set /files/etc/sysctl.conf/net.core.wmem_max 2097152

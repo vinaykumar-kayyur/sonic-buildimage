@@ -201,6 +201,16 @@ RUN apt-get update && apt-get install -y \
         cmake \
 # For pam_tacplus build
         autoconf-archive \
+# For python-click build
+        python-sphinx \
+        python-docutils \
+        python3-all \
+        python3-setuptools \
+        python3-sphinx \
+        python3-docutils \
+        python3-requests \
+        python3-pytest \
+        python3-colorama \
 # For initramfs
         bash-completion
 
@@ -219,11 +229,16 @@ RUN pip install \
         ctypesgen \
         crc16
 
+# For sonic config engine testing
+RUN pip install pyangbind==0.6.0
+# Note: force upgrade debian packaged jinja2, if installed
+RUN pip install --force-reinstall --upgrade jinja2>=2.10
+
 # For templating
 RUN pip install j2cli
 
-# For sonic config engine testing
-RUN pip install pyangbind==0.5.10
+# For sonic utilities testing
+RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
 
 # For supervisor build
 RUN pip install meld3 mock
@@ -255,4 +270,4 @@ RUN add-apt-repository \
            stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-stretch
-RUN echo "DOCKER_OPTS=\"--experimental\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
