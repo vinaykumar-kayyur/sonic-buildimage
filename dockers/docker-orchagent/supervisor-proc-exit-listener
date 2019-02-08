@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import os
+import signal
+import sys
+import syslog
+
+from supervisor import childutils
+
+# Process names as defined in supervisor.conf file
+critical_processes = ['orchagent']
+
+def main():
+    while True:
+        # Transition from ACKNOWLEDGED to READY
+        childutils.listener.ready()
+
+        line = sys.stdin.readline()
+        headers = childutils.get_headers(line)
+        payload = sys.stdin.read(int(headers['len']))
+
+        # Transition from READY to ACKNOWLEDGED
+        childutils.listener.ok()
+
+        # We only care about PROCESS_STATE_EXITED events
+        if headers['eventname'] == 'PROCESS_STATE_EXITED':
+            payload_headers, payload_data = childutils.eventdata(payload + '\n')
+
+            expected = int(payload_headers['expected'])
+            processname = payload_headers['processname']
+
+            # If a critical process exited unexpectedly, terminate supervisor
+            if expected == 0 and processname in critical_processes:
+                MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
+                msg = MSG_FORMAT_STR.format(payload_headers['processname'])
+                syslog.syslog(syslog.LOG_INFO, msg)
+                os.kill(os.getppid(), signal.SIGTERM)
+
+if __name__ == "__main__":
+    main()
