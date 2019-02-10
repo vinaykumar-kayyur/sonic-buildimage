@@ -304,7 +304,7 @@ write_boot_configs() {
         fi
     fi
 
-    mv /tmp/append $cmdline_image
+    cat /tmp/append > $cmdline_image
     [ -e ${target_path}/machine.conf ] || write_machine_config
 }
 
