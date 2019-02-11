@@ -1,0 +1,28 @@
+From ccdf6cdf14f03b219c877db4af6a856b1cbf0637 Mon Sep 17 00:00:00 2001
+From: Joe LeVeque <jolevequ@microsoft.com>
+Date: Mon, 11 Feb 2019 19:25:21 +0000
+Subject: [PATCH] Don't treat out-of-range MTU as an error
+
+---
+ interface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/interface.c b/interface.c
+index d17267e..87fe937 100644
+--- a/interface.c
++++ b/interface.c
+@@ -158,9 +158,9 @@ check_iface(struct Interface *iface)
+ 	   ((iface->AdvLinkMTU < MIN_AdvLinkMTU) ||
+ 	   (iface->if_maxmtu != -1 && (iface->AdvLinkMTU > iface->if_maxmtu))))
+ 	{
+-		flog(LOG_ERR,  "AdvLinkMTU for %s (%u) must be zero or between %u and %u",
++		flog(LOG_WARNING,  "AdvLinkMTU for %s (%u) must be zero or between %u and %u",
+ 		iface->Name, iface->AdvLinkMTU, MIN_AdvLinkMTU, iface->if_maxmtu);
+-		res = -1;
++		//res = -1;
+ 	}
+ 
+ 	if (iface->AdvReachableTime >  MAX_AdvReachableTime)
+-- 
+2.17.1
+
