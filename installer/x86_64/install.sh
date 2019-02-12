@@ -24,6 +24,10 @@ _trap_push true
 set -e
 cd $(dirname $0)
 
+uefi_esp_gpt_uuid="C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+grub_boot_gpt_uuid="21686148-6449-6E6F-744E-656564454649"
+onie_boot_gpt_uuid="7412F7D5-A156-4B13-81DC-867174929325"
+
 if [ -d "/etc/sonic" ]; then
     echo "Installing SONiC in SONiC"
     install_env="sonic"
@@ -161,6 +165,85 @@ if [ "$install_env" = "onie" ]; then
     fi
 fi
 
+
+# Deletes a GPT partition
+#
+# arg $1 - block device without the "/dev"
+# arg $2 - the partition number
+delete_gpt_partition()
+{
+    sgdisk -d $2 /dev/$1 > /dev/null 2>&1
+}
+
+# Erase a block device partition
+erase_part()
+{
+    local blk_dev="$1"
+    local part="$2"
+    printf "${log_pre}Deleting partition $part from /dev/$blk_dev\n"
+    eval delete_gpt_partition $blk_dev $part || {
+        echo "Unable to remove partition $part on /dev/$blk_dev\n"
+        return 1
+    }
+}
+
+# When deleting partitions this function determines whether or not to
+# keep the specified GPT partition.
+#
+# arg $1 - block device without the "/dev"
+# arg $2 - the partition number
+#
+# Returns 0 to delete the partition.
+should_delete_gpt_partition()
+{
+    # Check for precious GPT Partition GUIDs
+    local part_guid="$(sgdisk -i $2 /dev/$1 | grep 'Partition GUID code:')"
+    local part_guid=${part_guid##Partition GUID code: }
+    local part_guid=${part_guid%% *}
+    case "$part_guid" in
+        $uefi_esp_gpt_uuid|$grub_boot_gpt_uuid|$onie_boot_gpt_uuid)
+            echo "skipping GPT partition $part_guid"
+            return 1
+            ;;
+        *)
+            ;;
+    esac
+
+    # Check for precious GPT Partition names
+    local part_name="$(sgdisk -i $2 /dev/$1 | grep 'Partition name:')"
+    local part_name=${part_name#*"'"}
+    local part_name=${part_name%"'"*}
+    case "$part_name" in
+        *-DIAG)
+            # check system attributes
+            local attr=$(sgdisk -i $2 /dev/$1 | grep 'Attribute flags')
+            attr=${attr##*: }
+            if [ "$attr" = "0000000000000001" ] ; then
+                # system attribute is set, skip this part
+                echo "skipping DIAG part"
+                return 1
+            fi
+            ;;
+			  RECOVERY)
+                                    if [ "$ONIE_FEAT_INBAND" = "1" ] || [ "$ONIE_FEAT_RECOVERY" = "1" ] ; then
+                                         recovery_boot_partnum=$2
+  				         echo "skipping $part_name partition $2 on /dev/$1"
+					 return 1
+                                    else
+					 return 0
+                                    fi
+						;;
+			  ONIE-BOOT)
+				    echo "skipping $part_name partition $2 on /dev/$1"
+						return 1
+						;;
+        *)
+            ;;
+    esac
+
+    return 0
+}
+
 # Creates a new partition for the DEMO OS.
 # 
 # arg $1 -- base block device
@@ -205,6 +288,55 @@ create_demo_gpt_partition()
             }
         done < $tmpfifo
     fi
+
+    # Clean up block device that contains ONIE
+    local spec_blk_dev=$(echo $blk_dev | sed -e 's#/dev/##')
+
+    [ -b "/dev/$spec_blk_dev" ] || {
+        echo "Error: Unable to determine block device of ONIE install"
+        exit 1
+    }
+
+    if [ "$firmware" = "bios" ] ; then
+       # When a NOS partition is deleted, the grub entry in MBR will no longer
+       # be valid. As a safety net, restore grub on MBR to point to ONIE boot
+       # partition. This will help avoid brick situations when ONIE installation
+       # fails or stopped down the line before successful installation
+       echo "INFO: Restore grub settings to default before deleting partitions."
+       onie_boot_mnt="/mnt/onie-boot"
+       core_img="$onie_boot_mnt/grub/i386-pc/core.img"
+       [ -f "$core_img" ] && chattr -i $core_img
+            grub-install --boot-directory="$onie_boot_mnt" --recheck "$blk_dev" || {
+            echo "ERROR: grub-install failed on: $blk_dev"
+            exit 1
+       }
+
+       # Re-install ONIE-BOOT grub
+       # restore immutable flag on the core.img file
+       onie_dev=$(blkid | grep ONIE-BOOT | awk '{print $1}' | sed -e 's/:.*$//')
+       grub-install --force --boot-directory="$onie_boot_mnt" --recheck "$onie_dev" || {
+            echo "ERROR: grub-install failed on: $onie_dev"
+            exit 1
+       }
+       [ -f "$core_img" ] && chattr +i $core_img
+    else
+        # Similar to legacy bios above, when we delete the NOS partition, the boot order
+        # will no longer be valid so determine the existing ONIE boot number device
+        # and set it as first boot order item
+        echo "INFO: Restore UEFI boot order to default before deleting partitions."
+        local num="$(efibootmgr -v | grep "ONIE" | grep ')/File(' | tail -n 1 | awk '{ print $1 }')"
+        num=${num#Boot}
+        # Remove trailing '*'
+        num=${num%\*}
+        efibootmgr -o $num
+    fi
+
+    # Delete all partitions beyond ONIE-BOOT and DIAG partitions to make way for the NOS.
+    ls -d /sys/block/$spec_blk_dev/${spec_blk_dev}${dev_suffix}* | sed -e "s/^.*$spec_blk_dev$dev_suffix//" | while read part ; do
+        if eval should_delete_gpt_partition $spec_blk_dev $part ; then
+            erase_part $spec_blk_dev $part
+        fi
+    done
 
     # ASSUME: there are no more than 99999 partitions in a block device
     all_part=$(sgdisk -p $blk_dev | awk "{if (\$1 > 0 && \$1 <= 99999) print \$1}")
