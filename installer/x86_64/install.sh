@@ -224,19 +224,19 @@ should_delete_gpt_partition()
                 return 1
             fi
             ;;
-			  RECOVERY)
-                                    if [ "$ONIE_FEAT_INBAND" = "1" ] || [ "$ONIE_FEAT_RECOVERY" = "1" ] ; then
-                                         recovery_boot_partnum=$2
-  				         echo "skipping $part_name partition $2 on /dev/$1"
-					 return 1
-                                    else
-					 return 0
-                                    fi
-						;;
-			  ONIE-BOOT)
-				    echo "skipping $part_name partition $2 on /dev/$1"
-						return 1
-						;;
+        RECOVERY)
+            if [ "$ONIE_FEAT_INBAND" = "1" ] || [ "$ONIE_FEAT_RECOVERY" = "1" ] ; then
+                recovery_boot_partnum=$2
+                echo "skipping $part_name partition $2 on /dev/$1"
+                    return 1
+            else
+                   return 0
+            fi
+            ;;
+        ONIE-BOOT)
+            echo "skipping $part_name partition $2 on /dev/$1"
+            return 1
+            ;;
         *)
             ;;
     esac
@@ -298,27 +298,27 @@ create_demo_gpt_partition()
     }
 
     if [ "$firmware" = "bios" ] ; then
-       # When a NOS partition is deleted, the grub entry in MBR will no longer
-       # be valid. As a safety net, restore grub on MBR to point to ONIE boot
-       # partition. This will help avoid brick situations when ONIE installation
-       # fails or stopped down the line before successful installation
-       echo "INFO: Restore grub settings to default before deleting partitions."
-       onie_boot_mnt="/mnt/onie-boot"
-       core_img="$onie_boot_mnt/grub/i386-pc/core.img"
-       [ -f "$core_img" ] && chattr -i $core_img
+        # When a NOS partition is deleted, the grub entry in MBR will no longer
+        # be valid. As a safety net, restore grub on MBR to point to ONIE boot
+        # partition. This will help avoid brick situations when ONIE installation
+        # fails or stopped down the line before successful installation
+        echo "INFO: Restore grub settings to default before deleting partitions."
+        onie_boot_mnt="/mnt/onie-boot"
+        core_img="$onie_boot_mnt/grub/i386-pc/core.img"
+        [ -f "$core_img" ] && chattr -i $core_img
             grub-install --boot-directory="$onie_boot_mnt" --recheck "$blk_dev" || {
             echo "ERROR: grub-install failed on: $blk_dev"
             exit 1
-       }
+        }
 
-       # Re-install ONIE-BOOT grub
-       # restore immutable flag on the core.img file
-       onie_dev=$(blkid | grep ONIE-BOOT | awk '{print $1}' | sed -e 's/:.*$//')
-       grub-install --force --boot-directory="$onie_boot_mnt" --recheck "$onie_dev" || {
+        # Re-install ONIE-BOOT grub
+        # restore immutable flag on the core.img file
+        onie_dev=$(blkid | grep ONIE-BOOT | awk '{print $1}' | sed -e 's/:.*$//')
+        grub-install --force --boot-directory="$onie_boot_mnt" --recheck "$onie_dev" || {
             echo "ERROR: grub-install failed on: $onie_dev"
             exit 1
-       }
-       [ -f "$core_img" ] && chattr +i $core_img
+        }
+        [ -f "$core_img" ] && chattr +i $core_img
     else
         # Similar to legacy bios above, when we delete the NOS partition, the boot order
         # will no longer be valid so determine the existing ONIE boot number device
