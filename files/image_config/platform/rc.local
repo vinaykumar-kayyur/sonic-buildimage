@@ -352,8 +352,8 @@ if [ -f $FIRST_BOOT_FILE ]; then
     fi
 
     # If there is a platform dependant script, execute it
-    if [ -x /usr/share/sonic/device/${onie_platform}/platform_setup ]; then
-        /usr/share/sonic/device/${onie_platform}/platform_setup
+    if [ -x /usr/share/sonic/device/${platform}/platform_setup ]; then
+        /usr/share/sonic/device/${platform}/platform_setup
     fi
     firsttime_exit
 fi
