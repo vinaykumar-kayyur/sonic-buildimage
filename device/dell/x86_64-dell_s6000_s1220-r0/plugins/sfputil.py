@@ -20,6 +20,7 @@ class SfpUtil(SfpUtilBase):
     EEPROM_OFFSET = 20
 
     _port_to_eeprom_mapping = {}
+    port_dict = {}
 
     @property
     def port_start(self):
@@ -37,11 +38,29 @@ class SfpUtil(SfpUtilBase):
     def port_to_eeprom_mapping(self):
         return self._port_to_eeprom_mapping
 
+    @property
+    def transceiver_status(self):
+        return self.modprs_register
+
     def __init__(self):
+        port = self.port_start
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
         for x in range(0, self.port_end + 1):
             self._port_to_eeprom_mapping[x] = eeprom_path.format(x + self.EEPROM_OFFSET)
+
+        # Get Transceiver status
+        try:
+            reg_file = open("/sys/devices/platform/dell-s6000-cpld.0/qsfp_modprs")
+
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        content = reg_file.readline().rstrip()
+
+        # content is a string containing the hex representation of the register
+        self.modprs_register = int(content, 16)
 
         SfpUtilBase.__init__(self)
 
@@ -175,9 +194,42 @@ class SfpUtil(SfpUtilBase):
         return True
 
     def get_transceiver_change_event(self):
-        """
-        TODO: This function need to be implemented
-        when decide to support monitoring SFP(Xcvrd)
-        on this platform.
-        """
-        raise NotImplementedError
+
+        port_dict = {}
+        port = self.port_start
+
+        try:
+            reg_file = open("/sys/devices/platform/dell-s6000-cpld.0/qsfp_modprs")
+
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False, {}
+
+        content = reg_file.readline().rstrip()
+
+        # content is a string containing the hex representation of the register
+        reg_value = int(content, 16)
+
+        # Check OIR change events
+        if reg_value == self.modprs_register:
+            return True, {}
+        else:
+            changed_ports = self.modprs_register ^ reg_value
+            while port >= self.port_start and port <= self.port_end:
+
+                # Mask off the bit corresponding to our port
+                mask = (1 << port)
+
+                if changed_ports & mask:
+                    # ModPrsL is active low
+                    if reg_value & mask == 0:
+                        port_dict[port] = '1'
+                    else:
+                        port_dict[port] = '0'
+
+                port += 1
+
+            # Update reg value
+            self.modprs_register = reg_value
+
+            return True, port_dict
