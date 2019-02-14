@@ -4,8 +4,10 @@ import os
 
 database_config_file = "/etc/sonic/database_config.json"
 
-with open(database_config_file, "r") as read_file:
-    data = json.load(read_file)
+data = {}
+if os.path.isfile(database_config_file):
+    with open(database_config_file, "r") as read_file:
+        data = json.load(read_file)
 
 if 'DATABASE' in data:
     for inst in data["DATABASE"]:
