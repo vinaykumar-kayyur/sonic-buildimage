@@ -4,7 +4,6 @@
 [submodule "sonic-linux-kernel"]
 	path = src/sonic-linux-kernel
 	url = https://github.com/Azure/sonic-linux-kernel
-	branch = stretch
 [submodule "sonic-sairedis"]
 	path = src/sonic-sairedis
 	url = https://github.com/Azure/sonic-sairedis
@@ -47,19 +46,19 @@
 	url = https://github.com/Azure/sonic-platform-daemons
 [submodule "src/sonic-frr/frr"]
 	path = src/sonic-frr/frr
-	url = https://github.com/FRRouting/frr.git
+	url = https://github.com/Azure/sonic-frr.git
 [submodule "platform/p4/p4-hlir/p4-hlir-v1.1"]
 	path = platform/p4/p4-hlir/p4-hlir-v1.1
 	url = https://github.com/p4lang/p4-hlir.git
 [submodule "platform/p4/SAI-P4-BM"]
 	path = platform/p4/SAI-P4-BM
 	url = https://github.com/Mellanox/SAI-P4-BM.git
-[submodule "platform/nephos/sonic-platform-modules-ingrasys"]
-	path = platform/nephos/sonic-platform-modules-ingrasys
-	url = https://github.com/Ingrasys-sonic/sonic-platform-modules-ingrasys-nephos.git
 [submodule "platform/barefoot/sonic-platform-modules-arista"]
 	path = platform/barefoot/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
 [submodule "platform/mellanox/hw-management/hw-mgmt"]
 	path = platform/mellanox/hw-management/hw-mgmt
 	url = https://github.com/Mellanox/hw-mgmt/
+[submodule "src/redis-dump-load"]
+	path = src/redis-dump-load
+	url = https://github.com/p/redis-dump-load.git

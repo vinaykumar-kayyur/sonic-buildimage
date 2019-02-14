@@ -35,6 +35,9 @@ RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3.6
 RUN python3.6 -m pip install --no-cache-dir hiredis
 
+# Install pyyaml dependency for use by some plugins
+RUN python3.6 -m pip install --no-cache-dir pyyaml
+
 {% if docker_snmp_sv2_whls.strip() -%}
 # Copy locally-built Python wheel dependencies
 {%- for whl in docker_snmp_sv2_whls.split(' ') %}
@@ -58,8 +61,6 @@ RUN rm -rf /debs /python-wheels ~/.cache
 COPY ["start.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["*.j2", "/usr/share/sonic/templates/"]
-COPY ["snmpd-config-updater", "/usr/bin/snmpd-config-updater"]
-RUN chmod +x /usr/bin/snmpd-config-updater
 
 # Although exposing ports is not needed for host net mode, keep it for possible bridge mode
 EXPOSE 161/udp 162/udp

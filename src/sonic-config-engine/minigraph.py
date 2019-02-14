@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import calendar
+import math
 import os
 import sys
 import socket
@@ -24,7 +25,6 @@ ns = "Microsoft.Search.Autopilot.Evolution"
 ns1 = "http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"
 ns2 = "Microsoft.Search.Autopilot.NetMux"
 ns3 = "http://www.w3.org/2001/XMLSchema-instance"
-KEY_SEPARATOR = '|'
 
 class minigraph_encoder(json.JSONEncoder):
     def default(self, obj):
@@ -176,6 +176,7 @@ def parse_dpg(dpg, hname):
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
         pcs = {}
+        pc_members = {}
         intfs_inpc = [] # List to hold all the LAG member interfaces 
         for pcintf in pcintfs.findall(str(QName(ns, "PortChannel"))):
             pcintfname = pcintf.find(str(QName(ns, "Name"))).text
@@ -185,10 +186,11 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(pcmbr_list):
                 pcmbr_list[i] = port_alias_map.get(member, member)
                 intfs_inpc.append(pcmbr_list[i])
+                pc_members[(pcintfname, pcmbr_list[i])] = {'NULL': 'NULL'}
             if pcintf.find(str(QName(ns, "Fallback"))) != None:
-                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text}
+                pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
-                pcs[pcintfname] = {'members': pcmbr_list}
+                pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75)))}
 
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlan_intfs = []
@@ -201,15 +203,16 @@ def parse_dpg(dpg, hname):
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
-                sonic_vlan_member_name = "Vlan%s%s%s" % (vlanid, KEY_SEPARATOR, vmbr_list[i])
-                vlan_members[sonic_vlan_member_name] = {'tagging_mode': 'untagged'}
+                sonic_vlan_member_name = "Vlan%s" % (vlanid)
+                vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid}
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
-            if vintf.find(str(QName(ns, "DhcpRelays"))) is not None:
-                vintfdhcpservers = vintf.find(str(QName(ns, "DhcpRelays"))).text
+            vintf_node = vintf.find(str(QName(ns, "DhcpRelays")))
+            if vintf_node is not None and vintf_node.text is not None:
+                vintfdhcpservers = vintf_node.text
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
 
@@ -280,7 +283,7 @@ def parse_dpg(dpg, hname):
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
-        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls
+        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls
     return None, None, None, None, None, None, None
 
 
@@ -418,6 +421,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
+    docker_routing_config_mode = "unified"
     port_speeds_default = {}
     port_speed_png = {}
     port_descriptions = {}
@@ -433,17 +437,20 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
+    docker_routing_config_mode_qn = QName(ns, "DockerRoutingConfigMode")
     for child in root:
         if child.tag == str(hwsku_qn):
             hwsku = child.text
         if child.tag == str(hostname_qn):
             hostname = child.text
+        if child.tag == str(docker_routing_config_mode_qn):
+            docker_routing_config_mode = child.text
 
     (ports, alias_map) = get_port_config(hwsku, platform, port_config_file)
     port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -460,6 +467,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
+        'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': hostname,
         'hwsku': hwsku,
         'type': current_device['type']
@@ -469,7 +477,20 @@ def parse_xml(filename, platform=None, port_config_file=None):
     if mgmt_routes:
         # TODO: differentiate v4 and v6
         mgmt_intf.itervalues().next()['forced_mgmt_routes'] = mgmt_routes
-    results['MGMT_INTERFACE'] = mgmt_intf
+    results['MGMT_PORT'] = {}
+    results['MGMT_INTERFACE'] = {}
+    mgmt_intf_count = 0
+    mgmt_alias_reverse_mapping = {}
+    for key in mgmt_intf:
+        alias = key[0]
+        if mgmt_alias_reverse_mapping.has_key(alias):
+            name = mgmt_alias_reverse_mapping[alias]
+        else:
+            name = 'eth' + str(mgmt_intf_count)
+            mgmt_intf_count += 1
+            mgmt_alias_reverse_mapping[alias] = name
+        results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up'}
+        results['MGMT_INTERFACE'][(name, key[1])] = mgmt_intf[key]
     results['LOOPBACK_INTERFACE'] = lo_intfs
 
     phyport_intfs = {}
@@ -509,12 +530,22 @@ def parse_xml(filename, platform=None, port_config_file=None):
         if port.get('speed') == '100000':
             port['fec'] = 'rs'
 
+    # set port description if parsed from deviceinfo
     for port_name in port_descriptions:
         # ignore port not in port_config.ini
         if not ports.has_key(port_name):
             continue
 
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
+
+    for port_name, port in ports.items():
+        if not port.get('description'):
+            if neighbors.has_key(port_name):
+                # for the ports w/o description set it to neighbor name:port
+                port['description'] = "%s:%s" % (neighbors[port_name]['name'], neighbors[port_name]['port'])
+            else:
+                # for the ports w/o neighbor info, set it to port alias
+                port['description'] = port.get('alias', port_name)
 
     # set default port MTU as 9100
     for port in ports.itervalues():
@@ -524,6 +555,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
     for port in phyport_intfs:
         if port[0] in ports:
             ports.get(port[0])['admin_status'] = 'up'
+
+    for member in pc_members.keys() + vlan_members.keys():
+        port = ports.get(member[1])
+        if port:
+            port['admin_status'] = 'up'
 
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
@@ -543,7 +579,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
-
+    results['PORTCHANNEL_MEMBER'] = pc_members
 
     for pc_intf in pc_intfs.keys():
         # remove portchannels not in PORTCHANNEL dictionary

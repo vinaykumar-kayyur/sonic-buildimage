@@ -1,7 +1,7 @@
 FROM docker-config-engine
 
 ARG docker_container_name
-RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name\/%syslogtag%/;" /etc/rsyslog.conf
+RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,10 +14,21 @@ debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
+COPY \
+{% for deb in docker_syncd_mlnx_pydebs.split(' ') -%}
+python-debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+
 RUN apt-get install -y libxml2
 
 RUN dpkg -i \
 {% for deb in docker_syncd_mlnx_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+
+RUN dpkg -i \
+{% for deb in docker_syncd_mlnx_pydebs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 

@@ -1,7 +1,7 @@
-FROM docker-config-engine
+FROM docker-config-engine-stretch
 
 ARG docker_container_name
-RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#syslogtag%/;" /etc/rsyslog.conf
+RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -36,6 +36,5 @@ RUN sed -ri 's/^(save .*$)/# \1/g;                       \
             ' /etc/redis/redis.conf
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
-COPY ["files/configdb-load.sh", "/usr/bin/"]
 
 ENTRYPOINT ["/usr/bin/supervisord"]
