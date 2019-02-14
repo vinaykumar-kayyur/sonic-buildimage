@@ -274,6 +274,10 @@ platform_specific() {
         flash_size=28000
         echo "hugepages=128" >> /tmp/append
     fi
+    if [ "$sid" = "Lodoga" ]; then
+        aboot_machine=arista_7050cx3_32s
+        flash_size=3700
+    fi
     if [ "$sid" = "BlackhawkO" ]; then
         aboot_machine=arista_7060px4_32
         flash_size=28000
