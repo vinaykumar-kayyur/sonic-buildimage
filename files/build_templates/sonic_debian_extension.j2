@@ -183,6 +183,11 @@ sudo cp $IMAGE_CONFIGS/hostname/hostname-config.service  $FILESYSTEM_ROOT/etc/sy
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable hostname-config.service
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
+# Copy timezone configuration scripts
+sudo cp $IMAGE_CONFIGS/timezone/timezone-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable timezone-config.service
+sudo cp $IMAGE_CONFIGS/timezone/timezone-config.sh $FILESYSTEM_ROOT/usr/bin/
+
 # Copy updategraph script and service file
 j2 files/build_templates/updategraph.service.j2 | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/updategraph.service
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable updategraph.service
