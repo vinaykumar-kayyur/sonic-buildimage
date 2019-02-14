@@ -8,7 +8,15 @@ import syslog
 from supervisor import childutils
 
 # Process names as defined in supervisor.conf file
-critical_processes = ['orchagent']
+critical_processes = [
+    'orchagent',
+    'portsyncd',
+    'intfsyncd',
+    'neighsyncd',
+    'vlanmgrd',
+    'intfmgrd',
+    'buffermgrd'
+]
 
 def main():
     while True:
