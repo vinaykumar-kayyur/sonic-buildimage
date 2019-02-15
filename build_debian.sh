@@ -374,7 +374,6 @@ EOF
 
 # Disable acpi power saving mode used by some CPUs
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "HandleLidSwitch=ignore" >> /etc/systemd/logind.conf'
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "IdleAction=ignore" >> /etc/systemd/logind.conf'
 
 sudo cp files/dhcp/rfc3442-classless-routes $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d
 sudo cp files/dhcp/sethostname $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
