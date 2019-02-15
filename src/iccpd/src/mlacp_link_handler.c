@@ -391,16 +391,9 @@ void update_peerlink_isolate_from_all_csm_lif (
     sub_msg = (mclag_sub_option_hdr_t *)&msg_buf[msg_hdr->len];
     sub_msg->op_type = MCLAG_SUB_OPTION_TYPE_ISOLATE_SRC;
 
-    if(csm->peer_link_if->type == IF_T_PORT)
-    {
-    	src_len= strlen(csm->peer_link_if->name); 	
-    	memcpy(sub_msg->data, csm->peer_link_if->name, src_len);
-    }
-    else
-    {
-    	src_len= strlen(csm->peer_link_if->portchannel_member_buf); 	
-    	memcpy(sub_msg->data, csm->peer_link_if->portchannel_member_buf, src_len);
-    }
+    src_len= strlen(csm->peer_link_if->name); 	
+    memcpy(sub_msg->data, csm->peer_link_if->name, src_len);
+
     sub_msg->op_len = src_len;
 
     /*sub msg dst */
