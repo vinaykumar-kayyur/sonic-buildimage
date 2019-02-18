@@ -40,7 +40,7 @@ def
     {%- set cable_len = [] %}
     {%- for local_port in DEVICE_NEIGHBOR %}
         {%- if local_port == port_name %}
-            {%- if DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
+            {%- if DEVICE_NEIGHBOR_METADATA is defined and DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
                 {%- set neighbor = DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
                 {%- set neighbor_role = neighbor.type %}
                 {%- set roles1 = switch_role + '_' + neighbor_role %}
@@ -107,7 +107,7 @@ def
 {
     "CABLE_LENGTH": {
         "AZURE": {
-    {% for port in PORT %}
+    {% for port in PORT_ALL %}
         {%- set cable = cable_length(port) %}
         "{{ port }}": "{{ cable }}"{%- if not loop.last %},{% endif %}
 
@@ -127,10 +127,10 @@ def
 {{ defs.generate_pg_profils(port_names_active) }}
 {% else %}
     "BUFFER_PG": {
-        "{{ port_names_active }}|0-1": {
+        "{{ port_names_active }}|0-2": {
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
         },
-        "{{ port_names_active }}|5": {
+        "{{ port_names_active }}|5-6": {
             "profile" : "[BUFFER_PROFILE|ingress_lossy_profile]"
         }
     },
@@ -143,10 +143,10 @@ def
         "{{ port_names_active }}|3-4": {
             "profile" : "[BUFFER_PROFILE|egress_lossless_profile]"
         },
-        "{{ port_names_active }}|0-1": {
+        "{{ port_names_active }}|0-2": {
             "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         },
-        "{{ port_names_active }}|5": {
+        "{{ port_names_active }}|5-6": {
             "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         }
     }
