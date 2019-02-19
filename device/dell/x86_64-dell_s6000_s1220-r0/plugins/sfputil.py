@@ -39,8 +39,7 @@ class SfpUtil(SfpUtilBase):
         return self._port_to_eeprom_mapping
 
     @property
-    def transceiver_status(self):
-        return self.modprs_register
+    def get_transceiver_status(self):
 
     def __init__(self):
         port = self.port_start
@@ -59,8 +58,21 @@ class SfpUtil(SfpUtilBase):
 
         content = reg_file.readline().rstrip()
 
-        # content is a string containing the hex representation of the register
-        self.modprs_register = int(content, 16)
+        reg_file.close()
+
+        return int(content, 16)
+
+
+    def __init__(self):
+
+        port = self.port_start
+        eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
+
+        for x in range(0, self.port_end + 1):
+            self._port_to_eeprom_mapping[x] = eeprom_path.format(x + self.EEPROM_OFFSET)
+
+        # Get Transceiver status 
+        self.modprs_register = self.get_transceiver_status
 
         SfpUtilBase.__init__(self)
 
@@ -198,20 +210,16 @@ class SfpUtil(SfpUtilBase):
         port_dict = {}
         port = self.port_start
 
-        try:
-            reg_file = open("/sys/devices/platform/dell-s6000-cpld.0/qsfp_modprs")
-
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
-            return False, {}
-
-        content = reg_file.readline().rstrip()
-
-        # content is a string containing the hex representation of the register
-        reg_value = int(content, 16)
+        # Sleep for a minute
+        if self.modprs_register == self.get_transceiver_status:
+            time.sleep(1)
+            if self.modprs_register == self.get_transceiver_status:
+                state_change = 0
+            else:
+                state_change = 1
 
         # Check OIR change events
-        if reg_value == self.modprs_register:
+        if not state_change:
             return True, {}
         else:
             changed_ports = self.modprs_register ^ reg_value
