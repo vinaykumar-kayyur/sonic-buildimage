@@ -73,6 +73,22 @@ list :
 ## Include other rules
 ###############################################################################
 
+ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
+ENABLE_PFCWD_ON_START = y
+endif
+
+ifeq ($(SONIC_ENABLE_SYSTEM_TELEMETRY),y)
+ENABLE_SYSTEM_TELEMETRY = y
+endif
+
+ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
+ENABLE_SYNCD_RPC = y
+endif
+
+ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
+INSTALL_DEBUG_TOOLS = y
+endif
+
 include $(RULES_PATH)/config
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
@@ -529,7 +545,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export debs_path="$(STRETCH_DEBS_PATH)"
-	export python_debs_path="$(PYTHON_DEBS_PATH)"
+	export python_debs_path="$(PYTHON_DEBS_PATH)" 
 	export initramfs_tools="$(STRETCH_DEBS_PATH)/$(INITRAMFS_TOOLS)"
 	export linux_kernel="$(STRTCH_DEBS_PATH)/$(LINUX_KERNEL)"
 	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
