@@ -41,14 +41,6 @@ class SfpUtil(SfpUtilBase):
     @property
     def get_transceiver_status(self):
 
-    def __init__(self):
-        port = self.port_start
-        eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
-
-        for x in range(0, self.port_end + 1):
-            self._port_to_eeprom_mapping[x] = eeprom_path.format(x + self.EEPROM_OFFSET)
-
-        # Get Transceiver status
         try:
             reg_file = open("/sys/devices/platform/dell-s6000-cpld.0/qsfp_modprs")
 
@@ -65,7 +57,6 @@ class SfpUtil(SfpUtilBase):
 
     def __init__(self):
 
-        port = self.port_start
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
         for x in range(0, self.port_end + 1):
