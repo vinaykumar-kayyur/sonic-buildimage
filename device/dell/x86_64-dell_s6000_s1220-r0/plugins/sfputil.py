@@ -201,7 +201,7 @@ class SfpUtil(SfpUtilBase):
         port_dict = {}
         port = self.port_start
 
-        # Sleep for a minute
+        # Sleep for a second
         if self.modprs_register == self.get_transceiver_status:
             time.sleep(1)
             if self.modprs_register == self.get_transceiver_status:
