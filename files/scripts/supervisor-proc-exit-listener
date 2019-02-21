@@ -7,18 +7,15 @@ import syslog
 
 from supervisor import childutils
 
-# Process names as defined in supervisor.conf file
-critical_processes = [
-    'orchagent',
-    'portsyncd',
-    'intfsyncd',
-    'neighsyncd',
-    'vlanmgrd',
-    'intfmgrd',
-    'buffermgrd'
-]
+# Contents of file should be the names of critical processes (as defined in
+# supervisor.conf file), one per line
+CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 
 def main():
+    # Read the list of critical processes from a file
+    with open(CRITICAL_PROCESSES_FILE, 'r') as f:
+        critical_processes = [line.rstrip('\n') for line in f]
+
     while True:
         # Transition from ACKNOWLEDGED to READY
         childutils.listener.ready()
