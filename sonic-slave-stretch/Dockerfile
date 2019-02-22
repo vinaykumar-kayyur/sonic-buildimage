@@ -168,7 +168,6 @@ RUN apt-get update && apt-get install -y \
         python-parse \
 # For snmpd
         default-libmysqlclient-dev \
-        libssl1.0-dev \
         libperl-dev \
         libpci-dev \
         libpci3 \
@@ -254,6 +253,9 @@ EXPOSE 22
 # Install depot-tools (for git-retry)
 RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
 ENV PATH /usr/share/depot_tools:$PATH
+
+# For thrift build
+RUN apt-get install -y libssl1.0-dev
 
 # Install docker engine 17.03.2~ce-0 inside docker and enable experimental feature
 RUN apt-get update
