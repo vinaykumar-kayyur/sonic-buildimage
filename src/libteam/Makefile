@@ -21,6 +21,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git apply ../0004-libteam-Add-lacp-fallback-support-for-single-member-.patch
 	git apply ../0005-libteam-Add-warm_reboot-mode.patch
 	git apply ../0006-Fix-ifinfo_link_with_port-race-condition-with-newlink.patch
+	git apply ../0007-Skip-setting-the-same-hwaddr-to-lag-port-to-avoid-di.patch
 	popd
 
 	# Obtain debian packaging
