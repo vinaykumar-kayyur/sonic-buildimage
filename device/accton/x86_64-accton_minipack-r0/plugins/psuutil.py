@@ -21,41 +21,37 @@ class PsuUtil(PsuBase):
     def __init__(self):
         PsuBase.__init__(self)
 
-        self.psu_path = "/sys/bus/i2c/devices/"
-        self.psu_presence = "/psu_present"
-        self.psu_oper_status = "/psu_power_good"
-        self.psu_mapping = {
-            1: "35-0038",
-            2: "36-003b",
-        }
+        self.num = 4
+        self.psu_path = "/sys/bus/platform/devices/minipack_psensor/"
+        self.psu_voltage = "/in{0}_input"
 
     def get_num_psus(self):
-        return len(self.psu_mapping)
+        return self.num
 
     def get_psu_status(self, index):
         if index is None:
             return False
 
         status = 0
-        node = self.psu_path + self.psu_mapping[index]+self.psu_oper_status
+        node = self.psu_path + self.psu_voltage.format(index*2-1)
         try:
             with open(node, 'r') as power_status:
                 status = int(power_status.read())
         except IOError:
             return False
 
-        return status == 1
+        return status > 0
 
     def get_psu_presence(self, index):
         if index is None:
             return False
 
         status = 0
-        node = self.psu_path + self.psu_mapping[index] + self.psu_presence
+        node = self.psu_path + self.psu_voltage.format(index*2)
         try:
             with open(node, 'r') as presence_status:
                 status = int(presence_status.read())
         except IOError:
             return False
 
-        return status == 1
+        return status > 0
