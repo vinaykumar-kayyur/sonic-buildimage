@@ -40,19 +40,21 @@
 #include <asm/uaccess.h>
 
 
-/*#define DEBUG*/
+#define DEBUG_BUF_LEN       256
+#define DEBUG_INTR(args...) \
+    debug_print(__func__, __LINE__, 1, args)
 
-#ifdef DEBUG
-#define DEBUG_INTR(fmt, ...)	pr_err(fmt, ##__VA_ARGS__)
-#else
-#define DEBUG_INTR(fmt...)	    do { } while (0)
-#endif
-#define DEBUG_LEX(fmt, ...)	    do { } while (0)
+static unsigned int verbose = 0;
+module_param(verbose, uint, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(verbose, "Print more information for debugging. Default is disabled.");
+
+static unsigned int poll_interval = 9;
+module_param(poll_interval, uint, S_IRUGO|S_IWUSR);
+MODULE_PARM_DESC(poll_interval, "Time interval for data polling, in unit of second.");
 
 
 #define DRVNAME "minipack_psensor"     /*Platform Sensor*/
 
-#define SENSOR_DATA_UPDATE_INTERVAL (9*HZ)
 #define MAX_THERMAL_COUNT           8
 #define MAX_FAN_COUNT               (8)
 #define MAX_PSU_COUNT               (4)
@@ -308,6 +310,21 @@ static struct minipack_data *mp_data = NULL;
 
 /*-----------------------------------------------------------------------*/
 
+static void debug_print(const char *func, int line, int level, 
+                        const char *fmt, ...)
+{
+    va_list args;
+    char buf[DEBUG_BUF_LEN];
+    if (verbose >= level) {
+        va_start(args, fmt);
+        vsnprintf(buf, sizeof(buf), fmt, args);
+        va_end(args);
+        pr_info("[DBG]%s#%d: %s\n", func, line, buf);
+    }
+}
+
+
+
 static int _tty_wait(u32 mdelay) {
     if (mdelay) {
         msleep(mdelay);
@@ -382,7 +399,7 @@ static int _tty_tx(struct file *tty_fd, const char *str)
 
     rc = tty_fd->f_op->write(tty_fd, str, strlen(str)+1,0);
     if (rc < 0) {
-        pr_err( "failed to write(%d)\n", rc);
+        pr_info( "failed to write(%d)\n", rc);
         return -EBUSY;
     }
     DEBUG_INTR("[TX]%s-%d, %d BYTES, write:\n\"%s\"\n", __func__, __LINE__,rc, str);
@@ -454,7 +471,7 @@ static int _tty_writeNread(struct file *tty_fd,
         return -EINVAL;
 
     if(!(tty_fd->f_op) || !(tty_fd->f_op->read) ||!(tty_fd->f_op->write)) {
-        pr_err("file %s cann't readable or writable?\n", TTY_DEVICE);
+        pr_info("file %s cann't readable or writable?\n", TTY_DEVICE);
         return -EINVAL;
     }
 
@@ -682,19 +699,16 @@ static int extract_numbers(char *buf, int *out, int out_cnt)
     int  cnt, x;
 
     ptr = buf;
-    DEBUG_LEX("%s-%d, out_cnt (%d)\n", __func__, __LINE__,  out_cnt);
     /*replace non-digits into '|', for sscanf(%s)'s ease to handle it.*/
     for (x = 0; x < strlen(ptr); x++) {
         if( (ptr[x]<'0' || ptr[x] >'9') && ptr[x] != '-')
             ptr[x] = TTY_RESP_SEPARATOR;
     }
 
-    DEBUG_LEX("%s-%d, (%lu) resp:%s\n", __func__, __LINE__, strlen(ptr), ptr);
     cnt = 0;
     while (strchr(ptr, TTY_RESP_SEPARATOR))
     {
         if (sscanf(ptr,"%d%s",out,ptr)) {
-            DEBUG_LEX("%s-%d,  %d @(%d)\n", __func__, __LINE__,  *(out), cnt);
             cnt++;
             out++;
             if (cnt == out_cnt) {
@@ -729,7 +743,6 @@ static int extract_2byteHex(char *buf, int *out, int out_cnt)
             ptr[x] = TTY_RESP_SEPARATOR;
     }
 
-    DEBUG_LEX("%s-%d, (%lu) resp:%s\n", __func__, __LINE__, strlen(ptr), ptr);
     cnt = 0;
     while (strchr(ptr, TTY_RESP_SEPARATOR))
     {
@@ -737,10 +750,8 @@ static int extract_2byteHex(char *buf, int *out, int out_cnt)
         if (strlen(ptr) && *ptr == TTY_RESP_SEPARATOR) {
             continue;
         }
-        DEBUG_LEX("%s-%d, (%lu) :%s\n", __func__, __LINE__, strlen(ptr), ptr);
         if (sscanf(ptr,"%4s",tmp)) {
             if(!strchr(tmp, TTY_RESP_SEPARATOR)) {
-                DEBUG_LEX("%s-%d,  %s @(%d)\n", __func__, __LINE__,  tmp, cnt);
                 if (kstrtol(tmp, 16, &y) < 0)
                     return -EINVAL;
                 *out = (int)y;
@@ -888,7 +899,7 @@ update_data(struct device *dev, enum sensor_type_e type) {
     int data_cnt, rc;
 
     mutex_lock(&data->update_lock);
-    if (time_after(jiffies, (*last_updated) + SENSOR_DATA_UPDATE_INTERVAL)
+    if (time_after(jiffies, (*last_updated) + (poll_interval*HZ))
             || !(*valid))
     {
         rc = get_type_data(&data->sdata, type, 0, &data_ptr, &data_cnt);
