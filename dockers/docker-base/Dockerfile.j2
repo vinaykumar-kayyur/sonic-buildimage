@@ -20,6 +20,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Configure data sources for apt/dpkg
 COPY ["sources.list", "/etc/apt/sources.list"]
 COPY ["dpkg_01_drop", "/etc/dpkg/dpkg.cfg.d/01_drop"]
+COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
 RUN apt-get update
 
 # Pre-install fundamental packages

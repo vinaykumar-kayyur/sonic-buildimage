@@ -2,6 +2,8 @@ FROM debian:jessie
 
 MAINTAINER johnar@microsoft.com
 
+COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
+
 RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
