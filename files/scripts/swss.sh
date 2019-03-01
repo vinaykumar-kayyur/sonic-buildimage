@@ -130,6 +130,7 @@ stop() {
 
     # if warm start enabled or peer lock exists, don't stop peer service docker
     if [[ x"$WARM_BOOT" != x"true" ]]; then
+        /usr/bin/docker exec database redis-cli -n 0 SET "SWSS_DB_FLUSH_DONE" "0"
         /bin/systemctl stop ${PEER}
     fi
 }
