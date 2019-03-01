@@ -25,14 +25,14 @@ if [ -e /usr/share/sonic/platform/fancontrol ]; then
     supervisorctl start fancontrol
 fi
 
-{% if ledd != "skip" %}
+{% if skip_ledd != 1 %}
 supervisorctl start ledd
 {% endif %}
 
-{% if xcvrd != "skip" %}
+{% if skip_xcvrd != 1 %}
 supervisorctl start xcvrd
 {% endif %}
 
-{% if psud != "skip" %}
+{% if skip_psud != 1 %}
 supervisorctl start psud
 {% endif %}

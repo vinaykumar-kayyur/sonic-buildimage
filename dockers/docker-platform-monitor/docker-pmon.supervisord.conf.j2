@@ -37,7 +37,7 @@ autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 
-{% if ledd != "skip" %}
+{% if skip_ledd != 1 %}
 [program:ledd]
 command=/usr/bin/ledd
 priority=5
@@ -48,7 +48,7 @@ stderr_logfile=syslog
 startsecs=0
 {% endif %}
 
-{% if xcvrd != "skip" %}
+{% if skip_xcvrd != 1 %}
 [program:xcvrd]
 command=/usr/bin/xcvrd
 priority=6
@@ -59,7 +59,7 @@ stderr_logfile=syslog
 startsecs=0
 {% endif %}
 
-{% if psud != "skip" %}
+{% if skip_psud != 1 %}
 [program:psud]
 command=/usr/bin/psud
 priority=7
