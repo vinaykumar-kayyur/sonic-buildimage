@@ -97,6 +97,7 @@ start() {
         /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
         /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
         clean_up_tables 6 "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*'"
+        /usr/bin/docker exec database redis-cli -n 0 SET "SWSS_DB_FLUSH_DONE" "1"
     fi
 
     # start service docker
