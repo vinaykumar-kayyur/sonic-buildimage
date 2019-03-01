@@ -175,6 +175,12 @@ RUN apt-get update && apt-get install -y \
         libsensors4 \
         libsensors4-dev \
         libwrap0-dev \
+# For lldpd
+	debhelper \
+        autotools-dev \
+        libbsd-dev \
+        pkg-config \
+        check \
 # For mpdecimal
         docutils-common \
         libjs-sphinxdoc \
@@ -239,6 +245,9 @@ RUN pip install j2cli
 
 # For sonic utilities testing
 RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
+
+# For sonic snmpagent mock testing
+RUN pip3 install mockredispy==2.9.3
 
 # For supervisor build
 RUN pip install meld3 mock

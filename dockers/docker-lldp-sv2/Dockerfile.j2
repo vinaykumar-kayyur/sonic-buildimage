@@ -1,4 +1,4 @@
-FROM docker-config-engine
+FROM docker-config-engine-stretch
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 # Install dependencies
-RUN apt-get install -y python-pip libbsd0 libevent-2.0-5 libjansson4 libwrap0 libxml2 libpci3 libperl5.20 libpython2.7
+RUN apt-get install -y adduser init-system-helpers libbsd0 libevent-2.0-5 libjansson4 libsensors4 libwrap0 libxml2 libpci3 python-pip lsb-base libpython2.7
 
 {% if docker_lldp_sv2_debs.strip() -%}
 # Copy locally-built Debian package dependencies
