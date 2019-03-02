@@ -109,7 +109,6 @@ start() {
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl start ${PEER}
     fi
-    /usr/bin/${SERVICE}.sh attach
 }
 
 stop() {

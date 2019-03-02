@@ -117,7 +117,6 @@ start() {
     debug "Started ${SERVICE} service..."
 
     unlock_service_state_change
-    /usr/bin/${SERVICE}.sh attach
 }
 
 stop() {
