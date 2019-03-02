@@ -111,6 +111,10 @@ start() {
     fi
 }
 
+attach() {
+    /usr/bin/${SERVICE}.sh attach
+}
+
 stop() {
     debug "Stopping ${SERVICE} service..."
 
@@ -133,11 +137,11 @@ stop() {
 }
 
 case "$1" in
-    start|stop)
+    start|attach|stop)
         $1
         ;;
     *)
-        echo "Usage: $0 {start|stop}"
+        echo "Usage: $0 {start|attach|stop}"
         exit 1
         ;;
 esac
