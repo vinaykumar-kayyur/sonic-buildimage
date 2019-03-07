@@ -1,6 +1,4 @@
 {
-    "skip_ledd": 1,
-    "skip_xcvrd": 0,
-    "skip_psud": 0
+    "skip_ledd": true 
 }
 
