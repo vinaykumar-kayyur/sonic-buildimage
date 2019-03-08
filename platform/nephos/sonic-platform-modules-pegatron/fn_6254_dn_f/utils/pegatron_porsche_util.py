@@ -24,7 +24,6 @@ import threading
 DEBUG = False
 
 SFP_MAX_NUM = 48
-MAX_PORT = 54
 CPLDA_SFP_NUM = 24
 CPLDB_SFP_NUM = 12
 CPLDC_SFP_NUM = 18
@@ -187,10 +186,6 @@ def pega_init():
 		nodes = i2c_prefix + bus + '/sfp' + str(x+1) + '_tx_disable'
 		dbg_print("SFP_TX_DISABLE NODES: " + nodes)
 		status, output = do_cmd("echo 0 > "+ nodes, 1)
-
-	for x in range(SFP_MAX_NUM, MAX_PORT-1):
-		nodes = i2c_prefix + bus + '/sfp' + str(x+1) + '_reset'
-		status, output = do_cmd("echo 1 > "+ nodes, 1)
 
 	return
 
