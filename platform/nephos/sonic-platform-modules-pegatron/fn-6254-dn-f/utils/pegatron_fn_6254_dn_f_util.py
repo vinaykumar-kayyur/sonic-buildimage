@@ -24,13 +24,13 @@ import threading
 DEBUG = False
 
 SFP_MAX_NUM = 48
-MAX_PORT = 54
+TOTAL_PORT_NUM = 54
 CPLDA_SFP_NUM = 24
 CPLDB_SFP_NUM = 12
 CPLDC_SFP_NUM = 18
 
-kernel_module = ['i2c_dev', 'i2c-mux-pca954x force_deselect_on_exit=1', 'at24', 'pegatron_porsche_cpld', 'pegatron_hwmon_mcu', 'pegatron_porsche_sfp']
-moduleID = ['pca9544', 'pca9544', '24c02', 'pega_hwmon_mcu', 'porsche_cpld', 'porsche_cpld', 'porsche_cpld', 'porsche_sfpA', 'porsche_sfpB', 'porsche_sfpC']
+kernel_module = ['i2c_dev', 'i2c-mux-pca954x force_deselect_on_exit=1', 'at24', 'pegatron_fn_6254_dn_f_cpld', 'pegatron_hwmon_mcu', 'pegatron_fn_6254_dn_f_sfp']
+moduleID = ['pca9544', 'pca9544', '24c02', 'pega_hwmon_mcu', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_sfpA', 'fn_6254_dn_f_sfpB', 'fn_6254_dn_f_sfpC']
 i2c_check_node = ['i2c-0', 'i2c-1']
 uninstall_check_node = ['-0072', '-0073']
 device_address = ['0x72', '0x73', '0x54', '0x70', '0x74', '0x75', '0x76', '0x50', '0x50', '0x50']
@@ -176,7 +176,7 @@ def pega_init():
 		set_device(device_init['led'][i])
 
 	#set tx_disable
-	for x in range(0, SFP_MAX_NUM-1):
+	for x in range(0, SFP_MAX_NUM):
 		if x < CPLDB_SFP_NUM:
 			bus = cpld_bus[1]
 		elif x < CPLDB_SFP_NUM + CPLDA_SFP_NUM:
@@ -188,9 +188,10 @@ def pega_init():
 		dbg_print("SFP_TX_DISABLE NODES: " + nodes)
 		status, output = do_cmd("echo 0 > "+ nodes, 1)
 
-	for x in range(SFP_MAX_NUM, MAX_PORT):
-		nodes = i2c_prefix + bus + '/sfp' + str(x+1) + '_reset'
-		status, output = do_cmd("echo 1 > "+ nodes, 1)
+	for x in range(SFP_MAX_NUM, TOTAL_PORT_NUM):
+		nodes = i2c_prefix + cpld_bus[2] + '/sfp' + str(x+1) + '_reset'
+		dbg_print("SFP_RESET NODES: " + nodes)
+		status, output = do_cmd("echo 3 > "+ nodes, 1)
 
 	return
 
