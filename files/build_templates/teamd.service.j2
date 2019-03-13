@@ -2,6 +2,7 @@
 Description=TEAMD container
 Requires=updategraph.service
 After=updategraph.service
+After=syncd.service
 Before=ntp-config.service
 
 [Service]
