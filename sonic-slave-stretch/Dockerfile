@@ -212,7 +212,13 @@ RUN apt-get update && apt-get install -y \
         python3-pytest \
         python3-colorama \
 # For initramfs
-        bash-completion
+        bash-completion \
+# For smartmontools 6.6-1
+        automake1.11 \
+        libselinux1-dev
+
+# For smartmontools 6.6-1
+RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux
