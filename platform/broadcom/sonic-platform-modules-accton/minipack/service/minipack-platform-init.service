@@ -5,12 +5,10 @@ After=sysinit.target
 DefaultDependencies=no
 
 [Service]
-ExecStartPre=/usr/local/bin/accton_minipack_util.py install
-KillSignal=SIGKILL
-SuccessExitStatus=SIGKILL
-
-# Resource Limitations
-LimitCORE=infinity
+Type=oneshot
+ExecStart=/usr/local/bin/accton_minipack_util.py install
+ExecStop=/usr/local/bin/accton_minipack_util.py clean
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

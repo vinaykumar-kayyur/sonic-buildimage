@@ -203,7 +203,6 @@ def driver_install():
         if status:
             if FORCE == 0:
                 return status
-    status, output = log_os_system('ifconfig usb0 up', 1)
     return 0
 
 def driver_uninstall():
