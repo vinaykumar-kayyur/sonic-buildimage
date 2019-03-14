@@ -42,3 +42,6 @@ supervisorctl start ledd
 supervisorctl start xcvrd
 
 supervisorctl start psud
+
+post-syseeprom
+
