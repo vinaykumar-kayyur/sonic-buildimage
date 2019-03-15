@@ -1,8 +1,3 @@
-init end stage task
-init end stage module
-init end stage task-rsrc
-init end stage low-level
-
 init start stage low-level
 
 init set port-map port=0 eth-macro=2 lane=0 max-speed=25g active=true
@@ -635,4 +630,4 @@ port set property portlist=129-130 medium-type=kr
 port set property portlist=0-53 fec=disable
 port set adver portlist=129-130 speed-10g-kr
 port set property portlist=129-130 an=enable
-port set property portlist=0-52,53 admin=enable
+port set property portlist=0-53,129-130 admin=enable
