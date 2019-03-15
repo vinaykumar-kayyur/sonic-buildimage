@@ -99,6 +99,7 @@ RUN apt-get update && apt-get install -y \
         libslf4j-java \
         libservlet3.1-java \
         qt5-default \
+        pkg-php-tools \
 # For mellanox sdk build
         libpcre3 \
         libpcre3-dev \
@@ -232,29 +233,19 @@ RUN apt-get update && apt-get install -y \
         texi2html \
 # For initramfs
         bash-completion \
-# For Mellanox CRIU build
-        libprotobuf-dev \
-        libprotobuf-c0-dev \
-        protobuf-c-compiler \
-        protobuf-compiler \
-        python-protobuf \
-        pkg-config \
-        libnet1-dev \
-        libnet-dev \
-        libaio-dev \
-        asciidoc \
-        xmlto \
-        checkinstall \
 # For sonic vs image build
         dosfstools \
         qemu-kvm \
         libvirt-bin
 
+# For jenkins slave
+RUN apt-get -y install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk
+
 # For linux build
 RUN apt-get -y build-dep linux
 
-# For gobgp build
-RUN export VERSION=1.11.2 \
+# For gobgp and telemetry build
+RUN export VERSION=1.11.5 \
  && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
  && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
@@ -278,13 +269,16 @@ RUN pip install --force-reinstall --upgrade jinja2>=2.10
 RUN pip install j2cli
 
 # For sonic utilities testing
-RUN pip install click-default-group click natsort tabulate
+RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
 
 # For supervisor build
 RUN pip install meld3 mock
 
 # For vs image build
 RUN pip install pexpect==4.6.0
+
+# For sonic-utilities build
+RUN pip install mockredispy==2.9.3
 
 # Install dependencies for isc-dhcp-relay build
 RUN apt-get -y build-dep isc-dhcp

@@ -22,7 +22,7 @@ GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
 
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-hwsku_dict = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 0, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 3, }
+hwsku_dict = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 0, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 3, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1),(0, 18, 21, 22, 1)]
 
 class SfpUtil(SfpUtilBase):
@@ -41,7 +41,7 @@ class SfpUtil(SfpUtilBase):
     db_sel_tbl = None
     state_db = None
     sfpd_status_tbl = None
-    qsfp_sysfs_path = "/sys/devices/platform/i2c_mlxcpld.1/i2c-1/i2c-2/2-0048/"
+    qsfp_sysfs_path = "/var/run/hw-management/qsfp/"
 
     @property
     def port_start(self):
@@ -123,31 +123,9 @@ class SfpUtil(SfpUtilBase):
         if curr_lpmode == lpmode:
             return True
 
+        # Compose LPM command
         lpm = 'on' if lpmode else 'off'
         lpm_cmd = "docker exec syncd python /usr/share/sonic/platform/plugins/sfplpmset.py {} {}".format(port_num, lpm)
-        sfp_port_names = self.physical_to_logical[port_num]
-
-        # Get port admin status
-        try:
-            enabled_ports = subprocess.check_output("ip link show up", shell=True)
-        except subprocess.CalledProcessError as e:
-            print "Error! Unable to get ports status, err msg: {}".format(e.output)
-            return False
-
-        port_to_disable = []
-        for port in sfp_port_names:
-            if port in enabled_ports:
-                port_to_disable.append(port)
-
-        # Disable ports before LPM settings
-        for port in port_to_disable:
-            try:
-                subprocess.check_output("ifconfig {} down".format(port), shell=True)
-            except subprocess.CalledProcessError as e:
-                print "Error! Unable to set admin status to DOWN for {}, rc = {}, err msg: {}".format(port, e.returncode, e.output)
-                return False
-
-        time.sleep(3)
 
         # Set LPM
         try:
@@ -155,14 +133,6 @@ class SfpUtil(SfpUtilBase):
         except subprocess.CalledProcessError as e:
             print "Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
             return False
-
-        # Enable ports after LPM settings
-        for port in port_to_disable:
-            try:
-                subprocess.check_output("ifconfig {} up".format(port), shell=True)
-            except subprocess.CalledProcessError as e:
-                print "Error! Unable to set admin status to UP for {}, rc = {}, err msg: {}".format(port, e.returncode, e.output)
-                return False
 
         return True
 
@@ -206,7 +176,11 @@ class SfpUtil(SfpUtilBase):
         if 'LIVENESS' not in keys:
             return False, phy_port_dict
 
-        (state, c) = self.db_sel.select(timeout)
+        if timeout:
+            (state, c) = self.db_sel.select(timeout)
+        else:
+            (state, c) = self.db_sel.select()
+
         if state == self.db_sel_timeout:
             status = True
         elif state != self.db_sel_object:
