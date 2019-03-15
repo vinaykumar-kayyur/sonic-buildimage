@@ -15,7 +15,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd sx_kernel-$(MLNX_SDK_VERSION)-$(MLNX_SDK_ISSU_VERSION)
 	patch -p1 < ../sx_kernel_makefile_sonic_build.patch
 
-	debuild -e KVERSION=$(KVERSION) -e KSRC_EXT=/lib/modules/$(KVERSION)/source/ -b -us -uc
+	debuild -e KVERSION=$(KVERSION) -e KSRC_EXT=/lib/modules/$(KVERSION)/source/ -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 
 	popd
 

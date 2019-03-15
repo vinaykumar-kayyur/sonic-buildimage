@@ -21,7 +21,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 		./autogen.sh
 	fi
 
-	debuild -b -us -uc
+	debuild -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 
 	popd
 
