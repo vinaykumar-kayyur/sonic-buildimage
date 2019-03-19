@@ -232,7 +232,8 @@ platform_specific() {
         flash_size=3700
         echo "modprobe.blacklist=radeon,sp5100_tco" >>/tmp/append
     fi
-    if [ "$sid" = "Upperlake" ] || [ "$sid" = "UpperlakeES" ]; then
+    if [ "$sid" = "Upperlake" ] || [ "$sid" = "UpperlakeES" ] ||
+       [ "$sid" = "UpperlakeSsd" ]; then
         aboot_machine=arista_7060_cx32s
         flash_size=3700
         echo "amd_iommu=off" >> /tmp/append
