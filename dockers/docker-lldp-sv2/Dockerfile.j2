@@ -9,8 +9,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update apt's cache of available packages
 RUN apt-get update
 
-# Install dependencies
-RUN apt-get install -y adduser init-system-helpers libbsd0 libevent-2.0-5 libjansson4 libsensors4 libwrap0 libxml2 libpci3 python-pip lsb-base libpython2.7
 
 {% if docker_lldp_sv2_debs.strip() -%}
 # Copy locally-built Debian package dependencies
