@@ -96,6 +96,7 @@ RUN apt-get update && apt-get install -y \
         libslf4j-java \
         libservlet3.1-java \
         qt5-default \
+        pkg-php-tools \
 # For mellanox sdk build
         libpcre3 \
         libpcre3-dev \
@@ -212,7 +213,11 @@ RUN apt-get update && apt-get install -y \
         python3-pytest \
         python3-colorama \
 # For initramfs
-        bash-completion
+        bash-completion \
+# For lm-sensors
+        librrd8 \
+        librrd-dev \
+        rrdtool
 
 # For linux build
 RUN apt-get -y build-dep linux
