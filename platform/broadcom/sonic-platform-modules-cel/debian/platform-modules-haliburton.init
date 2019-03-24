@@ -15,10 +15,7 @@ case "$1" in
 start)
         echo -n "Setting up board... "
 
-	modprobe smc
-        sleep 1
-        modprobe -r gpio_ich
-        sleep 1
+        modprobe smc
         modprobe hlx_gpio_ich
 
         found=0
