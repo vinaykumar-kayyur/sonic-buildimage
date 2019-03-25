@@ -4,9 +4,10 @@ MLNX_SDK_ISSU_VERSION = 100
 
 MLNX_SDK_DEB_VERSION = $(subst _,.,$(MLNX_SDK_VERSION))
 
-ifdef MLNX_SDK_SOURCE_BASE_URL
+# Place here URL where SDK sources exist
+MLNX_SDK_SOURCE_BASE_URL = 
+
 export MLNX_SDK_SOURCE_BASE_URL MLNX_SDK_VERSION MLNX_SDK_ISSU_VERSION MLNX_SDK_DEB_VERSION
-endif
 
 MLNX_SDK_RDEBS += $(APPLIBS) $(IPROUTE2_MLNX) $(SX_ACL_RM) $(SX_COMPLIB) \
 		  $(SX_EXAMPLES) $(SX_GEN_UTILS) $(SX_SCEW) $(SXD_LIBS)
@@ -79,7 +80,7 @@ $(eval $(foreach deb,$(MLNX_SDK_DEBS),$(call make_url,$(deb))))
 $(eval $(foreach deb,$(MLNX_SDK_RDEBS),$(call make_url,$(deb))))
 $(eval $(foreach deb,$(PYTHON_SDK_API) $(SX_KERNEL) $(SX_KERNEL_DEV),$(call make_url,$(deb))))
 
-ifdef MLNX_SDK_SOURCE_BASE_URL
+ifneq ($(MLNX_SDK_SOURCE_BASE_URL), )
 SONIC_MAKE_DEBS += $(MLNX_SDK_RDEBS) $(PYTHON_SDK_API) $(SX_KERNEL)
 else
 SONIC_ONLINE_DEBS += $(MLNX_SDK_RDEBS) $(PYTHON_SDK_API) $(SX_KERNEL)
