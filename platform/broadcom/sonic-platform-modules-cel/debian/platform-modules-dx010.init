@@ -38,9 +38,6 @@ start)
         modprobe dx010_wdt
         modprobe leds-dx010
         modprobe lm75
-        sleep 1
-        modprobe -r gpio_ich
-        sleep 1
         modprobe slx_gpio_ich
 
         found=0
