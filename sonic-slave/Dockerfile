@@ -2,6 +2,9 @@ FROM debian:jessie
 
 MAINTAINER johnar@microsoft.com
 
+## Remove retired jessie-updates repo
+RUN sed -i '/deb http:\/\/deb.debian.org\/debian jessie-updates main/d' /etc/apt/sources.list
+
 RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
@@ -9,9 +12,6 @@ RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contr
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
-
-## Remove retired jessie-updates repo
-RUN sed -i '/deb http:\/\/deb.debian.org\/debian jessie-updates main/d' /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -y \
         apt-utils \
