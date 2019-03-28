@@ -218,7 +218,16 @@ RUN apt-get update && apt-get install -y \
 # For lm-sensors
         librrd8 \
         librrd-dev \
-        rrdtool
+        rrdtool \
+# For iproute2
+        cm-super-minimal \
+        libatm1-dev \
+        libmnl-dev \
+        libselinux1-dev \
+        linuxdoc-tools \
+        lynx \
+        texlive-latex-extra \
+        texlive-latex-recommended
 
 # For linux build
 RUN apt-get -y build-dep linux
