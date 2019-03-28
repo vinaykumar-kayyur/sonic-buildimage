@@ -47,6 +47,11 @@ prepare_installer_disk()
 create_disk
 prepare_installer_disk
 
+# Force o.s. to drop cache so that KVM can get 2G memory
+free -m
+echo 1 | sudo tee /proc/sys/vm/drop_caches
+free -m
+
 /usr/bin/kvm -m $MEM \
     -name "onie" \
     -boot "order=cd,once=d" -cdrom "$ONIE_RECOVERY_ISO" \
