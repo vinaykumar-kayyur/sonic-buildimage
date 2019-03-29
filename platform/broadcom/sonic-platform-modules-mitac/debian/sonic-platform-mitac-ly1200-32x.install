@@ -1,0 +1,2 @@
+ly1200-32x/etc/init.d/* etc/init.d
+ly1200-32x/systemd/sonic-platform-mitac-ly1200-32x.service lib/systemd/system

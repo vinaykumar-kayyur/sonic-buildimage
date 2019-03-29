@@ -1,16 +1,17 @@
 #!/bin/bash
 
 ### BEGIN INIT INFO
-# Provides:          setup-board
+# Provides:          setup-board-i2c
 # Required-Start:
 # Required-Stop:
 # Should-Start:
 # Should-Stop:
-# Default-Start:     S
-# Default-Stop:      0 6
+# Default-Start:
+# Default-Stop:
 # Short-Description: Setup ly1200-32x board.
 ### END INIT INFO
 
+I2C_BUS_RM_ALL=0
 I2C_I801_RM_PRINT=0
 I2C_ISMT_RM_PRINT=0
 I2C_I801_INS_PRINT=0
@@ -47,134 +48,53 @@ function log_msg() {
 
 # Load kernel modules
 load_modules () {
-        #----------remove i801 start---------------------
-        if [ `lsmod | grep -c "i2c_i801 "` -eq 1 ]; then
-                rmmod i2c_i801
-                while [ `lsmod | grep -c "i2c_i801 "` -eq 1 ]
-                do
-                        if [ $I2C_I801_RM_PRINT -eq 0 ]; then
-                                I2C_I801_RM_PRINT=1
-                                log_msg "Wait for i2c_i801 remove."
-                        fi
-                        if [ $I2C_I801_RM_RETRY -lt $RETRY ];then
-                                I2C_I801_RM_RETRY=$((I2C_I801_RM_RETRY + 1))
-                        else
-                                break
-                        fi
-                        sleep 1
-                done
-                if [ $I2C_I801_RM_PRINT -eq 1 ]; then
-                        log_msg "i2c_i801 remove success."
-                fi
-        fi
-        #----------remove i801 end------------------------
+        modprobe i2c_i801
+        modprobe i2c_ismt
 
-
-        #----------remove ismt start----------------------
-        if [ `lsmod | grep -c "i2c_ismt "` -eq 1 ]; then
-                rmmod i2c_ismt
-                while [ `lsmod | grep -c "i2c_ismt "` -eq 1 ]
-                do
-                        if [ $I2C_ISMT_RM_PRINT -eq 0 ]; then
-                                I2C_ISMT_RM_PRINT=1
-                                log_msg "Wait for i2c_ismt remove."
-                        fi
-                        if [ $I2C_ISMT_RM_RETRY -lt $RETRY ];then
-                                I2C_ISMT_RM_RETRY=$((I2C_ISMT_RM_RETRY + 1))
-                        else
-                                break
-                        fi
-                        sleep 1
-                done
-                if [ $I2C_ISMT_RM_PRINT -eq 1 ]; then
-                        log_msg "i2c_ismt remove success."
-                fi
-        fi
-        #----------remove ismt end------------------------
-
-        #----------insert i801 start----------------------
-        insmod /lib/modules/`uname -r`/kernel/drivers/i2c/busses/i2c-i801.ko
-        while [ `lsmod | grep -c "i2c_i801 "` -eq 0 ]
-        do
-                if [ $I2C_I801_INS_PRINT -eq 0 ]; then
-                        I2C_I801_INS_PRINT=1
-                        log_msg "Wait for i2c_i801 insert."
-                fi
-                if [ $I2C_I801_INS_RETRY -lt $RETRY ];then
-                        I2C_I801_INS_RETRY=$((I2C_I801_INS_RETRY + 1))
-                else
-                        break
-                fi
-                sleep 1
-        done
-        if [ $I2C_I801_INS_PRINT -eq 1 ]; then
-                log_msg "i2c_i801 insert success."
-        fi
-        #----------insert i801 end------------------------
-
-        #----------insert ismt start----------------------
-        insmod /lib/modules/`uname -r`/kernel/drivers/i2c/busses/i2c-ismt.ko
-        while [ `lsmod | grep -c "i2c_ismt "` -eq 0 ]
-        do
-                if [ $I2C_ISMT_INS_PRINT -eq 0 ]; then
-                        I2C_ISMT_INS_PRINT=1
-                        log_msg "Wait for i2c_ismt insert."
-                fi
-                if [ $I2C_ISMT_INS_RETRY -lt $RETRY ];then
-                        I2C_ISMT_INS_RETRY=$((I2C_ISMT_INS_RETRY + 1))
-                else
-                        break
-                fi
-                sleep 1
-        done
-        if [ $I2C_ISMT_INS_PRINT -eq 1 ]; then
-                log_msg "i2c_ismt insert success."
-        fi
-        #----------insert ismt start------------------------
         if [ `lsmod | grep -c "at24 "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/kernel/drivers/misc/eeprom/at24.ko
+                modprobe at24
         fi
         if [ `lsmod | grep -c "i2c_mux "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/kernel/drivers/i2c/i2c-mux.ko
+                modprobe i2c_mux
         fi
         if [ `lsmod | grep -c "i2c_mux_pca954x "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/kernel/drivers/i2c/muxes/i2c-mux-pca954x.ko
+                modprobe i2c_mux_pca954x
         fi
         if [ `lsmod | grep -c "lm75 "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/kernel/drivers/hwmon/lm75.ko
+                modprobe lm75
         fi
         if [ `lsmod | grep -c "max31790 "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/kernel/drivers/hwmon/max31790.ko
+                modprobe max31790
         fi
         if [ `lsmod | grep -c "sff_8436_eeprom "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/kernel/drivers/misc/eeprom/sff_8436_eeprom.ko
+                modprobe sff_8436_eeprom
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_fse000 "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_fse000.ko
+                modprobe mitac_ly1200_32x_fse000
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_system_cpld "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_system_cpld.ko
+                modprobe mitac_ly1200_32x_system_cpld
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_master_cpld "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_master_cpld.ko
+                modprobe mitac_ly1200_32x_master_cpld
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_slave_cpld "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_slave_cpld.ko
+                modprobe mitac_ly1200_32x_slave_cpld
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_cb_i2c "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_cb_i2c.ko
+                modprobe mitac_ly1200_32x_cb_i2c
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_sb_i2c "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_sb_i2c.ko
+                modprobe mitac_ly1200_32x_sb_i2c
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_pb_i2c "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_pb_i2c.ko
+                modprobe mitac_ly1200_32x_pb_i2c
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_fb_i2c "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_fb_i2c.ko
+                modprobe mitac_ly1200_32x_fb_i2c
         fi
         if [ `lsmod | grep -c "mitac_ly1200_32x_fb_module_i2c "` -eq 0 ]; then
-                insmod /lib/modules/`uname -r`/extra/mitac_ly1200_32x_fb_module_i2c.ko
+                modprobe mitac_ly1200_32x_fb_module_i2c
         fi
 }
 
@@ -185,18 +105,24 @@ load_i2c_dev_modules () {
         fi
 }
 
+# Load nvmem_core modules
+load_nvmem_core_modules () {
+        if [ `lsmod | grep -c "nvmem_core "` -eq 0 ]; then
+                modprobe nvmem_core
+        fi
+}
+
 case "$1" in
 start)
-    echo -n "Setting up board... "
+    echo -n "Loading modules for board... "
     load_i2c_dev_modules
+    load_nvmem_core_modules
     load_modules
     echo "done."
     ;;
 
 stop)
     echo -n "cleaning... "
-
-
     echo "done."
 
     ;;
