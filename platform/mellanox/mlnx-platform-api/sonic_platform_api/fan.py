@@ -169,7 +169,7 @@ class Fan(FanBase):
         
         try:
             with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
-                length = fan_pwm.write(str(pwm))
+                fan_pwm.write(str(pwm))
         except (ValueError, IOError):
             status = False
 
