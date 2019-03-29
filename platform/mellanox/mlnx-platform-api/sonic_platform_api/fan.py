@@ -20,6 +20,9 @@ LED_OFF = 0
 
 PWM_MAX = 255
 
+FAN_PATH = "/var/run/hw-management/thermal/"
+LED_PATH = "/var/run/hw-management/led/"
+
 class Fan(FanBase):
     """Platform-specific Fan class"""
     def __init__(self, fan_index, drawer_index = 1, psu_fan = False):
@@ -28,12 +31,9 @@ class Fan(FanBase):
         self.drawer_index = drawer_index + 1
 
         self.is_psu_fan = psu_fan
-
-        self.fan_path = "/var/run/hw-management/thermal/"
-        self.led_path = "/var/run/hw-management/led/"
         
         self.fan_min_speed_path = "fan{}_min".format(self.index)
-        if self.is_psu_fan == False:
+        if not self.is_psu_fan:
             self.fan_speed_get_path = "fan{}_speed_get".format(self.index)
             self.fan_speed_set_path = "fan{}_speed_set".format(self.index)
             self.fan_presence_path = "fan{}_status".format(self.drawer_index)
@@ -59,7 +59,7 @@ class Fan(FanBase):
             status = 1
         else:
             try:
-                with open(os.path.join(self.fan_path, self.fan_status_path), 'r') as fault_status:
+                with open(os.path.join(FAN_PATH, self.fan_status_path), 'r') as fault_status:
                     status = int(fault_status.read())
             except (ValueError, IOError):
                 status = 0
@@ -75,13 +75,13 @@ class Fan(FanBase):
         """
         status = 0
         if self.is_psu_fan:
-            if os.path.exists(os.path.join(self.fan_path, self.fan_presence_path)):
+            if os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path)):
                 status = 1
             else:
                 status = 0
         else:
             try:
-                with open(os.path.join(self.fan_path, self.fan_presence_path), 'r') as presence_status:
+                with open(os.path.join(FAN_PATH, self.fan_presence_path), 'r') as presence_status:
                     status = int(presence_status.read())
             except (ValueError, IOError):
                 status = 0
@@ -91,7 +91,7 @@ class Fan(FanBase):
     def _get_min_speed_in_rpm(self):
         speed = 0
         try:
-            with open(os.path.join(self.fan_path, self.fan_min_speed_path), 'r') as min_fan_speed:
+            with open(os.path.join(FAN_PATH, self.fan_min_speed_path), 'r') as min_fan_speed:
                 speed = int(min_fan_speed.read())
         except (ValueError, IOError):
             speed = 0
@@ -101,7 +101,7 @@ class Fan(FanBase):
     def _get_max_speed_in_rpm(self):
         speed = 0
         try:
-            with open(os.path.join(self.fan_path, self.fan_max_speed_path), 'r') as max_fan_speed:
+            with open(os.path.join(FAN_PATH, self.fan_max_speed_path), 'r') as max_fan_speed:
                 speed = int(max_fan_speed.read())
         except (ValueError, IOError):
             speed = 0
@@ -117,18 +117,13 @@ class Fan(FanBase):
         """
         speed = 0
         try:
-            with open(os.path.join(self.fan_path, self.fan_speed_get_path), 'r') as fan_curr_speed:
+            with open(os.path.join(FAN_PATH, self.fan_speed_get_path), 'r') as fan_curr_speed:
                 speed_in_rpm = int(fan_curr_speed.read())
         except (ValueError, IOError):
             speed_in_rpm = 0
         
         max_speed_in_rpm = self._get_max_speed_in_rpm()
-        
-        if self.is_psu_fan:
-            speed = 100*speed_in_rpm/max_speed_in_rpm
-        else: 
-            min_speed_in_rpm = self._get_min_speed_in_rpm()
-            speed = 100*speed_in_rpm/max_speed_in_rpm
+        speed = 100*speed_in_rpm/max_speed_in_rpm
 
         return speed
 
@@ -145,7 +140,7 @@ class Fan(FanBase):
             # Not like system fan, psu fan speed can not be modified, so target speed is N/A 
             return speed
         try:
-            with open(os.path.join(self.fan_path, self.fan_speed_set_path), 'r') as fan_pwm:
+            with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'r') as fan_pwm:
                 pwm = int(fan_pwm.read())
         except (ValueError, IOError):
             pwm = 0
@@ -158,6 +153,10 @@ class Fan(FanBase):
         """
         Set fan speed to expected value
 
+        Args:
+            speed: An integer, the percentage of full fan speed to set fan to,
+                   in the range 0 (off) to 100 (full speed)
+
         Returns:
             bool: True if set success, False if fail. 
         """
@@ -169,19 +168,20 @@ class Fan(FanBase):
             return False
         
         try:
-            with open(os.path.join(self.fan_path, self.fan_speed_set_path), 'w') as fan_pwm:
-                print pwm
+            with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
                 length = fan_pwm.write(str(pwm))
-                print length
         except (ValueError, IOError):
-            print "failed to open file"
             status = False
 
-        return status == True
+        return status
 
     def set_status_led(self, color):
         """
         Set led to expected color
+
+        Args:
+            color: A string representing the color with which to set the
+                   fan module status LED
 
         Returns:
             bool: True if set success, False if fail. 
@@ -190,34 +190,25 @@ class Fan(FanBase):
             # PSU fan led status is not able to set
             return False
         status = False
-        if color == 'green':
-            try:
-                with open(os.path.join(self.led_path, self.fan_green_led_path), 'w') as fan_led:
+        try:
+            if color == 'green':
+                with open(os.path.join(LED_PATH, self.fan_green_led_path), 'w') as fan_led:
                     fan_led.write(str(LED_ON))
-            except (ValueError, IOError):
-                status = False
-        elif color == 'red':
-            try:
-                with open(os.path.join(self.led_path, self.fan_red_led_path), 'w') as fan_led:
+            elif color == 'red':
+                with open(os.path.join(LED_PATH, self.fan_red_led_path), 'w') as fan_led:
                     fan_led.write(str(LED_ON))
-            except (ValueError, IOError):
-                status = False
-        elif color == 'off':
-            try:
-                with open(os.path.join(self.led_path, self.fan_green_led_path), 'w') as fan_led:
-                    fan_led.write(str(LED_OFF))
-            except (ValueError, IOError):
-                status = False
 
-            try:
-                with open(os.path.join(self.led_path, self.fan_red_led_path), 'w') as fan_led:
+            elif color == 'off':
+                with open(os.path.join(LED_PATH, self.fan_green_led_path), 'w') as fan_led:
                     fan_led.write(str(LED_OFF))
-            except (ValueError, IOError):
-                status = False
-        else:
-            pass
 
-        return status == True
+                with open(os.path.join(LED_PATH, self.fan_red_led_path), 'w') as fan_led:
+                    fan_led.write(str(LED_OFF))
+            else:
+                status = False
+        except (ValueError, IOError):
+                    status = False
+        return status
 
     def get_speed_tolerance(self):
         """

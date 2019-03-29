@@ -14,6 +14,7 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_api.psu import Psu
     from sonic_platform_api.fan import Fan
+    from sonic_platform_api.fan import FAN_PATH
     from sonic_platform_api.watchdog import get_watchdog
     from os import listdir
     from os.path import isfile, join
@@ -22,7 +23,6 @@ except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 MLNX_NUM_PSU = 2
-fan_path = '/var/run/hw-management/thermal/'
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -41,7 +41,7 @@ class Chassis(ChassisBase):
         # Initialize FAN list
         multi_rotor_in_drawer = False
         num_of_fan, num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
-        multi_rotor_in_drawer = True if num_of_fan > num_of_drawer else multi_rotor_in_drawer
+        multi_rotor_in_drawer = num_of_fan > num_of_drawer
 
         for index in range(num_of_fan):
             if multi_rotor_in_drawer:
@@ -53,8 +53,8 @@ class Chassis(ChassisBase):
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0
         num_of_drawer = 0
-        for f in listdir(fan_path):
-            if isfile(join(fan_path, f)):
+        for f in listdir(FAN_PATH):
+            if isfile(join(FAN_PATH, f)):
                 match_obj = re.match('fan(\d+)_speed_get', f)
                 if match_obj != None:
                     if int(match_obj.group(1)) > num_of_fan:
