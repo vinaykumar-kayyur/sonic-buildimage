@@ -506,6 +506,48 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
 	$(FOOTER)
 
+# Targets for building docker images
+$(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_DEBUG_IMAGES)) : $(TARGET_PATH)/%-dbg.gz : .platform docker-start \
+		$$(addprefix $(DEBS_PATH)/,$$($$*.gz_DEPENDS)) \
+		$$(addprefix $(FILES_PATH)/,$$($$*.gz_FILES)) \
+		$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*.gz_PYTHON_DEBS)) \
+		$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*.gz_PYTHON_WHEELS)) \
+		$$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$*.gz)) \
+		$$($$*.gz_PATH)/Dockerfile.j2
+	$(HEADER)
+	# Apply series of patches if exist
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi
+	mkdir -p $($*.gz_PATH)/debs $(LOG)
+	mkdir -p $($*.gz_PATH)/files $(LOG)
+	mkdir -p $($*.gz_PATH)/python-debs $(LOG)
+	mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
+	sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+	sudo mount --bind $(FILES_PATH) $($*.gz_PATH)/files $(LOG)
+	sudo mount --bind $(PYTHON_DEBS_PATH) $($*.gz_PATH)/python-debs $(LOG)
+	sudo mount --bind $(PYTHON_WHEELS_PATH) $($*.gz_PATH)/python-wheels $(LOG)
+	# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*-dbg.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_from_image_name=$*)
+	j2 $($*.gz_PATH)/Dockerfile.j2 > $($*.gz_PATH)/Dockerfile-dbg
+	docker info $(LOG)
+	docker build --squash --no-cache \
+		--build-arg http_proxy=$(HTTP_PROXY) \
+		--build-arg https_proxy=$(HTTPS_PROXY) \
+		--build-arg user=$(USER) \
+		--build-arg uid=$(UID) \
+		--build-arg guid=$(GUID) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+		--build-arg frr_user_uid=$(FRR_USER_UID) \
+		--build-arg frr_user_gid=$(FRR_USER_GID) \
+		--label Tag=$(SONIC_GET_VERSION) \
+		--file $($*.gz_PATH)/Dockerfile-dbg \
+		-t $*-dbg $($*.gz_PATH) $(LOG)
+	docker save $*-dbg | gzip -c > $@
+	# Clean up
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
+	$(FOOTER)
+
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES))
 
 DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \

@@ -1,4 +1,4 @@
-FROM docker-config-engine
+FROM {{ docker_orchagent_from_image_name|default('docker-config-engine') }}
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -21,6 +21,9 @@ RUN pip install setuptools
 RUN pip install pyroute2==0.5.3 netifaces==0.10.7
 RUN pip install monotonic==1.5
 
+{% if docker_orchagent_debs is defined %}
+{% if docker_orchagent_debs|length %}
+
 COPY \
 {% for deb in docker_orchagent_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
@@ -31,6 +34,38 @@ RUN dpkg -i \
 {% for deb in docker_orchagent_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
+
+{% endif %}
+{% endif %}
+
+{% if docker_orchagent_dbg_debs is defined %}
+{% if docker_orchagent_dbg_debs|length %}
+
+COPY \
+{% for deb in docker_orchagent_dbg_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+
+RUN dpkg -i \
+{% for deb in docker_orchagent_dbg_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+
+{% endif %}
+{% endif %}
+
+
+{% if docker_orchagent_dbgs is defined %}
+{% if docker_orchagent_dbgs|length %}
+
+RUN apt-get install -f -y \
+{% for dbg in docker_orchagent_dbgs.split(' ') -%}
+{{ dbg }}{{' '}}
+{%- endfor %}
+
+{% endif %}
+{% endif %}
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
