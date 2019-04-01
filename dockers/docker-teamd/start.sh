@@ -7,6 +7,6 @@ mkdir -p /var/warmboot/teamd
 
 supervisorctl start rsyslogd
 
-supervisorctl start teammgrd
-
 supervisorctl start teamsyncd
+
+supervisorctl start teammgrd
