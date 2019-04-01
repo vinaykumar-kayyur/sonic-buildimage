@@ -79,4 +79,4 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 ## Copy all Jinja2 template files into the templates folder
 COPY ["*.j2", "/usr/share/sonic/templates/"]
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord"]
