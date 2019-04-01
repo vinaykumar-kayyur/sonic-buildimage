@@ -30,7 +30,6 @@
 #include <linux/mutex.h>
 
 #undef pegatron_porsche_DEBUG
-/*#define pegatron_porsche_DEBUG*/
 #ifdef pegatron_porsche_DEBUG
 #define DBG(x) x
 #else
@@ -567,7 +566,9 @@ static ssize_t set_qsfp_reset(struct device *dev, struct device_attribute *da,
 
     data = pegatron_porsche_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    data = (val & 0x3) << ((attr->index % QSFP_FIRST_PORT % 4)*2);
+    CLEAR_BIT(data, (attr->index % 4)*2);
+    CLEAR_BIT(data, (attr->index % 4)*2+1);
+    data |= (val & 0x3) << ((attr->index % QSFP_FIRST_PORT % 4)*2);
 
     pegatron_porsche_cpld_write(client->addr, reg, data);
 

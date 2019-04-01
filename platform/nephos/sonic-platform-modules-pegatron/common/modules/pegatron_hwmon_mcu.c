@@ -55,13 +55,6 @@
 #define SET_BIT(data, bit)              data |= (1 << bit)
 #define CLEAR_BIT(data, bit)            data &= ~(1 << bit)
 
-enum chips
-{   
-    mercedes3 = 0,
-    cadillac,
-    porsche,
-};
-
 enum fan_alert
 {
     FAN_OUTER_RPM_OVER_ALERT_BIT = 0,
@@ -1339,7 +1332,7 @@ static int pega_hwmon_mcu_remove(struct i2c_client *client)
 }
 
 static const struct i2c_device_id pega_hwmon_mcu_id[] = {
-    { "porsche_hwmon_mcu", porsche },
+    { "pega_hwmon_mcu", 0 },
     {}
 };
 MODULE_DEVICE_TABLE(i2c, pega_hwmon_mcu_id);
