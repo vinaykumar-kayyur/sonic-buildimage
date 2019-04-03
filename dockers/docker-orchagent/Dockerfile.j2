@@ -10,7 +10,7 @@ RUN apt-get update
 
 RUN apt-get install -f -y ifupdown arping libdbus-1-3 libdaemon0 libjansson4 libpython2.7 iproute2
 
-RUN apt-get install -f -y ndisc6 tcpdump python-scapy
+RUN apt-get install -f -y ndisc6 tcpdump python-scapy=2.4.0-2
 ## Install redis-tools dependencies
 ## TODO: implicitly install dependencies
 RUN apt-get -y install libjemalloc1
