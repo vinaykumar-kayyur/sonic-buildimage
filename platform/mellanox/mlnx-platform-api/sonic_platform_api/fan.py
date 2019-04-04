@@ -45,7 +45,9 @@ class Fan(FanBase):
         self.fan_status_path = "fan{}_fault".format(self.index)
         self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
         self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
+        self.fan_orange_led_path = "led_fan{}_orange".format(self.drawer_index)
         self.fan_pwm_path = "pwm1"
+        self.fan_led_cap_path = "led_fan{}_capability".format(self.drawer_index)
 
     def get_status(self):
         """
@@ -174,6 +176,17 @@ class Fan(FanBase):
             status = False
 
         return status
+    
+    def _get_led_capability(self):
+        cap_list = None
+        try:
+            with open(os.path.join(LED_PATH, self.fan_led_cap_path), 'r') as fan_led_cap:
+                    caps = fan_led_cap.read()
+                    cap_list = caps.split()
+        except (ValueError, IOError):
+            status = 0
+        
+        return cap_list
 
     def set_status_led(self, color):
         """
@@ -186,6 +199,10 @@ class Fan(FanBase):
         Returns:
             bool: True if set success, False if fail. 
         """
+        led_cap_list = self._get_led_capability()
+        if led_cap_list is None:
+            return False
+
         if self.is_psu_fan:
             # PSU fan led status is not able to set
             return False
@@ -195,7 +212,14 @@ class Fan(FanBase):
                 with open(os.path.join(LED_PATH, self.fan_green_led_path), 'w') as fan_led:
                     fan_led.write(str(LED_ON))
             elif color == 'red':
-                with open(os.path.join(LED_PATH, self.fan_red_led_path), 'w') as fan_led:
+                # Some fan don't support red led but support orange led, in this case we set led to orange
+                if 'red' in led_cap_list:
+                    led_path = os.path.join(LED_PATH, self.fan_red_led_path)
+                elif 'orange' in led_cap_list:
+                    led_path = os.path.join(LED_PATH, self.fan_orange_led_path)
+                else:
+                    return False
+                with open(led_path, 'w') as fan_led:
                     fan_led.write(str(LED_ON))
 
             elif color == 'off':
@@ -218,5 +242,5 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        # The tolerance value not decided yet, discussing with low-level team
-        pass
+        # The tolerance value is fixed as 20% for all the Mellanox platform
+        return 20
