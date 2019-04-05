@@ -36,6 +36,7 @@ PYTHON_WHEELS_PATH = $(TARGET_PATH)/python-wheels
 PROJECT_ROOT = $(shell pwd)
 STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
+DBG_IMAGE_MARK = -dbg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -474,8 +475,10 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES))
 # jessie docker images only in jessie slave docker
 ifeq ($(BLDENV),stretch)
 	DOCKER_IMAGES := $(SONIC_STRETCH_DOCKERS)
+	DOCKER_DBG_IMAGES := $(SONIC_STRETCH_DBG_DOCKERS)
 else
 	DOCKER_IMAGES := $(filter-out $(SONIC_STRETCH_DOCKERS), $(SONIC_DOCKER_IMAGES))
+	DOCKER_DBG_IMAGES := $(filter-out $(SONIC_STRETCH_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
 endif
 
 # Targets for building docker images
@@ -522,9 +525,42 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES))
 
+# Targets for building docker images
+$(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%$(DBG_IMAGE_MARK).gz : .platform docker-start \
+		$$(addprefix $(DEBS_PATH)/,$$($$*.gz_DBG_DEPENDS)) \
+		$$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$*.gz))
+	$(HEADER)
+	mkdir -p $($*.gz_PATH)/debs $(LOG)
+	sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+	# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
+	./build_dbg_j2.sh $* $(subst -,_,$(notdir $($*.gz_PATH)))_debs $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs > $($*.gz_PATH)/Dockerfile-dbg.j2
+	j2 $($*.gz_PATH)/Dockerfile-dbg.j2 > $($*.gz_PATH)/Dockerfile-dbg
+	docker info $(LOG)
+	docker build --squash --no-cache \
+		--build-arg http_proxy=$(HTTP_PROXY) \
+		--build-arg https_proxy=$(HTTPS_PROXY) \
+		--build-arg user=$(USER) \
+		--build-arg uid=$(UID) \
+		--build-arg guid=$(GUID) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+		--build-arg frr_user_uid=$(FRR_USER_UID) \
+		--build-arg frr_user_gid=$(FRR_USER_GID) \
+		--label Tag=$(SONIC_GET_VERSION) \
+		--file $($*.gz_PATH)/Dockerfile-dbg \
+		-t $*-dbg $($*.gz_PATH) $(LOG)
+	docker save $*-dbg | gzip -c > $@
+	# Clean up
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES))
+
 DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
 		      $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		      $(DOCKER_IMAGES)))
+
 $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TARGET_PATH)/$$*.gz
 	$(HEADER)
 	docker load -i $(TARGET_PATH)/$*.gz $(LOG)
@@ -658,6 +694,7 @@ $(SONIC_CLEAN_FILES) : $(FILES_PATH)/%-clean : .platform
 
 SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_DOCKER_IMAGES) \
+		       $(SONIC_DOCKER_DBG_IMAGES) \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean : .platform
@@ -681,7 +718,8 @@ all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
 stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
           $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES)) \
-          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DOCKERS))
+          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DOCKERS)) \
+          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DBG_DOCKERS))
 
 
 ###############################################################################
