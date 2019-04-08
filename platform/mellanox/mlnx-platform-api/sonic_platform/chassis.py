@@ -12,10 +12,10 @@ import sys
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform_api.psu import Psu
-    from sonic_platform_api.fan import Fan
-    from sonic_platform_api.fan import FAN_PATH
-    from sonic_platform_api.watchdog import get_watchdog
+    from sonic_platform.psu import Psu
+    from sonic_platform.fan import Fan
+    from sonic_platform.fan import FAN_PATH
+    from sonic_platform.watchdog import get_watchdog
     from os import listdir
     from os.path import isfile, join
     import re
