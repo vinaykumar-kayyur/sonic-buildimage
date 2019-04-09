@@ -80,6 +80,7 @@ To build SONiC installer image and docker images, run the following commands:
  **NOTE**:
 
 - Recommend reserving 50G free space to build one platform.
+- It is possible to run into errors where Docker's `/var/lib/docker` workspace folder can sit on a drive without enough empty space to do work (for example, untaring a large tar file). [Here is a link](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) with information for moving the `var/lib/docker` folder to a drive with more disk space, as a workaround solution.
 - Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
 - Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
