@@ -80,8 +80,11 @@ To build SONiC installer image and docker images, run the following commands:
  **NOTE**:
 
 - Recommend reserving 50G free space to build one platform.
-- It is possible to run into errors where Docker's `/var/lib/docker` workspace folder can sit on a drive without enough empty space to do work. [Here is a link](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) with information for a workaround. One of these error messages can look something like:
-    - `/usr/bin/tar: ./datadrive/sonic-buildimage/<some_file>: Cannot write: No space left on device`.
+- If Docker's workspace folder, `/var/lib/docker`, resides on a partition without sufficient free space, you may encounter an error like the following during a Docker container build job:
+
+    `/usr/bin/tar: /path/to/sonic-buildimage/<some_file>: Cannot write: No space left on device`
+
+    The solution is to [move the directory](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) to a partition with more free space.
 - Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
 - Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
