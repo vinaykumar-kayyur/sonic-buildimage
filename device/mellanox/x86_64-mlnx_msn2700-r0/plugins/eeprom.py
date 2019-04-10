@@ -40,7 +40,7 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
 
     def __init__(self, name, path, cpld_root, ro):
         for attempt in range(self.RETRIES):
-            if not os.path.islink(EEPROM_SYMLINK):
+            if not (os.path.exists(EEPROM_SYMLINK) or os.path.isfile(CACHE_FILE)):
                 time.sleep(1)
             else:
                 break
