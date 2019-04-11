@@ -41,5 +41,4 @@ RUN apt-get install -f -y \
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-CMD ["/usr/bin/supervisord"]
 "

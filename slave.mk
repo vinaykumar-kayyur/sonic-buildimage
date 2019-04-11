@@ -137,8 +137,6 @@ export SONIC_CONFIG_MAKE_JOBS
 ###############################################################################
 
 export SONIC_ROUTING_STACK
-export FRR_USER_UID
-export FRR_USER_GID
 
 ###############################################################################
 ## Dumping key config attributes associated to current building exercise
@@ -158,10 +156,6 @@ $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
 $(info "INSTALL_DEBUG_TOOLS"             : "$(INSTALL_DEBUG_TOOLS)")
 $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
-ifeq ($(SONIC_ROUTING_STACK),frr)
-$(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
-$(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
-endif
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
@@ -510,12 +504,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 	docker build --squash --no-cache \
 		--build-arg http_proxy=$(HTTP_PROXY) \
 		--build-arg https_proxy=$(HTTPS_PROXY) \
-		--build-arg user=$(USER) \
-		--build-arg uid=$(UID) \
-		--build-arg guid=$(GUID) \
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
-		--build-arg frr_user_uid=$(FRR_USER_UID) \
-		--build-arg frr_user_gid=$(FRR_USER_GID) \
 		--label Tag=$(SONIC_GET_VERSION) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
@@ -535,18 +524,13 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%$(DBG_IMAGE
 	# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
 	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
 	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_IMAGE_PACKAGES)))\n" | awk '!a[$$0]++'))
-	./build_dbg_j2.sh $* $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs > $($*.gz_PATH)/Dockerfile-dbg.j2
+	./build_debug_docker_j2.sh $* $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs > $($*.gz_PATH)/Dockerfile-dbg.j2
 	j2 $($*.gz_PATH)/Dockerfile-dbg.j2 > $($*.gz_PATH)/Dockerfile-dbg
 	docker info $(LOG)
 	docker build --squash --no-cache \
 		--build-arg http_proxy=$(HTTP_PROXY) \
 		--build-arg https_proxy=$(HTTPS_PROXY) \
-		--build-arg user=$(USER) \
-		--build-arg uid=$(UID) \
-		--build-arg guid=$(GUID) \
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
-		--build-arg frr_user_uid=$(FRR_USER_UID) \
-		--build-arg frr_user_gid=$(FRR_USER_GID) \
 		--label Tag=$(SONIC_GET_VERSION) \
 		--file $($*.gz_PATH)/Dockerfile-dbg \
 		-t $*-dbg $($*.gz_PATH) $(LOG)
