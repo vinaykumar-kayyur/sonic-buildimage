@@ -11,8 +11,22 @@ case $1 in
     ;;
 esac
 
+# Extract kernel parameters
+set -- $(cat /proc/cmdline)
+for x in "$@"; do
+    case "$x" in
+        loop=*)
+            image_dir=`echo $x | sed -e 's/.*loop=\(\S*\)\/.*/\1/'`
+        ;;
+        varlog_size=*)
+            varlog_size="${x#varlog_size=}"
+        ;;
+        *mmc_host*)
+             eMMC=1
+    esac
+done
+
 ## Mount the overlay file system: rw layer over squashfs
-image_dir=$(cat /proc/cmdline | sed -e 's/.*loop=\(\S*\)\/.*/\1/')
 mkdir -p ${rootmnt}/host/$image_dir/rw
 mkdir -p ${rootmnt}/host/$image_dir/work
 mount -n -o lowerdir=${rootmnt},upperdir=${rootmnt}/host/$image_dir/rw,workdir=${rootmnt}/host/$image_dir/work -t overlay root-overlay ${rootmnt}
@@ -26,5 +40,9 @@ mount --bind ${rootmnt}/host/$image_dir/{{ DOCKERFS_DIR }} ${rootmnt}/var/lib/do
 ## Mount the boot directory in the raw partition, bypass the overlay
 mkdir -p ${rootmnt}/boot
 mount --bind ${rootmnt}/host/$image_dir/boot ${rootmnt}/boot
-## Mount loop device for /var/log
-[ -f ${rootmnt}/host/disk-img/var-log.ext4 ] && mount -t ext4 -o loop,rw ${rootmnt}/host/disk-img/var-log.ext4 ${rootmnt}/var/log
+## Mount loop device for /var/log or a tmpfs device if the flash is eMMC
+if [ -z ${eMMC+1} ]; then
+    [ -f ${rootmnt}/host/disk-img/var-log.ext4 ] && mount -t ext4 -o loop,rw ${rootmnt}/host/disk-img/var-log.ext4 ${rootmnt}/var/log
+else
+    mount -t tmpfs -o size=${varlog_size}M,mode=0755 tmpfs ${rootmnt}/var/log
+fi

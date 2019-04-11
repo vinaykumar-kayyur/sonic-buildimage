@@ -17,6 +17,9 @@ for x in "$@"; do
     case "$x" in
         varlog_size=*)
             varlog_size="${x#varlog_size=}"
+	;;
+	*mmc_host*)
+	    eMMC=1
     esac
 done
 
@@ -32,5 +35,7 @@ if [ -e "${rootmnt}/host/disk-img/var-log.ext4" ]; then
     fi
 fi
 
-# create varlog disk
-mkdir -p ${rootmnt}/host/disk-img && ${rootmnt}/usr/bin/fallocate -l "$varlog_size"M ${rootmnt}/host/disk-img/var-log.ext4 && mkfs.ext4 -q -F ${rootmnt}/host/disk-img/var-log.ext4
+# create varlog disk only if we are not running eMMC flash
+if [ -z ${eMMC+1} ]; then
+    mkdir -p ${rootmnt}/host/disk-img && ${rootmnt}/usr/bin/fallocate -l "$varlog_size"M ${rootmnt}/host/disk-img/var-log.ext4 && mkfs.ext4 -q -F ${rootmnt}/host/disk-img/var-log.ext4
+fi
