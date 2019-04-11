@@ -78,8 +78,8 @@ class AaaCfg(object):
                 self.auth['failthrough'] = is_true(data['failthrough'])
             if 'debug' in data:
                 self.debug = is_true(data['debug'])
-            if key == 'accounting':
-                self.acct =data
+        if key == 'accounting':
+            self.acct =data
         if modify_conf:
             self.modify_conf_file()
 
