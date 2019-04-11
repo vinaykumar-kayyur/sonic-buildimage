@@ -12,8 +12,7 @@ case $1 in
 esac
 
 # Extract kernel parameters
-set -- $(cat /proc/cmdline)
-for x in "$@"; do
+for x in $(cat /proc/cmdline); do
     case "$x" in
         loop=*)
             image_dir=`echo $x | sed -e 's/.*loop=\(\S*\)\/.*/\1/'`
