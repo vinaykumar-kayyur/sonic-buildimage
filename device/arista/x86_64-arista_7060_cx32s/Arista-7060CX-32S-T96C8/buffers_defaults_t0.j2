@@ -1,11 +1,24 @@
-
-{%- set default_cable = '40m' %}
+{%- set default_cable = '5m' %}
 
 {%- macro generate_port_lists(PORT_ALL) %}
     {# Generate list of ports #}
-    {%- for port_idx in range(0,136,4) %}
+    {%- for port_idx in range(0,96,32) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx + 4)) %}{%- endif %}
+    {%- endfor %}
+    {%- for port_idx in range(8,31) %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
     {%- endfor %}
+    {%- for port_idx in range(40,63) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
+    {%- endfor %}
+    {%- for port_idx in range(72,95) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
+    {%- endfor %}
+    {%- for port_idx in range(104,128) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
+    {%- endfor %}
+    {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
 {%- endmacro %}
 
 {%- macro generate_buffer_pool_and_profiles() %}

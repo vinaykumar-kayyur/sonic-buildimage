@@ -20,6 +20,9 @@
     {%- for port_idx in range(22,24) %}
         {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
     {%- endfor %}
+    {%- for port_idx in range(128,136,4) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
+    {%- endfor %}
 {%- endmacro %}
 
 {%- macro generate_buffer_pool_and_profiles() %}

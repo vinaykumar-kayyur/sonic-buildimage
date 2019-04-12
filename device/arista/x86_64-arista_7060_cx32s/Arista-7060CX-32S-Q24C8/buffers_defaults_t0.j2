@@ -1,37 +1,23 @@
+
 {%- set default_cable = '5m' %}
 
 {%- macro generate_port_lists(PORT_ALL) %}
     {# Generate list of ports #}
-    {%- for port_idx in range(0,6) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(10,22) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(24,32) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(6,10) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
-    {%- endfor %}
-    {%- for port_idx in range(22,24) %}
-        {%- if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{%- endif %}
+    {%- for port_idx in range(0,136,4) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx)) %}{%- endif %}
     {%- endfor %}
 {%- endmacro %}
 
 {%- macro generate_buffer_pool_and_profiles() %}
     "BUFFER_POOL": {
         "ingress_lossless_pool": {
-            "size": "11213696",
+            "size": "10875072",
             "type": "ingress",
             "mode": "dynamic",
-            "xoff": "3855488"
+            "xoff": "4194112"
         },
         "egress_lossy_pool": {
-            "size": "9532224",
+            "size": "9243812",
             "type": "egress",
             "mode": "dynamic"
         },

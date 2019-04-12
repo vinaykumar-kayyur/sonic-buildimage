@@ -377,6 +377,24 @@ xgxs_tx_lane_map_107.0=0x2301
 xgxs_tx_lane_map_108.0=0x0321
 xgxs_tx_lane_map_109.0=0x2301
 
+# SFPs
+phy_an_c37_66.0=2
+phy_an_c37_94.0=2
+phy_an_c73_66.0=0
+phy_an_c73_94.0=0
+phy_xaui_rx_polarity_flip_66.0=0x0
+phy_xaui_rx_polarity_flip_94.0=0x0
+phy_xaui_tx_polarity_flip_66.0=0x0
+phy_xaui_tx_polarity_flip_94.0=0x0
+portmap_66.0=129:1
+portmap_94.0=131:1
+port_init_autoneg_66.0=0
+port_init_autoneg_94.0=0
+port_phy_addr_66.0=0xff
+port_phy_addr_94.0=0xff
+xgxs_rx_lane_map_66.0=0x3210
+xgxs_tx_lane_map_66.0=0x3210
+
 # tuning parameters for 25g serdes fiber
 serdes_driver_current_1=0xa
 serdes_preemphasis_1=0x284008
