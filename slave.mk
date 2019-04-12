@@ -478,6 +478,7 @@ ifeq ($(BLDENV),stretch)
 	DOCKER_IMAGES := $(SONIC_STRETCH_DOCKERS)
 	DOCKER_DBG_IMAGES := $(SONIC_STRETCH_DBG_DOCKERS)
 	SONIC_STRETCH_DOCKERS_FOR_INSTALLERS = $(filter $(SONIC_STRETCH_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS))
+	SONIC_STRETCH_DBG_DOCKERS_FOR_INSTALLERS = $(filter $(SONIC_STRETCH_DBG_DOCKERS), $(patsubst %.gz,%$(DBG_IMAGE_MARK).gz, $(SONIC_STRETCH_DOCKERS_FOR_INSTALLERS)))
 else
 	DOCKER_IMAGES := $(filter-out $(SONIC_STRETCH_DOCKERS), $(SONIC_DOCKER_IMAGES))
 	DOCKER_DBG_IMAGES := $(filter-out $(SONIC_STRETCH_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
@@ -716,7 +717,7 @@ all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
           $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES)) \
           $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DOCKERS_FOR_INSTALLERS)) \
-          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DBG_DOCKERS))
+          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DBG_DOCKERS_FOR_INSTALLERS))
 
 
 ###############################################################################
