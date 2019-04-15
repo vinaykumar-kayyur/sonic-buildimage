@@ -204,15 +204,9 @@ class SfpUtil(SfpUtilBase):
         # Sleep for a second
         if self.modprs_register == self.get_transceiver_status:
             time.sleep(1)
-            if self.modprs_register == self.get_transceiver_status:
-                state_change = 0
-            else:
-                state_change = 1
-
-        # Check OIR change events
-        if not state_change:
             return True, {}
         else:
+            reg_value = self.get_transceiver_status
             changed_ports = self.modprs_register ^ reg_value
             while port >= self.port_start and port <= self.port_end:
 
