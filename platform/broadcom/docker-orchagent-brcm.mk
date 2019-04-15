@@ -1,5 +1,5 @@
 # docker image for orchagent
 
-DOCKER_ORCHAGENT_BRCM_STEM = docker-orchagent-brcm
+DOCKER_ORCHAGENT_PLATFORM_CODE = brcm
 include $(PLATFORM_PATH)/../template/docker-orchagent-base.mk
 
