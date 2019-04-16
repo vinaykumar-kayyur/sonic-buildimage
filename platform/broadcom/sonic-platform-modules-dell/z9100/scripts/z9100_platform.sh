@@ -152,7 +152,7 @@ reset_muxes() {
 }
 
 # Copy led_proc_init.soc file according to the HWSKU
-switch_port_led() {
+init_switch_port_led() {
     T0="Force10-Z9100-C8D48"
     T1="Force10-Z9100-C32"
     device="/usr/share/sonic/device"
@@ -165,11 +165,16 @@ switch_port_led() {
           if [ $? -eq 0 ]; then
                   hwsku=$T1
           else
-                  hwsku=$T2
+                  hwsku=$T0
           fi
     fi
 
     led_proc_init="$device/$platform/$hwsku/led_proc_init.soc"
+
+    if [ -e $led_proc_init ] && [ ! -e $device/$platform/led_proc_init.soc ]; then
+      ln -s $led_proc_init $device/$platform
+    fi
+
 }
 
 init_devnum
@@ -192,12 +197,8 @@ if [[ "$1" == "init" ]]; then
     echo $value > /sys/class/i2c-adapter/i2c-15/15-003e/qsfp_lpmode
     echo $value > /sys/class/i2c-adapter/i2c-16/16-003e/qsfp_lpmode
 
-
     #Copy led_proc_init.soc
-    switch_port_led
-    if [ -e $led_proc_init ] && [ ! -e $device/$platform/led_proc_init.soc ]; then
-      cp $led_proc_init $device/$platform
-    fi
+    init_switch_port_led
 
 elif [[ "$1" == "deinit" ]]; then
     switch_board_sfp "delete_device"
