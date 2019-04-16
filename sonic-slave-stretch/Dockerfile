@@ -114,6 +114,13 @@ RUN apt-get update && apt-get install -y \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
+# For BFN sdk build
+        libusb-1.0-0-dev \
+        libcurl3-nss-dev \
+        libunwind8-dev \
+        telnet \
+        libc-ares2 \
+        libgoogle-perftools4 \
 # For build image
         cpio \
         squashfs-tools \
@@ -218,7 +225,13 @@ RUN apt-get update && apt-get install -y \
 # For lm-sensors
         librrd8 \
         librrd-dev \
-        rrdtool
+        rrdtool \
+# For smartmontools 6.6-1
+        automake1.11 \
+        libselinux1-dev
+
+# For smartmontools 6.6-1
+RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux
