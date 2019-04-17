@@ -96,6 +96,7 @@ RUN apt-get update && apt-get install -y \
         libslf4j-java \
         libservlet3.1-java \
         qt5-default \
+        pkg-php-tools \
 # For mellanox sdk build
         libpcre3 \
         libpcre3-dev \
@@ -109,9 +110,17 @@ RUN apt-get update && apt-get install -y \
         libdb-dev \
         iptables-dev \
         swig \
+        ctags \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
+# For BFN sdk build
+        libusb-1.0-0-dev \
+        libcurl3-nss-dev \
+        libunwind8-dev \
+        telnet \
+        libc-ares2 \
+        libgoogle-perftools4 \
 # For build image
         cpio \
         squashfs-tools \
@@ -218,7 +227,17 @@ RUN apt-get update && apt-get install -y \
         python3-pytest \
         python3-colorama \
 # For initramfs
-        bash-completion
+        bash-completion \
+# For lm-sensors
+        librrd8 \
+        librrd-dev \
+        rrdtool \
+# For smartmontools 6.6-1
+        automake1.11 \
+        libselinux1-dev
+
+# For smartmontools 6.6-1
+RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux
@@ -248,6 +267,11 @@ RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fas
 
 # For sonic snmpagent mock testing
 RUN pip3 install mockredispy==2.9.3
+
+RUN pip3 install PyYAML>=5.1
+
+# For sonic-platform-common testing
+RUN pip3 install redis
 
 # For supervisor build
 RUN pip install meld3 mock
