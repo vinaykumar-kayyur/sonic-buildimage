@@ -251,7 +251,8 @@ RUN apt-get -y build-dep linux
 
 # For gobgp and telemetry build
 RUN export VERSION=1.11.5 \
- && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
+ # && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
+ && wget https://studygolang.com/dl/golang/go$VERSION.linux-amd64.tar.gz \
  && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
  && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc
@@ -302,7 +303,8 @@ RUN mkdir /var/run/sshd
 EXPOSE 22
 
 # Install depot-tools (for git-retry)
-RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
+# RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
+RUN git clone https://github.com/mlufei/depot_tools.git
 ENV PATH /usr/share/depot_tools:$PATH
 
 # Install docker engine 17.03.2~ce-0 inside docker and enable experimental feature
@@ -313,11 +315,13 @@ RUN apt-get install -y \
            curl \
            gnupg2 \
            software-properties-common
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
-RUN add-apt-repository \
-           "deb [arch=amd64] https://download.docker.com/linux/debian \
-           $(lsb_release -cs) \
-           stable"
+# RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+RUN curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/debian/gpg | sudo apt-key add -
+# RUN add-apt-repository \
+#           "deb [arch=amd64] https://download.docker.com/linux/debian \
+#           $(lsb_release -cs) \
+#           stable"
+RUN add-apt-repository "deb [arch=amd64] http://mirrors.aliyun.com/docker-ce/linux/debian $(lsb_release -cs) stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
