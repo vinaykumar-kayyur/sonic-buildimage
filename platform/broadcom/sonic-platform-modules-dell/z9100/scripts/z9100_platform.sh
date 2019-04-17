@@ -171,8 +171,11 @@ init_switch_port_led() {
 
     led_proc_init="$device/$platform/$hwsku/led_proc_init.soc"
 
+    # Remove old HWSKU LED file..
+    rm -rf $device/$platform/led_proc_init.soc
+
     if [ -e $led_proc_init ] && [ ! -e $device/$platform/led_proc_init.soc ]; then
-      ln -s $led_proc_init $device/$platform
+      cp $led_proc_init $device/$platform
     fi
 
 }
