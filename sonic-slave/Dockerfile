@@ -2,11 +2,13 @@ FROM debian:jessie
 
 MAINTAINER johnar@microsoft.com
 
+## Remove retired jessie-updates repo
+RUN sed -i '/deb http:\/\/deb.debian.org\/debian jessie-updates main/d' /etc/apt/sources.list
+
 RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://debian-archive.trafficmanager.net/debian/ jessie-backports main contrib non-free" >> /etc/apt/sources.list
+        echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -113,6 +115,7 @@ RUN apt-get update && apt-get install -y \
         libdb-dev \
         iptables-dev \
         swig \
+        ctags \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
@@ -121,6 +124,8 @@ RUN apt-get update && apt-get install -y \
         libcurl3-nss-dev \
         libunwind8-dev \
         telnet \
+        libc-ares2 \
+        libgoogle-perftools4 \
 # For build image
         cpio \
         squashfs-tools \
