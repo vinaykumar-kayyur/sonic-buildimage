@@ -1,6 +1,6 @@
 # docker image for syncd
 
-DOCKER_SYNCD_PLATFORM_CODE = mlnx
+DOCKER_SYNCD_PLATFORM_CODE = bfn
 include $(PLATFORM_PATH)/../template/docker-syncd-base.mk
 
 $(DOCKER_SYNCD_BASE)_DEPENDS += $(SYNCD)
