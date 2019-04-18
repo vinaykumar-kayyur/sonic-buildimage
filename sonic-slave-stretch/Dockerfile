@@ -114,6 +114,13 @@ RUN apt-get update && apt-get install -y \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
+# For BFN sdk build
+        libusb-1.0-0-dev \
+        libcurl3-nss-dev \
+        libunwind8-dev \
+        telnet \
+        libc-ares2 \
+        libgoogle-perftools4 \
 # For build image
         cpio \
         squashfs-tools \
@@ -177,6 +184,12 @@ RUN apt-get update && apt-get install -y \
         libsensors4 \
         libsensors4-dev \
         libwrap0-dev \
+# For lldpd
+	debhelper \
+        autotools-dev \
+        libbsd-dev \
+        pkg-config \
+        check \
 # For mpdecimal
         docutils-common \
         libjs-sphinxdoc \
@@ -251,6 +264,14 @@ RUN pip install j2cli
 
 # For sonic utilities testing
 RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
+
+# For sonic snmpagent mock testing
+RUN pip3 install mockredispy==2.9.3
+
+RUN pip3 install PyYAML>=5.1
+
+# For sonic-platform-common testing
+RUN pip3 install redis
 
 # For supervisor build
 RUN pip install meld3 mock
