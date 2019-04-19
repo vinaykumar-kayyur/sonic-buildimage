@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import os.path
 import subprocess
 import click
@@ -10,9 +9,16 @@ import os
 class FwUtil():
     """Platform-specific FwUtil class"""
 
-    def __init__(self):
-        self.cpld_dx010_path = "/sys/devices/platform/dx010_cpld/getreg"
-        self.bios_version_path = "/sys/class/dmi/id/bios_version"
+    CPLD_ADDR_MAPPING = {
+        "CPLD1": "0x100",
+        "CPLD2": "0x200",
+        "CPLD3": "0x280",
+        "CPLD4": "0x300",
+        "CPLD5": "0x380"
+    }
+    SUPPORTED_MODULES = ["BIOS", "CPLD"]
+    GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
+    BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 
     # Run bash command and print output to stdout
     def run_command(self, command):
@@ -28,7 +34,7 @@ class FwUtil():
             return False
         return True
 
-    # Read register and resurn value
+    # Read register and return value
     def __get_register_value(self, path, register):
         cmd = "echo {1} > {0}; cat {0}".format(path, register)
         p = subprocess.Popen(
@@ -41,7 +47,7 @@ class FwUtil():
     # Get BIOS firmware version
     def get_bios_version(self):
         try:
-            with open(self.bios_version_path, 'r') as fd:
+            with open(self.BIOS_VERSION_PATH, 'r') as fd:
                 bios_version = fd.read()
                 return bios_version.strip()
         except Exception, e:
@@ -49,41 +55,26 @@ class FwUtil():
 
     # Get CPLD firmware version
     def get_cpld_version(self):
-        try:
-            CPLD_1 = self.__get_register_value(self.cpld_dx010_path, '0x100')
-            CPLD_2 = self.__get_register_value(self.cpld_dx010_path, '0x200')
-            CPLD_3 = self.__get_register_value(self.cpld_dx010_path, '0x280')
-            CPLD_4 = self.__get_register_value(self.cpld_dx010_path, '0x300')
-            CPLD_5 = self.__get_register_value(self.cpld_dx010_path, '0x380')
-
-            CPLD_1 = 'None' if CPLD_1 is 'None' else "{}.{}".format(
-                int(CPLD_1[2], 16), int(CPLD_1[3], 16))
-            CPLD_2 = 'None' if CPLD_2 is 'None' else "{}.{}".format(
-                int(CPLD_2[2], 16), int(CPLD_2[3], 16))
-            CPLD_3 = 'None' if CPLD_3 is 'None' else "{}.{}".format(
-                int(CPLD_3[2], 16), int(CPLD_3[3], 16))
-            CPLD_4 = 'None' if CPLD_4 is 'None' else "{}.{}".format(
-                int(CPLD_4[2], 16), int(CPLD_4[3], 16))
-            CPLD_5 = 'None' if CPLD_5 is 'None' else "{}.{}".format(
-                int(CPLD_5[2], 16), int(CPLD_5[3], 16))
-
-            cpld_version = dict()
-            cpld_version["CPLD1"] = CPLD_1
-            cpld_version["CPLD2"] = CPLD_2
-            cpld_version["CPLD3"] = CPLD_3
-            cpld_version["CPLD4"] = CPLD_4
-            cpld_version["CPLD5"] = CPLD_5
-            return cpld_version
-        except Exception, e:
-            return None
+        cpld_version = dict()
+        for cpld_name in self.CPLD_ADDR_MAPPING:
+            try:
+                cpld_addr = self.CPLD_ADDR_MAPPING[cpld_name]
+                cpld_version_raw = self.__get_register_value(
+                    self.GETREG_PATH, cpld_addr)
+                cpld_version_str = "{}.{}".format(int(cpld_version_raw[2], 16), int(
+                    cpld_version_raw[3], 16)) if cpld_version_raw is not None else 'None'
+                cpld_version[cpld_name] = cpld_version_str
+            except Exception, e:
+                cpld_version[cpld_name] = 'None'
+        return cpld_version
 
     def get_module_list(self):
         """
         Retrieves the list of module that available on the device
 
-        :return: A list of module
+        :return: A list of modules
         """
-        return ["BIOS", "CPLD"]
+        return self.SUPPORTED_MODULES
 
     def get_fw_version(self, module_name):
         """

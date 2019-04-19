@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import os.path
 import subprocess
 import click
@@ -10,10 +9,11 @@ import os
 class FwUtil():
     """Platform-specific FwUtil class"""
 
-    def __init__(self):
-        self.bios_version_path = "/sys/class/dmi/id/bios_version"
-        self.smc_cpld_e1031_path = "/sys/devices/platform/e1031.smc/version"
-        self.mmc_cpld_e1031_path = "/sys/devices/platform/e1031.smc/getreg"
+    SUPPORTED_MODULES = ["BIOS", "CPLD"]
+    BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
+    SMC_CPLD_PATH = "/sys/devices/platform/e1031.smc/version"
+    MMC_CPLD_PATH = "/sys/devices/platform/e1031.smc/getreg"
+    MMC_CPLD_ADDR = '0x100'
 
     # Run bash command and print output to stdout
     def run_command(self, command):
@@ -29,7 +29,7 @@ class FwUtil():
             return False
         return True
 
-    # Read register and resurn value
+    # Read register and return value
     def __get_register_value(self, path, register):
         cmd = "echo {1} > {0}; cat {0}".format(path, register)
         p = subprocess.Popen(
@@ -42,7 +42,7 @@ class FwUtil():
     # Get BIOS firmware version
     def get_bios_version(self):
         try:
-            with open(self.bios_version_path, 'r') as fd:
+            with open(self.BIOS_VERSION_PATH, 'r') as fd:
                 bios_version = fd.read()
                 return bios_version.strip()
         except Exception, e:
@@ -51,14 +51,14 @@ class FwUtil():
     # Get CPLD firmware version
     def get_cpld_version(self):
         try:
-            with open(self.smc_cpld_e1031_path, 'r') as fd:
+            with open(self.SMC_CPLD_PATH, 'r') as fd:
                 smc_cpld_version = fd.read()
 
             smc_cpld_version = "{}.{}".format(int(smc_cpld_version[2], 16), int(
                 smc_cpld_version[3], 16)) if smc_cpld_version is not None else smc_cpld_version
 
             mmc_cpld_version = self.__get_register_value(
-                self.mmc_cpld_e1031_path, '0x100')
+                self.MMC_CPLD_PATH, self.MMC_CPLD_ADDR)
             mmc_cpld_version = "{}.{}".format(int(mmc_cpld_version[2], 16), int(
                 mmc_cpld_version[3], 16)) if mmc_cpld_version is not None else mmc_cpld_version
 
@@ -74,9 +74,9 @@ class FwUtil():
         """
         Retrieves the list of module that available on the device
 
-        :return: A list of module
+        :return: A list of modules
         """
-        return ["BIOS", "CPLD"]
+        return self.SUPPORTED_MODULES
 
     def get_fw_version(self, module_name):
         """
