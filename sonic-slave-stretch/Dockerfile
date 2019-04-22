@@ -96,6 +96,7 @@ RUN apt-get update && apt-get install -y \
         libslf4j-java \
         libservlet3.1-java \
         qt5-default \
+        pkg-php-tools \
 # For mellanox sdk build
         libpcre3 \
         libpcre3-dev \
@@ -109,9 +110,17 @@ RUN apt-get update && apt-get install -y \
         libdb-dev \
         iptables-dev \
         swig \
+        ctags \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
+# For BFN sdk build
+        libusb-1.0-0-dev \
+        libcurl3-nss-dev \
+        libunwind8-dev \
+        telnet \
+        libc-ares2 \
+        libgoogle-perftools4 \
 # For build image
         cpio \
         squashfs-tools \
@@ -168,13 +177,19 @@ RUN apt-get update && apt-get install -y \
         python-parse \
 # For snmpd
         default-libmysqlclient-dev \
-        libssl-dev \
+        libssl1.0-dev \
         libperl-dev \
         libpci-dev \
         libpci3 \
         libsensors4 \
         libsensors4-dev \
         libwrap0-dev \
+# For lldpd
+	debhelper \
+        autotools-dev \
+        libbsd-dev \
+        pkg-config \
+        check \
 # For mpdecimal
         docutils-common \
         libjs-sphinxdoc \
@@ -201,14 +216,34 @@ RUN apt-get update && apt-get install -y \
         cmake \
 # For pam_tacplus build
         autoconf-archive \
+# For python-click build
+        python-sphinx \
+        python-docutils \
+        python3-all \
+        python3-setuptools \
+        python3-sphinx \
+        python3-docutils \
+        python3-requests \
+        python3-pytest \
+        python3-colorama \
 # For initramfs
-        bash-completion
+        bash-completion \
+# For lm-sensors
+        librrd8 \
+        librrd-dev \
+        rrdtool \
+# For smartmontools 6.6-1
+        automake1.11 \
+        libselinux1-dev
+
+# For smartmontools 6.6-1
+RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux
 
-# For gobgp build
-RUN export VERSION=1.8.3 \
+# For gobgp and telemetry build
+RUN export VERSION=1.11.5 \
  && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
  && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
@@ -219,11 +254,24 @@ RUN pip install \
         ctypesgen \
         crc16
 
+# For sonic config engine testing
+RUN pip install pyangbind==0.6.0
+# Note: force upgrade debian packaged jinja2, if installed
+RUN pip install --force-reinstall --upgrade jinja2>=2.10
+
 # For templating
 RUN pip install j2cli
 
-# For sonic config engine testing
-RUN pip install pyangbind==0.5.10
+# For sonic utilities testing
+RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
+
+# For sonic snmpagent mock testing
+RUN pip3 install mockredispy==2.9.3
+
+RUN pip3 install PyYAML>=5.1
+
+# For sonic-platform-common testing
+RUN pip3 install redis
 
 # For supervisor build
 RUN pip install meld3 mock
@@ -255,4 +303,4 @@ RUN add-apt-repository \
            stable"
 RUN apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-stretch
-RUN echo "DOCKER_OPTS=\"--experimental\"" >> /etc/default/docker
+RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
