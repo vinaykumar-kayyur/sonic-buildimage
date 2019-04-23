@@ -228,7 +228,7 @@ if [[ "$1" == "init" ]]; then
 
     # Disable Watchdog Timer
     if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then
-        exec /usr/local/bin/platform_watchdog_disable.sh
+        /usr/local/bin/platform_watchdog_disable.sh
     fi
 
     cpu_board_mux "new_device"
