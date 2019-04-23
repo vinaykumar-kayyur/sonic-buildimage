@@ -201,28 +201,27 @@ class SfpUtil(SfpUtilBase):
         port_dict = {}
         port = self.port_start
 
-        # Sleep for a second
-        if self.modprs_register == self.get_transceiver_status:
-            time.sleep(1)
-            return True, {}
-        else:
+        while True:
             reg_value = self.get_transceiver_status
-            changed_ports = self.modprs_register ^ reg_value
-            while port >= self.port_start and port <= self.port_end:
+            if reg_value != self.modprs_register:
+                changed_ports = self.modprs_register ^ reg_value
+                while port >= self.port_start and port <= self.port_end:
 
-                # Mask off the bit corresponding to our port
-                mask = (1 << port)
+                    # Mask off the bit corresponding to our port
+                    mask = (1 << port)
 
-                if changed_ports & mask:
-                    # ModPrsL is active low
-                    if reg_value & mask == 0:
-                        port_dict[port] = '1'
-                    else:
-                        port_dict[port] = '0'
+                    if changed_ports & mask:
+                        # ModPrsL is active low
+                        if reg_value & mask == 0:
+                            port_dict[port] = '1'
+                        else:
+                            port_dict[port] = '0'
 
-                port += 1
+                    port += 1
 
-            # Update reg value
-            self.modprs_register = reg_value
+                # Update reg value
+                self.modprs_register = reg_value
+                return True, port_dict
 
-            return True, port_dict
+            # Sleep for a second
+            time.sleep(1)
