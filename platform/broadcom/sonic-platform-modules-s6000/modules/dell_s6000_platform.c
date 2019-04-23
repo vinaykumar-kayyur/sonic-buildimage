@@ -256,11 +256,12 @@ static int dell_i2c_smbus_read_byte_data(const struct i2c_client *client,
 
     ret = i2c_smbus_read_byte_data(client, command);
     if(ret < 0) {
-        printk(KERN_WARNING "I2C smbus read filed. Toggling GPIO for retry");
+        printk(KERN_WARNING "I2C smbus read failed. Resetting mux with gpio10");
         gpio_set_value(GPIO_I2C_MUX_PIN, 1);
         gpio_set_value(GPIO_I2C_MUX_PIN, 0);
+        ret = i2c_smbus_read_byte_data(client, command);
     }
-    return i2c_smbus_read_byte_data(client, command);
+    return ret;
 }
 
 static int dell_i2c_smbus_write_byte_data(const struct i2c_client *client,
@@ -271,11 +272,12 @@ static int dell_i2c_smbus_write_byte_data(const struct i2c_client *client,
     ret = i2c_smbus_write_byte_data(client, command, value);
     if(ret < 0)
     {
-        printk(KERN_WARNING "I2C smbus write filed. Toggling GPIO for retry");
+        printk(KERN_WARNING "I2C smbus write failed. Resetting mux with gpio10");
         gpio_set_value(GPIO_I2C_MUX_PIN, 1);
         gpio_set_value(GPIO_I2C_MUX_PIN, 0);
+        ret = i2c_smbus_write_byte_data(client, command, value);
     }
-    return i2c_smbus_write_byte_data(client, command, value);
+    return ret;
 }
 
 static ssize_t get_modsel(struct device *dev, struct device_attribute *devattr, char *buf)
