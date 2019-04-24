@@ -16,8 +16,10 @@ if [ "$?" == "0" ] && [ "$HOSTNAME" != "" ]; then
     echo $HOSTNAME > /etc/hostname
     hostname -F /etc/hostname
 
-    sed -i "/\s$CURRENT_HOSTNAME$/d" /etc/hosts
-    echo "127.0.0.1 $HOSTNAME" >> /etc/hosts
+    tempfile=`mktemp -q -t hosts.XXXX`
+    sed "/\s$CURRENT_HOSTNAME$/d" /etc/hosts > $tempfile
+    echo "127.0.0.1 $HOSTNAME" >> $tempfile
+    cat $tempfile > /etc/hosts && rm $tempfile
 fi
 
 rm -f /var/run/rsyslogd.pid

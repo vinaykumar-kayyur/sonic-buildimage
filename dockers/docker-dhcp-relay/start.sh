@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+CURRENT_HOSTNAME=`hostname`
+HOSTNAME=`sonic-cfggen -d -v DEVICE_METADATA[\'localhost\'][\'hostname\']`
+
+if [ "$?" == "0" ] && [ "$HOSTNAME" != "" ]; then
+    echo $HOSTNAME > /etc/hostname
+    hostname -F /etc/hostname
+
+    tempfile=`mktemp -q -t hosts.XXXX`
+    sed "/\s$CURRENT_HOSTNAME$/d" /etc/hosts > $tempfile
+    echo "127.0.0.1 $HOSTNAME" >> $tempfile
+    cat $tempfile > /etc/hosts && rm $tempfile
+fi
+
 # Remove stale rsyslog PID file if it exists
 rm -f /var/run/rsyslogd.pid
 
