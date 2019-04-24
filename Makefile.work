@@ -27,6 +27,9 @@
 #  *                  make NOSTRETCH=1 KEEP_SLAVE_ON=yes <any jessie target>
 #  * SOURCE_FOLDER: host path to be mount as /var/$(USER)/src, only effective when KEEP_SLAVE_ON=yes
 #  * SONIC_BUILD_JOBS: Specifying number of concurrent build job(s) to run
+#  * VS_PREPARE_MEM: Prepare memory in VS build (drop cache and compact).
+#  *                 Default: yes
+#  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
 #
 ###############################################################################
@@ -103,6 +106,7 @@ DOCKER_BUILD = docker build --no-cache \
 
 SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
+                           BLDENV=$(BLDENV) \
                            PLATFORM=$(PLATFORM) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
@@ -114,10 +118,12 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
+                           VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
-                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY)
+                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
+                           $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 
@@ -166,12 +172,15 @@ init :
 reset :
 	@echo && echo -n "Warning! All local changes will be lost. Proceed? [y/N]: "
 	@read ans && \
-	 if [ $$ans == y ]; then \
-	     git clean -xfdf; \
-	     git reset --hard; \
-	     git submodule foreach --recursive git clean -xfdf; \
-	     git submodule foreach --recursive git reset --hard; \
-	     git submodule update --init --recursive;\
-	 else \
-	     echo "Reset aborted"; \
-	 fi
+	    if [ $$ans == y ]; then \
+	        echo "Resetting local repository. Please wait..."; \
+	        $(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) sudo rm -rf fsroot; \
+	        git clean -xfdf; \
+	        git reset --hard; \
+	        git submodule foreach --recursive git clean -xfdf; \
+	        git submodule foreach --recursive git reset --hard; \
+	        git submodule update --init --recursive; \
+			echo "Reset complete!"; \
+	    else \
+	        echo "Reset aborted"; \
+	    fi
