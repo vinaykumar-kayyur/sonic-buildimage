@@ -196,7 +196,7 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
-    def get_transceiver_change_event(self):
+    def get_transceiver_change_event(self, timeout=0):
 
         port_dict = {}
         port = self.port_start
