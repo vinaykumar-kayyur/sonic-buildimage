@@ -10,7 +10,7 @@ if [ "$?" == "0" ] && [ "$HOSTNAME" != "" ]; then
     tempfile=`mktemp -q -t hosts.XXXX`
     sed "/\s$CURRENT_HOSTNAME$/d" /etc/hosts > $tempfile
     echo "127.0.0.1 $HOSTNAME" >> $tempfile
-    cat $tempfile > /etc/hosts && rm $tempfile
+    cat $tempfile > /etc/hosts ; rm $tempfile
 fi
 
 # Remove stale rsyslog PID file if it exists
