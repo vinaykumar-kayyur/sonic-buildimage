@@ -5,8 +5,13 @@ import subprocess
 import click
 import os
 
+try:
+    from sonic_fw.fw_manage_base import FwBase
+except ImportError as e:
+    raise ImportError(str(e) + "- required module not found")
 
-class FwUtil():
+
+class FwUtil(FwBase):
     """Platform-specific FwUtil class"""
 
     CPLD_ADDR_MAPPING = {
