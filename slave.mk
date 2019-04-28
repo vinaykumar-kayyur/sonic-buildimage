@@ -648,6 +648,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	PASSWORD="$(PASSWORD)" \
 	TARGET_MACHINE=$($*_MACHINE) \
 	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+	IMAGE_PREFIX="" \
 		./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
@@ -663,6 +664,103 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS))
+
+# targets for building debug installers with base image
+$(addprefix $(TARGET_PATH)/, $(SONIC_DBG_INSTALLERS)) : $(TARGET_PATH)/$(DBG_IMAGE_MARK)-% : \
+        .platform \
+        onie-image.conf \
+        build_debian.sh \
+        build_image.sh \
+        $$(addsuffix -install,$$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_DEPENDS))) \
+        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_INSTALLS)) \
+        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
+        $(addprefix $(STRETCH_DEBS_PATH)/,$(INITRAMFS_TOOLS) \
+                $(LINUX_KERNEL) \
+                $(SONIC_DEVICE_DATA) \
+                $(PYTHON_CLICK) \
+                $(LIBPAM_TACPLUS) \
+                $(LIBNSS_TACPLUS)) \
+        $$(addprefix $(TARGET_PATH)/,$$($$*_DBG_DOCKERS)) \
+        $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
+        $(addprefix $(STRETCH_FILES_PATH)/,$(IXGBE_DRIVER)) \
+        $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))
+	$(HEADER)
+	# Pass initramfs and linux kernel explicitly. They are used for all platforms
+	export debs_path="$(STRETCH_DEBS_PATH)"
+	export python_debs_path="$(PYTHON_DEBS_PATH)" 
+	export initramfs_tools="$(STRETCH_DEBS_PATH)/$(INITRAMFS_TOOLS)"
+	export linux_kernel="$(STRTCH_DEBS_PATH)/$(LINUX_KERNEL)"
+	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
+	export kversion="$(KVERSION)"
+	export image_type="$($*_IMAGE_TYPE)"
+	export sonicadmin_user="$(USERNAME)"
+	export sonic_asic_platform="$(CONFIGURED_PLATFORM)"
+	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
+	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
+	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
+	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
+	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($*_INSTALLS))"
+	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(STRETCH_DEBS_PATH)/$(deb))))"
+	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DBG_DOCKERS))"
+	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
+	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
+	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
+	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
+
+	$(foreach docker, $($*_DBG_DOCKERS),\
+		export docker_image="$(docker)"
+		export docker_image_name="$(basename $(docker))"
+		export docker_container_name="$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)"
+		$(eval $(docker:-dbg.gz=.gz)_RUN_OPT += $($(docker:-dbg.gz=.gz)_$($*_IMAGE_TYPE)_RUN_OPT))
+		export docker_image_run_opt="$($(docker:-dbg.gz=.gz)_RUN_OPT)"
+		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
+		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
+		j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+		fi
+		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
+	)
+
+	export installer_start_scripts="$(foreach docker, $($*_DBG_DOCKERS),$(addsuffix .sh, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)))"
+	export installer_services="$(foreach docker, $($*_DBG_DOCKERS),$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)))"
+	export installer_extra_files="$(foreach docker, $($*_DBG_DOCKERS), $(foreach file, $($(docker:-dbg.gz=.gz)_BASE_IMAGE_FILES), $($(docker:-dbg.gz=.gz)_PATH)/base_image_files/$(file)))"
+
+	j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
+	j2 -f env files/initramfs-tools/arista-convertfs.j2 onie-image.conf > files/initramfs-tools/arista-convertfs
+
+	j2 files/build_templates/updategraph.service.j2 > updategraph.service
+
+	$(if $($*_DBG_DOCKERS),
+		j2 files/build_templates/sonic_debian_extension.j2 > sonic_debian_extension.sh
+		chmod +x sonic_debian_extension.sh,
+	)
+
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+		./build_debian.sh $(LOG)
+
+	USERNAME="$(USERNAME)" \
+	PASSWORD="$(PASSWORD)" \
+	TARGET_MACHINE=$($*_MACHINE) \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+	IMAGE_PREFIX="$(DBG_IMAGE_MARK)-" \
+		./build_image.sh $(LOG)
+
+	$(foreach docker, $($*_DBG_DOCKERS), \
+		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
+		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+	)
+
+	$(if $($*_DBG_DOCKERS),
+		rm sonic_debian_extension.sh,
+	)
+
+	chmod a+x $@
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_DBG_INSTALLERS))
 
 ###############################################################################
 ## Clean targets
