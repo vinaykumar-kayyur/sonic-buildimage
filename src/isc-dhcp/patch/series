@@ -1,4 +1,4 @@
-# This series applies on GIT commit ee3dffdda38a8cfc6ad2005d8d64a165d2a709ba
+# This series applies on GIT commit d613b77d0473054fb0071b00d01eaa1623e50a07
 0001-Bugfix-Don-t-print-log-messages-to-stderr-in-release.patch
 0002-Customizable-Option-82-circuit-ID-and-remote-ID-fiel.patch
 0003-Support-for-obtaining-name-of-physical-interface-tha.patch
