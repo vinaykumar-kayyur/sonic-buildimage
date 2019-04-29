@@ -1,7 +1,6 @@
 [Unit]
 Description=Router advertiser container
 Requires=updategraph.service swss.service
-PartOf=swss.service
 After=updategraph.service swss.service
 Before=ntp-config.service
 
