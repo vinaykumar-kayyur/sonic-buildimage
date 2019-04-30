@@ -1,7 +1,11 @@
 orchagent
 portsyncd
-intfsyncd
 neighsyncd
 vlanmgrd
 intfmgrd
+portmgrd
 buffermgrd
+vrfmgrd
+nbrmgrd
+vxlanmgrd
+intfsyncd
