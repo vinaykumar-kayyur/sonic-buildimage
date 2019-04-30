@@ -80,6 +80,8 @@ route-map FROM_BGP_SPEAKER_V4 permit 10
 route-map TO_BGP_SPEAKER_V4 deny 10
 !
 ! Vnet BGP instance
+{% block vnet_bgp_instance %}
+{% if VNET is defined %}
 {% for vnet_name, vnet_metadata in VNET.iteritems() %}
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vnet_name }}
   no bgp default ipv4-unicast
@@ -131,6 +133,8 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vnet_name }}
     advertise ipv4 unicast
   exit-address-family
 {% endfor %}
+{% endif %}
+{% endblock vnet_bgp_instance %}
 !
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   bgp log-neighbor-changes
