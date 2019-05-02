@@ -347,6 +347,13 @@ static struct platform_device system_led_dev = {
 	},
 };
 
+static struct platform_device qci_hwmon_device = {
+	.name           = "qci-hwmon",
+	.id             = 0,
+	.dev = {
+	},
+};
+
 static struct platform_device *ix1b_device;
 
 struct gpio_led_data {
@@ -465,6 +472,9 @@ static int __init ix1b_platform_init(void)
 		ix1b_leds[i].cdev = &(priv->leds[i].cdev);
 	}
 	printk("[CC] NEW device led\n");
+
+	platform_device_register(&qci_hwmon_device);
+	printk("[CC] NEW device hwmon\n");
 
 	return 0;
 
