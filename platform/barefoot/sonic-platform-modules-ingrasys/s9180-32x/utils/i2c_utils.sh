@@ -174,12 +174,18 @@ function _i2c_init {
     echo "# Description: I2C Init"
     echo "========================================================="
 
+    depmod -a
+
     rmmod eeprom
     rmmod i2c_i801
+    rmmod optoe
+    rmmod sff_8436_eeprom
     modprobe i2c_i801
     modprobe i2c_dev
     modprobe i2c_mux_pca954x force_deselect_on_exit=1
     #modprobe cpld_wdt
+    modprobe sff_8436_eeprom
+    modprobe optoe
 
     if [ ! -e "${PATH_SYS_I2C_DEVICES}/i2c-${NUM_MUX1_CHAN0_DEVICE}" ]; then
         _retry "echo 'pca9548 0x70' > ${PATH_I801_DEVICE}/new_device"
@@ -240,9 +246,7 @@ function _i2c_init {
     _i2c_fan_speed_init
     _i2c_temp_init
     modprobe jc42
-    rmmod gpio_ich
     _i2c_gpio_init
-    modprobe gpio_ich
     _i2c_mb_eeprom_init "new"
     _i2c_qsfp_eeprom_init "new"
     _i2c_sfp_eeprom_init "new"
@@ -644,9 +648,10 @@ function _i2c_gpio_init {
     do
         echo $i > /sys/class/gpio/export
         echo 1 > /sys/class/gpio/gpio${i}/active_low
-        echo low > /sys/class/gpio/gpio${i}/direction
-        #echo out > /sys/class/gpio/gpio${i}/direction
-        #echo 0 > /sys/class/gpio/gpio${i}/value
+	# value low for gpio direction not official support
+        #echo low > /sys/class/gpio/gpio${i}/direction
+        echo out > /sys/class/gpio/gpio${i}/direction
+        echo 0 > /sys/class/gpio/gpio${i}/value
     done
 
     #RST Port 16-31
@@ -656,9 +661,10 @@ function _i2c_gpio_init {
     do
         echo $i > /sys/class/gpio/export
         echo 1 > /sys/class/gpio/gpio${i}/active_low
-        echo low > /sys/class/gpio/gpio${i}/direction
-        #echo out > /sys/class/gpio/gpio${i}/direction
-        #echo 0 > /sys/class/gpio/gpio${i}/value
+	# value low for gpio direction not official support
+        #echo low > /sys/class/gpio/gpio${i}/direction
+        echo out > /sys/class/gpio/gpio${i}/direction
+        echo 0 > /sys/class/gpio/gpio${i}/value
     done
     
     #PSU I/O on Dummy Board 0x25
@@ -1129,10 +1135,10 @@ function _i2c_sfp_eeprom_init {
     if [ "${action}" == "new" ] && \
        ! [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_SFP1_DEVICE}-0050 ] && \
        ! [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_SFP2_DEVICE}-0050 ]; then
-        #echo "sff8436 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP1_DEVICE}/new_device
-        #echo "sff8436 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP2_DEVICE}/new_device
-        echo "optoe1 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP1_DEVICE}/new_device
-        echo "optoe1 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP2_DEVICE}/new_device
+        echo "sff8436 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP1_DEVICE}/new_device
+        echo "sff8436 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP2_DEVICE}/new_device
+        #echo "optoe1 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP1_DEVICE}/new_device
+        #echo "optoe1 0x50" > ${PATH_SYS_I2C_DEVICES}/i2c-${NUM_SFP2_DEVICE}/new_device
     elif [ "${action}" == "delete" ] && \
          [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_SFP1_DEVICE}-0050 ] && \
          [ -L ${PATH_SYS_I2C_DEVICES}/${NUM_SFP2_DEVICE}-0050 ]; then

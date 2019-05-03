@@ -383,6 +383,8 @@ function _i2c_init {
     echo "# Description: I2C Init"
     echo "========================================================="
 
+    depmod -a
+
     #remove optoe module
     rmmod optoe
 
@@ -494,6 +496,9 @@ function _i2c_init {
     _util_rmmod eeprom
     modprobe eeprom_mb
     modprobe gpio-pca953x
+    modprobe sff_8436_eeprom
+    modprobe optoe
+
     _i2c_io_exp_init
     _i2c_sensors_init
     _i2c_cpld_init
@@ -1160,8 +1165,8 @@ function _i2c_sfp_eeprom_init {
 
         if [ "${action}" == "new" ] && \
            ! [ -L ${PATH_SYS_I2C_DEVICES}/$eepromBus-$(printf "%04x" $eepromAddr) ]; then
-            #echo "sff8436 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eepromBus/new_device
-            echo "optoe1 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eepromBus/new_device
+            echo "sff8436 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eepromBus/new_device
+            #echo "optoe1 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eepromBus/new_device
         elif [ "${action}" == "delete" ] && \
              [ -L ${PATH_SYS_I2C_DEVICES}/$eepromBus-$(printf "%04x" $eepromAddr) ]; then
             echo "$eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eepromBus/delete_device

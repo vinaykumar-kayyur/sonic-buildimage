@@ -250,9 +250,13 @@ function _i2c_init {
 
     #rmmod i2c_ismt
     _util_rmmod i2c_i801
+    _util_rmmod optoe
+    _util_rmmod sff_8436_eeprom
     modprobe i2c_i801 disable_features=0x10
     modprobe i2c_dev
     modprobe i2c_mux_pca954x force_deselect_on_exit=1
+    modprobe sff_8436_eeprom
+    modprobe optoe
 
     # add MUX PCA9548#0 on I801, assume to be i2c-1~8
     if [ ! -e ${PATH_MUX_9548_0_CH0} ]; then
@@ -302,9 +306,7 @@ function _i2c_init {
     modprobe eeprom_mb
     modprobe gpio-pca953x
     _i2c_io_exp_init
-    rmmod gpio_ich
     _i2c_gpio_init
-    modprobe gpio_ich
     _i2c_sensors_init
     _i2c_psu_init
     
@@ -1144,7 +1146,8 @@ function _i2c_qsfp_eeprom_init {
         
         if [ "${action}" == "new" ] && \
            ! [ -L ${PATH_SYS_I2C_DEVICES}/$eeprombus-$(printf "%04x" $eepromAddr) ]; then
-            echo "sff8436 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eeprombus/new_device
+            #echo "sff8436 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eeprombus/new_device
+            echo "optoe1 $eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eeprombus/new_device
         elif [ "${action}" == "delete" ] && \
              [ -L ${PATH_SYS_I2C_DEVICES}/$eeprombus-$(printf "%04x" $eepromAddr) ]; then
             echo "$eepromAddr" > ${PATH_SYS_I2C_DEVICES}/i2c-$eeprombus/delete_device
