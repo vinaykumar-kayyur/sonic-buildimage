@@ -36,7 +36,7 @@ class ThermalUtil(object):
     """Platform-specific ThermalUtil class"""
 
     THERMAL_NUM_ON_MAIN_BROAD = 6
-
+    THERMAL_NUM_1_IDX = 1
     BASE_VAL_PATH = '/sys/bus/i2c/devices/{0}-00{1}/hwmon/hwmon*/temp1_input'
 
     """ Dictionary where
@@ -44,20 +44,20 @@ class ThermalUtil(object):
         value = path to fan device file (string) """
     _thermal_to_device_path_mapping = {}
 
-    _thermal_to_device_node_mapping = {
+    _thermal_to_device_node_mapping = [
             ['18', '48'],
             ['18', '49'],
             ['18', '4a'],
             ['18', '4b'],
             ['17', '4d'],
             ['17', '4e'],
-           }
+           ]
 
     def __init__(self):
         thermal_path = self.BASE_VAL_PATH
 
-        for x in range(self.THERMAL_NUM_1_IDX, self.THERMAL_NUM_ON_MAIN_BROAD+1):
-            self._thermal_to_device_path_mapping[x] = thermal_path.format(
+        for x in range(self.THERMAL_NUM_ON_MAIN_BROAD):
+            self._thermal_to_device_path_mapping[x+1] = thermal_path.format(
                 self._thermal_to_device_node_mapping[x][0],
                 self._thermal_to_device_node_mapping[x][1])
             
@@ -109,9 +109,12 @@ class ThermalUtil(object):
 
     def get_thermal_temp(self):
         sum = 0
-        for x in range(thermal.get_idx_thermal_start(), thermal.get_num_thermals()+1)
-            sum += self._get_thermal_node_val(x)
-        return (int)(sum/thermal.get_num_thermals())  #round down for hysteresis.
+        o = []
+        for x in range(self.THERMAL_NUM_ON_MAIN_BROAD):
+            sum += self._get_thermal_node_val(x+1)
+        avg = sum/self.THERMAL_NUM_ON_MAIN_BROAD    
+        avg = (avg/1000)*1000    #round down for hysteresis.
+        return avg 
 
 #def main():
 #    thermal = ThermalUtil()

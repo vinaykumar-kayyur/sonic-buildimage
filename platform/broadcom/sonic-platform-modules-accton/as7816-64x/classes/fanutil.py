@@ -67,7 +67,6 @@ class FanUtil(object):
     _fan_to_device_node_mapping = {
            (FAN_NUM_1_IDX, FAN_NODE_FAULT_IDX_OF_MAP): 'fan1_fault',           
            (FAN_NUM_1_IDX, FAN_NODE_DIR_IDX_OF_MAP): 'fan1_direction',           
-
            (FAN_NUM_2_IDX, FAN_NODE_FAULT_IDX_OF_MAP): 'fan2_fault',
            (FAN_NUM_2_IDX, FAN_NODE_DIR_IDX_OF_MAP): 'fan2_direction',
 
@@ -207,7 +206,6 @@ class FanUtil(object):
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
-        #val = ((val + 1 ) * 625 +75 ) / 100
         fan_file.write(str(val))
         fan_file.close()
         return True
