@@ -127,7 +127,7 @@ start() {
             exit $?
         fi
 
-        # docker created with a different HWSKU, remove and recreate
+        # docker created with a different HWSKU and/or hostname, remove and recreate
         echo "Removing obsolete {{docker_container_name}} container with HWSKU $DOCKERMOUNT and HOSTNAME $DOCKERHOSTNAME"
         docker rm -f {{docker_container_name}}
     fi
