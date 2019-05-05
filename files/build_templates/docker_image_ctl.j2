@@ -168,6 +168,9 @@ wait() {
 }
 
 stop() {
+{%- if docker_container_name == "pmon" %}
+    docker exec pmon post-syseeprom -c
+{%- endif %}
     docker stop {{docker_container_name}}
 }
 
