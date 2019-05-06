@@ -106,6 +106,7 @@ COPY ["files/sonic_version.yml", "/etc/sonic/"]
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
 
 RUN echo "docker-sonic-vs" > /etc/hostname
+RUN mkdir -p /etc/quagga
 RUN touch /etc/quagga/zebra.conf
 
 # Create /var/warmboot/teamd folder for teammgrd
