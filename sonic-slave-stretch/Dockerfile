@@ -262,6 +262,8 @@ RUN pip install --force-reinstall --upgrade jinja2>=2.10
 # For templating
 RUN pip install j2cli
 
+# Remove python-click 6.6
+RUN apt-get purge -y python-click
 # For sonic utilities testing
 RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
 
