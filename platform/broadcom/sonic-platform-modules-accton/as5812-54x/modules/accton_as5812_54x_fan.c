@@ -33,6 +33,8 @@
 #include <linux/device.h>
 #include <linux/platform_device.h>
 
+#define DRVNAME "as5812_54x_fan"
+
 #define FAN_MAX_NUMBER                   5
 #define FAN_SPEED_CPLD_TO_RPM_STEP       150
 #define FAN_SPEED_PRECENT_TO_CPLD_STEP   5
@@ -127,50 +129,62 @@ static int accton_as5812_54x_fan_read_value(u8 reg);
 static int accton_as5812_54x_fan_write_value(u8 reg, u8 value);
 
 static ssize_t fan_set_duty_cycle(struct device *dev,
-                    struct device_attribute *da,const char *buf, size_t count);
+                                  struct device_attribute *da,const char *buf, size_t count);
 static ssize_t fan_show_value(struct device *dev,
-                    struct device_attribute *da, char *buf);
+                              struct device_attribute *da, char *buf);
+static ssize_t show_name(struct device *dev,
+                         struct device_attribute *da, char *buf);
 
 extern int as5812_54x_cpld_read(unsigned short cpld_addr, u8 reg);
 extern int as5812_54x_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 
 
 /*******************/
-#define _MAKE_SENSOR_DEVICE_ATTR(prj, id) \
-    static SENSOR_DEVICE_ATTR(prj##fan##id##_fault, S_IRUGO, fan_show_value, NULL, FAN##id##_FAULT); \
+#define _MAKE_SENSOR_DEVICE_ATTR(prj, id, id2) \
     static SENSOR_DEVICE_ATTR(prj##fan##id##_speed_rpm, S_IRUGO, fan_show_value, NULL, FAN##id##_SPEED); \
     static SENSOR_DEVICE_ATTR(prj##fan##id##_duty_cycle_percentage, S_IWUSR | S_IRUGO, fan_show_value,          \
                                             fan_set_duty_cycle, FAN##id##_DUTY_CYCLE);          \
     static SENSOR_DEVICE_ATTR(prj##fan##id##_direction, S_IRUGO, fan_show_value, NULL, FAN##id##_DIRECTION); \
     static SENSOR_DEVICE_ATTR(prj##fanr##id##_fault, S_IRUGO, fan_show_value, NULL, FANR##id##_FAULT); \
-    static SENSOR_DEVICE_ATTR(prj##fanr##id##_speed_rpm, S_IRUGO, fan_show_value, NULL, FANR##id##_SPEED);
+    static SENSOR_DEVICE_ATTR(prj##fanr##id##_speed_rpm, S_IRUGO, fan_show_value, NULL, FANR##id##_SPEED); \
+    static SENSOR_DEVICE_ATTR(prj##fan##id##_input, S_IRUGO, fan_show_value, NULL, FAN##id##_SPEED); \
+    static SENSOR_DEVICE_ATTR(prj##fan##id2##_input, S_IRUGO, fan_show_value, NULL, FANR##id##_SPEED); \
+    static SENSOR_DEVICE_ATTR(prj##fan##id##_fault, S_IRUGO, fan_show_value, NULL, FAN##id##_FAULT); \
+    static SENSOR_DEVICE_ATTR(prj##fan##id2##_fault, S_IRUGO, fan_show_value, NULL, FAN##id##_FAULT);
 
-#define MAKE_SENSOR_DEVICE_ATTR(prj,id) _MAKE_SENSOR_DEVICE_ATTR(prj,id)
+#define MAKE_SENSOR_DEVICE_ATTR(prj,id, id2) _MAKE_SENSOR_DEVICE_ATTR(prj,id, id2)
 
-MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME, 1)
-MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME, 2)
-MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME, 3)
-MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME, 4)
-MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME, 5)
+MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME,1,11)
+MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME,2,12)
+MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME,3,13)
+MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME,4,14)
+MAKE_SENSOR_DEVICE_ATTR(PROJECT_NAME,5,15)
+
+static SENSOR_DEVICE_ATTR(name, S_IRUGO, show_name, NULL, 0);
 /*******************/
 
-#define _MAKE_FAN_ATTR(prj, id) \
-    &sensor_dev_attr_##prj##fan##id##_fault.dev_attr.attr,     \
+#define _MAKE_FAN_ATTR(prj, id, id2) \
     &sensor_dev_attr_##prj##fan##id##_speed_rpm.dev_attr.attr,     \
     &sensor_dev_attr_##prj##fan##id##_duty_cycle_percentage.dev_attr.attr,\
     &sensor_dev_attr_##prj##fan##id##_direction.dev_attr.attr, \
     &sensor_dev_attr_##prj##fanr##id##_fault.dev_attr.attr,   \
-    &sensor_dev_attr_##prj##fanr##id##_speed_rpm.dev_attr.attr,
+    &sensor_dev_attr_##prj##fanr##id##_speed_rpm.dev_attr.attr, \
+    &sensor_dev_attr_##prj##fan##id##_input.dev_attr.attr, \
+    &sensor_dev_attr_##prj##fan##id2##_input.dev_attr.attr, \
+    &sensor_dev_attr_##prj##fan##id##_fault.dev_attr.attr,     \
+    &sensor_dev_attr_##prj##fan##id2##_fault.dev_attr.attr,
 
-#define MAKE_FAN_ATTR(prj, id) _MAKE_FAN_ATTR(prj, id)
+
+#define MAKE_FAN_ATTR(prj, id, id2) _MAKE_FAN_ATTR(prj, id, id2)
 
 static struct attribute *accton_as5812_54x_fan_attributes[] = {
     /* fan related attributes */
-    MAKE_FAN_ATTR(PROJECT_NAME,1)
-    MAKE_FAN_ATTR(PROJECT_NAME,2)
-    MAKE_FAN_ATTR(PROJECT_NAME,3)
-    MAKE_FAN_ATTR(PROJECT_NAME,4)
-    MAKE_FAN_ATTR(PROJECT_NAME,5)
+    MAKE_FAN_ATTR(PROJECT_NAME,1,11)
+    MAKE_FAN_ATTR(PROJECT_NAME,2,12)
+    MAKE_FAN_ATTR(PROJECT_NAME,3,13)
+    MAKE_FAN_ATTR(PROJECT_NAME,4,14)
+    MAKE_FAN_ATTR(PROJECT_NAME,5,15)
+    &sensor_dev_attr_name.dev_attr.attr,
     NULL
 };
 /*******************/
@@ -178,7 +192,7 @@ static struct attribute *accton_as5812_54x_fan_attributes[] = {
 /* fan related functions
  */
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
-             char *buf)
+                              char *buf)
 {
     struct  sensor_device_attribute *attr = to_sensor_dev_attr(da);
     ssize_t ret = 0;
@@ -194,47 +208,53 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     data_index = attr->index/FAN2_FAULT;
 
     switch (type_index) {
-        case FAN1_FAULT:
-            ret = sprintf(buf, "%d\n", fan_data->status[data_index]);
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
-            break;
-        case FAN1_SPEED:
-            ret = sprintf(buf, "%d\n", fan_data->speed[data_index]);
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
-            break;
-        case FAN1_DUTY_CYCLE:
-            ret = sprintf(buf, "%d\n", fan_data->duty_cycle[data_index]);
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
-            break;
-        case FAN1_DIRECTION:
-            ret = sprintf(buf, "%d\n", fan_data->direction[data_index]);   /* presnet, need to modify*/
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
-            break;
-        case FANR1_FAULT:
-            ret = sprintf(buf, "%d\n", fan_data->r_status[data_index]);
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
-            break;
-        case FANR1_SPEED:
-            ret = sprintf(buf, "%d\n", fan_data->r_speed[data_index]);
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
-            break;
-        default:
-            if (LOCAL_DEBUG)
-                printk ("[Check !!][%s][%d] \n", __FUNCTION__, __LINE__);
-            break;
+    case FAN1_FAULT:
+        ret = sprintf(buf, "%d\n", fan_data->status[data_index]);
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+        break;
+    case FAN1_SPEED:
+        ret = sprintf(buf, "%d\n", fan_data->speed[data_index]);
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+        break;
+    case FAN1_DUTY_CYCLE:
+        ret = sprintf(buf, "%d\n", fan_data->duty_cycle[data_index]);
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+        break;
+    case FAN1_DIRECTION:
+        ret = sprintf(buf, "%d\n", fan_data->direction[data_index]);   /* presnet, need to modify*/
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+        break;
+    case FANR1_FAULT:
+        ret = sprintf(buf, "%d\n", fan_data->r_status[data_index]);
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+        break;
+    case FANR1_SPEED:
+        ret = sprintf(buf, "%d\n", fan_data->r_speed[data_index]);
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d][type->index=%d][data->index=%d]\n", __FUNCTION__, __LINE__, type_index, data_index);
+        break;
+    default:
+        if (LOCAL_DEBUG)
+            printk ("[Check !!][%s][%d] \n", __FUNCTION__, __LINE__);
+        break;
     }
 
     return ret;
 }
+
+static ssize_t show_name(struct device *dev, struct device_attribute *da,
+                         char *buf)
+{
+    return sprintf(buf, "%s\n", DRVNAME);
+}
 /*******************/
 static ssize_t fan_set_duty_cycle(struct device *dev, struct device_attribute *da,
-            const char *buf, size_t count) {
+                                  const char *buf, size_t count) {
 
     int error, value;
 
@@ -355,11 +375,11 @@ static int accton_as5812_54x_fan_probe(struct platform_device *pdev)
 
     }
 
-	fan_data->hwmon_dev = hwmon_device_register(&pdev->dev);
-	if (IS_ERR(fan_data->hwmon_dev)) {
-		status = PTR_ERR(fan_data->hwmon_dev);
-		goto exit_remove;
-	}
+    fan_data->hwmon_dev = hwmon_device_register(&pdev->dev);
+    if (IS_ERR(fan_data->hwmon_dev)) {
+        status = PTR_ERR(fan_data->hwmon_dev);
+        goto exit_remove;
+    }
 
     dev_info(&pdev->dev, "accton_as5812_54x_fan\n");
 
@@ -379,7 +399,7 @@ static int accton_as5812_54x_fan_remove(struct platform_device *pdev)
     return 0;
 }
 
-#define DRVNAME "as5812_54x_fan"
+
 
 static struct platform_driver accton_as5812_54x_fan_driver = {
     .probe      = accton_as5812_54x_fan_probe,
@@ -406,7 +426,7 @@ static int __init accton_as5812_54x_fan_init(void)
         goto exit;
     }
 
-	mutex_init(&fan_data->update_lock);
+    mutex_init(&fan_data->update_lock);
     fan_data->valid = 0;
 
     fan_data->pdev = platform_device_register_simple(DRVNAME, -1, NULL, 0);
