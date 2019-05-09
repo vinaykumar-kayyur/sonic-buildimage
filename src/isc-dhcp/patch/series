@@ -9,4 +9,5 @@
 0008-Port-upstream-changes-from-commit-f2e70402f0f2955f39.patch
 0009-Port-upstream-changes-from-commit-edd6d8881bc4d8ec4b.patch
 0010-Uncomment-USE_SOCKETS-to-force-dhcrelay-to-create-an.patch
-0011-If-using-a-socket-per-interface-send-to-ALL-servers-.patch
+0011-Bugfix-Ensure-HAVE_SO_BINDTODEVICE-has-a-chance-to-b.patch
+0012-If-destination-of-BOOTREQUEST-is-directed-broadcast-.patch
