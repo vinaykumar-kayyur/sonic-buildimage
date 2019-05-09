@@ -734,10 +734,10 @@ int main( int argc, char * argv[] )
     for ( iCommandLineIndex = 1; iCommandLineIndex < argc; iCommandLineIndex++ ) {   /* Process all VME files sequentially */
         strcpy( szCommandLineArg, argv[ iCommandLineIndex ] );
         if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex == 1 ) ) {
+            continue;
         }
-        else if ( !strcmp( strlwr( szCommandLineArg ), "-checksum" )) {}
-        else if(((iCommandLineIndex >= 4)&&(set_freq == 1)) || (set_freq == 0))
-            {
+        else if (((iCommandLineIndex >= 4)&&(set_freq == 1)) || (set_freq == 0)) {
+            strcpy( szCommandLineArg, argv[ iCommandLineIndex ] );
             vme_out_string( "Processing virtual machine file (");
             vme_out_string( szCommandLineArg );
             vme_out_string (")......\n\n");
