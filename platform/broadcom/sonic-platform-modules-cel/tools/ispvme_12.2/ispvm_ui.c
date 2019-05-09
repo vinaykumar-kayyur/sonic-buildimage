@@ -1,7 +1,7 @@
 /**************************************************************
 *
 * Lattice Semiconductor Corp. Copyright 2008
-* 
+*
 * ispVME Embedded allows programming of Lattice's suite of FPGA
 * devices on embedded systems through the JTAG port.  The software
 * is distributed in source code form and is open to re - distribution
@@ -10,28 +10,28 @@
 * ispVME Embedded C Source comprised with 3 modules:
 * ispvm_ui.c is the module provides input and output support.
 * ivm_core.c is the module interpret the VME file(s).
-* hardware.c is the module access the JTAG port of the device(s).                 
+* hardware.c is the module access the JTAG port of the device(s).
 *
-* The optional module cable.c is for supporting Lattice's parallel 
-* port ispDOWNLOAD cable on DOS and Windows 95/98 O/S. It can be 
+* The optional module cable.c is for supporting Lattice's parallel
+* port ispDOWNLOAD cable on DOS and Windows 95/98 O/S. It can be
 * requested from Lattice's ispVMSupport.
 *
 ***************************************************************/
 
 
 /**************************************************************
-* 
+*
 * Revision History of ispvm_ui.c
-* 
-* 3/6/07 ht Added functions vme_out_char(),vme_out_hex(), 
+*
+* 3/6/07 ht Added functions vme_out_char(),vme_out_hex(),
 *           vme_out_string() to provide output resources.
-*           Consolidate all printf() calls into the added output 
-*           functions.	
+*           Consolidate all printf() calls into the added output
+*           functions.
 *
 * 09/11/07 NN Added Global variables initialization
 * 09/24/07 NN Added a switch allowing users to do calibration.
 * Calibration will help to determine the system clock frequency
-* and the count value for one micro-second delay of the target 
+* and the count value for one micro-second delay of the target
 * specific hardware.
 * Removed Delay Percent support
 * 11/15/07  NN moved the checking of the File CRC to the end of processing
@@ -95,12 +95,12 @@ extern unsigned short g_usCalculatedCRC;
 extern unsigned short g_usDataType;
 extern unsigned char * g_pucOutMaskData,
                      * g_pucInData,
-					 * g_pucOutData,
-					 * g_pucHIRData,
-					 * g_pucTIRData,
-					 * g_pucHDRData,
-					 * g_pucTDRData,
-					 * g_pucOutDMaskData,
+                     * g_pucOutData,
+                     * g_pucHIRData,
+                     * g_pucTIRData,
+                     * g_pucHDRData,
+                     * g_pucTDRData,
+                     * g_pucOutDMaskData,
                      * g_pucIntelBuffer;
 extern unsigned char * g_pucHeapMemory;
 extern unsigned short g_iHeapCounter;
@@ -141,125 +141,125 @@ const char * const g_szSupportedVersions[] = { "__VME2.0", "__VME3.0", "____12.0
 
 unsigned char GetByte()
 {
-	unsigned char ucData = 0;
-	
-	if ( g_usDataType & HEAP_IN ) {
+    unsigned char ucData = 0;
 
-		/***************************************************************
-		*
-		* Get data from repeat buffer.
-		*
-		***************************************************************/
+    if ( g_usDataType & HEAP_IN ) {
 
-		if ( g_iHeapCounter > g_iHEAPSize ) {
+        /***************************************************************
+        *
+        * Get data from repeat buffer.
+        *
+        ***************************************************************/
 
-			/***************************************************************
-			*
-			* Data over-run.
-			*
-			***************************************************************/
+        if ( g_iHeapCounter > g_iHEAPSize ) {
 
-			return 0xFF;
-		}
+            /***************************************************************
+            *
+            * Data over-run.
+            *
+            ***************************************************************/
 
-		ucData = g_pucHeapMemory[ g_iHeapCounter++ ];
-	}
-	else if ( g_usDataType & LHEAP_IN ) {
+            return 0xFF;
+        }
 
-		/***************************************************************
-		*
-		* Get data from intel buffer.
-		*
-		***************************************************************/
+        ucData = g_pucHeapMemory[ g_iHeapCounter++ ];
+    }
+    else if ( g_usDataType & LHEAP_IN ) {
 
-		if ( g_usIntelDataIndex >= g_usIntelBufferSize ) {
+        /***************************************************************
+        *
+        * Get data from intel buffer.
+        *
+        ***************************************************************/
 
-			/***************************************************************
-			*
-			* Data over-run.
-			*
-			***************************************************************/
+        if ( g_usIntelDataIndex >= g_usIntelBufferSize ) {
 
-			return 0xFF;
-		}
+            /***************************************************************
+            *
+            * Data over-run.
+            *
+            ***************************************************************/
 
-		ucData = g_pucIntelBuffer[ g_usIntelDataIndex++ ];
-	}
-	else {
+            return 0xFF;
+        }
 
-		/***************************************************************
-		*
-		* Get data from file.
-		*
-		***************************************************************/
+        ucData = g_pucIntelBuffer[ g_usIntelDataIndex++ ];
+    }
+    else {
 
-		ucData = (unsigned char)fgetc( g_pVMEFile );
+        /***************************************************************
+        *
+        * Get data from file.
+        *
+        ***************************************************************/
 
-		if ( feof( g_pVMEFile ) ) {
+        ucData = (unsigned char)fgetc( g_pVMEFile );
 
-			/***************************************************************
-			*
-			* Reached EOF.
-			*
-			***************************************************************/
+        if ( feof( g_pVMEFile ) ) {
 
-			return 0xFF;
-		}
-		/***************************************************************
-		*
-		* Calculate the 32-bit CRC if the expected CRC exist.
-		*
-		***************************************************************/
-		if( g_usExpectedCRC != 0)
-		{
-			ispVMCalculateCRC32(ucData);
-		}
-	}
-	
-	return ( ucData );
+            /***************************************************************
+            *
+            * Reached EOF.
+            *
+            ***************************************************************/
+
+            return 0xFF;
+        }
+        /***************************************************************
+        *
+        * Calculate the 32-bit CRC if the expected CRC exist.
+        *
+        ***************************************************************/
+        if( g_usExpectedCRC != 0)
+        {
+            ispVMCalculateCRC32(ucData);
+        }
+    }
+
+    return ( ucData );
 }
 
 /***************************************************************
 *
 * vme_out_char
 *
-* Send a character out to the output resource if available. 
-* The monitor is the default output resource. 
+* Send a character out to the output resource if available.
+* The monitor is the default output resource.
 *
 *
 ***************************************************************/
 void vme_out_char(unsigned char charOut)
 {
-	printf("%c",charOut);
+    printf("%c",charOut);
 }
 /***************************************************************
 *
 * vme_out_hex
 *
-* Send a character out as in hex format to the output resource 
-* if available. The monitor is the default output resource. 
+* Send a character out as in hex format to the output resource
+* if available. The monitor is the default output resource.
 *
 *
 ***************************************************************/
 void vme_out_hex(unsigned char hexOut)
 {
-	printf("%.2X",hexOut);
+    printf("%.2X",hexOut);
 }
 /***************************************************************
 *
 * vme_out_string
 *
-* Send a text string out to the output resource if available. 
-* The monitor is the default output resource. 
+* Send a text string out to the output resource if available.
+* The monitor is the default output resource.
 *
 *
 ***************************************************************/
 void vme_out_string(char *stringOut)
 {
-	if(stringOut)
-	{
-		printf("%s",stringOut);
-	}
+    if(stringOut)
+    {
+        printf("%s",stringOut);
+    }
 
 }
 /***************************************************************
@@ -273,111 +273,111 @@ void vme_out_string(char *stringOut)
 
 void ispVMMemManager( signed char cTarget, unsigned short usSize )
 {
-	switch ( cTarget ) {
-	case XTDI:
-    case TDI:  
-		if ( g_pucInData != NULL ) {
-			if ( g_usPreviousSize == usSize ) {/*memory exist*/
-				break;
-			}
-			else {
-				free( g_pucInData );
-				g_pucInData = NULL;
-			}
-		}
-		g_pucInData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		g_usPreviousSize = usSize;
+    switch ( cTarget ) {
+    case XTDI:
+    case TDI:
+        if ( g_pucInData != NULL ) {
+            if ( g_usPreviousSize == usSize ) {/*memory exist*/
+                break;
+            }
+            else {
+                free( g_pucInData );
+                g_pucInData = NULL;
+            }
+        }
+        g_pucInData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        g_usPreviousSize = usSize;
     case XTDO:
     case TDO:
-		if ( g_pucOutData!= NULL ) { 
-			if ( g_usPreviousSize == usSize ) { /*already exist*/
-				break;
-			}
-			else {
-				free( g_pucOutData );
-				g_pucOutData = NULL;
-			}
-		}
-		g_pucOutData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		g_usPreviousSize = usSize;
-		break;
+        if ( g_pucOutData!= NULL ) {
+            if ( g_usPreviousSize == usSize ) { /*already exist*/
+                break;
+            }
+            else {
+                free( g_pucOutData );
+                g_pucOutData = NULL;
+            }
+        }
+        g_pucOutData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        g_usPreviousSize = usSize;
+        break;
     case MASK:
-		if ( g_pucOutMaskData != NULL ) {
-			if ( g_usPreviousSize == usSize ) {/*already allocated*/
-				break;
-			}
-			else {
-				free( g_pucOutMaskData ); 
-				g_pucOutMaskData = NULL;
-			}
-		}
-		g_pucOutMaskData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		g_usPreviousSize = usSize;
-		break;
+        if ( g_pucOutMaskData != NULL ) {
+            if ( g_usPreviousSize == usSize ) {/*already allocated*/
+                break;
+            }
+            else {
+                free( g_pucOutMaskData );
+                g_pucOutMaskData = NULL;
+            }
+        }
+        g_pucOutMaskData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        g_usPreviousSize = usSize;
+        break;
     case HIR:
-		if ( g_pucHIRData != NULL ) {
-			free( g_pucHIRData );
-			g_pucHIRData = NULL;
-		}
-		g_pucHIRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		break;
+        if ( g_pucHIRData != NULL ) {
+            free( g_pucHIRData );
+            g_pucHIRData = NULL;
+        }
+        g_pucHIRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        break;
     case TIR:
-		if ( g_pucTIRData != NULL ) {
-			free( g_pucTIRData );
-			g_pucTIRData = NULL;
-		}
-		g_pucTIRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		break;
+        if ( g_pucTIRData != NULL ) {
+            free( g_pucTIRData );
+            g_pucTIRData = NULL;
+        }
+        g_pucTIRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        break;
     case HDR:
-		if ( g_pucHDRData != NULL ) {
-			free( g_pucHDRData );
-			g_pucHDRData = NULL;
-		}
-		g_pucHDRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		break;
+        if ( g_pucHDRData != NULL ) {
+            free( g_pucHDRData );
+            g_pucHDRData = NULL;
+        }
+        g_pucHDRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        break;
     case TDR:
-		if ( g_pucTDRData != NULL ) {
-			free( g_pucTDRData );
-			g_pucTDRData = NULL;
-		}
-		g_pucTDRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		break;
+        if ( g_pucTDRData != NULL ) {
+            free( g_pucTDRData );
+            g_pucTDRData = NULL;
+        }
+        g_pucTDRData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        break;
     case HEAP:
-		if ( g_pucHeapMemory != NULL ) {
-			free( g_pucHeapMemory );
-			g_pucHeapMemory = NULL;
-		}
-		g_pucHeapMemory = ( unsigned char * ) malloc( usSize + 2 );
-		break;
-	case DMASK: 
-		if ( g_pucOutDMaskData != NULL ) {
-			if ( g_usPreviousSize == usSize ) { /*already allocated*/
-				break;
-			}
-			else {
-				free( g_pucOutDMaskData ); 
-				g_pucOutDMaskData = NULL;
-			}
-		}
-		g_pucOutDMaskData = ( unsigned char * ) malloc( usSize / 8 + 2 );
-		g_usPreviousSize = usSize;
-		break;
-	case LHEAP:
-		if ( g_pucIntelBuffer != NULL ) {
-			free( g_pucIntelBuffer );
-			g_pucIntelBuffer = NULL;
-		}
-		g_pucIntelBuffer = ( unsigned char * ) malloc( usSize + 2 );
-		break;
-	case LVDS:
-		if ( g_pLVDSList != NULL ) {
-			free( g_pLVDSList );
-			g_pLVDSList = NULL;
-		}
-		g_pLVDSList = ( LVDSPair * ) calloc( usSize, sizeof( LVDSPair ) );
-		break;
-	default:
-		return;
+        if ( g_pucHeapMemory != NULL ) {
+            free( g_pucHeapMemory );
+            g_pucHeapMemory = NULL;
+        }
+        g_pucHeapMemory = ( unsigned char * ) malloc( usSize + 2 );
+        break;
+    case DMASK:
+        if ( g_pucOutDMaskData != NULL ) {
+            if ( g_usPreviousSize == usSize ) { /*already allocated*/
+                break;
+            }
+            else {
+                free( g_pucOutDMaskData );
+                g_pucOutDMaskData = NULL;
+            }
+        }
+        g_pucOutDMaskData = ( unsigned char * ) malloc( usSize / 8 + 2 );
+        g_usPreviousSize = usSize;
+        break;
+    case LHEAP:
+        if ( g_pucIntelBuffer != NULL ) {
+            free( g_pucIntelBuffer );
+            g_pucIntelBuffer = NULL;
+        }
+        g_pucIntelBuffer = ( unsigned char * ) malloc( usSize + 2 );
+        break;
+    case LVDS:
+        if ( g_pLVDSList != NULL ) {
+            free( g_pLVDSList );
+            g_pLVDSList = NULL;
+        }
+        g_pLVDSList = ( LVDSPair * ) calloc( usSize, sizeof( LVDSPair ) );
+        break;
+    default:
+        return;
     }
 }
 
@@ -391,61 +391,61 @@ void ispVMMemManager( signed char cTarget, unsigned short usSize )
 
 void ispVMFreeMem()
 {
-	if ( g_pucHeapMemory != NULL ) {
-		free( g_pucHeapMemory ); 
-		g_pucHeapMemory = NULL;
-	}
+    if ( g_pucHeapMemory != NULL ) {
+        free( g_pucHeapMemory );
+        g_pucHeapMemory = NULL;
+    }
 
-	if ( g_pucOutMaskData != NULL ) {
-		free( g_pucOutMaskData );
-		g_pucOutMaskData = NULL;
-	}
-	
-	if ( g_pucInData != NULL ) {
-		free( g_pucInData );
-		g_pucInData = NULL;
-	}
-	
-	if ( g_pucOutData != NULL ) {
-		free( g_pucOutData );
-		g_pucOutData = NULL;
-	}
-	
-	if ( g_pucHIRData != NULL ) {
-		free( g_pucHIRData );
-		g_pucHIRData = NULL;
-	}
-	
-	if ( g_pucTIRData != NULL ) {
-		free( g_pucTIRData );
-		g_pucTIRData = NULL;
-	}
-	
-	if ( g_pucHDRData != NULL ) {
-		free( g_pucHDRData );
-		g_pucHDRData = NULL;
-	}
-	
-	if ( g_pucTDRData != NULL ) {
-		free( g_pucTDRData );
-		g_pucTDRData = NULL;
-	}
-	
-	if ( g_pucOutDMaskData != NULL ) {
-		free( g_pucOutDMaskData );
-		g_pucOutDMaskData = NULL;
-	}
-	
-	if ( g_pucIntelBuffer != NULL ) {
-		free( g_pucIntelBuffer );
-		g_pucIntelBuffer = NULL;
-	}
+    if ( g_pucOutMaskData != NULL ) {
+        free( g_pucOutMaskData );
+        g_pucOutMaskData = NULL;
+    }
 
-	if ( g_pLVDSList != NULL ) {
-		free( g_pLVDSList );
-		g_pLVDSList = NULL;
-	}
-} 
+    if ( g_pucInData != NULL ) {
+        free( g_pucInData );
+        g_pucInData = NULL;
+    }
+
+    if ( g_pucOutData != NULL ) {
+        free( g_pucOutData );
+        g_pucOutData = NULL;
+    }
+
+    if ( g_pucHIRData != NULL ) {
+        free( g_pucHIRData );
+        g_pucHIRData = NULL;
+    }
+
+    if ( g_pucTIRData != NULL ) {
+        free( g_pucTIRData );
+        g_pucTIRData = NULL;
+    }
+
+    if ( g_pucHDRData != NULL ) {
+        free( g_pucHDRData );
+        g_pucHDRData = NULL;
+    }
+
+    if ( g_pucTDRData != NULL ) {
+        free( g_pucTDRData );
+        g_pucTDRData = NULL;
+    }
+
+    if ( g_pucOutDMaskData != NULL ) {
+        free( g_pucOutDMaskData );
+        g_pucOutDMaskData = NULL;
+    }
+
+    if ( g_pucIntelBuffer != NULL ) {
+        free( g_pucIntelBuffer );
+        g_pucIntelBuffer = NULL;
+    }
+
+    if ( g_pLVDSList != NULL ) {
+        free( g_pLVDSList );
+        g_pLVDSList = NULL;
+    }
+}
 
 /***************************************************************
 *
@@ -457,15 +457,15 @@ void ispVMFreeMem()
 
 void error_handler( short a_siRetCode, char * pszMessage )
 {
-	const char * pszErrorMessage[] = { "pass",
-									   "verification fail",
-									   "can't find the file",
-									   "wrong file type",
-									   "file error",
-									   "option error",
-									   "crc verification error" };
+    const char * pszErrorMessage[] = { "pass",
+                                       "verification fail",
+                                       "can't find the file",
+                                       "wrong file type",
+                                       "file error",
+                                       "option error",
+                                       "crc verification error" };
 
-	strcpy( pszMessage, pszErrorMessage[ -a_siRetCode ] );
+    strcpy( pszMessage, pszErrorMessage[ -a_siRetCode ] );
 }
 /***************************************************************
 *
@@ -478,163 +478,163 @@ void error_handler( short a_siRetCode, char * pszMessage )
 
 signed char ispVM( const char * a_pszFilename )
 {
-	char szFileVersion[ 9 ]      = { 0 };
-	signed char cRetCode         = 0;
-	signed char cIndex           = 0;
-	signed char cVersionIndex    = 0;
-	unsigned char ucReadByte     = 0;
-	
-	/***************************************************************
-	*
-	* Global variables initialization.
-	*
-	* 09/11/07 NN Added
-	***************************************************************/
-	g_pucHeapMemory		= NULL;
-	g_iHeapCounter		= 0;
-	g_iHEAPSize			= 0;
-	g_usIntelDataIndex	= 0;
-	g_usIntelBufferSize	= 0;
-	g_usPreviousSize     = 0;
+    char szFileVersion[ 9 ]      = { 0 };
+    signed char cRetCode         = 0;
+    signed char cIndex           = 0;
+    signed char cVersionIndex    = 0;
+    unsigned char ucReadByte     = 0;
 
-	/***************************************************************
-	*
-	* Open a file pointer to the VME file.
-	*
-	***************************************************************/
+    /***************************************************************
+    *
+    * Global variables initialization.
+    *
+    * 09/11/07 NN Added
+    ***************************************************************/
+    g_pucHeapMemory     = NULL;
+    g_iHeapCounter      = 0;
+    g_iHEAPSize         = 0;
+    g_usIntelDataIndex  = 0;
+    g_usIntelBufferSize = 0;
+    g_usPreviousSize     = 0;
 
-	if ( ( g_pVMEFile = fopen( a_pszFilename, "rb" ) ) == NULL ) {
-		return VME_FILE_READ_FAILURE;
-	}
-	g_usCalculatedCRC = 0;
-	g_usExpectedCRC   = 0;
-	ucReadByte = GetByte();
-	switch( ucReadByte ) {
-	case FILE_CRC:
+    /***************************************************************
+    *
+    * Open a file pointer to the VME file.
+    *
+    ***************************************************************/
 
-		/***************************************************************
-		*
-		* Read and store the expected CRC to do the comparison at the end.  
-		* Only versions 3.0 and higher support CRC protection.
-		*
-		***************************************************************/
+    if ( ( g_pVMEFile = fopen( a_pszFilename, "rb" ) ) == NULL ) {
+        return VME_FILE_READ_FAILURE;
+    }
+    g_usCalculatedCRC = 0;
+    g_usExpectedCRC   = 0;
+    ucReadByte = GetByte();
+    switch( ucReadByte ) {
+    case FILE_CRC:
 
-		g_usExpectedCRC = (unsigned char ) fgetc( g_pVMEFile );
-		g_usExpectedCRC <<= 8;
-		g_usExpectedCRC |= fgetc( g_pVMEFile );
-		
+        /***************************************************************
+        *
+        * Read and store the expected CRC to do the comparison at the end.
+        * Only versions 3.0 and higher support CRC protection.
+        *
+        ***************************************************************/
 
-		/***************************************************************
-		*
-		* Read and store the version of the VME file.
-		*
-		***************************************************************/
+        g_usExpectedCRC = (unsigned char ) fgetc( g_pVMEFile );
+        g_usExpectedCRC <<= 8;
+        g_usExpectedCRC |= fgetc( g_pVMEFile );
 
-		for ( cIndex = 0; cIndex < 8; cIndex++ ) {
-			szFileVersion[ cIndex ] = GetByte();
-		}
 
-		break;
-	default:
+        /***************************************************************
+        *
+        * Read and store the version of the VME file.
+        *
+        ***************************************************************/
 
-		/***************************************************************
-		*
-		* Read and store the version of the VME file.  Must be version 2.0.
-		*
-		***************************************************************/
+        for ( cIndex = 0; cIndex < 8; cIndex++ ) {
+            szFileVersion[ cIndex ] = GetByte();
+        }
 
-		szFileVersion[ 0 ] = ( signed char ) ucReadByte;
-		for ( cIndex = 1; cIndex < 8; cIndex++ ) {
-			szFileVersion[ cIndex ] = GetByte();
-		}
+        break;
+    default:
 
-		break;
-	}
+        /***************************************************************
+        *
+        * Read and store the version of the VME file.  Must be version 2.0.
+        *
+        ***************************************************************/
 
-	/***************************************************************
-	*
-	* Compare the VME file version against the supported version.
-	*
-	***************************************************************/
+        szFileVersion[ 0 ] = ( signed char ) ucReadByte;
+        for ( cIndex = 1; cIndex < 8; cIndex++ ) {
+            szFileVersion[ cIndex ] = GetByte();
+        }
 
-	for ( cVersionIndex = 0; g_szSupportedVersions[ cVersionIndex ] != 0; cVersionIndex++ ) {
-		for ( cIndex = 0; cIndex < 8; cIndex++ ) {
-			if ( szFileVersion[ cIndex ] != g_szSupportedVersions[ cVersionIndex ][ cIndex ] ) {
-				cRetCode = VME_VERSION_FAILURE;
-				break;
-			}	
-			cRetCode = 0;
-		}
+        break;
+    }
 
-		if ( cRetCode == 0 ) {
+    /***************************************************************
+    *
+    * Compare the VME file version against the supported version.
+    *
+    ***************************************************************/
 
-			/***************************************************************
-			*
-			* Found matching version, break.
-			*
-			***************************************************************/
+    for ( cVersionIndex = 0; g_szSupportedVersions[ cVersionIndex ] != 0; cVersionIndex++ ) {
+        for ( cIndex = 0; cIndex < 8; cIndex++ ) {
+            if ( szFileVersion[ cIndex ] != g_szSupportedVersions[ cVersionIndex ][ cIndex ] ) {
+                cRetCode = VME_VERSION_FAILURE;
+                break;
+            }
+            cRetCode = 0;
+        }
 
-			break;
-		}
-	}
+        if ( cRetCode == 0 ) {
 
-	if ( cRetCode < 0 ) {
+            /***************************************************************
+            *
+            * Found matching version, break.
+            *
+            ***************************************************************/
 
-		/***************************************************************
-		*
-		* VME file version failed to match the supported versions.
-		*
-		***************************************************************/
+            break;
+        }
+    }
 
-		fclose( g_pVMEFile );
-		g_pVMEFile = NULL;
-		return VME_VERSION_FAILURE;
-	}
+    if ( cRetCode < 0 ) {
 
-	/***************************************************************
-	*
-	* Enable the JTAG port to communicate with the device.
+        /***************************************************************
+        *
+        * VME file version failed to match the supported versions.
+        *
+        ***************************************************************/
+
+        fclose( g_pVMEFile );
+        g_pVMEFile = NULL;
+        return VME_VERSION_FAILURE;
+    }
+
+    /***************************************************************
+    *
+    * Enable the JTAG port to communicate with the device.
     * Set the JTAG state machine to the Test-Logic/Reset State.
-	*
-	***************************************************************/
+    *
+    ***************************************************************/
 
     ispVMStart();
 
-	/***************************************************************
-	*
-	* Process the VME file.
-	*
-	***************************************************************/
+    /***************************************************************
+    *
+    * Process the VME file.
+    *
+    ***************************************************************/
 
     cRetCode = ispVMCode();
 
-	/***************************************************************
-	*
-	* Set the JTAG State Machine to Test-Logic/Reset state then disable
+    /***************************************************************
+    *
+    * Set the JTAG State Machine to Test-Logic/Reset state then disable
     * the communication with the JTAG port.
-	*
-	***************************************************************/
+    *
+    ***************************************************************/
 
     ispVMEnd();
-                   
+
     fclose( g_pVMEFile );
-	g_pVMEFile = NULL;
+    g_pVMEFile = NULL;
 
 
-	ispVMFreeMem();
+    ispVMFreeMem();
 
-	/***************************************************************
-	*
-	* Compare the expected CRC versus the calculated CRC.
-	*
-	***************************************************************/
+    /***************************************************************
+    *
+    * Compare the expected CRC versus the calculated CRC.
+    *
+    ***************************************************************/
 
-	if ( cRetCode == 0 && g_usExpectedCRC != 0 && ( g_usExpectedCRC != g_usCalculatedCRC ) ) {
-		printf( "Expected CRC:   0x%.4X\n", g_usExpectedCRC );
-		printf( "Calculated CRC: 0x%.4X\n", g_usCalculatedCRC );
-		return VME_CRC_FAILURE;
-	}
-	
+    if ( cRetCode == 0 && g_usExpectedCRC != 0 && ( g_usExpectedCRC != g_usCalculatedCRC ) ) {
+        printf( "Expected CRC:   0x%.4X\n", g_usExpectedCRC );
+        printf( "Calculated CRC: 0x%.4X\n", g_usCalculatedCRC );
+        return VME_CRC_FAILURE;
+    }
+
     return ( cRetCode );
 }
 
@@ -646,139 +646,134 @@ signed char ispVM( const char * a_pszFilename )
 
 char *strlwr(char *str)
 {
-	char *orig = str;
+    char *orig = str;
 
-	for (; *str != '\0'; str++)
-		*str = tolower(*str);
+    for (; *str != '\0'; str++)
+        *str = tolower(*str);
 
-	return orig;
+    return orig;
 }
 
 int main( int argc, char * argv[] )
 {
-	unsigned short iCommandLineIndex  = 0;
-	short siRetCode                   = 0;
-	char szExtension[ 5 ]             = { 0 };
-	char szCommandLineArg[ 300 ]      = { 0 };
-	short sicalibrate                 = 0;
-	unsigned char set_freq		  = 0;
+    unsigned short iCommandLineIndex  = 0;
+    short siRetCode                   = 0;
+    char szExtension[ 5 ]             = { 0 };
+    char szCommandLineArg[ 300 ]      = { 0 };
+    short sicalibrate                 = 0;
+    unsigned char set_freq            = 0;
 
-	//08/28/08 NN Added Calculate checksum support.
-	g_usChecksum = 0;
-	g_uiChecksumIndex = 0;
-	
-	vme_out_string( "                 Lattice Semiconductor Corp.\n" );
-	vme_out_string( "\n             ispVME(tm) V");
+    //08/28/08 NN Added Calculate checksum support.
+    g_usChecksum = 0;
+    g_uiChecksumIndex = 0;
+
+    vme_out_string( "                 Lattice Semiconductor Corp.\n" );
+    vme_out_string( "\n             ispVME(tm) V");
     vme_out_string( VME_VERSION_NUMBER );
     vme_out_string(" Copyright 1998-2011.\n");
-	vme_out_string( "\nFor daisy chain programming of all in-system programmable devices\n\n" );
-	
-	if ( argc < 2 ) {
-		vme_out_string( "\nUsage: vme [option] vme_file [vme_file]\n" );
-		vme_out_string( "Example: vme vme_file1.vme vme_file2.vme\n" );
-		vme_out_string( "option   -c:   do the calibration.\n" );
-		vme_out_string( "Example: vme -c\n" );
-		vme_out_string( "Example: vme -c vme_file1.vme vme_file2.vme\n" );		
-		vme_out_string( "\n\n");		
-		exit( 1 );
-	}
-	for ( iCommandLineIndex = 1; iCommandLineIndex < argc; iCommandLineIndex++ ) {
-		strcpy( szCommandLineArg, argv[ iCommandLineIndex ] );
-		if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex == 1 ) ) {
-			sicalibrate = 1;
-		}
-		else if ( !strcmp( strlwr( szCommandLineArg ), "-f" ) && ( iCommandLineIndex == 2 ) ) {
-			g_usCpu_Frequency = strtoul(argv[iCommandLineIndex+1],NULL,0);
-			set_freq = 1;
-			printf("CPU Freq set as %d MHZ\n", g_usCpu_Frequency);
-		}
-		else if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex != 1 ) ) {
-			vme_out_string( "Error: calibrate option -c must be the first argument\n\n" );
-			exit( 1 );
-		}
-		else if(((iCommandLineIndex >= 4)&&(set_freq == 1)) || (set_freq == 0))
-		{
-			strcpy( szExtension, &szCommandLineArg[ strlen( szCommandLineArg ) - 4 ] );
-			strlwr( szExtension );
-			if ( strcmp( szExtension, ".vme" ) ) {
-				vme_out_string( "Error: VME files must end with the extension *.vme\n\n" );
-				exit( 1 );
-			}
-		}
-	}
-	if (iopl(3))
-	{
-		perror("iopl");
-		exit(1);/* reminder here: do not use "return", I warned */	
-	}
-	else
-	{
-#ifndef IPMI_PRJ
-		outl_p((inl_p(0x580) | 0x40130), 0x580);
-		outl_p((inl_p(0x584) & 0xFFFFFECF), 0x584);
-		outl_p((inl_p(0x584) | 0x00040000), 0x584);
-#else
-		//outl_p((inl_p(0x540) | 0x3C0), 0x540);	//Pebble:2->cs,5->clk, offset 0x540
-		outl_p((inl_p(0x540) | 0xFFFFFFFF), 0x540);	//Pebble:2->cs,5->clk, offset 0x540
-		//printf("IPMI GPIO init: 0x%x 0x%x 0x%x\n",  
-		//	inl_p(0x540), inl_p(0x544), inl_p(0x548));
-		outl_p((inl_p(0x544) & 0xFFFFFFCB), 0x544);	//Pebble:2,4,5->output:0  3->input:1
-		outl_p((inl_p(0x544) | 0x8), 0x544);
-		//printf("IPMI GPIO init finished: 0x%x 0x%x 0x%x\n",  
-		//	inl_p(0x540), inl_p(0x544), inl_p(0x548));
-#endif
-	}
-	/******test JTAG ports**********/
-	//port_test();
-	/******test JTAG ports**********/
-	siRetCode = 0;
-	if(sicalibrate)
-	{
-		calibration();
-	}
-	for ( iCommandLineIndex = 1; iCommandLineIndex < argc; iCommandLineIndex++ ) {   /* Process all VME files sequentially */
-		strcpy( szCommandLineArg, argv[ iCommandLineIndex ] );
-		if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex == 1 ) ) {
-		}
-		else if ( !strcmp( strlwr( szCommandLineArg ), "-checksum" )) {}
-		else if(((iCommandLineIndex >= 4)&&(set_freq == 1)) || (set_freq == 0))
-			{
-			vme_out_string( "Processing virtual machine file (");
-			vme_out_string( szCommandLineArg );
-			vme_out_string (")......\n\n");
-			siRetCode = ispVM( szCommandLineArg );
-			if ( siRetCode < 0 ) {
-				break;
-			}
-		}
-	}
-	if ( siRetCode < 0 ) {
-		error_handler( siRetCode, szCommandLineArg );
-		vme_out_string( "Failed due to ");
-		vme_out_string ( szCommandLineArg );
-		vme_out_string ("\n\n");
-		vme_out_string( "+=======+\n" );
-		vme_out_string( "| FAIL! |\n" );
-		vme_out_string( "+=======+\n\n" );
-	} 
-	else {
-		vme_out_string( "+=======+\n" );
-		vme_out_string( "| PASS! |\n" );
-		vme_out_string( "+=======+\n\n" );
-		//08/28/08 NN Added Calculate checksum support.
-		if(g_usChecksum != 0)
-		{
-			g_usChecksum &= 0xFFFF;
-			printf("Data Checksum: %.4X\n\n",g_usChecksum);
-			g_usChecksum = 0;
-		}
-	}
+    vme_out_string( "\nFor daisy chain programming of all in-system programmable devices\n\n" );
 
-	if (iopl(0))
-	{		
-		perror("iopl");
-		exit(1);/* reminder here: do not use "return", I warned */	
-	}
-	exit( siRetCode );
-} 
+    if ( argc < 2 ) {
+        vme_out_string( "\nUsage: vme [option] vme_file [vme_file]\n" );
+        vme_out_string( "Example: vme vme_file1.vme vme_file2.vme\n" );
+        vme_out_string( "option   -c:   do the calibration.\n" );
+        vme_out_string( "Example: vme -c\n" );
+        vme_out_string( "Example: vme -c vme_file1.vme vme_file2.vme\n" );
+        vme_out_string( "\n\n");
+        exit( 1 );
+    }
+    for ( iCommandLineIndex = 1; iCommandLineIndex < argc; iCommandLineIndex++ ) {
+        strcpy( szCommandLineArg, argv[ iCommandLineIndex ] );
+        if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex == 1 ) ) {
+            sicalibrate = 1;
+        }
+        else if ( !strcmp( strlwr( szCommandLineArg ), "-f" ) && ( iCommandLineIndex == 2 ) ) {
+            g_usCpu_Frequency = strtoul(argv[iCommandLineIndex+1],NULL,0);
+            set_freq = 1;
+            printf("CPU Freq set as %d MHZ\n", g_usCpu_Frequency);
+        }
+        else if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex != 1 ) ) {
+            vme_out_string( "Error: calibrate option -c must be the first argument\n\n" );
+            exit( 1 );
+        }
+        else if(((iCommandLineIndex >= 4)&&(set_freq == 1)) || (set_freq == 0))
+        {
+            strcpy( szExtension, &szCommandLineArg[ strlen( szCommandLineArg ) - 4 ] );
+            strlwr( szExtension );
+            if ( strcmp( szExtension, ".vme" ) ) {
+                vme_out_string( "Error: VME files must end with the extension *.vme\n\n" );
+                exit( 1 );
+            }
+        }
+    }
+    if (iopl(3))
+    {
+        perror("iopl");
+        exit(1);/* reminder here: do not use "return", I warned */
+    }
+    else
+    {
+#ifndef IPMI_PRJ
+        outl_p((inl_p(0x580) | 0x40130), 0x580);
+        outl_p((inl_p(0x584) & 0xFFFFFECF), 0x584);
+        outl_p((inl_p(0x584) | 0x00040000), 0x584);
+#else
+        outl_p((inl_p(0x540) | 0xFFFFFFFF), 0x540);
+        outl_p((inl_p(0x544) & 0xFFFFFFCB), 0x544);
+        outl_p((inl_p(0x544) | 0x8), 0x544);
+#endif
+    }
+    /******test JTAG ports**********/
+    //port_test();
+    /******test JTAG ports**********/
+    siRetCode = 0;
+    if(sicalibrate)
+    {
+        calibration();
+    }
+    for ( iCommandLineIndex = 1; iCommandLineIndex < argc; iCommandLineIndex++ ) {   /* Process all VME files sequentially */
+        strcpy( szCommandLineArg, argv[ iCommandLineIndex ] );
+        if ( !strcmp( strlwr( szCommandLineArg ), "-c" ) && ( iCommandLineIndex == 1 ) ) {
+        }
+        else if ( !strcmp( strlwr( szCommandLineArg ), "-checksum" )) {}
+        else if(((iCommandLineIndex >= 4)&&(set_freq == 1)) || (set_freq == 0))
+            {
+            vme_out_string( "Processing virtual machine file (");
+            vme_out_string( szCommandLineArg );
+            vme_out_string (")......\n\n");
+            siRetCode = ispVM( szCommandLineArg );
+            if ( siRetCode < 0 ) {
+                break;
+            }
+        }
+    }
+    if ( siRetCode < 0 ) {
+        error_handler( siRetCode, szCommandLineArg );
+        vme_out_string( "Failed due to ");
+        vme_out_string ( szCommandLineArg );
+        vme_out_string ("\n\n");
+        vme_out_string( "+=======+\n" );
+        vme_out_string( "| FAIL! |\n" );
+        vme_out_string( "+=======+\n\n" );
+    }
+    else {
+        vme_out_string( "+=======+\n" );
+        vme_out_string( "| PASS! |\n" );
+        vme_out_string( "+=======+\n\n" );
+        //08/28/08 NN Added Calculate checksum support.
+        if(g_usChecksum != 0)
+        {
+            g_usChecksum &= 0xFFFF;
+            printf("Data Checksum: %.4X\n\n",g_usChecksum);
+            g_usChecksum = 0;
+        }
+    }
+
+    if (iopl(0))
+    {
+        perror("iopl");
+        exit(1);/* reminder here: do not use "return", I warned */
+    }
+    exit( siRetCode );
+}
 

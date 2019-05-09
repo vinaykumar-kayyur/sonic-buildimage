@@ -10,7 +10,7 @@
 * VME version.
 *
 * History:
-* 
+*
 ***************************************************************/
 #define VME_VERSION_NUMBER "12.2"
 
@@ -39,7 +39,7 @@
 
 /***************************************************************
 *
-* Flow control register bit definitions.  A set bit indicates 
+* Flow control register bit definitions.  A set bit indicates
 * that the register currently exhibits the corresponding mode.
 *
 ***************************************************************/
@@ -68,11 +68,11 @@
 #define HEAP_IN    0x0080    /* Data is from the heap. */
 #define LHEAP_IN   0x0200    /* Data is from intel data buffer. */
 #define VARIABLE   0x0400    /* Data is from a declared variable. */
-#define CRC_DATA   0x0800	 /* CRC data is pressent. */
+#define CRC_DATA   0x0800    /* CRC data is pressent. */
 #define CMASK_DATA 0x1000    /* CMASK data is pressent. */
-#define RMASK_DATA 0x2000	 /* RMASK data is pressent. */
+#define RMASK_DATA 0x2000    /* RMASK data is pressent. */
 #define READ_DATA  0x4000    /* READ data is pressent. */
-#define DMASK_DATA 0x8000	 /* DMASK data is pressent. */
+#define DMASK_DATA 0x8000    /* DMASK data is pressent. */
 
 /***************************************************************
 *
@@ -92,10 +92,10 @@
 *
 ***************************************************************/
 
-#define VENDOR		0x56
-#define LATTICE		0x01
-#define ALTERA		0x02
-#define XILINX		0x03
+#define VENDOR      0x56
+#define LATTICE     0x01
+#define ALTERA      0x02
+#define XILINX      0x03
 
 /***************************************************************
 *
@@ -134,7 +134,7 @@
 #define HEAP       0x32    /* The memory size needed to hold one loop. */
 #define REPEAT     0x33    /* The beginning of the loop. */
 #define LEFTPAREN  0x35    /* The beginning of data following the loop. */
-#define VAR		     0x55	   /* Plac holder for loop data. */
+#define VAR        0x55      /* Plac holder for loop data. */
 #define SEC        0x1C    /* The delay time in seconds that must be observed. */
 #define SMASK      0x1D    /* The mask for TDI data. */
 #define MAX        0x1E    /* The absolute maximum wait time. */
@@ -142,15 +142,15 @@
 #define OFF        0x20    /* Dis-assert the targeted pin. */
 #define SETFLOW    0x30    /* Change the flow control register. */
 #define RESETFLOW  0x31    /* Clear the flow control register. */
-#define CRC		     0x47    /* The following data stream is used for CRC calculation. */
-#define CMASK	     0x48	   /* The following data stream is used as mask for CRC calculation. */
+#define CRC        0x47    /* The following data stream is used for CRC calculation. */
+#define CMASK      0x48      /* The following data stream is used as mask for CRC calculation. */
 #define RMASK      0x49    /* The following data stream is used as mask for read and save. */
-#define READ	     0x50    /* The following data stream is used for read and save. */
+#define READ       0x50    /* The following data stream is used for read and save. */
 #define ENDLOOP    0x59    /* The end of the repeat loop. */
 #define SECUREHEAP 0x60    /* Used to secure the HEAP opcode. */
-#define VUES       0x61	   /* Support continue if fail. */
+#define VUES       0x61    /* Support continue if fail. */
 #define DMASK      0x62    /* The following data stream is used for dynamic I/O. */
-#define COMMENT	   0x63    /* Support SVF comments in the VME file. */
+#define COMMENT    0x63    /* Support SVF comments in the VME file. */
 #define HEADER     0x64    /* Support header in VME file. */
 #define FILE_CRC   0x65    /* Support crc-protected VME file. */
 #define LCOUNT     0x66    /* Support intelligent programming. */
@@ -158,7 +158,7 @@
 #define LSDR       0x68    /* Support intelligent programming. */
 #define LHEAP      0x69    /* Memory needed to hold intelligent data buffer */
 #define CONTINUE   0x70    /* Allow continuation. */
-#define LVDS	     0x71	   /* Support LVDS. */
+#define LVDS       0x71      /* Support LVDS. */
 #define ENDVME     0x7F    /* End of the VME file. */
 #define HIGH       0x80    /* Assert the targeted pin. */
 #define LOW        0x81    /* Dis-assert the targeted pin. */
@@ -170,12 +170,12 @@
 *
 ***************************************************************/
 
-#define VME_VERIFICATION_FAILURE		-1
-#define VME_FILE_READ_FAILURE			  -2
-#define VME_VERSION_FAILURE				  -3
-#define VME_INVALID_FILE				    -4
-#define VME_ARGUMENT_FAILURE			  -5
-#define VME_CRC_FAILURE					    -6
+#define VME_VERIFICATION_FAILURE        -1
+#define VME_FILE_READ_FAILURE           -2
+#define VME_VERSION_FAILURE             -3
+#define VME_INVALID_FILE                -4
+#define VME_ARGUMENT_FAILURE            -5
+#define VME_CRC_FAILURE                 -6
 
 /***************************************************************
 *
@@ -185,7 +185,7 @@
 
 /* Support LVDS */
 typedef struct {
-	unsigned short usPositiveIndex;
-	unsigned short usNegativeIndex;
-	unsigned char  ucUpdate;
+    unsigned short usPositiveIndex;
+    unsigned short usNegativeIndex;
+    unsigned char  ucUpdate;
 } LVDSPair;
