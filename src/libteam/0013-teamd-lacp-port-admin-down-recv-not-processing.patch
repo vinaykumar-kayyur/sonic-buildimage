@@ -1,0 +1,25 @@
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index 5fa026a..5f4ba75 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -1179,12 +1179,20 @@ static int lacpdu_recv(struct lacp_port *lacp_port)
+ 	struct lacpdu lacpdu;
+ 	struct sockaddr_ll ll_from;
+ 	int err;
++	bool admin_state;
+ 
+ 	err = teamd_recvfrom(lacp_port->sock, &lacpdu, sizeof(lacpdu), 0,
+ 			     (struct sockaddr *) &ll_from, sizeof(ll_from));
+ 	if (err <= 0)
+ 		return err;
+ 
++        admin_state = team_get_ifinfo_admin_state(lacp_port->ctx->ifinfo);
++        if (!admin_state) {
++                teamd_log_info("%s received PDU in admin down state.",
++                       lacp_port->tdport->ifname);
++                return 0;
++        }
++
+ 	return lacpdu_process(lacp_port, &lacpdu);
+ }
+ 
