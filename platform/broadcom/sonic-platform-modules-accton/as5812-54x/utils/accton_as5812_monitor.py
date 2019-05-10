@@ -53,7 +53,6 @@ class accton_as5812_monitor(object):
     # static temp var
     _ori_temp = 0
     _new_perc = 0
-    _ori_perc = 0
 
     def __init__(self, log_file, log_level):
         """Needs a logger and a logger level."""
@@ -151,8 +150,9 @@ class accton_as5812_monitor(object):
                     self._new_perc = FAN_LEV1_SPEED_PERC
                 logging.debug('INFO. SET. FAN_SPEED as %d (new THERMAL temp:%d)', self._new_perc, new_temp)
 
-        if self._ori_perc == self._new_perc:
-            logging.debug('INFO. RETURN. FAN speed not changed. %d / %d (new_perc / ori_perc)', self._new_perc, self._ori_perc)
+        cur_perc = fan.get_fan_duty_cycle(fan.get_idx_fan_start())
+        if cur_perc == self._new_perc:
+            logging.debug('INFO. RETURN. FAN speed not changed. %d / %d (new_perc / ori_perc)', self._new_perc, cur_perc)
             return True
 
         set_stat = fan.set_fan_duty_cycle(fan.get_idx_fan_start(), self._new_perc)
@@ -161,10 +161,9 @@ class accton_as5812_monitor(object):
         else:
             logging.debug('INFO: FAIL. set_fan_duty_cycle (%d)', self._new_perc)
 
-        logging.debug('INFO: GET. ori_perc is %d. ori_temp is %d', self._ori_perc, self._ori_temp)
-        self._ori_perc = self._new_perc
+        logging.debug('INFO: GET. ori_perc is %d. ori_temp is %d', cur_perc, self._ori_temp)
         self._ori_temp = new_temp
-        logging.debug('INFO: UPDATE. ori_perc to %d. ori_temp to %d', self._ori_perc, self._ori_temp)
+        logging.debug('INFO: UPDATE. ori_perc to %d. ori_temp to %d', cur_perc, self._ori_temp)
 
         return True
 
