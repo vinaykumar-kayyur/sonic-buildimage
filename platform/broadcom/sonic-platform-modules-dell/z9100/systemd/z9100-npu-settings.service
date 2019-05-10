@@ -1,0 +1,11 @@
+[Unit]
+Description=Dell Z9100 NPU Specific Settings
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/dell_npu_settings start
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

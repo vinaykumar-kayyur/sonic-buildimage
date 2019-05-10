@@ -9,4 +9,8 @@ systemctl start platform-modules-z9100.service
 systemctl enable z9100-qsfp-monitor.service
 systemctl start  z9100-qsfp-monitor.service
 
+# Enable Dell-Z9100-DeEmphasis-Settings-service
+systemctl enable z9100-npu-settings.service
+systemctl start  z9100-npu-settings.service
+
 #DEBHELPER#

@@ -1,0 +1,4 @@
+#!/bin/bash
+if [ -r /usr/local/bin/dell_npu_settings.py ]; then
+    python /usr/local/bin/dell_npu_settings.py &
+fi
