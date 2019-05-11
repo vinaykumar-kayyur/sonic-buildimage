@@ -28,6 +28,7 @@ rm -f /var/run/rsyslogd.pid
 
 supervisorctl start rsyslogd
 
+supervisorctl start bgp_eoiu_marker
 supervisorctl start bgpcfgd
 
 # Start Quagga processes
