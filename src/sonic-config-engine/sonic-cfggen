@@ -244,10 +244,10 @@ def main():
         print(template.render(data))
 
     if args.var_json != None:
-        try :
+        if not data.has_key(args.var_json):
+            print("{}")
+        else:
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json]), indent=4, cls=minigraph_encoder))
-        except KeyError:
-            return
 
     if args.write_to_db:
         configdb = ConfigDBConnector(**db_kwargs)
