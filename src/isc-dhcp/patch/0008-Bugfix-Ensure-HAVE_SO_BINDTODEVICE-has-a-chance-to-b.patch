@@ -1,4 +1,4 @@
-From c0bb9b992f5adc6272b491baa62666a02f3b5387 Mon Sep 17 00:00:00 2001
+From ddf74bdf94184b8009cc6ea28b36248ac4803ea9 Mon Sep 17 00:00:00 2001
 From: Joe LeVeque <jolevequ@microsoft.com>
 Date: Wed, 8 May 2019 18:08:13 +0000
 Subject: [PATCH 2/3] Bugfix: Ensure HAVE_SO_BINDTODEVICE has a chance to be
