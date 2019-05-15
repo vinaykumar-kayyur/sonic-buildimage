@@ -30,6 +30,8 @@ RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return
 {%- endfor %}
 {%- endif %}
 
+RUN chown -R ${frr_user_uid}:${frr_user_gid} /etc/frr/
+
 # Clean up
 RUN apt-get clean -y
 RUN apt-get autoclean -y
