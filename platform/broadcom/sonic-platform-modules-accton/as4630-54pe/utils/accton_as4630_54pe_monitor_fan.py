@@ -18,7 +18,7 @@
 # ------------------------------------------------------------------
 # HISTORY:
 #    mm/dd/yyyy (A.D.)
-#    3/27/2019:  Jostar create for as7326-56x
+#    5/15/2019:  Jostar create for as4630-54pe
 # ------------------------------------------------------------------
 
 try:
@@ -67,31 +67,25 @@ class switch(object):
             return False
 
 
-fan_state=[2, 2, 2, 2, 2, 2, 2]  #init state=2, insert=1, remove=0
-fan_status_state=[2, 2, 2, 2, 2, 2, 2]  #init state=2, fault=1, normal=0
+fan_state=[2, 2, 2, 2]  #init state=2, insert=1, remove=0
+fan_status_state=[2, 2, 2, 2]  #init state=2, fault=1, normal=0
 # Make a class we can use to capture stdout and sterr in the log
 class device_monitor(object):
 
     def __init__(self, log_file, log_level):
         
-        self.fan_num = 6
-        self.fan_path = "/sys/bus/i2c/devices/54-0066/"        
+        self.fan_num = 3
+        self.fan_path = "/sys/bus/i2c/devices/3-0060/"        
         self.present = {
-            0: "fan1_present",
-            1: "fan2_present",
-            2: "fan3_present",
-            3: "fan4_present",
-            4: "fan5_present",
-            5: "fan6_present",
+            0: "fan_present_1",
+            1: "fan_present_2",
+            2: "fan_present_3",
         }
         
         self.fault = {
-            0: "fan1_fault",
-            1: "fan2_fault",
-            2: "fan3_fault",
-            3: "fan4_fault",
-            4: "fan5_fault",
-            5: "fan6_fault",
+            0: "fan_fault_1",
+            1: "fan_fault_2",
+            2: "fan_fault_3",
         }
         
         
@@ -190,7 +184,7 @@ def main(argv):
                 log_file = arg
     monitor = device_monitor(log_file, log_level)
     while True:
-        #monitor.manage_fan()
+        monitor.manage_fan()
         time.sleep(3)
 
 if __name__ == '__main__':

@@ -18,7 +18,7 @@
 # ------------------------------------------------------------------
 # HISTORY:
 #    mm/dd/yyyy (A.D.)
-#    7/2/2018:  Jostar create for as7326-56x
+#    5/15/2019:  Jostar create for as4630-54pe
 # ------------------------------------------------------------------
 
 try:
@@ -57,8 +57,8 @@ class device_monitor(object):
         self.presence = "/psu_present"
         self.oper_status = "/psu_power_good"
         self.mapping = {
-            0: "50-0053",
-            1: "49-0050",
+            0: "10-0050",
+            1: "11-0051",
         }
         
         """Needs a logger and a logger level."""
@@ -162,7 +162,7 @@ def main(argv):
     monitor = device_monitor(log_file, log_level)
     # Loop forever, doing something useful hopefully:
     while True:
-        #monitor.manage_psu()
+        monitor.manage_psu()
         time.sleep(3)
 
 if __name__ == '__main__':
