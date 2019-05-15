@@ -148,6 +148,7 @@ class HostConfigDaemon:
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
         self.aaacfg = AaaCfg()
         self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+        self.hostname_cache=""
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -166,10 +167,40 @@ class HostConfigDaemon:
             log_data['passkey'] = obfuscate(log_data['passkey'])
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
+    def hostname_handler(self, key, data):
+        hostname = data["hostname"]
+        if hostname == self.hostname_cache:
+            return
+
+        syslog.syslog(syslog.LOG_INFO, "Get all running containers")
+        cmd = 'docker ps --format "{{.Names}}"'
+        try:
+            containers = subprocess.check_output(cmd, shell=True).split("\n")[:-1]
+        except subprocess.CalledProcessError as err:
+                syslog.syslog(syslog.LOG_WARNING, "{} - failed: return code - {}, output:\n{}"
+                                .format(err.cmd, err.returncode, err.output))
+
+        for name in containers:
+            script = '/usr/bin/{}.sh'.format(name)
+            exists = os.path.isfile(script)
+            if not exists:
+                syslog.syslog(syslog.LOG_INFO, "Can't find controll script for {}".format(name))
+                continue
+
+            cmd = "{} updateHostName {}".format(script, hostname)
+            try:
+                subprocess.check_call(cmd, shell=True)
+            except subprocess.CalledProcessError as err:
+                syslog.syslog(syslog.LOG_WARNING, "{} - failed: return code - {}, output:\n{}"
+                                .format(err.cmd, err.returncode, err.output))
+
+        self.hostname_cache = hostname
+
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
+        self.config_db.subscribe('DEVICE_METADATA', lambda table, key, data: self.hostname_handler(key, data))
         self.config_db.listen()
 
 
