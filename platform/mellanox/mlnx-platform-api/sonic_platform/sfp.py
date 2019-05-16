@@ -12,20 +12,13 @@ try:
     import os.path
     import subprocess
     from sonic_platform_base.sfp_base import SfpBase
-    from sonic_eeprom import eeprom_dts
-    from sonic_sfp.sff8472 import sff8472InterfaceId
-    from sonic_sfp.sff8472 import sff8472Dom
-    from sonic_sfp.sff8436 import sff8436InterfaceId
-    from sonic_sfp.sff8436 import sff8436Dom
-    from sonic_sfp.inf8628 import inf8628InterfaceId
-    '''
     from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.inf8628 import inf8628InterfaceId
-    '''
+
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -143,35 +136,21 @@ class SFP(SfpBase):
         Returns:
             bool: True if device is present, False if not
         """
+        presence = False
+        ethtool_cmd = "ethtool -m sfp{} 2>/dev/null".format(self.index)
         try:
-            with open(os.path.join(SFP_PATH, self.sfp_status_path), 'r') as presence_status:
-                    content = int(presence_status.read())
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
-            return False
+            proc = subprocess.Popen(ethtool_cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+            stdout = proc.communicate()[0]
+            proc.wait()
+            result = stdout.rstrip('\n')
+            if result != '':
+                presence = True
 
-        return content == 1
+        except OSError, e:
+            raise OSError("Cannot detect sfp")
         
-    # Returns 1 if SFP EEPROM found. Returns 0 otherwise
-    def _sfp_eeprom_present(self, sysfs_sfp_i2c_client_eeprompath, offset):
-        """Tries to read the eeprom file to determine if the
-        device/sfp is present or not. If sfp present, the read returns
-        valid bytes. If not, read returns error 'Connection timed out"""
-
-        if not os.path.exists(sysfs_sfp_i2c_client_eeprompath):
-            return False
-        else:
-            try:
-                with open(sysfs_sfp_i2c_client_eeprompath, mode="rb", buffering=0) as sysfsfile:
-                    sysfsfile.seek(offset)
-                    sysfsfile.read(1)
-            except IOError:
-                return False
-            except:
-                return False
-            else:
-                return True
-
+        return presence
+        
     # Read out any bytes from any offset
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
         eeprom_raw = []
@@ -185,7 +164,6 @@ class SFP(SfpBase):
                     line_split = line.split()
                     eeprom_raw = eeprom_raw + line_split[1:]
         except subprocess.CalledProcessError as e:
-            print "Error! Unable to eeprom data for sfp{}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output)
             return None
         
         return eeprom_raw
@@ -229,7 +207,6 @@ class SFP(SfpBase):
         elif self.sfp_type == "SFP":
             sfpi_obj = sff8472InterfaceId()
             if sfpi_obj is None:
-                print("Error: sfp_object open failed")
                 return None
             sfp_dom_capability_raw = self._read_eeprom_specific_bytes(XCVR_DOM_CAPABILITY_OFFSET, XCVR_DOM_CAPABILITY_WIDTH)
             if sfp_dom_capability_raw is not None:
@@ -315,7 +292,6 @@ class SFP(SfpBase):
 
             sfpi_obj = inf8628InterfaceId()
             if sfpi_obj is None:
-                print("Error: sfp_object open failed")
                 return None
 
             sfp_type_raw = self._read_eeprom_specific_bytes((offset + OSFP_TYPE_OFFSET), XCVR_TYPE_WIDTH)
@@ -353,7 +329,6 @@ class SFP(SfpBase):
             transceiver_info_dict['modelname'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
             transceiver_info_dict['hardwarerev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serialnum'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
-            # Below part is added to avoid fail the xcvrd, shall be implemented later
             transceiver_info_dict['vendor_oui'] = 'N/A'
             transceiver_info_dict['vendor_date'] = 'N/A'
             transceiver_info_dict['Connector'] = 'N/A'
@@ -366,7 +341,6 @@ class SFP(SfpBase):
             transceiver_info_dict['nominal_bit_rate'] = 'N/A'
 
         else:
-            #if port_num in self.qsfp_ports:
             if self.sfp_type == QSFP_TYPE:
                 offset = 128
                 vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
@@ -444,7 +418,7 @@ class SFP(SfpBase):
             transceiver_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
             transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
             transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
-            #if sfp_type == 'QSFP':
+
             if self.sfp_type == QSFP_TYPE:
                 for key in qsfp_cable_length_tup:
                     if key in sfp_interface_bulk_data['data']:
@@ -503,9 +477,7 @@ class SFP(SfpBase):
         """
         transceiver_dom_info_dict = {}
 
-        #if port_num in self.osfp_ports:
         if self.sfp_type == OSFP_TYPE:
-            # Below part is added to avoid fail xcvrd, shall be implemented later
             transceiver_dom_info_dict['temperature'] = 'N/A'
             transceiver_dom_info_dict['voltage'] = 'N/A'
             transceiver_dom_info_dict['rx1power'] = 'N/A'
@@ -521,7 +493,6 @@ class SFP(SfpBase):
             transceiver_dom_info_dict['tx3power'] = 'N/A'
             transceiver_dom_info_dict['tx4power'] = 'N/A'
 
-        #elif port_num in self.qsfp_ports:
         elif self.sfp_type == QSFP_TYPE:
             if not self.dom_supported:
                 return None
@@ -662,7 +633,6 @@ class SFP(SfpBase):
             offset = 0
             dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_CHANNL_RX_LOS_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
-                #dom_channel_monitor_data = sfpd_obj.parse_channel_rx_los_status(dom_channel_monitor_raw, 0)
                 rx_los_data = int(dom_channel_monitor_raw[0], 16)
                 rx_los_list.append(rx_los_data & 0x01 != 0)
                 rx_los_list.append(rx_los_data & 0x02 != 0)
@@ -672,9 +642,7 @@ class SFP(SfpBase):
             offset = 256
             dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
-                #dom_channel_monitor_data = sfpd_obj.parse_channel_status(dom_channel_monitor_raw, 0)
                 rx_los_data = int(dom_channel_monitor_raw[0], 16)
-                #rx_los_list.append((dom_channel_monitor_data['data']['RXLOSState']['value']))
                 rx_los_list.append(rx_los_data & 0x02 != 0)
             else:
                 return None
@@ -916,7 +884,7 @@ class SFP(SfpBase):
         """
         rx_power_list = []
         if self.sfp_type == OSFP_TYPE:
-            # Below part is added to avoid fail xcvrd, shall be implemented later
+            # OSFP not supported on our platform yet.
             return None
 
         elif self.sfp_type == QSFP_TYPE:
@@ -970,7 +938,7 @@ class SFP(SfpBase):
         """
         tx_power_list = []
         if self.sfp_type == OSFP_TYPE:
-            # Below part is added to avoid fail xcvrd, shall be implemented later
+            # OSFP not supported on our platform yet.
             return None
 
         elif self.sfp_type == QSFP_TYPE:
