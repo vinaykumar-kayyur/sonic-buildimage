@@ -99,7 +99,7 @@ class MlnxSfpd:
         self.state_db.connect("STATE_DB")
 
         # open SDK API handle
-        # retry at most SX_OPE_RETRIES times to wait
+        # retry at most SX_OPEN_RETRIES times to wait
         # until SDK is started during system startup
         retry = 1
         while True:
@@ -162,8 +162,11 @@ class MlnxSfpd:
             try:
                 read, _, _ = select.select([self.rx_fd_p.fd], [], [], self.SELECT_TIMEOUT)
             except select.error as err:
-                log_error("select returned error: {}".format(err))
-                continue
+                rc, msg = err
+                if rc == errno.EAGAIN or rc == errno.EINTR:
+                    continue
+                else:
+                    raise err
 
             for fd in read:
                 if fd == self.rx_fd_p.fd:
