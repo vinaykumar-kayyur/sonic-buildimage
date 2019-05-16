@@ -166,7 +166,7 @@ class MlnxSfpd:
                 if rc == errno.EAGAIN or rc == errno.EINTR:
                     continue
                 else:
-                    raise err
+                    raise
 
             for fd in read:
                 if fd == self.rx_fd_p.fd:
@@ -247,8 +247,8 @@ def main():
     try:
         sfpd.initialize()
         sfpd.run()
-    except RuntimeError as err:
-        log_error("RuntimeError: {}".format(err))
+    except (RuntimeError, select.error) as err:
+        log_error("error: {}".format(err))
     finally:
         sfpd.deinitialize()
 
