@@ -9,7 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr
 	tools/tarsource.sh -V -e '-sonic'
-	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib
+	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 	mv $(DERIVED_TARGET) $* $(DEST)/
 
