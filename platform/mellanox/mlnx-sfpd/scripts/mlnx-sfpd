@@ -170,8 +170,8 @@ class MlnxSfpd:
 
             for fd in read:
                 if fd == self.rx_fd_p.fd:
-                    rc, port_list, module_state = self.on_pmpe(self.rx_fd_p)
-                    if rc != SX_STATUS_SUCCESS:
+                    success, port_list, module_state = self.on_pmpe(self.rx_fd_p)
+                    if not success:
                         raise RuntimeError("failed to read from {}".format(fd))
 
                     sfp_state = sfp_value_status_dict.get(module_state, STATUS_UNKNOWN)
