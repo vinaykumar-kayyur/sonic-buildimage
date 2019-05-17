@@ -5,6 +5,8 @@
 try:
     import time
     import os
+    import pickle
+    from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -13,8 +15,8 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 0
-    PORT_END = 71
+    PORT_START = 1
+    PORT_END = 72
     PORTS_IN_BLOCK = 72
     QSFP_PORT_START = 48
     QSFP_PORT_END = 72
@@ -35,78 +37,78 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     _port_to_i2c_mapping = {
-           0: [1, 2],
-           1: [2, 3],
-           2: [3, 4],
-           3: [4, 5],
-           4: [5, 6],
-           5: [6, 7],
-           6: [7, 8],
-           7: [8, 9],
-           8: [9, 10],            
-           9: [10, 11],
-           10: [11, 12],
-           11: [12, 13],
-           12: [13, 14],
-           13: [14, 15],
-           14: [15, 16],
-           15: [16, 17],
-           16: [17, 18],
-           17: [18, 19],
-           18: [19, 20],
-           19: [20, 21],            
-           20: [21, 22],
-           21: [22, 23],
-           22: [23, 24],
-           23: [24, 25],
-           24: [25, 26],
-           25: [26, 27],
-           26: [27, 28],
-           27: [28, 29],
-           28: [29, 30],
-           29: [30, 31],
-           30: [31, 32],
-           31: [32, 33],
-           32: [33, 34],
-           33: [34, 35],
-           34: [35, 36],
-           35: [36, 37],
-           36: [37, 38],
-           37: [38, 39],
-           38: [39, 40],
-           39: [40, 41],
-           40: [41, 42],
-           41: [42, 43],
-           42: [43, 44],
-           43: [44, 45],
-           44: [45, 46],
-           45: [46, 47],
-           46: [47, 48],
-           47: [48, 49],
-           48: [49, 50],#QSFP49
-           49: [49, 50],
+            1: [1, 2],
+            2: [2, 3],
+            3: [3, 4],
+            4: [4, 5],
+            5: [5, 6],
+            6: [6, 7],
+            7: [7, 8],
+            8: [8, 9],
+            9: [9, 10],
+           10: [10, 11],
+           11: [11, 12],
+           12: [12, 13],
+           13: [13, 14],
+           14: [14, 15],
+           15: [15, 16],
+           16: [16, 17],
+           17: [17, 18],
+           18: [18, 19],
+           19: [19, 20],
+           20: [20, 21],
+           21: [21, 22],
+           22: [22, 23],
+           23: [23, 24],
+           24: [24, 25],
+           25: [25, 26],
+           26: [26, 27],
+           27: [27, 28],
+           28: [28, 29],
+           29: [29, 30],
+           30: [30, 31],
+           31: [31, 32],
+           32: [32, 33],
+           33: [33, 34],
+           34: [34, 35],
+           35: [35, 36],
+           36: [36, 37],
+           37: [37, 38],
+           38: [38, 39],
+           39: [39, 40],
+           40: [40, 41],
+           41: [41, 42],
+           42: [42, 43],
+           43: [43, 44],
+           44: [44, 45],
+           45: [45, 46],
+           46: [46, 47],
+           47: [47, 48],
+           48: [48, 49],
+           49: [49, 50],#QSFP49
            50: [49, 50],
-           51: [49, 50],            
-           52: [50, 52],#QSFP50
-           53: [50, 52],
+           51: [49, 50],
+           52: [49, 50],
+           53: [50, 52],#QSFP50
            54: [50, 52],
            55: [50, 52],
-           56: [51, 54],#QSFP51
-           57: [51, 54],
+           56: [50, 52],
+           57: [51, 54],#QSFP51
            58: [51, 54],
            59: [51, 54],
-           60: [52, 51],#QSFP52
-           61: [52, 51],
+           60: [51, 54],
+           61: [52, 51],#QSFP52
            62: [52, 51],
-           63: [52, 51], 
-           64: [53, 53], #QSFP53
-           65: [53, 53],
+           63: [52, 51],
+           64: [52, 51],
+           65: [53, 53],#QSFP53
            66: [53, 53],
            67: [53, 53],
-           68: [54, 55],#QSFP54          
-           69: [54, 55],          
-           70: [54, 55],          
-           71: [54, 55],          
+           68: [53, 53],
+           69: [54, 55],#QSFP54
+           70: [54, 55],
+           71: [54, 55],
+           72: [54, 55],
            }
 
     @property
@@ -136,7 +138,7 @@ class SfpUtil(SfpUtilBase):
     def __init__(self):
         eeprom_path = self.BASE_OOM_PATH + "eeprom"
 
-        for x in range(0, self.port_end+1):
+        for x in range(self.port_start, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 self._port_to_i2c_mapping[x][1]
                 )
@@ -145,13 +147,16 @@ class SfpUtil(SfpUtilBase):
 
     #Two i2c buses might get flipped order, check them both.
     def update_i2c_order(self):
-        if self.I2C_BUS_ORDER < 0:
-            eeprom_path = "/sys/bus/i2c/devices/1-0057/eeprom"
-            if os.path.exists(eeprom_path):
-                self.I2C_BUS_ORDER = 0
-            eeprom_path = "/sys/bus/i2c/devices/0-0057/eeprom"
-            if os.path.exists(eeprom_path):
-                self.I2C_BUS_ORDER = 1
+        if os.path.exists("/tmp/accton_util.p"):
+            self.I2C_BUS_ORDER = pickle.load(open("/tmp/accton_util.p", "rb"))
+        else:
+            if self.I2C_BUS_ORDER < 0:
+                eeprom_path = "/sys/bus/i2c/devices/1-0057/eeprom"
+                if os.path.exists(eeprom_path):
+                    self.I2C_BUS_ORDER = 0
+                eeprom_path = "/sys/bus/i2c/devices/0-0057/eeprom"
+                if os.path.exists(eeprom_path):
+                    self.I2C_BUS_ORDER = 1
         return self.I2C_BUS_ORDER 
 
     def get_presence(self, port_num):
@@ -160,7 +165,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         order = self.update_i2c_order()
-        if port_num < 24:
+        if port_num <= 24:
             present_path = self.BASE_CPLD2_PATH.format(order)         
         else:
             present_path = self.BASE_CPLD3_PATH.format(order)
@@ -189,7 +194,7 @@ class SfpUtil(SfpUtilBase):
         qsfp_index = self.qsfp_sb_map[qsfp_index-1]
         return qsfp_start+qsfp_index
 
-    def get_low_power_mode(self, port_num):             
+    def get_low_power_mode_cpld(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
         
@@ -214,31 +219,62 @@ class SfpUtil(SfpUtilBase):
 
         return False
 
-    def set_low_power_mode(self, port_num, lpmode):                
+    def get_low_power_mode(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
-            return False    
-              
-        order = self.update_i2c_order()
-        lp_mode_path = self.BASE_CPLD3_PATH.format(order)
-        lp_mode_path = lp_mode_path + "module_lp_mode_" 
-        q = self.qsfp_sb_remap(port_num)
-        lp_mode_path = lp_mode_path + str(q)
+            return False
         
+        if not self.get_presence(port_num):
+            return self.get_low_power_mode_cpld(port_num)
+
         try:
-            reg_file = open(lp_mode_path, 'r+')
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            eeprom = None
+
+            eeprom = open(self.port_to_eeprom_mapping[port_num], "rb")
+            eeprom.seek(93)
+            lpmode = ord(eeprom.read(1))
+
+            if not (lpmode & 0x1): # 'Power override' bit is 0
+                return self.get_low_power_mode_cpld(port_num)
+            else:
+                if ((lpmode & 0x2) == 0x2):
+                    return True # Low Power Mode if "Power set" bit is 1
+                else:
+                    return False # High Power Mode if "Power set" bit is 0
+        except IOError as err:
+            print "Error: unable to open file: %s" % str(err)
+            return False
+        finally:
+            if eeprom is not None:
+                eeprom.close()
+                time.sleep(0.01)
+
+    def set_low_power_mode(self, port_num, lpmode):
+        if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
 
-        if lpmode is True:
-            reg_value = '1'
-        else:
-            reg_value = '0'
+        try:
+            eeprom = None
 
-        reg_file.write(reg_value)
-        reg_file.close()
+            if not self.get_presence(port_num):
+                return False # Port is not present, unable to set the eeprom
 
-        return True
+            # Fill in write buffer
+            regval = 0x3 if lpmode else 0x1 # 0x3:Low Power Mode, 0x1:High Power Mode
+            buffer = create_string_buffer(1)
+            buffer[0] = chr(regval)
+
+            # Write to eeprom
+            eeprom = open(self.port_to_eeprom_mapping[port_num], "r+b")
+            eeprom.seek(93)
+            eeprom.write(buffer[0])
+            return True
+        except IOError as err:
+            print "Error: unable to open file: %s" % str(err)
+            return False
+        finally:
+            if eeprom is not None:
+                eeprom.close()
+                time.sleep(0.01)
 
     def reset(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
