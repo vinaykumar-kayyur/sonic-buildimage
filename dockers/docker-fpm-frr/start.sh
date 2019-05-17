@@ -34,6 +34,7 @@ supervisorctl start bgpcfgd
 supervisorctl start zebra
 supervisorctl start staticd
 supervisorctl start bgpd
+supervisorctl start staticd
 
 if [ "$CONFIG_TYPE" == "unified" ]; then
     supervisorctl start vtysh_b
