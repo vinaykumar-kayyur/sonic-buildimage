@@ -69,3 +69,9 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 startsecs=0
 {% endif %}
+
+[eventlistener:event-listener]
+command=/usr/bin/event-listener
+events=SUPERVISOR_STATE_CHANGE_STOPPING
+stderr_logfile=syslog
+
