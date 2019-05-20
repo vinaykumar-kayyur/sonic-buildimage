@@ -593,6 +593,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export debs_path="$(STRETCH_DEBS_PATH)"
+	export files_path="$(FILES_PATH)"
 	export python_debs_path="$(PYTHON_DEBS_PATH)" 
 	export initramfs_tools="$(STRETCH_DEBS_PATH)/$(INITRAMFS_TOOLS)"
 	export linux_kernel="$(STRTCH_DEBS_PATH)/$(LINUX_KERNEL)"
