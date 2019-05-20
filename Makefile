@@ -5,7 +5,7 @@ NOJESSIE ?= 0
 %::
 	@echo "+++ --- Making $@ --- +++"
 ifeq ($(NOJESSIE), 0)
-	make -f Makefile.work jessie
+	EXTRA_JESSIE_TARGETS=$(notdir $@) make -f Makefile.work jessie
 endif
 	BLDENV=stretch make -f Makefile.work $@
 
