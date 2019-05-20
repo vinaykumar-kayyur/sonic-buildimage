@@ -235,7 +235,7 @@ RUN apt-get update && apt-get install -y \
 # For sonic vs image build
         dosfstools \
         qemu-kvm \
-        libvirt-bin \
+        libvirt-clients \
 # For lm-sensors
         librrd8 \
         librrd-dev \
