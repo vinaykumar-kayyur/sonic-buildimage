@@ -14,11 +14,8 @@ index 5fa026a..5f4ba75 100644
  		return err;
  
 +        admin_state = team_get_ifinfo_admin_state(lacp_port->ctx->ifinfo);
-+        if (!admin_state) {
-+                teamd_log_dbg("%s received PDU in admin down state.",
-+                       lacp_port->tdport->ifname);
++        if (!admin_state)
 +                return 0;
-+        }
 +
  	return lacpdu_process(lacp_port, &lacpdu);
  }
