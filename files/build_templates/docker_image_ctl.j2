@@ -14,6 +14,9 @@ function updateHostName()
 
     NEW_HOSTNAME="$1"
     HOSTNAME=`$EXEC "hostname"`
+    if ! [[ $HOSTNAME =~ ^[a-zA-Z0-9.\-]*$ ]]; then
+        HOSTNAME=`hostname`
+    fi
 
     # copy HOSTS to HOSTS_TMP
     $EXEC "cp $HOSTS $HOSTS_TMP"
@@ -23,8 +26,9 @@ function updateHostName()
     $EXEC "echo -e \"127.0.0.1\t$NEW_HOSTNAME\" >> $HOSTS_TMP"
 
     echo "Set hostname in {{docker_container_name}} container"
-    $EXEC "hostname $NEW_HOSTNAME"
+    $EXEC "hostname '$NEW_HOSTNAME'"
     $EXEC "cat $HOSTS_TMP > $HOSTS"
+    $EXEC "rm -f $HOSTS_TMP"
 }
 
 function getBootType()
@@ -128,7 +132,7 @@ start() {
     HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
     {%- endif %}
     HOSTNAME=`sonic-cfggen -m -v 'DEVICE_METADATA["localhost"]["hostname"]'`
-    if [ -z "$HOSTNAME" ]; then
+    if [ -z "$HOSTNAME" ] || ! [[ $HOSTNAME =~ ^[a-zA-Z0-9.\-]*$ ]]; then
         HOSTNAME=`hostname`
     fi
 
@@ -147,7 +151,7 @@ start() {
             {%- endif %}
             preStartAction
             docker start {{docker_container_name}}
-            updateHostName $HOSTNAME
+            updateHostName "$HOSTNAME"
             postStartAction
             exit $?
         fi
@@ -185,7 +189,7 @@ start() {
 {%- endif %}
         --tmpfs /tmp \
         --tmpfs /var/tmp \
-        --hostname $HOSTNAME \
+        --hostname "$HOSTNAME" \
         --name={{docker_container_name}} {{docker_image_name}}:latest || {
             echo "Failed to docker run" >&1
             exit 4
