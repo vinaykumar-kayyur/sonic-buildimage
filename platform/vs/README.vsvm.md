@@ -9,7 +9,7 @@ sudo apt-get install libvirt-clients qemu-kvm libvirt-bin
 2. Create SONiC VM
 
 ```
-$ virsh
+$ sudo virsh
 Welcome to virsh, the virtualization interactive terminal.
 
 Type:  'help' for help with commands
@@ -22,14 +22,25 @@ Domain sonic created from sonic.xml
 virsh # 
 ```
 
-2. Connect SONiC VM via console
+3. Access virtual switch:
 
-```
-$ telnet 127.0.0.1 7000
-```
+    1. Connect SONiC VM via console
+    ```
+    $ telnet 127.0.0.1 7000
+    ```
+    
+    OR
 
-3. Connect SONiC VM via SSH
+    2. Connect SONiC VM via SSH
+        
+        1. Connect via console (see 3.1 above)
 
-```
-$ ssh -p 3040 admin@127.0.0.1
-```
+        2. Request a new DHCP address
+        ```
+        sudo dhclient -v
+        ```
+        
+        3. Connect via SSH
+        ```
+        $ ssh -p 3040 admin@127.0.0.1
+        ```
