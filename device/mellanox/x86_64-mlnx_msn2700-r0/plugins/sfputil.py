@@ -20,6 +20,10 @@ SFP_STATUS_INSERTED = '1'
 
 GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
 
+# Ethernet<n> <=> sfp<n+SFP_PORT_NAME_OFFSET>
+SFP_PORT_NAME_OFFSET = 1
+SFP_PORT_NAME_CONVENTION = "sfp{}"
+
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
 hwsku_dict = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 0, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 3, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0}
@@ -198,9 +202,8 @@ class SfpUtil(SfpUtilBase):
 
     # Read out any bytes from any offset
     def _read_eeprom_specific_bytes_via_ethtool(self, port_num, offset, num_bytes):
-
-        port_num += 1
-        sfpname = "sfp" + str(port_num)
+        port_num += SFP_PORT_NAME_OFFSET
+        sfpname = SFP_PORT_NAME_CONVENTION.format(port_num)
 
         eeprom_raw = []
         ethtool_cmd = "ethtool -m {} hex on offset {} length {}".format(sfpname, offset, num_bytes)
@@ -219,7 +222,6 @@ class SfpUtil(SfpUtilBase):
 
     # Read eeprom
     def _read_eeprom_devid(self, port_num, devid, offset, num_bytes = 512):
-
         if port_num in self.osfp_ports:
             pass
         elif port_num in self.qsfp_ports:
@@ -276,12 +278,6 @@ class SfpUtil(SfpUtilBase):
             if sfp_vendor_sn_raw is not None:
                 sfp_vendor_sn_data = sfpi_obj.parse_vendor_sn(sfp_vendor_sn_raw, 0)
             else:
-                return None
-
-            try:
-                sysfsfile_eeprom.close()
-            except IOError:
-                print("Error: closing sysfs file %s" % file_path)
                 return None
 
             transceiver_info_dict['type'] = sfp_type_data['data']['type']['value']
@@ -407,7 +403,6 @@ class SfpUtil(SfpUtilBase):
         return transceiver_info_dict
 
     def get_transceiver_dom_info_dict(self, port_num):
-
         transceiver_dom_info_dict = {}
 
         # Below part is added to avoid fail xcvrd
@@ -495,11 +490,6 @@ class SfpUtil(SfpUtilBase):
                     dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params(dom_channel_monitor_raw, 0)
                 else:
                     return transceiver_dom_info_dict
-
-                transceiver_dom_info_dict['tx1power'] = 'N/A'
-                transceiver_dom_info_dict['tx2power'] = 'N/A'
-                transceiver_dom_info_dict['tx3power'] = 'N/A'
-                transceiver_dom_info_dict['tx4power'] = 'N/A'
             else:
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes_via_ethtool(port_num, (offset + QSFP_CHANNL_MON_OFFSET), QSFP_CHANNL_MON_WITH_TX_POWER_WIDTH)
                 if dom_channel_monitor_raw is not None:
