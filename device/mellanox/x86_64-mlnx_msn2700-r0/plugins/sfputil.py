@@ -406,28 +406,40 @@ class SfpUtil(SfpUtilBase):
 
         return transceiver_info_dict
 
-    def get_transceiver_dom_info_dict(self, port_num, batchread=False, test=False):
+    def get_transceiver_dom_info_dict(self, port_num):
 
         transceiver_dom_info_dict = {}
 
+        # Below part is added to avoid fail xcvrd
+        # Currently, the way in which dom data is read has been changed from
+        # using sysfs to using ethtool.
+        # The ethtool returns None for ports without dom support, resulting in 
+        # None being returned. However, this fails xcvrd to add the 
+        # TRANSCEIVER_DOM_SENSOR table entry of associated port to CONFIG_DB
+        # and then causes SNMP fail.
+        # To address this issue a default dict is initialized with all data set to
+        # 'N/A' and is returned is the above case.
+        # BTW, in the original implementation which sysfs is used to read dom data,
+        # even though non-None data is returned for ports without dom support, 
+        # it does not contain valid data. This can result in wrong data in 
+        # TRANSCEIVER_DOM_SENSOR table.
+        transceiver_dom_info_dict['temperature'] = 'N/A'
+        transceiver_dom_info_dict['voltage'] = 'N/A'
+        transceiver_dom_info_dict['rx1power'] = 'N/A'
+        transceiver_dom_info_dict['rx2power'] = 'N/A'
+        transceiver_dom_info_dict['rx3power'] = 'N/A'
+        transceiver_dom_info_dict['rx4power'] = 'N/A'
+        transceiver_dom_info_dict['tx1bias'] = 'N/A'
+        transceiver_dom_info_dict['tx2bias'] = 'N/A'
+        transceiver_dom_info_dict['tx3bias'] = 'N/A'
+        transceiver_dom_info_dict['tx4bias'] = 'N/A'
+        transceiver_dom_info_dict['tx1power'] = 'N/A'
+        transceiver_dom_info_dict['tx2power'] = 'N/A'
+        transceiver_dom_info_dict['tx3power'] = 'N/A'
+        transceiver_dom_info_dict['tx4power'] = 'N/A'
+
         if port_num in self.osfp_ports:
-
-            # Below part is added to avoid fail xcvrd, shall be implemented later
-            transceiver_dom_info_dict['temperature'] = 'N/A'
-            transceiver_dom_info_dict['voltage'] = 'N/A'
-            transceiver_dom_info_dict['rx1power'] = 'N/A'
-            transceiver_dom_info_dict['rx2power'] = 'N/A'
-            transceiver_dom_info_dict['rx3power'] = 'N/A'
-            transceiver_dom_info_dict['rx4power'] = 'N/A'
-            transceiver_dom_info_dict['tx1bias'] = 'N/A'
-            transceiver_dom_info_dict['tx2bias'] = 'N/A'
-            transceiver_dom_info_dict['tx3bias'] = 'N/A'
-            transceiver_dom_info_dict['tx4bias'] = 'N/A'
-            transceiver_dom_info_dict['tx1power'] = 'N/A'
-            transceiver_dom_info_dict['tx2power'] = 'N/A'
-            transceiver_dom_info_dict['tx3power'] = 'N/A'
-            transceiver_dom_info_dict['tx4power'] = 'N/A'
-
+            pass
         elif port_num in self.qsfp_ports:
             offset = 0
             offset_xcvr = 128
@@ -440,6 +452,7 @@ class SfpUtil(SfpUtilBase):
             if sfpi_obj is None:
                 return None
 
+
             # QSFP capability byte parse, through this byte can know whether it support tx_power or not.
             # TODO: in the future when decided to migrate to support SFF-8636 instead of SFF-8436,
             # need to add more code for determining the capability and version compliance
@@ -448,25 +461,25 @@ class SfpUtil(SfpUtilBase):
             if qsfp_dom_capability_raw is not None:
                 qspf_dom_capability_data = sfpi_obj.parse_qsfp_dom_capability(qsfp_dom_capability_raw, 0)
             else:
-                return None
+                return transceiver_dom_info_dict
 
             dom_temperature_raw = self._read_eeprom_specific_bytes_via_ethtool(port_num, (offset + QSFP_TEMPE_OFFSET), QSFP_TEMPE_WIDTH)
             if dom_temperature_raw is not None:
                 dom_temperature_data = sfpd_obj.parse_temperature(dom_temperature_raw, 0)
             else:
-                return None
+                return transceiver_dom_info_dict
 
             dom_voltage_raw = self._read_eeprom_specific_bytes_via_ethtool(port_num, (offset + QSFP_VLOT_OFFSET), QSFP_VOLT_WIDTH)
             if dom_voltage_raw is not None:
                 dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
             else:
-                return None
+                return transceiver_dom_info_dict
 
             qsfp_dom_rev_raw = self._read_eeprom_specific_bytes_via_ethtool(port_num, (offset + QSFP_DOM_REV_OFFSET), QSFP_DOM_REV_WIDTH)
             if qsfp_dom_rev_raw is not None:
                 qsfp_dom_rev_data = sfpd_obj.parse_sfp_dom_rev(qsfp_dom_rev_raw, 0)
             else:
-                return None
+                return transceiver_dom_info_dict
 
             transceiver_dom_info_dict['temperature'] = dom_temperature_data['data']['Temperature']['value']
             transceiver_dom_info_dict['voltage'] = dom_voltage_data['data']['Vcc']['value']
@@ -481,7 +494,7 @@ class SfpUtil(SfpUtilBase):
                 if dom_channel_monitor_raw is not None:
                     dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params(dom_channel_monitor_raw, 0)
                 else:
-                    return None
+                    return transceiver_dom_info_dict
 
                 transceiver_dom_info_dict['tx1power'] = 'N/A'
                 transceiver_dom_info_dict['tx2power'] = 'N/A'
@@ -492,7 +505,7 @@ class SfpUtil(SfpUtilBase):
                 if dom_channel_monitor_raw is not None:
                     dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params_with_tx_power(dom_channel_monitor_raw, 0)
                 else:
-                    return None
+                    return transceiver_dom_info_dict
 
                 transceiver_dom_info_dict['tx1power'] = dom_channel_monitor_data['data']['TX1Power']['value']
                 transceiver_dom_info_dict['tx2power'] = dom_channel_monitor_data['data']['TX2Power']['value']
@@ -519,6 +532,8 @@ class SfpUtil(SfpUtilBase):
             calibration_type = sfp_obj._get_calibration_type(eeprom_raw)
 
             eeprom_domraw = self._read_eeprom_specific_bytes_via_ethtool(port_num, offset, 256)
+            if eeprom_domraw is None:
+                return transceiver_dom_info_dict
 
             sfpd_obj = sff8472Dom(None, calibration_type)
             if sfpd_obj is None:
@@ -537,16 +552,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_info_dict['temperature'] = dom_temperature_data['data']['Temperature']['value']
             transceiver_dom_info_dict['voltage'] = dom_voltage_data['data']['Vcc']['value']
             transceiver_dom_info_dict['rx1power'] = dom_channel_monitor_data['data']['RXPower']['value']
-            transceiver_dom_info_dict['rx2power'] = 'N/A'
-            transceiver_dom_info_dict['rx3power'] = 'N/A'
-            transceiver_dom_info_dict['rx4power'] = 'N/A'
             transceiver_dom_info_dict['tx1bias'] = dom_channel_monitor_data['data']['TXBias']['value']
-            transceiver_dom_info_dict['tx2bias'] = 'N/A'
-            transceiver_dom_info_dict['tx3bias'] = 'N/A'
-            transceiver_dom_info_dict['tx4bias'] = 'N/A'
             transceiver_dom_info_dict['tx1power'] = dom_channel_monitor_data['data']['TXPower']['value']
-            transceiver_dom_info_dict['tx2power'] = 'N/A'
-            transceiver_dom_info_dict['tx3power'] = 'N/A'
-            transceiver_dom_info_dict['tx4power'] = 'N/A'
 
         return transceiver_dom_info_dict
