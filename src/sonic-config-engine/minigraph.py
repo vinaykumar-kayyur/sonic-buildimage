@@ -395,23 +395,15 @@ def parse_deviceinfo(meta, hwsku):
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
-            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces")))
-            for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
+            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces"))).findall(str(QName(ns1, "EthernetInterface")))
+            interfaces = interfaces + device_info.find(str(QName(ns, "ManagementInterfaces"))).findall(str(QName(ns1, "ManagementInterface")))
+            for interface in interfaces:
                 alias = interface.find(str(QName(ns, "InterfaceName"))).text
                 speed = interface.find(str(QName(ns, "Speed"))).text
                 desc  = interface.find(str(QName(ns, "Description")))
                 if desc != None:
                     port_descriptions[port_alias_map.get(alias, alias)] = desc.text
                 port_speeds[port_alias_map.get(alias, alias)] = speed
-            interfaces = device_info.find(str(QName(ns, "ManagementInterfaces")))
-            if interfaces:
-                for interface in interfaces.findall(str(QName(ns1, "ManagementInterface"))):
-                    alias = interface.find(str(QName(ns, "InterfaceName"))).text
-                    speed = interface.find(str(QName(ns, "Speed"))).text
-                    desc  = interface.find(str(QName(ns, "Description")))
-                    if desc != None:
-                        port_descriptions[port_alias_map.get(alias, alias)] = desc.text
-                    port_speeds[port_alias_map.get(alias, alias)] = speed
     return port_speeds, port_descriptions
 
 def parse_xml(filename, platform=None, port_config_file=None):
@@ -493,7 +485,6 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['MGMT_PORT'] = {}
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
-    mgmt_speed = 0
     mgmt_alias_reverse_mapping = {}
     for key in mgmt_intf:
         alias = key[0]
@@ -503,11 +494,9 @@ def parse_xml(filename, platform=None, port_config_file=None):
             name = 'eth' + str(mgmt_intf_count)
             mgmt_intf_count += 1
             mgmt_alias_reverse_mapping[alias] = name
-        if port_speeds_default.has_key(alias):
-            port_speed = port_speeds_default[alias]
-            results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up', 'speed': port_speed}
-        else:
-            results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up'}
+        results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up'}
+        if alias in port_speeds_default:
+            results['MGMT_PORT'][name]['speed'] = port_speeds_default[alias]
         results['MGMT_INTERFACE'][(name, key[1])] = mgmt_intf[key]
     results['LOOPBACK_INTERFACE'] = lo_intfs
 
