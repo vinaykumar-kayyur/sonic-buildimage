@@ -148,6 +148,8 @@ start() {
         -v /var/log/mellanox/sniffer:/var/log/mellanox/sniffer:rw \
         -v sx_api:/tmp \
         -v /dev/shm:/dev/shm:rw \
+{%- else %}
+        --tmpfs /tmp \
 {%- endif %}
 {%- if docker_container_name == "pmon" %}
         -v /var/run/hw-management:/var/run/hw-management:rw \
@@ -160,9 +162,6 @@ start() {
 {%- endif %}
 {%- if sonic_asic_platform != "mellanox" %}
         --tmpfs /tmp \
-{%- elif docker_container_name != "syncd" %}
-        --tmpfs /tmp \
-{%- else %}
 {%- endif %}
         --tmpfs /var/tmp \
         --name={{docker_container_name}} {{docker_image_name}}:latest || {
