@@ -16,10 +16,6 @@ IMAGE_VERSION=$(. functions.sh && sonic_get_version)
 
 generate_onie_installer_image()
 {
-    # clean up any temp onie image
-    mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
-    sudo rm -f $OUTPUT_ONIE_IMAGE
-
     # Copy platform-specific ONIE installer config files where onie-mk-demo.sh expects them
     rm -rf ./installer/x86_64/platforms/
     mkdir -p ./installer/x86_64/platforms/
@@ -39,18 +35,12 @@ generate_onie_installer_image()
           $ONIE_INSTALLER_PAYLOAD
 }
 
-
 if [ "$IMAGE_TYPE" = "onie" ]; then
     echo "Build ONIE installer"
-    # Clean up any old copy of target
-    mkdir -p `dirname $IMAGE_TARGET`
-    sudo rm -f $IMAGE_TARGET
-
+    mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
+    sudo rm -f $OUTPUT_ONIE_IMAGE
 
     generate_onie_installer_image
-
-    sudo mv $OUTPUT_ONIE_IMAGE $IMAGE_TARGET
-
 
 ## Build a raw partition dump image using the ONIE installer that can be
 ## used to dd' in-lieu of using the onie-nos-installer. Used while migrating
