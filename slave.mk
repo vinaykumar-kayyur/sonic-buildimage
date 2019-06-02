@@ -37,7 +37,6 @@ PROJECT_ROOT = $(shell pwd)
 STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
 DBG_IMAGE_MARK = dbg
-SUFFIX_DBG_IMAGE_MARK = -dbg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -542,7 +541,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 	./build_debug_docker_j2.sh $* $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs > $($*.gz_PATH)/Dockerfile-dbg.j2
 	j2 $($*.gz_PATH)/Dockerfile-dbg.j2 > $($*.gz_PATH)/Dockerfile-dbg
 	docker info $(LOG)
-	docker build --squash --no-cache \
+	docker build \
+		$(if $($*.gz_DBG_DEPENDS), --squash --no-cache, --no-cache) \
 		--build-arg http_proxy=$(HTTP_PROXY) \
 		--build-arg https_proxy=$(HTTPS_PROXY) \
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
@@ -575,9 +575,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         onie-image.conf \
         build_debian.sh \
         build_image.sh \
-        $$(addsuffix -install,$$(addprefix $(STRETCH_DEBS_PATH)/,$$($$(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$$*)_DEPENDS))) \
-        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$$*)_INSTALLS)) \
-        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$$*)_LAZY_INSTALLS)) \
+        $$(addsuffix -install,$$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_DEPENDS))) \
+        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_INSTALLS)) \
+        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
         $(addprefix $(STRETCH_DEBS_PATH)/,$(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
                 $(SONIC_DEVICE_DATA) \
@@ -585,7 +585,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
-        $$(addprefix $(FILES_PATH)/,$$($$(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$$*)_FILES)) \
+        $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
         $(addprefix $(STRETCH_FILES_PATH)/,$(IXGBE_DRIVER)) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
@@ -600,15 +600,15 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export linux_kernel="$(STRTCH_DEBS_PATH)/$(LINUX_KERNEL)"
 	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
 	export kversion="$(KVERSION)"
-	export image_type="$($(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$*)_IMAGE_TYPE)"
+	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
 	export sonic_asic_platform="$(CONFIGURED_PLATFORM)"
 	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
-	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$*)_INSTALLS))"
-	export lazy_installer_debs="$(foreach deb, $($(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$*)_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(STRETCH_DEBS_PATH)/$(deb))))"
+	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($*_INSTALLS))"
+	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(STRETCH_DEBS_PATH)/$(deb))))"
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
@@ -619,11 +619,11 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		export docker_image="$(docker)"
 		export docker_image_name="$(basename $(docker))"
 		export docker_container_name="$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)"
-		$(eval $(docker:-dbg.gz=.gz)_RUN_OPT += $($(docker:-dbg.gz=.gz)_$($(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$*)_IMAGE_TYPE)_RUN_OPT))
+		$(eval $(docker:-dbg.gz=.gz)_RUN_OPT += $($(docker:-dbg.gz=.gz)_$($*_IMAGE_TYPE)_RUN_OPT))
 		export docker_image_run_opt="$($(docker:-dbg.gz=.gz)_RUN_OPT)"
 		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
-		j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+			j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
 		fi
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 	)
@@ -648,9 +648,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
-	TARGET_MACHINE=$($(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$*)_MACHINE) \
-	IMAGE_TYPE=$($(subst $(SUFFIX_DBG_IMAGE_MARK),$(NULL),$*)_IMAGE_TYPE) \
-	IMAGE_TARGET=$@ \
+	TARGET_MACHINE=$($*_MACHINE) \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \
