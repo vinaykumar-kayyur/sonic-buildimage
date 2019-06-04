@@ -78,13 +78,14 @@ class SfpUtil(SfpUtilBase):
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
+        presence = False
+
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
-            return False
+            return presence
 
         port_num += SFP_PORT_NAME_OFFSET
         sfpname = SFP_PORT_NAME_CONVENTION.format(port_num)
-        presence = False
 
         ethtool_cmd = "ethtool -m {} 2>/dev/null".format(sfpname)
         try:
