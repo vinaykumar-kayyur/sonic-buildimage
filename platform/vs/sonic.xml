@@ -22,7 +22,7 @@
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' cache='writeback'/>
-      <source file='/data/sonic/sonic-buildimage/target/sonic-vs.img'/>
+      <source file='/home/t-lale/sonic-buildimage/target/sonic-vs.img'/>
       <target bus='virtio' dev='vda'/>
     </disk>
     <serial type='tcp'>
@@ -33,6 +33,38 @@
     <interface type='user'>
         <model type='e1000' />
     </interface>
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
+    <interface type='ethernet' />
     <interface type='ethernet' />
     <interface type='ethernet' />
     <interface type='ethernet' />
