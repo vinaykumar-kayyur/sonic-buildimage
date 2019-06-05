@@ -70,8 +70,13 @@ stderr_logfile=syslog
 startsecs=0
 {% endif %}
 
-[eventlistener:event-listener]
-command=/usr/bin/event-listener
-events=SUPERVISOR_STATE_CHANGE_STOPPING
+{% if not skip_syseepromd %}
+[program:syseepromd]
+command=/usr/bin/syseepromd
+priority=8
+autostart=false
+autorestart=false
+stdout_logfile=syslog
 stderr_logfile=syslog
-
+startsecs=0
+{% endif %}
