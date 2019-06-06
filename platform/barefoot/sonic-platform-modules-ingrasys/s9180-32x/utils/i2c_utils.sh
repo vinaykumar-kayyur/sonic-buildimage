@@ -639,8 +639,6 @@ function _i2c_gpio_init {
     do
         echo $i > /sys/class/gpio/export
         echo 1 > /sys/class/gpio/gpio${i}/active_low
-	# value low for gpio direction not official support
-        #echo low > /sys/class/gpio/gpio${i}/direction
         echo out > /sys/class/gpio/gpio${i}/direction
         echo 0 > /sys/class/gpio/gpio${i}/value
     done
@@ -652,8 +650,6 @@ function _i2c_gpio_init {
     do
         echo $i > /sys/class/gpio/export
         echo 1 > /sys/class/gpio/gpio${i}/active_low
-	# value low for gpio direction not official support
-        #echo low > /sys/class/gpio/gpio${i}/direction
         echo out > /sys/class/gpio/gpio${i}/direction
         echo 0 > /sys/class/gpio/gpio${i}/value
     done
