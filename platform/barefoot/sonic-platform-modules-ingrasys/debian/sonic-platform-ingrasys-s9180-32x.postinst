@@ -1,0 +1,5 @@
+# postinst script for s9180
+
+depmod -a
+
+#DEBHELPER#

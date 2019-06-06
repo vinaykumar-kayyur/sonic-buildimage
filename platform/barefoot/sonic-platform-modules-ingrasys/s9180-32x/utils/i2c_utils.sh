@@ -174,8 +174,6 @@ function _i2c_init {
     echo "# Description: I2C Init"
     echo "========================================================="
 
-    depmod -a
-
     # invoke deinit to make sure init sequence
     _i2c_deinit
 
