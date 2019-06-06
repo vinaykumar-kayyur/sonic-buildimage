@@ -176,10 +176,9 @@ function _i2c_init {
 
     depmod -a
 
-    rmmod eeprom
-    rmmod i2c_i801
-    rmmod optoe
-    rmmod sff_8436_eeprom
+    # invoke deinit to make sure init sequence
+    _i2c_deinit
+
     modprobe i2c_i801
     modprobe i2c_dev
     modprobe i2c_mux_pca954x force_deselect_on_exit=1
@@ -228,12 +227,6 @@ function _i2c_init {
         echo "${PATH_MAIN_MUX_CHAN0_DEVICE} 0x72 already init."
     fi
 
-    rmmod coretemp
-    rmmod jc42
-    rmmod w83795
-    rmmod lm75
-    rmmod lm90
-    rmmod eeprom
     modprobe coretemp
     modprobe w83795
     modprobe lm75
@@ -289,7 +282,7 @@ function _mac_vdd_init {
 #I2C Deinit
 function _i2c_deinit {
     _i2c_gpio_deinit
-    for mod in coretemp jc42 w83795 lm75 lm90 eeprom eeprom_mb gpio-pca953x i2c_mux_pca954x i2c_ismt i2c_i801;
+    for mod in coretemp jc42 w83795 lm75 lm90 optoe sff_8436_eeprom eeprom eeprom_mb gpio-pca953x i2c_mux_pca954x i2c_ismt i2c_i801;
     do
         [ "$(lsmod | grep "^$mod ")" != "" ] && rmmod $mod
     done

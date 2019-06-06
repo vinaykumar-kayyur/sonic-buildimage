@@ -385,11 +385,9 @@ function _i2c_init {
 
     depmod -a
 
-    #remove optoe module
-    rmmod optoe
+    # invoke deinit to make sure init sequence
+     _i2c_deinit
 
-    #rmmod i2c_ismt
-    _util_rmmod i2c_i801
     modprobe i2c_i801
     modprobe i2c_dev
     modprobe i2c_mux_pca954x force_deselect_on_exit=1
@@ -552,7 +550,7 @@ function _mac_vdd_init {
 #I2C Deinit
 function _i2c_deinit {
     echo "i2c deinit..."
-    for mod in coretemp jc42 w83795 ingrasys_s9280_64x_psu ingrasys_s9280_64x_i2c_cpld eeprom eeprom_mb gpio-pca953x i2c_mux_pca954x i2c_i801;
+    for mod in coretemp jc42 w83795 ingrasys_s9280_64x_psu ingrasys_s9280_64x_i2c_cpld optoe sff_8436_eeprom eeprom eeprom_mb gpio-pca953x i2c_mux_pca954x i2c_i801;
     do
         _util_rmmod $mod
     done
@@ -584,11 +582,6 @@ function _i2c_sensors_init {
     echo "SENSORS init..."
     local dev_path
     # to make sure hwmon index in sysfs as expected,
-    # need to remove kernel module and then probe them in expected order
-    # remove all sensors kernel module
-    _util_rmmod coretemp
-    _util_rmmod jc42
-    _util_rmmod w83795
     # probe coretemp kernel module
     modprobe coretemp #hwmon0
     # probe hwmon kernel module
