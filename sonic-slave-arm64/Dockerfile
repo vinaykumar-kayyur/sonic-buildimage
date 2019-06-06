@@ -1,6 +1,6 @@
 FROM multiarch/debian-debootstrap:arm64-jessie
 
-MAINTAINER johnar@microsoft.com
+MAINTAINER arheneus@marvell.com
 
 RUN echo "deb http://deb.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src http://deb.debian.org/debian jessie main contrib non-free" >> /etc/apt/sources.list && \
