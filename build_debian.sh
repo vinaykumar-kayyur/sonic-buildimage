@@ -28,6 +28,10 @@
 ## Enable debug output for script
 set -x -e
 
+CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo $HOST_ARCH)
+[[ $SONIC_ARCH == "" ]] && SONIC_ARCH=$CONFIGURED_ARCH
+[[ $CONFIGURED_ARCH == amd64 ]] && ARCH_SUFFIX= || ARCH_SUFFIX=-$CONFIGURED_ARCH
+
 ## docker engine version (with platform)
 DOCKER_VERSION=5:18.09.2~3-0~debian-stretch
 LINUX_KERNEL_VERSION=4.9.0-8-2
@@ -63,6 +67,10 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+# Copy Host Arch Qemu binary for binfmt-misc cross build
+sudo mkdir -p $FILESYSTEM_ROOT/usr/bin
+sudo cp /usr/bin/qemu*static $FILESYSTEM_ROOT/usr/bin || true
+
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -70,7 +78,7 @@ popd
 
 ## Build a basic Debian system by debootstrap
 echo '[INFO] Debootstrap...'
-sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch amd64 stretch $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
+sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch $CONFIGURED_ARCH stretch $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
 
 ## Config hostname and hosts, otherwise 'sudo ...' will complain 'sudo: unable to resolve host ...'
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '$HOSTNAME' > /etc/hostname"
@@ -92,7 +100,11 @@ trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+sudo cp files/apt/sources.list$ARCH_SUFFIX $FILESYSTEM_ROOT/etc/apt/sources.list
+else
 sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
+fi
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages}} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'apt-mark auto `apt-mark showmanual`'
 
@@ -104,7 +116,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc systemd-sy
 
 ## Create device files
 echo '[INFO] MAKEDEV'
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic-arm'
+else
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
+fi
 ## Install initramfs-tools and linux kernel
 ## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
 ## 1. commands such as touch
@@ -118,7 +134,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-amd64_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode 
@@ -159,8 +175,10 @@ sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/ho
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 pushd $FILESYSTEM_ROOT/usr/share/initramfs-tools/scripts/init-bottom && sudo patch -p1 < $OLDPWD/files/initramfs-tools/udev.patch; popd
 
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Install latest intel ixgbe driver
 sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
+fi
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -176,7 +194,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
-                                    "deb [arch=amd64] https://download.docker.com/linux/debian stretch stable"
+                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian stretch stable"
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
@@ -262,10 +280,12 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -na
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t stretch-backports install \
     picocom
 
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
     grub-pc-bin
 
 sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
+fi
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
@@ -402,7 +422,7 @@ built_by: $USER@$BUILD_HOSTNAME
 EOF
 
 if [ -f sonic_debian_extension.sh ]; then
-    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
+    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $CONFIGURED_ARCH
 fi
 
 ## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...

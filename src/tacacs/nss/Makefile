@@ -2,7 +2,7 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = libnss-tacplus_$(NSS_TACPLUS_VERSION)_amd64.deb
+MAIN_TARGET = libnss-tacplus_$(NSS_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain libnss-tacplus

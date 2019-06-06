@@ -1,7 +1,7 @@
 # Docker base image (based on Debian Stretch)
 
 DOCKER_BASE_STRETCH = docker-base-stretch.gz
-$(DOCKER_BASE_STRETCH)_PATH = $(DOCKERS_PATH)/docker-base-stretch
+$(DOCKER_BASE_STRETCH)_PATH = $(DOCKERS_PATH)/docker-base-stretch$(ARCH_SUFFIX)
 $(DOCKER_BASE_STRETCH)_DEPENDS += $(SUPERVISOR)
 $(DOCKER_BASE_STRETCH)_DEPENDS += $(SOCAT)
 

@@ -5,9 +5,9 @@ SHELL = /bin/bash
 REDIS_VERSION = 3.2.4
 REDIS_VERSION_FULL = $(REDIS_VERSION)-1~bpo8+1
 
-MAIN_TARGET = redis-server_$(REDIS_VERSION_FULL)_amd64.deb
-DERIVED_TARGETS = redis-tools_$(REDIS_VERSION_FULL)_amd64.deb \
-		  redis-sentinel_$(REDIS_VERSION_FULL)_amd64.deb
+MAIN_TARGET = redis-server_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = redis-tools_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
+		  redis-sentinel_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf  redis_build

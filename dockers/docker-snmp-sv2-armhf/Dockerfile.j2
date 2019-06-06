@@ -1,0 +1,88 @@
+FROM docker-config-engine-stretch
+
+ARG docker_container_name
+RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
+
+# Enable -O for all Python calls
+ENV PYTHONOPTIMIZE 1
+
+# Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update apt's cache of available packages
+RUN apt-get update
+
+# Install curl so we can download and install pip later
+# Also install major root CA certificates for curl to reference
+RUN apt-get install -y curl ca-certificates
+
+# Install gcc which is required for installing hiredis
+RUN apt-get install -y gcc make
+
+# Install libdpkg-perl which is required for python3.6-3.6.0 as one of its specs i.e. no-pie-compile.specs
+# The file referenced (`/usr/share/dpkg/no-pie-compile.specs`) is in the `libdpkg-perl` package on Debian
+RUN apt-get install -y libdpkg-perl
+
+{% if docker_snmp_sv2_debs.strip() -%}
+# Copy locally-built Debian package dependencies
+{%- for deb in docker_snmp_sv2_debs.split(' ') %}
+COPY debs/{{ deb }} /debs/
+{%- endfor %}
+
+# Install locally-built Debian packages and implicitly install their dependencies
+{%- for deb in docker_snmp_sv2_debs.split(' ') %}
+RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; dpkg_apt /debs/{{ deb }}
+{%- endfor %}
+{%- endif %}
+
+
+#####
+# Fix for hiredis compilation issues.
+RUN apt-get install -y locales
+RUN locale-gen "en_US.UTF-8"
+RUN dpkg-reconfigure --frontend noninteractive locales
+ENV LC_CTYPE=en_US.UTF-8
+RUN sed -i '/^#.* en_US.* /s/^#//' /etc/locale.gen
+RUN locale-gen
+#####
+
+# Install up-to-date version of pip
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3.6
+RUN python3.6 -m pip install --no-cache-dir hiredis
+
+# Install pyyaml dependency for use by some plugins
+RUN python3.6 -m pip install --no-cache-dir pyyaml
+
+# Install smbus dependency for use by some plugins
+RUN python3.6 -m pip install --no-cache-dir smbus
+
+{% if docker_snmp_sv2_whls.strip() -%}
+# Copy locally-built Python wheel dependencies
+{%- for whl in docker_snmp_sv2_whls.split(' ') %}
+COPY python-wheels/{{ whl }} /python-wheels/
+{%- endfor %}
+
+# Install locally-built Python wheel dependencies
+{%- for whl in docker_snmp_sv2_whls.split(' ') %}
+RUN pip install /python-wheels/{{ whl }}
+{%- endfor %}
+{% endif %}
+
+RUN python3.6 -m sonic_ax_impl install
+
+# Clean up
+RUN apt-get -y purge libpython3.6-dev libpython3.6 curl gcc make libdpkg-perl
+# Note: these packages should be removed with autoremove but actually not, so explicitly purged
+RUN apt-get -y purge libldap-2.4-2 libsasl2-2 libsasl2-modules libsasl2-modules-db
+RUN apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y --purge
+RUN find / | grep -E "__pycache__" | xargs rm -rf
+RUN rm -rf /debs /python-wheels ~/.cache
+
+COPY ["start.sh", "/usr/bin/"]
+COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["*.j2", "/usr/share/sonic/templates/"]
+
+# Although exposing ports is not needed for host net mode, keep it for possible bridge mode
+EXPOSE 161/udp 162/udp
+
+ENTRYPOINT ["/usr/bin/supervisord"]
