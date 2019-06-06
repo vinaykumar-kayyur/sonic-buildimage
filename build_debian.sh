@@ -100,7 +100,7 @@ trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
-if [[ $CONFIGURED_ARCH == armhf ]]; then
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 sudo cp files/apt/sources.list$ARCH_SUFFIX $FILESYSTEM_ROOT/etc/apt/sources.list
 else
 sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
@@ -116,7 +116,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc systemd-sy
 
 ## Create device files
 echo '[INFO] MAKEDEV'
-if [[ $CONFIGURED_ARCH == armhf ]]; then
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic-arm'
 else
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'

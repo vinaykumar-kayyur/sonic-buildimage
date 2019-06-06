@@ -146,7 +146,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 .DEFAULT_GOAL :=  all
 
 %::
-ifeq "$(CONFIGURED_ARCH)" "armhf"
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
 	@$(DOCKER_MULTIARCH_CHECK)
 endif
 	@$(OVERLAY_MODULE_CHECK)

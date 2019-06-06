@@ -1,16 +1,14 @@
-FROM multiarch/debian-debootstrap:armhf-jessie
+FROM multiarch/debian-debootstrap:arm64-stretch
 
-MAINTAINER johnar@microsoft.com
+MAINTAINER gulv@microsoft.com
 
-RUN echo "deb http://deb.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list && \
-        echo "deb-src http://deb.debian.org/debian jessie main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://deb.debian.org/debian jessie-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://security.debian.org jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src http://security.debian.org jessie/updates main contrib non-free" >> /etc/apt/sources.list
-
-        # Below URL is moved out, need to find the right URL
-        #echo "deb-src http://deb.debian.org/debian jessie-updates main contrib non-free" >> /etc/apt/sources.list
-        #echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
+RUN echo "deb http://deb.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list && \
+        echo "deb-src http://deb.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb http://deb.debian.org/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src http://deb.debian.org/debian stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src http://security.debian.org stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo 'deb http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -30,8 +28,8 @@ RUN apt-get update && apt-get install -y \
         dh-make \
         dh-exec \
         kmod \
-        libtinyxml2-2 \
-        libboost-program-options1.55-dev \
+        libtinyxml2-4 \
+        libboost-program-options1.62-dev \
         libtinyxml2-dev \
         python \
         python-pip \
@@ -61,13 +59,16 @@ RUN apt-get update && apt-get install -y \
         chrpath \
 # For frr build
         libc-ares-dev \
-        hardening-wrapper \
         libsnmp-dev \
-        libjson0 \
-        libjson0-dev \
+        libjson-c3 \
+        libjson-c-dev \
         libsystemd-dev \
         python-ipaddr \
+        libcmocka-dev \
+        python3-all-dev \
+        python3-all-dbg \
         install-info \
+        logrotate \
 # For libnl3 (local) build
         cdbs \
 # For SAI meta build
@@ -91,10 +92,9 @@ RUN apt-get update && apt-get install -y \
         libqt4-dev \
         python-all-dev \
         python-twisted \
-        php5-dev \
         phpunit \
         libbit-vector-perl \
-        openjdk-7-jdk \
+        openjdk-8-jdk \
         javahelper \
         maven-debian-helper \
         ant \
@@ -116,7 +116,6 @@ RUN apt-get update && apt-get install -y \
         dpatch \
         libdb-dev \
         iptables-dev \
-        swig \
         ctags \
 # For mellanox sai build
         libtool-bin \
@@ -133,8 +132,8 @@ RUN apt-get update && apt-get install -y \
         squashfs-tools \
         zip \
 # For broadcom sdk build
-        linux-compiler-gcc-4.8-x86 \
-        linux-kbuild-3.16 \
+#        linux-compiler-gcc-6-x86 \
+        linux-kbuild-4.9 \
 # teamd build
         libdaemon-dev \
         libdbus-1-dev \
@@ -178,35 +177,44 @@ RUN apt-get update && apt-get install -y \
         cppcheck \
         clang \
         pylint \
+        python-pytest \
         gcovr \
-        python-pytest=2.6.3* \
-        python3-pytest=2.6.3* \
         python-pytest-cov \
-        python3-pytest-cov \
         python-parse \
 # For snmpd
-        libmysqlclient-dev \
-        libmysqld-dev \
+        default-libmysqlclient-dev \
+        libssl1.0-dev \
         libperl-dev \
         libpci-dev \
         libpci3 \
         libsensors4 \
         libsensors4-dev \
         libwrap0-dev \
+# For lldpd
+	debhelper \
+        autotools-dev \
+        libbsd-dev \
+        pkg-config \
+        check \
 # For mpdecimal
         docutils-common \
         libjs-sphinxdoc \
         libjs-underscore \
         python-docutils \
+        python-jinja2 \
         python-markupsafe \
         python-pygments \
         python-roman \
+        python-sphinx \
         sphinx-common \
+        python3-sphinx \
 # For sonic config engine testing
         python-lxml \
+        python-jinja2 \
         python-netaddr \
         python-ipaddr \
         python-yaml \
+        python3-yaml \
 # For lockfile
         procmail \
 # For gtest
@@ -214,18 +222,6 @@ RUN apt-get update && apt-get install -y \
         cmake \
 # For pam_tacplus build
         autoconf-archive \
-# For python-based swsscommon
-        swig3.0 \
-# For iproute2
-        cm-super-minimal \
-        libatm1-dev \
-        libelf-dev \
-        libmnl-dev \
-        libselinux1-dev \
-        linuxdoc-tools \
-        lynx \
-        texlive-latex-extra \
-        texlive-latex-recommended \
 # For python-click build
         python-sphinx \
         python-docutils \
@@ -236,31 +232,32 @@ RUN apt-get update && apt-get install -y \
         python3-requests \
         python3-pytest \
         python3-colorama \
-# For bash
-        texi2html \
 # For initramfs
         bash-completion \
 # For sonic vs image build
-        dosfstools \
-        qemu-kvm \
-        libvirt-bin
+#        dosfstools \
+#        qemu-kvm \
+#        libvirt-clients \
+# For lm-sensors
+        librrd8 \
+        librrd-dev \
+        rrdtool \
+# For smartmontools 6.6-1
+        automake1.11 \
+        libselinux1-dev
 
-# For jenkins slave
-# RUN apt-get -y install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk
+# For smartmontools 6.6-1
+RUN apt-get -t stretch-backports install -y debhelper
 
 # For linux build
 RUN apt-get -y build-dep linux
 
 # For gobgp and telemetry build
 RUN export VERSION=1.11.5 \
- && wget https://storage.googleapis.com/golang/go$VERSION.linux-armv6l.tar.gz \
- && tar -C /usr/local -xzf go$VERSION.linux-armv6l.tar.gz \
+ && wget https://storage.googleapis.com/golang/go$VERSION.linux-arm64.tar.gz \
+ && tar -C /usr/local -xzf go$VERSION.linux-arm64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
  && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc
-
-# Upgrade pip2
-# Note: use pip2 specific version so jinja2 2.10 will install
-RUN python2 -m pip install -U pip==9.0.3
 
 # For p4 build
 RUN pip install \
@@ -272,11 +269,21 @@ RUN pip install pyangbind==0.6.0
 # Note: force upgrade debian packaged jinja2, if installed
 RUN pip install --force-reinstall --upgrade jinja2>=2.10
 
-# For templating (requiring jinja2)
+# For templating
 RUN pip install j2cli
 
+# Remove python-click 6.6
+RUN apt-get purge -y python-click
 # For sonic utilities testing
 RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
+
+# For sonic snmpagent mock testing
+RUN pip3 install mockredispy==2.9.3
+
+RUN pip3 install PyYAML>=5.1
+
+# For sonic-platform-common testing
+RUN pip3 install redis
 
 # For supervisor build
 RUN pip install meld3 mock
@@ -317,10 +324,10 @@ RUN apt-get install -y \
            software-properties-common
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
 RUN add-apt-repository \
-           "deb [arch=armhf] https://download.docker.com/linux/debian \
+           "deb [arch=arm64] https://download.docker.com/linux/debian \
            $(lsb_release -cs) \
            stable"
 RUN apt-get update
-#RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
+#RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-stretch
 RUN apt-get install -y docker-ce=18.06.3~ce~3-0~debian
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
