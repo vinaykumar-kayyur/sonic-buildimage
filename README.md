@@ -74,6 +74,14 @@ To build SONiC installer image and docker images, run the following commands:
     # Build SONiC image
     make all
 
+## Usage for ARM Architecture
+To build Arm32 bit for (ARMHF) plaform
+    # Execute make configure once to configure ASIC and ARCH
+    make configure PLATFORM=[ASIC_VENDOR] SONIC_ARCH=armhf
+    **example**:
+    make configure PLATFORM=marvell-armhf SONIC_ARCH=armhf
+
+
  **NOTE**:
 
 - Recommend reserving 50G free space to build one platform.
