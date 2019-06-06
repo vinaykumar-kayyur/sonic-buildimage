@@ -2,20 +2,16 @@ FROM multiarch/debian-debootstrap:arm64-jessie
 
 MAINTAINER arheneus@marvell.com
 
-RUN echo "deb http://deb.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list && \
-        echo "deb-src http://deb.debian.org/debian jessie main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://deb.debian.org/debian jessie-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://security.debian.org jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src http://security.debian.org jessie/updates main contrib non-free" >> /etc/apt/sources.list
+RUN echo "deb http://archive.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list && \
+        echo "deb-src http://archive.debian.org/debian jessie main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb-src http://archive.debian.org/debian jessie-backports main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb http://archive.debian.org/debian jessie-backports main contrib non-free" >> /etc/apt/sources.list
 
-        # Below URL is moved out, need to find the right URL
-        #echo "deb-src http://deb.debian.org/debian jessie-updates main contrib non-free" >> /etc/apt/sources.list
-        #echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y \
         apt-utils \
         default-jre-headless \
         openssh-server \
@@ -133,7 +129,7 @@ RUN apt-get update && apt-get install -y \
         squashfs-tools \
         zip \
 # For broadcom sdk build
-        linux-compiler-gcc-4.8-x86 \
+#        linux-compiler-gcc-4.8-x86 \
         linux-kbuild-3.16 \
 # teamd build
         libdaemon-dev \
@@ -239,11 +235,11 @@ RUN apt-get update && apt-get install -y \
 # For bash
         texi2html \
 # For initramfs
-        bash-completion \
+        bash-completion
 # For sonic vs image build
-        dosfstools \
-        qemu-kvm \
-        libvirt-bin
+#        dosfstools \
+#        qemu-kvm \
+#        libvirt-bin
 
 # For jenkins slave
 # RUN apt-get -y install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk

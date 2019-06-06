@@ -133,7 +133,7 @@ RUN apt-get update && apt-get install -y \
         squashfs-tools \
         zip \
 # For broadcom sdk build
-        linux-compiler-gcc-4.8-x86 \
+#        linux-compiler-gcc-4.8-x86 \
         linux-kbuild-3.16 \
 # teamd build
         libdaemon-dev \
@@ -239,11 +239,11 @@ RUN apt-get update && apt-get install -y \
 # For bash
         texi2html \
 # For initramfs
-        bash-completion \
+        bash-completion
 # For sonic vs image build
-        dosfstools \
-        qemu-kvm \
-        libvirt-bin
+#        dosfstools \
+#        qemu-kvm \
+#        libvirt-bin
 
 # For jenkins slave
 # RUN apt-get -y install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk
