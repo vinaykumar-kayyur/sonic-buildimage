@@ -20,6 +20,7 @@ PLATFORM_DIR=$2
     echo "Error: no or empty PLATFORM_DIR argument"
     exit 1
 }
+CONFIGURED_ARCH=$3
 
 ## Enable debug output for script
 set -x -e
@@ -50,6 +51,9 @@ sudo chroot $FILESYSTEM_ROOT service docker start
 # Apply apt configuration files
 sudo cp $IMAGE_CONFIGS/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
 sudo cp -R $IMAGE_CONFIGS/apt/sources.list.d/ $FILESYSTEM_ROOT/etc/apt/
+if [ "$CONFIGURED_ARCH" == "amhf" ]; then
+    sudo rm -f $FILESYSTEM_ROOT/etc/apt/sources.list.d/debian_archive_trafficmanager_net_debian.list
+fi
 cat $IMAGE_CONFIGS/apt/sonic-dev.gpg.key | sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
 
 # Update apt's snapshot of its repos

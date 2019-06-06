@@ -5,7 +5,7 @@ SHELL = /bin/bash
 IPROUTE2_VERSION = 4.9.0
 IPROUTE2_VERSION_FULL = $(IPROUTE2_VERSION)-1
 
-MAIN_TARGET = iproute2_$(IPROUTE2_VERSION_FULL)_amd64.deb
+MAIN_TARGET = iproute2_$(IPROUTE2_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	wget -O iproute2_$(IPROUTE2_VERSION).orig.tar.xz -N "https://sonicstorage.blob.core.windows.net/packages/iproute2_4.9.0.orig.tar.xz?sv=2015-04-05&sr=b&sig=9nvybd1xkXyRQbaG6Fy6wBazPA8IbZV0AO41GWXPEP8%3D&se=2154-10-23T11%3A59%3A00Z&sp=r"
