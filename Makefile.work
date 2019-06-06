@@ -42,32 +42,22 @@ ifeq ($(USER), root)
 $(error Add your user account to docker group and use your user account to make. root or sudo are not supported!)
 endif
 
-ifeq "$(HOST_ARCH)" "armhf"
-override HOST_ARCH = armhf
-endif
-
-ifeq "$(HOST_ARCH)" "x86_64"
-override HOST_ARCH = amd64
-endif
-
 # Remove lock file in case previous run was forcefully stopped
 $(shell rm -f .screen)
 
 MAKEFLAGS += -B
 
-CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(HOST_ARCH))
+HOST_ARCH := $(shell uname -m)
+
+CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(SONIC_ARCH))
 ifeq ($(SONIC_ARCH),)
 	override SONIC_ARCH = $(CONFIGURED_ARCH)
 endif
-ifeq "$(CONFIGURED_ARCH)" "amd64"
-	ARCH_SUFFIX = 
+ifeq "$(CONFIGURED_ARCH)" ""
+    #make configure will have SONIC_ARCH set
+    ARCH_SUFFIX = 
 else
-    ifeq "$(CONFIGURED_ARCH)" ""
-    	#make configure will have SONIC_ARCH set
-	ARCH_SUFFIX = -$(SONIC_ARCH)
-    else
-	ARCH_SUFFIX = -$(CONFIGURED_ARCH)
-    endif
+    ARCH_SUFFIX = -$(CONFIGURED_ARCH)
 endif
 DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
  
