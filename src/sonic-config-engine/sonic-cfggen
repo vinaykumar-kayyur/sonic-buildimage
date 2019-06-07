@@ -87,6 +87,11 @@ def unique_name(l):
     return new_list
 
 def pfx_filter(value):
+    """INTERFACE Table can have keys in one of the two formats:
+       string or tuple - This filter skips the string keys and only
+       take into account the tuple.
+       For eg - VLAN_INTERFACE|Vlan1000 vs VLAN_INTERFACE|Vlan1000|192.168.0.1/21
+    """
     table = OrderedDict()
     for key,val in value.items():
         if not isinstance(key, tuple):
