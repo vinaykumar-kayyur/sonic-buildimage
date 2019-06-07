@@ -118,6 +118,10 @@ load   12 10 5
 #
                                            #  Run as an AgentX master agent
 master          agentx
+# internal socket to allow extension to other docker containers
+# Currently the othe container using this is docker-fpm-frr
+# make sure this line matches bgp:/etc/snmp/frr.conf 
+agentxsocket    tcp:localhost:3161
 
 #
 #  SysDescription pass-through
