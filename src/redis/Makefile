@@ -19,6 +19,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-source -x redis_$(REDIS_VERSION_FULL).dsc
 
 	pushd redis-$(REDIS_VERSION)
+	export ARCH=""
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
