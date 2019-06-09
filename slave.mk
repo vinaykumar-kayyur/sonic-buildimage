@@ -36,6 +36,7 @@ PYTHON_WHEELS_PATH = $(TARGET_PATH)/python-wheels
 PROJECT_ROOT = $(shell pwd)
 STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
+DBG_IMAGE_MARK = dbg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -120,6 +121,10 @@ ifeq ($(SONIC_BUILD_JOBS),)
 override SONIC_BUILD_JOBS := $(SONIC_CONFIG_BUILD_JOBS)
 endif
 
+ifeq ($(VS_PREPARE_MEM),)
+override VS_PREPARE_MEM := $(DEFAULT_VS_PREPARE_MEM)
+endif
+
 ifeq ($(KERNEL_PROCURE_METHOD),)
 override KERNEL_PROCURE_METHOD := $(DEFAULT_KERNEL_PROCURE_METHOD)
 endif
@@ -167,6 +172,7 @@ $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
+$(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info )
 
 ###############################################################################
@@ -175,6 +181,7 @@ $(info )
 ###############################################################################
 
 export kernel_procure_method=$(KERNEL_PROCURE_METHOD)
+export vs_build_prepare_mem=$(VS_PREPARE_MEM)
 
 ###############################################################################
 ## Local targets
@@ -464,8 +471,21 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES))
 
+# Build jessie docker images only in jessie slave docker,
+# jessie docker images only in jessie slave docker
+ifeq ($(BLDENV),)
+	DOCKER_IMAGES_FOR_INSTALLERS := $(sort $(foreach installer,$(SONIC_INSTALLERS),$($(installer)_DOCKERS)))
+	DOCKER_IMAGES := $(SONIC_JESSIE_DOCKERS)
+	DOCKER_DBG_IMAGES := $(SONIC_JESSIE_DBG_DOCKERS)
+	SONIC_JESSIE_DOCKERS_FOR_INSTALLERS = $(filter $(SONIC_JESSIE_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_JESSIE_TARGETS))
+	SONIC_JESSIE_DBG_DOCKERS_FOR_INSTALLERS = $(filter $(SONIC_JESSIE_DBG_DOCKERS), $(patsubst %.gz,%-$(DBG_IMAGE_MARK).gz, $(SONIC_JESSIE_DOCKERS_FOR_INSTALLERS)))
+else
+	DOCKER_IMAGES := $(filter-out $(SONIC_JESSIE_DOCKERS), $(SONIC_DOCKER_IMAGES))
+	DOCKER_DBG_IMAGES := $(filter-out $(SONIC_JESSIE_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
+endif
+
 # Targets for building docker images
-$(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start \
+$(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start \
 		$$(addprefix $(DEBS_PATH)/,$$($$*.gz_DEPENDS)) \
 		$$(addprefix $(FILES_PATH)/,$$($$*.gz_FILES)) \
 		$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*.gz_PYTHON_DEBS)) \
@@ -506,11 +526,39 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .pl
 	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
 	$(FOOTER)
 
-SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_DOCKER_IMAGES))
+SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES))
+
+# Targets for building docker images
+$(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAGE_MARK).gz : .platform docker-start \
+		$$(addprefix $(DEBS_PATH)/,$$($$*.gz_DBG_DEPENDS)) \
+		$$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$*.gz))
+	$(HEADER)
+	mkdir -p $($*.gz_PATH)/debs $(LOG)
+	sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+	# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
+	$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_IMAGE_PACKAGES)))\n" | awk '!a[$$0]++'))
+	./build_debug_docker_j2.sh $* $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs > $($*.gz_PATH)/Dockerfile-dbg.j2
+	j2 $($*.gz_PATH)/Dockerfile-dbg.j2 > $($*.gz_PATH)/Dockerfile-dbg
+	docker info $(LOG)
+	docker build --squash --no-cache \
+		--build-arg http_proxy=$(HTTP_PROXY) \
+		--build-arg https_proxy=$(HTTPS_PROXY) \
+		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+		--label Tag=$(SONIC_GET_VERSION) \
+		--file $($*.gz_PATH)/Dockerfile-dbg \
+		-t $*-dbg $($*.gz_PATH) $(LOG)
+	docker save $*-dbg | gzip -c > $@
+	# Clean up
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
+	$(FOOTER)
+
+SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES))
 
 DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
 		      $(SONIC_SIMPLE_DOCKER_IMAGES) \
-		      $(SONIC_DOCKER_IMAGES)))
+		      $(DOCKER_IMAGES)))
+
 $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TARGET_PATH)/$$*.gz
 	$(HEADER)
 	docker load -i $(TARGET_PATH)/$*.gz $(LOG)
@@ -545,9 +593,10 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export debs_path="$(STRETCH_DEBS_PATH)"
+	export files_path="$(FILES_PATH)"
 	export python_debs_path="$(PYTHON_DEBS_PATH)" 
 	export initramfs_tools="$(STRETCH_DEBS_PATH)/$(INITRAMFS_TOOLS)"
-	export linux_kernel="$(STRTCH_DEBS_PATH)/$(LINUX_KERNEL)"
+	export linux_kernel="$(STRETCH_DEBS_PATH)/$(LINUX_KERNEL)"
 	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
 	export kversion="$(KVERSION)"
 	export image_type="$($*_IMAGE_TYPE)"
@@ -644,6 +693,7 @@ $(SONIC_CLEAN_FILES) : $(FILES_PATH)/%-clean : .platform
 
 SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_DOCKER_IMAGES) \
+		       $(SONIC_DOCKER_DBG_IMAGES) \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean : .platform
@@ -667,8 +717,10 @@ all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
 stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
           $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES)) \
-          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DOCKERS))
+          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DOCKERS_FOR_INSTALLERS)) \
+          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DBG_DOCKERS_FOR_INSTALLERS))
 
+jessie : $$(addprefix $(TARGET_PATH)/,$$(SONIC_JESSIE_DOCKERS_FOR_INSTALLERS))
 
 ###############################################################################
 ## Standard targets

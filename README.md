@@ -71,15 +71,17 @@ To build SONiC installer image and docker images, run the following commands:
     # Execute make configure once to configure ASIC
     make configure PLATFORM=[ASIC_VENDOR]
 
-    # Build Debian Stretch required targets (Manual execution optional; will also be executed as part of the build)
-    BLDENV=stretch make stretch
-
     # Build SONiC image
     make all
 
  **NOTE**:
 
 - Recommend reserving 50G free space to build one platform.
+- If Docker's workspace folder, `/var/lib/docker`, resides on a partition without sufficient free space, you may encounter an error like the following during a Docker container build job:
+
+    `/usr/bin/tar: /path/to/sonic-buildimage/<some_file>: Cannot write: No space left on device`
+
+    The solution is to [move the directory](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) to a partition with more free space.
 - Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
 - Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
