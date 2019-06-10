@@ -53,11 +53,10 @@ CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(SONIC_ARCH))
 ifeq ($(SONIC_ARCH),)
 	override SONIC_ARCH = $(CONFIGURED_ARCH)
 endif
-ifeq "$(CONFIGURED_ARCH)" ""
-    #make configure will have SONIC_ARCH set
-    ARCH_SUFFIX = 
-else
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
     ARCH_SUFFIX = -$(CONFIGURED_ARCH)
+else
+    ARCH_SUFFIX = 
 endif
 DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
  
