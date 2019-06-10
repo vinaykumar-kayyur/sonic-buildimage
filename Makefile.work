@@ -48,6 +48,9 @@ $(shell rm -f .screen)
 MAKEFLAGS += -B
 
 HOST_ARCH := $(shell uname -m)
+ifeq ($(HOST_ARCH), x86_64)
+    override HOST_ARCH = amd64
+endif
 
 CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(SONIC_ARCH))
 ifeq ($(SONIC_ARCH),)
