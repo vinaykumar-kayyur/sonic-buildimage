@@ -643,6 +643,52 @@ def parse_xml(filename, platform=None, port_config_file=None):
             count += 1
         results['MIRROR_SESSION'] = mirror_sessions
 
+ 
+    spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
+    chassis_backend_role = 'ChassisBackendRouter'
+
+    # Special parsing for spine chassis frontend routers
+    if current_device['type'] == spine_chassis_frontend_role:
+        chassis_vnet ='Vnet1'
+        chassis_vxlan_tunnel = 'tunnel1'
+        chassis_vni = 8000
+
+        # Vxlan tunnel information
+        lo_addr = '0.0.0.0'
+        for lo in lo_intfs:
+            lo_network = ipaddress.IPNetwork(lo[1])
+            if lo_network.version == 4:
+                lo_addr = str(lo_network.ip)
+                break        
+
+        results['VXLAN_TUNNEL'] = {chassis_vxlan_tunnel: {
+            'source_ip': lo_addr
+        }}
+
+        # Vnet information
+        results['VNET'] = {chassis_vnet: {
+            'vxlan_tunnel': chassis_vxlan_tunnel,
+            'vni': chassis_vni
+        }}
+
+        for intf in phyport_intfs:
+            if type(intf) != tuple:
+                continue 
+
+            # intf = (intf name, IP prefix)
+            intf_name = intf[0]
+            neighbor_router = results['DEVICE_NEIGHBOR'][intf_name]['name']
+            
+            # if the neighbor router is an external router (neither spine frontend nor backend)
+            if devices[neighbor_router]['type'] != spine_chassis_frontend_role and \
+               devices[neighbor_router]['type'] != chassis_backend_role:
+
+                # Enslave the interface to a Vnet
+                if intf_name in phyport_intfs:
+                    phyport_intfs[intf_name] = {'vnet_name': chassis_vnet}
+                else:
+                    print >> sys.stderr, 'Warning: cannot find the key %s' % (intf_name) 
+
     return results
 
 
