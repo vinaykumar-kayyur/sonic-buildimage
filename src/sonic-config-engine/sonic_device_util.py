@@ -48,7 +48,19 @@ def get_system_mac():
     version_info = get_sonic_version_info()
 
     if (version_info['asic_type'] == 'mellanox'):
-        get_mac_cmd = "sudo decode-syseeprom -m"
+        # With latest Mellanox ONIE release(2019.05-5.2.0012)
+        # "onie_base_mac" was added to /host/machine.conf:
+        # onie_base_mac=e4:1d:2d:44:5e:80
+        # So we have another way to get the mac address besides decode syseeprom
+        # By this can mitigate the dependency on the hw-management service
+        base_mac_key = "onie_base_mac"
+        machine_vars = get_machine_info()
+        if machine_vars is not None and base_mac_key in machine_vars:
+            mac = machine_vars[base_mac_key]
+            mac = mac.strip()
+            return mac
+        else:
+            get_mac_cmd = "sudo decode-syseeprom -m"
     else:
         get_mac_cmd = "ip link show eth0 | grep ether | awk '{print $2}'"
 
