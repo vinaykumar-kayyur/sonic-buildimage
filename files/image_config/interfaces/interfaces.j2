@@ -9,12 +9,6 @@
 # The loopback network interface
 auto lo
 iface lo inet loopback
-# Use command 'ip addr list dev lo' to check all addresses
-{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-iface lo {{ 'inet' if prefix | ipv4 else 'inet6' }} static
-    address {{ prefix | ip }}
-    netmask {{ prefix | netmask if prefix | ipv4 else prefix | prefixlen }}
-#
 {% endfor %}
 {% endblock loopback %}
 {% block mgmt_interface %}
