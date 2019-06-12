@@ -2,6 +2,7 @@
 import os
 import yaml
 import subprocess
+import re
 
 DOCUMENTATION = '''
 ---
@@ -44,6 +45,12 @@ def get_sonic_version_info():
         data = yaml.load(stream)
     return data
 
+def validate_mac_address(mac):
+    if re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac):
+        return True
+    else:
+        return False
+
 def get_system_mac():
     version_info = get_sonic_version_info()
 
@@ -58,9 +65,10 @@ def get_system_mac():
         if machine_vars is not None and base_mac_key in machine_vars:
             mac = machine_vars[base_mac_key]
             mac = mac.strip()
-            return mac
-        else:
-            get_mac_cmd = "sudo decode-syseeprom -m"
+            if validate_mac_address(mac):
+                return mac
+
+        get_mac_cmd = "sudo decode-syseeprom -m"
     else:
         get_mac_cmd = "ip link show eth0 | grep ether | awk '{print $2}'"
 
@@ -76,7 +84,11 @@ def get_system_mac():
         last_byte = mac[-2:]
         aligned_last_byte = format(int(int(last_byte, 16) & 0b11000000), '02x')
         mac = mac[:-2] + aligned_last_byte
-    return mac
+
+    if validate_mac_address(mac):
+        return mac
+    else:
+        return None
 
 #
 # Function to obtain the routing-stack being utilized. Function is not
