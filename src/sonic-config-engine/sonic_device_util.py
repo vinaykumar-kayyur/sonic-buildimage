@@ -45,11 +45,8 @@ def get_sonic_version_info():
         data = yaml.load(stream)
     return data
 
-def validate_mac_address(mac):
-    if re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac):
-        return True
-    else:
-        return False
+def valid_mac_address(mac):
+    return bool(re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac))
 
 def get_system_mac():
     version_info = get_sonic_version_info()
@@ -65,7 +62,7 @@ def get_system_mac():
         if machine_vars is not None and base_mac_key in machine_vars:
             mac = machine_vars[base_mac_key]
             mac = mac.strip()
-            if validate_mac_address(mac):
+            if valid_mac_address(mac):
                 return mac
 
         get_mac_cmd = "sudo decode-syseeprom -m"
@@ -79,16 +76,16 @@ def get_system_mac():
 
     mac = mac.strip()
 
+    if not valid_mac_address(mac):
+        return None
+
     # Align last byte of MAC if necessary
     if version_info and version_info['asic_type'] == 'centec':
         last_byte = mac[-2:]
         aligned_last_byte = format(int(int(last_byte, 16) & 0b11000000), '02x')
         mac = mac[:-2] + aligned_last_byte
 
-    if validate_mac_address(mac):
-        return mac
-    else:
-        return None
+    return mac
 
 #
 # Function to obtain the routing-stack being utilized. Function is not
