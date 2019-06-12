@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import sys
 import subprocess
 import syslog
@@ -20,6 +21,15 @@ NSS_CONF = "/etc/nsswitch.conf"
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
 TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
+
+
+def is_valid_hostname(name):
+    if hostname[-1] == ".":
+        hostname = hostname[:-1] # strip exactly one dot from the right, if present
+    if len(hostname) > 253:
+        return False
+    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(x) for x in hostname.split("."))
 
 
 def is_true(val):
@@ -44,8 +54,6 @@ class AaaCfg(object):
     def __init__(self):
         self.auth_default = {
             'login': 'local',
-            'failthrough': True,
-            'fallback': True
         }
         self.tacplus_global_default = {
             'auth_type': TACPLUS_SERVER_AUTH_TYPE_DEFAULT,
@@ -127,10 +135,10 @@ class AaaCfg(object):
         # Add tacplus in nsswitch.conf if TACACS+ enable
         if 'tacacs+' in auth['login']:
             if os.path.isfile(NSS_CONF):
-                os.system("sed -i -e '/tacplus/b' -e '/^passwd/s/compat/& tacplus/' /etc/nsswitch.conf")
+                os.system("sed -i -e '/tacplus/b' -e '/^passwd/s/compat/tacplus &/' /etc/nsswitch.conf")
         else:
             if os.path.isfile(NSS_CONF):
-                os.system("sed -i -e '/^passwd/s/ tacplus//' /etc/nsswitch.conf")
+                os.system("sed -i -e '/^passwd/s/tacplus //' /etc/nsswitch.conf")
 
         # Set tacacs+ server in nss-tacplus conf
         template_file = os.path.abspath(NSS_TACPLUS_CONF_TEMPLATE)
@@ -150,6 +158,7 @@ class HostConfigDaemon:
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
         self.aaacfg = AaaCfg()
         self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+        self.hostname_cache=""
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -159,19 +168,58 @@ class HostConfigDaemon:
         log_data = copy.deepcopy(data)
         if log_data.has_key('passkey'):
             log_data['passkey'] = obfuscate(log_data['passkey'])
-        syslog.syslog(syslog.LOG_DEBUG, 'value of {} changed to {}'.format(key, log_data))
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
     def tacacs_global_handler(self, key, data):
         self.aaacfg.tacacs_global_update(key, data)
         log_data = copy.deepcopy(data)
         if log_data.has_key('passkey'):
             log_data['passkey'] = obfuscate(log_data['passkey'])
-        syslog.syslog(syslog.LOG_DEBUG, 'value of {} changed to {}'.format(key, log_data))
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
+
+    def hostname_handler(self, key, data):
+        if key != "localhost":
+            return
+
+        hostname = data.get("hostname")
+
+        if not hostname:
+            syslog.syslog(syslog.LOG_WARNING, "hostname key is missing")
+            return
+        if not is_valid_hostname(hostname):
+            return
+        if hostname == self.hostname_cache:
+            return
+
+        syslog.syslog(syslog.LOG_INFO, "Get all running containers")
+        cmd = 'docker ps --format "{{.Names}}"'
+        try:
+            containers = subprocess.check_output(cmd, shell=True).split("\n")[:-1]
+        except subprocess.CalledProcessError as err:
+            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                          .format(err.cmd, err.returncode, err.output))
+
+        for name in containers:
+            script = '/usr/bin/{}.sh'.format(name)
+            exists = os.path.isfile(script)
+            if not exists:
+                syslog.syslog(syslog.LOG_ERR, "Can't find control script for {}".format(name))
+                continue
+
+            cmd = "{} updateHostName {}".format(script, hostname)
+            try:
+                subprocess.check_call(cmd, shell=True)
+            except subprocess.CalledProcessError as err:
+                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                              .format(err.cmd, err.returncode, err.output))
+
+        self.hostname_cache = hostname
 
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
+        self.config_db.subscribe('DEVICE_METADATA', lambda table, key, data: self.hostname_handler(key, data))
         self.config_db.listen()
 
 

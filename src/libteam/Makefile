@@ -12,19 +12,17 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./libteam
 	git clone https://github.com/jpirko/libteam.git
 	pushd ./libteam
-	git checkout -f v1.26
+	git checkout -b teamd -f 5c5e498bff9
 
-	# Apply patch
-	git apply ../0001-libteam-Add-team_get_port_enabled-function.patch
-	git apply ../0002-libteam-Temporarily-remove-redundant-debug-mes.patch
-	git apply ../0003-teamd-lacp-runner-will-send-lacp-update-right-after-.patch
-	git apply ../0004-libteam-Add-lacp-fallback-support-for-single-member-.patch
+	# Apply patch series
+	stg init
+	stg import -s ../patch/series
 	popd
 
 	# Obtain debian packaging
-	git clone https://anonscm.debian.org/git/collab-maint/libteam.git tmp
+	git clone https://salsa.debian.org/debian/libteam.git tmp
 	pushd ./tmp
-	git checkout -f da006f2 # v1.26
+	git checkout -f 7188c361  # v1.28-1
 	popd
 
 	mv tmp/debian libteam/

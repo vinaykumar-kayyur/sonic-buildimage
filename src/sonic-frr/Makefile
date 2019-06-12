@@ -2,18 +2,15 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = frr_$(FRR_VERSION)_amd64.deb
+MAIN_TARGET = $(FRR)
+DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-        # Replacing frr's rules/install files with SONiC's own versions to activate
-        # specific knobs and adjust install process to address SONiC's needs.
-	cp sonic_frr.rules frr/debian/rules
-	cp sonic_frr.install frr/debian/frr.install
-
-        # Build the package
+	# Build the package
 	pushd ./frr
-	rm -f debian/*.debhelper.log
-	dpkg-buildpackage -rfakeroot -b -us -uc
+	tools/tarsource.sh -V -e '-sonic'
+	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
+	mv $(DERIVED_TARGET) $* $(DEST)/
 
-	mv $* $(DEST)/
+$(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
