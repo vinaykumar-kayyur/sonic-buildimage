@@ -1,9 +1,5 @@
 #!/bin/bash
 
-SERVICE="swss"
-PEER="syncd"
-DEBUGLOG="/tmp/swss-syncd-debug.log"
-LOCKFILE="/tmp/swss-syncd-lock"
 
 function debug()
 {
@@ -30,8 +26,8 @@ function unlock_service_state_change()
 
 function check_warm_boot()
 {
-    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    SYSTEM_WARM_START=`/usr/bin/redis-cli $DEV -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_WARM_START=`/usr/bin/redis-cli $DEV -n 6 hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
     if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
         WARM_BOOT="true"
     else
@@ -42,7 +38,7 @@ function check_warm_boot()
 function validate_restore_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restore_count`
+        RESTORE_COUNT=`/usr/bin/redis-cli $DEV -n 6 hget "WARM_RESTART_TABLE|orchagent" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
             WARM_BOOT="false"
@@ -53,12 +49,12 @@ function validate_restore_count()
 function wait_for_database_service()
 {
     # Wait for redis server start before database clean
-    until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]];
+    until [[ $(/usr/bin/redis-cli $DEV ping | grep -c PONG) -gt 0 ]];
         do sleep 1;
     done
 
     # Wait for configDB initialization
-    until [[ $(/usr/bin/docker exec database redis-cli -n 4 GET "CONFIG_DB_INITIALIZED") ]];
+    until [[ $(/usr/bin/redis-cli $DEV -n 4 GET "CONFIG_DB_INITIALIZED") ]];
         do sleep 1;
     done
 }
@@ -68,7 +64,7 @@ function wait_for_database_service()
 # $2 the string of a list of table prefixes
 function clean_up_tables()
 {
-    redis-cli -n $1 EVAL "
+    redis-cli $DEV -n $1 EVAL "
     local tables = {$2}
     for i = 1, table.getn(tables) do
         local matches = redis.call('KEYS', tables[i])
@@ -82,7 +78,11 @@ startPeerService() {
     check_warm_boot
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /bin/systemctl start ${PEER}
+		if [[ ! -z $DEV ]]; then
+			/bin/systemctl start ${PEER}@$DEV
+		else
+			/bin/systemctl start ${PEER}
+		fi
     fi
 }
 
@@ -100,15 +100,15 @@ start() {
     # Don't flush DB during warm boot
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         debug "Flushing APP, ASIC, COUNTER, CONFIG, and partial STATE databases ..."
-        /usr/bin/docker exec database redis-cli -n 0 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 2 FLUSHDB
-        /usr/bin/docker exec database redis-cli -n 5 FLUSHDB
+        /usr/bin/redis-cli $DEV -n 0 FLUSHDB
+        /usr/bin/redis-cli $DEV -n 1 FLUSHDB
+        /usr/bin/redis-cli $DEV -n 2 FLUSHDB
+        /usr/bin/redis-cli $DEV -n 5 FLUSHDB
         clean_up_tables 6 "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*'"
     fi
 
     # start service docker
-    /usr/bin/${SERVICE}.sh start
+    /usr/bin/${SERVICE}.sh start $DEV
     debug "Started ${SERVICE} service..."
 
     # Unlock has to happen before reaching out to peer service
@@ -117,7 +117,7 @@ start() {
 
 wait() {
     startPeerService
-    /usr/bin/${SERVICE}.sh wait
+    /usr/bin/${SERVICE}.sh wait $DEV
 }
 
 stop() {
@@ -129,7 +129,7 @@ stop() {
     check_warm_boot
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
-    /usr/bin/${SERVICE}.sh stop
+    /usr/bin/${SERVICE}.sh stop $DEV
     debug "Stopped ${SERVICE} service..."
 
     # Unlock has to happen before reaching out to peer service
@@ -137,9 +137,20 @@ stop() {
 
     # if warm start enabled or peer lock exists, don't stop peer service docker
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /bin/systemctl stop ${PEER}
+		if [[ ! -z $DEV ]]; then
+			/bin/systemctl stop ${PEER}@$DEV
+		else
+			/bin/systemctl stop ${PEER}
+		fi
     fi
 }
+
+DEV=$2
+
+SERVICE="swss"
+PEER="syncd"
+DEBUGLOG="/tmp/swss-syncd-debug$DEV.log"
+LOCKFILE="/tmp/swss-syncd-lock$DEV"
 
 case "$1" in
     start|wait|stop)
