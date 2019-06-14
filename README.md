@@ -79,11 +79,11 @@ To build Arm32 bit for (ARMHF) plaform
 
     # Execute make configure once to configure ASIC and ARCH
 
-    make configure PLATFORM=[ASIC_VENDOR] SONIC_ARCH=armhf
+    make configure PLATFORM=[ASIC_VENDOR] ARCH=armhf
 
     **example**:
 
-    make configure PLATFORM=marvell-armhf SONIC_ARCH=armhf
+    make configure PLATFORM=marvell-armhf ARCH=armhf
 
 
 
@@ -91,11 +91,11 @@ To build Arm64 bit for plaform
 
     # Execute make configure once to configure ASIC and ARCH
 
-    make configure PLATFORM=[ASIC_VENDOR] SONIC_ARCH=arm64
+    make configure PLATFORM=[ASIC_VENDOR] ARCH=arm64
 
     **example**:
 
-    make configure PLATFORM=marvell-arm64 SONIC_ARCH=arm64
+    make configure PLATFORM=marvell-arm64 ARCH=arm64
 
 
  **NOTE**:

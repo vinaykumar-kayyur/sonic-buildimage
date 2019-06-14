@@ -28,8 +28,8 @@
 ## Enable debug output for script
 set -x -e
 
-CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo $HOST_ARCH)
-[[ $SONIC_ARCH == "" ]] && SONIC_ARCH=$CONFIGURED_ARCH
+CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
+[[ $ARCH == "" ]] && ARCH=$CONFIGURED_ARCH
 [[ $CONFIGURED_ARCH == amd64 ]] && ARCH_SUFFIX= || ARCH_SUFFIX=-$CONFIGURED_ARCH
 
 ## docker engine version (with platform)
@@ -67,10 +67,6 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
-# Copy Host Arch Qemu binary for binfmt-misc cross build
-sudo mkdir -p $FILESYSTEM_ROOT/usr/bin
-sudo cp /usr/bin/qemu*static $FILESYSTEM_ROOT/usr/bin || true
-
 ## make / as a mountpoint in chroot env, needed by dockerd
 pushd $FILESYSTEM_ROOT
 sudo mount --bind . .
@@ -100,11 +96,7 @@ trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
-if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-sudo cp files/apt/sources.list$ARCH_SUFFIX $FILESYSTEM_ROOT/etc/apt/sources.list
-else
 sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
-fi
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages}} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'apt-mark auto `apt-mark showmanual`'
 
@@ -134,10 +126,10 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode 
+[[ $CONFIGURED_ARCH == amd64 ]] && sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode 
 
 ## Update initramfs for booting with squashfs+overlay
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
