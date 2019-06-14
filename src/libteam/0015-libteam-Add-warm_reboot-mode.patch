@@ -21,7 +21,7 @@ index 5c32a9c..c418243 100644
  	}
  }
 diff --git a/teamd/teamd.c b/teamd/teamd.c
-index 0f8993e..836745a 100644
+index 0f8993e..ad91fe5 100644
 --- a/teamd/teamd.c
 +++ b/teamd/teamd.c
 @@ -116,7 +116,9 @@ static void print_help(const struct teamd_context *ctx) {
@@ -35,15 +35,6 @@ index 0f8993e..836745a 100644
              ctx->argv0);
  	printf("Available runners: ");
  	for (i = 0; i < TEAMD_RUNNER_LIST_SIZE; i++) {
-@@ -129,7 +131,7 @@ static void print_help(const struct teamd_context *ctx) {
- 
- static int parse_command_line(struct teamd_context *ctx,
- 			      int argc, char *argv[]) {
--	int opt;
-+	int opt, err;
- 	static const struct option long_options[] = {
- 		{ "help",		no_argument,		NULL, 'h' },
- 		{ "daemonize",		no_argument,		NULL, 'd' },
 @@ -149,10 +151,12 @@ static int parse_command_line(struct teamd_context *ctx,
  		{ "zmq-enable",		required_argument,	NULL, 'Z' },
  		{ "usock-enable",	no_argument,		NULL, 'U' },
@@ -189,7 +180,7 @@ index 5c2ef56..50e5a08 100644
  			   struct teamd_port *tdport)
  {
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index 0930b22..5e0ba0b 100644
+index 0930b22..dc87448 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
 @@ -31,6 +31,7 @@
@@ -207,7 +198,7 @@ index 0930b22..5e0ba0b 100644
 +struct wr_tdport_state
 +{
 +	char name[IFNAMSIZ+1];
-+	bool state;
++	bool enabled;
 +	bool checked;
 +};
 +
@@ -370,7 +361,7 @@ index 0930b22..5e0ba0b 100644
 +	}
 +
 +	for (i = 0; i < lacp->wr.nr_of_tdports; ++i) {
-+		err = fprintf(fp, "%s\n%d\n", lacp->wr.state[i].name, lacp->wr.state[i].state ? 1 : 0); //FIXME
++		err = fprintf(fp, "%s\n%d\n", lacp->wr.state[i].name, lacp->wr.state[i].enabled ? 1 : 0);
 +		if (err < 0) {
 +			teamd_log_err("WR-mode. Can't write to the file '%s' to save the lacp dump: %s", filename, strerror(errno));
 +			goto error_with_close;
@@ -425,7 +416,7 @@ index 0930b22..5e0ba0b 100644
 +			(void)fclose(fp);
 +			return -1;
 +		}
-+		lacp->wr.state[i].state = data1 == 1;
++		lacp->wr.state[i].enabled = data1 == 1;
 +		lacp->wr.state[i].checked = false;
 +	}
 +
@@ -488,7 +479,7 @@ index 0930b22..5e0ba0b 100644
 +				if (!lacp->wr.state[found].checked) {
 +					lacp->wr.state[found].checked = true;
 +
-+					if(lacp->wr.state[found].state) {
++					if(lacp->wr.state[found].enabled) {
 +						/* the port was up before the WR. Trying to restore it */
 +						struct lacpdu lacpdu;
 +						err = lacpdu_read(lacp_port, &lacpdu);
@@ -583,7 +574,7 @@ index 0930b22..5e0ba0b 100644
  	teamd_log_info("%s: Changed port state: \"%s\" -> \"%s\"",
  		       lacp_port->tdport->ifname,
  		       lacp_port_state_name[lacp_port->state],
-@@ -1090,37 +1395,27 @@ static int lacpdu_send(struct lacp_port *lacp_port)
+@@ -1090,34 +1395,23 @@ static int lacpdu_send(struct lacp_port *lacp_port)
  	return err;
  }
  
@@ -594,7 +585,7 @@ index 0930b22..5e0ba0b 100644
 -	struct sockaddr_ll ll_from;
  	int err;
 -	bool admin_state;
--
+ 
 -	err = teamd_recvfrom(lacp_port->sock, &lacpdu, sizeof(lacpdu), 0,
 -			     (struct sockaddr *) &ll_from, sizeof(ll_from));
 -	if (err <= 0)
@@ -606,7 +597,7 @@ index 0930b22..5e0ba0b 100644
 -	admin_state = team_get_ifinfo_admin_state(lacp_port->ctx->ifinfo);
 -	if (!admin_state)
 -		return 0;
- 
+-
 -	if (!lacpdu_check(&lacpdu)) {
 +	if (!lacpdu_check(lacpdu)) {
  		teamd_log_warn("malformed LACP PDU came.");
@@ -626,11 +617,7 @@ index 0930b22..5e0ba0b 100644
  		err = lacp_port_partner_update(lacp_port);
  		if (err)
  			return err;
-+
- 		err = lacp_port_agg_update(lacp_port);
- 		if (err)
- 			return err;
-@@ -1133,21 +1428,56 @@ static int lacpdu_recv(struct lacp_port *lacp_port)
+@@ -1133,21 +1427,56 @@ static int lacpdu_recv(struct lacp_port *lacp_port)
  	lacp_port_actor_update(lacp_port);
  
  	/* Check if the other side has correct info about us */
@@ -690,7 +677,7 @@ index 0930b22..5e0ba0b 100644
  static int lacp_callback_timeout(struct teamd_context *ctx, int events,
  				 void *priv)
  {
-@@ -1253,6 +1583,8 @@ static int lacp_port_added(struct teamd_context *ctx,
+@@ -1253,6 +1582,8 @@ static int lacp_port_added(struct teamd_context *ctx,
  	struct lacp *lacp = creator_priv;
  	int err;
  
@@ -699,7 +686,7 @@ index 0930b22..5e0ba0b 100644
  	lacp_port->ctx = ctx;
  	lacp_port->tdport = tdport;
  	lacp_port->lacp = lacp;
-@@ -1299,6 +1631,13 @@ static int lacp_port_added(struct teamd_context *ctx,
+@@ -1299,6 +1630,13 @@ static int lacp_port_added(struct teamd_context *ctx,
  		goto periodic_callback_del;
  	}
  
@@ -713,7 +700,7 @@ index 0930b22..5e0ba0b 100644
  	/* Newly added ports are disabled */
  	err = team_set_port_enabled(ctx->th, tdport->ifindex, false);
  	if (err) {
-@@ -1336,7 +1675,13 @@ static void lacp_port_removed(struct teamd_context *ctx,
+@@ -1336,7 +1674,13 @@ static void lacp_port_removed(struct teamd_context *ctx,
  {
  	struct lacp_port *lacp_port = priv;
  
@@ -728,7 +715,7 @@ index 0930b22..5e0ba0b 100644
  	teamd_loop_callback_del(ctx, LACP_TIMEOUT_CB_NAME, lacp_port);
  	teamd_loop_callback_del(ctx, LACP_PERIODIC_CB_NAME, lacp_port);
  	teamd_loop_callback_del(ctx, LACP_SOCKET_CB_NAME, lacp_port);
-@@ -1428,6 +1773,42 @@ static void lacp_event_watch_refresh(struct teamd_context *ctx, struct teamd_por
+@@ -1428,6 +1772,42 @@ static void lacp_event_watch_refresh(struct teamd_context *ctx, struct teamd_por
  		(void) lacpdu_send(lacp_port);
  }
  
@@ -742,9 +729,9 @@ index 0930b22..5e0ba0b 100644
 +	if (lacp->wr.state) {
 +		int err;
 +		strcpy(lacp->wr.state[lacp->wr.nr_of_tdports-1].name, tdport->ifname);
-+		err = teamd_port_enabled(ctx, tdport, &lacp->wr.state[lacp->wr.nr_of_tdports-1].state);
++		err = teamd_port_enabled(ctx, tdport, &lacp->wr.state[lacp->wr.nr_of_tdports-1].enabled);
 +		if (err)
-+			lacp->wr.state[lacp->wr.nr_of_tdports-1].state = false;
++			lacp->wr.state[lacp->wr.nr_of_tdports-1].enabled = false;
 +	} else {
 +		teamd_log_err("WR-mode. Can't reallocate memory for LACP member %s dump", tdport->ifname);
 +		lacp->wr.nr_of_tdports = 0;
@@ -762,16 +749,16 @@ index 0930b22..5e0ba0b 100644
 +			teamd_log_err("WR-mode. Can't open file %s for writing %s", filename, strerror(errno));
 +		}
 +	} else {
-+		teamd_log_err("WR-mode. Can't dump received lacp pdu for port %s. "
-+			      "Either it wasn't received, or directory to save wasn't configured",
-+			      lacp_port->tdport->ifname);
++		if (lacp_port->ctx->lacp_directory == NULL)
++			teamd_log_err("WR-mode. Can't dump received lacp pdu for port %s. "
++				      "LACP directory wasn't configured", lacp_port->tdport->ifname);
 +	}
 +}
 +
  static const struct teamd_event_watch_ops lacp_event_watch_ops = {
  	.hwaddr_changed = lacp_event_watch_hwaddr_changed,
  	.port_added = lacp_event_watch_port_added,
-@@ -1435,21 +1816,35 @@ static const struct teamd_event_watch_ops lacp_event_watch_ops = {
+@@ -1435,21 +1815,35 @@ static const struct teamd_event_watch_ops lacp_event_watch_ops = {
  	.port_changed = lacp_event_watch_port_changed,
  	.admin_state_changed = lacp_event_watch_admin_state_changed,
  	.refresh = lacp_event_watch_refresh,
@@ -812,7 +799,7 @@ index 0930b22..5e0ba0b 100644
  	return 0;
  }
  
-@@ -1917,6 +2312,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
+@@ -1917,6 +2311,12 @@ static int lacp_init(struct teamd_context *ctx, void *priv)
  	}
  
  	lacp->ctx = ctx;
@@ -825,7 +812,7 @@ index 0930b22..5e0ba0b 100644
  	err = teamd_hash_func_set(ctx);
  	if (err)
  		return err;
-@@ -1958,10 +2359,13 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
+@@ -1958,10 +2358,13 @@ static void lacp_fini(struct teamd_context *ctx, void *priv)
  {
  	struct lacp *lacp = priv;
  
