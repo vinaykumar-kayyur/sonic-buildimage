@@ -10,7 +10,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd ./frr
 	git reset --hard
 	git clean -xfdf
-	git checkout -b work frr/7.0
+	git branch work origin/frr/7.0
+	git checkout work
 	stg init
 	stg import -s ../patch/series
 	tools/tarsource.sh -V -e '-sonic'
