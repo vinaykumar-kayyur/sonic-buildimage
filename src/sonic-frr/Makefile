@@ -8,6 +8,11 @@ DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG)
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr
+	git reset --hard
+	git clean -xfdf
+	stg init
+	git checkout -b work frr/7.0
+	stg import -s ../patch/series
 	tools/tarsource.sh -V -e '-sonic'
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
