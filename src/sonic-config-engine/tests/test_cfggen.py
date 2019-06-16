@@ -16,6 +16,7 @@ class TestCfgGen(TestCase):
         self.sample_graph_t2_chassis_frontend = os.path.join(self.test_dir, 't2-chassis-frontend-graph.xml')
         self.sample_device_desc = os.path.join(self.test_dir, 'device.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.t2_chassis_frontend_port_config = os.path.join(self.test_dir, 't2-chassis-frontend-port-config.ini')
 
     def run_script(self, argument, check_stderr=False):
         print '\n    Running sonic-cfggen ' + argument
@@ -241,12 +242,12 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), "{'10.0.10.1': {}, '10.0.10.2': {}}")
 
     def test_minigraph_t2_chassis_frontend_type(self):
-        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
+        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -p "' + self.t2_chassis_frontend_port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'SpineChassisFrontendRouter')
 
     def test_minigraph_t2_chassis_frontend_interfaces(self):
-        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -v "INTERFACE"'
+        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -p "' + self.t2_chassis_frontend_port_config + '" -v "INTERFACE"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(),  
                          "{'Ethernet8': {}, "
@@ -262,7 +263,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), "")
 
     def test_minigraph_t2_chassis_frontend_vnet(self):
-        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -v "VNET"'
+        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -p "' + self.t2_chassis_frontend_port_config + '" -v "VNET"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'Vnet1': {'vxlan_tunnel': 'tunnel1', 'vni': 8000}}")
 
@@ -272,7 +273,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(), "")
 
     def test_minigraph_t2_chassis_frontend_vxlan(self):
-        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -v "VXLAN_TUNNEL"'
+        argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -p "' + self.t2_chassis_frontend_port_config + '" -v "VXLAN_TUNNEL"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'tunnel1': {'source_ip': '4.0.0.0'}}")
 
