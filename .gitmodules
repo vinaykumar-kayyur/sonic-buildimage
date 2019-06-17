@@ -88,3 +88,6 @@
 [submodule "src/wpasupplicant/sonic-wpa-supplicant"]
 	path = src/wpasupplicant/sonic-wpa-supplicant
 	url = https://github.com/Azure/sonic-wpa-supplicant.git
+[submodule "platform/broadcom/Networking-acs-platform-modules-n3132"]
+	path = platform/broadcom/Networking-acs-platform-modules-n3132
+	url = https://msazure.visualstudio.com/One/_git/Networking-acs-platform-modules-n3132
