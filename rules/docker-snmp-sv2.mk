@@ -1,7 +1,7 @@
 # docker image for snmp agent
 
 DOCKER_SNMP_SV2 = docker-snmp-sv2.gz
-$(DOCKER_SNMP_SV2)_PATH = $(DOCKERS_PATH)/docker-snmp-sv2$(ARCH_SUFFIX)
+$(DOCKER_SNMP_SV2)_PATH = $(DOCKERS_PATH)/docker-snmp-sv2
 ## TODO: remove LIBPY3_DEV if we can get pip3 directly
 $(DOCKER_SNMP_SV2)_DEPENDS += $(SNMP) $(SNMPD) $(PY3) $(LIBPY3_DEV)
 $(DOCKER_SNMP_SV2)_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY3) $(SWSSSDK_PY3) $(ASYNCSNMP_PY3)
