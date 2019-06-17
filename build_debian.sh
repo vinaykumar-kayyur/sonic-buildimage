@@ -29,7 +29,6 @@
 set -x -e
 
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
-[[ $ARCH == "" ]] && ARCH=$CONFIGURED_ARCH
 [[ $CONFIGURED_ARCH == amd64 ]] && ARCH_SUFFIX= || ARCH_SUFFIX=-$CONFIGURED_ARCH
 
 ## docker engine version (with platform)
