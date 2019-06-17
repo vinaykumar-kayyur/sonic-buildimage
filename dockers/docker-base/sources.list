@@ -1,7 +1,18 @@
 ## Debian mirror on Microsoft Azure
 ## Ref: http://debian-archive.trafficmanager.net/
 
-deb http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free
-deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free
-deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free
-deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free
+deb [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free
+deb-src [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free
+deb [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free
+deb-src [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free
+
+# ARMhf repo
+deb [arch=armhf] http://deb.debian.org/debian jessie main contrib non-free
+deb-src [arch=armhf] http://deb.debian.org/debian jessie main contrib non-free
+deb [arch=armhf] http://security.debian.org jessie/updates main contrib non-free
+deb-src [arch=armhf] http://security.debian.org jessie/updates main contrib non-free
+# ARM64 repo
+deb [arch=arm64] http://archive.debian.org/debian jessie main contrib non-free
+deb-src [arch=arm64] http://archive.debian.org/debian jessie main contrib non-free
+deb-src [arch=arm64] http://archive.debian.org/debian jessie-backports main contrib non-free
+deb [arch=arm64] http://archive.debian.org/debian jessie-backports main contrib non-free

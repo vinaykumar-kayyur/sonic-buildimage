@@ -1,7 +1,7 @@
 # docker base image
 
 DOCKER_BASE = docker-base.gz
-$(DOCKER_BASE)_PATH = $(DOCKERS_PATH)/docker-base$(ARCH_SUFFIX)
+$(DOCKER_BASE)_PATH = $(DOCKERS_PATH)/docker-base
 $(DOCKER_BASE)_DEPENDS += $(SUPERVISOR)
 $(DOCKER_BASE)_DEPENDS += $(BASH)
 $(DOCKER_BASE)_DEPENDS += $(SOCAT)
