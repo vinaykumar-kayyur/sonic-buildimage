@@ -56,7 +56,7 @@ endif
 ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
     ARCH_SUFFIX = -$(CONFIGURED_ARCH)
 else
-    ARCH_SUFFIX =
+    ARCH_SUFFIX = 
 endif
 
 DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
@@ -64,15 +64,15 @@ DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static
 ifeq ($(BLDENV), stretch)
 SLAVE_BASE_TAG = $(shell sha1sum sonic-slave-stretch/Dockerfile | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat sonic-slave-stretch/Dockerfile.user sonic-slave-stretch/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
-SLAVE_BASE_IMAGE = sonic-slave-stretch-base
-SLAVE_IMAGE = sonic-slave-stretch-$(USER)
-SLAVE_DIR = sonic-slave-stretch
+SLAVE_BASE_IMAGE = sonic-slave-stretch-base$(ARCH_SUFFIX)
+SLAVE_IMAGE = sonic-slave-stretch$(ARCH_SUFFIX)-$(USER)
+SLAVE_DIR = sonic-slave-stretch$(ARCH_SUFFIX)
 else
 SLAVE_BASE_TAG = $(shell sha1sum sonic-slave/Dockerfile | awk '{print substr($$1,0,11);}')
-SLAVE_TAG = $(shell cat sonic-slave/Dockerfile.user sonic-slave/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
-SLAVE_BASE_IMAGE = sonic-slave-base
-SLAVE_IMAGE = sonic-slave-$(USER)
-SLAVE_DIR = sonic-slave
+SLAVE_TAG = $(shell cat sonic-slave$(ARCH_SUFFIX)/Dockerfile.user sonic-slave$(ARCH_SUFFIX)/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
+SLAVE_BASE_IMAGE = sonic-slave-base$(ARCH_SUFFIX)
+SLAVE_IMAGE = sonic-slave$(ARCH_SUFFIX)-$(USER)
+SLAVE_DIR = sonic-slave$(ARCH_SUFFIX)
 endif
 
 OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
