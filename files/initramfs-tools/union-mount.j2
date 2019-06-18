@@ -17,7 +17,7 @@ set_tmpfs_log_partition_size()
 
   # NOTE: certain platforms, when reaching initramfs stage, have a small
   #       limit of mounting tmpfs partition, potentially due to amount
-  #       of RAM available in this stage. e.g. Arista 7050i-qx32[s] and 7060-cx32s
+  #       of RAM available in this stage. e.g. Arista 7050-qx32[s] and 7060-cx32s
   [ X"$aboot_platform" = X"x86_64-arista_7050_qx32"  ] && return
   [ X"$aboot_platform" = X"x86_64-arista_7050_qx32s"  ] && return
   [ X"$aboot_platform" = X"x86_64-arista_7060_cx32s"  ] && return
