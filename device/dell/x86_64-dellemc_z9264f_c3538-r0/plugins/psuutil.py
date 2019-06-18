@@ -7,10 +7,12 @@
 import os.path
 import logging
 import commands
+import sys
 
 
 Z9264F_MAX_PSUS = 2
-IPMI_SENSOR_DATA = "docker exec -it pmon ipmitool sdr list"
+IPMI_PSU_DATA = "docker exec -it pmon ipmitool sdr list"
+IPMI_PSU_DATA_DOCKER = "ipmitool sdr list"
 PSU_PRESENCE = "PSU{0}_state"
 # Use this for older firmware
 # PSU_PRESENCE="PSU{0}_prsnt"
@@ -35,8 +37,10 @@ class PsuUtil(PsuBase):
         status = 1
         global ipmi_sdr_list
         ipmi_dev_node = "/dev/pmi0"
-
-        ipmi_cmd = IPMI_SENSOR_DATA
+        ipmi_cmd = IPMI_PSU_DATA
+        
+        if os.path.exists("/.dockerenv"):
+            ipmi_cmd = IPMI_PSU_DATA_DOCKER
         status, ipmi_sdr_list = commands.getstatusoutput(ipmi_cmd)
 
         if status:
