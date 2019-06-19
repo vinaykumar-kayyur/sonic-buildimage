@@ -15,8 +15,9 @@ agentx
 ! enable password {# {{ en_passwd }} TODO: param needed #}
 {% endblock system_init %}
 !
+{% block bgp %}
 {% if DEVICE_METADATA['localhost'].has_key('bgp_asn') %}
-{% block bgp_init %}
+{# block bgp_init #}
 !
 ! bgp multiple-instance
 !
@@ -24,7 +25,52 @@ route-map FROM_BGP_SPEAKER_V4 permit 10
 !
 route-map TO_BGP_SPEAKER_V4 deny 10
 !
+{% set vrf_lo_intf = {} %}
+{% for intf_key in LOOPBACK_INTERFACE %}
+{%   if intf_key is string() %}
+{%     set intf_vrf = 'global' %}
+{%     if LOOPBACK_INTERFACE[intf_key].has_key('vrf_name') %}
+{%       set intf_vrf = LOOPBACK_INTERFACE[intf_key]['vrf_name'] %}
+{%     endif %}
+{%     if vrf_lo_intf.has_key(intf_vrf) or vrf_lo_intf.update({intf_vrf:[]}) %}
+{%     endif %}
+{%     if vrf_lo_intf[intf_vrf].append(intf_key) %}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+{% set vrf_bgp_nbr = {} %}
+{% for nbr_key in BGP_NEIGHBOR %}
+{%   if nbr_key | length == 2 %}
+{%     set nbr_vrf = nbr_key[0] %}
+{%     set nbr_addr = nbr_key[1] %}
+{%   else %}
+{%     set nbr_vrf = 'global' %}
+{%     set nbr_addr = nbr_key %}
+{%   endif %}
+{%   if vrf_bgp_nbr.has_key(nbr_vrf) or vrf_bgp_nbr.update({nbr_vrf:{}}) %}
+{%   endif %}
+{%   if vrf_bgp_nbr[nbr_vrf].update({nbr_addr:BGP_NEIGHBOR[nbr_key]}) %}
+{%   endif %}
+{% endfor %}
+{% set vrf_bgp_pr = {} %}
+{% for pr_key in BGP_PEER_RANGE %}
+{%   set pr_vrf = 'global' %}
+{%   if BGP_PEER_RANGE[pr_key].has_key('vrf_name') %}
+{%     set pr_vrf = BGP_PEER_RANGE[pr_key]['vrf_name'] %}
+{%   endif %}
+{%   if vrf_bgp_nbr.has_key(pr_vrf) or vrf_bgp_nbr.update({pr_vrf:{}}) %}
+{%   endif %}
+{%   if vrf_bgp_pr.has_key(pr_vrf) or vrf_bgp_pr.update({pr_vrf:{}}) %}
+{%   endif %}
+{%   if vrf_bgp_pr[pr_vrf].update({pr_key:BGP_PEER_RANGE[pr_key]}) %}
+{%   endif %}
+{% endfor %}
+{% for vrf in vrf_bgp_nbr %}
+{% if vrf == 'global' %}
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+{% else %}
+router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
+{% endif %}
   bgp log-neighbor-changes
   bgp bestpath as-path multipath-relax
   no bgp default ipv4-unicast
@@ -33,25 +79,33 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
   bgp graceful-restart preserve-fw-state
 {% endif %}
+{% set vrf_lo0 = "" %}
+{% if vrf_lo_intf[vrf] | length > 0 %}
+{% set vrf_lo0 = vrf_lo_intf[vrf][0] %}
+{% endif %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if prefix | ipv4 and name == 'Loopback0' %}
+{% if prefix | ipv4 and name == vrf_lo0 %}
   bgp router-id {{ prefix | ip }}
 {% endif %}
 {% endfor %}
 {# advertise loopback #}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if prefix | ipv4 and name == 'Loopback0' %}
+{% if prefix | ipv4 and name == vrf_lo0 %}
   network {{ prefix | ip }}/32
-{% elif prefix | ipv6 and name == 'Loopback0' %}
+{% elif prefix | ipv6 and name == vrf_lo0 %}
   address-family ipv6
-    network {{ prefix | ip }}/64
+    network {{ prefix | ip }}/128
   exit-address-family
 {% endif %}
 {% endfor %}
-{% endblock bgp_init %}
-{% endif %}
-{% block vlan_advertisement %}
+{# endblock bgp_init #}
+{# block vlan_advertisement #}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% set vlan_intf_vrf = 'global' %}
+{% if VLAN_INTERFACE[name].has_key('vrf_name') %}
+{% set vlan_intf_vrf = VLAN_INTERFACE[name]['vrf_name'] %}
+{% endif %}
+{% if vlan_intf_vrf == vrf %}
 {% if prefix | ipv4 %}
   network {{ prefix }}
 {% elif prefix | ipv6 %}
@@ -59,10 +113,11 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
    network {{ prefix }}
   exit-address-family
 {% endif %}
+{% endif %}
 {% endfor %}
-{% endblock vlan_advertisement %}
-{% block bgp_sessions %}
-{% for neighbor_addr, bgp_session in BGP_NEIGHBOR.iteritems() %}
+{# endblock vlan_advertisement #}
+{# block bgp_sessions #}
+{% for neighbor_addr, bgp_session in vrf_bgp_nbr[vrf].iteritems() %}
 {% if bgp_session['asn'] | int != 0 %}
   neighbor {{ neighbor_addr }} remote-as {{ bgp_session['asn'] }}
   neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
@@ -111,10 +166,10 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 {% endif %}
 {% endfor %}
-{% endblock bgp_sessions %}
-{% block bgp_peers_with_range %}
-{% if BGP_PEER_RANGE %}
-{% for bgp_peer in BGP_PEER_RANGE.values() %}
+{# endblock bgp_sessions #}
+{# block bgp_peers_with_range #}
+{% if vrf_bgp_pr.has_key(vrf) %}
+{% for bgp_peer in vrf_bgp_pr[vrf].values() %}
   neighbor {{ bgp_peer['name'] }} peer-group
   neighbor {{ bgp_peer['name'] }} passive
 {% if bgp_peer['peer_asn'] is defined %}
@@ -127,8 +182,12 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% if bgp_peer['src_address'] is defined %}
   neighbor {{ bgp_peer['name'] }} update-source {{ bgp_peer['src_address'] | ip }}
 {% else %}
+{% set vrf_lo1 = "" %}
+{% if vrf_lo_intf[vrf] | length > 1 %}
+{% set vrf_lo1 = vrf_lo_intf[vrf][1] %}
+{% endif %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if name == 'Loopback1' %}
+{% if name == vrf_lo1 %}
   neighbor {{ bgp_peer['name'] }} update-source {{ prefix | ip }}
 {% endif %}
 {% endfor %}
@@ -148,14 +207,13 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   exit-address-family
 {% endfor %}
 {% endif %}
-{% endblock bgp_peers_with_range %}
+{# endblock bgp_peers_with_range #}
 !
-{% if DEVICE_METADATA['localhost'].has_key('bgp_asn') %}
-maximum-paths 64
-!
+{% endfor %}
 route-map ISOLATE permit 10
 set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
+{% endblock bgp %}
 !
 route-map set-next-hop-global-v6 permit 10
 set ipv6 next-hop prefer-global
