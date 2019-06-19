@@ -169,6 +169,14 @@ def sort_data(data):
             data[table] = OrderedDict(natsorted(data[table].items()))
     return data
 
+def get_config(data, keyword):
+    config = {}
+    for key, value in data.iteritems():
+        if key == keyword:
+            config[keyword] = value
+            break
+    return config
+
 
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
@@ -183,6 +191,7 @@ def main():
     parser.add_argument("-d", "--from-db", help="read config from configdb", action='store_true')
     parser.add_argument("-H", "--platform-info", help="read platform and hardware info", action='store_true')
     parser.add_argument("-s", "--redis-unix-sock-file", help="unix sock file for redis connection")
+    parser.add_argument("-i", "--interface", help="print specific port details")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--template", help="render the data with the template file")
     group.add_argument("-v", "--var", help="print the value of a variable, support jinja2 expression")
@@ -276,6 +285,10 @@ def main():
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json], args.key), indent=4, cls=minigraph_encoder))
         else:
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json]), indent=4, cls=minigraph_encoder))
+        config = get_config(data, args.var_json)
+        if args.var_json == "PORT" and args.interface:
+            config = get_config(config[args.var_json], args.interface)
+        print(json.dumps(FormatConverter.to_serialized(config), indent=4, cls=minigraph_encoder))
 
     if args.write_to_db:
         configdb = ConfigDBConnector(**db_kwargs)

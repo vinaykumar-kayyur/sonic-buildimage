@@ -78,7 +78,12 @@ class TestCfgGen(TestCase):
     def test_var_json_data(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" --var-json VLAN_MEMBER'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), '{\n    "Vlan1000|Ethernet8": {\n        "tagging_mode": "untagged"\n    }\n}')
+        self.assertEqual(output.strip(), '{\n    "VLAN_MEMBER": {\n        "Vlan1000|Ethernet8": {\n            "tagging_mode": "untagged"\n        }\n    }\n}')
+
+    def test_var_json_with_interface(self):
+        argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" --var-json PORT -i Ethernet124'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), '{\n    "Ethernet124": {\n        "alias": "fortyGigE0/124", \n        "description": "fortyGigE0/124", \n        "lanes": "101,102,103,104", \n        "mtu": "9100", \n        "pfc_asym": "off"\n    }\n}')
 
     def test_read_yaml(self):
         argument = '-v yml_item -y ' + os.path.join(self.test_dir, 'test.yml')
