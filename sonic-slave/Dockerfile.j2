@@ -19,7 +19,6 @@ RUN echo "deb [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian/
 {% if CONFIGURED_ARCH == "armhf" %}
 RUN echo "deb [arch=armhf] http://deb.debian.org/debian jessie main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://deb.debian.org/debian jessie main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=armhf] http://deb.debian.org/debian jessie-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://security.debian.org jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://security.debian.org jessie/updates main contrib non-free" >> /etc/apt/sources.list
 {% elif CONFIGURED_ARCH == "arm64" %}
@@ -265,8 +264,7 @@ RUN apt-get update && apt-get install -y \
         qemu-kvm \
         libvirt-bin
 {% else %}
-# Empty line for backslash 
-
+        bash-completion
 {% endif %}
 
 # For jenkins slave
