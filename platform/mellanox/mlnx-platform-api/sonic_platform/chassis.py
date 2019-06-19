@@ -17,8 +17,10 @@ try:
     from sonic_platform.fan import FAN_PATH
     from sonic_platform.sfp import SFP
     from sonic_platform.watchdog import get_watchdog
+    from sonic_platform.eeprom import Eeprom
     from os import listdir
     from os.path import isfile, join
+    import io
     import re
     import subprocess
 except ImportError as e:
@@ -27,6 +29,37 @@ except ImportError as e:
 MLNX_NUM_PSU = 2
 
 GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
+
+PLATFORM_ROOT = '/usr/share/sonic/device'
+EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
+EEPROM_CACHE_FILE = 'syseeprom_cache'
+
+HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
+
+REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
+
+REBOOT_CAUSE_POWER_LOSS_FILE = 'reset_main_pwr_fail'
+REBOOT_CAUSE_THERMAL_OVERLOAD_CPU_FILE = ''
+REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE = 'reset_asic_thermal'
+REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER_FILE = ''
+REBOOT_CAUSE_WATCHDOG_FILE = 'reset_hotswap_or_wd'
+REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
+
+REBOOT_CAUSE_FILE_LENGTH = 1
+
+REBOOT_DUE_TO_THIS_FILE = '1'
+
+CPLD_VERSION_ROOT = HWMGMT_SYSTEM_ROOT
+
+CPLD1_VERSION_FILE = 'cpld1_version'
+CPLD2_VERSION_FILE = 'cpld2_version'
+CPLD_VERSION_MAX_LENGTH = 4
+
+FIRMWARE_VERSION_COMMAND = 'mlxfwmanager --query'
+BIOS_VERSION_COMMAND = 'dmidecode -t 11'
+
+PREVIOUS_REBOOT_CAUSE_FILE = "/host/reboot-cause/previous-reboot-cause.txt"
+PREVIOUS_REBOOT_CAUSE_MAX_LENGTH = 100
 
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
@@ -37,7 +70,7 @@ class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
     def __init__(self):
-        ChassisBase.__init__(self)
+        super(Chassis, self).__init__()
 
         # Initialize PSU list
         for index in range(MLNX_NUM_PSU):
@@ -46,7 +79,7 @@ class Chassis(ChassisBase):
 
         # Initialize watchdog
         self._watchdog = get_watchdog()
-        
+
         # Initialize FAN list
         multi_rotor_in_drawer = False
         num_of_fan, num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
@@ -65,13 +98,16 @@ class Chassis(ChassisBase):
         self.QSFP_PORT_START = port_position_tuple[1]
         self.PORT_END = port_position_tuple[2]
         self.PORTS_IN_BLOCK = port_position_tuple[3]
-        
+
         for index in range(self.PORT_START, self.PORT_END + 1):
-            if index in range(QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
+            if index in range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
                 sfp_module = SFP(index, 'QSFP')
             else:
                 sfp_module = SFP(index, 'SFP')
             self._psu_list.append(sfp_module)
+
+        # Initialize EEPROM
+        self.eeprom = Eeprom()
 
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0
@@ -95,5 +131,169 @@ class Chassis(ChassisBase):
         position_tuple = port_position_tuple_list[hwsku_dict[out.rstrip('\n')]]
         return position_tuple
 
-    
+    def get_base_mac(self):
+        """
+        Retrieves the base MAC address for the chassis
 
+        Returns:
+            A string containing the MAC address in the format
+            'XX:XX:XX:XX:XX:XX'
+        """
+        return self.eeprom.get_base_mac()
+
+    def get_serial_number(self):
+        """
+        Retrieves the hardware serial number for the chassis
+
+        Returns:
+            A string containing the hardware serial number for this chassis.
+        """
+        return self.eeprom.get_serial_number()
+
+    def get_system_eeprom_info(self):
+        """
+        Retrieves the full content of system EEPROM information for the chassis
+
+        Returns:
+            A dictionary where keys are the type code defined in
+            OCP ONIE TlvInfo EEPROM format and values are their corresponding
+            values.
+        """
+        return self.eeprom.get_system_eeprom_info()
+
+    def _read_generic_file(self, filename, len):
+        """
+        Read a generic file, returns the contents of the file
+        """
+        r = ''
+        try:
+            f = io.open(filename)
+            r = f.read(len)
+            f.close()
+            return r
+        except:
+            return ''
+
+    def _read_reboot_cause_file(self, filename):
+        '''
+        Open and read the reboot cause file in 
+        /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
+        If a reboot cause file doesn't exists, returns '0'.
+        '''
+        return self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')
+
+    def get_reboot_cause(self):
+        """
+        Retrieves the cause of the previous reboot
+
+        Returns:
+            A tuple (string, string) where the first element is a string
+            containing the cause of the previous reboot. This string must be
+            one of the predefined strings in this class. If the first string
+            is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
+            to pass a description of the reboot cause.
+        """
+        #read reboot causes files in the following order
+        minor_cause = ''
+        if REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_POWER_LOSS_FILE):
+            major_cause = self.REBOOT_CAUSE_POWER_LOSS
+        elif REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
+            major_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
+        elif REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_WATCHDOG_FILE):
+            major_cause = self.REBOOT_CAUSE_WATCHDOG
+        else:
+            major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            if REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
+                minor_cause = "firmware"
+            else:
+                reboot_by_user = self._read_generic_file(PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_MAX_LENGTH)
+                if '' != reboot_by_user:
+                    major_cause = self.REBOOT_CAUSE_NON_HARDWARE
+                    minor_cause = reboot_by_user
+
+        return major_cause, minor_cause
+
+    def _get_cpld_version(self):
+        cpld1_version = self._read_generic_file(join(CPLD_VERSION_ROOT, CPLD1_VERSION_FILE), CPLD_VERSION_MAX_LENGTH)
+        cpld2_version = self._read_generic_file(join(CPLD_VERSION_ROOT, CPLD2_VERSION_FILE), CPLD_VERSION_MAX_LENGTH)
+        return "cpld1 version: " + cpld1_version.rstrip('\n') + " cpld 2 version: " + cpld2_version.rstrip('\n')
+
+    def _get_command_result(self, cmdline):
+        try:
+            proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+            stdout = proc.communicate()[0]
+            proc.wait()
+            result = stdout.rstrip('\n')
+
+        except OSError, e:
+            result = ''
+
+        return result
+
+    def _get_firmware_version(self):
+        """
+        firmware version is retrieved via command 'mlxfwmanager --query'
+        which should return result in the following convention
+            admin@mtbc-sonic-01-2410:~$ sudo mlxfwmanager --query
+            Querying Mellanox devices firmware ...
+
+            Device #1:
+            ----------
+
+            Device Type:      Spectrum
+            Part Number:      MSN2410-CxxxO_Ax_Bx
+            Description:      Spectrum based 25GbE/100GbE 1U Open Ethernet switch with ONIE; 48 SFP28 ports; 8 QSFP28 ports; x86 dual core; RoHS6
+            PSID:             MT_2860111033
+            PCI Device Name:  /dev/mst/mt52100_pci_cr0
+            Base MAC:         98039bf3f500
+            Versions:         Current        Available     
+                FW         ***13.2000.1140***N/A           
+
+            Status:           No matching image found
+
+        By using regular expression '(Versions:.*\n[\s]+FW[\s]+)([\S]+)',
+        we can extrace the version which is marked with *** in the above context
+        """
+        fw_ver_str = self._get_command_result(FIRMWARE_VERSION_COMMAND)
+        try: 
+            m = re.search('(Versions:.*\n[\s]+FW[\s]+)([\S]+)', fw_ver_str)
+            result = m.group(2)
+        except :
+            result = ''
+
+        return "firmware version: " + result
+
+    def _get_bios_version(self):
+        """
+        BIOS version is retrieved via command 'dmidecode -t 11'
+        which should return result in the following convention
+            # dmidecode 3.0
+            Getting SMBIOS data from sysfs.
+            SMBIOS 2.7 present.
+
+            Handle 0x0022, DMI type 11, 5 bytes
+            OEM Strings
+                    String 1:*0ABZS017_02.02.002*
+                    String 2: To Be Filled By O.E.M.
+
+        By using regular expression 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
+        we can extrace the version string which is marked with * in the above context
+        """
+        bios_ver_str = self._get_command_result(BIOS_VERSION_COMMAND)
+        try:
+            m = re.search('OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)', bios_ver_str)
+            result = m.group(1)
+        except:
+            result = ''
+
+        return "BIOS version: " + result
+
+    def get_component_versions(self):
+        """
+        Retrieves platform-specific hardware/firmware versions for chassis
+        componenets such as BIOS, CPLD, FPGA, etc.
+
+        Returns:
+            A string containing platform-specific component versions
+        """
+        return self._get_bios_version() + '\n' + self._get_cpld_version() + '\n' + self._get_firmware_version() + '\n'
