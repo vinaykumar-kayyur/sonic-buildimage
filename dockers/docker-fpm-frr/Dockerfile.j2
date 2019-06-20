@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 # Install required packages
-RUN apt-get install -y libdbus-1-3 libdaemon0 libjansson4 libc-ares2 iproute2 libpython2.7 libjson-c3 logrotate
+RUN apt-get install -y libdbus-1-3 libdaemon0 libjansson4 libc-ares2 iproute2 libpython2.7 libjson-c3 logrotate libunwind8
 
 {% if docker_fpm_frr_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -30,6 +30,8 @@ RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return
 {%- endfor %}
 {%- endif %}
 
+RUN chown -R ${frr_user_uid}:${frr_user_gid} /etc/frr/
+
 # Clean up
 RUN apt-get clean -y
 RUN apt-get autoclean -y
@@ -39,5 +41,6 @@ RUN rm -rf /debs ~/.cache
 COPY ["bgpcfgd", "start.sh", "/usr/bin/"]
 COPY ["*.j2", "/usr/share/sonic/templates/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["snmp.conf", "/etc/snmp/frr.conf"]
 
 ENTRYPOINT ["/usr/bin/supervisord"]
