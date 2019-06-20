@@ -22,7 +22,24 @@ route-map TO_BGP_PEER_V4 permit 100
 !
 route-map TO_BGP_PEER_V6 permit 100
 !
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalFrontend' %}
+route-map HIDE_INTERNAL permit 10
+  set community local-AS
+!
+{% endif %}
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalBackend' %}
+route-map OVERRIDE_ORIGINATOR_ID permit 10
+{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name == 'Loopback0' %}
+  set originator-id {{ prefix | ip }}
+{% endif %}
+{% endfor %}
+!
+{% endif %}
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalFrontend' %}
+  redistribute connected route-map HIDE_INTERNAL
+{% endif %}
   bgp log-neighbor-changes
   bgp bestpath as-path multipath-relax
   no bgp default ipv4-unicast
@@ -64,6 +81,9 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% if bgp_session['asn'] | int != 0 %}
   neighbor {{ neighbor_addr }} remote-as {{ bgp_session['asn'] }}
   neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalBackend' %}
+  neighbor {{ neighbor_addr }} route-map OVERRIDE_ORIGINATOR_ID in
+{% endif %}
 {# set the bgp neighbor timers if they have not default values #}
 {% if     (bgp_session['keepalive'] is defined and bgp_session['keepalive'] | int != 60)
       or  (bgp_session['holdtime'] is defined  and bgp_session['holdtime']  | int != 180) %}
@@ -87,7 +107,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
     neighbor {{ neighbor_addr }} route-reflector-client
 {% endif %}
 {% if bgp_session['nhopself'] | int != 0 %}
-    neighbor {{ neighbor_addr }} next-hop-self
+    neighbor {{ neighbor_addr }} next-hop-self all
 {% endif %}
     maximum-paths 64
   exit-address-family
@@ -103,7 +123,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
     neighbor {{ neighbor_addr }} route-reflector-client
 {% endif %}
 {% if bgp_session['nhopself'] | int != 0 %}
-    neighbor {{ neighbor_addr }} next-hop-self
+    neighbor {{ neighbor_addr }} next-hop-self all
 {% endif %}
 {% if bgp_session['asn'] != DEVICE_METADATA['localhost']['bgp_asn'] %}
     neighbor {{ neighbor_addr }} route-map set-next-hop-global-v6 in
