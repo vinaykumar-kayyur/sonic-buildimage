@@ -41,8 +41,8 @@ DBG_IMAGE_MARK = dbg
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
 CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo amd64)
-ifeq ($(ARCH),)
-	override ARCH = $(CONFIGURED_ARCH)
+ifeq ($(PLATFORM_ARCH),)
+	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 ifeq "$(CONFIGURED_ARCH)" "amd64"
 	ARCH_SUFFIX = 
@@ -74,7 +74,7 @@ configure :
 	@mkdir -p target/python-debs
 	@mkdir -p target/python-wheels
 	@echo $(PLATFORM) > .platform
-	@echo $(ARCH) > .arch
+	@echo $(PLATFORM_ARCH) > .arch
 
 distclean : .platform clean
 	@rm -f .platform
@@ -161,7 +161,7 @@ $(info SONiC Build System)
 $(info )
 $(info Build Configuration)
 $(info "CONFIGURED_PLATFORM"             : "$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))")
-$(info "CONFIGURED_ARCH"                 : "$(if $(ARCH),$(ARCH),$(CONFIGURED_ARCH))")
+$(info "CONFIGURED_ARCH"                 : "$(if $(PLATFORM_ARCH),$(PLATFORM_ARCH),$(CONFIGURED_ARCH))")
 $(info "SONIC_CONFIG_PRINT_DEPENDENCIES" : "$(SONIC_CONFIG_PRINT_DEPENDENCIES)")
 $(info "SONIC_BUILD_JOBS"                : "$(SONIC_BUILD_JOBS)")
 $(info "SONIC_CONFIG_MAKE_JOBS"          : "$(SONIC_CONFIG_MAKE_JOBS)")

@@ -49,9 +49,9 @@ MAKEFLAGS += -B
 
 HOST_ARCH := $(shell uname -m)
 
-CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(ARCH))
-ifeq ($(ARCH),)
-	override ARCH = $(CONFIGURED_ARCH)
+CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(PLATFORM_ARCH))
+ifeq ($(PLATFORM_ARCH),)
+	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
 DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
@@ -116,7 +116,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
                            BLDENV=$(BLDENV) \
                            PLATFORM=$(PLATFORM) \
-                           ARCH=$(ARCH) \
+                           PLATFORM_ARCH=$(PLATFORM_ARCH) \
                            HOST_ARCH=$(HOST_ARCH) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
