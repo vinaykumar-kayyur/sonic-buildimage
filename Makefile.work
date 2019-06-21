@@ -20,13 +20,15 @@
 #  *                Please note that with current Stretch build structure,
 #  *                user of KEEP_SLAVE_ON feature will have to be conscious
 #  *                about which docker to stay inside after build is done.
-#  *                - If user desires to stay inside Stretch docker, please issue
-#  *                  make KEEP_SLAVE_ON=yes stretch
 #  *                - If user desires to stay inside Jessie docker, please issue
-#  *                  (a successful "make stretch" may be needed before the following command)
-#  *                  make NOSTRETCH=1 KEEP_SLAVE_ON=yes <any jessie target>
+#  *                  make KEEP_SLAVE_ON=yes jessie
+#  *                - If user desires to stay inside Stretch docker, please issue
+#  *                  make NOJESSIE=1 KEEP_SLAVE_ON=yes <any target>
 #  * SOURCE_FOLDER: host path to be mount as /var/$(USER)/src, only effective when KEEP_SLAVE_ON=yes
 #  * SONIC_BUILD_JOBS: Specifying number of concurrent build job(s) to run
+#  * VS_PREPARE_MEM: Prepare memory in VS build (drop cache and compact).
+#  *                 Default: yes
+#  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
 #
 ###############################################################################
@@ -59,7 +61,11 @@ SLAVE_IMAGE = sonic-slave-$(USER)
 SLAVE_DIR = sonic-slave
 endif
 
-OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
+OVERLAY_MODULE_CHECK := \
+    lsmod | grep -q "^overlay " &>/dev/null || \
+    zgrep -q 'CONFIG_OVERLAY_FS=y' /proc/config.gz &>/dev/null || \
+    grep -q 'CONFIG_OVERLAY_FS=y' /boot/config-$(shell uname -r) &>/dev/null || \
+    (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
 
 BUILD_TIMESTAMP := $(shell date +%Y%m%d\.%H%M%S)
 
@@ -103,6 +109,7 @@ DOCKER_BUILD = docker build --no-cache \
 
 SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
+                           BLDENV=$(BLDENV) \
                            PLATFORM=$(PLATFORM) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
@@ -114,10 +121,14 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
+                           SONIC_USE_DOCKER_BUILDKIT=$(SONIC_USE_DOCKER_BUILDKIT) \
+                           VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
-                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY)
+                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
+                           EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
+                           $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 

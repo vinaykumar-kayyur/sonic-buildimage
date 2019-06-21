@@ -29,9 +29,9 @@ RUN apt-get install -y default-jre
 RUN apt-get install -y rsyslog psmisc
 
 # Remove cffi 1.5.2, will install 1.10.0 by pip later
-RUN apt-get remove -y python-cffi python-cffi-backend
+RUN apt-get purge -y python-cffi python-cffi-backend
 # Remove pycparser 2.14, will install >=2.17 by pip later
-RUN apt-get remove -y python-ply python-pycparser
+RUN apt-get purge -y python-ply python-pycparser
 
 RUN easy_install pip
 
@@ -45,11 +45,15 @@ RUN pip install ipaddr \
                 pysnmp==4.2.5 \
                 jinja2==2.7.2 \
                 cffi==1.10.0 \
-                paramiko==2.1.2
+                paramiko==2.1.2 \
+                passlib
 
 # Install Microsoft Azure Kusto Library for Python
 RUN pip install azure-kusto-data==0.0.13 \
                 azure-kusto-ingest==0.0.13
+
+# Install pytest-ansible module
+RUN pip install pytest-ansible==2.0.2
 
 ## Copy and install sonic-mgmt docker dependencies
 COPY \
