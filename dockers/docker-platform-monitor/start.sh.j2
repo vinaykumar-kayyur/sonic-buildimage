@@ -37,6 +37,12 @@ if [ -e /usr/share/sonic/platform/fancontrol ]; then
     supervisorctl start fancontrol
 fi
 
+# If this platform has a python api wheel file, install it
+if [ -e /usr/share/sonic/platform/sonic_platform-1.0-py2-none-any.whl ]; then
+    # install sonic_platform wheel
+    pip install /usr/share/sonic/platform/sonic_platform-1.0-py2-none-any.whl
+fi
+
 {% if not skip_ledd %}
 supervisorctl start ledd
 {% endif %}
