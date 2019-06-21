@@ -1,0 +1,12 @@
+[Unit]
+Description=Pegastron fn-6254-dn-f Platform status service
+After=fn_6254_dn_f-platform-init.service
+DefaultDependencies=no
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/pegatron_fn_6254_dn_f_status.py run
+ExecStop=/usr/local/bin/pegatron_fn_6254_dn_f_status.py stop
+
+[Install]
+WantedBy=multi-user.target

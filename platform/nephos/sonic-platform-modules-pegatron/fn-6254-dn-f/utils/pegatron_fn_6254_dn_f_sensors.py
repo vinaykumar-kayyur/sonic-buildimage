@@ -8,10 +8,10 @@ FAN_NUM = 5
 sensors_path = '/sys/bus/i2c/devices/5-0070/'
 sensors_nodes = {'fan_rpm': ['_inner_rpm', '_outer_rpm'],
                  'fan_vol': ['ADC8_vol', 'ADC7_vol','ADC6_vol', 'ADC5_vol','ADC4_vol', 'ADC3_vol'],
-                 'temp':['lm75_49_temp', 'lm75_48_temp', 'SA56004_local_temp','SA56004_remote_temp']}
+                 'temp':['lm75_48_temp', 'lm75_49_temp', 'lm75_4a_temp']}
 sensors_type = {'fan_rpm': ['Inner RPM', 'Outer RPM'],
                 'fan_vol': ['P0.2', 'P0.6','P0.1', 'P1.5','P0.7', 'P1.6'],
-                'temp':['lm75_49_temp', 'lm75_48_temp', 'SA56004_local_temp','SA56004_remote_temp']}
+                'temp':['lm75_48_temp', 'lm75_49_temp', 'lm75_4a_temp']}
 
 # Get sysfs attribute
 def get_attr_value(attr_path):
@@ -81,12 +81,12 @@ def get_fan():
     return
 
 def get_hwmon():
+    temp_type = sensors_type['temp']
     print " "
-    string = get_attr_value(sensors_path + "lm75_48_temp")
-    print "Sensor A: " + string + " C"
 
-    string = get_attr_value(sensors_path + "lm75_49_temp")
-    print "Sensor B: " + string + " C"
+    for types in temp_type:
+        string = get_attr_value(sensors_path + types)
+        print types + ": " + string + " C"
 
     return
 
@@ -121,10 +121,10 @@ def main():
         if arg == 'fan_init':
             init_fan()
         elif arg == 'get_sensors':
-            ver = get_attr_value(sensors_path + "fb_hw_version")
-            print 'HW Version: ' + ver
+            ver = get_attr_value(sensors_path + "mb_fw_version")
+            print 'MB-SW Version: ' + ver
             ver = get_attr_value(sensors_path + "fb_fw_version")
-            print 'SW Version: ' + ver
+            print 'FB-SW Version: ' + ver
             get_fan()
             get_hwmon()
             get_voltage()                      

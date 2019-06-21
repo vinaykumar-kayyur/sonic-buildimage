@@ -20,6 +20,7 @@ import logging
 import os
 import commands
 import threading
+import time
 
 DEBUG = False
 
@@ -29,12 +30,12 @@ CPLDA_SFP_NUM = 24
 CPLDB_SFP_NUM = 12
 CPLDC_SFP_NUM = 18
 
-kernel_module = ['i2c_dev', 'i2c-mux-pca954x force_deselect_on_exit=1', 'at24', 'pegatron_fn_6254_dn_f_cpld', 'pegatron_hwmon_mcu', 'pegatron_fn_6254_dn_f_sfp']
-moduleID = ['pca9544', 'pca9544', '24c02', 'pega_hwmon_mcu', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_sfpA', 'fn_6254_dn_f_sfpB', 'fn_6254_dn_f_sfpC']
+kernel_module = ['i2c_dev', 'i2c-mux-pca954x force_deselect_on_exit=1', 'at24', 'pegatron_fn_6254_dn_f_cpld', 'pegatron_hwmon_mcu', 'pegatron_fn_6254_dn_f_psu', 'pegatron_fn_6254_dn_f_sfp', 'pegatron_fn_6254_dn_f_ixgbe']
+moduleID = ['pca9544', 'pca9544', 'fn_6254_dn_f_psu', 'fn_6254_dn_f_psu', '24c02', 'pega_hwmon_mcu', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_sfpA', 'fn_6254_dn_f_sfpB', 'fn_6254_dn_f_sfpC']
 i2c_check_node = ['i2c-0', 'i2c-1']
 uninstall_check_node = ['-0072', '-0073']
-device_address = ['0x72', '0x73', '0x54', '0x70', '0x74', '0x75', '0x76', '0x50', '0x50', '0x50']
-device_node= ['i2c-2', 'i2c-6', 'i2c-4', 'i2c-5', 'i2c-6', 'i2c-7', 'i2c-8', 'i2c-6', 'i2c-7', 'i2c-8']
+device_address = ['0x72', '0x73', '0x58', '0x59', '0x54', '0x70', '0x74', '0x75', '0x76', '0x50', '0x50', '0x50']
+device_node= ['i2c-2', 'i2c-6', 'i2c-2', 'i2c-3', 'i2c-4', 'i2c-5', 'i2c-6', 'i2c-7', 'i2c-8', 'i2c-6', 'i2c-7', 'i2c-8']
 
 i2c_prefix = '/sys/bus/i2c/devices/'
 cpld_bus = ['6-0074', '7-0075', '8-0076']
@@ -58,7 +59,7 @@ def do_cmd(cmd, show):
 
 def install_driver():
 	status, output = do_cmd("depmod -a", 1)
-
+	
 	for i in range(0, len(kernel_module)):
 		status, output = do_cmd("modprobe " + kernel_module[i], 1)
 		if status:       
@@ -101,7 +102,6 @@ def do_install():
 
 	check_driver()
 	install_device()
-
 	return
 
 def do_uninstall():
@@ -121,22 +121,24 @@ def do_uninstall():
 	return
 
 led_command = {'sys_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
-			   'pwr_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
-			   'loc_led': {'on':'0', 'off':'1', 'blink':'2'},
-			   'fan_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
-			   'cpld_allled_ctrl': {'off':'0', 'mix':'1', 'amber':'2', 'normal':'3'},
-			   'serial_led_enable': {'disable':'0', 'enable':'1'}}
+		'pwr_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
+		'loc_led': {'on':'0', 'off':'1', 'blink':'2'},
+		'fan_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
+		'cpld_allled_ctrl': {'off':'0', 'mix':'1', 'amber':'2', 'normal':'3'},
+		'serial_led_enable': {'disable':'0', 'enable':'1'}}
 
 def set_led(args):
 	"""
-	Usage: %(scriptName)s set led object command
-
-	object:
-		sys_led   : set SYS led      [command: off|green|amber|blink_green|blink_amber]
-		pwr_led   : set PWR led      [command: off|green|amber|blink_green|blink_amber]
-		loc_led   : set LOCATOR led  [command: off|on|blink]
-		fan_led   : set FAN led      [command: off|green|amber|blink_green|blink_amber]
+	command:
+		sys_led   : set SYS led      [off | green | amber | blink_green | blink_amber]
+		pwr_led   : set PWR led      [off | green | amber | blink_green | blink_amber]
+		loc_led   : set LOCATOR led  [off | on | blink]
+		fan_led   : set FAN led      [off | green | amber | blink_green | blink_amber]
 	"""
+	if len(args) < 1:
+		print set_led.__doc__
+		sys.exit(0)
+
 	if args[0] not in led_command:
 		print set_led.__doc__
 		sys.exit(0)
@@ -154,15 +156,16 @@ def set_led(args):
 
 def set_device(args):
 	"""
-	Usage: %(scriptName)s command object
-
 	command:
-		led     : set status led sys_led|pwr_led|loc_led|mst_led|fan_led|digit_led      
+		led     : set status led      
 	"""
+	
+	if len(args[0:]) < 1:
+                print set_device.__doc__
+                sys.exit(0)
 
 	if args[0] == 'led':
 		set_led(args[1:])
-		return
 	else:
 		print set_device.__doc__
 																		   
@@ -188,46 +191,75 @@ def pega_init():
 		dbg_print("SFP_TX_DISABLE NODES: " + nodes)
 		status, output = do_cmd("echo 0 > "+ nodes, 1)
 
+	#set QSFP reset to normal
 	for x in range(SFP_MAX_NUM, TOTAL_PORT_NUM):
 		nodes = i2c_prefix + cpld_bus[2] + '/sfp' + str(x+1) + '_reset'
 		dbg_print("SFP_RESET NODES: " + nodes)
-		status, output = do_cmd("echo 3 > "+ nodes, 1)
+		status, output = do_cmd("echo 1 > "+ nodes, 1)
+	
+	#set QSFP I2c enable
+	for x in range(SFP_MAX_NUM, TOTAL_PORT_NUM):
+                nodes = i2c_prefix + cpld_bus[2] + '/sfp' + str(x+1) + '_modeseln'
+                dbg_print("SFP_MODSEL NODES: " + nodes)
+                status, output = do_cmd("echo 0 > "+ nodes, 1)
+	return
 
+def pega_cmd(args):
+	"""
+	command:
+		locate		: blink locate LED for searching
+	"""
+	
+	if len(args) < 1:
+		print pega_cmd.__doc__
+		sys.exit(0)
+
+	if args[0] == 'locate':
+		set_led(['loc_led', 'blink'])		
+		time.sleep(20)
+		set_led(['loc_led', 'off'])
+	else:
+		print pega_cmd.__doc__
+		sys.exit(0)
 	return
 
 def main():
 	"""
-	Usage: %(scriptName)s command object
-
 	command:
-		install     : install drivers and generate related sysfs nodes
-		uninstall   : uninstall drivers and remove related sysfs nodes  
-		set         : change board setting [led]
-		debug       : debug info [on/off]
+		install		: install drivers
+		uninstall	: uninstall drivers
+		set		: change board settings
+		cmd		: do command
+		debug		: show debug info [on/off]    
 	"""
-
-	if len(sys.argv)<2:
+	
+	if len(sys.argv[1:]) < 1:
 		print main.__doc__
+		sys.exit(0)
 
-	for arg in sys.argv[1:]:           
-		if arg == 'install':
-			do_install()
-			pega_init()
-		elif arg == 'uninstall':
-			do_uninstall()        
-		elif arg == 'set':
-			if len(sys.argv[2:])<1:
-				print main.__doc__
-			else:
-				set_device(sys.argv[2:])                
-			return
-		elif arg == 'debug':
-			if sys.argv[2] == 'on':
-				DEBUG = True
-			else:
-				DEBUG = False
-		else:
+	arg = sys.argv[1]
+	if arg == 'install':
+		do_install()
+		pega_init()
+	elif arg == 'uninstall':
+		do_uninstall()        
+	elif arg == 'set':
+		set_device(sys.argv[2:])                
+	elif arg == 'cmd':
+		pega_cmd(sys.argv[2:])
+	elif arg == 'debug':
+		if len(sys.argv[2:]) < 1:
 			print main.__doc__
+			sys.exit(0)
+		if sys.argv[2] == 'on':
+			DEBUG = True
+		else:
+			DEBUG = False
+	else:
+		print main.__doc__
+		sys.exit(0)
+
+	return
 
 if __name__ == "__main__":
 	main()

@@ -1,6 +1,6 @@
 [Unit]
 Description=Pegastron fn-6254-dn-f Platform initialization service
-After=local-fs.target
+Before=network.target
 DefaultDependencies=no
 
 [Service]
