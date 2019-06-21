@@ -35,8 +35,9 @@ RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return
 {%- endfor %}
 {%- endif %}
 
-{%- if CONFIGURED_ARCH != "amd64" %}
+{%- if CONFIGURED_ARCH == "armhf" %}
 # Fix for hiredis compilation issues for ARM
+# python will throw for missing locale 
 RUN apt-get install -y locales
 RUN locale-gen "en_US.UTF-8"
 RUN dpkg-reconfigure --frontend noninteractive locales

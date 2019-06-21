@@ -44,16 +44,10 @@ CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo amd64)
 ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
-ifeq "$(CONFIGURED_ARCH)" "amd64"
-	ARCH_SUFFIX = 
-else
-	ARCH_SUFFIX = -$(CONFIGURED_ARCH)
-endif
 export BUILD_NUMBER
 export BUILD_TIMESTAMP
 export CONFIGURED_PLATFORM
 export CONFIGURED_ARCH
-export ARCH_SUFFIX
 
 ###############################################################################
 ## Utility rules

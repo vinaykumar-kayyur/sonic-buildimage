@@ -29,7 +29,6 @@
 set -x -e
 
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
-[[ $CONFIGURED_ARCH == amd64 ]] && ARCH_SUFFIX= || ARCH_SUFFIX=-$CONFIGURED_ARCH
 
 ## docker engine version (with platform)
 DOCKER_VERSION=5:18.09.2~3-0~debian-stretch
@@ -108,9 +107,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc systemd-sy
 ## Create device files
 echo '[INFO] MAKEDEV'
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic-arm'
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic-arm'
 else
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 fi
 ## Install initramfs-tools and linux kernel
 ## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
@@ -167,8 +166,8 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 pushd $FILESYSTEM_ROOT/usr/share/initramfs-tools/scripts/init-bottom && sudo patch -p1 < $OLDPWD/files/initramfs-tools/udev.patch; popd
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
-## Install latest intel ixgbe driver
-sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
+    ## Install latest intel ixgbe driver
+    sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
 fi
 
 ## Install docker
@@ -272,10 +271,10 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t
     picocom
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
-    grub-pc-bin
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
+        grub-pc-bin
 
-sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
+    sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 fi
 
 ## Disable kexec supported reboot which was installed by default
@@ -414,7 +413,7 @@ built_by: $USER@$BUILD_HOSTNAME
 EOF
 
 if [ -f sonic_debian_extension.sh ]; then
-    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $CONFIGURED_ARCH
+    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
 fi
 
 ## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...

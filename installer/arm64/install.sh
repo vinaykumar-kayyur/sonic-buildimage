@@ -21,11 +21,11 @@ fi
 
 cd $(dirname $0)
 if [ -r ./machine.conf ]; then
-. ./machine.conf
+    . ./machine.conf
 fi
 
 if [ -r ./onie-image-arm64.conf ]; then
-. ./onie-image-arm64.conf
+    . ./onie-image-arm64.conf
 fi
 
 

@@ -47,8 +47,6 @@ $(shell rm -f .screen)
 
 MAKEFLAGS += -B
 
-HOST_ARCH := $(shell uname -m)
-
 CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(PLATFORM_ARCH))
 ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
@@ -117,7 +115,6 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BLDENV=$(BLDENV) \
                            PLATFORM=$(PLATFORM) \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
-                           HOST_ARCH=$(HOST_ARCH) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \

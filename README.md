@@ -49,7 +49,6 @@ sudo python2 -m pip install -U pip==9.0.3
 sudo pip install --force-reinstall --upgrade jinja2>=2.10
 sudo pip install j2cli
 
-
 ## SAI Version 
 Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release. 
 
