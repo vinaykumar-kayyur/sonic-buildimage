@@ -30,6 +30,10 @@ class PsuUtil(PsuBase):
 
     def __init__(self):
         PsuBase.__init__(self)
+     
+    def isDockerEnv(self):
+        num_docker = open('/proc/self/cgroup', 'r').read().count(":/docker")
+        return num_docker
 
     # Fetch a BMC register
     def get_pmc_register(self, reg_name):
@@ -38,9 +42,10 @@ class PsuUtil(PsuBase):
         global ipmi_sdr_list
         ipmi_dev_node = "/dev/pmi0"
         ipmi_cmd = IPMI_PSU_DATA
-        
-        if os.path.exists("/.dockerenv"):
+        dockerenv = self.isDockerEnv()
+        if dockerenv > 0:
             ipmi_cmd = IPMI_PSU_DATA_DOCKER
+
         status, ipmi_sdr_list = commands.getstatusoutput(ipmi_cmd)
 
         if status:
