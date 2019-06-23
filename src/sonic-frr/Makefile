@@ -8,12 +8,10 @@ DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG)
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr
-	git reset --hard
-	git clean -xfdf
-	git branch work origin/frr/7.0
-	git checkout work
-	stg init
-	stg import -s ../patch/series
+	patch -p1 < ../patch/0001-Add-support-of-bgp-tcp-DSCP-value.patch
+	patch -p1 < ../patch/0002-Reduce-severity-of-Vty-connected-from-message.patch
+	patch -p1 < ../patch/0003-ignore-nexthop-attribute-when-NLRI-is-present.patch
+	patch -p1 < ../patch/0004-Allow-BGP-attr-NEXT_HOP-to-be-0.0.0.0-due-to-allevia.patch
 	tools/tarsource.sh -V -e '-sonic'
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
