@@ -69,7 +69,8 @@ class Chassis(ChassisBase):
         # If Reset_Reason is not 11 return from Reset_Reason dictionary
         # Also check if power_reason, reset_reason are valid values by
         # checking key presence in dictionary else return
-        # REBOOT_CAUSE_NON_HARDWARE as default
+        # REBOOT_CAUSE_HARDWARE_OTHER as the Power_Reason and Reset_Reason
+        # registers returned invalid data
         if (reset_reason == 11):
             if (power_reason in self.power_reason_dict):
                 return self.power_reason_dict[power_reason]
@@ -77,5 +78,5 @@ class Chassis(ChassisBase):
             if (reset_reason in self.reset_reason_dict):
                 return self.reset_reason_dict[reset_reason]
 
-        return [(ChassisBase.REBOOT_CAUSE_NON_HARDWARE)]
+        return [(ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Invalid Reason")]
 
