@@ -3,8 +3,8 @@
 #############################################################################
 # Celestica
 #
-# Module contains an implementation of SONiC Platform Base API and
-# provides the components firmware management fucntion
+# Component contains an implementation of SONiC Platform Base API and
+# provides the components firmware management function
 #
 #############################################################################
 
@@ -15,26 +15,29 @@ import shlex
 import subprocess
 
 try:
-    from sonic_platform_base.module_base import ModuleBase
-    from sonic_platform.device import Device
+    from sonic_platform_base.device_base import DeviceBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-MMC_CPLD_ADDR = '0x100'
+CPLD_ADDR_MAPPING = {
+    "CPLD1": "0x100",
+    "CPLD2": "0x200",
+    "CPLD3": "0x280",
+    "CPLD4": "0x300",
+    "CPLD5": "0x380"
+}
+GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
-CONFIG_DB_PATH = "/etc/sonic/config_db.json"
-SMC_CPLD_PATH = "/sys/devices/platform/e1031.smc/version"
-MMC_CPLD_PATH = "/sys/devices/platform/e1031.smc/getreg"
 
 
-class Module(ModuleBase):
-    """Platform-specific Module class"""
+class Component(DeviceBase):
+    """Platform-specific Component class"""
 
-    def __init__(self, module_index):
-        ModuleBase.__init__(self)
-        self.index = module_index
-        self.device_base = Device(self.index, self.DEVICE_TYPE)
-        self.name = self.device_base.get_name()
+    DEVICE_TYPE = "component"
+
+    def __init__(self, component_name):
+        DeviceBase.__init__(self)
+        self.name = component_name.upper()
 
     def __run_command(self, command):
         # Run bash command and print output to stdout
@@ -45,8 +48,6 @@ class Module(ModuleBase):
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:
                     break
-                if output:
-                    print(output.strip())
             rc = process.poll()
             if rc != 0:
                 return False
@@ -64,7 +65,7 @@ class Module(ModuleBase):
             return None
         return raw_data.strip()
 
-    def get_bios_version(self):
+    def __get_bios_version(self):
         # Retrieves the BIOS firmware version
         try:
             with open(BIOS_VERSION_PATH, 'r') as fd:
@@ -73,21 +74,19 @@ class Module(ModuleBase):
         except Exception as e:
             return None
 
-    def get_cpld_version(self):
+    def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
-        with open(SMC_CPLD_PATH, 'r') as fd:
-            smc_cpld_version = fd.read()
-        smc_cpld_version = 'None' if smc_cpld_version is 'None' else "{}.{}".format(
-            int(smc_cpld_version[2], 16), int(smc_cpld_version[3], 16))
-
-        mmc_cpld_version = self.__get_register_value(
-            MMC_CPLD_PATH, MMC_CPLD_ADDR)
-        mmc_cpld_version = 'None' if mmc_cpld_version is 'None' else "{}.{}".format(
-            int(mmc_cpld_version[2], 16), int(mmc_cpld_version[3], 16))
-
-        cpld_version["SMC_CPLD"] = smc_cpld_version
-        cpld_version["MMC_CPLD"] = mmc_cpld_version
+        for cpld_name in CPLD_ADDR_MAPPING:
+            try:
+                cpld_addr = CPLD_ADDR_MAPPING[cpld_name]
+                cpld_version_raw = self.__get_register_value(
+                    GETREG_PATH, cpld_addr)
+                cpld_version_str = "{}.{}".format(int(cpld_version_raw[2], 16), int(
+                    cpld_version_raw[3], 16)) if cpld_version_raw is not None else 'None'
+                cpld_version[cpld_name] = cpld_version_str
+            except Exception as e:
+                cpld_version[cpld_name] = 'None'
         return cpld_version
 
     def get_firmware_version(self):
@@ -99,9 +98,9 @@ class Module(ModuleBase):
         fw_version = None
 
         if self.name == "BIOS":
-            fw_version = self.get_bios_version()
+            fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
-            cpld_version = self.get_cpld_version()
+            cpld_version = self.__get_cpld_version()
             fw_version = cpld_version.get(self.name)
 
         return fw_version

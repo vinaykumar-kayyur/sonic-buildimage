@@ -3,8 +3,8 @@
 #############################################################################
 # Celestica
 #
-# Module contains an implementation of SONiC Platform Base API and
-# provides the components firmware management fucntion
+# Device contains an implementation of SONiC Platform Base API and
+# provides the device information
 #
 #############################################################################
 
@@ -17,9 +17,9 @@ except ImportError as e:
 class Device(DeviceBase):
     """Platform-specific Device class"""
 
-    MODULES_NAME = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "BIOS"]
+    COMPONENTS_NAME = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "BIOS"]
 
-    def __init__(self, index, device_type):
+    def __init__(self, device_type, index=None):
         self.device_type = device_type
         self.index = index
         DeviceBase.__init__(self)
@@ -27,11 +27,21 @@ class Device(DeviceBase):
     def get_name(self):
         """
         Retrieves the name of the device
-
-        Returns:
+            Returns:
             string: The name of the device
         """
         device_name = {
-            "module": self.MODULES_NAME[self.index]
+            "component": self.COMPONENTS_NAME[self.index]
         }.get(self.device_type, None)
         return device_name
+
+    def get_name_list(self):
+        """
+        Retrieves list of the device name that available in this device type
+            Returns:
+            string: The list of device name
+        """
+        name_list = {
+            "component": self.COMPONENTS_NAME
+        }.get(self.device_type, None)
+        return name_list
