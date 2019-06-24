@@ -1,7 +1,7 @@
 ################################################################################
 #
-# Intel 10 Gigabit PCI Express Linux driver
-# Copyright(c) 1999 - 2013 Intel Corporation.
+# Intel(R) 10GbE PCI Express Linux Network Driver
+# Copyright(c) 1999 - 2017 Intel Corporation.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms and conditions of the GNU General Public License,
@@ -11,10 +11,6 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
 # more details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # The full GNU General Public License is included in this distribution in
 # the file called "COPYING".
@@ -26,19 +22,38 @@
 #
 ################################################################################
 
-#
-# Makefile for the Intel(R) 10GbE PCI Express ethernet driver
-#
-
 obj-m += pegatron_fn_6254_dn_f_ixgbe.o
 
-pegatron_fn_6254_dn_f_ixgbe-objs := ixgbe_main.o ixgbe_common.o ixgbe_ethtool.o \
-              ixgbe_82599.o ixgbe_82598.o ixgbe_phy.o ixgbe_sriov.o \
-              ixgbe_mbx.o ixgbe_x540.o ixgbe_x550.o ixgbe_lib.o ixgbe_ptp.o
+define pegatron_fn_6254_dn_f_ixgbe-y
+	ixgbe_main.o
+	ixgbe_api.o
+	ixgbe_common.o
+	ixgbe_dcb.o
+	ixgbe_dcb_82598.o
+	ixgbe_dcb_82599.o
+	ixgbe_ethtool.o
+	ixgbe_lib.o
+	ixgbe_mbx.o
+	ixgbe_sriov.o
+	ixgbe_param.o
+	ixgbe_phy.o
+	ixgbe_procfs.o
+	ixgbe_82598.o
+	ixgbe_82599.o
+	ixgbe_x540.o
+	ixgbe_x550.o
+endef
+pegatron_fn_6254_dn_f_ixgbe-y := $(strip ${pegatron_fn_6254_dn_f_ixgbe-y})
 
-pegatron_fn_6254_dn_f_ixgbe-y +=  ixgbe_dcb.o ixgbe_dcb_82598.o \
-                              ixgbe_dcb_82599.o ixgbe_dcb_nl.o
+pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_dcb_nl.o
+
+pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_debugfs.o
+
+pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_fcoe.o
+
+pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_ptp.o
 
 pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_sysfs.o
-pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_debugfs.o
-pegatron_fn_6254_dn_f_ixgbe-y += ixgbe_fcoe.o
+
+pegatron_fn_6254_dn_f_ixgbe-y += kcompat.o
+
