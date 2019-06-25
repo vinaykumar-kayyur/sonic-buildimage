@@ -33,7 +33,7 @@ start)
 
 stop)
         echo -n "Unload nps kernel modules... "
-
+	
         rmmod nps_netif
         rmmod nps_dev
 
