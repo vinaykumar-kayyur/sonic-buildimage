@@ -78,5 +78,5 @@ class Chassis(ChassisBase):
             if (reset_reason in self.reset_reason_dict):
                 return self.reset_reason_dict[reset_reason]
 
-        return [(ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Invalid Reason")]
+        return [(ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER)]
 
