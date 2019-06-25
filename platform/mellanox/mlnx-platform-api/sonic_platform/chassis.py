@@ -172,13 +172,13 @@ class Chassis(ChassisBase):
         except:
             return ''
 
-    def _read_reboot_cause_file(self, filename):
+    def _verify_reboot_cause(self, filename):
         '''
         Open and read the reboot cause file in 
         /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
         If a reboot cause file doesn't exists, returns '0'.
         '''
-        return REBOOT_DUE_TO_THIS_FILE == self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')
+        return bool(int(self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')))
 
     def get_reboot_cause(self):
         """
@@ -193,15 +193,15 @@ class Chassis(ChassisBase):
         """
         #read reboot causes files in the following order
         minor_cause = ''
-        if self._read_reboot_cause_file(REBOOT_CAUSE_POWER_LOSS_FILE):
+        if self._verify_reboot_cause(REBOOT_CAUSE_POWER_LOSS_FILE):
             major_cause = self.REBOOT_CAUSE_POWER_LOSS
-        elif self._read_reboot_cause_file(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
+        elif self._verify_reboot_cause(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
             major_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
-        elif self._read_reboot_cause_file(REBOOT_CAUSE_WATCHDOG_FILE):
+        elif self._verify_reboot_cause(REBOOT_CAUSE_WATCHDOG_FILE):
             major_cause = self.REBOOT_CAUSE_WATCHDOG
         else:
             major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            if self._read_reboot_cause_file(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
+            if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
                 minor_cause = "firmware"
             else:
                 reboot_by_user = self._read_generic_file(PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_MAX_LENGTH)
