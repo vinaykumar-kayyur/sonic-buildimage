@@ -52,8 +52,6 @@ ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
-DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
- 
 ifeq ($(BLDENV), stretch)
 SLAVE_BASE_TAG = $(shell sha1sum sonic-slave-stretch/Dockerfile | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat sonic-slave-stretch/Dockerfile.user sonic-slave-stretch/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
@@ -95,6 +93,25 @@ include rules/config
 
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
     DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
+endif
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
+    # Multiarch docker cannot start dockerd service due to iptables cannot run over different arch kernel
+    SONIC_SERVICE_DOCKERD_FOR_MULTIARCH=y
+    SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH := dockerd  --experimental=true --storage-driver=vfs \
+	--data-root /var/lib/march/docker/ --exec-root=/var/run/march/docker/ \
+	-H unix:///var/run/march/docker.sock -p /var/run/march/docker.pid
+    DOCKER_RUN += -v /var/run/march/docker.sock:/var/run/docker.sock
+    DOCKER_RUN += -v /var/run/march/docker.pid:/var/run/docker.pid
+    DOCKER_RUN += -v /var/run/march/docker:/var/run/docker
+    DOCKER_RUN += -v /var/lib/march/docker:/var/lib/docker
+    SONIC_USERFACL_DOCKERD_FOR_MUTLIARCH := setfacl -m user:$(USER):rw /var/run/march/docker.sock
+
+    #Override Native config to prevent docker service
+    SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=y
+
+    DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
+
+    DOCKER_SERVICE_MULTIARCH_CHECK := docker -H unix:///var/run/march/docker.sock info &> /dev/null || (echo "Docker march service not running..."; sudo rm -fr /var/run/march/docker*; (sudo $(SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH) &) &>/dev/null ; sleep 1; sudo $(SONIC_USERFACL_DOCKERD_FOR_MUTLIARCH);)
 endif
 
 DOCKER_BASE_BUILD = docker build --no-cache \
@@ -145,6 +162,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
 %::
 ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
 	@$(DOCKER_MULTIARCH_CHECK)
+	@$(DOCKER_SERVICE_MULTIARCH_CHECK)
 endif
 	@$(OVERLAY_MODULE_CHECK)
 	
