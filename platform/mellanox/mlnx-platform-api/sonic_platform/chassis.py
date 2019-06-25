@@ -39,9 +39,7 @@ HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 
 REBOOT_CAUSE_POWER_LOSS_FILE = 'reset_main_pwr_fail'
-REBOOT_CAUSE_THERMAL_OVERLOAD_CPU_FILE = ''
 REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE = 'reset_asic_thermal'
-REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER_FILE = ''
 REBOOT_CAUSE_WATCHDOG_FILE = 'reset_hotswap_or_wd'
 REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
 
@@ -180,7 +178,7 @@ class Chassis(ChassisBase):
         /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
         If a reboot cause file doesn't exists, returns '0'.
         '''
-        return self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')
+        return REBOOT_DUE_TO_THIS_FILE == self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')
 
     def get_reboot_cause(self):
         """
@@ -195,15 +193,15 @@ class Chassis(ChassisBase):
         """
         #read reboot causes files in the following order
         minor_cause = ''
-        if REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_POWER_LOSS_FILE):
+        if self._read_reboot_cause_file(REBOOT_CAUSE_POWER_LOSS_FILE):
             major_cause = self.REBOOT_CAUSE_POWER_LOSS
-        elif REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
+        elif self._read_reboot_cause_file(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
             major_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
-        elif REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_WATCHDOG_FILE):
+        elif self._read_reboot_cause_file(REBOOT_CAUSE_WATCHDOG_FILE):
             major_cause = self.REBOOT_CAUSE_WATCHDOG
         else:
             major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            if REBOOT_DUE_TO_THIS_FILE == self._read_reboot_cause_file(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
+            if self._read_reboot_cause_file(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
                 minor_cause = "firmware"
             else:
                 reboot_by_user = self._read_generic_file(PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_MAX_LENGTH)
