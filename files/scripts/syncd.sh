@@ -55,14 +55,14 @@ function wait_for_database_service()
 
 function getBootType()
 {
-    case "$(cat /proc/cmdline | grep -o 'SONIC_BOOT_TYPE=\S*' | cut -d'=' -f2)" in
-    warm*)
+    case "$(cat /proc/cmdline)" in
+    *warm*)
         TYPE='warm'
         ;;
-    fastfast)
+    *fastfast*)
         TYPE='fastfast'
         ;;
-    fast*)
+    *fast*)
         TYPE='fast'
         ;;
     *)
