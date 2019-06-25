@@ -25,7 +25,6 @@ start)
             echo "25165824" > /proc/sys/net/core/wmem_max
         fi
 
-	depmod -a
 	modprobe nps_dev
         modprobe nps_netif
 
@@ -52,4 +51,3 @@ force-reload|restart)
 esac
 
 exit 0
-
