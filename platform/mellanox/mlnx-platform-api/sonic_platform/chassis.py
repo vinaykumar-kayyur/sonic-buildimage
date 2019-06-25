@@ -202,7 +202,7 @@ class Chassis(ChassisBase):
         else:
             major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
             if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
-                minor_cause = "firmware"
+                minor_cause = "Reset by ASIC firmware"
             else:
                 reboot_by_user = self._read_generic_file(PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_MAX_LENGTH)
                 if '' != reboot_by_user:
