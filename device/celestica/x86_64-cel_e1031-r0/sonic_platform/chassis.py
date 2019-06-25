@@ -40,8 +40,8 @@ class Chassis(ChassisBase):
             psu = Psu(index)
             self._psu_list.append(psu)
         ChassisBase.__init__(self)
-        self.component_device = Device("component")
-        self.component_list = self.component_device.get_name_list()
+        self._component_device = Device("component")
+        self._component_list = self._component_device.get_name_list()
 
     def __read_config_db(self):
         try:
@@ -65,15 +65,6 @@ class Chassis(ChassisBase):
         except KeyError:
             raise KeyError("Base MAC not found")
 
-    def get_component_list(self):
-        """
-        Retrieves chassis components list such as BIOS, CPLD, FPGA, etc.
-
-        Returns:
-            A list containing component name
-        """
-        return self.component_list
-
     def get_firmware_version(self, component_name):
         """
         Retrieves platform-specific hardware/firmware versions for chassis
@@ -85,7 +76,7 @@ class Chassis(ChassisBase):
             A string containing platform-specific component versions
         """
         self.component = Component(component_name)
-        if component_name not in self.component_list:
+        if component_name not in self._component_list:
             return None
         return self.component.get_firmware_version()
 
@@ -100,6 +91,6 @@ class Chassis(ChassisBase):
             A boolean, True if install successfully, False if not
         """
         self.component = Component(component_name)
-        if component_name not in self.component_list:
+        if component_name not in self._component_list:
             return False
         return self.component.upgrade_firmware(image_path)
