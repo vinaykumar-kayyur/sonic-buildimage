@@ -221,7 +221,7 @@ start() {
     }
 
     preStartAction
-    docker start {{docker_container_name}}
+    docker start {{docker_container_name}}$DEV
     postStartAction
 }
 
