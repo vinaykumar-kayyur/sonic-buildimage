@@ -22,8 +22,8 @@ debs/{{ deb }}{{' '}}
 ## TODO: add kmod into Depends
 RUN apt-get install -f kmod
 
-COPY ["files/dsserve", "files/npx_diag", "files/warm_verifier", "start.sh", "/usr/bin/"]
-RUN chmod +x /usr/bin/dsserve /usr/bin/npx_diag /usr/bin/warm_verifier
+COPY ["files/dsserve", "files/npx_diag", "start.sh", "/usr/bin/"]
+RUN chmod +x /usr/bin/dsserve /usr/bin/npx_diag
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
