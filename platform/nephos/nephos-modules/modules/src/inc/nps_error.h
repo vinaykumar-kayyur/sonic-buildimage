@@ -74,4 +74,3 @@ nps_error_getString(
     const NPS_ERROR_NO_T cause );
 
 #endif  /* NPS_ERROR_H */
-
