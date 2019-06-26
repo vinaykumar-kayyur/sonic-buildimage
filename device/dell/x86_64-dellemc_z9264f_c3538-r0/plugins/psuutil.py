@@ -84,7 +84,7 @@ class PsuUtil(PsuBase):
         :return: Boolean, True if PSU is operating properly, False if PSU is\
         faulty
         """
-    # Until psu_status is implemented this is hardcoded temporarily
+        # Until psu_status is implemented this is hardcoded temporarily
 
         status = 1
         return status
