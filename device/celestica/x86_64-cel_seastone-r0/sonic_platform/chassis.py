@@ -41,7 +41,7 @@ class Chassis(ChassisBase):
             self._psu_list.append(psu)
         ChassisBase.__init__(self)
         self._component_device = Device("component")
-        self._component_list = self._component_device.get_name_list()
+        self._component_name_list = self._component_device.get_name_list()
 
     def __read_config_db(self):
         try:
@@ -76,7 +76,7 @@ class Chassis(ChassisBase):
             A string containing platform-specific component versions
         """
         self.component = Component(component_name)
-        if component_name not in self._component_list:
+        if component_name not in self._component_name_list:
             return None
         return self.component.get_firmware_version()
 
@@ -91,6 +91,6 @@ class Chassis(ChassisBase):
             A boolean, True if install successfully, False if not
         """
         self.component = Component(component_name)
-        if component_name not in self._component_list:
+        if component_name not in self._component_name_list:
             return False
         return self.component.upgrade_firmware(image_path)
