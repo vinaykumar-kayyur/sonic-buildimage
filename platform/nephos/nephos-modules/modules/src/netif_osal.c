@@ -42,10 +42,6 @@
 #define OSAL_US_PER_SECOND      (1000000)   /* macro second per second      */
 #define OSAL_NS_PER_USECOND     (1000)      /* nano second per macro second */
 
-/* ----------------------------------------------------------------------------------- macro function */
-#define OSAL_LOG_ERR(msg, ...) \
-    osal_printf("\033[31m<osal:%d>\033[0m"msg, __LINE__, ##__VA_ARGS__)
-
 /* ----------------------------------------------------------------------------------- struct */
 extern struct pci_dev       *_ptr_ext_pci_dev;
 
@@ -213,7 +209,7 @@ osal_isRunThread(void)
     {
         if (ptr_thread_node == &_osal_thread_head)
         {
-            OSAL_LOG_ERR("Cannot find task 0x%x.\n", current);
+            osal_printf("Cannot find task 0x%x.\n", current);
             break;
         }
         if (ptr_thread_node->ptr_task == current)
