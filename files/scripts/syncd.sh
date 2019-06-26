@@ -55,6 +55,7 @@ function wait_for_database_service()
 
 function getBootType()
 {
+    # same code snippet in files/build_templates/docker_image_ctl.j2
     case "$(cat /proc/cmdline)" in
     *SONIC_BOOT_TYPE=warm*)
         TYPE='warm'
