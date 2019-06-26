@@ -56,13 +56,13 @@ function wait_for_database_service()
 function getBootType()
 {
     case "$(cat /proc/cmdline)" in
-    *warm*)
+    *SONIC_BOOT_TYPE=warm*)
         TYPE='warm'
         ;;
-    *fastfast*)
+    *SONIC_BOOT_TYPE=fastfast*)
         TYPE='fastfast'
         ;;
-    *fast*)
+    *SONIC_BOOT_TYPE=fast*|*fast-reboot*)
         TYPE='fast'
         ;;
     *)
