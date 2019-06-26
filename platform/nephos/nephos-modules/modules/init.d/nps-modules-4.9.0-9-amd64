@@ -36,7 +36,6 @@ stop)
 	
         rmmod nps_netif
         rmmod nps_dev
-
         echo "done."
         ;;
 
@@ -45,7 +44,7 @@ force-reload|restart)
         ;;
 
 *)
-        echo "Usage: /etc/init.d/nps-modules-4.9.0-9-2-amd64.init {start|stop}"
+        echo "Usage: /etc/init.d/nps-modules-4.9.0-9-amd64.init {start|stop}"
         exit 1
         ;;
 esac
