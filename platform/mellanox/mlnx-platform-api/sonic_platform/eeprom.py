@@ -34,7 +34,7 @@ CACHE_FILE = 'syseeprom_cache'
 EEPROM_SYMLINK = "/var/run/hw-management/eeprom/vpd_info"
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
-    RETRIES = 5
+    RETRIES = 3
     EEPROM_DECODE_HEADLINES = 6
     EEPROM_DECODE_MAXITEM = 3
     EEPROM_DECODE_OFFSET = 0
@@ -70,26 +70,26 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         except:
             pass
 
-        e = self.read_eeprom()
-        if e is None :
+        eeprom = self.read_eeprom()
+        if eeprom is None :
             return 0
 
         try:
-            self.update_cache(e)
+            self.update_cache(eeprom)
         except:
             pass
 
-        self._base_mac = self.mgmtaddrstr(e)
+        self._base_mac = self.mgmtaddrstr(eeprom)
         if self._base_mac == None:
             self._base_mac = "Undefined."
 
-        self._serial_str = self.serial_number_str(e)
+        self._serial_str = self.serial_number_str(eeprom)
         if self._serial_str == None:
             self._serial_str = "Undefined."
 
         original_stdout = sys.stdout
         sys.stdout = StringIO()
-        self.decode_eeprom(e)
+        self.decode_eeprom(eeprom)
         decode_output = sys.stdout.getvalue()
         sys.stdout = original_stdout
 
@@ -99,12 +99,12 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         lines = lines[self.EEPROM_DECODE_HEADLINES:]
         self._eeprom_info_dict = dict()
 
-        for l in lines:
+        for line in lines:
             try:
-                m = re.search('(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)([\S]+)', l)
-                if m is not None:
-                    idx = m.group(1)
-                    value = m.group(3).rstrip('\0')
+                match = re.search('(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)([\S]+)', line)
+                if match is not None:
+                    idx = match.group(1)
+                    value = match.group(3).rstrip('\0')
 
                 self._eeprom_info_dict[idx] = value
             except:

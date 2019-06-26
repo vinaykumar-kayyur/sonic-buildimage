@@ -17,12 +17,13 @@ try:
     from sonic_platform.fan import FAN_PATH
     from sonic_platform.sfp import SFP
     from sonic_platform.watchdog import get_watchdog
-    from sonic_platform.eeprom import Eeprom
+    from eeprom import Eeprom
     from os import listdir
     from os.path import isfile, join
     import io
     import re
     import subprocess
+    import syslog
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -45,19 +46,24 @@ REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
 
 REBOOT_CAUSE_FILE_LENGTH = 1
 
-REBOOT_DUE_TO_THIS_FILE = '1'
-
 CPLD_VERSION_ROOT = HWMGMT_SYSTEM_ROOT
 
 CPLD1_VERSION_FILE = 'cpld1_version'
 CPLD2_VERSION_FILE = 'cpld2_version'
 CPLD_VERSION_MAX_LENGTH = 4
 
-FIRMWARE_VERSION_COMMAND = 'mlxfwmanager --query'
-BIOS_VERSION_COMMAND = 'dmidecode -t 11'
+FW_QUERY_VERSION_COMMAND = 'mlxfwmanager --query'
+BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
 
-PREVIOUS_REBOOT_CAUSE_FILE = "/host/reboot-cause/previous-reboot-cause.txt"
-PREVIOUS_REBOOT_CAUSE_MAX_LENGTH = 100
+REBOOT_CAUSE_FILE_USER_REBOOT = "/host/reboot-cause/previous-reboot-cause.txt"
+REBOOT_CAUSE_USER_REBOOT_MAX_LENGTH = 100
+
+SYSLOG_IDENTIFIER = "mlnx-chassis"
+
+def log_warning(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_WARNING, msg)
+    syslog.closelog()
 
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
@@ -163,13 +169,14 @@ class Chassis(ChassisBase):
         """
         Read a generic file, returns the contents of the file
         """
-        r = ''
+        result = ''
         try:
-            f = io.open(filename)
-            r = f.read(len)
-            f.close()
-            return r
+            fileobj = io.open(filename)
+            result = fileobj.read(len)
+            fileobj.close()
+            return result
         except:
+            log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
             return ''
 
     def _verify_reboot_cause(self, filename):
@@ -204,7 +211,7 @@ class Chassis(ChassisBase):
             if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
                 minor_cause = "Reset by ASIC firmware"
             else:
-                reboot_by_user = self._read_generic_file(PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_MAX_LENGTH)
+                reboot_by_user = self._read_generic_file(REBOOT_CAUSE_FILE_USER_REBOOT, REBOOT_CAUSE_USER_REBOOT_MAX_LENGTH)
                 if '' != reboot_by_user:
                     major_cause = self.REBOOT_CAUSE_NON_HARDWARE
                     minor_cause = reboot_by_user
@@ -214,7 +221,7 @@ class Chassis(ChassisBase):
     def _get_cpld_version(self):
         cpld1_version = self._read_generic_file(join(CPLD_VERSION_ROOT, CPLD1_VERSION_FILE), CPLD_VERSION_MAX_LENGTH)
         cpld2_version = self._read_generic_file(join(CPLD_VERSION_ROOT, CPLD2_VERSION_FILE), CPLD_VERSION_MAX_LENGTH)
-        return "cpld1 version: " + cpld1_version.rstrip('\n') + " cpld 2 version: " + cpld2_version.rstrip('\n')
+        return "cpld1 version: " + cpld1_version.rstrip('\n') + " cpld2 version: " + cpld2_version.rstrip('\n')
 
     def _get_command_result(self, cmdline):
         try:
@@ -252,7 +259,7 @@ class Chassis(ChassisBase):
         By using regular expression '(Versions:.*\n[\s]+FW[\s]+)([\S]+)',
         we can extrace the version which is marked with *** in the above context
         """
-        fw_ver_str = self._get_command_result(FIRMWARE_VERSION_COMMAND)
+        fw_ver_str = self._get_command_result(FW_QUERY_VERSION_COMMAND)
         try: 
             m = re.search('(Versions:.*\n[\s]+FW[\s]+)([\S]+)', fw_ver_str)
             result = m.group(2)
@@ -277,7 +284,7 @@ class Chassis(ChassisBase):
         By using regular expression 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
         we can extrace the version string which is marked with * in the above context
         """
-        bios_ver_str = self._get_command_result(BIOS_VERSION_COMMAND)
+        bios_ver_str = self._get_command_result(BIOS_QUERY_VERSION_COMMAND)
         try:
             m = re.search('OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)', bios_ver_str)
             result = m.group(1)
