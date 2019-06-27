@@ -252,7 +252,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(output.strip(),  
                          "{'Ethernet8': {}, "
                          "('Ethernet8', '172.16.0.9/30'): {}, "
-                         "'Ethernet0': {'vnet_name': 'Vnet1'}, "
+                         "'Ethernet0': {'vnet_name': 'VnetFE'}, "
                          "('Ethernet4', '172.16.0.1/30'): {}, "
                          "('Ethernet0', '192.168.0.2/30'): {}, "
                          "'Ethernet4': {}}")
@@ -265,7 +265,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_t2_chassis_frontend_vnet(self):
         argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -p "' + self.t2_chassis_frontend_port_config + '" -v "VNET"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'Vnet1': {'vxlan_tunnel': 'tunnel1', 'vni': 8000}}")
+        self.assertEqual(output.strip(), "{'VnetFE': {'vxlan_tunnel': 'TunnelInt', 'vni': 8000}}")
 
     def test_minigraph_vxlan(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "VXLAN_TUNNEL"'
@@ -275,5 +275,5 @@ class TestCfgGen(TestCase):
     def test_minigraph_t2_chassis_frontend_vxlan(self):
         argument = '-m "' + self.sample_graph_t2_chassis_frontend + '" -p "' + self.t2_chassis_frontend_port_config + '" -v "VXLAN_TUNNEL"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'tunnel1': {'source_ip': '4.0.0.0'}}")
+        self.assertEqual(output.strip(), "{'TunnelInt': {'source_ip': '4.0.0.0'}}")
 
