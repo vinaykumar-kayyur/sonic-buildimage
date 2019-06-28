@@ -9,6 +9,9 @@ SONIC_MAKE_DEBS += $(REDIS_TOOLS)
 REDIS_SERVER = redis-server_$(REDIS_VERSION)_amd64.deb
 $(eval $(call add_derived_package,$(REDIS_TOOLS),$(REDIS_SERVER)))
 
+REDIS_SERVER_DBG = redis-server-dbgsym_$(REDIS_VERSION)_amd64.deb
+$(eval $(call add_derived_package,$(REDIS_SERVER),$(REDIS_SERVER_DBG)))
+
 REDIS_SENTINEL = redis-sentinel_$(REDIS_VERSION)_amd64.deb
 $(REDIS_SENTINEL)_DEPENDS += $(REDIS_SERVER)
 $(REDIS_SENTINEL)_RDEPENDS += $(REDIS_SERVER)
