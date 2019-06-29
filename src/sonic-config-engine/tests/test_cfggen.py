@@ -265,13 +265,13 @@ class TestCfgGen(TestCase):
 
     # Test a minigraph file where VNI is not specified
     # Default VNI is 8000
-    def test_minigraph_t2_chassis_fe_vnet(self):
+    def test_minigraph_t2_chassis_fe_vnet_default(self):
         argument = '-m "' + self.sample_graph_t2_chassis_fe + '" -p "' + self.t2_chassis_fe_port_config + '" -v "VNET"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'VnetFE': {'vxlan_tunnel': 'TunnelInt', 'vni': 8000}}")
 
     # Test a minigraph file where VNI is specified    
-    def test_minigraph_t2_chassis_fe_vnet2(self):
+    def test_minigraph_t2_chassis_fe_vnet(self):
         argument = '-m "' + self.sample_graph_t2_chassis_fe_vni + '" -p "' + self.t2_chassis_fe_port_config + '" -v "VNET"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'VnetFE': {'vxlan_tunnel': 'TunnelInt', 'vni': 9000}}")
