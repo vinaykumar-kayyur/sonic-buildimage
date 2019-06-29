@@ -30,6 +30,9 @@ ns3 = "http://www.w3.org/2001/XMLSchema-instance"
 spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
 chassis_backend_role = 'ChassisBackendRouter'
 
+# Default Virtual Network Index (VNI) 
+vni_default = 8000
+
 class minigraph_encoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (
@@ -152,6 +155,14 @@ def parse_dpg(dpg, hname):
         hostname = child.find(str(QName(ns, "Hostname")))
         if hostname.text.lower() != hname.lower():
             continue
+
+        vni = vni_default
+        vni_element = child.find(str(QName(ns, "VNI")))
+        if vni_element != None:
+            if vni_element.text.isdigit():
+                vni = int(vni_element.text)
+            else:
+                print >> sys.stderr, "VNI must be an integer (use default VNI %d instead)" % vni_default 
 
         ipintfs = child.find(str(QName(ns, "IPInterfaces")))
         intfs = {}
@@ -294,8 +305,8 @@ def parse_dpg(dpg, hname):
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
-        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls
-    return None, None, None, None, None, None, None
+        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
+    return None, None, None, None, None, None, None, None, None
 
 
 def parse_cpg(cpg, hname):
@@ -418,10 +429,10 @@ def parse_deviceinfo(meta, hwsku):
     return port_speeds, port_descriptions
 
 # Special parsing for spine chassis frontend 
-def parse_spine_chassis_fe(results, lo_intfs, phyport_intfs, pc_intfs, devices):
+def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, devices):
     chassis_vnet ='VnetFE'
     chassis_vxlan_tunnel = 'TunnelInt'
-    chassis_vni = 8000
+    chassis_vni = vni
 
     # Vxlan tunnel information
     lo_addr = '0.0.0.0'
@@ -527,7 +538,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -710,7 +721,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     # Special parsing for spine chassis frontend routers
     if current_device['type'] == spine_chassis_frontend_role:
-        parse_spine_chassis_fe(results, lo_intfs, phyport_intfs, pc_intfs, devices)
+        parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, devices)
 
     return results
 
