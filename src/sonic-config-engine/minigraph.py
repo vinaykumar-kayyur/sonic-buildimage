@@ -429,7 +429,7 @@ def parse_deviceinfo(meta, hwsku):
     return port_speeds, port_descriptions
 
 # Special parsing for spine chassis frontend 
-def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, devices):
+def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices):
     chassis_vnet ='VnetFE'
     chassis_vxlan_tunnel = 'TunnelInt'
     chassis_vni = vni
@@ -475,9 +475,23 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, devi
         if isinstance(pc_intf, tuple) == False:
             continue 
 
+        # Get port channel interface name
         # pc intf = (pc intf name, IP prefix)
         pc_intf_name = pc_intf[0]
-        neighbor_router = results['DEVICE_NEIGHBOR'][pc_intf_name]['name']
+
+        # Get an interface that is enslaved to this port channel 
+        intf_name = None 
+        for pc_member in pc_members:
+            if isinstance(pc_member, tuple) and pc_member[0] == pc_intf_name:
+                intf_name = pc_member[1]
+                break 
+
+        if intf_name == None:
+            print >> sys.stderr, 'Warning: cannot find any interfaces enslaved to %s' % (pc_intf_name)
+            continue
+
+        # Get the neighbor router of this port channel interface
+        neighbor_router = results['DEVICE_NEIGHBOR'][intf_name]['name']
 
         # If the neighbor router is an external router 
         if devices[neighbor_router]['type'] != chassis_backend_role:
@@ -721,7 +735,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     # Special parsing for spine chassis frontend routers
     if current_device['type'] == spine_chassis_frontend_role:
-        parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, devices)
+        parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
 
     return results
 
