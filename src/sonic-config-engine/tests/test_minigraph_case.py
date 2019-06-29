@@ -10,6 +10,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.sample_graph = os.path.join(self.test_dir, 'simple-sample-graph-case.xml')
         self.sample_graph_t2_chassis_fe = os.path.join(self.test_dir, 't2-chassis-fe-graph.xml')
         self.sample_graph_t2_chassis_fe_vni = os.path.join(self.test_dir, 't2-chassis-fe-graph-vni.xml')        
+        self.sample_graph_t2_chassis_fe_pc = os.path.join(self.test_dir, 't2-chassis-fe-graph-pc.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.t2_chassis_fe_port_config = os.path.join(self.test_dir, 't2-chassis-fe-port-config.ini')
 
@@ -142,6 +143,17 @@ class TestCfgGenCaseInsensitive(TestCase):
                          "('Ethernet4', '172.16.0.1/30'): {}, "
                          "('Ethernet0', '192.168.0.2/30'): {}, "
                          "'Ethernet4': {}}")
+
+    def test_minigraph_t2_chassis_fe_pc_interfaces(self):
+        argument = '-m "' + self.sample_graph_t2_chassis_fe_pc + '" -p "' + self.t2_chassis_fe_port_config + '" -v "PORTCHANNEL_INTERFACE"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(),  
+                         "{'PortChannel8': {}, "
+                         "('PortChannel0', '192.168.0.2/30'): {}, "
+                         "('PortChannel4', '172.16.0.1/30'): {}, "
+                         "'PortChannel4': {}, "
+                         "('PortChannel8', '172.16.0.9/30'): {}, "
+                         "'PortChannel0': {'vnet_name': 'VnetFE'}}")
 
     def test_minigraph_vnet(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VNET"'
