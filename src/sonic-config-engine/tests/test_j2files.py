@@ -17,6 +17,8 @@ class TestJ2Files(TestCase):
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
         self.mlnx_port_config = os.path.join(self.test_dir, 'sample-port-config-mlnx.ini')
         self.dell6100_t0_minigraph = os.path.join(self.test_dir, 'sample-dell-6100-t0-minigraph.xml')
+        self.t2_chassis_fe_minigraph = os.path.join(self.test_dir, 't2-chassis-fe-graph.xml')
+        self.t2_chassis_fe_port_config = os.path.join(self.test_dir, 't2-chassis-fe-port-config.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
 
     def run_script(self, argument):
@@ -77,6 +79,20 @@ class TestJ2Files(TestCase):
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + conf_template + ' > ' + self.output_file
         self.run_script(argument)
         self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'frr.conf'), self.output_file))
+
+    # Test zebra.conf in FRR docker for a T2 chassis frontend (fe)
+    def test_t2_chassis_fe_zebra_frr(self):
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', 'zebra.conf.j2')
+        argument = '-m ' + self.t2_chassis_fe_minigraph + ' -p ' + self.t2_chassis_fe_port_config + ' -t ' + conf_template + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 't2-chassis-fe-zebra.conf'), self.output_file))
+
+    # Test bgpd.conf in FRR docker for a T2 chassis frontend (fe)
+    def test_t2_chassis_frontend_bgpd_frr(self):
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', 'bgpd.conf.j2')
+        argument = '-m ' + self.t2_chassis_fe_minigraph + ' -p ' + self.t2_chassis_fe_port_config + ' -t ' + conf_template + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 't2-chassis-fe-bgpd.conf'), self.output_file))
 
     def test_ipinip(self):
         ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
