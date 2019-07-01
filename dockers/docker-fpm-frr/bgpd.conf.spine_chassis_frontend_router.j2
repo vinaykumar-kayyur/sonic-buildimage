@@ -11,7 +11,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vnet_name }}
   bgp graceful-restart restart-time 240
   bgp graceful-restart
 {# Router ID #}
-{%   for (name, prefix) in LOOPBACK_INTERFACE %}
+{%   for (name, prefix) in LOOPBACK_INTERFACE | pfx_filter %}
 {%    if prefix | ipv4 and name == 'Loopback0' %}
   bgp router-id {{ prefix | ip }}
 {%    endif %}
@@ -76,13 +76,13 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   no bgp default ipv4-unicast
   bgp graceful-restart restart-time 240
   bgp graceful-restart
-{%   for (name, prefix) in LOOPBACK_INTERFACE %}
+{%   for (name, prefix) in LOOPBACK_INTERFACE | pfx_filter %}
 {%    if prefix | ipv4 and name == 'Loopback0' %}
   bgp router-id {{ prefix | ip }}
 {%    endif %}
 {%   endfor %}
 {# advertise loopback #}
-{%   for (name, prefix) in LOOPBACK_INTERFACE %}
+{%   for (name, prefix) in LOOPBACK_INTERFACE | pfx_filter %}
 {%    if prefix | ipv4 and name == 'Loopback0' %}
   network {{ prefix | ip }}/32
 {%    elif prefix | ipv6 and name == 'Loopback0' %}
