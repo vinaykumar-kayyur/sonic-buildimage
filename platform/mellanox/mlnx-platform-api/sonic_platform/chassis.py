@@ -17,6 +17,7 @@ try:
     from sonic_platform.fan import FAN_PATH
     from sonic_platform.sfp import SFP
     from sonic_platform.watchdog import get_watchdog
+    from sonic_daemon_base.daemon_base import Logger
     from eeprom import Eeprom
     from os import listdir
     from os.path import isfile, join
@@ -58,12 +59,9 @@ BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
 REBOOT_CAUSE_FILE_USER_REBOOT = "/host/reboot-cause/previous-reboot-cause.txt"
 REBOOT_CAUSE_USER_REBOOT_MAX_LENGTH = 100
 
+# Global logger class instance
 SYSLOG_IDENTIFIER = "mlnx-chassis"
-
-def log_warning(msg):
-    syslog.openlog(SYSLOG_IDENTIFIER)
-    syslog.syslog(syslog.LOG_WARNING, msg)
-    syslog.closelog()
+logger = Logger(SYSLOG_IDENTIFIER)
 
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
@@ -108,7 +106,7 @@ class Chassis(ChassisBase):
                 sfp_module = SFP(index, 'QSFP')
             else:
                 sfp_module = SFP(index, 'SFP')
-            self._psu_list.append(sfp_module)
+            self._sfp_list.append(sfp_module)
 
         # Initialize EEPROM
         self.eeprom = Eeprom()
@@ -176,7 +174,7 @@ class Chassis(ChassisBase):
             fileobj.close()
             return result
         except:
-            log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
+            logger.log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
             return ''
 
     def _verify_reboot_cause(self, filename):
@@ -211,10 +209,7 @@ class Chassis(ChassisBase):
             if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
                 minor_cause = "Reset by ASIC firmware"
             else:
-                reboot_by_user = self._read_generic_file(REBOOT_CAUSE_FILE_USER_REBOOT, REBOOT_CAUSE_USER_REBOOT_MAX_LENGTH)
-                if '' != reboot_by_user:
-                    major_cause = self.REBOOT_CAUSE_NON_HARDWARE
-                    minor_cause = reboot_by_user
+                major_cause = self.REBOOT_CAUSE_NON_HARDWARE
 
         return major_cause, minor_cause
 

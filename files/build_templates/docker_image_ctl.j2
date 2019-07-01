@@ -191,9 +191,6 @@ start() {
 {%- if docker_container_name != "database" %}
         -v /usr/share/sonic/device/$PLATFORM/$HWSKU:/usr/share/sonic/hwsku:ro \
 {%- endif %}
-{%- if docker_container_name == "pmon" %}
-        -v /host/reboot-cause:/host/reboot-cause \
-{%- endif %}
 {%- if sonic_asic_platform != "mellanox" %}
         --tmpfs /tmp \
 {%- endif %}
