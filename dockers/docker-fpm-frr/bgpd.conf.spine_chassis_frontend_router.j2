@@ -1,11 +1,8 @@
 {# VNET BGP Instance #}
 ! Vnet BGP instance
-{# VNI #}
 {% set interfaces_in_vnets = [] %}
 {% block vnet_bgp_instance %}
 {%  for vnet_name, vnet_metadata in VNET.iteritems() %}
-vrf {{ vnet_name }}
-vni {{ vnet_metadata['vni'] }}
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vnet_name }}
   no bgp default ipv4-unicast
   bgp log-neighbor-changes
