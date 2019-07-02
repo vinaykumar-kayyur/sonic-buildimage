@@ -42,4 +42,7 @@ int mlacp_fsm_update_heartbeat(struct CSM* csm, struct mLACPHeartbeatTLV* tlv);
 void mlacp_enqueue_arp(struct CSM* csm, struct Msg* msg);
 
 int mlacp_fsm_update_Agg_conf(struct CSM* csm, mLACPAggConfigTLV* portconf);
+int mlacp_fsm_update_port_channel_info(struct CSM* csm, struct mLACPPortChannelInfoTLV* tlv);
+int mlacp_fsm_update_peerlink_info(struct CSM* csm, struct mLACPPeerLinkInfoTLV* tlv);
+int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV* tlv);
 #endif

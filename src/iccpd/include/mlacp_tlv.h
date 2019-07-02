@@ -249,6 +249,8 @@ struct mLACPSyncReqTLV {
     * [Page 62]
     */
     uint16_t req_num;
+
+#if __BYTE_ORDER == __BIG_ENDIAN
     uint16_t c_bit :1;
     /*
     * RFC 7275
@@ -257,6 +259,16 @@ struct mLACPSyncReqTLV {
     */
     uint16_t s_bit :1;
     uint16_t req_type :14;
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+    uint16_t req_type :14;
+    /*
+    * RFC 7275
+    * 7.2.9.  mLACP Synchronization Request TLV
+    * [Page 63]
+    */  
+    uint16_t s_bit :1;
+    uint16_t c_bit :1;  
+#endif
     /* [IEEE-802.1AX], Section 5.3.4. */
     /* [IEEE-802.1AX], Section 5.4.6. */
     uint16_t port_num_agg_id;

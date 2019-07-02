@@ -50,5 +50,6 @@ int mlacp_prepare_for_heartbeat(struct CSM* csm,char* buf, size_t max_buf_size);
 int mlacp_prepare_for_Aggport_state(struct CSM* csm,char* buf, size_t max_buf_size, struct LocalInterface* local_if);
 int mlacp_prepare_for_Aggport_config(struct CSM* csm, char* buf, size_t max_buf_size, struct LocalInterface* lif, int purge_flag);
 int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf, size_t max_buf_size, struct LocalInterface* port_channel);
-
+int mlacp_prepare_for_port_peerlink_info(struct CSM* csm, char* buf, size_t max_buf_size, struct LocalInterface* peerlink_port);
+int iccp_netlink_if_hwaddr_set(uint32_t ifindex, uint8_t *addr, unsigned int addr_len);
 #endif

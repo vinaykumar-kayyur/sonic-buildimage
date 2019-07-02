@@ -102,19 +102,19 @@ struct mclagd_state
 {
     int mclag_id;
     int keepalive;
-    unsigned char local_ip[MCLAGDCTL_INET_ADDR_LEN];
-    unsigned char peer_ip[MCLAGDCTL_INET_ADDR_LEN];
-    unsigned char peer_link_if[MCLAGDCTL_MAX_L_PORT_NANE];
+    char local_ip[MCLAGDCTL_INET_ADDR_LEN];
+    char peer_ip[MCLAGDCTL_INET_ADDR_LEN];
+    char peer_link_if[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char peer_link_mac[MCLAGDCTL_ETHER_ADDR_LEN];
     int role;
-    unsigned char enabled_po[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
+    char enabled_po[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
 };
 
 struct mclagd_arp_msg 
 {
-    unsigned char op_type; 
-    unsigned char ifname[MCLAGDCTL_MAX_L_PORT_NANE];
-    unsigned char ipv4_addr[MCLAGDCTL_INET_ADDR_LEN];
+    char op_type; 
+    char ifname[MCLAGDCTL_MAX_L_PORT_NANE];
+    char ipv4_addr[MCLAGDCTL_INET_ADDR_LEN];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
 };
 
@@ -135,29 +135,29 @@ struct mclagd_mac_msg
 struct mclagd_local_if 
 {
     int ifindex;
-    unsigned char type[MCLAGDCTL_PARA1_LEN];
-    unsigned char name[MCLAGDCTL_MAX_L_PORT_NANE];
+    char type[MCLAGDCTL_PARA1_LEN];
+    char name[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
-    unsigned char  state[MCLAGDCTL_PARA1_LEN];
-    unsigned char ipv4_addr[MCLAGDCTL_INET_ADDR_LEN];
+    char  state[MCLAGDCTL_PARA1_LEN];
+    char ipv4_addr[MCLAGDCTL_INET_ADDR_LEN];
     unsigned char prefixlen;
     
     unsigned char l3_mode;
     unsigned char is_peer_link;
-    unsigned char portchannel_member_buf[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
+    char portchannel_member_buf[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
     int po_id; /* Port Channel ID */
     unsigned char po_active; 
-    unsigned char mlacp_state[MCLAGDCTL_PARA1_LEN]; 
+    char mlacp_state[MCLAGDCTL_PARA1_LEN]; 
     unsigned char isolate_to_peer_link; 
 
-    unsigned char vlanlist[MCLAGDCTL_PARA3_LEN];
+    char vlanlist[MCLAGDCTL_PARA3_LEN];
 };
 
 struct mclagd_peer_if
 {
     int ifindex;
     unsigned char type[MCLAGDCTL_PARA1_LEN];
-    unsigned char name[MCLAGDCTL_MAX_L_PORT_NANE];
+    char name[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
     unsigned char  state[MCLAGDCTL_PARA1_LEN];
     int po_id;

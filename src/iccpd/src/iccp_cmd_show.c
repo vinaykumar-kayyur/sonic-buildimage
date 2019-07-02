@@ -20,7 +20,7 @@
 *
 *  Maintainer: jianjun, grace Li from nephos
 */
-
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <net/if.h>
 #include <sys/queue.h>
@@ -30,8 +30,8 @@
 #include "../include/system.h"
 #include "../include/logger.h"
 #include "mclagdctl/mclagdctl.h"
-#include "../include/mlacp_link_handler.h"
 #include "../include/iccp_cmd_show.h"
+#include "../include/mlacp_link_handler.h"
 
 int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id) 
 {
@@ -43,7 +43,6 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
     char unknown[] = {"UNKNOWN"};
     int mclag_num= 0;
     int id_exist = 0;
-    char * str_buf =NULL;
     int str_size =0;
     int len = 0;
     char *state_buf = NULL;
@@ -96,7 +95,6 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
 
         state_info.role = csm->role_type;
 
-        str_buf = state_info.enabled_po;
         str_size = MCLAGDCTL_PORT_MEMBER_BUF_LEN;
 
         LIST_FOREACH(lif_po, &(MLACP(csm).lif_list), mlacp_next)
@@ -106,12 +104,11 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
                         break;
  
             if (lif_po->type == IF_T_PORT_CHANNEL)
-                len += snprintf(str_buf + len, str_size - len, "%s,", lif_po->name);       
+                len += snprintf(state_info.enabled_po + len, str_size - len, "%s,", lif_po->name);       
         }
 
         memcpy(state_buf + MCLAGD_REPLY_INFO_HDR + mclag_num*sizeof(struct mclagd_state), 
-            &state_info, sizeof(struct mclagd_state));  
-        
+            &state_info, sizeof(struct mclagd_state));
         mclag_num ++;
 
         if ((mclag_num + 1)*sizeof(struct mclagd_state) > (state_buf_size - MCLAGD_REPLY_INFO_HDR))
@@ -171,7 +168,7 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
             
             mclagd_arp.op_type = iccpd_arp->op_type;
             memcpy(mclagd_arp.ifname, iccpd_arp->ifname, strlen(iccpd_arp->ifname));
-            memcpy(mclagd_arp.ipv4_addr, show_ip_str(iccpd_arp->ipv4_addr), 16);
+            memcpy(mclagd_arp.ipv4_addr, show_ip_str(htonl(iccpd_arp->ipv4_addr)), 16);
             memcpy(mclagd_arp.mac_addr, iccpd_arp->mac_addr, 6);
            
             memcpy(arp_buf + MCLAGD_REPLY_INFO_HDR +arp_num*sizeof(struct mclagd_arp_msg), 

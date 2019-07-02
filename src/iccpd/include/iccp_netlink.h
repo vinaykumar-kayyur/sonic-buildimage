@@ -38,7 +38,8 @@ void iccp_event_handler_obj_input_dellink(struct nl_object *obj, void *arg);
 int iccp_system_init_netlink_socket();
 int iccp_init_netlink_event_fd(struct System *sys);
 int iccp_handle_events(struct System * sys);
-void iccp_netlink_sync_again();
+void update_if_ipmac_on_standby(struct LocalInterface* lif_po);
+int iccp_sys_local_if_list_get_addr();
 
 #endif
 

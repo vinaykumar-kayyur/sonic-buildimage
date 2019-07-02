@@ -24,14 +24,17 @@
 #define __MLACP_LINK_HANDLER__
 
 #include "../include/iccp_csm.h"
+#include "../include/mlacp_tlv.h"
 
 /*****************************************
  * Link Handler
  *
  * ***************************************/
 void mlacp_portchannel_state_handler(struct CSM* csm, struct LocalInterface* local_if, int po_state);
-void mlacp_peerlink_conn_handler(struct CSM* csm);
-void mlacp_peerlink_disconn_handler(struct CSM* csm);
+void mlacp_peer_conn_handler(struct CSM* csm);
+void mlacp_peer_disconn_handler(struct CSM* csm);
+void mlacp_peerlink_up_handler(struct CSM* csm);
+void mlacp_peerlink_down_handler(struct CSM* csm);
 void update_stp_peer_link(struct CSM *csm, struct PeerInterface *peer_if, int po_state, int new_create);
 void update_peerlink_isolate_from_pif(struct CSM *csm, struct PeerInterface *pif, int po_state, int new_create);
 void mlacp_mlag_link_add_handler(struct CSM *csm, struct LocalInterface *lif);
@@ -42,10 +45,16 @@ void update_peerlink_isolate_from_all_csm_lif (struct CSM* csm);
 
 int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac);
 int mlacp_fsm_arp_del(char *ifname, uint32_t ip);
+void del_mac_from_chip(struct MACMsg* mac_msg);
+void add_mac_to_chip(struct MACMsg* mac_msg, uint8_t mac_type);
+uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t set );
+void iccp_get_fdb_change_from_syncd( void);
 
 extern int mclagd_ctl_sock_create();
 extern int mclagd_ctl_sock_accept(int fd);
 extern int mclagd_ctl_interactive_process(int client_fd);
-int set_nonblocking(int fd);
 char *show_ip_str(uint32_t ipv4_addr);
+
+void syncd_info_close();
+int iccp_connect_syncd();
 #endif

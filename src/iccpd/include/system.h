@@ -37,7 +37,16 @@
 
 #include "../include/port.h"
 
+#define FRONT_PANEL_PORT_PREFIX "Ethernet"
+#define PORTCHANNEL_PREFIX      "PortChannel"
+#define VLAN_PREFIX             "Vlan"
+#define VXLAN_TUNNEL_PREFIX  "VTTNL"
+
 struct CSM;
+
+#ifndef MAX_BUFSIZE
+    #define MAX_BUFSIZE 4096
+#endif
 
 struct System {
     int server_fd;/* Peer-Link Socket*/

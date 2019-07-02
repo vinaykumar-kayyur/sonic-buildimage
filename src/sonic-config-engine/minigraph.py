@@ -228,6 +228,7 @@ def parse_dpg(dpg, hname):
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
+            is_mirror_v6 = False
 
             # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
             # maybe we should explicity ignore management and loopback interfaces?) because we
@@ -246,22 +247,28 @@ def parse_dpg(dpg, hname):
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
                     if port_alias_map[member] in intfs_inpc:
                         print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface"
-                elif member.lower() == 'erspan':
-                    is_mirror = True;
+                elif member.lower().startswith('erspan'):
+                    if member.lower().startswith('erspanv6'):
+                        is_mirror_v6 = True
+                    else:
+                        is_mirror = True;
                     # Erspan session will be attached to all front panel ports,
                     # if panel ports is a member port of LAG, should add the LAG 
                     # to acl table instead of the panel ports
-                    acl_intfs = pc_intfs
+                    acl_intfs = pc_intfs[:]
                     for panel_port in port_alias_map.values():
                         if panel_port not in intfs_inpc:
                             acl_intfs.append(panel_port)
                     break;
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
-                                 'ports': acl_intfs,
-                                 'type': 'MIRROR' if is_mirror else 'L3'}
-            elif is_mirror:
-                acls[aclname] = {'policy_desc': aclname, 'type': 'MIRROR'}
+                                 'ports': acl_intfs}
+                if is_mirror:
+                    acls[aclname]['type'] = 'MIRROR'
+                elif is_mirror_v6:
+                    acls[aclname]['type'] = 'MIRRORV6'
+                else:
+                    acls[aclname]['type'] = 'L3'
             else:
                 # This ACL has no interfaces to attach to -- consider this a control plane ACL
                 try:
@@ -336,7 +343,7 @@ def parse_cpg(cpg, hname):
                     peers = router.find(str(QName(ns1, "Peers")))
                     for bgpPeer in peers.findall(str(QName(ns, "BGPPeer"))):
                         addr = bgpPeer.find(str(QName(ns, "Address"))).text
-                        if bgpPeer.find(str(QName(ns1, "PeersRange"))) is not None:
+                        if bgpPeer.find(str(QName(ns1, "PeersRange"))) is not None: # FIXME: is better to check for type BGPPeerPassive
                             name = bgpPeer.find(str(QName(ns1, "Name"))).text
                             ip_range = bgpPeer.find(str(QName(ns1, "PeersRange"))).text
                             ip_range_group = ip_range.split(';') if ip_range and ip_range != "" else []
@@ -344,6 +351,10 @@ def parse_cpg(cpg, hname):
                                 'name': name,
                                 'ip_range': ip_range_group
                             }
+                            if bgpPeer.find(str(QName(ns1, "Address"))) is not None:
+                                bgp_peers_with_range[name]['src_address'] = bgpPeer.find(str(QName(ns1, "Address"))).text
+                            if bgpPeer.find(str(QName(ns1, "PeerAsn"))) is not None:
+                                bgp_peers_with_range[name]['peer_asn'] = bgpPeer.find(str(QName(ns1, "PeerAsn"))).text
                 else:
                     for peer in bgp_sessions:
                         bgp_session = bgp_sessions[peer]
@@ -391,8 +402,9 @@ def parse_deviceinfo(meta, hwsku):
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
-            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces")))
-            for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
+            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces"))).findall(str(QName(ns1, "EthernetInterface")))
+            interfaces = interfaces + device_info.find(str(QName(ns, "ManagementInterfaces"))).findall(str(QName(ns1, "ManagementInterface")))
+            for interface in interfaces:
                 alias = interface.find(str(QName(ns, "InterfaceName"))).text
                 speed = interface.find(str(QName(ns, "Speed"))).text
                 desc  = interface.find(str(QName(ns, "Description")))
@@ -421,7 +433,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
-    docker_routing_config_mode = "unified"
+    docker_routing_config_mode = "separated"
     port_speeds_default = {}
     port_speed_png = {}
     port_descriptions = {}
@@ -490,6 +502,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
             mgmt_intf_count += 1
             mgmt_alias_reverse_mapping[alias] = name
         results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up'}
+        if alias in port_speeds_default:
+            results['MGMT_PORT'][name]['speed'] = port_speeds_default[alias]
         results['MGMT_INTERFACE'][(name, key[1])] = mgmt_intf[key]
     results['LOOPBACK_INTERFACE'] = lo_intfs
 
@@ -501,12 +515,16 @@ def parse_xml(filename, platform=None, port_config_file=None):
     for intf in intfs:
         if intf[0][0:4] == 'Vlan':
             vlan_intfs[intf] = {}
+            vlan_intfs[intf[0]] = {}
         elif vlan_invert_mapping.has_key(intf[0]):
             vlan_intfs[(vlan_invert_mapping[intf[0]], intf[1])] = {}
+            vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
         elif intf[0][0:11] == 'PortChannel':
             pc_intfs[intf] = {}
+            pc_intfs[intf[0]] = {}
         else:
             phyport_intfs[intf] = {}
+            phyport_intfs[intf[0]] = {}
 
     results['INTERFACE'] = phyport_intfs
     results['VLAN_INTERFACE'] = vlan_intfs
@@ -530,6 +548,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         if port.get('speed') == '100000':
             port['fec'] = 'rs'
 
+    # set port description if parsed from deviceinfo
     for port_name in port_descriptions:
         # ignore port not in port_config.ini
         if not ports.has_key(port_name):
@@ -537,9 +556,22 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
+    for port_name, port in ports.items():
+        if not port.get('description'):
+            if neighbors.has_key(port_name):
+                # for the ports w/o description set it to neighbor name:port
+                port['description'] = "%s:%s" % (neighbors[port_name]['name'], neighbors[port_name]['port'])
+            else:
+                # for the ports w/o neighbor info, set it to port alias
+                port['description'] = port.get('alias', port_name)
+
     # set default port MTU as 9100
     for port in ports.itervalues():
         port['mtu'] = '9100'
+
+    # asymmetric PFC is disabled by default
+    for port in ports.itervalues():
+        port['pfc_asym'] = 'off'
 
     # set physical port default admin status up
     for port in phyport_intfs:
@@ -573,9 +605,10 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     for pc_intf in pc_intfs.keys():
         # remove portchannels not in PORTCHANNEL dictionary
-        if pc_intf[0] not in pcs:
+        if isinstance(pc_intf, tuple) and pc_intf[0] not in pcs:
             print >> sys.stderr, "Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0])
             del pc_intfs[pc_intf]
+            pc_intfs.pop(pc_intf[0], None)
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 

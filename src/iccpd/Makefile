@@ -20,6 +20,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	fi
 	cp iccpd $(DEB_PATH)/usr/bin/iccpd
 	cp src/mclagdctl/mclagdctl $(DEB_PATH)/usr/bin/mclagdctl
+	chmod +x $(DEB_PATH)/usr/bin/iccpd
+	chmod +x $(DEB_PATH)/usr/bin/mclagdctl
 	md5sum $(DEB_PATH)/usr/bin/iccpd > $(DEB_PATH)/DEBIAN/md5sums
 	md5sum $(DEB_PATH)/usr/bin/mclagdctl >> $(DEB_PATH)/DEBIAN/md5sums
 	dpkg-deb -b $(DEB_PATH) $(DEST)/$(MAIN_TARGET)

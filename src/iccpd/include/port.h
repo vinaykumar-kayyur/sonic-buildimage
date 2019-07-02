@@ -47,7 +47,8 @@
 #define IF_T_PORT           0
 #define IF_T_PORT_CHANNEL   1
 #define IF_T_VLAN         2
-
+#define IF_T_VXLAN       3
+#define IF_T_BRIDGE      4
 typedef struct {
     char *ifname;
     int type;
@@ -137,7 +138,8 @@ struct PeerInterface* peer_if_create(struct CSM* csm, int peer_if_number, int ty
 struct PeerInterface* peer_if_find_by_name(struct CSM* csm, char* name);
 
 void peer_if_destroy(struct PeerInterface* pif);
-
+int peer_if_add_vlan(struct PeerInterface* peer_if, uint16_t vlan_id);
+int peer_if_clean_unused_vlan(struct PeerInterface* peer_if);
 /* VLAN manipulation */
 int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid);
 void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid);

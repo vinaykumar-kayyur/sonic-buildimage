@@ -111,7 +111,6 @@ struct CSM {
     TAILQ_HEAD(msg_list, Msg) msg_list;
     
     /* System ID */
-    time_t           sysid_update_time;
     time_t           isolate_update_time;
     
     /* STP role */

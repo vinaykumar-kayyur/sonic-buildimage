@@ -23,6 +23,8 @@
 
 #include <stdio.h>
 #include <sys/file.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "../include/cmd_option.h"
 #include "../include/logger.h"
@@ -115,7 +117,6 @@ static inline int iccpd_make_rundir(void)
 
 int main(int argc, char* argv[]) 
 {
-    char *p;
     int pid_file_fd = 0;
     struct System* sys = NULL;
     int err;

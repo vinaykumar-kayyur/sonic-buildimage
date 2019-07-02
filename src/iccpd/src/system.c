@@ -26,6 +26,7 @@
 #include "../include/iccp_csm.h"
 #include "../include/logger.h"
 #include "../include/iccp_netlink.h"
+#include "../include/scheduler.h"
 
 /* Singleton */
 struct System* system_get_instance() 
@@ -56,6 +57,7 @@ void system_init(struct System* sys)
     sys->sync_ctrl_fd = -1;
     sys->arp_receive_fd = -1;
     sys->epoll_fd = -1;
+    sys->family = -1;
     LIST_INIT(&(sys->csm_list));
     LIST_INIT(&(sys->lif_list));
     LIST_INIT(&(sys->lif_purge_list));

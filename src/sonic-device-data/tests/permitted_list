@@ -19,6 +19,7 @@ dport_map_enable
 dport_map_indexed
 dport_map_port
 dpp_clock_ratio
+dpr_clock_frequency
 ext_sram_freq
 ext_tcam_freq
 force_core_pll
@@ -140,3 +141,7 @@ xgxs_lcpll_xtal_refclk
 xgxs_pdetect
 xgxs_rx_lane_map
 xgxs_tx_lane_map
+ifp_inports_support_enable
+port_flex_enable
+pdma_descriptor_prefetch_enable
+pktdma_poll_mode_channel_bitmap 

@@ -24,9 +24,11 @@
 #include <stdint.h>
 
 #include "../include/system.h"
+#include "../include/scheduler.h"
 #include "../include/logger.h"
+#include "../include/iccp_csm.h"
 #include "../include/mlacp_link_handler.h"
-
+#include "../include/iccp_netlink.h"
 /*
 * 'id <1-65535>' command
 */
@@ -69,9 +71,9 @@ int set_peer_link(int mid, const char* ifname)
 
     len = strlen(ifname);
 
-    if (strncmp(ifname, "Eth", 3) != 0 && strncmp(ifname, "Por", 3) != 0)
+    if (strncmp(ifname, FRONT_PANEL_PORT_PREFIX, strlen(FRONT_PANEL_PORT_PREFIX)) != 0 && strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0 && strncmp(ifname, VXLAN_TUNNEL_PREFIX, strlen(VXLAN_TUNNEL_PREFIX)) != 0)
     {
-        ICCPD_LOG_ERR(__FUNCTION__, "Peer-link is %s, must be Ethernet or PortChannel", ifname);
+        ICCPD_LOG_ERR(__FUNCTION__, "Peer-link is %s, must be Ethernet or PortChannel or VTTNL(Vxlan tunnel)", ifname);
         return -1;
     }
     
@@ -265,9 +267,6 @@ int unset_peer_address(int mid)
 int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname)
 {
     struct CSM* csm = NULL;
-    int i = 0;
-    int id = 0;
-    int len = 0;
     struct LocalInterface *lif = NULL;
     struct If_info * cif = NULL;
     

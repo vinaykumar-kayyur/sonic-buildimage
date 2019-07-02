@@ -107,7 +107,7 @@ int iccp_config_from_command(char * line)
         cp += 10;
         set_peer_link(mid,cp);
     }
-    else if(strncmp(cp,"bind_lacp:",10) == 0)
+    else if(strncmp(cp,"mclag_interface:",16) == 0)
     {
         cp += 10;
        

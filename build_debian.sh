@@ -29,8 +29,8 @@
 set -x -e
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:18.09.0~3-0~debian-stretch
-LINUX_KERNEL_VERSION=4.9.0-8-2
+DOCKER_VERSION=5:18.09.2~3-0~debian-stretch
+LINUX_KERNEL_VERSION=4.9.0-9-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -114,13 +114,14 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox
 echo '[INFO] Install SONiC linux kernel image'
 ## Note: duplicate apt-get command to ensure every line return zero
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools-core_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/linux-image-${LINUX_KERNEL_VERSION}-amd64_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-amd64_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode
 
 ## Update initramfs for booting with squashfs+overlay
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
@@ -129,6 +130,8 @@ cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-t
 sudo mkdir -p $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/
 sudo cp files/initramfs-tools/arista-convertfs $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
+sudo cp files/initramfs-tools/arista-hook $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-hook
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-hook
 sudo cp files/initramfs-tools/mke2fs $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 sudo cp files/initramfs-tools/setfacl $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/setfacl
@@ -150,14 +153,14 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mou
 sudo cp files/initramfs-tools/varlog $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 # Management interface (eth0) dhcp can be optionally turned off (during a migration from another NOS to SONiC)
-sudo cp files/initramfs-tools/mgmt-intf-dhcp $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
-sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
+#sudo cp files/initramfs-tools/mgmt-intf-dhcp $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
+#sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
 sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 pushd $FILESYSTEM_ROOT/usr/share/initramfs-tools/scripts/init-bottom && sudo patch -p1 < $OLDPWD/files/initramfs-tools/udev.patch; popd
 
 ## Install latest intel ixgbe driver
-sudo cp target/files/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
+sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -169,7 +172,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
                                                        curl \
                                                        gnupg2 \
                                                        software-properties-common
-sudo LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.gpg -fsSL https://download.docker.com/linux/debian/gpg
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.gpg -fsSL https://download.docker.com/linux/debian/gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
@@ -227,6 +230,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     usbutils                \
     pciutils                \
     iptables-persistent     \
+    ebtables                \
     logrotate               \
     curl                    \
     kexec-tools             \
@@ -244,6 +248,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     tcptraceroute           \
     mtr-tiny                \
     locales                 \
+    flashrom                \
     cgroup-tools
 
 #Adds a locale to a debian system in non-interactive mode
@@ -264,6 +269,10 @@ sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
+
+## Modifty ntp default configuration: disable initial jump (add -x), and disable
+## jump when time difference is greater than 1000 seconds (remove -g).
+sudo sed -i "s/NTPD_OPTS='-g'/NTPD_OPTS='-x'/" $FILESYSTEM_ROOT/etc/default/ntp
 
 ## Fix ping tools permission so non root user can directly use them
 ## Note: this is a workaround since aufs doesn't support extended attributes
@@ -298,7 +307,7 @@ check filesystem root-overlay with path /
 check filesystem var-log with path /var/log
   if space usage > 90% for 5 times within 10 cycles then alert
 check system $HOST
-  if memory usage > 90% for 5 times within 10 cycles then alert
+  if memory usage > 50% for 5 times within 10 cycles then alert
   if cpu usage (user) > 90% for 5 times within 10 cycles then alert
   if cpu usage (system) > 90% for 5 times within 10 cycles then alert
 EOF
@@ -310,6 +319,7 @@ set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %
 
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
+set /files/etc/sysctl.conf/vm.panic_on_oom 2
 set /files/etc/sysctl.conf/fs.suid_dumpable 2
 
 set /files/etc/sysctl.conf/net.ipv4.conf.default.forwarding 1
@@ -399,10 +409,14 @@ fi
 ## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...
 if [ "${enable_organization_extensions}" = "y" ]; then
    if [ -f files/build_templates/organization_extensions.sh ]; then
-      sudo chmod 755 files/build_templates/organization_extensions.sh 
+      sudo chmod 755 files/build_templates/organization_extensions.sh
       ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
    fi
 fi
+
+## Setup ebtable rules (rule file is in binary format)
+sudo sed -i 's/EBTABLES_LOAD_ON_START="no"/EBTABLES_LOAD_ON_START="yes"/g' ${FILESYSTEM_ROOT}/etc/default/ebtables
+sudo cp files/image_config/ebtables/ebtables.filter ${FILESYSTEM_ROOT}/etc
 
 ## Remove gcc and python dev pkgs
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev

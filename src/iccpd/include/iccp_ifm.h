@@ -34,9 +34,8 @@ void do_arp_update (unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ET
 
 int do_one_neigh_request (struct nlmsghdr *n);
 
-void iccp_from_netlink_portchannel_state_handler( char * ifname, int state);
+void iccp_from_netlink_port_state_handler( char * ifname, int state);
 
-void iccp_get_if_vlan_info_from_netlink();
-
+ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n);
 #endif // LACP_IFM_H
 

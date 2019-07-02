@@ -28,7 +28,8 @@
 #include "../include/logger.h"
 #include "../include/scheduler.h"
 #include "../include/system.h"
-
+#include "../include/iccp_netlink.h"
+#include "../include/mlacp_link_handler.h"
 /*****************************************
 * Define
 *
@@ -104,7 +105,7 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     NAKTLV* naktlv = NULL;
     int tlv = -1;
     int i = 0;
-    
+
     if (csm == NULL ) 
     {
         if (msg != NULL )
@@ -116,7 +117,9 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     
     icc_hdr = (ICCHdr*) msg->buf;
     param = (ICCParameter*) &msg->buf[sizeof(struct ICCHdr)];
-    if (icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA)
+    *(uint16_t *)param = ntohs(*(uint16_t *)param);
+
+    if ( icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA)
     {
         if(param->type > TLV_T_MLACP_CONNECT && param->type < TLV_T_MLACP_LIST_END)
             mlacp_enqueue_msg(csm, msg);
@@ -128,7 +131,7 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
         naktlv = (NAKTLV*) &msg->buf[sizeof(ICCHdr)];
         for(i=0; i<MAX_MSG_LOG_SIZE; ++i)
         {
-            if(naktlv->rejected_msg_id == csm->msg_log.msg[i].msg_id)
+            if(ntohl(naktlv->rejected_msg_id) == csm->msg_log.msg[i].msg_id)
             {
                 tlv = csm->msg_log.msg[i].tlv;
                 break;
@@ -171,17 +174,17 @@ int app_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
     ICCPD_LOG_DEBUG(__FUNCTION__, " Response NAK");
     memset(buf, 0, max_buf_size);
     icc_hdr->ldp_hdr.u_bit = 0x0;
-    icc_hdr->ldp_hdr.msg_type = MSG_T_NOTIFICATION;
-    icc_hdr->ldp_hdr.msg_len = msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
-    icc_hdr->ldp_hdr.msg_id = ICCP_MSG_ID++;
+    icc_hdr->ldp_hdr.msg_type = htons(MSG_T_NOTIFICATION);
+    icc_hdr->ldp_hdr.msg_len = htons(msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
+    icc_hdr->ldp_hdr.msg_id = htonl(ICCP_MSG_ID++);
     iccp_csm_fill_icc_rg_id_tlv(csm, icc_hdr);
     naktlv->icc_parameter.u_bit = 0;
     naktlv->icc_parameter.f_bit = 0;
-    naktlv->icc_parameter.type = TLV_T_NAK;
-    naktlv->icc_parameter.len = sizeof(NAKTLV) - 4;
+    naktlv->icc_parameter.type = htons(TLV_T_NAK);
+    naktlv->icc_parameter.len = htons(sizeof(NAKTLV) - 4);
 
-    naktlv->iccp_status_code = STATUS_CODE_ICCP_REJECTED_MSG;
-    naktlv->rejected_msg_id = csm->app_csm.invalid_msg_id;
+    naktlv->iccp_status_code = htonl(STATUS_CODE_ICCP_REJECTED_MSG);
+    naktlv->rejected_msg_id = htonl(csm->app_csm.invalid_msg_id);
     
     return msg_len;
 }
@@ -233,7 +236,11 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     LIST_FOREACH(lif_po, &(MLACP(csm).lif_list), mlacp_next)
     {
         if (lif_po->type == IF_T_PORT_CHANNEL && lif_po->po_id == lif->po_id)
+        {
+            /*if join a po member, may swss restart, reset portchannel ip mac  to mclagsyncd*/
+            update_if_ipmac_on_standby(lif_po); 
             return 0;
+        }
     }
     
     if (lif_po == NULL) 

@@ -26,9 +26,10 @@
    
 #include "../include/logger.h"
 #include "../include/system.h"
+#include "../include/scheduler.h"
 #include "../include/msg_format.h"
+#include "../include/iccp_csm.h"
 #include "../include/mlacp_link_handler.h"
-
 /*****************************************
 * Define
 *
@@ -136,7 +137,7 @@ void iccp_csm_status_reset(struct CSM* csm, int all)
     csm->connTimePrev = 0;
     csm->heartbeat_send_time = 0;
     csm->heartbeat_update_time = 0;
-    csm->sysid_update_time = 0;
+    /*csm->sysid_update_time = 0;*/
     csm->isolate_update_time = 0;
     csm->role_type = STP_ROLE_NONE;
     csm->sock_read_event_ptr = NULL;
@@ -210,15 +211,15 @@ int iccp_csm_send(struct CSM* csm, char* buf, int msg_len)
     if (csm == NULL || buf == NULL || csm->sock_fd <= 0 || msg_len <= 0)
         return -1;
     
-    if(ldp_hdr->msg_type == MSG_T_CAPABILITY)
+    if(ntohs(ldp_hdr->msg_type) == MSG_T_CAPABILITY)
         param = (struct ICCParameter*)&buf[sizeof(LDPHdr)];
     else
         param = (struct ICCParameter*)&buf[sizeof(ICCHdr)];
     
     /*ICCPD_LOG_DEBUG(__FUNCTION__, "Send(%d): len=[%d] msg_type=[%s (0x%X, 0x%X)]", csm->sock_fd, msg_len, get_tlv_type_string(param->type), ldp_hdr->msg_type, param->type);*/
-    csm->msg_log.msg[csm->msg_log.end_index].msg_id = ldp_hdr->msg_id;
-    csm->msg_log.msg[csm->msg_log.end_index].type = ldp_hdr->msg_type;
-    csm->msg_log.msg[csm->msg_log.end_index].tlv = param->type;
+    csm->msg_log.msg[csm->msg_log.end_index].msg_id = ntohl(ldp_hdr->msg_id);
+    csm->msg_log.msg[csm->msg_log.end_index].type = ntohs(ldp_hdr->msg_type);
+    csm->msg_log.msg[csm->msg_log.end_index].tlv = ntohs(param->type);
     ++csm->msg_log.end_index;
     if(csm->msg_log.end_index >= 128)
         csm->msg_log.end_index = 0;
@@ -391,21 +392,26 @@ int iccp_csm_prepare_capability_msg(struct CSM* csm, char* buf, size_t max_buf_s
     LDPHdr* ldp_hdr = (LDPHdr*) buf;
     LDPICCPCapabilityTLV* cap = (LDPICCPCapabilityTLV*) &buf[sizeof(LDPHdr)];
     size_t msg_len = sizeof(LDPHdr) + sizeof(LDPICCPCapabilityTLV);
-    
+
     memset(buf, 0, max_buf_size);
     
     /* LDP header */
     ldp_hdr->u_bit = 0x0;
-    ldp_hdr->msg_type = MSG_T_CAPABILITY;
-    ldp_hdr->msg_len = msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
-    ldp_hdr->msg_id = ICCP_MSG_ID++;
+    ldp_hdr->msg_type = htons(MSG_T_CAPABILITY);
+    ldp_hdr->msg_len = htons(msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
+    ldp_hdr->msg_id = htonl(ICCP_MSG_ID++);
     
     /* LDP ICCP capability TLV */
     cap->icc_parameter.u_bit = 0x1;
     cap->icc_parameter.f_bit = 0x0;
     cap->icc_parameter.type = TLV_T_ICCP_CAPABILITY;
-    cap->icc_parameter.len = TLV_L_ICCP_CAPABILITY;
-    cap->s_bit = csm->iccp_info.sender_capability_flag;
+    *(uint16_t *)cap = htons(*(uint16_t *)cap);         
+
+    cap->icc_parameter.len = htons(TLV_L_ICCP_CAPABILITY);
+
+    cap->s_bit = csm->iccp_info.sender_capability_flag;      
+    *(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)) = htons(*(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)));
+
     cap->major_ver = 0x1;
     cap->minior_ver = 0x0;
     
@@ -417,9 +423,9 @@ void iccp_csm_fill_icc_rg_id_tlv(struct CSM* csm, ICCHdr* icc_hdr)
     if (!csm || !icc_hdr)
         return;
         
-    icc_hdr->icc_rg_id_tlv.type = TLV_T_ICC_RG_ID;
-    icc_hdr->icc_rg_id_tlv.len = TLV_L_ICC_RG_ID;
-    icc_hdr->icc_rg_id_tlv.icc_rg_id = csm->iccp_info.icc_rg_id;
+    icc_hdr->icc_rg_id_tlv.type = htons(TLV_T_ICC_RG_ID);
+    icc_hdr->icc_rg_id_tlv.len = htons(TLV_L_ICC_RG_ID);
+    icc_hdr->icc_rg_id_tlv.icc_rg_id = htonl(csm->iccp_info.icc_rg_id);
 }
 
 /* ICCP NAK message handle function */
@@ -433,22 +439,22 @@ int iccp_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
     
     /* ICC header */
     icc_hdr->ldp_hdr.u_bit = 0x0;
-    icc_hdr->ldp_hdr.msg_type = MSG_T_NOTIFICATION;
-    icc_hdr->ldp_hdr.msg_len = msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
-    icc_hdr->ldp_hdr.msg_id = ICCP_MSG_ID++;
+    icc_hdr->ldp_hdr.msg_type = htons(MSG_T_NOTIFICATION);      
+    icc_hdr->ldp_hdr.msg_len = htons(msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
+    icc_hdr->ldp_hdr.msg_id = htonl(ICCP_MSG_ID++);
     iccp_csm_fill_icc_rg_id_tlv(csm, icc_hdr);
     
     /* NAL TLV */
     nak->icc_parameter.u_bit = 0x0;
     nak->icc_parameter.f_bit = 0x0;
-    nak->icc_parameter.type = TLV_T_NAK;
-    nak->icc_parameter.len = sizeof(((struct NAKTLV*) 0)->iccp_status_code) + sizeof(((struct NAKTLV*) 0)->rejected_msg_id);
+    nak->icc_parameter.type = htons(TLV_T_NAK);    
+    nak->icc_parameter.len = htons(sizeof(((struct NAKTLV*) 0)->iccp_status_code) + sizeof(((struct NAKTLV*) 0)->rejected_msg_id)); 
     
     switch (csm->iccp_info.status_code) 
     {
         case STATUS_CODE_U_ICCP_RG:
-            nak->iccp_status_code = csm->iccp_info.status_code;
-            nak->rejected_msg_id = csm->iccp_info.rejected_msg_id;
+            nak->iccp_status_code = htonl(csm->iccp_info.status_code);
+            nak->rejected_msg_id = htonl(csm->iccp_info.rejected_msg_id);
             break;
         /* Unsupported */
         case STATUS_CODE_ICCP_CONNECTION_COUNT_EXCEEDED:
@@ -477,16 +483,16 @@ int iccp_csm_prepare_rg_connect_msg(struct CSM* csm, char* buf, size_t max_buf_s
     
     /* ICC header */
     icc_hdr->ldp_hdr.u_bit = 0x0;
-    icc_hdr->ldp_hdr.msg_type = MSG_T_RG_CONNECT;
-    icc_hdr->ldp_hdr.msg_len = msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
-    icc_hdr->ldp_hdr.msg_id = ICCP_MSG_ID++;
+    icc_hdr->ldp_hdr.msg_type = htons(MSG_T_RG_CONNECT);
+    icc_hdr->ldp_hdr.msg_len = htons(msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
+    icc_hdr->ldp_hdr.msg_id = htonl(ICCP_MSG_ID++);
     iccp_csm_fill_icc_rg_id_tlv(csm, icc_hdr);
     
     /* ICC sender name TLV */
     sender->icc_parameter.u_bit = 0x0;
     sender->icc_parameter.f_bit = 0x0;
-    sender->icc_parameter.type = TLV_T_ICC_SENDER_NAME;
-    sender->icc_parameter.len = name_len;
+    sender->icc_parameter.type = htons(TLV_T_ICC_SENDER_NAME);    
+    sender->icc_parameter.len = htons(name_len);
     memcpy(sender->sender_name, csm->iccp_info.sender_name, name_len);
     
     return msg_len;
@@ -503,17 +509,17 @@ int iccp_csm_prepare_rg_disconnect_msg(struct CSM* csm, char* buf, size_t max_bu
     
     /* ICC header */
     icc_hdr->ldp_hdr.u_bit = 0x0;
-    icc_hdr->ldp_hdr.msg_type = MSG_T_RG_DISCONNECT;
-    icc_hdr->ldp_hdr.msg_len = msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
-    icc_hdr->ldp_hdr.msg_id = ICCP_MSG_ID++;
+    icc_hdr->ldp_hdr.msg_type = htons(MSG_T_RG_DISCONNECT);         
+    icc_hdr->ldp_hdr.msg_len = htons(msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
+    icc_hdr->ldp_hdr.msg_id = htonl(ICCP_MSG_ID++);
     iccp_csm_fill_icc_rg_id_tlv(csm, icc_hdr);
     
     /* Disconnect code TLV */
     disconn_code->icc_parameter.u_bit = 0x0;
     disconn_code->icc_parameter.f_bit = 0x0;
-    disconn_code->icc_parameter.type = TLV_T_DISCONNECT_CODE;
-    disconn_code->icc_parameter.len = sizeof(((struct DisconnectCodeTLV*) 0)->iccp_status_code);
-    disconn_code->iccp_status_code = csm->iccp_info.status_code;
+    disconn_code->icc_parameter.type = htons(TLV_T_DISCONNECT_CODE);     
+    disconn_code->icc_parameter.len = htons(sizeof(((struct DisconnectCodeTLV*) 0)->iccp_status_code));
+    disconn_code->iccp_status_code = htonl(csm->iccp_info.status_code);
     
     return msg_len;
 }
@@ -533,17 +539,17 @@ static void iccp_csm_check_id_from_msg(struct CSM* csm, struct Msg* msg)
         return;
     
     /* Check if received message ID same as local configuration */
-    if (icc_hdr->icc_rg_id_tlv.icc_rg_id == csm->iccp_info.icc_rg_id) 
+    if (ntohl(icc_hdr->icc_rg_id_tlv.icc_rg_id) == csm->iccp_info.icc_rg_id) 
     {
         if (csm->iccp_info.status_code == STATUS_CODE_U_ICCP_RG) 
         {
             csm->iccp_info.status_code = 0x0;
             csm->iccp_info.rejected_msg_id = 0x0;
         }
-    } else if (icc_hdr->icc_rg_id_tlv.icc_rg_id != csm->iccp_info.icc_rg_id) 
+    } else if (ntohl(icc_hdr->icc_rg_id_tlv.icc_rg_id) != csm->iccp_info.icc_rg_id) 
     {
         csm->iccp_info.status_code = STATUS_CODE_U_ICCP_RG;
-        csm->iccp_info.rejected_msg_id = icc_hdr->icc_rg_id_tlv.icc_rg_id;
+        csm->iccp_info.rejected_msg_id = ntohl(icc_hdr->icc_rg_id_tlv.icc_rg_id);
     }
 }
 
@@ -567,7 +573,7 @@ void iccp_csm_correspond_from_msg(struct CSM* csm, struct Msg* msg)
         iccp_csm_correspond_from_rg_disconnect_msg(csm, msg);
     else if (icc_hdr->ldp_hdr.msg_type == MSG_T_NOTIFICATION) 
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Received MSG_T_NOTIFICATION ,err status %s reason of %s",  get_status_string(nak->iccp_status_code), get_status_string(csm->iccp_info.status_code));
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Received MSG_T_NOTIFICATION ,err status %s reason of %s",  get_status_string(ntohl(nak->iccp_status_code)), get_status_string(csm->iccp_info.status_code));
         sleep(1);		
     } 
     else if (icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA) 
@@ -587,11 +593,14 @@ void iccp_csm_correspond_from_msg(struct CSM* csm, struct Msg* msg)
 void iccp_csm_correspond_from_capability_msg(struct CSM* csm, struct Msg* msg) 
 {
     LDPICCPCapabilityTLV* cap = (LDPICCPCapabilityTLV*) &(msg->buf)[sizeof(LDPHdr)];
-    
+
+    *(uint16_t *)cap = ntohs(*(uint16_t *)cap);         
+    *(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)) = ntohs(*(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)));
+
     if (cap->icc_parameter.u_bit == 0x1
             && cap->icc_parameter.f_bit == 0x0
             && cap->icc_parameter.type == TLV_T_ICCP_CAPABILITY
-            && cap->icc_parameter.len == (TLV_L_ICCP_CAPABILITY)
+            && ntohs(cap->icc_parameter.len) == (TLV_L_ICCP_CAPABILITY)
             && cap->s_bit == 1
             && cap->major_ver == 0x1
             && cap->minior_ver == 0x0)
@@ -604,6 +613,8 @@ void iccp_csm_correspond_from_capability_msg(struct CSM* csm, struct Msg* msg)
 void iccp_csm_correspond_from_rg_connect_msg(struct CSM* csm, struct Msg* msg) 
 {
     ICCSenderNameTLV* sender = (ICCSenderNameTLV*) &(msg->buf)[sizeof(ICCHdr)];
+
+    *(uint16_t *)sender = ntohs(*(uint16_t *)sender);  
     
     if (sender->icc_parameter.u_bit == 0x0 &&
             sender->icc_parameter.f_bit == 0x0 &&
@@ -617,12 +628,14 @@ void iccp_csm_correspond_from_rg_connect_msg(struct CSM* csm, struct Msg* msg)
 void iccp_csm_correspond_from_rg_disconnect_msg(struct CSM* csm, struct Msg* msg) 
 {
     DisconnectCodeTLV* diconn_code = (DisconnectCodeTLV*) &(msg->buf)[sizeof(ICCHdr)];
+
+    *(uint16_t *)diconn_code = ntohs(*(uint16_t *)diconn_code); 
     
     if (diconn_code->icc_parameter.u_bit == 0x0
             && diconn_code->icc_parameter.f_bit == 0x0
             && diconn_code->icc_parameter.type == TLV_T_DISCONNECT_CODE
-            && diconn_code->icc_parameter.len == (TLV_L_DISCONNECT_CODE)
-            && diconn_code->iccp_status_code == (STATUS_CODE_ICCP_RG_REMOVED))
+            && ntohs(diconn_code->icc_parameter.len) == (TLV_L_DISCONNECT_CODE)
+            && ntohl(diconn_code->iccp_status_code) == (STATUS_CODE_ICCP_RG_REMOVED))
     {
         csm->iccp_info.sender_rg_connect_flag = 0x0;
         csm->iccp_info.peer_rg_connect_flag = 0x0;
@@ -647,6 +660,9 @@ void iccp_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
         return;
         
     icc_hdr = (ICCHdr*) msg->buf;
+
+    *(uint16_t *)icc_hdr = ntohs(*(uint16_t *)icc_hdr); 
+
     if (icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA) 
     {
         app_csm_enqueue_msg(csm, msg);
@@ -657,7 +673,7 @@ void iccp_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
         
         for(i=0; i<MAX_MSG_LOG_SIZE; ++i)
         {
-            if(naktlv->rejected_msg_id == csm->msg_log.msg[i].msg_id) 
+            if(ntohl(naktlv->rejected_msg_id) == csm->msg_log.msg[i].msg_id) 
             {
                 type = csm->msg_log.msg[i].type;
                 break;

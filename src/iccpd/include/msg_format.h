@@ -207,8 +207,13 @@ static char* get_status_string(int status)
  * [Page 44]
  */
 struct LDPHdr {
+#if __BYTE_ORDER == __BIG_ENDIAN
 	uint16_t u_bit :1;
 	uint16_t msg_type :15;
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+	uint16_t msg_type :15;
+	uint16_t u_bit :1;
+#endif
 	uint16_t msg_len;
 	uint32_t msg_id;
 }__attribute__ ((packed));
@@ -241,9 +246,15 @@ typedef struct ICCHdr ICCHdr;
  * [Page 26]
  */
 struct ICCParameter {
+#if __BYTE_ORDER == __BIG_ENDIAN
 	uint16_t u_bit :1;
 	uint16_t f_bit :1;
 	uint16_t type :14;
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+	uint16_t type :14;
+	uint16_t f_bit :1;
+	uint16_t u_bit :1;    
+#endif
 	uint16_t len;
 }__attribute__ ((packed));
 
@@ -306,8 +317,13 @@ typedef struct RequestedProtocolVerTLV RequestedProtocolVerTLV;
  */
 struct LDPICCPCapabilityTLV {
 	ICCParameter icc_parameter;
+#if __BYTE_ORDER == __BIG_ENDIAN
 	uint16_t s_bit :1;
 	uint16_t reserved :15;
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+	uint16_t reserved :15;
+	uint16_t s_bit :1;
+#endif
 	uint8_t major_ver;
 	uint8_t minior_ver;
 }__attribute__ ((packed));
@@ -322,8 +338,13 @@ typedef struct LDPICCPCapabilityTLV LDPICCPCapabilityTLV;
 struct AppConnectTLV {
     ICCParameter icc_parameter;
     uint16_t protocol_version;
-    uint16_t a_bit :1;
-    uint16_t reserved :15;
+#if __BYTE_ORDER == __BIG_ENDIAN
+ 	uint16_t a_bit :1;
+	uint16_t reserved :15;   
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+	uint16_t reserved :15;
+	uint16_t a_bit :1;
+#endif
 
     /* Optional Sub-TLVs */
     /* No optional sub-TLVs in this version */
@@ -404,9 +425,9 @@ typedef struct mclag_sub_option_hdr_t_ {
 
 struct mclag_fdb_info
 {
-    unsigned char mac[32];
+    char mac[32];
     unsigned int vid;
-    unsigned char port_name[32];
+    char port_name[32];
     short type;/*dynamic or static*/
     short op_type;/*add or del*/
 }; 

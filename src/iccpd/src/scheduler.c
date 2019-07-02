@@ -37,7 +37,10 @@
 #include "../include/system.h"
 #include "../include/scheduler.h"
 #include "../include/iccp_csm.h"
-
+#include "../include/iccp_ifm.h"
+#include "../include/iccp_cmd.h"
+#include "../include/mlacp_link_handler.h"
+#include "../include/iccp_netlink.h"
 
 /******************************************************
  *
@@ -152,7 +155,7 @@ int scheduler_csm_read_callback(struct CSM* csm)
         /*usleep(100);*/
     }
     
-    data_len = ldp_hdr->msg_len - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
+    data_len = ntohs(ldp_hdr->msg_len) - MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS;
     pos = 0;
     while(data_len > 0)
     {
@@ -171,7 +174,7 @@ int scheduler_csm_read_callback(struct CSM* csm)
         /*usleep(100);*/
     }
     
-    retval = iccp_csm_init_msg(&msg, peer_msg, ldp_hdr->msg_len + MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
+    retval = iccp_csm_init_msg(&msg, peer_msg, ntohs(ldp_hdr->msg_len) + MSG_L_INCLUD_U_BIT_MSG_T_L_FIELDS);
     if (retval == 0) 
     {
         iccp_csm_enqueue_msg(csm, msg);
@@ -277,11 +280,7 @@ void scheduler_init()
 	
     /*Get kernel interface and port */
     iccp_sys_local_if_list_get_init();
-
-    /*Get kernel vlan info */
-    iccp_get_if_vlan_info_from_netlink();  
     iccp_sys_local_if_list_get_addr();
-
     /*Interfaces must be created before this func called*/
     iccp_config_from_file(sys->config_file_path);
 
@@ -312,7 +311,6 @@ void scheduler_init()
 void scheduler_loop()
 {
     struct System* sys = NULL;	
-    int result;
 
     if ((sys = system_get_instance()) == NULL)
         return;
@@ -328,11 +326,48 @@ void scheduler_loop()
         iccp_handle_events(sys);
         /*csm, app state machine transit */
         scheduler_transit_fsm();		
-        /*get netlink info again when error happens */
-        iccp_netlink_sync_again();
     }
 
     return;
+}
+
+/*****************************************
+* Sync portchannel  MAC with kernel
+*
+* ***************************************/
+int mlacp_sync_with_kernel_callback()
+{
+    struct System* sys = NULL;
+    struct CSM* csm = NULL;
+    struct LocalInterface* local_if = NULL;
+
+    if((sys = system_get_instance()) == NULL)
+    {
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to obtain System instance.");
+        goto out;
+    }
+
+    /* traverse all CSM */
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        /* Sync MLAG po state with kernel*/
+        LIST_FOREACH(local_if, &(MLACP(csm).lif_list), mlacp_next)
+        {
+            if(local_if->type == IF_T_PORT_CHANNEL) 
+            {
+                /* sync system info from one port-channel device*/
+                if(memcmp(MLACP(csm).system_id, local_if->mac_addr, ETHER_ADDR_LEN) != 0)
+                {
+                	memcpy(MLACP(csm).system_id, local_if->mac_addr, ETHER_ADDR_LEN);
+                	MLACP(csm).system_config_changed = 1;
+                	break;
+                }
+            }
+        }
+    }
+    
+out:
+    return 0;
 }
 
 /* Scheduler start while loop */
@@ -361,7 +396,7 @@ void scheduler_finalize() {
     return;
 }
 
-void* session_client_conn_handler(struct CSM *csm)
+void session_client_conn_handler(struct CSM *csm)
 {
     struct System* sys = NULL;
     struct sockaddr_in peer_addr;
@@ -521,8 +556,6 @@ void scheduler_server_sock_init()
         ICCPD_LOG_INFO(__FUNCTION__,"Set socket option failed. Error");
         /*return;*/
     }
-    
-    /* set_nonblocking(sys->server_fd);*/
 
     if (bind(sys->server_fd, (struct sockaddr*) &(svr_addr), sizeof(svr_addr)) < 0) 
     {
@@ -629,7 +662,7 @@ void scheduler_session_disconnect_handler(struct CSM* csm)
         csm->sock_fd = -1;
     }
 
-    mlacp_peerlink_disconn_handler(csm);
+    mlacp_peer_disconn_handler(csm);
     MLACP(csm).current_state = MLACP_STATE_INIT;
     iccp_csm_status_reset(csm, 0);
     time(&csm->connTimePrev);

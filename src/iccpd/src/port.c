@@ -135,7 +135,6 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type)
 {
     struct System* sys = NULL;
     struct LocalInterface* local_if = NULL;
-    uint8_t mac[ETHER_ADDR_LEN];
     struct CSM* csm;
     struct If_info * cif = NULL;
 	
@@ -187,6 +186,11 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type)
             break;
         case IF_T_VLAN:
             /* do nothing currently. */
+            break;
+        case IF_T_VXLAN:
+            /* do nothing currently. */
+            break;
+        case IF_T_BRIDGE:
             break;
         default:
             ICCPD_LOG_WARN(__FUNCTION__, "the type of local interface (%s) is not acceptable", ifname);

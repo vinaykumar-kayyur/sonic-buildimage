@@ -7,6 +7,7 @@ LOCKFILE="/tmp/swss-syncd-lock"
 
 function debug()
 {
+    /usr/bin/logger $1
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
@@ -29,8 +30,8 @@ function unlock_service_state_change()
 
 function check_warm_boot()
 {
-    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|system" enable`
-    SERVICE_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|${SERVICE}" enable`
+    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
     # SYSTEM_WARM_START could be empty, always make WARM_BOOT meaningful.
     if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
         WARM_BOOT="true"
@@ -54,14 +55,15 @@ function wait_for_database_service()
 
 function getBootType()
 {
-    case "$(cat /proc/cmdline | grep -o 'SONIC_BOOT_TYPE=\S*' | cut -d'=' -f2)" in
-    warm*)
+    # same code snippet in files/build_templates/docker_image_ctl.j2
+    case "$(cat /proc/cmdline)" in
+    *SONIC_BOOT_TYPE=warm*)
         TYPE='warm'
         ;;
-    fastfast)
+    *SONIC_BOOT_TYPE=fastfast*)
         TYPE='fastfast'
         ;;
-    fast*)
+    *SONIC_BOOT_TYPE=fast*|*fast-reboot*)
         TYPE='fast'
         ;;
     *)
@@ -87,24 +89,35 @@ start() {
         touch /host/warmboot/warm-starting
     else
         rm -f /host/warmboot/warm-starting
-
-        # Flush DB during non-warm start
-        /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
     fi
 
     # platform specific tasks
 
     # start mellanox drivers regardless of
     # boot type
-    if [ x"$sonic_asic_platform" == x"mellanox" ]; then
+    if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
         BOOT_TYPE=`getBootType`
         if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
             export FAST_BOOT=1
         fi
+
+        if [[ x"$WARM_BOOT" != x"true" ]]; then
+            if [[ x"$(/bin/systemctl is-active pmon)" == x"active" ]]; then
+                /bin/systemctl stop pmon
+                /usr/bin/hw-management.sh chipdown
+                /bin/systemctl restart pmon
+            else
+                /usr/bin/hw-management.sh chipdown
+            fi
+        fi
+
+        if [[ x"$BOOT_TYPE" == x"fast" ]]; then
+            /usr/bin/hw-management.sh chipupdis
+        fi
+
         /usr/bin/mst start
         /usr/bin/mlnx-fw-upgrade.sh
         /etc/init.d/sxdkernel start
-        /sbin/modprobe i2c-dev
     fi
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
@@ -113,13 +126,15 @@ start() {
         fi
     fi
 
-
     # start service docker
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
 
     unlock_service_state_change
-    /usr/bin/${SERVICE}.sh attach
+}
+
+wait() {
+    /usr/bin/${SERVICE}.sh wait
 }
 
 stop() {
@@ -153,16 +168,11 @@ stop() {
 
     # platform specific tasks
 
-    # stop mellanox driver regardless of
-    # shutdown type
-    if [ x$sonic_asic_platform == x'mellanox' ]; then
-        /etc/init.d/sxdkernel stop
-        /usr/bin/mst stop
-    fi
-
-
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        if [ x$sonic_asic_platform == x'cavium' ]; then
+        if [ x$sonic_asic_platform == x'mellanox' ]; then
+            /etc/init.d/sxdkernel stop
+            /usr/bin/mst stop
+        elif [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh stop
             /etc/init.d/xpnet.sh start
         fi
@@ -172,11 +182,11 @@ stop() {
 }
 
 case "$1" in
-    start|stop)
+    start|wait|stop)
         $1
         ;;
     *)
-        echo "Usage: $0 {start|stop}"
+        echo "Usage: $0 {start|wait|stop}"
         exit 1
         ;;
 esac

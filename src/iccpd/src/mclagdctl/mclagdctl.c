@@ -219,7 +219,6 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
     int pos = 0;
 
     len = sizeof (struct mclagd_state); 
-    
     for (; data_len >= len; data_len -=len, count ++)
     {
         state_info = (struct mclagd_state*)(msg + len * count);
@@ -764,19 +763,21 @@ int main(int argc, char **argv)
         ret = EXIT_FAILURE;
         goto mclagdctl_disconnect;
     }
+
     if (reply->exec_result == EXEC_TYPE_NO_EXIST_MCLAGID)
     {
         fprintf(stderr, "Mclag-id %d hasn't been configured in iccpd!\n", mclag_id);
         ret = EXIT_FAILURE;
         goto mclagdctl_disconnect;
     }
+
     if (reply->exec_result == EXEC_TYPE_FAILED)
     {
         fprintf(stderr, "exec error in iccpd!\n");
         ret = EXIT_FAILURE;
         goto mclagdctl_disconnect;
     }
-    
+
     cmd_type->parse_msg((char *)(rcv_buf + sizeof(struct mclagd_reply_hdr)), len - sizeof(struct mclagd_reply_hdr));
         
     ret = EXIT_SUCCESS;
