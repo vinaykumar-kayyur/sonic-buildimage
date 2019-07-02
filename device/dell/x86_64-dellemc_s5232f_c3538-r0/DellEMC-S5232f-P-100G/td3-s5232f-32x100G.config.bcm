@@ -27,8 +27,8 @@ pktdma_poll_mode_channel_bitmap=1
 
 l2xmsg_mode=1
 l2xmsg_hostbuf_size=8192
-ipv6_lpm_128b_enable=0
-num_ipv6_lpm_128b_entries=0
+ipv6_lpm_128b_enable=1
+num_ipv6_lpm_128b_entries=1024
 max_vp_lags=0
 
 l3_alpm_enable=2
