@@ -32,12 +32,12 @@ MLNX_NUM_PSU = 2
 
 GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
 
-PLATFORM_ROOT = '/usr/share/sonic/device'
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
 
 HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 
+#reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 
 REBOOT_CAUSE_POWER_LOSS_FILE = 'reset_main_pwr_fail'
@@ -47,6 +47,7 @@ REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
 
 REBOOT_CAUSE_FILE_LENGTH = 1
 
+#version retrieving related definitions
 CPLD_VERSION_ROOT = HWMGMT_SYSTEM_ROOT
 
 CPLD1_VERSION_FILE = 'cpld1_version'
@@ -56,8 +57,11 @@ CPLD_VERSION_MAX_LENGTH = 4
 FW_QUERY_VERSION_COMMAND = 'mlxfwmanager --query'
 BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
 
-REBOOT_CAUSE_FILE_USER_REBOOT = "/host/reboot-cause/previous-reboot-cause.txt"
-REBOOT_CAUSE_USER_REBOOT_MAX_LENGTH = 100
+#components definitions
+COMPONENT_BIOS = "BIOS"
+COMPONENT_FIRMWARE = "ASIC-FIRMWARE"
+COMPONENT_CPLD1 = "CPLD1"
+COMPONENT_CPLD2 = "CPLD2"
 
 # Global logger class instance
 SYSLOG_IDENTIFIER = "mlnx-chassis"
@@ -110,6 +114,12 @@ class Chassis(ChassisBase):
 
         # Initialize EEPROM
         self.eeprom = Eeprom()
+
+        # Initialize component list
+        self._component_name_list.append(COMPONENT_BIOS)
+        self._component_name_list.append(COMPONENT_FIRMWARE)
+        self._component_name_list.append(COMPONENT_CPLD1)
+        self._component_name_list.append(COMPONENT_CPLD2)
 
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0
@@ -213,10 +223,9 @@ class Chassis(ChassisBase):
 
         return major_cause, minor_cause
 
-    def _get_cpld_version(self):
-        cpld1_version = self._read_generic_file(join(CPLD_VERSION_ROOT, CPLD1_VERSION_FILE), CPLD_VERSION_MAX_LENGTH)
-        cpld2_version = self._read_generic_file(join(CPLD_VERSION_ROOT, CPLD2_VERSION_FILE), CPLD_VERSION_MAX_LENGTH)
-        return "cpld1 version: " + cpld1_version.rstrip('\n') + " cpld2 version: " + cpld2_version.rstrip('\n')
+    def _get_cpld_version(self, version_file):
+        cpld_version = self._read_generic_file(join(CPLD_VERSION_ROOT, version_file), CPLD_VERSION_MAX_LENGTH)
+        return cpld_version.rstrip('\n')
 
     def _get_command_result(self, cmdline):
         try:
@@ -261,7 +270,7 @@ class Chassis(ChassisBase):
         except :
             result = ''
 
-        return "firmware version: " + result
+        return result
 
     def _get_bios_version(self):
         """
@@ -286,14 +295,26 @@ class Chassis(ChassisBase):
         except:
             result = ''
 
-        return "BIOS version: " + result
+        return result
 
-    def get_component_versions(self):
+    def get_firmware_version(self, component_name):
         """
         Retrieves platform-specific hardware/firmware versions for chassis
         componenets such as BIOS, CPLD, FPGA, etc.
+        Args:
+            component_name: A string, the component name.
 
         Returns:
             A string containing platform-specific component versions
         """
-        return self._get_bios_version() + '\n' + self._get_cpld_version() + '\n' + self._get_firmware_version() + '\n'
+        if component_name in self._component_name_list :
+            if component_name == COMPONENT_BIOS:
+                return self._get_bios_version()
+            elif component_name == COMPONENT_CPLD1:
+                return self._get_cpld_version(CPLD1_VERSION_FILE)
+            elif component_name == COMPONENT_CPLD2:
+                return self._get_cpld_version(CPLD2_VERSION_FILE)
+            elif component_name == COMPONENT_FIRMWARE:
+                return self._get_firmware_version()
+
+        return None
