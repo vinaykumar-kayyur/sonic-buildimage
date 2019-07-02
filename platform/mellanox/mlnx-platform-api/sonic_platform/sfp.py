@@ -327,8 +327,7 @@ class SFP(SfpBase):
                     self.dom_volt_supported = False
                     self.dom_rx_power_supported = False
                     self.dom_tx_power_supported = False
-                sfp_dom_tx_disable_supported = int(sfp_dom_capability_raw[1], 16)
-                self.dom_tx_disable_supported = (sfp_dom_tx_disable_supported & 0x40 != 0)
+                self.dom_tx_disable_supported = (int(sfp_dom_capability_raw[1], 16) & 0x40 != 0)
         else:
             self.dom_supported = False
             self.dom_temp_supported = False
