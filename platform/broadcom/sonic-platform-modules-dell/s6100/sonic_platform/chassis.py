@@ -34,7 +34,7 @@ class Chassis(ChassisBase):
     power_reason_dict[11] = ChassisBase.REBOOT_CAUSE_POWER_LOSS
     power_reason_dict[22] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU
     power_reason_dict[33] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
-    power_reason_dict[44] = ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN
+    power_reason_dict[44] = ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN_SPEED
 
     def __init__(self):
         ChassisBase.__init__(self)
