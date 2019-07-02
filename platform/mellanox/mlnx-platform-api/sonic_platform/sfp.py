@@ -19,6 +19,7 @@ try:
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.inf8628 import inf8628InterfaceId
+    from sonic_daemon_base.daemon_base import Logger
     from python_sdk_api.sxd_api import *
     from python_sdk_api.sx_api import *
 
@@ -61,7 +62,7 @@ XCVR_VENDOR_SN_WIDTH = 16
 XCVR_VENDOR_DATE_OFFSET = 84
 XCVR_VENDOR_DATE_WIDTH = 8
 XCVR_DOM_CAPABILITY_OFFSET = 92
-XCVR_DOM_CAPABILITY_WIDTH = 1
+XCVR_DOM_CAPABILITY_WIDTH = 2
 
 # definitions of the offset for values in OSFP info eeprom
 OSFP_TYPE_OFFSET = 0
@@ -145,31 +146,42 @@ PMAOS_RST = 0
 PMAOS_ENABLE = 1
 PMAOS_DISABLE = 2
 
-MCION_LPMODE_BIT = 8
+PMMP_LPMODE_BIT = 8
 MCION_TX_DISABLE_BIT = 1
 
-MCIA_ADDR_TX_CHANNEL_DISABLE_OFF = 86
-MCIA_ADDR_TX_CHANNEL_DISABLE_SIZE = 1
-MCIA_I2C_DEV_ADDR = 0x50
+#on page 0
+#i2c address 0x50
+MCIA_ADDR_TX_CHANNEL_DISABLE = 86
+
+MCIA_ADDR_POWER_OVERRIDE = 93
+#power set bit
+MCIA_ADDR_POWER_OVERRIDE_PS_BIT = 1
+#power override bit
+MCIA_ADDR_POWER_OVERRIDE_POR_BIT = 0
+
+#on page 0
+#i2c address 0x51
+MCIA_ADDR_TX_DISABLE = 110
+MCIA_ADDR_TX_DISABLE_BIT = 6
 
 PORT_TYPE_NVE = 8
 PORT_TYPE_OFFSET = 28
 PORT_TYPE_MASK = 0xF0000000
 NVE_MASK = PORT_TYPE_MASK & (PORT_TYPE_NVE << PORT_TYPE_OFFSET)
 
-def log_warning(msg):
-    syslog.openlog(SYSLOG_IDENTIFIER)
-    syslog.syslog(syslog.LOG_WARNING, msg)
-    syslog.closelog()
+# Global logger class instance
+SYSLOG_IDENTIFIER = "mlnx-sfp"
+logger = Logger(SYSLOG_IDENTIFIER)
 
 class SFP(SfpBase):
     """Platform-specific SFP class"""
-    
+
     def __init__(self, sfp_index, sfp_type):
         self.index = sfp_index + 1
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
         self.sfp_type = sfp_type
+        self.dom_tx_disable_supported = False
         self._dom_capability_detect()
         self.sdk_handle = None
         self.sdk_index = sfp_index
@@ -181,7 +193,7 @@ class SFP(SfpBase):
         """
         rc, self.sdk_handle = sx_api_open(None)
         if (rc != SX_STATUS_SUCCESS):
-            log_warning("Failed to open api handle, please check whether SDK is running.")
+            logger.log_warning("Failed to open api handle, please check whether SDK is running.")
             self.sdk_handle = None
 
         self.mypid = os.getpid()
@@ -191,11 +203,17 @@ class SFP(SfpBase):
             self._initialize_sdk_handle()
 
         rc = sxd_access_reg_init(self.mypid, None, 0)
-        if (rc != 0):
-            log_warning("Failed to initializing register access, please check that SDK is running.")
+        if rc != 0:
+            logger.log_warning("Failed to initializing register access, please check that SDK is running.")
             return False
 
         return True
+
+    def _close_sdk(self):
+        rc = sxd_access_reg_deinit()
+        if rc != 0:
+            logger.log_warning("Failed to deinitializing register access.")
+            #no further actions here
 
     def _init_sx_meta_data(self):
         meta = sxd_reg_meta_t()
@@ -277,6 +295,7 @@ class SFP(SfpBase):
                     if sfpd_obj is None:
                         return None
                     self.optional_capability = sfpd_obj.parse_option_params(qsfp_option_value_raw, 0)
+                    self.dom_tx_disable_supported = self.optional_capability['data']['TxDisable']['value'] == 'On'
             else:
                 self.dom_supported = False
                 self.dom_temp_supported = False
@@ -308,6 +327,8 @@ class SFP(SfpBase):
                     self.dom_volt_supported = False
                     self.dom_rx_power_supported = False
                     self.dom_tx_power_supported = False
+                sfp_dom_tx_disable_supported = int(sfp_dom_capability_raw[1], 16)
+                self.dom_tx_disable_supported = (sfp_dom_tx_disable_supported & 0x40 != 0)
         else:
             self.dom_supported = False
             self.dom_temp_supported = False
@@ -800,6 +821,10 @@ class SFP(SfpBase):
 
         Returns:
             A Boolean, True if tx_disable is enabled, False if disabled
+
+        for QSFP, the disable states of each channel which are the lower 4 bits in byte 85 page a0
+        for SFP, the TX Disable State and Soft TX Disable Select is ORed as the tx_disable status returned
+                 These two bits are bit 7 & 6 in byte 110 page a2 respectively
         """
         if not self.dom_supported:
             return None
@@ -821,7 +846,7 @@ class SFP(SfpBase):
             dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
                 tx_disable_data = int(dom_channel_monitor_raw[0], 16)
-                tx_disable_list.append(tx_disable_data & 0x80 != 0)
+                tx_disable_list.append(tx_disable_data & 0xC0 != 0)
             else:
                 return None
         return tx_disable_list
@@ -861,8 +886,10 @@ class SFP(SfpBase):
                 meta.access_cmd = SXD_ACCESS_CMD_GET
 
                 rc = sxd_access_reg_mcion(mcion, meta, REGISTER_NUM, None, None)
+                self._close_sdk()
+
                 if rc != SXD_STATUS_SUCCESS:
-                    log_warning("sxd_access_reg_mcion failed, rc = %d" % rc)
+                    logger.log_warning("sxd_access_reg_mcion getting failed, rc = %d" % rc)
                     return None
 
                 # Get low power mode status
@@ -889,7 +916,7 @@ class SFP(SfpBase):
             dom_control_raw = self._read_eeprom_specific_bytes((offset + QSFP_CONTROL_OFFSET), QSFP_CONTROL_WIDTH)
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
-                return (1 == dom_control_data['data']['PowerOverride'])
+                return ('On' == dom_control_data['data']['PowerOverride'])
         else:
             return NotImplementedError
 
@@ -1151,13 +1178,52 @@ class SFP(SfpBase):
 
         rc = sxd_access_reg_pmaos(pmaos, meta, REGISTER_NUM, None, None)
         if rc != SXD_STATUS_SUCCESS:
-            log_warning("sxd_access_reg_pmaos failed, rc = %d" % rc)
+            logger.log_warning("sxd_access_reg_pmaos getting failed, rc = %d" % rc)
+            self._close_sdk()
             return None
 
         # Reset SFP
         pmaos.rst = 1
         meta.access_cmd = SXD_ACCESS_CMD_SET
         rc = sxd_access_reg_pmaos(pmaos, meta, REGISTER_NUM, None, None)
+        if rc != SXD_STATUS_SUCCESS:
+            logger.log_warning("sxd_access_reg_pmaos setting failed, rc = %d" % rc)
+
+        self._close_sdk()
+        return rc == SXD_STATUS_SUCCESS
+
+    def _write_i2c_via_mcia(self, page, i2caddr, address, data, mask):
+        handle = self._open_sdk()
+        if handle is None:
+            return False
+
+        mcia = ku_mcia_reg()
+
+        meta = self._init_sx_meta_data()
+        meta.access_cmd = SXD_ACCESS_CMD_GET
+
+        mcia.module = self.sdk_index
+        mcia.page_number = page
+        mcia.i2c_device_address = i2caddr
+        mcia.device_address = address
+        mcia.size = 1
+        rc = sxd_access_reg_mcia(mcia, meta, REGISTER_NUM, None, None)
+        if rc != SXD_STATUS_SUCCESS:
+            logger.log_warning("sxd_access_reg_mcia getting failed, rc = %d" % rc)
+            self._close_sdk()
+            return False
+
+        original_data = (mcia.dword_0 >> 24) & 0x000000FF
+        updated_data = original_data & (~mask)
+        updated_data |= (data & mask)
+
+        mcia.dword_0 = (updated_data << 24) & 0xFF000000
+        meta.access_cmd = SXD_ACCESS_CMD_SET
+        rc = sxd_access_reg_mcia(mcia, meta, REGISTER_NUM, None, None)
+        if rc != SXD_STATUS_SUCCESS:
+            logger.log_warning("sxd_access_reg_mcia setting failed, rc = %d" % rc)
+
+        self._close_sdk()
         return rc == SXD_STATUS_SUCCESS
 
     def tx_disable(self, tx_disable):
@@ -1171,37 +1237,34 @@ class SFP(SfpBase):
         Returns:
             A boolean, True if tx_disable is set successfully, False if not
 
-        make use of mcion registor
+        for SFP, make use of bit 6 of byte at (offset 110, a2h (i2c addr 0x51)) to disable/enable tx
+        for QSFP, set all channels to disable/enable tx
         """
-        if self.sfp_type == QSFP_TYPE:
-            try:
+        if self.sfp_type == SFP_TYPE:
+            if self.dom_tx_disable_supported:
                 handle = self._open_sdk()
                 if handle is None:
                     return False
 
-                # Get MCION
-                mcion = ku_mcion_reg()
-                mcion.module = self.sdk_index
-                meta = self._init_sx_meta_data()
-                meta.access_cmd = SXD_ACCESS_CMD_GET
-
-                rc = sxd_access_reg_mcion(mcion, meta, REGISTER_NUM, None, None)
-                if rc != SXD_STATUS_SUCCESS:
-                    log_warning("sxd_access_reg_pmaos failed, rc = %d" % rc)
-                    return None
-
-                # disable Tx
+                tx_disable_mask = 1 << MCIA_ADDR_TX_DISABLE_BIT
                 if tx_disable:
-                    mcion.module_inputs = 1 << MCION_TX_DISABLE_BIT
-                    mcion.module_inputs_mask = 1 << MCION_TX_DISABLE_BIT
+                    tx_disable_bit = tx_disable_mask
                 else:
-                    mcion.module_inputs = 0
-                    mcion.module_inputs_mask = 0
-                meta.access_cmd = SXD_ACCESS_CMD_SET
-                rc = sxd_access_reg_mcion(mcion, meta, REGISTER_NUM, None, None)
-                assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmaos failed, rc = %d" % rc
-                return rc == SXD_STATUS_SUCCESS
-            except:
+                    tx_disable_bit = 0
+
+                return self._write_i2c_via_mcia(2, 0x51, MCIA_ADDR_TX_DISABLE, tx_disable_bit, tx_disable_mask)
+            else:
+                return False
+        elif self.sfp_type == QSFP_TYPE:
+            if self.dom_tx_disable_supported:
+                channel_mask = 0x0f
+                if tx_disable:
+                    disable_flag = channel_mask
+                else:
+                    disable_flag = 0
+
+                return self._write_i2c_via_mcia(0, 0x50, MCIA_ADDR_TX_CHANNEL_DISABLE, disable_flag, channel_mask)
+            else:
                 return False
         else:
             return NotImplementedError
@@ -1222,42 +1285,15 @@ class SFP(SfpBase):
         QSFP: page a0, address 86, lower 4 bits
         """
         if self.sfp_type == QSFP_TYPE:
-            try:
-                handle = self._open_sdk()
-                if handle is None:
-                    return False
-
-                mcia = ku_mcia_reg()
-
-                meta = self._init_sx_meta_data()
-                meta.access_cmd = SXD_ACCESS_CMD_GET
-
-                mcia.module = self.sdk_index
-                mcia.page_number = 0
-                mcia.i2c_device_address = MCIA_I2C_DEV_ADDR
-                mcia.device_address = MCIA_ADDR_TX_CHANNEL_DISABLE_OFF
-                mcia.size = MCIA_ADDR_TX_CHANNEL_DISABLE_SIZE
-                rc = sxd_access_reg_mcia(mcia, meta, REGISTER_NUM, None, None)
-                if rc != SXD_STATUS_SUCCESS:
-                    log_warning("sxd_access_reg_pmaos failed, rc = %d" % rc)
-                    return None
-
-                disable_flag = (data >> 24) & 0x000000FF
+            if self.dom_tx_disable_supported:
                 channel_mask = 1 << channel
                 if disable:
-                    disable_flag |= channel_mask
+                    disable_flag = channel_mask
                 else:
-                    disable_flag &= ~channel_mask
+                    disable_flag = 0
 
-                mcia.dword_0 = (disable_flag << 24) & 0xFF000000
-                meta.access_cmd = SXD_ACCESS_CMD_SET
-                rc = sxd_access_reg_mcia(mcia, meta, REGISTER_NUM, None, None)
-                if rc != SXD_STATUS_SUCCESS:
-                    log_warning("sxd_access_reg_pmaos failed, rc = %d" % rc)
-                    return None
-
-                return rc == SXD_STATUS_SUCCESS
-            except:
+                return self._write_i2c_via_mcia(0, 0x50, MCIA_ADDR_TX_CHANNEL_DISABLE, disable_flag, channel_mask)
+            else:
                 return False
         else:
             return NotImplementedError
@@ -1335,7 +1371,7 @@ class SFP(SfpBase):
         assert rc == SXD_STATUS_SUCCESS, "sxd_access_reg_pmmp failed, rc = %d" % rc
 
         # Set low power mode status
-        lpm_mask = 1 << MCION_LPMODE_BIT
+        lpm_mask = 1 << PMMP_LPMODE_BIT
         if lpmode:
             pmmp.eeprom_override = pmmp.eeprom_override | lpm_mask
         else:
@@ -1374,7 +1410,8 @@ class SFP(SfpBase):
 
             return result == SXD_STATUS_SUCCESS
         except:
-            log_warning("set_lpmode failed due to some SDK failure")
+            logger.log_warning("set_lpmode failed due to some SDK failure")
+            self._close_sdk()
             return False
 
     def set_power_override(self, power_override, power_set):
@@ -1396,4 +1433,15 @@ class SFP(SfpBase):
             A boolean, True if power-override and power_set are set successfully,
             False if not
         """
-        return NotImplementedError
+        if self.sfp_type == QSFP_TYPE:
+            power_override_bit = 0
+            if power_override:
+                power_override_bit |= 1 << MCIA_ADDR_POWER_OVERRIDE_POR_BIT
+            power_set_bit = 0
+            if power_set:
+                power_set_bit |= 1 << MCIA_ADDR_POWER_OVERRIDE_PS_BIT
+            power_override_mask = 1 << MCIA_ADDR_POWER_OVERRIDE_PS_BIT | 1 << MCIA_ADDR_POWER_OVERRIDE_POR_BIT
+
+            return self._write_i2c_via_mcia(0, 0x50, MCIA_ADDR_POWER_OVERRIDE, power_set_bit|power_override_bit, power_override_mask)
+        else:
+            return NotImplementedError
