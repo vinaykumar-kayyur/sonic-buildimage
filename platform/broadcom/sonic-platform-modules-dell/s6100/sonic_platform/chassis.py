@@ -25,16 +25,16 @@ class Chassis(ChassisBase):
     MAILBOX_DIR = HWMON_DIR + HWMON_NODE
 
     reset_reason_dict = {}
-    reset_reason_dict[11] = (ChassisBase.REBOOT_CAUSE_POWER_LOSS)
-    reset_reason_dict[33] = (ChassisBase.REBOOT_CAUSE_WATCHDOG)
-    reset_reason_dict[44] = (ChassisBase.REBOOT_CAUSE_NON_HARDWARE)
-    reset_reason_dict[55] = (ChassisBase.REBOOT_CAUSE_NON_HARDWARE)
+    reset_reason_dict[11] = ChassisBase.REBOOT_CAUSE_POWER_LOSS
+    reset_reason_dict[33] = ChassisBase.REBOOT_CAUSE_WATCHDOG
+    reset_reason_dict[44] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
+    reset_reason_dict[55] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
 
     power_reason_dict = {}
-    power_reason_dict[11] = (ChassisBase.REBOOT_CAUSE_POWER_LOSS)
-    power_reason_dict[22] = (ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU)
-    power_reason_dict[33] = (ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC)
-    power_reason_dict[44] = (ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN)
+    power_reason_dict[11] = ChassisBase.REBOOT_CAUSE_POWER_LOSS
+    power_reason_dict[22] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU
+    power_reason_dict[33] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
+    power_reason_dict[44] = ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -73,10 +73,10 @@ class Chassis(ChassisBase):
         # registers returned invalid data
         if (reset_reason == 11):
             if (power_reason in self.power_reason_dict):
-                return self.power_reason_dict[power_reason]
+                return (self.power_reason_dict[power_reason], None)
         else:
             if (reset_reason in self.reset_reason_dict):
-                return self.reset_reason_dict[reset_reason]
+                return (self.reset_reason_dict[reset_reason], None)
 
         return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Invalid Reason")
 
