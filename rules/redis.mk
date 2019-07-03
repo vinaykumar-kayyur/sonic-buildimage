@@ -17,3 +17,8 @@ $(REDIS_SENTINEL)_DEPENDS += $(REDIS_SERVER)
 $(REDIS_SENTINEL)_RDEPENDS += $(REDIS_SERVER)
 $(eval $(call add_derived_package,$(REDIS_TOOLS),$(REDIS_SENTINEL)))
 
+# The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
+# are archived into debug one image to facilitate debugging.
+#
+DBG_SRC_ARCHIVE += redis
+

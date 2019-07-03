@@ -27,6 +27,11 @@ $(eval $(call add_derived_package,$(SENSORD),$(SENSORD_DBG)))
 
 SONIC_MAKE_DEBS += $(LM_SENSORS)
 
+# The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
+# are archived into debug one image to facilitate debugging.
+#
+DBG_SRC_ARCHIVE += lm-sensors
+
 export LM_SENSORS
 export FANCONTROL
 export LIBSENSORS

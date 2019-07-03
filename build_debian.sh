@@ -431,12 +431,12 @@ then
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'Create a subdir under /debug to upload your files' >> /etc/motd"
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is mounted in each docker' >> /etc/motd"
 
-    mkdir -p $FILESYSTEM_ROOT/src
+    sudo mkdir -p $FILESYSTEM_ROOT/src
     pushd src
-        ../dbg_files.sh | tar -cvzf ../$FILESYSTEM_ROOT/src/sonic_src.tar.gz -T -
+        ../scripts/dbg_files.sh | sudo tar -cvzf ../$FILESYSTEM_ROOT/src/sonic_src.tar.gz -T -
     popd
 
-    mkdir -p $FILESYSTEM_ROOT/debug
+    sudo mkdir -p $FILESYSTEM_ROOT/debug
 
 fi
 
