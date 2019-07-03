@@ -161,7 +161,6 @@ class Chassis(ChassisBase):
                 # Construct BIOS image path
                 if image_path is not None:
                     image_path = image_path + platform_path
-                    print image_path, bios_file_name
                     for name in glob.glob(
                                     os.path.join(image_path, bios_file_name)):
                         bios_image = image_path = name
