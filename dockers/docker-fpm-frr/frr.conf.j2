@@ -11,6 +11,7 @@ hostname {{ DEVICE_METADATA['localhost']['hostname'] }}
 password zebra
 log syslog informational
 log facility local4
+agentx
 ! enable password {# {{ en_passwd }} TODO: param needed #}
 {% endblock system_init %}
 !
@@ -98,7 +99,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   network {{ prefix | ip }}/32
 {% elif prefix | ipv6 and name == 'Loopback0' %}
   address-family ipv6
-    network {{ prefix | ip }}/128
+    network {{ prefix | ip }}/64
   exit-address-family
 {% endif %}
 {% endfor %}
