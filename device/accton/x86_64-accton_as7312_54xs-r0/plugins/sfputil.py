@@ -5,6 +5,8 @@
 
 try:
     import time
+    import string 
+    from ctypes import create_string_buffer 
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -14,7 +16,7 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 1
-    PORT_END = 53
+    PORT_END = 54
     PORTS_IN_BLOCK = 54
     QSFP_PORT_START = 49
     QSFP_PORT_END = 54
@@ -113,7 +115,7 @@ class SfpUtil(SfpUtilBase):
 
     def __init__(self):
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/eeprom'
-        for x in range(0, self.port_end+1):
+        for x in range(self.port_start, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 self._port_to_i2c_mapping[x+1])
 
