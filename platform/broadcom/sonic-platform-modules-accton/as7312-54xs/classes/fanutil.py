@@ -60,8 +60,10 @@ class FanUtil(object):
         key1 = fan id index (integer) starting from 1
         key2 = fan node index (interger) starting from 1
         value = path to fan device file (string) """
+
     _fan_to_device_path_mapping = {}
-    
+    logger = logging.getLogger(__name__)
+ 
 #fan1_direction
 #fan1_fault
 #fan1_present
@@ -70,7 +72,6 @@ class FanUtil(object):
     _fan_to_device_node_mapping = {
            (FAN_NUM_1_IDX, FAN_NODE_FAULT_IDX_OF_MAP): 'fan1_fault',           
            (FAN_NUM_1_IDX, FAN_NODE_DIR_IDX_OF_MAP): 'fan1_direction',           
-
            (FAN_NUM_2_IDX, FAN_NODE_FAULT_IDX_OF_MAP): 'fan2_fault',
            (FAN_NUM_2_IDX, FAN_NODE_DIR_IDX_OF_MAP): 'fan2_direction',
 
@@ -92,11 +93,11 @@ class FanUtil(object):
 
     def _get_fan_node_val(self, fan_num, node_num):
         if fan_num < self.FAN_NUM_1_IDX or fan_num > self.FAN_NUM_ON_MAIN_BROAD:
-            logging.debug('GET. Parameter error. fan_num:%d', fan_num)
+            self.logger.debug('GET. Parameter error. fan_num:%d', fan_num)
             return None
 
         if node_num < self.FAN_NODE_FAULT_IDX_OF_MAP or node_num > self.FAN_NODE_NUM_OF_MAP:
-            logging.debug('GET. Parameter error. node_num:%d', node_num)
+            self.logger.debug('GET. Parameter error. node_num:%d', node_num)
             return None
 
         device_path = self.get_fan_to_device_path(fan_num, node_num)
@@ -104,55 +105,59 @@ class FanUtil(object):
         try:
             val_file = open(device_path, 'r')
         except IOError as e:
-            logging.error('GET. unable to open file: %s', str(e))
+            self.logger.error('GET. unable to open file: %s', str(e))
             return None
 
         content = val_file.readline().rstrip()
         
         if content == '':
-            logging.debug('GET. content is NULL. device_path:%s', device_path)
+            self.logger.debug('GET. content is NULL. device_path:%s', device_path)
             return None
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
-            logging.debug('GET. unable to close file. device_path:%s', device_path)
+            self.logger.debug('GET. unable to close file. device_path:%s', device_path)
             return None
 
         return int(content)
 
     def _set_fan_node_val(self, fan_num, node_num, val):
         if fan_num < self.FAN_NUM_1_IDX or fan_num > self.FAN_NUM_ON_MAIN_BROAD:
-            logging.debug('GET. Parameter error. fan_num:%d', fan_num)
+            self.logger.debug('GET. Parameter error. fan_num:%d', fan_num)
             return None
 
         if node_num < self.FAN_NODE_FAULT_IDX_OF_MAP or node_num > self.FAN_NODE_NUM_OF_MAP:
-            logging.debug('GET. Parameter error. node_num:%d', node_num)
+            self.logger.debug('GET. Parameter error. node_num:%d', node_num)
             return None
 
         content = str(val)
         if content == '':
-            logging.debug('GET. content is NULL. device_path:%s', device_path)
+            self.logger.debug('GET. content is NULL. device_path:%s', device_path)
             return None
 
         device_path = self.get_fan_to_device_path(fan_num, node_num)
         try:
             val_file = open(device_path, 'w')
         except IOError as e:
-            logging.error('GET. unable to open file: %s', str(e))
+            self.logger.error('GET. unable to open file: %s', str(e))
             return None
 
         val_file.write(content)
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
-            logging.debug('GET. unable to close file. device_path:%s', device_path)
+            self.logger.debug('GET. unable to close file. device_path:%s', device_path)
             return None
 
         return True
 
-    def __init__(self):
+    def __init__(self, log_level=logging.INFO):
+        ch = logging.StreamHandler()
+        ch.setLevel(log_level)
+        self.logger.addHandler(ch)
+
         fan_path = self.BASE_VAL_PATH 
 
         for fan_num in range(self.FAN_NUM_1_IDX, self.FAN_NUM_ON_MAIN_BROAD+1):
@@ -229,16 +234,12 @@ class FanUtil(object):
 
     def get_fan_status(self, fan_num):
         if fan_num < self.FAN_NUM_1_IDX or fan_num > self.FAN_NUM_ON_MAIN_BROAD:
-            logging.debug('GET. Parameter error. fan_num, %d', fan_num)
+            self.logger.debug('GET. Parameter error. fan_num, %d', fan_num)
             return None
 
         if self.get_fan_fault(fan_num) is not None and self.get_fan_fault(fan_num) > 0:
-            logging.debug('GET. FAN fault. fan_num, %d', fan_num)
+            self.logger.debug('GET. FAN fault. fan_num, %d', fan_num)
             return False
-
-        #if self.get_fanr_fault(fan_num) is not None and self.get_fanr_fault(fan_num) > 0:
-        #    logging.debug('GET. FANR fault. fan_num, %d', fan_num)
-        #   return False
 
         return True
 
