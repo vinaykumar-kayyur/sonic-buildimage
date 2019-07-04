@@ -72,7 +72,14 @@ popd
 
 ## Build a basic Debian system by debootstrap
 echo '[INFO] Debootstrap...'
-sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch $CONFIGURED_ARCH stretch $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # qemu arm bin executable for cross-building
+    sudo mkdir -p $FILESYSTEM_ROOT/usr/bin
+    sudo cp /usr/bin/qemu*static $FILESYSTEM_ROOT/usr/bin || true
+    sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch $CONFIGURED_ARCH stretch $FILESYSTEM_ROOT http://deb.debian.org/debian
+else
+    sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch $CONFIGURED_ARCH stretch $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
+fi
 
 ## Config hostname and hosts, otherwise 'sudo ...' will complain 'sudo: unable to resolve host ...'
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '$HOSTNAME' > /etc/hostname"
@@ -97,6 +104,13 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages}} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'apt-mark auto `apt-mark showmanual`'
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # Remove amd64 x86 repo as it causes common packages version mismatch
+    sudo sed -i '/debian-archive.trafficmanager.net/d' $FILESYSTEM_ROOT/etc/apt/sources.list
+else
+    # Remove arm related repos
+    sudo sed -i '/arch=armhf,arm64/d' $FILESYSTEM_ROOT/etc/apt/sources.list
+fi
 
 ## Note: set lang to prevent locale warnings in your chroot
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
@@ -120,6 +134,11 @@ fi
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox
 echo '[INFO] Install SONiC linux kernel image'
 ## Note: duplicate apt-get command to ensure every line return zero
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install cpio klibc-utils kmod libklibc udev linux-base
+    sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-*${CONFIGURED_ARCH}*.deb || \
+        sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+fi
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
@@ -452,6 +471,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
 ## Wait fuser fully kill the processes
 sleep 15
 sudo umount $FILESYSTEM_ROOT/proc || true
+
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # Removed qemu arm bin executable used for cross-building
+    sudo rm -f $FILESYSTEM_ROOT/usr/bin/qemu*static || true
+fi
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host

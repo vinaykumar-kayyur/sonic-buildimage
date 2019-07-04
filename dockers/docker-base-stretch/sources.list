@@ -6,9 +6,3 @@ deb-src [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian/ stret
 deb [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian-security/ stretch/updates main contrib non-free
 deb-src [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian-security/ stretch/updates main contrib non-free
 deb [arch=amd64,i386] http://debian-archive.trafficmanager.net/debian/ stretch-backports main contrib non-free
-
-# ARM repo
-deb [arch=armhf,arm64] http://deb.debian.org/debian stretch main contrib non-free
-deb-src [arch=armhf,arm64] http://deb.debian.org/debian stretch main contrib non-free
-deb [arch=armhf,arm64] http://security.debian.org stretch/updates main contrib non-free
-deb-src [arch=armhf,arm64] http://security.debian.org stretch/updates main contrib non-free
