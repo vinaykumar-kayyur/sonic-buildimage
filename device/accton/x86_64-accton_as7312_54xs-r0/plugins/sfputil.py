@@ -5,8 +5,8 @@
 
 try:
     import time
-    import string 
-    from ctypes import create_string_buffer 
+    import string
+    from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -161,6 +161,7 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
+
         try:
             eeprom = None
 
@@ -192,6 +193,7 @@ class SfpUtil(SfpUtilBase):
 
         try:
             eeprom = None
+
             if not self.get_presence(port_num):
                 return False # Port is not present, unable to set the eeprom
 

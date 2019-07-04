@@ -6,9 +6,9 @@ minigraph file, config DB, json file(s), yaml files(s), command line input,
 and write the data into DB, print as json, or render a jinja2 config template.
 
 Examples:
-    Render template with minigraph:        
+    Render template with minigraph:
         sonic-cfggen -m -t /usr/share/template/bgpd.conf.j2
-    Dump config DB content into json file: 
+    Dump config DB content into json file:
         sonic-cfggen -d --print-data > db_dump.json
     Load content of json file into config DB:
         sonic-cfggen -j db_dump.json --write-to-db
@@ -86,13 +86,29 @@ def unique_name(l):
             new_list.append(item)
     return new_list
 
+def pfx_filter(value):
+    """INTERFACE Table can have keys in one of the two formats:
+       string or tuple - This filter skips the string keys and only
+       take into account the tuple.
+       For eg - VLAN_INTERFACE|Vlan1000 vs VLAN_INTERFACE|Vlan1000|192.168.0.1/21
+    """
+    table = OrderedDict()
+
+    if not value:
+        return table
+
+    for key,val in value.items():
+        if not isinstance(key, tuple):
+            continue
+        table[key] = val
+    return table
 
 class FormatConverter:
     """Convert config DB based schema to legacy minigraph based schema for backward capability.
 We will move to DB schema and remove this class when the config templates are modified.
 
 TODO(taoyl): Current version of config db only supports BGP admin states.
-    All other configuration are still loaded from minigraph. Plan to remove 
+    All other configuration are still loaded from minigraph. Plan to remove
     minigraph and move everything into config db in a later commit.
     """
     @staticmethod
@@ -202,7 +218,7 @@ def main():
 
     for yaml_file in args.yaml:
         with open(yaml_file, 'r') as stream:
-            additional_data = yaml.load(stream)      
+            additional_data = yaml.load(stream)
             deep_update(data, FormatConverter.to_deserialized(additional_data))
 
     for json_file in args.json:
@@ -211,7 +227,7 @@ def main():
 
     if args.additional_data != None:
         deep_update(data, json.loads(args.additional_data))
-  
+
     if args.from_db:
         configdb = ConfigDBConnector(**db_kwargs)
         configdb.connect()
@@ -234,6 +250,7 @@ def main():
         env.filters['ipv4'] = is_ipv4
         env.filters['ipv6'] = is_ipv6
         env.filters['unique_name'] = unique_name
+        env.filters['pfx_filter'] = pfx_filter
         for attr in ['ip', 'network', 'prefixlen', 'netmask']:
             env.filters[attr] = partial(prefix_attr, attr)
         template = env.get_template(template_file)

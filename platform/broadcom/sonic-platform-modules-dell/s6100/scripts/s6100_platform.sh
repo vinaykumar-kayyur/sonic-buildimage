@@ -217,6 +217,14 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
+install_python_api_package() {
+    device="/usr/share/sonic/device"
+    platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+
+    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
+    echo "pip install result = $rv"
+}
+
 init_devnum
 
 if [[ "$1" == "init" ]]; then
@@ -225,6 +233,11 @@ if [[ "$1" == "init" ]]; then
     modprobe dell_ich
     modprobe dell_s6100_iom_cpld
     modprobe dell_s6100_lpc
+
+    # Disable Watchdog Timer
+    if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then
+        /usr/local/bin/platform_watchdog_disable.sh
+    fi
 
     cpu_board_mux "new_device"
     switch_board_mux "new_device"
@@ -235,6 +248,9 @@ if [[ "$1" == "init" ]]; then
     switch_board_qsfp "new_device"
     switch_board_qsfp_lpmode "disable"
     xcvr_presence_interrupts "enable"
+
+    install_python_api_package
+
 elif [[ "$1" == "deinit" ]]; then
     xcvr_presence_interrupts "disable"
     switch_board_sfp "delete_device"
