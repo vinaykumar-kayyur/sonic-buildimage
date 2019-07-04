@@ -11,14 +11,10 @@ SONIC_MAKE_DEBS += $(REDIS_TOOLS)
 REDIS_SERVER = redis-server_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(REDIS_TOOLS),$(REDIS_SERVER)))
 
-<<<<<<< HEAD
-REDIS_SENTINEL = redis-sentinel_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
-=======
-REDIS_SERVER_DBG = redis-server-dbgsym_$(REDIS_VERSION)_amd64.deb
+REDIS_SERVER_DBG = redis-server-dbgsym_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(REDIS_SERVER),$(REDIS_SERVER_DBG)))
 
-REDIS_SENTINEL = redis-sentinel_$(REDIS_VERSION)_amd64.deb
->>>>>>> upstream/master
+REDIS_SENTINEL = redis-sentinel_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(REDIS_SENTINEL)_DEPENDS += $(REDIS_SERVER)
 $(REDIS_SENTINEL)_RDEPENDS += $(REDIS_SERVER)
 $(eval $(call add_derived_package,$(REDIS_TOOLS),$(REDIS_SENTINEL)))
