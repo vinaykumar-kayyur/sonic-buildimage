@@ -20,6 +20,7 @@ try:
     from sonic_platform.psu import Psu
     from sonic_platform.device import Device
     from sonic_platform.component import Component
+    from sonic_platform.watchdog import Watchdog
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -42,6 +43,7 @@ class Chassis(ChassisBase):
         ChassisBase.__init__(self)
         self._component_device = Device("component")
         self._component_name_list = self._component_device.get_name_list()
+        self._watchdog = Watchdog()
 
     def __read_config_db(self):
         try:
