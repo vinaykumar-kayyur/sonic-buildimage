@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(LLDPD)
-DERIVED_TARGETS = $(LIBLLDPCTL)
+DERIVED_TARGETS = $(LIBLLDPCTL) $(LLDPD_DBG)
 
 LLDP_URL = http://ftp.debian.org/debian/pool/main/l/lldpd
 
@@ -17,7 +17,7 @@ DEBIAN_FILE_URL = $(LLDP_URL)/$(DEBIAN_FILE)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
-	rm -rf ./lldpd
+	rm -rf lldpd-$(LLDPD_VERSION)
 
 	# download debian LLDPDD
 	wget -NO "$(DSC_FILE)" $(DSC_FILE_URL)

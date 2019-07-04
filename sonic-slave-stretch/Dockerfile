@@ -62,6 +62,11 @@ RUN apt-get update && apt-get install -y \
         libjson-c-dev \
         libsystemd-dev \
         python-ipaddr \
+        libcmocka-dev \
+        python3-all-dev \
+        python3-all-dbg \
+        install-info \
+        logrotate \
 # For libnl3 (local) build
         cdbs \
 # For SAI meta build
@@ -109,7 +114,6 @@ RUN apt-get update && apt-get install -y \
         dpatch \
         libdb-dev \
         iptables-dev \
-        swig \
         ctags \
 # For mellanox sai build
         libtool-bin \
@@ -147,6 +151,9 @@ RUN apt-get update && apt-get install -y \
         python-stdeb \
 # For redis build
         libjemalloc-dev \
+        liblua5.1-0-dev \
+        lua-bitop-dev  \
+        lua-cjson-dev \
 # For mft kernel module build
         dkms \
 # For python3.5 build
@@ -228,6 +235,10 @@ RUN apt-get update && apt-get install -y \
         python3-colorama \
 # For initramfs
         bash-completion \
+# For sonic vs image build
+        dosfstools \
+        qemu-kvm \
+        libvirt-clients \
 # For lm-sensors
         librrd8 \
         librrd-dev \
@@ -278,6 +289,9 @@ RUN pip3 install redis
 # For supervisor build
 RUN pip install meld3 mock
 
+# For vs image build
+RUN pip install pexpect==4.6.0
+
 # For sonic-utilities build
 RUN pip install mockredispy==2.9.3
 RUN pip install pytest-runner==4.4
@@ -285,6 +299,12 @@ RUN pip install setuptools==40.8.0
 
 # Install dependencies for isc-dhcp-relay build
 RUN apt-get -y build-dep isc-dhcp
+
+# Install vim
+RUN apt-get install -y vim
+
+# Install rsyslog
+RUN apt-get install -y rsyslog
 
 RUN cd /usr/src/gtest && cmake . && make -C /usr/src/gtest
 
@@ -309,5 +329,5 @@ RUN add-apt-repository \
            $(lsb_release -cs) \
            stable"
 RUN apt-get update
-RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-stretch
+RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-stretch
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
