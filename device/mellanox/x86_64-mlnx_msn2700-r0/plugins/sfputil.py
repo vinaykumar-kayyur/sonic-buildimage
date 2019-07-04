@@ -521,6 +521,10 @@ class SfpUtil(SfpUtilBase):
             sfp_obj = sff8472InterfaceId()
             calibration_type = sfp_obj._get_calibration_type(eeprom_raw)
 
+            dom_supported = (int(eeprom_raw[92], 16) & 0x40 != 0)
+            if not dom_supported:
+                return transceiver_dom_info_dict
+
             eeprom_domraw = self._read_eeprom_specific_bytes_via_ethtool(port_num, offset, 256)
             if eeprom_domraw is None:
                 return transceiver_dom_info_dict
