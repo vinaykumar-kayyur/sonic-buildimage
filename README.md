@@ -123,6 +123,67 @@ Every target has a clean target, so in order to clean swss, execute:
 
 It is recommended to use clean targets to clean all packages that are built together, like dev packages for instance. In order to be more familiar with build process and make some changes to it, it is recommended to read this short [Documentation](README.buildsystem.md).
 
+## Build debug dockers and debug SONiC installer image:
+_Note: For now enabled for Broadcom platform only. Soon it will be extended to all._
+
+`make INSTALL_DEBUG_TOOLS=y make target/sonic-broadcom.bin`
+
+* Builds debug docker images.
+* Debug images carry a suffix of "-dbg"
+    * e.g. target/docker-orchagent-dbg.gz
+* target/sonic-broadcom.bin is built using debug docker images
+    * Selective sources are archived and available under /src
+    * An empty /debug dir is created for use during debug session.
+    * All debug dockers are mounted with /src:ro and /debug:rw
+    * Login banner will briefly describe these features.
+  
+
+_Note: target/sonic-broadcom.bin name is the same irrespective of built using debug or non-debug dockers._
+
+_Recommend: Rename image built using INSTALL_DEBUG_TOOLS=y to mark it explicit. May be `mv target/sonic-broadcom.bin target/sonic-broadcom-dbg.bin`_
+
+### Debug dockers
+* Built with all available debug symbols.
+* Installed with many basic packages that would be required for debugging
+    * gdb
+    * gdbserver
+    * vim
+    * strace
+    * openssh-client
+    * sshpass
+* Loadable into any environment that supports docker
+* Outside SONiC image, you may run the docker with `--entrypoint=/bin/bash` 
+* Use -v to map any of your host directories
+* To debug a core file in non-SONiC environment that supports docker
+    * `docker load -i docker-<name>-dbg.gz`
+    * copy your unzipped core file into ~/debug
+    * `docker run -it -entrypoint=/bin/bash -v ~/debug:/debug <image id>`
+    * `gdb /usr/bin/<your binary> -c /debug/<your core>`
+    
+### Debug SONiC image
+_NOTE: For now available for broadcom only; soon to be extended._
+
+* Install this image into your broadcom switch that supports SONiC.
+* Open the archive in /src, if you would need source code for debugging
+* Every debug enabled docker is mounted with /src as read-only
+* The host has /debug dir and it is mapped into every debuggable docker as /debug with read-write permission.
+* To debug a core
+    * Copy core into /debug of host and unzip it
+        * Feel free to create & use sub-dirs as needed.
+        * Entire /debug is mounted inside docker
+    * Get into the docker (`docker -it exec <name> bash`)
+    * `gdb /usr/bin/<binary> -c /debug/<core file path>`
+    * Use set-directory in gdb to map appropriate source dir from under /src
+    * You may set gdb logs to go into /debug
+* For live debugging
+    * Use this as a regular switch
+    * Get into docker, and you may
+        * start process under dbg
+        * attach gdb to running process
+    * Set required source dir from under /src as needed
+    * May use /debug to reecord all geb logs or any spew from debug session.
+    
+
 ## Notes:
 - If you are running make for the first time, a sonic-slave-${USER} docker image will be built automatically.
 This may take a while, but it is a one-time action, so please be patient.
@@ -135,10 +196,7 @@ This may take a while, but it is a one-time action, so please be patient.
   - docker-base.gz: base docker image where other docker images are built from, only used in build process (gzip tar archive)
   - docker-database.gz: docker image for in-memory key-value store, used as inter-process communication (gzip tar archive)
   - docker-fpm.gz: docker image for quagga with fpm module enabled (gzip tar archive)
-  - docker-orchagent-brcm.gz: docker image for SWitch State Service (SWSS) on Broadcom platform (gzip tar archive)
-  - docker-orchagent-cavm.gz: docker image for SWitch State Service (SWSS) on Cavium platform (gzip tar archive)
-  - docker-orchagent-mlnx.gz: docker image for SWitch State Service (SWSS) on Mellanox platform (gzip tar archive)
-  - docker-orchagent-nephos.gz: docker image for SWitch State Service (SWSS) on Nephos platform (gzip tar archive)
+  - docker-orchagent.gz: docker image for SWitch State Service (SWSS) (gzip tar archive)
   - docker-syncd-brcm.gz: docker image for the daemon to sync database and Broadcom switch ASIC (gzip tar archive)
   - docker-syncd-cavm.gz: docker image for the daemon to sync database and Cavium switch ASIC (gzip tar archive)
   - docker-syncd-mlnx.gz: docker image for the daemon to sync database and Mellanox switch ASIC (gzip tar archive)
