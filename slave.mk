@@ -174,6 +174,7 @@ $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
+$(info "DOCKER_AVOID_BASE_TAG_LATEST"    : "$(DOCKER_AVOID_BASE_TAG_LATEST)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
