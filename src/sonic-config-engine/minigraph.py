@@ -428,6 +428,11 @@ def parse_deviceinfo(meta, hwsku):
                 port_speeds[port_alias_map.get(alias, alias)] = speed
     return port_speeds, port_descriptions
 
+# Function to check if IP address is present in the key. 
+# If it is present, then the key would be a tuple.
+def is_ip_prefix_in_key(key):
+    return (isinstance(key, tuple))
+
 # Special parsing for spine chassis frontend 
 def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices):
     chassis_vnet ='VnetFE'
@@ -452,9 +457,10 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
         'vni': chassis_vni
     }}
 
-    # Find physical L3 interfaces that should be enslaved to Vnet
+    # Find L3 physical interfaces that should be enslaved to Vnet
     for intf in phyport_intfs:
-        if isinstance(intf, tuple) == False:
+        # We only care about L3 physical interfaces 
+        if is_ip_prefix_in_key(intf) == False:
             continue 
 
         # intf = (intf name, IP prefix)
@@ -470,24 +476,25 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
             else:
                 print >> sys.stderr, 'Warning: cannot find the key %s' % (intf_name) 
 
-    # Find port chennel interfaces that should be enslaved to Vnet
+    # Find L3 port chennel interfaces that should be enslaved to Vnet
     for pc_intf in pc_intfs:
-        if isinstance(pc_intf, tuple) == False:
+        # We only care about L3 port channel interfaces 
+        if is_ip_prefix_in_key(pc_intf) == False:
             continue 
 
         # Get port channel interface name
         # pc intf = (pc intf name, IP prefix)
         pc_intf_name = pc_intf[0]
 
-        # Get an interface that is enslaved to this port channel 
         intf_name = None 
+        # Get a physical interface that belongs to this port channel         
         for pc_member in pc_members:
-            if isinstance(pc_member, tuple) and pc_member[0] == pc_intf_name:
+            if pc_member[0] == pc_intf_name:
                 intf_name = pc_member[1]
                 break 
 
         if intf_name == None:
-            print >> sys.stderr, 'Warning: cannot find any interfaces enslaved to %s' % (pc_intf_name)
+            print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf_name)
             continue
 
         # Get the neighbor router of this port channel interface
