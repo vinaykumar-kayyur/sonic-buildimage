@@ -8,7 +8,7 @@ REDIS_VERSION_FULL = $(REDIS_VERSION)-3~bpo9+2
 MAIN_TARGET = redis-server_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = redis-tools_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  redis-sentinel_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
-		  redis-server-dbgsym_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+		  redis-tools-dbgsym_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf  redis_build
