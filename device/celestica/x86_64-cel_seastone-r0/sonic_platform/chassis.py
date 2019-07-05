@@ -74,7 +74,7 @@ class Chassis(ChassisBase):
             base_mac = self.config_data["DEVICE_METADATA"]["localhost"]["mac"]
             return str(base_mac)
         except KeyError:
-            raise KeyError("Base MAC not found")
+            return str(None)
 
     def get_firmware_version(self, component_name):
         """
