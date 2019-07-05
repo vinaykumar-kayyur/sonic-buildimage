@@ -30,6 +30,7 @@ NUM_PSU = 2
 RESET_REGISTER = "0x112"
 REBOOT_CAUSE_PATH = "/host/reboot-cause/previous-reboot-cause.txt"
 
+
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
@@ -118,6 +119,7 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         self.component = Component("SMC_CPLD")
+        description = 'None'
         reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
         hw_reboot_cause = self.component.get_register_value(RESET_REGISTER)
         sw_reboot_cause = self.__read_txt_file(REBOOT_CAUSE_PATH)
@@ -128,5 +130,8 @@ class Chassis(ChassisBase):
             reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
         elif hw_reboot_cause == "0x33" or hw_reboot_cause == "0x55":
             reboot_cause = self.REBOOT_CAUSE_WATCHDOG
+        else:
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'Unknow reason'
 
-        return reboot_cause
+        return (reboot_cause, description)

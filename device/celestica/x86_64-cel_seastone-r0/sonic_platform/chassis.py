@@ -30,6 +30,7 @@ NUM_PSU = 2
 RESET_REGISTER = "0x103"
 REBOOT_CAUSE_PATH = "/host/reboot-cause/previous-reboot-cause.txt"
 
+
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
@@ -118,15 +119,20 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         self.component = Component("CPLD1")
+        description = 'None'
         reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
         hw_reboot_cause = self.component.get_register_value(RESET_REGISTER)
         sw_reboot_cause = self.__read_txt_file(REBOOT_CAUSE_PATH)
 
         if sw_reboot_cause != "Unexpected reboot":
             reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            description = sw_reboot_cause
         elif hw_reboot_cause == "0x11":
             reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
         elif hw_reboot_cause == "0x22":
-            reboot_cause = self.REBOOT_CAUSE_WATCHDOG
+            reboot_cause = self.REBOOT_CAUSE_WATCHDOG,
+        else:
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'Unknow reason'
 
-        return reboot_cause
+        return (reboot_cause, description)
