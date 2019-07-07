@@ -133,6 +133,6 @@ class Chassis(ChassisBase):
             reboot_cause = self.REBOOT_CAUSE_WATCHDOG,
         else:
             reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            description = 'Unknow reason'
+            description = 'Unknown reason'
 
         return (reboot_cause, description)

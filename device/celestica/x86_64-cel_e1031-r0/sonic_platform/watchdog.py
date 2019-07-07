@@ -67,13 +67,16 @@ class Watchdog(WatchdogBase):
 
     def _is_wd_main(self, dev):
         """
-        Checks if dev is Mellanox main watchdog
+        Checks watchdog identity
         """
         identity = self._read_file(
             "{}/{}/identity".format(WDT_SYSFS_PATH, dev))
         return identity == WD_MAIN_IDENTITY
 
     def _get_wdt(self):
+        """
+        Retrieves watchdog device
+        """
         wdt_main_dev_list = [dev for dev in os.listdir(
             "/dev/") if dev.startswith("watchdog") and self._is_wd_main(dev)]
         if not wdt_main_dev_list:
@@ -84,6 +87,9 @@ class Watchdog(WatchdogBase):
         return watchdog, wdt_main_dev_name
 
     def _read_file(self, file_path):
+        """
+        Read text file
+        """
         try:
             with open(file_path, "r") as fd:
                 txt = fd.read()
