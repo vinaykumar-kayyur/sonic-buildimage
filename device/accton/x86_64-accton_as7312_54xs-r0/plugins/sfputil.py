@@ -117,13 +117,13 @@ class SfpUtil(SfpUtilBase):
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/eeprom'
         for x in range(self.port_start, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
-                self._port_to_i2c_mapping[x+1])
+                self._port_to_i2c_mapping[x])
 
         SfpUtilBase.__init__(self)
 
     def get_cpld_num(self, port_num):             
         cpld_i = 1
-        if (port_num > 24 and port_num < self.QSFP_PORT_START):
+        if (port_num > 24 and port_num < self.qsfp_port_start):
             cpld_i = 2
 
         if (port_num > 52): 
