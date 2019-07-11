@@ -95,3 +95,5 @@ FRR_USER_GID = 300
 
 # Default VS build memory preparation
 DEFAULT_VS_PREPARE_MEM = yes
+
+DEFAULT_MULTI_ASIC = n

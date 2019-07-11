@@ -198,8 +198,10 @@ start() {
         --tmpfs /tmp \
 {%- endif %}
         --tmpfs /var/tmp \
+{%- if multi_instance == "False" %}
         --hostname "$HOSTNAME" \
-        --name={{docker_container_name}} {{docker_image_name}}:latest || {
+{%- endif %}
+        --name={{docker_container_name}}$DEV {{docker_image_name}}:latest || {
             echo "Failed to docker run" >&1
             exit 4
     }
