@@ -42,6 +42,8 @@
 #define VLAN_PREFIX             "Vlan"
 #define VXLAN_TUNNEL_PREFIX  "VTTNL"
 
+#define WARM_REBOOT 1
+
 struct CSM;
 
 #ifndef MAX_BUFSIZE
@@ -62,6 +64,11 @@ struct System {
     int route_sock_seq;
     struct nl_sock * genric_event_sock;
     struct nl_sock * route_event_sock;
+
+    int sig_pipe_r;
+    int sig_pipe_w;
+    int warmboot_start;
+    int warmboot_exit;
     
     /* Info List*/
     LIST_HEAD(csm_list, CSM) csm_list;

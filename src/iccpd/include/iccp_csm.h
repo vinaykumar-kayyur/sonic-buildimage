@@ -102,6 +102,7 @@ struct CSM {
     time_t connTimePrev;
     time_t heartbeat_send_time;
     time_t heartbeat_update_time;
+    time_t peer_warm_reboot_time;
     char peer_itf_name[IFNAMSIZ];
     char peer_ip[INET_ADDRSTRLEN];
     char sender_ip[INET_ADDRSTRLEN];

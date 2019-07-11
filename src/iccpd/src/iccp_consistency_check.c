@@ -48,19 +48,19 @@ static int iccp_check_interface_mode( char* ifname)
 {
     struct CSM* csm = NULL;
     struct LocalInterface* local_if = NULL;
-    struct PeerInterface* peer_if = NULL;  
-    
+    struct PeerInterface* peer_if = NULL;
+
     local_if = local_if_find_by_name(ifname);
     if(local_if == NULL)
-    return -2;   
+    return -2;
 
     csm = local_if->csm;
     if(csm == NULL)
     return -3;
-    
+
     peer_if = peer_if_find_by_name(csm, ifname);
     if(peer_if == NULL)
-    return -4; 
+    return -4;
 
     if(peer_if->l3_mode != local_if->l3_mode)
         return -5;
@@ -71,12 +71,12 @@ static int iccp_check_interface_mode( char* ifname)
 static int iccp_check_interface_layer3_addr(char* ifname)
 {
     struct CSM* csm = NULL;
-    struct LocalInterface* local_if = NULL;      
+    struct LocalInterface* local_if = NULL;
     struct PeerInterface* peer_if = NULL;
-    
+
     local_if = local_if_find_by_name(ifname);
     if(local_if == NULL)
-    return -2;   
+    return -2;
 
     csm = local_if->csm;
     if(csm == NULL)
@@ -84,7 +84,7 @@ static int iccp_check_interface_layer3_addr(char* ifname)
 
     peer_if = peer_if_find_by_name(csm, ifname);
     if(peer_if == NULL)
-    return -4; 
+    return -4;
 
     if(peer_if->ipv4_addr != local_if->ipv4_addr)
         return -5;
@@ -102,7 +102,7 @@ static int iccp_check_interface_vlan(char* ifname)
 
     local_if = local_if_find_by_name(ifname);
     if(local_if == NULL)
-    return -2;   
+    return -2;
 
     csm = local_if->csm;
     if(csm == NULL)
@@ -110,7 +110,7 @@ static int iccp_check_interface_vlan(char* ifname)
 
     peer_if = peer_if_find_by_name(csm, ifname);
     if(peer_if == NULL)
-    return -4; 
+    return -4;
 
     LIST_FOREACH(local_vlan, &(local_if->vlan_list), port_next)
     {

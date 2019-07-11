@@ -270,6 +270,27 @@ accept_client:
     return 0;
 }
 
+void iccp_get_start_type(struct System* sys)
+{
+    FILE* fp;      
+    memset(g_csm_buf, 0, CSM_BUFFER_SIZE);   
+
+    fp = fopen("/proc/cmdline", "r");
+    if (!fp) 
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"Error: Can't open file /proc/cmdline!");
+        return;
+    }
+
+    fread(g_csm_buf, CSM_BUFFER_SIZE, 1, fp);
+    (void)fclose(fp);
+    
+    if(strstr(g_csm_buf, "SONIC_BOOT_TYPE=warm"))
+        sys->warmboot_start = WARM_REBOOT;
+
+    return;   
+}
+
 /* scheduler initialization */
 void scheduler_init()
 {
@@ -277,7 +298,8 @@ void scheduler_init()
 
     if (!(sys = system_get_instance()))
         return;
-	
+
+    iccp_get_start_type(sys);
     /*Get kernel interface and port */
     iccp_sys_local_if_list_get_init();
     iccp_sys_local_if_list_get_addr();
@@ -307,10 +329,59 @@ void scheduler_init()
     return;
 }
 
+extern int mlacp_prepare_for_warm_reboot(struct CSM* csm,char* buf, size_t max_buf_size);
+void mlacp_sync_send_warmboot_flag()
+{
+    struct System* sys = NULL;
+    struct CSM* csm = NULL;
+    int msg_len = 0;
+        
+    if((sys = system_get_instance()) == NULL)
+        return;    
+    
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        if(MLACP(csm).current_state==MLACP_STATE_EXCHANGE)
+        {
+            memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+            msg_len = mlacp_prepare_for_warm_reboot(csm, g_csm_buf, CSM_BUFFER_SIZE);
+            iccp_csm_send(csm, g_csm_buf, msg_len);
+        }
+    }   
+    
+    return;
+}
+
+int iccp_receive_signal_handler(struct System* sys)
+{
+    char ctrl_byte;
+    int err = 0;          
+   
+    err = read(sys->sig_pipe_r, &ctrl_byte, 1);
+    if (err == -1)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"Read sig_pipe_r fail !");
+        return err;
+    }    
+
+    switch(ctrl_byte)
+    {
+        case 'w':
+             /*send packet to peer*/
+            mlacp_sync_send_warmboot_flag();
+            sys->warmboot_exit = WARM_REBOOT;
+            break;
+        default:
+            break;
+    }
+    
+    return 0;
+}
+
 /* Thread fetch to call */
 void scheduler_loop()
 {
-    struct System* sys = NULL;	
+    struct System* sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
         return;
@@ -325,7 +396,13 @@ void scheduler_loop()
         /*handle socket slelect event ,If no message received, it will block 0.1s*/
         iccp_handle_events(sys);
         /*csm, app state machine transit */
-        scheduler_transit_fsm();		
+        scheduler_transit_fsm();	
+
+        if (sys->warmboot_exit == WARM_REBOOT)
+        {
+            ICCPD_LOG_DEBUG(__FUNCTION__, "EXIT ......");           
+            return;
+        }
     }
 
     return;

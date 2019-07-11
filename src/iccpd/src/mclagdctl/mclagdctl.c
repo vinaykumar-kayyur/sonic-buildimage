@@ -226,9 +226,9 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
         fprintf(stdout,"%s: %s\n", "The MCLAG's keepalive is", state_info->keepalive ? "OK" : "ERROR"); 
  
         if (state_info->mclag_id <= 0)
-            fprintf(stdout,"%s: %s\n", "Mclag id", "UNKNOWN");
+            fprintf(stdout,"%s: %s\n", "Domain id", "Unknown");
         else
-            fprintf(stdout,"%s: %d\n" ,"Mclag id", state_info->mclag_id);
+            fprintf(stdout,"%s: %d\n" ,"Domain id", state_info->mclag_id);
         
         fprintf(stdout,"%s: %s\n", "Local Ip", state_info->local_ip);
         fprintf(stdout,"%s: %s\n", "Peer Ip", state_info->peer_ip);  
@@ -241,13 +241,13 @@ int mclagdctl_parse_dump_state(char *msg, int data_len)
                     state_info->peer_link_mac[4], state_info->peer_link_mac[5]);
         
         if (state_info->role == 0)
-            fprintf(stdout,"%s: %s\n", "Role", "NONE");
+            fprintf(stdout,"%s: %s\n", "Role", "None");
         else if (state_info->role == 1)
-            fprintf(stdout,"%s: %s\n", "Role", "ACTIVE");
+            fprintf(stdout,"%s: %s\n", "Role", "Active");
         else if (state_info->role == 2)
-            fprintf(stdout,"%s: %s\n", "Role", "STANDBY");
+            fprintf(stdout,"%s: %s\n", "Role", "Standby");
         
-        fprintf(stdout,"%s: %s\n", "Enabled PortChannel", state_info->enabled_po);
+        fprintf(stdout,"%s: %s\n", "MCLAG Interface", state_info->enabled_po);
         
     }
 
@@ -420,13 +420,13 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout,"%s: %s\n", "IPv4Address", lif_info->ipv4_addr);
             fprintf(stdout,"%s: %d\n" ,"Prefixlen", lif_info->prefixlen);
             fprintf(stdout,"%s: %s\n", "State", lif_info->state);
-            fprintf(stdout,"%s: %d\n" ,"L3Mode", lif_info->l3_mode);
-            fprintf(stdout,"%s: %d\n" ,"IsPeerlink", lif_info->is_peer_link);
-            fprintf(stdout,"%s: %s\n", "PortchannelMem", lif_info->portchannel_member_buf);
-            fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
-            fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", lif_info->po_active);
-            fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state);
-            fprintf(stdout,"%s: %d\n" ,"IsIsolateWithPeerlink", lif_info->isolate_to_peer_link);
+            fprintf(stdout,"%s: %s\n" ,"IsL3Interface", lif_info->l3_mode ? "Yes":"No");
+            fprintf(stdout,"%s: %s\n" ,"IsPeerlink", lif_info->is_peer_link ? "Yes":"No");
+            fprintf(stdout,"%s: %s\n", "MemberPorts", lif_info->portchannel_member_buf);
+            /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
+            fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
+            fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state);*/
+            fprintf(stdout,"%s: %s\n" ,"IsIsolateWithPeerlink", lif_info->isolate_to_peer_link ? "Yes":"No");
             fprintf(stdout,"%s: %s\n" ,"VlanList", lif_info->vlanlist);
         }
         else
@@ -435,7 +435,7 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout,"%s: %s\n", "Type", lif_info->type);
             fprintf(stdout,"%s: %s\n", "PortName", lif_info->name);
             fprintf(stdout,"%s: %s\n", "State", lif_info->state);
-            fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
+            /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);*/
         }
         
         for (pos = 0; pos < 60; ++pos)
@@ -492,8 +492,8 @@ int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len)
                 pif_info->mac_addr[4], pif_info->mac_addr[5]);
         
         fprintf(stdout,"%s: %s\n", "State", pif_info->state);
-        fprintf(stdout,"%s: %d\n" ,"PortchannelId", pif_info->po_id);
-        fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", pif_info->po_active);
+        /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", pif_info->po_id);
+        fprintf(stdout,"%s: %d\n" ,"PortchannelIsActive", pif_info->po_active);*/
  
         for (pos = 0; pos < 60; ++pos)
             fprintf(stdout, "-");
@@ -749,7 +749,7 @@ int main(int argc, char **argv)
     }
 
     reply = (struct mclagd_reply_hdr *)rcv_buf;
-        
+
     if (reply->info_type != cmd_type->info_type)
     {
         fprintf(stderr, "Reply info type from mclagd error\n");

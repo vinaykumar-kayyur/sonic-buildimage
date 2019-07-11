@@ -459,6 +459,16 @@ static void mlacp_sync_recv_heartbeat(struct CSM* csm, struct Msg* msg)
     return;
 }
 
+static void mlacp_sync_recv_warmboot(struct CSM* csm, struct Msg* msg)
+{
+    struct mLACPWarmbootTLV *tlv = NULL;
+    
+    tlv = (struct mLACPWarmbootTLV *)(&msg->buf[sizeof(ICCHdr)]);
+    mlacp_fsm_update_warmboot(csm, tlv);
+    
+    return;
+}
+
 /*****************************************
 * MLACP Init
 *
@@ -883,6 +893,9 @@ static void mlacp_sync_receiver_handler(struct CSM* csm, struct Msg* msg)
         case TLV_T_MLACP_HEARTBEAT:
             mlacp_sync_recv_heartbeat(csm, msg);
             break;
+        case TLV_T_MLACP_WARMBOOT_FLAG:
+            mlacp_sync_recv_warmboot(csm, msg);
+            break;
     }
     
     /*ICCPD_LOG_DEBUG("mlacp_fsm", "  [Sync Recv] %s... DONE", get_tlv_type_string(icc_param->type));*/
@@ -1131,6 +1144,14 @@ static void mlacp_exchange_handler(struct CSM* csm, struct Msg* msg)
     
     /* Send ARP info if any*/
     mlacp_sync_send_syncArpInfo(csm);
+
+    /*If peer is warm reboot*/
+    if(csm->peer_warm_reboot_time != 0)
+    {
+        /*Peer warm reboot timeout, recover to normal reboot*/
+        if((time(NULL) - csm->peer_warm_reboot_time) >= 90) 
+            csm->peer_warm_reboot_time = 0;
+    }
 
     return;
 }

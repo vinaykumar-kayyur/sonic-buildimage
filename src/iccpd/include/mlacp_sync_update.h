@@ -39,6 +39,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv);
 
 int mlacp_fsm_update_heartbeat(struct CSM* csm, struct mLACPHeartbeatTLV* tlv);
 
+int mlacp_fsm_update_warmboot(struct CSM* csm, struct mLACPWarmbootTLV* tlv);
 void mlacp_enqueue_arp(struct CSM* csm, struct Msg* msg);
 
 int mlacp_fsm_update_Agg_conf(struct CSM* csm, mLACPAggConfigTLV* portconf);

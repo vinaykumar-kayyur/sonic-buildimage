@@ -39,14 +39,14 @@ int set_mc_lag_by_id(uint16_t mid)
     struct CSM* csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if (!csm) 
+    if (!csm)
     {
         csm = (struct CSM*)iccp_get_csm();
-        if (csm == NULL) 
+        if (csm == NULL)
         {
             return -1;
         }
-        
+
         ret = set_mc_lag_id(csm, mid);
 
         return ret;
@@ -110,8 +110,8 @@ int iccp_config_from_command(char * line)
     else if(strncmp(cp,"mclag_interface:",16) == 0)
     {
         cp += 10;
-       
-        while (1) 
+
+        while (1)
         {
             start = cp;
             while (!(*cp == ',' || *cp == '\r' || *cp == '\n') &&
@@ -128,7 +128,7 @@ int iccp_config_from_command(char * line)
 
             if (*cp == '\0')
                 break;
-        } 
+        }
     }
     else
     {

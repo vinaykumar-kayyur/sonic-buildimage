@@ -30,15 +30,15 @@
 
 static uint32_t _iccpd_log_level_map[] =
 {
-    LOG_DEBUG,                
-    LOG_INFO,                
-    LOG_NOTICE,               
-    LOG_WARNING,           
-    LOG_ERR,                 
-    LOG_CRIT,              
+    LOG_DEBUG,
+    LOG_INFO,
+    LOG_NOTICE,
+    LOG_WARNING,
+    LOG_ERR,
+    LOG_CRIT,
 };
 
-static char* log_level_to_string(int level) 
+static char* log_level_to_string(int level)
 {
     switch (level)
     {
@@ -55,36 +55,36 @@ static char* log_level_to_string(int level)
         case DEBUG_LOG_LEVEL:
             return "DEBUG";
     }
-    
+
     return "INFO";
 }
 
-struct LoggerConfig* logger_get_configuration() 
+struct LoggerConfig* logger_get_configuration()
 {
     static struct LoggerConfig config;
 
-    if (config.init == 0) 
+    if (config.init == 0)
     {
         config.console_log_enabled = 0;
         config.log_level = DEBUG_LOG_LEVEL;
         config.init = 1;
     }
-    
+
     return &config;
 }
 
-void log_init(struct CmdOptionParser* parser) 
+void log_init(struct CmdOptionParser* parser)
 {
     struct LoggerConfig* config = logger_get_configuration();
     config->console_log_enabled = parser->console_log;
 }
 
-void log_finalize() 
+void log_finalize()
 {
      /*do nothing*/
 }
 
-void write_log(const int level, const char* tag, const char* format, ...) 
+void write_log(const int level, const char* tag, const char* format, ...)
 {
     struct LoggerConfig* config = logger_get_configuration();
     char buf[LOGBUF_SIZE];
@@ -92,12 +92,12 @@ void write_log(const int level, const char* tag, const char* format, ...)
     unsigned int   prefix_len;
     unsigned int   avbl_buf_len;
     unsigned int   print_len;
-    
+
 #if 0
     if (!config->console_log_enabled)
         return;
-#endif  
- 
+#endif
+
     if (level < config->log_level)
         return;
 
@@ -118,7 +118,7 @@ void write_log(const int level, const char* tag, const char* format, ...)
 
     buf[prefix_len+print_len] = '\0';
     ICCPD_UTILS_SYSLOG(_iccpd_log_level_map[level], "%s", buf);
-    
+
     return;
 }
 

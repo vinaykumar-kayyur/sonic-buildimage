@@ -23,7 +23,7 @@
 
 #include "../include/cmd_option.h"
 
-struct CmdOption* cmd_option_find(struct CmdOptionParser* parser, char* opt_name) 
+struct CmdOption* cmd_option_find(struct CmdOptionParser* parser, char* opt_name)
 {
     struct CmdOption* opt = NULL;
 
@@ -39,7 +39,7 @@ struct CmdOption* cmd_option_find(struct CmdOptionParser* parser, char* opt_name
     return NULL;
 }
 
-void cmd_option_delete(struct CmdOption* opt) 
+void cmd_option_delete(struct CmdOption* opt)
 {
     if (opt == NULL)
         return;
@@ -54,7 +54,7 @@ void cmd_option_delete(struct CmdOption* opt)
     free(opt);
 }
 
-struct CmdOption* cmd_option_add(struct CmdOptionParser* parser, char* opt_name) 
+struct CmdOption* cmd_option_add(struct CmdOptionParser* parser, char* opt_name)
 {
     struct CmdOption* opt = NULL;
 
@@ -63,22 +63,22 @@ struct CmdOption* cmd_option_add(struct CmdOptionParser* parser, char* opt_name)
     if ((opt = cmd_option_find(parser, opt_name)) != NULL)
     	return opt;
 
-    if ((opt = (struct CmdOption*) malloc(sizeof(struct CmdOption))) == NULL) 
+    if ((opt = (struct CmdOption*) malloc(sizeof(struct CmdOption))) == NULL)
     {
     	strerror(errno);
-    } 
-    else 
+    }
+    else
     {
     	opt->option = opt_name;
     	opt->parameter = NULL;
     	opt->desc = NULL;
     	LIST_INSERT_HEAD(&(parser->option_list), opt, next);
     }
-    
+
     return opt;
 }
 
-static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, char* desc) 
+static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, char* desc)
 {
     char buf[OPTION_MAX_LEN];
     struct CmdOption* opt = NULL;
@@ -104,13 +104,13 @@ static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, ch
     desc_copy = strdup(desc);
     if ((opt = cmd_option_find(parser, opt_name)) != NULL)
         goto failed;
-    if ((opt = cmd_option_add(parser, opt_name)) == NULL) 
+    if ((opt = cmd_option_add(parser, opt_name)) == NULL)
     {
         goto failed;
     }
     opt->parameter = param;
     opt->desc = desc_copy;
-    
+
     return;
 
 failed:
@@ -124,7 +124,7 @@ failed:
         free(opt);
 }
 
-void cmd_option_parser_init(struct CmdOptionParser* parser) 
+void cmd_option_parser_init(struct CmdOptionParser* parser)
 {
     if (parser == NULL)
     	return;
@@ -136,17 +136,17 @@ void cmd_option_parser_init(struct CmdOptionParser* parser)
     cmd_option_register(parser, "-h", "Show the usage.");
 }
 
-void cmd_option_parser_finalize(struct CmdOptionParser* parser) 
+void cmd_option_parser_finalize(struct CmdOptionParser* parser)
 {
     while (!LIST_EMPTY(&(parser->option_list)))
     {
-        struct CmdOption* opt = NULL; 
+        struct CmdOption* opt = NULL;
         opt = LIST_FIRST(&(parser->option_list));
         cmd_option_delete(opt);
-    } 
+    }
 }
 
-void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_name) 
+void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_name)
 {
     char buf[MSG_LEN];
     struct CmdOption* opt = NULL;
@@ -156,7 +156,7 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
     fprintf(stdout, "Usage: %s [Options]\n", prog_name);
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
-    LIST_FOREACH(opt, &(parser->option_list), next) 
+    LIST_FOREACH(opt, &(parser->option_list), next)
     {
         index = 0;
         begin = 0;
@@ -168,10 +168,10 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
         else
             snprintf(buf, MSG_LEN - 1, "%s", opt->option);
         fprintf(stdout, "%24s    ", buf);
-        while (index < strlen(opt->desc)) 
+        while (index < strlen(opt->desc))
         {
             while (index < strlen(opt->desc)
-            		&& opt->desc[index] != '\n' && length < 49) 
+            		&& opt->desc[index] != '\n' && length < 49)
             {
                 ++index;
                 ++length;
@@ -181,7 +181,7 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
             if (length == 49 && index < strlen(opt->desc)
             		&& opt->desc[index] != '\n'
             		&& opt->desc[index - 1] != ' '
-            		&& opt->desc[index] != ' ') 
+            		&& opt->desc[index] != ' ')
             {
                 buf[length] = '-';
                 buf[length + 1] = '\0';
@@ -189,11 +189,11 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
             if (length < 49) ++index;
             begin = index;
             length = 0;
-            if (first_line != 0) 
+            if (first_line != 0)
             {
                 fprintf(stdout, "%-52s\n", buf);
                 first_line = 0;
-            } 
+            }
             else
                 fprintf(stdout, "%28c%-52s\n", ' ', buf);
         }
@@ -201,7 +201,7 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
     }
 }
 
-int cmd_option_parser_parse(struct CmdOptionParser* parser, int argc, char* argv[]) 
+int cmd_option_parser_parse(struct CmdOptionParser* parser, int argc, char* argv[])
 {
     int index = 1;
     struct CmdOption* opt = NULL;
@@ -212,21 +212,21 @@ int cmd_option_parser_parse(struct CmdOptionParser* parser, int argc, char* argv
     if (parser == NULL)
     	return -255;
 
-    while (index < argc) 
+    while (index < argc)
     {
         opt_name = argv[index];
         opt = cmd_option_find(parser, opt_name);
-        if (opt == NULL) 
+        if (opt == NULL)
         {
             fprintf(stderr, "Unknown option %s, skip it.\n", opt_name);
             ++index;
             continue;
         }
-        
-        if (opt->parameter != NULL) 
+
+        if (opt->parameter != NULL)
         {
             ++index;
-            if (index >= argc) 
+            if (index >= argc)
             {
                 fprintf(stderr, "Error: Insufficient parameter for option %s\n", opt_name);
                 cmd_option_parser_dump_usage(parser, argv[0]);
@@ -234,29 +234,29 @@ int cmd_option_parser_parse(struct CmdOptionParser* parser, int argc, char* argv
             }
             val = argv[index];
         }
-        
-        if (strncmp(opt_name, "-h", 2) == 0) 
+
+        if (strncmp(opt_name, "-h", 2) == 0)
         {
             cmd_option_parser_dump_usage(parser, argv[0]);
             return -1;
         }
-        
+
         if (strncmp(opt_name, "-l", 2) == 0)
             parser->log_file_path = val;
-            
-        if (strncmp(opt_name, "-p", 2) == 0) 
+
+        if (strncmp(opt_name, "-p", 2) == 0)
         {
             num = atoi(val);
             if (num > 0 && num < 65535)
                 parser->telnet_port = num;
-        } 
+        }
         else if (strncmp(opt_name, "-c", 2) == 0)
             parser->console_log = 1;
         else
             fprintf(stderr, "Unknown option name %s, skip it.\n", opt_name);
-            
+
         ++index;
     }
-    
+
     return 0;
 }

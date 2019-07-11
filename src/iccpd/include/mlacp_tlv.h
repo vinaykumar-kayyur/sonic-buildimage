@@ -379,6 +379,14 @@ struct mLACPHeartbeatTLV {
     uint8_t         heartbeat;
 }__attribute__ ((packed));
 
+/*
+* NOS: Warm_reboot
+*/
+struct mLACPWarmbootTLV {
+    ICCParameter    icc_parameter;
+    uint8_t         warmboot;
+}__attribute__ ((packed));
+
 enum ARP_OP_TYPE {
     ARP_SYNC_LIF,
     ARP_SYNC_ADD,

@@ -635,7 +635,7 @@ void peerlink_port_isolate_cleanup(struct CSM* csm)
     
     if (!csm)
         return;
-    
+
     /* Clean all port block*/
     LIST_FOREACH(local_if, &(MLACP(csm).lif_list), mlacp_next)
     {
@@ -1239,18 +1239,24 @@ static void mlacp_conn_handler_fdb (struct CSM* csm)
 void mlacp_peer_conn_handler(struct CSM* csm)
 {
     struct LocalInterface *lif = NULL;
-    struct VLAN_ID *vlan = NULL;
     static int first_time = 0;
+    struct System* sys = NULL;
     
     if (!csm)
         return;
-    
+
+    if((sys = system_get_instance()) == NULL)
+        return;
+        
     set_peerlink_mlag_port_learn(csm->peer_link_if, 0);
 
+    /*If peer connect again, don't flush FDB*/
     if(first_time == 0)
     {
         first_time = 1;
-        mlacp_clean_fdb();
+        /*If warm reboot, don't flush FDB*/
+        if(sys->warmboot_start != WARM_REBOOT)
+            mlacp_clean_fdb();
     }
 
     iccp_get_fdb_change_from_syncd();
@@ -1301,10 +1307,26 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
     struct LocalInterface* lif = NULL;
     struct Msg* msg = NULL;
     struct MACMsg* mac_msg = NULL;
+    struct System* sys = NULL;
 
     if (!csm)
         return;
 
+    if((sys = system_get_instance()) == NULL)
+        return;
+
+    /*If warm reboot, don't change FDB and MAC address*/
+    if(sys->warmboot_exit == WARM_REBOOT)
+        return;
+
+    /*If peer is warm reboot, don't change FDB and MAC address*/
+    if(csm->peer_warm_reboot_time != 0)
+    {
+        /*If peer disconnected, recover peer to normal reboot for next time*/
+        csm->peer_warm_reboot_time = 0;
+        return;
+    }
+    
     TAILQ_FOREACH(msg, &MLACP(csm).mac_list, tail)
     {
         mac_msg = (struct MACMsg*) msg->buf;
@@ -1458,7 +1480,7 @@ int iccp_connect_syncd()
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) 
     {
-	 if(count == 0) ICCPD_LOG_WARN(__FUNCTION__, "Failed to create unix socket: %s", strerror(errno));
+        if(count == 0) ICCPD_LOG_WARN(__FUNCTION__, "Failed to create unix socket: %s", strerror(errno));
         goto conn_fail;
     }
 
@@ -1473,7 +1495,7 @@ int iccp_connect_syncd()
 
     ret = connect(fd, (struct sockaddr *)&serv, sizeof(serv));
     if (ret < 0) {
-	    if(count == 0) ICCPD_LOG_WARN(__FUNCTION__, "Failed to connect to mclag syncd: errno str %s", strerror(errno));
+        if(count == 0) ICCPD_LOG_WARN(__FUNCTION__, "Failed to connect to mclag syncd: errno str %s", strerror(errno));
         close(fd);
         goto conn_fail;
     }
@@ -1798,27 +1820,28 @@ void do_mac_update_from_syncd (char mac_str[32], uint16_t vid, char *ifname, uin
         return -1;
     }
 
-    if (msg_hdr->type != MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION)
+    if (msg_hdr->type == MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "msg type wrong!!!!! ");  		
-        return -1;
-    }		
+        count =( msg_hdr->len- sizeof(struct IccpSyncdHDr ))/sizeof(struct mclag_fdb_info);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d   ",count );  
+        for (i =0; i<count;i++)
+        {
+            mac_info = (struct mclag_fdb_info *)&msg_buf[sizeof(struct IccpSyncdHDr )+ i * sizeof(struct mclag_fdb_info)];
+            ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d vid %d mac %s port %s  optype  %d ",i, mac_info->vid, mac_info->mac, mac_info->port_name, mac_info->op_type);  
+            lif = local_if_find_by_name(mac_info->port_name);
+            
+            /*if (!lif ||lif->type != IF_T_PORT_CHANNEL)*/
+            if (!lif)
+                continue;
 
-    count =( msg_hdr->len- sizeof(struct IccpSyncdHDr ))/sizeof(struct mclag_fdb_info);
-    ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d   ",count );  
-    for (i =0; i<count;i++)
+            do_mac_update_from_syncd(mac_info->mac, mac_info->vid, mac_info->port_name, mac_info->type, mac_info->op_type);
+        }
+    }	
+    else 
     {
-        mac_info = (struct mclag_fdb_info *)&msg_buf[sizeof(struct IccpSyncdHDr )+ i * sizeof(struct mclag_fdb_info)];
-        ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d vid %d mac %s port %s  optype  %d ",i, mac_info->vid, mac_info->mac, mac_info->port_name, mac_info->op_type);  
-        lif = local_if_find_by_name(mac_info->port_name);
-        
-        /*if (!lif ||lif->type != IF_T_PORT_CHANNEL)*/
-        if (!lif)
-            continue;
-
-        do_mac_update_from_syncd(mac_info->mac, mac_info->vid, mac_info->port_name, mac_info->type, mac_info->op_type);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "recv unknown type msg  " );          
     }
-     
+	
     return 0;
 }
 

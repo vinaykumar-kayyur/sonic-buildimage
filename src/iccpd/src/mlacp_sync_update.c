@@ -641,4 +641,16 @@ int mlacp_fsm_update_heartbeat(struct CSM* csm, struct mLACPHeartbeatTLV* tlv)
     return 0;
 }
 
+/*****************************************
+* warm-reboot flag Update
+*****************************************/
+int mlacp_fsm_update_warmboot(struct CSM* csm, struct mLACPWarmbootTLV* tlv)
+{
+    if (!csm || !tlv)
+        return -255;
+    
+    time(&csm->peer_warm_reboot_time);
+    
+    return 0;
+}
 

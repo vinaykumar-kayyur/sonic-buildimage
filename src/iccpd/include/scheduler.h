@@ -54,5 +54,6 @@ void scheduler_server_sock_init();
 int scheduler_csm_read_callback(struct CSM* csm) ;
 int iccp_get_server_sock_fd();
 int scheduler_server_accept();
+int iccp_receive_signal_handler(struct System* sys);
 
 #endif /* SCHEDULER_H_ */

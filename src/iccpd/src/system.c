@@ -58,6 +58,8 @@ void system_init(struct System* sys)
     sys->arp_receive_fd = -1;
     sys->epoll_fd = -1;
     sys->family = -1;
+    sys->warmboot_start = 0;
+    sys->warmboot_exit = 0;
     LIST_INIT(&(sys->csm_list));
     LIST_INIT(&(sys->lif_list));
     LIST_INIT(&(sys->lif_purge_list));
@@ -100,13 +102,17 @@ void system_finalize()
     while (!LIST_EMPTY(&(sys->lif_list)))
     {
         local_if = LIST_FIRST(&(sys->lif_list));
+        LIST_REMOVE(local_if, system_next);
         local_if_finalize(local_if);
     }
     while (!LIST_EMPTY(&(sys->lif_purge_list)))
     {
-        local_if = LIST_FIRST(&(sys->lif_list));
+        local_if = LIST_FIRST(&(sys->lif_purge_list));
+        LIST_REMOVE(local_if, system_purge_next);
         local_if_finalize(local_if);
     }
+    
+    iccp_system_dinit_netlink_socket();
     
     if (sys->log_file_path != NULL )
         free(sys->log_file_path);
@@ -124,6 +130,11 @@ void system_finalize()
         close(sys->sync_ctrl_fd);
     if(sys->arp_receive_fd > 0)
         close(sys->arp_receive_fd);
+    if(sys->sig_pipe_r > 0)
+        close(sys->sig_pipe_r);
+    if(sys->sig_pipe_w > 0)
+        close(sys->sig_pipe_w);   
+    
     if(sys->epoll_fd)
         close(sys->epoll_fd);
         

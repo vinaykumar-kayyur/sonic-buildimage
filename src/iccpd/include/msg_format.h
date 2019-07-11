@@ -93,12 +93,12 @@
 /* Self define Feature */
 #define TLV_T_MLACP_ORPHAN_PORT         0x1033 //not yet
 #define TLV_T_MLACP_PORT_CHANNEL_INFO   0x1034
-#define TLV_T_MLACP_PEERLINK_INFO           0x1035
+#define TLV_T_MLACP_PEERLINK_INFO       0x1035
 #define TLV_T_MLACP_ARP_INFO            0x1036
 #define TLV_T_MLACP_STP_INFO            0x1037//no support
 #define TLV_T_MLACP_MAC_INFO            0x1038
-
-#define TLV_T_MLACP_LIST_END            0x1039 //list end
+#define TLV_T_MLACP_WARMBOOT_FLAG       0x1039
+#define TLV_T_MLACP_LIST_END            0x104a //list end
 
 /* Debug */
 static char* get_tlv_type_string(int type)

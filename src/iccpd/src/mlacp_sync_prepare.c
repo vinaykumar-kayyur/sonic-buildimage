@@ -557,6 +557,48 @@ int mlacp_prepare_for_heartbeat(struct CSM* csm,char* buf, size_t max_buf_size)
 }
 
 /*****************************************
+* Prepare Send warm-reboot flag
+*
+* ***************************************/
+int mlacp_prepare_for_warm_reboot(struct CSM* csm,char* buf, size_t max_buf_size)
+{
+    struct System* sys = NULL;
+    ICCHdr* icc_hdr = (ICCHdr*) buf;
+    struct mLACPWarmbootTLV* tlv = (struct mLACPWarmbootTLV*) &buf[sizeof(ICCHdr)];
+    size_t msg_len = sizeof(ICCHdr) + sizeof(struct mLACPWarmbootTLV);
+    
+    if(csm == NULL)
+        return -1;
+    
+    if(buf == NULL)
+        return -1;
+    
+    if(msg_len > max_buf_size)
+        return -1;
+    
+    if((sys = system_get_instance()) == NULL)
+        return -1;
+    
+    /* Prepare for sync request */
+    memset(buf, 0, max_buf_size);
+    
+    icc_hdr = (ICCHdr*) buf;
+    tlv = (struct mLACPWarmbootTLV*) &buf[sizeof(ICCHdr)];
+    
+    /* ICC header */
+    mlacp_fill_icc_header(csm, icc_hdr, msg_len);
+    
+    /* System Config TLV */
+    tlv->icc_parameter.u_bit = 0;
+    tlv->icc_parameter.f_bit = 0;
+    tlv->icc_parameter.type = htons(TLV_T_MLACP_WARMBOOT_FLAG);
+    
+    tlv->icc_parameter.len = htons(sizeof(struct mLACPWarmbootTLV) - sizeof(ICCParameter));    
+    tlv->warmboot = 0x1;
+    return msg_len;
+}
+
+/*****************************************
 * Tool : Prepare ICC Header
 *
 * ***************************************/

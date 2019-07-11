@@ -36,6 +36,7 @@ int iccp_get_port_member_list(struct LocalInterface* lif);
 void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg);
 void iccp_event_handler_obj_input_dellink(struct nl_object *obj, void *arg);
 int iccp_system_init_netlink_socket();
+void iccp_system_dinit_netlink_socket();
 int iccp_init_netlink_event_fd(struct System *sys);
 int iccp_handle_events(struct System * sys);
 void update_if_ipmac_on_standby(struct LocalInterface* lif_po);
