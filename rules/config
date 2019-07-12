@@ -95,11 +95,3 @@ FRR_USER_GID = 300
 
 # Default VS build memory preparation
 DEFAULT_VS_PREPARE_MEM = yes
-
-# DOCKER_AVOID_BASE_TAG_LATEST - Don't rely on :latest tag for Docker base image.
-# Uncomment the following line to avoid using the :latest tag to determine
-# which base image to use when creating the user image. This is important
-# in a shared build server environment where different types of builds
-# all claim to be the "latest" one, but the current :latest tagged base image
-# may be incompatible with this build.
-# DOCKER_AVOID_BASE_TAG_LATEST = y
