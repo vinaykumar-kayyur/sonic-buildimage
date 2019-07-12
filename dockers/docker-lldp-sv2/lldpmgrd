@@ -71,18 +71,6 @@ def signal_handler(sig, frame):
     else:
         log_warning("Caught unhandled signal '" + sig + "'")
 
-# ========================== Helpers ==================================
-
-def is_port_exist(port_name):
-    filename = "/sys/class/net/%s/operstate" % port_name
-    if os.path.exists(filename):
-        with open(filename) as fp:
-            state = fp.read()
-            return "up" in state
-    else:
-        filename = "/sys/class/net/%s/ifindex" % port_name
-        return os.path.exists(filename)
-
 # ============================== Classes ==============================
 
 class LldpManager(object):
@@ -178,11 +166,6 @@ class LldpManager(object):
         to_delete = []
 
         for (port_name, cmd) in self.pending_cmds.iteritems():
-            if not is_port_exist(port_name):
-                # it doesn't make any sense to configure lldpd if the target port does not exist
-                # let's postpone the command for the next iteration
-                continue
-
             log_debug("Running command: '{}'".format(cmd))
 
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
