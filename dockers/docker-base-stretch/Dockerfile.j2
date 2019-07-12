@@ -27,9 +27,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Configure data sources for apt/dpkg
 COPY ["dpkg_01_drop", "/etc/dpkg/dpkg.cfg.d/01_drop"]
 {% if CONFIGURED_ARCH == "armhf" %}
-COPY ["sources.list.arm", "/etc/apt/sources.list"]
+COPY ["sources.list.armhf", "/etc/apt/sources.list"]
 {% elif CONFIGURED_ARCH == "arm64" %}
-COPY ["sources.list.arm", "/etc/apt/sources.list"]
+COPY ["sources.list.arm64", "/etc/apt/sources.list"]
 {% else %}
 COPY ["sources.list", "/etc/apt/sources.list"]
 {% endif %}
@@ -48,6 +48,13 @@ RUN apt-get update &&        \
 # Install dependencies of supervisor
         python-pkg-resources \
         python-meld3
+
+{% if CONFIGURED_ARCH == "armhf" %}
+# ip and ifconfig utility missing in docker for armhf
+RUN apt-get -y install       \
+        iproute2             \
+        net-tools
+{% endif %}
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 

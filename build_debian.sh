@@ -101,16 +101,9 @@ trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
-sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
+sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages}} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'apt-mark auto `apt-mark showmanual`'
-if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-    # Remove amd64 x86 repo as it causes common packages version mismatch
-    sudo sed -i '/debian-archive.trafficmanager.net/d' $FILESYSTEM_ROOT/etc/apt/sources.list
-else
-    # Remove arm related repos
-    sudo sed -i '/arch=armhf,arm64/d' $FILESYSTEM_ROOT/etc/apt/sources.list
-fi
 
 ## Note: set lang to prevent locale warnings in your chroot
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update

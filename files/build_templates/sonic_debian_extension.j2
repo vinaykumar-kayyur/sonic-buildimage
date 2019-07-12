@@ -51,11 +51,7 @@ sudo chroot $FILESYSTEM_ROOT service docker start
 
 # Apply apt configuration files
 sudo cp $IMAGE_CONFIGS/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
-sudo cp -R $IMAGE_CONFIGS/apt/sources.list.d/ $FILESYSTEM_ROOT/etc/apt/
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-    # Dont add arm repos
-    sudo rm -f $FILESYSTEM_ROOT/etc/apt/sources.list.d/debian_arm.list
-fi
+sudo cp -R $IMAGE_CONFIGS/apt/sources.list.d/${CONFIGURED_ARCH}/ $FILESYSTEM_ROOT/etc/apt/
 cat $IMAGE_CONFIGS/apt/sonic-dev.gpg.key | sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
 
 # Update apt's snapshot of its repos
