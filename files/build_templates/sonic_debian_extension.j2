@@ -367,6 +367,15 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get autoremove -y
 
+# install kernel dump utility
+{% set coredump = [ "crash", "makedumpfile" ] -%}
+{% for pkg in coredump -%}
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y {{ pkg }}
+{% endfor -%}
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y kdump-tools || true
+sudo sed -i 's/\/MODULES=dep\//\/MODULES=most\//' $FILESYSTEM_ROOT/etc/kernel/postinst.d/kdump-tools
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y kdump-tools
+
 {% for file in installer_extra_files.split(' ') -%}
 {% if file.strip() -%}
 {% set src = file.split(':')[0] -%}
