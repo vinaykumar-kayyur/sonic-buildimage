@@ -3,8 +3,94 @@
 import sys
 import redis
 import subprocess
+import threading
 import syslog
 from swsssdk import ConfigDBConnector
+from swsscommon import swsscommon
+
+
+SELECT_TIMEOUT = 1000
+
+
+class ChassisManager(object):
+
+    PASS_THROUGH_ROUTE_TABLE_NAME = "PASS_THROUGH_ROUTE_TABLE"
+
+    def __init__(self):
+        self.config_db = ConfigDBConnector()
+        self.config_db.connect()
+        self.bgp_asn = self.config_db.get_entry('DEVICE_METADATA', 'localhost')['bgp_asn']
+        self.appl_db = swsscommon.DBConnector(swsscommon.APPL_DB, swsscommon.DBConnector.DEFAULT_UNIXSOCKET, 0)
+        self.select = swsscommon.Select()
+        self.subscriber = swsscommon.SubscriberStateTable(self.appl_db, 
+                ChassisManager.PASS_THROUGH_ROUTE_TABLE_NAME)
+        self.select.addSelectable(self.subscriber)
+
+    def __run_command(self, command):
+        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+        stdout = p.communicate()[0]
+        p.wait()
+        if p.returncode != 0:
+            syslog.syslog(syslog.LOG_ERR, '[bgp cfgd] command execution returned {}. Command: "{}", stdout: "{}"'.format(p.returncode, command, stdout))
+
+    def start(self):
+        (state, c) = self.select.select(SELECT_TIMEOUT)
+        if c:
+            self.__do_task()
+
+    def __do_task(self):
+        while True:
+            key, op, fvs = self.subscriber.pop()
+            if not key:
+                break
+            fvs = dict(fvs)
+            syslog.syslog(
+                syslog.LOG_INFO,
+                "Receive :{} update message: {}.".format(
+                    ChassisManager.PASS_THROUGH_ROUTE_TABLE_NAME, 
+                    fvs
+                    )
+                )
+            next_hop_ip = fvs.get("next_hop_ip", default = "")
+            next_vrf_name = fvs.get("next_vrf_name", default="")
+            if next_hop_ip == "" \
+                or next_vrf_name == "" \
+                or fvs.get("redistribute", default="false").lower() != "true" \
+                or fvs.get("source", default="").upper() != "CHASSIS_ORCH":
+                continue
+            if op == "SET":
+                self.__add_route(key, next_hop_ip, next_vrf_name)
+            else:
+                self.__del_route(key, next_hop_ip, next_vrf_name)
+
+    def __add_route(self, route, nexthop, next_vrf):
+        nexthop = nexthop.split(',')
+        command = "vtysh -c 'configure terminal' -c 'ip route {everflow} {nexthop} nexthop-vrf {next_vrf}'".format(
+            everflow = route,
+            nexthop = nexthop,
+            next_vrf = next_vrf
+            )
+        self.__run_command(command)
+        command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'network {everflow}' ".format(
+            bgp_asn = self.bgp_asn,
+            everflow = route,
+            )
+        self.__run_command(command)
+
+    def __del_route(self, route, nexthop, next_vrf):
+        nexthop = nexthop.split(',')
+        command = "vtysh -c 'configure terminal' -c 'no ip route {everflow} {nexthop} nexthop-vrf {next_vrf}'".format(
+            everflow = route,
+            nexthop = nexthop,
+            next_vrf = next_vrf
+            )
+        self.__run_command(command)
+        command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'no network {everflow}' ".format(
+            bgp_asn = self.bgp_asn,
+            everflow = route,
+            )
+        self.__run_command(command)
+
 
 class BGPConfigDaemon:
 
@@ -58,8 +144,16 @@ class BGPConfigDaemon:
 
 
 def main():
+    thread_pool = []
+
     daemon = BGPConfigDaemon()
-    daemon.start()
+    thread_pool.append(threading.Thread(target = daemon.start))
+    manager = ChassisManager()
+    thread_pool.append(threading.Thread(target = manager.start))
+
+    map(lambda t : t.start(), thread_pool)
+    map(lambda t : t.join(), thread_pool)
+
 
 if __name__ == "__main__":
     main()
