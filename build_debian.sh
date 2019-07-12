@@ -284,8 +284,28 @@ sudo chmod u+s $FILESYSTEM_ROOT/bin/ping{,6}
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
 sudo cp files/sshd/host-ssh-keygen.sh $FILESYSTEM_ROOT/usr/local/bin/
 sudo cp -f files/sshd/sshd.service $FILESYSTEM_ROOT/lib/systemd/system/ssh.service
-## Config sshd
-sudo augtool --autosave "set /files/etc/ssh/sshd_config/UseDNS no" -r $FILESYSTEM_ROOT
+# Config sshd
+# 1. Set 'UseDNS' to 'no'
+# 2. Configure sshd to close all SSH connetions after 15 minutes of inactivity
+sudo augtool -r $FILESYSTEM_ROOT <<'EOF'
+touch /files/etc/ssh/sshd_config/EmptyLineHack
+rename /files/etc/ssh/sshd_config/EmptyLineHack ""
+set /files/etc/ssh/sshd_config/UseDNS no
+ins #comment before /files/etc/ssh/sshd_config/UseDNS
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::UseDNS]] "Disable hostname lookups"
+
+rm /files/etc/ssh/sshd_config/ClientAliveInterval
+rm /files/etc/ssh/sshd_config/ClientAliveCountMax
+touch /files/etc/ssh/sshd_config/EmptyLineHack
+rename /files/etc/ssh/sshd_config/EmptyLineHack ""
+set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
+ins #comment before /files/etc/ssh/sshd_config/ClientAliveInterval
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 15 minutes"
+save
+quit
+EOF
+# Configure sshd to listen for v4 connections; disable listening for v6 connections
 sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
@@ -310,6 +330,10 @@ check system $HOST
   if memory usage > 50% for 5 times within 10 cycles then alert
   if cpu usage (user) > 90% for 5 times within 10 cycles then alert
   if cpu usage (system) > 90% for 5 times within 10 cycles then alert
+check process rsyslog with pidfile /var/run/rsyslogd.pid
+  start program = "/bin/systemctl start rsyslog.service"
+  stop program = "/bin/systemctl stop rsyslog.service"
+  if totalmem > 800 MB for 5 times within 10 cycles then restart
 EOF
 
 ## Config sysctl
@@ -417,6 +441,28 @@ fi
 ## Setup ebtable rules (rule file is in binary format)
 sudo sed -i 's/EBTABLES_LOAD_ON_START="no"/EBTABLES_LOAD_ON_START="yes"/g' ${FILESYSTEM_ROOT}/etc/default/ebtables
 sudo cp files/image_config/ebtables/ebtables.filter ${FILESYSTEM_ROOT}/etc
+
+## Debug Image specific changes
+## Update motd for debug image
+if [ "$DEBUG_IMG" == "y" ]
+then
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '**************' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'Running DEBUG image' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '**************' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/src has the sources' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/src is mounted in each docker' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is created for core files or temp files' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'Create a subdir under /debug to upload your files' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is mounted in each docker' >> /etc/motd"
+
+    sudo mkdir -p $FILESYSTEM_ROOT/src
+    pushd src
+        ../scripts/dbg_files.sh | sudo tar -cvzf ../$FILESYSTEM_ROOT/src/sonic_src.tar.gz -T -
+    popd
+
+    sudo mkdir -p $FILESYSTEM_ROOT/debug
+
+fi
 
 ## Remove gcc and python dev pkgs
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev

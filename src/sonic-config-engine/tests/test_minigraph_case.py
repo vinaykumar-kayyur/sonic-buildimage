@@ -123,3 +123,13 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "NTP_SERVER"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'10.0.10.1': {}, '10.0.10.2': {}}")
+
+    def test_minigraph_vnet(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VNET"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "")
+
+    def test_minigraph_vxlan(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VXLAN_TUNNEL"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "")
