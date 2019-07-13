@@ -460,7 +460,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
     # For each IP interface
     for intf in phyport_intfs:
         # A IP interface may have multiple entries. 
-        # For exmaple, "Ethernet0": {}", "Ethernet0|192.168.1.1": {}"
+        # For example, "Ethernet0": {}", "Ethernet0|192.168.1.1": {}"
         # We only care about the one without IP information
         if is_ip_prefix_in_key(intf) == True:
             continue 
@@ -475,7 +475,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
     # For each port channel IP interface
     for pc_intf in pc_intfs:
         # A port channel IP interface may have multiple entries. 
-        # For exmaple, "Portchannel0": {}", "Portchannel0|192.168.1.1": {}"
+        # For example, "Portchannel0": {}", "Portchannel0|192.168.1.1": {}"
         # We only care about the one without IP information
         if is_ip_prefix_in_key(pc_intf) == True:
             continue 
