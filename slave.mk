@@ -668,7 +668,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
 	)
-    rm -f updategraph.service
+	rm -f updategraph.service
 
 	$(if $($*_DOCKERS),
 		rm sonic_debian_extension.sh,
