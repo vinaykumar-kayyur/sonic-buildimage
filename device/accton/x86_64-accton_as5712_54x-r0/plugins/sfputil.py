@@ -273,7 +273,7 @@ class SfpUtil(SfpUtilBase):
         return True
 
     @property
-    def get_transceiver_status(self):
+    def _get_presence_bitmap(self):
 	nodes = []
         order = self.update_i2c_order()
         
@@ -312,7 +312,7 @@ class SfpUtil(SfpUtilBase):
         if now < (self.data['last'] + timeout) and self.data['valid']:
             return True, {}
 
-        reg_value = self.get_transceiver_status
+        reg_value = self._get_presence_bitmap
         changed_ports = self.data['present'] ^ reg_value
         if changed_ports:
             for port in range (self.port_start, self.port_end+1):
@@ -331,7 +331,6 @@ class SfpUtil(SfpUtilBase):
             self.data['last'] = now
             self.data['valid'] = 1
 
-            pprint.pprint(port_dict)
             return True, port_dict
         else:
             return True, {}
