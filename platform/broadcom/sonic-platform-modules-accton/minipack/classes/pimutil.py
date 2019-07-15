@@ -246,6 +246,7 @@ class PimUtil(object):
         if pim_num <0 or pim_num > 7:
             return False
         board_id = fpga_io(dom_base[pim_num+1]+dom["revision"])
+        board_id = board_id & 0x1
         if board_id==0x0:
             return 0
         else:
@@ -260,7 +261,7 @@ class PimUtil(object):
         status=fpga_io(dom_base[pim_num+1]+dom["device_power_bad_status"])
         
         for x in range(0, 5):
-            if status & ( (x+1) << (4*x) ) :
+            if status & ( (0xf) << (4*x) ) :
                 power_status = power_status | (0x1 << x)
         
         if ( status & 0x1000000):
@@ -305,7 +306,7 @@ class PimUtil(object):
     def pim_init(self, pim_num):
         if pim_num <0 or pim_num > 7:
             return False
-        status=self.set_pim_mdio_source_sel(pim_num+1, 0)
+        status=self.set_pim_mdio_source_sel(pim_num, 0)
         #put init phy cmd here
     
     
@@ -379,9 +380,14 @@ class PimUtil(object):
         led_val=fpga_io(dom_base[pim_num+1]+dom["system_led"])
         
         if color==1:
-           led_val = led_val | 0x8000 #blue
+            led_val = led_val | (0x8000 | 0x4000) #blue
+        elif color==0:
+            led_val = (led_val & ( ~ 0x8000)) | 0x4000 #amber
         else:
-           led_val = led_val & ( ~ 0x8000) #amber
+            print "Set RGB control to Green1"
+            led_val = led_val & (~ 0x4000)
+            led_val = led_val & (~ 0xfff)
+            led_val = led_val | 0x0f0 #B.G.R Birghtness, set to Green
         
         if control==0:
            led_val = led_val & ( ~ 0x3000) #Off
@@ -391,7 +397,6 @@ class PimUtil(object):
         else:
             led_val = led_val | 0x3000  #Flash
         
-        led_val = led_val | 0x4000
         fpga_io(dom_base[pim_num+1]+dom["system_led"], led_val)
      
     def get_qsfp_presence(self, port_num):
