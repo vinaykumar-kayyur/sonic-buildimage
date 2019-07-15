@@ -78,15 +78,7 @@ class SfpUtil(SfpUtilBase):
         pim=PimUtil()
         status=pim.get_qsfp_presence(port_num)
         return status
-        #eeprom_path = self.port_to_eeprom_mapping[port_num]
-        #with open(eeprom_path) as f:
-        #    try:
-        #        content = f.read(1)
-        #    except IOError as e:
-        #        #Not print any error, for if any, treat as Not present.
-        #        return False
-        #return True
-
+    
     def get_low_power_mode(self, port_num): 
         if port_num < self.port_start or port_num > self.port_end:
             return False
