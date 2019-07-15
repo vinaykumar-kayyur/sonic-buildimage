@@ -98,9 +98,8 @@ class SfpUtil(SfpUtilBase):
             return False
         pim=PimUtil()
         pim.reset(port_num)
-        return True
-        
-    #return code=" port_dict[port]='1' ":insert evt. return code="port_dict[port]='0' ":remove evt
+        return True        
+  
     def get_transceiver_change_event(self, timeout=0):
         pim=PimUtil()
         start_time = time.time()
