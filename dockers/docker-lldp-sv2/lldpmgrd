@@ -213,20 +213,19 @@ class LldpManager(object):
 
             if state == swsscommon.Select.OBJECT:
                 (key, op, fvp) = sst_confdb.pop()
-                if (key != "PortInitDone") and (key != "PortConfigDone"):
-                    if fvp:
-                        fvp_dict = dict(fvp)
+                if fvp:
+                    fvp_dict = dict(fvp)
 
-                        # handle creation
-                        if op == "SET":
+                    # handle creation
+                    if op == "SET":
+                        self.generate_pending_lldp_config_cmd_for_port(key)
+
+                    # handle config change
+                    if op in ["SET", "DEL"] and (fvp_dict.get("alias") or fvp_dict.get("description")) :
+                        if self.is_port_up(key):
                             self.generate_pending_lldp_config_cmd_for_port(key)
-
-                        # handle config change
-                        if op in ["SET", "DEL"] and (fvp_dict.get("alias") or fvp_dict.get("description")) :
-                            if self.is_port_up(key):
-                                self.generate_pending_lldp_config_cmd_for_port(key)
-                            else:
-                                self.pending_cmds.pop(key, None)
+                        else:
+                            self.pending_cmds.pop(key, None)
 
                 (key, op, fvp) = sst_appdb.pop()
                 if (key != "PortInitDone") and (key != "PortConfigDone"):
