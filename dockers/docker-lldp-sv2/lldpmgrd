@@ -209,7 +209,6 @@ class LldpManager(object):
 
         # Listen for changes to the PORT table in the CONFIG_DB and APP_DB
         while True:
-            state = None
             (state, c) = sel.select(SELECT_TIMEOUT_MS)
 
             if state == swsscommon.Select.OBJECT:
@@ -219,19 +218,21 @@ class LldpManager(object):
                         fvp_dict = dict(fvp)
 
                         # handle creation
-                        if op == "SET" and fvp_dict.get("state") == "ok":
+                        if op == "SET":
                             self.generate_pending_lldp_config_cmd_for_port(key)
 
                         # handle config change
                         if op in ["SET", "DEL"] and (fvp_dict.get("alias") or fvp_dict.get("description")) :
                             if self.is_port_up(key):
                                 self.generate_pending_lldp_config_cmd_for_port(key)
+                            else:
+                                self.pending_cmds.pop(key, None)
 
                 (key, op, fvp) = sst_appdb.pop()
                 if (key != "PortInitDone") and (key != "PortConfigDone"):
                     if fvp:
                         fvp_dict = dict(fvp)
-                        if self.is_port_up(key):
+                        if "up" in fvp_dict.get("oper_status"):
                             self.generate_pending_lldp_config_cmd_for_port(key)
                         else:
                             self.pending_cmds.pop(key, None)
