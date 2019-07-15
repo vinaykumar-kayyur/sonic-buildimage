@@ -293,7 +293,7 @@ sudo cp $IMAGE_CONFIGS/fstrim/* $FILESYSTEM_ROOT/etc/systemd/system/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable fstrim.timer
 
 ## copy platform rc.local
-sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
+j2 $IMAGE_CONFIGS/platform/rc.local.j2 | sudo tee $FILESYSTEM_ROOT/etc/rc.local
 
 ## copy blacklist file
 sudo cp $IMAGE_CONFIGS/platform/linux_kernel_bde.conf $FILESYSTEM_ROOT/etc/modprobe.d/
