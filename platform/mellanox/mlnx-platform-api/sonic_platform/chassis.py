@@ -36,6 +36,7 @@ REBOOT_CAUSE_SHORT_PB = 'reset_short_pb'
 REBOOT_CAUSE_FILE_LENGTH = 1
 
 # ========================== Syslog wrappers ==========================
+SYSLOG_IDENTIFIER = "mlnx-chassis"
 def log_warning(msg, also_print_to_console=False):
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_WARNING, msg)
@@ -68,7 +69,10 @@ class Chassis(ChassisBase):
         /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
         If a reboot cause file doesn't exists, returns '0'.
         '''
-        return bool(int(self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')))
+        try:
+            return bool(int(self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')))
+        except:
+            return False
 
     def get_reboot_cause(self):
         """
