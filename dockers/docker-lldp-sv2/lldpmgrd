@@ -233,10 +233,11 @@ class LldpManager(object):
                         fvp_dict = dict(fvp)
 
                         # handle port status change
-                        if "up" in fvp_dict.get("oper_status"):
-                            self.generate_pending_lldp_config_cmd_for_port(key)
-                        else:
-                            self.pending_cmds.pop(key, None)
+                        if fvp_dict.has_key("oper_status"):
+                            if "up" in fvp_dict.get("oper_status"):
+                                self.generate_pending_lldp_config_cmd_for_port(key)
+                            else:
+                                self.pending_cmds.pop(key, None)
 
             # Process all pending commands
             self.process_pending_cmds()
