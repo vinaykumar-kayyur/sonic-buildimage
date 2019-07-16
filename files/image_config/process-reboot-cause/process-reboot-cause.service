@@ -1,6 +1,6 @@
 [Unit]
 Description=Reboot cause determination service
-After=pmon.service
+After=rc-local.service
 
 [Service]
 Type=simple
