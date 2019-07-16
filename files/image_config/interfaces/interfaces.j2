@@ -10,12 +10,16 @@
 auto lo
 iface lo inet loopback
 # Use command 'ip addr list dev lo' to check all addresses
+{% if LOOPBACK_INTERFACE %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{% if name == "Loopback0" %}
 iface lo {{ 'inet' if prefix | ipv4 else 'inet6' }} static
     address {{ prefix | ip }}
     netmask {{ prefix | netmask if prefix | ipv4 else prefix | prefixlen }}
 #
+{% endif %}
 {% endfor %}
+{% endif %}
 {% endblock loopback %}
 {% block mgmt_interface %}
 
