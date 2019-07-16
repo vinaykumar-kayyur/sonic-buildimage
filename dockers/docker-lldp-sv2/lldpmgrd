@@ -216,10 +216,6 @@ class LldpManager(object):
                 if fvp:
                     fvp_dict = dict(fvp)
 
-                    # handle creation
-                    if op == "SET":
-                        self.generate_pending_lldp_config_cmd_for_port(key)
-
                     # handle config change
                     if op in ["SET", "DEL"] and (fvp_dict.get("alias") or fvp_dict.get("description")) :
                         if self.is_port_up(key):
@@ -231,6 +227,8 @@ class LldpManager(object):
                 if (key != "PortInitDone") and (key != "PortConfigDone"):
                     if fvp:
                         fvp_dict = dict(fvp)
+
+                        # handle port status change
                         if "up" in fvp_dict.get("oper_status"):
                             self.generate_pending_lldp_config_cmd_for_port(key)
                         else:
