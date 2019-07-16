@@ -12,11 +12,11 @@ import sys
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-#    from sonic_daemon_base.daemon_base import Logger
     from os.path import join
     import io
     import re
     import subprocess
+    import syslog
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -30,12 +30,17 @@ REBOOT_CAUSE_AUX_POWER_LOSS_FILE = 'reset_aux_pwr_or_ref'
 REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE = 'reset_asic_thermal'
 REBOOT_CAUSE_WATCHDOG_FILE = 'reset_hotswap_or_wd'
 REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
+REBOOT_CAUSE_LONG_PB = 'reset_long_pb'
+REBOOT_CAUSE_SHORT_PB = 'reset_short_pb'
 
 REBOOT_CAUSE_FILE_LENGTH = 1
 
-# Global logger class instance
-# SYSLOG_IDENTIFIER = "mlnx-chassis"
-# logger = Logger(SYSLOG_IDENTIFIER)
+# ========================== Syslog wrappers ==========================
+def log_warning(msg, also_print_to_console=False):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_WARNING, msg)
+    syslog.closelog()
+
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -54,7 +59,7 @@ class Chassis(ChassisBase):
             fileobj.close()
             return result
         except:
-            logger.log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
+            log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
             return ''
 
     def _verify_reboot_cause(self, filename):
@@ -90,6 +95,10 @@ class Chassis(ChassisBase):
             major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
             if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
                 minor_cause = "Reset by ASIC firmware"
+            elif self._verify_reboot_cause(REBOOT_CAUSE_LONG_PB):
+                minor_cause = "Reset by long press on power button"
+            elif self._verify_reboot_cause(REBOOT_CAUSE_SHORT_PB):
+                minor_cause = "Reset by short press on power button"
             else:
                 major_cause = self.REBOOT_CAUSE_NON_HARDWARE
 
