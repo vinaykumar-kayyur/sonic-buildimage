@@ -116,10 +116,13 @@ class LldpManager(object):
             port_table_dict = dict(fvp)
 
             # Get the oper-status for the port
-            port_oper_status = port_table_dict.get("oper_status")
-            log_info("Port name {} oper status: {}".format(port_name, port_oper_status))
-            return port_oper_status == "up"
-
+            if port_table_dict.has_key("oper_status"):
+                port_oper_status = port_table_dict.get("oper_status")
+                log_info("Port name {} oper status: {}".format(port_name, port_oper_status))
+                return port_oper_status == "up"
+            else:
+                log_error("Port name {} does not have key oper_status".format(port_name))
+                return False
         else:
             log_error("Port '{}' not found in {} table in App DB".format(port_name, swsscommon.APP_PORT_TABLE_NAME))
             return False
@@ -217,11 +220,12 @@ class LldpManager(object):
                     fvp_dict = dict(fvp)
 
                     # handle config change
-                    if op in ["SET", "DEL"] and (fvp_dict.get("alias") or fvp_dict.get("description")) :
-                        if self.is_port_up(key):
-                            self.generate_pending_lldp_config_cmd_for_port(key)
-                        else:
-                            self.pending_cmds.pop(key, None)
+                    if (fvp_dict.has_key("alias") or fvp_dict.has_key("description")):
+                        if op in ["SET", "DEL"]:
+                            if self.is_port_up(key):
+                                self.generate_pending_lldp_config_cmd_for_port(key)
+                            else:
+                                self.pending_cmds.pop(key, None)
 
                 (key, op, fvp) = sst_appdb.pop()
                 if (key != "PortInitDone") and (key != "PortConfigDone"):
