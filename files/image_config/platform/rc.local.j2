@@ -349,6 +349,8 @@ if [ -f $FIRST_BOOT_FILE ]; then
 
     systemctl enable snmp.timer
 
+    systemctl daemon-reexec
+
     firsttime_exit
 fi
 
