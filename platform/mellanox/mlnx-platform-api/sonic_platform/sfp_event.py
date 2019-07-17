@@ -71,7 +71,7 @@ class sfp_event:
                                                   SX_TRAP_ID_PMPE,
                                                   self.user_channel_p)
         if rc != SX_STATUS_SUCCESS:
-            raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(c))
+            raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(rc))
 
     def deinitialize(self):
         if self.handle is None:
