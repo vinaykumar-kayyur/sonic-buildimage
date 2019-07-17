@@ -249,7 +249,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     mtr-tiny                \
     locales                 \
     flashrom                \
-    cgroup-tools
+    cgroup-tools            \
+    mcelog
 
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
@@ -273,12 +274,6 @@ sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/k
 ## Modifty ntp default configuration: disable initial jump (add -x), and disable
 ## jump when time difference is greater than 1000 seconds (remove -g).
 sudo sed -i "s/NTPD_OPTS='-g'/NTPD_OPTS='-x'/" $FILESYSTEM_ROOT/etc/default/ntp
-
-## Fix ping tools permission so non root user can directly use them
-## Note: this is a workaround since aufs doesn't support extended attributes
-## Ref: https://github.com/moby/moby/issues/5650#issuecomment-303499489
-## TODO: remove workaround when the overlay filesystem support extended attributes
-sudo chmod u+s $FILESYSTEM_ROOT/bin/ping{,6}
 
 ## Remove sshd host keys, and will regenerate on first sshd start
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
@@ -385,6 +380,9 @@ set /files/etc/sysctl.conf/net.ipv4.udp_l3mdev_accept 1
 set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
+
+# Configure mcelog to log machine checks to syslog
+sudo sed -i 's/^#syslog = yes/syslog = yes/' $FILESYSTEM_ROOT/etc/mcelog/mcelog.conf
 
 ## docker-py is needed by Ansible docker module
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT easy_install pip
