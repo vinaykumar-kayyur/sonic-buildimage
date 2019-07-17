@@ -38,9 +38,8 @@ class sfp_event:
         self.handle = None
 
     def initialize(self):
-        # open SDK API handle
-        # retry at most SX_OPEN_RETRIES times to wait
-        # until SDK is started during system startup
+        # open SDK API handle.
+        # retry at most SX_OPEN_RETRIES times to wait until SDK is started during system startup
         retry = 1
         while True:
             rc, self.handle = sx_api_open(None)

@@ -385,12 +385,14 @@ class Chassis(ChassisBase):
         else:
             status = self.sfp_event.check_sfp_status(port_dict, timeout)
 
-        # if no event polled, just return empty set
         if status:
-            # workaround. 
-            # check_sfp_status cannot return all the notifications in fd via a single call
-            # due to sdk reason (see comment in check_sfp_status for detail). 
-            # we have to iterate in a loop to get all the notifications in the fd.
+            # get_change_event has the meaning of retrieving all the notifications through a single call.
+            # Typically this is implemented via a select framework which requires the underlay file-reading 
+            # interface able to retrieve all notifications without blocking once the fd has been selected. 
+            # However, sdk doesn't provide any interface satisfied the requirement. as a result,
+            # check_sfp_status returns only one notification may indicate more notifications in its queue.
+            # In this sense, we have to iterate in a loop to get all the notifications in case that
+            # the first call returns at least one.
             i = 0
             while i < self.MAX_SELECT_EVENT_RETURNED:
                 status = self.sfp_event.check_sfp_status(port_dict, 0)
