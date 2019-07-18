@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/python
 '''
 This code is for a mlnx platform specific daemon, mlnx-sfpd.
 Which listen to the SDK for the SFP change event and post the event to DB.
@@ -101,34 +101,65 @@ class MlnxSfpd:
         # open SDK API handle
         # retry at most SX_OPEN_RETRIES times to wait
         # until SDK is started during system startup
+        
         retry = 1
+        sx_api_open_pass = False
+        sx_api_host_ifc_open_pass = False
+        sx_api_host_ifc_trap_id_register_set_pass = False
+        
         while True:
-            rc, self.handle = sx_api_open(None)
-            if rc == SX_STATUS_SUCCESS:
-                break
+            if not sx_api_open_pass:
+                rc, self.handle = sx_api_open(None)
+                if rc == SX_STATUS_SUCCESS:
+                    sx_api_open_pass = True
+                    retry = 1
+                else:    
+                    log_warning("failed to open SDK API handle... retrying {}".format(retry))
+                    time.sleep(2 ** retry)
+                    retry += 1
+                    if retry > self.SX_OPEN_RETRIES:
+                        raise RuntimeError("failed to open SDK API handle after {} retries".format(retry))
+                    else:
+                        continue
+        
+            if not sx_api_host_ifc_open_pass:
+                rc = sx_api_host_ifc_open(self.handle, self.rx_fd_p)
+                if rc == SX_STATUS_SUCCESS:
+                    self.user_channel_p.type = SX_USER_CHANNEL_TYPE_FD
+                    self.user_channel_p.channel.fd = self.rx_fd_p
+                    sx_api_host_ifc_open_pass = True
+                    retry = 1
+                else:
+                    log_warning("sx_api_host_ifc_open return fail... retrying {}".format(retry))
+                    time.sleep(2 ** retry)
+                    retry += 1
+                    if retry > self.SX_OPEN_RETRIES:
+                        sx_api_close(self.handle)
+                        raise RuntimeError("sx_api_host_ifc_open failed with error after {} retries".format(retry))
+                    else:
+                        continue
 
-            log_warning("failed to open SDK API handle... retrying {}".format(retry))
-
-            time.sleep(2 ** retry)
-            retry += 1
-
-            if retry > self.SX_OPEN_RETRIES:
-                raise RuntimeError("failed to open SDK API handle after {} retries".format(retry))
-
-        rc = sx_api_host_ifc_open(self.handle, self.rx_fd_p)
-        if rc != SX_STATUS_SUCCESS:
-            raise RuntimeError("sx_api_host_ifc_open exited with error, rc {}".format(rc))
-
-        self.user_channel_p.type = SX_USER_CHANNEL_TYPE_FD
-        self.user_channel_p.channel.fd = self.rx_fd_p
-
-        rc = sx_api_host_ifc_trap_id_register_set(self.handle,
-                                                  SX_ACCESS_CMD_REGISTER,
-                                                  self.swid,
-                                                  SX_TRAP_ID_PMPE,
-                                                  self.user_channel_p)
-        if rc != SX_STATUS_SUCCESS:
-            raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(c))
+            if not sx_api_host_ifc_trap_id_register_set_pass:
+                rc = sx_api_host_ifc_trap_id_register_set(self.handle,
+                                                          SX_ACCESS_CMD_REGISTER,
+                                                          self.swid,
+                                                          SX_TRAP_ID_PMPE,
+                                                          self.user_channel_p)
+                if rc == SX_STATUS_SUCCESS:
+                    sx_api_host_ifc_trap_id_register_set_pass = True
+                    break
+                else:
+                    log_warning("sx_api_host_ifc_trap_id_register_set return fail... retrying {}".format(retry))
+                    time.sleep(2 ** retry)
+                    retry += 1
+                    if retry > self.SX_OPEN_RETRIES:
+                        sx_api_host_ifc_close(self.handle, self.rx_fd_p)
+                        sx_api_close(self.handle)
+                        raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(c))
+                    else:
+                        continue
+        
+        self.running = True
 
     def deinitialize(self):
         # remove mlnx-sfpd liveness key in DB if not expired yet
@@ -156,7 +187,6 @@ class MlnxSfpd:
             log_error("sx_api_close exited with error, rc {}".format(rc))
 
     def run(self):
-        self.running = True
 
         while self.running:
             try:
