@@ -157,18 +157,21 @@ sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
 
 # Copy NTP configuration files and templates
 sudo cp $IMAGE_CONFIGS/ntp/ntp-config.service $FILESYSTEM_ROOT/etc/systemd/system/
+GENERATOR_SERVICES="$GENERATOR_SERVICES ntp-config.service"
 sudo cp $IMAGE_CONFIGS/ntp/ntp-config.sh $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/ntp/ntp.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
 # Copy warmboot-finalizer files
 sudo LANG=C cp $IMAGE_CONFIGS/warmboot-finalizer/finalize-warmboot.sh $FILESYSTEM_ROOT/usr/local/bin/finalize-warmboot.sh
 sudo LANG=C cp $IMAGE_CONFIGS/warmboot-finalizer/warmboot-finalizer.service $FILESYSTEM_ROOT/etc/systemd/system/
+GENERATOR_SERVICES="$GENERATOR_SERVICES warmboot-finalizer.service"
 
 # Copy rsyslog configuration files and templates
 sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
 sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog-config.sh $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 sudo cp $IMAGE_CONFIGS/rsyslog/rsyslog.d/* $FILESYSTEM_ROOT/etc/rsyslog.d/
+GENERATOR_SERVICES="rsyslog-config.service"
 
 # Copy logrotate.d configuration files
 sudo cp -f $IMAGE_CONFIGS/logrotate/logrotate.d/* $FILESYSTEM_ROOT/etc/logrotate.d/
@@ -180,6 +183,7 @@ sudo cp -f $IMAGE_CONFIGS/systemd/journald.conf $FILESYSTEM_ROOT/etc/systemd/
 sudo cp $IMAGE_CONFIGS/interfaces/interfaces-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
 sudo cp $IMAGE_CONFIGS/interfaces/interfaces-config.sh $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/interfaces/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+GENERATOR_SERVICES="$GENERATOR_SERVICES interfaces-config.service"
 
 # Copy initial interfaces configuration file, will be overwritten on first boot
 sudo cp $IMAGE_CONFIGS/interfaces/init_interfaces $FILESYSTEM_ROOT/etc/network/interfaces
@@ -187,6 +191,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/etc/network/interfaces.d
 
 # Copy hostcfgd files
 sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd.service $FILESYSTEM_ROOT/etc/systemd/system/
+GENERATOR_SERVICES="$GENERATOR_SERVICES hostcfgd.service"
 sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
@@ -198,11 +203,13 @@ sudo cp $BUILD_TEMPLATES/qos_config.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATE
 
 # Copy hostname configuration scripts
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.service  $FILESYSTEM_ROOT/etc/systemd/system/
+GENERATOR_SERVICES="$GENERATOR_SERVICES hostname-config.service"
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy updategraph script and service file
 j2 files/build_templates/updategraph.service.j2 | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/updategraph.service
 sudo cp $IMAGE_CONFIGS/updategraph/updategraph $FILESYSTEM_ROOT/usr/bin/
+GENERATOR_SERVICES="$GENERATOR_SERVICES updategraph.service"
 {% if enable_dhcp_graph_service == "y" %}
 sudo bash -c "echo enabled=true > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 sudo bash -c "echo src=dhcp >> $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
@@ -228,10 +235,12 @@ sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
 
 # Copy control plane ACL management daemon files
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/system/
+GENERATOR_SERVICES="$GENERATOR_SERVICES caclmgrd.service"
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd $FILESYSTEM_ROOT/usr/bin/
 
 # Copy process-reboot-cause service files
 sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause.service  $FILESYSTEM_ROOT/etc/systemd/system/
+GENERATOR_SERVICES="$GENERATOR_SERVICES process-reboot-cause.service"
 sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause $FILESYSTEM_ROOT/usr/bin/
 
 ## Install package without starting service
@@ -281,13 +290,10 @@ sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 
 # Copy fstrim service and timer file, enable fstrim timer
 sudo cp $IMAGE_CONFIGS/fstrim/* $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable fstrim.timer
 
 ## copy platform rc.local
 sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
-
-## Copy sonic generator
-j2 $IMAGE_CONFIGS/systemd/systemd-sonic-generator.j2 | sudo tee $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
-sudo chmod +x $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
 
 ## copy blacklist file
 sudo cp $IMAGE_CONFIGS/platform/linux_kernel_bde.conf $FILESYSTEM_ROOT/etc/modprobe.d/
@@ -325,11 +331,17 @@ sudo cp {{script}} $FILESYSTEM_ROOT/usr/bin/
 {% for service in installer_services.split(' ') -%}
 if [ -f {{service}} ]; then
     sudo cp {{service}} $FILESYSTEM_ROOT/etc/systemd/system/
+    GENERATOR_SERVICES="$GENERATOR_SERVICES {{service}}"
 fi
 {% endfor %}
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
+
+## Copy sonic generator
+export generator_services=$GENERATOR_SERVICES
+j2 $IMAGE_CONFIGS/systemd/systemd-sonic-generator.j2 | sudo tee $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
+sudo chmod +x $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
 
 # Copy swss and syncd service script
 sudo LANG=C cp $SCRIPTS_DIR/swss.sh $FILESYSTEM_ROOT/usr/local/bin/swss.sh
@@ -338,6 +350,7 @@ sudo LANG=C cp $SCRIPTS_DIR/syncd.sh $FILESYSTEM_ROOT/usr/local/bin/syncd.sh
 # Copy systemd timer configuration
 # It implements delayed start of services
 sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable snmp.timer	
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-dev
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y

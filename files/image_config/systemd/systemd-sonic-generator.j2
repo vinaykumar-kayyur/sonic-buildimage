@@ -64,16 +64,11 @@ def install_unit(unit_file, install_dir, targets, instance = None):
 
 
 def main(install_dir):
-    standalone_services = "ntp-config.service warmboot-finalizer.service rsyslog-config.service hostcnfgd.service hostname-config.service updategraph.service caclmgrd.service process-reboot-cause.service fstrim.timer snmp.timer".split()
 
-    for service in standalone_services:
-        targets = parse_install_targets(service)
-        install_unit(service, install_dir, targets)
-
-    {% for service in installer_services.split(' ') %}
-    if os.path.exists(os.path.join(UNIT_FILE_PREFIX, {{service}})):
-        targets = parse_install_targets({{service}})
-        install_unit({{service}}, install_dir, targets)
+    {% for service in generator_services.split(' ') %}
+    if os.path.exists(os.path.join(UNIT_FILE_PREFIX, '{{service}}')):
+        targets = parse_install_targets('{{service}}')
+        install_unit('{{service}}', install_dir, targets)
     {% endfor %}
     
 
