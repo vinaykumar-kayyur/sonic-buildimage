@@ -6,7 +6,12 @@ import sys
 UNIT_FILE_PREFIX = '/etc/systemd/system/'
 
 def parse_install_targets(unit_file):
-    '''Return installation information for a unit file.'''
+    '''
+    Return installation information for a unit file.
+    
+    Parses the information in the [Install] section of a given unit file
+    to determine which directories to install the unit in
+    '''
 
     install_targets_raw = [] 
 
@@ -34,7 +39,13 @@ def parse_install_targets(unit_file):
              
  
 def install_unit(unit_file, install_dir, targets, instance = None):
-    '''Create symlinks for a unit file installation'''
+    '''
+    Create symlinks for a unit file installation
+
+    For a given unit file and its installation targets,
+    create the appropriate symlinks in the target directory
+    to enable the unit and have it started when systemd starts
+    '''
      
     for target in targets:
         if instance:
