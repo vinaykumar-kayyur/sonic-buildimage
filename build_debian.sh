@@ -250,6 +250,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     locales                 \
     flashrom                \
     cgroup-tools            \
+    watchdog                \
     mcelog
 
 #Adds a locale to a debian system in non-interactive mode
@@ -410,6 +411,12 @@ sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
+
+## Config watchdog device and disable at startup
+sudo sed -i 's/#watchdog-device/watchdog-device/' $FILESYSTEM_ROOT/etc/watchdog.conf
+sudo sed -i 's/run_watchdog=1/run_watchdog=0/' $FILESYSTEM_ROOT/etc/default/watchdog
+sudo rm -rf $FILESYSTEM_ROOT/lib/systemd/system/wd_keepalive.service
+sudo rm -rf $FILESYSTEM_ROOT/etc/init.d/wd_keepalive
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic

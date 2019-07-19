@@ -239,6 +239,10 @@ if [[ "$1" == "init" ]]; then
         /usr/local/bin/platform_watchdog_disable.sh
     fi
 
+    #Enable watcdog with nowayout
+    rmmod iTCO_wdt
+    modprobe iTCO_wdt nowayout=1
+
     cpu_board_mux "new_device"
     switch_board_mux "new_device"
     sys_eeprom "new_device"
