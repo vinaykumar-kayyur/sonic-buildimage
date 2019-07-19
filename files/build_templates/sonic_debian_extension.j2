@@ -286,6 +286,11 @@ sudo cp $IMAGE_CONFIGS/fstrim/* $FILESYSTEM_ROOT/etc/systemd/system/
 j2 $IMAGE_CONFIGS/platform/rc.local.j2 | sudo tee $FILESYSTEM_ROOT/etc/rc.local
 sudo chmod +x $FILESYSTEM_ROOT/etc/rc.local
 
+## Copy sonic generator
+
+j2 $IMAGE_CONFIGS/systemd/systemd-sonic-generator.j2 | sudo tee $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
+sudo chmod +x $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
+
 ## copy blacklist file
 sudo cp $IMAGE_CONFIGS/platform/linux_kernel_bde.conf $FILESYSTEM_ROOT/etc/modprobe.d/
 

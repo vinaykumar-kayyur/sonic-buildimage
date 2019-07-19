@@ -319,39 +319,6 @@ if [ -f $FIRST_BOOT_FILE ]; then
         mv /host/grub.cfg /host/grub/grub.cfg
     fi
 
-    # Enable appropriate system services
-
-    systemctl enable ntp-config.service
-
-    systemctl enable warmboot-finalizer.service
-
-    systemctl enable rsyslog-config.service
-
-    systemctl enable interfaces-config.service
-
-    systemctl enable hostcnfgd.service
-
-    systemctl enable hostname-config.service
-
-    systemctl enable updategraph.service
-
-    systemctl enable caclmgrd.service
-
-    systemctl enable process-reboot-cause.service
-
-    systemctl enable fstrim.timer
-
-    {% for service in installer_services.split(' ') -%}
-    if [ -f "/etc/systemd/system/{{service}}" ]; then
-        systemctl enable {{service}}
-    fi
-    {% endfor %}
-
-    systemctl enable snmp.timer
-
-    systemctl daemon-reexec
-
-    firsttime_exit
 fi
 
 exit 0

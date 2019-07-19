@@ -1,0 +1,68 @@
+#!/usr/bin/python
+
+import os
+import sys
+
+UNIT_FILE_PREFIX = '/etc/systemd/system/'
+
+def parse_install_targets(unit_file):
+    '''Return installation information for a unit file.'''
+
+    install_targets_raw = [] 
+
+    install_targets = []
+    
+    with open(os.path.join(UNIT_FILE_PREFIX, unit_file), 'r') as f:
+        found_install = False
+        for line in f:
+            if '[Install]' in line:
+                found_install = True
+            elif found_install:
+                install_targets_raw.append(line)
+    
+    for line in install_targets_raw:
+        install_option = line.split('=')[0]
+        targets = line.split('=')[1].split()
+        if 'WantedBy' in install_option:
+            for target in targets:
+                install_targets.append(target + '.wants') 
+        elif 'RequiredBy' in install_option:
+            for target in targets:
+                install_targets.append(target + '.requires')
+
+    return install_targets
+             
+ 
+def install_unit(unit_file, install_dir, targets, instance = None):
+    '''Create symlinks for a unit file installation'''
+     
+    for target in targets:
+        if instance:
+            # Insert the instance into the symlink destination
+            tmp = unit_file.split('@')
+            unit_file_instance = '{}@{}{}'.format(tmp[0], instance, tmp[1])
+            dst = os.path.join(install_dir, target, unit_file_instance)
+        else:
+            dst = os.path.join(install_dir, target, unit_file)
+        src = os.path.join(UNIT_FILE_PREFIX, unit_file)
+        os.symlink(src, dst)
+
+
+def main(install_dir):
+    standalone_services = "ntp-config.service warmboot-finalizer.service rsyslog-config.service hostcnfgd.service hostname-config.service updategraph.service caclmgrd.service process-reboot-cause.service fstrim.timer snmp.timer".split()
+
+    for service in standalone_services:
+        targets = parse_install_targets(service)
+        install_unit(service, install_dir, targets)
+
+    {% for service in installer_services.split(' ') %}
+    if os.path.exists(os.path.join(UNIT_FILE_PREFIX, {{service}})):
+        targets = parse_install_targets({{service}})
+        install_unit({{service}}, install_dir, targets)
+    {% endfor %}
+    
+
+
+if __name__ == '__main__':
+    install_dir = sys.argv[1]
+    main(install_dir)
