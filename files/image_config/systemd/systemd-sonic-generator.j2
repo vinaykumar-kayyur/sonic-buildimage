@@ -55,8 +55,12 @@ def install_unit(unit_file, install_dir, targets, instance = None):
             dst = os.path.join(install_dir, target, unit_file_instance)
         else:
             dst = os.path.join(install_dir, target, unit_file)
+        target_dir = os.path.join(install_dir, target)
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
         src = os.path.join(UNIT_FILE_PREFIX, unit_file)
-        os.symlink(src, dst)
+        if not os.path.exists(dst):
+            os.symlink(src, dst)
 
 
 def main(install_dir):
