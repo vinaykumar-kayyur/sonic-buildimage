@@ -7,6 +7,7 @@ try:
     import time
     import subprocess
     from sonic_sfp.sfputilbase import *
+    import syslog
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
@@ -19,6 +20,7 @@ SFP_I2C_PAGE_SIZE = 256
 REDIS_HOSTNAME = "localhost"
 REDIS_PORT = 6379
 REDIS_TIMEOUT_USECS = 0
+MLNX_SFPD_MAX_RETRY_TIMES = 20
 
 # parameters for SFP presence
 SFP_STATUS_INSERTED = '1'
@@ -33,6 +35,16 @@ SFP_PORT_NAME_CONVENTION = "sfp{}"
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
 hwsku_dict = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 0, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 3, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1),(0, 18, 21, 22, 1)]
+
+def log_info(msg, also_print_to_console=False):
+    syslog.openlog("sfputil")
+    syslog.syslog(syslog.LOG_INFO, msg)
+    syslog.closelog()
+
+def log_err(msg, also_print_to_console=False):
+    syslog.openlog("sfputil")
+    syslog.syslog(syslog.LOG_ERR, msg)
+    syslog.closelog()
 
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
@@ -79,6 +91,8 @@ class SfpUtil(SfpUtilBase):
         self.PORT_END = port_position_tuple[2]
         self.PORTS_IN_BLOCK = port_position_tuple[3]
         self.EEPROM_OFFSET = port_position_tuple[4]
+        self.mlnx_sfpd_started = False
+        self.mlnx_sfpd_retry_count = 0
 
         SfpUtilBase.__init__(self)
 
@@ -181,9 +195,25 @@ class SfpUtil(SfpUtilBase):
             self.sfpd_status_tbl = swsscommon.Table(self.state_db, 'MLNX_SFPD_TASK')
 
         # Check the liveness of mlnx-sfpd, if it failed, return false
+        # If mlnx-sfpd not started, wait for 20 times, for each iteration the wait time will be 2*n secs
         keys = self.sfpd_status_tbl.getKeys()
         if 'LIVENESS' not in keys:
-            return False, phy_port_dict
+            if self.mlnx_sfpd_started:
+                log_err("mlnx-sfpd exited, return false to notify xcvrd.")
+                return False, phy_port_dict
+            else:
+                time.sleep(2*self.mlnx_sfpd_retry_count)
+                self.mlnx_sfpd_retry_count = self.mlnx_sfpd_retry_count + 1
+                if self.mlnx_sfpd_retry_count > MLNX_SFPD_MAX_RETRY_TIMES:
+                    log_err("mlnx-sfpd not started in %d tries, return false to noitfy xcvrd" % self.mlnx_sfpd_retry_count)
+                    return False, phy_port_dict
+                else:
+                    log_info("mlnx-sfpd not started yet, try for the %d time." % self.mlnx_sfpd_retry_count)
+                    return True, phy_port_dict
+        else:
+            if not self.mlnx_sfpd_started:
+                self.mlnx_sfpd_started = True
+                log_info("mlnx-sfpd is running")
 
         if timeout:
             (state, c) = self.db_sel.select(timeout)
