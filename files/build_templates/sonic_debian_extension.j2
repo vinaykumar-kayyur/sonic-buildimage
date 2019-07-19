@@ -283,11 +283,9 @@ sudo rm -f $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 sudo cp $IMAGE_CONFIGS/fstrim/* $FILESYSTEM_ROOT/etc/systemd/system/
 
 ## copy platform rc.local
-j2 $IMAGE_CONFIGS/platform/rc.local.j2 | sudo tee $FILESYSTEM_ROOT/etc/rc.local
-sudo chmod +x $FILESYSTEM_ROOT/etc/rc.local
+sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
 
 ## Copy sonic generator
-
 j2 $IMAGE_CONFIGS/systemd/systemd-sonic-generator.j2 | sudo tee $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
 sudo chmod +x $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator
 
