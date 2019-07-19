@@ -18,8 +18,9 @@ if [ -f /etc/sonic/config_db.json ]; then
 else
     # generate and merge buffers configuration into config file
     sonic-cfggen -t /usr/share/sonic/hwsku/buffers.json.j2 > /tmp/buffers.json
+    sonic-cfggen -t /usr/share/sonic/hwsku/qos.json.j2 > /tmp/qos.json
     sonic-cfggen -p /usr/share/sonic/hwsku/port_config.ini -k $HWSKU --print-data > /tmp/ports.json
-    sonic-cfggen -j /etc/sonic/init_cfg.json -j /tmp/buffers.json -j /tmp/ports.json --print-data > /etc/sonic/config_db.json
+    sonic-cfggen -j /etc/sonic/init_cfg.json -j /tmp/buffers.json -j /tmp/qos.json -j /tmp/ports.json --print-data > /etc/sonic/config_db.json
 fi
 
 mkdir -p /etc/swss/config.d/
@@ -40,8 +41,6 @@ supervisorctl start orchagent
 
 supervisorctl start portsyncd
 
-supervisorctl start intfsyncd
-
 supervisorctl start neighsyncd
 
 supervisorctl start teamsyncd
@@ -49,6 +48,8 @@ supervisorctl start teamsyncd
 supervisorctl start fpmsyncd
 
 supervisorctl start teammgrd
+
+supervisorctl start vrfmgrd
 
 supervisorctl start portmgrd
 
@@ -58,11 +59,13 @@ supervisorctl start vlanmgrd
 
 supervisorctl start zebra
 
+supervisorctl start staticd
+
 supervisorctl start buffermgrd
 
-supervisorctl start vrfmgrd
-
 supervisorctl start nbrmgrd
+
+supervisorctl start vxlanmgrd
 
 # Start arp_update when VLAN exists
 VLAN=`sonic-cfggen -d -v 'VLAN.keys() | join(" ") if VLAN'`

@@ -22,9 +22,9 @@ class TestJ2Files(TestCase):
     def run_script(self, argument):
         print 'CMD: sonic-cfggen ' + argument
         return subprocess.check_output(self.script_file + ' ' + argument, shell=True)
-    
-    def run_diff(self, file1, file2, diff):
-        return subprocess.check_output('diff {} {} >{}'.format(file1, file2, diff), shell=True)
+
+    def run_diff(self, file1, file2):
+        return subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
 
     def test_interfaces(self):
         interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
@@ -61,7 +61,10 @@ class TestJ2Files(TestCase):
         conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'bgpd.conf.j2')
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + conf_template + ' > ' + self.output_file
         self.run_script(argument)
-        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', 'bgpd_quagga.conf'), self.output_file))
+        original_filename = os.path.join(self.test_dir, 'sample_output', 'bgpd_quagga.conf')
+        r = filecmp.cmp(original_filename, self.output_file)
+        diff_output = self.run_diff(original_filename, self.output_file) if not r else ""
+        self.assertTrue(r, "Diff:\n" + diff_output)
 
     def test_zebra_quagga(self):
         conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'zebra.conf.j2')
@@ -121,7 +124,7 @@ class TestJ2Files(TestCase):
 
         argument = '-m ' + self.dell6100_t0_minigraph + ' -p ' + port_config_ini_file + ' -t ' + buffers_file + ' > ' + self.output_file
         self.run_script(argument)
-        
+
         # cleanup
         buffers_config_file_new = os.path.join(dell_dir_path, 'buffers_config.j2')
         os.remove(buffers_config_file_new)

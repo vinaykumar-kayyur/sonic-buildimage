@@ -18,8 +18,7 @@
 # ------------------------------------------------------------------
 # HISTORY:
 #    mm/dd/yyyy (A.D.)#   
-#    4/20/2018: Jostar modify for as7726_32x
-#    12/03/2018:Jostar modify for as7726_32x thermal plan
+#    12/19/2018:Jostar create for as9716_32d thermal plan
 # ------------------------------------------------------------------
 
 try:
@@ -35,14 +34,14 @@ try:
     import time  # this is only being used as part of the example
     import traceback    
     from tabulate import tabulate
-    from as7726_32x.fanutil import FanUtil
-    from as7726_32x.thermalutil import ThermalUtil
+    from as9716_32d.fanutil import FanUtil
+    from as9716_32d.thermalutil import ThermalUtil
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
 # Deafults
 VERSION = '1.0'
-FUNCTION_NAME = '/usr/local/bin/accton_as7726_32x_monitor'
+FUNCTION_NAME = '/usr/local/bin/accton_as9716_32x_monitor'
 
 global log_file
 global log_level

@@ -20,13 +20,15 @@
 #  *                Please note that with current Stretch build structure,
 #  *                user of KEEP_SLAVE_ON feature will have to be conscious
 #  *                about which docker to stay inside after build is done.
-#  *                - If user desires to stay inside Stretch docker, please issue
-#  *                  make KEEP_SLAVE_ON=yes stretch
 #  *                - If user desires to stay inside Jessie docker, please issue
-#  *                  (a successful "make stretch" may be needed before the following command)
-#  *                  make NOSTRETCH=1 KEEP_SLAVE_ON=yes <any jessie target>
+#  *                  make KEEP_SLAVE_ON=yes jessie
+#  *                - If user desires to stay inside Stretch docker, please issue
+#  *                  make NOJESSIE=1 KEEP_SLAVE_ON=yes <any target>
 #  * SOURCE_FOLDER: host path to be mount as /var/$(USER)/src, only effective when KEEP_SLAVE_ON=yes
 #  * SONIC_BUILD_JOBS: Specifying number of concurrent build job(s) to run
+#  * VS_PREPARE_MEM: Prepare memory in VS build (drop cache and compact).
+#  *                 Default: yes
+#  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
 #
 ###############################################################################
@@ -38,6 +40,16 @@ PWD := $(shell pwd)
 
 ifeq ($(USER), root)
 $(error Add your user account to docker group and use your user account to make. root or sudo are not supported!)
+endif
+
+# Check for minimum Docker version on build host
+# Note: Using the greater of CE (17.05.0) and EE (17.06.1) versions that support ARG before FROM
+docker_min := 17.06.1
+docker_min_ver := $(shell echo "$(docker_min)" | awk -F. '{printf("%d%03d%03d\n",$$1,$$2,$$3);}' 2>/dev/null)
+docker_ver := $(shell docker info 2>/dev/null | grep -i "server version" | cut -d' ' -f3 | awk -F. '{printf("%d%03d%03d\n",$$1,$$2,$$3);}' 2>/dev/null)
+docker_is_valid := $(shell if [ $(docker_ver) -lt $(docker_min_ver) ] ; then echo "0"; else echo "1"; fi)
+ifeq (0,$(docker_is_valid))
+$(error SONiC requires Docker version $(docker_min) or later)
 endif
 
 # Remove lock file in case previous run was forcefully stopped
@@ -59,7 +71,11 @@ SLAVE_IMAGE = sonic-slave-$(USER)
 SLAVE_DIR = sonic-slave
 endif
 
-OVERLAY_MODULE_CHECK := lsmod | grep "^overlay " > /dev/null 2>&1 || (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
+OVERLAY_MODULE_CHECK := \
+    lsmod | grep -q "^overlay " &>/dev/null || \
+    zgrep -q 'CONFIG_OVERLAY_FS=y' /proc/config.gz &>/dev/null || \
+    grep -q 'CONFIG_OVERLAY_FS=y' /boot/config-$(shell uname -r) &>/dev/null || \
+    (echo "ERROR: Module 'overlay' not loaded. Try running 'sudo modprobe overlay'."; exit 1)
 
 BUILD_TIMESTAMP := $(shell date +%Y%m%d\.%H%M%S)
 
@@ -85,24 +101,24 @@ ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
 endif
 
 DOCKER_BASE_BUILD = docker build --no-cache \
-		    -t $(SLAVE_BASE_IMAGE) \
+		    -t $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
-		    $(SLAVE_DIR) && \
-		    docker tag $(SLAVE_BASE_IMAGE):latest $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
+		    $(SLAVE_DIR)
 
 DOCKER_BUILD = docker build --no-cache \
 	       --build-arg user=$(USER) \
 	       --build-arg uid=$(shell id -u) \
 	       --build-arg guid=$(shell id -g) \
 	       --build-arg hostname=$(shell echo $$HOSTNAME) \
-	       -t $(SLAVE_IMAGE) \
+               --build-arg slave_base_tag_ref=$(SLAVE_BASE_TAG) \
+	       -t $(SLAVE_IMAGE):$(SLAVE_TAG) \
 	       -f $(SLAVE_DIR)/Dockerfile.user \
-	       $(SLAVE_DIR) && \
-	       docker tag $(SLAVE_IMAGE):latest $(SLAVE_IMAGE):$(SLAVE_TAG)
+	       $(SLAVE_DIR)
 
 SONIC_BUILD_INSTRUCTION :=  make \
                            -f slave.mk \
+                           BLDENV=$(BLDENV) \
                            PLATFORM=$(PLATFORM) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
@@ -114,10 +130,14 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
+                           SONIC_USE_DOCKER_BUILDKIT=$(SONIC_USE_DOCKER_BUILDKIT) \
+                           VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
-                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY)
+                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
+                           EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
+                           $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
 
@@ -166,12 +186,15 @@ init :
 reset :
 	@echo && echo -n "Warning! All local changes will be lost. Proceed? [y/N]: "
 	@read ans && \
-	 if [ $$ans == y ]; then \
-	     git clean -xfdf; \
-	     git reset --hard; \
-	     git submodule foreach --recursive git clean -xfdf; \
-	     git submodule foreach --recursive git reset --hard; \
-	     git submodule update --init --recursive;\
-	 else \
-	     echo "Reset aborted"; \
-	 fi
+	    if [ $$ans == y ]; then \
+	        echo "Resetting local repository. Please wait..."; \
+	        $(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) sudo rm -rf fsroot; \
+	        git clean -xfdf; \
+	        git reset --hard; \
+	        git submodule foreach --recursive git clean -xfdf; \
+	        git submodule foreach --recursive git reset --hard; \
+	        git submodule update --init --recursive; \
+			echo "Reset complete!"; \
+	    else \
+	        echo "Reset aborted"; \
+	    fi

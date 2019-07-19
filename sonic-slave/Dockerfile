@@ -2,11 +2,13 @@ FROM debian:jessie
 
 MAINTAINER johnar@microsoft.com
 
+## Remove retired jessie-updates repo
+RUN sed -i '/deb http:\/\/deb.debian.org\/debian jessie-updates main/d' /etc/apt/sources.list
+
 RUN echo "deb http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src http://debian-archive.trafficmanager.net/debian/ jessie main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://debian-archive.trafficmanager.net/debian/ jessie-backports main contrib non-free" >> /etc/apt/sources.list
+        echo "deb-src http://debian-archive.trafficmanager.net/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -99,6 +101,7 @@ RUN apt-get update && apt-get install -y \
         libslf4j-java \
         libservlet3.1-java \
         qt5-default \
+        pkg-php-tools \
 # For mellanox sdk build
         libpcre3 \
         libpcre3-dev \
@@ -112,6 +115,7 @@ RUN apt-get update && apt-get install -y \
         libdb-dev \
         iptables-dev \
         swig \
+        ctags \
 # For mellanox sai build
         libtool-bin \
         libxml2-dev \
@@ -120,6 +124,8 @@ RUN apt-get update && apt-get install -y \
         libcurl3-nss-dev \
         libunwind8-dev \
         telnet \
+        libc-ares2 \
+        libgoogle-perftools4 \
 # For build image
         cpio \
         squashfs-tools \
@@ -232,29 +238,19 @@ RUN apt-get update && apt-get install -y \
         texi2html \
 # For initramfs
         bash-completion \
-# For Mellanox CRIU build
-        libprotobuf-dev \
-        libprotobuf-c0-dev \
-        protobuf-c-compiler \
-        protobuf-compiler \
-        python-protobuf \
-        pkg-config \
-        libnet1-dev \
-        libnet-dev \
-        libaio-dev \
-        asciidoc \
-        xmlto \
-        checkinstall \
 # For sonic vs image build
         dosfstools \
         qemu-kvm \
         libvirt-bin
 
+# For jenkins slave
+# RUN apt-get -y install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk
+
 # For linux build
 RUN apt-get -y build-dep linux
 
-# For gobgp build
-RUN export VERSION=1.11.2 \
+# For gobgp and telemetry build
+RUN export VERSION=1.11.5 \
  && wget https://storage.googleapis.com/golang/go$VERSION.linux-amd64.tar.gz \
  && tar -C /usr/local -xzf go$VERSION.linux-amd64.tar.gz \
  && echo 'export GOROOT=/usr/local/go' >> /etc/bash.bashrc \
@@ -272,19 +268,24 @@ RUN pip install \
 # For sonic config engine testing
 RUN pip install pyangbind==0.6.0
 # Note: force upgrade debian packaged jinja2, if installed
-RUN pip install --force-reinstall --upgrade jinja2>=2.10
+RUN pip install --force-reinstall --upgrade "jinja2>=2.10"
 
 # For templating (requiring jinja2)
 RUN pip install j2cli
 
 # For sonic utilities testing
-RUN pip install click-default-group click natsort tabulate netifaces==0.10.7
+RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
 
 # For supervisor build
 RUN pip install meld3 mock
 
 # For vs image build
 RUN pip install pexpect==4.6.0
+
+# For sonic-utilities build
+RUN pip install mockredispy==2.9.3
+RUN pip install pytest-runner==4.4
+RUN pip install setuptools==40.8.0
 
 # Install dependencies for isc-dhcp-relay build
 RUN apt-get -y build-dep isc-dhcp
@@ -320,3 +321,8 @@ RUN add-apt-repository \
 RUN apt-get update
 RUN apt-get install -y docker-ce=17.03.2~ce-0~debian-jessie
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+
+# For jenkins slave
+RUN echo "deb http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
+RUN apt-get -o Acquire::Check-Valid-Until=false update
+RUN apt-get -y -o Acquire::Check-Valid-Until=false install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk

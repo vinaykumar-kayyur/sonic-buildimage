@@ -47,6 +47,7 @@
 [submodule "src/sonic-frr/frr"]
 	path = src/sonic-frr/frr
 	url = https://github.com/Azure/sonic-frr.git
+	branch = frr/7.0
 [submodule "platform/p4/p4-hlir/p4-hlir-v1.1"]
 	path = platform/p4/p4-hlir/p4-hlir-v1.1
 	url = https://github.com/p4lang/p4-hlir.git
@@ -62,3 +63,6 @@
 [submodule "src/redis-dump-load"]
 	path = src/redis-dump-load
 	url = https://github.com/p/redis-dump-load.git
+[submodule "platform/mellanox/mlnx-sai/SAI-Implementation"]
+	path = platform/mellanox/mlnx-sai/SAI-Implementation
+	url = https://github.com/Mellanox/SAI-Implementation
