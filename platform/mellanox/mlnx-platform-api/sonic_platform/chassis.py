@@ -8,8 +8,6 @@
 #
 #############################################################################
 
-import sys
-
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.psu import Psu
@@ -22,6 +20,7 @@ try:
     from eeprom import Eeprom
     from os import listdir
     from os.path import isfile, join
+    import sys
     import io
     import re
     import subprocess
@@ -65,7 +64,7 @@ COMPONENT_CPLD1 = "CPLD1"
 COMPONENT_CPLD2 = "CPLD2"
 
 # Global logger class instance
-SYSLOG_IDENTIFIER = "mlnx-chassis"
+SYSLOG_IDENTIFIER = "mlnx-chassis-api"
 logger = Logger(SYSLOG_IDENTIFIER)
 
 # magic code defnition for port number, qsfp port position of each hwsku
@@ -80,11 +79,11 @@ class Chassis(ChassisBase):
         super(Chassis, self).__init__()
 
         # Initialize SKU name
-        self.sku = self._get_sku_name()
+        self.sku_name = self._get_sku_name()
 
         # Initialize PSU list
         for index in range(MLNX_NUM_PSU):
-            psu = Psu(index, self.sku)
+            psu = Psu(index, self.sku_name)
             self._psu_list.append(psu)
 
         # Initialize watchdog
@@ -103,7 +102,7 @@ class Chassis(ChassisBase):
             self._fan_list.append(fan)
 
         # Initialize SFP list
-        port_position_tuple = self._get_port_position_tuple_by_sku_name(self.sku)
+        port_position_tuple = self._get_port_position_tuple_by_sku_name()
         self.PORT_START = port_position_tuple[0]
         self.QSFP_PORT_START = port_position_tuple[1]
         self.PORT_END = port_position_tuple[2]
@@ -117,7 +116,7 @@ class Chassis(ChassisBase):
             self._sfp_list.append(sfp_module)
 
         # Initialize thermals
-        initialize_thermals(self.sku, self._thermal_list, self._psu_list)
+        initialize_thermals(self.sku_name, self._thermal_list, self._psu_list)
 
         # Initialize EEPROM
         self.eeprom = Eeprom()
@@ -149,8 +148,8 @@ class Chassis(ChassisBase):
         out, err = p.communicate()
         return out.rstrip('\n')
 
-    def _get_port_position_tuple_by_sku_name(self, sku):
-        position_tuple = port_position_tuple_list[hwsku_dict_port[self.sku]]
+    def _get_port_position_tuple_by_sku_name(self):
+        position_tuple = port_position_tuple_list[hwsku_dict_port[self.sku_name]]
         return position_tuple
 
     def get_base_mac(self):
@@ -193,8 +192,8 @@ class Chassis(ChassisBase):
             result = fileobj.read(len)
             fileobj.close()
             return result
-        except:
-            logger.log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
+        except Exception as e:
+            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
             return ''
 
     def _verify_reboot_cause(self, filename):

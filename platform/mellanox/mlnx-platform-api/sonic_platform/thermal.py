@@ -8,19 +8,18 @@
 #
 #############################################################################
 
-import os.path
-
 try:
     from sonic_platform_base.thermal_base import ThermalBase
     from sonic_daemon_base.daemon_base import Logger
     from os import listdir
     from os.path import isfile, join
     import io
+    import os.path
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 # Global logger class instance
-SYSLOG_IDENTIFIER = "mlnx-thermal"
+SYSLOG_IDENTIFIER = "mlnx-thermal-api"
 logger = Logger(SYSLOG_IDENTIFIER)
 
 THERMAL_DEV_CATEGORY_CPU_CORE = "cpu_core"
@@ -54,7 +53,7 @@ thermal_api_handler_module = {
     THERMAL_API_GET_HIGH_THRESHOLD:"temp_crit_module{}"
 }
 thermal_api_handler_psu = {
-    THERMAL_API_GET_TEMPERATURE:"psu{}",
+    THERMAL_API_GET_TEMPERATURE:None,
     THERMAL_API_GET_HIGH_THRESHOLD:"psu{}_max"
 }
 thermal_api_handler_gearbox = {
@@ -108,7 +107,14 @@ thermal_api_names = [
     THERMAL_API_GET_HIGH_THRESHOLD
 ]
 
-hwsku_dict_thermal = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 4, 'ACS-MSN3700': 5, 'ACS-MSN3700C': 6, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'ACS-MSN3800': 7}
+# thermal sensor file name convention for SKUs with single thermal sensor for each PSU
+THERMAL_PSU_TEMP_FOR_SINGLE_SENSOR = "psu{}"
+# thermal sensor file name convention for SKUs with multiple thermal sensors for each PSU
+THERMAL_PSU_TEMP_FOR_MULTI_SENSORS = "psu{}_temp"
+
+hwsku_with_single_thermal_per_sku = ['ACS-MSN2700', 'LS-SN2700','Mellanox-SN2700']
+
+hwsku_dict_thermal = {'ACS-MSN2700': 0, 'LS-SN2700':0, 'ACS-MSN2740': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 4, 'ACS-MSN3700': 5, 'ACS-MSN3700C': 6, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'ACS-MSN3800': 7}
 thermal_profile_list = [
     # 2700
     {
@@ -236,6 +242,13 @@ thermal_profile_list = [
 ]
 
 def initialize_thermals(sku, thermal_list, psu_list):
+    # initialize temperature sensor handlers
+    if sku in hwsku_with_single_thermal_per_sku:
+        thermal_api_handler_psu[THERMAL_API_GET_TEMPERATURE] = THERMAL_PSU_TEMP_FOR_SINGLE_SENSOR
+    else:
+        thermal_api_handler_psu[THERMAL_API_GET_TEMPERATURE] = THERMAL_PSU_TEMP_FOR_MULTI_SENSORS
+
+    # create thermal objects for all categories of sensors
     tp_index = hwsku_dict_thermal[sku]
     thermal_profile = thermal_profile_list[tp_index]
     for category in thermal_device_categories_all:
@@ -256,7 +269,7 @@ def initialize_thermals(sku, thermal_list, psu_list):
             else:
                 if category == THERMAL_DEV_CATEGORY_PSU:
                     for index in range(count):
-                        thermal = Thermal(category, start + index, True, psu_list[index])
+                        thermal = Thermal(category, start + index, True, psu_list[index].get_powergood_status, "power off")
                         thermal_list.append(thermal)
                 else:
                     for index in range(count):
@@ -264,7 +277,7 @@ def initialize_thermals(sku, thermal_list, psu_list):
                         thermal_list.append(thermal)
 
 class Thermal(ThermalBase):
-    def __init__(self, category, index, has_index, dependency = None):
+    def __init__(self, category, index, has_index, dependency = None, hint = None):
         """
         index should be a string for category ambient and int for other categories
         """
@@ -282,6 +295,7 @@ class Thermal(ThermalBase):
         self.temperature = self._get_file_from_api(THERMAL_API_GET_TEMPERATURE)
         self.high_threshold = self._get_file_from_api(THERMAL_API_GET_HIGH_THRESHOLD)
         self.dependency = dependency
+        self.dependent_hint = hint
 
     def get_name(self):
         """
@@ -300,10 +314,8 @@ class Thermal(ThermalBase):
         try:
             with open(filename, 'r') as fileobj:
                 result = fileobj.read()
-        except:
-            if self.dependency is None or self.dependency.get_powergood_status():
-                logger.log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
-            result = None
+        except Exception as e:
+            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
         return result
 
     def _get_file_from_api(self, api_name):
@@ -328,6 +340,13 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125 
         """
+        if self.dependency and not self.dependency():
+            if self.dependent_hint:
+                hint = self.dependent_hint
+            else:
+                hint = "unknown reason"
+            logger.log_info("get_temperature for {} failed due to {}".format(self.name, hint))
+            return None
         value_str = self._read_generic_file(self.temperature, 0)
         if value_str is None:
             return None

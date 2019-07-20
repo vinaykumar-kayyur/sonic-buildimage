@@ -8,9 +8,8 @@
 #
 #############################################################################
 
-import os.path
-
 try:
+    import os.path
     from sonic_platform_base.psu_base import PsuBase
     from sonic_daemon_base.daemon_base import Logger
     from sonic_platform.fan import Fan
@@ -18,7 +17,7 @@ except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 # Global logger class instance
-SYSLOG_IDENTIFIER = "mlnx-psu"
+SYSLOG_IDENTIFIER = "mlnx-psu-api"
 logger = Logger(SYSLOG_IDENTIFIER)
 
 psu_list = []
@@ -26,6 +25,12 @@ psu_list = []
 PSU_CURRENT = "current"
 PSU_VOLTAGE = "voltage"
 PSU_POWER = "power"
+
+# SKUs with unplugable PSUs:
+# 1. don't have psuX_status and should be treated as always present
+# 2. don't have voltage, current and power values
+hwsku_dict_with_unplugable_psu = ['ACS-MSN2010', 'ACS-MSN2100']
+
 # in most SKUs the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
 hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1}
@@ -53,34 +58,39 @@ class Psu(PsuBase):
         self.index = psu_index + 1
         psu_list.append(self.index)
         self.psu_path = "/var/run/hw-management/"
-        self.psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
+        psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
+        #psu_oper_status should always be present for all SKUs
+        self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
 
         if sku in hwsku_dict_psu:
             filemap = psu_profile_list[hwsku_dict_psu[sku]]
         else:
             filemap = psu_profile_list[0]
 
-        print "sku {} filemap {}".format(sku, filemap)
-        psu_voltage = filemap[PSU_VOLTAGE].format(self.index)
-        if os.path.exists(os.path.join(self.psu_path, psu_voltage)):
-            self.psu_voltage = psu_voltage
-        else:
+        if sku in hwsku_dict_with_unplugable_psu:
+            self.always_presence = True
             self.psu_voltage = None
-        psu_curr = filemap[PSU_CURRENT].format(self.index)
-        if os.path.exists(os.path.join(self.psu_path, psu_curr)):
-            self.psu_current = psu_curr
-        else:
             self.psu_current = None
-        psu_power = filemap[PSU_POWER].format(self.index)
-        if os.path.exists(os.path.join(self.psu_path, psu_power)):
-            self.psu_power = psu_power
-        else:
             self.psu_power = None
-        psu_presence = "thermal/psu{}_status".format(self.index)
-        if os.path.exists(os.path.join(self.psu_path, psu_presence)):
-            self.psu_presence = psu_presence
-        else:
             self.psu_presence = None
+        else:
+            self.always_presence = False
+            psu_voltage = filemap[PSU_VOLTAGE].format(self.index)
+            psu_voltage = os.path.join(self.psu_path, psu_voltage)
+            self.psu_voltage = psu_voltage
+
+            psu_current = filemap[PSU_CURRENT].format(self.index)
+            psu_current = os.path.join(self.psu_path, psu_current)
+            self.psu_current = psu_current
+
+            psu_power = filemap[PSU_POWER].format(self.index)
+            psu_power = os.path.join(self.psu_path, psu_power)
+            self.psu_power = psu_power
+
+            psu_presence = "thermal/psu{}_status".format(self.index)
+            psu_presence = os.path.join(self.psu_path, psu_presence)
+            self.psu_presence = psu_presence
+
         fan = Fan(psu_index, psu_index, True)
         if fan.get_presence():
             self._fan = fan
@@ -93,9 +103,8 @@ class Psu(PsuBase):
         try:
             with open(filename, 'r') as fileobj:
                 result = int(fileobj.read())
-        except:
-            logger.log_info("Fail to read file {}, maybe it doesn't exist".format(filename))
-            result = 0
+        except Exception as e:
+            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
         return result
 
     def get_powergood_status(self):
@@ -116,11 +125,11 @@ class Psu(PsuBase):
         Returns:
             bool: True if PSU is present, False if not
         """
-        if self.psu_presence is not None:
-            status = self._read_generic_file(os.path.join(self.psu_path, self.psu_presence), 0)
-            return status == 1
+        if self.always_presence:
+            return self.always_presence
         else:
-            return True
+            status = self._read_generic_file(self.psu_presence, 0)
+            return status == 1
 
     def get_voltage(self):
         """
@@ -130,8 +139,8 @@ class Psu(PsuBase):
             A float number, the output voltage in volts, 
             e.g. 12.1 
         """
-        if self.psu_voltage is not None:
-            voltage = self._read_generic_file(os.path.join(self.psu_path, self.psu_voltage), 0)
+        if self.psu_voltage is not None and os.path.exists(self.psu_voltage):
+            voltage = self._read_generic_file(self.psu_voltage, 0)
             return float(voltage) / 1000
         else:
             return None
@@ -143,8 +152,8 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        if self.psu_current is not None:
-            amperes = self._read_generic_file(os.path.join(self.psu_path, self.psu_current), 0)
+        if self.psu_current is not None and os.path.exists(self.psu_current):
+            amperes = self._read_generic_file(self.psu_current, 0)
             return float(amperes) / 1000
         else:
             return None
@@ -156,8 +165,8 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        if self.psu_power is not None:
-            power = self._read_generic_file(os.path.join(self.psu_path, self.psu_power), 0)
+        if self.psu_power is not None and os.path.exists(self.psu_power):
+            power = self._read_generic_file(self.psu_power, 0)
             return float(power) / 1000000
         else:
             return None
