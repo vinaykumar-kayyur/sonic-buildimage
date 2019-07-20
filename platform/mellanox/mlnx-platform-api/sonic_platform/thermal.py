@@ -53,8 +53,8 @@ thermal_api_handler_module = {
     THERMAL_API_GET_HIGH_THRESHOLD:"temp_crit_module{}"
 }
 thermal_api_handler_psu = {
-    THERMAL_API_GET_TEMPERATURE:None,
-    THERMAL_API_GET_HIGH_THRESHOLD:"psu{}_max"
+    THERMAL_API_GET_TEMPERATURE:"psu{}_temp",
+    THERMAL_API_GET_HIGH_THRESHOLD:"psu{}_temp_max"
 }
 thermal_api_handler_gearbox = {
     THERMAL_API_GET_TEMPERATURE:"temp_input_gearbox{}",
@@ -106,13 +106,6 @@ thermal_api_names = [
     THERMAL_API_GET_TEMPERATURE,
     THERMAL_API_GET_HIGH_THRESHOLD
 ]
-
-# thermal sensor file name convention for SKUs with single thermal sensor for each PSU
-THERMAL_PSU_TEMP_FOR_SINGLE_SENSOR = "psu{}"
-# thermal sensor file name convention for SKUs with multiple thermal sensors for each PSU
-THERMAL_PSU_TEMP_FOR_MULTI_SENSORS = "psu{}_temp"
-
-hwsku_with_single_thermal_per_sku = ['ACS-MSN2700', 'LS-SN2700','Mellanox-SN2700']
 
 hwsku_dict_thermal = {'ACS-MSN2700': 0, 'LS-SN2700':0, 'ACS-MSN2740': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 4, 'ACS-MSN3700': 5, 'ACS-MSN3700C': 6, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'ACS-MSN3800': 7}
 thermal_profile_list = [
@@ -242,12 +235,6 @@ thermal_profile_list = [
 ]
 
 def initialize_thermals(sku, thermal_list, psu_list):
-    # initialize temperature sensor handlers
-    if sku in hwsku_with_single_thermal_per_sku:
-        thermal_api_handler_psu[THERMAL_API_GET_TEMPERATURE] = THERMAL_PSU_TEMP_FOR_SINGLE_SENSOR
-    else:
-        thermal_api_handler_psu[THERMAL_API_GET_TEMPERATURE] = THERMAL_PSU_TEMP_FOR_MULTI_SENSORS
-
     # create thermal objects for all categories of sensors
     tp_index = hwsku_dict_thermal[sku]
     thermal_profile = thermal_profile_list[tp_index]

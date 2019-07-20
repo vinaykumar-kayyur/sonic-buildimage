@@ -139,7 +139,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts, 
             e.g. 12.1 
         """
-        if self.psu_voltage is not None and os.path.exists(self.psu_voltage):
+        if self.psu_voltage is not None and self.get_powergood_status():
             voltage = self._read_generic_file(self.psu_voltage, 0)
             return float(voltage) / 1000
         else:
@@ -152,7 +152,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        if self.psu_current is not None and os.path.exists(self.psu_current):
+        if self.psu_current is not None and self.get_powergood_status():
             amperes = self._read_generic_file(self.psu_current, 0)
             return float(amperes) / 1000
         else:
@@ -165,7 +165,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        if self.psu_power is not None and os.path.exists(self.psu_power):
+        if self.psu_power is not None and self.get_powergood_status():
             power = self._read_generic_file(self.psu_power, 0)
             return float(power) / 1000000
         else:
