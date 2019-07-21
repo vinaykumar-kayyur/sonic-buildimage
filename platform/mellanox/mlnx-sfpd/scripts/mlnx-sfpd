@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 '''
 This code is for a mlnx platform specific daemon, mlnx-sfpd.
 Which listen to the SDK for the SFP change event and post the event to DB.
@@ -75,7 +75,6 @@ class MlnxSfpd:
         # Allocate SDK fd and user channel structures
         self.rx_fd_p = new_sx_fd_t_p()
         self.user_channel_p = new_sx_user_channel_t_p()
-
         self.state_db = SonicV2Connector(host=REDIS_HOSTIP)
 
         # Register our signal handlers
@@ -114,7 +113,7 @@ class MlnxSfpd:
                     sx_api_open_pass = True
                     retry = 1
                 else:    
-                    log_warning("failed to open SDK API handle... retrying {}".format(retry))
+                    log_warning("failed to open SDK API handle with err code {}... retrying {}".format(rc,retry))
                     time.sleep(2 ** retry)
                     retry += 1
                     if retry > self.SX_OPEN_RETRIES:
@@ -155,7 +154,7 @@ class MlnxSfpd:
                     if retry > self.SX_OPEN_RETRIES:
                         sx_api_host_ifc_close(self.handle, self.rx_fd_p)
                         sx_api_close(self.handle)
-                        raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(c))
+                        raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(rc))
                     else:
                         continue
         
