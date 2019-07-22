@@ -1,0 +1,5 @@
+ip link set dev lo master mgmt
+sleep 1
+ntpstat $@
+sleep 1
+ip link set dev lo nomaster
