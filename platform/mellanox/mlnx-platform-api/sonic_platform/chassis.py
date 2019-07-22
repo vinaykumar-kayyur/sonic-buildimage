@@ -59,8 +59,8 @@ class Chassis(ChassisBase):
             result = fileobj.read(len)
             fileobj.close()
             return result
-        except:
-            log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
+        except Exception as e:
+            log_warning("Fail to read file {} due to {}".format(filename, repr(e)))
             return ''
 
     def _verify_reboot_cause(self, filename):
