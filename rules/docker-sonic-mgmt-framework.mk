@@ -19,4 +19,4 @@ SONIC_STRETCH_DOCKERS += $(DOCKER_MGMT-FRAMEWORK)
 $(DOCKER_MGMT-FRAMEWORK)_CONTAINER_NAME = mgmt-framework
 $(DOCKER_MGMT-FRAMEWORK)_RUN_OPT += --net=host --privileged -t
 $(DOCKER_MGMT-FRAMEWORK)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
-
+$(DOCKER_MGMT-FRAMEWORK)_RUN_OPT += --mount type=bind,source="/var/platform/",target="/mnt/platform/"
