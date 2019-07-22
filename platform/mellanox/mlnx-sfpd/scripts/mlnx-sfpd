@@ -129,7 +129,7 @@ class MlnxSfpd:
                     sx_api_host_ifc_open_pass = True
                     retry = 1
                 else:
-                    log_warning("sx_api_host_ifc_open return fail... retrying {}".format(retry))
+                    log_warning("sx_api_host_ifc_open failed with error code {}... retrying {}".format(rc,retry))
                     time.sleep(2 ** retry)
                     retry += 1
                     if retry > self.SX_OPEN_RETRIES:
@@ -148,13 +148,13 @@ class MlnxSfpd:
                     sx_api_host_ifc_trap_id_register_set_pass = True
                     break
                 else:
-                    log_warning("sx_api_host_ifc_trap_id_register_set return fail... retrying {}".format(retry))
+                    log_warning("sx_api_host_ifc_trap_id_register_set failed with error code {}... retrying {}".format(rc,retry))
                     time.sleep(2 ** retry)
                     retry += 1
                     if retry > self.SX_OPEN_RETRIES:
                         sx_api_host_ifc_close(self.handle, self.rx_fd_p)
                         sx_api_close(self.handle)
-                        raise RuntimeError("sx_api_host_ifc_trap_id_register_set exited with error, rc {}".format(rc))
+                        raise RuntimeError("sx_api_host_ifc_trap_id_register_set failed with error after {} retries".format(retry))
                     else:
                         continue
         
