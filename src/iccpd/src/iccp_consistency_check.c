@@ -1,26 +1,26 @@
 /*
-* iccp_consistency_check.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*
-*/
+ * iccp_consistency_check.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ *
+ */
 
 #include "../include/iccp_consistency_check.h"
 #include "../include/system.h"
@@ -51,18 +51,18 @@ static int iccp_check_interface_mode( char* ifname)
     struct PeerInterface* peer_if = NULL;
 
     local_if = local_if_find_by_name(ifname);
-    if(local_if == NULL)
-    return -2;
+    if (local_if == NULL)
+        return -2;
 
     csm = local_if->csm;
-    if(csm == NULL)
-    return -3;
+    if (csm == NULL)
+        return -3;
 
     peer_if = peer_if_find_by_name(csm, ifname);
-    if(peer_if == NULL)
-    return -4;
+    if (peer_if == NULL)
+        return -4;
 
-    if(peer_if->l3_mode != local_if->l3_mode)
+    if (peer_if->l3_mode != local_if->l3_mode)
         return -5;
 
     return 1;
@@ -75,18 +75,18 @@ static int iccp_check_interface_layer3_addr(char* ifname)
     struct PeerInterface* peer_if = NULL;
 
     local_if = local_if_find_by_name(ifname);
-    if(local_if == NULL)
-    return -2;
+    if (local_if == NULL)
+        return -2;
 
     csm = local_if->csm;
-    if(csm == NULL)
-    return -3;
+    if (csm == NULL)
+        return -3;
 
     peer_if = peer_if_find_by_name(csm, ifname);
-    if(peer_if == NULL)
-    return -4;
+    if (peer_if == NULL)
+        return -4;
 
-    if(peer_if->ipv4_addr != local_if->ipv4_addr)
+    if (peer_if->ipv4_addr != local_if->ipv4_addr)
         return -5;
 
     return 1;
@@ -101,26 +101,26 @@ static int iccp_check_interface_vlan(char* ifname)
     struct LocalInterface* local_if = NULL;
 
     local_if = local_if_find_by_name(ifname);
-    if(local_if == NULL)
-    return -2;
+    if (local_if == NULL)
+        return -2;
 
     csm = local_if->csm;
-    if(csm == NULL)
-    return -3;
+    if (csm == NULL)
+        return -3;
 
     peer_if = peer_if_find_by_name(csm, ifname);
-    if(peer_if == NULL)
-    return -4;
+    if (peer_if == NULL)
+        return -4;
 
     LIST_FOREACH(local_vlan, &(local_if->vlan_list), port_next)
     {
         LIST_FOREACH(peer_vlan, &(peer_if->vlan_list), port_next)
         {
-            if(peer_vlan->vid == local_vlan->vid)
+            if (peer_vlan->vid == local_vlan->vid)
                 break;
         }
 
-        if(peer_vlan == NULL)
+        if (peer_vlan == NULL)
         {
             return -5;
         }
@@ -131,11 +131,11 @@ static int iccp_check_interface_vlan(char* ifname)
 
         LIST_FOREACH(local_vlan, &(local_if->vlan_list), port_next)
         {
-            if(peer_vlan->vid == local_vlan->vid)
+            if (peer_vlan->vid == local_vlan->vid)
                 break;
         }
 
-        if(local_vlan == NULL)
+        if (local_vlan == NULL)
         {
             return -6;
         }
@@ -151,22 +151,22 @@ static const ConsistencyCheckFunc check_func[] = {
     iccp_check_interface_vlan,          /* REASON_PEER_IF_VLAN_IS_ASYNC */
     NULL                                /* REASON_MAX_ARRAY_SIZE */
 };
-#define ARRAY_SIZE(array_name) (sizeof(array_name)/sizeof(array_name[0]))
+#define ARRAY_SIZE(array_name) (sizeof(array_name) / sizeof(array_name[0]))
 
 enum Reason_ID iccp_consistency_check(char* ifname)
 {
     int i = 0;
     int ret = 0;
 
-    for(i = REASON_INTERRFACE_MODE_IS_ASYNC; i < REASON_MAX_ARRAY_SIZE; ++i)
+    for (i = REASON_INTERRFACE_MODE_IS_ASYNC; i < REASON_MAX_ARRAY_SIZE; ++i)
     {
-        if(check_func[i] == NULL)
+        if (check_func[i] == NULL)
             continue;
-        ret = check_func[i](ifname) ;
-        if(ret != 1)
+        ret = check_func[i](ifname);
+        if (ret != 1)
         {
-            ICCPD_LOG_DEBUG(__FUNCTION__, "%s ret = %d",reasons[i] ,ret);
-            fprintf(stdout,"%s \n",reasons[i]);
+            ICCPD_LOG_DEBUG(__FUNCTION__, "%s ret = %d", reasons[i], ret);
+            fprintf(stdout, "%s \n", reasons[i]);
             return i;
         }
     }

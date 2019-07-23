@@ -1,24 +1,24 @@
 /*
-* app_csm.c
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * app_csm.c
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -35,15 +35,15 @@
 *
 * ***************************************/
 #define APP_CSM_QUEUE_REINIT(list) \
-    {\
-        struct Msg* msg = NULL;\
-        while (!TAILQ_EMPTY(&(list))) {\
-            msg = TAILQ_FIRST(&(list));\
-            TAILQ_REMOVE(&(list), msg, tail);\
-            free(msg->buf);\
-            free(msg);\
-        }\
-        TAILQ_INIT(&(list));\
+    { \
+        struct Msg* msg = NULL; \
+        while (!TAILQ_EMPTY(&(list))) { \
+            msg = TAILQ_FIRST(&(list)); \
+            TAILQ_REMOVE(&(list), msg, tail); \
+            free(msg->buf); \
+            free(msg); \
+        } \
+        TAILQ_INIT(&(list)); \
     }
 
 /* Application State Machine instance initialization */
@@ -54,7 +54,7 @@ void app_csm_init(struct CSM* csm, int all)
 
     APP_CSM_QUEUE_REINIT(csm->app_csm.app_msg_list);
 
-    if(all)
+    if (all)
     {
         bzero(&(csm->app_csm), sizeof(struct AppCSM));
         APP_CSM_QUEUE_REINIT(csm->app_csm.app_msg_list);
@@ -89,7 +89,7 @@ void app_csm_transit(struct CSM* csm)
         return;
     }
 
-    if(csm->app_csm.current_state != APP_OPERATIONAL && csm->current_state == ICCP_OPERATIONAL)
+    if (csm->app_csm.current_state != APP_OPERATIONAL && csm->current_state == ICCP_OPERATIONAL)
     {
         csm->app_csm.current_state = APP_OPERATIONAL;
     }
@@ -115,30 +115,31 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     if (msg == NULL )
         return;
 
-    icc_hdr = (ICCHdr*) msg->buf;
-    param = (ICCParameter*) &msg->buf[sizeof(struct ICCHdr)];
+    icc_hdr = (ICCHdr*)msg->buf;
+    param = (ICCParameter*)&msg->buf[sizeof(struct ICCHdr)];
     *(uint16_t *)param = ntohs(*(uint16_t *)param);
 
     if ( icc_hdr->ldp_hdr.msg_type == MSG_T_RG_APP_DATA)
     {
-        if(param->type > TLV_T_MLACP_CONNECT && param->type < TLV_T_MLACP_LIST_END)
+        if (param->type > TLV_T_MLACP_CONNECT && param->type < TLV_T_MLACP_LIST_END)
             mlacp_enqueue_msg(csm, msg);
         else
             TAILQ_INSERT_TAIL(&(csm->app_csm.app_msg_list), msg, tail);
     }
     else if (icc_hdr->ldp_hdr.msg_type == MSG_T_NOTIFICATION)
     {
-        naktlv = (NAKTLV*) &msg->buf[sizeof(ICCHdr)];
-        for(i=0; i<MAX_MSG_LOG_SIZE; ++i)
+        naktlv = (NAKTLV*)&msg->buf[sizeof(ICCHdr)];
+
+        for (i = 0; i < MAX_MSG_LOG_SIZE; ++i)
         {
-            if(ntohl(naktlv->rejected_msg_id) == csm->msg_log.msg[i].msg_id)
+            if (ntohl(naktlv->rejected_msg_id) == csm->msg_log.msg[i].msg_id)
             {
                 tlv = csm->msg_log.msg[i].tlv;
                 break;
             }
         }
 
-        if(tlv > TLV_T_MLACP_CONNECT && tlv <= TLV_T_MLACP_MAC_INFO)
+        if (tlv > TLV_T_MLACP_CONNECT && tlv <= TLV_T_MLACP_MAC_INFO)
             mlacp_enqueue_msg(csm, msg);
         else
             TAILQ_INSERT_TAIL(&(csm->app_csm.app_msg_list), msg, tail);
@@ -167,8 +168,8 @@ struct Msg* app_csm_dequeue_msg(struct CSM* csm)
 /* APP NAK message handle function */
 int app_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 {
-    ICCHdr* icc_hdr = (ICCHdr*) buf;
-    NAKTLV* naktlv = (NAKTLV*) &buf[sizeof(ICCHdr)];
+    ICCHdr* icc_hdr = (ICCHdr*)buf;
+    NAKTLV* naktlv = (NAKTLV*)&buf[sizeof(ICCHdr)];
     size_t msg_len = sizeof(ICCHdr) + sizeof(NAKTLV);
 
     ICCPD_LOG_DEBUG(__FUNCTION__, " Response NAK");
@@ -201,8 +202,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
         return 0;
 
     /* remove purge from the csm*/
-    do
-    {
+    do {
         LIST_FOREACH(lifp, &(MLACP(csm).lif_purge_list), mlacp_purge_next)
         {
             if (lifp == lif)
@@ -226,7 +226,8 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     /* join new csm*/
     LIST_INSERT_HEAD(&(MLACP(csm).lif_list), lif, mlacp_next);
     lif->csm = csm;
-    if (lif->type == IF_T_PORT_CHANNEL) lif->port_config_sync = 1;
+    if (lif->type == IF_T_PORT_CHANNEL)
+        lif->port_config_sync = 1;
 
     ICCPD_LOG_INFO(__FUNCTION__, "%s: MLACP bind on csm %p", lif->name, csm);
     if (lif->type == IF_T_PORT_CHANNEL)
@@ -289,7 +290,7 @@ int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname)
     struct LocalInterface *lif_po = NULL;
 
     sys = system_get_instance();
-    if(sys == NULL)
+    if (sys == NULL)
         return 0;
 
     if (csm == NULL)

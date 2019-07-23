@@ -1,25 +1,25 @@
 /*
-* logger.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * logger.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -44,14 +44,19 @@ static char* log_level_to_string(int level)
     {
         case CRITICAL_LOG_LEVEL:
             return "CRITICAL";
+
         case ERR_LOG_LEVEL:
             return "ERROR";
+
         case WARN_LOG_LEVEL:
             return "WARN";
-          case NOTICE_LOG_LEVEL:
+
+        case NOTICE_LOG_LEVEL:
             return "NOTICE";
+
         case INFO_LOG_LEVEL:
             return "INFO";
+
         case DEBUG_LOG_LEVEL:
             return "DEBUG";
     }
@@ -76,12 +81,13 @@ struct LoggerConfig* logger_get_configuration()
 void log_init(struct CmdOptionParser* parser)
 {
     struct LoggerConfig* config = logger_get_configuration();
+
     config->console_log_enabled = parser->console_log;
 }
 
 void log_finalize()
 {
-     /*do nothing*/
+    /*do nothing*/
 }
 
 void write_log(const int level, const char* tag, const char* format, ...)
@@ -109,14 +115,14 @@ void write_log(const int level, const char* tag, const char* format, ...)
     va_end(args);
 
     /* Since osal_vsnprintf doesn't always return the exact size written to the buffer,
-    * we must check if the user string length exceeds the remaing buffer size.
-    */
+     * we must check if the user string length exceeds the remaing buffer size.
+     */
     if (print_len > avbl_buf_len)
     {
         print_len = avbl_buf_len;
     }
 
-    buf[prefix_len+print_len] = '\0';
+    buf[prefix_len + print_len] = '\0';
     ICCPD_UTILS_SYSLOG(_iccpd_log_level_map[level], "%s", buf);
 
     return;

@@ -1,25 +1,25 @@
 /*
-* cmd_option.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * cmd_option.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #include "../include/cmd_option.h"
 
@@ -28,12 +28,12 @@ struct CmdOption* cmd_option_find(struct CmdOptionParser* parser, char* opt_name
     struct CmdOption* opt = NULL;
 
     if (opt_name == NULL)
-    	return NULL;
+        return NULL;
 
     LIST_FOREACH(opt, &(parser->option_list), next)
     {
-    	if (strcmp(opt->option, opt_name) == 0)
-    		return opt;
+        if (strcmp(opt->option, opt_name) == 0)
+            return opt;
     }
 
     return NULL;
@@ -59,20 +59,20 @@ struct CmdOption* cmd_option_add(struct CmdOptionParser* parser, char* opt_name)
     struct CmdOption* opt = NULL;
 
     if (opt_name == NULL)
-    	return NULL;
+        return NULL;
     if ((opt = cmd_option_find(parser, opt_name)) != NULL)
-    	return opt;
+        return opt;
 
-    if ((opt = (struct CmdOption*) malloc(sizeof(struct CmdOption))) == NULL)
+    if ((opt = (struct CmdOption*)malloc(sizeof(struct CmdOption))) == NULL)
     {
-    	strerror(errno);
+        strerror(errno);
     }
     else
     {
-    	opt->option = opt_name;
-    	opt->parameter = NULL;
-    	opt->desc = NULL;
-    	LIST_INSERT_HEAD(&(parser->option_list), opt, next);
+        opt->option = opt_name;
+        opt->parameter = NULL;
+        opt->desc = NULL;
+        LIST_INSERT_HEAD(&(parser->option_list), opt, next);
     }
 
     return opt;
@@ -113,8 +113,8 @@ static void cmd_option_register(struct CmdOptionParser* parser, char* syntax, ch
 
     return;
 
-failed:
-    if(opt_name)
+ failed:
+    if (opt_name)
         free(opt_name);
     if (desc_copy != NULL)
         free(desc_copy);
@@ -127,7 +127,7 @@ failed:
 void cmd_option_parser_init(struct CmdOptionParser* parser)
 {
     if (parser == NULL)
-    	return;
+        return;
 
     LIST_INIT(&parser->option_list);
     cmd_option_register(parser, "-l <LOG_FILE_PATH>", "Set log file path.\n(Default: /var/log/iccpd.log)");
@@ -168,25 +168,28 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
         else
             snprintf(buf, MSG_LEN - 1, "%s", opt->option);
         fprintf(stdout, "%24s    ", buf);
+
         while (index < strlen(opt->desc))
         {
             while (index < strlen(opt->desc)
-            		&& opt->desc[index] != '\n' && length < 49)
+                   && opt->desc[index] != '\n' && length < 49)
             {
                 ++index;
                 ++length;
             }
+
             memset(buf, 0, MSG_LEN);
             strncpy(buf, &(opt->desc[begin]), length);
             if (length == 49 && index < strlen(opt->desc)
-            		&& opt->desc[index] != '\n'
-            		&& opt->desc[index - 1] != ' '
-            		&& opt->desc[index] != ' ')
+                && opt->desc[index] != '\n'
+                && opt->desc[index - 1] != ' '
+                && opt->desc[index] != ' ')
             {
                 buf[length] = '-';
                 buf[length + 1] = '\0';
             }
-            if (length < 49) ++index;
+            if (length < 49)
+                ++index;
             begin = index;
             length = 0;
             if (first_line != 0)
@@ -197,6 +200,7 @@ void cmd_option_parser_dump_usage(struct CmdOptionParser* parser, char* prog_nam
             else
                 fprintf(stdout, "%28c%-52s\n", ' ', buf);
         }
+
         fflush(stdout);
     }
 }
@@ -210,7 +214,7 @@ int cmd_option_parser_parse(struct CmdOptionParser* parser, int argc, char* argv
     int num = 0;
 
     if (parser == NULL)
-    	return -255;
+        return -255;
 
     while (index < argc)
     {

@@ -1,25 +1,25 @@
 /*
-* iccp_cmd_show.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * iccp_cmd_show.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <net/if.h>
@@ -40,10 +40,10 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
     struct CSM *csm = NULL;
     struct LocalInterface *peer_link_if = NULL;
     struct LocalInterface *lif_po = NULL;
-    char unknown[] = {"Unknown"};
-    int mclag_num= 0;
+    char unknown[] = { "Unknown" };
+    int mclag_num = 0;
     int id_exist = 0;
-    int str_size =0;
+    int str_size = 0;
     int len = 0;
     char *state_buf = NULL;
     int state_buf_size = MCLAGDCTL_CMD_SIZE;
@@ -67,7 +67,7 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
         else
             state_info.keepalive = 0;
 
-        if (mclag_id >0)
+        if (mclag_id > 0)
         {
             if (csm->mlag_id == mclag_id)
                 id_exist = 1;
@@ -78,9 +78,9 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
         peer_link_if = local_if_find_by_name(csm->peer_itf_name);
 
         if (csm->mlag_id <= 0)
-           state_info.mclag_id = -1;
+            state_info.mclag_id = -1;
         else
-           state_info.mclag_id = csm->mlag_id;
+            state_info.mclag_id = csm->mlag_id;
 
         memcpy(state_info.local_ip, csm->sender_ip, ICCP_MAX_IP_STR_LEN);
         memcpy(state_info.peer_ip, csm->peer_ip, ICCP_MAX_IP_STR_LEN);
@@ -100,8 +100,8 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
         LIST_FOREACH(lif_po, &(MLACP(csm).lif_list), mlacp_next)
         {
 
-            if (str_size -len < ICCP_MAX_PORT_NAME)
-                        break;
+            if (str_size - len < ICCP_MAX_PORT_NAME)
+                break;
 
             if (lif_po->type == IF_T_PORT_CHANNEL)
                 len += snprintf(state_info.enabled_po + len, str_size - len, "%s,", lif_po->name);
@@ -109,16 +109,16 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
 
         /*Skip the last ','*/
         len = strlen(state_info.enabled_po);
-        if(len > 0)
+        if (len > 0)
         {
-            state_info.enabled_po[len-1] = '\0';
+            state_info.enabled_po[len - 1] = '\0';
         }
 
-        memcpy(state_buf + MCLAGD_REPLY_INFO_HDR + mclag_num*sizeof(struct mclagd_state),
-            &state_info, sizeof(struct mclagd_state));
-        mclag_num ++;
+        memcpy(state_buf + MCLAGD_REPLY_INFO_HDR + mclag_num * sizeof(struct mclagd_state),
+               &state_info, sizeof(struct mclagd_state));
+        mclag_num++;
 
-        if ((mclag_num + 1)*sizeof(struct mclagd_state) > (state_buf_size - MCLAGD_REPLY_INFO_HDR))
+        if ((mclag_num + 1) * sizeof(struct mclagd_state) > (state_buf_size - MCLAGD_REPLY_INFO_HDR))
         {
             state_buf_size += MCLAGDCTL_CMD_SIZE;
             state_buf = (char*)realloc(state_buf, state_buf_size);
@@ -130,7 +130,7 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
     *buf = state_buf;
     *num = mclag_num;
 
-    if (mclag_id >0 && !id_exist)
+    if (mclag_id > 0 && !id_exist)
         return EXEC_TYPE_NO_EXIST_MCLAGID;
 
     return EXEC_TYPE_SUCCESS;
@@ -160,7 +160,7 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
     {
-        if (mclag_id >0)
+        if (mclag_id > 0)
         {
             if (csm->mlag_id == mclag_id)
                 id_exist = 1;
@@ -178,12 +178,12 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
             memcpy(mclagd_arp.ipv4_addr, show_ip_str(htonl(iccpd_arp->ipv4_addr)), 16);
             memcpy(mclagd_arp.mac_addr, iccpd_arp->mac_addr, 6);
 
-            memcpy(arp_buf + MCLAGD_REPLY_INFO_HDR +arp_num*sizeof(struct mclagd_arp_msg),
-                &mclagd_arp, sizeof(struct mclagd_arp_msg));
+            memcpy(arp_buf + MCLAGD_REPLY_INFO_HDR + arp_num * sizeof(struct mclagd_arp_msg),
+                   &mclagd_arp, sizeof(struct mclagd_arp_msg));
 
-            arp_num ++;
+            arp_num++;
 
-            if ((arp_num + 1)*sizeof(struct mclagd_arp_msg) > (arp_buf_size - MCLAGD_REPLY_INFO_HDR))
+            if ((arp_num + 1) * sizeof(struct mclagd_arp_msg) > (arp_buf_size - MCLAGD_REPLY_INFO_HDR))
             {
                 arp_buf_size += MCLAGDCTL_CMD_SIZE;
                 arp_buf = (char*)realloc(arp_buf, arp_buf_size);
@@ -196,7 +196,7 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
     *buf = arp_buf;
     *num = arp_num;
 
-    if (mclag_id >0 && !id_exist)
+    if (mclag_id > 0 && !id_exist)
         return EXEC_TYPE_NO_EXIST_MCLAGID;
 
     return EXEC_TYPE_SUCCESS;
@@ -226,7 +226,7 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
     {
-        if (mclag_id >0)
+        if (mclag_id > 0)
         {
             if (csm->mlag_id == mclag_id)
                 id_exist = 1;
@@ -247,12 +247,12 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
             memcpy(mclagd_mac.origin_ifname, iccpd_mac->origin_ifname, strlen(iccpd_mac->origin_ifname));
             mclagd_mac.age_flag = iccpd_mac->age_flag;
 
-            memcpy(mac_buf + MCLAGD_REPLY_INFO_HDR + mac_num*sizeof(struct mclagd_mac_msg),
-                &mclagd_mac, sizeof(struct mclagd_mac_msg));
+            memcpy(mac_buf + MCLAGD_REPLY_INFO_HDR + mac_num * sizeof(struct mclagd_mac_msg),
+                   &mclagd_mac, sizeof(struct mclagd_mac_msg));
 
-            mac_num ++;
+            mac_num++;
 
-            if ((mac_num + 1)*sizeof(struct mclagd_mac_msg) > (mac_buf_size -MCLAGD_REPLY_INFO_HDR))
+            if ((mac_num + 1) * sizeof(struct mclagd_mac_msg) > (mac_buf_size - MCLAGD_REPLY_INFO_HDR))
             {
                 mac_buf_size += MCLAGDCTL_CMD_SIZE;
                 mac_buf = (char*)realloc(mac_buf, mac_buf_size);
@@ -265,13 +265,13 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
     *buf = mac_buf;
     *num = mac_num;
 
-    if (mclag_id >0 && !id_exist)
+    if (mclag_id > 0 && !id_exist)
         return EXEC_TYPE_NO_EXIST_MCLAGID;
 
     return EXEC_TYPE_SUCCESS;
 }
 
-int iccp_local_if_dump(char * *buf,  int *num,int mclag_id)
+int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
 {
     struct System *sys = NULL;
     struct CSM *csm = NULL;
@@ -298,7 +298,7 @@ int iccp_local_if_dump(char * *buf,  int *num,int mclag_id)
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
     {
-        if (mclag_id >0)
+        if (mclag_id > 0)
         {
             if (csm->mlag_id == mclag_id)
                 id_exist = 1;
@@ -363,18 +363,18 @@ int iccp_local_if_dump(char * *buf,  int *num,int mclag_id)
             {
                 if (vlan_id != NULL )
                 {
-                    if (str_size -len < 4)
+                    if (str_size - len < 4)
                         break;
                     len += snprintf(str_buf + len, str_size - len, "%d ", vlan_id->vid);
                 }
             }
 
-            memcpy(lif_buf + MCLAGD_REPLY_INFO_HDR + lif_num*sizeof(struct mclagd_local_if),
-                &mclagd_lif, sizeof(struct mclagd_local_if));
+            memcpy(lif_buf + MCLAGD_REPLY_INFO_HDR + lif_num * sizeof(struct mclagd_local_if),
+                   &mclagd_lif, sizeof(struct mclagd_local_if));
 
-            lif_num ++;
+            lif_num++;
 
-            if ((lif_num + 1)*sizeof(struct mclagd_local_if) > (lif_buf_size - MCLAGD_REPLY_INFO_HDR))
+            if ((lif_num + 1) * sizeof(struct mclagd_local_if) > (lif_buf_size - MCLAGD_REPLY_INFO_HDR))
             {
                 lif_buf_size += MCLAGDCTL_CMD_SIZE;
                 lif_buf = (char*)realloc(lif_buf, lif_buf_size);
@@ -387,7 +387,7 @@ int iccp_local_if_dump(char * *buf,  int *num,int mclag_id)
     *buf = lif_buf;
     *num = lif_num;
 
-    if (mclag_id >0 && !id_exist)
+    if (mclag_id > 0 && !id_exist)
         return EXEC_TYPE_NO_EXIST_MCLAGID;
 
     return EXEC_TYPE_SUCCESS;
@@ -416,7 +416,7 @@ int iccp_peer_if_dump(char * *buf, int *num, int mclag_id)
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
     {
-        if (mclag_id >0)
+        if (mclag_id > 0)
         {
             if (csm->mlag_id == mclag_id)
                 id_exist = 1;
@@ -452,12 +452,12 @@ int iccp_peer_if_dump(char * *buf, int *num, int mclag_id)
             mclagd_pif.po_id = pif_po->po_id;
             mclagd_pif.po_active = pif_po->po_active;
 
-            memcpy(pif_buf + MCLAGD_REPLY_INFO_HDR + pif_num*sizeof(struct mclagd_peer_if),
-                &mclagd_pif, sizeof(struct mclagd_peer_if));
+            memcpy(pif_buf + MCLAGD_REPLY_INFO_HDR + pif_num * sizeof(struct mclagd_peer_if),
+                   &mclagd_pif, sizeof(struct mclagd_peer_if));
 
-            pif_num ++;
+            pif_num++;
 
-            if ((pif_num + 1)*sizeof(struct mclagd_peer_if) > (pif_buf_size - MCLAGD_REPLY_INFO_HDR))
+            if ((pif_num + 1) * sizeof(struct mclagd_peer_if) > (pif_buf_size - MCLAGD_REPLY_INFO_HDR))
             {
                 pif_buf_size += MCLAGDCTL_CMD_SIZE;
                 pif_buf = (char*)realloc(pif_buf, pif_buf_size);
@@ -470,7 +470,7 @@ int iccp_peer_if_dump(char * *buf, int *num, int mclag_id)
     *buf = pif_buf;
     *num = pif_num;
 
-    if (mclag_id >0 && !id_exist)
+    if (mclag_id > 0 && !id_exist)
         return EXEC_TYPE_NO_EXIST_MCLAGID;
 
     return EXEC_TYPE_SUCCESS;

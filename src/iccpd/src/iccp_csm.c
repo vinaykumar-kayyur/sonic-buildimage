@@ -1,25 +1,25 @@
 /*
-* iccp_csm.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * iccp_csm.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -35,29 +35,29 @@
 *
 * ***************************************/
 #define ICCP_CSM_QUEUE_REINIT(list) \
-    {\
-        struct Msg* msg = NULL;\
-        while (!TAILQ_EMPTY(&(list))) {\
-            msg = TAILQ_FIRST(&(list));\
-            TAILQ_REMOVE(&(list), msg, tail);\
-            free(msg->buf);\
-            free(msg);\
-        }\
-        TAILQ_INIT(&(list));\
+    { \
+        struct Msg* msg = NULL; \
+        while (!TAILQ_EMPTY(&(list))) { \
+            msg = TAILQ_FIRST(&(list)); \
+            TAILQ_REMOVE(&(list), msg, tail); \
+            free(msg->buf); \
+            free(msg); \
+        } \
+        TAILQ_INIT(&(list)); \
     }
 
 /*****************************************
 * Global
 *
 * ***************************************/
-char g_csm_buf[CSM_BUFFER_SIZE]={0};
+char g_csm_buf[CSM_BUFFER_SIZE] = { 0 };
 
 uint32_t ICCP_MSG_ID = 0x1;
 
 /* Enter Connection State Machine NONEXISTENT handle function */
 static void iccp_csm_enter_state_nonexistent(struct CSM* csm)
 {
-	iccp_csm_finalize(csm);
+    iccp_csm_finalize(csm);
 }
 
 /* Enter Connection State Machine INITIALIZED handle function */
@@ -89,7 +89,8 @@ static void iccp_csm_enter_state_connecting(struct CSM* csm)
 }
 
 /* Enter Connection State Machine OPERATIONAL handle function */
-static void iccp_csm_enter_state_operational(struct CSM* csm) {
+static void iccp_csm_enter_state_operational(struct CSM* csm)
+{
     if (csm == NULL)
         return;
 
@@ -102,7 +103,8 @@ void *iccp_get_csm()
     struct CSM* csm = NULL;
     struct System* sys = NULL;
 
-    if((sys = system_get_instance()) == NULL) {
+    if ((sys = system_get_instance()) == NULL)
+    {
         return NULL;
     }
 
@@ -126,7 +128,7 @@ void iccp_csm_status_reset(struct CSM* csm, int all)
 {
     ICCP_CSM_QUEUE_REINIT(csm->msg_list);
 
-    if(all)
+    if (all)
     {
         bzero(csm, sizeof(struct CSM));
         ICCP_CSM_QUEUE_REINIT(csm->msg_list);
@@ -143,7 +145,7 @@ void iccp_csm_status_reset(struct CSM* csm, int all)
     csm->role_type = STP_ROLE_NONE;
     csm->sock_read_event_ptr = NULL;
     csm->peer_link_if = NULL;
-    csm->u_msg_in_count= 0x0;
+    csm->u_msg_in_count = 0x0;
     csm->i_msg_in_count = 0x0;
     csm->icc_msg_in_count = 0x0;
     csm->icc_msg_out_count = 0x0;
@@ -168,11 +170,11 @@ void iccp_csm_finalize(struct CSM* csm)
     if (csm == NULL)
         return;
 
-    if((sys = system_get_instance()) == NULL)
+    if ((sys = system_get_instance()) == NULL)
         return;
 
     /*If warm reboot, don't change port block and peer link MAC learning*/
-    if(sys->warmboot_exit != WARM_REBOOT)
+    if (sys->warmboot_exit != WARM_REBOOT)
     {
         /* Clean all port block*/
         peerlink_port_isolate_cleanup(csm);
@@ -218,13 +220,13 @@ void iccp_csm_msg_list_finalize(struct CSM* csm)
 /* Send message to peer */
 int iccp_csm_send(struct CSM* csm, char* buf, int msg_len)
 {
-    LDPHdr* ldp_hdr = (LDPHdr*) buf;
+    LDPHdr* ldp_hdr = (LDPHdr*)buf;
     ICCParameter* param = NULL;
 
     if (csm == NULL || buf == NULL || csm->sock_fd <= 0 || msg_len <= 0)
         return -1;
 
-    if(ntohs(ldp_hdr->msg_type) == MSG_T_CAPABILITY)
+    if (ntohs(ldp_hdr->msg_type) == MSG_T_CAPABILITY)
         param = (struct ICCParameter*)&buf[sizeof(LDPHdr)];
     else
         param = (struct ICCParameter*)&buf[sizeof(ICCHdr)];
@@ -234,7 +236,7 @@ int iccp_csm_send(struct CSM* csm, char* buf, int msg_len)
     csm->msg_log.msg[csm->msg_log.end_index].type = ntohs(ldp_hdr->msg_type);
     csm->msg_log.msg[csm->msg_log.end_index].tlv = ntohs(param->type);
     ++csm->msg_log.end_index;
-    if(csm->msg_log.end_index >= 128)
+    if (csm->msg_log.end_index >= 128)
         csm->msg_log.end_index = 0;
 
     return write(csm->sock_fd, buf, msg_len);
@@ -272,6 +274,7 @@ void iccp_csm_transit(struct CSM* csm)
             if (csm->sock_fd > 0 && scheduler_check_csm_config(csm) > 0)
                 csm->current_state = ICCP_INITIALIZED;
             break;
+
         case ICCP_INITIALIZED:
             if (msg)
                 iccp_csm_correspond_from_msg(csm, msg);
@@ -282,12 +285,14 @@ void iccp_csm_transit(struct CSM* csm)
             else if (csm->iccp_info.sender_capability_flag == 0x1 && csm->iccp_info.peer_capability_flag == 0x1)
                 csm->current_state = ICCP_CAPREC;
             break;
+
         case ICCP_CAPSENT:
             if (msg)
                 iccp_csm_correspond_from_msg(csm, msg);
             if (csm->iccp_info.sender_capability_flag == 0x1 && csm->iccp_info.peer_capability_flag == 0x1)
                 csm->current_state = ICCP_CAPREC;
             break;
+
         case ICCP_CAPREC:
             if (msg)
                 iccp_csm_correspond_from_msg(csm, msg);
@@ -299,6 +304,7 @@ void iccp_csm_transit(struct CSM* csm)
             else if (csm->iccp_info.peer_rg_connect_flag == 0x1 && csm->iccp_info.status_code == 0x0)
                 csm->current_state = ICCP_OPERATIONAL;
             break;
+
         case ICCP_CONNECTING:
             if (msg)
                 iccp_csm_correspond_from_msg(csm, msg);
@@ -310,16 +316,19 @@ void iccp_csm_transit(struct CSM* csm)
             else if (csm->iccp_info.peer_rg_connect_flag == 0x1 && csm->iccp_info.status_code == 0x0)
                 csm->current_state = ICCP_OPERATIONAL;
             break;
+
         case ICCP_OPERATIONAL:
             if (msg)
                 iccp_csm_correspond_from_msg(csm, msg);
-            if (csm->iccp_info.sender_rg_connect_flag == 0x0 || csm->iccp_info.peer_rg_connect_flag == 0x0) {
+            if (csm->iccp_info.sender_rg_connect_flag == 0x0 || csm->iccp_info.peer_rg_connect_flag == 0x0)
+            {
                 memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
                 len = iccp_csm_prepare_iccp_msg(csm, g_csm_buf, CSM_BUFFER_SIZE);
                 iccp_csm_send(csm, g_csm_buf, len);
                 csm->current_state = ICCP_CAPREC;
             }
             break;
+
         default:
             break;
     }
@@ -330,26 +339,32 @@ void iccp_csm_transit(struct CSM* csm)
 
         switch (csm->current_state)
         {
-        case ICCP_NONEXISTENT:
-            iccp_csm_enter_state_nonexistent(csm);
-            break;
-        case ICCP_INITIALIZED:
-            iccp_csm_enter_state_initialized(csm);
-            break;
-        case ICCP_CAPSENT:
-            /* Do nothing on this state */
-            break;
-        case ICCP_CAPREC:
-            iccp_csm_enter_state_caprec(csm);
-            break;
-        case ICCP_CONNECTING:
-            iccp_csm_enter_state_connecting(csm);
-            break;
-        case ICCP_OPERATIONAL:
-            iccp_csm_enter_state_operational(csm);
-            break;
-        default:
-            break;
+            case ICCP_NONEXISTENT:
+                iccp_csm_enter_state_nonexistent(csm);
+                break;
+
+            case ICCP_INITIALIZED:
+                iccp_csm_enter_state_initialized(csm);
+                break;
+
+            case ICCP_CAPSENT:
+                /* Do nothing on this state */
+                break;
+
+            case ICCP_CAPREC:
+                iccp_csm_enter_state_caprec(csm);
+                break;
+
+            case ICCP_CONNECTING:
+                iccp_csm_enter_state_connecting(csm);
+                break;
+
+            case ICCP_OPERATIONAL:
+                iccp_csm_enter_state_operational(csm);
+                break;
+
+            default:
+                break;
         }
     }
     /*if (csm->current_state != ICCP_NONEXISTENT && prev_state != csm->current_state)
@@ -369,27 +384,35 @@ int iccp_csm_prepare_iccp_msg(struct CSM* csm, char* buf, size_t max_buf_size)
         case ICCP_NONEXISTENT:
             /* Do nothing on this state */
             break;
+
         case ICCP_INITIALIZED:
             msg_len = iccp_csm_prepare_capability_msg(csm, buf, max_buf_size);
             break;
+
         case ICCP_CAPSENT:
             /* Do nothing on this state */
             break;
+
         case ICCP_CAPREC:
-            if (csm->iccp_info.status_code > 0x0) {
+            if (csm->iccp_info.status_code > 0x0)
+            {
                 msg_len = iccp_csm_prepare_nak_msg(csm, buf, max_buf_size);
                 break;
             }
             msg_len = iccp_csm_prepare_rg_connect_msg(csm, buf, max_buf_size);
             break;
+
         case ICCP_CONNECTING:
-            if (csm->iccp_info.status_code > 0x0) {
+            if (csm->iccp_info.status_code > 0x0)
+            {
                 msg_len = iccp_csm_prepare_nak_msg(csm, buf, max_buf_size);
                 break;
             }
             break;
+
         case ICCP_OPERATIONAL:
-            if (csm->iccp_info.peer_rg_connect_flag == 0x0) {
+            if (csm->iccp_info.peer_rg_connect_flag == 0x0)
+            {
                 msg_len = iccp_csm_prepare_rg_disconnect_msg(csm, buf, max_buf_size);
                 break;
             }
@@ -402,8 +425,8 @@ int iccp_csm_prepare_iccp_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 /* ICCP capability message handle function */
 int iccp_csm_prepare_capability_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 {
-    LDPHdr* ldp_hdr = (LDPHdr*) buf;
-    LDPICCPCapabilityTLV* cap = (LDPICCPCapabilityTLV*) &buf[sizeof(LDPHdr)];
+    LDPHdr* ldp_hdr = (LDPHdr*)buf;
+    LDPICCPCapabilityTLV* cap = (LDPICCPCapabilityTLV*)&buf[sizeof(LDPHdr)];
     size_t msg_len = sizeof(LDPHdr) + sizeof(LDPICCPCapabilityTLV);
 
     memset(buf, 0, max_buf_size);
@@ -423,7 +446,7 @@ int iccp_csm_prepare_capability_msg(struct CSM* csm, char* buf, size_t max_buf_s
     cap->icc_parameter.len = htons(TLV_L_ICCP_CAPABILITY);
 
     cap->s_bit = csm->iccp_info.sender_capability_flag;
-    *(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)) = htons(*(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)));
+    *(uint16_t *)((uint8_t *)cap + sizeof(ICCParameter)) = htons(*(uint16_t *)((uint8_t *)cap + sizeof(ICCParameter)));
 
     cap->major_ver = 0x1;
     cap->minior_ver = 0x0;
@@ -444,8 +467,8 @@ void iccp_csm_fill_icc_rg_id_tlv(struct CSM* csm, ICCHdr* icc_hdr)
 /* ICCP NAK message handle function */
 int iccp_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 {
-    ICCHdr* icc_hdr = (ICCHdr*) buf;
-    NAKTLV* nak = (NAKTLV*) &buf[sizeof(ICCHdr)];
+    ICCHdr* icc_hdr = (ICCHdr*)buf;
+    NAKTLV* nak = (NAKTLV*)&buf[sizeof(ICCHdr)];
     size_t msg_len = sizeof(ICCHdr) + sizeof(NAKTLV);
 
     memset(buf, 0, max_buf_size);
@@ -461,7 +484,7 @@ int iccp_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
     nak->icc_parameter.u_bit = 0x0;
     nak->icc_parameter.f_bit = 0x0;
     nak->icc_parameter.type = htons(TLV_T_NAK);
-    nak->icc_parameter.len = htons(sizeof(((struct NAKTLV*) 0)->iccp_status_code) + sizeof(((struct NAKTLV*) 0)->rejected_msg_id));
+    nak->icc_parameter.len = htons(sizeof(((struct NAKTLV*)0)->iccp_status_code) + sizeof(((struct NAKTLV*)0)->rejected_msg_id));
 
     switch (csm->iccp_info.status_code)
     {
@@ -469,6 +492,7 @@ int iccp_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
             nak->iccp_status_code = htonl(csm->iccp_info.status_code);
             nak->rejected_msg_id = htonl(csm->iccp_info.rejected_msg_id);
             break;
+
         /* Unsupported */
         case STATUS_CODE_ICCP_CONNECTION_COUNT_EXCEEDED:
         case STATUS_CODE_ICCP_APP_CONNECTION_COUNT_EXCEEDED:
@@ -487,8 +511,8 @@ int iccp_csm_prepare_nak_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 /* ICCP RG connect handle function */
 int iccp_csm_prepare_rg_connect_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 {
-    ICCHdr* icc_hdr = (ICCHdr*) buf;
-    ICCSenderNameTLV* sender = (ICCSenderNameTLV*) &buf[sizeof(ICCHdr)];
+    ICCHdr* icc_hdr = (ICCHdr*)buf;
+    ICCSenderNameTLV* sender = (ICCSenderNameTLV*)&buf[sizeof(ICCHdr)];
     size_t name_len = strlen(csm->iccp_info.sender_name);
     size_t msg_len = sizeof(ICCHdr) + sizeof(ICCParameter) + name_len;
 
@@ -514,8 +538,8 @@ int iccp_csm_prepare_rg_connect_msg(struct CSM* csm, char* buf, size_t max_buf_s
 /* ICCP RG disconnect handle function */
 int iccp_csm_prepare_rg_disconnect_msg(struct CSM* csm, char* buf, size_t max_buf_size)
 {
-    ICCHdr* icc_hdr = (ICCHdr*) buf;
-    DisconnectCodeTLV* disconn_code = (DisconnectCodeTLV*) &buf[sizeof(ICCHdr)];
+    ICCHdr* icc_hdr = (ICCHdr*)buf;
+    DisconnectCodeTLV* disconn_code = (DisconnectCodeTLV*)&buf[sizeof(ICCHdr)];
     size_t msg_len = sizeof(ICCHdr) + sizeof(DisconnectCodeTLV);
 
     memset(buf, 0, max_buf_size);
@@ -531,7 +555,7 @@ int iccp_csm_prepare_rg_disconnect_msg(struct CSM* csm, char* buf, size_t max_bu
     disconn_code->icc_parameter.u_bit = 0x0;
     disconn_code->icc_parameter.f_bit = 0x0;
     disconn_code->icc_parameter.type = htons(TLV_T_DISCONNECT_CODE);
-    disconn_code->icc_parameter.len = htons(sizeof(((struct DisconnectCodeTLV*) 0)->iccp_status_code));
+    disconn_code->icc_parameter.len = htons(sizeof(((struct DisconnectCodeTLV*)0)->iccp_status_code));
     disconn_code->iccp_status_code = htonl(csm->iccp_info.status_code);
 
     return msg_len;
@@ -545,7 +569,7 @@ static void iccp_csm_check_id_from_msg(struct CSM* csm, struct Msg* msg)
     if (!csm || !msg || !msg->buf)
         return;
 
-    icc_hdr = (ICCHdr*) msg->buf;
+    icc_hdr = (ICCHdr*)msg->buf;
 
     /* Capability Message doesn't have ICC RG ID TLV */
     if (icc_hdr->ldp_hdr.msg_type == MSG_T_CAPABILITY)
@@ -559,7 +583,8 @@ static void iccp_csm_check_id_from_msg(struct CSM* csm, struct Msg* msg)
             csm->iccp_info.status_code = 0x0;
             csm->iccp_info.rejected_msg_id = 0x0;
         }
-    } else if (ntohl(icc_hdr->icc_rg_id_tlv.icc_rg_id) != csm->iccp_info.icc_rg_id)
+    }
+    else if (ntohl(icc_hdr->icc_rg_id_tlv.icc_rg_id) != csm->iccp_info.icc_rg_id)
     {
         csm->iccp_info.status_code = STATUS_CODE_U_ICCP_RG;
         csm->iccp_info.rejected_msg_id = ntohl(icc_hdr->icc_rg_id_tlv.icc_rg_id);
@@ -574,8 +599,8 @@ void iccp_csm_correspond_from_msg(struct CSM* csm, struct Msg* msg)
     if (csm == NULL || msg == NULL || msg->buf == NULL)
         return;
 
-    icc_hdr = (ICCHdr*) msg->buf;
-    NAKTLV* nak = (NAKTLV*)( icc_hdr+sizeof(ICCHdr));
+    icc_hdr = (ICCHdr*)msg->buf;
+    NAKTLV* nak = (NAKTLV*)( icc_hdr + sizeof(ICCHdr));
     iccp_csm_check_id_from_msg(csm, msg);
 
     if (icc_hdr->ldp_hdr.msg_type == MSG_T_CAPABILITY)
@@ -605,18 +630,18 @@ void iccp_csm_correspond_from_msg(struct CSM* csm, struct Msg* msg)
 /* Receive capability message correspond function */
 void iccp_csm_correspond_from_capability_msg(struct CSM* csm, struct Msg* msg)
 {
-    LDPICCPCapabilityTLV* cap = (LDPICCPCapabilityTLV*) &(msg->buf)[sizeof(LDPHdr)];
+    LDPICCPCapabilityTLV* cap = (LDPICCPCapabilityTLV*)&(msg->buf)[sizeof(LDPHdr)];
 
     *(uint16_t *)cap = ntohs(*(uint16_t *)cap);
-    *(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)) = ntohs(*(uint16_t *)((uint8_t *)cap+sizeof(ICCParameter)));
+    *(uint16_t *)((uint8_t *)cap + sizeof(ICCParameter)) = ntohs(*(uint16_t *)((uint8_t *)cap + sizeof(ICCParameter)));
 
     if (cap->icc_parameter.u_bit == 0x1
-            && cap->icc_parameter.f_bit == 0x0
-            && cap->icc_parameter.type == TLV_T_ICCP_CAPABILITY
-            && ntohs(cap->icc_parameter.len) == (TLV_L_ICCP_CAPABILITY)
-            && cap->s_bit == 1
-            && cap->major_ver == 0x1
-            && cap->minior_ver == 0x0)
+        && cap->icc_parameter.f_bit == 0x0
+        && cap->icc_parameter.type == TLV_T_ICCP_CAPABILITY
+        && ntohs(cap->icc_parameter.len) == (TLV_L_ICCP_CAPABILITY)
+        && cap->s_bit == 1
+        && cap->major_ver == 0x1
+        && cap->minior_ver == 0x0)
     {
         csm->iccp_info.peer_capability_flag = 0x1;
     }
@@ -625,13 +650,13 @@ void iccp_csm_correspond_from_capability_msg(struct CSM* csm, struct Msg* msg)
 /* Receive RG connect message correspond function */
 void iccp_csm_correspond_from_rg_connect_msg(struct CSM* csm, struct Msg* msg)
 {
-    ICCSenderNameTLV* sender = (ICCSenderNameTLV*) &(msg->buf)[sizeof(ICCHdr)];
+    ICCSenderNameTLV* sender = (ICCSenderNameTLV*)&(msg->buf)[sizeof(ICCHdr)];
 
     *(uint16_t *)sender = ntohs(*(uint16_t *)sender);
 
     if (sender->icc_parameter.u_bit == 0x0 &&
-            sender->icc_parameter.f_bit == 0x0 &&
-            sender->icc_parameter.type == TLV_T_ICC_SENDER_NAME)
+        sender->icc_parameter.f_bit == 0x0 &&
+        sender->icc_parameter.type == TLV_T_ICC_SENDER_NAME)
     {
         csm->iccp_info.peer_rg_connect_flag = 0x1;
     }
@@ -640,15 +665,15 @@ void iccp_csm_correspond_from_rg_connect_msg(struct CSM* csm, struct Msg* msg)
 /* Receive RG disconnect message correspond function */
 void iccp_csm_correspond_from_rg_disconnect_msg(struct CSM* csm, struct Msg* msg)
 {
-    DisconnectCodeTLV* diconn_code = (DisconnectCodeTLV*) &(msg->buf)[sizeof(ICCHdr)];
+    DisconnectCodeTLV* diconn_code = (DisconnectCodeTLV*)&(msg->buf)[sizeof(ICCHdr)];
 
     *(uint16_t *)diconn_code = ntohs(*(uint16_t *)diconn_code);
 
     if (diconn_code->icc_parameter.u_bit == 0x0
-            && diconn_code->icc_parameter.f_bit == 0x0
-            && diconn_code->icc_parameter.type == TLV_T_DISCONNECT_CODE
-            && ntohs(diconn_code->icc_parameter.len) == (TLV_L_DISCONNECT_CODE)
-            && ntohl(diconn_code->iccp_status_code) == (STATUS_CODE_ICCP_RG_REMOVED))
+        && diconn_code->icc_parameter.f_bit == 0x0
+        && diconn_code->icc_parameter.type == TLV_T_DISCONNECT_CODE
+        && ntohs(diconn_code->icc_parameter.len) == (TLV_L_DISCONNECT_CODE)
+        && ntohl(diconn_code->iccp_status_code) == (STATUS_CODE_ICCP_RG_REMOVED))
     {
         csm->iccp_info.sender_rg_connect_flag = 0x0;
         csm->iccp_info.peer_rg_connect_flag = 0x0;
@@ -663,7 +688,8 @@ void iccp_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     int type = -1;
     int i = 0;
 
-    if (csm == NULL) {
+    if (csm == NULL)
+    {
         if (msg != NULL)
             free(msg);
         return;
@@ -672,7 +698,7 @@ void iccp_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     if (msg == NULL)
         return;
 
-    icc_hdr = (ICCHdr*) msg->buf;
+    icc_hdr = (ICCHdr*)msg->buf;
 
     *(uint16_t *)icc_hdr = ntohs(*(uint16_t *)icc_hdr);
 
@@ -682,18 +708,18 @@ void iccp_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
     }
     else if (icc_hdr->ldp_hdr.msg_type == MSG_T_NOTIFICATION)
     {
-        naktlv = (NAKTLV*) &msg->buf[sizeof(ICCHdr)];
+        naktlv = (NAKTLV*)&msg->buf[sizeof(ICCHdr)];
 
-        for(i=0; i<MAX_MSG_LOG_SIZE; ++i)
+        for (i = 0; i < MAX_MSG_LOG_SIZE; ++i)
         {
-            if(ntohl(naktlv->rejected_msg_id) == csm->msg_log.msg[i].msg_id)
+            if (ntohl(naktlv->rejected_msg_id) == csm->msg_log.msg[i].msg_id)
             {
                 type = csm->msg_log.msg[i].type;
                 break;
             }
         }
 
-        if(type == MSG_T_RG_APP_DATA)
+        if (type == MSG_T_RG_APP_DATA)
             app_csm_enqueue_msg(csm, msg);
         else
             TAILQ_INSERT_TAIL(&(csm->msg_list), msg, tail);
@@ -727,14 +753,14 @@ int iccp_csm_init_msg(struct Msg** msg, char* data, int len)
     if (msg == NULL)
         return -2;
 
-    if(data == NULL || len <= 0)
+    if (data == NULL || len <= 0)
         return -1;
 
-    iccp_msg = (struct Msg*) malloc(sizeof(struct Msg));
+    iccp_msg = (struct Msg*)malloc(sizeof(struct Msg));
     if (iccp_msg == NULL)
         goto err_ret;
 
-    iccp_msg->buf = (char*) malloc(len);
+    iccp_msg->buf = (char*)malloc(len);
     if (iccp_msg->buf == NULL)
         goto err_ret;
 
@@ -744,10 +770,11 @@ int iccp_csm_init_msg(struct Msg** msg, char* data, int len)
 
     return 0;
 
-err_ret:
-    if(iccp_msg)
+ err_ret:
+    if (iccp_msg)
     {
-        if(iccp_msg->buf) free(iccp_msg->buf);
+        if (iccp_msg->buf)
+            free(iccp_msg->buf);
         free(iccp_msg);
     }
 
@@ -757,9 +784,9 @@ err_ret:
 void iccp_csm_stp_role_count(struct CSM *csm)
 {
     /* decide the role, lower ip to be active & socket client*/
-    if(csm->role_type == STP_ROLE_NONE)
+    if (csm->role_type == STP_ROLE_NONE)
     {
-        if(inet_addr(csm->sender_ip) < inet_addr(csm->peer_ip))
+        if (inet_addr(csm->sender_ip) < inet_addr(csm->peer_ip))
         {
             /* Active*/
             ICCPD_LOG_INFO(__FUNCTION__, "Role: [Active]");

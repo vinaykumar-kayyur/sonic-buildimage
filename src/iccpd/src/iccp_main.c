@@ -1,25 +1,25 @@
 /*
-* iccp_main.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * iccp_main.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #include <stdio.h>
 #include <sys/file.h>
@@ -42,7 +42,7 @@ int check_instance(char* pid_file_path)
         return -1;
 
     pid_file = open(pid_file_path, O_CREAT | O_RDWR, 0666);
-    if(pid_file <=0 )
+    if (pid_file <= 0 )
     {
         fprintf(stderr, "Can't open a pid file. Terminate.\n");
         close(pid_file);
@@ -108,10 +108,10 @@ static inline int iccpd_make_rundir(void)
     ret = mkdir(ICCPD_RUN_DIR, 0755);
     if (ret && errno != EEXIST)
     {
-    	ICCPD_LOG_ERR(__FUNCTION__,"Failed to create directory \"%s\"",
-    		      ICCPD_RUN_DIR);
+        ICCPD_LOG_ERR(__FUNCTION__, "Failed to create directory \"%s\"",
+                      ICCPD_RUN_DIR);
 
-    	return -errno;
+        return -errno;
     }
 
     return 0;
@@ -129,10 +129,10 @@ void iccpd_signal_handler(int sig)
         return;
     }
 
-retry:
+ retry:
     err = write(sys->sig_pipe_w, &warmboot_flag, 1);
     if (err == -1 && errno == EINTR)
-    	goto retry;
+        goto retry;
 
     return;
 }
@@ -147,22 +147,25 @@ static int iccpd_signal_init(struct System* sys)
 
     err = pipe(fds);
     if (err)
-    	return -errno;
+        return -errno;
 
     sys->sig_pipe_r = fds[0];
     sys->sig_pipe_w = fds[1];
 
-    if (sigemptyset(&ss) < 0) {
+    if (sigemptyset(&ss) < 0)
+    {
         ICCPD_LOG_ERR(__FUNCTION__, "sigemptyset(): %d", errno);
         goto close_pipe;
     }
 
-    if (sigaddset(&ss, SIGUSR1) < 0) {
+    if (sigaddset(&ss, SIGUSR1) < 0)
+    {
         ICCPD_LOG_ERR(__FUNCTION__, "sigaddset(): %d", errno);
         goto close_pipe;
     }
 
-    if (sigprocmask(SIG_UNBLOCK, &ss, NULL) < 0) {
+    if (sigprocmask(SIG_UNBLOCK, &ss, NULL) < 0)
+    {
         ICCPD_LOG_ERR(__FUNCTION__, "sigprocmask(): %d", errno);
         goto close_pipe;
     }
@@ -172,7 +175,8 @@ static int iccpd_signal_init(struct System* sys)
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
 
-    if (sigaction(SIGUSR1, &sa, NULL) < 0) {
+    if (sigaction(SIGUSR1, &sa, NULL) < 0)
+    {
         ICCPD_LOG_ERR(__FUNCTION__, "sigaction(): %d", errno);
         goto close_pipe;
     }
@@ -180,17 +184,17 @@ static int iccpd_signal_init(struct System* sys)
     event.data.fd = fds[0];
     event.events = EPOLLIN;
     err = epoll_ctl(sys->epoll_fd, EPOLL_CTL_ADD, fds[0], &event);
-    if(err)
+    if (err)
     {
         goto close_pipe;
     }
 
     FD_SET( fds[0], &(sys->readfd));
-    sys->readfd_count ++;
+    sys->readfd_count++;
 
     return 0;
 
-close_pipe:
+ close_pipe:
     close(sys->sig_pipe_r);
     close(sys->sig_pipe_w);
     return err;
@@ -205,13 +209,13 @@ int main(int argc, char* argv[])
 
     err = iccpd_make_rundir();
     if (err)
-	return 0;
+        return 0;
 
     if (getuid() != 0)
     {
         fprintf(stderr,
                 "This program needs root permission to do device manipulation. "
-                        "Please use sudo to execute it or change your user to root.\n");
+                "Please use sudo to execute it or change your user to root.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -262,7 +266,7 @@ int main(int argc, char* argv[])
     scheduler_start();
     system_finalize();
     /*scheduler_finalize();
-    log_finalize();*/
+       log_finalize();*/
 
     return EXIT_SUCCESS;
 }

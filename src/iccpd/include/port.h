@@ -1,25 +1,25 @@
 /*
-* port.h
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * port.h
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #ifndef PORT_H_
 #define PORT_H_
@@ -30,10 +30,10 @@
 
 #define ETHER_ADDR_LEN 6
 /*
-* RFC 7275
-* 7.2.4.  mLACP Port Config TLV
-* [Page 56]
-*/
+ * RFC 7275
+ * 7.2.4.  mLACP Port Config TLV
+ * [Page 56]
+ */
 #define MAX_L_PORT_NAME 20
 
 /* defined in RFC 7275 - 7.2.7 (p.59) */
@@ -49,70 +49,75 @@
 #define IF_T_VLAN         2
 #define IF_T_VXLAN       3
 #define IF_T_BRIDGE      4
-typedef struct {
+typedef struct
+{
     char *ifname;
     int type;
 } itf_type_t;
 
-struct If_info{
+struct If_info
+{
     char name[MAX_L_PORT_NAME];
-    LIST_ENTRY(If_info) csm_next;		
+    LIST_ENTRY(If_info) csm_next;
 };
 
-struct VLAN_ID {
+struct VLAN_ID
+{
     uint16_t vid;
     uint16_t vlan_removed;
     struct LocalInterface* vlan_itf; /* loacl vlan interface */
     LIST_ENTRY(VLAN_ID) port_next;
 };
 
-struct PeerInterface {
+struct PeerInterface
+{
     int ifindex;
     int type;
     char name[MAX_L_PORT_NAME];
-    
+
     uint8_t mac_addr[ETHER_ADDR_LEN];
     uint8_t state;
     uint32_t ipv4_addr;
-    
+
     uint8_t l3_mode;
     uint8_t is_peer_link;
     int po_id;
     uint8_t po_active;
-    
+
     struct CSM* csm;
-    
+
     LIST_ENTRY(PeerInterface) mlacp_next;
     LIST_HEAD(peer_vlan_list, VLAN_ID) vlan_list;
 };
 
-struct LocalInterface {
+struct LocalInterface
+{
     int ifindex;
     int type;
     char name[MAX_L_PORT_NAME];
-    
+
     uint8_t mac_addr[ETHER_ADDR_LEN];
     uint8_t mac_addr_ori[ETHER_ADDR_LEN];
     uint8_t state;
     uint32_t ipv4_addr;
     uint8_t prefixlen;
-    
+
     uint8_t l3_mode;
     uint8_t is_peer_link;
     char portchannel_member_buf[512];
     uint8_t is_arp_accept;
-    int po_id; /* Port Channel ID */
-    uint8_t po_active; /* Port Channel is in active status? */
-    int mlacp_state; /* Record mlacp state */
+    int po_id;          /* Port Channel ID */
+    uint8_t po_active;  /* Port Channel is in active status? */
+    int mlacp_state;    /* Record mlacp state */
     uint8_t isolate_to_peer_link;
-    
+
     struct CSM* csm;
-    
+
     uint8_t changed;
     uint8_t port_config_sync;
-    
+
     LIST_HEAD(local_vlan_list, VLAN_ID) vlan_list;
-    
+
     LIST_ENTRY(LocalInterface) system_next;
     LIST_ENTRY(LocalInterface) system_purge_next;
     LIST_ENTRY(LocalInterface) mlacp_next;

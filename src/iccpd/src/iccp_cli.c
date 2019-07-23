@@ -1,25 +1,25 @@
 /*
-* iccp_cli.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * iccp_cli.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #include <stdint.h>
 
@@ -30,16 +30,17 @@
 #include "../include/mlacp_link_handler.h"
 #include "../include/iccp_netlink.h"
 /*
-* 'id <1-65535>' command
-*/
+ * 'id <1-65535>' command
+ */
 int set_mc_lag_id( struct CSM *csm, uint16_t id)
 {
-    if (!csm) return -1;
+    if (!csm)
+        return -1;
 
     ICCPD_LOG_INFO(__FUNCTION__, "Set mlag-id : %d", id);
 
     /* Mlag-ID, RG-ID, MLACP-ID
-     Temporary let the three id be the same*/
+       Temporary let the three id be the same*/
     csm->mlag_id = id;
     csm->iccp_info.icc_rg_id = id;
     csm->app_csm.mlacp.id = id;
@@ -48,7 +49,8 @@ int set_mc_lag_id( struct CSM *csm, uint16_t id)
 
 int unset_mc_lag_id( struct CSM *csm, uint16_t id)
 {
-    if (!csm) return -1;
+    if (!csm)
+        return -1;
 
     /* Mlag-ID, RG-ID, MLACP-ID*/
     csm->mlag_id = 0;
@@ -61,8 +63,8 @@ int unset_mc_lag_id( struct CSM *csm, uint16_t id)
 }
 
 /*
-* 'peer-link WORD' command
-*/
+ * 'peer-link WORD' command
+ */
 int set_peer_link(int mid, const char* ifname)
 {
     struct CSM* csm = NULL;
@@ -78,13 +80,15 @@ int set_peer_link(int mid, const char* ifname)
     }
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if(csm == NULL) return -1;
+    if (csm == NULL)
+        return -1;
 
-    if (len > IFNAMSIZ) return -1;
+    if (len > IFNAMSIZ)
+        return -1;
 
     if (strlen(csm->peer_itf_name) > 0)
     {
-        if(strcmp(csm->peer_itf_name, ifname) == 0)
+        if (strcmp(csm->peer_itf_name, ifname) == 0)
         {
             ICCPD_LOG_INFO(__FUNCTION__, "Peer-link not be changed");
             return 0;
@@ -92,11 +96,11 @@ int set_peer_link(int mid, const char* ifname)
         else
         {
             ICCPD_LOG_INFO(__FUNCTION__, "Change peer-link : %s -> %s",
-                    csm->peer_itf_name, ifname);
+                           csm->peer_itf_name, ifname);
 
             scheduler_session_disconnect_handler(csm);
 
-            if(csm->peer_link_if)
+            if (csm->peer_link_if)
             {
                 csm->peer_link_if->is_peer_link = 0;
                 csm->peer_link_if = NULL;
@@ -106,7 +110,7 @@ int set_peer_link(int mid, const char* ifname)
     else
     {
         ICCPD_LOG_INFO(__FUNCTION__, "Set mlag %d peer-link : %s",
-                       csm->mlag_id,ifname);
+                       csm->mlag_id, ifname);
     }
 
     memset(csm->peer_itf_name, 0, IFNAMSIZ);
@@ -120,7 +124,7 @@ int set_peer_link(int mid, const char* ifname)
         lif->is_peer_link = 1;
         MLACP(csm).system_config_changed = 1;
 
-        if(lif->type == IF_T_PORT_CHANNEL)
+        if (lif->type == IF_T_PORT_CHANNEL)
             iccp_get_port_member_list(lif);
     }
 
@@ -132,9 +136,10 @@ int unset_peer_link(int mid)
     struct CSM* csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if(csm == NULL) return -1;
+    if (csm == NULL)
+        return -1;
 
-    if(MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+    if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
     {
         /*must be enabled mac learn*/
         set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
@@ -148,7 +153,7 @@ int unset_peer_link(int mid)
 
     /* clean peer-link*/
     memset(csm->peer_itf_name, 0, IFNAMSIZ);
-    if(csm->peer_link_if)
+    if (csm->peer_link_if)
     {
         csm->peer_link_if->is_peer_link = 0;
         csm->peer_link_if = NULL;
@@ -159,29 +164,35 @@ int unset_peer_link(int mid)
 }
 
 /*
-* 'local ip address A.B.C.D' command
-*/
+ * 'local ip address A.B.C.D' command
+ */
 int set_local_address(int mid, const char* addr)
 {
     struct CSM* csm = NULL;
     size_t len = 0;
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if(csm == NULL) return -1;
-    if (addr == NULL) return -1;
+    if (csm == NULL)
+        return -1;
+    if (addr == NULL)
+        return -1;
 
-    if (strlen(csm->sender_ip) > 0) {
-        if (strcmp(csm->sender_ip, addr) == 0) {
+    if (strlen(csm->sender_ip) > 0)
+    {
+        if (strcmp(csm->sender_ip, addr) == 0)
+        {
             ICCPD_LOG_INFO(__FUNCTION__, "Local-address not be changed");
             return 0;
         }
-        else {
+        else
+        {
             ICCPD_LOG_INFO(__FUNCTION__, "Change local-address : %s -> %s",
-                    csm->sender_ip, addr);
+                           csm->sender_ip, addr);
             scheduler_session_disconnect_handler(csm);
         }
     }
-    else {
+    else
+    {
         ICCPD_LOG_INFO(__FUNCTION__, "Set local-address : %s", addr);
     }
 
@@ -199,7 +210,8 @@ int unset_local_address(int mid)
     struct CSM* csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if(csm == NULL) return -1;
+    if (csm == NULL)
+        return -1;
 
     memset(csm->sender_ip, 0, INET_ADDRSTRLEN);
     memset(csm->iccp_info.sender_name, 0, INET_ADDRSTRLEN);
@@ -211,22 +223,24 @@ int unset_local_address(int mid)
 }
 
 /*
-* 'peer-address A.B.C.D' command
-*/
+ * 'peer-address A.B.C.D' command
+ */
 int set_peer_address(int mid, const char* addr)
 {
     struct CSM* csm = NULL;
     size_t len = 0;
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if(csm == NULL) return -1;
-    if(addr == NULL) return -1;
+    if (csm == NULL)
+        return -1;
+    if (addr == NULL)
+        return -1;
 
     len = strlen(addr);
 
     if (strlen(csm->peer_ip) > 0)
     {
-        if(strcmp(csm->peer_ip, addr) == 0)
+        if (strcmp(csm->peer_ip, addr) == 0)
         {
             ICCPD_LOG_INFO(__FUNCTION__, "Peer-address not be changed");
             return 0;
@@ -234,7 +248,7 @@ int set_peer_address(int mid, const char* addr)
         else
         {
             ICCPD_LOG_INFO(__FUNCTION__, "Change peer-address : %s -> %s",
-                    csm->peer_ip, addr);
+                           csm->peer_ip, addr);
             scheduler_session_disconnect_handler(csm);
         }
     }
@@ -254,7 +268,8 @@ int unset_peer_address(int mid)
     struct CSM* csm = NULL;
 
     csm = system_get_csm_by_mlacp_id(mid);
-    if(csm == NULL) return -1;
+    if (csm == NULL)
+        return -1;
 
     memset(csm->peer_ip, 0, INET_ADDRSTRLEN);
 
@@ -273,14 +288,16 @@ int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname
     if (!ifname)
         return -1;
 
-    if(strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX))!=0) {
+    if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
+    {
         ICCPD_LOG_DEBUG(__FUNCTION__,
                         "attach interface(%s) is not a port-channel", ifname);
         return -1;
     }
 
     csm = system_get_csm_by_mlacp_id(domain);
-    if (csm == NULL) {
+    if (csm == NULL)
+    {
         ICCPD_LOG_DEBUG(__FUNCTION__, "MC-LAG ID %d doesn't exist", domain);
         return -1;
     }
@@ -288,20 +305,20 @@ int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname
     lif = local_if_find_by_name(ifname);
     if (lif)
     {
-    	mlacp_bind_port_channel_to_csm(csm, ifname);
+        mlacp_bind_port_channel_to_csm(csm, ifname);
     }
 
     LIST_FOREACH(cif, &(csm->if_bind_list), csm_next)
     {
-        if (strcmp(cif->name,ifname) ==0)
-        break;
+        if (strcmp(cif->name, ifname) == 0)
+            break;
     }
 
-    if(cif == NULL)
+    if (cif == NULL)
     {
-        cif = (struct If_info *) malloc(sizeof(struct If_info));
+        cif = (struct If_info *)malloc(sizeof(struct If_info));
         if (!cif)
-        return -1;
+            return -1;
 
         snprintf(cif->name, MAX_L_PORT_NAME, "%s", ifname);
         LIST_INSERT_HEAD(&(csm->if_bind_list), cif, csm_next);
@@ -321,7 +338,8 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
     if (!ifname)
         return -1;
 
-    if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX))!=0) {
+    if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
+    {
         ICCPD_LOG_DEBUG(__FUNCTION__,
                         "detach interface(%s) is not a port-channel",  ifname);
         return -1;
@@ -330,7 +348,7 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
     /* find po*/
     if (!(lif_po = local_if_find_by_name(ifname))
         || lif_po->type != IF_T_PORT_CHANNEL
-        || lif_po->po_id <=0
+        || lif_po->po_id <= 0
         || lif_po->csm == NULL)
     {
         return -1;
@@ -355,8 +373,131 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
 
     LIST_FOREACH(cif, &(csm->if_bind_list), csm_next)
     {
-        if (strcmp(ifname, cif->name) ==0)
-        LIST_REMOVE(cif, csm_next);
+        if (strcmp(ifname, cif->name) == 0)
+            LIST_REMOVE(cif, csm_next);
     }
     return 0;
 }
+
+/* This function parses a string to a binary mac address (uint8_t[6])
+    The string should contain mac address only. No spaces are allowed.
+    The mac address separators could be either ':' or '-'*/
+int parseMacString(const char * str_mac, uint8_t* bin_mac)
+{
+    if (bin_mac == NULL)
+    {
+        return -1;
+    }
+
+    /* 6 hexadecimal numbers (two digits each) + 5 delimiters*/
+    if (strlen(str_mac) != ETHER_ADDR_LEN * 2 + 5)
+    {
+        return -1;
+    }
+
+    /* first check that all mac address separators are equal to each other
+        2, 5, 8, 11, and 14 are MAC address separator positions*/
+    if (!(str_mac[2]  == str_mac[5]
+          && str_mac[5]  == str_mac[8]
+          && str_mac[8]  == str_mac[11]
+          && str_mac[11] == str_mac[14]))
+    {
+        return -1;
+    }
+
+    /* then check that the first separator is equal to ':' or '-'*/
+    if (str_mac[2] != ':' && str_mac[2] != '-')
+    {
+        return -1;
+    }
+
+    for (int i = 0; i < ETHER_ADDR_LEN; ++i)
+    {
+        int left = i * 3;       /* left  digit position of hexadecimal number*/
+        int right = left + 1;   /* right digit position of hexadecimal number*/
+
+        if (str_mac[left] >= '0' && str_mac[left] <= '9')
+        {
+            bin_mac[i] = (uint8_t)(str_mac[left] - '0');
+        }
+        else if (str_mac[left] >= 'A' && str_mac[left] <= 'F')
+        {
+            bin_mac[i] = (uint8_t)(str_mac[left] - 'A' + 0x0a);
+        }
+        else if (str_mac[left] >= 'a' && str_mac[left] <= 'f')
+        {
+            bin_mac[i] = (uint8_t)(str_mac[left] - 'a' + 0x0a);
+        }
+        else
+        {
+            return -1;
+        }
+
+        bin_mac[i] = (uint8_t)(bin_mac[i] << 4);
+
+        if (str_mac[right] >= '0' && str_mac[right] <= '9')
+        {
+            bin_mac[i] |= (uint8_t)(str_mac[right] - '0');
+        }
+        else if (str_mac[right] >= 'A' && str_mac[right] <= 'F')
+        {
+            bin_mac[i] |= (uint8_t)(str_mac[right] - 'A' + 0x0a);
+        }
+        else if (str_mac[right] >= 'a' && str_mac[right] <= 'f')
+        {
+            bin_mac[i] |= (uint8_t)(str_mac[right] - 'a' + 0x0a);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int set_local_system_id(const char* mac)
+{
+    struct System* sys = NULL;
+    struct CSM* csm = NULL;
+    char syscmd[128];
+    int ret = 0;
+
+    if ((sys = system_get_instance()) == NULL )
+        return 0;
+
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        parseMacString(mac, MLACP(csm).system_id);
+
+        ICCPD_LOG_DEBUG(__FUNCTION__, "   Set local systemID [%02X:%02X:%02X:%02X:%02X:%02X].",
+                        MLACP(csm).system_id[0], MLACP(csm).system_id[1], MLACP(csm).system_id[2],
+                        MLACP(csm).system_id[3], MLACP(csm).system_id[4], MLACP(csm).system_id[5]);
+    }
+
+    /*When changing the mac of a vlan member port, the mac of Bridge will be changed.*/
+    /*The Bridge mac can not be the same as peer system id, so fix the Bridge MAC address here.*/
+    sprintf(syscmd, "ip link set dev Bridge address %s > /dev/null 2>&1", mac);
+    ret = system(syscmd);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+
+    return 0;
+}
+
+int unset_local_system_id( )
+{
+    uint8_t null_mac[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    struct System* sys = NULL;
+    struct CSM* csm = NULL;
+
+    if ((sys = system_get_instance()) == NULL )
+        return 0;
+
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        memcpy(MLACP(csm).system_id, null_mac, ETHER_ADDR_LEN);
+    }
+
+    return 0;
+}
+

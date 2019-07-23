@@ -1,25 +1,25 @@
 /*
-* iccp_cmd.c
-*
-* Copyright(c) 2016-2019 Nephos/Estinet.
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms and conditions of the GNU General Public License,
-* version 2, as published by the Free Software Foundation.
-*
-* This program is distributed in the hope it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, see <http://www.gnu.org/licenses/>.
-*
-* The full GNU General Public License is included in this distribution in
-* the file called "COPYING".
-*
-*  Maintainer: jianjun, grace Li from nephos
-*/
+ * iccp_cmd.c
+ *
+ * Copyright(c) 2016-2019 Nephos/Estinet.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, see <http://www.gnu.org/licenses/>.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ *
+ *  Maintainer: jianjun, grace Li from nephos
+ */
 
 #include <net/if.h>
 #include <sys/queue.h>
@@ -71,7 +71,7 @@ int iccp_config_from_command(char * line)
     cp = line;
 
     /* Skip white spaces. */
-    while (isspace ((int) *cp) && *cp != '\0')
+    while (isspace((int)*cp) && *cp != '\0')
         cp++;
 
     /* Return if there is only white spaces */
@@ -80,55 +80,62 @@ int iccp_config_from_command(char * line)
 
     end = cp;
 
-     /* Skip end white spaces. */
-    while (!isspace ((int) *end) && *end != '\0')
+    /* Skip end white spaces. */
+    while (!isspace((int)*end) && *end != '\0')
         end++;
 
     *end = '\0';
     /*mc-lag id*/
-    if (strncmp(cp,"mclag_id:",9) == 0 )
+    if (strncmp(cp, MCLAG_ID_STR, strlen(MCLAG_ID_STR)) == 0 )
     {
-        cp += 9;
+        cp += strlen(MCLAG_ID_STR) + 1;
         mid = atoi(cp);
         set_mc_lag_by_id(mid);
     }
-    else if (strncmp(cp,"local_ip:",9) == 0) /*local ip*/
+    else if (strncmp(cp, LOCAL_IP_STR, strlen(LOCAL_IP_STR)) == 0) /*local ip*/
     {
-        cp += 9;
-        set_local_address(mid,cp);
+        cp += strlen(LOCAL_IP_STR) + 1;
+        set_local_address(mid, cp);
     }
-    else if (strncmp(cp,"peer_ip:",8) == 0) /*peer ip*/
+    else if (strncmp(cp, PEER_IP_STR, strlen(PEER_IP_STR)) == 0) /*peer ip*/
     {
-        cp += 8;
-        set_peer_address(mid,cp);
+        cp += strlen(PEER_IP_STR) + 1;
+        set_peer_address(mid, cp);
     }
-    else if(strncmp(cp,"peer_link:",10) == 0)
+    else if (strncmp(cp, PEER_LINK_STR, strlen(PEER_LINK_STR)) == 0)/*peer link*/
     {
-        cp += 10;
-        set_peer_link(mid,cp);
+        cp += strlen(PEER_LINK_STR) + 1;
+        set_peer_link(mid, cp);
     }
-    else if(strncmp(cp,"mclag_interface:",16) == 0)
+    else if (strncmp(cp, MCLAG_INTF_STR, strlen(MCLAG_INTF_STR)) == 0)/*mclag interface*/
     {
-        cp += 10;
+        cp += strlen(MCLAG_INTF_STR) + 1;
 
         while (1)
         {
             start = cp;
+
             while (!(*cp == ',' || *cp == '\r' || *cp == '\n') &&
-             *cp != '\0')
+                   *cp != '\0')
                 cp++;
+
             slen = cp - start;
-            strncpy (token, start, slen);
+            strncpy(token, start, slen);
             *(token + slen) = '\0';
             iccp_cli_attach_mclag_domain_to_port_channel(mid, token);
 
-            while ((isspace ((int) *cp) || *cp == '\n' || *cp == '\r' || *cp == ',') &&
-             *cp != '\0')
+            while ((isspace((int)*cp) || *cp == '\n' || *cp == '\r' || *cp == ',') &&
+                   *cp != '\0')
                 cp++;
 
             if (*cp == '\0')
                 break;
         }
+    }
+    else if (strncmp(cp, SYSTEM_MAC_STR, strlen(SYSTEM_MAC_STR)) == 0)/*system mac*/
+    {
+        cp += strlen(SYSTEM_MAC_STR) + 1;
+        set_local_system_id(cp);
     }
     else
     {
@@ -140,19 +147,20 @@ int iccp_config_from_command(char * line)
 
 /* Configration make from file. */
 int
-iccp_config_from_file (char *config_default_dir)
+iccp_config_from_file(char *config_default_dir)
 {
     FILE *confp = NULL;
     char command_buf[CONFIG_LINE_LEN];
 
-    confp = fopen (config_default_dir, "r");
+    confp = fopen(config_default_dir, "r");
     if (confp == NULL)
         return (1);
 
-    while (fgets (command_buf, CONFIG_LINE_LEN, confp))
+    while (fgets(command_buf, CONFIG_LINE_LEN, confp))
     {
         iccp_config_from_command(command_buf);
     }
+
     fclose(confp);
 
     return 0;
