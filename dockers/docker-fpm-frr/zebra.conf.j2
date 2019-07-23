@@ -36,6 +36,7 @@ ip route 0.0.0.0/0 {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} 200
 {% endfor %}
 {% endif %}
 {% endblock default_route %}
+!
 {% block static_route %}
 {% if STATIC_ROUTE %}
 {% set glb_rt = {} %}
@@ -51,7 +52,7 @@ ip route 0.0.0.0/0 {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} 200
 {%     endif %}
 {%   endif %}
 {% endfor %}
-{% for rt_key, rt_attr in glb_rt.iteritems() %}
+{% for rt_key, rt_attr in glb_rt|dictsort %}
 {% if rt_attr.has_key('distance') and rt_attr['distance'] | int != 1 %}
 {% if rt_attr.has_key('nexthop-vrf') %}
 ip route {{ rt_key }} {{ rt_attr['nexthop'] }} {{ rt_attr['distance'] }} nexthop-vrf {{ rt_attr['nexthop-vrf'] }}
@@ -67,9 +68,9 @@ ip route {{ rt_key }} {{ rt_attr['nexthop'] }}
 {% endif %}
 {% endfor %}
 !
-{% for vrf, rt in vrf_rt.iteritems() %}
+{% for vrf, rt in vrf_rt|dictsort %}
 vrf {{ vrf }}
-{% for rt_key, rt_attr in rt.iteritems() %}
+{% for rt_key, rt_attr in rt|dictsort %}
 {% if rt_attr.has_key('distance') and rt_attr['distance'] | int != 1 %}
 {% if rt_attr.has_key('nexthop-vrf') %}
   ip route {{ rt_key }} {{ rt_attr['nexthop'] }} {{ rt_attr['distance'] }} nexthop-vrf {{ rt_attr['nexthop-vrf'] }}
