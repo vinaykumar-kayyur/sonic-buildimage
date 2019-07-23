@@ -1,0 +1,3 @@
+SYSTEMD_SONIC_GENERATOR = systemd-sonic-generator
+$(SYSTEMD_SONIC_GENERATOR)_SRC_PATH = $(SRC_PATH)/systemd-sonic-generator
+SONIC_MAKE_FILES += $(SYSTEMD_SONIC_GENERATOR)
