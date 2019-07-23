@@ -14,6 +14,11 @@ debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
+RUN apt-get update \
+ && apt-get -y install  \
+    net-tools           \
+    iputils-ping
+
 RUN apt-get -y install libpcap-dev libxml2-dev python-dev swig libsensors4-dev libjemalloc1 nfs-common
 
 RUN dpkg -i \

@@ -512,8 +512,9 @@ sleep 15
 sudo umount $FILESYSTEM_ROOT/proc || true
 
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-    # Removed qemu arm bin executable used for cross-building
+    # Remove qemu arm bin executable used for cross-building
     sudo rm -f $FILESYSTEM_ROOT/usr/bin/qemu*static || true
+    DOCKERFS_PATH=../dockerfs/
 fi
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
@@ -528,7 +529,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C var/lib/docker .; popd
+pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
 pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
