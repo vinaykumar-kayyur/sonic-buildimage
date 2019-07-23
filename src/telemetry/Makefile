@@ -5,6 +5,7 @@ INSTALL := /usr/bin/install
 all: sonic-telemetry
 
 sonic-telemetry:
+	cd ${GOPATH}/src/github.com/Azure/sonic-telemetry && glide install
 	/usr/local/go/bin/go get -v github.com/Azure/sonic-telemetry/telemetry
 	/usr/local/go/bin/go get -v github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
 
