@@ -6,7 +6,6 @@ try:
     import time
     import os
     import pickle
-    import pprint
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:

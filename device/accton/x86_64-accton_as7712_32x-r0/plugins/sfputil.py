@@ -3,7 +3,6 @@
 try:
     import time
     import string
-    import pprint
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase 
 except ImportError, e:
@@ -64,7 +63,6 @@ class SfpUtil(SfpUtilBase):
         for x in range(self.port_start, self.port_end + 1):
             port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x])
             self._port_to_eeprom_mapping[x] = port_eeprom_path
-        self.get_transceiver_change_event()
         SfpUtilBase.__init__(self)
 
     def reset(self, port_num):
@@ -235,7 +233,6 @@ class SfpUtil(SfpUtilBase):
             self.data['present'] = reg_value
             self.data['last'] = now
             self.data['valid'] = 1
-            pprint.pprint(port_dict)
             return True, port_dict
         else:
             return True, {}

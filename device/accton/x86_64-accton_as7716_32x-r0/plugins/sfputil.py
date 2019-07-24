@@ -7,7 +7,6 @@ try:
     import time
     import string
     from ctypes import create_string_buffer
-    import pprint
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))

@@ -2,7 +2,6 @@
 
 try:
     import time
-    import pprint
     import string
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase 

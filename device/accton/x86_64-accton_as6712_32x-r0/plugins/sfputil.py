@@ -7,7 +7,6 @@ try:
     import time
     import os
     import string
-    import pprint
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
@@ -304,7 +303,6 @@ class SfpUtil(SfpUtilBase):
             self.data['last'] = now
             self.data['valid'] = 1
 
-            pprint.pprint(port_dict)
             return True, port_dict
         else:
             return True, {}
