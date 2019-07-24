@@ -341,7 +341,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
 
 ## Copy systemd generator for sonic services
-sudo LANG=C cp $files_path/systemd-sonic-generator $FILESYSTEM_ROOT/lib/systemd/system-generators/systemd-sonic-generator 
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/systemd-sonic-generator*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
 
 # Copy swss and syncd service script
 sudo LANG=C cp $SCRIPTS_DIR/swss.sh $FILESYSTEM_ROOT/usr/local/bin/swss.sh
