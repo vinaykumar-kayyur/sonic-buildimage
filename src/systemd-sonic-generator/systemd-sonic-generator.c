@@ -10,6 +10,7 @@
 #include <linux/limits.h>
 
 #define MAX_NUM_TARGETS 5
+#define MAX_NUM_INSTALL_LINES 5
 #define MAX_NUM_UNITS 128
 
 static const char* UNIT_FILE_PREFIX = "/etc/systemd/system/";
@@ -36,7 +37,7 @@ static int get_target_lines(char* unit_file, char* target_lines[]) {
     FILE *fp;
     char *line = NULL;
     size_t len = 0;
-    ssize_t read;
+    ssize_t nread;
     bool found_install;
     int num_target_lines;
 
@@ -50,12 +51,16 @@ static int get_target_lines(char* unit_file, char* target_lines[]) {
     found_install = false;
     num_target_lines = 0;
 
-    while ((read = getline(&line, &len, fp)) != -1 ) {
+    while ((nread = getline(&line, &len, fp)) != -1 ) {
         // Assumes that [Install] is the last section of the unit file
         if (strstr(line, "[Install]") != NULL) {
              found_install = true;
         }
         else if (found_install) {
+            if (num_target_lines >= MAX_NUM_INSTALL_LINES) {
+                fputs("Number of lines in [Install] section exceeds MAX_NUM_INSTALL_LINES\n", stderr);
+                return -1;
+            }
             target_lines[num_target_lines] = strdup(line);
             num_target_lines++;
         }
@@ -89,6 +94,11 @@ static int get_install_targets_from_line(char* target_string, char* suffix, char
 
         free(target);
 
+        if (num_targets >= MAX_NUM_TARGETS) {
+            fputs("Number of targets found exceeds MAX_NUM_TARGETS\n", stderr);
+            return -1;
+        }
+
         targets[num_targets] = strdup(final_target);
         num_targets++;
     }
@@ -103,9 +113,10 @@ static int get_install_targets(char* unit_file, char* targets[]) {
     unit file to determine which directories to install the unit in
     ***/
     char file_path[PATH_MAX];
-    char *target_lines[5];
+    char *target_lines[MAX_NUM_INSTALL_LINES];
     int num_target_lines;
     int num_targets;
+    int found_targets;
     char* token;
     char* line = NULL;
     bool first;
@@ -115,6 +126,8 @@ static int get_install_targets(char* unit_file, char* targets[]) {
     strcat(file_path, unit_file);
 
     num_target_lines = get_target_lines(file_path, target_lines);
+    if (num_target_lines < 0)
+        return -1;
 
     num_targets = 0;
 
@@ -134,7 +147,11 @@ static int get_install_targets(char* unit_file, char* targets[]) {
                 }
             }
             else {
-                num_targets += get_install_targets_from_line(token, target_suffix, &targets[num_targets]);
+                found_targets = get_install_targets_from_line(token, target_suffix, &targets[num_targets]);
+                if (found_targets < 0)
+                    return -1;
+
+                num_targets += found_targets;
             }
         }
         free(target_lines[i]);
@@ -200,16 +217,33 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
 
     if (stat(final_install_dir, &st) == -1) {
         // If doesn't exist, create
-        mkdir(final_install_dir, 0755);
+        r = mkdir(final_install_dir, 0755);
+        if (r == -1) {
+            fputs("Unable to create target directory\n", stderr);
+            return -1;
+        }
     }
     else if (S_ISREG(st.st_mode)) {
         // If is regular file, remove and create
-        remove(final_install_dir);
-        mkdir(final_install_dir, 0755);
+        r = remove(final_install_dir);
+        if (r == -1) {
+            fputs("Unable to remove file with same name as target directory\n", stderr);
+            return -1;
+        }
+
+        r = mkdir(final_install_dir, 0755);
+        if (r == -1) {
+            fputs("Unable to create target direectory\n", stderr);
+            return -1;
+        }
     }  
     else if (S_ISDIR(st.st_mode)) {
         // If directory, verify correct permissions
-        chmod(final_install_dir, 0755);
+        r = chmod(final_install_dir, 0755);
+        if (r == -1) {
+            fputs("Unable to change permissions of existing target directory\n", stderr);
+            return -1;
+        }
     }
         
 
@@ -251,6 +285,9 @@ int main(int argc, char **argv) {
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
         num_targets = get_install_targets(unit_files[i], targets);
+        if (num_targets < 0)
+            return 1;
+
         for(int j = 0; j < num_targets; j++) {
             if (install_unit_file(unit_files[i], targets[j], install_dir) != 0) {
                 return 1;
