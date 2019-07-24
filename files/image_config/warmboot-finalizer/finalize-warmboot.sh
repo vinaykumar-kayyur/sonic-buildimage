@@ -80,7 +80,7 @@ fi
 
 # No need to wait for the reconciliation process. Database has been loaded
 # and migrated. This is good enough to save a copy.
-debug "Save in memory database after warm reboot ..."
+debug "Save in-memory database after warm reboot ..."
 config save -y
 
 list=${COMP_LIST}
