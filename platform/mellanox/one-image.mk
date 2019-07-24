@@ -1,6 +1,7 @@
 # sonic mellanox one image installer
 
 SONIC_ONE_IMAGE = sonic-mellanox.bin
+$(SONIC_ONE_IMAGE)_DEPENDS += $(SYSTEMD_SONIC_GENERATOR)
 $(SONIC_ONE_IMAGE)_MACHINE = mellanox
 $(SONIC_ONE_IMAGE)_IMAGE_TYPE = onie
 $(SONIC_ONE_IMAGE)_INSTALLS += $(SX_KERNEL) $(KERNEL_MFT) $(MFT_OEM) $(MFT) $(MLNX_HW_MANAGEMENT)

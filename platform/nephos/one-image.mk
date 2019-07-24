@@ -1,6 +1,7 @@
 # sonic nephos one image installer
 
 SONIC_ONE_IMAGE = sonic-nephos.bin
+$(SONIC_ONE_IMAGE)_DEPENDS += $(SYSTEMD_SONIC_GENERATOR)
 $(SONIC_ONE_IMAGE)_MACHINE = nephos
 $(SONIC_ONE_IMAGE)_IMAGE_TYPE = onie
 $(SONIC_ONE_IMAGE)_INSTALLS += $(NEPHOS_MODULE)

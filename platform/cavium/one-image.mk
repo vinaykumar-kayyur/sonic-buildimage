@@ -1,6 +1,7 @@
 # sonic cavium one image installer
 
 SONIC_ONE_IMAGE = sonic-cavium.bin
+$(SONIC_ONE_IMAGE)_DEPENDS += $(SYSTEMD_SONIC_GENERATOR)
 $(SONIC_ONE_IMAGE)_MACHINE = cavium
 $(SONIC_ONE_IMAGE)_IMAGE_TYPE = onie
 $(SONIC_ONE_IMAGE)_INSTALLS += $(CAVM_PLATFORM_DEB)
