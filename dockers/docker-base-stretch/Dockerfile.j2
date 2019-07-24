@@ -45,12 +45,12 @@ RUN apt-get -y purge   \
     exim4-config       \
     exim4-daemon-light
 
-{% if docker_base_stretch_debs.strip() -%}
+{% if env("docker_base_stretch_debs").strip() -%}
 # Copy locally-built Debian package dependencies
-{{ copy_files("debs/", docker_base_stretch_debs.split(' '), "/debs/") }}
+{{ copy_files("debs/", env("docker_base_stretch_debs").split(' '), "/debs/") }}
 
 # Install built Debian packages and implicitly install their dependencies
-{{ install_debian_packages(docker_base_stretch_debs.split(' ')) }}
+{{ install_debian_packages(env("docker_base_stretch_debs").split(' ')) }}
 {%- endif %}
 
 # Clean up apt
