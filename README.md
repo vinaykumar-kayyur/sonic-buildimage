@@ -43,11 +43,11 @@ Following is the instruction on how to build an [(ONIE)](https://github.com/open
 Any server can be a build image server. We are using a server with 1T hard disk. The OS is Ubuntu 16.04.
 
 # Prerequisites
-Install pip and jinja in host build machine, execute below commands if it j2 is not available
-sudo apt-get install -y python-pip
-sudo python2 -m pip install -U pip==9.0.3
-sudo pip install --force-reinstall --upgrade jinja2>=2.10
-sudo pip install j2cli
+Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available
+    sudo apt-get install -y python-pip
+    sudo python2 -m pip install -U pip==9.0.3
+    sudo pip install --force-reinstall --upgrade jinja2>=2.10
+    sudo pip install j2cli
 
 ## SAI Version 
 Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release. 
