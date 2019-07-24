@@ -160,7 +160,7 @@ static int get_install_targets(char* unit_file, char* targets[]) {
 }
 
 
-static int get_unit_files(char* unit_files[]){
+static int get_unit_files(char* unit_files[]) {
     /***
     Reads a list of unit files to be installed from /etc/sonic/generated_services.conf
     ***/
@@ -288,7 +288,7 @@ int main(int argc, char **argv) {
         if (num_targets < 0)
             return 1;
 
-        for(int j = 0; j < num_targets; j++) {
+        for (int j = 0; j < num_targets; j++) {
             if (install_unit_file(unit_files[i], targets[j], install_dir) != 0) {
                 return 1;
             }

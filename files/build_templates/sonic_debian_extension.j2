@@ -340,7 +340,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
 
-## Copy systemd generator for sonic services
+## Install Systemd generator for SONiC services
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/systemd-sonic-generator*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
