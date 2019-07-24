@@ -19,7 +19,7 @@ class SfpUtil(SfpUtilBase):
     PORT_START = 0
     PORT_END = 128
     
-    BASE_OOM_PATH = "/sys/bus/i2c/devices/{0}-0050/"
+    LOCAL_OOM_PATH = "/usr/local/bin/minipack_qsfp/port%d_eeprom"
     
     _port_to_is_present = {}
     _port_to_lp_mode = {}
@@ -56,12 +56,8 @@ class SfpUtil(SfpUtilBase):
 
 
     def __init__(self):
-        eeprom_path = self.BASE_OOM_PATH + "eeprom"
-        
-        for x in range(0, self.port_end+1):
-            bus = self.sfp_map(x)
-            self.port_to_eeprom_mapping[x] = eeprom_path.format(
-                bus)
+        for x in range(0, self.port_end):           
+            self.port_to_eeprom_mapping[x] = self.LOCAL_OOM_PATH %x
 
         SfpUtilBase.__init__(self)
         pim=PimUtil()
