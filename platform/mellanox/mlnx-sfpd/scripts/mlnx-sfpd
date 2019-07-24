@@ -101,7 +101,7 @@ class MlnxSfpd:
         # retry at most SX_OPEN_RETRIES times to wait
         # until SDK is started during system startup
         
-        retry = 1
+        retry = 0
         sx_api_open_pass = False
         sx_api_host_ifc_open_pass = False
         sx_api_host_ifc_trap_id_register_set_pass = False
@@ -111,11 +111,11 @@ class MlnxSfpd:
                 rc, self.handle = sx_api_open(None)
                 if rc == SX_STATUS_SUCCESS:
                     sx_api_open_pass = True
-                    retry = 1
+                    retry = 0
                 else:    
                     log_warning("failed to open SDK API handle with err code {}... retrying {}".format(rc,retry))
-                    time.sleep(2 ** retry)
                     retry += 1
+                    time.sleep(2 ** retry)
                     if retry > self.SX_OPEN_RETRIES:
                         raise RuntimeError("failed to open SDK API handle after {} retries".format(retry))
                     else:
@@ -127,11 +127,11 @@ class MlnxSfpd:
                     self.user_channel_p.type = SX_USER_CHANNEL_TYPE_FD
                     self.user_channel_p.channel.fd = self.rx_fd_p
                     sx_api_host_ifc_open_pass = True
-                    retry = 1
+                    retry = 0
                 else:
                     log_warning("sx_api_host_ifc_open failed with error code {}... retrying {}".format(rc,retry))
-                    time.sleep(2 ** retry)
                     retry += 1
+                    time.sleep(2 ** retry)
                     if retry > self.SX_OPEN_RETRIES:
                         sx_api_close(self.handle)
                         raise RuntimeError("sx_api_host_ifc_open failed with error after {} retries".format(retry))
@@ -149,8 +149,8 @@ class MlnxSfpd:
                     break
                 else:
                     log_warning("sx_api_host_ifc_trap_id_register_set failed with error code {}... retrying {}".format(rc,retry))
-                    time.sleep(2 ** retry)
                     retry += 1
+                    time.sleep(2 ** retry)
                     if retry > self.SX_OPEN_RETRIES:
                         sx_api_host_ifc_close(self.handle, self.rx_fd_p)
                         sx_api_close(self.handle)
