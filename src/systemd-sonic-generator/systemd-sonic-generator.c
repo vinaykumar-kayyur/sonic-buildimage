@@ -188,7 +188,6 @@ static int get_unit_files(char* unit_files[]) {
     fclose(fp);
 
     return num_unit_files;
-
 }
 
 
@@ -261,7 +260,6 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
     }
 
     return 0;
-
 }
 
 
