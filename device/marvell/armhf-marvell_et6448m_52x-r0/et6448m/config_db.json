@@ -11,7 +11,7 @@
         "localhost": {
             "hwsku": "et6448m", 
             "hostname": "switch1", 
-            "mac": "00:e1:e2:e3:e4:ef", 
+            "mac": "00:50:43:ee:ee:ee", 
             "bgp_asn": "None", 
             "deployment_id": "None", 
             "type": "LeafRouter"
