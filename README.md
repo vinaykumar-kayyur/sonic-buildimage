@@ -42,8 +42,10 @@ Following is the instruction on how to build an [(ONIE)](https://github.com/open
 # Hardware
 Any server can be a build image server. We are using a server with 1T hard disk. The OS is Ubuntu 16.04.
 
-# Prerequisites
-Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available
+## Prerequisites
+
+Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available:
+
     sudo apt-get install -y python-pip
     sudo python2 -m pip install -U pip==9.0.3
     sudo pip install --force-reinstall --upgrade jinja2>=2.10
