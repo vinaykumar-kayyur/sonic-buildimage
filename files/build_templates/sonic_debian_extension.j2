@@ -290,6 +290,14 @@ sudo cp $IMAGE_CONFIGS/platform/rc.local $FILESYSTEM_ROOT/etc/
 ## copy blacklist file
 sudo cp $IMAGE_CONFIGS/platform/linux_kernel_bde.conf $FILESYSTEM_ROOT/etc/modprobe.d/
 
+# Enable psample drivers to support sFlow on vs
+{% if sonic_asic_platform == "vs" %}
+sudo tee -a $FILESYSTEM_ROOT/etc/modules-load.d/modules.conf > /dev/null <<EOF
+psample
+act_sample
+EOF
+{% endif %}
+
 {% if installer_images.strip() -%}
 sudo chroot $FILESYSTEM_ROOT docker info
 {% for image in installer_images.strip().split(' ') -%}
