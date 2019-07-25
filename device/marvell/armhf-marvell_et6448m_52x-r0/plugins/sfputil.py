@@ -24,7 +24,7 @@ class SfpUtil(SfpUtilBase):
          52 : 0
     }
 
-    _qsfp_ports = range(0, ports_in_block + 1)
+    _qsfp_ports = range(_port_start, ports_in_block + 1)
 
     def __init__(self):
         # Override port_to_eeprom_mapping for class initialization
@@ -37,7 +37,10 @@ class SfpUtil(SfpUtilBase):
 
         if not os.path.exists("/sys/bus/i2c/devices/0-0050") :
             os.system("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/new_device")
-            #os.system("echo optoe 0x50 > /sys/bus/i2c/devices/i2c-0/new_device")
+        #os.system("echo optoe 0x50 > /sys/bus/i2c/devices/i2c-0/new_device")
+
+        #enable optic
+        os.system("i2cset -y -m 0x0f 0 0x41 0x5 0x00")
         eeprom_path = '/sys/bus/i2c/devices/0-0050/eeprom'
         for x in range(self.port_start, self.port_end + 1):
             port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x])
@@ -68,10 +71,10 @@ class SfpUtil(SfpUtilBase):
         return True
 
     def set_low_power_mode(self, port_nuM, lpmode):
-        raise NotImplementedErro
+        raise NotImplementedError
 
     def get_low_power_mode(self, port_num):
-        raise NotImplementedErro
+        raise NotImplementedError
       
     def get_presence(self, port_num):
         # Check for invalid port_num
@@ -231,7 +234,7 @@ class SfpUtil(SfpUtilBase):
 	
     @property
     def qsfp_ports(self):
-        return range(0, self.ports_in_block + 1)
+        return self._qsfp_ports
 
     @property 
     def port_to_eeprom_mapping(self):
