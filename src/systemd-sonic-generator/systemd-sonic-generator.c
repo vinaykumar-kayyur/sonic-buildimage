@@ -45,7 +45,8 @@ static int get_target_lines(char* unit_file, char* target_lines[]) {
     fp = fopen(unit_file, "r");
 
     if (fp == NULL) {
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "Failed to open file %s\n", unit_file);
+        return -1;
     }
 
     found_install = false;
@@ -58,8 +59,9 @@ static int get_target_lines(char* unit_file, char* target_lines[]) {
         }
         else if (found_install) {
             if (num_target_lines >= MAX_NUM_INSTALL_LINES) {
-                fputs("Number of lines in [Install] section exceeds MAX_NUM_INSTALL_LINES\n", stderr);
-                return -1;
+                fprintf(stderr, "Number of lines in [Install] section of %s exceeds MAX_NUM_INSTALL_LINES\n", unit_file);
+                fputs("Extra [Install] lines will be ignored\n", stderr);
+                return num_target_lines;
             }
             target_lines[num_target_lines] = strdup(line);
             num_target_lines++;
@@ -73,7 +75,7 @@ static int get_target_lines(char* unit_file, char* target_lines[]) {
     return num_target_lines;
 }
 
-static int get_install_targets_from_line(char* target_string, char* suffix, char* targets[]) {
+static int get_install_targets_from_line(char* target_string, char* suffix, char* targets[], int existing_targets) {
     /***
     Helper fuction for get_install_targets
 
@@ -94,12 +96,13 @@ static int get_install_targets_from_line(char* target_string, char* suffix, char
 
         free(target);
 
-        if (num_targets >= MAX_NUM_TARGETS) {
+        if (num_targets + existing_targets >= MAX_NUM_TARGETS) {
             fputs("Number of targets found exceeds MAX_NUM_TARGETS\n", stderr);
-            return -1;
+            fputs("Additional targets will be ignored \n", stderr);
+            return num_targets;
         }
 
-        targets[num_targets] = strdup(final_target);
+        targets[num_targets + existing_targets] = strdup(final_target);
         num_targets++;
     }
     return num_targets;
@@ -126,8 +129,10 @@ static int get_install_targets(char* unit_file, char* targets[]) {
     strcat(file_path, unit_file);
 
     num_target_lines = get_target_lines(file_path, target_lines);
-    if (num_target_lines < 0)
+    if (num_target_lines < 0) {
+        fprintf(stderr, "Error parsing targets for %s\n", unit_file);
         return -1;
+    }
 
     num_targets = 0;
 
@@ -147,10 +152,7 @@ static int get_install_targets(char* unit_file, char* targets[]) {
                 }
             }
             else {
-                found_targets = get_install_targets_from_line(token, target_suffix, &targets[num_targets]);
-                if (found_targets < 0)
-                    return -1;
-
+                found_targets = get_install_targets_from_line(token, target_suffix, targets, num_targets);
                 num_targets += found_targets;
             }
         }
@@ -172,12 +174,17 @@ static int get_unit_files(char* unit_files[]) {
     fp = fopen(CONFIG_FILE, "r");
 
     if (fp == NULL) {
+        fprintf(stderr, "Failed to open %s\n", CONFIG_FILE);
         exit(EXIT_FAILURE);
     }
 
     int num_unit_files = 0;
 
     while ((read = getline(&line, &len, fp)) != -1) {
+        if (num_unit_files >= MAX_NUM_UNITS) {
+            fprintf(stderr, "Maximum number of units exceeded, ignoring extras\n");
+            return num_unit_files;
+        }
         strip_trailing_newline(line);
         unit_files[num_unit_files] = strdup(line);
         num_unit_files++;
@@ -218,7 +225,7 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
         // If doesn't exist, create
         r = mkdir(final_install_dir, 0755);
         if (r == -1) {
-            fputs("Unable to create target directory\n", stderr);
+            fprintf(stderr, "Unable to create target directory %s\n", final_install_dir);
             return -1;
         }
     }
@@ -226,13 +233,13 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
         // If is regular file, remove and create
         r = remove(final_install_dir);
         if (r == -1) {
-            fputs("Unable to remove file with same name as target directory\n", stderr);
+            fprintf(stderr, "Unable to remove file with same name as target directory %s\n", final_install_dir);
             return -1;
         }
 
         r = mkdir(final_install_dir, 0755);
         if (r == -1) {
-            fputs("Unable to create target direectory\n", stderr);
+            fprintf(stderr, "Unable to create target directory %s\n", final_install_dir);
             return -1;
         }
     }  
@@ -240,7 +247,7 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
         // If directory, verify correct permissions
         r = chmod(final_install_dir, 0755);
         if (r == -1) {
-            fputs("Unable to change permissions of existing target directory\n", stderr);
+            fprintf(stderr, "Unable to change permissions of existing target directory %s\n", final_install_dir);
             return -1;
         }
     }
@@ -255,8 +262,8 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
     if (r < 0) {
         if (errno == EEXIST)
             return 0;
-
-        return 1;
+        fprintf(stderr, "Error creating symlink %s from source %s\n", dest_path, src_path);
+        return -1;
     }
 
     return 0;
@@ -283,13 +290,16 @@ int main(int argc, char **argv) {
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
         num_targets = get_install_targets(unit_files[i], targets);
-        if (num_targets < 0)
-            return 1;
+        if (num_targets < 0) {
+            fprintf(stderr, "Error parsing %s\n", unit_files[i]);
+            free(unit_files[i]);
+            continue;
+        }
 
         for (int j = 0; j < num_targets; j++) {
-            if (install_unit_file(unit_files[i], targets[j], install_dir) != 0) {
-                return 1;
-            }
+            if (install_unit_file(unit_files[i], targets[j], install_dir) != 0)
+                fprintf(stderr, "Error installing %s to target directory %s\n", unit_files[i], targets[j]);
+
             free(targets[j]);
         }
 
