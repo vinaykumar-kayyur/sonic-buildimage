@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-std=gnu99
 
 BINARY = systemd-sonic-generator
-MAIN_TARGET = $(BINARY)_1.0.0_amd64.deb
+MAIN_TARGET = $(BINARY)_1.0.0_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -us -uc -b
