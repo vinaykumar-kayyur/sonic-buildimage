@@ -90,7 +90,6 @@ update_mgmt_interface_macaddr() {
 
 firsttime_exit() {
     rm -rf $FIRST_BOOT_FILE
-    exit 0
 }
 
 # Given a string of tuples of the form field=value, extract the value for a field
@@ -321,5 +320,14 @@ if [ -f $FIRST_BOOT_FILE ]; then
 
     firsttime_exit
 fi
+
+# Create dir where following scripts put their output files
+mkdir -p /var/platform
+
+# Write contents of system EEPROM as JSON file
+/usr/bin/decode-syseeprom | /usr/bin/syseeprom-to-json > /var/platform/syseeprom
+
+# Start system information poller
+/usr/bin/syspoll &
 
 exit 0
