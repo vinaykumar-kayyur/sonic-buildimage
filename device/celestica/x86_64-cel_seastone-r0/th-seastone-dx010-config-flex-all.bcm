@@ -33,7 +33,9 @@ rate_ext_mdio_divisor=0x80
 # use internal rom boot
 phy_ext_rom_boot=0
 
+# oversubscribe mode enabled, also allow 25G+50G in the same port macro
 oversubscribe_mode=1
+oversubscribe_mixed_sister_25_50_enable = 1
 
 # Map the physical ports to logical ports
 dport_map_enable=1
