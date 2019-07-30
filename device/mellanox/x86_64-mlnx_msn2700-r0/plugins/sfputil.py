@@ -10,6 +10,11 @@ try:
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
+# sfp supports dom
+XCVR_DOM_CAPABILITY_DOM_SUPPORT_BIT = 0x40
+# I2C page size for sfp
+SFP_I2C_PAGE_SIZE = 256
+
 # parameters for DB connection 
 REDIS_HOSTNAME = "localhost"
 REDIS_PORT = 6379
@@ -37,15 +42,12 @@ class SfpUtil(SfpUtilBase):
     PORTS_IN_BLOCK = 0
     EEPROM_OFFSET = 0
 
-    _port_to_eeprom_mapping = {}
-
     db_sel = None
     db_sel_timeout = None
     db_sel_object = None
     db_sel_tbl = None
     state_db = None
     sfpd_status_tbl = None
-    qsfp_sysfs_path = "/var/run/hw-management/qsfp/"
 
     @property
     def port_start(self):
@@ -61,7 +63,8 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-        return self._port_to_eeprom_mapping
+        print "dependency on sysfs has been removed"
+        raise Exception() 
 
     def get_port_position_tuple_by_sku_name(self):
         p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
@@ -77,29 +80,31 @@ class SfpUtil(SfpUtilBase):
         self.PORTS_IN_BLOCK = port_position_tuple[3]
         self.EEPROM_OFFSET = port_position_tuple[4]
 
-        for x in range(0, self.port_end + 1):
-            self._port_to_eeprom_mapping[x] = self.qsfp_sysfs_path + "qsfp{}".format(x + self.EEPROM_OFFSET)
-
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
+        presence = False
+
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
-            return False
+            return presence
 
+        port_num += SFP_PORT_NAME_OFFSET
+        sfpname = SFP_PORT_NAME_CONVENTION.format(port_num)
+
+        ethtool_cmd = "ethtool -m {} 2>/dev/null".format(sfpname)
         try:
-            reg_file = open(self.qsfp_sysfs_path + "qsfp{}_status".format(port_num + 1))
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
-            return False
+            proc = subprocess.Popen(ethtool_cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+            stdout = proc.communicate()[0]
+            proc.wait()
+            result = stdout.rstrip('\n')
+            if result != '':
+                presence = True
 
-        content = reg_file.readline().rstrip()
+        except OSError, e:
+            return presence
 
-        # content is a string with the qsfp status
-        if content == SFP_STATUS_INSERTED:
-            return True
-
-        return False
+        return presence
 
     def get_low_power_mode(self, port_num):
         # Check for invalid port_num
@@ -405,7 +410,7 @@ class SfpUtil(SfpUtilBase):
     def get_transceiver_dom_info_dict(self, port_num):
         transceiver_dom_info_dict = {}
 
-        # Below part is added to avoid fail xcvrd
+        # Below part is added to avoid failing xcvrd
         # Currently, the way in which dom data is read has been changed from
         # using sysfs to using ethtool.
         # The ethtool returns None for ports without dom support, resulting in 
@@ -464,7 +469,7 @@ class SfpUtil(SfpUtilBase):
             else:
                 return transceiver_dom_info_dict
 
-            dom_voltage_raw = self._read_eeprom_specific_bytes_via_ethtool(port_num, (offset + QSFP_VLOT_OFFSET), QSFP_VOLT_WIDTH)
+            dom_voltage_raw = self._read_eeprom_specific_bytes_via_ethtool(port_num, (offset + QSFP_VOLT_OFFSET), QSFP_VOLT_WIDTH)
             if dom_voltage_raw is not None:
                 dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
             else:
@@ -514,14 +519,19 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_info_dict['tx4bias'] = dom_channel_monitor_data['data']['TX4Bias']['value']
 
         else:
-            offset = 256
+            offset = SFP_I2C_PAGE_SIZE
 
-            eeprom_raw = ['0'] * 256
-            eeprom_raw[92:92+16] = self._read_eeprom_specific_bytes_via_ethtool(port_num, 92, 16)
+            eeprom_raw = ['0'] * SFP_I2C_PAGE_SIZE
+            eeprom_raw[XCVR_DOM_CAPABILITY_OFFSET : XCVR_DOM_CAPABILITY_OFFSET + XCVR_DOM_CAPABILITY_WIDTH] = \
+                self._read_eeprom_specific_bytes_via_ethtool(port_num, XCVR_DOM_CAPABILITY_OFFSET, XCVR_DOM_CAPABILITY_WIDTH)
             sfp_obj = sff8472InterfaceId()
             calibration_type = sfp_obj._get_calibration_type(eeprom_raw)
 
-            eeprom_domraw = self._read_eeprom_specific_bytes_via_ethtool(port_num, offset, 256)
+            dom_supported = (int(eeprom_raw[XCVR_DOM_CAPABILITY_OFFSET], 16) & XCVR_DOM_CAPABILITY_DOM_SUPPORT_BIT != 0)
+            if not dom_supported:
+                return transceiver_dom_info_dict
+
+            eeprom_domraw = self._read_eeprom_specific_bytes_via_ethtool(port_num, offset, SFP_I2C_PAGE_SIZE)
             if eeprom_domraw is None:
                 return transceiver_dom_info_dict
 
@@ -533,7 +543,7 @@ class SfpUtil(SfpUtilBase):
             dom_temperature_raw = eeprom_domraw[SFP_TEMPE_OFFSET:SFP_TEMPE_OFFSET+SFP_TEMPE_WIDTH]
             dom_temperature_data = sfpd_obj.parse_temperature(dom_temperature_raw, 0)
 
-            dom_voltage_raw = eeprom_domraw[SFP_VLOT_OFFSET:SFP_VLOT_OFFSET+SFP_VOLT_WIDTH]
+            dom_voltage_raw = eeprom_domraw[SFP_VOLT_OFFSET:SFP_VOLT_OFFSET+SFP_VOLT_WIDTH]
             dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
 
             dom_channel_monitor_raw = eeprom_domraw[SFP_CHANNL_MON_OFFSET:SFP_CHANNL_MON_OFFSET+SFP_CHANNL_MON_WIDTH]
