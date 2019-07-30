@@ -683,22 +683,28 @@ int scheduler_check_csm_config(struct CSM* csm)
 
     if (csm->mlag_id <= 0)
         ret = -1;
-    else if (strlen(csm->peer_itf_name) <= 0)
-        ret = -1;
     else if (strlen(csm->peer_ip) <= 0)
         ret = -1;
     else if (strlen(csm->sender_ip) <= 0)
         ret = -1;
-    else if ((lif = local_if_find_by_name(csm->peer_itf_name)) == NULL)
-        ret = -1;
-    else
+    else if (strlen(csm->peer_itf_name) != 0)
     {
-        lif->is_peer_link = 1;
-        csm->peer_link_if = lif;
+        lif = local_if_find_by_name(csm->peer_itf_name);
+        if (lif == NULL)
+        {
+            /*if peer-link is configured but the interface is not created, peer connection can not establish*/
+            return -1;
+        }
+        else
+        {
+            lif->is_peer_link = 1;
+            csm->peer_link_if = lif;
+        }
     }
 
     if (ret == -1)
         ICCPD_LOG_INFO(__FUNCTION__, "mclag config is not complete or conflicting, please check!");
+
     /* Decide STP role*/
     iccp_csm_stp_role_count(csm);
 

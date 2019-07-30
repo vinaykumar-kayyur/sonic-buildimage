@@ -116,9 +116,6 @@ struct CSM
     /* Msg queue */
     TAILQ_HEAD(msg_list, Msg) msg_list;
 
-    /* System ID */
-    time_t           isolate_update_time;
-
     /* STP role */
     stp_role_type_et role_type;
 

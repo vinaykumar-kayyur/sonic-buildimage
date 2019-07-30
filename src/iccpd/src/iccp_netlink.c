@@ -241,7 +241,6 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
             {
                 /* portchannel member changed, update port isolate attribute*/
                 update_peerlink_isolate_from_all_csm_lif(csm);
-                csm->isolate_update_time = time(NULL);
             }
         }
     }
@@ -325,13 +324,14 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
             {
                 memset(local_if->portchannel_member_buf, 0, 512);
                 memcpy(local_if->portchannel_member_buf, temp_buf, sizeof(local_if->portchannel_member_buf) - 1);
-
+                #if 0
                 if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
                 {
                     /*peerlink portchannel member changed*/
                     update_peerlink_isolate_from_all_csm_lif(csm);
                     csm->isolate_update_time = time(NULL);
                 }
+                #endif
             }
         }
     }
@@ -737,7 +737,6 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
                          if_whitelist[i].ifname, strlen(if_whitelist[i].ifname)) == 0))
             {
                 lif = local_if_create(ifindex, ifname, if_whitelist[i].type);
-
 
                 lif->state = PORT_STATE_DOWN;
 

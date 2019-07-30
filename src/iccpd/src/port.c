@@ -364,6 +364,14 @@ void local_if_destroy(char *ifname)
     else
         local_if_remove(lif);
 
+    if (csm->peer_link_if && strcmp(csm->peer_link_if->name, ifname) == 0)
+    {
+        /*if the peerlink interface is not created, peer connection can not establish*/
+        scheduler_session_disconnect_handler(csm);
+        csm->peer_link_if->is_peer_link = 0;
+        csm->peer_link_if = NULL;
+    }
+
     csm = lif->csm;
     if (csm && MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
         goto to_mlacp_purge;

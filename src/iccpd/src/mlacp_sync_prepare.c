@@ -308,9 +308,9 @@ int mlacp_prepare_for_mac_info_to_peer(struct CSM* csm, char* buf, size_t max_bu
     memset(buf, 0, max_buf_size);
     icc_hdr = (ICCHdr*)buf;
     mlacp_fill_icc_header(csm, icc_hdr, msg_len);
-
-    /* Prepare for ARP information TLV */
-    tlv = (struct mLACPMACInfoTLV*)malloc(tlv_len);
+    
+    /* Prepare for MAC information TLV */
+    tlv = (struct mLACPMACInfoTLV*) &buf[sizeof(ICCHdr)];
     memset(tlv, 0, tlv_len);
     tlv->icc_parameter.u_bit = 0;
     tlv->icc_parameter.f_bit = 0;
@@ -320,11 +320,7 @@ int mlacp_prepare_for_mac_info_to_peer(struct CSM* csm, char* buf, size_t max_bu
     sprintf(tlv->mac_str, "%s", mac_msg->mac_str);
     sprintf(tlv->ifname, "%s", mac_msg->origin_ifname);
     tlv->vid = htons(mac_msg->vid);
-
-    /* Fill MAC Information TLV */
-    memcpy(&buf[sizeof(ICCHdr)], tlv, tlv_len);
-    free(tlv);
-
+    
     #if 1
     ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg type = TLV_T_MLACP_MAC_INFO");
     ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg if name %s  mac  = %s, vid = %d, type = %d", mac_msg->origin_ifname,  mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
@@ -360,7 +356,7 @@ int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, 
     mlacp_fill_icc_header(csm, icc_hdr, msg_len);
 
     /* Prepare for ARP information TLV */
-    tlv = (struct mLACPARPInfoTLV*)malloc(tlv_len);
+    tlv = (struct mLACPARPInfoTLV*) &buf[sizeof(ICCHdr)];
     memset(tlv, 0, tlv_len);
     tlv->icc_parameter.u_bit = 0;
     tlv->icc_parameter.f_bit = 0;
@@ -370,11 +366,7 @@ int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, 
     sprintf(tlv->ifname, "%s", arp_msg->ifname);
     tlv->ipv4_addr = htonl(arp_msg->ipv4_addr);
     memcpy(tlv->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
-
-    /* Fill ARP Information TLV */
-    memcpy(&buf[sizeof(ICCHdr)], tlv, tlv_len);
-    free(tlv);
-
+    
     ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg if name %s  msg ifname %s  mac  =%02x:%02x:%02x:%02x:%02x:%02x ", tlv->ifname, arp_msg->ifname,  tlv->mac_addr[0], tlv->mac_addr[1], tlv->mac_addr[2],
                     tlv->mac_addr[3], tlv->mac_addr[4], tlv->mac_addr[5]);
     ICCPD_LOG_DEBUG(__FUNCTION__, "    IP Addr = %s ", show_ip_str( tlv->ipv4_addr));
@@ -415,7 +407,7 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
     if (vlan_id != NULL)
         num_of_vlan_id++;
 
-    tlv_len = sizeof(struct mLACPPortChannelInfoTLV) + sizeof(struct VLAN_ID) * num_of_vlan_id;
+    tlv_len = sizeof(struct mLACPPortChannelInfoTLV) + sizeof(struct mLACPVLANData) * num_of_vlan_id;
 
     if ((msg_len = sizeof(ICCHdr) + tlv_len) > max_buf_size)
         return -1;
@@ -433,7 +425,7 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
     tlv->icc_parameter.u_bit = 0;
     tlv->icc_parameter.f_bit = 0;
     tlv->icc_parameter.type = htons(TLV_T_MLACP_PORT_CHANNEL_INFO);
-    tlv->icc_parameter.len = htons(sizeof(struct mLACPPortChannelInfoTLV) - sizeof(ICCParameter) + sizeof(struct VLAN_ID) * num_of_vlan_id);
+    tlv->icc_parameter.len = htons(sizeof(struct mLACPPortChannelInfoTLV) - sizeof(ICCParameter) + sizeof(struct mLACPVLANData) * num_of_vlan_id);
     tlv->agg_id = htons(port_channel->po_id);
     tlv->ipv4_addr = htonl(port_channel->ipv4_addr);
     tlv->l3_mode = port_channel->l3_mode;

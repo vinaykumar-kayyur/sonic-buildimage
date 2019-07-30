@@ -140,8 +140,6 @@ void iccp_csm_status_reset(struct CSM* csm, int all)
     csm->heartbeat_send_time = 0;
     csm->heartbeat_update_time = 0;
     csm->peer_warm_reboot_time = 0;
-    /*csm->sysid_update_time = 0;*/
-    csm->isolate_update_time = 0;
     csm->role_type = STP_ROLE_NONE;
     csm->sock_read_event_ptr = NULL;
     csm->peer_link_if = NULL;
@@ -176,11 +174,9 @@ void iccp_csm_finalize(struct CSM* csm)
     /*If warm reboot, don't change port block and peer link MAC learning*/
     if (sys->warmboot_exit != WARM_REBOOT)
     {
-        /* Clean all port block*/
-        peerlink_port_isolate_cleanup(csm);
-
         /*Enable peer link port MAC learning*/
-        set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
+        if (csm->peer_link_if)
+            set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
     }
 
     /* Disconnect from peer */

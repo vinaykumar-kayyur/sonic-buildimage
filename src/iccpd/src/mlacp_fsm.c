@@ -274,9 +274,12 @@ static void mlacp_sync_send_syncPeerLinkInfo(struct CSM* csm)
     if ((sys = system_get_instance()) == NULL)
         return;
 
-    memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
-    msg_len = mlacp_prepare_for_port_peerlink_info(csm, g_csm_buf, CSM_BUFFER_SIZE, csm->peer_link_if);
-    iccp_csm_send(csm, g_csm_buf, msg_len);
+    if (csm->peer_link_if)
+    {
+        memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+        msg_len = mlacp_prepare_for_port_peerlink_info(csm, g_csm_buf, CSM_BUFFER_SIZE, csm->peer_link_if);
+        iccp_csm_send(csm, g_csm_buf, msg_len);
+    }
 
     return;
 }
@@ -565,13 +568,6 @@ void mlacp_fsm_transit(struct CSM* csm)
             MLACP(csm).current_state = MLACP_STATE_INIT;
         }
         return;
-    }
-
-    /*Update port isolate after 3 seconds*/
-    if (csm->isolate_update_time != 0 && (time(NULL) - csm->isolate_update_time) >= 3)
-    {
-        /*update_peerlink_isolate_from_all_csm_lif(csm);*/
-        csm->isolate_update_time = 0;
     }
 
     mlacp_sync_send_heartbeat(csm);
@@ -1105,9 +1101,12 @@ static void mlacp_exchange_handler(struct CSM* csm, struct Msg* msg)
         len = mlacp_prepare_for_sys_config(csm, g_csm_buf, CSM_BUFFER_SIZE);
         iccp_csm_send(csm, g_csm_buf, len);
 
-        memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
-        len = mlacp_prepare_for_port_peerlink_info(csm, g_csm_buf, CSM_BUFFER_SIZE, csm->peer_link_if);
-        iccp_csm_send(csm, g_csm_buf, len);
+        if (csm->peer_link_if)
+        {
+            memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+            len = mlacp_prepare_for_port_peerlink_info(csm, g_csm_buf, CSM_BUFFER_SIZE, csm->peer_link_if);
+            iccp_csm_send(csm, g_csm_buf, len);
+        }
 
         MLACP(csm).system_config_changed = 0;
     }

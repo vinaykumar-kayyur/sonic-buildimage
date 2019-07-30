@@ -98,6 +98,7 @@ int set_peer_link(int mid, const char* ifname)
             ICCPD_LOG_INFO(__FUNCTION__, "Change peer-link : %s -> %s",
                            csm->peer_itf_name, ifname);
 
+            /*disconnect the link for mac and arp sync up before change peer_itf_name*/
             scheduler_session_disconnect_handler(csm);
 
             if (csm->peer_link_if)
@@ -120,6 +121,7 @@ int set_peer_link(int mid, const char* ifname)
     lif = local_if_find_by_name(csm->peer_itf_name);
     if (lif)
     {
+        /*When set peer-link, the local-if is already created*/
         csm->peer_link_if = lif;
         lif->is_peer_link = 1;
         MLACP(csm).system_config_changed = 1;
@@ -127,6 +129,9 @@ int set_peer_link(int mid, const char* ifname)
         if (lif->type == IF_T_PORT_CHANNEL)
             iccp_get_port_member_list(lif);
     }
+
+    /*disconnect the link for mac and arp sync up*/
+    scheduler_session_disconnect_handler(csm);
 
     return 0;
 }
@@ -142,11 +147,9 @@ int unset_peer_link(int mid)
     if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
     {
         /*must be enabled mac learn*/
-        set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
+        if (csm->peer_link_if)
+            set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
     }
-
-    /* Clean all port block*/
-    peerlink_port_isolate_cleanup(csm);
 
     /* update peer-link link handler*/
     scheduler_session_disconnect_handler(csm);
@@ -384,6 +387,8 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
     The mac address separators could be either ':' or '-'*/
 int parseMacString(const char * str_mac, uint8_t* bin_mac)
 {
+    int i;
+
     if (bin_mac == NULL)
     {
         return -1;
@@ -411,7 +416,7 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
         return -1;
     }
 
-    for (int i = 0; i < ETHER_ADDR_LEN; ++i)
+    for (i = 0; i < ETHER_ADDR_LEN; ++i)
     {
         int left = i * 3;       /* left  digit position of hexadecimal number*/
         int right = left + 1;   /* right digit position of hexadecimal number*/
