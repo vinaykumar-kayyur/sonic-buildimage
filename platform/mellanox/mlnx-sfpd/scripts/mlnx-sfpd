@@ -64,7 +64,7 @@ def log_error(msg, also_print_to_console=False):
 class MlnxSfpd:
     ''' Listen to plugin/plugout cable events '''
 
-    SX_OPEN_RETRIES = 20
+    SX_OPEN_RETRIES = 10
     SELECT_TIMEOUT = 1
 
     def __init__(self):
