@@ -1837,7 +1837,7 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
 
                         if (csm->peer_link_if && csm->peer_link_if->state == PORT_STATE_UP)
                         {
-                            add_mac_to_chip(mac_msg, MAC_TYPE_DYNAMIC);
+                            add_mac_to_chip(mac_info, MAC_TYPE_DYNAMIC);
                             ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC del msg: %s(down), del %s vlan-id %d, redirect to peer-link",
                                             mac_info->ifname, mac_info->mac_str, mac_info->vid);
                         }

@@ -136,7 +136,6 @@ struct mLACPPortConfigTLV
     char port_name[MAX_L_PORT_NAME];
 
     /* NOS */
-    uint8_t orphan;
     uint8_t l3_mode;
 } __attribute__ ((packed));
 
@@ -205,7 +204,6 @@ struct mLACPPortStateTLV
     uint16_t agg_id;
 
     /* NOS */
-    uint8_t orphan;
     uint16_t port_id;
     uint8_t l3_mode;
     uint8_t is_peer_link;
@@ -321,7 +319,6 @@ struct mLACPPortChannelInfoTLV
     uint8_t if_name_len;
     uint8_t l3_mode;
     uint32_t ipv4_addr;
-    uint16_t orphan;
     uint16_t po_id;
     uint16_t num_of_vlan_id;
     struct mLACPVLANData vlanData[0];

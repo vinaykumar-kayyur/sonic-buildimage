@@ -329,7 +329,6 @@ int iccp_get_portchannel_member_list_handler(struct nl_msg *msg, void * arg)
                 {
                     /*peerlink portchannel member changed*/
                     update_peerlink_isolate_from_all_csm_lif(csm);
-                    csm->isolate_update_time = time(NULL);
                 }
                 #endif
             }
