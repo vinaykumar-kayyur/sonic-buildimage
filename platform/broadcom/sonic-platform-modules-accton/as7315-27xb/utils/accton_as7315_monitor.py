@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2017 Accton Technology Corporation
+# Copyright (C) 2019 Accton Technology Corporation
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #    mm/dd/yyyy (A.D.)
 #    11/13/2017: Polly Hsu, Create
 #    1/10/2018: Jostar modify for as7716_32
-#    5/02/2019: Roy Lee modify for as7816_64x
+#    8/02/2019: Roy Lee modify for as7315_27x
 # ------------------------------------------------------------------
 
 try:

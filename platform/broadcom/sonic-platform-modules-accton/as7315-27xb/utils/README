@@ -1,4 +1,4 @@
-Copyright (C) 2016 Accton Networks, Inc.
+Copyright (C) 2019 Accton Networks, Inc.
 
 This program is free software: you can redistribute it and/or modify
 It under the terms of the GNU General Public License as published by
@@ -13,17 +13,17 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-To initialize the system, run "accton_as7712_util.py install".
-To clean up the drivers & devices, run "accton_as7712_util.py clean".
-To dump information of sensors, run "accton_as7712_util.py show".
-To dump SFP EEPROM, run "accton_as7712_util.py sff".
-To set fan speed, run "accton_as7712_util.py set fan".
-To enable/disable SFP emission, run "accton_as7712_util.py set sfp".
-To set system LEDs' color, run "accton_as7712_util.py set led"
-For more information, run "accton_as7712_util.py --help".
+To initialize the system, run "accton_as7315_util.py install".
+To clean up the drivers & devices, run "accton_as7315_util.py clean".
+To dump information of sensors, run "accton_as7315_util.py show".
+To dump SFP EEPROM, run "accton_as7315_util.py sff".
+To set fan speed, run "accton_as7315_util.py set fan".
+To enable/disable SFP emission, run "accton_as7315_util.py set sfp".
+To set system LEDs' color, run "accton_as7315_util.py set led"
+For more information, run "accton_as7315_util.py --help".
 
 ====================================================================
-Besides applying accton_as7712_util.py to access peripherals, you can 
+Besides applying accton_as7315_util.py to access peripherals, you can 
 access peripherals by sysfs nodes directly after the installation is run.
 
 LED controls can be found under /sys/class/leds. The sysfs interface
@@ -41,7 +41,7 @@ The loc led has only 1 color, blue.
 The diag one has 3 colors: red, amber, and green.
 
 Fan controls can be found in /sys/bus/i2c/devices/2-0066.
-There are 12 fans inside 6 fan modules.
+There are 10 fans inside 5 fan modules.
 All fans share 1 duty setting, ranged from 0~100.
 
 Three temperature sensors are controlled by the lm75 kernel modules. 
@@ -51,10 +51,10 @@ Two power supplies are controlled by the CPLD.
 Here provide their status under
 /sys/bus/i2c/devices/10-0050 and /sys/bus/i2c/devices/11-0053.
 
-There are 32 QSFP+ modules are equipped. 
-Apply "accton_as7712_util.py show" to get their status. 
-Apply "accton_as7712_util.py set sfp" to turn on/off light transmission.
-Apply "accton_as7712_util.py sff" to dump EEPROM information.
+There are QSFP/SFP modules are equipped. 
+Apply "accton_as7315_util.py show" to get their status. 
+Apply "accton_as7315_util.py set sfp" to turn on/off light transmission.
+Apply "accton_as7315_util.py sff" to dump EEPROM information.
 Before operating on that QSFP+, please make sure it is well plugged. 
 Otherwise, operation is going to fail.
 
