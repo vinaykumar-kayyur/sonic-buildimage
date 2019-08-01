@@ -141,6 +141,7 @@ DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
+		    --build-arg apt_cacher_ng_proxy=$(apt_cacher_ng_proxy) \
 		    $(SLAVE_DIR)
 
 DOCKER_BUILD = docker build --no-cache \
@@ -149,6 +150,7 @@ DOCKER_BUILD = docker build --no-cache \
 	       --build-arg guid=$(shell id -g) \
 	       --build-arg hostname=$(shell echo $$HOSTNAME) \
                --build-arg slave_base_tag_ref=$(SLAVE_BASE_TAG) \
+	       --build-arg apt_cacher_ng_proxy=$(apt_cacher_ng_proxy) \
 	       -t $(SLAVE_IMAGE):$(SLAVE_TAG) \
 	       -f $(SLAVE_DIR)/Dockerfile.user \
 	       $(SLAVE_DIR)
@@ -173,6 +175,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
+		           APT_CACHER_NG_PROXY=$(apt_cacher_ng_proxy) \
                            SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
                            EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
                            $(SONIC_OVERRIDE_BUILD_VARS)

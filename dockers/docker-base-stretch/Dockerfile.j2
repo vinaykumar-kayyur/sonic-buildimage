@@ -21,6 +21,10 @@ RUN while [ -n "$(find /usr/share/doc -depth -type d -empty -print -exec rmdir {
     /var/cache/man/*     \
     /usr/share/locale/*
 
+{% if APT_CACHER_NG_PROXY.strip() -%}
+        RUN echo 'Acquire::http::Proxy "{{APT_CACHER_NG_PROXY}}";' >> /etc/apt/apt.conf.d/02proxy
+{%- endif %}
+
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 

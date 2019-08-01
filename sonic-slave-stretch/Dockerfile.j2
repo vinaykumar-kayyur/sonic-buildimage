@@ -32,6 +32,10 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian stretch main contrib non
         echo 'deb [arch=arm64] http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list
 {%- endif %}
 
+
+ARG apt_cacher_ng_proxy
+RUN echo "Acquire::http::Proxy \"$apt_cacher_ng_proxy\";" >> /etc/apt/apt.conf.d/02proxy
+
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
