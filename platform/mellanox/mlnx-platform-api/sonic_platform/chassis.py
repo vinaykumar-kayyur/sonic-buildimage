@@ -13,6 +13,7 @@ import sys
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from os.path import join
+    import os
     import io
     import re
     import subprocess
@@ -20,10 +21,15 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
+# The default dir for reboot cause files
 HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
+# The hwmon root dir used in case of the hw-mgmt v1.x.x is used.
+HWMON_ROOT = '/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon2/'
+# The alternative hwmon root dir used in case of the above two not accessable
+HWMON_ROOT_ALT = '/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon3/'
 
 #reboot cause related definitions
-REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
+REBOOT_CAUSE_ROOT = None
 
 REBOOT_CAUSE_POWER_LOSS_FILE = 'reset_main_pwr_fail'
 REBOOT_CAUSE_AUX_POWER_LOSS_FILE = 'reset_aux_pwr_or_ref'
@@ -47,7 +53,20 @@ class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
     def __init__(self):
+        global REBOOT_CAUSE_ROOT
         super(Chassis, self).__init__()
+
+        # adaptively reboot cause root dir initialization
+        REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
+        if not os.path.exists(REBOOT_CAUSE_ROOT):
+            log_warning("reboot cause dir {} doesn't exist, trying other alternatives".format(REBOOT_CAUSE_ROOT))
+            if os.path.exists(HWMON_ROOT):
+                REBOOT_CAUSE_ROOT = HWMON_ROOT
+            elif os.path.exists(HWMON_ROOT_ALT):
+                log_warning("reboot cause dir {} doesn't exist, trying other alternatives".format(HWMON_ROOT))
+                REBOOT_CAUSE_ROOT = HWMON_ROOT_ALT
+            else:
+                log_warning("reboot cause dir {} doesn't exist, unable to fetch reboot cause".format(HWMON_ROOT_ALT))
 
     def _read_generic_file(self, filename, len):
         """
