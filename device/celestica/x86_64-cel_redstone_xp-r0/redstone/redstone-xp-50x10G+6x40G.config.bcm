@@ -164,6 +164,17 @@ phy_an_c73_xe=0
 #phy_xaui_tx_polarity_flip_xe7=0x0
 #phy_xaui_tx_polarity_flip_xe8=0x1
 #phy_xaui_tx_polarity_flip_xe9=0x0
+
+portmap_1=13:10
+portmap_2=14:10
+portmap_3=15:10
+portmap_4=16:10
+portmap_5=21:10
+portmap_6=22:10
+portmap_7=23:10
+portmap_8=24:10
+portmap_9=25:10
+
 portmap_10=26:10
 portmap_11=27:10
 portmap_12=28:10
@@ -174,7 +185,7 @@ portmap_16=32:10
 portmap_17=45:10
 portmap_18=46:10
 portmap_19=47:10
-portmap_1=13:10
+
 portmap_20=48:10
 portmap_21=49:10
 portmap_22=50:10
@@ -185,7 +196,7 @@ portmap_26=54:10
 portmap_27=55:10
 portmap_28=56:10
 portmap_29=57:10
-portmap_2=14:10
+
 portmap_30=58:10
 portmap_31=59:10
 portmap_32=60:10
@@ -196,7 +207,7 @@ portmap_36=64:10
 portmap_37=65:10
 portmap_38=66:10
 portmap_39=67:10
-portmap_3=15:10
+
 portmap_40=68:10
 portmap_41=69:10
 portmap_42=70:10
@@ -206,12 +217,7 @@ portmap_45=73:10
 portmap_46=74:10
 portmap_47=75:10
 portmap_48=76:10
-portmap_4=16:10
-portmap_5=21:10
-portmap_6=22:10
-portmap_7=23:10
-portmap_8=24:10
-portmap_9=25:10
+
 
 #40G ports
 portmap_49=77:10
@@ -268,8 +274,6 @@ portmap_72=112:10
 #portmap_71=111:10:i
 #portmap_72=112:10:i
 
-
-#scache_filename=/tmp/scache
 #schan_intr_enable=0
 
 #xgxs_rx_lane_map_xe0=0x3210
