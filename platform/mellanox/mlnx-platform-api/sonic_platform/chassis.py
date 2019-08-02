@@ -89,9 +89,9 @@ class Chassis(ChassisBase):
 
         for index in range(num_of_fan):
             if multi_rotor_in_drawer:
-                fan = Fan(index, index/2)
+                fan = Fan(self.sku_name, index, index/2)
             else:
-                fan = Fan(index, index)
+                fan = Fan(self.sku_name, index, index)
             self._fan_list.append(fan)
 
 
