@@ -36,7 +36,7 @@ link_namespace() {
         fi
     fi
 
-    ln -s /proc/$PID/ns/net /var/run/netns/{{docker_container_name}}$1
+    ln -s /proc/$PID/ns/net /var/run/netns/asic$1
 }
 {%- endif %}
 
