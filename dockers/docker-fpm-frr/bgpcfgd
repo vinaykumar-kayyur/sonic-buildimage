@@ -11,12 +11,12 @@ from swsscommon import swsscommon
 
 
 def run_command(command):
-    syslog.syslog(syslog.LOG_DEBUG, "[bgp cfgd] execute command {}.".format(command))
+    syslog.syslog(syslog.LOG_DEBUG, "execute command {}.".format(command))
     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     stdout = p.communicate()[0]
     p.wait()
     if p.returncode != 0:
-        syslog.syslog(syslog.LOG_ERR, '[bgp cfgd] command execution returned {}. Command: "{}", stdout: "{}"'.format(p.returncode, command, stdout))
+        syslog.syslog(syslog.LOG_ERR, 'command execution returned {}. Command: "{}", stdout: "{}"'.format(p.returncode, command, stdout))
 
 
 class BGPConfigManager(object):
@@ -32,19 +32,19 @@ class BGPConfigManager(object):
             or "bgp_asn" not in data \
                 or self.bgp_asn == data["bgp_asn"]:
             return
-        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] ASN changed to {} from {}, restart BGP...'.format(data['bgp_asn'], self.bgp_asn))
+        syslog.syslog(syslog.LOG_INFO, 'ASN changed to {} from {}, restart BGP...'.format(data['bgp_asn'], self.bgp_asn))
         run_command("supervisorctl restart start.sh")
         run_command("service frr restart")
         self.bgp_asn = data["bgp_asn"]
     
     def __bgp_handler(self, key, op, data):
         self.bgp_message.put((key, op, data))
-        # If ASN was setted
+        # If ASN was set
         if self.bgp_asn == None:
             return
         while not self.bgp_message.empty():
             key, op, data = self.bgp_message.get()
-            syslog.syslog(syslog.LOG_INFO, '[bgp cfgd] value for {} changed to {}'.format(key, data))
+            syslog.syslog(syslog.LOG_INFO, 'value for {} changed to {}'.format(key, data))
             if op == swsscommon.SET_COMMAND:
                 command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} remote-as {}'".format(self.bgp_asn, key, data['asn'])
                 run_command(command)
@@ -110,9 +110,11 @@ class Daemon(object):
 
 
 def main():
+    syslog.openlog("bgpcfgd")
     daemon = Daemon()
     bgp_manager = BGPConfigManager(daemon)
     daemon.start()
+    syslog.closelog()
 
 if __name__ == "__main__":
     main()
