@@ -139,3 +139,14 @@ xgxs_lcpll_xtal_refclk
 xgxs_pdetect
 xgxs_rx_lane_map
 xgxs_tx_lane_map
+cancun_dir
+linkscan_led_fw_dir
+custom_led_fw_dir
+help_cli_enable
+ifp_inports_support_enable
+memlist_enable
+pbmp_gport_stack
+phy_chain_rx_lane_map_physical
+phy_chain_tx_polarity_flip_physical
+port_flex_enable
+reglist_enable
