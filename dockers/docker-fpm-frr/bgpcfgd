@@ -36,12 +36,9 @@ class BGPConfigManager(object):
         run_command("supervisorctl restart start.sh")
         run_command("service frr restart")
         self.bgp_asn = data["bgp_asn"]
-    
-    def __bgp_handler(self, key, op, data):
-        self.bgp_message.put((key, op, data))
-        # If ASN was set
-        if self.bgp_asn == None:
-            return
+        self.__update_bgp()
+
+    def __update_bgp(self):
         while not self.bgp_message.empty():
             key, op, data = self.bgp_message.get()
             syslog.syslog(syslog.LOG_INFO, 'value for {} changed to {}'.format(key, data))
@@ -59,6 +56,13 @@ class BGPConfigManager(object):
                 # Neighbor is deleted
                 command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no neighbor {}'".format(self.bgp_asn, key)
                 run_command(command)
+
+    def __bgp_handler(self, key, op, data):
+        self.bgp_message.put((key, op, data))
+        # If ASN doesn't be set, we just cache this message until the ASN is set.
+        if self.bgp_asn == None:
+            return
+        self.__update_bgp()
 
 
 class Daemon(object):
