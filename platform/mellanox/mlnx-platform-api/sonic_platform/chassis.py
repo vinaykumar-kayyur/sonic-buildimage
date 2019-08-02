@@ -13,6 +13,7 @@ import sys
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from os.path import join
+    from glob import glob
     import os
     import io
     import re
@@ -24,9 +25,7 @@ except ImportError as e:
 # The default dir for reboot cause files
 HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 # The hwmon root dir used in case of the hw-mgmt v1.x.x is used.
-HWMON_ROOT = '/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon2/'
-# The alternative hwmon root dir used in case of the above two not accessable
-HWMON_ROOT_ALT = '/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon3/'
+HWMON_ROOT_PATTERN = '/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon*'
 
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = None
@@ -43,11 +42,15 @@ REBOOT_CAUSE_FILE_LENGTH = 1
 
 # ========================== Syslog wrappers ==========================
 SYSLOG_IDENTIFIER = "mlnx-chassis"
-def log_warning(msg, also_print_to_console=False):
+def log_warning(msg):
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_WARNING, msg)
     syslog.closelog()
 
+def log_info(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_INFO, msg)
+    syslog.closelog()
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -60,13 +63,15 @@ class Chassis(ChassisBase):
         REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
         if not os.path.exists(REBOOT_CAUSE_ROOT):
             log_warning("reboot cause dir {} doesn't exist, trying other alternatives".format(REBOOT_CAUSE_ROOT))
-            if os.path.exists(HWMON_ROOT):
-                REBOOT_CAUSE_ROOT = HWMON_ROOT
-            elif os.path.exists(HWMON_ROOT_ALT):
-                log_warning("reboot cause dir {} doesn't exist, trying other alternatives".format(HWMON_ROOT))
-                REBOOT_CAUSE_ROOT = HWMON_ROOT_ALT
+            possible_reboot_cause_dir_list = glob(HWMON_ROOT_PATTERN)
+            if possible_reboot_cause_dir_list is None or len(possible_reboot_cause_dir_list) == 0:
+                log_warning("can't find reboot cause files in {}".format(HWMON_ROOT_PATTERN))
             else:
-                log_warning("reboot cause dir {} doesn't exist, unable to fetch reboot cause".format(HWMON_ROOT_ALT))
+                REBOOT_CAUSE_ROOT = possible_reboot_cause_dir_list[0]
+                if len(possible_reboot_cause_dir_list) > 1:
+                    log_warning("found multiple reboot cause dir {}, pick the first one".format(possible_reboot_cause_dir_list))
+                else:
+                    log_info("pick {} as reboot cause file".format(REBOOT_CAUSE_ROOT))
 
     def _read_generic_file(self, filename, len):
         """
