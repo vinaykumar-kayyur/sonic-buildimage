@@ -106,7 +106,9 @@ class Chassis(ChassisBase):
 
     def initialize_sfp(self):
         from sonic_platform.sfp import SFP
+        from sonic_platform.sfp_event import sfp_event
         self.sfp_module = SFP
+
         # Initialize SFP list
         port_position_tuple = self._get_port_position_tuple_by_sku_name()
         self.PORT_START = port_position_tuple[0]
@@ -120,6 +122,11 @@ class Chassis(ChassisBase):
             else:
                 sfp_module = SFP(index, 'SFP')
             self._sfp_list.append(sfp_module)
+
+        # Initialize SFP event
+        self.sfp_event = sfp_event()
+        self.sfp_event.initialize()
+        self.MAX_SELECT_EVENT_RETURNED = self.PORT_END
 
     def initialize_thermals(self):
         from sonic_platform.thermal import initialize_thermals
@@ -137,14 +144,6 @@ class Chassis(ChassisBase):
         self._component_name_list.append(COMPONENT_FIRMWARE)
         self._component_name_list.append(COMPONENT_CPLD1)
         self._component_name_list.append(COMPONENT_CPLD2)
-
-        # Initialize sfp-change-listening stuff
-        self._init_sfp_change_event()
-
-    def _init_sfp_change_event(self):
-        self.sfp_event = sfp_event()
-        self.sfp_event.initialize()
-        self.MAX_SELECT_EVENT_RETURNED = self.PORT_END
 
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0
