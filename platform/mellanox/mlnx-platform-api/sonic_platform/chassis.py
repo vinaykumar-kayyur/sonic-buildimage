@@ -129,7 +129,7 @@ class Chassis(ChassisBase):
     def initialize_eeprom(self):
         from eeprom import Eeprom
         # Initialize EEPROM
-        self.eeprom = Eeprom()
+        self._eeprom = Eeprom()
 
     def initialize_components_list(self):
         # Initialize component list
@@ -203,7 +203,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self.eeprom.get_base_mac()
+        return self._eeprom.get_base_mac()
 
     def get_serial_number(self):
         """
@@ -212,7 +212,7 @@ class Chassis(ChassisBase):
         Returns:
             A string containing the hardware serial number for this chassis.
         """
-        return self.eeprom.get_serial_number()
+        return self._eeprom.get_serial_number()
 
     def get_system_eeprom_info(self):
         """
@@ -223,7 +223,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
-        return self.eeprom.get_system_eeprom_info()
+        return self._eeprom.get_system_eeprom_info()
 
     def _read_generic_file(self, filename, len):
         """
