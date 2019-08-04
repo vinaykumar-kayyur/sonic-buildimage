@@ -10,15 +10,7 @@
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.psu import Psu
-    from sonic_platform.fan import Fan
-    from sonic_platform.fan import FAN_PATH
-    from sonic_platform.sfp import SFP
-    from sonic_platform.thermal import Thermal, initialize_thermals
-    from sonic_platform.watchdog import get_watchdog
     from sonic_daemon_base.daemon_base import Logger
-    from eeprom import Eeprom
-    from sfp_event import sfp_event
     from os import listdir
     from os.path import isfile, join
     import sys
@@ -84,14 +76,22 @@ class Chassis(ChassisBase):
         # Initialize SKU name
         self.sku_name = self._get_sku_name()
 
+        # move the initialization of each components to their dedicated initializer
+        # which will be called from platform
+
+    def initialize_psu(self):
+        from sonic_platform.psu import Psu
         # Initialize PSU list
+        self.psu_module = Psu
         for index in range(MLNX_NUM_PSU):
             psu = Psu(index, self.sku_name)
             self._psu_list.append(psu)
 
-        # Initialize watchdog
-        self._watchdog = None
-
+    def initialize_fan(self):
+        from sonic_platform.fan import Fan
+        from sonic_platform.fan import FAN_PATH
+        self.fan_module = Fan
+        self.fan_path = FAN_PATH
         # Initialize FAN list
         multi_rotor_in_drawer = False
         num_of_fan, num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
@@ -104,6 +104,9 @@ class Chassis(ChassisBase):
                 fan = Fan(index, index)
             self._fan_list.append(fan)
 
+    def initialize_sfp(self):
+        from sonic_platform.sfp import SFP
+        self.sfp_module = SFP
         # Initialize SFP list
         port_position_tuple = self._get_port_position_tuple_by_sku_name()
         self.PORT_START = port_position_tuple[0]
@@ -118,12 +121,17 @@ class Chassis(ChassisBase):
                 sfp_module = SFP(index, 'SFP')
             self._sfp_list.append(sfp_module)
 
+    def initialize_thermals(self):
+        from sonic_platform.thermal import initialize_thermals
         # Initialize thermals
         initialize_thermals(self.sku_name, self._thermal_list, self._psu_list)
 
+    def initialize_eeprom(self):
+        from eeprom import Eeprom
         # Initialize EEPROM
         self.eeprom = Eeprom()
 
+    def initialize_components_list(self):
         # Initialize component list
         self._component_name_list.append(COMPONENT_BIOS)
         self._component_name_list.append(COMPONENT_FIRMWARE)
@@ -141,8 +149,8 @@ class Chassis(ChassisBase):
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0
         num_of_drawer = 0
-        for f in listdir(FAN_PATH):
-            if isfile(join(FAN_PATH, f)):
+        for f in listdir(self.fan_path):
+            if isfile(join(self.fan_path, f)):
                 match_obj = re.match('fan(\d+)_speed_get', f)
                 if match_obj != None:
                     if int(match_obj.group(1)) > num_of_fan:
@@ -180,6 +188,7 @@ class Chassis(ChassisBase):
         """
         try:
             if self._watchdog is None:
+                from sonic_platform.watchdog import get_watchdog
                 self._watchdog = get_watchdog()
         except Exception as e:
             logger.log_info("Fail to load watchdog due to {}".format(repr(e)))
