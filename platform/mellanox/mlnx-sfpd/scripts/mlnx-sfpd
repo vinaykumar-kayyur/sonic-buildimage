@@ -28,6 +28,12 @@ STATUS_PLUGIN = '1'
 STATUS_PLUGOUT = '0'
 STATUS_UNKNOWN = '2'
 
+INITIALIZING_PHASE_NONE = 0
+INITIALIZING_PHASE_SX_API_OPENED = 1
+INITIALIZING_PHASE_HOST_IFC_OPENED = 2
+INITIALIZING_PHASE_SWITCH_CREATED = 3
+INITIALIZING_PHASE_HOST_IFC_TRAPID_SET = 4
+
 SFPD_LIVENESS_EXPIRE_SECS = 30
 
 SDK_DAEMON_READY_FILE = '/tmp/sdk_ready'
@@ -66,7 +72,8 @@ def log_error(msg, also_print_to_console=False):
 class MlnxSfpd:
     ''' Listen to plugin/plugout cable events '''
 
-    SX_OPEN_RETRIES = 10
+    SX_OPEN_RETRIES = 30
+    SX_OPEN_TIMEOUT = 5
     SELECT_TIMEOUT = 1
 
     def __init__(self):
@@ -99,68 +106,86 @@ class MlnxSfpd:
     def initialize(self):
         self.state_db.connect("STATE_DB")
 
-        # Wait for SDK daemon to be started with detect the sdk_ready file     
-        retry = 0
-        while not os.path.exists(SDK_DAEMON_READY_FILE):  
-            if retry >= self.SX_OPEN_RETRIES:
-                raise RuntimeError("SDK daemon failed to start after {} retries, exiting...".format(retry))
-            else:
-                log_info("SDK daemon not started yet, retry {} times".format(retry))
-                retry = retry + 1
-                time.sleep(2 ** retry)
-        
-        # After SDK daemon started, sx_api_open and sx_api_host_ifc_open is ready for call
-        rc, self.handle = sx_api_open(None)
-        if rc != SX_STATUS_SUCCESS:
-            raise RuntimeError("failed to call sx_api_open with rc {}, exiting...".format(rc))
+        initializing_phase = INITIALIZING_PHASE_NONE
 
-        rc = sx_api_host_ifc_open(self.handle, self.rx_fd_p)
-        if rc != SX_STATUS_SUCCESS:
-            sx_api_close(self.handle)
-            raise RuntimeError("failed to call sx_api_host_ifc_open with rc {}, exiting...".format(rc))
+        swid_cnt_p = None
 
-        self.user_channel_p.type = SX_USER_CHANNEL_TYPE_FD
-        self.user_channel_p.channel.fd = self.rx_fd_p
-
-        # Wait for switch to be created and inited inside SDK
-        retry = 0
-        swid_cnt_p = new_uint32_t_p()
-        uint32_t_p_assign(swid_cnt_p, 0)
-        swid_cnt = 0
-        while True:
-            if retry > self.SX_OPEN_RETRIES:
-                delete_uint32_t_p(swid_cnt_p)
-                sx_api_host_ifc_close(self.handle, self.rx_fd_p)
-                sx_api_close(self.handle)
-                raise RuntimeError("switch not created after {} retries, exiting...".format(retry))
-            else:
-                rc = sx_api_port_swid_list_get(self.handle, None, swid_cnt_p)
-                if rc == SX_STATUS_SUCCESS:
-                    swid_cnt = uint32_t_p_value(swid_cnt_p)
-                    if swid_cnt > 0:
-                        delete_uint32_t_p(swid_cnt_p)
-                        break
-                    else:
-                        log_info("switch not created yet, swid_cnt {}, retry {} times".format(swid_cnt, retry))
+        try:
+            # Wait for SDK daemon to be started with detect the sdk_ready file
+            retry = 0
+            while not os.path.exists(SDK_DAEMON_READY_FILE):  
+                if retry >= self.SX_OPEN_RETRIES:
+                    raise RuntimeError("SDK daemon failed to start after {} retries and {} seconds waiting, exiting..."
+                        .format(retry, self.SX_OPEN_TIMEOUT * self.SX_OPEN_RETRIES))
                 else:
-                    log_info("sx_api_port_swid_list_get fail with rc {}, retry {} times".format(rc, retry))
+                    log_info("SDK daemon not started yet, retry {} times".format(retry))
+                    retry = retry + 1
+                    time.sleep(self.SX_OPEN_TIMEOUT)
 
-                retry = retry + 1
-                time.sleep(2 ** retry)
+            # After SDK daemon started, sx_api_open and sx_api_host_ifc_open is ready for call
+            rc, self.handle = sx_api_open(None)
+            if rc != SX_STATUS_SUCCESS:
+                raise RuntimeError("failed to call sx_api_open with rc {}, exiting...".format(rc))
 
-        # After switch was created inside SDK, sx_api_host_ifc_trap_id_register_set is ready to call
-        rc = sx_api_host_ifc_trap_id_register_set(self.handle,
-                                                  SX_ACCESS_CMD_REGISTER,
-                                                  self.swid,
-                                                  SX_TRAP_ID_PMPE,
-                                                  self.user_channel_p)
+            initializing_phase = INITIALIZING_PHASE_SX_API_OPENED
 
-        if rc != SX_STATUS_SUCCESS:
-            sx_api_host_ifc_close(self.handle, self.rx_fd_p)
-            sx_api_close(self.handle)
-            raise RuntimeError("sx_api_host_ifc_trap_id_register_set failed with rc {}, exiting...".format(rc))
-            
-        self.running = True
+            rc = sx_api_host_ifc_open(self.handle, self.rx_fd_p)
+            if rc != SX_STATUS_SUCCESS:
+                raise RuntimeError("failed to call sx_api_host_ifc_open with rc {}, exiting...".format(rc))
+
+            self.user_channel_p.type = SX_USER_CHANNEL_TYPE_FD
+            self.user_channel_p.channel.fd = self.rx_fd_p
+
+            initializing_phase = INITIALIZING_PHASE_HOST_IFC_OPENED
+
+            # Wait for switch to be created and initialized inside SDK
+            retry = 0
+            swid_cnt_p = new_uint32_t_p()
+            uint32_t_p_assign(swid_cnt_p, 0)
+            swid_cnt = 0
+            while True:
+                if retry > self.SX_OPEN_RETRIES:
+                    raise RuntimeError("switch not created after {} retries and {} seconds waiting, exiting..."
+                        .format(retry, self.SX_OPEN_RETRIES * self.SX_OPEN_TIMEOUT))
+                else:
+                    rc = sx_api_port_swid_list_get(self.handle, None, swid_cnt_p)
+                    if rc == SX_STATUS_SUCCESS:
+                        swid_cnt = uint32_t_p_value(swid_cnt_p)
+                        if swid_cnt > 0:
+                            delete_uint32_t_p(swid_cnt_p)
+                            break
+                        else:
+                            log_info("switch not created yet, swid_cnt {}, retry {} times and wait for {} seconds"
+                                .format(swid_cnt, retry, self.SX_OPEN_TIMEOUT * retry))
+                    else:
+                        raise RuntimeError("sx_api_port_swid_list_get fail with rc {}, retry {} times and wait for {} seconds".
+                            format(rc, retry, self.SX_OPEN_TIMEOUT * retry))
+
+                    retry = retry + 1
+                    time.sleep(self.SX_OPEN_TIMEOUT)
+
+            initializing_phase = INITIALIZING_PHASE_SWITCH_CREATED
+
+            # After switch was created inside SDK, sx_api_host_ifc_trap_id_register_set is ready to call
+            rc = sx_api_host_ifc_trap_id_register_set(self.handle,
+                                                    SX_ACCESS_CMD_REGISTER,
+                                                    self.swid,
+                                                    SX_TRAP_ID_PMPE,
+                                                    self.user_channel_p)
+
+            if rc != SX_STATUS_SUCCESS:
+                raise RuntimeError("sx_api_host_ifc_trap_id_register_set failed with rc {}, exiting...".format(rc))
+
+            self.running = True
+        except Exception as e:
+            log_error("mlnx-sfpd initialization failed due to {}".format(repr(e)))
+            if initializing_phase >= INITIALIZING_PHASE_SX_API_OPENED:
+                if initializing_phase >= INITIALIZING_PHASE_HOST_IFC_OPENED:
+                    if initializing_phase >= INITIALIZING_PHASE_SWITCH_CREATED:
+                        if swid_cnt_p is not None:
+                            delete_uint32_t_p(swid_cnt_p)
+                    sx_api_host_ifc_close(self.handle, self.rx_fd_p)
+                sx_api_close(self.handle)
 
     def deinitialize(self):
         # remove mlnx-sfpd liveness key in DB if not expired yet
