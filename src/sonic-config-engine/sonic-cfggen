@@ -124,14 +124,14 @@ TODO(taoyl): Current version of config db only supports BGP admin states.
         return db_data
 
     @staticmethod
-    def to_serialized(data, find_key = ""):
+    def to_serialized(data, lookup_key = None):
         if type(data) is dict:
             data = OrderedDict(natsorted(data.items()))
 
-            if find_key != "":
+            if lookup_key != None:
                 newData = {}
                 for key in data.keys():
-                    if ((type(key) is unicode and find_key == key) or (type(key) is tuple and find_key in key)):
+                    if ((type(key) is unicode and lookup_key == key) or (type(key) is tuple and lookup_key in key)):
                         newData[ConfigDBConnector.serialize_key(key)] = data.pop(key)
                         break
                 return newData
