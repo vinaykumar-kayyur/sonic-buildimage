@@ -11,10 +11,6 @@ case $1 in
     ;;
 esac
 
-. /usr/share/initramfs-tools/hook-functions
-
-copy_exec /bin/tar /usr/bin/tar
-
 set_tmpfs_log_partition_size()
 {
   varlogsize=128
@@ -56,7 +52,7 @@ mkdir -p ${rootmnt}/var/lib/docker
 if [ -f ${rootmnt}/host/$image_dir/{{ FILESYSTEM_DOCKERFS }} ]; then
     ## mount tmpfs and extract docker into it
     mount -t tmpfs -o rw,nodev,size={{ DOCKER_RAMFS_SIZE }} tmpfs ${rootmnt}/var/lib/docker
-    /usr/bin/tar xz --numeric-owner --warning=no-timestamp -f ${rootmnt}/host/$image_dir/{{ FILESYSTEM_DOCKERFS }} -C ${rootmnt}/var/lib/docker
+    tar xz --numeric-owner -f ${rootmnt}/host/$image_dir/{{ FILESYSTEM_DOCKERFS }} -C ${rootmnt}/var/lib/docker
 else
     ## Mount the working directory of docker engine in the raw partition, bypass the overlay
     mount --bind ${rootmnt}/host/$image_dir/{{ DOCKERFS_DIR }} ${rootmnt}/var/lib/docker
