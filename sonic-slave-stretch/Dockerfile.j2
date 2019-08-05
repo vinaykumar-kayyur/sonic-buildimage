@@ -249,7 +249,6 @@ RUN apt-get update && apt-get install -y \
         cmake \
 # For pam_tacplus build
         autoconf-archive \
-{%- if CONFIGURED_ARCH == "armhf" %}
 # For iproute2
         cm-super-minimal \
         libatm1-dev \
@@ -261,7 +260,6 @@ RUN apt-get update && apt-get install -y \
         texlive-latex-extra \
         texlive-latex-recommended \
         iproute2 \
-{%- endif %}
 # For python-click build
         python-sphinx \
         python-docutils \
