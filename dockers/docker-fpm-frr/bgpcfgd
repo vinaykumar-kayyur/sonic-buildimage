@@ -33,8 +33,9 @@ class BGPConfigManager(object):
                 or self.bgp_asn == data["bgp_asn"]:
             return
         syslog.syslog(syslog.LOG_INFO, 'ASN changed to {} from {}, restart BGP...'.format(data['bgp_asn'], self.bgp_asn))
-        run_command("supervisorctl restart start.sh")
-        run_command("service frr restart")
+
+        # TODO add ASN update commands 
+
         self.bgp_asn = data["bgp_asn"]
         self.__update_bgp()
 
