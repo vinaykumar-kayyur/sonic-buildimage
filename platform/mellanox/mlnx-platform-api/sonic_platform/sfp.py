@@ -76,7 +76,7 @@ QSFP_DOM_REV_OFFSET = 1
 QSFP_DOM_REV_WIDTH = 1
 QSFP_TEMPE_OFFSET = 22
 QSFP_TEMPE_WIDTH = 2
-QSFP_VLOT_OFFSET = 26
+QSFP_VOLT_OFFSET = 26
 QSFP_VOLT_WIDTH = 2
 QSFP_VERSION_COMPLIANCE_OFFSET = 1
 QSFP_VERSION_COMPLIANCE_WIDTH = 1
@@ -102,7 +102,7 @@ QSFP_OPTION_VALUE_WIDTH = 4
 
 SFP_TEMPE_OFFSET = 96
 SFP_TEMPE_WIDTH = 2
-SFP_VLOT_OFFSET = 98
+SFP_VOLT_OFFSET = 98
 SFP_VOLT_WIDTH = 2
 SFP_CHANNL_MON_OFFSET = 100
 SFP_CHANNL_MON_WIDTH = 6
@@ -327,6 +327,7 @@ class SFP(SfpBase):
                     self.dom_volt_supported = False
                     self.dom_rx_power_supported = False
                     self.dom_tx_power_supported = False
+                    self.calibration = 0
                 self.dom_tx_disable_supported = (int(sfp_dom_capability_raw[1], 16) & 0x40 != 0)
         else:
             self.dom_supported = False
@@ -617,7 +618,7 @@ class SFP(SfpBase):
                 transceiver_dom_info_dict['temperature'] = 'N/A'
 
             if self.dom_volt_supported:
-                dom_voltage_raw = self._read_eeprom_specific_bytes((offset + QSFP_VLOT_OFFSET), QSFP_VOLT_WIDTH)
+                dom_voltage_raw = self._read_eeprom_specific_bytes((offset + QSFP_VOLT_OFFSET), QSFP_VOLT_WIDTH)
                 if dom_voltage_raw is not None:
                     dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
                     volt = self._convert_string_to_num(dom_voltage_data['data']['Vcc']['value'])
@@ -677,7 +678,7 @@ class SFP(SfpBase):
             else:
                 return None
 
-            dom_voltage_raw = self._read_eeprom_specific_bytes((offset + SFP_VLOT_OFFSET), SFP_VOLT_WIDTH)
+            dom_voltage_raw = self._read_eeprom_specific_bytes((offset + SFP_VOLT_OFFSET), SFP_VOLT_WIDTH)
             if dom_voltage_raw is not None:
                 dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
             else:
@@ -979,7 +980,7 @@ class SFP(SfpBase):
                 return None
 
             if self.dom_volt_supported:
-                dom_voltage_raw = self._read_eeprom_specific_bytes((offset + QSFP_VLOT_OFFSET), QSFP_VOLT_WIDTH)
+                dom_voltage_raw = self._read_eeprom_specific_bytes((offset + QSFP_VOLT_OFFSET), QSFP_VOLT_WIDTH)
                 if dom_voltage_raw is not None:
                     dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
                     voltage = self._convert_string_to_num(dom_voltage_data['data']['Vcc']['value'])
@@ -996,7 +997,7 @@ class SFP(SfpBase):
 
             sfpd_obj._calibration_type = self.calibration
 
-            dom_voltage_raw = self._read_eeprom_specific_bytes((offset + SFP_VLOT_OFFSET), SFP_VOLT_WIDTH)
+            dom_voltage_raw = self._read_eeprom_specific_bytes((offset + SFP_VOLT_OFFSET), SFP_VOLT_WIDTH)
             if dom_voltage_raw is not None:
                 dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
                 voltage = self._convert_string_to_num(dom_voltage_data['data']['Vcc']['value'])
