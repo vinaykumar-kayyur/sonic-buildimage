@@ -25,8 +25,8 @@ class PsuUtil(PsuBase):
         self.psu_presence = "/psu_present"
         self.psu_oper_status = "/psu_power_good"
         self.psu_mapping = {
-            2: "13-0053",
-            1: "12-0050",
+            1: "13-0053",
+            2: "12-0050",
         }
 
     def get_num_psus(self):

@@ -35,7 +35,7 @@ except ImportError as e:
 class ThermalUtil(object):
     """Platform-specific ThermalUtil class"""
 
-    THERMAL_NUM_ON_MAIN_BROAD = 6
+    THERMAL_NUM_ON_MAIN_BROAD = 3
     THERMAL_NUM_1_IDX = 1
     BASE_VAL_PATH = '/sys/bus/i2c/devices/{0}-00{1}/hwmon/hwmon*/temp1_input'
 
@@ -45,17 +45,17 @@ class ThermalUtil(object):
     _thermal_to_device_path_mapping = {}
 
     _thermal_to_device_node_mapping = [
-            ['18', '48'],
-            ['18', '49'],
-            ['18', '4a'],
-            ['18', '4b'],
-            ['17', '4d'],
-            ['17', '4e'],
+            ['51', '49'],
+            ['52', '4a'],
+            ['53', '4c'],
            ]
+    logger = logging.getLogger(__name__)
+    def __init__(self, log_level=logging.DEBUG):
+        ch = logging.StreamHandler()
+        ch.setLevel(log_level)
+        self.logger.addHandler(ch)
 
-    def __init__(self):
         thermal_path = self.BASE_VAL_PATH
-
         for x in range(self.THERMAL_NUM_ON_MAIN_BROAD):
             self._thermal_to_device_path_mapping[x+1] = thermal_path.format(
                 self._thermal_to_device_node_mapping[x][0],
@@ -63,7 +63,7 @@ class ThermalUtil(object):
             
     def _get_thermal_node_val(self, thermal_num):
         if thermal_num < self.THERMAL_NUM_1_IDX or thermal_num > self.THERMAL_NUM_ON_MAIN_BROAD:
-            logging.debug('GET. Parameter error. thermal_num, %d', thermal_num)
+            self.logger.debug('GET. Parameter error. thermal_num, %d', thermal_num)
             return None
 
         device_path = self.get_thermal_to_device_path(thermal_num)
@@ -71,19 +71,19 @@ class ThermalUtil(object):
             try:
                 val_file = open(filename, 'r')
             except IOError as e:
-                logging.error('GET. unable to open file: %s', str(e))
+                self.logger.error('GET. unable to open file: %s', str(e))
                 return None
 
         content = val_file.readline().rstrip()
 
         if content == '':
-            logging.debug('GET. content is NULL. device_path:%s', device_path)
+            self.logger.debug('GET. content is NULL. device_path:%s', device_path)
             return None
 
         try:
-		    val_file.close()
+            val_file.close()
         except:
-            logging.debug('GET. unable to close file. device_path:%s', device_path)
+            self.logger.debug('GET. unable to close file. device_path:%s', device_path)
             return None
       
         return int(content)

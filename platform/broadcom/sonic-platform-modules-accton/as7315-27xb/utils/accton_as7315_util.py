@@ -47,10 +47,12 @@ verbose = False
 DEBUG = False
 args = []
 ALL_DEVICE = {}               
-DEVICE_NO = {'led':5, 'fan':5,'thermal':3, 'psu':2, 'sfp':27}
+DEVICE_NO = {'led':2, 'fan':5,'thermal':3, 'psu':2, 'sfp':27}
 FORCE = 0
 #logging.basicConfig(filename= PROJECT_NAME+'.log', filemode='w',level=logging.DEBUG)
 #logging.basicConfig(level=logging.INFO)
+
+qsfp_start_index = 24
 
 
 if DEBUG == True:
@@ -119,14 +121,14 @@ def show_help():
 def  show_set_help():
     cmd =  sys.argv[0].split("/")[-1]+ " "  + args[0]
     print  cmd +" [led|sfp|fan]"
-    print  "    use \""+ cmd + " led 0-4 \"  to set led color"
+    print  "    use \""+ cmd + " led 0-1 \"  to set led color"
     print  "    use \""+ cmd + " fan 0-100\" to set fan duty percetage"    
-    print  "    use \""+ cmd + " sfp 1-64 {0|1}\" to set sfp# tx_disable"
+    print  "    use \""+ cmd + " sfp 1-27 {0|1}\" to set sfp# tx_disable"
     sys.exit(0)  
     
 def  show_eeprom_help():
     cmd =  sys.argv[0].split("/")[-1]+ " "  + args[0]
-    print  "    use \""+ cmd + " 1-64 \" to dump sfp# eeprom"
+    print  "    use \""+ cmd + " 1-27 \" to dump sfp# eeprom"
     sys.exit(0)           
             
 def my_log(txt):
@@ -194,8 +196,8 @@ def driver_uninstall():
                 return status              
     return 0
 
-led_prefix ='/sys/class/leds/'+PROJECT_NAME+'_led::'
-hwmon_types = {'led': ['diag','fan','loc','psu1','psu2']}
+led_prefix ='/sys/class/leds/'+PROJECT_NAME+'_'
+hwmon_types = {'led': ['diag','loc']}
 hwmon_nodes = {'led': ['brightness'] }
 hwmon_prefix ={'led': led_prefix}
 
@@ -204,18 +206,20 @@ i2c_bus = {'fan': ['50-0066'] ,
            'thermal': ['51-0049','52-004a', '53-004c'] ,
            'psu': ['13-0053','12-0050'], 
            'sfp': ['-0050']}
-i2c_nodes = {'fan': ['present', 'front_speed_rpm', 'rear_speed_rpm'] ,
+i2c_nodes = {'fan': ['present', 'input'] ,
            'thermal': ['hwmon/hwmon*/temp1_input'] ,
            'psu': ['psu_present', 'psu_power_good']    ,
-           'sfp': ['module_present']}
+           'sfp': ['present']}
                    
-sfp_map =  [25,26,27,28,37,38,39,40,42,41,44,43,33,34,35,36,45,46,47,48,49,
+sfp_map =  [26,27,28,29,30,31,32,33,
+            34,35,36,37,38,39,40,41,
+            42,43,44,45,46,47,48,49,
             21, 22, 23]
 
 mknod =[   
-'echo pca9548  0x76 > /sys/bus/i2c/devices/i2c-1/new_device',
+'echo pca9548  0x76 > /sys/bus/i2c/devices/i2c-0/new_device',
 'echo pca9548  0x74 > /sys/bus/i2c/devices/i2c-3/new_device',
-'echo pca9548  0x72 > /sys/bus/i2c/devices/i2c-0/new_device',
+'echo pca9548  0x72 > /sys/bus/i2c/devices/i2c-1/new_device',
 'echo pca9548  0x70 > /sys/bus/i2c/devices/i2c-18/new_device',
 'echo pca9548  0x71 > /sys/bus/i2c/devices/i2c-19/new_device',
 'echo pca9548  0x73 > /sys/bus/i2c/devices/i2c-20/new_device',
@@ -232,7 +236,7 @@ mknod =[
 'echo lm75  0x49 > /sys/bus/i2c/devices/i2c-51/new_device',
 'echo lm75  0x4a > /sys/bus/i2c/devices/i2c-52/new_device',
 'echo lm75  0x4c > /sys/bus/i2c/devices/i2c-53/new_device',
-']
+]
        
 def i2c_order_check():    
     return 0
@@ -253,7 +257,10 @@ def device_install():
 
     for i in range(0,len(sfp_map)):
         path = "/sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device"
-        status, output =log_os_system("echo optoe1 0x50 > " + path, 1)
+        if 1 >= qsfp_start_index:
+            status, output =log_os_system("echo optoe1 0x50 > " + path, 1)
+        else:
+            status, output =log_os_system("echo optoe2 0x50 > " + path, 1)
         if status:
             print output
             if FORCE == 0:            
@@ -361,8 +368,11 @@ def devices_info():
                 elif  'sfp' == key:
                     for k in range(0,DEVICE_NO[key]):
                         node = key+str(k+1)
-                        fmt = i2c_prefix+"19-0060/{0}_{1}"
-                        path =  fmt.format(nodes[j], k+1)
+                        if k > qsfp_start_index:
+                            fmt = i2c_prefix+"7-0064/{0}_{1}"
+                        else:
+                            fmt = i2c_prefix+"8-0063/{0}_{1}"
+                        path =  fmt.format(nodes[j], (k%qsfp_start_index)+1)
 
                         my_log(node+": "+ path)
                         ALL_DEVICE[key][node].append(path)                                        
