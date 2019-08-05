@@ -30,6 +30,8 @@
 #  *                 Default: yes
 #  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
+#  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
+#  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #
 ###############################################################################
 
@@ -137,6 +139,12 @@ ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
 
 endif
 
+ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
+    $(shell test -d $(SONIC_DPKG_CACHE_SOURCE) || mkdir -p $(SONIC_DPKG_CACHE_SOURCE) )
+    DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache"
+endif
+
+
 DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
 		    --build-arg http_proxy=$(http_proxy) \
@@ -171,6 +179,8 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_USE_DOCKER_BUILDKIT=$(SONIC_USE_DOCKER_BUILDKIT) \
                            VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
+                           SONIC_DPKG_CACHE_METHOD=$(SONIC_DPKG_CACHE_METHOD) \
+                           SONIC_DPKG_CACHE_SOURCE=$(SONIC_DPKG_CACHE_SOURCE) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
                            SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
