@@ -482,7 +482,7 @@ fi
 unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
 
 # when disk is small, keep dockerfs.tar.gz in disk, expand it into ramfs during initrd
-if [ x"$DOCKER_BACKING_FILESYSTEM" = x"ramfs" ]; then
+if [ x"$docker_inram" = x"on" ]; then
     unzip -o $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
 else
     if [ "$install_env" = "onie" ]; then
