@@ -346,6 +346,7 @@ write_boot_configs() {
         fi
     fi
 
+    mkdir -p "$image_path"
     cat /tmp/append > $cmdline_image
     [ -e ${target_path}/machine.conf ] || write_machine_config
 }
