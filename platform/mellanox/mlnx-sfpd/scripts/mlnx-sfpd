@@ -28,12 +28,6 @@ STATUS_PLUGIN = '1'
 STATUS_PLUGOUT = '0'
 STATUS_UNKNOWN = '2'
 
-INITIALIZING_PHASE_NONE = 0
-INITIALIZING_PHASE_SX_API_OPENED = 1
-INITIALIZING_PHASE_HOST_IFC_OPENED = 2
-INITIALIZING_PHASE_SWITCH_CREATED = 3
-INITIALIZING_PHASE_HOST_IFC_TRAPID_SET = 4
-
 SFPD_LIVENESS_EXPIRE_SECS = 30
 
 SDK_DAEMON_READY_FILE = '/tmp/sdk_ready'
@@ -106,8 +100,6 @@ class MlnxSfpd:
     def initialize(self):
         self.state_db.connect("STATE_DB")
 
-        initializing_phase = INITIALIZING_PHASE_NONE
-
         swid_cnt_p = None
 
         try:
@@ -130,8 +122,6 @@ class MlnxSfpd:
             if rc != SX_STATUS_SUCCESS:
                 raise RuntimeError("failed to call sx_api_open with rc {}, exiting...".format(rc))
 
-            initializing_phase = INITIALIZING_PHASE_SX_API_OPENED
-
             rc = sx_api_host_ifc_open(self.handle, self.rx_fd_p)
             if rc != SX_STATUS_SUCCESS:
                 raise RuntimeError("failed to call sx_api_host_ifc_open with rc {}, exiting...".format(rc))
@@ -139,15 +129,13 @@ class MlnxSfpd:
             self.user_channel_p.type = SX_USER_CHANNEL_TYPE_FD
             self.user_channel_p.channel.fd = self.rx_fd_p
 
-            initializing_phase = INITIALIZING_PHASE_HOST_IFC_OPENED
-
             # Wait for switch to be created and initialized inside SDK
             retry = 0
             swid_cnt_p = new_uint32_t_p()
             uint32_t_p_assign(swid_cnt_p, 0)
             swid_cnt = 0
             while True:
-                if retry > self.SX_OPEN_RETRIES:
+                if retry >= self.SX_OPEN_RETRIES:
                     raise RuntimeError("switch not created after {} retries and {} seconds waiting, exiting..."
                         .format(retry, self.SX_OPEN_RETRIES * self.SX_OPEN_TIMEOUT))
                 else:
@@ -156,6 +144,7 @@ class MlnxSfpd:
                         swid_cnt = uint32_t_p_value(swid_cnt_p)
                         if swid_cnt > 0:
                             delete_uint32_t_p(swid_cnt_p)
+                            swid_cnt_p = None
                             break
                         else:
                             log_info("switch not created yet, swid_cnt {}, retry {} times and wait for {} seconds"
@@ -166,8 +155,6 @@ class MlnxSfpd:
 
                     retry = retry + 1
                     time.sleep(self.SX_OPEN_TIMEOUT)
-
-            initializing_phase = INITIALIZING_PHASE_SWITCH_CREATED
 
             # After switch was created inside SDK, sx_api_host_ifc_trap_id_register_set is ready to call
             rc = sx_api_host_ifc_trap_id_register_set(self.handle,
@@ -181,14 +168,10 @@ class MlnxSfpd:
 
             self.running = True
         except Exception as e:
-            log_error("mlnx-sfpd initialization failed due to {}".format(repr(e)))
-            if initializing_phase >= INITIALIZING_PHASE_SX_API_OPENED:
-                if initializing_phase >= INITIALIZING_PHASE_HOST_IFC_OPENED:
-                    if initializing_phase >= INITIALIZING_PHASE_SWITCH_CREATED:
-                        if swid_cnt_p is not None:
-                            delete_uint32_t_p(swid_cnt_p)
-                    sx_api_host_ifc_close(self.handle, self.rx_fd_p)
-                sx_api_close(self.handle)
+            log_error("mlnx-sfpd initialization failed due to {}, exiting...".format(repr(e)))
+            if swid_cnt_p is not None:
+                delete_uint32_t_p(swid_cnt_p)
+            self.deinitialize()
 
     def deinitialize(self):
         # remove mlnx-sfpd liveness key in DB if not expired yet
