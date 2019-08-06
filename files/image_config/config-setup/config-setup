@@ -179,6 +179,12 @@ load_config()
   if [ $? -ne 0 ]; then
      return $?
   fi
+
+  if [[ -x /usr/bin/db_migrator.py ]]; then
+     # Migrate the DB to the latest schema version if needed
+     /usr/bin/db_migrator.py -o migrate
+  fi
+
   redis-cli -n $CONFIG_DB_INDEX SET "CONFIG_DB_INITIALIZED" "1"
   return 0
 }
@@ -280,6 +286,11 @@ do_config_migration()
       if [ -e ${CONFIG_DB_JSON} ]; then
          echo "Use config_db.json from old system..."
          sonic-cfggen -j ${CONFIG_DB_JSON} --write-to-db
+
+         if [[ -x /usr/bin/db_migrator.py ]]; then
+             # Migrate the DB to the latest schema version if needed
+             /usr/bin/db_migrator.py -o migrate
+         fi
       fi
   fi
 
