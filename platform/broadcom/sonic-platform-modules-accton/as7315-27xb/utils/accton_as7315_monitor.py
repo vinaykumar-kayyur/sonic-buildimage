@@ -99,13 +99,12 @@ class accton_as7315_monitor(object):
         for x in range(fan.get_idx_fan_start(), fan.get_num_fans()+1):
             fan_status = fan.get_fan_status(x)
             if fan_status is None:
-                self.llog.debug('INFO. SET new_perc to %d (FAN stauts is None. fan_num:%d)', max_duty, x)
+                self.llog.debug('SET new_perc to %d (FAN stauts is None. fan_num:%d)', max_duty, x)
                 return False
             if fan_status is False:             
-                self.llog.debug('INFO. SET new_perc to %d (FAN fault. fan_num:%d)', max_duty, x)
+                self.llog.debug('SET new_perc to %d (FAN fault. fan_num:%d)', max_duty, x)
                 fan.set_fan_duty_cycle(max_duty)
                 return True
-            #self.llog.debug('INFO. fan_status is True (fan_num:%d)', x)
  
         #Find if current duty matched any of define duty. 
 	#If not, set it to highest one.
@@ -124,16 +123,16 @@ class accton_as7315_monitor(object):
             y = len(fan_policy) - x -1 #checked from highest
             if get_temp > fan_policy[y][1] and get_temp < fan_policy[y][2] :
                 new_duty_cycle = fan_policy[y][0]
-                self.llog.debug('INFO. Sum of temp %d > %d , new_duty_cycle=%d', get_temp, fan_policy[y][1], new_duty_cycle)
+                self.llog.debug('Sum of temp %d > %d , new_duty_cycle=%d', get_temp, fan_policy[y][1], new_duty_cycle)
 
-        self.llog.debug('INFO. Final duty_cycle=%d', new_duty_cycle)
+        self.llog.debug('Final duty_cycle=%d', new_duty_cycle)
         if(new_duty_cycle != cur_duty_cycle):
             fan.set_fan_duty_cycle(new_duty_cycle)
         return True
 
 def sig_handler(signum, frame):
     fan = FanUtil()
-    self.llog.debug('INFO:Cause signal %d, set fan speed max.', signum)
+    logging.critical('Cause signal %d, set fan speed max.', signum)
     fan.set_fan_duty_cycle(DUTY_MAX)
     sys.exit(0)
 
