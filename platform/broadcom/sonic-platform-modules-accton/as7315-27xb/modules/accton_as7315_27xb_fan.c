@@ -39,7 +39,7 @@
 #define DRV_NAME "as5812_54x_fan"
 
 #define FAN_MAX_NUMBER                   5
-#define FAN_SPEED_TACH_TO_RPM_STEP       750
+#define FAN_SPEED_TACH_TO_RPM_STEP       175
 #define FAN_SPEED_PWM_STEPS              31
 #define FAN_DUTY_CYCLE_MIN               0   /* 10% ??*/
 #define FAN_DUTY_CYCLE_MAX               100  /* 100% */
@@ -300,11 +300,11 @@ static ssize_t show_byte(struct device *dev,
 
 static u32 reg_val_to_duty_cycle(u8 reg_val)
 {
-    return ((u32)(reg_val+1) * 312 + 88)/ 100;
+    return ((u32)(reg_val+1) * 156 + 88) / 100;
 }
 static u8 duty_cycle_to_reg_val(u8 duty_cycle)
 {
-    return ((u32)duty_cycle * 100 / 311) - 1;
+    return ((u32)duty_cycle * 100 / 155) - 1;
 }
 
 static ssize_t show_pwm(struct device *dev,
