@@ -103,6 +103,14 @@ def pfx_filter(value):
         table[key] = val
     return table
 
+def is_intf_exists(value):
+    if not value:
+        return False
+    link_state = '/sys/class/net/'+value+'/operstate'
+    if os.path.isfile(link_state):
+        return True
+    return False
+
 class FormatConverter:
     """Convert config DB based schema to legacy minigraph based schema for backward capability.
 We will move to DB schema and remove this class when the config templates are modified.
@@ -247,6 +255,7 @@ def main():
 
         env = jinja2.Environment(loader=loader, trim_blocks=True)
         env.filters['sort_by_port_index'] = sort_by_port_index
+        env.filters['is_intf_exists'] = is_intf_exists
         env.filters['ipv4'] = is_ipv4
         env.filters['ipv6'] = is_ipv6
         env.filters['unique_name'] = unique_name
