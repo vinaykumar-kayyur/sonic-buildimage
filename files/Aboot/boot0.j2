@@ -165,7 +165,7 @@ extract_image() {
 
     info "Extracting $dockerfs from swi"
     ## Unpacking dockerfs delayed
-    ## 1. when disk is vfat as it does not support symbol link
+    ## 1. when disk is vfat as it does not support symbolic link
     ## 2. when disk is small, expand it into ramfs during initrd
     if [ "$rootfs_type" != "vfat" -a x"$docker_inram" != x"on" ]; then
         mkdir -p "$image_path/{{ DOCKERFS_DIR }}"
@@ -179,7 +179,7 @@ extract_image() {
     else
         ## save dockerfs archive in the image directory
         unzip -oq "$swipath" "$dockerfs" -d "$image_path"
-        info "Unpacking $dockerfs delayed to initrd because $target_path is $rootfs_type"
+        info "Unpacking $dockerfs delayed to initrd because $target_path is $rootfs_type or docker_inram is on"
     fi
 
     ## remove installer since it's not needed anymore
