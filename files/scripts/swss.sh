@@ -131,7 +131,13 @@ start() {
 
 wait() {
     start_peer_and_dependent_services
-    /usr/bin/${SERVICE}.sh wait
+
+    # Allow peer service some time to start up
+    sleep 5
+
+    # NOTE: This assumes Docker containers share the same names as their
+    # corresponding services
+    /usr/bin/docker-wait-any ${SERVICE} ${PEER}
 }
 
 stop() {
