@@ -1772,15 +1772,15 @@ static ssize_t show_ppid(struct device *dev,
         case 4:
             reg = FAN_5_SERIAL_CODE;
             break;
-		case 10:
-			reg = PSU_1_COUNTRY_CODE;
-			break;
-		case 11:
-			reg = PSU_2_COUNTRY_CODE;
-			break;
-		default:
-			return ret;
-	}
+        case 10:
+            reg = PSU_1_COUNTRY_CODE;
+            break;
+        case 11:
+            reg = PSU_2_COUNTRY_CODE;
+            break;
+        default:
+            return ret;
+}
 
 	// Get Country Code
 	for( i = 0; i < EEPROM_COUNTRY_CODE_SIZE; i++) {
@@ -2021,7 +2021,7 @@ static const struct attribute_group *smf_groups[] = {
         &smf_vsen_group,
         &smf_curr_group,
         &smf_tcpu_group,
-		&smf_dell_group,
+        &smf_dell_group,
         NULL
 };
 
