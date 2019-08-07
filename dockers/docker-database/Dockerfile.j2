@@ -45,5 +45,6 @@ COPY ["supervisord_database.conf.j2", "/usr/share/sonic/templates/"]
 COPY ["start.sh", "/usr/local/bin/"]
 COPY ["create_single_redis_config.sh", "/usr/local/bin/"]
 COPY ["create_all_redis_config", "/usr/local/bin/"]
+COPY ["database_config.json", "/usr/share/sonic/config/"]
 
 ENTRYPOINT ["/usr/bin/supervisord"]

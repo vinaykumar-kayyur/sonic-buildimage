@@ -2,7 +2,7 @@
 import json
 import os
 
-database_config_file = "/etc/sonic/database_config.json"
+database_config_file = "/var/run/redis/database_config.json"
 
 data = {}
 if os.path.isfile(database_config_file):
