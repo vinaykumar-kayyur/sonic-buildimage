@@ -126,10 +126,6 @@ class device_monitor(object):
           
     def get_state_from_fan_policy(self, temp, policy):
         state=0
-         
-        #if temp >= 75000:
-        #    state=LEVEL_TEMP_CRITICAL
-        #    return state
         logging.debug('temp=%d', temp)
         for i in range(0, len(policy)):
             #logging.debug('policy[%d][0]=%d, policy[%d][1]=%d', i,policy[i][0],i, policy[i][1])
@@ -190,7 +186,6 @@ class device_monitor(object):
             temp3 = thermal._get_thermal_val(3)
             temp4 = thermal._get_thermal_val(4)
             temp5 = thermal._get_thermal_val(5)
-            #temp6 = thermal._get_thermal_val(6)
             temp6=0
         else:
             temp1 = test_temp_list[0]
@@ -198,7 +193,6 @@ class device_monitor(object):
             temp3 = test_temp_list[2]
             temp4 = test_temp_list[3]
             temp5 = test_temp_list[4]
-            #temp6 = test_temp_list[5]
             temp6=0
             fan_fail=0
        
@@ -232,14 +226,10 @@ class device_monitor(object):
                     fan.set_fan_duty_cycle(new_pwm)
                     break
             else:
-                fan_fail=0
+                fan_fail=0        
+       
+        new_state = fan_policy_state       
         
-        #if fan_policy_state == ori_state:            
-        #    return True 
-        #else:
-        new_state = fan_policy_state
-        
-        #logging.warning('Temperature high alarm testing')       
         if ori_state==LEVEL_FAN_DEF:            
            if new_state==LEVEL_TEMP_HIGH:
                if alarm_state==0:
