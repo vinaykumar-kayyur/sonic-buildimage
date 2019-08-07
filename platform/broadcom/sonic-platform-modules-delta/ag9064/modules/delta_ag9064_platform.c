@@ -863,10 +863,9 @@ static int __init swpld_mux_probe(struct platform_device *pdev)
 
 add_adapter_failed:
     i2c_mux_del_adapters(muxc);
-alloc_failed2:
-    kfree(mux);
 alloc_failed:
     i2c_put_adapter(parent);
+    kfree(mux);
 
     return ret;
 }
@@ -961,7 +960,6 @@ static ssize_t delta_bin_attr_read(struct file *filp, struct kobject *kobj, stru
 {
     struct delta_bin_attribute *delta_attr = to_delta_attr(attr);
     char attr_path[100];
-    int test;
 
     dni_klock();
 
@@ -1032,7 +1030,7 @@ static ssize_t delta_bin_attr_read(struct file *filp, struct kobject *kobj, stru
         case EEPROM_SFP_63:
         case EEPROM_SFP_64:
             sprintf(attr_path, "/sys/bus/i2c/devices/%d-0050/eeprom", delta_attr->index + EEPROM_MASK);
-            if (access_user_space(attr_path, eeprom_data, EEPROM_SIZE, 0, ATTR_R) < 0) {
+            if (access_user_space(attr_path, eeprom_data, EEPROM_SIZE, off, ATTR_R) < 0) {
                     goto ACCESS_ERROR;
             }
             count = (count <= EEPROM_SIZE) ? count : EEPROM_SIZE;
@@ -1123,7 +1121,7 @@ static ssize_t delta_bin_attr_write(struct file *filp, struct kobject *kobj, str
         case EEPROM_SFP_63:
         case EEPROM_SFP_64:
             sprintf(attr_path, "/sys/bus/i2c/devices/%d-0050/eeprom", delta_attr->index + EEPROM_MASK);
-            if (access_user_space(attr_path, buf, count, 0, ATTR_W) < 0) {
+            if (access_user_space(attr_path, buf, count, off, ATTR_W) < 0) {
                 goto ACCESS_ERROR;
             }
             break;

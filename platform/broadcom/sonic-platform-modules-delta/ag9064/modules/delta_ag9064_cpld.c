@@ -616,7 +616,6 @@ static ssize_t psu_scan(struct device *dev, struct device_attribute *dev_attr, c
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(dev_attr);
     int ret;
-    u64 data = 0;
     uint8_t cmd_data[2]={0};
     uint8_t set_cmd;
     int cmd_data_len;
