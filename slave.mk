@@ -81,12 +81,22 @@ list :
 ## Include other rules
 ###############################################################################
 
+include $(RULES_PATH)/config
+
 ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
 endif
 
 ifeq ($(SONIC_ENABLE_SYSTEM_TELEMETRY),y)
 ENABLE_SYSTEM_TELEMETRY = y
+endif
+
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
+    # Workaround: Force disable Telmetry for ARM, will be removed after fixing issue
+    # Issue: qemu crashes when it uses "go get url"
+    # Qemu Support: https://bugs.launchpad.net/qemu/+bug/1838946
+    # Golang Support: https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/golang-nuts/1txPOGa4aGc
+ENABLE_SYSTEM_TELEMETRY = N
 endif
 
 ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
@@ -97,7 +107,6 @@ ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
 endif
 
-include $(RULES_PATH)/config
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
 ifneq ($(CONFIGURED_PLATFORM), undefined)
@@ -603,7 +612,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
-        $(addprefix $(STRETCH_FILES_PATH)/,$(IXGBE_DRIVER)) \
+	$(addprefix $(STRETCH_FILES_PATH)/, $(if $(filter $(CONFIGURED_ARCH),amd64), $(IXGBE_DRIVER))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
