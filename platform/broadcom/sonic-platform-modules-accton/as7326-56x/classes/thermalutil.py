@@ -120,23 +120,13 @@ class ThermalUtil(object):
                 return 0  
             file_str = check_file.read()
             search_str="average current temperature is"
-            #print "file_str.find=%s"%file_str.find(search_str)
             str_len = len(search_str)
             idx=file_str.find(search_str)
             if idx==-1:
-                #print "bcm sdk is not ready ,retrun 0"
+                logging.debug('bcm sdk is not ready ,retrun 0')
                 return 0
-            else:               
-                #print "file_str[idx]=%c"%file_str[idx+str_len+1]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2+1]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2+2]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2+3]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2+4]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2+5]
-                #print "file_str[idx]=%c"%file_str[idx+str_len+2+6]
+            else:
                 temp_str=file_str[idx+str_len+1] + file_str[idx+str_len+2] + file_str[idx+str_len+3]+file_str[idx+str_len+4] +file_str[idx+str_len+5]
-                #print "bcm temp_str=%s"%temp_str
                 check_file.close()                 
                 return float(temp_str)*1000
 
@@ -165,17 +155,12 @@ class ThermalUtil(object):
 
 def main():
     thermal = ThermalUtil()
-    print "termal1=%d" %thermal._get_thermal_val(1)
-    print "termal2=%d" %thermal._get_thermal_val(2)
-    print "termal3=%d" %thermal._get_thermal_val(3)
-    print "termal4=%d" %thermal._get_thermal_val(4)
-    print "termal5=%d" %thermal._get_thermal_val(5)
-    print "termal6=%d" %thermal._get_thermal_val(6)
-#
-#    print 'get_size_node_map : %d' % thermal.get_size_node_map()
-#    print 'get_size_path_map : %d' % thermal.get_size_path_map()
-#    for x in range(thermal.get_idx_thermal_start(), thermal.get_num_thermals()+1):
-#        print thermal.get_thermal_to_device_path(x)
-#
+    logging.debug('thermal1=%d' ,thermal._get_thermal_val(1))
+    logging.debug('thermal2=%d' ,thermal._get_thermal_val(2))
+    logging.debug('thermal3=%d' ,thermal._get_thermal_val(3))
+    logging.debug('thermal4=%d' ,thermal._get_thermal_val(4))
+    logging.debug('thermal5=%d' ,thermal._get_thermal_val(5))
+    logging.debug('thermal6=%d' ,thermal._get_thermal_val(6))
+
 if __name__ == '__main__':
     main()
