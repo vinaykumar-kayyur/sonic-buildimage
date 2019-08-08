@@ -2,6 +2,7 @@
 
 SERVICE="swss"
 PEER="syncd"
+DEPENDENT="teamd"
 DEBUGLOG="/tmp/swss-syncd-debug.log"
 LOCKFILE="/tmp/swss-syncd-lock"
 
@@ -83,6 +84,9 @@ startPeerService() {
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl start ${PEER}
+        for dep in ${DEPENDENT}; do
+            /bin/systemctl start ${dep}
+        done
     fi
 }
 
@@ -138,6 +142,9 @@ stop() {
     # if warm start enabled or peer lock exists, don't stop peer service docker
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl stop ${PEER}
+        for dep in ${DEPENDENT}; do
+            /bin/systemctl stop ${dep}
+        done
     fi
 }
 
