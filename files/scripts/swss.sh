@@ -79,13 +79,23 @@ function clean_up_tables()
     end" 0
 }
 
-startPeerService() {
+startPeerAndDependentService() {
     check_warm_boot
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl start ${PEER}
         for dep in ${DEPENDENT}; do
             /bin/systemctl start ${dep}
+        done
+    fi
+}
+
+stopPeerAndDependentService() {
+    # if warm start enabled or peer lock exists, don't stop peer service docker
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        /bin/systemctl stop ${PEER}
+        for dep in ${DEPENDENT}; do
+            /bin/systemctl stop ${dep}
         done
     fi
 }
@@ -120,7 +130,7 @@ start() {
 }
 
 wait() {
-    startPeerService
+    startPeerAndDependentService
     /usr/bin/${SERVICE}.sh wait
 }
 
@@ -139,13 +149,7 @@ stop() {
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
 
-    # if warm start enabled or peer lock exists, don't stop peer service docker
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /bin/systemctl stop ${PEER}
-        for dep in ${DEPENDENT}; do
-            /bin/systemctl stop ${dep}
-        done
-    fi
+    stopPeerAndDependentService
 }
 
 case "$1" in
