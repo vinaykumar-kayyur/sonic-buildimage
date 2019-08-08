@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2018 Pegatron, Inc.
+# Copyright (C) 2019 Pegatron, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,251 +15,44 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, getopt
-import logging
-import os
-import commands
-import threading
-import time
+from pegaProcess import common
 
-DEBUG = False
-
-SFP_MAX_NUM = 48
-TOTAL_PORT_NUM = 54
-CPLDA_SFP_NUM = 24
-CPLDB_SFP_NUM = 12
-CPLDC_SFP_NUM = 18
-
-kernel_module = ['i2c_dev', 'i2c-mux-pca954x force_deselect_on_exit=1', 'at24', 'pegatron_fn_6254_dn_f_cpld', 'pegatron_hwmon_mcu', 'pegatron_fn_6254_dn_f_psu', 'pegatron_fn_6254_dn_f_sfp', 'pegatron_fn_6254_dn_f_ixgbe']
-moduleID = ['pca9544', 'pca9544', 'fn_6254_dn_f_psu', 'fn_6254_dn_f_psu', '24c02', 'pega_hwmon_mcu', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_cpld', 'fn_6254_dn_f_sfpA', 'fn_6254_dn_f_sfpB', 'fn_6254_dn_f_sfpC']
-i2c_check_node = ['i2c-0', 'i2c-1']
-uninstall_check_node = ['-0072', '-0073']
-device_address = ['0x72', '0x73', '0x58', '0x59', '0x54', '0x70', '0x74', '0x75', '0x76', '0x50', '0x50', '0x50']
-device_node= ['i2c-2', 'i2c-6', 'i2c-2', 'i2c-3', 'i2c-4', 'i2c-5', 'i2c-6', 'i2c-7', 'i2c-8', 'i2c-6', 'i2c-7', 'i2c-8']
-
-i2c_prefix = '/sys/bus/i2c/devices/'
-cpld_bus = ['6-0074', '7-0075', '8-0076']
-led_nodes = ['sys_led', 'pwr_led', 'loc_led', 'fan_led', "cpld_allled_ctrl", "serial_led_enable"]
-
-def dbg_print(string):
-	if DEBUG == True:
-		print string    
-	return
-
-def do_cmd(cmd, show):
-	logging.info('Run :' + cmd)  
-	status, output = commands.getstatusoutput(cmd)    
-	dbg_print(cmd + "with result:" + str(status))
-	dbg_print("output:" + output)    
-	if status:
-		logging.info('Failed :' + cmd)
-		if show:
-			print('Failed :' + cmd)
-	return  status, output
-
-def install_driver():
-	status, output = do_cmd("depmod -a", 1)
+#message handler
+def doCommand(cmd):
+	"""
+	Command:
+		global          : Set global config
+		device          : Set device config
+	"""
+	if len(cmd[0:]) < 1 or cmd[0] not in common.CMD_TYPE:
+		print doCommand.__doc__
+		return
+	msg = ' '.join(str(data) for data in cmd)
+	result = common.doSend(msg, common.SOCKET_PORT)
+	print result
 	
-	for i in range(0, len(kernel_module)):
-		status, output = do_cmd("modprobe " + kernel_module[i], 1)
-		if status:       
-			return status
-
-	return
-
-def check_device_position(num):  
-	for i in range(0, len(i2c_check_node)):
-		status, output = do_cmd("echo " + moduleID[num] + " " + device_address[num] + " > " + i2c_prefix + i2c_check_node[i] + "/new_device", 0)
-		status, output = do_cmd("ls " + i2c_prefix + device_node[num], 0)
-		device_node[num] = i2c_check_node[i]
-
-		if status:
-			status, output = do_cmd("echo " + device_address[num] + " > " + i2c_prefix + i2c_check_node[i] + "/delete_device", 0) 
-		else:
-			return
-
-	return
-
-def install_device():
-	for i in range(0, len(moduleID)):
-		if moduleID[i] == "pca9544":
-			check_device_position(i)
-		else:
-			status, output = do_cmd("echo " + moduleID[i] + " " + device_address[i] + " > " + i2c_prefix + device_node[i] + "/new_device", 1)
-
-	return 
-
-def check_driver():
-	for i in range(0, len(kernel_module)):
-		status, output = do_cmd("lsmod | grep " + kernel_module[i], 0)
-		if status:
-			status, output = do_cmd("modprobe " + kernel_module[i], 1)
-
-	return
-
-def do_install():
-	status, output = do_cmd("depmod -a", 1)
-
-	check_driver()
-	install_device()
-	return
-
-def do_uninstall():
-	for i in range(0, len(kernel_module)):
-	    status, output = do_cmd("modprobe -rq " + kernel_module[i], 0)
-
-	for i in range(0, len(moduleID)):
-            if moduleID[i] == "pca9544":
-                for node in range(0, len(i2c_check_node)):
-                    status, output = do_cmd("ls " + i2c_prefix + str(node) + uninstall_check_node[i], 0)
-                    if not status:
-                        status, output = do_cmd("echo " + device_address[i] + " > " + i2c_prefix + i2c_check_node[node] + "/delete_device", 0)
-
-            else:
-                status, output = do_cmd("echo " + device_address[i] + " > " + i2c_prefix + device_node[i] + "/delete_device", 0)
-
-	return
-
-led_command = {'sys_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
-		'pwr_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
-		'loc_led': {'on':'0', 'off':'1', 'blink':'2'},
-		'fan_led': {'green':'0', 'amber':'1', 'off':'2', 'blink_green':'3', 'blink_amber':'4'},
-		'cpld_allled_ctrl': {'off':'0', 'mix':'1', 'amber':'2', 'normal':'3'},
-		'serial_led_enable': {'disable':'0', 'enable':'1'}}
-
-def set_led(args):
-	"""
-	command:
-		sys_led   : set SYS led      [off | green | amber | blink_green | blink_amber]
-		pwr_led   : set PWR led      [off | green | amber | blink_green | blink_amber]
-		loc_led   : set LOCATOR led  [off | on | blink]
-		fan_led   : set FAN led      [off | green | amber | blink_green | blink_amber]
-	"""
-	if len(args) < 1:
-		print set_led.__doc__
-		sys.exit(0)
-
-	if args[0] not in led_command:
-		print set_led.__doc__
-		sys.exit(0)
-
-	for i in range(0,len(led_nodes)):
-		if args[0] == led_nodes[i]:
-			node = i2c_prefix + cpld_bus[1] + '/'+ led_nodes[i]
-
-	command = led_command[args[0]]
-	data = command[args[1]]
-
-	status, output = do_cmd("echo "+ str(data) + " > "+ node, 1)
-
-	return
-
-def set_device(args):
-	"""
-	command:
-		led     : set status led      
-	"""
-	
-	if len(args[0:]) < 1:
-                print set_device.__doc__
-                sys.exit(0)
-
-	if args[0] == 'led':
-		set_led(args[1:])
-	else:
-		print set_device.__doc__
-																		   
-	return
-
-device_init = {'led': [['led', 'sys_led', 'green'], ['led', 'pwr_led', 'green'], ['led', 'fan_led', 'green'], ['led', 'cpld_allled_ctrl', 'normal'], ['led', 'serial_led_enable', 'enable']]}
-
-def pega_init():
-	#set led
-	for i in range(0,len(device_init['led'])):
-		set_device(device_init['led'][i])
-
-	#set tx_disable
-	for x in range(0, SFP_MAX_NUM):
-		if x < CPLDB_SFP_NUM:
-			bus = cpld_bus[1]
-		elif x < CPLDB_SFP_NUM + CPLDA_SFP_NUM:
-			bus = cpld_bus[0]
-		else:
-			bus = cpld_bus[2]
-
-		nodes = i2c_prefix + bus + '/sfp' + str(x+1) + '_tx_disable'
-		dbg_print("SFP_TX_DISABLE NODES: " + nodes)
-		status, output = do_cmd("echo 0 > "+ nodes, 1)
-
-	#set QSFP reset to normal
-	for x in range(SFP_MAX_NUM, TOTAL_PORT_NUM):
-		nodes = i2c_prefix + cpld_bus[2] + '/sfp' + str(x+1) + '_reset'
-		dbg_print("SFP_RESET NODES: " + nodes)
-		status, output = do_cmd("echo 1 > "+ nodes, 1)
-	
-	#set QSFP I2c enable
-	for x in range(SFP_MAX_NUM, TOTAL_PORT_NUM):
-                nodes = i2c_prefix + cpld_bus[2] + '/sfp' + str(x+1) + '_modeseln'
-                dbg_print("SFP_MODSEL NODES: " + nodes)
-                status, output = do_cmd("echo 0 > "+ nodes, 1)
-	return
-
-def pega_cmd(args):
-	"""
-	command:
-		locate		: blink locate LED for searching
-	"""
-	
-	if len(args) < 1:
-		print pega_cmd.__doc__
-		sys.exit(0)
-
-	if args[0] == 'locate':
-		set_led(['loc_led', 'blink'])		
-		time.sleep(20)
-		set_led(['loc_led', 'off'])
-	else:
-		print pega_cmd.__doc__
-		sys.exit(0)
 	return
 
 def main():
 	"""
-	command:
-		install		: install drivers
-		uninstall	: uninstall drivers
-		set		: change board settings
-		cmd		: do command
-		debug		: show debug info [on/off]    
-	"""
+	Command:
+		install		: Install drivers
+		uninstall	: Uninstall drivers
+		cmd		: Commands
+	"""	
+	args = common.sys.argv[1:]
+
+	if len(args[0:]) < 1:
+                print main.__doc__
+                return
 	
-	if len(sys.argv[1:]) < 1:
-		print main.__doc__
-		sys.exit(0)
-
-	arg = sys.argv[1]
-	if arg == 'install':
-		do_install()
-		pega_init()
-	elif arg == 'uninstall':
-		do_uninstall()        
-	elif arg == 'set':
-		set_device(sys.argv[2:])                
-	elif arg == 'cmd':
-		pega_cmd(sys.argv[2:])
-	elif arg == 'debug':
-		if len(sys.argv[2:]) < 1:
-			print main.__doc__
-			sys.exit(0)
-		if sys.argv[2] == 'on':
-			DEBUG = True
-		else:
-			DEBUG = False
+	if args[0] == 'uninstall':
+		doCommand(['global', 'uninstall'])
+	elif args[0] == 'cmd':
+		doCommand(args[1:])
 	else:
-		print main.__doc__
-		sys.exit(0)
-
-	return
+		print main.__doc__		
+	common.sys.exit(0)
 
 if __name__ == "__main__":
 	main()

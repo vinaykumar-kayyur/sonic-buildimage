@@ -25,6 +25,7 @@ UTILS_DIR := utils
 SERVICE_DIR := service
 SCRIPTS_DIR := scripts
 CONF_DIR := conf
+PROCESS_DIR := pegaProcess
 
 %:
 	dh $@ --with systemd,python2,python3 --buildsystem=pybuild
@@ -35,6 +36,11 @@ clean:
 	dh_clean
 
 build:
+	# For fn-6254-dn-f ixgbe driver
+	git clone https://github.com/Peter5Lin/kernelDriver
+	git --git-dir=kernelDriver/.git/ --work-tree=kernelDriver am ../fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/0001-modify-Intel-ixgbe-driver-for-fn-6254-dn-f.patch
+	cp kernelDriver/* $(MOD_SRC_DIR)/fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/        
+	rm -rf kernelDriver
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
 	done)
@@ -57,14 +63,16 @@ binary-indep:
 
 	# Custom package commands
 	(for mod in $(MODULE_DIRS); do \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin; \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/usr/bin; \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /usr/local/bin; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /usr/local/bin/${PROCESS_DIR}; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /usr/bin; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /lib/systemd/system; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(MODULE_DIR)/*.ko debian/$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
 		cp $(MOD_SRC_DIR)/$${mod}/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service debian/$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SCRIPTS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/bin/; \
+		cp $(MOD_SRC_DIR)/$${mod}/${PROCESS_DIR}/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/${PROCESS_DIR}; \
 	done)
 
 	# For fn-6254-dn-f ixgbe driver

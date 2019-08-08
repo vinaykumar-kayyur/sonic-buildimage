@@ -4,8 +4,8 @@ Before=network.target
 DefaultDependencies=no
 
 [Service]
-Type=oneshot
-ExecStart=/usr/local/bin/pegatron_fn_6254_dn_f_util.py install
+Type=simple
+ExecStart=/usr/local/bin/pegaProcess/main.py install
 ExecStop=/usr/local/bin/pegatron_fn_6254_dn_f_util.py uninstall
 RemainAfterExit=yes
 
