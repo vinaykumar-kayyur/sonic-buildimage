@@ -65,16 +65,21 @@ def get_system_mac():
             if valid_mac_address(mac):
                 return mac
 
-        get_mac_cmd = "sudo decode-syseeprom -m"
+        hw_mac_entry_cmds = [ "sudo decode-syseeprom -m" ]
+    elif (version_info['asic_type'] == 'marvell'):
+        # Try valid mac in eeprom, else fetch it from eth0
+        hw_mac_entry_cmds = [ "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
     else:
-        get_mac_cmd = "ip link show eth0 | grep ether | awk '{print $2}'"
+        hw_mac_entry_cmds = [ "ip link show eth0 | grep ether | awk '{print $2}'" ]
 
-    proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (mac, err) = proc.communicate()
-    if err:
-        return None
-
-    mac = mac.strip()
+    for get_mac_cmd in hw_mac_entry_cmds:
+        proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (mac, err) = proc.communicate()
+        if err:
+            continue
+        mac = mac.strip()
+        if valid_mac_address(mac):
+            break
 
     if not valid_mac_address(mac):
         return None
