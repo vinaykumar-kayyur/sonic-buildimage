@@ -68,7 +68,10 @@ def get_system_mac():
         hw_mac_entry_cmds = [ "sudo decode-syseeprom -m" ]
     elif (version_info['asic_type'] == 'marvell'):
         # Try valid mac in eeprom, else fetch it from eth0
-        hw_mac_entry_cmds = [ "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
+        platform = get_platform_info(get_machine_info())
+        hwsku = get_machine_info()['onie_machine']
+        profile_cmd = 'cat /usr/share/sonic/device/' + platform +'/'+ hwsku +'/profile.ini | cut -f2 -d='
+        hw_mac_entry_cmds = [ profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
     else:
         hw_mac_entry_cmds = [ "ip link show eth0 | grep ether | awk '{print $2}'" ]
 
