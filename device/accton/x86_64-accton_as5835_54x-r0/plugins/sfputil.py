@@ -326,39 +326,61 @@ class SfpUtil(SfpUtilBase):
         rev = "".join(rev[::-1])
         return int(rev,16)
 
-    data = {'valid':0, 'last':0, 'present':0} 
-    def get_transceiver_change_event(self, timeout=2000):
-        now = time.time()
+    data = {'valid':0, 'present':0} 
+    def get_transceiver_change_event(self, timeout=0):
+
+        start_time = time.time()
         port_dict = {}
         port = 0
+        blocking = False
 
-        if timeout < 1000:
-            timeout = 1000
-        timeout = (timeout) / float(1000) # Convert to secs
-
-
-        if now < (self.data['last'] + timeout) and self.data['valid']:
-            return True, {}
-
-        reg_value = self._get_presence_bitmap
-        changed_ports = self.data['present'] ^ reg_value
-        if changed_ports:
-            for port in range (self.port_start, self.port_end+1):
-                # Mask off the bit corresponding to our port
-                mask = (1 << (port - 1))
-                if changed_ports & mask:
-
-                    if (reg_value & mask) == 0:
-                        port_dict[port] = SFP_STATUS_REMOVED
-                    else:
-                        port_dict[port] = SFP_STATUS_INSERTED
-
-            # Update cache 
-            self.data['present'] = reg_value
-            self.data['last'] = now
-            self.data['valid'] = 1
-            return True, port_dict
+        if timeout == 0:
+            blocking = True
+        elif timeout > 0:
+            timeout = timeout / float(1000) # Convert to secs
         else:
-            return True, {}
+            print "get_transceiver_change_event:Invalid timeout value", timeout
+            return False, {}
+
+        end_time = start_time + timeout
+        if start_time > end_time:
+            print 'get_transceiver_change_event:' \
+                       'time wrap / invalid timeout value', timeout
+
+            return False, {} # Time wrap or possibly incorrect timeout
+
+        while timeout >= 0:
+            # Check for OIR events and return updated port_dict
+
+            reg_value = self._get_presence_bitmap
+            changed_ports = self.data['present'] ^ reg_value
+            if changed_ports:
+                for port in range (self.port_start, self.port_end+1):
+                    # Mask off the bit corresponding to our port
+                    mask = (1 << (port - 1))
+                    if changed_ports & mask:
+
+                        if (reg_value & mask) == 0:
+                            port_dict[port] = SFP_STATUS_REMOVED
+                        else:
+                            port_dict[port] = SFP_STATUS_INSERTED
+
+                # Update cache 
+                self.data['present'] = reg_value
+                self.data['valid'] = 1
+                return True, port_dict
+
+            if blocking:
+                time.sleep(1)
+            else:
+                timeout = end_time - time.time()
+                if timeout >= 1:
+                    time.sleep(1) # We poll at 1 second granularity
+                else:
+                    if timeout > 0:
+                        time.sleep(timeout)
+                    return True, {}
+        print "get_transceiver_change_event: Should not reach here."
         return False, {}
+
 
