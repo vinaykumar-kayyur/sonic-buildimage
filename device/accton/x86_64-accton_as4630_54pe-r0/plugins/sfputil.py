@@ -182,7 +182,6 @@ class SfpUtil(SfpUtilBase):
                 # Mask off the bit corresponding to our port
                 mask = (1 << (port - self.port_start))
                 if changed_ports & mask:
-
                     if (reg_value & mask) == 0:
                         port_dict[port] = SFP_STATUS_REMOVED
                     else:
@@ -193,5 +192,5 @@ class SfpUtil(SfpUtilBase):
             return True, port_dict
         else:
             return True, {}
-
         return False, {}
+
