@@ -31,9 +31,16 @@ class Platform(PlatformBase):
         Test whether current process is running on the host or an docker
         return True for host and False for docker
         """
+        is_host = False
         try:
-            subprocess.Popen("docker")
-        except OSError, e:
-            return False
+            proc = subprocess.Popen("docker --version 2>/dev/null", stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+            stdout = proc.communicate()[0]
+            proc.wait()
+            result = stdout.rstrip('\n')
+            if result != '':
+                is_host = True
 
-        return True
+        except OSError, e:
+            pass
+
+        return is_host
