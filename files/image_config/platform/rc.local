@@ -325,11 +325,15 @@ if [ -f $FIRST_BOOT_FILE ]; then
         # Initialize the SONiC's grub config
         mv /host/grub.cfg /host/grub/grub.cfg
     fi
-    sed -i 's/[^M] quiet/ crashkernel=256M quiet/' /host/grub/grub.cfg
 
-    kdump-config unload
-    kdump-config symlinks `uname -r`
-    kdump-config load
+    if `dpkg -l kdump-tools > /dev/null 2>&1`;
+    then
+	sed -i 's/[^M] quiet/ crashkernel=256M quiet/' /host/grub/grub.cfg
+
+	kdump-config unload
+	kdump-config symlinks `uname -r`
+	kdump-config load
+    fi
 
     firsttime_exit
 fi

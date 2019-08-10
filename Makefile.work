@@ -161,6 +161,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
+                           SONIC_ENABLE_KDUMP=$(SONIC_ENABLE_KDUMP) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
