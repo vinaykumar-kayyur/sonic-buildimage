@@ -101,7 +101,7 @@ mknod =[
 
 # PSU-1
 'echo as5712_54x_psu1 0x38 > /sys/bus/i2c/devices/i2c-57/new_device',
-'echo ym2851  0x3c > /sys/bus/i2c/devices/i2c-57/new_device',
+'echo ym2851 0x3c > /sys/bus/i2c/devices/i2c-57/new_device',
 'echo as5712_54x_psu1 0x50 > /sys/bus/i2c/devices/i2c-57/new_device',
 
 # PSU-2
@@ -125,12 +125,12 @@ mknod2 =[
 
 # PSU-1
 'echo as5712_54x_psu1 0x38 > /sys/bus/i2c/devices/i2c-57/new_device',
-'echo cpr_4011_4mxx  0x3c > /sys/bus/i2c/devices/i2c-57/new_device',
+'echo ym2851  0x3c > /sys/bus/i2c/devices/i2c-57/new_device',
 'echo as5712_54x_psu1 0x50 > /sys/bus/i2c/devices/i2c-57/new_device',
 
 # PSU-2
 'echo as5712_54x_psu2 0x3b > /sys/bus/i2c/devices/i2c-58/new_device',
-'echo cpr_4011_4mxx 0x3f > /sys/bus/i2c/devices/i2c-58/new_device',
+'echo ym2851 0x3f > /sys/bus/i2c/devices/i2c-58/new_device',
 'echo as5712_54x_psu2 0x53 > /sys/bus/i2c/devices/i2c-58/new_device',
 
 'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-61/new_device',
@@ -255,7 +255,6 @@ kos = [
 'modprobe i2c_mux_pca954x force_deselect_on_exit=1',
 'modprobe optoe',
 'modprobe i2c-mux-accton_as5712_54x_cpld',
-'modprobe cpr_4011_4mxx',
 'modprobe ym2651y',
 'modprobe accton_as5712_54x_fan',
 'modprobe leds-accton_as5712_54x',
