@@ -8,12 +8,4 @@ autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 {%     endfor %}
-{% else %}
-[program:redis]
-command=/bin/bash -c "{ [[ -s /var/lib/redis/dump.rdb ]] || rm -f /var/lib/redis/dump.rdb; } && exec /usr/bin/redis-server /etc/redis/redis.conf"
-priority=2
-autostart=true
-autorestart=false
-stdout_logfile=syslog
-stderr_logfile=syslog
 {% endif %}

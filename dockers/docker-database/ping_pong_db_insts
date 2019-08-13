@@ -28,7 +28,3 @@ if 'INSTANCES' in data:
         port = data["INSTANCES"][inst]["port"]
         cmd = "redis-cli -p " + str(port) + " ping | grep -c PONG"
         ping_redis(cmd)
-# if nothing configured, there is a default redis server
-else:
-    cmd = "redis-cli -p 6379 ping | grep -c PONG"
-    ping_redis(cmd)
