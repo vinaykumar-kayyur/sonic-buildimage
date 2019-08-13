@@ -71,7 +71,7 @@ function postStartAction()
 {
 {%- if docker_container_name == "database" %}
     # Wait until redis starts
-    ping_pong_db_insts
+    /usr/bin/docker exec database ping_pong_db_insts
     if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast") && -f $WARM_DIR/dump.rdb ]]; then
         rm -f $WARM_DIR/dump.rdb
     else
@@ -160,11 +160,10 @@ start() {
 
 {%- if docker_container_name == "database" %}
     echo "Creating new {{docker_container_name}} container"
-    # database_config.json contains the information how to create database instances and distribute the database on instances
     # if database_config exists in old_config, use it; otherwise use the default one in new image
     if [ -f /etc/sonic/old_config/database_config.json ]; then
         echo "Use database_config.json from old system..."
-        cp /etc/sonic/old_config/database_config.json /etc/sonic/
+        mv /etc/sonic/old_config/database_config.json /etc/sonic/
     fi
 {%- else %}
     echo "Creating new {{docker_container_name}} container with HWSKU $HWSKU"

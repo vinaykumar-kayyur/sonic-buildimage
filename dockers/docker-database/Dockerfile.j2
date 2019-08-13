@@ -29,22 +29,13 @@ RUN apt-get clean -y                                  && \
              s/^# syslog-enabled no$/syslog-enabled no/; \
              s/^# unixsocket/unixsocket/;                \
              s/redis-server.sock/redis.sock/g;           \
-             s%pidfile .*%pidfile /var/run/redis/redis.pid%; \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/ \
             ' /etc/redis/redis.conf
 
-RUN sed -ri 's%DAEMON_ARGS=.*%DAEMON_ARGS=/etc/`basename ${0}`/`basename ${0}`.conf%;  \
-             s/NAME=.*/NAME=`basename ${0}`/;                                          \
-             s/DESC=.*/DESC=`basename ${0}`/;                                          \
-             s%PIDFILE=.*%PIDFILE=$RUNDIR/`basename ${0}`.pid%;                        \
-             ' /etc/init.d/redis-server
-
-RUN cp /etc/init.d/redis-server /etc/init.d/redis
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["supervisord_database.conf.j2", "/usr/share/sonic/templates/"]
 COPY ["start.sh", "/usr/local/bin/"]
-COPY ["create_single_redis_config.sh", "/usr/local/bin/"]
-COPY ["create_all_redis_config", "/usr/local/bin/"]
-COPY ["database_config.json", "/usr/share/sonic/config/"]
+COPY ["ping_pong_db_insts", "/usr/local/bin/"]
+COPY ["database_config.json", "/etc/default/sonic-db/"]
 
 ENTRYPOINT ["/usr/bin/supervisord"]
