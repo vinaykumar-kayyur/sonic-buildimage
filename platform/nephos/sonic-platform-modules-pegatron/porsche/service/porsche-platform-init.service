@@ -4,8 +4,8 @@ After=local-fs.target
 DefaultDependencies=no
 
 [Service]
-Type=oneshot
-ExecStart=/usr/local/bin/pegatron_porsche_util.py install
+Type=simple
+ExecStart=/usr/local/bin/pegaProcess/main.py install
 ExecStop=/usr/local/bin/pegatron_porsche_util.py uninstall
 RemainAfterExit=yes
 
