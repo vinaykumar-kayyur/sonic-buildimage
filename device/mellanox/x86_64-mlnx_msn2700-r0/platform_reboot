@@ -4,6 +4,7 @@ declare -r EXIT_SUCCESS="0"
 declare -r EXIT_ERROR="1"
 
 declare -r FW_UPGRADE_SCRIPT="/usr/bin/mlnx-fw-upgrade.sh"
+declare -r SYSFS_PWR_CYCLE="/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon1/pwr_cycle"
 
 FORCE_REBOOT="no"
 
@@ -31,6 +32,6 @@ if [[ "${EXIT_CODE}" != "${EXIT_SUCCESS}" ]]; then
     fi
 fi
 
-echo 1 > /bsp/system/pwr_cycle
+echo 1 > $SYSFS_PWR_CYCLE
 sleep 3
-echo 0 > /bsp/system/pwr_cycle
+echo 0 > $SYSFS_PWR_CYCLE
