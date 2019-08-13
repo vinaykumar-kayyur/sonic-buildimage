@@ -415,7 +415,7 @@ class Sfp(SfpBase):
 
         # content is a string containing the hex
         # representation of the register
-        reg_value = int(content, 16)
+        reg_value = int(reg_hex, 16)
 
         # Mask off the bit corresponding to our port
         mask = (1 << self.sfp_ctrl_idx)
