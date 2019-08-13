@@ -60,7 +60,7 @@ class BGPConfigManager(object):
 
     def __bgp_handler(self, key, op, data):
         self.bgp_message.put((key, op, data))
-        # If ASN doesn't be set, we just cache this message until the ASN is set.
+        # If ASN is not set, we just cache this message until the ASN is set.
         if self.bgp_asn == None:
             return
         self.__update_bgp()
