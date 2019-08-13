@@ -132,7 +132,6 @@ def doInstall():
 	status, output = common.doBash("depmod -a")
 	checkDriver()
 	installDevice()
-	status, output = common.doBash("systemctl status flnet_s8930_54n-platform-main.service | grep inactive")
 	return
 
 def setupThreads():
