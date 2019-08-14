@@ -6,13 +6,12 @@ import time
 
 def ping_redis(cmd):
     while True:
-        output = '0'
+        output = ''
         try:
             output = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as e:
             print ("ping redis failed")
-
-        if output != '0':
+        if 'PONG' in output:
             break
         time.sleep(1)
 
@@ -26,5 +25,5 @@ if os.path.isfile(database_config_file):
 if 'INSTANCES' in data:
     for inst in data["INSTANCES"]:
         port = data["INSTANCES"][inst]["port"]
-        cmd = "redis-cli -p " + str(port) + " ping | grep -c PONG"
+        cmd = "redis-cli -p " + str(port) + " ping"
         ping_redis(cmd)
