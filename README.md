@@ -72,6 +72,11 @@ To build SONiC installer image and docker images, run the following commands:
     # (Optional) Checkout a specific branch. By default, it uses master branch
     git checkout [branch_name]
 
+    # Use docker command without sudo
+      1. Add current user to the docker group
+	 sudo gpasswd -a ${USER} docker
+      2. Log out and log back in ?so that your group membership is re-evaluated .	
+
     # Execute make init once after cloning the repo, or after fetching remote repo with submodule updates
     make init
 
