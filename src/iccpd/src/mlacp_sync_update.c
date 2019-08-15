@@ -101,7 +101,7 @@ int mlacp_fsm_update_Agg_conf(struct CSM* csm, mLACPAggConfigTLV* portconf)
     {
         pif = peer_if_create(csm, ntohs(portconf->agg_id), IF_T_PORT_CHANNEL);
         if (pif == NULL)
-            return -1;
+            return MCLAG_ERROR;
 
         new_create = 1;
     }
@@ -128,7 +128,7 @@ int mlacp_fsm_update_Aggport_state(struct CSM* csm, mLACPAggPortStateTLV* tlv)
     uint8_t po_active;
 
     if (csm == NULL || tlv == NULL)
-        return -255;
+        return MCLAG_ERROR;
     ICCPD_LOG_DEBUG(__FUNCTION__, "  po id %d  state %d  ", ntohs(tlv->agg_id), tlv->agg_state);
 
     po_active = (tlv->agg_state == PORT_STATE_UP);
@@ -158,26 +158,24 @@ int mlacp_fsm_update_Aggport_state(struct CSM* csm, mLACPAggPortStateTLV* tlv)
 /*****************************************
 * Recv from peer, MAC-Info Update
 * ***************************************/
-int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV* tlv)
+int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *MacData)
 {
+
     struct Msg* msg = NULL;
     struct MACMsg *mac_msg = NULL, mac_data;
     struct LocalInterface* local_if = NULL;
     uint8_t from_mclag_intf = 0;/*0: orphan port, 1: MCLAG port*/
 
-    if (!csm || !tlv)
-        return -255;
-
 #if 1
     ICCPD_LOG_INFO(__FUNCTION__,
                    "Received MAC Info, itf=[%s] vid[%d] MAC[%s]  type %d ",
-                   tlv->ifname, ntohs(tlv->vid), tlv->mac_str, tlv->type);
+                   MacData->ifname, ntohs(MacData->vid), MacData->mac_str, MacData->type);
 #endif
 
     /*Find the interface in MCLAG interface list*/
     LIST_FOREACH(local_if, &(MLACP(csm).lif_list), mlacp_next)
     {
-        if (local_if->type == IF_T_PORT_CHANNEL && strcmp(local_if->name, tlv->ifname) == 0)
+        if (local_if->type == IF_T_PORT_CHANNEL && strcmp(local_if->name, MacData->ifname) == 0)
         {
             from_mclag_intf = 1;
             break;
@@ -190,9 +188,9 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
         mac_msg = (struct MACMsg*)msg->buf;
 
         /*Same MAC is exist in local switch, this may be mac move*/
-        if (strcmp(mac_msg->mac_str, tlv->mac_str) == 0 && mac_msg->vid == ntohs(tlv->vid))
+        if (strcmp(mac_msg->mac_str, MacData->mac_str) == 0 && mac_msg->vid == ntohs(MacData->vid))
         {
-            if (tlv->type == MAC_SYNC_ADD)
+            if (MacData->type == MAC_SYNC_ADD)
             {
                 mac_msg->age_flag &= ~MAC_AGE_PEER;
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Recv ADD, Remove peer age flag:%d ifname  %s, add %s vlan-id %d, op_type %d",
@@ -200,12 +198,12 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
 
                 /*mac_msg->fdb_type = tlv->fdb_type;*/
                 /*The port ifname is different to the local item*/
-                if (strcmp(mac_msg->ifname, tlv->ifname) != 0 || strcmp(mac_msg->origin_ifname, tlv->ifname) != 0)
+                if (strcmp(mac_msg->ifname, MacData->ifname) != 0 || strcmp(mac_msg->origin_ifname, MacData->ifname) != 0)
                 {
                     if (mac_msg->fdb_type != MAC_TYPE_STATIC)
                     {
                         /*Update local item*/
-                        memcpy(&mac_msg->origin_ifname, tlv->ifname, MAX_L_PORT_NAME);
+                        memcpy(&mac_msg->origin_ifname, MacData->ifname, MAX_L_PORT_NAME);
                     }
 
                     /*If the MAC is learned from orphan port, or from MCLAG port but the local port is down*/
@@ -240,7 +238,7 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
                             del_mac_from_chip(mac_msg);
 
                             /*Update local item*/
-                            memcpy(&mac_msg->ifname, tlv->ifname, MAX_L_PORT_NAME);
+                            memcpy(&mac_msg->ifname, MacData->ifname, MAX_L_PORT_NAME);
 
                             /*if orphan port mac but no peerlink, don't keep this mac*/
                             if (from_mclag_intf == 0)
@@ -255,7 +253,7 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
                     else
                     {
                         /*Update local item*/
-                        memcpy(&mac_msg->ifname, tlv->ifname, MAX_L_PORT_NAME);
+                        memcpy(&mac_msg->ifname, MacData->ifname, MAX_L_PORT_NAME);
 
                         /*from MCLAG port and the local port is up, add mac to ASIC to update port*/
                         add_mac_to_chip(mac_msg, MAC_TYPE_DYNAMIC);
@@ -288,7 +286,7 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
     }
 
     /* delete/add MAC list*/
-    if (msg && tlv->type == MAC_SYNC_DEL)
+    if (msg && MacData->type == MAC_SYNC_DEL)
     {
         mac_msg->age_flag |= MAC_AGE_PEER;
         ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %d   ifname %s, add %s vlan-id %d, op_type %d",
@@ -309,14 +307,14 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
             return 0;
         }
     }
-    else if (!msg && tlv->type == MAC_SYNC_ADD)
+    else if (!msg && MacData->type == MAC_SYNC_ADD)
     {
         mac_msg = (struct MACMsg*)&mac_data;
         mac_msg->fdb_type = MAC_TYPE_DYNAMIC;
-        mac_msg->vid = ntohs(tlv->vid);
-        sprintf(mac_msg->mac_str, "%s", tlv->mac_str);
-        sprintf(mac_msg->ifname, "%s", tlv->ifname);
-        sprintf(mac_msg->origin_ifname, "%s", tlv->ifname);
+        mac_msg->vid = ntohs(MacData->vid);
+        sprintf(mac_msg->mac_str, "%s", MacData->mac_str);
+        sprintf(mac_msg->ifname, "%s", MacData->ifname);
+        sprintf(mac_msg->origin_ifname, "%s", MacData->ifname);
         mac_msg->age_flag = 0;
 
         /*If the MAC is learned from orphan port, or from MCLAG port but the local port is down*/
@@ -327,8 +325,8 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
 
             if (strlen(csm->peer_itf_name) == 0)
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "orphan port or portchannel is down, but peer-link is not configured: ifname %s, add %s vlan-id %d, op_type %d",
-                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "orphan port %d or portchannel is down, but peer-link is not configured: ifname %s, add %s vlan-id %d, op_type %d",
+                                from_mclag_intf,  mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
 
                 /*if orphan port mac but no peerlink, don't keep this mac*/
                 if (from_mclag_intf == 0)
@@ -378,6 +376,22 @@ int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV*
     return 0;
 }
 
+int mlacp_fsm_update_mac_info_from_peer(struct CSM* csm, struct mLACPMACInfoTLV* tlv)
+{
+    int count = 0;
+    int i;
+
+    if (!csm || !tlv)
+        return MCLAG_ERROR;
+    count = ntohs(tlv->num_of_entry);
+    ICCPD_LOG_INFO(__FUNCTION__, "Received MAC Info count  %d ", count );
+
+    for (i = 0; i < count; i++)
+    {
+        mlacp_fsm_update_mac_entry_from_peer(csm, &(tlv->MacEntry[i]));
+    }
+}
+
 /*****************************************
  * Tool : Add ARP Info into ARP list
  *
@@ -407,7 +421,7 @@ void mlacp_enqueue_arp(struct CSM* csm, struct Msg* msg)
 /*****************************************
 * ARP-Info Update
 * ***************************************/
-int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
+int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
 {
     struct Msg* msg = NULL;
     struct ARPMsg *arp_msg = NULL, arp_data;
@@ -417,23 +431,23 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
     int set_arp_flag = 0;
     char mac_str[18] = "";
 
-    if (!csm || !tlv)
-        return -255;
+    if (!csm || !arp_entry)
+        return MCLAG_ERROR;
 
     #if 1
     ICCPD_LOG_INFO(__FUNCTION__,
                    "%s: Received ARP Info,"
                    "itf=[%s] ARP IP[%s],MAC[%02x:%02x:%02x:%02x:%02x:%02x]",
                    __FUNCTION__,
-                   tlv->ifname, show_ip_str(tlv->ipv4_addr),
-                   tlv->mac_addr[0], tlv->mac_addr[1], tlv->mac_addr[2],
-                   tlv->mac_addr[3], tlv->mac_addr[4], tlv->mac_addr[5]);
+                   arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr),
+                   arp_entry->mac_addr[0], arp_entry->mac_addr[1], arp_entry->mac_addr[2],
+                   arp_entry->mac_addr[3], arp_entry->mac_addr[4], arp_entry->mac_addr[5]);
     #endif
 
-    sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", tlv->mac_addr[0], tlv->mac_addr[1], tlv->mac_addr[2],
-            tlv->mac_addr[3], tlv->mac_addr[4], tlv->mac_addr[5]);
+    sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", arp_entry->mac_addr[0], arp_entry->mac_addr[1], arp_entry->mac_addr[2],
+            arp_entry->mac_addr[3], arp_entry->mac_addr[4], arp_entry->mac_addr[5]);
 
-    if (strncmp(tlv->ifname, "Vlan", 4) == 0)
+    if (strncmp(arp_entry->ifname, "Vlan", 4) == 0)
     {
         peer_link_if = local_if_find_by_name(csm->peer_itf_name);
 
@@ -444,7 +458,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
             {
                 if (!vlan_id_list->vlan_itf)
                     continue;
-                if (strcmp(vlan_id_list->vlan_itf->name, tlv->ifname) != 0)
+                if (strcmp(vlan_id_list->vlan_itf->name, arp_entry->ifname) != 0)
                     continue;
                 if (!local_if_is_l3_mode(vlan_id_list->vlan_itf))
                     continue;
@@ -475,7 +489,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
                     {
                         if (!vlan_id_list->vlan_itf)
                             continue;
-                        if (strcmp(vlan_id_list->vlan_itf->name, tlv->ifname) != 0)
+                        if (strcmp(vlan_id_list->vlan_itf->name, arp_entry->ifname) != 0)
                             continue;
                         if (!local_if_is_l3_mode(vlan_id_list->vlan_itf))
                             continue;
@@ -497,7 +511,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
                 else
                 {
                     /* Is the ARP belong to a L3 mode MLAG itf?*/
-                    if (strcmp(local_if->name, tlv->ifname) == 0)
+                    if (strcmp(local_if->name, arp_entry->ifname) == 0)
                     {
                         ICCPD_LOG_DEBUG(__FUNCTION__,
                                         "%s:  ==> Find ARP itf on L3 port-channel, %s",
@@ -522,27 +536,27 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
     /* set dynamic ARP*/
     if (set_arp_flag == 1)
     {
-        if (tlv->type == ARP_SYNC_ADD)
+        if (arp_entry->op_type == ARP_SYNC_ADD)
         {
-            if (mlacp_fsm_arp_set(tlv->ifname, ntohl(tlv->ipv4_addr), mac_str) < 0)
+            if (mlacp_fsm_arp_set(arp_entry->ifname, ntohl(arp_entry->ipv4_addr), mac_str) < 0)
             {
                 ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP set for %s %s %s",
-                                __FUNCTION__, tlv->ifname, show_ip_str(tlv->ipv4_addr), mac_str);
-                return -1;
+                                __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
+                return MCLAG_ERROR;
             }
         }
         else
         {
-            if (mlacp_fsm_arp_del(tlv->ifname, ntohl(tlv->ipv4_addr)) < 0)
+            if (mlacp_fsm_arp_del(arp_entry->ifname, ntohl(arp_entry->ipv4_addr)) < 0)
             {
                 ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP delete for %s %s %s",
-                                __FUNCTION__, tlv->ifname, show_ip_str(tlv->ipv4_addr), mac_str);
-                return -1;
+                                __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
+                return MCLAG_ERROR;
             }
         }
 
         ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP update for %s %s %s",
-                        __FUNCTION__, tlv->ifname, show_ip_str(tlv->ipv4_addr), mac_str);
+                        __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
     }
     else
     {
@@ -555,30 +569,30 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
     TAILQ_FOREACH(msg, &(MLACP(csm).arp_list), tail)
     {
         arp_msg = (struct ARPMsg*)msg->buf;
-        if (arp_msg->ipv4_addr == ntohl(tlv->ipv4_addr))
+        if (arp_msg->ipv4_addr == ntohl(arp_entry->ipv4_addr))
         {
             /*arp_msg->op_type = tlv->type;*/
-            sprintf(arp_msg->ifname, "%s", tlv->ifname);
-            memcpy(arp_msg->mac_addr, tlv->mac_addr, ETHER_ADDR_LEN);
+            sprintf(arp_msg->ifname, "%s", arp_entry->ifname);
+            memcpy(arp_msg->mac_addr, arp_entry->mac_addr, ETHER_ADDR_LEN);
             break;
         }
     }
 
     /* delete/add ARP list*/
-    if (msg && tlv->type == ARP_SYNC_DEL)
+    if (msg && arp_entry->op_type == ARP_SYNC_DEL)
     {
         TAILQ_REMOVE(&(MLACP(csm).arp_list), msg, tail);
         free(msg->buf); free(msg);
         ICCPD_LOG_INFO(__FUNCTION__, "%s: del arp queue successfully",
                        __FUNCTION__);
     }
-    else if (!msg && tlv->type == ARP_SYNC_ADD)
+    else if (!msg && arp_entry->op_type == ARP_SYNC_ADD)
     {
         arp_msg = (struct ARPMsg*)&arp_data;
-        sprintf(arp_msg->ifname, "%s", tlv->ifname);
-        arp_msg->ipv4_addr = ntohl(tlv->ipv4_addr);
-        arp_msg->op_type = tlv->type;
-        memcpy(arp_msg->mac_addr, tlv->mac_addr, ETHER_ADDR_LEN);
+        sprintf(arp_msg->ifname, "%s", arp_entry->ifname);
+        arp_msg->ipv4_addr = ntohl(arp_entry->ipv4_addr);
+        arp_msg->op_type = arp_entry->op_type;
+        memcpy(arp_msg->mac_addr, arp_entry->mac_addr, ETHER_ADDR_LEN);
         if (iccp_csm_init_msg(&msg, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
         {
             mlacp_enqueue_arp(csm, msg);
@@ -591,7 +605,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
     TAILQ_FOREACH(msg, &(MLACP(csm).arp_msg_list), tail)
     {
         arp_msg = (struct ARPMsg*)msg->buf;
-        if (arp_msg->ipv4_addr == ntohl(tlv->ipv4_addr))
+        if (arp_msg->ipv4_addr == ntohl(arp_entry->ipv4_addr))
             break;
     }
 
@@ -604,12 +618,28 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
         TAILQ_FOREACH(msg, &(MLACP(csm).arp_msg_list), tail)
         {
             arp_msg = (struct ARPMsg*)msg->buf;
-            if (arp_msg->ipv4_addr == ntohl(tlv->ipv4_addr))
+            if (arp_msg->ipv4_addr == ntohl(arp_entry->ipv4_addr))
                 break;
         }
     }
 
     return 0;
+}
+
+int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
+{
+    int count = 0;
+    int i;
+
+    if (!csm || !tlv)
+        return MCLAG_ERROR;
+    count = ntohs(tlv->num_of_entry);
+    ICCPD_LOG_INFO(__FUNCTION__, "Received ARP Info count  %d ", count );
+
+    for (i = 0; i < count; i++)
+    {
+        mlacp_fsm_update_arp_entry(csm, &(tlv->ArpEntry[i]));
+    }
 }
 
 /*****************************************
@@ -623,7 +653,7 @@ int mlacp_fsm_update_port_channel_info(struct CSM* csm,
     int i = 0;
 
     if (csm == NULL || tlv == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     LIST_FOREACH(peer_if, &(MLACP(csm).pif_list), mlacp_next)
     {
@@ -665,7 +695,7 @@ int mlacp_fsm_update_peerlink_info(struct CSM* csm,
                                    struct mLACPPeerLinkInfoTLV* tlv)
 {
     if (csm == NULL || tlv == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     if (!csm->peer_link_if)
     {
@@ -688,7 +718,7 @@ int mlacp_fsm_update_peerlink_info(struct CSM* csm,
 int mlacp_fsm_update_heartbeat(struct CSM* csm, struct mLACPHeartbeatTLV* tlv)
 {
     if (!csm || !tlv)
-        return -255;
+        return MCLAG_ERROR;
 
     time(&csm->heartbeat_update_time);
 
@@ -701,7 +731,7 @@ int mlacp_fsm_update_heartbeat(struct CSM* csm, struct mLACPHeartbeatTLV* tlv)
 int mlacp_fsm_update_warmboot(struct CSM* csm, struct mLACPWarmbootTLV* tlv)
 {
     if (!csm || !tlv)
-        return -255;
+        return MCLAG_ERROR;
 
     time(&csm->peer_warm_reboot_time);
 

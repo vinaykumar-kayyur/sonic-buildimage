@@ -346,18 +346,33 @@ struct mLACPVLANInfoTLV
     struct mLACPVLANData vlanData[0];
 } __attribute__ ((packed));
 
+/* Mac entry Information TLV*/
+struct mLACPMACData
+{
+    uint8_t         type;/*add or del*/
+    char     mac_str[ETHER_ADDR_STR_LEN];
+    uint16_t vid;
+    /*Current if name that set in chip*/
+    char     ifname[MAX_L_PORT_NAME];
+} __attribute__ ((packed));
+
 /*
  * MAC Information TLV
  */
 struct mLACPMACInfoTLV
 {
     ICCParameter    icc_parameter;
-    uint8_t         type;/*add or del*/
-    char     mac_str[32];
-    uint16_t vid;
-    /*Current if name that set in chip*/
-    char     ifname[MAX_L_PORT_NAME];
+    uint16_t num_of_entry;
+    struct mLACPMACData MacEntry[0];
 } __attribute__ ((packed));
+
+struct ARPMsg
+{
+    uint8_t     op_type;
+    char     ifname[MAX_L_PORT_NAME];
+    uint32_t    ipv4_addr;
+    uint8_t     mac_addr[ETHER_ADDR_LEN];
+};
 
 /*
  * ARP Information TLV
@@ -366,10 +381,8 @@ struct mLACPARPInfoTLV
 {
     ICCParameter    icc_parameter;
     /* Local Interface ID */
-    uint8_t         type;
-    char         ifname[MAX_L_PORT_NAME];
-    uint32_t        ipv4_addr;
-    uint8_t         mac_addr[ETHER_ADDR_LEN];
+    uint16_t num_of_entry;
+    struct ARPMsg ArpEntry[0];
 } __attribute__ ((packed));
 
 /*
@@ -407,15 +420,6 @@ enum ARP_OP_TYPE
     ARP_SYNC_DEL,
 };
 
-struct ARPMsg
-{
-    uint8_t     op_type;
-    char     ifname[MAX_L_PORT_NAME];
-    uint32_t    ipv4_addr;
-    uint8_t     mac_addr[ETHER_ADDR_LEN];
-    time_t      update_time;
-};
-
 enum MAC_AGE_TYPE
 {
     MAC_AGE_LOCAL   = 1,    /*MAC in local switch is ageout*/
@@ -439,7 +443,7 @@ struct MACMsg
 {
     uint8_t     op_type;    /*add or del*/
     uint8_t     fdb_type;   /*static or dynamic*/
-    char     mac_str[32];
+    char     mac_str[ETHER_ADDR_STR_LEN];
     uint16_t vid;
     /*Current if name that set in chip*/
     char     ifname[MAX_L_PORT_NAME];

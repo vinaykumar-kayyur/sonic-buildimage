@@ -29,6 +29,7 @@
 #include <sys/queue.h>
 
 #define ETHER_ADDR_LEN 6
+#define ETHER_ADDR_STR_LEN 18
 /*
  * RFC 7275
  * 7.2.4.  mLACP Port Config TLV

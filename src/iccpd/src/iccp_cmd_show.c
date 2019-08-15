@@ -241,7 +241,7 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
 
             mclagd_mac.op_type = iccpd_mac->op_type;
             mclagd_mac.fdb_type = iccpd_mac->fdb_type;
-            memcpy(mclagd_mac.mac_str, iccpd_mac->mac_str, 32);
+            memcpy(mclagd_mac.mac_str, iccpd_mac->mac_str, ETHER_ADDR_STR_LEN);
             mclagd_mac.vid = iccpd_mac->vid;
             memcpy(mclagd_mac.ifname, iccpd_mac->ifname, strlen(iccpd_mac->ifname));
             memcpy(mclagd_mac.origin_ifname, iccpd_mac->origin_ifname, strlen(iccpd_mac->origin_ifname));

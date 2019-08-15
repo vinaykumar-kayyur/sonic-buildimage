@@ -220,7 +220,7 @@ int iccp_csm_send(struct CSM* csm, char* buf, int msg_len)
     ICCParameter* param = NULL;
 
     if (csm == NULL || buf == NULL || csm->sock_fd <= 0 || msg_len <= 0)
-        return -1;
+        return MCLAG_ERROR;
 
     if (ntohs(ldp_hdr->msg_type) == MSG_T_CAPABILITY)
         param = (struct ICCParameter*)&buf[sizeof(LDPHdr)];
@@ -373,7 +373,7 @@ int iccp_csm_prepare_iccp_msg(struct CSM* csm, char* buf, size_t max_buf_size)
     size_t msg_len = -1;
 
     if (csm == NULL || buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     switch (csm->current_state)
     {
@@ -750,7 +750,7 @@ int iccp_csm_init_msg(struct Msg** msg, char* data, int len)
         return -2;
 
     if (data == NULL || len <= 0)
-        return -1;
+        return MCLAG_ERROR;
 
     iccp_msg = (struct Msg*)malloc(sizeof(struct Msg));
     if (iccp_msg == NULL)
@@ -774,7 +774,7 @@ int iccp_csm_init_msg(struct Msg** msg, char* data, int len)
         free(iccp_msg);
     }
 
-    return -1;
+    return MCLAG_ERROR;
 }
 
 void iccp_csm_stp_role_count(struct CSM *csm)

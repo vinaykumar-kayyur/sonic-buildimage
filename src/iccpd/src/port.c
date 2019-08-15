@@ -364,7 +364,8 @@ void local_if_destroy(char *ifname)
     else
         local_if_remove(lif);
 
-    if (csm->peer_link_if && strcmp(csm->peer_link_if->name, ifname) == 0)
+    csm = lif->csm;
+    if (csm && csm->peer_link_if && strcmp(csm->peer_link_if->name, ifname) == 0)
     {
         /*if the peerlink interface is not created, peer connection can not establish*/
         scheduler_session_disconnect_handler(csm);
@@ -372,7 +373,6 @@ void local_if_destroy(char *ifname)
         csm->peer_link_if = NULL;
     }
 
-    csm = lif->csm;
     if (csm && MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
         goto to_mlacp_purge;
     else
@@ -581,7 +581,7 @@ int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid)
     {
         vlan = (struct VLAN_ID*)malloc(sizeof(struct VLAN_ID));
         if (!vlan)
-            return -1;
+            return MCLAG_ERROR;
 
         ICCPD_LOG_DEBUG(__FUNCTION__, "add VLAN ID = %d on %s", vid, local_if->name);
         local_if->port_config_sync = 1;
@@ -655,7 +655,7 @@ int peer_if_add_vlan(struct PeerInterface* peer_if, uint16_t vlan_id)
     {
         peer_vlan = (struct VLAN_ID*)malloc(sizeof(struct VLAN_ID));
         if (!peer_vlan)
-            return -1;
+            return MCLAG_ERROR;
 
         ICCPD_LOG_DEBUG(__FUNCTION__, "add VLAN ID = %d from peer's %s", vlan_id, peer_if->name);
         LIST_INSERT_HEAD(&(peer_if->vlan_list), peer_vlan, port_next);
@@ -705,7 +705,7 @@ int set_sys_arp_accept_flag(char* ifname, int flag)
     char cmd[64];
     char arp_file[64];
     char buf[2];
-    int result = -1;
+    int result = MCLAG_ERROR;
 
     memset(arp_file, 0, 64);
     snprintf(arp_file, 63, "/proc/sys/net/ipv4/conf/%s/arp_accept", ifname);

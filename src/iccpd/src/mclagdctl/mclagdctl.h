@@ -27,6 +27,7 @@
 #define MCLAGDCTL_INET_ADDR_LEN 32
 #define MCLAGDCTL_ETHER_ADDR_LEN 6
 #define MCLAGDCTL_PORT_MEMBER_BUF_LEN 512
+#define ETHER_ADDR_STR_LEN 18
 
 typedef int (*call_enca_msg_fun)(char *msg, int mclag_id,  int argc, char **argv);
 typedef int (*call_parse_msg_fun)(char *msg, int data_len);
@@ -86,6 +87,8 @@ struct mclagd_reply_hdr
 #define EXEC_TYPE_NO_EXIST_MCLAGID  -3
 #define EXEC_TYPE_FAILED -4
 
+#define MCLAG_ERROR -1
+
 #define MCLAGD_REPLY_INFO_HDR (sizeof(struct mclagd_reply_hdr) + sizeof(int))
 
 #define MCLAGDCTL_COMMAND_PARAM_MAX_CNT 8
@@ -122,9 +125,9 @@ struct mclagd_arp_msg
 
 struct mclagd_mac_msg
 {
-    unsigned char     op_type;  /*add or del*/
-    unsigned char     fdb_type; /*static or dynamic*/
-    char     mac_str[32];
+    unsigned char     op_type;/*add or del*/
+    unsigned char     fdb_type;/*static or dynamic*/
+    char     mac_str[ETHER_ADDR_STR_LEN];
     unsigned short vid;
     /*Current if name that set in chip*/
     char     ifname[MCLAGDCTL_MAX_L_PORT_NANE];

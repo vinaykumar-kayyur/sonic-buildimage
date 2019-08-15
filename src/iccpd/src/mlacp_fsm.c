@@ -201,23 +201,35 @@ static void mlacp_sync_send_aggState(struct CSM* csm)
 
     return;
 }
-
+#define MAX_MAC_ENTRY_NUM 30
+#define MAX_ARP_ENTRY_NUM 40
 static void mlacp_sync_send_syncMacInfo(struct CSM* csm)
 {
     int msg_len = 0;
     struct Msg* msg = NULL;
+    int count = 0;
+
+    memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
 
     while (!TAILQ_EMPTY(&(MLACP(csm).mac_msg_list)))
     {
         msg = TAILQ_FIRST(&(MLACP(csm).mac_msg_list));
         TAILQ_REMOVE(&(MLACP(csm).mac_msg_list), msg, tail);
-        memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
-        msg_len = mlacp_prepare_for_mac_info_to_peer(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct MACMsg*)msg->buf);
-        iccp_csm_send(csm, g_csm_buf, msg_len);
+        msg_len = mlacp_prepare_for_mac_info_to_peer(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct MACMsg*)msg->buf, count);
+        count++;
         free(msg->buf);
         free(msg);
+        if (count >= MAX_MAC_ENTRY_NUM)
+        {
+            iccp_csm_send(csm, g_csm_buf, msg_len);
+            count = 0;
+            memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+        }
         /*ICCPD_LOG_DEBUG("mlacp_fsm", "  [SYNC_Send] MacInfo,len=[%d]", msg_len);*/
     }
+
+    if (count)
+        iccp_csm_send(csm, g_csm_buf, msg_len);
 
     return;
 }
@@ -226,18 +238,30 @@ static void mlacp_sync_send_syncArpInfo(struct CSM* csm)
 {
     int msg_len = 0;
     struct Msg* msg = NULL;
+    int count = 0;
+
+    memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
 
     while (!TAILQ_EMPTY(&(MLACP(csm).arp_msg_list)))
     {
         msg = TAILQ_FIRST(&(MLACP(csm).arp_msg_list));
         TAILQ_REMOVE(&(MLACP(csm).arp_msg_list), msg, tail);
-        memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
-        msg_len = mlacp_prepare_for_arp_info(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct ARPMsg*)msg->buf);
-        iccp_csm_send(csm, g_csm_buf, msg_len);
+
+        msg_len = mlacp_prepare_for_arp_info(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct ARPMsg*)msg->buf, count);
+        count++;
         free(msg->buf);
         free(msg);
+        if (count >= MAX_ARP_ENTRY_NUM)
+        {
+            iccp_csm_send(csm, g_csm_buf, msg_len);
+            count = 0;
+            memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+        }
         /*ICCPD_LOG_DEBUG("mlacp_fsm", "  [SYNC_Send] ArpInfo,len=[%d]", msg_len);*/
     }
+
+    if (count)
+        iccp_csm_send(csm, g_csm_buf, msg_len);
 
     return;
 }
@@ -324,7 +348,7 @@ static void mlacp_sync_recv_sysConf(struct CSM* csm, struct Msg* msg)
 
     sysconf = (mLACPSysConfigTLV*)&(msg->buf[sizeof(ICCHdr)]);
 
-    if (mlacp_fsm_update_system_conf(csm, sysconf) == -1)
+    if (mlacp_fsm_update_system_conf(csm, sysconf) == MCLAG_ERROR)
     {
         /*NOTE: we just change the node ID local side without sending NAK msg*/
         ICCPD_LOG_DEBUG("mlacp_fsm", "    Same Node ID = %d, send NAK", MLACP(csm).remote_system.node_id);
@@ -357,7 +381,7 @@ static void mlacp_sync_recv_aggConf(struct CSM* csm, struct Msg* msg)
     mLACPAggConfigTLV* portconf = NULL;
 
     portconf = (mLACPAggConfigTLV*)&(msg->buf[sizeof(ICCHdr)]);
-    if (mlacp_fsm_update_Agg_conf(csm, portconf) == -1)
+    if (mlacp_fsm_update_Agg_conf(csm, portconf) == MCLAG_ERROR)
     {
         mlacp_sync_send_nak_handler(csm, msg);
     }
@@ -370,7 +394,7 @@ static void mlacp_sync_recv_aggState(struct CSM* csm, struct Msg* msg)
     mLACPAggPortStateTLV* portstate = NULL;
 
     portstate = (mLACPAggPortStateTLV*)&(msg->buf[sizeof(ICCHdr)]);
-    if (mlacp_fsm_update_Aggport_state(csm, portstate) == -1)
+    if (mlacp_fsm_update_Aggport_state(csm, portstate) == MCLAG_ERROR)
     {
         mlacp_sync_send_nak_handler(csm, msg);
         /*MLACP(csm).error_msg = "Receive a port state update on an non-existed port. It is suggest to check the environment and re-initialize mLACP again.";*/
@@ -412,7 +436,7 @@ static void mlacp_sync_recv_portChanInfo(struct CSM* csm, struct Msg* msg)
     mLACPPortChannelInfoTLV* portconf = NULL;
 
     portconf = (mLACPPortChannelInfoTLV*)&(msg->buf[sizeof(ICCHdr)]);
-    if (mlacp_fsm_update_port_channel_info(csm, portconf) == -1)
+    if (mlacp_fsm_update_port_channel_info(csm, portconf) == MCLAG_ERROR)
     {
         mlacp_sync_send_nak_handler(csm, msg);
     }

@@ -109,13 +109,13 @@ int mclagdctl_sock_connect()
         return 0;
 
     if (strlen(mclagdctl_sock_path) <= 0)
-        return -1;
+        return MCLAG_ERROR;
 
     mclagdctl_sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
     if (mclagdctl_sock_fd < 0)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     memset(&addr, 0, sizeof(addr));
@@ -127,7 +127,7 @@ int mclagdctl_sock_connect()
     {
         close(mclagdctl_sock_fd);
         mclagdctl_sock_fd = -1;
-        return -1;
+        return MCLAG_ERROR;
     }
 
     return 0;
@@ -178,22 +178,22 @@ int mclagdctl_sock_read(int fd, unsigned char *r_buf, int total_len)
 
         switch ((ret = select(fd + 1, &read_fd, NULL, NULL, &tv)))
         {
-        case -1:    // error
-            fprintf(stdout, "Mclagdctl:Select return error:%s\n", strerror(errno));
-            return -1;
+            case -1:    // error
+                fprintf(stdout, "Mclagdctl:Select return error:%s\n", strerror(errno));
+                return MCLAG_ERROR;
 
-        case 0:    // timeout
-            fprintf(stdout, "Mclagdctl:Select timeout:%s\n", strerror(errno));
-            return -1;
+            case 0:    // timeout
+                fprintf(stdout, "Mclagdctl:Select timeout:%s\n", strerror(errno));
+                return MCLAG_ERROR;
 
-        default:
-            break;
+            default:
+                break;
         }
 
         ret = read(fd, r_buf + read_len, total_len - read_len);
         if (ret <= 0)
         {
-            return -1;
+            return MCLAG_ERROR;
         }
         read_len += ret;
     }
@@ -264,7 +264,7 @@ int mclagdctl_enca_dump_arp(char *msg, int mclag_id, int argc, char **argv)
     if (mclag_id <= 0)
     {
         fprintf(stderr, "Need to specify mclag-id through the parameter i !\n");
-        return -1;
+        return MCLAG_ERROR;
     }
 
     memset(&req, 0, sizeof(struct mclagdctl_req_hdr));
@@ -314,7 +314,7 @@ int mclagdctl_enca_dump_mac(char *msg, int mclag_id, int argc, char **argv)
     if (mclag_id <= 0)
     {
         fprintf(stderr, "Need to specify mclag-id through the parameter i !\n");
-        return -1;
+        return MCLAG_ERROR;
     }
 
     memset(&req, 0, sizeof(struct mclagdctl_req_hdr));
@@ -381,7 +381,7 @@ int mclagdctl_enca_dump_local_portlist(char *msg, int mclag_id, int argc, char *
     if (mclag_id <= 0)
     {
         fprintf(stderr, "Need to specify mclag-id through the parameter i !\n");
-        return -1;
+        return MCLAG_ERROR;
     }
 
     memset(&req, 0, sizeof(struct mclagdctl_req_hdr));
@@ -458,7 +458,7 @@ int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id,  int argc, char *
     if (mclag_id <= 0)
     {
         fprintf(stderr, "Need to specify mclag-id through the parameter i !\n");
-        return -1;
+        return MCLAG_ERROR;
     }
 
     memset(&req, 0, sizeof(struct mclagdctl_req_hdr));

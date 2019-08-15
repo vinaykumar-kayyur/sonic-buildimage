@@ -196,7 +196,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
     struct LocalInterface* lif_po = NULL;
 
     if (csm == NULL || lif == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (lif->csm == csm)
         return 0;
@@ -252,7 +252,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
             ICCPD_LOG_WARN(__FUNCTION__,
                            "Failed to find port_channel instance for %d.",
                            lif->po_id);
-            return -1;
+            return MCLAG_ERROR;
         }
 
         lif_po->csm = csm;
@@ -267,7 +267,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
 int mlacp_unbind_local_if(struct LocalInterface* lif)
 {
     if (lif == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     if (lif->csm == NULL )
         return 0;

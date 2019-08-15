@@ -79,12 +79,12 @@ static int getHwAddr(char *buff, char *mac)
 
     if ( buff == NULL || mac == NULL )
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     if (sscanf(mac, "%x:%x:%x:%x:%x:%x", &p[0], &p[1], &p[2], &p[3], &p[4], &p[5]) < 6)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     for (i = 0; i < 6; i++)
@@ -109,7 +109,7 @@ int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac)
 
     if (ifname == NULL || ip == 0 || mac == NULL)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /*you must add this becasue some system will return "Invlid argument"
@@ -123,7 +123,7 @@ int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac)
 
     if (getHwAddr((char *)arpreq.arp_ha.sa_data, mac) < 0)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     strncpy(arpreq.arp_dev, ifname, 15);
@@ -135,14 +135,14 @@ int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac)
     sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock_fd < 0)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     rc = ioctl(sock_fd, SIOCSARP, &arpreq);
     if (rc < 0)
     {
         close(sock_fd);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     close(sock_fd);
@@ -163,7 +163,7 @@ int mlacp_fsm_arp_del(char *ifname, uint32_t ip)
 
     if (ifname == NULL || ip == 0)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /*you must add this becasue some system will return "Invlid argument"
@@ -181,14 +181,14 @@ int mlacp_fsm_arp_del(char *ifname, uint32_t ip)
     sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock_fd < 0)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     rc = ioctl(sock_fd, SIOCDARP, &arpreq);
     if (rc < 0)
     {
         close(sock_fd);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     close(sock_fd);
@@ -981,14 +981,14 @@ void update_stp_peer_link(struct CSM *csm,
 void iccp_get_fdb_change_from_syncd( void)
 {
     struct IccpSyncdHDr * msg_hdr;
-    char *msg_buf = g_csm_buf;
+    char msg_buf[512];
     struct System *sys;
 
     sys = system_get_instance();
     if (sys == NULL)
         return;
 
-    memset(msg_buf, 0, CSM_BUFFER_SIZE);
+    memset(msg_buf, 0, 512);
 
     msg_hdr = (struct IccpSyncdHDr *)msg_buf;
     msg_hdr->ver = 1;
@@ -1008,7 +1008,7 @@ void iccp_get_fdb_change_from_syncd( void)
 void iccp_send_fdb_entry_to_syncd( struct MACMsg* mac_msg, uint8_t mac_type)
 {
     struct IccpSyncdHDr * msg_hdr;
-    char *msg_buf = g_csm_buf;
+    char msg_buf[512];
     struct System *sys;
     struct mclag_fdb_info * mac_info;
 
@@ -1016,7 +1016,7 @@ void iccp_send_fdb_entry_to_syncd( struct MACMsg* mac_msg, uint8_t mac_type)
     if (sys == NULL)
         return;
 
-    memset(msg_buf, 0, CSM_BUFFER_SIZE);
+    memset(msg_buf, 0, 512);
 
     msg_hdr = (struct IccpSyncdHDr *)msg_buf;
     msg_hdr->ver = 1;
@@ -1026,7 +1026,7 @@ void iccp_send_fdb_entry_to_syncd( struct MACMsg* mac_msg, uint8_t mac_type)
     mac_info = (struct mclag_fdb_info *)&msg_buf[sizeof(struct IccpSyncdHDr)];
     mac_info->vid = mac_msg->vid;
     memcpy(mac_info->port_name, mac_msg->ifname, MAX_L_PORT_NAME);
-    memcpy(mac_info->mac, mac_msg->mac_str, 32);
+    memcpy(mac_info->mac, mac_msg->mac_str, ETHER_ADDR_STR_LEN);
     mac_info->type = mac_type;
     mac_info->op_type = mac_msg->op_type;
     msg_hdr->len = sizeof(struct IccpSyncdHDr) + sizeof(struct mclag_fdb_info);
@@ -1573,7 +1573,7 @@ int iccp_connect_syncd()
 
     count++;
 
-    return -1;
+    return MCLAG_ERROR;
 }
 
 void syncd_info_close()
@@ -1598,7 +1598,7 @@ int iccp_get_receive_fdb_sock_fd(struct System *sys)
 }
 
 /*When received MAC add and del packets from mclagsyncd, update mac information*/
-void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint8_t fdb_type, uint8_t op_type)
+void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, char *ifname, uint8_t fdb_type, uint8_t op_type)
 {
     struct System *sys = NULL;
     struct CSM *csm = NULL;
@@ -1615,10 +1615,6 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
     if (!(sys = system_get_instance()))
         return;
 
-    /* Find local itf*/
-    if (!(mac_lif = local_if_find_by_name(ifname)))
-        return;
-
     /* create MAC msg*/
     memset(buf, 0, MAX_BUFSIZE);
     msg_len = sizeof(struct MACMsg);
@@ -1627,8 +1623,7 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
     mac_msg->fdb_type = fdb_type;
     sprintf(mac_msg->mac_str, "%s", mac_str);
     mac_msg->vid = vid;
-    sprintf(mac_msg->ifname, "%s", mac_lif->name);
-    sprintf(mac_msg->origin_ifname, "%s", mac_lif->name);
+
     mac_msg->age_flag = 0;
 
     /*Debug*/
@@ -1636,7 +1631,6 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
     /* dump receive MAC info*/
     fprintf(stderr, "\n======== MAC Update==========\n");
     fprintf(stderr, "  MAC    =  %s\n", mac_str);
-    fprintf(stderr, "  ifname = %s\n", mac_lif->name);
     fprintf(stderr, "  vlan id = %d\n", vid);
     fprintf(stderr, "  fdb type = %s\n", fdb_type == MAC_TYPE_STATIC ? "static" : "dynamic");
     fprintf(stderr, "  op type = %s\n", op_type == MAC_SYNC_ADD ? "add" : "del");
@@ -1694,6 +1688,13 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
     /*handle mac add*/
     if (op_type == MAC_SYNC_ADD)
     {
+        /* Find local itf*/
+        if (!(mac_lif = local_if_find_by_name(ifname)))
+            return;
+
+        sprintf(mac_msg->ifname, "%s", ifname);
+        sprintf(mac_msg->origin_ifname, "%s", ifname);
+
         /*same MAC exist*/
         if (mac_exist)
         {
@@ -1848,6 +1849,9 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
 
                 /*If local is aged but peer is not aged, Send mac add message to mclagsyncd*/
                 /*it is from_mclag_intf and port state is up, local orphan mac can not be here*/
+                /* Find local itf*/
+                if (!(mac_lif = local_if_find_by_name(mac_info->ifname)))
+                    return;
                 if (mac_lif->state == PORT_STATE_UP)
                     add_mac_to_chip(mac_info, MAC_TYPE_DYNAMIC);
             }
@@ -1859,60 +1863,46 @@ void do_mac_update_from_syncd(char mac_str[32], uint16_t vid, char *ifname, uint
 
 int iccp_receive_fdb_handler_from_syncd(struct System *sys)
 {
-    int n = 0;
+    char *msg_buf = g_csm_buf;
+    struct IccpSyncdHDr *msg_hdr;
+    struct mclag_fdb_info * mac_info;
+    size_t pos = 0;
     int count = 0;
     int i = 0;
-    char *msg_buf = g_csm_buf;
-    struct LocalInterface* lif = NULL;
-    struct IccpSyncdHDr * msg_hdr;
-    struct mclag_fdb_info * mac_info;
-    static time_t last_time = 0;
+    int n = 0;
 
     if (sys == NULL)
-        return -1;
+        return MCLAG_ERROR;
+
     memset(msg_buf, 0, CSM_BUFFER_SIZE);
 
     n = read(sys->sync_fd, msg_buf, CSM_BUFFER_SIZE);
     if (n <= 0)
     {
-        if (last_time == 0 || (time(NULL) - last_time) >= 60)
+        ICCPD_LOG_ERR(__FUNCTION__, "read msg error!!!" );
+        return MCLAG_ERROR;
+    }
+
+    while (pos < n)
+    {
+        msg_hdr = (struct IccpSyncdHDr *)&msg_buf[pos];
+        if (msg_hdr->ver != 1 || msg_hdr->type != MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION )
         {
-            ICCPD_LOG_DEBUG(__FUNCTION__, "fd %d read error ret = %d  errno = %d ", sys->sync_fd, n, errno);
-            last_time = time(NULL);
+            ICCPD_LOG_ERR(__FUNCTION__, "msg version or type wrong!!!!! ");
+            return MCLAG_ERROR;
         }
 
-        return -1;
-    }
-
-    msg_hdr = (struct IccpSyncdHDr *)msg_buf;
-    ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg version %d type %d len %d  ", msg_hdr->ver, msg_hdr->type, msg_hdr->len );
-    if (msg_hdr->ver != 1)
-    {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "msg version wrong!!!!! ");
-        return -1;
-    }
-
-    if (msg_hdr->type == MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION)
-    {
         count = ( msg_hdr->len - sizeof(struct IccpSyncdHDr )) / sizeof(struct mclag_fdb_info);
-        ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d   ", count );
+        ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d ", count);
 
         for (i = 0; i < count; i++)
         {
-            mac_info = (struct mclag_fdb_info *)&msg_buf[sizeof(struct IccpSyncdHDr ) + i * sizeof(struct mclag_fdb_info)];
+            mac_info = (struct mclag_fdb_info *)&msg_buf[pos + sizeof(struct IccpSyncdHDr ) + i * sizeof(struct mclag_fdb_info)];
             ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d vid %d mac %s port %s  optype  %d ", i, mac_info->vid, mac_info->mac, mac_info->port_name, mac_info->op_type);
-            lif = local_if_find_by_name(mac_info->port_name);
-
-            /*if (!lif ||lif->type != IF_T_PORT_CHANNEL)*/
-            if (!lif)
-                continue;
-
             do_mac_update_from_syncd(mac_info->mac, mac_info->vid, mac_info->port_name, mac_info->type, mac_info->op_type);
         }
-    }
-    else
-    {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "recv unknown type msg  " );
+
+        pos += msg_hdr->len;
     }
 
     return 0;
@@ -1953,7 +1943,7 @@ int mclagd_ctl_sock_create()
     int ret = 0;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (sys->sync_ctrl_fd > 0)
         return sys->sync_ctrl_fd;
@@ -1976,14 +1966,14 @@ int mclagd_ctl_sock_create()
     {
         ICCPD_LOG_WARN(__FUNCTION__, "Failed to bind mclagd ctl socket %s:%s\n", sys->mclagdctl_file_path, strerror(errno));
         close(sys->sync_ctrl_fd);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     if (listen(sys->sync_ctrl_fd, 5) < 0)
     {
         ICCPD_LOG_WARN(__FUNCTION__, "Failed to listen unix mclagd ctl socket%s:%s\n", sys->mclagdctl_file_path, strerror(errno));
         close(sys->sync_ctrl_fd);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     event.data.fd = sys->sync_ctrl_fd;
@@ -2005,7 +1995,7 @@ int mclagd_ctl_sock_accept(int fd)
     if (client_fd < 0)
     {
         ICCPD_LOG_WARN(__FUNCTION__, "failed to accept a client from mclagdctl\n");
-        return -1;
+        return MCLAG_ERROR;
     }
 
     return client_fd;
@@ -2031,7 +2021,7 @@ int mclagd_ctl_sock_read(int fd, char *r_buf, int total_len)
             /* error*/
             case 0:
                 /* timeout*/
-                return -1;
+                return MCLAG_ERROR;
 
             default:
                 break;
@@ -2041,7 +2031,7 @@ int mclagd_ctl_sock_read(int fd, char *r_buf, int total_len)
             ret = read(fd, r_buf + read_len, total_len - read_len);
         if (ret <= 0)
         {
-            return -1;
+            return MCLAG_ERROR;
         }
         read_len += ret;
     }
@@ -2126,7 +2116,7 @@ void mclagd_ctl_handle_dump_arp(int client_fd, int mclag_id)
         hd->exec_result = ret;
         hd->info_type = INFO_TYPE_DUMP_ARP;
         hd->data_len = 0;
-        mclagd_ctl_sock_write(client_fd, buf, sizeof(struct mclagd_reply_hdr));
+        mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
 
         if (Pbuf)
             free(Pbuf);
@@ -2166,7 +2156,7 @@ void mclagd_ctl_handle_dump_mac(int client_fd, int mclag_id)
         hd->exec_result = ret;
         hd->info_type = INFO_TYPE_DUMP_MAC;
         hd->data_len = 0;
-        mclagd_ctl_sock_write(client_fd, buf, sizeof(struct mclagd_reply_hdr));
+        mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
 
         if (Pbuf)
             free(Pbuf);
@@ -2178,8 +2168,10 @@ void mclagd_ctl_handle_dump_mac(int client_fd, int mclag_id)
     hd->exec_result = EXEC_TYPE_SUCCESS;
     hd->info_type = INFO_TYPE_DUMP_MAC;
     hd->data_len = mac_num * sizeof(struct mclagd_mac_msg);
+
     len_tmp = (hd->data_len + sizeof(struct mclagd_reply_hdr));
     memcpy(Pbuf, &len_tmp, sizeof(int));
+
     mclagd_ctl_sock_write(client_fd, Pbuf, MCLAGD_REPLY_INFO_HDR + hd->data_len);
 
     if (Pbuf)
@@ -2206,7 +2198,7 @@ void mclagd_ctl_handle_dump_local_portlist(int client_fd, int mclag_id)
         hd->exec_result = ret;
         hd->info_type = INFO_TYPE_DUMP_LOCAL_PORTLIST;
         hd->data_len = 0;
-        mclagd_ctl_sock_write(client_fd, buf, sizeof(struct mclagd_reply_hdr));
+        mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
 
         if (Pbuf)
             free(Pbuf);
@@ -2246,7 +2238,7 @@ void mclagd_ctl_handle_dump_peer_portlist(int client_fd, int mclag_id)
         hd->exec_result = ret;
         hd->info_type = INFO_TYPE_DUMP_PEER_PORTLIST;
         hd->data_len = 0;
-        mclagd_ctl_sock_write(client_fd, buf, sizeof(struct mclagd_reply_hdr));
+        mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
 
         if (Pbuf)
             free(Pbuf);
@@ -2276,12 +2268,12 @@ int mclagd_ctl_interactive_process(int client_fd)
     struct mclagdctl_req_hdr* req = NULL;
 
     if (client_fd < 0)
-        return -1;
+        return MCLAG_ERROR;
 
     ret = mclagd_ctl_sock_read(client_fd, buf, sizeof(struct mclagdctl_req_hdr));
 
     if (ret < 0)
-        return -1;
+        return MCLAG_ERROR;
 
     req = (struct mclagdctl_req_hdr*)buf;
 
@@ -2310,7 +2302,7 @@ int mclagd_ctl_interactive_process(int client_fd)
             break;
 
         default:
-            return -1;
+            return MCLAG_ERROR;
     }
 
     return 0;

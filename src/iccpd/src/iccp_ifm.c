@@ -71,7 +71,7 @@ int iccp_sys_local_if_list_get_init()
     int retry = 1;
 
     if (!(sys = system_get_instance()))
-        return -1;
+        return MCLAG_ERROR;
 
     while (retry)
     {
@@ -245,7 +245,6 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Update ARP for %s",
                                 show_ip_str(htonl(arp_msg->ipv4_addr)));
             }
-            time(&arp_info->update_time);
         }
         break;
     }
@@ -372,7 +371,7 @@ int do_one_neigh_request(struct nlmsghdr *n)
 
     len -= NLMSG_LENGTH(sizeof(*ndm));
     if (len < 0)
-        return -1;
+        return MCLAG_ERROR;
 
     ifm_parse_rtattr(tb, NDA_MAX, NDA_RTA(ndm), len);
 
@@ -421,7 +420,7 @@ int iccp_arp_get_init()
     int retry = 1;
 
     if (!(sys = system_get_instance()))
-        return -1;
+        return MCLAG_ERROR;
 
     while (retry)
     {
@@ -572,8 +571,6 @@ void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETH
             ICCPD_LOG_DEBUG(__FUNCTION__, "Update ARP for %s",
                             show_ip_str(htonl(arp_msg->ipv4_addr)));
         }
-        time(&arp_info->update_time);
-
         break;
     }
 

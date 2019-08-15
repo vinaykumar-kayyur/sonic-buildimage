@@ -98,7 +98,7 @@ static int scheduler_transit_fsm()
     struct System* sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     LIST_FOREACH(csm, &(sys->csm_list), next)
     {
@@ -133,7 +133,7 @@ int scheduler_csm_read_callback(struct CSM* csm)
     int recv_len = 0, len = 0, retval;
 
     if (csm->sock_fd <= 0)
-        return -1;
+        return MCLAG_ERROR;
 
     memset(peer_msg, 0, CSM_BUFFER_SIZE);
 
@@ -190,14 +190,14 @@ int scheduler_csm_read_callback(struct CSM* csm)
 
  recv_err:
     scheduler_session_disconnect_handler(csm);
-    return -1;
+    return MCLAG_ERROR;
 }
 
 /* Handle server accept client */
 int scheduler_server_accept()
 {
     int new_fd;
-    int ret = -1;
+    int ret = MCLAG_ERROR;
     struct CSM* csm = NULL;
     struct System* sys = NULL;
     struct sockaddr_in client_addr;
@@ -205,11 +205,11 @@ int scheduler_server_accept()
 
     if ((sys = system_get_instance()) == NULL )
     {
-        return -1;
+        return MCLAG_ERROR;
     }
     if (sys->server_fd <= 0)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     addr_len = sizeof(struct sockaddr_in);
@@ -249,7 +249,7 @@ int scheduler_server_accept()
  reject_client:
     if (new_fd >= 0)
         close(new_fd);
-    return -1;
+    return MCLAG_ERROR;
 
  accept_client:
     session_conn_thread_lock(&csm->conn_mutex);
@@ -559,7 +559,7 @@ void session_client_conn_handler(struct CSM *csm)
 /* Create socket connect to peer */
 int scheduler_prepare_session(struct CSM* csm)
 {
-    int ret = -1;
+    int ret = MCLAG_ERROR;
     uint32_t local_ip = 0;
     uint32_t peer_ip = 0;
 
@@ -676,24 +676,24 @@ int scheduler_check_csm_config(struct CSM* csm)
     struct System* sys = NULL;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (csm == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     if (csm->mlag_id <= 0)
-        ret = -1;
+        ret = MCLAG_ERROR;
     else if (strlen(csm->peer_ip) <= 0)
-        ret = -1;
+        ret = MCLAG_ERROR;
     else if (strlen(csm->sender_ip) <= 0)
-        ret = -1;
+        ret = MCLAG_ERROR;
     else if (strlen(csm->peer_itf_name) != 0)
     {
         lif = local_if_find_by_name(csm->peer_itf_name);
         if (lif == NULL)
         {
             /*if peer-link is configured but the interface is not created, peer connection can not establish*/
-            return -1;
+            return MCLAG_ERROR;
         }
         else
         {
@@ -702,7 +702,7 @@ int scheduler_check_csm_config(struct CSM* csm)
         }
     }
 
-    if (ret == -1)
+    if (ret == MCLAG_ERROR)
         ICCPD_LOG_INFO(__FUNCTION__, "mclag config is not complete or conflicting, please check!");
 
     /* Decide STP role*/
@@ -716,11 +716,11 @@ int scheduler_unregister_sock_read_event_callback(struct CSM* csm)
     struct System* sys = NULL;
 
     if ((sys = system_get_instance()) == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     if (csm == NULL )
     {
-        return -2;
+        return MCLAG_ERROR;
     }
 
     FD_CLR(csm->sock_fd, &(sys->readfd));

@@ -39,7 +39,7 @@ int check_instance(char* pid_file_path)
     int rc = 0;
 
     if (pid_file_path == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     pid_file = open(pid_file_path, O_CREAT | O_RDWR, 0666);
     if (pid_file <= 0 )
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
     if (parser.parse(&parser, argc, argv) != 0)
     {
         parser.finalize(&parser);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     pid_file_fd = check_instance(parser.pid_file_path);

@@ -44,7 +44,7 @@ int set_mc_lag_by_id(uint16_t mid)
         csm = (struct CSM*)iccp_get_csm();
         if (csm == NULL)
         {
-            return -1;
+            return MCLAG_ERROR;
         }
 
         ret = set_mc_lag_id(csm, mid);

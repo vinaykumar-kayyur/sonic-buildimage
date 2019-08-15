@@ -54,16 +54,16 @@ int mlacp_prepare_for_sync_request_tlv(struct CSM* csm, char* buf, size_t max_bu
     size_t msg_len = sizeof(ICCHdr) + sizeof(mLACPSyncReqTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -106,16 +106,16 @@ int mlacp_prepare_for_sync_data_tlv(struct CSM* csm, char* buf, size_t max_buf_s
     size_t msg_len = sizeof(ICCHdr) + sizeof(mLACPSyncDataTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -153,16 +153,16 @@ int mlacp_prepare_for_sys_config(struct CSM* csm, char* buf, size_t max_buf_size
     size_t msg_len = sizeof(ICCHdr) + sizeof(mLACPSysConfigTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -194,22 +194,22 @@ int mlacp_prepare_for_Aggport_state(struct CSM* csm, char* buf, size_t max_buf_s
     size_t msg_len = sizeof(ICCHdr) + sizeof(mLACPAggPortStateTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (local_if == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (local_if->type != IF_T_PORT_CHANNEL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -248,13 +248,13 @@ int mlacp_prepare_for_Aggport_config(struct CSM* csm,
     size_t msg_len = sizeof(ICCHdr) + sizeof(mLACPAggConfigTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -287,43 +287,48 @@ int mlacp_prepare_for_Aggport_config(struct CSM* csm,
 * Preprare Sync MAC-Info TLV
 *
 * ***************************************/
-int mlacp_prepare_for_mac_info_to_peer(struct CSM* csm, char* buf, size_t max_buf_size, struct MACMsg* mac_msg)
+int mlacp_prepare_for_mac_info_to_peer(struct CSM* csm, char* buf, size_t max_buf_size, struct MACMsg* mac_msg, int count)
 {
     struct mLACPMACInfoTLV* tlv = NULL;
     size_t msg_len = 0;
     size_t tlv_len = 0;
     ICCHdr* icc_hdr = NULL;
+    struct mLACPMACData *MacData;
 
     if (!csm)
-        return -1;
+        return MCLAG_ERROR;
     if (!buf)
-        return -1;
+        return MCLAG_ERROR;
 
-    tlv_len = sizeof(struct mLACPMACInfoTLV);
+    tlv_len = sizeof(struct mLACPMACInfoTLV) + sizeof(struct mLACPMACData) * (count + 1);
 
     if ((msg_len = sizeof(ICCHdr) + tlv_len) > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     /* ICC header */
-    memset(buf, 0, max_buf_size);
     icc_hdr = (ICCHdr*)buf;
     mlacp_fill_icc_header(csm, icc_hdr, msg_len);
-    
     /* Prepare for MAC information TLV */
-    tlv = (struct mLACPMACInfoTLV*) &buf[sizeof(ICCHdr)];
-    memset(tlv, 0, tlv_len);
-    tlv->icc_parameter.u_bit = 0;
-    tlv->icc_parameter.f_bit = 0;
-    tlv->icc_parameter.type = htons(TLV_T_MLACP_MAC_INFO);
+    tlv = (struct mLACPMACInfoTLV*)&buf[sizeof(ICCHdr)];
     tlv->icc_parameter.len = htons(tlv_len - sizeof(ICCParameter));
-    tlv->type = mac_msg->op_type;
-    sprintf(tlv->mac_str, "%s", mac_msg->mac_str);
-    sprintf(tlv->ifname, "%s", mac_msg->origin_ifname);
-    tlv->vid = htons(mac_msg->vid);
-    
+    tlv->num_of_entry = htons(count + 1);
+
+    if (count == 0)
+    {
+        tlv->icc_parameter.u_bit = 0;
+        tlv->icc_parameter.f_bit = 0;
+        tlv->icc_parameter.type = htons(TLV_T_MLACP_MAC_INFO);
+    }
+
+    MacData = (struct mLACPMACData *)&buf[sizeof(ICCHdr) + sizeof(struct mLACPMACInfoTLV) + sizeof(struct mLACPMACData) * count];
+    MacData->type = mac_msg->op_type;
+    sprintf(MacData->mac_str, "%s", mac_msg->mac_str);
+    sprintf(MacData->ifname, "%s", mac_msg->origin_ifname);
+    MacData->vid = htons(mac_msg->vid);
+
     #if 1
     ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg type = TLV_T_MLACP_MAC_INFO");
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg if name %s  mac  = %s, vid = %d, type = %d", mac_msg->origin_ifname,  mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg if name %s  mac  = %s, vid = %d, type = %d count %d msg len %d", mac_msg->origin_ifname,  mac_msg->mac_str, mac_msg->vid, mac_msg->op_type, count, msg_len);
     #endif
 
     return msg_len;
@@ -333,43 +338,50 @@ int mlacp_prepare_for_mac_info_to_peer(struct CSM* csm, char* buf, size_t max_bu
 * Preprare Sync ARP-Info TLV
 *
 * ***************************************/
-int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, struct ARPMsg* arp_msg)
+int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, struct ARPMsg* arp_msg, int count)
 {
     struct mLACPARPInfoTLV* tlv = NULL;
     size_t msg_len = 0;
     size_t tlv_len = 0;
     ICCHdr* icc_hdr = NULL;
+    struct ARPMsg* ArpData;
 
     if (!csm)
-        return -1;
+        return MCLAG_ERROR;
     if (!buf)
-        return -1;
+        return MCLAG_ERROR;
 
-    tlv_len = sizeof(struct mLACPARPInfoTLV);
+    tlv_len = sizeof(struct mLACPARPInfoTLV) + sizeof(struct ARPMsg) * (count + 1);
 
     if ((msg_len = sizeof(ICCHdr) + tlv_len) > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     /* ICC header */
-    memset(buf, 0, max_buf_size);
     icc_hdr = (ICCHdr*)buf;
     mlacp_fill_icc_header(csm, icc_hdr, msg_len);
 
     /* Prepare for ARP information TLV */
-    tlv = (struct mLACPARPInfoTLV*) &buf[sizeof(ICCHdr)];
-    memset(tlv, 0, tlv_len);
-    tlv->icc_parameter.u_bit = 0;
-    tlv->icc_parameter.f_bit = 0;
-    tlv->icc_parameter.type = htons(TLV_T_MLACP_ARP_INFO);
+    tlv = (struct mLACPARPInfoTLV*)&buf[sizeof(ICCHdr)];
     tlv->icc_parameter.len = htons(tlv_len - sizeof(ICCParameter));
-    tlv->type = arp_msg->op_type;
-    sprintf(tlv->ifname, "%s", arp_msg->ifname);
-    tlv->ipv4_addr = htonl(arp_msg->ipv4_addr);
-    memcpy(tlv->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
-    
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg if name %s  msg ifname %s  mac  =%02x:%02x:%02x:%02x:%02x:%02x ", tlv->ifname, arp_msg->ifname,  tlv->mac_addr[0], tlv->mac_addr[1], tlv->mac_addr[2],
-                    tlv->mac_addr[3], tlv->mac_addr[4], tlv->mac_addr[5]);
-    ICCPD_LOG_DEBUG(__FUNCTION__, "    IP Addr = %s ", show_ip_str( tlv->ipv4_addr));
+    tlv->num_of_entry = htons(count + 1);
+
+    if (count == 0)
+    {
+        tlv->icc_parameter.u_bit = 0;
+        tlv->icc_parameter.f_bit = 0;
+        tlv->icc_parameter.type = htons(TLV_T_MLACP_ARP_INFO);
+    }
+
+    ArpData = (struct mLACPMACData *)&buf[sizeof(ICCHdr) + sizeof(struct mLACPARPInfoTLV) + sizeof(struct ARPMsg) * count];
+
+    ArpData->op_type = arp_msg->op_type;
+    sprintf(ArpData->ifname, "%s", arp_msg->ifname);
+    ArpData->ipv4_addr = htonl(arp_msg->ipv4_addr);
+    memcpy(ArpData->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Prepare Msg if name %s  mac  =%02x:%02x:%02x:%02x:%02x:%02x ", ArpData->ifname, ArpData->mac_addr[0], ArpData->mac_addr[1], ArpData->mac_addr[2],
+                    ArpData->mac_addr[3], ArpData->mac_addr[4], ArpData->mac_addr[5]);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "    IP Addr = %s ", show_ip_str( ArpData->ipv4_addr));
 
     return msg_len;
 }
@@ -392,15 +404,15 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
     int num_of_vlan_id = 0;
 
     if (csm == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if (buf == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if (port_channel == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if (port_channel->type == IF_T_PORT)
-        return -1;
+        return MCLAG_ERROR;
     if ((sys = system_get_instance()) == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     /* Calculate VLAN ID Length */
     LIST_FOREACH(vlan_id, &(port_channel->vlan_list), port_next)
@@ -410,7 +422,7 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
     tlv_len = sizeof(struct mLACPPortChannelInfoTLV) + sizeof(struct mLACPVLANData) * num_of_vlan_id;
 
     if ((msg_len = sizeof(ICCHdr) + tlv_len) > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for port channel info */
     memset(buf, 0, max_buf_size);
@@ -469,13 +481,13 @@ int mlacp_prepare_for_port_peerlink_info(struct CSM* csm, char* buf,
     size_t tlv_len;
 
     if (csm == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if (buf == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if (peerlink_port == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if ((sys = system_get_instance()) == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for port channel info */
     memset(buf, 0, max_buf_size);
@@ -483,7 +495,7 @@ int mlacp_prepare_for_port_peerlink_info(struct CSM* csm, char* buf,
     tlv_len = sizeof(struct mLACPPeerLinkInfoTLV);
 
     if ((msg_len = sizeof(ICCHdr) + tlv_len) > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     icc_hdr = (ICCHdr*)buf;
     tlv = (struct mLACPPeerLinkInfoTLV*)&buf[sizeof(ICCHdr)];
@@ -519,16 +531,16 @@ int mlacp_prepare_for_heartbeat(struct CSM* csm, char* buf, size_t max_buf_size)
     size_t msg_len = sizeof(ICCHdr) + sizeof(struct mLACPHeartbeatTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -561,16 +573,16 @@ int mlacp_prepare_for_warm_reboot(struct CSM* csm, char* buf, size_t max_buf_siz
     size_t msg_len = sizeof(ICCHdr) + sizeof(struct mLACPWarmbootTLV);
 
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (buf == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (msg_len > max_buf_size)
-        return -1;
+        return MCLAG_ERROR;
 
     if ((sys = system_get_instance()) == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Prepare for sync request */
     memset(buf, 0, max_buf_size);
@@ -598,7 +610,7 @@ int mlacp_prepare_for_warm_reboot(struct CSM* csm, char* buf, size_t max_buf_siz
 static int mlacp_fill_icc_header(struct CSM* csm, ICCHdr* icc_hdr, size_t msg_len)
 {
     if (csm == NULL || icc_hdr == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     /* ICC header */
     icc_hdr->ldp_hdr.u_bit = 0x0;

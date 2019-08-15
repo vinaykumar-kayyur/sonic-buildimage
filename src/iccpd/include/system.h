@@ -44,6 +44,8 @@
 
 #define WARM_REBOOT 1
 
+#define MCLAG_ERROR -1
+
 struct CSM;
 
 #ifndef MAX_BUFSIZE

@@ -35,7 +35,7 @@
 int set_mc_lag_id( struct CSM *csm, uint16_t id)
 {
     if (!csm)
-        return -1;
+        return MCLAG_ERROR;
 
     ICCPD_LOG_INFO(__FUNCTION__, "Set mlag-id : %d", id);
 
@@ -50,7 +50,7 @@ int set_mc_lag_id( struct CSM *csm, uint16_t id)
 int unset_mc_lag_id( struct CSM *csm, uint16_t id)
 {
     if (!csm)
-        return -1;
+        return MCLAG_ERROR;
 
     /* Mlag-ID, RG-ID, MLACP-ID*/
     csm->mlag_id = 0;
@@ -76,15 +76,15 @@ int set_peer_link(int mid, const char* ifname)
     if (strncmp(ifname, FRONT_PANEL_PORT_PREFIX, strlen(FRONT_PANEL_PORT_PREFIX)) != 0 && strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0 && strncmp(ifname, VXLAN_TUNNEL_PREFIX, strlen(VXLAN_TUNNEL_PREFIX)) != 0)
     {
         ICCPD_LOG_ERR(__FUNCTION__, "Peer-link is %s, must be Ethernet or PortChannel or VTTNL(Vxlan tunnel)", ifname);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (len > IFNAMSIZ)
-        return -1;
+        return MCLAG_ERROR;
 
     if (strlen(csm->peer_itf_name) > 0)
     {
@@ -142,7 +142,7 @@ int unset_peer_link(int mid)
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
     {
@@ -176,9 +176,9 @@ int set_local_address(int mid, const char* addr)
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
     if (addr == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     if (strlen(csm->sender_ip) > 0)
     {
@@ -214,7 +214,7 @@ int unset_local_address(int mid)
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     memset(csm->sender_ip, 0, INET_ADDRSTRLEN);
     memset(csm->iccp_info.sender_name, 0, INET_ADDRSTRLEN);
@@ -235,9 +235,9 @@ int set_peer_address(int mid, const char* addr)
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
     if (addr == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     len = strlen(addr);
 
@@ -272,7 +272,7 @@ int unset_peer_address(int mid)
 
     csm = system_get_csm_by_mlacp_id(mid);
     if (csm == NULL)
-        return -1;
+        return MCLAG_ERROR;
 
     memset(csm->peer_ip, 0, INET_ADDRSTRLEN);
 
@@ -289,20 +289,20 @@ int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname
     struct If_info * cif = NULL;
 
     if (!ifname)
-        return -1;
+        return MCLAG_ERROR;
 
     if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
     {
         ICCPD_LOG_DEBUG(__FUNCTION__,
                         "attach interface(%s) is not a port-channel", ifname);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     csm = system_get_csm_by_mlacp_id(domain);
     if (csm == NULL)
     {
         ICCPD_LOG_DEBUG(__FUNCTION__, "MC-LAG ID %d doesn't exist", domain);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     lif = local_if_find_by_name(ifname);
@@ -321,7 +321,7 @@ int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname
     {
         cif = (struct If_info *)malloc(sizeof(struct If_info));
         if (!cif)
-            return -1;
+            return MCLAG_ERROR;
 
         snprintf(cif->name, MAX_L_PORT_NAME, "%s", ifname);
         LIST_INSERT_HEAD(&(csm->if_bind_list), cif, csm_next);
@@ -339,13 +339,13 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
     struct If_info * cif = NULL;
 
     if (!ifname)
-        return -1;
+        return MCLAG_ERROR;
 
     if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
     {
         ICCPD_LOG_DEBUG(__FUNCTION__,
                         "detach interface(%s) is not a port-channel",  ifname);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /* find po*/
@@ -354,7 +354,7 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
         || lif_po->po_id <= 0
         || lif_po->csm == NULL)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /* find csm*/
@@ -391,13 +391,13 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
 
     if (bin_mac == NULL)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /* 6 hexadecimal numbers (two digits each) + 5 delimiters*/
     if (strlen(str_mac) != ETHER_ADDR_LEN * 2 + 5)
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /* first check that all mac address separators are equal to each other
@@ -407,13 +407,13 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
           && str_mac[8]  == str_mac[11]
           && str_mac[11] == str_mac[14]))
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /* then check that the first separator is equal to ':' or '-'*/
     if (str_mac[2] != ':' && str_mac[2] != '-')
     {
-        return -1;
+        return MCLAG_ERROR;
     }
 
     for (i = 0; i < ETHER_ADDR_LEN; ++i)
@@ -435,7 +435,7 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
         }
         else
         {
-            return -1;
+            return MCLAG_ERROR;
         }
 
         bin_mac[i] = (uint8_t)(bin_mac[i] << 4);
@@ -454,7 +454,7 @@ int parseMacString(const char * str_mac, uint8_t* bin_mac)
         }
         else
         {
-            return -1;
+            return MCLAG_ERROR;
         }
     }
 

@@ -345,7 +345,7 @@ int iccp_genric_socket_team_family_get()
     int grp_id = 0;
 
     if ((sys = system_get_instance()) == NULL )
-        return -1;
+        return MCLAG_ERROR;
     if (sys->family < 0)
     {
         sys->family = genl_ctrl_resolve(sys->genric_sock, TEAM_GENL_NAME);
@@ -423,7 +423,7 @@ int iccp_netlink_if_hwaddr_set(uint32_t ifindex, uint8_t *addr, unsigned int add
     struct System* sys = NULL;
 
     if (!(sys = system_get_instance()))
-        return -1;
+        return MCLAG_ERROR;
 
     link = rtnl_link_alloc();
     if (!link)
@@ -763,17 +763,17 @@ void iccp_event_handler_obj_input_newlink(struct nl_object *obj, void *arg)
         {
             lif->state = PORT_STATE_UP;
             /*if(lif->type ==IF_T_PORT_CHANNEL)*/
-            iccp_from_netlink_port_state_handler(lif->name, lif->state);
+            ICCPD_LOG_INFO(__FUNCTION__, "update local port %s state up", ifname);
 
-            ICCPD_LOG_INFO(__FUNCTION__, "update  local port %s state %x  ", ifname, op_state  );
+            iccp_from_netlink_port_state_handler(lif->name, lif->state);
         }
         else if (lif->state == PORT_STATE_UP && ( IF_OPER_UP != op_state || !(link_flag & IFF_LOWER_UP)))
         {
             lif->state = PORT_STATE_DOWN;
             /*if(lif->type ==IF_T_PORT_CHANNEL)*/
-            iccp_from_netlink_port_state_handler(lif->name, lif->state);
+            ICCPD_LOG_INFO(__FUNCTION__, "update local port %s state down", ifname);
 
-            ICCPD_LOG_INFO(__FUNCTION__, "update  local port %s state %x  ", ifname, op_state  );
+            iccp_from_netlink_port_state_handler(lif->name, lif->state);
         }
 
         switch (addr_type)
@@ -874,7 +874,7 @@ int iccp_sys_local_if_list_get_addr()
     int retry = 1;
 
     if (!(sys = system_get_instance()))
-        return -1;
+        return MCLAG_ERROR;
 
     while (retry)
     {
@@ -970,7 +970,7 @@ int iccp_system_init_netlink_socket()
     int err = 0;
 
     if ((sys = system_get_instance()) == NULL )
-        return -1;
+        return MCLAG_ERROR;
 
     sys->genric_sock = nl_socket_alloc();
     if (!sys->genric_sock)
@@ -1225,7 +1225,7 @@ static int iccp_receive_arp_packet_handler(struct System *sys)
     if (n < 0)
     {
         ICCPD_LOG_DEBUG(__FUNCTION__, "arp recvfrom: %s", buf);
-        return -1;
+        return MCLAG_ERROR;
     }
 
     /* Sanity checks */
