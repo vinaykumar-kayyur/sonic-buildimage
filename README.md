@@ -50,7 +50,12 @@ Install pip and jinja in host build machine, execute below commands if j2/j2cli 
     sudo python2 -m pip install -U pip==9.0.3
     sudo pip install --force-reinstall --upgrade jinja2>=2.10
     sudo pip install j2cli
-
+    
+Configure your system to allow running the 'docker' command without 'sudo'
+      1. Add current user to the docker group
+	 `sudo gpasswd -a ${USER} docker`
+      2. Log out and log back in so that your group membership is re-evaluated
+      
 ## SAI Version 
 Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release. 
 
@@ -71,11 +76,6 @@ To build SONiC installer image and docker images, run the following commands:
 
     # (Optional) Checkout a specific branch. By default, it uses master branch
     git checkout [branch_name]
-
-    # Use docker command without sudo
-      1. Add current user to the docker group
-	 sudo gpasswd -a ${USER} docker
-      2. Log out and log back in so that your group membership is re-evaluated .	
 
     # Execute make init once after cloning the repo, or after fetching remote repo with submodule updates
     make init
