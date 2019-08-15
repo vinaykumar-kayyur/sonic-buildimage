@@ -4,7 +4,7 @@ declare -r EXIT_SUCCESS="0"
 declare -r EXIT_ERROR="1"
 
 declare -r FW_UPGRADE_SCRIPT="/usr/bin/mlnx-fw-upgrade.sh"
-declare -r SYSFS_PWR_CYCLE="/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon1/pwr_cycle"
+declare -r SYSFS_PWR_CYCLE="/sys/devices/platform/mlxplat/mlxreg-io/hwmon/hwmon*/pwr_cycle"
 
 FORCE_REBOOT="no"
 
