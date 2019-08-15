@@ -28,9 +28,11 @@
 ## Enable debug output for script
 set -x -e
 
+CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
+
 ## docker engine version (with platform)
-DOCKER_VERSION=1.11.1-0~stretch_amd64
-LINUX_KERNEL_VERSION=4.9.0-8
+DOCKER_VERSION=5:18.09.8~3-0~debian-stretch
+LINUX_KERNEL_VERSION=4.9.0-9-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -63,9 +65,21 @@ mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 
+## make / as a mountpoint in chroot env, needed by dockerd
+pushd $FILESYSTEM_ROOT
+sudo mount --bind . .
+popd
+
 ## Build a basic Debian system by debootstrap
 echo '[INFO] Debootstrap...'
-sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch amd64 stretch $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # qemu arm bin executable for cross-building
+    sudo mkdir -p $FILESYSTEM_ROOT/usr/bin
+    sudo cp /usr/bin/qemu*static $FILESYSTEM_ROOT/usr/bin || true
+    sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch $CONFIGURED_ARCH stretch $FILESYSTEM_ROOT http://deb.debian.org/debian
+else
+    sudo http_proxy=$http_proxy debootstrap --variant=minbase --arch $CONFIGURED_ARCH stretch $FILESYSTEM_ROOT http://debian-archive.trafficmanager.net/debian
+fi
 
 ## Config hostname and hosts, otherwise 'sudo ...' will complain 'sudo: unable to resolve host ...'
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '$HOSTNAME' > /etc/hostname"
@@ -87,7 +101,7 @@ trap_push 'sudo umount $FILESYSTEM_ROOT/proc || true'
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
-sudo cp files/apt/sources.list $FILESYSTEM_ROOT/etc/apt/
+sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
 sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages}} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'apt-mark auto `apt-mark showmanual`'
 
@@ -99,7 +113,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc systemd-sy
 
 ## Create device files
 echo '[INFO] MAKEDEV'
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic-arm'
+else
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
+fi
 ## Install initramfs-tools and linux kernel
 ## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
 ## 1. commands such as touch
@@ -109,13 +127,19 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox
 echo '[INFO] Install SONiC linux kernel image'
 ## Note: duplicate apt-get command to ensure every line return zero
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools-core_*.deb || \
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install cpio klibc-utils kmod libklibc udev linux-base
+    sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-*${CONFIGURED_ARCH}*.deb || \
+        sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+fi
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/initramfs-tools_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i target/debs/linux-image-${LINUX_KERNEL_VERSION}-amd64_*.deb || \
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
+[[ $CONFIGURED_ARCH == amd64 ]] && sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode
 
 ## Update initramfs for booting with squashfs+overlay
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
@@ -124,6 +148,8 @@ cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-t
 sudo mkdir -p $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/
 sudo cp files/initramfs-tools/arista-convertfs $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-convertfs
+sudo cp files/initramfs-tools/arista-hook $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-hook
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-hook
 sudo cp files/initramfs-tools/mke2fs $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 sudo cp files/initramfs-tools/setfacl $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/setfacl
@@ -145,31 +171,42 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/union-mou
 sudo cp files/initramfs-tools/varlog $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 # Management interface (eth0) dhcp can be optionally turned off (during a migration from another NOS to SONiC)
-sudo cp files/initramfs-tools/mgmt-intf-dhcp $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
-sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
+#sudo cp files/initramfs-tools/mgmt-intf-dhcp $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
+#sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
 sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 pushd $FILESYSTEM_ROOT/usr/share/initramfs-tools/scripts/init-bottom && sudo patch -p1 < $OLDPWD/files/initramfs-tools/udev.patch; popd
 
-## Install latest intel ixgbe driver
-sudo cp target/files/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    ## Install latest intel ixgbe driver
+    sudo cp $files_path/ixgbe.ko $FILESYSTEM_ROOT/lib/modules/${LINUX_KERNEL_VERSION}-amd64/kernel/drivers/net/ethernet/intel/ixgbe/ixgbe.ko
+fi
 
 ## Install docker
 echo '[INFO] Install docker'
 ## Install apparmor utils since they're missing and apparmor is enabled in the kernel
 ## Otherwise Docker will fail to start
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
-docker_deb_url=https://apt.dockerproject.org/repo/pool/main/d/docker-engine/docker-engine_${DOCKER_VERSION}.deb
-docker_deb_temp=`mktemp`
-trap_push "rm -f $docker_deb_temp"
-wget $docker_deb_url -qO $docker_deb_temp
-sudo dpkg --root=$FILESYSTEM_ROOT -i $docker_deb_temp || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
+                                                       ca-certificates \
+                                                       curl \
+                                                       gnupg2 \
+                                                       software-properties-common
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.gpg -fsSL https://download.docker.com/linux/debian/gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/docker.gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
+sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
+                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian stretch stable"
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
 ## Add docker config drop-in to select aufs, otherwise it may select other storage driver
 sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
 ## Note: $_ means last argument of last command
 sudo cp files/docker/docker.service.conf $_
+## Fix systemd race between docker and containerd
+sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
 ## Create default user
 ## Note: user should be in the group with the same name, and also in sudo/docker group
@@ -177,9 +214,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
-## Pre-install hardware drivers
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
-    firmware-linux-nonfree
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    ## Pre-install hardware drivers
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
+        firmware-linux-nonfree
+fi
 
 ## Pre-install the fundamental packages
 ## Note: gdisk is needed for sgdisk in install.sh
@@ -188,7 +227,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
 ## Note: don't install python-apt by pip, older than Debian repo one
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     file                    \
-    ifupdown                \
+    ifmetric                \
     iproute2                \
     bridge-utils            \
     isc-dhcp-client         \
@@ -213,6 +252,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     usbutils                \
     pciutils                \
     iptables-persistent     \
+    ebtables                \
     logrotate               \
     curl                    \
     kexec-tools             \
@@ -220,6 +260,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     unzip                   \
     gdisk                   \
     sysfsutils              \
+    squashfs-tools          \
     grub2-common            \
     rsyslog                 \
     ethtool                 \
@@ -228,7 +269,18 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-scapy            \
     tcptraceroute           \
     mtr-tiny                \
-    locales
+    locales                 \
+    cgroup-tools            \
+    ipmitool                \
+    ndisc6
+
+
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+## Pre-install the fundamental packages for amd64 (x86)
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+    flashrom                \
+    mcelog
+fi
 
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
@@ -241,26 +293,46 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -na
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t stretch-backports install \
     picocom
 
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
-    grub-pc-bin
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
+        grub-pc-bin
 
-sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
+    sudo mv $FILESYSTEM_ROOT/grub-pc-bin*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
+fi
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
 
-## Fix ping tools permission so non root user can directly use them
-## Note: this is a workaround since aufs doesn't support extended attributes
-## Ref: https://github.com/moby/moby/issues/5650#issuecomment-303499489
-## TODO: remove workaround when the overlay filesystem support extended attributes
-sudo chmod u+s $FILESYSTEM_ROOT/bin/ping{,6}
+## Modifty ntp default configuration: disable initial jump (add -x), and disable
+## jump when time difference is greater than 1000 seconds (remove -g).
+sudo sed -i "s/NTPD_OPTS='-g'/NTPD_OPTS='-x'/" $FILESYSTEM_ROOT/etc/default/ntp
 
 ## Remove sshd host keys, and will regenerate on first sshd start
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
 sudo cp files/sshd/host-ssh-keygen.sh $FILESYSTEM_ROOT/usr/local/bin/
 sudo cp -f files/sshd/sshd.service $FILESYSTEM_ROOT/lib/systemd/system/ssh.service
-## Config sshd
-sudo augtool --autosave "set /files/etc/ssh/sshd_config/UseDNS no" -r $FILESYSTEM_ROOT
+# Config sshd
+# 1. Set 'UseDNS' to 'no'
+# 2. Configure sshd to close all SSH connetions after 15 minutes of inactivity
+sudo augtool -r $FILESYSTEM_ROOT <<'EOF'
+touch /files/etc/ssh/sshd_config/EmptyLineHack
+rename /files/etc/ssh/sshd_config/EmptyLineHack ""
+set /files/etc/ssh/sshd_config/UseDNS no
+ins #comment before /files/etc/ssh/sshd_config/UseDNS
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::UseDNS]] "Disable hostname lookups"
+
+rm /files/etc/ssh/sshd_config/ClientAliveInterval
+rm /files/etc/ssh/sshd_config/ClientAliveCountMax
+touch /files/etc/ssh/sshd_config/EmptyLineHack
+rename /files/etc/ssh/sshd_config/EmptyLineHack ""
+set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
+ins #comment before /files/etc/ssh/sshd_config/ClientAliveInterval
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 15 minutes"
+save
+quit
+EOF
+# Configure sshd to listen for v4 connections; disable listening for v6 connections
 sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
@@ -282,9 +354,13 @@ check filesystem root-overlay with path /
 check filesystem var-log with path /var/log
   if space usage > 90% for 5 times within 10 cycles then alert
 check system $HOST
-  if memory usage > 90% for 5 times within 10 cycles then alert
+  if memory usage > 50% for 5 times within 10 cycles then alert
   if cpu usage (user) > 90% for 5 times within 10 cycles then alert
   if cpu usage (system) > 90% for 5 times within 10 cycles then alert
+check process rsyslog with pidfile /var/run/rsyslogd.pid
+  start program = "/bin/systemctl start rsyslog.service"
+  stop program = "/bin/systemctl stop rsyslog.service"
+  if totalmem > 800 MB for 5 times within 10 cycles then restart
 EOF
 
 ## Config sysctl
@@ -294,6 +370,7 @@ set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %
 
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
+set /files/etc/sysctl.conf/vm.panic_on_oom 2
 set /files/etc/sysctl.conf/fs.suid_dumpable 2
 
 set /files/etc/sysctl.conf/net.ipv4.conf.default.forwarding 1
@@ -327,15 +404,28 @@ set /files/etc/sysctl.conf/net.ipv6.conf.all.keep_addr_on_down 1
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.keep_addr_on_down 1
 
 set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra_defrtr 0
+set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_ra 0
+
+set /files/etc/sysctl.conf/net.ipv4.tcp_l3mdev_accept 1
+set /files/etc/sysctl.conf/net.ipv4.udp_l3mdev_accept 1
 
 set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
 
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    # Configure mcelog to log machine checks to syslog
+    sudo sed -i 's/^#syslog = yes/syslog = yes/' $FILESYSTEM_ROOT/etc/mcelog/mcelog.conf
+fi
+
 ## docker-py is needed by Ansible docker module
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT easy_install pip
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'docker-py==1.6.0'
 ## Note: keep pip installed for maintainance purpose
+
+## Get gcc and python dev pkgs
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gcc libpython2.7-dev
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'netifaces==0.10.7'
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
@@ -352,6 +442,7 @@ sudo cp files/dhcp/rfc3442-classless-routes $FILESYSTEM_ROOT/etc/dhcp/dhclient-e
 sudo cp files/dhcp/sethostname $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
+sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 
 ## Version file
@@ -374,16 +465,45 @@ fi
 ## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...
 if [ "${enable_organization_extensions}" = "y" ]; then
    if [ -f files/build_templates/organization_extensions.sh ]; then
-      sudo chmod 755 files/build_templates/organization_extensions.sh 
+      sudo chmod 755 files/build_templates/organization_extensions.sh
       ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
    fi
 fi
+
+## Setup ebtable rules (rule file is in binary format)
+sudo sed -i 's/EBTABLES_LOAD_ON_START="no"/EBTABLES_LOAD_ON_START="yes"/g' ${FILESYSTEM_ROOT}/etc/default/ebtables
+sudo cp files/image_config/ebtables/ebtables.filter ${FILESYSTEM_ROOT}/etc
+
+## Debug Image specific changes
+## Update motd for debug image
+if [ "$DEBUG_IMG" == "y" ]
+then
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '**************' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'Running DEBUG image' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '**************' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/src has the sources' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/src is mounted in each docker' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is created for core files or temp files' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'Create a subdir under /debug to upload your files' >> /etc/motd"
+    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is mounted in each docker' >> /etc/motd"
+
+    sudo mkdir -p $FILESYSTEM_ROOT/src
+    pushd src
+        ../scripts/dbg_files.sh | sudo tar -cvzf ../$FILESYSTEM_ROOT/src/sonic_src.tar.gz -T -
+    popd
+
+    sudo mkdir -p $FILESYSTEM_ROOT/debug
+
+fi
+
+## Remove gcc and python dev pkgs
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev
 
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 
 ## Clean up apt
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoremove
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y autoremove
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get autoclean
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get clean
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'rm -rf /usr/share/doc/* /usr/share/locale/* /var/lib/apt/lists/* /tmp/*'
@@ -401,6 +521,12 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
 sleep 15
 sudo umount $FILESYSTEM_ROOT/proc || true
 
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # Remove qemu arm bin executable used for cross-building
+    sudo rm -f $FILESYSTEM_ROOT/usr/bin/qemu*static || true
+    DOCKERFS_PATH=../dockerfs/
+fi
+
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
 
@@ -413,7 +539,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C var/lib/docker .; popd
+pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
 pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
