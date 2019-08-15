@@ -103,10 +103,6 @@ ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
 ENABLE_SYNCD_RPC = y
 endif
 
-ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
-INSTALL_DEBUG_TOOLS = y
-endif
-
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
 ifneq ($(CONFIGURED_PLATFORM), undefined)
