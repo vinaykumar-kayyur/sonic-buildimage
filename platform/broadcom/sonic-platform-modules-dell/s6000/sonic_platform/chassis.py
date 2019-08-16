@@ -10,6 +10,7 @@
 try:
     import os
     from sonic_platform_base.chassis_base import ChassisBase
+    from sonic_platform.sfp import Sfp
     from sonic_platform.psu import Psu
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
