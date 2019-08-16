@@ -10,8 +10,11 @@
 try:
     import os
     from sonic_platform_base.chassis_base import ChassisBase
+    from sonic_platform.psu import Psu
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+MAX_S6000_PSU = 2
 
 
 class Chassis(ChassisBase):
@@ -27,6 +30,10 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
+
+        for i in range(MAX_S6000_PSU):
+            psu = Psu(i)
+            self._psu_list.append(psu)
 
     def get_register(self, reg_name):
         rv = 'ERR'
