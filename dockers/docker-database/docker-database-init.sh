@@ -7,9 +7,8 @@ else
     cp /etc/default/sonic-db/database_config.json /var/run/redis/sonic-db
 fi
 
+mkdir -p /etc/supervisor/conf.d/
 # generate all redis server supervisord configuration file
-sonic-cfggen -j /var/run/redis/sonic-db/database_config.json -t /usr/share/sonic/templates/supervisord_database.conf.j2 > /etc/supervisor/conf.d/supervisord_database.conf
+sonic-cfggen -j /var/run/redis/sonic-db/database_config.json -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
 
-# finally, reread supervisord config files and start new added redis servers only
-supervisorctl reread
-supervisorctl update
+exec /usr/bin/supervisord
