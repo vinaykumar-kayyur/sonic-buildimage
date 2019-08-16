@@ -12,6 +12,14 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	pushd ./libpsample
 	git checkout -b libpsample -f e48fad2
+
+	# get the dpkg lock and install libmnl-dev
+	while true; do
+	if mkdir $(DEST)/dpkg_lock &> /dev/null; then
+	{ sudo apt-get install -f -y libmnl-dev=1.0.4-2 && rm -d $(DEST)/dpkg_lock && break; } || { rm -d $(DEST)/dpkg_lock && exit 1 ; }
+	fi
+	done
+
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
