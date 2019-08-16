@@ -11,8 +11,13 @@ try:
     import os
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
+    from sonic_platform.psu import Psu
+    from sonic_platform.thermal import Thermal
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+MAX_S6000_PSU = 2
+MAX_S6000_THERMAL = 10
 
 
 class Chassis(ChassisBase):
@@ -44,6 +49,14 @@ class Chassis(ChassisBase):
             eeprom_path = eeprom_base.format(index + EEPROM_OFFSET)
             sfp_node = Sfp(index, 'QSFP', eeprom_path, sfp_control, index)
             self._sfp_list.append(sfp_node)
+
+        for i in range(MAX_S6000_PSU):
+            psu = Psu(i)
+            self._psu_list.append(psu)
+
+        for i in range(MAX_S6000_THERMAL):
+            thermal = Thermal(i)
+            self._thermal_list.append(thermal)
 
     def get_register(self, reg_name):
         rv = 'ERR'
