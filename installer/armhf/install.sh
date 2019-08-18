@@ -29,11 +29,13 @@ fi
 
 echo "Installer: platform: $platform"
 
+# install_uimage will be overriden from platform.conf as it is non generic
 install_uimage() {
     echo "Copying uImage to NOR flash:"
     flashcp -v demo-${platform}.itb $mtd_dev
 }
 
+# hw_load will be overriden from platform.conf as it is non generic
 hw_load() {
     echo "cp.b $img_start \$loadaddr $img_sz"
 }
@@ -43,10 +45,6 @@ hw_load() {
 install_uimage
 
 hw_load_str="$(hw_load)"
-
-echo "Updating U-Boot environment variables"
-
-fw_setenv -f -s /tmp/env.txt
 
 cd /
 
