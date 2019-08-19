@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
+#############################################################################
+# Accton
+#
+# Module contains an implementation of SONiC PSU Base API and
+# provides the PSUs status which are available in the platform
+#
+#############################################################################
+
 import os.path
 
 try:
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:
-    raise ImportError(str(e) + "- required module not found")
-
+    raise ImportError (str(e) + "- required module not found")
 
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
@@ -14,29 +21,25 @@ class PsuUtil(PsuBase):
     def __init__(self):
         PsuBase.__init__(self)
 
-        self.psu_path = "/sys/devices/platform/e1031.smc/"
-        self.psu_presence = "psu{}_prs"
-        self.psu_oper_status = "psu{}_status"
+        self.psu_path = "/sys/bus/i2c/devices/"
+        self.psu_presence = "/psu_present"
+        self.psu_oper_status = "/psu_power_good"
+        self.psu_mapping = {
+            1: "57-0038",
+            2: "58-003b",
+        }
 
     def get_num_psus(self):
-        """
-        Retrieves the number of PSUs available on the device
-
-        :return: An integer, the number of PSUs available on the device
-        """
-        return 2
+        return len(self.psu_mapping)
 
     def get_psu_status(self, index):
-        """
-        Retrieves the oprational status of power supply unit (PSU) defined by 1-based index <index>
+        if index is None:
+            return False
 
-        :param index: An integer, 1-based index of the PSU of which to query status
-        :return: Boolean, True if PSU is operating properly, False if PSU is faulty
-        """
-        psu_location = ["R", "L"]
         status = 0
+        node = self.psu_path + self.psu_mapping[index]+self.psu_oper_status
         try:
-            with open(self.psu_path + self.psu_oper_status.format(psu_location[index - 1]), 'r') as power_status:
+            with open(node, 'r') as power_status:
                 status = int(power_status.read())
         except IOError:
             return False
@@ -44,17 +47,14 @@ class PsuUtil(PsuBase):
         return status == 1
 
     def get_psu_presence(self, index):
-        """
-        Retrieves the presence status of power supply unit (PSU) defined by 1-based index <index>
+        if index is None:
+            return False
 
-        :param index: An integer, 1-based index of the PSU of which to query status
-        :return: Boolean, True if PSU is plugged, False if not
-        """
-        psu_location = ["R", "L"]
         status = 0
+        node = self.psu_path + self.psu_mapping[index] + self.psu_presence
         try:
-            with open(self.psu_path + self.psu_presence.format(psu_location[index - 1]), 'r') as psu_prs:
-                status = int(psu_prs.read())
+            with open(node, 'r') as presence_status:
+                status = int(presence_status.read())
         except IOError:
             return False
 
