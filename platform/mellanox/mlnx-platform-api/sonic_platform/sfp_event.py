@@ -65,7 +65,7 @@ class sfp_event:
                         .format(retry, self.SX_OPEN_TIMEOUT * self.SX_OPEN_RETRIES))
                 else:
                     logger.log_info("SDK daemon not started yet, retry {} times".format(retry))
-                    retry = retry + 1
+                    retry += 1
                     time.sleep(self.SX_OPEN_TIMEOUT)
 
             # to make sure SDK daemon has started
@@ -107,7 +107,7 @@ class sfp_event:
                         raise RuntimeError("sx_api_port_swid_list_get fail with rc {}, retry {} times and wait for {} seconds".
                             format(rc, retry, self.SX_OPEN_TIMEOUT * retry))
 
-                    retry = retry + 1
+                    retry += 1
                     time.sleep(self.SX_OPEN_TIMEOUT)
 
             # After switch was created inside SDK, sx_api_host_ifc_trap_id_register_set is ready to call
