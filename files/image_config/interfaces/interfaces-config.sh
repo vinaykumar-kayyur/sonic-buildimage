@@ -7,7 +7,7 @@ if [ -e /etc/network/ifupdown2/policy.d/ztp_dhcp.json ]; then
     # Obtain port operational state information
     redis-dump -d 0 -k "PORT_TABLE:Ethernet*"  -y > /tmp/ztp_port_data.json
 
-    if [ ! -e /tmp/ztp_port_data.json ] || [ "$(cat /tmp/ztp_port_data.json)" = "" ]; then
+    if [ $? -ne 0 ] || [ ! -e /tmp/ztp_port_data.json ] || [ "$(cat /tmp/ztp_port_data.json)" = "" ]; then
         echo "{}" > /tmp/ztp_port_data.json
     fi
 
@@ -25,7 +25,7 @@ sonic-cfggen -d -j /tmp/ztp_input.json -t /usr/share/sonic/templates/interfaces.
 [ -f /var/run/dhclient6.eth0.pid ] && kill `cat /var/run/dhclient6.eth0.pid` && rm -f /var/run/dhclient6.eth0.pid
 
 for intf_pid in $(ls -1 /var/run/dhclient*.Ethernet*.pid 2> /dev/null); do
-  [ -f ${intf_pid} ] && kill `cat ${intf_pid}` && rm -f ${intf_pid}
+    [ -f ${intf_pid} ] && kill `cat ${intf_pid}` && rm -f ${intf_pid}
 done
 
 sonic-cfggen -d -j /tmp/ztp_input.json -t /usr/share/sonic/templates/dhclient.conf.j2 > /etc/dhcp/dhclient.conf
