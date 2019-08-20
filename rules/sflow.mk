@@ -11,7 +11,12 @@ $(HSFLOWD)_SRC_PATH = $(SRC_PATH)/sflow/hsflowd
 SONIC_MAKE_DEBS += $(HSFLOWD)
 SONIC_STRETCH_DEBS += $(HSFLOWD)
 
-export HSFLOWD
+HSFLOWD_DBG = hsflowd-dbg_$(HSFLOWD_VERSION)-$(HSFLOWD_SUBVERSION)_$(CONFIGURED_ARCH).deb
+$(HSFLOWD_DBG)_DEPENDS += $(HSFLOWD)
+$(HSFLOWD_DBG)_RDEPENDS += $(HSFLOWD)
+$(eval $(call add_derived_package,$(HSFLOWD),$(HSFLOWD_DBG)))
+
+export HSFLOWD HSFLOWD_DBG
 
 # sflowtool package
 
@@ -37,3 +42,8 @@ $(PSAMPLE)_SRC_PATH = $(SRC_PATH)/sflow/psample
 SONIC_MAKE_DEBS += $(PSAMPLE)
 SONIC_STRETCH_DEBS += $(PSAMPLE)
 export PSAMPLE
+
+# The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
+# are archived into debug one image to facilitate debugging.
+#
+DBG_SRC_ARCHIVE += sflow
