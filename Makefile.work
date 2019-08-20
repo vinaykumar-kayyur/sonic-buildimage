@@ -242,3 +242,7 @@ reset :
 	    else \
 	        echo "Reset aborted"; \
 	    fi
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
+	@sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
+	@sudo sudo rm -f /var/run/march/docker.pid || true
+endif
