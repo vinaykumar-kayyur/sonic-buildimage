@@ -213,7 +213,7 @@ class Psu(PsuBase):
 
         return status
 
-    def set_status_led(self):
+    def set_status_led(self, color):
         """
         Sets the state of the PSU status LED
         Args:
@@ -223,5 +223,6 @@ class Psu(PsuBase):
             bool: True if status LED state is set successfully, False if
                   not
         """
-        # Hardware not supported
+        # In S6000, the firmware running in the PSU controls the LED
+        # and the PSU LED state cannot be changed from CPU.
         return False
