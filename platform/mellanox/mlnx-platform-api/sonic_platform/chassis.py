@@ -81,6 +81,8 @@ class Chassis(ChassisBase):
 
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
+        self.sfp_module = None
+        logger.log_info("Chassis loaded successfully")
 
     def initialize_psu(self):
         from sonic_platform.psu import Psu
@@ -147,6 +149,58 @@ class Chassis(ChassisBase):
         self._component_name_list.append(COMPONENT_FIRMWARE)
         self._component_name_list.append(COMPONENT_CPLD1)
         self._component_name_list.append(COMPONENT_CPLD2)
+
+    ##############################################
+    # SFP methods
+    ##############################################
+    def get_num_sfps(self):
+        """
+        Retrieves the number of sfps available on this chassis
+
+        Returns:
+            An integer, the number of sfps available on this chassis
+        """
+        if self.sfp_module is None:
+            self.initialize_sfp()
+        return len(self._sfp_list)
+
+    def get_all_sfps(self):
+        """
+        Retrieves all sfps available on this chassis
+
+        Returns:
+            A list of objects derived from SfpBase representing all sfps 
+            available on this chassis
+        """
+        if self.sfp_module is None:
+            self.initialize_sfp()
+        return self._sfp_list
+
+    def get_sfp(self, index):
+        """
+        Retrieves sfp represented by (0-based) index <index>
+
+        Args:
+            index: An integer, the index (0-based) of the sfp to retrieve.
+                   The index should be the sequence of a physical port in a chassis,
+                   starting from 0.
+                   For example, 0 for Ethernet0, 1 for Ethernet4 and so on.
+
+        Returns:
+            An object dervied from SfpBase representing the specified sfp
+        """
+        if self.sfp_module is None:
+            self.initialize_sfp()
+
+        sfp = None
+
+        try:
+            sfp = self._sfp_list[index]
+        except IndexError:
+            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
+                             index, len(self._sfp_list)-1))
+
+        return sfp
 
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0

@@ -22,7 +22,6 @@ class Platform(PlatformBase):
             self._chassis = Chassis()
             self._chassis.initialize_psu()
             self._chassis.initialize_fan()
-            self._chassis.initialize_sfp()
             self._chassis.initialize_eeprom()
             self._chassis.initialize_components_list()
 
