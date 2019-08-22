@@ -26,7 +26,7 @@ SERVICE_DIR := service
 SCRIPTS_DIR := scripts
 CONF_DIR := conf
 PROCESS_DIR := pegaProcess
-
+IXGBE_VERSION := 5.2.4
 %:
 	dh $@ --with systemd,python2,python3 --buildsystem=pybuild
 
@@ -37,10 +37,17 @@ clean:
 
 build:
 	# For fn-6254-dn-f ixgbe driver
-	git clone https://github.com/Peter5Lin/kernelDriver
-	git --git-dir=kernelDriver/.git/ --work-tree=kernelDriver am ../fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/0001-modify-Intel-ixgbe-driver-for-fn-6254-dn-f.patch
-	cp kernelDriver/* $(MOD_SRC_DIR)/fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/        
-	rm -rf kernelDriver
+	rm -rf ./ixgbe-$(IXGBE_VERSION)
+	wget -O ixgbe.tar.gz "https://sonicstorage.blob.core.windows.net/packages/ixgbe-5.2.4.tar.gz?sv=2015-04-05&sr=b&sig=AaqJHHaPiJRp8R3HKobi0GNDgHAVnqijk6hpahwJ0Mg%3D&se=2154-10-05T22%3A19%3A29Z&sp=r"
+	tar xzf ixgbe.tar.gz
+	rm ixgbe-$(IXGBE_VERSION)/src/Makefile ixgbe-$(IXGBE_VERSION)/src/common.mk ixgbe-$(IXGBE_VERSION)/src/Module.supported
+	git init ixgbe-$(IXGBE_VERSION)/src
+	git --git-dir=./ixgbe-$(IXGBE_VERSION)/src/.git --work-tree=ixgbe-$(IXGBE_VERSION)/src add --all
+	git --git-dir=./ixgbe-$(IXGBE_VERSION)/src/.git --work-tree=ixgbe-$(IXGBE_VERSION)/src commit -m "unmodified ixgbe source"
+	cp ./fn-6254-dn-f/modules/pegatron_fn_6254_dn_f_ixgbe/0001-modify-Intel-ixgbe-driver-for-fn-6254-dn-f.patch ./ixgbe-$(IXGBE_VERSION)/src/
+	git --git-dir=./ixgbe-$(IXGBE_VERSION)/src/.git --work-tree=ixgbe-$(IXGBE_VERSION)/src am 0001-modify-Intel-ixgbe-driver-for-fn-6254-dn-f.patch
+	cp ./ixgbe-$(IXGBE_VERSION)/src/* $(MOD_SRC_DIR)/fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/
+	
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
 	done)
