@@ -122,7 +122,7 @@ class sfp_event:
 
             self.running = True
         except Exception as e:
-            logger.log_error("mlnx-sfpd initialization failed due to {}, exiting...".format(repr(e)))
+            logger.log_error("sfp_event initialization failed due to {}, exiting...".format(repr(e)))
             if swid_cnt_p is not None:
                 delete_uint32_t_p(swid_cnt_p)
             self.deinitialize()
