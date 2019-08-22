@@ -35,14 +35,6 @@ HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 
-REBOOT_CAUSE_POWER_LOSS_FILE = 'reset_main_pwr_fail'
-REBOOT_CAUSE_AUX_POWER_LOSS_FILE = 'reset_aux_pwr_or_ref'
-REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE = 'reset_asic_thermal'
-REBOOT_CAUSE_WATCHDOG_FILE = 'reset_hotswap_or_wd'
-REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
-REBOOT_CAUSE_LONG_PB = 'reset_long_pb'
-REBOOT_CAUSE_SHORT_PB = 'reset_short_pb'
-
 REBOOT_CAUSE_FILE_LENGTH = 1
 
 #version retrieving related definitions
@@ -82,6 +74,7 @@ class Chassis(ChassisBase):
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
         self.sfp_module = None
+        self.reboot_cause_initialized = False
         logger.log_info("Chassis loaded successfully")
 
     def initialize_psu(self):
@@ -293,7 +286,7 @@ class Chassis(ChassisBase):
             return result
         except Exception as e:
             logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
-            return ''
+            return '0'
 
     def _verify_reboot_cause(self, filename):
         '''
@@ -302,6 +295,31 @@ class Chassis(ChassisBase):
         If a reboot cause file doesn't exists, returns '0'.
         '''
         return bool(int(self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')))
+
+    def initialize_reboot_cause(self):
+        self.reboot_major_cause_dict = {
+            'reset_main_pwr_fail'       :   self.REBOOT_CAUSE_POWER_LOSS,
+            'reset_aux_pwr_or_ref'      :   self.REBOOT_CAUSE_POWER_LOSS,
+            'reset_asic_thermal'        :   self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC,
+            'reset_hotswap_or_wd'       :   self.REBOOT_CAUSE_WATCHDOG,
+            'reset_swb_wd'              :   self.REBOOT_CAUSE_WATCHDOG,
+            'reset_sff_wd'              :   self.REBOOT_CAUSE_WATCHDOG
+        }
+        self.reboot_minor_cause_dict = {
+            'reset_fw_reset'            :   "Reset by ASIC firmware",
+            'reset_long_pb'             :   "Reset by long press on power button",
+            'reset_short_pb'            :   "Reset by short press on power button",
+            'reset_comex_thermal'       :   "ComEx thermal shutdown",
+            'reset_comex_pwr_fail'      :   "ComEx power fail",
+            'reset_comex_wd'            :   "Reset requested from ComEx",
+            'reset_from_asic'           :   "Reset requested from ASIC",
+            'reset_reload_bios'         :   "Reset caused by BIOS reload",
+            'reset_sw_reset'            :   "Software reset",
+            'reset_hotswap_or_halt'     :   "Reset caused by hotswap or halt",
+            'reset_from_comex'          :   "Reset from ComEx",
+            'reset_voltmon_upgrade_fail':   "Reset due to voltage monitor devices upgrade failure"
+        }
+        self.reboot_cause_initialized = True
 
     def get_reboot_cause(self):
         """
@@ -315,27 +333,18 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         #read reboot causes files in the following order
-        minor_cause = ''
-        if self._verify_reboot_cause(REBOOT_CAUSE_POWER_LOSS_FILE):
-            major_cause = self.REBOOT_CAUSE_POWER_LOSS
-        elif self._verify_reboot_cause(REBOOT_CAUSE_AUX_POWER_LOSS_FILE):
-            major_cause = self.REBOOT_CAUSE_POWER_LOSS
-        elif self._verify_reboot_cause(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
-            major_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
-        elif self._verify_reboot_cause(REBOOT_CAUSE_WATCHDOG_FILE):
-            major_cause = self.REBOOT_CAUSE_WATCHDOG
-        else:
-            major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
-                minor_cause = "Reset by ASIC firmware"
-            elif self._verify_reboot_cause(REBOOT_CAUSE_LONG_PB):
-                minor_cause = "Reset by long press on power button"
-            elif self._verify_reboot_cause(REBOOT_CAUSE_SHORT_PB):
-                minor_cause = "Reset by short press on power button"
-            else:
-                major_cause = self.REBOOT_CAUSE_NON_HARDWARE
+        if not self.reboot_cause_initialized:
+            self.initialize_reboot_cause()
 
-        return major_cause, minor_cause
+        for reset_file, reset_cause in self.reboot_major_cause_dict.iteritems():
+            if self._verify_reboot_cause(reset_file):
+                return reset_cause, ''
+
+        for reset_file, reset_cause in self.reboot_minor_cause_dict.iteritems():
+            if self._verify_reboot_cause(reset_file):
+                return self.REBOOT_CAUSE_HARDWARE_OTHER, reset_cause
+
+        return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
     def _get_cpld_version(self, version_file):
         cpld_version = self._read_generic_file(join(CPLD_VERSION_ROOT, version_file), CPLD_VERSION_MAX_LENGTH)
