@@ -7,6 +7,6 @@ then
     for i in $DEBUG_SRC_ARCHIVE_DIRS
     do
         find src/$i/ -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -type f
-    done | tar -cvzf $DEBUG_SRC_ARCHIVE_FILE -T -
+    done | tar -czf $DEBUG_SRC_ARCHIVE_FILE -T -
 fi
 
