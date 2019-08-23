@@ -91,6 +91,14 @@ ifeq ($(SONIC_ENABLE_SYSTEM_TELEMETRY),y)
 ENABLE_SYSTEM_TELEMETRY = y
 endif
 
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
+    # Workaround: Force disable Telmetry for ARM, will be removed after fixing issue
+    # Issue: qemu crashes when it uses "go get url"
+    # Qemu Support: https://bugs.launchpad.net/qemu/+bug/1838946
+    # Golang Support: https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/golang-nuts/1txPOGa4aGc
+ENABLE_SYSTEM_TELEMETRY = N
+endif
+
 ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
 ENABLE_SYNCD_RPC = y
 endif
@@ -604,7 +612,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
-        $(addprefix $(STRETCH_FILES_PATH)/,$(IXGBE_DRIVER)) \
+	$(addprefix $(STRETCH_FILES_PATH)/, $(if $(filter $(CONFIGURED_ARCH),amd64), $(IXGBE_DRIVER))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
@@ -695,7 +703,6 @@ SONIC_CLEAN_DEBS = $(addsuffix -clean,$(addprefix $(DEBS_PATH)/, \
 		   $(SONIC_COPY_DEBS) \
 		   $(SONIC_MAKE_DEBS) \
 		   $(SONIC_DPKG_DEBS) \
-		   $(SONIC_PYTHON_STDEB_DEBS) \
 		   $(SONIC_DERIVED_DEBS) \
 		   $(SONIC_EXTRA_DEBS)))
 
@@ -720,15 +727,20 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 $(SONIC_CLEAN_TARGETS) : $(TARGET_PATH)/%-clean : .platform
 	@rm -f $(TARGET_PATH)/$*
 
+SONIC_CLEAN_STDEB_DEBS = $(addsuffix -clean,$(addprefix $(PYTHON_DEBS_PATH)/, \
+		     $(SONIC_PYTHON_STDEB_DEBS)))
+$(SONIC_CLEAN_STDEB_DEBS) : $(PYTHON_DEBS_PATH)/%-clean : .platform
+	@rm -f $(PYTHON_DEBS_PATH)/$*
+
 SONIC_CLEAN_WHEELS = $(addsuffix -clean,$(addprefix $(PYTHON_WHEELS_PATH)/, \
 		     $(SONIC_PYTHON_WHEELS)))
 $(SONIC_CLEAN_WHEELS) : $(PYTHON_WHEELS_PATH)/%-clean : .platform
 	@rm -f $(PYTHON_WHEELS_PATH)/$*
 
 clean-logs : .platform
-	@rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log $(FILES_PATH)/*.log $(PYTHON_WHEELS_PATH)/*.log
+	@rm -f $(TARGET_PATH)/*.log $(DEBS_PATH)/*.log $(FILES_PATH)/*.log $(PYTHON_DEBS_PATH)/*.log $(PYTHON_WHEELS_PATH)/*.log
 
-clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC_CLEAN_TARGETS) $$(SONIC_CLEAN_WHEELS)
+clean : .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONIC_CLEAN_TARGETS) $$(SONIC_CLEAN_STDEB_DEBS) $$(SONIC_CLEAN_WHEELS)
 
 ###############################################################################
 ## all
@@ -747,6 +759,6 @@ jessie : $$(addprefix $(TARGET_PATH)/,$$(SONIC_JESSIE_DOCKERS_FOR_INSTALLERS))
 ## Standard targets
 ###############################################################################
 
-.PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_WHEELS) $(SONIC_PHONY_TARGETS) clean distclean configure
+.PHONY : $(SONIC_CLEAN_DEBS) $(SONIC_CLEAN_FILES) $(SONIC_CLEAN_TARGETS) $(SONIC_CLEAN_STDEB_DEBS) $(SONIC_CLEAN_WHEELS) $(SONIC_PHONY_TARGETS) clean distclean configure
 
 .INTERMEDIATE : $(SONIC_INSTALL_TARGETS) $(SONIC_INSTALL_WHEELS) $(DOCKER_LOAD_TARGETS) docker-start .platform
