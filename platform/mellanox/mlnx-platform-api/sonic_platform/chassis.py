@@ -73,7 +73,7 @@ class Chassis(ChassisBase):
 
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
-        self.sfp_module = None
+        self.sfp_module_initialized = False
         self.reboot_cause_initialized = False
         logger.log_info("Chassis loaded successfully")
 
@@ -126,6 +126,8 @@ class Chassis(ChassisBase):
         self.sfp_event.initialize()
         self.MAX_SELECT_EVENT_RETURNED = self.PORT_END
 
+        self.sfp_module_initialized = True
+
     def initialize_thermals(self):
         from sonic_platform.thermal import initialize_thermals
         # Initialize thermals
@@ -153,7 +155,7 @@ class Chassis(ChassisBase):
         Returns:
             An integer, the number of sfps available on this chassis
         """
-        if self.sfp_module is None:
+        if not self.sfp_module_initialized:
             self.initialize_sfp()
         return len(self._sfp_list)
 
@@ -165,7 +167,7 @@ class Chassis(ChassisBase):
             A list of objects derived from SfpBase representing all sfps 
             available on this chassis
         """
-        if self.sfp_module is None:
+        if not self.sfp_module_initialized:
             self.initialize_sfp()
         return self._sfp_list
 
@@ -182,7 +184,7 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        if self.sfp_module is None:
+        if not self.sfp_module_initialized:
             self.initialize_sfp()
 
         sfp = None
@@ -222,7 +224,7 @@ class Chassis(ChassisBase):
 
     def get_watchdog(self):
         """
-        Retreives hardware watchdog device on this chassis
+        Retrieves hardware watchdog device on this chassis
 
         Returns:
             An object derived from WatchdogBase representing the hardware

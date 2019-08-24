@@ -67,7 +67,7 @@ XCVR_DOM_CAPABILITY_WIDTH = 2
 # in function get_transceiver_info and get_transceiver_bulk_status
 # XCVR_INTERFACE_DATA_SIZE stands for the max size to be read
 # this variable is only used by get_transceiver_info.
-# be attention that each time some new value added to the function 
+# please be noted that each time some new value added to the function 
 # we should make sure that it falls into the area 
 # [XCVR_INTERFACE_DATA_START, XCVR_INTERFACE_DATA_SIZE] or
 # adjust XCVR_INTERFACE_MAX_SIZE to contain the new data
