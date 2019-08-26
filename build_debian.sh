@@ -460,7 +460,7 @@ EOF
 
 ## Copy ASIC config checksum
 python files/build_scripts/generate_asic_config_checksum.py
-if [ ! -f asic_config_checksum ]; then
+if [[ ! -f './asic_config_checksum' ]]; then
     echo 'asic_config_checksum not found'
     exit 1
 fi
