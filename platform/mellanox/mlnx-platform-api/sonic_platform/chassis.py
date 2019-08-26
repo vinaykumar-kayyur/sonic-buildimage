@@ -74,8 +74,13 @@ class Chassis(ChassisBase):
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
         self.sfp_module_initialized = False
+        self.sfp_event_initialized = False
         self.reboot_cause_initialized = False
         logger.log_info("Chassis loaded successfully")
+
+    def __del__(self):
+        if self.sfp_event_initialized:
+            self.sfp_event.deinitialize()
 
     def initialize_psu(self):
         from sonic_platform.psu import Psu
@@ -104,7 +109,7 @@ class Chassis(ChassisBase):
 
     def initialize_sfp(self):
         from sonic_platform.sfp import SFP
-        from sonic_platform.sfp_event import sfp_event
+
         self.sfp_module = SFP
 
         # Initialize SFP list
@@ -120,11 +125,6 @@ class Chassis(ChassisBase):
             else:
                 sfp_module = SFP(index, 'SFP')
             self._sfp_list.append(sfp_module)
-
-        # Initialize SFP event
-        self.sfp_event = sfp_event()
-        self.sfp_event.initialize()
-        self.MAX_SELECT_EVENT_RETURNED = self.PORT_END
 
         self.sfp_module_initialized = True
 
@@ -488,6 +488,14 @@ class Chassis(ChassisBase):
                       indicates that fan 0 has been removed, fan 2
                       has been inserted and sfp 11 has been removed.
         """
+        # Initialize SFP event first
+        if not self.sfp_event_initialized:
+            from sonic_platform.sfp_event import sfp_event
+            self.sfp_event = sfp_event()
+            self.sfp_event.initialize()
+            self.MAX_SELECT_EVENT_RETURNED = self.PORT_END
+            self.sfp_event_initialized = True
+
         wait_for_ever = (timeout == 0)
         port_dict = {}
         if wait_for_ever:
