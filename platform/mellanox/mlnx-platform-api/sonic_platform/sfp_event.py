@@ -46,8 +46,6 @@ class sfp_event:
     def __init__(self):
         self.swid = 0
         self.handle = None
-        self.running = True
-        self.has_report_not_ready = False
 
         # Allocate SDK fd and user channel structures
         self.rx_fd_p = new_sx_fd_t_p()
@@ -119,8 +117,6 @@ class sfp_event:
 
             if rc != SX_STATUS_SUCCESS:
                 raise RuntimeError("sx_api_host_ifc_trap_id_register_set failed with rc {}, exiting...".format(rc))
-
-            self.running = True
         except Exception as e:
             logger.log_error("sfp_event initialization failed due to {}, exiting...".format(repr(e)))
             if swid_cnt_p is not None:
