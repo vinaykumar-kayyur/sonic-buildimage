@@ -11,8 +11,7 @@ CHUNK_SIZE = 8192
 SAMPLE_PATH = 'src/sonic-swss/swssconfig/sample/'
 SAMPLE_FILES = ['netbouncer.json', '00-copp.config.json']
 
-OUTPUT_PATH = './'
-OUTPUT_FILE = 'asic_config_checksum'
+OUTPUT_FILE = './asic_config_checksum'
 
 def log_info(msg):
     syslog.openlog(SYSLOG_IDENTIFIER)
