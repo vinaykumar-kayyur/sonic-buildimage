@@ -653,15 +653,20 @@ static void fpgai2c_process(struct fpgalogic_i2c *i2c)
         }
     }
 
-    if (i2c->state == STATE_READ) {
+    switch (i2c->state) {
+    case STATE_READ:
         PRINT("fpgai2c_poll STATE_READ i2c->pos=%d msg->len-1 = 0x%x set FPGAI2C_REG_CMD = 0x%x\n",i2c->pos, msg->len-1,
                 i2c->pos == (msg->len-1) ?  FPGAI2C_REG_CMD_READ_NACK : FPGAI2C_REG_CMD_READ_ACK);
         fpgai2c_reg_set(i2c, FPGAI2C_REG_CMD, i2c->pos == (msg->len-1) ?
                 FPGAI2C_REG_CMD_READ_NACK : FPGAI2C_REG_CMD_READ_ACK);
-    } else {
+        break;
+    case STATE_WRITE:
         PRINT("fpgai2c_process set FPGAI2C_REG_DATA(0x%x)\n",FPGAI2C_REG_DATA);
         fpgai2c_reg_set(i2c, FPGAI2C_REG_DATA, msg->buf[i2c->pos++]);
         fpgai2c_reg_set(i2c, FPGAI2C_REG_CMD, FPGAI2C_REG_CMD_WRITE);
+        break;
+    default:
+        printk("Unexpected state, %s:%u state=%d\n", __FILE__, __LINE__, i2c->state);
     }
 }
 
