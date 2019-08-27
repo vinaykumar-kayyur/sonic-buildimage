@@ -1,0 +1,9 @@
+INTERVAL=10
+FCTEMPS=/sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/17-0048/hwmon/hwmon[[:print:]]*/temp1_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/17-0049/hwmon/hwmon[[:print:]]*/temp1_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/17-004a/hwmon/hwmon[[:print:]]*/temp1_input
+FCFANS=/sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan1_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan2_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan3_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan4_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan5_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan6_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan11_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan12_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan13_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan14_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan15_input /sys/bus/i2c/devices/16-0066/fan1_pwm=/sys/bus/i2c/devices/16-0066/fan16_input
+MINTEMP=/sys/bus/i2c/devices/16-0066/fan1_pwm=45
+MAXTEMP=/sys/bus/i2c/devices/16-0066/fan1_pwm=53
+MINSTART=/sys/bus/i2c/devices/16-0066/fan1_pwm=15
+MINSTOP=/sys/bus/i2c/devices/16-0066/fan1_pwm=4
+MINPWM=/sys/bus/i2c/devices/16-0066/fan1_pwm=4
+MAXPWM=/sys/bus/i2c/devices/16-0066/fan1_pwm=10

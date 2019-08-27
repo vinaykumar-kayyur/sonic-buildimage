@@ -113,6 +113,19 @@ ifneq ($(CONFIGURED_PLATFORM), undefined)
 include $(PLATFORM_PATH)/rules.mk
 endif
 
+
+ifeq ($(SONIC_USE_PDDF_FRAMEWORK),y)
+PDDF_SUPPORT = y
+endif
+export PDDF_SUPPORT
+
+ifeq ($(PDDF_SUPPORT), y)
+PDDF_DIR = pddf
+PLATFORM_PDDF_PATH = platform/$(PDDF_DIR)
+include $(PLATFORM_PDDF_PATH)/rules.mk
+endif
+
+
 ifeq ($(USERNAME),)
 override USERNAME := $(DEFAULT_USERNAME)
 else
@@ -191,6 +204,7 @@ $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
+$(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)

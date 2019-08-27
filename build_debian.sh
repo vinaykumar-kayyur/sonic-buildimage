@@ -240,6 +240,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     openssh-server          \
     python                  \
     python-setuptools       \
+    python-jsonschema       \
     monit                   \
     python-apt              \
     traceroute              \
