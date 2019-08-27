@@ -103,11 +103,10 @@ class SfpUtil(SfpUtilBase):
 
         try:
             reg_file = open(self.qsfp_sysfs_path + "qsfp{}_status".format(port_num + 1))
+            content = reg_file.readline().rstrip()
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
-
-        content = reg_file.readline().rstrip()
 
         # content is a string with the qsfp status
         if content == SFP_STATUS_INSERTED:
