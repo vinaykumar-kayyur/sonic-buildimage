@@ -24,23 +24,23 @@ def log_error(msg):
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
 
-def get_config_files():
+def get_config_files(config_file_map):
     '''
-    Gathers up ASIC config file names from the appropriately named 'sample'
-    directory in SWSS
+    Generates a list of absolute paths to ASIC config files.
     '''
-    checksum_files = []
-    for path, files in CONFIG_FILES.items():
+    config_files = []
+    for path, files in config_file_map.items():
         for file in files:
-            checksum_files.append(os.path.join(path, file))
-    return checksum_files
+            config_files.append(os.path.join(path, file))
+    return config_files
 
 def generate_checksum(checksum_files):
     '''
-    Iterates through all of the given ASIC config file, reads their contents,
-    and generates a checksum. NOTE: The checksum is performed in the order
-    provided. This function does NOT do any re-ordering of the files before
-    creating the checksum.
+    Generates a checksum for a given list of files. Returns None if an error
+    occurs while reading the files.
+    
+    NOTE: The checksum is performed in the order provided. This function does 
+    NOT do any re-ordering of the files before creating the checksum.
     '''
     checksum = hashlib.sha1()
     for file in checksum_files:
@@ -55,7 +55,7 @@ def generate_checksum(checksum_files):
     return checksum.hexdigest()
 
 def main():
-    config_files = sorted(get_config_files())
+    config_files = sorted(get_config_files(CONFIG_FILES))
     checksum = generate_checksum(config_files)
     if checksum == None:
         exit(1)
