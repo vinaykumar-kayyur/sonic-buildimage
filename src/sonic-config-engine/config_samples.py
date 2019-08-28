@@ -54,9 +54,20 @@ def generate_l2_config(data):
         data['VLAN_MEMBER']['Vlan1000|{}'.format(port)] = {'tagging_mode': 'untagged'}
     return data
 
+def generate_default_config(data):
+    if not data['DEVICE_METADATA']['localhost'].has_key('hostname'):
+        data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
+    if not data['DEVICE_METADATA']['localhost'].has_key('type'):
+        data['DEVICE_METADATA']['localhost']['type'] = 'ToRRouter'
+    for port in natsorted(data['PORT'].keys()):
+        data['PORT'][port]['admin_status'] = 'up'
+        data['PORT'][port]['mtu'] = '9100'
+    return data
+
 _sample_generators = {
         't1': generate_t1_sample_config,
         'l2': generate_l2_config,
+        'default': generate_default_config,
         'empty': generate_empty_config
         }
 
