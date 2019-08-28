@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
 import syslog
-import errno
+import os
 import hashlib
 
 SYSLOG_IDENTIFIER = 'asic_config_checksum'
 
 CHUNK_SIZE = 8192
 
-SAMPLE_PATH = 'src/sonic-swss/swssconfig/sample/'
-SAMPLE_FILES = ['netbouncer.json', '00-copp.config.json']
+CONFIG_FILES = {
+    os.path.abspath('./src/sonic-swss/swssconfig/sample/'): ['netbouncer.json', '00-copp.config.json']
+}
 
-OUTPUT_FILE = './asic_config_checksum'
+OUTPUT_FILE = os.path.abspath('./asic_config_checksum')
 
 def log_info(msg):
     syslog.openlog(SYSLOG_IDENTIFIER)
@@ -23,14 +24,15 @@ def log_error(msg):
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
 
-def get_samples():
+def get_config_files():
     '''
     Gathers up ASIC config file names from the appropriately named 'sample'
     directory in SWSS
     '''
     checksum_files = []
-    for file in SAMPLE_FILES:
-        checksum_files.append(SAMPLE_PATH + file)
+    for path, files in CONFIG_FILES.items():
+        for file in files:
+            checksum_files.append(os.path.join(path, file))
     return checksum_files
 
 def generate_checksum(checksum_files):
@@ -40,7 +42,7 @@ def generate_checksum(checksum_files):
     provided. This function does NOT do any re-ordering of the files before
     creating the checksum.
     '''
-    checksum = hashlib.md5()
+    checksum = hashlib.sha1()
     for file in checksum_files:
         try:
             with open(file, 'r') as f:
@@ -53,11 +55,8 @@ def generate_checksum(checksum_files):
     return checksum.hexdigest()
 
 def main():
-    checksum_files = []
-    checksum_files += get_samples()
-
-    checksum_files.sort()
-    checksum = generate_checksum(checksum_files)
+    config_files = sorted(get_config_files())
+    checksum = generate_checksum(config_files)
     if checksum == None:
         exit(1)
 
