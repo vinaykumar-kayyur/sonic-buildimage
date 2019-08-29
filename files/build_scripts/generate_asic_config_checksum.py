@@ -30,8 +30,8 @@ def get_config_files(config_file_map):
     '''
     config_files = []
     for path, files in config_file_map.items():
-        for file in files:
-            config_files.append(os.path.join(path, file))
+        for config_file in files:
+            config_files.append(os.path.join(path, config_file))
     return config_files
 
 def generate_checksum(checksum_files):
@@ -43,13 +43,13 @@ def generate_checksum(checksum_files):
     NOT do any re-ordering of the files before creating the checksum.
     '''
     checksum = hashlib.sha1()
-    for file in checksum_files:
+    for checksum_file in checksum_files:
         try:
-            with open(file, 'r') as f:
+            with open(checksum_file, 'r') as f:
                 for chunk in iter(lambda: f.read(CHUNK_SIZE), b""):
                     checksum.update(chunk)
         except IOError as e:
-            log_error('Error processing ASIC config file ' + file + ':' + e.strerror)
+            log_error('Error processing ASIC config file ' + checksum_file + ':' + e.strerror)
             return None
 
     return checksum.hexdigest()
