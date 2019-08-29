@@ -23,9 +23,9 @@ TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
 
 
-def is_valid_hostname(name):
+def is_valid_hostname(hostname):
     if hostname[-1] == ".":
-        hostname = hostname[:-1] # strip exactly one dot from the right, if present
+        return False
     if len(hostname) > 253:
         return False
     allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
@@ -187,6 +187,7 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "hostname key is missing")
             return
         if not is_valid_hostname(hostname):
+            syslog.syslog(syslog.LOG_WARNING, "hostname {} is invalid".format(hostname))
             return
         if hostname == self.hostname_cache:
             return
