@@ -17,15 +17,28 @@ def run_command(command):
     p.wait()
     if p.returncode != 0:
         syslog.syslog(syslog.LOG_ERR, 'command execution returned {}. Command: "{}", stdout: "{}"'.format(p.returncode, command, stdout))
+    return stdout
 
 
-class BGPConfigManager(object):
+class Backlog(object):
+    def __init__(self, handler, key, op, data):
+        self.handler = handler
+        self.key = key
+        self.op = op
+        self.data = data
+
+
+class Manager(object):
     def __init__(self, daemon):
         self.daemon = daemon
         self.bgp_asn = None
-        self.bgp_message = Queue.Queue(0)
+        self.backlog_queue = Queue.Queue(0)
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, self.__metadata_handler)
-        daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
+
+    def process_backlog(self):
+        while not self.backlog_queue.empty():
+            backlog = self.backlog_queue.get()
+            backlog.handler(backlog.key, backlog.op, backlog.data)
 
     def __metadata_handler(self, key, op, data):
         if key != "localhost" \
@@ -36,33 +49,92 @@ class BGPConfigManager(object):
         # TODO add ASN update commands 
 
         self.bgp_asn = data["bgp_asn"]
-        self.__update_bgp()
+        self.process_backlog()
 
-    def __update_bgp(self):
-        while not self.bgp_message.empty():
-            key, op, data = self.bgp_message.get()
-            syslog.syslog(syslog.LOG_INFO, 'value for {} changed to {}'.format(key, data))
-            if op == swsscommon.SET_COMMAND:
-                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} remote-as {}'".format(self.bgp_asn, key, data['asn'])
-                run_command(command)
-                if "name" in data:
-                    command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} description {}'".format(self.bgp_asn, key, data['name'])
-                    run_command(command)
-                if "admin_status" in data:
-                    command_mod = "no " if data["admin_status"] == "up" else ""
-                    command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c '{}neighbor {} shutdown'".format(self.bgp_asn, command_mod, key)
-                    run_command(command)                
-            elif op == swsscommon.DEL_COMMAND:
-                # Neighbor is deleted
-                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no neighbor {}'".format(self.bgp_asn, key)
-                run_command(command)
+
+class ChassisManager(Manager):
+    def __init__(self, daemon):
+        super(ChassisManager, self).__init__(daemon)
+        daemon.add_manager(swsscommon.APPL_DB, swsscommon.APP_PASS_THROUGH_ROUTE_TABLE_NAME, self.__update_route)
+        self.route_cache = {}
+
+    def __update_route(self, key, op, data):
+        if self.bgp_asn == None:
+            self.backlog_queue.put(Backlog(self.__update_route, key, op, data))
+            return
+        if op == "SET":
+            # nexthop is a list of IP separated by comma
+            # pick the first as the nexthop
+            next_hop_ip = data.get("next_hop_ip", "").split(',')[0]
+            next_vrf_name = data.get("next_vrf_name", "")
+            if next_hop_ip == "" \
+                or next_vrf_name == "" \
+                or data.get("redistribute", "false").lower() != "true" \
+                or data.get("source", "").upper() != "CHASSIS_ORCH":
+                    return
+            self.route_cache[key] = {"next_hop_ip" : next_hop_ip, "next_vrf_name" : next_vrf_name}
+            self.__add_route(key, next_hop_ip, next_vrf_name)
+        else:
+            if key not in self.route_cache:
+                syslog.syslog(syslog.LOG_ERR, 'route "{}" is empty '.format(key, ))
+                return
+            next_hop_ip = self.route_cache[key]["next_hop_ip"]
+            next_vrf_name = self.route_cache[key]["next_vrf_name"]
+            self.__del_route(key, next_hop_ip, next_vrf_name)
+
+    def __add_route(self, route, nexthop, next_vrf):
+        syslog.syslog(syslog.LOG_INFO, 'route {} nexthop {} next_vrf {} was add'.format(route, nexthop, next_vrf))
+        command = "vtysh -c 'configure terminal' -c 'ip route {everflow} {nexthop} nexthop-vrf {next_vrf}'".format(
+            everflow = route,
+            nexthop = nexthop,
+            next_vrf = next_vrf)
+        run_command(command)
+        command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'network {everflow}' ".format(
+            bgp_asn = self.bgp_asn,
+            everflow = route,
+            )
+        run_command(command)
+
+    def __del_route(self, route, nexthop, next_vrf):
+        syslog.syslog(syslog.LOG_INFO, 'route {} nexthop {} next_vrf {} was delete'.format(route, nexthop, next_vrf))
+        command = "vtysh -c 'configure terminal' -c 'no ip route {everflow} {nexthop} nexthop-vrf {next_vrf}'".format(
+            everflow = route,
+            nexthop = nexthop,
+            next_vrf = next_vrf
+            )
+        run_command(command)
+        command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'no network {everflow}' ".format(
+            bgp_asn = self.bgp_asn,
+            everflow = route,
+            )
+        run_command(command)
+
+
+class BGPConfigManager(Manager):
+    def __init__(self, daemon):
+        super(BGPConfigManager, self).__init__(daemon)
+        daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
 
     def __bgp_handler(self, key, op, data):
-        self.bgp_message.put((key, op, data))
         # If ASN is not set, we just cache this message until the ASN is set.
         if self.bgp_asn == None:
+            self.backlog_queue.put(Backlog(self.__bgp_handler, key, op, data))
             return
-        self.__update_bgp()
+        syslog.syslog(syslog.LOG_INFO, 'value for {} changed to {}'.format(key, data))
+        if op == swsscommon.SET_COMMAND:
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} remote-as {}'".format(self.bgp_asn, key, data['asn'])
+            run_command(command)
+            if "name" in data:
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'neighbor {} description {}'".format(self.bgp_asn, key, data['name'])
+                run_command(command)
+            if "admin_status" in data:
+                command_mod = "no " if data["admin_status"] == "up" else ""
+                command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c '{}neighbor {} shutdown'".format(self.bgp_asn, command_mod, key)
+                run_command(command)                
+        elif op == swsscommon.DEL_COMMAND:
+            # Neighbor is deleted
+            command = "vtysh -c 'configure terminal' -c 'router bgp {}' -c 'no neighbor {}'".format(self.bgp_asn, key)
+            run_command(command)
 
 
 class Daemon(object):
@@ -117,6 +189,7 @@ def main():
     syslog.openlog("bgpcfgd")
     daemon = Daemon()
     bgp_manager = BGPConfigManager(daemon)
+    chassis_manager = ChassisManager(daemon)
     daemon.start()
     syslog.closelog()
 
