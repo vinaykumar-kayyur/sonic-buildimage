@@ -27,6 +27,7 @@ iface lo {{ 'inet' if prefix | ipv4 else 'inet6' }} static
     up ip addr add 127.0.0.1/8 dev lo-m
     up ip link set lo-m up
     up ip link set dev lo-m master mgmt
+	down ip link delete dev lo-m
 {% endif %}
 {% endblock loopback %}
 {% block mgmt_interface %}
