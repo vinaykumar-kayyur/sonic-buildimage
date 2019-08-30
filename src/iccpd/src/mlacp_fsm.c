@@ -93,6 +93,8 @@
         LIST_INIT(&(list)); \
     }
 
+#define WARM_REBOOT_TIMEOUT 90
+
 /*****************************************
 * Static Function
 *
@@ -594,6 +596,17 @@ void mlacp_fsm_transit(struct CSM* csm)
         return;
     }
 
+    if (csm->warm_reboot_disconn_time != 0)
+    {
+        /*After peer warm reboot and disconnect, if peer connection is not establised more than 90s, 
+           recover peer disconnection to normal process, such as add peer age flag for MACs etc*/
+        if ((time(NULL) - csm->warm_reboot_disconn_time) >= WARM_REBOOT_TIMEOUT)
+        {
+            csm->warm_reboot_disconn_time = 0;
+            mlacp_peer_disconn_handler(csm);
+        }
+    }
+
     mlacp_sync_send_heartbeat(csm);
 
     /* Dequeue msg if any*/
@@ -636,7 +649,6 @@ void mlacp_fsm_transit(struct CSM* csm)
         {
             MLACP(csm).wait_for_sync_data = 0;
             MLACP(csm).current_state = MLACP_STATE_STAGE1;
-            mlacp_resync_mac(csm);
             mlacp_resync_arp(csm);
         }
 
@@ -1184,9 +1196,11 @@ static void mlacp_exchange_handler(struct CSM* csm, struct Msg* msg)
     /*If peer is warm reboot*/
     if (csm->peer_warm_reboot_time != 0)
     {
-        /*Peer warm reboot timeout, recover to normal reboot*/
-        if ((time(NULL) - csm->peer_warm_reboot_time) >= 90)
+        /*Peer warm reboot timeout(connection is not broken more than 90s), recover to normal reboot*/
+        if ((time(NULL) - csm->peer_warm_reboot_time) >= WARM_REBOOT_TIMEOUT)
+        {
             csm->peer_warm_reboot_time = 0;
+        }
     }
 
     return;

@@ -488,6 +488,12 @@ void session_client_conn_handler(struct CSM *csm)
     struct timeval con_tv;
     socklen_t len = sizeof(con_tv);
 
+    struct sockaddr_in src_addr;
+    bzero(&(src_addr), sizeof(src_addr));
+    src_addr.sin_family = PF_INET;
+    src_addr.sin_port = 0;
+    src_addr.sin_addr.s_addr = inet_addr(csm->sender_ip);
+
     /* Lock the thread*/
     session_conn_thread_lock(&csm->conn_mutex);
 
@@ -514,6 +520,11 @@ void session_client_conn_handler(struct CSM *csm)
     if (setsockopt(connFd, SOL_SOCKET, SO_SNDTIMEO, &con_tv, len) == -1)
     {
         ICCPD_LOG_INFO(__FUNCTION__, "Set socket timeout fail");
+    }
+
+    if (bind(connFd, (struct sockaddr*)&(src_addr), sizeof(src_addr)) < 0)
+    {
+        ICCPD_LOG_INFO(__FUNCTION__, "Bind socket failed. Error");
     }
 
     /* Try conn*/

@@ -1066,45 +1066,39 @@ uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t 
 
     if (set == 0)/*remove age flag*/
     {
-        if (new_age_flag & MAC_AGE_LOCAL)
-        {
-            new_age_flag &= ~MAC_AGE_LOCAL;
+        new_age_flag &= ~MAC_AGE_LOCAL;
 
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Remove local age flag: %d ifname  %s, add %s vlan-id %d, age_flag %d",
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove local age flag: %d ifname  %s, add %s vlan-id %d, age_flag %d",
                             new_age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
 
-            /*send mac MAC_SYNC_ADD message to peer*/
-            if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+        /*send mac MAC_SYNC_ADD message to peer*/
+        if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+        {
+            mac_msg->op_type = MAC_SYNC_ADD;
+            if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
             {
-                mac_msg->op_type = MAC_SYNC_ADD;
-                if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
-                {
-                    TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg, tail);
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
-                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
-                }
+                TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg, tail);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                               mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
             }
         }
     }
     else/*set age flag*/
     {
-        if (!(new_age_flag & MAC_AGE_LOCAL))
-        {
-            new_age_flag |= MAC_AGE_LOCAL;
+        new_age_flag |= MAC_AGE_LOCAL;
 
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Add local age flag: %s, add %s vlan-id %d, age_flag %d",
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add local age flag: %s, add %s vlan-id %d, age_flag %d",
                             mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
 
-            /*send mac MAC_SYNC_DEL message to peer*/
-            if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+        /*send mac MAC_SYNC_DEL message to peer*/
+        if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+        {
+            mac_msg->op_type = MAC_SYNC_DEL;
+            if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
             {
-                mac_msg->op_type = MAC_SYNC_DEL;
-                if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
-                {
-                    TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg, tail);
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
-                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
-                }
+                TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg, tail);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
             }
         }
     }
@@ -1293,6 +1287,12 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     if ((sys = system_get_instance()) == NULL)
         return;
 
+    if (csm->warm_reboot_disconn_time != 0)
+    {
+        /*If peer reconnected, reset peer disconnect time*/
+        csm->warm_reboot_disconn_time = 0;
+    }
+
     if (csm->peer_link_if)
     {
         set_peerlink_mlag_port_learn(csm->peer_link_if, 0);
@@ -1308,6 +1308,7 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     }
 
     iccp_get_fdb_change_from_syncd();
+    sys->csm_trans_time = time(NULL);
 
     mlacp_conn_handler_fdb(csm);
 
@@ -1367,14 +1368,6 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
     if (sys->warmboot_exit == WARM_REBOOT)
         return;
 
-    /*If peer is warm reboot, don't change FDB and MAC address*/
-    if (csm->peer_warm_reboot_time != 0)
-    {
-        /*If peer disconnected, recover peer to normal reboot for next time*/
-        csm->peer_warm_reboot_time = 0;
-        return;
-    }
-
     TAILQ_FOREACH(msg, &MLACP(csm).mac_list, tail)
     {
         mac_msg = (struct MACMsg*)msg->buf;
@@ -1396,6 +1389,17 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
         TAILQ_REMOVE(&(MLACP(csm).mac_list), msg, tail);
         free(msg->buf);
         free(msg);
+    }
+
+    /*If peer is warm reboot, only set peer age flag to MACs*/
+    if (csm->peer_warm_reboot_time != 0)
+    {
+        /*If peer disconnected, recover peer to normal reboot for next time*/
+        csm->peer_warm_reboot_time = 0;
+        /*peer connection must be establised again within 90s
+           from last disconnection for peer warm reboot*/
+        time(&csm->warm_reboot_disconn_time);
+        return;
     }
 
     /* Clean all port block*/

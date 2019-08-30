@@ -252,6 +252,9 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                     }
                     else
                     {
+                        /*Remove MAC_AGE_LOCAL flag*/
+                        mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 0);
+
                         /*Update local item*/
                         memcpy(&mac_msg->ifname, MacData->ifname, MAX_L_PORT_NAME);
 
@@ -340,6 +343,11 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Redirect to peerlink for orphan port or portchannel is down, Add local age flag: %d   ifname %s, add %s vlan-id %d, op_type %d",
                                 mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
             }
+        }
+        else
+        {
+            /*Remove MAC_AGE_LOCAL flag*/
+            mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 0);
         }
 
         if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)

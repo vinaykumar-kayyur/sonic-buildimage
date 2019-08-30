@@ -25,7 +25,7 @@
 #define MSG_FORMAT_H_
 #include <sys/types.h>
 #include <stdint.h>
-
+#include "../include/port.h"
 
 #define MAX_MSG_LOG_SIZE    128
 
@@ -474,9 +474,9 @@ typedef struct mclag_sub_option_hdr_t_
 
 struct mclag_fdb_info
 {
-    char mac[32];
+    char mac[ETHER_ADDR_STR_LEN];
     unsigned int vid;
-    char port_name[32];
+    char port_name[MAX_L_PORT_NAME];
     short type;     /*dynamic or static*/
     short op_type;  /*add or del*/
 };

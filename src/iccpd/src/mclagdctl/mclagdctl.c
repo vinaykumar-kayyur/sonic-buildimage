@@ -410,7 +410,7 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
 
         fprintf(stdout, "\n");
 
-        if (memcmp(lif_info->type, "PORT-CHANNEL", 12) == 0)
+        if (memcmp(lif_info->type, "PortChannel", 11) == 0)
         {
             fprintf(stdout, "%s: %d\n", "Ifindex", lif_info->ifindex);
             fprintf(stdout, "%s: %s\n", "Type", lif_info->type);
@@ -425,7 +425,7 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
             fprintf(stdout, "%s: %d\n", "Prefixlen", lif_info->prefixlen);
             fprintf(stdout, "%s: %s\n", "State", lif_info->state);
             fprintf(stdout, "%s: %s\n", "IsL3Interface", lif_info->l3_mode ? "Yes" : "No");
-            fprintf(stdout, "%s: %s\n", "IsPeerlink", lif_info->is_peer_link ? "Yes" : "No");
+            /*fprintf(stdout, "%s: %s\n", "IsPeerlink", lif_info->is_peer_link ? "Yes" : "No");*/
             fprintf(stdout, "%s: %s\n", "MemberPorts", lif_info->portchannel_member_buf);
             /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
                fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
