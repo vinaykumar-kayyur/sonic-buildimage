@@ -89,6 +89,10 @@ output_raw_image=$(cat onie-image.conf | grep OUTPUT_RAW_IMAGE | cut -f2 -d"=")
 output_raw_image=$(eval echo $output_raw_image)
 
 # Tailor the demo installer for OS mode or DIAG mode
+if [ $sonic_kdump_enable == "y" ];
+then
+    sed -i "s/[^M] quiet/ crashkernel=256M quiet/"
+fi
 sed -i -e "s/%%DEMO_TYPE%%/$demo_type/g" \
        -e "s/%%IMAGE_VERSION%%/$image_version/g" \
        -e "s/%%ONIE_IMAGE_PART_SIZE%%/$onie_image_part_size/" \
