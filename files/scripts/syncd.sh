@@ -103,11 +103,21 @@ start() {
 
         if [[ x"$WARM_BOOT" != x"true" ]]; then
             if [[ x"$(/bin/systemctl is-active pmon)" == x"active" ]]; then
+                # The only possibility that pmon is active, is that pmon starts ahead of syncd,
+                # Thus, pmon has been started and stopped for an extra time which is unnecessary
+                # and consume more starting time.
+                # In this sense, should we add explicit dependency of syncd for pmon
+                # and remove the below "stop pmon"?
                 /bin/systemctl stop pmon
                 /usr/bin/hw-management.sh chipdown
                 /bin/systemctl restart pmon
+                debug "Assertion failure, pmon is active while syncd starting..."
             else
                 /usr/bin/hw-management.sh chipdown
+                debug "Triger pmon starting"
+                debug "Starting pmon service..."
+                /bin/systemctl restart pmon
+                debug "Started pmon service"
             fi
         fi
 
@@ -148,6 +158,12 @@ stop() {
         TYPE=warm
     else
         TYPE=cold
+    fi
+
+    if [[ x$sonic_asic_platform == x"mellanox" ]] && [[ x$TYPE == x"cold" ]]; then
+        debug "Stopping pmon service ahead of syncd..."
+        /bin/systemctl stop pmon
+        debug "Stopped pmon service."
     fi
 
     if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
