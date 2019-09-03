@@ -13,17 +13,20 @@ bcm56340_config
 cdma_timeout_usec
 core_clock_frequency
 ctr_evict_enable
+device_clock_frequency
 dma_desc_timeout_usec
 dport_map_direct
 dport_map_enable
 dport_map_indexed
 dport_map_port
 dpp_clock_ratio
+dpr_clock_frequency
 ext_sram_freq
 ext_tcam_freq
 force_core_pll
 fpem_mem_entries
 higig2_hdr_mode
+ifp_inports_support_enable
 ipmc_do_vlan
 ipv6_lpm_128b_enable
 knet_filter_persist
@@ -33,6 +36,7 @@ l2mod_dma_intr_enable
 l2xmsg_hostbuf_size
 l2xmsg_mode
 l3_alpm_enable
+l3_alpm_ipv6_128b_bkt_rsvd
 l3_intf_vlan_split_egress
 l3_max_ecmp_mode
 l3_mem_entries
@@ -53,6 +57,7 @@ miim_intr_enable
 miim_timeout_usec
 mmu_init_config
 mmu_lossless
+mmu_port_num_mc_queue
 module_64ports
 multicast_l2_r
 multicast_l2_range
@@ -95,6 +100,8 @@ phy_tx_polarity_flip
 phy_xaui_rx_polarity_flip
 phy_xaui_tx_polarity_flip
 physical_ports
+pll_bypass
+port_flex_enable
 port_init_autoneg
 port_init_cl72
 port_init_speed
@@ -115,6 +122,8 @@ schan_intr_enable
 schan_timeout_usec
 serdes_automed
 serdes_automedium
+serdes_core_rx_polarity_flip_physical
+serdes_core_tx_polarity_flip_physical
 serdes_driver_current
 serdes_fiber_pref
 serdes_firmware_mode
@@ -123,6 +132,7 @@ serdes_pre_driver_current
 serdes_preemphasis
 serdes_rx_los
 serdes_sgmii_m
+serdes_tx_taps
 skip_L2_USER_ENTRY
 sram_scan_enable
 stable_size
@@ -140,3 +150,12 @@ xgxs_lcpll_xtal_refclk
 xgxs_pdetect
 xgxs_rx_lane_map
 xgxs_tx_lane_map
+ifp_inports_support_enable
+port_flex_enable
+pdma_descriptor_prefetch_enable
+pktdma_poll_mode_channel_bitmap 
+ccm_dma_enable
+ccmdma_intr_enable
+phy_enable
+init_all_modules
+port_fec

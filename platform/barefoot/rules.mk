@@ -6,14 +6,13 @@ include $(PLATFORM_PATH)/platform-modules-ingrasys.mk
 include $(PLATFORM_PATH)/bfn-sai.mk
 include $(PLATFORM_PATH)/docker-syncd-bfn.mk
 include $(PLATFORM_PATH)/docker-syncd-bfn-rpc.mk
-include $(PLATFORM_PATH)/docker-orchagent-bfn.mk
 include $(PLATFORM_PATH)/one-aboot.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/docker-ptf-bfn.mk
 include $(PLATFORM_PATH)/bfn-platform.mk
-include $(PLATFORM_PATH)/bfn-platform-wnc.mk
-include $(PLATFORM_PATH)/bfn-platform-ingrasys.mk
+#include $(PLATFORM_PATH)/bfn-platform-wnc.mk
+#include $(PLATFORM_PATH)/bfn-platform-ingrasys.mk
 include $(PLATFORM_PATH)/bfn-modules.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT) \

@@ -1,6 +1,7 @@
 [Unit]
 Description=SNMP container
-Requires=updategraph.service swss.service
+Requires=updategraph.service
+Requisite=swss.service
 After=updategraph.service swss.service
 Before=ntp-config.service
 
@@ -8,3 +9,6 @@ Before=ntp-config.service
 ExecStartPre=/usr/bin/{{docker_container_name}}.sh start
 ExecStart=/usr/bin/{{docker_container_name}}.sh wait
 ExecStop=/usr/bin/{{docker_container_name}}.sh stop
+
+[Install]
+WantedBy=multi-user.target swss.service

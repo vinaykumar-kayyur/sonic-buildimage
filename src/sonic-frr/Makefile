@@ -2,21 +2,20 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
+MAIN_TARGET = $(FRR)
+DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG) $(FRR_SNMP) $(FRR_SNMP_DBG)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-
 	# Build the package
 	pushd ./frr
-
-	# This could very well be tools/tarsource.sh -V -e sonic
-	tools/tarsource.sh -V
-	# This is a no-op but here in case the changelog stops being a symlink
-	debchange -b -v $(FRR_VERSION)-1~sonic.debian8+1 'SONiC FRR debian package build'
-	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib
-	cd ..
-	mv frr_$(FRR_VERSION)-*_amd64.deb frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
-	mv $* $(DEST)/
-
+	patch -p1 < ../patch/0001-Add-support-of-bgp-tcp-DSCP-value.patch
+	patch -p1 < ../patch/0002-Reduce-severity-of-Vty-connected-from-message.patch
+	patch -p1 < ../patch/0003-ignore-nexthop-attribute-when-NLRI-is-present.patch
+	patch -p1 < ../patch/0004-Allow-BGP-attr-NEXT_HOP-to-be-0.0.0.0-due-to-allevia.patch
+	patch -p1 < ../patch/0005-Support-VRF.patch
+	tools/tarsource.sh -V -e '-sonic'
+	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
+	mv $(DERIVED_TARGET) $* $(DEST)/
 
+$(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
