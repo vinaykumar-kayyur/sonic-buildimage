@@ -70,9 +70,11 @@ class Chassis(ChassisBase):
 
         # In S6000, We track the reboot reason by writing the reason in
         # NVRAM. Only Warmboot and Coldboot reason are supported here.
+        # Since it does not support any hardware reason, we return
+        # non_hardware as default
 
         if (reset_reason in self.reset_reason_dict):
             return (self.reset_reason_dict[reset_reason], None)
 
-        return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Invalid Reason")
+        return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
 
