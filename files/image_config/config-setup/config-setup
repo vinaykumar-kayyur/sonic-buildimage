@@ -268,6 +268,20 @@ do_config_intialization()
     rm -f /tmp/pending_config_initialization
 }
 
+# Restore config-setup post migration hooks from a backup copy
+copy_post_migration_hooks()
+{
+    BACKUP_DIR=/etc/sonic/old_config/config-migration-post-hooks.d
+    if [ -d ${BACKUP_DIR} ]; then
+        [ -d ${CONFIG_POST_MIGRATION_HOOKS} ] || mkdir -p ${CONFIG_POST_MIGRATION_HOOKS}
+        for hook in $(ls -1 ${BACKUP_DIR}) ; do
+            if [ ! -e ${CONFIG_POST_MIGRATION_HOOKS}/$hook ]; then
+                cp -ar ${BACKUP_DIR}/$hook ${CONFIG_POST_MIGRATION_HOOKS}
+            fi
+        done
+    fi
+}
+
 # Perform configuration migration from backup copy.
 #  - This step is performed when a new image is installed and SONiC switch boots into it
 do_config_migration()
@@ -277,6 +291,9 @@ do_config_migration()
 
     # Migrate all configuration files from old to new
     copy_config_files_and_directories $copy_list
+
+    # Migrate post-migration hooks
+    copy_post_migration_hooks
 
     # Execute custom hooks if present
     run_hookdir ${CONFIG_POST_MIGRATION_HOOKS} ${CONFIG_SETUP_POST_MIGRATION_FLAG}
@@ -316,6 +333,7 @@ do_config_backup()
     echo "Taking backup of curent configuration"
     rm -rf /host/old_config
     cp -ar /etc/sonic /host/old_config
+    [ -d ${CONFIG_POST_MIGRATION_HOOKS} ] && cp -arL ${CONFIG_POST_MIGRATION_HOOKS} /host/old_config
 
     # Execute custom hooks if present
     run_hookdir ${CONFIG_PRE_MIGRATION_HOOKS} ${CONFIG_SETUP_PRE_MIGRATION_FLAG}
