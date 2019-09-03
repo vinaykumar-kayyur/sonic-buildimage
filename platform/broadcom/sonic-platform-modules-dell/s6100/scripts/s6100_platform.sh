@@ -228,7 +228,7 @@ track_reboot_reason() {
             else
                 echo 0xbb > mb_poweron_reason
             fi
-        elif [ $reason == "bb" ] || [ $reason == "01"]; then
+        elif [ $reason == "bb" ] || [ $reason == "1" ]; then
             cd /sys/devices/platform/SMF.512/hwmon/*
             echo 0xaa > mb_poweron_reason
         fi
