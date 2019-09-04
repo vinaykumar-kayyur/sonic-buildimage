@@ -239,7 +239,12 @@ def parse_dpg(dpg, hname):
         aclintfs = child.find(str(QName(ns, "AclInterfaces")))
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
-            aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
+            try:
+                aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
+                stage = "ingress"
+            except:
+                aclname = aclintf.find(str(QName(ns, "OutAcl"))).text.upper().replace(" ", "_").replace("-", "_")
+                stage = "egress"
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
@@ -256,7 +261,7 @@ def parse_dpg(dpg, hname):
                     # to LAG will be applied to all the LAG members internally by SAI/SDK
                     acl_intfs.append(member)
                 elif vlans.has_key(member):
-                    print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a Vlan interface, which is currently not supported"
+                    acl_intfs.append(member)
                 elif port_alias_map.has_key(member):
                     acl_intfs.append(port_alias_map[member])
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
@@ -277,6 +282,7 @@ def parse_dpg(dpg, hname):
                     break;
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
+                                 'stage': stage,
                                  'ports': acl_intfs}
                 if is_mirror:
                     acls[aclname]['type'] = 'MIRROR'
@@ -301,6 +307,7 @@ def parse_dpg(dpg, hname):
                     else:
                         acls[aclname] = {'policy_desc': aclname,
                                          'type': 'CTRLPLANE',
+                                         'stage': stage,
                                          'services': [aclservice]}
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
