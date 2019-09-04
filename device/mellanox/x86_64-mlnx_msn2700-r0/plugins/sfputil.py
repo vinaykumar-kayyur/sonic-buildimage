@@ -8,6 +8,7 @@ try:
     import subprocess
     from sonic_sfp.sfputilbase import *
     import syslog
+    import sys
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
@@ -105,7 +106,7 @@ class SfpUtil(SfpUtilBase):
             reg_file = open(self.qsfp_sysfs_path + "qsfp{}_status".format(port_num + 1))
             content = reg_file.readline().rstrip()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print >> sys.stderr, "Error: unable to access file: %s" % str(e)
             return False
 
         # content is a string with the qsfp status
@@ -126,7 +127,7 @@ class SfpUtil(SfpUtilBase):
             if 'LPM ON' in output:
                 return True
         except subprocess.CalledProcessError as e:
-            print "Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
+            print >> sys.stderr, "Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
             return False
 
         return False
