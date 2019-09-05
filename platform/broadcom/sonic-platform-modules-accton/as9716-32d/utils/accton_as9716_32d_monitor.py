@@ -67,8 +67,8 @@ class switch(object):
 
 
 
-# Read fanN_direction=1: The air flow of Fan6 is °ßAFI-Back to Front°®
-#                     0: The air flow of Fan6 is °ßAFO-Front to back°®
+# Read fanN_direction=1: The air flow of Fan6 is ‚ÄúAFI-Back to Front‚Äù
+#                     0: The air flow of Fan6 is ‚ÄúAFO-Front to back‚Äù
 #
 # Thermal policy:
 # a.Defaut fan duty_cycle=100%
@@ -77,115 +77,116 @@ class switch(object):
 #   Default fan duty_cycle will be 100%(fan_policy_state=LEVEL_FAN_MAX).
 #   If all below case meet with, set to 75%(LEVEL_FAN_MID).
 #   MB board
-#   LM75-1(0X48)°ÿ57¢J
-#   LM75-2(0X49)°ÿ47.3¢J
-#   LM75-3(0X4A)°ÿ45¢J
-#   LM75-4(0X4C)°ÿ45.1¢J
-#   LM75-5(0X4E)°ÿ40.75¢J
-#   LM75-6(0X4F)°ÿ42.1¢J
+#   LM75-1(0X48)<=57
+#   LM75-2(0X49)<=47.3
+#   LM75-3(0X4A)<=45
+#   LM75-4(0X4C)<=45.1
+#   LM75-5(0X4E)<=40.75
+#   LM75-6(0X4F)<=42.1
 #   CPU board
-#   Core°ÿ44 
-#   LM75-1(0X4B)°ÿ35¢J
+#   Core<=44 
+#   LM75-1(0X4B)<=35
 
 #   When fan_policy_state=LEVEL_FAN_MID, meet with below case,  Fan duty_cycle will be 100%(LEVEL_FAN_DAX)
 #   (MB board)
-#   LM75-1(0X48)°Ÿ61.5¢J
-#   LM75-2(0X49)°Ÿ51.5¢J
-#   LM75-3(0X4A)°Ÿ49.4¢J
-#   LM75-4(0X4C)°Ÿ49.4¢J
-#   LM75-5(0X4E)°Ÿ45.1¢J
-#   LM75-6(0X4F)°Ÿ46.75¢J
+#   LM75-1(0X48)>=61.5
+#   LM75-2(0X49)>=51.5
+#   LM75-3(0X4A)>=49.4
+#   LM75-4(0X4C)>=49.4
+#   LM75-5(0X4E)>=45.1
+#   LM75-6(0X4F)>=46.75
 #   (CPU board)
-#   Core°Ÿ48 
-#   LM75-1(0X4B)°Ÿ38.5¢J
+#   Core>=48 
+#   LM75-1(0X4B)>=38.5
  
 # 2. For AFO:
 #  At default, FAN duty_cycle was 100%(LEVEL_FAN_MAX). If all below case meet with, set to 75%(LEVEL_FAN_MID).
 # (MB board)
-# LM75-1(0X48)°ÿ59¢J
-# LM75-2(0X49)°ÿ53.5¢J
-# LM75-3(0X4A)°ÿ55.3¢J
-# LM75-4(0X4C)°ÿ50.3¢J
-# LM75-5(0X4E)°ÿ50¢J
-# LM75-6(0X4F)°ÿ52.5¢J
+# LM75-1(0X48)<=59
+# LM75-2(0X49)<=53.5
+# LM75-3(0X4A)<=55.3
+# LM75-4(0X4C)<=50.3
+# LM75-5(0X4E)<=50
+# LM75-6(0X4F)<=52.5
 # (CPU board)
-# Core°ÿ59
-# LM75-1(0X4B)°ÿ41.1¢J
+# Core<=59
+# LM75-1(0X4B)<=41.1
 
 # When FAN duty_cycle was 75%(LEVEL_FAN_MID). If all below case meet with, set to 50%(LEVEL_FAN_DEF).
 # (MB board)
-# LM75-1(0X48)°ÿ55.8
-# LM75-2(0X49)°ÿ50.5
-# LM75-3(0X4A)°ÿ51.1
-# LM75-4(0X4C)°ÿ47.6
-# LM75-5(0X4E)°ÿ45.75
-# LM75-6(0X4F)°ÿ50.1
+# LM75-1(0X48)<=55.8
+# LM75-2(0X49)<=50.5
+# LM75-3(0X4A)<=51.1
+# LM75-4(0X4C)<=47.6
+# LM75-5(0X4E)<=45.75
+# LM75-6(0X4F)<=50.1
 # (CPU board)
-# Core°ÿ57
-# LM75-1(0X4B)°ÿ36.6
+# Core<=57
+# LM75-1(0X4B)<=36.6
  
 # When fan_speed 50%(LEVEL_FAN_DEF).
 # Meet with below case, Fan duty_cycle will be 75%(LEVEL_FAN_MID)
 # (MB board)
-# LM75-1(0X48)°Ÿ70
-# LM75-2(0X49)°Ÿ66
-# LM75-3(0X4A)°Ÿ68
-# LM75-4(0X4C)°Ÿ62
-# LM75-5(0X4E)°Ÿ62
-# LM75-6(0X4F)°Ÿ67
+# LM75-1(0X48)>=70
+# LM75-2(0X49)>=66
+# LM75-3(0X4A)>=68
+# LM75-4(0X4C)>=62
+# LM75-5(0X4E)>=62
+# LM75-6(0X4F)>=67
 # (CPU board)
-# Core°Ÿ77
-# LM75-1(0X4B)°Ÿ50
+# Core>=77
+# LM75-1(0X4B)>=50
 
 # When FAN duty_cycle was 75%(LEVEL_FAN_MID). If all below case meet with, set to 100%(LEVEL_FAN_MAX).
 # (MB board)
-# LM75-1(0X48)°Ÿ67
-# LM75-2(0X49)°Ÿ62.5
-# LM75-3(0X4A)°Ÿ65
-# LM75-4(0X4C)°Ÿ59
-# LM75-5(0X4E)°Ÿ58.5
-# LM75-6(0X4F)°Ÿ63
+# LM75-1(0X48)>=67
+# LM75-2(0X49)>=62.5
+# LM75-3(0X4A)>=65
+# LM75-4(0X4C)>=59
+# LM75-5(0X4E)>=58.5
+# LM75-6(0X4F)>=63
 
 # (CPU board)
 # Core >=69
-# LM75-1(0X4B)°Ÿ49
+# LM75-1(0X4B)>=49
 
 
 #Yellow Alarm
 #MB board
-#LM75-1(0X48)°Ÿ68
-#LM75-2(0X49)°Ÿ64
-#LM75-3(0X4A)°Ÿ65
-#LM75-4(0X4C)°Ÿ61
-#LM75-5(0X4E)°Ÿ60
-#LM75-6(0X4F)°Ÿ64
+#LM75-1(0X48)>=68
+#LM75-2(0X49)>=64
+#LM75-3(0X4A)>=65
+#LM75-4(0X4C)>=61
+#LM75-5(0X4E)>=60
+#LM75-6(0X4F)>=64
 #CPU Board
-#Core°Ÿ70
-#LM75-1(0X4B)°Ÿ68
+#Core>=70
+#LM75-1(0X4B)>=68
 
 #Red Alarm
 #MB board
-#LM75-1(0X48)°Ÿ72
-#LM75-2(0X49)°Ÿ68
-#LM75-3(0X4A)°Ÿ69
-#LM75-4(0X4C)°Ÿ65
-#LM75-5(0X4E)°Ÿ64
-#LM75-6(0X4F)°Ÿ68
+#LM75-1(0X48)>=72
+#LM75-2(0X49)>=68
+#LM75-3(0X4A)>=69
+#LM75-4(0X4C)>=65
+#LM75-5(0X4E)>=64
+#LM75-6(0X4F)>=68
 #CPU Board
-#Core°Ÿ74
-#LM75-1(0X4B)°Ÿ72
+#Core>=74
+#LM75-1(0X4B)>=72
 
 #Shut down
 #MB board
-#LM75-1(0X48)°Ÿ77
-#LM75-2(0X49)°Ÿ73
-#LM75-3(0X4A)°Ÿ74
-#LM75-4(0X4C)°Ÿ70
-#LM75-5(0X4E)°Ÿ69
-#LM75-6(0X4F)°Ÿ73
+#LM75-1(0X48)>=77
+#LM75-2(0X49)>=73
+#LM75-3(0X4A)>=74
+#LM75-4(0X4C)>=70
+#LM75-5(0X4E)>=69
+#LM75-6(0X4F)>=73
 #CPU Board
-#Core°Ÿ79
-#LM75-1(0X4B)°Ÿ77
+#Core>=79
+#LM75-1(0X4B)>=77
+
 
 
 def power_off_dut():
