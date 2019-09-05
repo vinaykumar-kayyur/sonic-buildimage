@@ -76,6 +76,8 @@ XCVR_DOM_CAPABILITY_WIDTH = 2
 # get_transceiver_bulk_status
 XCVR_INTERFACE_DATA_START = 0
 XCVR_INTERFACE_DATA_SIZE = 92
+SFP_MODULE_THRESHOLD_OFFSET = 0
+SFP_MODULE_THRESHOLD_WIDTH = 56
 
 QSFP_DOM_BULK_DATA_START = 22
 QSFP_DOM_BULK_DATA_SIZE = 36
@@ -117,6 +119,11 @@ QSFP_POWEROVERRIDE_BIT = 0
 QSFP_POWERSET_BIT = 1
 QSFP_OPTION_VALUE_OFFSET = 192
 QSFP_OPTION_VALUE_WIDTH = 4
+
+QSFP_MODULE_THRESHOLD_OFFSET = 128
+QSFP_MODULE_THRESHOLD_WIDTH = 24
+QSFP_CHANNL_THRESHOLD_OFFSET = 176
+QSFP_CHANNL_THRESHOLD_WIDTH = 16
 
 SFP_TEMPE_OFFSET = 96
 SFP_TEMPE_WIDTH = 2
@@ -689,6 +696,137 @@ class SFP(SfpBase):
             transceiver_dom_info_dict['tx1power'] = self._convert_string_to_num(dom_channel_monitor_data['data']['TXPower']['value'])
 
         return transceiver_dom_info_dict
+
+    def get_transceiver_dom_threshold_info_dict(self):
+        """
+        Retrieves transceiver threshold info of this SFP
+
+        Returns:
+            A dict which contains following keys/values :
+        ========================================================================
+        keys                       |Value Format   |Information
+        ---------------------------|---------------|----------------------------
+        temphighalarm              |FLOAT          |High Alarm Threshold value of temperature in Celsius.
+        templowalarm               |FLOAT          |Low Alarm Threshold value of temperature in Celsius.
+        temphighwarning            |FLOAT          |High Warning Threshold value of temperature in Celsius.
+        templowwarning             |FLOAT          |Low Warning Threshold value of temperature in Celsius.
+        vcchighalarm               |FLOAT          |High Alarm Threshold value of supply voltage in mV.
+        vcclowalarm                |FLOAT          |Low Alarm Threshold value of supply voltage in mV.
+        vcchighwarning             |FLOAT          |High Warning Threshold value of supply voltage in mV.
+        vcclowwarning              |FLOAT          |Low Warning Threshold value of supply voltage in mV.
+        rxpowerhighalarm           |FLOAT          |High Alarm Threshold value of received power in dBm.
+        rxpowerlowalarm            |FLOAT          |Low Alarm Threshold value of received power in dBm.
+        rxpowerhighwarning         |FLOAT          |High Warning Threshold value of received power in dBm.
+        rxpowerlowwarning          |FLOAT          |Low Warning Threshold value of received power in dBm.
+        txpowerhighalarm           |FLOAT          |High Alarm Threshold value of transmit power in dBm.
+        txpowerlowalarm            |FLOAT          |Low Alarm Threshold value of transmit power in dBm.
+        txpowerhighwarning         |FLOAT          |High Warning Threshold value of transmit power in dBm.
+        txpowerlowwarning          |FLOAT          |Low Warning Threshold value of transmit power in dBm.
+        txbiashighalarm            |FLOAT          |High Alarm Threshold value of tx Bias Current in mA.
+        txbiaslowalarm             |FLOAT          |Low Alarm Threshold value of tx Bias Current in mA.
+        txbiashighwarning          |FLOAT          |High Warning Threshold value of tx Bias Current in mA.
+        txbiaslowwarning           |FLOAT          |Low Warning Threshold value of tx Bias Current in mA.
+        ========================================================================
+        """
+        transceiver_dom_threshold_info_dict = {}
+
+        dom_info_dict_keys = ['temphighalarm',    'temphighwarning',
+                              'templowalarm',     'templowwarning',
+                              'vcchighalarm',     'vcchighwarning',
+                              'vcclowalarm',      'vcclowwarning',
+                              'rxpowerhighalarm', 'rxpowerhighwarning',
+                              'rxpowerlowalarm',  'rxpowerlowwarning',
+                              'txpowerhighalarm', 'txpowerhighwarning',
+                              'txpowerlowalarm',  'txpowerlowwarning',
+                              'txbiashighalarm',  'txbiashighwarning',
+                              'txbiaslowalarm',   'txbiaslowwarning'
+                             ]
+        transceiver_dom_threshold_info_dict = dict.fromkeys(dom_info_dict_keys, 'N/A')
+
+        if self.sfp_type == OSFP_TYPE:
+            pass
+
+        elif self.sfp_type == QSFP_TYPE:
+            if not self.dom_supported:
+                return transceiver_dom_threshold_info_dict
+
+            # Dom Threshold data starts from offset 384
+            # Revert offset back to 0 once data is retrieved
+            offset = 384
+            sfpd_obj = sff8436Dom()
+            if sfpd_obj is None:
+                return transceiver_dom_threshold_info_dict
+
+            dom_module_threshold_raw = self._read_eeprom_specific_bytes((offset + QSFP_MODULE_THRESHOLD_OFFSET), QSFP_MODULE_THRESHOLD_WIDTH)
+            if dom_module_threshold_raw is None:
+                return transceiver_dom_threshold_info_dict
+
+            dom_module_threshold_data = sfpd_obj.parse_module_threshold_values(dom_module_threshold_raw, 0)
+
+            dom_channel_threshold_raw = self._read_eeprom_specific_bytes((offset + QSFP_CHANNL_THRESHOLD_OFFSET),
+                                      QSFP_CHANNL_THRESHOLD_WIDTH)
+            if dom_channel_threshold_raw is None:
+                return transceiver_dom_threshold_info_dict
+            dom_channel_threshold_data = sfpd_obj.parse_channel_threshold_values(dom_channel_threshold_raw, 0)
+
+            # Threshold Data
+            transceiver_dom_threshold_info_dict['temphighalarm'] = dom_module_threshold_data['data']['TempHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['temphighwarning'] = dom_module_threshold_data['data']['TempHighWarning']['value']
+            transceiver_dom_threshold_info_dict['templowalarm'] = dom_module_threshold_data['data']['TempLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['templowwarning'] = dom_module_threshold_data['data']['TempLowWarning']['value']
+            transceiver_dom_threshold_info_dict['vcchighalarm'] = dom_module_threshold_data['data']['VccHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['vcchighwarning'] = dom_module_threshold_data['data']['VccHighWarning']['value']
+            transceiver_dom_threshold_info_dict['vcclowalarm'] = dom_module_threshold_data['data']['VccLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['vcclowwarning'] = dom_module_threshold_data['data']['VccLowWarning']['value']
+            transceiver_dom_threshold_info_dict['rxpowerhighalarm'] = dom_channel_threshold_data['data']['RxPowerHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['rxpowerhighwarning'] = dom_channel_threshold_data['data']['RxPowerHighWarning']['value']
+            transceiver_dom_threshold_info_dict['rxpowerlowalarm'] = dom_channel_threshold_data['data']['RxPowerLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['rxpowerlowwarning'] = dom_channel_threshold_data['data']['RxPowerLowWarning']['value']
+            transceiver_dom_threshold_info_dict['txbiashighalarm'] = dom_channel_threshold_data['data']['TxBiasHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['txbiashighwarning'] = dom_channel_threshold_data['data']['TxBiasHighWarning']['value']
+            transceiver_dom_threshold_info_dict['txbiaslowalarm'] = dom_channel_threshold_data['data']['TxBiasLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['txbiaslowwarning'] = dom_channel_threshold_data['data']['TxBiasLowWarning']['value']
+
+        else:
+            offset = 256
+
+            if not self.dom_supported:
+                return transceiver_dom_threshold_info_dict
+
+            sfpd_obj = sff8472Dom(None, self.calibration)
+            if sfpd_obj is None:
+                return transceiver_dom_threshold_info_dict
+
+            dom_module_threshold_raw = self._read_eeprom_specific_bytes((offset + SFP_MODULE_THRESHOLD_OFFSET),
+                                         SFP_MODULE_THRESHOLD_WIDTH)
+            if dom_module_threshold_raw is not None:
+                dom_module_threshold_data = sfpd_obj.parse_alarm_warning_threshold(dom_module_threshold_raw, 0)
+            else:
+                return transceiver_dom_threshold_info_dict
+
+            # Threshold Data
+            transceiver_dom_threshold_info_dict['temphighalarm'] = dom_module_threshold_data['data']['TempHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['templowalarm'] = dom_module_threshold_data['data']['TempLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['temphighwarning'] = dom_module_threshold_data['data']['TempHighWarning']['value']
+            transceiver_dom_threshold_info_dict['templowwarning'] = dom_module_threshold_data['data']['TempLowWarning']['value']
+            transceiver_dom_threshold_info_dict['vcchighalarm'] = dom_module_threshold_data['data']['VoltageHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['vcclowalarm'] = dom_module_threshold_data['data']['VoltageLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['vcchighwarning'] = dom_module_threshold_data['data']['VoltageHighWarning']['value']
+            transceiver_dom_threshold_info_dict['vcclowwarning'] = dom_module_threshold_data['data']['VoltageLowWarning']['value']
+            transceiver_dom_threshold_info_dict['txbiashighalarm'] = dom_module_threshold_data['data']['BiasHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['txbiaslowalarm'] = dom_module_threshold_data['data']['BiasLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['txbiashighwarning'] = dom_module_threshold_data['data']['BiasHighWarning']['value']
+            transceiver_dom_threshold_info_dict['txbiaslowwarning'] = dom_module_threshold_data['data']['BiasLowWarning']['value']
+            transceiver_dom_threshold_info_dict['txpowerhighalarm'] = dom_module_threshold_data['data']['TXPowerHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['txpowerlowalarm'] = dom_module_threshold_data['data']['TXPowerLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['txpowerhighwarning'] = dom_module_threshold_data['data']['TXPowerHighWarning']['value']
+            transceiver_dom_threshold_info_dict['txpowerlowwarning'] = dom_module_threshold_data['data']['TXPowerLowWarning']['value']
+            transceiver_dom_threshold_info_dict['rxpowerhighalarm'] = dom_module_threshold_data['data']['RXPowerHighAlarm']['value']
+            transceiver_dom_threshold_info_dict['rxpowerlowalarm'] = dom_module_threshold_data['data']['RXPowerLowAlarm']['value']
+            transceiver_dom_threshold_info_dict['rxpowerhighwarning'] = dom_module_threshold_data['data']['RXPowerHighWarning']['value']
+            transceiver_dom_threshold_info_dict['rxpowerlowwarning'] = dom_module_threshold_data['data']['RXPowerLowWarning']['value']
+
+        return transceiver_dom_threshold_info_dict
 
     def get_reset_status(self):
         """
