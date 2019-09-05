@@ -106,12 +106,11 @@ start() {
                 # The only possibility that pmon is active, is that pmon starts ahead of syncd,
                 # Thus, pmon has been started and stopped for an extra time which is unnecessary
                 # and consume more starting time.
-                # In this sense, should we add explicit dependency of syncd for pmon
-                # and remove the below "stop pmon"?
+                # In this sense, should we add explicit dependency on syncd for pmon
+                # and then remove the below "stop pmon"?
                 /bin/systemctl stop pmon
                 /usr/bin/hw-management.sh chipdown
                 /bin/systemctl restart pmon
-                debug "Assertion failure, pmon is active while syncd starting..."
             else
                 /usr/bin/hw-management.sh chipdown
                 debug "Triger pmon starting"
