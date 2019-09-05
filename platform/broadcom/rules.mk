@@ -16,6 +16,7 @@ include $(PLATFORM_PATH)/docker-syncd-brcm.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-rpc.mk
 include $(PLATFORM_PATH)/docker-saiserver-brcm.mk
 include $(PLATFORM_PATH)/one-image.mk
+include $(PLATFORM_PATH)/one-pde-image.mk
 include $(PLATFORM_PATH)/raw-image.mk
 include $(PLATFORM_PATH)/one-aboot.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk

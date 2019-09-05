@@ -162,6 +162,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
+                           ENABLE_PDE=$(ENABLE_PDE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
@@ -178,7 +179,16 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
-.PHONY: sonic-slave-build sonic-slave-bash init reset
+PDESUBMODULES = src/sonic-linux-kernel \
+                src/sonic-utilities \
+                src/sonic-platform-common \
+                src/sonic-swss-common \
+                src/sonic-py-swsssdk \
+                src/redis-dump-load \
+                src/sonic-sairedis \
+                src/sonic-platform-pde
+
+.PHONY: sonic-slave-build sonic-slave-bash init initpde reset
 
 .DEFAULT_GOAL :=  all
 
