@@ -31,7 +31,12 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:18.09.8~3-0~debian-stretch
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # Version name differs between ARCH, copying same version as in sonic-slave docker
+    DOCKER_VERSION=18.06.3~ce~3-0~debian
+else
+    DOCKER_VERSION=5:18.09.8~3-0~debian-stretch
+fi
 LINUX_KERNEL_VERSION=4.9.0-9-2
 
 ## Working directory to prepare the file system
@@ -214,9 +219,11 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
-## Pre-install hardware drivers
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
-    firmware-linux-nonfree
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    ## Pre-install hardware drivers
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
+        firmware-linux-nonfree
+fi
 
 ## Pre-install the fundamental packages
 ## Note: gdisk is needed for sgdisk in install.sh
@@ -268,9 +275,17 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     tcptraceroute           \
     mtr-tiny                \
     locales                 \
-    flashrom                \
     cgroup-tools            \
+    ipmitool                \
+    ndisc6
+
+
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+## Pre-install the fundamental packages for amd64 (x86)
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+    flashrom                \
     mcelog
+fi
 
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
@@ -403,8 +418,10 @@ set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
 
-# Configure mcelog to log machine checks to syslog
-sudo sed -i 's/^#syslog = yes/syslog = yes/' $FILESYSTEM_ROOT/etc/mcelog/mcelog.conf
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    # Configure mcelog to log machine checks to syslog
+    sudo sed -i 's/^#syslog = yes/syslog = yes/' $FILESYSTEM_ROOT/etc/mcelog/mcelog.conf
+fi
 
 ## docker-py is needed by Ansible docker module
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT easy_install pip
@@ -476,10 +493,7 @@ then
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is mounted in each docker' >> /etc/motd"
 
     sudo mkdir -p $FILESYSTEM_ROOT/src
-    pushd src
-        ../scripts/dbg_files.sh | sudo tar -cvzf ../$FILESYSTEM_ROOT/src/sonic_src.tar.gz -T -
-    popd
-
+    sudo cp $DEBUG_SRC_ARCHIVE_FILE $FILESYSTEM_ROOT/src/
     sudo mkdir -p $FILESYSTEM_ROOT/debug
 
 fi
