@@ -185,6 +185,7 @@ $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
 $(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
+$(info "ENABLE_PDE"                      : "$(ENABLE_PDE)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
@@ -670,12 +671,14 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export debug_src_archive="$(DBG_SRC_ARCHIVE)"
 
 	DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
+	BUILD_TARGET="$@" \
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
 		./build_debian.sh $(LOG)
 
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
+	BUILD_TARGET="$@" \
 	TARGET_MACHINE=$($*_MACHINE) \
 	IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		./build_image.sh $(LOG)
