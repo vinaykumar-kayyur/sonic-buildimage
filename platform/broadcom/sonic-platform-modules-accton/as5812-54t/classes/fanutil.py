@@ -48,7 +48,7 @@ class FanUtil(object):
     FANR_NODE_FAULT_IDX_OF_MAP = 5
     FANR_NODE_SPEED_IDX_OF_MAP = 6
 
-    BASE_VAL_PATH = '/sys/devices/platform/as5812_54x_fan/{0}'
+    BASE_VAL_PATH = '/sys/devices/platform/as5812_54t_fan/{0}'
 
     #logfile = ''
     #loglevel = logging.INFO

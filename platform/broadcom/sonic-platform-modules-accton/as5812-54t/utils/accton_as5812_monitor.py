@@ -19,7 +19,7 @@
 # HISTORY:
 #    mm/dd/yyyy (A.D.)
 #    11/13/2017: Polly Hsu, Create
-#    05/08/2019: Roy Lee, changed for as5812-54x.
+#    05/08/2019: Roy Lee, changed for as5812-54t.
 # ------------------------------------------------------------------
 
 try:
@@ -36,8 +36,8 @@ try:
     import traceback
     import signal
     from tabulate import tabulate
-    from as5812_54x.fanutil import FanUtil
-    from as5812_54x.thermalutil import ThermalUtil
+    from as5812_54t.fanutil import FanUtil
+    from as5812_54t.thermalutil import ThermalUtil
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
