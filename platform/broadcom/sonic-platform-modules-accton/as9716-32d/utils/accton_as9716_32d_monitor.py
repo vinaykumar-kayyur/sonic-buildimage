@@ -225,8 +225,7 @@ def check_psu_loading():
             
         psu_power_status[i-1]=int(status)
         if status==0:
-            check_psu_watt=1
-            break
+            check_psu_watt=1           
     
     if check_psu_watt:
         for i in range(1,3):
