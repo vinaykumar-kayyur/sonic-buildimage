@@ -47,7 +47,7 @@ isc-dhcp-relay-{{ vlan_name }}
 {% for vlan_name in VLAN %}
 {% if VLAN[vlan_name]['dhcp_servers'] %}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
-{% if  dhcp_server | ipv4 %}
+{% if dhcp_server | ipv4 %}
 {% set _dummy = relay_for_ipv4.update({'flag': True}) %}
 {% endif %}
 {% endfor %}
