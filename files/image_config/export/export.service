@@ -1,0 +1,12 @@
+[Unit]
+Description=Export the tech support contents to remote server
+Requires=database.service
+After=database.service
+
+[Service]
+Type=forking
+ExecStart=/usr/local/bin/export.py --daemon
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
