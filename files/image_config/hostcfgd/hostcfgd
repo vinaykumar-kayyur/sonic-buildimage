@@ -24,9 +24,7 @@ TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
 
 
 def is_valid_hostname(hostname):
-    if hostname[-1] == ".":
-        return False
-    if len(hostname) > 253:
+    if hostname[-1] == "." or len(hostname) > 253:
         return False
     allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
     return all(allowed.match(x) for x in hostname.split("."))
