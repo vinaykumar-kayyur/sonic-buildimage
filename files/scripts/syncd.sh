@@ -109,15 +109,12 @@ start() {
                 # In this sense, should we add explicit dependency on syncd for pmon
                 # and then remove the below "stop pmon"?
                 /bin/systemctl stop pmon
-                /usr/bin/hw-management.sh chipdown
-                /bin/systemctl restart pmon
-            else
-                /usr/bin/hw-management.sh chipdown
-                debug "Triger pmon starting"
-                debug "Starting pmon service..."
-                /bin/systemctl restart pmon
-                debug "Started pmon service"
+                debug "pmon is active while syncd starting, stop it first"
             fi
+            /usr/bin/hw-management.sh chipdown
+            debug "Starting pmon service..."
+            /bin/systemctl restart pmon
+            debug "Started pmon service"
         fi
 
         if [[ x"$BOOT_TYPE" == x"fast" ]]; then
