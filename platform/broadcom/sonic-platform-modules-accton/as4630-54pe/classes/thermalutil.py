@@ -20,7 +20,7 @@
 #    mm/dd/yyyy (A.D.)
 #    11/13/2017: Polly Hsu, Create
 #    1/10/2018:Jostar modify for as7716_32x
-#    08/09/2019:Roy_Lee modify for as4630_54pe
+#    12/03/2018:Jostar modify for as7726_32x thermal plan
 # ------------------------------------------------------------------
 
 try:
