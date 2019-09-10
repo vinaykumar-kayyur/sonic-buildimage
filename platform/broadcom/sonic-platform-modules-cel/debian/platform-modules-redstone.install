@@ -1,0 +1,5 @@
+redstone/scripts/redstone_check_qsfp.sh usr/local/bin
+redstone/cfg/redstone-modules.conf etc/modules-load.d
+redstone/systemd/platform-modules-redstone.service lib/systemd/system
+redstone/modules/sonic_platform-1.0-py2-none-any.whl usr/share/sonic/device/x86_64-cel_redstone-r0
+services/platform_api/platform_api_mgnt.sh usr/local/bin

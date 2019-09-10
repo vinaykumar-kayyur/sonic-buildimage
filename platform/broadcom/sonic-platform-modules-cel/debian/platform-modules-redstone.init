@@ -155,7 +155,7 @@ force-reload|restart)
         ;;
 
 *)
-        echo "Usage: /etc/init.d/platform-modules-dx010.init {start|stop}"
+        echo "Usage: /etc/init.d/platform-modules-redstone.init {start|stop}"
         exit 1
         ;;
 esac
