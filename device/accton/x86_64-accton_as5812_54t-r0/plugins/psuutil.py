@@ -25,8 +25,8 @@ class PsuUtil(PsuBase):
         self.psu_presence = "/psu_present"
         self.psu_oper_status = "/psu_power_good"
         self.psu_mapping = {
-            1: "11-0038",
-            2: "11-003b",
+            1: ["11-0038", "11-0050"],
+            2: ["12-003b", "12-0053"],
         }
 
     def get_num_psus(self):
@@ -37,25 +37,29 @@ class PsuUtil(PsuBase):
             return False
 
         status = 0
-        node = self.psu_path + self.psu_mapping[index]+self.psu_oper_status
-        try:
-            with open(node, 'r') as power_status:
-                status = int(power_status.read())
-        except IOError:
-            return False
+        lst = self.psu_mapping[index]
+        for i in lst:
+            node = self.psu_path + i + self.psu_oper_status
+            try:
+                with open(node, 'r') as power_status:
+                    status += int(power_status.read())
+            except IOError:
+                return False
 
-        return status == 1
+        return status > 0
 
     def get_psu_presence(self, index):
         if index is None:
             return False
 
         status = 0
-        node = self.psu_path + self.psu_mapping[index] + self.psu_presence
-        try:
-            with open(node, 'r') as presence_status:
-                status = int(presence_status.read())
-        except IOError:
-            return False
+        lst = self.psu_mapping[index]
+        for i in lst:
+            node = self.psu_path + i + self.psu_presence
+            try:
+                with open(node, 'r') as presence_status:
+                    status += int(presence_status.read())
+            except IOError:
+                return False
 
-        return status == 1
+        return status > 0
