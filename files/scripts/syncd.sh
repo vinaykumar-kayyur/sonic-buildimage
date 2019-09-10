@@ -103,11 +103,6 @@ start() {
 
         if [[ x"$WARM_BOOT" != x"true" ]]; then
             if [[ x"$(/bin/systemctl is-active pmon)" == x"active" ]]; then
-                # The only possibility that pmon is active, is that pmon starts ahead of syncd,
-                # Thus, pmon has been started and stopped for an extra time which is unnecessary
-                # and consume more starting time.
-                # In this sense, should we add explicit dependency on syncd for pmon
-                # and then remove the below "stop pmon"?
                 /bin/systemctl stop pmon
                 debug "pmon is active while syncd starting, stop it first"
             fi
