@@ -150,7 +150,7 @@ def driver_check():
     logging.info('mods:'+lsmod)
     if len(lsmod) ==0:
         return False   
-
+    return True
 			
 kos = [
 'modprobe i2c_dev',
