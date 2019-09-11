@@ -25,17 +25,17 @@ function wait_until_iface_ready
 
 
 # Wait for all interfaces with IPv4 addresses to be up and ready
-{% for (name, prefix) in INTERFACE %}
+{% for (name, prefix) in INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %}
 wait_until_iface_ready {{ name }} {{ prefix }}
 {% endif %}
 {% endfor %}
-{% for (name, prefix) in VLAN_INTERFACE %}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %}
 wait_until_iface_ready {{ name }} {{ prefix }}
 {% endif %}
 {% endfor %}
-{% for (name, prefix) in PORTCHANNEL_INTERFACE %}
+{% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %}
 wait_until_iface_ready {{ name }} {{ prefix }}
 {% endif %}
