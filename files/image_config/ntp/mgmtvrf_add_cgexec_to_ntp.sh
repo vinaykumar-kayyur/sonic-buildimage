@@ -1,3 +1,0 @@
-#!/bin/bash
-sudo sed -i '/start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE $NTPD_OPTS/d' $1
-sudo sed -i '/flock -w 180 9/a \\t\t\tvrfEnabled=$(/usr/local/bin/sonic-cfggen -d -v '"'MGMT_VRF_CONFIG[\"vrf_global\"][\"mgmtVrfEnabled\"]'"')\n\t\t\tif [ "$vrfEnabled" = "true" ]\n\t\t\tthen\n\t\t\t\tlog_daemon_msg "Starting NTP server in mgmt-vrf" "ntpd"\n\t\t\t\tcgexec -g l3mdev:mgmt start-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE $NTPD_OPTS\n\t\t\telse\n\t\t\t\tlog_daemon_msg "Starting NTP server in default-vrf" "ntpd"\n\t\t\t\tstart-stop-daemon --start --quiet --oknodo --pidfile $PIDFILE --startas $DAEMON -- -p $PIDFILE $NTPD_OPTS\n\t\t\tfi' $1
