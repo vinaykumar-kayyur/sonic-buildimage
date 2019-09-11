@@ -742,6 +742,7 @@ int mlacp_fsm_update_warmboot(struct CSM* csm, struct mLACPWarmbootTLV* tlv)
         return MCLAG_ERROR;
 
     time(&csm->peer_warm_reboot_time);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Receive warm reboot notification from peer!");
 
     return 0;
 }

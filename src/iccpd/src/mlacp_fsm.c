@@ -603,6 +603,7 @@ void mlacp_fsm_transit(struct CSM* csm)
         if ((time(NULL) - csm->warm_reboot_disconn_time) >= WARM_REBOOT_TIMEOUT)
         {
             csm->warm_reboot_disconn_time = 0;
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Peer warm reboot, reconnection timeout, recover to normal reboot!");
             mlacp_peer_disconn_handler(csm);
         }
     }
@@ -1200,6 +1201,7 @@ static void mlacp_exchange_handler(struct CSM* csm, struct Msg* msg)
         if ((time(NULL) - csm->peer_warm_reboot_time) >= WARM_REBOOT_TIMEOUT)
         {
             csm->peer_warm_reboot_time = 0;
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Peer warm reboot timeout, recover to normal reboot!");
         }
     }
 

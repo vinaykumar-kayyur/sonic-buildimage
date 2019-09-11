@@ -480,12 +480,6 @@ int set_local_system_id(const char* mac)
                         MLACP(csm).system_id[3], MLACP(csm).system_id[4], MLACP(csm).system_id[5]);
     }
 
-    /*When changing the mac of a vlan member port, the mac of Bridge will be changed.*/
-    /*The Bridge mac can not be the same as peer system id, so fix the Bridge MAC address here.*/
-    sprintf(syscmd, "ip link set dev Bridge address %s > /dev/null 2>&1", mac);
-    ret = system(syscmd);
-    ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
-
     return 0;
 }
 

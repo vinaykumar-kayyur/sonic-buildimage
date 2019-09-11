@@ -245,6 +245,7 @@ void iccp_csm_transit(struct CSM* csm)
     int len = -1;
     struct Msg* msg = NULL;
     ICCP_CONNECTION_STATE_E prev_state;
+    char *state_str[] = {"NONEXISTENT", "INITIALIZED", "CAPSENT", "CAPREC", "CONNECTING", "OPERATIONAL"};
 
     if (!csm)
         return;
@@ -254,6 +255,7 @@ void iccp_csm_transit(struct CSM* csm)
     /* No connection, but have state change? reset it...*/
     if (csm->current_state != ICCP_NONEXISTENT && csm->sock_fd <= 0)
     {
+        ICCPD_LOG_INFO(__FUNCTION__, "csm %d change state from %s to NONEXISTENT.", csm->mlag_id, state_str[csm->current_state]);
         csm->current_state = ICCP_NONEXISTENT;
         iccp_csm_enter_state_nonexistent(csm);
         return;
@@ -332,7 +334,8 @@ void iccp_csm_transit(struct CSM* csm)
 
     if (prev_state != csm->current_state || (csm->current_state && msg != NULL))
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "csm %d enter state %d .", csm->mlag_id, csm->current_state);
+        if (prev_state != csm->current_state)
+            ICCPD_LOG_INFO(__FUNCTION__, "csm %d change state from %s to %s.", csm->mlag_id, state_str[prev_state], state_str[csm->current_state]);
 
         switch (csm->current_state)
         {

@@ -1271,6 +1271,30 @@ static void mlacp_conn_handler_fdb(struct CSM* csm)
     return;
 }
 
+static void mlacp_fix_bridge_mac(struct CSM* csm)
+{
+    char syscmd[128];
+    int ret = 0;
+    char macaddr[64];
+    uint8_t null_mac[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+    if (memcmp(MLACP(csm).system_id, null_mac, ETHER_ADDR_LEN) != 0)
+    {
+        memset(macaddr, 0, 64);
+        snprintf(macaddr, 64, "%02x:%02x:%02x:%02x:%02x:%02x",
+             MLACP(csm).system_id[0], MLACP(csm).system_id[1], MLACP(csm).system_id[2],
+             MLACP(csm).system_id[3], MLACP(csm).system_id[4], MLACP(csm).system_id[5]);
+
+        /*When changing the mac of a vlan member port, the mac of Bridge will be changed.*/
+        /*The Bridge mac can not be the same as peer system id, so fix the Bridge MAC address here.*/
+        sprintf(syscmd, "ip link set dev Bridge address %s > /dev/null 2>&1", macaddr);
+        ret = system(syscmd);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+    }
+
+    return;
+}
+
 /*****************************************
 * Peer connect/disconnect handler
 *
@@ -1291,6 +1315,7 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     {
         /*If peer reconnected, reset peer disconnect time*/
         csm->warm_reboot_disconn_time = 0;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Peer warm reboot and reconnect, reset peer disconnect time!");
     }
 
     if (csm->peer_link_if)
@@ -1302,6 +1327,7 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     if (first_time == 0)
     {
         first_time = 1;
+        mlacp_fix_bridge_mac(csm);
         /*If warm reboot, don't flush FDB*/
         if (sys->warmboot_start != WARM_REBOOT)
             mlacp_clean_fdb();
@@ -1399,6 +1425,7 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
         /*peer connection must be establised again within 90s
            from last disconnection for peer warm reboot*/
         time(&csm->warm_reboot_disconn_time);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Peer warm reboot and disconnect, recover to normal reboot for next time!");
         return;
     }
 

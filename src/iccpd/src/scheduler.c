@@ -487,6 +487,7 @@ void session_client_conn_handler(struct CSM *csm)
     int connFd = -1, connStat = -1;
     struct timeval con_tv;
     socklen_t len = sizeof(con_tv);
+    int err = 0;
 
     struct sockaddr_in src_addr;
     bzero(&(src_addr), sizeof(src_addr));
@@ -522,9 +523,11 @@ void session_client_conn_handler(struct CSM *csm)
         ICCPD_LOG_INFO(__FUNCTION__, "Set socket timeout fail");
     }
 
-    if (bind(connFd, (struct sockaddr*)&(src_addr), sizeof(src_addr)) < 0)
+    err = bind(connFd, (struct sockaddr*)&(src_addr), sizeof(src_addr));
+    if (err < 0)
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "Bind socket failed. Error");
+        ICCPD_LOG_INFO(__FUNCTION__, "Bind socket failed. Error = %d errno = %d ",err,errno);
+        goto conn_fail;
     }
 
     /* Try conn*/

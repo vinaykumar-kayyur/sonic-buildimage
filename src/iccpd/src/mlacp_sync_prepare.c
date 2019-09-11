@@ -600,6 +600,8 @@ int mlacp_prepare_for_warm_reboot(struct CSM* csm, char* buf, size_t max_buf_siz
 
     tlv->icc_parameter.len = htons(sizeof(struct mLACPWarmbootTLV) - sizeof(ICCParameter));
     tlv->warmboot = 0x1;
+
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Send warm reboot notification to peer!");
     return msg_len;
 }
 

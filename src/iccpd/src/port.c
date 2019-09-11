@@ -592,6 +592,9 @@ int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid)
     vlan->vid = vid;
     vlan->vlan_removed = 0;
     vlan->vlan_itf = local_if_find_by_name(vlan_name);
+
+    update_if_ipmac_on_standby(local_if);
+
     return 0;
 }
 
