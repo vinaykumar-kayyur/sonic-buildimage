@@ -2,6 +2,14 @@
 
 CONFIG_DB_INDEX=4
 
+function install_iptables()
+{
+    if [[ -x /usr/bin/iptables.sh ]]; then
+        # Install iptables rules
+        /usr/bin/iptables.sh
+    fi
+}
+
 reload_minigraph()
 {
     echo "Reloading minigraph..."
@@ -21,6 +29,7 @@ reload_minigraph()
         # Set latest version number
         /usr/bin/db_migrator.py -o set_version
     fi
+    install_iptables
 }
 
 function copy_config_files_and_directories()
@@ -46,7 +55,6 @@ function check_system_warm_boot()
     fi
 }
 
-
 if [ ! -f /etc/sonic/updategraph.conf ]; then
     echo "No updategraph.conf found, generating a default one."
     echo "enabled=false" >/etc/sonic/updategraph.conf
@@ -67,6 +75,7 @@ if [ -f /tmp/pending_config_migration ]; then
     else
         echo "Use config_db.json from old system..."
         sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
+        install_iptables
     fi
     rm -f /tmp/pending_config_migration
     sed -i "/enabled=/d" /etc/sonic/updategraph.conf
@@ -82,6 +91,7 @@ if [ -f /tmp/pending_config_initialization ]; then
         sonic-cfggen -H -k ${PRESET[0]} --preset ${PRESET[1]} > /etc/sonic/config_db.json
         redis-cli -n $CONFIG_DB_INDEX FLUSHDB
         sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
+        install_iptables
         redis-cli -n $CONFIG_DB_INDEX SET "CONFIG_DB_INITIALIZED" "1"
         exit 0
     fi
@@ -127,6 +137,7 @@ if [ "$src" = "dhcp" ]; then
         fi
         redis-cli -n $CONFIG_DB_INDEX FLUSHDB
         sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
+        install_iptables
         redis-cli -n $CONFIG_DB_INDEX SET "CONFIG_DB_INITIALIZED" "1"
         if [ "$dhcp_as_static" = "true" ]; then
             sed -i "/enabled=/d" /etc/sonic/updategraph.conf
