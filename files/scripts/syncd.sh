@@ -107,10 +107,11 @@ start() {
                 debug "pmon is active while syncd starting, stop it first"
             fi
             /usr/bin/hw-management.sh chipdown
-            debug "Starting pmon service..."
-            /bin/systemctl restart pmon
-            debug "Started pmon service"
         fi
+
+        debug "Starting pmon service..."
+        /bin/systemctl start pmon
+        debug "Started pmon service"
 
         if [[ x"$BOOT_TYPE" == x"fast" ]]; then
             /usr/bin/hw-management.sh chipupdis
