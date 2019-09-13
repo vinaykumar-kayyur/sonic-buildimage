@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 from datetime import datetime
 
-SYSLOG_IDENTIFIER = 'core_cleanup_cronjob'
+SYSLOG_IDENTIFIER = 'core_cleanup.py'
 CORE_FILE_DIR = os.path.abspath('/var/core')
 MAX_CORE_FILES = 4
 

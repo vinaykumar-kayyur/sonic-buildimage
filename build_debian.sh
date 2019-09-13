@@ -464,7 +464,7 @@ built_by: $USER@$BUILD_HOSTNAME
 EOF
 
 ## Copy over clean-up script
-sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup
+sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
 
 ## Copy ASIC config checksum
 python files/build_scripts/generate_asic_config_checksum.py
