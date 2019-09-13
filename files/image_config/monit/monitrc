@@ -153,10 +153,8 @@ set logfile syslog
 ## commands to a running Monit daemon. See the Monit Wiki if you want to
 ## enable SSL for the HTTP interface.
 #
-set httpd port 2812 and
-     use address localhost  # only accept connection from localhost
+set httpd unixsocket /var/run/monit.sock and
      allow localhost        # allow localhost to connect to the server and
-     allow admin:monit      # require user 'admin' with password 'monit'
 #
 ###############################################################################
 ## Services
