@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 
 SYSLOG_IDENTIFIER = 'core_cleanup.py'
-CORE_FILE_DIR = os.path.abspath('/var/core')
+CORE_FILE_DIR = os.path.basename(__file__)
 MAX_CORE_FILES = 4
 
 def log_info(msg):
