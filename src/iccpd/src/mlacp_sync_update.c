@@ -214,6 +214,12 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
 
                         if (strlen(csm->peer_itf_name) != 0)
                         {
+                            if (strcmp(mac_msg->ifname, csm->peer_itf_name) == 0)
+                            {
+                                /*This MAC is already point to peer-link*/
+                                return;
+                            }
+
                             if (csm->peer_link_if && csm->peer_link_if->state == PORT_STATE_UP)
                             {
                                 /*Redirect the mac to peer-link*/

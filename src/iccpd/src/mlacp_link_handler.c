@@ -1302,7 +1302,7 @@ static void mlacp_fix_bridge_mac(struct CSM* csm)
 void mlacp_peer_conn_handler(struct CSM* csm)
 {
     struct LocalInterface *lif = NULL;
-    static int first_time = 0;
+    static int once_connected = 0;
     struct System* sys = NULL;
 
     if (!csm)
@@ -1324,9 +1324,9 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     }
 
     /*If peer connect again, don't flush FDB*/
-    if (first_time == 0)
+    if (once_connected == 0)
     {
-        first_time = 1;
+        once_connected = 1;
         mlacp_fix_bridge_mac(csm);
         /*If warm reboot, don't flush FDB*/
         if (sys->warmboot_start != WARM_REBOOT)

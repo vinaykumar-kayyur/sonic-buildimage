@@ -465,8 +465,6 @@ int set_local_system_id(const char* mac)
 {
     struct System* sys = NULL;
     struct CSM* csm = NULL;
-    char syscmd[128];
-    int ret = 0;
 
     if ((sys = system_get_instance()) == NULL )
         return 0;

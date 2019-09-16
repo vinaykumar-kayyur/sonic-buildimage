@@ -104,6 +104,7 @@ struct LocalInterface
     uint8_t prefixlen;
 
     uint8_t l3_mode;
+    uint8_t l3_mac_addr[ETHER_ADDR_LEN];
     uint8_t is_peer_link;
     char portchannel_member_buf[512];
     uint8_t is_arp_accept;
