@@ -1,7 +1,7 @@
 From 49ce7fc078dfa8c1a1688e05de4e2d151dbcd76a Mon Sep 17 00:00:00 2001
 From: Harish Venkatraman <Harish_Venkatraman@dell.com>
 Date: Wed, 17 Oct 2018 15:22:04 -0700
-Subject: [PATCH] Linux-VRF 5.7.3 Support
+Subject: [PATCH] Linux-VRF 5.7.3 Support from https://sourceforge.net/p/net-snmp/patches/1376/
 
 ---
  agent/agent_trap.c                               | 20 ++++++++++--
