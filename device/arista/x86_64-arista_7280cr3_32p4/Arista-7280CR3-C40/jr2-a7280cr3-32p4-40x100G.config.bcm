@@ -103,7 +103,6 @@ serdes_tx_taps_5=pam4:-16:64:0:3:0:0
 serdes_tx_taps_6=pam4:-16:64:0:3:0:0
 serdes_tx_taps_7=pam4:-16:64:0:3:0:0
 serdes_tx_taps_8=pam4:-16:64:0:3:0:0
-
 serdes_tx_taps_9=pam4:-8:60:0:0:0:0
 serdes_tx_taps_10=pam4:-8:60:0:0:0:0
 serdes_tx_taps_11=pam4:-8:60:0:0:0:0
@@ -112,7 +111,6 @@ serdes_tx_taps_13=pam4:-8:60:0:0:0:0
 serdes_tx_taps_14=pam4:-8:60:0:0:0:0
 serdes_tx_taps_15=pam4:-8:60:0:0:0:0
 serdes_tx_taps_16=pam4:-8:60:0:0:0:0
-
 serdes_tx_taps_17=pam4:-8:60:0:0:0:0
 serdes_tx_taps_18=pam4:-8:60:0:0:0:0
 serdes_tx_taps_19=pam4:-8:60:0:0:0:0
@@ -121,7 +119,6 @@ serdes_tx_taps_21=pam4:-8:60:0:0:0:0
 serdes_tx_taps_22=pam4:-8:60:0:0:0:0
 serdes_tx_taps_23=pam4:-8:60:0:0:0:0
 serdes_tx_taps_24=pam4:-8:60:0:0:0:0
-
 serdes_tx_taps_25=pam4:-8:60:0:0:0:0
 serdes_tx_taps_26=pam4:-8:60:0:0:0:0
 serdes_tx_taps_27=pam4:-8:60:0:0:0:0
@@ -130,7 +127,6 @@ serdes_tx_taps_29=pam4:-16:60:0:3:0:0
 serdes_tx_taps_30=pam4:-16:60:0:3:0:0
 serdes_tx_taps_31=pam4:-16:60:0:3:0:0
 serdes_tx_taps_32=pam4:-16:60:0:3:0:0
-
 serdes_tx_taps_33=nrz:0:71:-16:-5:0:0
 serdes_tx_taps_34=nrz:0:71:-16:-5:0:0
 serdes_tx_taps_35=nrz:0:78:-22:-4:0:0
@@ -933,4 +929,3 @@ dma_desc_aggregator_buff_size_kb.BCM8869X=100
 dma_desc_aggregator_timeout_usec.BCM8869X=1000
 dma_desc_aggregator_enable_specific_MDB_LPM.BCM8869X=1
 dma_desc_aggregator_enable_specific_MDB_FEC.BCM8869X=1
-
