@@ -8,6 +8,7 @@ import subprocess
 import syslog
 import copy
 import jinja2
+import ipaddr as ipaddress
 from swsssdk import ConfigDBConnector
 
 # FILE
@@ -49,6 +50,68 @@ def obfuscate(data):
     else:
         return data
 
+class Iptables(object):
+    def is_ip_prefix_in_key(self, key):
+        '''
+        Function to check if IP address is present in the key. If it
+        is present, then the key would be a tuple or else, it shall be
+        be string
+        '''
+        return (isinstance(key, tuple))
+
+    def load(self, lpbk_table):
+        for row in lpbk_table:
+            self.iptables_handler(row, lpbk_table[row])
+
+    def command(self, chain, ip, ver, op):
+        cmd = 'iptables' if ver == '4' else 'ip6tables'
+        cmd += ' -t mangle --{} {} -p tcp --tcp-flags SYN SYN'.format(op, chain)
+        cmd += ' -d' if chain == 'PREROUTING' else ' -s'
+        cmd += ' {} -j TCPMSS --set-mss 1460'.format(ip)
+
+        return cmd
+
+    def iptables_handler(self, key, data, add=True):
+        if not self.is_ip_prefix_in_key(key):
+            return
+
+        iface, ip = key
+        ip_str = ip.split("/")[0]
+        ip_addr = ipaddress.IPAddress(ip_str)
+        if isinstance(ip_addr, ipaddress.IPv6Address):
+            ver = '6'
+        else:
+            ver = '4'
+
+        self.mangle_handler(ip_str, ver, add)
+
+    def mangle_handler(self, ip, ver, add):
+        if not add:
+            op = 'delete'
+        else:
+            op = 'check'
+
+        iptables_cmds = []
+        chains = ['PREROUTING', 'POSTROUTING']
+        for chain in chains:
+            cmd = self.command(chain, ip, ver, op)
+            if not add:
+                iptables_cmds.append(cmd)
+            else:
+                ret = subprocess.call(cmd, shell=True)
+                if ret == 0:
+                    syslog.syslog(syslog.LOG_INFO, "{} rule exists in {}".format(ip, chain))
+                else:
+                    # Modify command from Check to Append
+                    iptables_cmds.append(cmd.replace("check","append"))
+
+        for cmd in iptables_cmds:
+            syslog.syslog(syslog.LOG_INFO, "Running cmd - {}".format(cmd))
+            try:
+                subprocess.check_call(cmd, shell=True)
+            except subprocess.CalledProcessError as err:
+                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                              .format(err.cmd, err.returncode, err.output))
 
 class AaaCfg(object):
     def __init__(self):
@@ -159,7 +222,9 @@ class HostConfigDaemon:
         self.aaacfg = AaaCfg()
         self.aaacfg.load(aaa, tacacs_global, tacacs_server)
         self.hostname_cache=""
-        self.lpbk_handler()
+        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
+        self.iptables = Iptables()
+        self.iptables.load(lpbk_table)
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -216,18 +281,16 @@ class HostConfigDaemon:
 
         self.hostname_cache = hostname
 
-    def lpbk_handler(self, key=None, data=None):
-        script = '/usr/bin/iptables.sh'
-        exists = os.path.isfile(script)
-        if not exists:
-            syslog.syslog(syslog.LOG_ERR, "Can't find iptables script ")
-            return
+    def lpbk_handler(self, key, data):
+        key = ConfigDBConnector.deserialize_key(key)
+        #Check if delete operation by fetch existing keys
+        keys = self.config_db.get_keys('LOOPBACK_INTERFACE')
+        if key in keys:
+            add = True
+        else:
+            add = False
 
-        try:
-            subprocess.check_call(script, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                              .format(err.cmd, err.returncode, err.output))
+        self.iptables.iptables_handler(key, data, add)
 
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))

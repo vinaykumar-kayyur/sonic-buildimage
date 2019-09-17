@@ -487,9 +487,6 @@ fi
 sudo sed -i 's/EBTABLES_LOAD_ON_START="no"/EBTABLES_LOAD_ON_START="yes"/g' ${FILESYSTEM_ROOT}/etc/default/ebtables
 sudo cp files/image_config/ebtables/ebtables.filter ${FILESYSTEM_ROOT}/etc
 
-## Setup iptables rules
-sudo cp files/image_config/iptables/iptables.sh ${FILESYSTEM_ROOT}/usr/bin
-
 ## Debug Image specific changes
 ## Update motd for debug image
 if [ "$DEBUG_IMG" == "y" ]
