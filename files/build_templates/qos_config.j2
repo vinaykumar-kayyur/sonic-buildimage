@@ -73,7 +73,7 @@
             "7": "7"
         }
     },
-{% if DEVICE_METADATA['localhost']['type'] in backend_device_types %}
+{% if 'type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] in backend_device_types %}
     "DOT1P_TO_TC_MAP": {
         "AZURE": {
             "0": "0",
@@ -176,7 +176,7 @@
 {% endif %}
     "PORT_QOS_MAP": {
         "{{ port_names_active }}": {
-{% if DEVICE_METADATA['localhost']['type'] in backend_device_types %}
+{% if 'type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] in backend_device_types %}
             "dot1p_to_tc_map" : "[DOT1P_TO_TC_MAP|AZURE]",
 {% else %}
             "dscp_to_tc_map"  : "[DSCP_TO_TC_MAP|AZURE]",
