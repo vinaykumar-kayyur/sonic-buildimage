@@ -51,6 +51,12 @@ def obfuscate(data):
         return data
 
 class Iptables(object):
+    def __init__(self):
+        '''
+        Default MSS to 1460 - (MTU 1500 - 40 (TCP/IP Overhead))
+        '''
+        self.tcpmss = 1460
+
     def is_ip_prefix_in_key(self, key):
         '''
         Function to check if IP address is present in the key. If it
@@ -67,7 +73,7 @@ class Iptables(object):
         cmd = 'iptables' if ver == '4' else 'ip6tables'
         cmd += ' -t mangle --{} {} -p tcp --tcp-flags SYN SYN'.format(op, chain)
         cmd += ' -d' if chain == 'PREROUTING' else ' -s'
-        cmd += ' {} -j TCPMSS --set-mss 1460'.format(ip)
+        cmd += ' {} -j TCPMSS --set-mss {}'.format(ip, self.tcpmss)
 
         return cmd
 
@@ -103,7 +109,7 @@ class Iptables(object):
                     syslog.syslog(syslog.LOG_INFO, "{} rule exists in {}".format(ip, chain))
                 else:
                     # Modify command from Check to Append
-                    iptables_cmds.append(cmd.replace("check","append"))
+                    iptables_cmds.append(cmd.replace("check", "append"))
 
         for cmd in iptables_cmds:
             syslog.syslog(syslog.LOG_INFO, "Running cmd - {}".format(cmd))
