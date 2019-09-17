@@ -67,6 +67,15 @@ RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return
 {%- endfor %}
 {%- endif %}
 
+{% if docker_base_dbgs.strip() -%}
+# Install common debug-packages
+{%- for dbg_pkg in docker_base_dbgs.split(' ') %}
+RUN apt-get -y install {{ dbg_pkg }}
+{%- endfor %}
+{% else %}
+RUN ln /usr/bin/vim.tiny /usr/bin/vim
+{%- endif %}
+
 # Remove python3.4
 # Note: if later python3 is required by more docker images, consider install homebrew python3 here instead of in SNMP image only
 RUN apt-get purge -y libpython3.4-minimal
