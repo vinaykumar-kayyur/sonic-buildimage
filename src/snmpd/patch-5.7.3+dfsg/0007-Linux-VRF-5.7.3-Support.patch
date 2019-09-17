@@ -3,6 +3,30 @@ From: Harish Venkatraman <Harish_Venkatraman@dell.com>
 Date: Wed, 17 Oct 2018 15:22:04 -0700
 Subject: [PATCH] Linux-VRF 5.7.3 Support from https://sourceforge.net/p/net-snmp/patches/1376/
 
+Sourceforge commits related to this consolidated patch are given below.
+https://sourceforge.net/p/net-snmp/code/ci/0b637fea62c7b6dc467b94206d0bd2dec6f912ca/
+https://sourceforge.net/p/net-snmp/code/ci/19ba7b0a6b56d201a8563fe6505cd82e313c1c9c/
+https://sourceforge.net/p/net-snmp/code/ci/76336fb63bb74b4dede5dda5c14fb8cf2d60be8e/
+https://sourceforge.net/p/net-snmp/code/ci/c7398de4122102b3250e6dac7c09dbc5d09f1840/
+https://sourceforge.net/p/net-snmp/code/ci/0831ed64a39a34dc040eabe39d0229b07fa2a8a5/
+https://sourceforge.net/p/net-snmp/code/ci/62f6babcc7cfc54c79b442b8a7f45662b4ddc807/
+https://sourceforge.net/p/net-snmp/code/ci/313949522c4d0ddfeac72195fa63512955d9eb28/
+
+
+This consolidated patch adds native support for VRFs to snmpd. NCLU patches in this same
+CCR will be added shortly.  The VRF is specified for both listening
+addresses as well as TRAP sinks with the 'ipaddr%iface' syntax:
+
+agentAddress 10.0.1.7%mgmt,22.22.22.22%red
+trapsink 10.0.1.9%mgmt
+trap2sink 22.22.22.25%red
+
+The SO_BINDTODEVICE socket option is used to bind a VRF to a particular
+socket.
+
+Testing done included VRFs as well as non-VRF functionality with traps
+(v1, v2, and v3)
+
 ---
  agent/agent_trap.c                               | 20 ++++++++++--
  agent/mibgroup/agentx/master.c                   |  2 +-
