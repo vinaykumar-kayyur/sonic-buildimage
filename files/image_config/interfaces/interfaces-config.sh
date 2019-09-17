@@ -28,6 +28,10 @@ for intf_pid in $(ls -1 /var/run/dhclient*.Ethernet*.pid 2> /dev/null); do
     [ -f ${intf_pid} ] && kill `cat ${intf_pid}` && rm -f ${intf_pid}
 done
 
+sonic-cfggen -d -j /tmp/ztp_input.json -t /usr/share/sonic/templates/90-dhcp6-systcl.conf.j2 > /etc/sysctl.d/90-dhcp6-systcl.conf
+# Read sysctl conf files again
+sysctl -p /etc/sysctl.d/90-dhcp6-systcl.conf
+
 sonic-cfggen -d -j /tmp/ztp_input.json -t /usr/share/sonic/templates/dhclient.conf.j2 > /etc/dhcp/dhclient.conf
 systemctl restart networking
 

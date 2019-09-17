@@ -104,6 +104,9 @@ iface eth0 inet dhcp
     up cgset -r l3mdev.master-device=mgmt mgmt
     down cgdelete -g l3mdev:mgmt
 {% endif %}
+iface eth0 inet6 dhcp
+    up sysctl net.ipv6.conf.eth0.accept_ra=1
+    down sysctl net.ipv6.conf.eth0.accept_ra=0
 {% endif %}
 {% endif %}
 #
