@@ -107,6 +107,11 @@ class Iptables(object):
             if not add:
                 iptables_cmds.append(cmd)
             else:
+                '''
+                For add case, first check if rule exists. Iptables just appends to the chain
+                as a new rule even if it is the same as an existing one. Check this and
+                do nothing if rule exists
+                '''
                 ret = subprocess.call(cmd, shell=True)
                 if ret == 0:
                     syslog.syslog(syslog.LOG_INFO, "{} rule exists in {}".format(ip, chain))
