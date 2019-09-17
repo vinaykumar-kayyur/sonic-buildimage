@@ -54,8 +54,10 @@ class Iptables(object):
     def __init__(self):
         '''
         Default MSS to 1460 - (MTU 1500 - 40 (TCP/IP Overhead))
+        For IPv6, it would be 1440 - (MTU 1500 - 60 octects)
         '''
         self.tcpmss = 1460
+        self.tcp6mss = 1440
 
     def is_ip_prefix_in_key(self, key):
         '''
@@ -73,7 +75,8 @@ class Iptables(object):
         cmd = 'iptables' if ver == '4' else 'ip6tables'
         cmd += ' -t mangle --{} {} -p tcp --tcp-flags SYN SYN'.format(op, chain)
         cmd += ' -d' if chain == 'PREROUTING' else ' -s'
-        cmd += ' {} -j TCPMSS --set-mss {}'.format(ip, self.tcpmss)
+        mss = self.tcpmss if ver == '4' else self.tcp6mss
+        cmd += ' {} -j TCPMSS --set-mss {}'.format(ip, mss)
 
         return cmd
 
