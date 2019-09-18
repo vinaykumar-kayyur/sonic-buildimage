@@ -1,7 +1,7 @@
 from setuptools import setup
 
 DEVICE_NAME = 'celestica'
-HW_SKU = 'cel_redstone_xp-r0'
+HW_SKU = 'x86_64-cel_redstone_xp-r0'
 
 setup(
     name='sonic-platform',
