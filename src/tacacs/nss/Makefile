@@ -5,7 +5,7 @@ SHELL = /bin/bash
 MAIN_TARGET = libnss-tacplus_$(NSS_TACPLUS_VERSION)_$(CONFIGURED_ARCH).deb
 
 GIT_APPLY = am
-ifeq ($(CONFIGURED_ARCH), armhf)
+ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
 # Workaround git am issue "Out of memory getdelim failed" 
 GIT_APPLY = apply
 endif
@@ -22,6 +22,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git $(GIT_APPLY) ../0002-Enable-modifying-local-user-permission.patch
 	git $(GIT_APPLY) ../0003-management-vrf-support.patch
 	git $(GIT_APPLY) ../0004-Skip-accessing-tacacs-servers-for-local-non-tacacs-u.patch
+	git $(GIT_APPLY) ../0005-libnss-Modify-parsing-of-IP-addr-and-port-number-str.patch
 
 	dpkg-buildpackage -rfakeroot -b -us -uc
 	popd
