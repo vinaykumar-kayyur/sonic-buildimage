@@ -21,11 +21,10 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-MAX_S6000_PSU = 2
-MAX_S6000_THERMAL = 10
-
 
 MAX_S6000_FAN = 3
+MAX_S6000_PSU = 2
+MAX_S6000_THERMAL = 10
 
 BIOS_QUERY_VERSION_COMMAND = "dmidecode -s system-version"
 #components definitions
