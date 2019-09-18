@@ -174,6 +174,8 @@
 #define EEPROM_LABEL_REV_SIZE      3
 #define EEPROM_PPID_SIZE           28
 
+/* Mailbox PowerOn Reason */
+#define TRACK_POWERON_REASON    0x05FF
 
 
 unsigned long  *mmio;

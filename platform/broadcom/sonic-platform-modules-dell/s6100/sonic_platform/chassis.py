@@ -85,6 +85,13 @@ class Chassis(ChassisBase):
         self._component_name_list.append(SWITCH_CPLD)
         self._component_name_list.append(SMF_FPGA)
 
+    def _get_reboot_reason_smf_register(self):
+        # Returns 0xAA on software reload
+        # Returns 0xFF on power-cycle
+        # Returns 0x01 on first-boot
+        smf_mb_reg_reason = self._get_pmc_register('mb_poweron_reason')
+        return int(smf_mb_reg_reason, 16)
+
     def _get_pmc_register(self, reg_name):
         # On successful read, returns the value read from given
         # reg_name and on failure returns 'ERR'

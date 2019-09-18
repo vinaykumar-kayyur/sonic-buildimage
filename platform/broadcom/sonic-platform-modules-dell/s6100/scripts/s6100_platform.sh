@@ -217,7 +217,6 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
-
 track_reboot_reason() {
     if [[ -d /sys/devices/platform/SMF.512/hwmon/ ]]; then
         rv=$(cd /sys/devices/platform/SMF.512/hwmon/*; cat mb_poweron_reason)
@@ -229,7 +228,7 @@ track_reboot_reason() {
             else
                 echo 0xbb > mb_poweron_reason
             fi
-        elif [ $reason == "bb" ] || [ $reason == "01"]; then
+        elif [ $reason == "bb" ] || [ $reason == "1" ]; then
             cd /sys/devices/platform/SMF.512/hwmon/*
             echo 0xaa > mb_poweron_reason
         fi
