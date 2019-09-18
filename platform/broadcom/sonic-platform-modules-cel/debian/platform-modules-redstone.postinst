@@ -1,6 +1,6 @@
 depmod -a
-#systemctl enable platform-modules-dx010.service
-#systemctl start platform-modules-dx010.service
+systemctl enable platform-modules-redstone.service
+systemctl start platform-modules-redstone.service
 
 #/usr/local/bin/platform_api_mgnt.sh install
 
