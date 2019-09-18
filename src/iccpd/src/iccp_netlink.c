@@ -628,7 +628,10 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
     memset(macaddr, 0, 64);
     SET_MAC_STR(macaddr, MLACP(csm).system_id);
     if (local_if_is_l3_mode(lif_po))
+    {
         iccp_set_interface_ipadd_mac(lif_po, macaddr );
+        memcpy(lif_po->l3_mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN);
+    }
     else
     {
         LIST_FOREACH(vlan, &(lif_po->vlan_list), port_next)
@@ -646,6 +649,7 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
                 }
 
                 iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
+                memcpy(vlan->vlan_itf->l3_mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN);
             }
         }
     }
