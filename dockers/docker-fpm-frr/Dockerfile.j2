@@ -43,7 +43,8 @@ RUN apt-get clean -y      && \
     apt-get autoremove -y && \
     rm -rf /debs ~/.cache
 
-COPY ["bgpcfgd", "start.sh", "/usr/bin/"]
+COPY ["bgpcfgd", "start.sh", "services_start.sh", "/usr/bin/"]
+COPY ["daemons", "/etc/frr/"]
 COPY ["*.j2", "/usr/share/sonic/templates/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["snmp.conf", "/etc/snmp/frr.conf"]
@@ -54,4 +55,4 @@ RUN chmod a+x /usr/bin/TSA && \
     chmod a+x /usr/bin/TSB && \
     chmod a+x /usr/bin/TSC
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT /usr/bin/services_start.sh && /usr/bin/supervisord
