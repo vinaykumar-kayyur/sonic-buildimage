@@ -100,7 +100,6 @@ endif
 DOCKER_RUN := docker run --rm=true --privileged \
     -v $(DOCKER_BUILDER_MOUNT) \
     -w $(DOCKER_BUILDER_WORKDIR) \
-    --tmpfs /fsroot:exec,dev \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
     -i$(if $(TERM),t,)

@@ -35,7 +35,7 @@ DOCKER_VERSION=5:18.09.8~3-0~debian-stretch
 LINUX_KERNEL_VERSION=4.9.0-9-2
 
 ## Working directory to prepare the file system
-FILESYSTEM_ROOT=/fsroot
+FILESYSTEM_ROOT=./fsroot
 PLATFORM_DIR=platform
 ## Hostname for the linux image
 HOSTNAME=sonic
@@ -58,8 +58,9 @@ DEFAULT_USERINFO="Default admin user,,,"
 
 ## Prepare the file system directory
 if [[ -d $FILESYSTEM_ROOT ]]; then
-    sudo chown $(id -nu):$(id -ng) $FILESYSTEM_ROOT || die "Failed to own chroot directory"
+    sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
 fi
+mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
@@ -460,7 +461,8 @@ fi
 
 ## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...
 if [ "${enable_organization_extensions}" = "y" ]; then
-   if [ -x files/build_templates/organization_extensions.sh ]; then
+   if [ -f files/build_templates/organization_extensions.sh ]; then
+      sudo chmod 755 files/build_templates/organization_extensions.sh
       ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
    fi
 fi
@@ -526,19 +528,16 @@ fi
 sudo mkdir $FILESYSTEM_ROOT/host
 
 ## Compress most file system into squashfs file
-rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
+sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
-sudo mksquashfs $FILESYSTEM_ROOT /tmp/$FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
-cp /tmp/$FILESYSTEM_SQUASHFS $FILESYSTEM_SQUASHFS
+sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar czf /tmp/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
-cp /tmp/$FILESYSTEM_DOCKERFS $FILESYSTEM_DOCKERFS
+pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
-pushd $FILESYSTEM_ROOT && sudo zip /tmp/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
-sudo zip -g /tmp/$ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
-cp /tmp/$ONIE_INSTALLER_PAYLOAD $ONIE_INSTALLER_PAYLOAD
+pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
+sudo zip -g $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
