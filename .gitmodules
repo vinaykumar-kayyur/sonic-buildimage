@@ -69,6 +69,3 @@
 [submodule "src/sonic-mgmt-framework"]
 	path = src/sonic-mgmt-framework
 	url = https://github.com/project-arlo/sonic-mgmt-framework.git
-[submodule "src/telemetry"]
-	path = src/telemetry
-	url = https://github.com/project-arlo/sonic-telemetry.git
