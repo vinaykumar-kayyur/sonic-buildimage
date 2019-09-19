@@ -7,7 +7,8 @@ import struct
 PORT_RES = '/dev/port'
 
 def track_reboot():
-    res = subprocess.check_output(['/usr/share/sonic/device/x86_64-dell_s6100_c2538-r0/platform_plugin'])
+    # Run plugin script which will track the cli triggered reboot, fastboot, warmboot
+    res = subprocess.check_output(['/usr/share/sonic/device/x86_64-dell_s6100_c2538-r0/fastboot_plugin'])
     return
 
 def portio_reg_write(resource, offset, val):
