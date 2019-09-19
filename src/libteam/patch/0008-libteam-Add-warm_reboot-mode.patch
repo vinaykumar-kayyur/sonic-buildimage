@@ -105,9 +105,9 @@ index 9dc85b5..679da49 100644
 +					if (ctrl_byte == 'w' || ctrl_byte == 'f') {
 +						ctx->keep_ports = true;
 +						ctx->no_quit_destroy = true;
++						teamd_refresh_ports(ctx);
 +						if (ctrl_byte == 'w')
 +							teamd_ports_flush_data(ctx);
-+						teamd_refresh_ports(ctx);
 +					} else {
 +						err = teamd_flush_ports(ctx);
 +						if (err)
