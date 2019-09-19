@@ -109,10 +109,6 @@ start() {
             /usr/bin/hw-management.sh chipdown
         fi
 
-        debug "Starting pmon service..."
-        /bin/systemctl start pmon
-        debug "Started pmon service"
-
         if [[ x"$BOOT_TYPE" == x"fast" ]]; then
             /usr/bin/hw-management.sh chipupdis
         fi
@@ -136,6 +132,11 @@ start() {
 }
 
 wait() {
+    if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
+        debug "Starting pmon service..."
+        /bin/systemctl start pmon
+        debug "Started pmon service"
+    fi
     /usr/bin/${SERVICE}.sh wait
 }
 
