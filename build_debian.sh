@@ -60,6 +60,7 @@ DEFAULT_USERINFO="Default admin user,,,"
 if [[ -d $FILESYSTEM_ROOT ]]; then
     sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
 fi
+mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/x86_64-grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime

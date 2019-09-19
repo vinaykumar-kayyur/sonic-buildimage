@@ -34,7 +34,7 @@
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/sonic-utilities"]
 	path = src/sonic-utilities
-	url = https://github.com/project-arlo/sonic-utilities.git
+	url = https://github.com/Azure/sonic-utilities.git
 [submodule "platform/broadcom/sonic-platform-modules-arista"]
 	path = platform/broadcom/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
@@ -68,4 +68,7 @@
 	url = https://github.com/Mellanox/SAI-Implementation
 [submodule "src/sonic-mgmt-framework"]
 	path = src/sonic-mgmt-framework
-	url = https://github.com/project-arlo/sonic-mgmt-framework.git
+	url = https://github.com/Azure/sonic-mgmt-framework.git
+[submodule "src/telemetry"]
+	path = src/sonic-telemetry
+	url = https://github.com/Azure/sonic-telemetry.git
