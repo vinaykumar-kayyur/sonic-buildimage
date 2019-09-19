@@ -31,7 +31,12 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:18.09.8~3-0~debian-stretch
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    # Version name differs between ARCH, copying same version as in sonic-slave docker
+    DOCKER_VERSION=18.06.3~ce~3-0~debian
+else
+    DOCKER_VERSION=5:18.09.8~3-0~debian-stretch
+fi
 LINUX_KERNEL_VERSION=4.9.0-9-2
 
 ## Working directory to prepare the file system
@@ -338,31 +343,8 @@ sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/ss
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
 ## Config monit
-sudo sed -i '
-    s/^# set logfile syslog/set logfile syslog/;
-    s/^\s*set logfile \/var/# set logfile \/var/;
-    s/^# set httpd port/set httpd port/;
-    s/^#    use address localhost/   use address localhost/;
-    s/^#    allow localhost/   allow localhost/;
-    s/^#    allow admin:monit/   allow admin:monit/;
-    s/^#    allow @monit/   allow @monit/;
-    s/^#    allow @users readonly/   allow @users readonly/
-    ' $FILESYSTEM_ROOT/etc/monit/monitrc
-
-sudo tee -a $FILESYSTEM_ROOT/etc/monit/monitrc > /dev/null <<'EOF'
-check filesystem root-overlay with path /
-  if space usage > 90% for 5 times within 10 cycles then alert
-check filesystem var-log with path /var/log
-  if space usage > 90% for 5 times within 10 cycles then alert
-check system $HOST
-  if memory usage > 50% for 5 times within 10 cycles then alert
-  if cpu usage (user) > 90% for 5 times within 10 cycles then alert
-  if cpu usage (system) > 90% for 5 times within 10 cycles then alert
-check process rsyslog with pidfile /var/run/rsyslogd.pid
-  start program = "/bin/systemctl start rsyslog.service"
-  stop program = "/bin/systemctl stop rsyslog.service"
-  if totalmem > 800 MB for 5 times within 10 cycles then restart
-EOF
+sudo cp files/image_config/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
+sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
 
 ## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
@@ -445,6 +427,9 @@ sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
+if [ -f files/image_config/ntp/ntp ]; then
+    sudo cp ./files/image_config/ntp/ntp $FILESYSTEM_ROOT/etc/init.d/
+fi
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
@@ -458,6 +443,17 @@ build_date: $(date -u)
 build_number: ${BUILD_NUMBER:-0}
 built_by: $USER@$BUILD_HOSTNAME
 EOF
+
+## Copy over clean-up script
+sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
+
+## Copy ASIC config checksum
+python files/build_scripts/generate_asic_config_checksum.py
+if [[ ! -f './asic_config_checksum' ]]; then
+    echo 'asic_config_checksum not found'
+    exit 1
+fi
+sudo cp ./asic_config_checksum $FILESYSTEM_ROOT/etc/sonic/asic_config_checksum
 
 if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR
@@ -489,10 +485,7 @@ then
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '/debug is mounted in each docker' >> /etc/motd"
 
     sudo mkdir -p $FILESYSTEM_ROOT/src
-    pushd src
-        ../scripts/dbg_files.sh | sudo tar -cvzf ../$FILESYSTEM_ROOT/src/sonic_src.tar.gz -T -
-    popd
-
+    sudo cp $DEBUG_SRC_ARCHIVE_FILE $FILESYSTEM_ROOT/src/
     sudo mkdir -p $FILESYSTEM_ROOT/debug
 
 fi

@@ -37,6 +37,7 @@ PROJECT_ROOT = $(shell pwd)
 STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
 DBG_IMAGE_MARK = dbg
+DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -105,6 +106,10 @@ endif
 
 ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
+endif
+
+ifeq ($(SONIC_ENABLE_SFLOW),y)
+ENABLE_SFLOW = y
 endif
 
 include $(RULES_PATH)/functions
@@ -205,6 +210,7 @@ $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
+$(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
@@ -681,9 +687,13 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x sonic_debian_extension.sh,
 	)
 
-	export debug_src_archive="$(DBG_SRC_ARCHIVE)"
+	DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
+	DEBUG_SRC_ARCHIVE_DIRS="$(DBG_SRC_ARCHIVE)" \
+	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
+		scripts/dbg_files.sh
 
 	DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
+	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
 		./build_debian.sh $(LOG)
