@@ -346,9 +346,7 @@ sudo cp files/image_config/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
 sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
 
 ## Config sysctl
-sudo mkdir -p $FILESYSTEM_ROOT/var/core
 sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p'
 
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
@@ -429,6 +427,8 @@ sudo cp files/dhcp/dhclient.conf $FILESYSTEM_ROOT/etc/dhcp/
 if [ -f files/image_config/ntp/ntp ]; then
     sudo cp ./files/image_config/ntp/ntp $FILESYSTEM_ROOT/etc/init.d/
 fi
+## Configure application core dump handler
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y systemd-coredump
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic

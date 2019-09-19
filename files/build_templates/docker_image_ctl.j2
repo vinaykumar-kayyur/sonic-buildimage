@@ -228,6 +228,11 @@ start() {
         --tmpfs /tmp \
 {%- endif %}
 {%- endif %}
+{%- if sonic_debugging_on == "y" %}
+        -v /var/log/journal:/var/log/journal:ro \
+        -v /var/lib/systemd/coredump:/var/lib/systemd/coredump:ro \
+        -v /etc/machine-id:/etc/machine-id:ro \
+{%- endif %}
         -v /var/run/redis:/var/run/redis:rw \
         -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/platform:ro \
 {%- if docker_container_name != "database" %}
