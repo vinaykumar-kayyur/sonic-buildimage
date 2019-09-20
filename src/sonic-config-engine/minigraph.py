@@ -26,6 +26,13 @@ ns1 = "http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolut
 ns2 = "Microsoft.Search.Autopilot.NetMux"
 ns3 = "http://www.w3.org/2001/XMLSchema-instance"
 
+# Device types
+spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
+chassis_backend_role = 'ChassisBackendRouter'
+
+# Default Virtual Network Index (VNI) 
+vni_default = 8000
+
 class minigraph_encoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (
@@ -149,6 +156,14 @@ def parse_dpg(dpg, hname):
         if hostname.text.lower() != hname.lower():
             continue
 
+        vni = vni_default
+        vni_element = child.find(str(QName(ns, "VNI")))
+        if vni_element != None:
+            if vni_element.text.isdigit():
+                vni = int(vni_element.text)
+            else:
+                print >> sys.stderr, "VNI must be an integer (use default VNI %d instead)" % vni_default 
+
         ipintfs = child.find(str(QName(ns, "IPInterfaces")))
         intfs = {}
         for ipintf in ipintfs.findall(str(QName(ns, "IPInterface"))):
@@ -163,6 +178,14 @@ def parse_dpg(dpg, hname):
             intfname = lointf.find(str(QName(ns, "AttachTo"))).text
             ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
             lo_intfs[(intfname, ipprefix)] = {}
+
+        mvrfConfigs = child.find(str(QName(ns, "MgmtVrfConfigs")))
+        mvrf = {}
+        if mvrfConfigs != None:
+            mv = mvrfConfigs.find(str(QName(ns1, "MgmtVrfGlobal")))
+            if mv != None:
+                mvrf_en_flag = mv.find(str(QName(ns, "mgmtVrfEnabled"))).text
+                mvrf["vrf_global"] = {"mgmtVrfEnabled": mvrf_en_flag}
 
         mgmtintfs = child.find(str(QName(ns, "ManagementIPInterfaces")))
         mgmt_intf = {}
@@ -228,6 +251,7 @@ def parse_dpg(dpg, hname):
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
+            is_mirror_v6 = False
 
             # TODO: Ensure that acl_intfs will only ever contain front-panel interfaces (e.g.,
             # maybe we should explicity ignore management and loopback interfaces?) because we
@@ -247,21 +271,27 @@ def parse_dpg(dpg, hname):
                     if port_alias_map[member] in intfs_inpc:
                         print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface"
                 elif member.lower().startswith('erspan'):
-                    is_mirror = True;
+                    if member.lower().startswith('erspanv6'):
+                        is_mirror_v6 = True
+                    else:
+                        is_mirror = True;
                     # Erspan session will be attached to all front panel ports,
                     # if panel ports is a member port of LAG, should add the LAG 
                     # to acl table instead of the panel ports
-                    acl_intfs = pc_intfs
+                    acl_intfs = pc_intfs[:]
                     for panel_port in port_alias_map.values():
                         if panel_port not in intfs_inpc:
                             acl_intfs.append(panel_port)
                     break;
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
-                                 'ports': acl_intfs,
-                                 'type': 'MIRROR' if is_mirror else 'L3'}
-            elif is_mirror:
-                acls[aclname] = {'policy_desc': aclname, 'type': 'MIRROR'}
+                                 'ports': acl_intfs}
+                if is_mirror:
+                    acls[aclname]['type'] = 'MIRROR'
+                elif is_mirror_v6:
+                    acls[aclname]['type'] = 'MIRRORV6'
+                else:
+                    acls[aclname]['type'] = 'L3'
             else:
                 # This ACL has no interfaces to attach to -- consider this a control plane ACL
                 try:
@@ -283,8 +313,8 @@ def parse_dpg(dpg, hname):
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
-        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls
-    return None, None, None, None, None, None, None
+        return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
+    return None, None, None, None, None, None, None, None, None, None
 
 
 def parse_cpg(cpg, hname):
@@ -395,8 +425,9 @@ def parse_deviceinfo(meta, hwsku):
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
-            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces")))
-            for interface in interfaces.findall(str(QName(ns1, "EthernetInterface"))):
+            interfaces = device_info.find(str(QName(ns, "EthernetInterfaces"))).findall(str(QName(ns1, "EthernetInterface")))
+            interfaces = interfaces + device_info.find(str(QName(ns, "ManagementInterfaces"))).findall(str(QName(ns1, "ManagementInterface")))
+            for interface in interfaces:
                 alias = interface.find(str(QName(ns, "InterfaceName"))).text
                 speed = interface.find(str(QName(ns, "Speed"))).text
                 desc  = interface.find(str(QName(ns, "Description")))
@@ -404,6 +435,78 @@ def parse_deviceinfo(meta, hwsku):
                     port_descriptions[port_alias_map.get(alias, alias)] = desc.text
                 port_speeds[port_alias_map.get(alias, alias)] = speed
     return port_speeds, port_descriptions
+
+# Function to check if IP address is present in the key. 
+# If it is present, then the key would be a tuple.
+def is_ip_prefix_in_key(key):
+    return (isinstance(key, tuple))
+
+# Special parsing for spine chassis frontend 
+def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices):
+    chassis_vnet ='VnetFE'
+    chassis_vxlan_tunnel = 'TunnelInt'
+    chassis_vni = vni
+
+    # Vxlan tunnel information
+    lo_addr = '0.0.0.0'
+    for lo in lo_intfs:
+        lo_network = ipaddress.IPNetwork(lo[1])
+        if lo_network.version == 4:
+            lo_addr = str(lo_network.ip)
+            break        
+
+    results['VXLAN_TUNNEL'] = {chassis_vxlan_tunnel: {
+        'src_ip': lo_addr
+    }}
+
+    # Vnet information
+    results['VNET'] = {chassis_vnet: {
+        'vxlan_tunnel': chassis_vxlan_tunnel,
+        'vni': chassis_vni
+    }}
+
+    # For each IP interface
+    for intf in phyport_intfs:
+        # A IP interface may have multiple entries. 
+        # For example, "Ethernet0": {}", "Ethernet0|192.168.1.1": {}"
+        # We only care about the one without IP information
+        if is_ip_prefix_in_key(intf) == True:
+            continue 
+            
+        neighbor_router = results['DEVICE_NEIGHBOR'][intf]['name']
+            
+        # If the neighbor router is an external router 
+        if devices[neighbor_router]['type'] != chassis_backend_role:
+            # Enslave the interface to a Vnet
+            phyport_intfs[intf] = {'vnet_name': chassis_vnet}
+           
+    # For each port channel IP interface
+    for pc_intf in pc_intfs:
+        # A port channel IP interface may have multiple entries. 
+        # For example, "Portchannel0": {}", "Portchannel0|192.168.1.1": {}"
+        # We only care about the one without IP information
+        if is_ip_prefix_in_key(pc_intf) == True:
+            continue 
+
+        intf_name = None 
+        # Get a physical interface that belongs to this port channel         
+        for pc_member in pc_members:
+            if pc_member[0] == pc_intf:
+                intf_name = pc_member[1]
+                break 
+
+        if intf_name == None:
+            print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf)
+            continue
+
+        # Get the neighbor router of this port channel interface
+        neighbor_router = results['DEVICE_NEIGHBOR'][intf_name]['name']
+
+        # If the neighbor router is an external router 
+        if devices[neighbor_router]['type'] != chassis_backend_role:
+            # Enslave the port channel interface to a Vnet
+            pc_intfs[pc_intf] = {'vnet_name': chassis_vnet}        
+
 
 def parse_xml(filename, platform=None, port_config_file=None):
     root = ET.parse(filename).getroot()
@@ -425,7 +528,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     neighbors = None
     devices = None
     hostname = None
-    docker_routing_config_mode = "unified"
+    docker_routing_config_mode = "separated"
     port_speeds_default = {}
     port_speed_png = {}
     port_descriptions = {}
@@ -454,7 +557,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -494,8 +597,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
             mgmt_intf_count += 1
             mgmt_alias_reverse_mapping[alias] = name
         results['MGMT_PORT'][name] = {'alias': alias, 'admin_status': 'up'}
+        if alias in port_speeds_default:
+            results['MGMT_PORT'][name]['speed'] = port_speeds_default[alias]
         results['MGMT_INTERFACE'][(name, key[1])] = mgmt_intf[key]
     results['LOOPBACK_INTERFACE'] = lo_intfs
+    results['MGMT_VRF_CONFIG'] = mvrf
 
     phyport_intfs = {}
     vlan_intfs = {}
@@ -505,12 +611,16 @@ def parse_xml(filename, platform=None, port_config_file=None):
     for intf in intfs:
         if intf[0][0:4] == 'Vlan':
             vlan_intfs[intf] = {}
+            vlan_intfs[intf[0]] = {}
         elif vlan_invert_mapping.has_key(intf[0]):
             vlan_intfs[(vlan_invert_mapping[intf[0]], intf[1])] = {}
+            vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
         elif intf[0][0:11] == 'PortChannel':
             pc_intfs[intf] = {}
+            pc_intfs[intf[0]] = {}
         else:
             phyport_intfs[intf] = {}
+            phyport_intfs[intf[0]] = {}
 
     results['INTERFACE'] = phyport_intfs
     results['VLAN_INTERFACE'] = vlan_intfs
@@ -591,9 +701,10 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     for pc_intf in pc_intfs.keys():
         # remove portchannels not in PORTCHANNEL dictionary
-        if pc_intf[0] not in pcs:
+        if isinstance(pc_intf, tuple) and pc_intf[0] not in pcs:
             print >> sys.stderr, "Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0])
             del pc_intfs[pc_intf]
+            pc_intfs.pop(pc_intf[0], None)
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
@@ -614,19 +725,25 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
 
     results['ACL_TABLE'] = acls
-    mirror_sessions = {}
-    if erspan_dst:
-        lo_addr = '0.0.0.0'
-        for lo in lo_intfs:
-            lo_network = ipaddress.IPNetwork(lo[1])
-            if lo_network.version == 4:
-                lo_addr = str(lo_network.ip)
-                break
-        count = 0
-        for dst in erspan_dst:
-            mirror_sessions['everflow{}'.format(count)] = {"dst_ip": dst, "src_ip": lo_addr}
-            count += 1
-        results['MIRROR_SESSION'] = mirror_sessions
+
+    # Do not configure the minigraph's mirror session, which is currently unused
+    # mirror_sessions = {}
+    # if erspan_dst:
+    #     lo_addr = '0.0.0.0'
+    #     for lo in lo_intfs:
+    #         lo_network = ipaddress.IPNetwork(lo[1])
+    #         if lo_network.version == 4:
+    #             lo_addr = str(lo_network.ip)
+    #             break
+    #     count = 0
+    #     for dst in erspan_dst:
+    #         mirror_sessions['everflow{}'.format(count)] = {"dst_ip": dst, "src_ip": lo_addr}
+    #         count += 1
+    #     results['MIRROR_SESSION'] = mirror_sessions
+
+    # Special parsing for spine chassis frontend routers
+    if current_device['type'] == spine_chassis_frontend_role:
+        parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
 
     return results
 

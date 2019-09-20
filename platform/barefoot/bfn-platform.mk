@@ -1,10 +1,5 @@
-ifdef BLDENV
-BFN_PLATFORM = bfnplatform_master.92171a1_deb9.deb
-$(BFN_PLATFORM)_URL = "https://github.com/barefootnetworks/sonic-release-pkgs/raw/sde-master/bfnplatform_master.92171a1_deb9.deb"
-else
-BFN_PLATFORM = bfnplatform_master.92171a1_deb8.deb
-$(BFN_PLATFORM)_URL = "https://github.com/barefootnetworks/sonic-release-pkgs/raw/sde-master/bfnplatform_master.92171a1_deb8.deb"
-endif
+BFN_PLATFORM = bfnplatform_9.0.0.cc6ccbe_pr_deb9.deb
+$(BFN_PLATFORM)_URL = "https://github.com/barefootnetworks/sonic-release-pkgs/raw/rel_9_0/bfnplatform_9.0.0.cc6ccbe_pr_deb9.deb"
 
-SONIC_ONLINE_DEBS += $(BFN_PLATFORM) # $(BFN_SAI_DEV)
+SONIC_ONLINE_DEBS += $(BFN_PLATFORM)
 $(BFN_SAI_DEV)_DEPENDS += $(BFN_PLATFORM)
