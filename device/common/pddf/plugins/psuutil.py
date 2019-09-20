@@ -236,7 +236,7 @@ class PsuUtil(PsuBase):
 
         return p_out
 
-    def get_fan_rpm(self, idx, fan_idx):
+    def get_fan_speed(self, idx, fan_idx):
         if idx is None or fan_idx is None:
             return 0
 
