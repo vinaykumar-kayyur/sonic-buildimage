@@ -3,7 +3,7 @@
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * Description:
- *	Platform FAN defines/structures header file
+ *  Platform FAN defines/structures header file
  */
 
 #ifndef __PDDF_FAN_DEFS_H__
@@ -22,37 +22,37 @@
 typedef struct FAN_DATA_ATTR
 {
     char aname[ATTR_NAME_LEN];                    // attr name, taken from enum fan_sysfs_attributes
-	char devtype[DEV_TYPE_LEN];       // Type of FAN controller, i.e EMC2305, EMC2302, or FAN-CPLD etc
+    char devtype[DEV_TYPE_LEN];       // Type of FAN controller, i.e EMC2305, EMC2302, or FAN-CPLD etc
     uint32_t offset;
     uint32_t mask;
     uint32_t cmpval;
     uint32_t len;
-    int	mult;						// Multiplication factor to get the actual data
-    uint8_t	is_divisor;						// Check if the value is a divisor and mult is dividend
-	void *access_data;
+    int mult;                       // Multiplication factor to get the actual data
+    uint8_t is_divisor;                     // Check if the value is a divisor and mult is dividend
+    void *access_data;
 
 }FAN_DATA_ATTR;
 
 
 typedef struct FAN_SYSFS_ATTR_DATA
 {
-	int index;
-	unsigned short mode;
-	ssize_t (*show)(struct device *dev, struct device_attribute *da, char *buf);
-	int (*pre_get)(void *client, FAN_DATA_ATTR *adata, void *data);
-	int (*do_get)(void *client, FAN_DATA_ATTR *adata, void *data);
-	int (*post_get)(void *client, FAN_DATA_ATTR *adata, void *data);
-	ssize_t (*store)(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
-	int (*pre_set)(void *client, FAN_DATA_ATTR *adata, void *data);
-	int (*do_set)(void *client, FAN_DATA_ATTR *adata, void *data);
-	int (*post_set)(void *client, FAN_DATA_ATTR *adata, void *data);
-	void *data;
+    int index;
+    unsigned short mode;
+    ssize_t (*show)(struct device *dev, struct device_attribute *da, char *buf);
+    int (*pre_get)(void *client, FAN_DATA_ATTR *adata, void *data);
+    int (*do_get)(void *client, FAN_DATA_ATTR *adata, void *data);
+    int (*post_get)(void *client, FAN_DATA_ATTR *adata, void *data);
+    ssize_t (*store)(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
+    int (*pre_set)(void *client, FAN_DATA_ATTR *adata, void *data);
+    int (*do_set)(void *client, FAN_DATA_ATTR *adata, void *data);
+    int (*post_set)(void *client, FAN_DATA_ATTR *adata, void *data);
+    void *data;
 } FAN_SYSFS_ATTR_DATA;
 
 typedef struct FAN_SYSFS_ATTR_DATA_ENTRY
 {
-	char name[ATTR_NAME_LEN];
-	FAN_SYSFS_ATTR_DATA *a_ptr;
+    char name[ATTR_NAME_LEN];
+    FAN_SYSFS_ATTR_DATA *a_ptr;
 } FAN_SYSFS_ATTR_DATA_ENTRY;
 
 
@@ -60,7 +60,7 @@ typedef struct FAN_SYSFS_ATTR_DATA_ENTRY
 typedef struct FAN_DATA
 {
     int num_fan;                    // num of fans controlled by this fan client
-	FAN_DATA_ATTR fan_attr;
+    FAN_DATA_ATTR fan_attr;
     int len;             // no of valid attributes for this fan client
     FAN_DATA_ATTR fan_attrs[MAX_FAN_ATTRS]; 
 }FAN_DATA;

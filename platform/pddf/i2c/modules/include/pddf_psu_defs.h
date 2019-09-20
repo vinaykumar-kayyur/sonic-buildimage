@@ -3,7 +3,7 @@
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * Description:
- *	Platform PSU defines/structures header file
+ *  Platform PSU defines/structures header file
  */
 
 #ifndef __PDDF_PSU_DEFS_H__
@@ -22,44 +22,44 @@
 typedef struct PSU_DATA_ATTR
 {
     char aname[ATTR_NAME_LEN];                    // attr name, taken from enum psu_sysfs_attributes
-	char devtype[DEV_TYPE_LEN];       // either a 'eeprom' or 'cpld', or 'pmbus' attribute
+    char devtype[DEV_TYPE_LEN];       // either a 'eeprom' or 'cpld', or 'pmbus' attribute
     uint32_t devaddr;
     uint32_t offset;
     uint32_t mask;
     uint32_t cmpval;
     uint32_t len;
-	void *access_data;
+    void *access_data;
 
 }PSU_DATA_ATTR;
 
 typedef struct PSU_SYSFS_ATTR_DATA
 {
-	int index;
-	unsigned short mode;
-	ssize_t (*show)(struct device *dev, struct device_attribute *da, char *buf);
-	int (*pre_get)(void *client, PSU_DATA_ATTR *adata, void *data);
-	int (*do_get)(void *client, PSU_DATA_ATTR *adata, void *data);
-	int (*post_get)(void *client, PSU_DATA_ATTR *adata, void *data);
-	ssize_t (*store)(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
-	int (*pre_set)(void *client, PSU_DATA_ATTR *adata, void *data);
-	int (*do_set)(void *client, PSU_DATA_ATTR *adata, void *data);
-	int (*post_set)(void *client, PSU_DATA_ATTR *adata, void *data);
-	void *data;
+    int index;
+    unsigned short mode;
+    ssize_t (*show)(struct device *dev, struct device_attribute *da, char *buf);
+    int (*pre_get)(void *client, PSU_DATA_ATTR *adata, void *data);
+    int (*do_get)(void *client, PSU_DATA_ATTR *adata, void *data);
+    int (*post_get)(void *client, PSU_DATA_ATTR *adata, void *data);
+    ssize_t (*store)(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
+    int (*pre_set)(void *client, PSU_DATA_ATTR *adata, void *data);
+    int (*do_set)(void *client, PSU_DATA_ATTR *adata, void *data);
+    int (*post_set)(void *client, PSU_DATA_ATTR *adata, void *data);
+    void *data;
 } PSU_SYSFS_ATTR_DATA;
 
 typedef struct PSU_SYSFS_ATTR_DATA_ENTRY
 {
-	char name[ATTR_NAME_LEN];
-	PSU_SYSFS_ATTR_DATA *a_ptr;
+    char name[ATTR_NAME_LEN];
+    PSU_SYSFS_ATTR_DATA *a_ptr;
 } PSU_SYSFS_ATTR_DATA_ENTRY;
 
 
 /* PSU CLIENT DATA - PLATFORM DATA FOR PSU CLIENT */
 typedef struct PSU_DATA
 {
-    int idx;	// psu index
-	int num_psu_fans;
-	PSU_DATA_ATTR psu_attr;
+    int idx;    // psu index
+    int num_psu_fans;
+    PSU_DATA_ATTR psu_attr;
     int len;             // no of valid attributes for this psu client
     PSU_DATA_ATTR psu_attrs[MAX_PSU_ATTRS]; 
 }PSU_DATA;

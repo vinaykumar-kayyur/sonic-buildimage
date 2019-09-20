@@ -27,17 +27,17 @@
 static unsigned short normal_i2c[] = {0x50, 0x58, 0x51, 0x59, 0x53, 0x5b, I2C_CLIENT_END};
 
 struct pddf_ops_t pddf_psu_ops = {
-	.pre_init = NULL,
-	.post_init = NULL,
+    .pre_init = NULL,
+    .post_init = NULL,
 
-	.pre_probe = NULL,
-	.post_probe = NULL,
+    .pre_probe = NULL,
+    .post_probe = NULL,
 
-	.pre_remove = NULL,
-	.post_remove = NULL,
+    .pre_remove = NULL,
+    .post_remove = NULL,
 
-	.pre_exit = NULL,
-	.post_exit = NULL,
+    .pre_exit = NULL,
+    .post_exit = NULL,
 };
 EXPORT_SYMBOL(pddf_psu_ops);
 
@@ -75,29 +75,29 @@ EXPORT_SYMBOL(access_psu_fan1_speed_rpm);
 
 PSU_SYSFS_ATTR_DATA_ENTRY psu_sysfs_attr_data_tbl[]=
 {
-	{ "psu_present", &access_psu_present},
-	{ "psu_model_name", &access_psu_model_name},
-	{ "psu_power_good" , &access_psu_power_good},
-	{ "psu_mfr_id" , &access_psu_mfr_id},
-	{ "psu_serial_num" , &access_psu_serial_num},
-	{ "psu_fan_dir" , &access_psu_fan_dir},
-	{ "psu_v_out" , &access_psu_v_out},
-	{ "psu_i_out" , &access_psu_i_out},
-	{ "psu_p_out" , &access_psu_p_out},
-	{ "psu_fan1_speed_rpm" , &access_psu_fan1_speed_rpm}
+    { "psu_present", &access_psu_present},
+    { "psu_model_name", &access_psu_model_name},
+    { "psu_power_good" , &access_psu_power_good},
+    { "psu_mfr_id" , &access_psu_mfr_id},
+    { "psu_serial_num" , &access_psu_serial_num},
+    { "psu_fan_dir" , &access_psu_fan_dir},
+    { "psu_v_out" , &access_psu_v_out},
+    { "psu_i_out" , &access_psu_i_out},
+    { "psu_p_out" , &access_psu_p_out},
+    { "psu_fan1_speed_rpm" , &access_psu_fan1_speed_rpm}
 };
 
 void *get_psu_access_data(char *name)
 {
-	int i=0;
-	for(i=0; i<(sizeof(psu_sysfs_attr_data_tbl)/sizeof(psu_sysfs_attr_data_tbl[0])); i++)
-	{
-		if(strcmp(name, psu_sysfs_attr_data_tbl[i].name) ==0)
-		{
-			return &psu_sysfs_attr_data_tbl[i];
-		}
-	}
-	return NULL;
+    int i=0;
+    for(i=0; i<(sizeof(psu_sysfs_attr_data_tbl)/sizeof(psu_sysfs_attr_data_tbl[0])); i++)
+    {
+        if(strcmp(name, psu_sysfs_attr_data_tbl[i].name) ==0)
+        {
+            return &psu_sysfs_attr_data_tbl[i];
+        }
+    }
+    return NULL;
 }
 EXPORT_SYMBOL(get_psu_access_data);
 
@@ -107,21 +107,21 @@ static int psu_probe(struct i2c_client *client,
 {
     struct psu_data *data;
     int status =0;
-	int i,num, j=0;
-	PSU_PDATA *psu_platform_data;
-	PSU_DATA_ATTR *data_attr;
-	PSU_SYSFS_ATTR_DATA_ENTRY *sysfs_data_entry;
-	char new_str[ATTR_NAME_LEN] = "";
+    int i,num, j=0;
+    PSU_PDATA *psu_platform_data;
+    PSU_DATA_ATTR *data_attr;
+    PSU_SYSFS_ATTR_DATA_ENTRY *sysfs_data_entry;
+    char new_str[ATTR_NAME_LEN] = "";
 
 
-	/*pddf_dbg("GENERIC_PSU_DRIVER Probe called... \n");*/
+    /*pddf_dbg("GENERIC_PSU_DRIVER Probe called... \n");*/
 
-	if (client == NULL) {
-		printk("NULL Client.. \n");
-		goto exit;
-	}
+    if (client == NULL) {
+        printk("NULL Client.. \n");
+        goto exit;
+    }
 
-	if (pddf_psu_ops.pre_probe)
+    if (pddf_psu_ops.pre_probe)
     {
         status = (pddf_psu_ops.pre_probe)(client, dev_id);
         if (status != 0)
@@ -142,61 +142,61 @@ static int psu_probe(struct i2c_client *client,
     i2c_set_clientdata(client, data);
     dev_info(&client->dev, "chip found\n");
 
-	/* Take control of the platform data */
-	psu_platform_data = (PSU_PDATA *)(client->dev.platform_data);
-	num = psu_platform_data->len;
-	data->index = psu_platform_data->idx - 1;
-	data->num_psu_fans = psu_platform_data->num_psu_fans;
-	data->num_attr = num;
+    /* Take control of the platform data */
+    psu_platform_data = (PSU_PDATA *)(client->dev.platform_data);
+    num = psu_platform_data->len;
+    data->index = psu_platform_data->idx - 1;
+    data->num_psu_fans = psu_platform_data->num_psu_fans;
+    data->num_attr = num;
 
 
 
-	/* Create and Add supported attr in the 'attributes' list */
-	for (i=0; i<num; i++)
-	{
-		/*struct attribute *aptr = NULL;*/
-		struct sensor_device_attribute *dy_ptr = NULL;
-		data_attr = psu_platform_data->psu_attrs + i;
-		sysfs_data_entry = get_psu_access_data(data_attr->aname);
-		if (sysfs_data_entry == NULL)
-		{
-			printk(KERN_ERR "%s: Wrong attribute name provided by user '%s'\n", __FUNCTION__, data_attr->aname);
-			continue;
-		}
-		
-		dy_ptr = (struct sensor_device_attribute *)kzalloc(sizeof(struct sensor_device_attribute)+ATTR_NAME_LEN, GFP_KERNEL);
-		dy_ptr->dev_attr.attr.name = (char *)&dy_ptr[1];
-		strcpy((char *)dy_ptr->dev_attr.attr.name, data_attr->aname);
-		dy_ptr->dev_attr.attr.mode = sysfs_data_entry->a_ptr->mode;
-		dy_ptr->dev_attr.show = sysfs_data_entry->a_ptr->show;
-		dy_ptr->dev_attr.store = sysfs_data_entry->a_ptr->store;
-		dy_ptr->index = sysfs_data_entry->a_ptr->index;
-		
-		data->psu_attribute_list[i] = &dy_ptr->dev_attr.attr;
-		/*pddf_dbg(KERN_ERR "PSU%d: Allocated %d: 0x%x\n", data->index+1, i, data->psu_attribute_list[i]);*/
-		strcpy(data->attr_info[i].name, data_attr->aname);
-		data->attr_info[i].valid = 0;
-		mutex_init(&data->attr_info[i].update_lock);
+    /* Create and Add supported attr in the 'attributes' list */
+    for (i=0; i<num; i++)
+    {
+        /*struct attribute *aptr = NULL;*/
+        struct sensor_device_attribute *dy_ptr = NULL;
+        data_attr = psu_platform_data->psu_attrs + i;
+        sysfs_data_entry = get_psu_access_data(data_attr->aname);
+        if (sysfs_data_entry == NULL)
+        {
+            printk(KERN_ERR "%s: Wrong attribute name provided by user '%s'\n", __FUNCTION__, data_attr->aname);
+            continue;
+        }
+        
+        dy_ptr = (struct sensor_device_attribute *)kzalloc(sizeof(struct sensor_device_attribute)+ATTR_NAME_LEN, GFP_KERNEL);
+        dy_ptr->dev_attr.attr.name = (char *)&dy_ptr[1];
+        strcpy((char *)dy_ptr->dev_attr.attr.name, data_attr->aname);
+        dy_ptr->dev_attr.attr.mode = sysfs_data_entry->a_ptr->mode;
+        dy_ptr->dev_attr.show = sysfs_data_entry->a_ptr->show;
+        dy_ptr->dev_attr.store = sysfs_data_entry->a_ptr->store;
+        dy_ptr->index = sysfs_data_entry->a_ptr->index;
+        
+        data->psu_attribute_list[i] = &dy_ptr->dev_attr.attr;
+        /*pddf_dbg(KERN_ERR "PSU%d: Allocated %d: 0x%x\n", data->index+1, i, data->psu_attribute_list[i]);*/
+        strcpy(data->attr_info[i].name, data_attr->aname);
+        data->attr_info[i].valid = 0;
+        mutex_init(&data->attr_info[i].update_lock);
 
-		/*Create a duplicate entry*/
-		get_psu_duplicate_sysfs(dy_ptr->index, new_str);
-		if (strcmp(new_str,""))
-		{
-			dy_ptr = (struct sensor_device_attribute *)kzalloc(sizeof(struct sensor_device_attribute)+ATTR_NAME_LEN, GFP_KERNEL);
-			dy_ptr->dev_attr.attr.name = (char *)&dy_ptr[1];
-			strcpy((char *)dy_ptr->dev_attr.attr.name, new_str);
-			dy_ptr->dev_attr.attr.mode = sysfs_data_entry->a_ptr->mode;
-			dy_ptr->dev_attr.show = sysfs_data_entry->a_ptr->show;
-			dy_ptr->dev_attr.store = sysfs_data_entry->a_ptr->store;
-			dy_ptr->index = sysfs_data_entry->a_ptr->index;
+        /*Create a duplicate entry*/
+        get_psu_duplicate_sysfs(dy_ptr->index, new_str);
+        if (strcmp(new_str,""))
+        {
+            dy_ptr = (struct sensor_device_attribute *)kzalloc(sizeof(struct sensor_device_attribute)+ATTR_NAME_LEN, GFP_KERNEL);
+            dy_ptr->dev_attr.attr.name = (char *)&dy_ptr[1];
+            strcpy((char *)dy_ptr->dev_attr.attr.name, new_str);
+            dy_ptr->dev_attr.attr.mode = sysfs_data_entry->a_ptr->mode;
+            dy_ptr->dev_attr.show = sysfs_data_entry->a_ptr->show;
+            dy_ptr->dev_attr.store = sysfs_data_entry->a_ptr->store;
+            dy_ptr->index = sysfs_data_entry->a_ptr->index;
 
-			data->psu_attribute_list[num+j] = &dy_ptr->dev_attr.attr;
-			j++;
-			strcpy(new_str,"");
-		}
-	}
-	data->psu_attribute_list[i+j] = NULL;
-	data->psu_attribute_group.attrs = data->psu_attribute_list;
+            data->psu_attribute_list[num+j] = &dy_ptr->dev_attr.attr;
+            j++;
+            strcpy(new_str,"");
+        }
+    }
+    data->psu_attribute_list[i+j] = NULL;
+    data->psu_attribute_group.attrs = data->psu_attribute_list;
 
     /* Register sysfs hooks */
     status = sysfs_create_group(&client->dev.kobj, &data->psu_attribute_group);
@@ -204,16 +204,16 @@ static int psu_probe(struct i2c_client *client,
         goto exit_free;
     }
 
-	data->hwmon_dev = hwmon_device_register(&client->dev);
-	if (IS_ERR(data->hwmon_dev)) {
-		status = PTR_ERR(data->hwmon_dev);
-		goto exit_remove;
-	}
+    data->hwmon_dev = hwmon_device_register(&client->dev);
+    if (IS_ERR(data->hwmon_dev)) {
+        status = PTR_ERR(data->hwmon_dev);
+        goto exit_remove;
+    }
 
     dev_info(&client->dev, "%s: psu '%s'\n",
          dev_name(data->hwmon_dev), client->name);
     
-	/* Add a support for post probe function */
+    /* Add a support for post probe function */
     if (pddf_psu_ops.post_probe)
     {
         status = (pddf_psu_ops.post_probe)(client, dev_id);
@@ -227,14 +227,14 @@ static int psu_probe(struct i2c_client *client,
 exit_remove:
     sysfs_remove_group(&client->dev.kobj, &data->psu_attribute_group);
 exit_free:
-	/* Free all the allocated attributes */
-	for (i=0;data->psu_attribute_list[i]!=NULL;i++)
-	{
-		struct sensor_device_attribute *ptr = (struct sensor_device_attribute *)data->psu_attribute_list[i];
-		kfree(ptr);
-		data->psu_attribute_list[i] = NULL;
-		pddf_dbg(PSU, KERN_ERR "%s: Freed all the memory allocated for attributes\n", __FUNCTION__);
-	}
+    /* Free all the allocated attributes */
+    for (i=0;data->psu_attribute_list[i]!=NULL;i++)
+    {
+        struct sensor_device_attribute *ptr = (struct sensor_device_attribute *)data->psu_attribute_list[i];
+        kfree(ptr);
+        data->psu_attribute_list[i] = NULL;
+        pddf_dbg(PSU, KERN_ERR "%s: Freed all the memory allocated for attributes\n", __FUNCTION__);
+    }
     kfree(data);
 exit:
     return status;
@@ -242,40 +242,40 @@ exit:
 
 static int psu_remove(struct i2c_client *client)
 {
-	int i=0, idx=0, ret = 0;
+    int i=0, idx=0, ret = 0;
     struct psu_data *data = i2c_get_clientdata(client);
-	PSU_PDATA *platdata = (PSU_PDATA *)client->dev.platform_data; // use dev_get_platdata()
-	PSU_DATA_ATTR *platdata_sub = platdata->psu_attrs;
-	struct sensor_device_attribute *ptr = NULL;
+    PSU_PDATA *platdata = (PSU_PDATA *)client->dev.platform_data; // use dev_get_platdata()
+    PSU_DATA_ATTR *platdata_sub = platdata->psu_attrs;
+    struct sensor_device_attribute *ptr = NULL;
 
-	if (pddf_psu_ops.pre_remove)
+    if (pddf_psu_ops.pre_remove)
     {
         ret = (pddf_psu_ops.pre_remove)(client);
         if (ret!=0)
             printk(KERN_ERR "FAN pre_remove function failed\n");
     }
 
-	hwmon_device_unregister(data->hwmon_dev);
-	sysfs_remove_group(&client->dev.kobj, &data->psu_attribute_group);
-	for (i=0; data->psu_attribute_list[i]!=NULL; i++)
+    hwmon_device_unregister(data->hwmon_dev);
+    sysfs_remove_group(&client->dev.kobj, &data->psu_attribute_group);
+    for (i=0; data->psu_attribute_list[i]!=NULL; i++)
     {
         ptr = (struct sensor_device_attribute *)data->psu_attribute_list[i];
-		kfree(ptr);
-		data->psu_attribute_list[i] = NULL;
-		/*pddf_dbg(KERN_ERR "PSU%d: Freed %d: 0x%x\n", data->index+1, i, ptr);*/
-	}
+        kfree(ptr);
+        data->psu_attribute_list[i] = NULL;
+        /*pddf_dbg(KERN_ERR "PSU%d: Freed %d: 0x%x\n", data->index+1, i, ptr);*/
+    }
     pddf_dbg(PSU, KERN_ERR "%s: Freed all the memory allocated for attributes\n", __FUNCTION__);
     kfree(data);
-	if (platdata_sub) {
-		printk(KERN_DEBUG "%s: Freeing platform subdata\n", __FUNCTION__);
-		kfree(platdata_sub);
-	}
-	if (platdata) {
-		printk(KERN_DEBUG "%s: Freeing platform data\n", __FUNCTION__);
-		kfree(platdata);
-	}
+    if (platdata_sub) {
+        printk(KERN_DEBUG "%s: Freeing platform subdata\n", __FUNCTION__);
+        kfree(platdata_sub);
+    }
+    if (platdata) {
+        printk(KERN_DEBUG "%s: Freeing platform data\n", __FUNCTION__);
+        kfree(platdata);
+    }
     
-	if (pddf_psu_ops.post_remove)
+    if (pddf_psu_ops.post_remove)
     {
         ret = (pddf_psu_ops.post_remove)(client);
         if (ret!=0)
@@ -287,14 +287,14 @@ static int psu_remove(struct i2c_client *client)
 
 enum psu_intf
 {
-	eeprom_intf,
-	smbus_intf
+    eeprom_intf,
+    smbus_intf
 };
 
 static const struct i2c_device_id psu_id[] = {
-	{"psu_eeprom", eeprom_intf},
-	{"psu_pmbus", smbus_intf},
-	{}
+    {"psu_eeprom", eeprom_intf},
+    {"psu_pmbus", smbus_intf},
+    {}
 };
 
 MODULE_DEVICE_TABLE(i2c, psu_id);
@@ -312,8 +312,8 @@ static struct i2c_driver psu_driver = {
 
 int example_fun(void)
 {
-	pddf_dbg(PSU, KERN_ERR "CALLING FUN...\n");
-	return 0;
+    pddf_dbg(PSU, KERN_ERR "CALLING FUN...\n");
+    return 0;
 }
 EXPORT_SYMBOL(example_fun);
 
@@ -330,11 +330,11 @@ int psu_init(void)
             return status;
     }
 
-	pddf_dbg(PSU, KERN_ERR "GENERIC_PSU_DRIVER.. init Invoked..\n");
+    pddf_dbg(PSU, KERN_ERR "GENERIC_PSU_DRIVER.. init Invoked..\n");
     status = i2c_add_driver(&psu_driver);
     if (status!=0)
         return status;
-	
+    
     if (pddf_psu_ops.post_init)
     {
         status = (pddf_psu_ops.post_init)();
@@ -342,16 +342,16 @@ int psu_init(void)
             return status;
     }
 
-	return status;
+    return status;
 }
 EXPORT_SYMBOL(psu_init);
 
 void __exit psu_exit(void)
 {
-	pddf_dbg(PSU, "GENERIC_PSU_DRIVER.. exit\n");
-	if (pddf_psu_ops.pre_exit) (pddf_psu_ops.pre_exit)();
+    pddf_dbg(PSU, "GENERIC_PSU_DRIVER.. exit\n");
+    if (pddf_psu_ops.pre_exit) (pddf_psu_ops.pre_exit)();
     i2c_del_driver(&psu_driver);
-	if (pddf_psu_ops.post_exit) (pddf_psu_ops.post_exit)();
+    if (pddf_psu_ops.post_exit) (pddf_psu_ops.post_exit)();
 }
 EXPORT_SYMBOL(psu_exit);
 

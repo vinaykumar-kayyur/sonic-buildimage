@@ -1,35 +1,35 @@
 {
-	"PSU":
-	{
-		"psu_present": 
-		{
-			"valmap": { "1":true, "0":false }
-		},
+    "PSU":
+    {
+        "psu_present": 
+        {
+            "valmap": { "1":true, "0":false }
+        },
 
-		"psu_power_good": 
-		{
-			"valmap": { "1": true, "0":false }
-		},
+        "psu_power_good": 
+        {
+            "valmap": { "1": true, "0":false }
+        },
 
-		"psu_fan_dir":
-		{
-			"valmap": { "F2B":"INTAKE", "B2F":"EXHAUST" }
-		}
-	},
+        "psu_fan_dir":
+        {
+            "valmap": { "F2B":"INTAKE", "B2F":"EXHAUST" }
+        }
+    },
 
-	"FAN":
-	{
-		"direction":
-		{
-			"valmap": {"1":"INTAKE", "0":"EXHAUST"}
-		},
+    "FAN":
+    {
+        "direction":
+        {
+            "valmap": {"1":"INTAKE", "0":"EXHAUST"}
+        },
 
-		"present":
-		{
-			"valmap": {"1":true, "0":false}
-		},
-		
-		"duty_cycle_to_pwm": "lambda dc: ((dc*100)/625 - 1)"
-	}
+        "present":
+        {
+            "valmap": {"1":true, "0":false}
+        },
+        
+        "duty_cycle_to_pwm": "lambda dc: ((dc*100)/625 - 1)"
+    }
 
 }

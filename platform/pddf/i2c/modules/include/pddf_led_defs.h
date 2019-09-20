@@ -26,11 +26,11 @@ struct kobject *cur_state_kobj=NULL;
  *****************************************/
 #define NAME_SIZE 32
 typedef enum {
-	ON,
-	OFF,
-	FAULTY,
-	BLINK,
-        MAX_LED_STATUS		
+    ON,
+    OFF,
+    FAULTY,
+    BLINK,
+        MAX_LED_STATUS      
 }LED_STATUS;
 typedef struct 
 {
@@ -41,11 +41,11 @@ typedef struct
 
 typedef struct
 {
-    int	swpld_addr;
+    int swpld_addr;
     int swpld_addr_offset;
     char color[NAME_SIZE];
     MASK_BITS bits;
-    unsigned short	value;
+    unsigned short  value;
 } LED_DATA;
 
 typedef struct
@@ -62,27 +62,27 @@ typedef struct
     int index;
     LED_DATA data[MAX_LED_STATUS];
     bool blink;
-    int	swpld_addr;
+    int swpld_addr;
     int swpld_addr_offset;
 } LED_OPS_DATA; 
 
 typedef enum{
-	LED_SYS,
-	LED_PSU,
-	LED_FAN,
-	LED_FANTRAY,
-	LED_DIAG,
-	LED_LOC,
-	LED_TYPE_MAX
+    LED_SYS,
+    LED_PSU,
+    LED_FAN,
+    LED_FANTRAY,
+    LED_DIAG,
+    LED_LOC,
+    LED_TYPE_MAX
 } LED_TYPE;
 char* LED_TYPE_STR[LED_TYPE_MAX] = 
 {
-	"LED_SYS",
-	"LED_PSU",
-	"LED_FAN",
-	"LED_FANTRAY",
-	"LED_DIAG",
-	"LED_LOC",
+    "LED_SYS",
+    "LED_PSU",
+    "LED_FAN",
+    "LED_FANTRAY",
+    "LED_DIAG",
+    "LED_LOC",
 };
 
 /*****************************************

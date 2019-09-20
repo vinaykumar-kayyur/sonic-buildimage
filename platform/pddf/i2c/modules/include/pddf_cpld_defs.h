@@ -3,7 +3,7 @@
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * Description:
- *	Platform CPLD defines/structures header file
+ *  Platform CPLD defines/structures header file
  */
 
 #ifndef __PDDF_CPLD_DEFS_H__

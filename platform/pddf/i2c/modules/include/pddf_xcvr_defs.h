@@ -3,7 +3,7 @@
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * Description:
- *	Platform SFP defines/structures header file
+ *  Platform SFP defines/structures header file
  */
 
 #ifndef __PDDF_XCVR_DEFS_H__
@@ -17,16 +17,16 @@
 typedef struct XCVR_ATTR
 {
     char aname[32];                    // attr name, taken from enum xcvr_sysfs_attributes
-	char devtype[32];       // either a 'eeprom' or 'cpld', or 'pmbus' attribute
+    char devtype[32];       // either a 'eeprom' or 'cpld', or 'pmbus' attribute
     uint32_t devaddr;
     uint32_t offset;
     uint32_t mask;
     uint32_t cmpval;
     uint32_t len;
 
-	int (*pre_access)(void *client, void *data);
-	int (*do_access)(void *client, void *data);
-	int (*post_access)(void *client, void *data);
+    int (*pre_access)(void *client, void *data);
+    int (*do_access)(void *client, void *data);
+    int (*post_access)(void *client, void *data);
 
 }XCVR_ATTR;
 
@@ -34,7 +34,7 @@ typedef struct XCVR_ATTR
 typedef struct XCVR_DATA
 {
     int idx;                    // xcvr index
-	XCVR_ATTR xcvr_attr;
+    XCVR_ATTR xcvr_attr;
     int len;             // no of valid attributes for this xcvr client
     XCVR_ATTR xcvr_attrs[MAX_XCVR_ATTRS]; 
 }XCVR_DATA;
@@ -76,32 +76,32 @@ struct xcvr_data {
     uint32_t            intr_status;
     uint32_t            lpmode;
     uint32_t            rxlos;
-	uint32_t			txdisable;
+    uint32_t            txdisable;
     uint32_t            txfault;
 };
 
 typedef struct XCVR_SYSFS_ATTR_OPS
 {
-	int index;
-	ssize_t (*show)(struct device *dev, struct device_attribute *da, char *buf);
-	int (*pre_get)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
-	int (*do_get)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
-	int (*post_get)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
-	ssize_t (*store)(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
-	int (*pre_set)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
-	int (*do_set)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
-	int (*post_set)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
+    int index;
+    ssize_t (*show)(struct device *dev, struct device_attribute *da, char *buf);
+    int (*pre_get)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
+    int (*do_get)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
+    int (*post_get)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
+    ssize_t (*store)(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
+    int (*pre_set)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
+    int (*do_set)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
+    int (*post_set)(struct i2c_client *client, XCVR_ATTR *adata, struct xcvr_data *data);
 } XCVR_SYSFS_ATTR_OPS;
 
 enum xcvr_sysfs_attributes {
     XCVR_PRESENT,
-	XCVR_RESET,
-	XCVR_INTR_STATUS,
-	XCVR_LPMODE,
-	XCVR_RXLOS,
-	XCVR_TXDISABLE,
-	XCVR_TXFAULT,
-	XCVR_ATTR_MAX
+    XCVR_RESET,
+    XCVR_INTR_STATUS,
+    XCVR_LPMODE,
+    XCVR_RXLOS,
+    XCVR_TXDISABLE,
+    XCVR_TXFAULT,
+    XCVR_ATTR_MAX
 };
 
 extern int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg);

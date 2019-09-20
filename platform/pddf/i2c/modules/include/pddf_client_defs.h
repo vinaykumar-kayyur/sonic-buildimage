@@ -3,7 +3,7 @@
  * The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
  *
  * Description:
- *	Platform I2C client defines/structures header file
+ *  Platform I2C client defines/structures header file
  */
 
 #ifndef __PDDF_CLIENT_DEFS_H__
@@ -42,7 +42,7 @@ typedef struct pddf_data_attribute{
         int type;
         int len;
         char *addr;
-		char *data;
+        char *data;
 }PDDF_ATTR;
 
 #define PDDF_DATA_ATTR(_name, _mode, _show, _store, _type, _len, _addr, _data)    \
@@ -50,7 +50,7 @@ typedef struct pddf_data_attribute{
           .type = _type , \
           .len = _len ,   \
           .addr = _addr,  \
-		  .data = _data }
+          .data = _data }
 
 
 enum attribute_data_type {
@@ -75,9 +75,9 @@ typedef struct NEW_DEV_ATTR
     int parent_bus;
     char dev_type[GEN_NAME_SIZE];
     int dev_addr;
-	char *data;
-	int error;
-	char errstr[ERR_STR_SIZE];
+    char *data;
+    int error;
+    char errstr[ERR_STR_SIZE];
 
 }NEW_DEV_ATTR;
 extern NEW_DEV_ATTR pddf_data;
@@ -97,26 +97,26 @@ void traverse_device_table(void );
 /*Various Ops hook which can be used by vendors to provide some deviation from usual pddf functionality*/
 struct pddf_ops_t 
 {
-	/*Module init ops*/
-	int (*pre_init)(void);
-	int (*post_init)(void);
-	/*probe ops*/
-	int (*pre_probe)(struct i2c_client *, const struct i2c_device_id *);
-	int (*post_probe)(struct i2c_client *, const struct i2c_device_id *);
-	/*remove ops*/
-	int (*pre_remove)(struct i2c_client *);
-	int (*post_remove)(struct i2c_client *);
-	/*Module exit ops*/
-	void (*pre_exit)(void);
+    /*Module init ops*/
+    int (*pre_init)(void);
+    int (*post_init)(void);
+    /*probe ops*/
+    int (*pre_probe)(struct i2c_client *, const struct i2c_device_id *);
+    int (*post_probe)(struct i2c_client *, const struct i2c_device_id *);
+    /*remove ops*/
+    int (*pre_remove)(struct i2c_client *);
+    int (*post_remove)(struct i2c_client *);
+    /*Module exit ops*/
+    void (*pre_exit)(void);
     void (*post_exit)(void);
 };
 
 
 typedef struct PDEVICE
 {
-	struct hlist_node node;
-	char name[GEN_NAME_SIZE];
-	char *data;
+    struct hlist_node node;
+    char name[GEN_NAME_SIZE];
+    char *data;
 
 }PDEVICE;
 
