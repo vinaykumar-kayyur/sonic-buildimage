@@ -112,6 +112,11 @@ ifeq ($(SONIC_ENABLE_SFLOW),y)
 ENABLE_SFLOW = y
 endif
 
+ifeq ($(SONIC_ENABLE_TAM),y)
+ENABLE_TAM = y
+endif
+
+
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
 ifneq ($(CONFIGURED_PLATFORM), undefined)
@@ -197,6 +202,7 @@ $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
+$(info "ENABLE_TAM"                      : "$(ENABLE_TAM)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
