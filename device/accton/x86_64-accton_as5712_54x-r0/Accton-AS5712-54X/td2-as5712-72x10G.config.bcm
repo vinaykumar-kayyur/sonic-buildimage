@@ -1,6 +1,6 @@
 os=unix
 bcm_stat_flags=0
-parity_enable=0
+parity_enable=1
 parity_correction=0
 
 bcm_num_cos=8

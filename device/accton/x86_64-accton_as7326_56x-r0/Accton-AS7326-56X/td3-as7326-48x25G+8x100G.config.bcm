@@ -5,7 +5,7 @@ dpp_clock_ratio=2:3
 oversubscribe_mode=1
 pbmp_xport_xe=0x7F878787F878787FDFE1E1E1FE1E1E1FE
 
-parity_enable=0
+parity_enable=1
 mem_cache_enable=0
 
 l2_mem_entries=32768

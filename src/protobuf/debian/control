@@ -1,0 +1,18 @@
+Source: sonic
+Maintainer: Broadcom
+Section: net
+Priority: optional
+Build-Depends: dh-exec (>=0.3), debhelper (>= 9), autotools-dev
+Standards-Version: 1.0.0
+
+Package: protobuf
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: This package contains protobuf-v3.8.0 for SONiC project.
+
+Package: protobuf-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: protobuf (=${binary:Version})
+Description: This package contains debugging symbols for protobuf.

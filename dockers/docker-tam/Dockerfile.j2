@@ -1,0 +1,33 @@
+FROM {{docker_tam_load_image}}
+
+MAINTAINER Shirisha Dasari
+
+ARG docker_container_name
+RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update
+
+## Install dependencies
+RUN apt-get install -y gdb
+
+## Copy locally built debian packages
+## Install locally built debian packages in docker
+COPY \
+{% for deb in docker_tam_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor -%}
+debs/
+
+RUN dpkg -i \
+{% for deb in docker_tam_debs.split(' ') -%}
+debs/{{ deb }}{{' '}}
+{%- endfor %}
+
+COPY ["start.sh", "/usr/bin/"]
+##COPY ["files/bvmgrd", "/usr/bin/"]
+COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+
+ENTRYPOINT ["/usr/bin/supervisord"]
