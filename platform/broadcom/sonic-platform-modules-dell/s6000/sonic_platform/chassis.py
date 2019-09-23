@@ -16,11 +16,15 @@ try:
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
     from sonic_platform.fan import Fan
+    from sonic_platform.psu import Psu
+    from sonic_platform.thermal import Thermal
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
 MAX_S6000_FAN = 3
+MAX_S6000_PSU = 2
+MAX_S6000_THERMAL = 10
 
 BIOS_QUERY_VERSION_COMMAND = "dmidecode -s system-version"
 #components definitions
@@ -74,6 +78,14 @@ class Chassis(ChassisBase):
         for i in range(MAX_S6000_FAN):
             fan = Fan(i)
             self._fan_list.append(fan)
+
+        for i in range(MAX_S6000_PSU):
+            psu = Psu(i)
+            self._psu_list.append(psu)
+
+        for i in range(MAX_S6000_THERMAL):
+            thermal = Thermal(i)
+            self._thermal_list.append(thermal)
 
         # Initialize component list
         self._component_name_list.append(COMPONENT_BIOS)
@@ -175,16 +187,18 @@ class Chassis(ChassisBase):
         """
         Retrieves the cause of the previous reboot
         """
-        reset_reason = int(self._get_cpld_register('last_reboot_reason'),
-                           base=16)
-
         # In S6000, We track the reboot reason by writing the reason in
         # NVRAM. Only Warmboot and Coldboot reason are supported here.
+        # Since it does not support any hardware reason, we return
+        # non_hardware as default
 
-        if (reset_reason in self.reset_reason_dict):
-            return (self.reset_reason_dict[reset_reason], None)
+        lrr = self._get_cpld_register('last_reboot_reason')
+        if (lrr != 'ERR'):
+            reset_reason = int(lrr, base=16)
+            if (reset_reason in self.reset_reason_dict):
+                return (self.reset_reason_dict[reset_reason], None)
 
-        return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Invalid Reason")
+        return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
 
     def _get_command_result(self, cmdline):
         try:

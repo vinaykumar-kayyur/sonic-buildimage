@@ -201,3 +201,4 @@ tm_port_header_type_in
 tm_port_header_type_out
 trunk_group_max_members
 ucode_port
+led_fw_path
