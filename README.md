@@ -42,7 +42,19 @@ Following is the instruction on how to build an [(ONIE)](https://github.com/open
 # Hardware
 Any server can be a build image server. We are using a server with 1T hard disk. The OS is Ubuntu 16.04.
 
-# Prerequisites
+## Prerequisites
+
+Install pip and jinja in host build machine, execute below commands if j2/j2cli is not available:
+
+    sudo apt-get install -y python-pip
+    sudo python2 -m pip install -U pip==9.0.3
+    sudo pip install --force-reinstall --upgrade jinja2>=2.10
+    sudo pip install j2cli
+
+Configure your system to allow running the 'docker' command without 'sudo':
+    Add current user to the docker group
+	 `sudo gpasswd -a ${USER} docker`
+    Log out and log back in so that your group membership is re-evaluated
 
 ## SAI Version 
 Please refer to [SONiC roadmap](https://github.com/Azure/SONiC/wiki/Sonic-Roadmap-Planning) on the SAI version for each SONiC release. 
@@ -73,6 +85,38 @@ To build SONiC installer image and docker images, run the following commands:
 
     # Build SONiC image
     make all
+
+## Usage for ARM Architecture
+To build Arm32 bit for (ARMHF) plaform
+    ARM build has dependency in docker version 18,
+    if docker version is 19, downgrade to 18 as below
+    sudo apt-get install --allow-downgrades  -y docker-ce=5:18.09.0~3-0~ubuntu-xenial
+    sudo apt-get install --allow-downgrades  -y docker-ce-cli=5:18.09.0~3-0~ubuntu-xenial
+
+    # Execute make configure once to configure ASIC and ARCH
+
+    make configure PLATFORM=[ASIC_VENDOR] PLATFORM_ARCH=armhf
+
+    make target/sonic-[ASIC_VENDER]-armhf.bin
+
+    # example:
+
+    make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
+
+    make target/sonic-marvell-armhf.bin
+
+
+
+To build Arm64 bit for plaform
+
+    # Execute make configure once to configure ASIC and ARCH
+
+    make configure PLATFORM=[ASIC_VENDOR] PLATFORM_ARCH=arm64
+
+    # example:
+
+    make configure PLATFORM=marvell-arm64 PLATFORM_ARCH=arm64
+
 
  **NOTE**:
 
