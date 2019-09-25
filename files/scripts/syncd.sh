@@ -156,7 +156,7 @@ stop() {
     if [[ x$sonic_asic_platform == x"mellanox" ]] && [[ x$TYPE == x"cold" ]]; then
         debug "Stopping pmon service ahead of syncd..."
         /bin/systemctl stop pmon
-        debug "Stopped pmon service."
+        debug "Stopped pmon service"
     fi
 
     if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
