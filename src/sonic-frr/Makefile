@@ -15,12 +15,12 @@ patches = "$patch1 $patch2 $patch3 $patch4 $patch5"
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr
-	for frr_patch in $patches; do
-		if patch -sfp1 --dry-run < ../patch/$frr_patch; then
-			patch -sfp1 < ../patch/$frr_patch
+	for frr_patch in $$patches; do
+		if patch -sfp1 --dry-run < ../patch/$$frr_patch; then
+			patch -sfp1 < ../patch/$$frr_patch
 		else
-			if ! patch -Rsfp1 --dry-run < ../patch/$frr_patch; then
-				echo "Patch $frr_patch failure"
+			if ! patch -Rsfp1 --dry-run < ../patch/$$frr_patch; then
+				echo "Patch $$frr_patch failure"
 				exit 1
 			fi
 		fi
