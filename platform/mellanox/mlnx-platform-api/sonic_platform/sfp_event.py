@@ -66,9 +66,6 @@ class sfp_event:
                     retry += 1
                     time.sleep(self.SX_OPEN_TIMEOUT)
 
-            # to make sure SDK daemon has started
-            time.sleep(self.SX_OPEN_TIMEOUT)
-
             # After SDK daemon started, sx_api_open and sx_api_host_ifc_open is ready for call
             rc, self.handle = sx_api_open(None)
             if rc != SX_STATUS_SUCCESS:
