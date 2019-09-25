@@ -105,7 +105,7 @@ int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac)
     int rc;
     int sock_fd = 0;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Set arp entry for IP:%s  MAC:%s  ifname:%s\n", show_ip_str(htonl(ip)), mac, ifname);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Set arp entry for IP:%s  MAC:%s  ifname:%s", show_ip_str(htonl(ip)), mac, ifname);
 
     if (ifname == NULL || ip == 0 || mac == NULL)
     {
@@ -159,7 +159,7 @@ int mlacp_fsm_arp_del(char *ifname, uint32_t ip)
     int rc;
     int sock_fd = 0;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "%s: Del arp entry for IP : %s\n", __FUNCTION__, show_ip_str(htonl(ip)));
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Del arp entry for IP : %s ifname:%s", show_ip_str(htonl(ip)), ifname);
 
     if (ifname == NULL || ip == 0)
     {
@@ -1031,8 +1031,8 @@ void iccp_send_fdb_entry_to_syncd( struct MACMsg* mac_msg, uint8_t mac_type)
     mac_info->op_type = mac_msg->op_type;
     msg_hdr->len = sizeof(struct IccpSyncdHDr) + sizeof(struct mclag_fdb_info);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "fd %d write mac msg vid : %d ; ifname %s ; mac %s fdb type %d ; op type %d  ",
-                    sys->sync_fd, mac_info->vid, mac_info->port_name, mac_info->mac, mac_info->type, mac_info->op_type);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "write mac msg vid : %d ; ifname %s ; mac %s fdb type %s ; op type %s",
+                    mac_info->vid, mac_info->port_name, mac_info->mac, mac_info->type == MAC_TYPE_STATIC ? "static" : "dynamic", mac_info->op_type == MAC_SYNC_ADD ? "add" : "del");
 
     /*send msg*/
     if (sys->sync_fd > 0 )
@@ -1674,8 +1674,9 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
 
     mac_msg->age_flag = 0;
 
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC msg vid %d mac %s port %s optype %s ", vid, mac_str, ifname, op_type == MAC_SYNC_ADD ? "add" : "del");
     /*Debug*/
-    #if 1
+    #if 0
     /* dump receive MAC info*/
     fprintf(stderr, "\n======== MAC Update==========\n");
     fprintf(stderr, "  MAC    =  %s\n", mac_str);
@@ -1794,8 +1795,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
 
             /*set MAC_AGE_PEER flag before send this item to peer*/
             mac_msg->age_flag |= MAC_AGE_PEER;
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %s, add %s vlan-id %d, age_flag %d",
-                            mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+            /*ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %s, add %s vlan-id %d, age_flag %d",
+                            mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);*/
             mac_msg->op_type = MAC_SYNC_ADD;
 
             if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
@@ -1806,7 +1807,12 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
                     mac_msg->age_flag &= ~MAC_AGE_PEER;
                     TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg_send, tail);
 
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                    /*ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);*/
+                }
+                else
+                {
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC-msg-list: %s, add %s vlan-id %d, age_flag %d",
                                     mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
                 }
             }
@@ -1816,8 +1822,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).mac_list), msg, tail);
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-list enqueue: %s, add %s vlan-id %d",
-                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-list enqueue: %s, add %s vlan-id %d",
+                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);*/
             }
             else
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC %s, add %s vlan-id %d",
@@ -1946,7 +1952,7 @@ int iccp_receive_fdb_handler_from_syncd(struct System *sys)
         for (i = 0; i < count; i++)
         {
             mac_info = (struct mclag_fdb_info *)&msg_buf[pos + sizeof(struct IccpSyncdHDr ) + i * sizeof(struct mclag_fdb_info)];
-            ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d vid %d mac %s port %s  optype  %d ", i, mac_info->vid, mac_info->mac, mac_info->port_name, mac_info->op_type);
+            /*ICCPD_LOG_DEBUG(__FUNCTION__, "recv msg fdb count %d vid %d mac %s port %s  optype  %s ", i, mac_info->vid, mac_info->mac, mac_info->port_name, mac_info->op_type == MAC_SYNC_ADD ? "add" : "del");*/
             do_mac_update_from_syncd(mac_info->mac, mac_info->vid, mac_info->port_name, mac_info->type, mac_info->op_type);
         }
 

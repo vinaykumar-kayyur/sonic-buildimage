@@ -168,8 +168,8 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
 
 #if 1
     ICCPD_LOG_INFO(__FUNCTION__,
-                   "Received MAC Info, itf=[%s] vid[%d] MAC[%s]  type %d ",
-                   MacData->ifname, ntohs(MacData->vid), MacData->mac_str, MacData->type);
+                   "Received MAC Info, port[%s] vid[%d] MAC[%s] type[%s]",
+                   MacData->ifname, ntohs(MacData->vid), MacData->mac_str, MacData->type == MAC_SYNC_ADD ? "add" : "del");
 #endif
 
     /*Find the interface in MCLAG interface list*/
@@ -193,8 +193,8 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
             if (MacData->type == MAC_SYNC_ADD)
             {
                 mac_msg->age_flag &= ~MAC_AGE_PEER;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Recv ADD, Remove peer age flag:%d ifname  %s, add %s vlan-id %d, op_type %d",
-                                mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Recv ADD, Remove peer age flag:%d ifname %s, add %s vlan-id %d",
+                                mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
                 /*mac_msg->fdb_type = tlv->fdb_type;*/
                 /*The port ifname is different to the local item*/
@@ -298,8 +298,8 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
     if (msg && MacData->type == MAC_SYNC_DEL)
     {
         mac_msg->age_flag |= MAC_AGE_PEER;
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %d   ifname %s, add %s vlan-id %d, op_type %d",
-                        mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %d ifname %s, add %s vlan-id %d",
+                        mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
         if (mac_msg->age_flag == (MAC_AGE_LOCAL | MAC_AGE_PEER))
         {
@@ -334,8 +334,8 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
 
             if (strlen(csm->peer_itf_name) == 0)
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "orphan port %d or portchannel is down, but peer-link is not configured: ifname %s, add %s vlan-id %d, op_type %d",
-                                from_mclag_intf,  mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "From orphan port or portchannel is down, but peer-link is not configured: ifname %s, add %s vlan-id %d",
+                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
                 /*if orphan port mac but no peerlink, don't keep this mac*/
                 if (from_mclag_intf == 0)
@@ -346,8 +346,8 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                 /*Redirect the mac to peer-link*/
                 memcpy(&mac_msg->ifname, csm->peer_itf_name, IFNAMSIZ);
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Redirect to peerlink for orphan port or portchannel is down, Add local age flag: %d   ifname %s, add %s vlan-id %d, op_type %d",
-                                mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Redirect to peerlink for orphan port or portchannel is down, Add local age flag: %d  ifname %s, add %s vlan-id %d",
+                                mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
             }
         }
         else
@@ -450,9 +450,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
 
     #if 1
     ICCPD_LOG_INFO(__FUNCTION__,
-                   "%s: Received ARP Info,"
-                   "itf=[%s] ARP IP[%s],MAC[%02x:%02x:%02x:%02x:%02x:%02x]",
-                   __FUNCTION__,
+                   "Received ARP Info, intf[%s] IP[%s], MAC[%02x:%02x:%02x:%02x:%02x:%02x]",
                    arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr),
                    arp_entry->mac_addr[0], arp_entry->mac_addr[1], arp_entry->mac_addr[2],
                    arp_entry->mac_addr[3], arp_entry->mac_addr[4], arp_entry->mac_addr[5]);
@@ -478,9 +476,8 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                     continue;
 
                 ICCPD_LOG_DEBUG(__FUNCTION__,
-                                "%s:  ==> Find ARP itf on L3 bridge, peer-link %s of %s",
-                                __FUNCTION__,
-                                peer_link_if->name, vlan_id_list->vlan_itf->name);
+                                "ARP is learnt from intf %s, peer-link %s is the member of this vlan",
+                                vlan_id_list->vlan_itf->name, peer_link_if->name);
 
                 /* Peer-link belong to L3 vlan is alive, set the ARP info*/
                 set_arp_flag = 1;
@@ -509,9 +506,8 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                             continue;
 
                         ICCPD_LOG_DEBUG(__FUNCTION__,
-                                        "%s:  ==> Find ARP itf on L3 bridge, %s of %s",
-                                        __FUNCTION__,
-                                        local_if->name, vlan_id_list->vlan_itf->name);
+                                        "ARP is learnt from intf %s, mclag %s is the member of this vlan",
+                                        vlan_id_list->vlan_itf->name, local_if->name);
                         break;
                     }
 
@@ -528,8 +524,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                     if (strcmp(local_if->name, arp_entry->ifname) == 0)
                     {
                         ICCPD_LOG_DEBUG(__FUNCTION__,
-                                        "%s:  ==> Find ARP itf on L3 port-channel, %s",
-                                        __FUNCTION__,
+                                        "ARP is learnt from mclag L3 intf %s",
                                         local_if->name);
                         if (local_if->po_active == 1)
                         {
@@ -554,8 +549,8 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
         {
             if (mlacp_fsm_arp_set(arp_entry->ifname, ntohl(arp_entry->ipv4_addr), mac_str) < 0)
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP set for %s %s %s",
-                                __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP add failure for %s %s %s",
+                                arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
                 return MCLAG_ERROR;
             }
         }
@@ -563,19 +558,18 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
         {
             if (mlacp_fsm_arp_del(arp_entry->ifname, ntohl(arp_entry->ipv4_addr)) < 0)
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP delete for %s %s %s",
-                                __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP delete failure for %s %s %s",
+                                arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
                 return MCLAG_ERROR;
             }
         }
 
-        ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP update for %s %s %s",
-                        __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);
+        /*ICCPD_LOG_DEBUG(__FUNCTION__, "%s: ARP update for %s %s %s",
+                        __FUNCTION__, arp_entry->ifname, show_ip_str(arp_entry->ipv4_addr), mac_str);*/
     }
     else
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:  ==> port-channel is not alive",
-                        __FUNCTION__);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Failure: port-channel is not alive");
         /*TODO Set static route through peer-link or just skip it?*/
     }
 
@@ -596,9 +590,9 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
     if (msg && arp_entry->op_type == ARP_SYNC_DEL)
     {
         TAILQ_REMOVE(&(MLACP(csm).arp_list), msg, tail);
-        free(msg->buf); free(msg);
-        ICCPD_LOG_INFO(__FUNCTION__, "%s: del arp queue successfully",
-                       __FUNCTION__);
+        free(msg->buf);
+        free(msg);
+        /*ICCPD_LOG_INFO(__FUNCTION__, "Del arp queue successfully");*/
     }
     else if (!msg && arp_entry->op_type == ARP_SYNC_ADD)
     {
@@ -610,8 +604,7 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
         if (iccp_csm_init_msg(&msg, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
         {
             mlacp_enqueue_arp(csm, msg);
-            ICCPD_LOG_INFO(__FUNCTION__, "%s: add arp queue successfully",
-                           __FUNCTION__);
+            /*ICCPD_LOG_INFO(__FUNCTION__, "Add arp queue successfully");*/
         }
     }
 

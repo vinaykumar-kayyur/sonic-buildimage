@@ -1035,7 +1035,7 @@ int iccp_system_init_netlink_socket()
         goto err_route_event_sock_connect;
     }
 
-    err = nl_socket_set_buffer_size(sys->route_event_sock, 98304, 0);
+    err = nl_socket_set_buffer_size(sys->route_event_sock, 983040, 0);
     if (err)
     {
         ICCPD_LOG_ERR(__FUNCTION__, "Failed to set buffer size of netlink route event sock.");
@@ -1257,7 +1257,7 @@ static int iccp_receive_arp_packet_handler(struct System *sys)
     memcpy(mac_addr,  (char*)(a + 1), ETHER_ADDR_LEN);
     memcpy(&addr, (char*)(a + 1) + a->ar_hln, 4);
 
-    do_arp_update(ifindex, ntohl(addr), mac_addr);
+    do_arp_update_from_reply_packet(ifindex, ntohl(addr), mac_addr);
 
     return 0;
 }

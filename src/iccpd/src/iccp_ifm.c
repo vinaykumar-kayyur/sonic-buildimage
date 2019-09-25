@@ -109,7 +109,7 @@ int iccp_sys_local_if_list_get_init()
     return ret;
 }
 
-static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
+static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
 {
     struct System *sys = NULL;
     struct CSM *csm = NULL;
@@ -146,14 +146,14 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
 
     arp_msg->ipv4_addr = ntohl(arp_msg->ipv4_addr);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "arp msg type %d , state  (%04X)(%d)  ifindex   [%d] (%s) ip %s  , mac   [%02X:%02X:%02X:%02X:%02X:%02X] ",
-                    msgtype, ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
+    ICCPD_LOG_DEBUG(__FUNCTION__, "arp type %s, state (%04X)(%d) ifindex [%d] (%s) ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+                    msgtype == RTM_NEWNEIGH ? "New":"Del", ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
                     ndm->ndm_ifindex, arp_lif->name,
                     show_ip_str(htonl(arp_msg->ipv4_addr)),
                     arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
 
     /*Debug*/
-    #if 1
+    #if 0
     /* dump receive kernel ARP req*/
     fprintf(stderr, "\n======== Kernel ARP ==========\n");
     fprintf(stderr, "  Type    = [%d] (New=%d, Del=%d)\n", msgtype, RTM_NEWNEIGH, RTM_DELNEIGH);
@@ -188,7 +188,7 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
                 if (!vlan_id_list)
                     continue;
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from itf (%s) of vlan (%s)",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s of vlan %s",
                                 lif_po->name, vlan_id_list->vlan_itf->name);
             }
             else
@@ -197,8 +197,7 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
                 if (ndm->ndm_ifindex != lif_po->ifindex)
                     continue;
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from itf (%s)",
-                                lif_po->name);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s", lif_po->name);
             }
 
             verify_arp = 1;
@@ -226,7 +225,9 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
         {
             /* delete ARP*/
             TAILQ_REMOVE(&MLACP(csm).arp_list, msg, tail);
-            free(msg->buf); free(msg); msg = NULL;
+            free(msg->buf);
+            free(msg);
+            msg = NULL;
             ICCPD_LOG_DEBUG(__FUNCTION__, "Delete ARP %s",
                             show_ip_str(htonl(arp_msg->ipv4_addr)));
         }
@@ -261,9 +262,9 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
             if (iccp_csm_init_msg(&msg, (char*)arp_msg, msg_len) == 0)
             {
                 mlacp_enqueue_arp(csm, msg);
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s",
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s",
                                 arp_msg->ifname,
-                                show_ip_str(htonl(arp_msg->ipv4_addr)));
+                                show_ip_str(htonl(arp_msg->ipv4_addr)));*/
             }
             else
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s",
@@ -278,11 +279,11 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, msg_len) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] for %s",
-                                show_ip_str(htonl(arp_msg->ipv4_addr)));
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] message for %s",
+                                show_ip_str(htonl(arp_msg->ipv4_addr)));*/
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] for %s",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] message for %s",
                                 show_ip_str(htonl(arp_msg->ipv4_addr)));
 
         }
@@ -296,18 +297,18 @@ static void do_arp_request(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, msg_len) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[DEL] for %s",
-                                show_ip_str(htonl(arp_msg->ipv4_addr)));
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[DEL] message for %s",
+                                show_ip_str(htonl(arp_msg->ipv4_addr)));*/
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[DEL] for %s",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[DEL] message for %s",
                                 show_ip_str(htonl(arp_msg->ipv4_addr)));
 
         }
     }
 
     /*Debug: dump for dequeue ARP Info*/
-    #if 1
+    #if 0
     fprintf(stderr, "\n======== ARP Info List ========\n");
     TAILQ_FOREACH(msg, &MLACP(csm).arp_list, tail)
     {
@@ -391,7 +392,7 @@ int do_one_neigh_request(struct nlmsghdr *n)
 
     if (ndm->ndm_family == AF_INET)
     {
-        do_arp_request(ndm, tb, n->nlmsg_type);
+        do_arp_learn_from_kernel(ndm, tb, n->nlmsg_type);
     }
 
     return(0);
@@ -460,7 +461,7 @@ int iccp_arp_get_init()
 }
 
 /*When received ARP packets from kernel, update arp information*/
-void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETHER_ADDR_LEN])
+void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETHER_ADDR_LEN])
 {
     struct System *sys = NULL;
     struct CSM *csm = NULL;
@@ -492,8 +493,12 @@ void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETH
     memcpy(&arp_msg->ipv4_addr, &addr, 4);
     memcpy(arp_msg->mac_addr, mac_addr, 6);
 
+    ICCPD_LOG_DEBUG(__FUNCTION__, "arp ifindex [%d] (%s) ip %s mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+                    ifindex, arp_lif->name,
+                    show_ip_str(htonl(arp_msg->ipv4_addr)),
+                    arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
     /*Debug*/
-    #if 1
+    #if 0
     /* dump receive kernel ARP req*/
     fprintf(stderr, "\n======== Kernel ARP Update==========\n");
     fprintf(stderr, "  Type    = (New=%d)\n", RTM_NEWNEIGH);
@@ -526,7 +531,7 @@ void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETH
 
                 if (!vlan_id_list)
                     continue;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from itf (%s) of vlan (%s)",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s of vlan %s",
                                 lif_po->name, vlan_id_list->vlan_itf->name);
             }
             else
@@ -534,7 +539,7 @@ void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETH
                 /* Is the ARP belong to a L3 mode MLAG itf?*/
                 if (ifindex != lif_po->ifindex)
                     continue;
-                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from itf (%s)",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from intf %s",
                                 lif_po->name);
             }
 
@@ -581,14 +586,12 @@ void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETH
         if (iccp_csm_init_msg(&msg, (char*)arp_msg, msg_len) == 0)
         {
             mlacp_enqueue_arp(csm, msg);
-            ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s",
-                            arp_msg->ifname,
-                            show_ip_str(htonl(arp_msg->ipv4_addr)));
+            /*ICCPD_LOG_DEBUG(__FUNCTION__, "ARP-list enqueue: %s, add %s",
+                            arp_msg->ifname, show_ip_str(htonl(arp_msg->ipv4_addr)));*/
         }
         else
             ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP-list: %s, add %s",
-                            arp_msg->ifname,
-                            show_ip_str(htonl(arp_msg->ipv4_addr)));
+                            arp_msg->ifname, show_ip_str(htonl(arp_msg->ipv4_addr)));
     }
 
     /* enqueue iccp_msg (add)*/
@@ -598,11 +601,11 @@ void do_arp_update(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETH
         if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, msg_len) == 0)
         {
             TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] for %s",
-                            show_ip_str(htonl(arp_msg->ipv4_addr)));
+            /*ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] for %s",
+                            show_ip_str(htonl(arp_msg->ipv4_addr)));*/
         }
         else
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] for %s",
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] message for %s",
                             show_ip_str(htonl(arp_msg->ipv4_addr)));
     }
 
