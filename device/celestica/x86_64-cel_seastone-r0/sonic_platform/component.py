@@ -29,6 +29,7 @@ CPLD_ADDR_MAPPING = {
 GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_NAME_LIST = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "BIOS"]
+COMPONENT_DES_LIST = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "Basic Input/Output System"]
 
 
 class Component(ComponentBase):
@@ -104,7 +105,7 @@ class Component(ComponentBase):
             Returns:
             A string containing the description of the component
         """
-        return ""
+        return COMPONENT_DES_LIST[self.index]
 
     def get_firmware_version(self):
         """

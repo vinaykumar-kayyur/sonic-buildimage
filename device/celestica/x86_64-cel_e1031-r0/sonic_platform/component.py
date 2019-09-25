@@ -25,6 +25,8 @@ CONFIG_DB_PATH = "/etc/sonic/config_db.json"
 SMC_CPLD_PATH = "/sys/devices/platform/e1031.smc/version"
 GETREG_PATH = "/sys/devices/platform/e1031.smc/getreg"
 COMPONENT_NAME_LIST = ["SMC_CPLD", "MMC_CPLD", "BIOS"]
+COMPONENT_DES_LIST = ["System Management Controller",
+                      "Module Management CPLD", "Basic Input/Output System"]
 
 
 class Component(ComponentBase):
@@ -102,7 +104,7 @@ class Component(ComponentBase):
             Returns:
             A string containing the description of the component
         """
-        return ""
+        return COMPONENT_DES_LIST[self.index]
 
     def get_firmware_version(self):
         """
