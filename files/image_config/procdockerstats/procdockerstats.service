@@ -1,0 +1,11 @@
+[Unit]
+Description=Control Plane ACL configuration daemon
+Requires=updategraph.service
+After=updategraph.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/procdockerstats
+
+[Install]
+WantedBy=multi-user.target
