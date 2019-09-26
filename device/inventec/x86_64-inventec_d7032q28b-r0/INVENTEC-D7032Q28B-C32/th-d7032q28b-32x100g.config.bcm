@@ -17,14 +17,14 @@ oversubscribe_mode=1
 pbmp_xport_xe=0x3fd000000ff4000003fc000001fe
 
 # EagleCore ports
-portmap_66=129:10
-portmap_100=131:10
+#portmap_66=129:10
+#portmap_100=131:10
 
 # Loopback ports
-portmap_33=132:10
-portmap_67=133:10
-portmap_101=134:10
-portmap_135=135:10
+#portmap_33=132:10
+#portmap_67=133:10
+#portmap_101=134:10
+#portmap_135=135:10
 
 portmap_68=65:100
 portmap_69=69:100

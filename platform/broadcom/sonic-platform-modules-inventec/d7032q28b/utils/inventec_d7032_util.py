@@ -136,7 +136,8 @@ def system_install():
     status, output = exec_cmd("rmmod i2c_ismt ", 1)
     status, output = exec_cmd("rmmod i2c-i801 ", 1)
     status, output = exec_cmd("rmmod gpio_ich",1)
-    status, output = exec_cmd("insmod /lib/modules/3.16.0-5-amd64/extra/gpio-ich.ko gpiobase=0",1)
+    status, output = exec_cmd("insmod /lib/modules/4.9.0-8-amd64/kernel/drivers/gpio/gpio-ich.ko gpiobase=0",1)
+    #status, output = exec_cmd("insmod /lib/modules/3.16.0-5-amd64/extra/gpio-ich.ko gpiobase=0",1)
 
     #install drivers
     for i in range(0,len(drivers)):
@@ -199,6 +200,7 @@ def install():
     return
 
 def uninstall():
+#    pass
     global FORCE
     exec_cmd("rmmod gpio_ich",1)
     #uninstall drivers

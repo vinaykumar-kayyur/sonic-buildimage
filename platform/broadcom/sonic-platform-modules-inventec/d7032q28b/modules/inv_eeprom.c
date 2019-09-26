@@ -42,7 +42,7 @@ static void inv_eeprom_update_client(struct i2c_client *client, u8 slice)
 	int ret;
 	int addr;
 	
-	
+
 	mutex_lock(&data->update_lock);
 
 	if (!(data->valid & (1 << slice)) ||

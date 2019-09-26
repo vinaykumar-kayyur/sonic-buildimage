@@ -21,8 +21,7 @@
 
 /* definition */
 #define CPLD_INFO_OFFSET   0x00
-#define CPLD_RESET_OFFSET  0x08
-#define CPLD_PSU_OFFSET    0x09
+#define CPLD_PSU_OFFSET    0x08
 #define CPLD_LED_OFFSET    0x0E
 #define CPLD_LED_STATU_OFFSET    0x0D
 #define CPLD_CTL_OFFSET    0x0C
@@ -39,12 +38,12 @@ struct cpld_data {
 
 static ssize_t cpld_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size_t count)
 {
-#if USE_SMBUS
+#if USE_SMBUS    
 	int i;
-
+	
     for(i=0; i<count; i++) {
         buf[i] = i2c_smbus_read_byte_data(client, offset+i);
-    }
+    }	
     return count;
 #else
 	struct i2c_msg msg[2];
@@ -52,9 +51,9 @@ static ssize_t cpld_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size
 	int status;
 
 	memset(msg, 0, sizeof(msg));
-
+	
 	msgbuf[0] = offset;
-
+	
 	msg[0].addr = client->addr;
 	msg[0].buf = msgbuf;
 	msg[0].len = 1;
@@ -63,30 +62,30 @@ static ssize_t cpld_i2c_read(struct i2c_client *client, u8 *buf, u8 offset, size
 	msg[1].flags = I2C_M_RD;
 	msg[1].buf = buf;
 	msg[1].len = count;
-
+	
 	status = i2c_transfer(client->adapter, msg, 2);
-
+	
 	if(status == 2)
 	    status = count;
-    
-	return status;
-#endif
+	    
+	return status;    
+#endif	
 }
 
 static ssize_t cpld_i2c_write(struct i2c_client *client, char *buf, unsigned offset, size_t count)
 {
-#if USE_SMBUS
+#if USE_SMBUS    
 	int i;
 	
     for(i=0; i<count; i++) {
         i2c_smbus_write_byte_data(client, offset+i, buf[i]);
-    }
+    }	
     return count;
 #else
 	struct i2c_msg msg;
 	int status;
     u8 writebuf[64];
-
+	
 	int i = 0;
 
 	msg.addr = client->addr;
@@ -94,15 +93,15 @@ static ssize_t cpld_i2c_write(struct i2c_client *client, char *buf, unsigned off
 
 	/* msg.buf is u8 and casts will mask the values */
 	msg.buf = writebuf;
-
+	
 	msg.buf[i++] = offset;
 	memcpy(&msg.buf[i], buf, count);
 	msg.len = i + count;
-
+	
 	status = i2c_transfer(client->adapter, &msg, 1);
 	if (status == 1)
 		status = count;
-
+	
     return status;	
 #endif    
 }
@@ -135,45 +134,6 @@ static ssize_t show_info(struct device *dev, struct device_attribute *da,
 	return strlen(buf);
 }
 
-static ssize_t show_reset(struct device *dev, struct device_attribute *da,
-			 char *buf)
-{
-	u32 status;
-	//struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-	struct i2c_client *client = to_i2c_client(dev);
-	struct cpld_data *data = i2c_get_clientdata(client);
-	u8 b[1];
-    
-	mutex_lock(&data->update_lock);
-	
-    status = cpld_i2c_read(client, b, CPLD_RESET_OFFSET, 1);
-	
-	mutex_unlock(&data->update_lock);
-	
-	if(status != 1) return sprintf(buf, "read cpld reset fail\n");
-	    
-	
-	status = sprintf (buf, "The CPLD 1 cpld_reset = %d\n", b[0]);
-	    
-	return strlen(buf);
-}
-
-static ssize_t set_reset(struct device *dev,
-			   struct device_attribute *devattr,
-			   const char *buf, size_t count)
-{
-	//struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
-	struct i2c_client *client = to_i2c_client(dev);
-	struct cpld_data *data = i2c_get_clientdata(client);
-
-	u8 temp = simple_strtol(buf, NULL, 10);
-    
-	mutex_lock(&data->update_lock);
-	cpld_i2c_write(client, &temp, CPLD_RESET_OFFSET, 1);
-	mutex_unlock(&data->update_lock);
-
-	return count;
-}
 
 static ssize_t show_ctl(struct device *dev, struct device_attribute *da,
 			 char *buf)
@@ -218,6 +178,7 @@ static ssize_t set_ctl(struct device *dev,
 
 	return count;
 }
+
 
 static char* led_str[] = {
     "OFF",     //000
@@ -332,7 +293,6 @@ static ssize_t show_psu(struct device *dev, struct device_attribute *da,
 
 
 static SENSOR_DEVICE_ATTR(info,  S_IRUGO,			        show_info, 0, 0);
-static SENSOR_DEVICE_ATTR(reset, S_IWUSR|S_IRUGO,			show_reset, set_reset, 0);
 static SENSOR_DEVICE_ATTR(ctl, S_IWUSR|S_IRUGO,			show_ctl, set_ctl, 0);
 
 static SENSOR_DEVICE_ATTR(grn_led, S_IWUSR|S_IRUGO,			show_led, set_led, 0);
@@ -344,7 +304,6 @@ static SENSOR_DEVICE_ATTR(psu1,  S_IRUGO,			        show_psu, 0, 1);
 static struct attribute *cpld_attributes[] = {
     //info
 	&sensor_dev_attr_info.dev_attr.attr,
-	&sensor_dev_attr_reset.dev_attr.attr,
 	&sensor_dev_attr_ctl.dev_attr.attr,
 
 	&sensor_dev_attr_grn_led.dev_attr.attr,
