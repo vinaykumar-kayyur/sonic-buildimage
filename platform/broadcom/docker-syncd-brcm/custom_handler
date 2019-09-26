@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+# This is custom handler for supervisor-proc-exit-listener
+# docker specfic handling when critical processes exit can be added here.
+import os
+import sys
+import syslog
+import json
+
+from swsssdk import SonicV2Connector
+
+class OaNotif(object):
+
+    def __init__(self):
+        super(OaNotif,self).__init__()
+        self.db = SonicV2Connector(host="127.0.0.1")
+        self.db.connect(self.db.ASIC_DB, False)
+        return
+
+    def shutdown(self):
+        opdata = ["switch_shutdown_request",""]
+        msg = json.dumps(opdata,separators=(',',':'))
+        self.db.publish('ASIC_DB','NOTIFICATIONS', msg)
+        return
+
+def main():
+    orch_agent_notif = OaNotif()
+    syslog.syslog(syslog.LOG_INFO, "Restarting swss to recover the system")
+    orch_agent_notif.shutdown()
+
+if __name__ == "__main__":
+    main()

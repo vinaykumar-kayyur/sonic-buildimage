@@ -10,6 +10,7 @@ from supervisor import childutils
 # Contents of file should be the names of critical processes (as defined in
 # supervisor.conf file), one per line
 CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
+CUSTOM_HANDLER = '/usr/bin/custom_handler'
 
 def main():
     # Read the list of critical processes from a file
@@ -39,6 +40,8 @@ def main():
                 MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
                 msg = MSG_FORMAT_STR.format(payload_headers['processname'])
                 syslog.syslog(syslog.LOG_INFO, msg)
+                if os.path.exists(CUSTOM_HANDLER):
+                   os.system(CUSTOM_HANDLER)
                 os.kill(os.getppid(), signal.SIGTERM)
 
 if __name__ == "__main__":
