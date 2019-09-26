@@ -10,8 +10,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	pushd ./frr
 	git reset --hard
 	git clean -xfdf
-	stg init
-	git checkout -b work frr/7.0
+	git checkout -b work origin/frr/7.0
+	stg init	
 	stg import -s ../patch/series
 	tools/tarsource.sh -V -e '-sonic'
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
