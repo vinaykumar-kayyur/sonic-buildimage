@@ -2,9 +2,14 @@
 import sys
 import os
 import struct
+import subprocess
 
 PORT_RES = '/dev/port'
 
+def track_reboot():
+    # Run plugin script which will track the cli triggered reboot, fastboot, warmboot
+    res = subprocess.check_output(['/usr/local/bin/fastboot_plugin'])
+    return
 
 def portio_reg_write(resource, offset, val):
     fd = os.open(resource, os.O_RDWR)
@@ -21,5 +26,6 @@ def portio_reg_write(resource, offset, val):
     os.close(fd)
 
 if __name__ == "__main__":
+    track_reboot()
     portio_reg_write(PORT_RES, 0xcf9, 0xe)
 
