@@ -68,6 +68,8 @@ class Chassis(ChassisBase):
     def __init__(self):
         super(Chassis, self).__init__()
 
+        self._component_name_list = []
+
         # Initialize SKU name
         self.sku_name = self._get_sku_name()
 
@@ -164,7 +166,7 @@ class Chassis(ChassisBase):
         Retrieves all sfps available on this chassis
 
         Returns:
-            A list of objects derived from SfpBase representing all sfps 
+            A list of objects derived from SfpBase representing all sfps
             available on this chassis
         """
         if not self.sfp_module_initialized:
@@ -233,7 +235,7 @@ class Chassis(ChassisBase):
         Note:
             We overload this method to ensure that watchdog is only initialized
             when it is referenced. Currently, only one daemon can open the watchdog.
-            To initialize watchdog in the constructor causes multiple daemon 
+            To initialize watchdog in the constructor causes multiple daemon
             try opening watchdog when loading and constructing a chassis object
             and fail. By doing so we can eliminate that risk.
         """
@@ -292,7 +294,7 @@ class Chassis(ChassisBase):
 
     def _verify_reboot_cause(self, filename):
         '''
-        Open and read the reboot cause file in 
+        Open and read the reboot cause file in
         /var/run/hwmanagement/system (which is defined as REBOOT_CAUSE_ROOT)
         If a reboot cause file doesn't exists, returns '0'.
         '''
@@ -380,8 +382,8 @@ class Chassis(ChassisBase):
             PSID:             MT_2860111033
             PCI Device Name:  /dev/mst/mt52100_pci_cr0
             Base MAC:         98039bf3f500
-            Versions:         Current        Available     
-                FW         ***13.2000.1140***N/A           
+            Versions:         Current        Available
+                FW         ***13.2000.1140***N/A
 
             Status:           No matching image found
 
@@ -389,7 +391,7 @@ class Chassis(ChassisBase):
         we can extrace the version which is marked with *** in the above context
         """
         fw_ver_str = self._get_command_result(FW_QUERY_VERSION_COMMAND)
-        try: 
+        try:
             m = re.search('(Versions:.*\n[\s]+FW[\s]+)([\S]+)', fw_ver_str)
             result = m.group(2)
         except :
@@ -479,7 +481,7 @@ class Chassis(ChassisBase):
                 - True if call successful, False if not;
                 - A nested dictionary where key is a device type,
                   value is a dictionary with key:value pairs in the format of
-                  {'device_id':'device_event'}, 
+                  {'device_id':'device_event'},
                   where device_id is the device ID for this device and
                         device_event,
                              status='1' represents device inserted,
@@ -509,8 +511,8 @@ class Chassis(ChassisBase):
 
         if status:
             # get_change_event has the meaning of retrieving all the notifications through a single call.
-            # Typically this is implemented via a select framework which requires the underlay file-reading 
-            # interface able to retrieve all notifications without blocking once the fd has been selected. 
+            # Typically this is implemented via a select framework which requires the underlay file-reading
+            # interface able to retrieve all notifications without blocking once the fd has been selected.
             # However, sdk doesn't provide any interface satisfied the requirement. as a result,
             # check_sfp_status returns only one notification may indicate more notifications in its queue.
             # In this sense, we have to iterate in a loop to get all the notifications in case that
