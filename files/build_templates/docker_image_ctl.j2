@@ -62,6 +62,17 @@ function preStartAction()
         echo -n > /tmp/dump.rdb
         docker cp /tmp/dump.rdb database:/var/lib/redis/
     fi
+{%- elif docker_container_name == "syncd" %}
+    # Clear the portstat counters
+    for file in `ls /tmp/portstat*/*`
+    do
+      sed -i "s|S'[0-9]*'|S'0'|g" $file
+    done
+    # Clear the pfcstat counters
+    for file in `ls /tmp/pfcstat*/*`
+    do
+      sed -i "s|S'[0-9]*'|S'0'|g" $file
+    done
 {%- else %}
     : # nothing
 {%- endif %}
