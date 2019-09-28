@@ -16,6 +16,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
 	stg undo
 	git clean -xfdf
+	git checkout frr/7.0
+	git branch -D $(BRANCH)
 	popd
 	mv $(DERIVED_TARGET) $* $(DEST)/
 
