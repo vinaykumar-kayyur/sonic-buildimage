@@ -9,7 +9,7 @@ BRANCH = $(shell date +%Y%m%d\.%H%M%S)
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr	
-	git checkout -b $(BRANCH) frr/7.0
+	git checkout -b $(BRANCH) origin/frr/7.0
 	stg init
 	stg import -s ../patch/series
 	tools/tarsource.sh -V -e '-sonic'
