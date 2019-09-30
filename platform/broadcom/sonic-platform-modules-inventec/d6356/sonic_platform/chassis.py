@@ -11,6 +11,7 @@ try:
     from sonic_platform.eeprom import Eeprom
     from sonic_platform.psu import Psu
     from sonic_platform.sfp import Sfp
+    from sonic_platform.qsfp import QSfp
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -18,8 +19,9 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
-        self.__num_of_psus = 2
-        self.__num_of_sfps = 56
+        self.__num_of_psus   = 2
+        self.__num_of_sfps   = 56
+        self.__start_of_qsfp = 48
 
         # Initialize EEPROM
         self._eeprom = Eeprom()
@@ -29,6 +31,13 @@ class Chassis(ChassisBase):
             psu = Psu(index)
             self._psu_list.append(psu)
 
+        # Initialize SFP
+        for index in range(0, self.__num_of_sfps):
+            if index < self.__start_of_qsfp:
+                sfp = Sfp(index)
+            else:
+                sfp = QSfp(index)
+            self._sfp_list.append(sfp)
 
 ##############################################
 # Device methods
