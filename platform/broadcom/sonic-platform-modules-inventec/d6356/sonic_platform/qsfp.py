@@ -8,6 +8,7 @@
 try:
     import os
     import sys
+    import time
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
@@ -79,11 +80,13 @@ class QSfp(SfpBase):
                                     }
         self.__port_end = len(self.__port_to_i2c_mapping) - 1;
 
-        self.__sfp_presence_attr = None
+        self.__presence_attr = None
         self.__eeprom_path = None
         if self.__index in range(0, self.__port_end + 1):
-            self.__sfp_presence_attr = "/sys/class/swps/port{}/present".format(self.__index)
-            self.__eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom".format(self.__port_to_i2c_mapping[self.__index])
+            self.__presence_attr = "/sys/class/swps/port{}/present".format(self.__index)
+            self.__lpmode_attr   = "/sys/class/swps/port{}/lpmod".format(self.__index)
+            self.__reset_attr    = "/sys/class/swps/port{}/reset".format(self.__index)
+            self.__eeprom_path   = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom".format(self.__port_to_i2c_mapping[self.__index])
 
         #print(self.__eeprom_path)
 
@@ -185,7 +188,7 @@ class QSfp(SfpBase):
             bool: True if device is present, False if not
         """
         presence = False
-        attr_path = self.__sfp_presence_attr
+        attr_path = self.__presence_attr
 
         attr_rv = self.__get_attr_value(attr_path)
         if (attr_rv != 'ERR'):
@@ -221,7 +224,7 @@ class QSfp(SfpBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        return self.get_presence() and self.get_transceiver_bulk_status()
+        return self.get_presence() and not self.get_reset_status()
 
 ##############################################
 # SFP methods
@@ -533,8 +536,15 @@ class QSfp(SfpBase):
         Returns:
             A Boolean, True if reset enabled, False if disabled
         """
-        #TBD
-        return False
+        reset_status = False
+        attr_path = self.__reset_attr
+
+        attr_rv = self.__get_attr_value(attr_path)
+        if (attr_rv != 'ERR'):
+            if (int(attr_rv) == 0):
+                reset_status = True
+
+        return reset_status
 
     def get_rx_los(self):
         """
@@ -642,8 +652,15 @@ class QSfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        #TBD
-        return False
+        lpmode = False
+        attr_path = self.__lpmode_attr
+
+        attr_rv = self.__get_attr_value(attr_path)
+        if (attr_rv != 'ERR'):
+            if (int(attr_rv) == 1):
+                lpmode = True
+
+        return lpmode
 
     def get_power_override(self):
         """
@@ -741,8 +758,31 @@ class QSfp(SfpBase):
         Returns:
             A boolean, True if successful, False if not
         """
-        #TBD
-        return False
+
+        try:
+            reg_file = open(self.__reset_attr, "r+")
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        reg_value = 0
+        reg_file.write(hex(reg_value))
+        reg_file.close()
+
+        # Sleep 2 second to allow it to settle
+        time.sleep(2)
+
+        try:
+            reg_file = open(self.__reset_attr, "r+")
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        reg_value = 1
+        reg_file.write(hex(reg_value))
+        reg_file.close()
+
+        return True
 
     def tx_disable(self, tx_disable):
         """
@@ -820,8 +860,23 @@ class QSfp(SfpBase):
         Returns:
             A boolean, True if lpmode is set successfully, False if not
         """
-        #TBD
-        return False
+        try:
+            reg_file = open(self.__lpmode_attr, "r+")
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        reg_value = int(reg_file.readline().rstrip())
+
+        if lpmode is True:
+            reg_value = 1
+        else:
+            reg_value = 0
+
+        reg_file.write(hex(reg_value))
+        reg_file.close()
+
+        return True
 
     def set_power_override(self, power_override, power_set):
         """

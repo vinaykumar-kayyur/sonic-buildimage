@@ -71,13 +71,11 @@ class Sfp(SfpBase):
                                     }
         self.__port_end = len(self.__port_to_i2c_mapping) - 1;
 
-        self.__sfp_presence_attr = None
+        self.__presence_attr = None
         self.__eeprom_path = None
         if self.__index in range(0, self.__port_end + 1):
-            self.__sfp_presence_attr = "/sys/class/swps/port{}/present".format(self.__index)
+            self.__presence_attr = "/sys/class/swps/port{}/present".format(self.__index)
             self.__eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom".format(self.__port_to_i2c_mapping[self.__index])
-
-        #print(self.__eeprom_path)
 
         SfpBase.__init__(self)
 
@@ -177,7 +175,7 @@ class Sfp(SfpBase):
             bool: True if device is present, False if not
         """
         presence = False
-        attr_path = self.__sfp_presence_attr
+        attr_path = self.__presence_attr
 
         attr_rv = self.__get_attr_value(attr_path)
         if (attr_rv != 'ERR'):
@@ -213,7 +211,7 @@ class Sfp(SfpBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        return self.get_presence() and self.get_transceiver_bulk_status()
+        return self.get_presence() and not self.get_reset_status()
 
 ##############################################
 # SFP methods
