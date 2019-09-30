@@ -4,21 +4,18 @@ This code is for a specific daemon, process-docker.
 Which sends process and docker CPU/memory utilization data to DB every 2 mins.
 '''
 
-import sys, errno
+import sys
 import os
 import time
 import syslog
-import signal
-import select
 import subprocess
 import re
 import swsssdk 
-import collections
 from datetime import datetime
 
 VERSION = '1.0'
 
-SYSLOG_IDENTIFIER = "process-docker"
+SYSLOG_IDENTIFIER = "procdockerstats"
 
 REDIS_HOSTIP = "127.0.0.1"
 
@@ -42,114 +39,84 @@ def log_error(msg, also_print_to_console=False):
 class ProcDockerStats:
 
     def __init__(self):
-        self.swid = 0
-        self.running = False
-        self.handle = None
-        
-    def initialize(self):
         self.state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
-        self.state_db.connect("STATE_DB")
+        self.state_db.connect("STATE_DB") 
+    
+    def run_command(self, cmd):
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+	(stdout, stderr) = proc.communicate()
+	
+	if proc.returncode != 0:
+	    log_error("Error running command '{}'".format(cmd))
+	else:
+            return stdout
+
+    def format_docker_cmd_output(self, cmdout):
+        lines = re.split("\n", cmdout)
+        keys = re.split("   +", lines[0])
+        x = len(lines)
+        dict1 = dict()
+        dict_list = []
+        for i in range(1,x):
+            values1 = re.split("   +", lines[i])
+            dict1 =  dict(zip(keys, values1))
+            dict_list.append(dict1)
+        return dict_list
+    
+    def update_dockerstats_command(self):        
+        data = self.run_command("docker stats --no-stream -a")
+        dockerdata = self.format_docker_cmd_output(data)
+
+        value = ""
         # wipe out all data before updating with new values
         self.state_db.delete_all_by_pattern('STATE_DB', 'Docker_Stats|*')
-              
-    def run_commands(self, commands):
-        """
-        Given a list of shell commands, run them in order
-        Args:
-            commands: List of strings, each string is a shell command
-        """
-        for cmd in commands:
-            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-            (stdout, stderr) = proc.communicate()
-
-            if proc.returncode != 0:
-                log_error("Error running command '{}'".format(cmd))
-            else:
-                lines = re.split("\n", stdout)
-                keys = re.split("   +", lines[0])
-                x = len(lines)
-                dict1 = dict()
-                dict_list = []
-                for i in range(1,x):
-                    values1 = re.split("   +", lines[i])
-                    dict1 =  dict(zip(keys, values1))
-                    dict_list.append(dict1)
-                return dict_list                                        
-                                     
-    def update_process_docker_commands(self):
-        """
-        Convenience wrapper which retrieves process and docker CPU/memory utilization data
-        """
-        process_docker_cmds = []
-        process_docker_cmds.append("docker stats --no-stream -a")
-        """ process_docker_cmds.append("ps aux")"""
-       
-        log_info("Issuing the following commands:")
-        for cmd in  process_docker_cmds:
-            log_info("  " + cmd)
-
-        dockerdata = self.run_commands(process_docker_cmds)
-        value = ""
-
         for index in range(len(dockerdata)):
-            row = dockerdata[index]            
+            row = dockerdata[index]
             cid = row.get('CONTAINER ID')
-            if cid != "":               
+            if cid:
                 value = 'Docker_Stats|' + str(cid)
                 name = row.get('NAME')
                 self.update_state_db(value, 'NAME', name)
-
                 cpu = row.get('CPU %')
                 self.update_state_db(value, 'CPU%', str(cpu))
-
                 splitcol = row.get('MEM USAGE / LIMIT')
                 memuse = re.split(" / ", str(splitcol))
                 self.update_state_db(value, 'MEM', str(memuse[0]))
                 self.update_state_db(value, 'MEM_LIMIT', str(memuse[1]))
-
                 mem = row.get('MEM %')
                 self.update_state_db(value, 'MEM %', str(mem))
-
                 splitcol = row.get('NET I/O')
                 netio = re.split(" / ", str(splitcol))
                 self.update_state_db(value, 'NET_IN', str(netio[0]))
                 self.update_state_db(value, 'NET_OUT', str(netio[1]))
-
                 splitcol = row.get('BLOCK I/O')
                 blocio = re.split(" / ", str(splitcol))
                 self.update_state_db(value, 'BLOCK_IN', str(blocio[0]))
                 self.update_state_db(value, 'BLOCK_OUT', str(blocio[1]))
-
                 pids = row.get('PIDS')
-                self.update_state_db(value, 'PIDS', pids)            
-
+                self.update_state_db(value, 'PIDS', pids)       
+            
     def update_state_db(self, key1, key2, value2):
         self.state_db.set('STATE_DB', key1, key2, value2)
 
     def run(self):
-        self.update_process_docker_commands()
+        self.update_dockerstats_command()
         datetimeobj = datetime.now()
-        # Adding key to store latest update time.
+        #Adding key to store latest update time.
         self.update_state_db('Docker_Stats|LastUpdateTime', 'lastupdate', datetimeobj)
-
-
 
 # main start
 def main():
     log_info("process-docker stats aemon starting up..")
-
     if not os.getuid() == 0:
-        log_error("Must be root to run process-docker daemon")
-        print "Error: Must be root to run process-docker daemon"
-        sys.exit(1)
-
+    log_error("Must be root to run process-docker daemon")
+    print "Error: Must be root to run process-docker daemon"
+    sys.exit(1)
     pd = ProcDockerStats()
-    pd.initialize()
     # Data need to be updated every 2 mins. hence adding delay of 120 seconds
-    #time.sleep(120)
+    time.sleep(120)
     pd.run()
     log_info("process-docker stats daemon exited")
-
-
+        
 if __name__ == '__main__':
     main()
