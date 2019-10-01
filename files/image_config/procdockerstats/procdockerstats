@@ -10,7 +10,7 @@ import time
 import syslog
 import subprocess
 import re
-import swsssdk 
+import swsssdk
 from datetime import datetime
 
 VERSION = '1.0'
@@ -19,36 +19,40 @@ SYSLOG_IDENTIFIER = "procdockerstats"
 
 REDIS_HOSTIP = "127.0.0.1"
 
+
 # ========================== Syslog wrappers ==========================
 def log_info(msg, also_print_to_console=False):
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_INFO, msg)
     syslog.closelog()
 
+
 def log_warning(msg, also_print_to_console=False):
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_WARNING, msg)
     syslog.closelog()
+
 
 def log_error(msg, also_print_to_console=False):
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
 
+
 # ========================== ProcessDocker class ==========================
 class ProcDockerStats:
 
     def __init__(self):
         self.state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
-        self.state_db.connect("STATE_DB") 
-    
+        self.state_db.connect("STATE_DB")
+
     def run_command(self, cmd):
         proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-	(stdout, stderr) = proc.communicate()
-	
-	if proc.returncode != 0:
-	    log_error("Error running command '{}'".format(cmd))
-	else:
+        (stdout, stderr) = proc.communicate()
+
+        if proc.returncode != 0:
+            log_error("Error running command '{}'".format(cmd))
+        else:
             return stdout
 
     def format_docker_cmd_output(self, cmdout):
@@ -57,13 +61,13 @@ class ProcDockerStats:
         x = len(lines)
         dict1 = dict()
         dict_list = []
-        for i in range(1,x):
+        for i in range(1, x):
             values1 = re.split("   +", lines[i])
-            dict1 =  dict(zip(keys, values1))
+            dict1 = dict(zip(keys, values1))
             dict_list.append(dict1)
         return dict_list
-    
-    def update_dockerstats_command(self):        
+
+    def update_dockerstats_command(self):
         data = self.run_command("docker stats --no-stream -a")
         dockerdata = self.format_docker_cmd_output(data)
 
@@ -94,29 +98,29 @@ class ProcDockerStats:
                 self.update_state_db(value, 'BLOCK_IN', str(blocio[0]))
                 self.update_state_db(value, 'BLOCK_OUT', str(blocio[1]))
                 pids = row.get('PIDS')
-                self.update_state_db(value, 'PIDS', pids)       
-            
+                self.update_state_db(value, 'PIDS', pids)
+
     def update_state_db(self, key1, key2, value2):
         self.state_db.set('STATE_DB', key1, key2, value2)
 
     def run(self):
         self.update_dockerstats_command()
         datetimeobj = datetime.now()
-        #Adding key to store latest update time.
+        # Adding key to store latest update time.
         self.update_state_db('Docker_Stats|LastUpdateTime', 'lastupdate', datetimeobj)
 
 # main start
 def main():
     log_info("process-docker stats aemon starting up..")
     if not os.getuid() == 0:
-    log_error("Must be root to run process-docker daemon")
-    print "Error: Must be root to run process-docker daemon"
+        log_error("Must be root to run process-docker daemon")
+        print "Error: Must be root to run process-docker daemon"
     sys.exit(1)
     pd = ProcDockerStats()
     # Data need to be updated every 2 mins. hence adding delay of 120 seconds
     time.sleep(120)
     pd.run()
     log_info("process-docker stats daemon exited")
-        
+
 if __name__ == '__main__':
     main()
