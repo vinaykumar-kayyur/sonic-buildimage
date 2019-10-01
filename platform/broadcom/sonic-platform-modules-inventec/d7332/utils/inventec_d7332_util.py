@@ -123,8 +123,7 @@ drivers =[
 'i2c-dev',
 'inv_eeprom',
 'inv_cpld',
-'inv_platform',
-'inv_sff']
+'inv_platform']
 
 
 
