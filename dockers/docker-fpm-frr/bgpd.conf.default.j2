@@ -175,6 +175,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   neighbor {{ neighbor_addr }} remote-as {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   neighbor {{ neighbor_addr }} peer-group BGPMON_V4
   neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
+  neighbor {{ neighbor_addr }} activate
 {% endfor %}
 {% endif %}
 {% endblock bgp_monitors %}
