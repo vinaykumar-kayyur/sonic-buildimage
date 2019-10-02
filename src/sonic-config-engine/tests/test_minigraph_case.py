@@ -137,7 +137,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(output.strip(), "")
 
     def test_minigraph_bgp_mon(self):
-        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "BGP_MONITOR"'
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "BGP_MONITORS"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "")
 
