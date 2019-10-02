@@ -55,7 +55,7 @@ class ProcDockerStats:
         dict_list = []
         for item in lines[1:]:
             values1 = re.split("   +", item)
-            dict1 =  dict(zip(keys, values1))
+            dict1 = dict(zip(keys, values1))
             dict_list.append(dict1)
         return dict_list
 
@@ -75,7 +75,7 @@ class ProcDockerStats:
             dict_list.append(dict1)
         return dict_list
     
-    def update_dockerstats_command(self):        
+    def update_dockerstats_command(self):
         data = self.run_command("docker stats --no-stream -a")
         dockerdata = self.format_docker_cmd_output(data)
         value = ""
@@ -149,9 +149,9 @@ class ProcDockerStats:
 def main():
     log_info("process-docker stats aemon starting up..")
     if not os.getuid() == 0:
-    log_error("Must be root to run process-docker daemon")
-    print "Error: Must be root to run process-docker daemon"
-    sys.exit(1)
+        log_error("Must be root to run process-docker daemon")
+        print "Error: Must be root to run process-docker daemon"
+        sys.exit(1)
     pd = ProcDockerStats()
     # Data need to be updated every 2 mins. hence adding delay of 120 seconds
     time.sleep(120)
