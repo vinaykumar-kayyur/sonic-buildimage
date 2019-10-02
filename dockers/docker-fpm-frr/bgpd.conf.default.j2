@@ -161,14 +161,13 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endblock bgp_peers_with_range %}
 {% block bgp_monitors %}
 {% if BGP_MONITORS is defined and BGP_MONITORS|length > 0 %}
+  neighbor BGPMON_V4 peer-group
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 and name == 'Loopback0' %}
   neighbor BGPMON_V4 update-source {{ prefix | ip }}
 {% endif %}
 {% endfor %}
   neighbor BGPMON_V4 route-map FROM_BGPMON_V4 in
-  neighbor BGPMON_V4 route-map FROM_BGPMON_V4 in
-  neighbor BGPMON_V4 route-map TO_BGPMON_V4 out
   neighbor BGPMON_V4 route-map TO_BGPMON_V4 out
   neighbor BGPMON_V4 send-community
   neighbor BGPMON_V4 maximum-prefix 1
