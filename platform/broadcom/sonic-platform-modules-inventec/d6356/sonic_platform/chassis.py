@@ -9,9 +9,11 @@ try:
     import os
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.eeprom import Eeprom
+    from sonic_platform.fan import Fan
     from sonic_platform.psu import Psu
     from sonic_platform.sfp import Sfp
     from sonic_platform.qsfp import QSfp
+    from sonic_platform.thermal import Thermal
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -19,12 +21,19 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
-        self.__num_of_psus   = 2
-        self.__num_of_sfps   = 56
-        self.__start_of_qsfp = 48
+        self.__num_of_fans     = 8
+        self.__num_of_psus     = 2
+        self.__num_of_sfps     = 56
+        self.__start_of_qsfp   = 48
+        self.__num_of_thermals = 5
 
         # Initialize EEPROM
         self._eeprom = Eeprom()
+
+        # Initialize FAN
+        for index in range(1, self.__num_of_fans + 1):
+            fan = Fan(index, False, 0)
+            self._fan_list.append(fan)
 
         # Initialize PSU
         for index in range(1, self.__num_of_psus + 1):
@@ -38,6 +47,12 @@ class Chassis(ChassisBase):
             else:
                 sfp = QSfp(index)
             self._sfp_list.append(sfp)
+
+        # Initialize THERMAL
+        for index in range(0, self.__num_of_thermals):
+            thermal = Thermal(index)
+            self._thermal_list.append(thermal)
+
 
 ##############################################
 # Device methods
@@ -96,7 +111,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self._eeprom.base_mac_addr()
+        return self._eeprom.base_mac_address()
 
     def get_serial_number(self):
         """

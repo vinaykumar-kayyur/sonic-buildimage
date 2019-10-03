@@ -60,11 +60,11 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             return "N/A"
         return results[2]
 
-    def base_mac_addr(self):
+    def base_mac_address(self):
         (is_valid, t) = self.get_tlv_field(
                           self.__eeprom_data, self._TLV_CODE_MAC_BASE)
         if not is_valid or t[1] != 6:
-            return super(TlvInfoDecoder, self).switchaddrstr(e)
+            return super(eeprom_tlvinfo.TlvInfoDecoder, self).switchaddrstr(self.__eeprom_data)
 
         return ":".join([binascii.b2a_hex(T) for T in t[2]])
 

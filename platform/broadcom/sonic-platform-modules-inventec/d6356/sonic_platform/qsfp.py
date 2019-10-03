@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Name: sfp.py, version: 1.0
+# Name: qsfp.py, version: 1.0
 #
 # Description: Module contains the definitions of SONiC platform APIs 
 #

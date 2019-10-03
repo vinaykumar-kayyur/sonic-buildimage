@@ -8,18 +8,28 @@
 try:
     import os
     from sonic_platform_base.psu_base import PsuBase
+    from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 class Psu(PsuBase):
 
     def __init__(self, index):
+        self.__num_of_fans = 1
         self.__index = index
         self.__psu_presence_attr    = "/sys/class/hwmon/hwmon2/device/psu{}".format(self.__index)
         self.__psu_power_in_attr    = "/sys/class/hwmon/hwmon{}/power1_input".format(self.__index + 6)
         self.__psu_power_out_attr   = "/sys/class/hwmon/hwmon{}/power2_input".format(self.__index + 6)
         self.__psu_voltage_out_attr = "/sys/class/hwmon/hwmon{}/in2_input".format(self.__index + 6)
         self.__psu_current_out_attr = "/sys/class/hwmon/hwmon{}/curr2_input".format(self.__index + 6)
+
+        # Overriding _fan_list class variable defined in PsuBase, to make it unique per Psu object
+        self._fan_list = []
+
+        # Initialize FAN
+        for x in range(1, self.__num_of_fans + 1):
+            fan = Fan(x, True, self.__index)
+            self._fan_list.append(fan)
 
     def __get_attr_value(self, attr_path):
 
@@ -74,7 +84,7 @@ class Psu(PsuBase):
         Returns:
             string: Model/part number of device
         """
-        raise NotImplementedError
+        return "N/A"
 
     def get_serial(self):
         """
@@ -83,7 +93,7 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        raise NotImplementedError
+        return "N/A"
 
     def get_status(self):
         """
