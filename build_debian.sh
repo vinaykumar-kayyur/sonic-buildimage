@@ -446,6 +446,10 @@ EOF
 ## Copy over clean-up script
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
 
+## Copy over configlet application script
+sudo cp ./files/image_config/configlet/configlet.py $FILESYSTEM_ROOT/usr/bin/configlet.py
+sudo cp ./files/image_config/configlet/db_updater.py $FILESYSTEM_ROOT/usr/bin/db_updater.py
+
 ## Copy ASIC config checksum
 python files/build_scripts/generate_asic_config_checksum.py
 if [[ ! -f './asic_config_checksum' ]]; then
