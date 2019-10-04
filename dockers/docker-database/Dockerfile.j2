@@ -29,6 +29,7 @@ RUN apt-get clean -y                                  && \
              s/^# syslog-enabled no$/syslog-enabled no/; \
              s/^# unixsocket/unixsocket/;                \
              s/redis-server.sock/redis.sock/g;           \
+             s/^# rename-command CONFIG ""$/rename-command CONFIG ""/;                                              \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/ \
             ' /etc/redis/redis.conf
 
