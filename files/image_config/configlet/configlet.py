@@ -6,59 +6,70 @@ A tool to update CONFIG-DB with JSON diffs that can update/delete redis-DB.
 All elements in the list are processed in the same order as it is present.
 The list entry, contains objects for delete & update
 Within an list entry that has delete & update, delete gets done first, followed by update.
-Within an op (delete/update), the tables are handled in any order.
+Within an op (delete/update) list, the entries are processed in given order.
+Within an entry in the list, the tables are handled in any order.
 Within a table, the keys are handled in any order.
 [
     {
-        "delete": {
-            "TABLE1": {
-                "Key1": {
-                    "Key2": {
-                        "Field1": "Val1"
+        "delete": [
+            {
+                "TABLE1": {
+                    "Key1": {
+                        "Key2": {
+                            "Field1": "Val1"
+                        }
                     }
                 }
             }
-        },
-        "update": {
-            "TABLE1": {
-                "Key1": {
-                    "Key2": {
-                        "Field1": "Val1",
-                        "Field2": "Val2",
-                        "Field3": "Val3"
-                    },
-                    "Key2_1": {
-                        "Field2_1": "Val1",
-                        "Field2_2": "Val2",
-                        "Field2_3": "Val3"
+        ],
+        "update": [
+            {
+                "TABLE1": {
+                    "Key1": {
+                        "Key2": {
+                            "Field1": "Val1",
+                            "Field2": "Val2",
+                            "Field3": "Val3"
+                        },
+                        "Key2_1": {
+                            "Field2_1": "Val1",
+                            "Field2_2": "Val2",
+                            "Field2_3": "Val3"
+                        }
                     }
                 }
             },
-            "TABLE2": {
-                "Key1": {
-                    "Key2": {
-                        "Field2": "Val2"
+            {
+                "TABLE1": {
+                    "Key1": {
+                        "Key2": {
+                            "Field4": "Val2"
+                        }
                     }
                 }
             }
-        }
+        ]
     },
     {
-        "delete": {
-            "TABLE2": {
+        "delete": [
+            {
+                "TABLE2": {
+                }
             }
-        }
+        ]
     },
     {
-        "update": {
-            "TABLE2": {
-                "Key22_1": {
-                    "Key22_2": {
-                        "Field22_2": "Val22_2"
+        "update": [
+            {
+                "TABLE2": {
+                    "Key22_1": {
+                        "Key22_2": {
+                            "Field22_2": "Val22_2"
+                        }
                     }
                 }
             }
-        }
+        ]
     }
 ]
 
@@ -117,8 +128,9 @@ def do_operate(op, t, k, lst):
 def process_entry(data):
     for op in ["delete", "update"]:
         if op in data.keys():
-            for t in data[op].keys():
-                do_operate(op, t, (), data[op][t])
+            for e in data[op]:
+                for t in e.keys():
+                    do_operate(op, t, (), e[t])
 
 def main():
     global test_only
