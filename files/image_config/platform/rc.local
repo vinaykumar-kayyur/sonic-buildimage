@@ -326,8 +326,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
         mv /host/grub.cfg /host/grub/grub.cfg
     fi
 
-    if `grep crashkernel=256M /proc/cmdline > /dev/null 2>&1`;
-    then
+    if `grep crashkernel=256M /proc/cmdline > /dev/null 2>&1`; then
 	kdump-config unload
 	kdump-config symlinks `uname -r`
 	kdump-config load

@@ -370,6 +370,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get autor
 # install kernel dump utility
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y kdump-tools || true
 sudo sed -i 's/\/MODULES=dep\//\/MODULES=most\//' $FILESYSTEM_ROOT/etc/kernel/postinst.d/kdump-tools
+# TODO : this is a work around due to current kdump-tools package bug, should be removed when bug fixed
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y kdump-tools
 {% if sonic_kdump_enable == "y" %}
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y crash
