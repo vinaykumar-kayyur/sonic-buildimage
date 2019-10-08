@@ -10,11 +10,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr	
 	git checkout -b $(BRANCH) origin/frr/7.1
-#	stg init
-#	stg import -s ../patch/series
+	stg init
+	stg import -s ../patch/series
 	tools/tarsource.sh -V -e '-sonic'
 	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
-#	stg undo
+	stg undo
 	git clean -xfdf
 	git checkout frr/7.1
 	git branch -D $(BRANCH)
