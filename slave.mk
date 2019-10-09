@@ -49,6 +49,7 @@ export BUILD_NUMBER
 export BUILD_TIMESTAMP
 export CONFIGURED_PLATFORM
 export CONFIGURED_ARCH
+SONIC_MAKEFILE_LIST=slave.mk rules/config rules/functions
 
 ###############################################################################
 ## Utility rules
@@ -193,6 +194,9 @@ $(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
+ifeq ($(SONIC_DPKG_CACHE_METHOD),cache)
+$(info "DPKG_CACHE_PATH"                 : "$(SONIC_DPKG_CACHE_SOURCE)")
+endif
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
@@ -214,6 +218,85 @@ export kernel_procure_method=$(KERNEL_PROCURE_METHOD)
 export vs_build_prepare_mem=$(VS_PREPARE_MEM)
 
 ###############################################################################
+MOD_CACHE_LOCK_TIMEOUT = 3600
+SONIC_DPKG_CACHE_DIR=/dpkg_cache
+
+# Lock macro for debian package level cache
+# Lock is implemented through flock command with the timeout value of 1 hour
+# Lock file is created in the cache directory and corresponding lock fd is stored as part of DPKG recipe.
+define MOD_LOCK
+	if [[ ! -f $(SONIC_DPKG_CACHE_DIR)/$(1)_cache_accss.lock ]]; then
+		touch $(SONIC_DPKG_CACHE_DIR)/$(1)_cache_accss.lock
+		chmod 777 $(SONIC_DPKG_CACHE_DIR)/$(1)_cache_accss.lock;
+	fi
+	$(eval $(1)_lock_fd=$(subst -,_,$(subst +,_,$(subst .,_,$(1)))))
+	exec {$($(1)_lock_fd)}<"$(SONIC_DPKG_CACHE_DIR)/$(1)_cache_accss.lock";
+	if ! flock -x -w $(MOD_CACHE_LOCK_TIMEOUT) "$${$($(1)_lock_fd)}" ; then
+		echo "ERROR: Lock timeout trying to read $(1) from cache.";
+		exit 1;
+	fi
+endef
+
+
+# UnLock macro for debian package level cache
+define MOD_UNLOCK
+	eval exec "$${$($(1)_lock_fd)}<&-";
+endef
+
+
+# Loads the deb package from debian cache
+# Cache file prefix is formed using SHA value
+# The SHA value is derived from one of the keyword type - GIT_COMMIT_SHA or GIT_CONTENT_SHA
+#   GIT_COMMIT_SHA   - SHA value of the last git commit id if it is a submodule
+#   GIT_CONTENT_SHA  - SHA value is calculated from the target dependency files content.
+#   Cache is loaded only when corresponding cache file is present in the cache direcory and its dependencies are not changed.
+define LOAD_CACHE
+	$(eval MOD_SRC_PATH=$($(1)_SRC_PATH))
+	$(eval MOD_HASH=$(if $(filter GIT_COMMIT_SHA,$($(1)_CACHE_MODE)),$(shell cd $(MOD_SRC_PATH) && git log -1 --format="%H")
+		, $(shell git hash-object $($(1)_DEP_SOURCE) $($(1)_SMDEP_SOURCE)|sha1sum|awk '{print $$1}')))
+	$(eval MOD_CACHE_FILE=$(1)-$(MOD_HASH).tgz)
+	$(eval $(1)_MOD_CACHE_FILE=$(MOD_CACHE_FILE))
+	$(eval DRV_DEB=$(foreach pkg,$(addprefix $(DEBS_PATH)/,$(1) $($(1)_DERIVED_DEBS)),$(if $(wildcard $(pkg)),,$(pkg))))
+	$(eval $(1)_FILES_MODIFIED  := $(if $($(1)_DEP_SOURCE),$(shell git status -s $($(1)_DEP_SOURCE))) \
+		   $(if $($(1)_SMDEP_SOURCE),$(shell cd $(MOD_SRC_PATH) &&  git status -s $(subst $(MOD_SRC_PATH)/,,$($(1)_SMDEP_SOURCE)))) )
+	#$(filter-out $($(1)_DEP_SOURCE),$($(1)_SMDEP_SOURCE), $?)
+
+	$(if $($(1)_FILES_MODIFIED),
+		echo "Target $(1) dependencies are modifed - load cache skipped";
+		echo "Modified dependencies are : [$($(1)_FILES_MODIFIED)] ";
+	    ,
+		$(if $(wildcard $(SONIC_DPKG_CACHE_DIR)/$(MOD_CACHE_FILE)),
+			$(if $(DRV_DEB), tar -xzvf $(SONIC_DPKG_CACHE_DIR)/$(MOD_CACHE_FILE),echo );
+			echo "File $(SONIC_DPKG_CACHE_DIR)/$(MOD_CACHE_FILE) is loaded from cache";
+			$(eval $(1)_CACHE_LOADED := Yes)
+			,
+			echo "File $(SONIC_DPKG_CACHE_DIR)/$(MOD_CACHE_FILE) is not present in the cache !";
+		 )
+	 )
+	echo ""
+endef
+
+# Saves the deb package into debian cache
+# A single tared-zip cache is created for .deb and its derived packages in the cache direcory.
+# It saves the .deb into cache only when its dependencies are not changed
+# The cache save is protected with lock.
+# The SAVE_CACHE macro has dependecy with LOAD_CACHE macro
+# 	 The target specific variables -_SRC_PATH, _MOD_CACHE_FILE and _FILES_MODIFIED are
+# 	 derived from the LOAD_CACHE macro
+define SAVE_CACHE
+	$(eval MOD_SRC_PATH=$($(1)_SRC_PATH))
+	$(eval MOD_CACHE_FILE=$($(1)_MOD_CACHE_FILE))
+	$(call MOD_LOCK,$(1))
+	$(if $($(1)_FILES_MODIFIED),
+		echo "Target $(1) dependencies are modifed - save cache skipped";
+	    ,
+		tar -czvf $(SONIC_DPKG_CACHE_DIR)/$(MOD_CACHE_FILE) $(2) $(addprefix $(DEBS_PATH)/,$($(1)_DERIVED_DEBS));
+		echo "File $(SONIC_DPKG_CACHE_DIR)/$(MOD_CACHE_FILE) saved in the cache ";
+	 )
+	$(call MOD_UNLOCK,$(1))
+	echo ""
+endef
+
 ## Local targets
 ###############################################################################
 
@@ -311,8 +394,16 @@ SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
 #     $(SOME_NEW_DEB)_SRC_PATH = $(SRC_PATH)/project_name
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_MAKE_DEBS += $(SOME_NEW_DEB)
-$(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+$(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
+	$$($$*_DEP_SOURCE) $$($$*_SMDEP_SOURCE)
 	$(HEADER)
+
+	# Load the target deb from DPKG cache
+	$(if $(and $(filter-out none,$(SONIC_DPKG_CACHE_METHOD)),$($*_CACHE_MODE)), $(call LOAD_CACHE,$*) )
+
+	# Skip building the target if it is already loaded from cache
+	if [ -z '$($*_CACHE_LOADED)' ] ; then
+
 	# Remove target to force rebuild
 	rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
 	# Apply series of patches if exist
@@ -321,6 +412,12 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
+
+		# Save the target deb into DPKG cache
+		$(if $(and $(filter-out none,$(SONIC_DPKG_CACHE_METHOD)),$($*_CACHE_MODE)), $(call SAVE_CACHE,$*,$@))
+
+	fi
+
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS))
@@ -331,8 +428,16 @@ SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS))
 #     $(SOME_NEW_DEB)_SRC_PATH = $(SRC_PATH)/project_name
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_DPKG_DEBS += $(SOME_NEW_DEB)
-$(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS)))
+$(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
+	$$($$*_DEP_SOURCE) $$($$*_SMDEP_SOURCE)
 	$(HEADER)
+
+	# Load the target deb from DPKG cache
+	$(if $(and $(filter-out none,$(SONIC_DPKG_CACHE_METHOD)),$($*_CACHE_MODE)), $(call LOAD_CACHE,$*) )
+
+	# Skip building the target if it is already loaded from cache
+	if [ -z '$($*_CACHE_LOADED)' ] ; then
+
 	# Remove old build logs if they exist
 	rm -f $($*_SRC_PATH)/debian/*.debhelper.log
 	# Apply series of patches if exist
@@ -349,6 +454,11 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
 	# Take built package(s)
 	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS)) $(DEBS_PATH) $(LOG)
+
+		# Save the target deb into DPKG cache
+		$(if $(and $(filter-out none,$(SONIC_DPKG_CACHE_METHOD)),$($*_CACHE_MODE)), $(call SAVE_CACHE,$*,$@))
+	fi
+
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS))
