@@ -628,6 +628,7 @@ static ssize_t set_lpmode_data(struct device *dev, struct device_attribute *dev_
     struct cpld_platform_data *pdata = i2cdev->platform_data;
     unsigned long long set_data;
     int err;
+    int status = 0;
     unsigned char set_bytes;
 
 
@@ -638,21 +639,42 @@ static ssize_t set_lpmode_data(struct device *dev, struct device_attribute *dev_
     mutex_lock(&dni_lock);
     /*QSFP25~32*/
     set_bytes = set_data & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_4, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_4, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
 
     /*QSFP17~24*/
     set_bytes = (set_data >> 8 ) & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_3, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_3, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
 
     /*QSFP9~16*/
     set_bytes = (set_data >> 16 ) & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_2, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_2, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
 
     /*QSFP1~8*/
     set_bytes = (set_data >> 24 ) & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_1, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_LPMODE_1, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
+
     mutex_unlock(&dni_lock);
     return count;
+
+ERROR:
+    mutex_unlock(&dni_lock);
+    return status;
 
 }
 
@@ -662,6 +684,7 @@ static ssize_t set_reset_data(struct device *dev, struct device_attribute *dev_a
     struct cpld_platform_data *pdata = i2cdev->platform_data;
     unsigned long long set_data;
     int err;
+    int status = 0;
     unsigned char set_bytes;
 
     err = kstrtoull(buf, 16, &set_data);
@@ -672,21 +695,41 @@ static ssize_t set_reset_data(struct device *dev, struct device_attribute *dev_a
     mutex_lock(&dni_lock);
     /*QSFP25~32*/
     set_bytes = set_data & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_4, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_4, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
 
     /*QSFP17~24*/
     set_bytes = (set_data >> 8 ) & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_3, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_3, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
 
     /*QSFP9~16*/
     set_bytes = (set_data >> 16 ) & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_2, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_2, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
 
     /*QSFP1~8*/
     set_bytes = (set_data >> 24 ) & 0xff;
-    i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_1, set_bytes);
+    status = i2c_smbus_write_byte_data(pdata[swpld1].client, QSFP_RESET_1, set_bytes);
+    if(status < 0)
+    {
+        goto ERROR;
+    }
+
     mutex_unlock(&dni_lock);
     return count;
+ERROR:
+    mutex_unlock(&dni_lock);
+    return status;
 }
 
 
