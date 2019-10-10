@@ -320,7 +320,6 @@ class Chassis(ChassisBase):
             'reset_comex_wd'            :   "Reset requested from ComEx",
             'reset_from_asic'           :   "Reset requested from ASIC",
             'reset_reload_bios'         :   "Reset caused by BIOS reload",
-            'reset_sw_reset'            :   "Software reset",
             'reset_hotswap_or_halt'     :   "Reset caused by hotswap or halt",
             'reset_from_comex'          :   "Reset from ComEx",
             'reset_voltmon_upgrade_fail':   "Reset due to voltage monitor devices upgrade failure"
