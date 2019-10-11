@@ -1,0 +1,22 @@
+#!/bin/bash
+
+DOCKER_EXEC_FLAGS="i"
+
+# Determine whether stdout is on a terminal
+if [ -t 1 ] ; then
+    DOCKER_EXEC_FLAGS+="t"
+fi
+
+dbid=`python -c "import swsssdk ; print swsssdk.SonicDBConfig.get_dbid(\"$1\")"`
+if [ $? -gt 0 ]; then
+    echo "Cannot get DB id for $1"
+    exit 1
+fi
+
+dbport=`python -c "import swsssdk ; print swsssdk.SonicDBConfig.get_port(\"$1\")"`
+if [ $? -gt 0 ]; then
+    echo "Cannot get DB port for $1"
+    exit 1
+fi
+
+docker exec -$DOCKER_EXEC_FLAGS database redis-cli -n $dbid -p $dbport "${@:2}"
