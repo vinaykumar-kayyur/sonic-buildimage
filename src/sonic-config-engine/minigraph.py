@@ -274,15 +274,17 @@ def parse_dpg(dpg, hname):
                     if member.lower().startswith('erspanv6'):
                         is_mirror_v6 = True
                     else:
-                        is_mirror = True;
-                    # Erspan session will be attached to all front panel ports,
-                    # if panel ports is a member port of LAG, should add the LAG 
-                    # to acl table instead of the panel ports
+                        is_mirror = True
+                    # Erspan session will be attached to all front panel ports
+                    # initially. If panel ports is a member port of LAG, then
+                    # the LAG will be added to acl table instead of the panel
+                    # ports. Non-active ports will be removed from this list
+                    # later after the rest of the minigraph has been parsed.
                     acl_intfs = pc_intfs[:]
                     for panel_port in port_alias_map.values():
                         if panel_port not in intfs_inpc:
                             acl_intfs.append(panel_port)
-                    break;
+                    break
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
                                  'ports': acl_intfs}
@@ -728,6 +730,21 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
+
+    # Filter ports from mirroring ACL tables that are not active.
+    for acl_table, group_params in acls.iteritems():
+        group_type = group_params.get('type', None)
+
+        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
+            continue
+
+        # We assume that if a LAG was included in the list of ports earlier then it will be active.
+        active_ports = [ port for port in group_params.get('ports', []) if port in neighbors.keys() or port in pcs ]
+
+        if not active_ports:
+            print >> sys.stderr, 'Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table)
+
+        acls[acl_table]['ports'] = active_ports
 
     results['ACL_TABLE'] = acls
 
