@@ -1,22 +1,33 @@
-#!/bin/bash
+#!/usr/bin/python
+import os
+import sys
+import swsssdk
+import logging
+import subprocess
 
-DOCKER_EXEC_FLAGS="i"
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.NullHandler())
+
+DOCKER_EXEC_FLAGS = "i"
 
 # Determine whether stdout is on a terminal
-if [ -t 1 ] ; then
-    DOCKER_EXEC_FLAGS+="t"
-fi
+if os.isatty(1):
+    DOCKER_EXEC_FLAGS += "t"
 
-dbid=`python -c "import swsssdk ; print swsssdk.SonicDBConfig.get_dbid(\"$1\")"`
-if [ $? -gt 0 ]; then
-    echo "Cannot get DB id for $1"
-    exit 1
-fi
-
-dbport=`python -c "import swsssdk ; print swsssdk.SonicDBConfig.get_port(\"$1\")"`
-if [ $? -gt 0 ]; then
-    echo "Cannot get DB port for $1"
-    exit 1
-fi
-
-docker exec -$DOCKER_EXEC_FLAGS database redis-cli -n $dbid -p $dbport "${@:2}"
+if len(sys.argv) < 3:
+    msg = "More than three arguments are required. 'usage: sonic-db-cli 'dbname' 'redis commands''"
+    print >> sys.stderr, msg
+    logger.error(msg)
+else:
+    try:
+        dbid = swsssdk.SonicDBConfig.get_dbid(sys.argv[1])
+        dbport = swsssdk.SonicDBConfig.get_port(sys.argv[1])
+        cmd = "docker exec -{} database redis-cli -n {} -p {} {}".format(DOCKER_EXEC_FLAGS, dbid, dbport, "
+".join(sys.argv[2:]))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+        print proc.stdout.read()
+    except RuntimeError:
+        msg = "Invalid database name input : '{}'".format(sys.argv[1])
+        print >> sys.stderr, msg
+        logger.error(msg)
