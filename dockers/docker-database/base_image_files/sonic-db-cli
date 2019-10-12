@@ -16,18 +16,18 @@ if os.isatty(1):
     DOCKER_EXEC_FLAGS += "t"
 
 if len(sys.argv) < 3:
-    msg = "More than three arguments are required. 'usage: sonic-db-cli 'dbname' 'redis commands''"
+    msg = "More than three arguments are required. 'usage: sonic-db-cli dbname rediscommands'"
     print >> sys.stderr, msg
     logger.error(msg)
 else:
     try:
         dbid = swsssdk.SonicDBConfig.get_dbid(sys.argv[1])
         dbport = swsssdk.SonicDBConfig.get_port(sys.argv[1])
-        cmd = "docker exec -{} database redis-cli -n {} -p {} {}".format(DOCKER_EXEC_FLAGS, dbid, dbport, "
-".join(sys.argv[2:]))
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
-        print proc.stdout.read()
     except RuntimeError:
         msg = "Invalid database name input : '{}'".format(sys.argv[1])
         print >> sys.stderr, msg
         logger.error(msg)
+    else:
+        cmd = "docker exec -{} database redis-cli -n {} -p {} {}".format(DOCKER_EXEC_FLAGS, dbid, dbport, " ".join(sys.argv[2:]))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+        print proc.stdout.read()
