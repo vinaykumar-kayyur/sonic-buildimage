@@ -157,6 +157,9 @@ RUN apt-get update && apt-get install -y \
 {%- if CONFIGURED_ARCH == "amd64" %}
         linux-compiler-gcc-6-x86 \
 {%- endif %}
+{%- if CONFIGURED_ARCH == "armhf" %}
+        linux-compiler-gcc-6-arm \
+{%- endif %}
         linux-kbuild-4.9 \
 # teamd build
         libdaemon-dev \
@@ -249,6 +252,17 @@ RUN apt-get update && apt-get install -y \
         cmake \
 # For pam_tacplus build
         autoconf-archive \
+# For iproute2
+        cm-super-minimal \
+        libatm1-dev \
+        libelf-dev \
+        libmnl-dev \
+        libselinux1-dev \
+        linuxdoc-tools \
+        lynx \
+        texlive-latex-extra \
+        texlive-latex-recommended \
+        iproute2 \
 # For python-click build
         python-sphinx \
         python-docutils \
@@ -259,6 +273,8 @@ RUN apt-get update && apt-get install -y \
         python3-requests \
         python3-pytest \
         python3-colorama \
+# For bash
+        texi2html \
 # For initramfs
         bash-completion \
 {%- if CONFIGURED_ARCH == "amd64" %}
@@ -299,7 +315,7 @@ RUN export VERSION=1.11.5 \
 
 # For p4 build
 RUN pip install \
-        ctypesgen \
+        ctypesgen==0.r125 \
         crc16
 
 # For sonic config engine testing

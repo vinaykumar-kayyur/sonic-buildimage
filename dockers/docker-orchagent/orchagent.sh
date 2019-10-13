@@ -29,6 +29,10 @@ elif [ "$platform" == "barefoot" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 elif [ "$platform" == "vs" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
+elif [ "$platform" == "mellanox" ]; then
+    ORCHAGENT_ARGS+=""
+elif [ "$platform" == "innovium" ]; then
+    ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 else
     MAC_ADDRESS=`sonic-cfggen -d -v 'DEVICE_METADATA.localhost.mac'`
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"

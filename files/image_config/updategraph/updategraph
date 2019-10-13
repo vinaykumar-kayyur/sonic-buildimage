@@ -23,7 +23,6 @@ reload_minigraph()
     fi
 }
 
-
 if [ ! -f /etc/sonic/updategraph.conf ]; then
     echo "No updategraph.conf found, generating a default one."
     echo "enabled=false" >/etc/sonic/updategraph.conf
