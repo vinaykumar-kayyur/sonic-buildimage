@@ -1,19 +1,19 @@
 #!/bin/bash
 ###########################################################################
-# Copyright 2019 Broadcom. The term “Broadcom” refers to Broadcom Inc.    #
+# Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc.    #
 # and/or its subsidiaries.                                                #
 #                                                                         #
 # Licensed under the Apache License, Version 2.0 (the "License");         #
-# you may not use this file except in compliance with the License.        #
-# You may obtain a copy of the License at                                 #
+# you may not use this file except in compliance with the License.        #
+# You may obtain a copy of the License at                                 #
 #                                                                         #
-#   http://www.apache.org/licenses/LICENSE-2.0                            #
+#   http://www.apache.org/licenses/LICENSE-2.0                            #
 #                                                                         #
 # Unless required by applicable law or agreed to in writing, software     #
-# distributed under the License is distributed on an "AS IS" BASIS,       #
+# distributed under the License is distributed on an "AS IS" BASIS,       #
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-# See the License for the specific language governing permissions and     #
-# limitations under the License.                                          #
+# See the License for the specific language governing permissions and     #
+# limitations under the License.                                          #
 #                                                                         #
 ###########################################################################
 # SONiC Configuration Setup                                               #
@@ -303,25 +303,23 @@ do_config_migration()
         disable_updategraph
         rm -f /tmp/pending_config_migration
         exit 0
-    elif updategraph_is_enabled ; then
-        if [ -e ${MINGRAPH_FILE} ]; then
-            echo "Use minigraph.xml from old system..."
-            reload_minigraph
-            sonic-cfggen -d --print-data > ${CONFIG_DB_JSON}
+    elif [ -r ${CONFIG_DB_JSON} ]; then
+        echo "Use config_db.json from old system..."
+        sonic-cfggen -j ${CONFIG_DB_JSON} --write-to-db
 
-            # Disable updategraph
-            disable_updategraph
+        if [[ -x /usr/bin/db_migrator.py ]]; then
+            # Migrate the DB to the latest schema version if needed
+            /usr/bin/db_migrator.py -o migrate
         fi
+    elif [ -r ${MINGRAPH_FILE} ]; then
+        echo "Use minigraph.xml from old system..."
+        reload_minigraph
+        sonic-cfggen -d --print-data > ${CONFIG_DB_JSON}
+
+        # Disable updategraph
+        disable_updategraph
     else
-        if [ -e ${CONFIG_DB_JSON} ]; then
-            echo "Use config_db.json from old system..."
-            sonic-cfggen -j ${CONFIG_DB_JSON} --write-to-db
-
-            if [[ -x /usr/bin/db_migrator.py ]]; then
-                # Migrate the DB to the latest schema version if needed
-                /usr/bin/db_migrator.py -o migrate
-            fi
-        fi
+        echo "Didn't found neither config_db.json nor minigraph.xml ..."
     fi
 
     rm -f /tmp/pending_config_migration
