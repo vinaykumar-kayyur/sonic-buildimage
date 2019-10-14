@@ -56,7 +56,7 @@ args = []
 ALL_DEVICE = {}               
 DEVICE_NO = {'led':4, 'fan':4,'thermal':6, 'psu':2, 'sfp':64}
 FORCE = 0
-
+FUNCTION_NAME = '/var/log/juniper_qfx5210_util'
 
 if DEBUG == True:
     print sys.argv[0]
@@ -67,6 +67,9 @@ def main():
     global DEBUG
     global args
     global FORCE
+
+    log_file = '%s.log' % FUNCTION_NAME
+    log_level = logging.DEBUG
         
     if len(sys.argv)<2:
         show_help()
@@ -75,11 +78,25 @@ def main():
                                                        'debug',
                                                        'force',
                                                           ])
+    logging.basicConfig(
+        filename=log_file,
+        filemode='w',
+        level=log_level,
+        format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+        datefmt='%H:%M:%S')
+
     if DEBUG == True:                                                           
         print options
         print args
         print len(sys.argv)
-            
+        # set up logging to console
+        if log_level == logging.DEBUG:
+            console = logging.StreamHandler()
+            console.setLevel(log_level)
+            formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+            console.setFormatter(formatter)
+            logging.getLogger('').addHandler(console)
+     
     for opt, arg in options:
         if opt in ('-h', '--help'):
             show_help()
@@ -153,18 +170,18 @@ def main():
    
         # creating the "/var/run/eeprom" file and storing all the values of different fields in this file.
         eeprom_file = open ("/var/run/eeprom", "a+")
-        eeprom_file.write("Product Name=%s\r\n" % product_name)
+        eeprom_file.write("Product Name=%s\r\n" % str(product_name))
 
         # like wise we are moving the file pointer to respective position where other fields are stored and extract these fields and store in /var/run/eeprom file
         partnumber_position = eeprom_hexfile.seek(66, 0)
         partnumber_read = eeprom_hexfile.read(20)
         partnumber_name = binascii.unhexlify(partnumber_read)
-        eeprom_file.write("Part Number=%s\r\n" % partnumber_name)
+        eeprom_file.write("Part Number=%s\r\n" % str(partnumber_name))
 
         serialnumber_position = eeprom_hexfile.seek(90, 0)
         serialnumber_read = eeprom_hexfile.read(24)
         serialnumber_name = binascii.unhexlify(serialnumber_read)
-        eeprom_file.write("Serial Number=%s\r\n" % serialnumber_name)
+        eeprom_file.write("Serial Number=%s\r\n" % str(serialnumber_name))
 
         macaddress_position = eeprom_hexfile.seek(118, 0)
         macaddress_read = eeprom_hexfile.read(12)
@@ -172,36 +189,36 @@ def main():
         for i in range(0,12,2):
             macaddress_name += macaddress_read[i:i+2] + ":"
         macaddress_name=macaddress_name[:-1]
-        eeprom_file.write("MAC Address=%s\r\n" % macaddress_name)
+        eeprom_file.write("MAC Address=%s\r\n" % str(macaddress_name))
 
         mfgdate_position = eeprom_hexfile.seek(132, 0)
         mfgdate_read = eeprom_hexfile.read(40)
         mfgdate_name = binascii.unhexlify(mfgdate_read)
-        eeprom_file.write("Manufacture Date=%s\r\n" % mfgdate_name)
+        eeprom_file.write("Manufacture Date=%s\r\n" % str(mfgdate_name))
 
         devversion_position = eeprom_hexfile.seek(176, 0)
         devversion_read = eeprom_hexfile.read(2)
-        eeprom_file.write("Device Version=%s\r\n" % devversion_read)
+        eeprom_file.write("Device Version=%s\r\n" % str(devversion_read))
 
         platform_position = eeprom_hexfile.seek(182, 0)
         platform_read = eeprom_hexfile.read(68)
         platform_name = binascii.unhexlify(platform_read)
-        eeprom_file.write("Platform Name=%s\r\n" % platform_name)
+        eeprom_file.write("Platform Name=%s\r\n" % str(platform_name))
 
         MACnumber_position = eeprom_hexfile.seek(254, 0)
         MACnumber_read = eeprom_hexfile.read(4)
         MACnumber = int(MACnumber_read, 16)
-        eeprom_file.write("Number of MAC Addresses=%s\r\n" % MACnumber)
+        eeprom_file.write("Number of MAC Addresses=%s\r\n" % str(MACnumber))
 
         vendorName_position = eeprom_hexfile.seek(262, 0)
         vendorName_read = eeprom_hexfile.read(40)
         vendorName = binascii.unhexlify(vendorName_read)
-        eeprom_file.write("Vendor Name=%s\r\n" % vendorName)
+        eeprom_file.write("Vendor Name=%s\r\n" % str(vendorName))
 
         mfgname_position = eeprom_hexfile.seek(306, 0)
         mfgname_read = eeprom_hexfile.read(40)
         mfgname = binascii.unhexlify(mfgname_read)
-        eeprom_file.write("Manufacture Name=%s\r\n" % mfgname)
+        eeprom_file.write("Manufacture Name=%s\r\n" % str(mfgname))
 
         vendorext_position = eeprom_hexfile.seek(350, 0)
         vendorext_read = eeprom_hexfile.read(124)
@@ -209,54 +226,54 @@ def main():
         vendorext += "0x" + vendorext_read[0:2]
         for i in range(2,124,2):
             vendorext += " 0x" + vendorext_read[i:i+2]
-        eeprom_file.write("Vendor Extension=%s\r\n" % vendorext)
+        eeprom_file.write("Vendor Extension=%s\r\n" % str(vendorext))
 
         IANA_position = eeprom_hexfile.seek(350, 0)
         IANA_read = eeprom_hexfile.read(8)
         IANAName = binascii.unhexlify(IANA_read)
-        eeprom_file.write("IANA=%s\r\n" % IANAName)
+        eeprom_file.write("IANA=%s\r\n" % str(IANAName))
 
         ASMpartrev_position = eeprom_hexfile.seek(358, 0)
         ASMpartrev_read = eeprom_hexfile.read(4)
         ASMpartrev = binascii.unhexlify(ASMpartrev_read)
-        eeprom_file.write("Assembly Part Number Rev=%s\r\n" % ASMpartrev)
+        eeprom_file.write("Assembly Part Number Rev=%s\r\n" % str(ASMpartrev))
 
         ASMpartnum_position = eeprom_hexfile.seek(374, 0)
         ASMpartnum_read = eeprom_hexfile.read(20)
         ASMpartnum_read = binascii.unhexlify(ASMpartnum_read)
-        eeprom_file.write("Assembly Part Number=%s\r\n" % ASMpartnum_read)
+        eeprom_file.write("Assembly Part Number=%s\r\n" % str(ASMpartnum_read))
 
         ASMID_position = eeprom_hexfile.seek(402, 0)
         ASMID_read = eeprom_hexfile.read(4)
         ASMID_read_upper = ASMID_read.upper()
-        eeprom_file.write("Assembly ID=0x%s\r\n" % ASMID_read_upper)
+        eeprom_file.write("Assembly ID=0x%s\r\n" % str(ASMID_read_upper))
 
         ASMHWMajRev_position = eeprom_hexfile.seek(410, 0)
         ASMHWMajRev_read = eeprom_hexfile.read(2)
-        eeprom_file.write("Assembly Major Revision=0x%s\r\n" % ASMHWMajRev_read)
+        eeprom_file.write("Assembly Major Revision=0x%s\r\n" % str(ASMHWMajRev_read))
 
         ASMHWMinRev_position = eeprom_hexfile.seek(416, 0)
         ASMHWMinRev_read = eeprom_hexfile.read(2)
-        eeprom_file.write("Assembly Minor Revision=0x%s\r\n" % ASMHWMinRev_read)
+        eeprom_file.write("Assembly Minor Revision=0x%s\r\n" % str(ASMHWMinRev_read))
 
         Deviation_position = eeprom_hexfile.seek(422, 0)
         Deviation_read = eeprom_hexfile.read(28)
         Deviation_read_upper = Deviation_read.upper()
-        eeprom_file.write("Deviation=0x%s\r\n" % Deviation_read_upper)
+        eeprom_file.write("Deviation=0x%s\r\n" % str(Deviation_read_upper))
 
         CLEI_position = eeprom_hexfile.seek(450, 0)
         CLEI_read = eeprom_hexfile.read(20)
         CLEI_name = binascii.unhexlify(CLEI_read)
-        eeprom_file.write("CLEI code=%s\r\n" % CLEI_name)
+        eeprom_file.write("CLEI code=%s\r\n" % str(CLEI_name))
 
         ONIEversion_position = eeprom_hexfile.seek(478, 0)
         ONIEversion_read = eeprom_hexfile.read(22)
         ONIEversion = binascii.unhexlify(ONIEversion_read)
-        eeprom_file.write("ONIE Version=%s\r\n" % ONIEversion)
+        eeprom_file.write("ONIE Version=%s\r\n" % str(ONIEversion))
 
         CRC_position = eeprom_hexfile.seek(504, 0)
         CRC = eeprom_hexfile.read(8)
-        eeprom_file.write("CRC=%s\r\n" % CRC)
+        eeprom_file.write("CRC=%s\r\n" % str(CRC))
 
         eeprom_file.close()
 
@@ -281,7 +298,7 @@ def  show_eeprom_help():
             
 def my_log(txt):
     if DEBUG == True:
-        print "[ROY]"+txt    
+        print txt    
     return
     
 def log_os_system(cmd, show):
@@ -451,9 +468,9 @@ def system_ready():
     return True
                
 def do_install():
-    print "Checking system...."
+    logging.info('Checking system....')
     if driver_check() == False:
-        print "No driver, installing...."    
+        logging.info('No driver, installing....')
         status = driver_install()
         if status:
             if FORCE == 0:        
@@ -461,7 +478,7 @@ def do_install():
     else:
         print PROJECT_NAME.upper()+" drivers detected...."                      
     if not device_exist():
-        print "No device, installing...."     
+        logging.info('No device, installing....')     
         status = device_install() 
         if status:
             if FORCE == 0:        
@@ -471,11 +488,11 @@ def do_install():
     return
     
 def do_uninstall():
-    print "Checking system...."
+    logging.info('Checking system....')
     if not device_exist():
         print PROJECT_NAME.upper() +" has no device installed...."         
     else:
-        print "Removing device...."     
+        logging.info('Removing device....')
         status = device_uninstall() 
         if status:
             if FORCE == 0:            
@@ -484,7 +501,7 @@ def do_uninstall():
     if driver_check()== False :
         print PROJECT_NAME.upper() +" has no driver installed...."
     else:
-        print "Removing installed driver...."
+        logging.info('Removing installed driver....')
         status = driver_uninstall()
         if status:
             if FORCE == 0:        
