@@ -131,6 +131,135 @@ def main():
         print 'Error: Execution of "%s" failed', CPUeepromFileCmd
         return False
 
+    eeprom_ascii = '/etc/init.d/eeprom_qfx5210_ascii'
+    # Read file contents in Hex format
+    with open(eeprom_ascii, 'rb') as Hexformat:
+        content = Hexformat.read()
+    Hexformatoutput = binascii.hexlify(content)
+
+    eeprom_hex = '/etc/init.d/eeprom_qfx5210_hex'
+    #Write contents of CPU EEPROM to new file in hexa format
+    with open(eeprom_hex, 'wb+') as Hexfile:
+        Hexfile.write(Hexformatoutput)
+  
+    # Read from EEPROM Hex file and extract the different fields like Product name,
+    # Part Number, Serial Number MAC Address, Mfg Date ... etc and store in /var/run/eeprom file
+    with open(eeprom_hex, 'rb') as eeprom_hexfile:
+        # moving the file pointer to required position where product name is stored in EEPROM file and reading the required bytes from this position
+
+        product_position = eeprom_hexfile.seek(26, 0)
+        product_read = eeprom_hexfile.read(36)
+        product_name = binascii.unhexlify(product_read)
+   
+        # creating the "/var/run/eeprom" file and storing all the values of different fields in this file.
+        eeprom_file = open ("/var/run/eeprom", "a+")
+        eeprom_file.write("Product Name=%s\r\n" % product_name)
+
+        # like wise we are moving the file pointer to respective position where other fields are stored and extract these fields and store in /var/run/eeprom file
+        partnumber_position = eeprom_hexfile.seek(66, 0)
+        partnumber_read = eeprom_hexfile.read(20)
+        partnumber_name = binascii.unhexlify(partnumber_read)
+        eeprom_file.write("Part Number=%s\r\n" % partnumber_name)
+
+        serialnumber_position = eeprom_hexfile.seek(90, 0)
+        serialnumber_read = eeprom_hexfile.read(24)
+        serialnumber_name = binascii.unhexlify(serialnumber_read)
+        eeprom_file.write("Serial Number=%s\r\n" % serialnumber_name)
+
+        macaddress_position = eeprom_hexfile.seek(118, 0)
+        macaddress_read = eeprom_hexfile.read(12)
+        macaddress_name=""
+        for i in range(0,12,2):
+            macaddress_name += macaddress_read[i:i+2] + ":"
+        macaddress_name=macaddress_name[:-1]
+        eeprom_file.write("MAC Address=%s\r\n" % macaddress_name)
+
+        mfgdate_position = eeprom_hexfile.seek(132, 0)
+        mfgdate_read = eeprom_hexfile.read(40)
+        mfgdate_name = binascii.unhexlify(mfgdate_read)
+        eeprom_file.write("Manufacture Date=%s\r\n" % mfgdate_name)
+
+        devversion_position = eeprom_hexfile.seek(176, 0)
+        devversion_read = eeprom_hexfile.read(2)
+        eeprom_file.write("Device Version=%s\r\n" % devversion_read)
+
+        platform_position = eeprom_hexfile.seek(182, 0)
+        platform_read = eeprom_hexfile.read(68)
+        platform_name = binascii.unhexlify(platform_read)
+        eeprom_file.write("Platform Name=%s\r\n" % platform_name)
+
+        MACnumber_position = eeprom_hexfile.seek(254, 0)
+        MACnumber_read = eeprom_hexfile.read(4)
+        MACnumber = int(MACnumber_read, 16)
+        eeprom_file.write("Number of MAC Addresses=%s\r\n" % MACnumber)
+
+        vendorName_position = eeprom_hexfile.seek(262, 0)
+        vendorName_read = eeprom_hexfile.read(40)
+        vendorName = binascii.unhexlify(vendorName_read)
+        eeprom_file.write("Vendor Name=%s\r\n" % vendorName)
+
+        mfgname_position = eeprom_hexfile.seek(306, 0)
+        mfgname_read = eeprom_hexfile.read(40)
+        mfgname = binascii.unhexlify(mfgname_read)
+        eeprom_file.write("Manufacture Name=%s\r\n" % mfgname)
+
+        vendorext_position = eeprom_hexfile.seek(350, 0)
+        vendorext_read = eeprom_hexfile.read(124)
+        vendorext=""
+        vendorext += "0x" + vendorext_read[0:2]
+        for i in range(2,124,2):
+            vendorext += " 0x" + vendorext_read[i:i+2]
+        eeprom_file.write("Vendor Extension=%s\r\n" % vendorext)
+
+        IANA_position = eeprom_hexfile.seek(350, 0)
+        IANA_read = eeprom_hexfile.read(8)
+        IANAName = binascii.unhexlify(IANA_read)
+        eeprom_file.write("IANA=%s\r\n" % IANAName)
+
+        ASMpartrev_position = eeprom_hexfile.seek(358, 0)
+        ASMpartrev_read = eeprom_hexfile.read(4)
+        ASMpartrev = binascii.unhexlify(ASMpartrev_read)
+        eeprom_file.write("Assembly Part Number Rev=%s\r\n" % ASMpartrev)
+
+        ASMpartnum_position = eeprom_hexfile.seek(374, 0)
+        ASMpartnum_read = eeprom_hexfile.read(20)
+        ASMpartnum_read = binascii.unhexlify(ASMpartnum_read)
+        eeprom_file.write("Assembly Part Number=%s\r\n" % ASMpartnum_read)
+
+        ASMID_position = eeprom_hexfile.seek(402, 0)
+        ASMID_read = eeprom_hexfile.read(4)
+        ASMID_read_upper = ASMID_read.upper()
+        eeprom_file.write("Assembly ID=0x%s\r\n" % ASMID_read_upper)
+
+        ASMHWMajRev_position = eeprom_hexfile.seek(410, 0)
+        ASMHWMajRev_read = eeprom_hexfile.read(2)
+        eeprom_file.write("Assembly Major Revision=0x%s\r\n" % ASMHWMajRev_read)
+
+        ASMHWMinRev_position = eeprom_hexfile.seek(416, 0)
+        ASMHWMinRev_read = eeprom_hexfile.read(2)
+        eeprom_file.write("Assembly Minor Revision=0x%s\r\n" % ASMHWMinRev_read)
+
+        Deviation_position = eeprom_hexfile.seek(422, 0)
+        Deviation_read = eeprom_hexfile.read(28)
+        Deviation_read_upper = Deviation_read.upper()
+        eeprom_file.write("Deviation=0x%s\r\n" % Deviation_read_upper)
+
+        CLEI_position = eeprom_hexfile.seek(450, 0)
+        CLEI_read = eeprom_hexfile.read(20)
+        CLEI_name = binascii.unhexlify(CLEI_read)
+        eeprom_file.write("CLEI code=%s\r\n" % CLEI_name)
+
+        ONIEversion_position = eeprom_hexfile.seek(478, 0)
+        ONIEversion_read = eeprom_hexfile.read(22)
+        ONIEversion = binascii.unhexlify(ONIEversion_read)
+        eeprom_file.write("ONIE Version=%s\r\n" % ONIEversion)
+
+        CRC_position = eeprom_hexfile.seek(504, 0)
+        CRC = eeprom_hexfile.read(8)
+        eeprom_file.write("CRC=%s\r\n" % CRC)
+
+        eeprom_file.close()
+
     return True              
         
 def show_help():
