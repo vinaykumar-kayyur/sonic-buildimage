@@ -1,2 +1,16 @@
 systemctl enable qfx5210-platform-init.service
 systemctl start qfx5210-platform-init.service
+
+SONIC_VERSION=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version)
+FIRST_BOOT_FILE="/host/image-${SONIC_VERSION}/platform/firsttime"
+
+if [ -f $FIRST_BOOT_FILE ]; then
+    mkdir /tmp/sda1
+    mount /dev/sda1 /tmp/sda1
+    cd /tmp/sda1/EFI
+    mkdir BOOT
+    cp SONiC-OS/grubx64.efi BOOT/BOOTX64.EFI
+    cd /tmp
+    umount sda1
+    efibootmgr -c -L "SONiC" -l "\EFI\BOOT\BOOTX64.EFI" > /dev/null 2>&1
+fi
