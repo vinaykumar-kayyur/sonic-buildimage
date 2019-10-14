@@ -258,6 +258,8 @@ class Chassis(ChassisBase):
                 return (ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
             elif last_reboot_reason == "0x20":
                 return (ChassisBase.REBOOT_CAUSE_POWER_LOSS, None)
+            elif last_reboot_reason == "0x10":
+                return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Swizzle Reset")
             else:
                 return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Unknown reason")
         else:
@@ -269,5 +271,7 @@ class Chassis(ChassisBase):
                 return (ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
             elif last_reboot_reason == "0x20":
                 return (ChassisBase.REBOOT_CAUSE_POWER_LOSS, None)
+            elif last_reboot_reason == "0x10":
+                return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Swizzle Reset")
             else:
                 return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Unknown reason")
