@@ -131,7 +131,7 @@ def main():
         else:
             show_help()
            
-    DisableWatchDogCmd = '/usr/sbin/i2cset -y 0 0x65 0x3 0x04' 
+    DisableWatchDogCmd = '/usr/sbin/i2cset -f -y 0 0x65 0x3 0x04' 
     # Disable watchdog
     try:
         os.system(DisableWatchDogCmd)
@@ -399,7 +399,9 @@ mknod =[
 'echo cpld_qfx5210  0x60 > /sys/bus/i2c/devices/i2c-19/new_device',
 'echo cpld_plain  0x62 > /sys/bus/i2c/devices/i2c-20/new_device',
 'echo cpld_plain  0x64 > /sys/bus/i2c/devices/i2c-21/new_device',
-'echo cpld_plain  0x66 > /sys/bus/i2c/devices/i2c-22/new_device']
+'echo cpld_plain  0x66 > /sys/bus/i2c/devices/i2c-22/new_device',
+'echo cpld_plain  0x65 > /sys/bus/i2c/devices/i2c-0/new_device 2>/dev/null'
+]
        
 def i2c_order_check():    
     return 0
