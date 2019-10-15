@@ -139,7 +139,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% block bgp_monitors %}
 {% if BGP_MONITORS is defined and BGP_MONITORS|length > 0 %}
   neighbor BGPMON_V4 peer-group
-{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{% for (name, prefix) in LOOPBACK_INTERFACE %}
 {% if prefix | ipv4 and name == 'Loopback0' %}
   neighbor BGPMON_V4 update-source {{ prefix | ip }}
 {% endif %}
