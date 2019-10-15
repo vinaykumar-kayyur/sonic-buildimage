@@ -7,6 +7,13 @@ sonic-quanta-platform-modules (1.0) unstable; urgency=low
 
 sonic-quanta-platform-modules (1.0) unstable; urgency=low
 
+  * Add support for Quanta IX4-64X
+  * Initial release
+
+ -- Chih-Pei Chang <Chih-Pei.Chang@qct.io> Jonathan Tsai <jonathan.tsai@quantatw.com>  Mon, 27 Mar 2018 09:26:01 +0800
+
+sonic-quanta-platform-modules (1.0) unstable; urgency=low
+
   * Add support for Quanta IX7-32X
   * Initial release
 
