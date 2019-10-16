@@ -19,6 +19,8 @@ elif [ "$CONFIG_TYPE" == "split" ] || [ -z "$CONFIG_TYPE" ]; then
     rm -f /etc/frr/bgpd.conf /etc/frr/zebra.conf /etc/frr/staticd.conf
 fi
 
+chown -R frr:frr /etc/frr/
+
 sonic-cfggen -d -t /usr/share/sonic/templates/isolate.j2 > /usr/sbin/bgp-isolate
 chown root:root /usr/sbin/bgp-isolate
 chmod 0755 /usr/sbin/bgp-isolate
