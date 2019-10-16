@@ -19,7 +19,7 @@
 # HISTORY:
 #    mm/dd/yyyy (A.D.)
 #    7/2/2018:  Jostar create for as7726-32x
-#    9/25/2019:   Jostar fix that get fan_faul=1 when fan_insert and read cpld
+#    9/25/2019:   Jostar fix that get fan_fault=1 when fan_insert and read cpld
 # ------------------------------------------------------------------
 
 try:
