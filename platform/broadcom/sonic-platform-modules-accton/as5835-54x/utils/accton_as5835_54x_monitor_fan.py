@@ -19,7 +19,7 @@
 # HISTORY:
 #    mm/dd/yyyy (A.D.)
 #    5/27/2019:  Brandon_Chuang create
-#    9/25/2019:  Jostar fix that get fan_faul=1 when fan_insert and read cpld
+#    9/25/2019:  Jostar fix that get fan_fault=1 when fan_insert and read cpld
 # ------------------------------------------------------------------
 
 try:
