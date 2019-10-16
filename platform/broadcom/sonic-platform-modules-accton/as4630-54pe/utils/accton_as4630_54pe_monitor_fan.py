@@ -19,7 +19,7 @@
 # HISTORY:
 #    mm/dd/yyyy (A.D.)
 #    5/15/2019:  Jostar create for as4630-54pe
-#    9/25/2019:  Jostar fix that get fan_faul=1 when fan_insert and read cpld
+#    9/25/2019:  Jostar fix that get fan_fault=1 when fan_insert and read cpld
 # ------------------------------------------------------------------
 
 try:
@@ -185,7 +185,7 @@ def main(argv):
     monitor = device_monitor(log_file, log_level)
     while True:
         monitor.manage_fan()
-        time.sleep(3)
+        time.sleep(3)        
 
 if __name__ == '__main__':
     main(sys.argv[1:])
