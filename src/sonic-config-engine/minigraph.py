@@ -730,6 +730,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
 
     results['ACL_TABLE'] = acls
+    results['FEATURES'] = {
+        'telemetry': {
+            'status': 'on'
+        }
+    }
 
     # Do not configure the minigraph's mirror session, which is currently unused
     # mirror_sessions = {}
