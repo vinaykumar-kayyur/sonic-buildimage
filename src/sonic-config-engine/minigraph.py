@@ -33,6 +33,12 @@ chassis_backend_role = 'ChassisBackendRouter'
 # Default Virtual Network Index (VNI) 
 vni_default = 8000
 
+###############################################################################
+#
+# Minigraph parsing functions
+#
+###############################################################################
+
 class minigraph_encoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (
@@ -512,6 +518,39 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
             # Enslave the port channel interface to a Vnet
             pc_intfs[pc_intf] = {'vnet_name': chassis_vnet}        
 
+###############################################################################
+#
+# Post-processing functions
+#
+###############################################################################
+
+def filter_acl_mirror_table_bindings(acls, neighbors, port_channels):
+    """
+        Filters out inactive front-panel ports from the binding list for mirror
+        ACL tables. We define an "active" port as one that is a member of a
+        port channel or one that is connected to a neighboring device.
+    """
+
+    for acl_table, group_params in acls.iteritems():
+        group_type = group_params.get('type', None)
+
+        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
+            continue
+
+        active_ports = [ port for port in group_params.get('ports', []) if port in neighbors.keys() or port in port_channels ]
+
+        if not active_ports:
+            print >> sys.stderr, 'Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table)
+
+        acls[acl_table]['ports'] = active_ports
+
+    return acls
+
+###############################################################################
+#
+# Main functions
+#
+###############################################################################
 
 def parse_xml(filename, platform=None, port_config_file=None):
     root = ET.parse(filename).getroot()
@@ -731,22 +770,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
 
-    # Filter ports from mirroring ACL tables that are not active.
-    for acl_table, group_params in acls.iteritems():
-        group_type = group_params.get('type', None)
-
-        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
-            continue
-
-        # We assume that if a LAG was included in the list of ports earlier then it will be active.
-        active_ports = [ port for port in group_params.get('ports', []) if port in neighbors.keys() or port in pcs ]
-
-        if not active_ports:
-            print >> sys.stderr, 'Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table)
-
-        acls[acl_table]['ports'] = active_ports
-
-    results['ACL_TABLE'] = acls
+    results['ACL_TABLE'] = filter_acl_mirror_table_bindings(acls, neighbors, pcs)
 
     # Do not configure the minigraph's mirror session, which is currently unused
     # mirror_sessions = {}
