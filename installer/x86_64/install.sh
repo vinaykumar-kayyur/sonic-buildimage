@@ -429,7 +429,7 @@ image_dir="image-$image_version"
 if [ "$install_env" = "onie" ]; then
     eval $create_demo_partition $blk_dev
     demo_dev=$(echo $blk_dev | sed -e 's/\(mmcblk[0-9]\)/\1p/')$demo_part
-    demo_dev=$(echo $blk_dev | sed -e 's/\(nvme[0-9]n[0-9]\)/\1p/')$demo_part
+    echo $blk_dev | grep -q nvme0 && demo_dev=$(echo $blk_dev | sed -e 's/\(nvme[0-9]n[0-9]\)/\1p/')$demo_part
 
     # Make filesystem
     mkfs.ext4 -L $demo_volume_label $demo_dev
