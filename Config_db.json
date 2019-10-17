@@ -1,0 +1,247 @@
+{
+    "DEVICE_METADATA": {
+        "localhost": {
+            "bgp_asn": "None", 
+            "deployment_id": "None", 
+            "hostname": "sonic", 
+            "hwsku": "Dell-S4048-on",
+            "docker_routing_config_mode": "unified",
+            "type": "ToR"
+        }
+        },       
+        "BGP_PEER_RANGE": {}, 
+        "VLAN": {},
+            "PORT": {
+        "Ethernet1": {
+            "alias": "TenGigabitEthernet1/1",            
+        }, 
+        "Ethernet2": {
+            "alias": "TenGigabitEthernet1/2",            
+        }, 
+        "Ethernet3": {
+            "alias": "TenGigabitEthernet1/3", 
+            
+        }, 
+        "Ethernet4": {
+            "alias": "TenGigabitEthernet1/4", 
+            
+        }, 
+        "Ethernet5": {
+            "alias": "TenGigabitEthernet1/5", 
+            
+        }, 
+        "Ethernet6": {
+            "alias": "TenGigabitEthernet1/6", 
+            
+        }, 
+        "Ethernet7": {
+            "alias": "TenGigabitEthernet1/7", 
+            
+        }, 
+        "Ethernet8": {
+            "alias": "TenGigabitEthernet1/8", 
+            
+        }, 
+        "Ethernet9": {
+            "alias": "TenGigabitEthernet1/9", 
+            
+        }, 
+        "Ethernet10": {
+            "alias": "TenGigabitEthernet1/10", 
+            
+        }, 
+        "Ethernet11": {
+            "alias": "TenGigabitEthernet1/11", 
+            
+        }, 
+        "Ethernet12": {
+            "alias": "TenGigabitEthernet1/12", 
+            
+        }, 
+        "Ethernet13": {
+            "alias": "TenGigabitEthernet1/13", 
+            
+        }, 
+        "Ethernet14": {
+            "alias": "TenGigabitEthernet1/14", 
+            
+        }, 
+        "Ethernet15": {
+            "alias": "TenGigabitEthernet1/15", 
+            
+        }, 
+        "Ethernet16": {
+            "alias": "TenGigabitEthernet1/16", 
+            
+        }, 
+        "Ethernet17": {
+            "alias": "TenGigabitEthernet1/17", 
+            
+        }, 
+        "Ethernet18": {
+            "alias": "TenGigabitEthernet1/18", 
+            
+        }, 
+        "Ethernet19": {
+            "alias": "TenGigabitEthernet1/19", 
+            
+        }, 
+        "Ethernet20": {
+            "alias": "TenGigabitEthernet1/20", 
+            
+        }, 
+        "Ethernet21": {
+            "alias": "TenGigabitEthernet1/21", 
+            
+        }, 
+        "Ethernet22": {
+            "alias": "TenGigabitEthernet1/22", 
+            
+        }, 
+        "Ethernet23": {
+            "alias": "TenGigabitEthernet1/23", 
+            
+        }, 
+        "Ethernet24": {
+            "alias": "TenGigabitEthernet1/24", 
+            
+        }, 
+        "Ethernet25": {
+            "alias": "TenGigabitEthernet1/25", 
+            
+        }, 
+        "Ethernet26": {
+            "alias": "TenGigabitEthernet1/26", 
+            
+        }, 
+        "Ethernet27": {
+            "alias": "TenGigabitEthernet1/27", 
+            
+        }, 
+        "Ethernet28": {
+            "alias": "TenGigabitEthernet1/28", 
+            
+        }, 
+        "Ethernet29": {
+            "alias": "TenGigabitEthernet1/29", 
+            
+        }, 
+        "Ethernet30": {
+            "alias": "TenGigabitEthernet1/30", 
+            
+        }, 
+        "Ethernet31": {
+            "alias": "TenGigabitEthernet1/31", 
+            
+        }, 
+        "Ethernet32": {
+            "alias": "TenGigabitEthernet1/32", 
+            
+        }, 
+        "Ethernet33": {
+            "alias": "TenGigabitEthernet1/33", 
+            
+        }, 
+        "Ethernet34": {
+            "alias": "TenGigabitEthernet1/34", 
+            
+        }, 
+        "Ethernet35": {
+            "alias": "TenGigabitEthernet1/35", 
+            
+        }, 
+        "Ethernet36": {
+            "alias": "TenGigabitEthernet1/36", 
+            
+        }, 
+        "Ethernet37": {
+            "alias": "TenGigabitEthernet1/37", 
+            
+        }, 
+        "Ethernet38": {
+            "alias": "TenGigabitEthernet1/38", 
+            
+        }, 
+        "Ethernet39": {
+            "alias": "TenGigabitEthernet1/39", 
+            
+        }, 
+        "Ethernet40": {
+            "alias": "TenGigabitEthernet1/40", 
+            
+        }, 
+        "Ethernet41": {
+            "alias": "TenGigabitEthernet1/41", 
+            
+        }, 
+        "Ethernet42": {
+            "alias": "TenGigabitEthernet1/42", 
+            
+        }, 
+        "Ethernet43": {
+            "alias": "TenGigabitEthernet1/43", 
+            
+        }, 
+        "Ethernet44": {
+            "alias": "TenGigabitEthernet1/44", 
+            
+        }, 
+        "Ethernet45": {
+            "alias": "TenGigabitEthernet1/45", 
+            
+        }, 
+        "Ethernet46": {
+            "alias": "TenGigabitEthernet1/46", 
+            
+        }, 
+        "Ethernet47": {
+            "alias": "TenGigabitEthernet1/47", 
+            
+        }, 
+        "Ethernet48": {
+            "alias": "TenGigabitEthernet1/48", 
+            
+        }, 
+        "Ethernet49": {
+            "alias": "fortyGigE1/49", 
+            
+        }, 
+        "Ethernet50": {
+            "alias": "fortyGigE1/50", 
+            
+        }, 
+        "Ethernet51": {
+            "alias": "fortyGigE1/51", 
+            
+        }, 
+        "Ethernet52": {
+            "alias": "fortyGigE1/52", 
+            
+        }, 
+        "Ethernet53": {
+            "alias": "fortyGigE1/53", 
+            
+        }, 
+        "Ethernet54": {
+            "alias": "fortyGigE1/54", 
+            
+        }
+    },
+        "SYSLOG_SERVER": {}, 
+        "VLAN_INTERFACE": {},
+            "PORTCHANNEL_INTERFACE": {}, 
+            "PORTCHANNEL": {}, 
+            "MGMT_INTERFACE": {}, 
+            "DHCP_SERVER": {}, 
+            "NTP_SERVER": {
+                "2.debian.pool.ntp.org": {}, 
+                "1.debian.pool.ntp.org": {}, 
+                "3.debian.pool.ntp.org": {}, 
+                "0.debian.pool.ntp.org": {}
+                },            
+    "VERSIONS": {
+        "DATABASE": {
+            "VERSION": "version_1_0_1"
+        }
+    }
+}
