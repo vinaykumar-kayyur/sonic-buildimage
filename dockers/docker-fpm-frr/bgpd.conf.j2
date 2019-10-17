@@ -31,3 +31,10 @@ set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 route-map set-next-hop-global-v6 permit 10
 set ipv6 next-hop prefer-global
 !
+{% block bgp_error_handling_init %}
+{% if BGP_ERROR_CFG_TABLE %}
+{% if BGP_ERROR_CFG_TABLE['config']['enable'] == 'true' %}
+bgp error-handling enable
+{% endif %}
+{% endif %}
+{% endblock bgp_error_handling_init %}

@@ -1,0 +1,1541 @@
+From 251fb7522326c697fe7d1d539c092b695ba1e3fc Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Wed, 16 Oct 2019 11:37:29 -0700
+Subject: [PATCH] From e84ec0c7e787802b433f93985ef485a959b51ec3 Mon Sep 17
+ 00:00:00 2001 Subject: [PATCH] From c04658408c549474d999a052bb554f73b5219eff
+ Mon Sep 17  00:00:00 2001 Subject: [PATCH] From
+ 587b6ce466c33bfbfa0ebc822dfeee7b852ab63d  Mon Sep 17  00:00:00 2001 Subject:
+ [PATCH] From  b16e413434c80a3f7039e4960f7001df230df04c  Mon Sep 17  00:00:00
+ 2001 Subject:  [PATCH] bgpd: Changes for supporting  install-then-advertise
+ behavior  The  routes will be pushed by BGP to Zebra to   fpm to be installed
+ in  hardware.  If fpm returns error, the routes will not  be sent by BGP to
+ its  peers. Only  successful routes are sent by BGP to its  peers. The
+ feature can  be  enabled/disabled in BGP by a CLI. By default, the  feature
+ is disabled.  Functional specification: 
+ https://github.com/Azure/SONiC/pull/424 Signed-off   by: Preetham Singh 
+ <preetham.singh@broadcom.com>
+
+---
+ bgpd/bgp_errors.c         |  18 +++
+ bgpd/bgp_errors.h         |   3 +
+ bgpd/bgp_route.c          |  46 +++++++
+ bgpd/bgp_route.h          |   4 +-
+ bgpd/bgp_table.h          |   2 +
+ bgpd/bgp_vty.c            |  51 +++++++-
+ bgpd/bgp_zebra.c          | 109 +++++++++++++++++
+ bgpd/bgpd.c               |   7 ++
+ bgpd/bgpd.h               |   2 +
+ eigrpd/eigrp_zebra.c      |   2 +-
+ fpm/fpm.h                 |   5 +
+ lib/command.h             |   1 +
+ lib/log.c                 |   1 +
+ lib/route_types.pl        |   2 +-
+ lib/zclient.c             |  29 ++++-
+ lib/zclient.h             |   8 +-
+ pbrd/pbr_zebra.c          |   2 +-
+ sharpd/sharp_zebra.c      |   2 +-
+ staticd/static_zebra.c    |   2 +-
+ zebra/rib.h               |  10 ++
+ zebra/zapi_msg.c          |  51 ++++++--
+ zebra/zapi_msg.h          |   1 +
+ zebra/zebra_fpm.c         |  10 ++
+ zebra/zebra_fpm_netlink.c | 123 +++++++++++++++++++
+ zebra/zebra_fpm_private.h |   2 +
+ zebra/zebra_rib.c         | 247 +++++++++++++++++++++++++++++++++++++-
+ zebra/zebra_router.h      |   3 +
+ zebra/zebra_vty.c         | 120 ++++++++++++++++--
+ 28 files changed, 831 insertions(+), 32 deletions(-)
+
+diff --git a/bgpd/bgp_errors.c b/bgpd/bgp_errors.c
+index 753ee6baf..e30a134d3 100644
+--- a/bgpd/bgp_errors.c
++++ b/bgpd/bgp_errors.c
+@@ -468,6 +468,24 @@ static struct log_ref ferr_bgp_err[] = {
+ 		.description = "As part of BGP startup, the peer and ourselves can start connections to each other at the same time. During this process BGP received additional configuration, but it was only applied to one of the two nascent connections. Depending on the result of collision detection and resolution this configuration might be lost.  To remedy this, after performing collision detection and resolution the peer session has been reset in order to apply the new configuration.",
+ 		.suggestion = "Gather data and open a Issue so that this developmental escape can be fixed, the peer should have been reset",
+ 	},
++    {
++        .code = EC_BGP_FIB_INSTALL_ERROR,
++        .title = "Error installing BGP route in FIB",
++        .description = "BGP route not successfully added to FIB",
++        .suggestion = "Get log files from router and open an issue",
++    },
++    {
++        .code = EC_BGP_INVALID_BGP_INSTANCE,
++        .title = "BGP instance for the specifc vrf is invalid",
++        .description = "Indicates that specified bgp instance is NULL",
++        .suggestion = "Get log files from router and open an issue",
++    },
++    {
++        .code = EC_BGP_INVALID_ROUTE,
++        .title = "BGP route node is invalid",
++        .description = "BGP route for the specified AFI/SAFI is NULL",
++        .suggestion = "Get log files from router and open an issue",
++    },
+ 	{
+ 		.code = END_FERR,
+ 	}
+diff --git a/bgpd/bgp_errors.h b/bgpd/bgp_errors.h
+index 13bd318e2..c902c2363 100644
+--- a/bgpd/bgp_errors.h
++++ b/bgpd/bgp_errors.h
+@@ -100,6 +100,9 @@ enum bgp_log_refs {
+ 	EC_BGP_CAPABILITY_UNKNOWN,
+ 	EC_BGP_INVALID_NEXTHOP_LENGTH,
+ 	EC_BGP_DOPPELGANGER_CONFIG,
++    EC_BGP_FIB_INSTALL_ERROR,
++    EC_BGP_INVALID_BGP_INSTANCE,
++    EC_BGP_INVALID_ROUTE,
+ };
+ 
+ extern void bgp_error_init(void);
+diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
+index 732115756..5b726e9e2 100644
+--- a/bgpd/bgp_route.c
++++ b/bgpd/bgp_route.c
+@@ -1434,9 +1434,16 @@ int subgroup_announce_check(struct bgp_node *rn, struct bgp_path_info *pi,
+ 	afi_t afi;
+ 	safi_t safi;
+ 	int samepeer_safe = 0; /* for synthetic mplsvpns routes */
++    bool fib_enabled = true;
+ 
+ 	if (DISABLE_BGP_ANNOUNCE)
+ 		return 0;
++	/* It's initialized in bgp_announce_check() */
++    if ((bgp_zebra_num_connects() == 0) ||
++        bgp_option_check(BGP_OPT_NO_FIB))
++    {
++        fib_enabled = false;
++    }
+ 
+ 	afi = SUBGRP_AFI(subgrp);
+ 	safi = SUBGRP_SAFI(subgrp);
+@@ -1448,6 +1455,14 @@ int subgroup_announce_check(struct bgp_node *rn, struct bgp_path_info *pi,
+ 	from = pi->peer;
+ 	filter = &peer->filter[afi][safi];
+ 	bgp = SUBGRP_INST(subgrp);
++
++    /* Do not advertise routes that are not installed in hardware or install is pending.*/
++    if (bgp && (CHECK_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_FAILED) 
++                || CHECK_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_PENDING)) 
++        && fib_enabled)
++    {
++        return 0;
++    }
+ 	piattr = bgp_path_info_mpath_count(pi) ? bgp_path_info_mpath_attr(pi)
+ 					       : pi->attr;
+ 
+@@ -2967,6 +2982,7 @@ int bgp_update(struct peer *peer, struct prefix *p, uint32_t addpath_id,
+ 	int vnc_implicit_withdraw = 0;
+ #endif
+ 	int same_attr = 0;
++    bool fib_enabled = true;
+ 
+ 	memset(&new_attr, 0, sizeof(struct attr));
+ 	new_attr.label_index = BGP_INVALID_LABEL_INDEX;
+@@ -2980,6 +2996,25 @@ int bgp_update(struct peer *peer, struct prefix *p, uint32_t addpath_id,
+ 	else
+ 		has_valid_label = bgp_is_valid_label(label);
+ 
++   /* If the route is newly learnt from peer and suppress fib is
++     * configured, advertise route when route is installed in fib
++     */
++
++    if ((bgp_zebra_num_connects() == 0) ||
++            bgp_option_check(BGP_OPT_NO_FIB))
++        fib_enabled = false;
++
++    /* subtype NORMAL means learnt from a BGP peer (not through redistribute etc) */
++    if (bgp_option_check(BGP_OPT_FIB_ERRCHECK_ENABLE)
++         && bgp_option_check(BGP_OPT_FIB_INSTALL_WAIT)
++         && (sub_type == BGP_ROUTE_NORMAL) && fib_enabled) 
++    {
++        if (rn->info == NULL)
++            SET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_PENDING);
++        else
++            UNSET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_PENDING);
++    }
++
+ 	/* When peer's soft reconfiguration enabled.  Record input packet in
+ 	   Adj-RIBs-In.  */
+ 	if (!soft_reconfig
+@@ -6854,6 +6889,17 @@ static void route_vty_short_status_out(struct vty *vty,
+ 	else
+ 		vty_out(vty, " ");
+ 
++    if (CHECK_FLAG(path->flags, BGP_PATH_SELECTED)
++        && (CHECK_FLAG(path->net->flags, BGP_NODE_FIB_INSTALL_FAILED)
++            || CHECK_FLAG(path->net->flags, BGP_NODE_FIB_INSTALL_PENDING)))
++    {
++        vty_out(vty, "#");
++    }
++    else
++    {
++        vty_out(vty, " ");
++    }
++
+ 	/* Internal route. */
+ 	if (path->peer && (path->peer->as)
+ 	    && (path->peer->as == path->peer->local_as))
+diff --git a/bgpd/bgp_route.h b/bgpd/bgp_route.h
+index 7bbc14b46..ef8e21ae5 100644
+--- a/bgpd/bgp_route.h
++++ b/bgpd/bgp_route.h
+@@ -62,11 +62,11 @@ enum bgp_show_adj_route_type {
+ 
+ #define BGP_SHOW_SCODE_HEADER                                                  \
+ 	"Status codes:  s suppressed, d damped, "                              \
+-	"h history, * valid, > best, = multipath,\n"                           \
++	"h history, * valid, > best, = multipath, # not installed in hardware\n"                           \
+ 	"               i internal, r RIB-failure, S Stale, R Removed\n"
+ #define BGP_SHOW_OCODE_HEADER "Origin codes:  i - IGP, e - EGP, ? - incomplete\n\n"
+ #define BGP_SHOW_NCODE_HEADER "Nexthop codes: @NNN nexthop's vrf id, < announce-nh-self\n"
+-#define BGP_SHOW_HEADER "   Network          Next Hop            Metric LocPrf Weight Path\n"
++#define BGP_SHOW_HEADER "   Network          Next Hop            Metric     LocPrf     Weight Path\n"
+ 
+ /* Maximum number of labels we can process or send with a prefix. We
+  * really do only 1 for MPLS (BGP-LU) but we can do 2 for EVPN-VxLAN.
+diff --git a/bgpd/bgp_table.h b/bgpd/bgp_table.h
+index 040e83a8c..2d28ff287 100644
+--- a/bgpd/bgp_table.h
++++ b/bgpd/bgp_table.h
+@@ -70,6 +70,8 @@ struct bgp_node {
+ #define BGP_NODE_USER_CLEAR             (1 << 1)
+ #define BGP_NODE_LABEL_CHANGED          (1 << 2)
+ #define BGP_NODE_REGISTERED_FOR_LABEL   (1 << 3)
++#define BGP_NODE_FIB_INSTALL_PENDING    (1 << 4)
++#define BGP_NODE_FIB_INSTALL_FAILED     (1 << 5)
+ 
+ 	struct bgp_addpath_node_data tx_addpath;
+ };
+diff --git a/bgpd/bgp_vty.c b/bgpd/bgp_vty.c
+index a15a0f526..879c2e773 100644
+--- a/bgpd/bgp_vty.c
++++ b/bgpd/bgp_vty.c
+@@ -36,6 +36,7 @@
+ #include "queue.h"
+ #include "filter.h"
+ #include "frrstr.h"
++#include "zclient.h"
+ 
+ #include "bgpd/bgpd.h"
+ #include "bgpd/bgp_attr_evpn.h"
+@@ -68,7 +69,7 @@
+ 
+ static struct peer_group *listen_range_exists(struct bgp *bgp,
+ 					      struct prefix *range, int exact);
+-
++extern struct zclient *zclient;
+ static enum node_type bgp_node_type(afi_t afi, safi_t safi)
+ {
+ 	switch (afi) {
+@@ -1139,6 +1140,50 @@ DEFUN (no_router_bgp,
+ 	return CMD_SUCCESS;
+ }
+ 
++/* bgp error-handling enable*/
++DEFUN (bgp_error_handling_enable,
++       bgp_error_handling_enable_cmd,
++       "bgp error-handling enable",
++       BGP_STR
++       "error-handling\n"
++       "Enable Install Route Success Or Failure Notification\n")
++{
++    /* Set option in bgp_master */
++    bgp_option_set(BGP_OPT_FIB_ERRCHECK_ENABLE);
++    
++    /* Currently, only positive ACK is supported */
++    bgp_option_set(BGP_OPT_FIB_INSTALL_WAIT);
++
++    /* allow bgp to receive success/failure messages when zebra installs 
++       its routes in the forwarding table */
++    zclient->receive_notify = true;
++    zebra_route_notify_send(ZEBRA_ROUTE_NOTIFY_REQUEST, zclient, true);
++    
++    return CMD_SUCCESS;
++}
++
++/* no bgp error-handling enable */
++DEFUN (no_bgp_error_handling_enable,
++       no_bgp_error_handling_enable_cmd,
++       "no bgp error-handling enable",
++       NO_STR
++       BGP_STR
++       "error-handling\n"
++       "Disable Install Route Success Or Failure Notification\n")
++{
++    /* Set option in bgp_master */
++    bgp_option_unset(BGP_OPT_FIB_ERRCHECK_ENABLE);
++    
++    /* Currently, only positive ACK is supported */
++    bgp_option_unset(BGP_OPT_FIB_INSTALL_WAIT);
++
++    /* Do not allow bgp to receive success/failure messages when zebra installs 
++       its routes in the forwarding table */
++    zclient->receive_notify = false;
++    zebra_route_notify_send(ZEBRA_ROUTE_NOTIFY_REQUEST, zclient, false);
++	return CMD_SUCCESS;
++}
++
+ /* bgp session-dscp */
+ 
+ DEFUN (bgp_session_dscp,
+@@ -12965,6 +13010,10 @@ void bgp_vty_init(void)
+ 	/* "no router bgp" commands. */
+ 	install_element(CONFIG_NODE, &no_router_bgp_cmd);
+ 
++    /* bgp error-handling enable */
++	install_element(CONFIG_NODE, &bgp_error_handling_enable_cmd);
++	install_element(CONFIG_NODE, &no_bgp_error_handling_enable_cmd);
++
+ 	/* "bgp session-dscp command */
+ 	install_element (BGP_NODE, &bgp_session_dscp_cmd);
+ 	install_element (BGP_NODE, &no_bgp_session_dscp_cmd);
+diff --git a/bgpd/bgp_zebra.c b/bgpd/bgp_zebra.c
+index d47c1f963..c6f0b3218 100644
+--- a/bgpd/bgp_zebra.c
++++ b/bgpd/bgp_zebra.c
+@@ -1467,6 +1467,8 @@ void bgp_zebra_announce(struct bgp_node *rn, struct prefix *p,
+ 			__func__, buf_prefix,
+ 			(recursion_flag ? "" : "NOT "));
+ 	}
++    /* When we announce the route to Zebra, we need to unset the flag. */
++    UNSET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_FAILED);
+ 	zclient_route_send(valid_nh_count ? ZEBRA_ROUTE_ADD
+ 					  : ZEBRA_ROUTE_DELETE,
+ 			   zclient, &api);
+@@ -2301,6 +2303,112 @@ static int iptable_notify_owner(ZAPI_CALLBACK_ARGS)
+ 	return 0;
+ }
+ 
++/* Process route notification messages from RIB */
++static int bgp_zebra_route_notify_owner(int command, struct zclient *zclient,
++                    zebra_size_t length, vrf_id_t vrf_id)
++{
++    struct prefix p;
++    enum zapi_route_notify_owner note;
++    uint32_t table_id;
++    char buf[PREFIX2STR_BUFFER];
++    afi_t afi;
++    safi_t safi;
++    struct bgp_node *rn;
++    struct bgp *bgp;
++    struct bgp_path_info *ri, *new_select;
++
++    if (!zapi_route_notify_decode(zclient->ibuf, &p, &table_id, &note,
++                    &afi, &safi)) {
++        zlog_err("%s : error in msg decode", __PRETTY_FUNCTION__);
++        return -1;
++    }
++    prefix2str(&p, buf, sizeof(buf));
++
++    switch(note)
++    {
++        case ZAPI_ROUTE_BETTER_ADMIN_WON:
++        case ZAPI_ROUTE_INSTALLED:
++        case ZAPI_ROUTE_FAIL_INSTALL:
++        case ZAPI_ROUTE_REMOVED:
++        case ZAPI_ROUTE_REMOVE_FAIL:
++            return 0;
++        default:
++            break;
++    }
++
++    zlog_info("%s: Received route [%s], table_id %d, note %d, afi %d, safi %d",
++              __PRETTY_FUNCTION__, buf, table_id, note, afi, safi);
++
++    bgp = bgp_lookup_by_vrf_id(vrf_id);
++    if (!bgp) {
++        flog_err(EC_BGP_INVALID_BGP_INSTANCE,
++            "%s : bgp instance not found vrf %d",
++            __PRETTY_FUNCTION__, vrf_id);
++        return -1;
++    }
++
++    if ((afi < AFI_IP) || (afi >= AFI_MAX) ||
++        (safi < SAFI_UNICAST) || (safi >= SAFI_MAX)) {
++        flog_err(EC_BGP_INVALID_ROUTE,
++            "%s : invalid afi %d, safi %d", __PRETTY_FUNCTION__,
++            afi, safi);
++    }
++
++    rn = bgp_afi_node_lookup(bgp->rib[afi][safi], afi, safi, &p,
++                    &bgp->vrf_prd);
++    if (!rn) {
++        flog_err(EC_BGP_INVALID_ROUTE,
++            "%s : route %s not found afi %d, safi %d",
++            __PRETTY_FUNCTION__, buf, afi, safi);
++        return -1;
++    }
++
++    new_select = NULL;
++    for (ri = rn->info; ri; ri = ri->next)
++        if (CHECK_FLAG(ri->flags, BGP_PATH_SELECTED)) {
++            new_select = ri;
++        break;
++    }
++
++    if (new_select == NULL) {
++        flog_err(EC_BGP_INVALID_ROUTE,
++            "%s : selected route not found for prefix %s",
++            __PRETTY_FUNCTION__, buf);
++        return -1;
++    }
++
++    switch (note) {
++    case ZAPI_ROUTE_HARDWARE_FAIL:
++        flog_err(EC_BGP_FIB_INSTALL_ERROR,
++            "%s: [%s] Route install failure for afi %d, safi %d",
++            __PRETTY_FUNCTION__, buf, afi, safi);
++        SET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_FAILED);
++        UNSET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_PENDING);
++
++        /* Advertise or withdraw the route */
++        group_announce_route(bgp, afi, safi, rn, new_select);
++        break;
++    case ZAPI_ROUTE_HARDWARE_SUCCESS:
++        /* Clear the flags so that route can be processed */
++        if (CHECK_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_FAILED)
++            || CHECK_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_PENDING)) 
++        {
++            UNSET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_FAILED);
++            UNSET_FLAG(rn->flags, BGP_NODE_FIB_INSTALL_PENDING);
++
++            /* Advertise or withdraw the route */
++            group_announce_route(bgp, afi, safi, rn, new_select);
++        }
++        break;
++    default:
++        flog_err(EC_BGP_FIB_INSTALL_ERROR,
++            "%s : invalid status",  __PRETTY_FUNCTION__);
++        break;
++    }
++
++    return 0;
++}
++
+ /* this function is used to forge ip rule,
+  * - either for iptable/ipset using fwmark id
+  * - or for sample ip rule cmd
+@@ -2744,6 +2852,7 @@ void bgp_zebra_init(struct thread_master *master, unsigned short instance)
+ 	zclient->ipset_notify_owner = ipset_notify_owner;
+ 	zclient->ipset_entry_notify_owner = ipset_entry_notify_owner;
+ 	zclient->iptable_notify_owner = iptable_notify_owner;
++    zclient->route_notify_owner = bgp_zebra_route_notify_owner;
+ 	zclient->instance = instance;
+ }
+ 
+diff --git a/bgpd/bgpd.c b/bgpd/bgpd.c
+index 55aeb2dd8..a7f8c39f4 100644
+--- a/bgpd/bgpd.c
++++ b/bgpd/bgpd.c
+@@ -175,6 +175,8 @@ int bgp_option_set(int flag)
+ 	case BGP_OPT_CONFIG_CISCO:
+ 	case BGP_OPT_NO_LISTEN:
+ 	case BGP_OPT_NO_ZEBRA:
++    case BGP_OPT_FIB_ERRCHECK_ENABLE:
++    case BGP_OPT_FIB_INSTALL_WAIT:
+ 		SET_FLAG(bm->options, flag);
+ 		break;
+ 	default:
+@@ -193,6 +195,8 @@ int bgp_option_unset(int flag)
+ 	case BGP_OPT_NO_ZEBRA:
+ 	case BGP_OPT_NO_FIB:
+ 	case BGP_OPT_CONFIG_CISCO:
++    case BGP_OPT_FIB_ERRCHECK_ENABLE:
++    case BGP_OPT_FIB_INSTALL_WAIT:
+ 		UNSET_FLAG(bm->options, flag);
+ 		break;
+ 	default:
+@@ -7588,6 +7592,9 @@ int bgp_config_write(struct vty *vty)
+ 		vty_out(vty, "bgp route-map delay-timer %u\n",
+ 			bm->rmap_update_timer);
+ 
++    if(zclient->receive_notify == true)
++        vty_out(vty, "bgp error-handling enable \n");
++
+ 	if (write)
+ 		vty_out(vty, "!\n");
+ 
+diff --git a/bgpd/bgpd.h b/bgpd/bgpd.h
+index 32983a0a9..f288b9597 100644
+--- a/bgpd/bgpd.h
++++ b/bgpd/bgpd.h
+@@ -138,6 +138,8 @@ struct bgp_master {
+ #define BGP_OPT_CONFIG_CISCO             (1 << 2)
+ #define BGP_OPT_NO_LISTEN                (1 << 3)
+ #define BGP_OPT_NO_ZEBRA                 (1 << 4)
++#define BGP_OPT_FIB_ERRCHECK_ENABLE      (1 << 5)
++#define BGP_OPT_FIB_INSTALL_WAIT         (1 << 6)
+ 
+ 	uint64_t updgrp_idspace;
+ 	uint64_t subgrp_idspace;
+diff --git a/eigrpd/eigrp_zebra.c b/eigrpd/eigrp_zebra.c
+index 0a74e8626..652043b21 100644
+--- a/eigrpd/eigrp_zebra.c
++++ b/eigrpd/eigrp_zebra.c
+@@ -93,7 +93,7 @@ static int eigrp_zebra_route_notify_owner(ZAPI_CALLBACK_ARGS)
+ 	enum zapi_route_notify_owner note;
+ 	uint32_t table;
+ 
+-	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table, &note))
++	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table, &note, NULL, NULL))
+ 		return -1;
+ 
+ 	return 0;
+diff --git a/fpm/fpm.h b/fpm/fpm.h
+index f73ab7c66..ce4ad7750 100644
+--- a/fpm/fpm.h
++++ b/fpm/fpm.h
+@@ -183,6 +183,11 @@ static inline size_t fpm_msg_align(size_t len)
+ 
+ COMPILE_ASSERT(FPM_MSG_ALIGNTO == FPM_MSG_HDR_LEN);
+ 
++typedef struct fpm_custom_msg_t_ {
++    unsigned char status; /* Indicates success or failure */
++} fpm_custom_msg_t;
++
++#define FPM_CUSTOM_MSG_LEN (fpm_msg_align (sizeof (fpm_custom_msg_t)))
+ /*
+  * fpm_data_len_to_msg_len
+  *
+diff --git a/lib/command.h b/lib/command.h
+index a5f9616db..9a188eb37 100644
+--- a/lib/command.h
++++ b/lib/command.h
+@@ -339,6 +339,7 @@ struct cmd_node {
+ #define SHOW_STR "Show running system information\n"
+ #define IP_STR "IP information\n"
+ #define IPV6_STR "IPv6 information\n"
++#define ADDR_STR "IP/IPv6 information\n"
+ #define NO_STR "Negate a command or set its defaults\n"
+ #define REDIST_STR "Redistribute information from another routing protocol\n"
+ #define CLEAR_STR "Reset functions\n"
+diff --git a/lib/log.c b/lib/log.c
+index e64c00186..e3baa82da 100644
+--- a/lib/log.c
++++ b/lib/log.c
+@@ -1070,6 +1070,7 @@ static const struct zebra_desc_table command_types[] = {
+ 	DESC_ENTRY(ZEBRA_VXLAN_FLOOD_CONTROL),
+ 	DESC_ENTRY(ZEBRA_VXLAN_SG_ADD),
+ 	DESC_ENTRY(ZEBRA_VXLAN_SG_DEL),
++	DESC_ENTRY(ZEBRA_ROUTE_NOTIFY_REQUEST),
+ };
+ #undef DESC_ENTRY
+ 
+diff --git a/lib/route_types.pl b/lib/route_types.pl
+index f29709663..4dfbde2e6 100755
+--- a/lib/route_types.pl
++++ b/lib/route_types.pl
+@@ -121,7 +121,7 @@ sub codelist {
+ 	}
+ 	$str =~ s/ $//;
+ 	push @lines, $str . "\\n\" \\\n";
+-	push @lines, "  \"       > - selected route, * - FIB route, q - queued route, r - rejected route\\n\\n\"";
++	push @lines, "  \"       > - selected route, * - FIB route, q - queued route, r - rejected route, # - not installed in hardware\\n\\n\"";
+ 	return join("", @lines);
+ }
+ 
+diff --git a/lib/zclient.c b/lib/zclient.c
+index 9affe4306..e7bf8bc13 100644
+--- a/lib/zclient.c
++++ b/lib/zclient.c
+@@ -1087,9 +1087,12 @@ int zapi_pbr_rule_encode(uint8_t cmd, struct stream *s, struct pbr_rule *zrule)
+ 
+ bool zapi_route_notify_decode(struct stream *s, struct prefix *p,
+ 			      uint32_t *tableid,
+-			      enum zapi_route_notify_owner *note)
++			      enum zapi_route_notify_owner *note, 
++                  afi_t *afi, safi_t *safi)
+ {
+ 	uint32_t t;
++    afi_t afi_val;
++    safi_t safi_val;
+ 
+ 	STREAM_GET(note, s, sizeof(*note));
+ 
+@@ -1097,9 +1100,17 @@ bool zapi_route_notify_decode(struct stream *s, struct prefix *p,
+ 	STREAM_GETC(s, p->prefixlen);
+ 	STREAM_GET(&p->u.prefix, s, prefix_blen(p));
+ 	STREAM_GETL(s, t);
++    STREAM_GETC(s, afi_val);
++    STREAM_GETC(s, safi_val);
+ 
+ 	*tableid = t;
+ 
++    if (afi)
++        *afi = afi_val;
++
++    if (safi)
++        *safi = safi_val;
++
+ 	return true;
+ 
+ stream_failure:
+@@ -2825,3 +2836,19 @@ void zclient_interface_set_master(struct zclient *client,
+ 	stream_putw_at(s, 0, stream_get_endp(s));
+ 	zclient_send_message(client);
+ }
++/* Send route notify request to zebra */
++int  zebra_route_notify_send(int command, struct zclient *zclient, bool set)
++{
++    struct stream *s;
++    char ch = (set == true) ? 1 : 0;
++
++    s = zclient->obuf;
++    stream_reset(s);
++    zlog_info("%s", __PRETTY_FUNCTION__);
++    zclient_create_header(s, command, 0);
++    stream_putc(s, ch);
++
++    stream_putw_at(s, 0, stream_get_endp(s));
++
++    return zclient_send_message(zclient);
++}
+diff --git a/lib/zclient.h b/lib/zclient.h
+index c46d63bfa..c725f1565 100644
+--- a/lib/zclient.h
++++ b/lib/zclient.h
+@@ -166,6 +166,7 @@ typedef enum {
+ 	ZEBRA_VXLAN_FLOOD_CONTROL,
+ 	ZEBRA_VXLAN_SG_ADD,
+ 	ZEBRA_VXLAN_SG_DEL,
++	ZEBRA_ROUTE_NOTIFY_REQUEST,
+ } zebra_message_types_t;
+ 
+ struct redist_proto {
+@@ -374,6 +375,8 @@ enum zapi_route_notify_owner {
+ 	ZAPI_ROUTE_INSTALLED,
+ 	ZAPI_ROUTE_REMOVED,
+ 	ZAPI_ROUTE_REMOVE_FAIL,
++    ZAPI_ROUTE_HARDWARE_FAIL,
++    ZAPI_ROUTE_HARDWARE_SUCCESS,
+ };
+ 
+ enum zapi_rule_notify_owner {
+@@ -590,7 +593,8 @@ extern int zapi_route_encode(uint8_t, struct stream *, struct zapi_route *);
+ extern int zapi_route_decode(struct stream *, struct zapi_route *);
+ bool zapi_route_notify_decode(struct stream *s, struct prefix *p,
+ 			      uint32_t *tableid,
+-			      enum zapi_route_notify_owner *note);
++			      enum zapi_route_notify_owner *note,
++                  afi_t *afi, safi_t *safi);
+ bool zapi_rule_notify_decode(struct stream *s, uint32_t *seqno,
+ 			     uint32_t *priority, uint32_t *unique,
+ 			     ifindex_t *ifindex,
+@@ -622,6 +626,8 @@ static inline void zapi_route_set_blackhole(struct zapi_route *api,
+ 	api->nexthops[0].bh_type = bh_type;
+ 	SET_FLAG(api->message, ZAPI_MESSAGE_NEXTHOP);
+ };
++/* Send route notify request to zebra */
++extern int  zebra_route_notify_send(int command, struct zclient *zclient, bool set);
+ 
+ 
+ #endif /* _ZEBRA_ZCLIENT_H */
+diff --git a/pbrd/pbr_zebra.c b/pbrd/pbr_zebra.c
+index aad0e4275..bd129e10e 100644
+--- a/pbrd/pbr_zebra.c
++++ b/pbrd/pbr_zebra.c
+@@ -168,7 +168,7 @@ static int route_notify_owner(ZAPI_CALLBACK_ARGS)
+ 	uint32_t table_id;
+ 	char buf[PREFIX_STRLEN];
+ 
+-	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table_id, &note))
++	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table_id, &note, NULL, NULL))
+ 		return -1;
+ 
+ 	prefix2str(&p, buf, sizeof(buf));
+diff --git a/sharpd/sharp_zebra.c b/sharpd/sharp_zebra.c
+index 19c7e556c..2b931c99f 100644
+--- a/sharpd/sharp_zebra.c
++++ b/sharpd/sharp_zebra.c
+@@ -203,7 +203,7 @@ static int route_notify_owner(ZAPI_CALLBACK_ARGS)
+ 	enum zapi_route_notify_owner note;
+ 	uint32_t table;
+ 
+-	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table, &note))
++	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table, &note, NULL, NULL))
+ 		return -1;
+ 
+ 	switch (note) {
+diff --git a/staticd/static_zebra.c b/staticd/static_zebra.c
+index c03a371d8..ee8ecc7ef 100644
+--- a/staticd/static_zebra.c
++++ b/staticd/static_zebra.c
+@@ -147,7 +147,7 @@ static int route_notify_owner(ZAPI_CALLBACK_ARGS)
+ 	uint32_t table_id;
+ 	char buf[PREFIX_STRLEN];
+ 
+-	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table_id, &note))
++	if (!zapi_route_notify_decode(zclient->ibuf, &p, &table_id, &note, NULL, NULL))
+ 		return -1;
+ 
+ 	prefix2str(&p, buf, sizeof(buf));
+diff --git a/zebra/rib.h b/zebra/rib.h
+index 9fe42aef3..956ec681b 100644
+--- a/zebra/rib.h
++++ b/zebra/rib.h
+@@ -34,6 +34,7 @@
+ #include "if.h"
+ #include "mpls.h"
+ #include "srcdest_table.h"
++#include "zclient.h"
+ 
+ #ifdef __cplusplus
+ extern "C" {
+@@ -99,6 +100,8 @@ struct route_entry {
+ #define ROUTE_ENTRY_INSTALLED        0x20
+ /* Route has Failed installation into the Data Plane in some manner */
+ #define ROUTE_ENTRY_FAILED           0x40
++#define ROUTE_ENTRY_FPM_INSTALL_PENDING 0x80
++#define ROUTE_ENTRY_FPM_INSTALL_FAILED 0x100
+ 
+ 	/* Nexthop information. */
+ 	uint8_t nexthop_num;
+@@ -369,6 +372,13 @@ extern int rib_gc_dest(struct route_node *rn);
+ extern struct route_table *rib_tables_iter_next(rib_tables_iter_t *iter);
+ 
+ extern uint8_t route_distance(int type);
++void rib_update_route_notify(afi_t afi, safi_t safi, vrf_id_t vrf_id, struct prefix *p, uint32_t *ifindex_arr, 
++            union g_addr *gateway_arr, uint16_t num_nhs, uint8_t blackhole, enum zapi_route_notify_owner note);
++void rib_install_specific_failed_route(afi_t afi, safi_t safi, vrf_id_t vrf_id, struct prefix* prefix);
++void rib_install_all_failed_routes(afi_t afi, safi_t safi, vrf_id_t vrf_id);
++uint16_t rib_compare_fpm_attr(struct route_entry *re, uint32_t *ifindex_arr, 
++            union g_addr *gateway_arr, uint16_t num_nhs, afi_t afi);
++void rib_send_specific_route(afi_t afi, vrf_id_t vrf_id, struct route_node *rn, enum zapi_route_notify_owner note);
+ 
+ extern void zebra_rib_evaluate_rn_nexthops(struct route_node *rn, uint32_t seq);
+ 
+diff --git a/zebra/zapi_msg.c b/zebra/zapi_msg.c
+index 7f6af8201..38787533e 100644
+--- a/zebra/zapi_msg.c
++++ b/zebra/zapi_msg.c
+@@ -684,6 +684,7 @@ static int zsend_ipv4_nexthop_lookup_mrib(struct zserv *client,
+ static int route_notify_internal(const struct prefix *p, int type,
+ 				 uint16_t instance, vrf_id_t vrf_id,
+ 				 uint32_t table_id,
++                 afi_t afi, safi_t safi,
+ 				 enum zapi_route_notify_owner note)
+ {
+ 	struct zserv *client;
+@@ -726,32 +727,45 @@ static int route_notify_internal(const struct prefix *p, int type,
+ 
+ 	stream_putl(s, table_id);
+ 
++    /* Encode AFI, SAFI in the message */
++    if (type == ZEBRA_ROUTE_BGP) {
++        stream_putc(s, afi);
++        stream_putc(s, safi);
++    } else {
++        stream_putc(s, 0);
++        stream_putc(s, 0);
++    }
++
+ 	stream_putw_at(s, 0, stream_get_endp(s));
+ 
+ 	return zserv_send_message(client, s);
+ }
+ 
+ int zsend_route_notify_owner(struct route_entry *re, const struct prefix *p,
++                 afi_t afi, safi_t safi,
+ 			     enum zapi_route_notify_owner note)
+ {
+ 	return (route_notify_internal(p, re->type, re->instance, re->vrf_id,
+-				      re->table, note));
++				      re->table, afi, safi, note));
+ }
+ 
+ /*
+  * Route-owner notification using info from dataplane update context.
+  */
+ int zsend_route_notify_owner_ctx(const struct zebra_dplane_ctx *ctx,
+-				 enum zapi_route_notify_owner note)
++                 enum zapi_route_notify_owner note)
+ {
+-	return (route_notify_internal(dplane_ctx_get_dest(ctx),
+-				      dplane_ctx_get_type(ctx),
+-				      dplane_ctx_get_instance(ctx),
+-				      dplane_ctx_get_vrf(ctx),
+-				      dplane_ctx_get_table(ctx),
+-				      note));
++    return (route_notify_internal(dplane_ctx_get_dest(ctx),
++                      dplane_ctx_get_type(ctx),
++                      dplane_ctx_get_instance(ctx),
++                      dplane_ctx_get_vrf(ctx),
++                      dplane_ctx_get_table(ctx),
++                      dplane_ctx_get_afi(ctx),
++                      dplane_ctx_get_safi(ctx),
++                      note));
+ }
+ 
++
+ void zsend_rule_notify_owner(struct zebra_pbr_rule *rule,
+ 			     enum zapi_rule_notify_owner note)
+ {
+@@ -1395,6 +1409,9 @@ static void zread_route_add(ZAPI_HANDLER_ARGS)
+ 	else
+ 		re->table = zvrf->table_id;
+ 
++	if(zrouter.fpm_route_notify_owner)
++	    SET_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_PENDING);
++
+ 	if (!CHECK_FLAG(api.message, ZAPI_MESSAGE_NEXTHOP)
+ 	    || api.nexthop_num == 0) {
+ 		char buf_prefix[PREFIX_STRLEN];
+@@ -2407,6 +2424,23 @@ stream_failure:
+ 	return;
+ }
+ 
++/* Process route notify request message from client */
++static void zread_route_notify_request(ZAPI_HANDLER_ARGS)
++{
++    uint8_t notify;
++
++    STREAM_GETC(msg, notify);
++    zlog_info("%s,notify=%d", __PRETTY_FUNCTION__, notify);
++    client->notify_owner = notify;
++    if(client->proto == ZEBRA_ROUTE_BGP)
++        zrouter.fpm_route_notify_owner = notify;
++    if (IS_ZEBRA_DEBUG_RECV)
++        zlog_debug("%s notify %d", __PRETTY_FUNCTION__, notify);
++
++ stream_failure:
++    return;
++}
++
+ void (*zserv_handlers[])(ZAPI_HANDLER_ARGS) = {
+ 	[ZEBRA_ROUTER_ID_ADD] = zread_router_id_add,
+ 	[ZEBRA_ROUTER_ID_DELETE] = zread_router_id_delete,
+@@ -2475,6 +2509,7 @@ void (*zserv_handlers[])(ZAPI_HANDLER_ARGS) = {
+ 	[ZEBRA_IPTABLE_ADD] = zread_iptable,
+ 	[ZEBRA_IPTABLE_DELETE] = zread_iptable,
+ 	[ZEBRA_VXLAN_FLOOD_CONTROL] = zebra_vxlan_flood_control,
++    [ZEBRA_ROUTE_NOTIFY_REQUEST] = zread_route_notify_request,
+ };
+ 
+ #if defined(HANDLE_ZAPI_FUZZING)
+diff --git a/zebra/zapi_msg.h b/zebra/zapi_msg.h
+index d30fa2d0e..e2b72f282 100644
+--- a/zebra/zapi_msg.h
++++ b/zebra/zapi_msg.h
+@@ -73,6 +73,7 @@ extern int zsend_interface_link_params(struct zserv *zclient,
+ extern int zsend_pw_update(struct zserv *client, struct zebra_pw *pw);
+ extern int zsend_route_notify_owner(struct route_entry *re,
+ 				    const struct prefix *p,
++                    afi_t afi, safi_t safi,
+ 				    enum zapi_route_notify_owner note);
+ extern int zsend_route_notify_owner_ctx(const struct zebra_dplane_ctx *ctx,
+ 					enum zapi_route_notify_owner note);
+diff --git a/zebra/zebra_fpm.c b/zebra/zebra_fpm.c
+index 3b73a285f..e8640a847 100644
+--- a/zebra/zebra_fpm.c
++++ b/zebra/zebra_fpm.c
+@@ -33,6 +33,7 @@
+ 
+ #include "zebra/rib.h"
+ #include "zebra/zserv.h"
++#include "zebra/zebra_router.h"
+ #include "zebra/zebra_ns.h"
+ #include "zebra/zebra_vrf.h"
+ #include "zebra/zebra_errors.h"
+@@ -905,6 +906,15 @@ static void zfpm_build_updates(void)
+ 		data = fpm_msg_data(hdr);
+ 
+ 		re = zfpm_route_for_update(dest);
++
++        /* If the route is marked as not installed in hardware, then delete this route */
++        /* Also, if there is no active nh, treat the update as delete  */
++        if(  ( (zrouter.fpm_route_notify_owner) && re && CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED)) 
++              ||  ( re && (0 == re->nexthop_active_num))        )
++        {
++            re = NULL;
++        }
++
+ 		is_add = re ? 1 : 0;
+ 
+ 		write_msg = 1;
+diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
+index 29f07f801..fab259be0 100644
+--- a/zebra/zebra_fpm_netlink.c
++++ b/zebra/zebra_fpm_netlink.c
+@@ -38,6 +38,7 @@
+ #include "zebra/kernel_netlink.h"
+ #include "zebra/rt_netlink.h"
+ #include "nexthop.h"
++#include "fpm/fpm.h"
+ 
+ #include "zebra/zebra_fpm_private.h"
+ 
+@@ -460,4 +461,126 @@ int zfpm_netlink_encode_route(int cmd, rib_dest_t *dest, struct route_entry *re,
+ 	return netlink_route_info_encode(ri, in_buf, in_buf_len);
+ }
+ 
++/* zfpm_netlink_process_response
++ *
++ * Process the netlink response message sent by fpm.
++ * When Zebra sends route to fpmsyncd, fpmsyncd can reply if the route 
++ * installation failed or succeeded. Success notification is based on 
++ * configuration. fpmsyncd may not reply when route installation succeeded.
++ * Return value : None 
++ */
++void zfpm_netlink_process_response(struct stream *ibuf, uint16_t msg_len)
++{
++	size_t length_read, sublen;
++    struct rtmsg *rtmsg;
++    struct rtattr *rta, *rtsuba;
++    struct prefix prefix;
++    afi_t afi;
++    safi_t safi = SAFI_UNICAST;
++    uint16_t num_nhs = 0;
++    uint32_t ifindex[MULTIPATH_NUM];
++    union g_addr gateway[MULTIPATH_NUM];
++    uint16_t  addr_len;
++    struct rtnexthop *rtnh;
++    char dst_buf[PREFIX_STRLEN];
++    unsigned char status;
++    fpm_custom_msg_t *cust_msg;
++
++    if(msg_len < FPM_MSG_HDR_LEN + FPM_CUSTOM_MSG_LEN + NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct rtmsg))))
++    {
++        zlog_info("%s: msg_len=%d is too small, discarding message", __PRETTY_FUNCTION__, msg_len);
++        return;
++    }
++    
++    length_read = FPM_MSG_HDR_LEN;
++
++	stream_set_getp(ibuf, length_read);
++    cust_msg = (fpm_custom_msg_t *)stream_pnt(ibuf);
++    status = cust_msg->status;
++    length_read += FPM_CUSTOM_MSG_LEN;
++
++	stream_set_getp(ibuf, length_read);
++    length_read += NLMSG_HDRLEN;
++
++    stream_set_getp(ibuf, length_read);
++    rtmsg = (struct rtmsg *)stream_pnt(ibuf);
++    length_read = FPM_MSG_HDR_LEN + FPM_CUSTOM_MSG_LEN + NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct rtmsg)));
++
++    stream_set_getp(ibuf, length_read);
++    rta = (struct rtattr *)stream_pnt(ibuf);
++
++    prefix.family = rtmsg->rtm_family;
++    prefix.prefixlen = rtmsg->rtm_dst_len;
++    switch(prefix.family)
++    {
++        case AF_INET:
++            afi = AFI_IP;
++            addr_len = 4;
++            memcpy(&prefix.u.prefix4.s_addr, RTA_DATA(rta), 4);
++            break;
++        case AF_INET6:
++            afi = AFI_IP6;
++            addr_len = 16;
++            memcpy(&prefix.u.prefix6, RTA_DATA(rta), 16);
++            break;
++        default:
++            /* Do not support any other address-family now */
++            goto done;
++    }    
++    //Extract the nexthop address and ifindex information
++    num_nhs = 0;
++    length_read += rta->rta_len;
++    prefix2str(&prefix, dst_buf, sizeof(dst_buf));
++    zlog_info("%s:msg_len=%d, length_read=%ld", dst_buf, msg_len, length_read);
++    zlog_info("status= %s, rtm_family=%d, rtm_table=%d, rtm_dst_len=%d, rtm_type=%d", 
++                (status == ZEBRA_DPLANE_INSTALL_SUCCESS) ? "SUCCESS":"FAIL", rtmsg->rtm_family, 
++                rtmsg->rtm_table, rtmsg->rtm_dst_len, rtmsg->rtm_type); 
++    while(length_read < msg_len)
++    {
++        stream_set_getp(ibuf, length_read);
++        rta = (struct rtattr *)stream_pnt(ibuf);
++        switch(rta->rta_type)
++        {
++            case RTA_GATEWAY:
++                memcpy(&gateway[num_nhs], RTA_DATA(rta), addr_len); 
++                zlog_info("gateway[%d]=0x%x", num_nhs, gateway[num_nhs].ipv4.s_addr);
++                break;
++            case RTA_OIF:
++                memcpy(&ifindex[num_nhs++], RTA_DATA(rta), 4);
++                zlog_info("ifindex[%d]=0x%x", num_nhs - 1, ifindex[num_nhs - 1]);
++                break;
++            case RTA_MULTIPATH:
++                sublen = 0;
++                stream_set_getp(ibuf, length_read + sizeof(struct rtattr));
++                rtnh = (struct rtnexthop *)stream_pnt(ibuf);
++                while(sublen + sizeof(struct rtattr) < rta->rta_len)
++                {
++                    memcpy(&ifindex[num_nhs], &rtnh->rtnh_ifindex, 4);
++                    rtsuba = (struct rtattr *)((char *)rtnh + sizeof(struct rtnexthop)); 
++                    switch(rtsuba->rta_type)
++                    {
++                        case RTA_GATEWAY:
++                            memcpy(&gateway[num_nhs++], RTA_DATA(rtsuba), addr_len);
++                            zlog_info("gateway[%d]=0x%x, ifindex[%d]=%d", num_nhs - 1, 
++                                gateway[num_nhs - 1].ipv4.s_addr, num_nhs - 1, ifindex[num_nhs - 1]);
++                            break;
++                        default:
++                            break;
++                    }    
++                    sublen += rtnh->rtnh_len;
++                    rtnh = RTNH_NEXT(rtnh);
++                }
++                break;
++            default:
++                break;
++
++        }
++        length_read += rta->rta_len;
++    }
++    rib_update_route_notify(afi, safi, rtmsg->rtm_table, &prefix, ifindex, gateway, num_nhs, 
++            (rtmsg->rtm_type == RTN_BLACKHOLE) ? true : false, (status == ZEBRA_DPLANE_INSTALL_SUCCESS) ? ZAPI_ROUTE_HARDWARE_SUCCESS : ZAPI_ROUTE_HARDWARE_FAIL);
++done:
++	stream_reset(ibuf);
++	return;
++}
+ #endif /* HAVE_NETLINK */
+diff --git a/zebra/zebra_fpm_private.h b/zebra/zebra_fpm_private.h
+index 943aad986..2a1f8f1c8 100644
+--- a/zebra/zebra_fpm_private.h
++++ b/zebra/zebra_fpm_private.h
+@@ -66,6 +66,8 @@ extern int zfpm_protobuf_encode_route(rib_dest_t *dest, struct route_entry *re,
+ 
+ extern struct route_entry *zfpm_route_for_update(rib_dest_t *dest);
+ 
++extern void zfpm_netlink_process_response(struct stream *ibuf, uint16_t msg_len);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/zebra/zebra_rib.c b/zebra/zebra_rib.c
+index 555127b09..4723724fa 100644
+--- a/zebra/zebra_rib.c
++++ b/zebra/zebra_rib.c
+@@ -1012,12 +1012,21 @@ void rib_install_kernel(struct route_node *rn, struct route_entry *re,
+ {
+ 	struct nexthop *nexthop;
+ 	rib_table_info_t *info = srcdest_rnode_table_info(rn);
+-	struct zebra_vrf *zvrf = vrf_info_lookup(re->vrf_id);
+ 	const struct prefix *p, *src_p;
+-	enum zebra_dplane_result ret;
+-
++	struct zebra_vrf *zvrf = vrf_info_lookup(re->vrf_id);
++    enum zebra_dplane_result ret;
++    afi_t afi;
++    safi_t safi;
+ 	rib_dest_t *dest = rib_dest_from_rnode(rn);
+ 
++    /* Get the AFI, SAFI from the rib table */
++    if (info) {
++        afi = info->afi;
++        safi = info->safi;
++    } else {
++        afi = 0;
++        safi = 0;
++    }
+ 	srcdest_rnode_prefixes(rn, &p, &src_p);
+ 
+ 	if (info->safi != SAFI_UNICAST) {
+@@ -1046,7 +1055,7 @@ void rib_install_kernel(struct route_node *rn, struct route_entry *re,
+ 	 * know that they've lost
+ 	 */
+ 	if (old && (old != re) && (old->type != re->type))
+-		zsend_route_notify_owner(old, p, ZAPI_ROUTE_BETTER_ADMIN_WON);
++		zsend_route_notify_owner(old, p, afi, safi, ZAPI_ROUTE_BETTER_ADMIN_WON);
+ 
+ 	/* Update fib selection */
+ 	dest->selected_fib = re;
+@@ -1324,6 +1333,7 @@ int rib_gc_dest(struct route_node *rn)
+ static void rib_process_add_fib(struct zebra_vrf *zvrf, struct route_node *rn,
+ 				struct route_entry *new)
+ {
++    UNSET_FLAG(new->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
+ 	hook_call(rib_update, rn, "new route selected");
+ 
+ 	/* Update real nexthop. This may actually determine if nexthop is active
+@@ -1723,10 +1733,21 @@ static void rib_process(struct route_node *rn)
+ 			if (!new_selected)
+ 				redistribute_delete(p, src_p, old_selected);
+ 			if (old_selected != new_selected)
++            {
+ 				UNSET_FLAG(old_selected->flags,
+ 					   ZEBRA_FLAG_SELECTED);
++            }
+ 		}
+ 	}
++    else
++    {
++        if(zrouter.fpm_route_notify_owner && new_selected)
++        {
++            rib_send_specific_route(((p->family == AF_INET) ? AFI_IP:AFI_IP6), vrf_id, rn, 
++                (CHECK_FLAG(new_selected->status, ROUTE_ENTRY_FPM_INSTALL_FAILED)) ? 
++                 ZAPI_ROUTE_HARDWARE_FAIL: ZAPI_ROUTE_HARDWARE_SUCCESS);
++        }
++    }
+ 
+ 	/* Remove all RE entries queued for removal */
+ 	RNODE_FOREACH_RE_SAFE (rn, re, next) {
+@@ -2052,6 +2073,8 @@ static void rib_process_result(struct zebra_dplane_ctx *ctx)
+ 				SET_FLAG(old_re->status, ROUTE_ENTRY_FAILED);
+ 			if (re)
+ 				zsend_route_notify_owner(re, dest_pfx,
++							 dplane_ctx_get_afi(ctx),
++							 dplane_ctx_get_safi(ctx),
+ 							 ZAPI_ROUTE_FAIL_INSTALL);
+ 
+ 			zlog_warn("%u:%s: Route install failed",
+@@ -3524,3 +3547,219 @@ struct route_table *rib_tables_iter_next(rib_tables_iter_t *iter)
+ 
+ 	return table;
+ }
++void rib_update_route_notify(afi_t afi, safi_t safi, vrf_id_t vrf_id, struct prefix *p, uint32_t *ifindex_arr, 
++            union g_addr *gateway_arr, uint16_t num_nhs, uint8_t blackhole, enum zapi_route_notify_owner note)
++{
++    struct vrf *vrf;
++    struct zebra_vrf *zvrf;
++    struct route_table *table;
++    struct route_node *rn;
++    struct route_entry *route_entry;
++    rib_dest_t *dest;
++    uint16_t ret;
++    
++    vrf = vrf_lookup_by_id(vrf_id);
++    if(!vrf)
++    {
++        zlog_info("vrf=%d not found in vrf database", vrf_id);
++        return;
++    }
++
++    zvrf = vrf->info;
++    table = zvrf->table[afi][safi];
++
++    if(!table)
++    {
++        zlog_info("table not found in zebra database");
++        return;
++    }
++
++    rn  = route_node_lookup(table, p);
++    if(!rn)
++    {
++        char dst_buf[PREFIX_STRLEN];
++        prefix2str(p, dst_buf, sizeof(dst_buf));
++        zlog_info("%u:%s doesn't exist in rib", vrf_id,
++                   dst_buf);
++        return;
++    }
++    dest = rib_dest_from_rnode(rn);
++    if (dest && dest->selected_fib) 
++    {
++        if (!RIB_SYSTEM_ROUTE(dest->selected_fib))
++        {
++            ret = rib_compare_fpm_attr(dest->selected_fib, ifindex_arr, 
++                    gateway_arr, num_nhs, afi);
++            if(false == ret)
++            {
++                zlog_info("Nexthop mismatch, returning");
++                return;
++            }
++
++            RE_DEST_FOREACH_ROUTE(dest, route_entry)
++            {
++                UNSET_FLAG(route_entry->status, ROUTE_ENTRY_FPM_INSTALL_PENDING);
++                if (note == ZAPI_ROUTE_HARDWARE_FAIL)
++                    SET_FLAG (route_entry->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
++                else
++                    UNSET_FLAG (route_entry->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
++                if(route_entry->type == ZEBRA_ROUTE_BGP)
++                    zsend_route_notify_owner(route_entry, p, afi, safi, note);
++            }
++            
++            /* In case of error, uninstall the selected route from kernel and fpm */
++            if(note == ZAPI_ROUTE_HARDWARE_FAIL)
++                rib_uninstall_kernel(rn, dest->selected_fib);
++        }
++    }
++    return;
++}
++
++/* The below function returns true when gateway address or ifindex match happens, false otherwise */ 
++uint16_t rib_compare_fpm_attr(struct route_entry *re, uint32_t *ifindex_arr, 
++            union g_addr *gateway_arr, uint16_t num_nhs, afi_t afi)
++{
++    uint16_t count = 0;
++    uint16_t addrlen = (afi == AFI_IP) ? 4 : 16;
++    struct   nexthop *nexthop;
++
++    /* Blackhole case */
++    if(0 == num_nhs)
++        return true;
++    for(ALL_NEXTHOPS(re->ng, nexthop))
++    {
++        if((uint32_t)nexthop->ifindex != ifindex_arr[count])
++            return false;
++        if(memcmp(&nexthop->gate, &gateway_arr[count], addrlen) != 0)
++            return false;
++        count++; 
++    }
++    if(count != num_nhs)
++        return false; 
++    return true;
++}
++void rib_install_all_failed_routes(afi_t afi, safi_t safi, vrf_id_t vrf_id)
++{
++    struct vrf *vrf;
++    struct zebra_vrf *zvrf;
++    struct route_table *table;
++    struct route_node *rn;
++    struct route_entry *re;
++
++    vrf = vrf_lookup_by_id(vrf_id);
++    if(!vrf)
++    {
++        zlog_info("vrf=%d not found in vrf database", vrf_id);
++        return;
++    }
++
++    zvrf = vrf->info;
++    table = zvrf->table[afi][safi];
++
++    if(!table)
++    {
++        zlog_info("table not found in zebra database");
++        return;
++    }
++
++    for (rn = route_top(table); rn; rn = srcdest_route_next(rn)) 
++    {
++        RNODE_FOREACH_RE (rn, re) 
++        {
++            if (CHECK_FLAG(re->flags, ZEBRA_FLAG_SELECTED) 
++                    && !RIB_SYSTEM_ROUTE(re) 
++                    && (CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED)
++                        || CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_PENDING)))
++            {
++                UNSET_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
++                hook_call(rib_update, rn, "new route selected");
++                rib_install_kernel(rn, re, NULL);
++                break;
++            }
++        }
++    }
++    return;
++}
++void rib_install_specific_failed_route(afi_t afi, safi_t safi, vrf_id_t vrf_id, struct prefix* prefix)
++{
++    struct vrf *vrf;
++    struct zebra_vrf *zvrf;
++    struct route_table *table;
++    struct route_node *rn;
++    struct route_entry *re;
++
++    vrf = vrf_lookup_by_id(vrf_id);
++    if(!vrf)
++    {
++        zlog_info("vrf=%d not found in vrf database", vrf_id);
++        return;
++    }
++
++    zvrf = vrf->info;
++    table = zvrf->table[afi][safi];
++
++    if(!table)
++    {
++        zlog_info("table not found in zebra database");
++        return;
++    }
++    rn  = route_node_lookup(table, prefix);
++    if(!rn)
++    {
++        char dst_buf[PREFIX_STRLEN];
++        prefix2str(prefix, dst_buf, sizeof(dst_buf));
++        zlog_info("%u:%s doesn't exist in rib", vrf_id,
++                dst_buf);
++        return;
++    }
++    RNODE_FOREACH_RE (rn, re) 
++    {
++        if (CHECK_FLAG(re->flags, ZEBRA_FLAG_SELECTED) 
++                && !RIB_SYSTEM_ROUTE(re) 
++                    && (CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED)
++                        || CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_PENDING)))
++        {
++            UNSET_FLAG (re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
++            hook_call (rib_update, rn, "new route selected");
++            rib_install_kernel (rn, re, NULL);
++            break;
++        }
++    }
++
++    return;
++}
++void rib_send_specific_route(afi_t afi, vrf_id_t vrf_id, struct route_node *rn, enum zapi_route_notify_owner note)
++{
++    struct vrf *vrf;
++    struct zebra_vrf *zvrf;
++    struct route_table *table;
++    struct route_entry *re;
++    safi_t safi = SAFI_UNICAST;
++
++    vrf = vrf_lookup_by_id(vrf_id);
++    if(!vrf)
++    {
++        zlog_info("vrf=%d not found in vrf database", vrf_id);
++        return;
++    }
++
++    zvrf = vrf->info;
++    table = zvrf->table[afi][safi];
++
++    if(!table)
++    {
++        zlog_info("table not found in zebra database");
++        return;
++    }
++    RNODE_FOREACH_RE (rn, re)
++    {
++        UNSET_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_PENDING);
++        if(note == ZAPI_ROUTE_HARDWARE_SUCCESS)
++            UNSET_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
++        else
++            SET_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED);
++        if (re->type == ZEBRA_ROUTE_BGP)
++            zsend_route_notify_owner (re, &rn->p, afi, safi, note);
++    }
++    return;
++}
+diff --git a/zebra/zebra_router.h b/zebra/zebra_router.h
+index b316b91d0..11d810016 100644
+--- a/zebra/zebra_router.h
++++ b/zebra/zebra_router.h
+@@ -110,6 +110,9 @@ struct zebra_router {
+ 	 * The EVPN instance, if any
+ 	 */
+ 	struct zebra_vrf *evpn_vrf;
++
++    /* Error handling Flag */
++    bool fpm_route_notify_owner;
+ };
+ 
+ extern struct zebra_router zrouter;
+diff --git a/zebra/zebra_vty.c b/zebra/zebra_vty.c
+index 77795c615..033e642a7 100644
+--- a/zebra/zebra_vty.c
++++ b/zebra/zebra_vty.c
+@@ -60,7 +60,7 @@ static int do_show_ip_route(struct vty *vty, const char *vrf_name, afi_t afi,
+ 			    route_tag_t tag,
+ 			    const struct prefix *longer_prefix_p,
+ 			    bool supernets_only, int type,
+-			    unsigned short ospf_instance_id);
++			    unsigned short ospf_instance_id, bool fpm_failed_only);
+ static void vty_show_ip_route_detail(struct vty *vty, struct route_node *rn,
+ 				     int mcast);
+ static void vty_show_ip_route_summary(struct vty *vty,
+@@ -128,7 +128,7 @@ DEFUN (show_ip_rpf,
+ {
+ 	bool uj = use_json(argc, argv);
+ 	return do_show_ip_route(vty, VRF_DEFAULT_NAME, AFI_IP, SAFI_MULTICAST,
+-				false, uj, 0, NULL, false, 0, 0);
++				false, uj, 0, NULL, false, 0, 0, 0);
+ }
+ 
+ DEFUN (show_ip_rpf_addr,
+@@ -160,6 +160,93 @@ DEFUN (show_ip_rpf_addr,
+ 
+ 	return CMD_SUCCESS;
+ }
++DEFUN (clear_fpm_failed_route,
++       clear_fpm_failed_route_cmd,
++       "clear <ip|ipv6> [<view|vrf> VIEWVRFNAME] route not-installed [A.B.C.D/M|X:X::X:X/M]",
++       CLEAR_STR
++       IP_STR
++       IPV6_STR
++       "view\nvrf\n" 
++       "view or vrf name\n"
++       "route\n"
++       "not installed in hardware\n"
++       "ipv4 prefix with mask\nipv6 prefix with mask\n")
++{
++    int ret;
++    afi_t afi = AFI_IP6;
++    safi_t safi = SAFI_UNICAST;
++    int idx = 0;
++    char *prefix_str;
++    vrf_id_t vrf_id = VRF_DEFAULT;
++    struct prefix match;
++
++    if (argv_find(argv, argc, "ip", &idx))
++        afi = AFI_IP;
++
++    prefix_str = argv_find(argv, argc, "A.B.C.D/M", &idx) ? argv[idx]->arg : NULL;
++    if(NULL == prefix_str)
++        prefix_str = argv_find(argv, argc, "X:X::X:X/M", &idx) ? argv[idx]->arg : NULL;
++    if(prefix_str)
++    {
++        /* Check IP address argument. */
++        ret = str2prefix(prefix_str, &match);
++        if (!ret) 
++        {
++            vty_out(vty, "%% address is malformed\n");
++            return CMD_WARNING;
++        }
++        rib_install_specific_failed_route(afi, safi, vrf_id, &match);
++    }
++    else
++    {
++        zlog_info("%s,afi %d, clear_all",__PRETTY_FUNCTION__, afi);
++        rib_install_all_failed_routes(afi, safi, vrf_id);
++    }
++    return CMD_SUCCESS;
++}
++DEFUN (show_fpm_failed_route,
++       show_fpm_failed_route_cmd,
++       "show <ip|ipv6> [<view|vrf> VIEWVRFNAME] route not-installed [A.B.C.D/M|X:X::X:X/M]",
++       SHOW_STR
++       IP_STR
++       IPV6_STR
++       "view\nvrf\n" 
++       "view or vrf name\n"
++       "route\n"
++       "not installed in hardware\n"
++       "ipv4 prefix with mask\nipv6 prefix with mask\n")
++{
++    int ret;
++    afi_t afi = AFI_IP6;
++    safi_t safi = SAFI_UNICAST;
++    int idx = 0;
++    char *prefix_str;
++    struct prefix match;
++
++    if (argv_find(argv, argc, "ip", &idx))
++        afi = AFI_IP;
++
++    prefix_str = argv_find(argv, argc, "A.B.C.D/M", &idx) ? argv[idx]->arg : NULL;
++    if(NULL == prefix_str)
++        prefix_str = argv_find(argv, argc, "X:X::X:X/M", &idx) ? argv[idx]->arg : NULL;
++    if(prefix_str)
++    {
++        /* Check IP address argument. */
++        ret = str2prefix(prefix_str, &match);
++        if (!ret) 
++        {
++            vty_out(vty, "%% address is malformed\n");
++            return CMD_WARNING;
++        }
++        return do_show_ip_route(vty, VRF_DEFAULT_NAME, afi, safi, false, false, 0, &match, false, 0, 0, true);
++    }
++    else
++    {
++        zlog_info("%s,afi %d, clear_all",__PRETTY_FUNCTION__, afi);
++        return do_show_ip_route(vty, VRF_DEFAULT_NAME, afi, safi, false, false, 0, NULL, false, 0, 0, true);
++    }
++    return CMD_SUCCESS;
++}
+ 
+ static char re_status_output_char(struct route_entry *re, struct nexthop *nhop)
+ {
+@@ -622,11 +709,15 @@ static void vty_show_ip_route(struct vty *vty, struct route_node *rn,
+ 			if (re->instance)
+ 				len += vty_out(vty, "[%d]", re->instance);
+ 			len += vty_out(
+-				vty, "%c%c %s",
++				vty, "%c%c%c %s",
+ 				CHECK_FLAG(re->flags, ZEBRA_FLAG_SELECTED)
+ 					? '>'
+ 					: ' ',
+ 				re_status_output_char(re, nexthop),
++				(CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED)
++                 || CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_PENDING))
++					? '#'
++					: ' ',
+ 				srcdest_rnode2str(rn, buf, sizeof buf));
+ 
+ 			/* Distance and metric display. */
+@@ -775,7 +866,7 @@ static void do_show_route_helper(struct vty *vty, struct zebra_vrf *zvrf,
+ 				 bool use_fib, route_tag_t tag,
+ 				 const struct prefix *longer_prefix_p,
+ 				 bool supernets_only, int type,
+-				 unsigned short ospf_instance_id, bool use_json)
++				 unsigned short ospf_instance_id, bool use_json,  bool fpm_failed_only)
+ {
+ 	struct route_node *rn;
+ 	struct route_entry *re;
+@@ -797,6 +888,11 @@ static void do_show_route_helper(struct vty *vty, struct zebra_vrf *zvrf,
+ 			if (use_fib && re != dest->selected_fib)
+ 				continue;
+ 
++            if(fpm_failed_only 
++               && !(CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_FAILED)
++                    || CHECK_FLAG(re->status, ROUTE_ENTRY_FPM_INSTALL_PENDING)))
++                continue;
++
+ 			if (tag && re->tag != tag)
+ 				continue;
+ 
+@@ -868,7 +964,7 @@ static int do_show_ip_route(struct vty *vty, const char *vrf_name, afi_t afi,
+ 			    route_tag_t tag,
+ 			    const struct prefix *longer_prefix_p,
+ 			    bool supernets_only, int type,
+-			    unsigned short ospf_instance_id)
++			    unsigned short ospf_instance_id, bool fpm_failed_only)
+ {
+ 	struct route_table *table;
+ 	struct zebra_vrf *zvrf = NULL;
+@@ -898,7 +994,7 @@ static int do_show_ip_route(struct vty *vty, const char *vrf_name, afi_t afi,
+ 
+ 	do_show_route_helper(vty, zvrf, table, afi, use_fib, tag,
+ 			     longer_prefix_p, supernets_only, type,
+-			     ospf_instance_id, use_json);
++			     ospf_instance_id, use_json, fpm_failed_only);
+ 
+ 	return CMD_SUCCESS;
+ }
+@@ -921,7 +1017,7 @@ DEFPY (show_route_table,
+ 	t = zebra_router_find_table(zvrf, table, afi, SAFI_UNICAST);
+ 	if (t)
+ 		do_show_route_helper(vty, zvrf, t, afi, false, 0, false, false,
+-				     0, 0, !!json);
++				     0, 0, !!json, 0);
+ 
+ 	return CMD_SUCCESS;
+ }
+@@ -950,7 +1046,7 @@ DEFPY (show_route_table_vrf,
+ 	t = zebra_router_find_table(zvrf, table, afi, SAFI_UNICAST);
+ 	if (t)
+ 		do_show_route_helper(vty, zvrf, t, afi, false, 0, false, false,
+-				     0, 0, !!json);
++				     0, 0, !!json, 0);
+ 
+ 	return CMD_SUCCESS;
+ }
+@@ -1157,7 +1253,7 @@ DEFPY (show_route,
+ 			do_show_ip_route(
+ 				vty, zvrf_name(zvrf), afi, SAFI_UNICAST, !!fib,
+ 				!!json, tag, prefix_str ? prefix : NULL,
+-				!!supernets_only, type, ospf_instance_id);
++				!!supernets_only, type, ospf_instance_id, 0);
+ 		}
+ 	} else {
+ 		vrf_id_t vrf_id = VRF_DEFAULT;
+@@ -1167,7 +1263,7 @@ DEFPY (show_route,
+ 		vrf = vrf_lookup_by_id(vrf_id);
+ 		do_show_ip_route(vty, vrf->name, afi, SAFI_UNICAST, !!fib,
+ 				 !!json, tag, prefix_str ? prefix : NULL,
+-				 !!supernets_only, type, ospf_instance_id);
++				 !!supernets_only, type, ospf_instance_id, 0);
+ 	}
+ 
+ 	return CMD_SUCCESS;
+@@ -2937,6 +3033,10 @@ void zebra_vty_init(void)
+ 
+ 	install_element(VIEW_NODE, &show_ip_rpf_cmd);
+ 	install_element(VIEW_NODE, &show_ip_rpf_addr_cmd);
++    install_element(VIEW_NODE, &show_fpm_failed_route_cmd);
++
++    /* "clear fpm failed route commands" */
++    install_element(ENABLE_NODE, &clear_fpm_failed_route_cmd);
+ 
+ 	install_element(CONFIG_NODE, &ip_nht_default_route_cmd);
+ 	install_element(CONFIG_NODE, &no_ip_nht_default_route_cmd);
+-- 
+2.18.0
+
