@@ -185,7 +185,7 @@ def main(argv):
     monitor = device_monitor(log_file, log_level)
     while True:
         monitor.manage_fan()
-        time.sleep(3)        
+        time.sleep(3)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
