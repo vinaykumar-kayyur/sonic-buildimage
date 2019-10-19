@@ -24,7 +24,7 @@
 #include "pddf_psu_api.h"
 
 
-static unsigned short normal_i2c[] = {0x50, 0x58, 0x51, 0x59, 0x53, 0x5b, I2C_CLIENT_END};
+static unsigned short normal_i2c[] = { I2C_CLIENT_END };
 
 struct pddf_ops_t pddf_psu_ops = {
     .pre_init = NULL,
