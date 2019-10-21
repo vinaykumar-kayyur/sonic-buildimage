@@ -85,6 +85,8 @@ class BGPConfigManager(object):
         fabric = TemplateFabric()
         self.bgp_peer_add_template = fabric.from_file('bgpd.peer.conf.j2')
         self.bgp_peer_del_template = fabric.from_string('no neighbor {{ neighbor_addr }}')
+        self.bgp_peer_shutdown = fabric.from_string('neighbor {{ neighbor_addr }} shutdown')
+        self.bgp_peer_no_shutdown = fabric.from_string('no neighbor {{ neighbor_addr }} shutdown')
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, self.__metadata_handler)
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
 
@@ -112,21 +114,32 @@ class BGPConfigManager(object):
     def __update_bgp(self):
         cmds = []
         for key, op, data in self.bgp_messages:
-            add_peer_chunk = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=key, bgp_session=data)
-            del_peer_chunk = self.bgp_peer_del_template.render(neighbor_addr=key)
             if op == swsscommon.SET_COMMAND:
-                if key in self.peers:
-                    cmds.append(del_peer_chunk)
-                cmds.append(add_peer_chunk)
-                syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(key, data))
-                self.peers.add(key)
+                if key not in self.peers:
+                    cmds.append(self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=key, bgp_session=data))
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(key, data))
+                    self.peers.add(key)
+                else:
+                    # when the peer is already configured we support "shutdown/no shutdown"
+                    # commands for the peers only
+                    if "admin_status" in data:
+                        if data['admin_status'] == 'up':
+                            cmds.append(self.bgp_peer_no_shutdown.render(neighbor_addr=key))
+                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "up"'.format(key))
+                        elif data['admin_status'] == 'down':
+                            cmds.append(self.bgp_peer_shutdown.render(neighbor_addr=key))
+                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "down"'.format(key))
+                        else:
+                            syslog.syslog(syslog.LOG_ERR, "Peer {}: Can't update the peer. has wrong attribute value attr['admin_status'] = '{}'".format(key, data['admin_status']))
+                    else:
+                        syslog.syslog(syslog.LOG_INFO, "Peer {}: Can't update the peer. No 'admin_status' attribute in the request".format(key))
             elif op == swsscommon.DEL_COMMAND:
                 if key in self.peers:
-                    cmds.append(del_peer_chunk)
+                    cmds.append(self.bgp_peer_del_template.render(neighbor_addr=key))
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} has been removed'.format(key))
                     self.peers.remove(key)
-                    syslog.syslog(syslog.LOG_INFO, 'Peer {} removed'.format(key))
                 else:
-                    syslog.syslog(syslog.LOG_WARNING, 'Peer {} not found'.format(key))
+                    syslog.syslog(syslog.LOG_WARNING, 'Peer {} is not found'.format(key))
         self.bgp_messages = []
 
         if len(cmds) == 0:
