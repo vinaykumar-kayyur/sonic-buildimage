@@ -42,6 +42,4 @@ fi
 
 supervisorctl start fpmsyncd
 
-sleep 5
-
 supervisorctl start bgpcfgd
