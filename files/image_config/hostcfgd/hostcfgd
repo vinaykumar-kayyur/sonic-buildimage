@@ -15,12 +15,23 @@ PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
 PAM_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/common-auth-sonic.j2"
 NSS_TACPLUS_CONF = "/etc/tacplus_nss.conf"
 NSS_TACPLUS_CONF_TEMPLATE = "/usr/share/sonic/templates/tacplus_nss.conf.j2"
+NSS_RADIUS_CONF = "/etc/radius_nss.conf"
+NSS_RADIUS_CONF_TEMPLATE = "/usr/share/sonic/templates/radius_nss.conf.j2"
+PAM_RADIUS_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_radius_auth.conf.j2"
 NSS_CONF = "/etc/nsswitch.conf"
 
 # TACACS+
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
 TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
+
+# RADIUS
+RADIUS_SERVER_AUTH_PORT_DEFAULT = "1812"
+RADIUS_SERVER_PASSKEY_DEFAULT = ""
+RADIUS_SERVER_RETRANSMIT_DEFAULT = "3"
+RADIUS_SERVER_TIMEOUT_DEFAULT = "5"
+RADIUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
+RADIUS_PAM_AUTH_CONF_DIR = "/etc/pam_radius_auth.d/"
 
 
 def is_true(val):
@@ -127,19 +138,32 @@ class AaaCfg(object):
             'timeout': TACPLUS_SERVER_TIMEOUT_DEFAULT,
             'passkey': TACPLUS_SERVER_PASSKEY_DEFAULT
         }
-        self.auth = {}
         self.tacplus_global = {}
         self.tacplus_servers = {}
+        self.radius_global_default = {
+            'auth_port': RADIUS_SERVER_AUTH_PORT_DEFAULT,
+            'auth_type': RADIUS_SERVER_AUTH_TYPE_DEFAULT,
+            'retransmit': RADIUS_SERVER_RETRANSMIT_DEFAULT,
+            'timeout': RADIUS_SERVER_TIMEOUT_DEFAULT,
+            'passkey': RADIUS_SERVER_PASSKEY_DEFAULT
+        }
+        self.radius_global = {}
+        self.radius_servers = {}
+        self.auth = {}
         self.debug = False
 
     # Load conf from ConfigDb
-    def load(self, aaa_conf, tac_global_conf, tacplus_conf):
+    def load(self, aaa_conf, tac_global_conf, tacplus_conf, rad_global_conf, radius_conf):
         for row in aaa_conf:
             self.aaa_update(row, aaa_conf[row], modify_conf=False)
         for row in tac_global_conf:
             self.tacacs_global_update(row, tac_global_conf[row], modify_conf=False)
         for row in tacplus_conf:
             self.tacacs_server_update(row, tacplus_conf[row], modify_conf=False)
+        for row in rad_global_conf:
+            self.radius_global_update(row, rad_global_conf[row], modify_conf=False)
+        for row in radius_conf:
+            self.radius_server_update(row, radius_conf[row], modify_conf=False)
         self.modify_conf_file()
 
     def aaa_update(self, key, data, modify_conf=True):
@@ -173,6 +197,22 @@ class AaaCfg(object):
             cmd = "sed -e {0} {1} > {1}.new; mv -f {1} {1}.old; mv -f {1}.new {1}".format(' -e '.join(operations), filename)
             os.system(cmd)
 
+    def radius_global_update(self, key, data, modify_conf=True):
+        if key == 'global':
+            self.radius_global = data
+            if modify_conf:
+                self.modify_conf_file()
+
+    def radius_server_update(self, key, data, modify_conf=True):
+        if data == {}:
+            if key in self.radius_servers:
+                del self.radius_servers[key]
+        else:
+            self.radius_servers[key] = data
+
+        if modify_conf:
+            self.modify_conf_file()
+
     def modify_conf_file(self):
         auth = self.auth_default.copy()
         auth.update(self.auth)
@@ -188,11 +228,27 @@ class AaaCfg(object):
                 servers_conf.append(server)
             servers_conf = sorted(servers_conf, key=lambda t: int(t['priority']), reverse=True)
 
+        radius_global = self.radius_global_default.copy()
+        radius_global.update(self.radius_global)
+
+        radsrvs_conf = []
+        if self.radius_servers:
+            for addr in self.radius_servers:
+                server = radius_global.copy()
+                server['ip'] = addr
+                server.update(self.radius_servers[addr])
+                radsrvs_conf.append(server)
+            radsrvs_conf = sorted(radsrvs_conf, key=lambda t: t['priority'], reverse=True)
+
         template_file = os.path.abspath(PAM_AUTH_CONF_TEMPLATE)
         env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
         env.filters['sub'] = sub
         template = env.get_template(template_file)
-        pam_conf = template.render(auth=auth, servers=servers_conf)
+        if 'radius' in auth['login']:
+            pam_conf = template.render(auth=auth, servers=radsrvs_conf)
+        else:
+            pam_conf = template.render(auth=auth, servers=servers_conf)
+        
         with open(PAM_AUTH_CONF, 'w') as f:
             f.write(pam_conf)
 
@@ -204,13 +260,22 @@ class AaaCfg(object):
             self.modify_single_file('/etc/pam.d/sshd',  [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
             self.modify_single_file('/etc/pam.d/login', [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
 
-        # Add tacplus in nsswitch.conf if TACACS+ enable
+        # Add tacplus/radius in nsswitch.conf if TACACS+/RADIUS enable
         if 'tacacs+' in auth['login']:
             if os.path.isfile(NSS_CONF):
                 self.modify_single_file(NSS_CONF, [ "'/tacplus/b'", "'/^passwd/s/compat/tacplus &/'"])
         else:
             if os.path.isfile(NSS_CONF):
                 self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //'" ])
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/ radius//'" ])
+        elif 'radius' in auth['login']:
+            if os.path.isfile(NSS_CONF):
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //'" ])
+                self.modify_single_file(NSS_CONF, [ "'/radius/b'", "'/^passwd/s/compat/& radius/'"])
+        else:
+            if os.path.isfile(NSS_CONF):
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //'" ])
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/ radius//'" ])
 
         # Set tacacs+ server in nss-tacplus conf
         template_file = os.path.abspath(NSS_TACPLUS_CONF_TEMPLATE)
@@ -218,6 +283,28 @@ class AaaCfg(object):
         nss_tacplus_conf = template.render(debug=self.debug, servers=servers_conf)
         with open(NSS_TACPLUS_CONF, 'w') as f:
             f.write(nss_tacplus_conf)
+
+        # Set debug in nss-radius conf
+        template_file = os.path.abspath(NSS_RADIUS_CONF_TEMPLATE)
+        template = env.get_template(template_file)
+        nss_radius_conf = template.render(debug=self.debug, servers=radsrvs_conf)
+        with open(NSS_RADIUS_CONF, 'w') as f:
+            f.write(nss_radius_conf)
+
+        # Create the per server pam_radius_auth.conf
+        if self.radius_servers:
+            for addr in self.radius_servers:
+                srv = radius_global.copy()
+                srv['ip'] = addr
+                srv.update(self.radius_servers[addr])
+                pam_radius_auth_file = RADIUS_PAM_AUTH_CONF_DIR + addr + ":" + srv['auth_port'] + ".conf"
+                template_file = os.path.abspath(PAM_RADIUS_AUTH_CONF_TEMPLATE)
+                template = env.get_template(template_file)
+                pam_radius_auth_conf = template.render(server=srv)
+
+                with open(pam_radius_auth_file, 'w') as f:
+                    f.write(pam_radius_auth_conf)
+
 
 
 class HostConfigDaemon:
@@ -228,8 +315,10 @@ class HostConfigDaemon:
         aaa = self.config_db.get_table('AAA')
         tacacs_global = self.config_db.get_table('TACPLUS')
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
+        radius_global = self.config_db.get_table('RADIUS')
+        radius_server = self.config_db.get_table('RADIUS_SERVER')
         self.aaacfg = AaaCfg()
-        self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+        self.aaacfg.load(aaa, tacacs_global, tacacs_server, radius_global, radius_server)
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
@@ -261,6 +350,21 @@ class HostConfigDaemon:
             add = False
 
         self.iptables.iptables_handler(key, data, add)
+
+
+    def radius_server_handler(self, key, data):
+        self.aaacfg.radius_server_update(key, data)
+        log_data = copy.deepcopy(data)
+        if log_data.has_key('passkey'):
+            log_data['passkey'] = obfuscate(log_data['passkey'])
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
+
+    def radius_global_handler(self, key, data):
+        self.aaacfg.radius_global_update(key, data)
+        log_data = copy.deepcopy(data)
+        if log_data.has_key('passkey'):
+            log_data['passkey'] = obfuscate(log_data['passkey'])
+        syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
     def feature_status_handler(self, key, data):
         status_data = self.config_db.get_table('FEATURE')
@@ -307,6 +411,8 @@ class HostConfigDaemon:
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
         self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_status_handler(key, data))
+        self.config_db.subscribe('RADIUS_SERVER', lambda table, key, data: self.radius_server_handler(key, data))
+        self.config_db.subscribe('RADIUS', lambda table, key, data: self.radius_global_handler(key, data))
         self.config_db.listen()
 
 

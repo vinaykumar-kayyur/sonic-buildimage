@@ -1,0 +1,37 @@
+# RADIUS NSS Configuration File
+#
+# Debug: on|off|trace
+# Default: off
+#
+# debug=on
+{% if debug %}
+debug=on
+{% endif %}
+
+#
+# User Privilege:
+# Default:
+# user_priv=15;pw_info=remote_user_su;uid=1000;gid=1000;group=sudo,docker;dir=/home/admin;shell=/bin/bash
+# user_priv=1;pw_info=remote_user;uid=65534;gid=65534;group=users;dir=/var/tmp;shell=/bin/bash
+
+# Eg:
+# First need to create netops, operator using:
+#     useradd netops -G users -u 2007 -g 100 -c "netops" -m -s /bin/bash
+#     useradd operator -G users -u 2001 -g 100 -c "operator" -m -s /bin/rbash
+#
+# Then uncomment the lines below.
+#
+# user_priv=15;pw_info=remote_user_su;uid=1000;gid=1000;group=sudo,docker;dir=/home/admin;shell=/bin/bash
+# user_priv=7;pw_info=netops;uid=2007;gid=100;group=users;dir=/home/netops;shell=/bin/bash
+# user_priv=1;pw_info=operator;uid=2001;gid=100;group=users;dir=/home/operator;shell=/bin/rbash
+
+# many_to_one:
+#   y: Map TACACS+ users to one local user per privilege.
+#   n: Create local user account on first successful authentication.
+#   a: Anonymous: Return least privileged(user_priv=1) user info for unknown.
+# Default: n
+#
+
+# Eg:
+# many_to_one=y
+#
