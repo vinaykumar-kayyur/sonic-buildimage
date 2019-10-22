@@ -731,7 +731,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['ACL_TABLE'] = acls
     results['FEATURES'] = {
         'telemetry': {
-            'status': 'on'
+            'status': 'enabled'
         }
     }
 
