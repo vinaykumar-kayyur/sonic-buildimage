@@ -6,14 +6,9 @@
 !
 {% endblock banner %}
 !
-{% block system_init %}
-hostname {{ DEVICE_METADATA['localhost']['hostname'] }}
-password zebra
-log syslog informational
-log facility local4
+{% include "daemons.common.conf.j2" %}
+!
 agentx
-! enable password {# {{ en_passwd }} TODO: param needed #}
-{% endblock system_init %}
 !
 {% block interfaces %}
 ! Enable link-detect (default disabled)

@@ -6,11 +6,7 @@
 !
 {% endblock banner %}
 !
-{% block sys_init %}
-hostname {{ DEVICE_METADATA['localhost']['hostname'] }}
-password zebra
-enable password zebra
-{% endblock sys_init %}
+{% include "daemons.common.conf.j2" %}
 !
 {% block vrf %}
 {%  if VNET is defined %}
@@ -71,9 +67,3 @@ ipv6 protocol bgp route-map RM_SET_SRC6
 {% endif %}
 {% endblock source_loopback %}
 !
-{% block logging %}
-log syslog informational
-log facility local4
-{% endblock logging %}
-!
-
