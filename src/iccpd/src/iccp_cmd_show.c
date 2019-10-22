@@ -50,7 +50,6 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
 
     if (!(sys = system_get_instance()))
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
         return EXEC_TYPE_NO_EXIST_SYS;
     }
 
@@ -150,7 +149,6 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
 
     if (!(sys = system_get_instance()))
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
         return EXEC_TYPE_NO_EXIST_SYS;
     }
 
@@ -216,7 +214,6 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
 
     if (!(sys = system_get_instance()))
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
         return EXEC_TYPE_NO_EXIST_SYS;
     }
 
@@ -288,7 +285,6 @@ int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
 
     if (!(sys = system_get_instance()))
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
         return EXEC_TYPE_NO_EXIST_SYS;
     }
 
@@ -406,7 +402,6 @@ int iccp_peer_if_dump(char * *buf, int *num, int mclag_id)
 
     if (!(sys = system_get_instance()))
     {
-        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
         return EXEC_TYPE_NO_EXIST_SYS;
     }
 

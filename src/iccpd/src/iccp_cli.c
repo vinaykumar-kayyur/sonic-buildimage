@@ -293,15 +293,14 @@ int iccp_cli_attach_mclag_domain_to_port_channel( int domain, const char* ifname
 
     if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__,
-                        "attach interface(%s) is not a port-channel", ifname);
+        ICCPD_LOG_WARN(__FUNCTION__, "Attach interface(%s) is not a port-channel", ifname);
         return MCLAG_ERROR;
     }
 
     csm = system_get_csm_by_mlacp_id(domain);
     if (csm == NULL)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "MC-LAG ID %d doesn't exist", domain);
+        ICCPD_LOG_WARN(__FUNCTION__, "MC-LAG ID %d doesn't exist", domain);
         return MCLAG_ERROR;
     }
 
@@ -343,8 +342,7 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
 
     if (strncmp(ifname, PORTCHANNEL_PREFIX, strlen(PORTCHANNEL_PREFIX)) != 0)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__,
-                        "detach interface(%s) is not a port-channel",  ifname);
+        ICCPD_LOG_WARN(__FUNCTION__, "Detach interface(%s) is not a port-channel", ifname);
         return MCLAG_ERROR;
     }
 
@@ -360,7 +358,7 @@ int iccp_cli_detach_mclag_domain_to_port_channel( const char* ifname)
     /* find csm*/
     csm = lif_po->csm;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "detach mclag id = %d from ifname = %s",
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Detach mclag id = %d from ifname = %s",
                     csm->mlag_id, lif_po->name);
 
     /* process link state handler before detaching it.*/

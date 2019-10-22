@@ -249,9 +249,7 @@ int mlacp_bind_local_if(struct CSM* csm, struct LocalInterface* lif)
         lif_po = local_if_find_by_po_id(lif->po_id);
         if (lif_po == NULL)
         {
-            ICCPD_LOG_WARN(__FUNCTION__,
-                           "Failed to find port_channel instance for %d.",
-                           lif->po_id);
+            ICCPD_LOG_WARN(__FUNCTION__, "Failed to find port_channel instance for %d.", lif->po_id);
             return MCLAG_ERROR;
         }
 
@@ -305,9 +303,7 @@ int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname)
     }
     else
     {
-        ICCPD_LOG_WARN(__FUNCTION__,
-                       "%s: Failed to find a port instance .",
-                       ifname);
+        ICCPD_LOG_WARN(__FUNCTION__, "%s: Failed to find a port instance .", ifname);
         return 0;
     }
     /* process link state handler after attaching it.*/

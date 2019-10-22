@@ -31,12 +31,12 @@
 
 typedef enum _iccpd_log_level_t
 {
-    DEBUG_LOG_LEVEL     = 0,
-    INFO_LOG_LEVEL      = 1,
-    NOTICE_LOG_LEVEL    = 2,
-    WARN_LOG_LEVEL      = 3,
-    ERR_LOG_LEVEL       = 4,
-    CRITICAL_LOG_LEVEL  = 5
+    CRITICAL_LOG_LEVEL       = 0,
+    ERR_LOG_LEVEL          = 1,
+    WARN_LOG_LEVEL           = 2,
+    NOTICE_LOG_LEVEL         = 3,
+    INFO_LOG_LEVEL           = 4,
+    DEBUG_LOG_LEVEL          = 5
 } _iccpd_log_level_t;
 
 
@@ -58,6 +58,7 @@ struct LoggerConfig
 };
 
 struct LoggerConfig* logger_get_configuration();
+void logger_set_configuration(int log_level);
 void log_setup(char* progname, char* path);
 void log_finalize();
 void log_init(struct CmdOptionParser* parser);

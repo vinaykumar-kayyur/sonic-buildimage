@@ -29,75 +29,6 @@
 #include "../include/system.h"
 #include "../include/iccp_csm.h"
 
-/* Ethernet MAC Address setter - set by string. */
-static void ether_mac_set_addr_with_string(uint8_t* macdst, const char* macstr)
-{
-    char* dupmac = NULL;
-    char* token = NULL;
-    unsigned long oct;
-    int i = 0;
-
-    if (macdst == NULL || macstr == NULL)
-        return;
-
-    memset(macdst, 0, 6);
-
-    dupmac = strdup(macstr);
-
-    /* tokenize */
-    token = strtok(dupmac, " -:");
-    oct = strtoul(token, NULL, 16);
-    if (oct > 255)
-        oct = 0xff;
-    macdst[0] = oct;
-
-    for (i = 1; i < 6; ++i)
-    {
-        token = strtok(NULL, " -:");
-        if (token == NULL)
-        {
-            memset(macdst, 0, 6);
-            break;
-        }
-        oct = strtoul(token, NULL, 16);
-        if (oct > 255)
-            oct = 0xff;
-        macdst[i] = oct;
-    }
-
-    free(dupmac);
-
-    return;
-}
-
-/* Get the Ethernet MAC Address by interface name. */
-void ether_mac_set_addr_with_if_name(char* name, uint8_t* mac)
-{
-    char addr_file[64];
-    FILE *file_ptr = NULL;
-    char buf[64];
-
-    if (!mac || !name)
-        return;
-
-    memset(addr_file, 0, 64);
-    snprintf(addr_file, 63, "/sys/class/net/%s/address", name);
-
-    if ((file_ptr = fopen(addr_file, "r")))
-    {
-        memset(buf, 0, 64);
-        fgets(buf, 63, file_ptr);
-        fclose(file_ptr);
-        ether_mac_set_addr_with_string(mac, buf);
-    }
-    else
-    {
-        ICCPD_LOG_WARN(__FUNCTION__, "Failed to find device %s from %s", name, addr_file);
-    }
-
-    return;
-}
-
 void local_if_init(struct LocalInterface* local_if)
 {
     if (local_if == NULL)
@@ -152,7 +83,7 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type)
 
     if (!(local_if = (struct LocalInterface*)malloc(sizeof(struct LocalInterface))))
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "port ifindex = %d, malloc failed", ifindex);
+        ICCPD_LOG_WARN(__FUNCTION__, "Port ifindex = %d, malloc failed", ifindex);
         return NULL;
     }
 
@@ -196,13 +127,13 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type)
             break;
 
         default:
-            ICCPD_LOG_WARN(__FUNCTION__, "the type of local interface (%s) is not acceptable", ifname);
+            ICCPD_LOG_WARN(__FUNCTION__, "The type of local interface (%s) is not acceptable", ifname);
             if (local_if)
                 free(local_if);
             return NULL;
     }
 
-    ICCPD_LOG_INFO(__FUNCTION__,
+    ICCPD_LOG_NOTICE(__FUNCTION__,
                    "Create a local_if = %s ifindex = %d MAC = %02x:%02x:%02x:%02x:%02x:%02x, state = %s",
                    ifname, local_if->ifindex, local_if->mac_addr[0], local_if->mac_addr[1], local_if->mac_addr[2],
                    local_if->mac_addr[3], local_if->mac_addr[4], local_if->mac_addr[5], local_if->state ? "down" : "up");
@@ -355,7 +286,7 @@ void local_if_destroy(char *ifname)
     if (!lif)
         return;
 
-    ICCPD_LOG_WARN(__FUNCTION__, "destroy interface %s, %d\n", lif->name, lif->ifindex);
+    ICCPD_LOG_WARN(__FUNCTION__, "Destroy interface %s, %d\n", lif->name, lif->ifindex);
 
     if (lif->type == IF_T_VLAN)
         local_if_vlan_remove(lif);
@@ -439,7 +370,7 @@ void local_if_purge_clear(void)
     while (!LIST_EMPTY(&(sys->lif_purge_list)))
     {
         lif = LIST_FIRST(&(sys->lif_purge_list));
-        ICCPD_LOG_DEBUG(__FUNCTION__, "purge %s", lif->name);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Purge %s", lif->name);
         LIST_REMOVE(lif, system_purge_next);
         if (lif->mlacp_purge_next.le_next != 0 && lif->mlacp_purge_next.le_prev != 0)
             LIST_REMOVE(lif, mlacp_purge_next);
@@ -484,7 +415,7 @@ struct PeerInterface* peer_if_create(struct CSM* csm,
     if (type != IF_T_PORT && type != IF_T_PORT_CHANNEL)
     {
         ICCPD_LOG_WARN(__FUNCTION__,
-                       "the type(%) of peer interface(%d) is not acceptable",
+                       "The type(%) of peer interface(%d) is not acceptable",
                        type, peer_if_number);
         return NULL;
     }
@@ -492,7 +423,7 @@ struct PeerInterface* peer_if_create(struct CSM* csm,
     /* create a new peer if*/
     if ((peer_if = (struct PeerInterface*)malloc(sizeof(struct PeerInterface))) == NULL)
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "peer port id = %d, malloc failed", peer_if_number);
+        ICCPD_LOG_WARN(__FUNCTION__, "Peer port id = %d, malloc failed", peer_if_number);
         return NULL;
     }
     memset(peer_if, 0, sizeof(struct PeerInterface));
@@ -541,8 +472,8 @@ void peer_if_del_all_vlan(struct PeerInterface* pif)
     while (!LIST_EMPTY(&(pif->vlan_list)))
     {
         pvlan = LIST_FIRST(&(pif->vlan_list));
-        ICCPD_LOG_DEBUG(__FUNCTION__, "remove VLAN ID = %d from peer's %s",
-                        pvlan->vid, pif->name);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove peer intf %s from VLAN %d",
+                        pif->name, pvlan->vid);
         LIST_REMOVE(pvlan, port_next);
         free(pvlan);
     }
@@ -552,7 +483,7 @@ void peer_if_del_all_vlan(struct PeerInterface* pif)
 
 void peer_if_destroy(struct PeerInterface* pif)
 {
-    ICCPD_LOG_WARN(__FUNCTION__, "destroy peer's interface %s, %d\n",
+    ICCPD_LOG_WARN(__FUNCTION__, "Destroy peer's interface %s, %d",
                    pif->name, pif->ifindex);
 
     /* destroy if*/
@@ -583,7 +514,7 @@ int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid)
         if (!vlan)
             return MCLAG_ERROR;
 
-        ICCPD_LOG_DEBUG(__FUNCTION__, "add VLAN ID = %d on %s", vid, local_if->name);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add %s to VLAN %d", local_if->name, vid);
         local_if->port_config_sync = 1;
         LIST_INSERT_HEAD(&(local_if->vlan_list), vlan, port_next);
     }
@@ -616,7 +547,7 @@ void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid)
         local_if->port_config_sync = 1;
     }
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "remove VLAN ID = %d on %s", vid, local_if->name);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", local_if->name, vid);
 
     return;
 }
@@ -628,7 +559,7 @@ void local_if_del_all_vlan(struct LocalInterface* lif)
     while (!LIST_EMPTY(&(lif->vlan_list)))
     {
         vlan = LIST_FIRST(&(lif->vlan_list));
-        ICCPD_LOG_DEBUG(__FUNCTION__, "remove VLAN ID = %d on %s", vlan->vid, lif->name);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", lif->name, vlan->vid);
         LIST_REMOVE(vlan, port_next);
         free(vlan);
     }
@@ -649,7 +580,7 @@ int peer_if_add_vlan(struct PeerInterface* peer_if, uint16_t vlan_id)
     {
         if (peer_vlan->vid == vlan_id)
         {
-            ICCPD_LOG_DEBUG(__FUNCTION__, "update VLAN ID = %d from peer's %s", peer_vlan->vid, peer_if->name);
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Update VLAN ID %d for peer intf %s", peer_vlan->vid, peer_if->name);
             break;
         }
     }
@@ -660,7 +591,7 @@ int peer_if_add_vlan(struct PeerInterface* peer_if, uint16_t vlan_id)
         if (!peer_vlan)
             return MCLAG_ERROR;
 
-        ICCPD_LOG_DEBUG(__FUNCTION__, "add VLAN ID = %d from peer's %s", vlan_id, peer_if->name);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer intf %s to VLAN %d", peer_if->name, vlan_id);
         LIST_INSERT_HEAD(&(peer_if->vlan_list), peer_vlan, port_next);
     }
 
@@ -682,7 +613,7 @@ int peer_if_clean_unused_vlan(struct PeerInterface* peer_if)
     {
         if (peer_vlan != NULL)
         {
-            ICCPD_LOG_DEBUG(__FUNCTION__, "remove VLAN ID = %d from peer's %s", peer_vlan->vid, peer_if->name);
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Remove peer intf %s from VLAN %d", peer_if->name, peer_vlan->vid);
             LIST_REMOVE(peer_vlan, port_next);
             free(peer_vlan);
             peer_vlan = NULL;
@@ -694,7 +625,7 @@ int peer_if_clean_unused_vlan(struct PeerInterface* peer_if)
 
     if (peer_vlan != NULL)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "remove VLAN ID = %d from peer's %s", peer_vlan->vid, peer_if->name);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove peer intf %s from VLAN %d", peer_if->name, peer_vlan->vid);
         LIST_REMOVE(peer_vlan, port_next);
         free(peer_vlan);
     }
@@ -714,7 +645,7 @@ int set_sys_arp_accept_flag(char* ifname, int flag)
     snprintf(arp_file, 63, "/proc/sys/net/ipv4/conf/%s/arp_accept", ifname);
     if (!(file_ptr = fopen(arp_file, "r")))
     {
-        ICCPD_LOG_DEBUG(__func__, "Failed to find device %s from %s", ifname, arp_file);
+        ICCPD_LOG_WARN(__func__, "Failed to find device %s from %s", ifname, arp_file);
         return result;
     }
 
@@ -726,7 +657,7 @@ int set_sys_arp_accept_flag(char* ifname, int flag)
         memset(cmd, 0, 64);
         snprintf(cmd, 63, "echo %d > /proc/sys/net/ipv4/conf/%s/arp_accept", flag, ifname);
         if (system(cmd))
-            ICCPD_LOG_DEBUG(__func__, "Failed to execute cmd = %s", flag, cmd);
+            ICCPD_LOG_WARN(__func__, "Failed to execute cmd = %s", flag, cmd);
     }
 
     fclose(file_ptr);

@@ -234,8 +234,8 @@ static int arp_set_handler(struct CSM* csm,
                 arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
 
         mlacp_fsm_arp_set(arp_msg->ifname, arp_msg->ipv4_addr, mac_str);
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Add dynamic ARP to kernel [%s]",
-                        show_ip_str(htonl(arp_msg->ipv4_addr)));
+        /*ICCPD_LOG_DEBUG(__FUNCTION__, "Add dynamic ARP to kernel [%s]",
+                        show_ip_str(htonl(arp_msg->ipv4_addr)));*/
     }
     goto done;
 
@@ -253,10 +253,10 @@ static int arp_set_handler(struct CSM* csm,
         if (arp_msg->op_type == ARP_SYNC_DEL)
             continue;
 
+        /* link broken, del all dynamic arp on the lif*/
         mlacp_fsm_arp_del(arp_msg->ifname, arp_msg->ipv4_addr);
-        /* link broken, del all static arp on the lif*/
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Del dynamic ARP [%s]",
-                        show_ip_str(htonl(arp_msg->ipv4_addr)));
+        /*ICCPD_LOG_DEBUG(__FUNCTION__, "Del dynamic ARP [%s]",
+                        show_ip_str(htonl(arp_msg->ipv4_addr)));*/
     }
 
  done:
@@ -302,7 +302,7 @@ static void set_route_by_linux_route(struct CSM* csm,
 #endif
 
     ret = system(syscmd);
-    ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "%s  ret = %d", syscmd, ret);
 
     return;
 }
@@ -363,8 +363,8 @@ static void set_l3_itf_state(struct CSM *csm,
     {
         /*set_default_route(csm);*/
 
-        ICCPD_LOG_DEBUG(__FUNCTION__, "  route set Interface = %s   route type = %d   route = %s   nexthop via = %s ",
-                        set_l3_local_if->name, route_type, show_ip_str(htonl(set_l3_local_if->ipv4_addr)), csm->peer_ip );
+        /*ICCPD_LOG_DEBUG(__FUNCTION__, "  route set Interface = %s   route type = %d   route = %s   nexthop via = %s ",
+                        set_l3_local_if->name, route_type, show_ip_str(htonl(set_l3_local_if->ipv4_addr)), csm->peer_ip );*/
 
         /* set static route*/
         if (route_type == ROUTE_ADD)
@@ -428,7 +428,7 @@ static void mlacp_clean_fdb(void)
     if (sys->sync_fd)
         write(sys->sync_fd, msg_buf, msg_hdr->len);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "notify mclagsyncd clear fdb");
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Notify mclagsyncd to clear FDB");
 
     return;
 }
@@ -467,8 +467,8 @@ void set_peerlink_mlag_port_learn(struct LocalInterface *lif, int enable)
     msg_hdr->len += sizeof(mclag_sub_option_hdr_t);
     msg_hdr->len += sub_msg->op_len;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, " send port-learn msg to sync for %s , member %s",
-                    lif->name, sub_msg->data);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Send %s port MAC learn msg to mclagsyncd for %s",
+                    sub_msg->op_type == MCLAG_SUB_OPTION_TYPE_MAC_LEARN_DISABLE ? "DISABLE":"ENABLE", lif->name);
 
     /*send msg*/
     if (sys->sync_fd)
@@ -600,7 +600,11 @@ void update_peerlink_isolate_from_all_csm_lif(
     if (dst_len)
     {
         memcpy(sub_msg->data, mlag_po_buf, dst_len);
-        ICCPD_LOG_DEBUG(__FUNCTION__, "isolate dst %s, data %s, len %d", mlag_po_buf, sub_msg->data, dst_len);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Send port isolate msg to mclagsyncd, src port %s, dst port %s", csm->peer_link_if->name, mlag_po_buf);
+    }
+    else
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Send port isolate msg to mclagsyncd, src port %s, dst port is NULL", csm->peer_link_if->name);
     }
 
     /*send msg*/
@@ -683,11 +687,11 @@ void update_peerlink_isolate_from_pif(
 
     if (!lif)
     {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "can't find lif");
+        ICCPD_LOG_WARN(__FUNCTION__, "Can't find local if for %s", pif->name);
         return;
     }
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, " from peer %s local(%s) / peer(%s)",
+    ICCPD_LOG_DEBUG(__FUNCTION__, "From if %s local(%s) / peer(%s)",
                     lif->name,
                     (lif_po_state) ? "up" : "down",
                     (pif_po_state) ? "up" : "down");
@@ -697,7 +701,7 @@ void update_peerlink_isolate_from_pif(
         if (pif_po_state == 1)
         {
             /* both peer-pair link up, enable port-isolate*/
-            ICCPD_LOG_DEBUG(__FUNCTION__, " Enable port-isolate from %s to %s",
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Enable port-isolate from %s to %s",
                             csm->peer_link_if->name, lif->name);
             set_peerlink_mlag_port_isolate(csm, lif, 1);
         }
@@ -741,7 +745,7 @@ static void update_peerlink_isolate_from_lif(
         break;
     }
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, " from local %s local(%s) / peer(%s)",
+    ICCPD_LOG_DEBUG(__FUNCTION__, "From if %s local(%s) / peer(%s)",
                     lif->name, (lif_po_state) ? "up" : "down", (pif_po_state) ? "up" : "down");
 
     if (lif_po_state == 1)
@@ -903,11 +907,11 @@ void syn_arp_info_to_peer(struct CSM *csm, struct LocalInterface *local_if)
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
-                ICCPD_LOG_DEBUG( __FUNCTION__, "Enqueue ARP[ADD] for %s",
-                                 show_ip_str(htonl(arp_msg->ipv4_addr)));
+                /*ICCPD_LOG_DEBUG( __FUNCTION__, "Enqueue ARP[ADD] for %s",
+                                 show_ip_str(htonl(arp_msg->ipv4_addr)));*/
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue ARP[ADD] for %s",
+                ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue ARP[ADD] for %s",
                                 show_ip_str(htonl(arp_msg->ipv4_addr)));
         }
     }
@@ -995,8 +999,7 @@ void iccp_get_fdb_change_from_syncd( void)
     msg_hdr->type =  MCLAG_MSG_TYPE_GET_FDB_CHANGES;
     msg_hdr->len = sizeof(struct IccpSyncdHDr);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "fd %d write get fdb change msg ",
-                    sys->sync_fd);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Send get fdb change msg to mclagsyncd");
 
     /*send msg*/
     if (sys->sync_fd > 0)
@@ -1031,8 +1034,8 @@ void iccp_send_fdb_entry_to_syncd( struct MACMsg* mac_msg, uint8_t mac_type)
     mac_info->op_type = mac_msg->op_type;
     msg_hdr->len = sizeof(struct IccpSyncdHDr) + sizeof(struct mclag_fdb_info);
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "write mac msg vid : %d ; ifname %s ; mac %s fdb type %s ; op type %s",
-                    mac_info->vid, mac_info->port_name, mac_info->mac, mac_info->type == MAC_TYPE_STATIC ? "static" : "dynamic", mac_info->op_type == MAC_SYNC_ADD ? "add" : "del");
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Send mac %s msg to mclagsyncd, vid %d ; ifname %s ; mac %s; type %s",
+                    mac_info->op_type == MAC_SYNC_ADD ? "add" : "del", mac_info->vid, mac_info->port_name, mac_info->mac, mac_info->type == MAC_TYPE_STATIC ? "static" : "dynamic");
 
     /*send msg*/
     if (sys->sync_fd > 0 )
@@ -1078,9 +1081,14 @@ uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t 
             if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg, tail);
-                ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
-                               mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                               mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);*/
             }
+            else
+            {
+                ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue MAC-msg-list: %s, add %s vlan-id %d, age_flag %d",
+                               mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                }
         }
     }
     else/*set age flag*/
@@ -1097,8 +1105,13 @@ uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t 
             if (iccp_csm_init_msg(&msg, (char*)mac_msg, sizeof(struct MACMsg)) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg, tail);
-                ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
-                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                /*ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
+                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);*/
+            }
+            else
+            {
+                ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue MAC-msg-list: %s, del %s vlan-id %d, age_flag %d",
+                               mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
             }
         }
     }
@@ -1128,10 +1141,10 @@ static void update_l2_mac_state(struct CSM *csm,
         /*portchannel down*/
         if (po_state == 0)
         {
-            mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 1);
+            ICCPD_LOG_DEBUG(__FUNCTION__, "Intf %s down, age local MAC %s vlan-id %d",
+                            mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
-            ICCPD_LOG_DEBUG(__FUNCTION__, "Intf down,flag %d  del MAC: %s, MAC %s vlan-id %d",
-                            mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+            mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 1);
 
             if (mac_msg->age_flag == (MAC_AGE_LOCAL | MAC_AGE_PEER))
             {
@@ -1139,7 +1152,7 @@ static void update_l2_mac_state(struct CSM *csm,
                 if (mac_msg->fdb_type != MAC_TYPE_STATIC)
                     del_mac_from_chip(mac_msg);
 
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Intf down, del MAC: %s, MAC %s vlan-id %d",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Intf %s down, del MAC %s vlan-id %d",
                                 mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
                 /*If local and peer both aged, del the mac*/
@@ -1167,16 +1180,16 @@ static void update_l2_mac_state(struct CSM *csm,
                         memcpy(mac_msg->ifname, csm->peer_itf_name, IFNAMSIZ);
                     }
 
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "Intf down, flag %d, redirect MAC to peer-link: %s, MAC %s vlan-id %d",
-                                    mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "Intf %s down, redirect MAC %s vlan-id %d to peer-link %s",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, csm->peer_itf_name);
                 }
                 else
                 {
                     /*peer-link is not configured, del mac from ASIC, mac still in mac_list*/
                     del_mac_from_chip(mac_msg);
 
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "Intf down, flag %d, peer-link is not configured: %s, MAC %s vlan-id %d",
-                                    mac_msg->age_flag, mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "Intf %s down, peer-link is not configured: MAC %s vlan-id %d",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
                 }
             }
         }
@@ -1186,8 +1199,8 @@ static void update_l2_mac_state(struct CSM *csm,
             /*when this portchannel up, recover the mac back*/
             if (strcmp(mac_msg->ifname, csm->peer_itf_name) == 0)
             {
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Intf up, redirect MAC to portchannel: %s, MAC %s vlan-id %d",
-                                mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Intf %s up, redirect MAC %s vlan-id %d from peerlink to %s",
+                                mac_msg->origin_ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->origin_ifname);
 
                 /*Remove MAC_AGE_LOCAL flag*/
                 mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 0);
@@ -1202,7 +1215,7 @@ static void update_l2_mac_state(struct CSM *csm,
             {
                 /*this may be peerlink is not configured and portchannel is down*/
                 /*when this portchannel up, add the mac back to ASIC*/
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Intf up, add MAC to ASIC: %s, MAC %s vlan-id %d",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Intf %s up, add MAC %s vlan-id %d to ASIC",
                                 mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
                 /*Remove MAC_AGE_LOCAL flag*/
@@ -1268,8 +1281,8 @@ static void mlacp_conn_handler_fdb(struct CSM* csm)
                 {
                     mac_msg->age_flag &= ~MAC_AGE_PEER;
                     TAILQ_INSERT_TAIL(&(MLACP(csm).mac_msg_list), msg_send, tail);
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d, age_flag %d",
-                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list enqueue: %s, add %s vlan-id %d",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
                 }
             }
             else
@@ -1277,8 +1290,8 @@ static void mlacp_conn_handler_fdb(struct CSM* csm)
                 /*If MAC with local age flag and is point to MCLAG enabled port, reomove local age flag*/
                 if (strcmp(mac_msg->ifname, csm->peer_itf_name) != 0)
                 {
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list not enqueue for local age flag: %s, mac %s vlan-id %d, age_flag %d, remove local age flag",
-                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "MAC-msg-list not enqueue for local age flag: %s, mac %s vlan-id %d, remove local age flag",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
                     mac_msg->age_flag &= ~MAC_AGE_LOCAL;
                 }
             }
@@ -1428,8 +1441,8 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
         mac_msg = (struct MACMsg*)msg->buf;
 
         mac_msg->age_flag |= MAC_AGE_PEER;
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %s, add %s vlan-id %d, op_type %d",
-                        mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->op_type);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add peer age flag: %s, MAC %s vlan-id %d",
+                        mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
 
         /* find the MAC that the port is peer-link or local and peer both aged, to be deleted*/
         if (strcmp(mac_msg->ifname, csm->peer_itf_name) != 0 && mac_msg->age_flag != (MAC_AGE_LOCAL | MAC_AGE_PEER))
@@ -1507,10 +1520,10 @@ void mlacp_peerlink_down_handler(struct CSM* csm)
         if (strcmp(mac_msg->ifname, csm->peer_itf_name) != 0)
             continue;
 
-        mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 1);
-
         ICCPD_LOG_DEBUG(__FUNCTION__, "Peer link down, del MAC for peer-link: %s, MAC %s vlan-id %d",
                         mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
+
+        mac_msg->age_flag = set_mac_local_age_flag(csm, mac_msg, 1);
 
         /*Send mac del message to mclagsyncd*/
         del_mac_from_chip(mac_msg);
@@ -1604,7 +1617,7 @@ int iccp_connect_syncd()
         goto conn_fail;
     }
 
-    ICCPD_LOG_WARN(__FUNCTION__, "success to link syncd");
+    ICCPD_LOG_NOTICE(__FUNCTION__, "Success to link syncd");
     sys->sync_fd = fd;
 
     event.data.fd = fd;
@@ -1616,8 +1629,7 @@ int iccp_connect_syncd()
 
  conn_fail:
     if (count == 0)
-        ICCPD_LOG_DEBUG(__FUNCTION__, "%s:%d, mclag syncd socket connect fail",
-                        __FUNCTION__, __LINE__);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Mclag syncd socket connect fail");
 
     count++;
 
@@ -1674,7 +1686,7 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
 
     mac_msg->age_flag = 0;
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC msg vid %d mac %s port %s optype %s ", vid, mac_str, ifname, op_type == MAC_SYNC_ADD ? "add" : "del");
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Recv MAC msg from mclagsyncd, vid %d mac %s port %s optype %s ", vid, mac_str, ifname, op_type == MAC_SYNC_ADD ? "add" : "del");
     /*Debug*/
     #if 0
     /* dump receive MAC info*/
@@ -1812,8 +1824,8 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
                 }
                 else
                 {
-                    ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC-msg-list: %s, add %s vlan-id %d, age_flag %d",
-                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, mac_msg->age_flag);
+                    ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue MAC-msg-list: %s, MAC %s vlan-id %d",
+                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
                 }
             }
 
@@ -1826,7 +1838,7 @@ void do_mac_update_from_syncd(char mac_str[ETHER_ADDR_STR_LEN], uint16_t vid, ch
                                 mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);*/
             }
             else
-                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC %s, add %s vlan-id %d",
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Failed to enqueue MAC %s, MAC %s vlan-id %d",
                                 mac_msg->ifname, mac_msg->mac_str, mac_msg->vid);
         }
     }
@@ -1981,6 +1993,8 @@ char * mclagd_ctl_cmd_str(int req_type)
         case INFO_TYPE_DUMP_PEER_PORTLIST:
             return "dump peer portlist";
 
+        case INFO_TYPE_CONFIG_LOGLEVEL:
+            return "config loglevel";
         default:
             break;
     }
@@ -2005,7 +2019,7 @@ int mclagd_ctl_sock_create()
     sys->sync_ctrl_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sys->sync_ctrl_fd < 0)
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "Failed to create mclagd ctl sock\n");
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to create mclagd ctl sock");
         return sys->sync_ctrl_fd;
     }
 
@@ -2018,14 +2032,14 @@ int mclagd_ctl_sock_create()
 
     if ((ret = bind(sys->sync_ctrl_fd, (struct sockaddr*)&addr, addr_len)) < 0)
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "Failed to bind mclagd ctl socket %s:%s\n", sys->mclagdctl_file_path, strerror(errno));
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to bind mclagd ctl socket %s:%s", sys->mclagdctl_file_path, strerror(errno));
         close(sys->sync_ctrl_fd);
         return MCLAG_ERROR;
     }
 
     if (listen(sys->sync_ctrl_fd, 5) < 0)
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "Failed to listen unix mclagd ctl socket%s:%s\n", sys->mclagdctl_file_path, strerror(errno));
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to listen unix mclagd ctl socket%s:%s", sys->mclagdctl_file_path, strerror(errno));
         close(sys->sync_ctrl_fd);
         return MCLAG_ERROR;
     }
@@ -2048,7 +2062,7 @@ int mclagd_ctl_sock_accept(int fd)
     client_fd = accept(fd, (struct sockaddr*)&client_addr, &addr_len);
     if (client_fd < 0)
     {
-        ICCPD_LOG_WARN(__FUNCTION__, "failed to accept a client from mclagdctl\n");
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to accept a client from mclagdctl");
         return MCLAG_ERROR;
     }
 
@@ -2121,7 +2135,6 @@ void mclagd_ctl_handle_dump_state(int client_fd, int mclag_id)
     int len_tmp = 0;
 
     ret = iccp_mclag_config_dump(&Pbuf, &state_num, mclag_id);
-    ICCPD_LOG_WARN(__FUNCTION__, "state_num = %d", state_num);
     if (ret != EXEC_TYPE_SUCCESS)
     {
         len_tmp = sizeof(struct mclagd_reply_hdr);
@@ -2314,6 +2327,25 @@ void mclagd_ctl_handle_dump_peer_portlist(int client_fd, int mclag_id)
     return;
 }
 
+void mclagd_ctl_handle_config_loglevel(int client_fd, int log_level)
+{
+    char buf[sizeof(struct mclagd_reply_hdr)+sizeof(int)];
+    struct mclagd_reply_hdr *hd = NULL;
+    int len_tmp = 0;
+
+    logger_set_configuration(log_level);
+
+    len_tmp = sizeof(struct mclagd_reply_hdr);
+    memcpy(buf, &len_tmp, sizeof(int));
+    hd = (struct mclagd_reply_hdr *)(buf + sizeof(int));
+    hd->exec_result = EXEC_TYPE_SUCCESS;
+    hd->info_type = INFO_TYPE_CONFIG_LOGLEVEL;
+    hd->data_len = 0;
+    mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
+
+    return;
+}
+
 int mclagd_ctl_interactive_process(int client_fd)
 {
     char buf[512] = { 0 };
@@ -2331,7 +2363,7 @@ int mclagd_ctl_interactive_process(int client_fd)
 
     req = (struct mclagdctl_req_hdr*)buf;
 
-    ICCPD_LOG_WARN(__FUNCTION__, "rcv request %s from mclagdctl", mclagd_ctl_cmd_str(req->info_type));
+    ICCPD_LOG_DEBUG(__FUNCTION__, "Receive request %s from mclagdctl", mclagd_ctl_cmd_str(req->info_type));
 
     switch (req->info_type)
     {
@@ -2355,6 +2387,10 @@ int mclagd_ctl_interactive_process(int client_fd)
             mclagd_ctl_handle_dump_peer_portlist(client_fd, req->mclag_id);
             break;
 
+        case INFO_TYPE_CONFIG_LOGLEVEL:
+            mclagd_ctl_handle_config_loglevel(client_fd, req->mclag_id);
+            break;
+			
         default:
             return MCLAG_ERROR;
     }

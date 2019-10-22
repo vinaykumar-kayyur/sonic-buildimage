@@ -165,7 +165,7 @@ enum Reason_ID iccp_consistency_check(char* ifname)
         ret = check_func[i](ifname);
         if (ret != 1)
         {
-            ICCPD_LOG_DEBUG(__FUNCTION__, "%s ret = %d", reasons[i], ret);
+            ICCPD_LOG_WARN(__FUNCTION__, "%s ret = %d", reasons[i], ret);
             fprintf(stdout, "%s \n", reasons[i]);
             return i;
         }

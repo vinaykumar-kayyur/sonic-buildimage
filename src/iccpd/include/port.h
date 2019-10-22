@@ -139,8 +139,6 @@ int local_if_is_l3_mode(struct LocalInterface* local_if);
 void local_if_init(struct LocalInterface*);
 void local_if_finalize(struct LocalInterface*);
 
-void ether_mac_set_addr_with_if_name(char* name, uint8_t* mac);
-
 struct PeerInterface* peer_if_create(struct CSM* csm, int peer_if_number, int type);
 struct PeerInterface* peer_if_find_by_name(struct CSM* csm, char* name);
 
