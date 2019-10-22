@@ -28,6 +28,13 @@ route-map FROM_BGPMON_V4 deny 10
 route-map TO_BGPMON_V4 permit 10
 !
 {% endif %}
+!
+route-map ISOLATE permit 10
+  set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+!
+route-map set-next-hop-global-v6 permit 10
+  set ipv6 next-hop prefer-global
+!
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   bgp log-neighbor-changes
   bgp bestpath as-path multipath-relax
