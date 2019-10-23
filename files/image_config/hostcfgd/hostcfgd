@@ -306,10 +306,10 @@ class HostConfigDaemon:
         self.iptables.iptables_handler(key, data, add)
         
     def feature_status_handler(self, key, data):
-        status_data = self.config_db.get_table('FEATURES')
+        status_data = self.config_db.get_table('FEATURE')
         for key in status_data.keys():
         if not key:
-            syslog.syslog(syslog.LOG_WARNING, "FEATURES key is missing")
+            syslog.syslog(syslog.LOG_WARNING, "FEATURE key is missing")
             return
         status = status_data[key]['status']
         if not status:
@@ -318,11 +318,11 @@ class HostConfigDaemon:
         if status == "enabled":
             sudo systemctl enable key
             sudo systemctl start key
-            syslog.syslog(syslog.LOG_INFO, "FEATURES {} is enabled and started".format(key))
+            syslog.syslog(syslog.LOG_INFO, "FEATURE {} is enabled and started".format(key))
         if status == "disabled":
             sudo systemctl stop key
             sudo systemctl disable key
-            syslog.syslog(syslog.LOG_INFO, "FEATURES {} is stopped and disabled".format(key))
+            syslog.syslog(syslog.LOG_INFO, "FEATURE {} is stopped and disabled".format(key))
 
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
@@ -330,7 +330,7 @@ class HostConfigDaemon:
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('DEVICE_METADATA', lambda table, key, data: self.hostname_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
-        self.config_db.subscribe('FEATURES', lambda table, key, data: self.feature_status_handler(key, data))
+        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_status_handler(key, data))
         self.config_db.listen()
 
 
