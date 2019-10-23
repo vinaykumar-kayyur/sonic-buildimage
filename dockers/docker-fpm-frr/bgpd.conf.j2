@@ -13,5 +13,6 @@ agentx
 {% if DEVICE_METADATA['localhost']['type'] == "SpineChassisFrontendRouter" %}
 {%  include "bgpd.conf.spine_chassis_frontend_router.j2" %}
 {% endif %}
+!
 {% include "bgpd.conf.default.j2" %}
 !
