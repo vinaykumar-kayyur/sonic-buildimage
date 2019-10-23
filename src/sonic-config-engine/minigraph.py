@@ -729,7 +729,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     results['ACL_TABLE'] = acls
-    results['FEATURES'] = {
+    results['FEATURE'] = {
         'telemetry': {
             'status': 'enabled'
         }
