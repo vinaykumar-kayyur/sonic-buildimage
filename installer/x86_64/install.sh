@@ -125,6 +125,9 @@ if [ "$install_env" = "onie" ]; then
     onie_initrd_tmp=/
 fi
 
+enable_kdump="%%ENABLE_KDUMP%%"
+KDUMP_PARAM="crashkernel=256M"
+
 # The build system prepares this script by replacing %%DEMO-TYPE%%
 # with "OS" or "DIAG".
 demo_type="%%DEMO_TYPE%%"
@@ -536,7 +539,11 @@ trap_push "rm $grub_cfg || true"
 [ -r ./platform.conf ] && . ./platform.conf
 
 DEFAULT_GRUB_SERIAL_COMMAND="serial --port=${CONSOLE_PORT} --speed=${CONSOLE_SPEED} --word=8 --parity=no --stop=1"
-DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 quiet"
+if [ $enable_kdump = "y" ];then
+    DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 ${KDUMP_PARAM} quiet"
+else
+    DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 quiet"
+fi
 GRUB_SERIAL_COMMAND=${GRUB_SERIAL_COMMAND:-"$DEFAULT_GRUB_SERIAL_COMMAND"}
 GRUB_CMDLINE_LINUX=${GRUB_CMDLINE_LINUX:-"$DEFAULT_GRUB_CMDLINE_LINUX"}
 export GRUB_SERIAL_COMMAND
