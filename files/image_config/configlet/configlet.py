@@ -4,72 +4,71 @@
 A tool to update CONFIG-DB with JSON diffs that can update/delete redis-DB.
 
 All elements in the list are processed in the same order as it is present.
-The list entry, contains objects for delete & update
-Within an list entry that has delete & update, delete gets done first, followed by update.
-Within an op (delete/update) list, the entries are processed in given order.
 Within an entry in the list, the tables are handled in any order.
 Within a table, the keys are handled in any order.
+
+
+
+A sample for delete a field TABLE1|KEY1|Key2:field1
 [
     {
-        "delete": [
-            {
-                "TABLE1": {
-                    "Key1": {
-                        "Key2": {
-                            "Field1": "Val1"
-                        }
-                    }
+        "TABLE1": {
+            "Key1": {
+                "Key2": {
+                    "Field1": "Val1"
                 }
             }
-        ],
-        "update": [
-            {
-                "TABLE1": {
-                    "Key1": {
-                        "Key2": {
-                            "Field1": "Val1",
-                            "Field2": "Val2",
-                            "Field3": "Val3"
-                        },
-                        "Key2_1": {
-                            "Field2_1": "Val1",
-                            "Field2_2": "Val2",
-                            "Field2_3": "Val3"
-                        }
-                    }
-                }
-            },
-            {
-                "TABLE1": {
-                    "Key1": {
-                        "Key2": {
-                            "Field4": "Val2"
-                        }
-                    }
+        }
+    }
+],
+
+A sample for update 
+[
+    {
+        "TABLE1": {
+            "Key1": {
+                "Key2": {
+                    "Field1": "Val1",
+                    "Field2": "Val2",
+                    "Field3": "Val3"
+                },
+                "Key2_1": {
+                    "Field2_1": "Val1",
+                    "Field2_2": "Val2",
+                    "Field2_3": "Val3"
                 }
             }
-        ]
+        }
     },
     {
-        "delete": [
-            {
-                "TABLE2": {
+        "TABLE1": {
+            "Key1": {
+                "Key2": {
+                    "Field4": "Val2"
                 }
             }
-        ]
-    },
+        }
+    }
+]
+
+A sample for delete entire TABLE2:
+[
     {
-        "update": [
-            {
-                "TABLE2": {
-                    "Key22_1": {
-                        "Key22_2": {
-                            "Field22_2": "Val22_2"
-                        }
-                    }
+        "TABLE2": {
+        }
+    }
+]
+
+A sample for update:
+[
+    {
+        "TABLE2": {
+            "Key22_1": {
+                "Key22_2": {
+                    "Field22_2": "Val22_2"
                 }
             }
-        ]
+        }
     }
 ]
 
@@ -83,9 +82,45 @@ import argparse
 import json
 from collections import OrderedDict
 from natsort import natsorted
-from db_updater import *
+from swsssdk import ConfigDBConnector
 
 test_only = False
+
+connected = False
+
+db = ConfigDBConnector()
+
+def init():
+    global connected
+
+    if connected == False:
+        db.connect(False)
+        connected = True
+
+def db_update(t, k, lst):
+    init()
+    db.mod_entry(t, k, lst)
+
+def db_filtered_upd(t, k, lst):
+    init()
+    data = db.get_entry(t, k)
+    for i in lst.keys():
+        data.pop(i)
+    db.set_entry(t, k, data)
+
+
+def db_delete_deep(t, k):
+    if not k:
+        db.delete_table(t)
+    else:
+        db.mod_entry(t, k, None)
+
+def db_delete(t, k, lst):
+    init()
+    if lst:
+        db_filtered_upd(t, k, lst)
+    else:
+        db_delete_deep(t, k)
 
 def do_update(t, k, lst):
     if test_only == False:
@@ -108,49 +143,52 @@ def do_delete(t, k, lst):
         print ("---------------------")
 
 
-def do_operate(op, t, k, lst):
+def do_operate(op_upd, t, k, lst):
     if lst:
         if type(lst[lst.keys()[0]]) == dict:
             for i in lst:
-                do_operate(op, t, k+(i,), lst[i])
+                do_operate(op_upd, t, k+(i,), lst[i])
             return
 
-    if op == "delete":
+    if op_upd:
+        do_update(t, k, lst)
+    else:
         do_delete(t, k, lst)
 
-    elif op == "update":
-        do_update(t, k, lst)
 
-    else:
-        assert False, "Internal error: Unknown operation (" + op + ")"
-
-
-def process_entry(data):
-    for op in ["delete", "update"]:
-        if op in data.keys():
-            for e in data[op]:
-                for t in e.keys():
-                    do_operate(op, t, (), e[t])
+def process_entry(op_upd, data):
+    for t in data.keys():
+        do_operate(op_upd, t, (), data[t])
 
 def main():
     global test_only
 
     parser=argparse.ArgumentParser(description="Manage configlets for CUD (Update & Delete")
-    parser.add_argument("-j", "--json", help="json file that contains configlet with action", action='append')
+    parser.add_argument("-j", "--json", help="json file that contains configlet", action='append')
     parser.add_argument("-t", "--test", help="Test only", action='store_true', default=False)
     parser.add_argument("-p", "--parse", help="Parse JSON only", action='store_true', default=False)
+    parser.add_argument("-u", "--update", help="Apply the JSON as update", action='store_true', default=False)
+    parser.add_argument("-d", "--delete", help="Apply the JSON as delete", action='store_true', default=False)
 
     args = parser.parse_args()
 
     test_only = args.test
     parse_only = args.parse
+    do_update = args.update
+    do_delete = args.delete
+
+    do_act = test_only | parse_only | do_update | do_delete
+    if not do_act:
+        print ("Expect an action update/delete or for debug parse/test\n")
+        parser.print_help()
+        exit(-1)
 
     for json_file in args.json:
         with open(json_file, 'r') as stream:
             data = json.load(stream)
             if parse_only == False:
                 for i in data:
-                    process_entry (i)
+                    process_entry (do_update, i)
             else:
                 print("Parsed:")
                 print(data)
