@@ -196,10 +196,10 @@ class ProcDockerStats:
 # main start
 def main():
     log_info("process-docker stats daemon starting up..")
-    """if not os.getuid() == 0:
-    log_error("Must be root to run process-docker daemon")
-    print "Error: Must be root to run process-docker daemon"
-    sys.exit(1)"""
+    if not os.getuid() == 0:
+        log_error("Must be root to run process-docker daemon")
+        print "Error: Must be root to run process-docker daemon"
+        sys.exit(1)
     pd = ProcDockerStats()
     # Data need to be updated every 2 mins. hence adding delay of 120 seconds
     while True:
