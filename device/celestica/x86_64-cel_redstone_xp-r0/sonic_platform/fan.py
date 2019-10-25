@@ -23,7 +23,7 @@ EMC2305_MAX_PWM = 255
 EMC2305_FAN_PWM = "pwm{}"
 EMC2305_FAN_TARGET = "fan{}_target"
 EMC2305_FAN_INPUT = "pwm{}"
-FAN_NAME_LIST = ["FAN-1", "FAN-2", "FAN-3", "FAN-4", "FAN-5"]
+FAN_NAME_LIST = ["FAN-1", "FAN-2", "FAN-3", "FAN-4"]
 
 
 class Fan(FanBase):
@@ -41,11 +41,11 @@ class Fan(FanBase):
         self.dx010_emc2305_chip = [
             {
                 'device': "13-002e",
-                'index_map': [2, 1, 4, 5, 3]
+                'index_map': [4, 3, 2, 1]
             },
             {
                 'device': "13-004d",
-                'index_map': [2, 4, 5, 3, 1]
+                'index_map': [2, 4, 3, 1]
             }
         ]
 
@@ -55,7 +55,6 @@ class Fan(FanBase):
             {'prs': 11, 'dir': 16, 'color': {'red': 29, 'green': 30}},
             {'prs': 12, 'dir': 17, 'color': {'red': 35, 'green': 36}},
             {'prs': 13, 'dir': 18, 'color': {'red': 37, 'green': 38}},
-            {'prs': 14, 'dir': 19, 'color': {'red': 33, 'green': 34}},
         ]
 
     def get_gpio_base(self):
