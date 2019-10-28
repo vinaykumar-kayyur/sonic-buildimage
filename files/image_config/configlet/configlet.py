@@ -80,6 +80,7 @@ import sys
 import os.path
 import argparse
 import json
+import time
 from collections import OrderedDict
 from natsort import natsorted
 from swsssdk import ConfigDBConnector
@@ -189,6 +190,11 @@ def main():
             if parse_only == False:
                 for i in data:
                     process_entry (do_update, i)
+                    # Artificial sleep to give a pause between two entries
+                    # so as to ensure that all internal daemons have digested the 
+                    # previous update, before the next one arrives.
+                    #
+                    time.sleep(3)
             else:
                 print("Parsed:")
                 print(data)
