@@ -1,0 +1,42 @@
+From 038bed6fe3970dc829dbf9a282f7bea7198e7826 Wed Oct 30 00:00:00 2001
+From: Antony Rheneus <arheneus@marvell.com>
+Date: Wed, 30 Oct 2019 16:39:35 -0700
+Subject: [PATCH] Init failure retry
+
+ Failed to find "enabled" option.
+---
+ teamd/teamd_per_port.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletion(-)
+
+diff --git a/teamd/teamd_per_port.c b/teamd/teamd_per_port.c
+index b5b8c04..ae16904 100644
+--- a/teamd/teamd_per_port.c
++++ b/teamd/teamd_per_port.c
+@@ -106,16 +106,18 @@ static int port_priv_init_all(struct teamd_context *ctx, struct port_obj *port_o
+ 			continue;
+                 while(--retry)
+                 {
+-		err = ppitem->pp->init(ctx, _port(port_obj), &ppitem->priv,
+-				       ppitem->creator_priv);
+-		if (err) {
+-			teamd_log_err("Failed to init port priv. err %d retries %d", err, (RETRY_BEFORE_ROLLING_BACK - retry));
++                    err = ppitem->pp->init(ctx, _port(port_obj), &ppitem->priv,
++                            ppitem->creator_priv);
++                    if (err) {
++                        teamd_log_err("Failed to init port priv. err %d retries %d", err, (RETRY_BEFORE_ROLLING_BACK - retry));
+                         if (retry <= 0)
+-			goto rollback;
+-		}
+-                else {
+-                    break;
+-                }
++                            goto rollback;
++                        else
++                            sleep(1);
++                    }
++                    else {
++                        break;
++                    }
+                 }
+ 	}
+ 	return 0;
