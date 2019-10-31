@@ -1,0 +1,52 @@
+{% block static_route %}
+{% if STATIC_ROUTE %}
+{% set glb_rt = {} %}
+{% set vrf_rt = {} %}
+{% for rt_key in STATIC_ROUTE %}
+{%   if rt_key is not string() %}
+{%     if vrf_rt.has_key(rt_key[0]) or vrf_rt.update({rt_key[0]:{}}) %}
+{%     endif %}
+{%     if vrf_rt[rt_key[0]].update({rt_key[1]:STATIC_ROUTE[rt_key]}) %}
+{%     endif %}
+{%   else %}
+{%     if glb_rt.update({rt_key:STATIC_ROUTE[rt_key]}) %}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+{% for rt_key, rt_attr in glb_rt|dictsort %}
+{% if rt_attr.has_key('distance') and rt_attr['distance'] | int != 1 %}
+{% if rt_attr.has_key('nexthop-vrf') %}
+ip route {{ rt_key }} {{ rt_attr['nexthop'] }} {{ rt_attr['distance'] }} nexthop-vrf {{ rt_attr['nexthop-vrf'] }}
+{% else %}
+ip route {{ rt_key }} {{ rt_attr['nexthop'] }} {{ rt_attr['distance'] }}
+{% endif %}
+{% else %}
+{% if rt_attr.has_key('nexthop-vrf') %}
+ip route {{ rt_key }} {{ rt_attr['nexthop'] }} nexthop-vrf {{ rt_attr['nexthop-vrf'] }}
+{% else %}
+ip route {{ rt_key }} {{ rt_attr['nexthop'] }}
+{% endif %}
+{% endif %}
+{% endfor %}
+!
+{% for vrf, rt in vrf_rt|dictsort %}
+vrf {{ vrf }}
+{% for rt_key, rt_attr in rt|dictsort %}
+{% if rt_attr.has_key('distance') and rt_attr['distance'] | int != 1 %}
+{% if rt_attr.has_key('nexthop-vrf') %}
+  ip route {{ rt_key }} {{ rt_attr['nexthop'] }} {{ rt_attr['distance'] }} nexthop-vrf {{ rt_attr['nexthop-vrf'] }}
+{% else %}
+  ip route {{ rt_key }} {{ rt_attr['nexthop'] }} {{ rt_attr['distance'] }}
+{% endif %}
+{% else %}
+{% if rt_attr.has_key('nexthop-vrf') %}
+  ip route {{ rt_key }} {{ rt_attr['nexthop'] }} nexthop-vrf {{ rt_attr['nexthop-vrf'] }}
+{% else %}
+  ip route {{ rt_key }} {{ rt_attr['nexthop'] }}
+{% endif %}
+{% endif %}
+{% endfor %}
+!
+{% endfor %}
+{% endif %}
+{% endblock static_route %}

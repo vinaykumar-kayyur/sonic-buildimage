@@ -91,12 +91,22 @@ class BGPConfigManager(object):
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
 
     def load_peers(self):
-        peers = set()
-        command = ["vtysh", "-c",  "show bgp neighbors json"]
+        vrfs = set()
+        command = ["vtysh", "-c",  "show bgp vrfs json"]
         rc, out, err = run_command(command)
         if rc == 0:
-            js_bgp = json.loads(out)
-            peers = set(js_bgp.keys())
+            js_vrf = json.loads(out)
+            vrfs = set(js_vrf['vrfs'].keys())
+
+        peers = set()
+        for vrf in vrfs:
+            command = ["vtysh", "-c",  'show bgp vrf {} neighbors json'.format(vrf)]
+            rc, out, err = run_command(command)
+            if rc == 0:
+                js_bgp = json.loads(out)
+                for nbr in js_bgp.keys():
+                    peers.add((vrf, nbr))
+
         return peers
 
     def __metadata_handler(self, key, op, data):
@@ -114,37 +124,48 @@ class BGPConfigManager(object):
     def __update_bgp(self):
         cmds = []
         for key, op, data in self.bgp_messages:
+            if '|' in key:
+                vrf, nbr = key.split('|', 1)
+                cmds.append('router bgp {} vrf {}'.format(self.bgp_asn, vrf))
+                syslog.syslog(syslog.LOG_INFO, 'Enter router bgp {} vrf {}'.format(self.bgp_asn, vrf))
+            else:
+                vrf = 'default'
+                nbr = key
+                cmds.append('router bgp {}'.format(self.bgp_asn))
+                syslog.syslog(syslog.LOG_INFO, 'Enter router bgp {}'.format(self.bgp_asn))
             if op == swsscommon.SET_COMMAND:
-                if key not in self.peers:
+                if (vrf, nbr) not in self.peers:
                     try:
-                        txt = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=key, bgp_session=data)
+                        txt = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=nbr, bgp_session=data)
                         cmds.append(txt)
                     except:
-                        syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in rendering the template for "SET" command {}'.format(key, data))
+                        syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in rendering the template for "SET" command {}'.format(nbr, data))
                     else:
-                        syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(key, data))
-                        self.peers.add(key)
+                        syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(nbr, data))
+                        self.peers.add((vrf, nbr))
                 else:
                     # when the peer is already configured we support "shutdown/no shutdown"
                     # commands for the peers only
                     if "admin_status" in data:
                         if data['admin_status'] == 'up':
-                            cmds.append(self.bgp_peer_no_shutdown.render(neighbor_addr=key))
-                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "up"'.format(key))
+                            cmds.append(self.bgp_peer_no_shutdown.render(neighbor_addr=nbr))
+                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "up"'.format(nbr))
                         elif data['admin_status'] == 'down':
-                            cmds.append(self.bgp_peer_shutdown.render(neighbor_addr=key))
-                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "down"'.format(key))
+                            cmds.append(self.bgp_peer_shutdown.render(neighbor_addr=nbr))
+                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "down"'.format(nbr))
                         else:
-                            syslog.syslog(syslog.LOG_ERR, "Peer {}: Can't update the peer. has wrong attribute value attr['admin_status'] = '{}'".format(key, data['admin_status']))
+                            syslog.syslog(syslog.LOG_ERR, "Peer {}: Can't update the peer. has wrong attribute value attr['admin_status'] = '{}'".format(nbr, data['admin_status']))
                     else:
-                        syslog.syslog(syslog.LOG_INFO, "Peer {}: Can't update the peer. No 'admin_status' attribute in the request".format(key))
+                        syslog.syslog(syslog.LOG_INFO, "Peer {}: Can't update the peer. No 'admin_status' attribute in the request".format(nbr))
             elif op == swsscommon.DEL_COMMAND:
-                if key in self.peers:
-                    cmds.append(self.bgp_peer_del_template.render(neighbor_addr=key))
-                    syslog.syslog(syslog.LOG_INFO, 'Peer {} has been removed'.format(key))
-                    self.peers.remove(key)
+                if (vrf, nbr) in self.peers:
+                    cmds.append(self.bgp_peer_del_template.render(neighbor_addr=nbr))
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} has been removed'.format(nbr))
+                    self.peers.remove((vrf, nbr))
                 else:
-                    syslog.syslog(syslog.LOG_WARNING, 'Peer {} is not found'.format(key))
+                    syslog.syslog(syslog.LOG_WARNING, 'Peer {} is not found'.format(nbr))
+            cmds.append('!')
+            syslog.syslog(syslog.LOG_INFO, 'Exit router bgp mode')
         self.bgp_messages = []
 
         if len(cmds) == 0:
@@ -153,7 +174,6 @@ class BGPConfigManager(object):
         fd, tmp_filename = tempfile.mkstemp(dir='/tmp')
         os.close(fd)
         with open (tmp_filename, 'w') as fp:
-            fp.write('router bgp %s\n' % self.bgp_asn)
             for cmd in cmds:
                 fp.write("%s\n" % cmd)
 
