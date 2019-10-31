@@ -1,9 +1,9 @@
 From f12da7b01afc35a37ffb769e6559092f52ac75fb Mon Sep 17 00:00:00 2001
 From: arheneus <arheneus@marvell.com>
-Date: Thu, 31 Oct 2019 12:20:11 +0530
-Subject: [PATCH] Adding port member failed during port init in "team_option
- *team_get_option()" which got err as -ENOENT (-2). If port init failed, it
- does rollback and remove the LAG member and never adds back until reboot TO
+Date: Thu, 31 Oct 2019 12:31:36 +0530
+Subject: [PATCH] Adding port member failed during port init in "team_option 
+ *team_get_option()" which got err as -ENOENT (-2). If port init failed, it 
+ does rollback and remove the LAG member and never adds back until reboot TO 
  avoid this, retry the port init 30 times.
 
 Failure LOG from teamd.log:
