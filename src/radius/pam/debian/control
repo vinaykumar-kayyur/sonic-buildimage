@@ -1,5 +1,5 @@
 Source: libpam-radius-auth
-Maintainer: Debian QA Group <packages@qa.debian.org>
+Maintainer: Arun Barboza <29963827+a-barboza@users.noreply.github.com>
 Section: libs
 Priority: extra
 Standards-Version: 3.6.2

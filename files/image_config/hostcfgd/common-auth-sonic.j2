@@ -53,14 +53,14 @@ auth	[success=1 default=ignore]	pam_exec.so /usr/sbin/cache_radius
 
 {% elif auth['login'] == 'radius' %}
 # root user can only be authenticated locally. Jump to local.
-auth	[success={{ (servers | count) + 1 }} default=ignore]	pam_succeed_if.so user = root
+auth	[success={{ (servers | count) + 2 }} default=ignore]	pam_succeed_if.so user = root
 # For the RADIUS servers, on success jump to the cache the MPL(Privilege)
 {% for server in servers %}
 auth	[success={{ (servers | count) - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} try_first_pass
 {% endfor %}
 auth	requisite	pam_deny.so
 # Cache MPL(Privilege)
-auth	[success=1 default=ignore]	pam_exec.so /usr/sbin/cache_radius
+auth	[success=2 default=ignore]	pam_exec.so /usr/sbin/cache_radius
 # Local
 auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die maxtries=die' if not auth['failthrough'] }}]	pam_unix.so nullok try_first_pass
 
