@@ -1,6 +1,6 @@
-{% block bgp %}
+!
 {% if DEVICE_METADATA['localhost'].has_key('bgp_asn') %}
-{# block bgp_init #}
+{% block bgp_init %}
 !
 ! bgp multiple-instance
 !
@@ -13,7 +13,7 @@ route-map TO_BGP_SPEAKER_V4 deny 10
 {% if prefix | ipv4 and name == 'Loopback0' %}
 ip prefix-list PL_LoopbackV4 permit {{ prefix | ip }}/32
 {% elif prefix | ipv6 and name == 'Loopback0' %}
-ipv6 prefix-list PL_LoopbackV6 permit {{ prefix | ip }}/64
+ipv6 prefix-list PL_LoopbackV6 permit {{ prefix | replace('/128', '/64') | ip_network }}/64
 {% endif %}
 {% endfor %}
 !
@@ -29,53 +29,14 @@ route-map FROM_BGPMON_V4 deny 10
 route-map TO_BGPMON_V4 permit 10
 !
 {% endif %}
-{% set vrf_lo_intf = {} %}
-{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{%   set intf_vrf = 'global' %}
-{%   if LOOPBACK_INTERFACE.has_key(name) and LOOPBACK_INTERFACE[name].has_key('vrf_name') %}
-{%     set intf_vrf = LOOPBACK_INTERFACE[name]['vrf_name'] %}
-{%   endif %}
-{%   if vrf_lo_intf.has_key(intf_vrf) or vrf_lo_intf.update({intf_vrf:[]}) %}
-{%   endif %}
-{%   if name not in vrf_lo_intf[intf_vrf] and vrf_lo_intf[intf_vrf].append(name) %}
-{%   endif %}
-{% endfor %}
-{% set vrf_routers = [] %}
-{% set vrf_bgp_nbr = {} %}
-{% for nbr_key in BGP_NEIGHBOR %}
-{%   if nbr_key | length == 2 %}
-{%     set nbr_vrf = nbr_key[0] %}
-{%     set nbr_addr = nbr_key[1] %}
-{%   else %}
-{%     set nbr_vrf = 'global' %}
-{%     set nbr_addr = nbr_key %}
-{%   endif %}
-{%   if nbr_vrf in vrf_routers or vrf_routers.append(nbr_vrf) %}
-{%   endif %}
-{%   if vrf_bgp_nbr.has_key(nbr_vrf) or vrf_bgp_nbr.update({nbr_vrf:{}}) %}
-{%   endif %}
-{%   if vrf_bgp_nbr[nbr_vrf].update({nbr_addr:BGP_NEIGHBOR[nbr_key]}) %}
-{%   endif %}
-{% endfor %}
-{% set vrf_bgp_pr = {} %}
-{% for pr_key in BGP_PEER_RANGE %}
-{%   set pr_vrf = 'global' %}
-{%   if BGP_PEER_RANGE[pr_key].has_key('vrf_name') %}
-{%     set pr_vrf = BGP_PEER_RANGE[pr_key]['vrf_name'] %}
-{%   endif %}
-{%   if pr_vrf not in vrf_routers and vrf_routers.append(pr_vrf) %}
-{%   endif %}
-{%   if vrf_bgp_pr.has_key(pr_vrf) or vrf_bgp_pr.update({pr_vrf:{}}) %}
-{%   endif %}
-{%   if vrf_bgp_pr[pr_vrf].update({pr_key:BGP_PEER_RANGE[pr_key]}) %}
-{%   endif %}
-{% endfor %}
-{% for vrf in vrf_routers|sort %}
-{% if vrf == 'global' %}
+!
+route-map ISOLATE permit 10
+  set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+!
+route-map set-next-hop-global-v6 permit 10
+  set ipv6 next-hop prefer-global
+!
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
-{% else %}
-router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
-{% endif %}
   bgp log-neighbor-changes
   bgp bestpath as-path multipath-relax
   no bgp default ipv4-unicast
@@ -84,33 +45,25 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
 {% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
   bgp graceful-restart preserve-fw-state
 {% endif %}
-{% set vrf_lo0 = "" %}
-{% if vrf_lo_intf[vrf] | length > 0 %}
-{% set vrf_lo0 = vrf_lo_intf[vrf][0] %}
-{% endif %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if prefix | ipv4 and name == vrf_lo0 %}
+{% if prefix | ipv4 and name == 'Loopback0' %}
   bgp router-id {{ prefix | ip }}
 {% endif %}
 {% endfor %}
 {# advertise loopback #}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if prefix | ipv4 and name == vrf_lo0 %}
+{% if prefix | ipv4 and name == 'Loopback0' %}
   network {{ prefix | ip }}/32
-{% elif prefix | ipv6 and name == vrf_lo0 %}
+{% elif prefix | ipv6 and name == 'Loopback0' %}
   address-family ipv6
     network {{ prefix | ip }}/64
   exit-address-family
 {% endif %}
 {% endfor %}
-{# endblock bgp_init #}
-{# block vlan_advertisement #}
-{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
-{% set vlan_intf_vrf = 'global' %}
-{% if VLAN_INTERFACE.has_key(name) and VLAN_INTERFACE[name].has_key('vrf_name') %}
-{% set vlan_intf_vrf = VLAN_INTERFACE[name]['vrf_name'] %}
+{% endblock bgp_init %}
 {% endif %}
-{% if vlan_intf_vrf == vrf %}
+{% block vlan_advertisement %}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %}
   network {{ prefix }}
 {% elif prefix | ipv6 %}
@@ -118,71 +71,37 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
    network {{ prefix }}
   exit-address-family
 {% endif %}
-{% endif %}
 {% endfor %}
-{# endblock vlan_advertisement #}
-{# block bgp_sessions #}
-{% if vrf_bgp_nbr.has_key(vrf) %}
-{% for neighbor_addr, bgp_session in vrf_bgp_nbr[vrf]|dictsort %}
-{% if bgp_session['asn'] | int != 0 %}
-  neighbor {{ neighbor_addr }} remote-as {{ bgp_session['asn'] }}
-  neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
-{# set the bgp neighbor timers if they have not default values #}
-{% if     (bgp_session['keepalive'] is defined and bgp_session['keepalive'] | int != 60)
-      or  (bgp_session['holdtime'] is defined  and bgp_session['holdtime']  | int != 180) %}
-  neighbor {{ neighbor_addr }} timers {{ bgp_session['keepalive'] }} {{ bgp_session['holdtime'] }}
-{% endif %}
-{% if bgp_session.has_key('admin_status') and bgp_session['admin_status'] == 'down' or not bgp_session.has_key('admin_status') and DEVICE_METADATA['localhost'].has_key('default_bgp_status') and DEVICE_METADATA['localhost']['default_bgp_status'] == 'down' %}
-  neighbor {{ neighbor_addr }} shutdown
-{% endif %}
-{# Apply default route-map for v4 peers #}
-{% if neighbor_addr | ipv4 %}
-  neighbor {{ neighbor_addr }} route-map TO_BGP_PEER_V4 out
-{% endif %}
-{% if neighbor_addr | ipv4 %}
+{% endblock vlan_advertisement %}
+{% block maximum_paths %}
+  address-family ipv4
+    maximum-paths 64
+  exit-address-family
+  address-family ipv6
+    maximum-paths 64
+  exit-address-family
+{% endblock maximum_paths %}
+{% block peers_peer_group %}
+  neighbor PEER_V4 peer-group
+  neighbor PEER_V6 peer-group
   address-family ipv4
 {% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
-    neighbor {{ neighbor_addr }} allowas-in 1
+    neighbor PEER_V4 allowas-in 1
 {% endif %}
-    neighbor {{ neighbor_addr }} activate
-    neighbor {{ neighbor_addr }} soft-reconfiguration inbound
-{% if bgp_session['rrclient'] | int != 0 %}
-    neighbor {{ neighbor_addr }} route-reflector-client
-{% endif %}
-{% if bgp_session['nhopself'] | int != 0 %}
-    neighbor {{ neighbor_addr }} next-hop-self
-{% endif %}
-    maximum-paths 64
+    neighbor PEER_V4 soft-reconfiguration inbound
+    neighbor PEER_V4 route-map TO_BGP_PEER_V4 out
   exit-address-family
-{% endif %}
-{% if neighbor_addr | ipv6 %}
   address-family ipv6
 {% if DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
-    neighbor {{ neighbor_addr }} allowas-in 1
+    neighbor PEER_V6 allowas-in 1
 {% endif %}
-    neighbor {{ neighbor_addr }} activate
-    neighbor {{ neighbor_addr }} soft-reconfiguration inbound
-{% if bgp_session['rrclient'] | int != 0 %}
-    neighbor {{ neighbor_addr }} route-reflector-client
-{% endif %}
-{% if bgp_session['nhopself'] | int != 0 %}
-    neighbor {{ neighbor_addr }} next-hop-self
-{% endif %}
-{% if bgp_session['asn'] != DEVICE_METADATA['localhost']['bgp_asn'] %}
-    neighbor {{ neighbor_addr }} route-map set-next-hop-global-v6 in
-{% endif %}
-{# Apply default route-map for v6 peers #}
-    neighbor {{ neighbor_addr }} route-map TO_BGP_PEER_V6 out
-    maximum-paths 64
+    neighbor PEER_V6 soft-reconfiguration inbound
+    neighbor PEER_V6 route-map TO_BGP_PEER_V6 out
   exit-address-family
-{% endif %}
-{% endif %}
-{% endfor %}
-{% endif %}
-{# endblock bgp_sessions #}
-{# block bgp_peers_with_range #}
-{% if vrf_bgp_pr.has_key(vrf) %}
-{% for peer_key, bgp_peer in vrf_bgp_pr[vrf]|dictsort %}
+{% endblock peers_peer_group %}
+{% block bgp_peers_with_range %}
+{% if BGP_PEER_RANGE %}
+{% for bgp_peer in BGP_PEER_RANGE.values() %}
   neighbor {{ bgp_peer['name'] }} peer-group
   neighbor {{ bgp_peer['name'] }} passive
 {% if bgp_peer['peer_asn'] is defined %}
@@ -195,12 +114,8 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
 {% if bgp_peer['src_address'] is defined %}
   neighbor {{ bgp_peer['name'] }} update-source {{ bgp_peer['src_address'] | ip }}
 {% else %}
-{% set vrf_lo1 = "" %}
-{% if vrf_lo_intf[vrf] | length > 1 %}
-{% set vrf_lo1 = vrf_lo_intf[vrf][1] %}
-{% endif %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if name == vrf_lo1 %}
+{% if name == 'Loopback1' %}
   neighbor {{ bgp_peer['name'] }} update-source {{ prefix | ip }}
 {% endif %}
 {% endfor %}
@@ -212,20 +127,18 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
 {% endfor %}
   address-family ipv4
     neighbor {{ bgp_peer['name'] }} activate
-    maximum-paths 64
   exit-address-family
   address-family ipv6
     neighbor {{ bgp_peer['name'] }} activate
-    maximum-paths 64
   exit-address-family
 {% endfor %}
 {% endif %}
-{# endblock bgp_peers_with_range #}
-{# block bgp_monitors #}
+{% endblock bgp_peers_with_range %}
+{% block bgp_monitors %}
 {% if BGP_MONITORS is defined and BGP_MONITORS|length > 0 %}
   neighbor BGPMON_V4 peer-group
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if prefix | ipv4 and name == vrf_lo0 %}
+{% if prefix | ipv4 and name == 'Loopback0' %}
   neighbor BGPMON_V4 update-source {{ prefix | ip }}
 {% endif %}
 {% endfor %}
@@ -240,8 +153,5 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }} vrf {{ vrf }}
   neighbor {{ neighbor_addr }} activate
 {% endfor %}
 {% endif %}
-{# endblock bgp_monitors #}
+{% endblock bgp_monitors %}
 !
-{% endfor %}
-{% endif %}
-{% endblock bgp %}
