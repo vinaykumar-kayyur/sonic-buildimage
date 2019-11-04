@@ -218,12 +218,12 @@ class ChassisManager(Manager):
             everflow = route,
             nexthop = nexthop,
             next_vrf = next_vrf)
-        run_command(command)
+        run_command(["bash", "-c", command])
         command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'network {everflow}' ".format(
             bgp_asn = self.bgp_asn,
             everflow = route,
             )
-        run_command(command)
+        run_command(["bash", "-c", command])
 
     def __del_route(self, route, nexthop, next_vrf):
         syslog.syslog(syslog.LOG_INFO, 'route {} nexthop {} next_vrf {} was delete'.format(route, nexthop, next_vrf))
@@ -232,12 +232,12 @@ class ChassisManager(Manager):
             nexthop = nexthop,
             next_vrf = next_vrf
             )
-        run_command(command)
+        run_command(["bash", "-c", command])
         command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'no network {everflow}' ".format(
             bgp_asn = self.bgp_asn,
             everflow = route,
             )
-        run_command(command)
+        run_command(["bash", "-c", command])
 
 
 class Daemon(object):
