@@ -34,6 +34,39 @@ def run_command(command, shell=False):
 
     return p.returncode, stdout, stderr
 
+
+class Backlog(object):
+    def __init__(self, handler, key, op, data):
+        self.handler = handler
+        self.key = key
+        self.op = op
+        self.data = data
+
+
+class Manager(object):
+    def __init__(self, daemon):
+        self.bgp_asn = None
+        self.meta = None
+        self.backlog_message = []
+        daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, self.__metadata_handler)
+
+    def process_backlog(self):
+        for backlog in self.backlog_message:
+            backlog.handler(backlog.key, backlog.op, backlog.data)
+
+    def __metadata_handler(self, key, op, data):
+        if key != "localhost" \
+            or "bgp_asn" not in data \
+                or self.bgp_asn == data["bgp_asn"]:
+            return
+
+        # TODO add ASN update commands
+
+        self.meta = { 'localhost': data }
+        self.bgp_asn = data["bgp_asn"]
+        self.process_backlog()
+
+
 class TemplateFabric(object):
     def __init__(self):
         j2_template_paths = ['/usr/share/sonic/templates']
@@ -76,75 +109,53 @@ class TemplateFabric(object):
         return addr.version == 6
 
 
-class BGPConfigManager(object):
+class BGPConfigManager(Manager):
     def __init__(self, daemon):
-        self.bgp_asn = None
-        self.meta = None
-        self.bgp_messages = []
+        super(BGPConfigManager, self).__init__(daemon)
         self.peers = self.load_peers() # we can have bgp monitors peers here. it could be fixed by adding support for it here
         fabric = TemplateFabric()
         self.bgp_peer_add_template = fabric.from_file('bgpd.peer.conf.j2')
         self.bgp_peer_del_template = fabric.from_string('no neighbor {{ neighbor_addr }}')
         self.bgp_peer_shutdown = fabric.from_string('neighbor {{ neighbor_addr }} shutdown')
         self.bgp_peer_no_shutdown = fabric.from_string('no neighbor {{ neighbor_addr }} shutdown')
-        daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, self.__metadata_handler)
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
 
-    def load_peers(self):
-        peers = set()
-        command = ["vtysh", "-c",  "show bgp neighbors json"]
-        rc, out, err = run_command(command)
-        if rc == 0:
-            js_bgp = json.loads(out)
-            peers = set(js_bgp.keys())
-        return peers
-
-    def __metadata_handler(self, key, op, data):
-        if key != "localhost" \
-            or "bgp_asn" not in data \
-                or self.bgp_asn == data["bgp_asn"]:
+    def __bgp_handler(self, key, op, data):
+        if self.bgp_asn == None:
+            self.backlog_message.append(Backlog(self.__bgp_handler, key, op, data))
             return
-
-        # TODO add ASN update commands
-
-        self.meta = { 'localhost': data }
-        self.bgp_asn = data["bgp_asn"]
-        self.__update_bgp()
-
-    def __update_bgp(self):
         cmds = []
-        for key, op, data in self.bgp_messages:
-            if op == swsscommon.SET_COMMAND:
-                if key not in self.peers:
-                    try:
-                        txt = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=key, bgp_session=data)
-                        cmds.append(txt)
-                    except:
-                        syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in rendering the template for "SET" command {}'.format(key, data))
-                    else:
-                        syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(key, data))
-                        self.peers.add(key)
+        if op == swsscommon.SET_COMMAND:
+            if key not in self.peers:
+                try:
+                    txt = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=key, bgp_session=data)
+                    cmds.append(txt)
+                except:
+                    syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in rendering the template for "SET" command {}'.format(key, data))
                 else:
-                    # when the peer is already configured we support "shutdown/no shutdown"
-                    # commands for the peers only
-                    if "admin_status" in data:
-                        if data['admin_status'] == 'up':
-                            cmds.append(self.bgp_peer_no_shutdown.render(neighbor_addr=key))
-                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "up"'.format(key))
-                        elif data['admin_status'] == 'down':
-                            cmds.append(self.bgp_peer_shutdown.render(neighbor_addr=key))
-                            syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "down"'.format(key))
-                        else:
-                            syslog.syslog(syslog.LOG_ERR, "Peer {}: Can't update the peer. has wrong attribute value attr['admin_status'] = '{}'".format(key, data['admin_status']))
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(key, data))
+                    self.peers.add(key)
+            else:
+                # when the peer is already configured we support "shutdown/no shutdown"
+                # commands for the peers only
+                if "admin_status" in data:
+                    if data['admin_status'] == 'up':
+                        cmds.append(self.bgp_peer_no_shutdown.render(neighbor_addr=key))
+                        syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "up"'.format(key))
+                    elif data['admin_status'] == 'down':
+                        cmds.append(self.bgp_peer_shutdown.render(neighbor_addr=key))
+                        syslog.syslog(syslog.LOG_INFO, 'Peer {} admin state is set to "down"'.format(key))
                     else:
-                        syslog.syslog(syslog.LOG_INFO, "Peer {}: Can't update the peer. No 'admin_status' attribute in the request".format(key))
-            elif op == swsscommon.DEL_COMMAND:
-                if key in self.peers:
-                    cmds.append(self.bgp_peer_del_template.render(neighbor_addr=key))
-                    syslog.syslog(syslog.LOG_INFO, 'Peer {} has been removed'.format(key))
-                    self.peers.remove(key)
+                        syslog.syslog(syslog.LOG_ERR, "Peer {}: Can't update the peer. has wrong attribute value attr['admin_status'] = '{}'".format(key, data['admin_status']))
                 else:
-                    syslog.syslog(syslog.LOG_WARNING, 'Peer {} is not found'.format(key))
+                    syslog.syslog(syslog.LOG_INFO, "Peer {}: Can't update the peer. No 'admin_status' attribute in the request".format(key))
+        elif op == swsscommon.DEL_COMMAND:
+            if key in self.peers:
+                cmds.append(self.bgp_peer_del_template.render(neighbor_addr=key))
+                syslog.syslog(syslog.LOG_INFO, 'Peer {} has been removed'.format(key))
+                self.peers.remove(key)
+            else:
+                syslog.syslog(syslog.LOG_WARNING, 'Peer {} is not found'.format(key))
         self.bgp_messages = []
 
         if len(cmds) == 0:
@@ -160,17 +171,78 @@ class BGPConfigManager(object):
         command = ["vtysh", "-f",  tmp_filename]
         run_command(command) #FIXME
         os.remove(tmp_filename)
+    
+    def load_peers(self):
+        peers = set()
+        command = ["vtysh", "-c",  "show bgp neighbors json"]
+        rc, out, err = run_command(command)
+        if rc == 0:
+            js_bgp = json.loads(out)
+            peers = set(js_bgp.keys())
+        return peers
 
-    def __bgp_handler(self, key, op, data):
-        self.bgp_messages.append((key, op, data))
-        # If ASN is not set, we just cache this message until the ASN is set.
-        if self.bgp_asn is not None:
-            self.__update_bgp()
+
+class ChassisManager(Manager):
+    def __init__(self, daemon):
+        super(ChassisManager, self).__init__(daemon)
+        daemon.add_manager(swsscommon.APPL_DB, swsscommon.APP_PASS_THROUGH_ROUTE_TABLE_NAME, self.__update_route)
+        self.route_cache = {}
+
+    def __update_route(self, key, op, data):
+        if self.bgp_asn == None:
+            self.backlog_message.append(Backlog(self.__update_route, key, op, data))
+            return
+        if op == "SET":
+            # nexthop is a list of IP separated by comma
+            # pick the first as the nexthop
+            next_hop_ip = data.get("next_hop_ip", "").split(',')[0]
+            next_vrf_name = data.get("next_vrf_name", "")
+            if next_hop_ip == "" \
+                or next_vrf_name == "" \
+                or data.get("redistribute", "false").lower() != "true" \
+                or data.get("source", "").upper() != "CHASSIS_ORCH":
+                    return
+            self.route_cache[key] = {"next_hop_ip" : next_hop_ip, "next_vrf_name" : next_vrf_name}
+            self.__add_route(key, next_hop_ip, next_vrf_name)
+        else:
+            if key not in self.route_cache:
+                syslog.syslog(syslog.LOG_ERR, 'route "{}" is empty '.format(key, ))
+                return
+            next_hop_ip = self.route_cache[key]["next_hop_ip"]
+            next_vrf_name = self.route_cache[key]["next_vrf_name"]
+            self.__del_route(key, next_hop_ip, next_vrf_name)
+
+    def __add_route(self, route, nexthop, next_vrf):
+        syslog.syslog(syslog.LOG_INFO, 'route {} nexthop {} next_vrf {} was add'.format(route, nexthop, next_vrf))
+        command = "vtysh -c 'configure terminal' -c 'ip route {everflow} {nexthop} nexthop-vrf {next_vrf}'".format(
+            everflow = route,
+            nexthop = nexthop,
+            next_vrf = next_vrf)
+        run_command(command)
+        command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'network {everflow}' ".format(
+            bgp_asn = self.bgp_asn,
+            everflow = route,
+            )
+        run_command(command)
+
+    def __del_route(self, route, nexthop, next_vrf):
+        syslog.syslog(syslog.LOG_INFO, 'route {} nexthop {} next_vrf {} was delete'.format(route, nexthop, next_vrf))
+        command = "vtysh -c 'configure terminal' -c 'no ip route {everflow} {nexthop} nexthop-vrf {next_vrf}'".format(
+            everflow = route,
+            nexthop = nexthop,
+            next_vrf = next_vrf
+            )
+        run_command(command)
+        command = "vtysh -c 'configure terminal' -c 'router bgp {bgp_asn}' -c 'address-family ipv4 unicast' -c 'no network {everflow}' ".format(
+            bgp_asn = self.bgp_asn,
+            everflow = route,
+            )
+        run_command(command)
 
 
 class Daemon(object):
     SELECT_TIMEOUT = 1000
-    DATABASE_LIST = [ swsscommon.CONFIG_DB ]
+    DATABASE_LIST = [ swsscommon.APPL_DB, swsscommon.CONFIG_DB ]
 
     def __init__(self):
         self.db_connectors = { db : swsscommon.DBConnector(db, swsscommon.DBConnector.DEFAULT_UNIXSOCKET, 0) for db in Daemon.DATABASE_LIST }
@@ -224,6 +296,7 @@ def main():
     wait_for_bgpd()
     daemon = Daemon()
     bgp_manager = BGPConfigManager(daemon)
+    chassis_manager = ChassisManager(daemon)
     daemon.run()
 
 
