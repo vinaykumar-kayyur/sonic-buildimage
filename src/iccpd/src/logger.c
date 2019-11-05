@@ -38,7 +38,7 @@ static uint32_t _iccpd_log_level_map[] =
     LOG_DEBUG,
 };
 
-static char* log_level_to_string(int level)
+char* log_level_to_string(int level)
 {
     switch (level)
     {

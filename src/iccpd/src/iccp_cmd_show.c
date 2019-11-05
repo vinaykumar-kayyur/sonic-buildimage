@@ -40,6 +40,7 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
     struct CSM *csm = NULL;
     struct LocalInterface *peer_link_if = NULL;
     struct LocalInterface *lif_po = NULL;
+    struct LoggerConfig* logconfig;
     char unknown[] = { "Unknown" };
     int mclag_num = 0;
     int id_exist = 0;
@@ -91,6 +92,9 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
 
         if (peer_link_if)
             memcpy(state_info.peer_link_mac, peer_link_if->mac_addr, 6);
+
+        logconfig = logger_get_configuration();
+        memcpy(state_info.loglevel, log_level_to_string(logconfig->log_level), strlen( log_level_to_string(logconfig->log_level)));
 
         state_info.role = csm->role_type;
 

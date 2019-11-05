@@ -59,6 +59,7 @@ struct LoggerConfig
 
 struct LoggerConfig* logger_get_configuration();
 void logger_set_configuration(int log_level);
+char* log_level_to_string(int level);
 void log_setup(char* progname, char* path);
 void log_finalize();
 void log_init(struct CmdOptionParser* parser);

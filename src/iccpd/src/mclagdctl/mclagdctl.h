@@ -126,6 +126,7 @@ struct mclagd_state
     unsigned char peer_link_mac[MCLAGDCTL_ETHER_ADDR_LEN];
     int role;
     char enabled_po[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
+    char loglevel[MCLAGDCTL_PARA1_LEN];
 };
 
 struct mclagd_arp_msg
