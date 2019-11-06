@@ -34,7 +34,7 @@ rm -f /var/run/rsyslogd.pid
 supervisorctl start rsyslogd
 
 # start eoiu pulling, only if configured so
-if [ $(sonic-cfggen -d -v 'WARM_RESTART.bgp.bgp_eoiu') == 'true' ]; then
+if [[ $(sonic-cfggen -d -v 'WARM_RESTART.bgp.bgp_eoiu') == 'true' ]]; then
 		supervisorctl start bgp_eoiu_marker
 fi
 
