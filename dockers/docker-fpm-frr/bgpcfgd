@@ -51,8 +51,11 @@ class Manager(object):
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, self.__metadata_handler)
 
     def process_backlog(self):
-        for backlog in self.backlog_message:
+        # Avoid forever loop if new backlog messages was appended in handler
+        i = len(self.backlog_message)
+        for backlog in self.backlog_message[:i]:
             backlog.handler(backlog.key, backlog.op, backlog.data)
+        self.backlog_message = self.backlog_message[i:]
 
     def __metadata_handler(self, key, op, data):
         if key != "localhost" \
@@ -112,13 +115,27 @@ class TemplateFabric(object):
 class BGPConfigManager(Manager):
     def __init__(self, daemon):
         super(BGPConfigManager, self).__init__(daemon)
+        self.neig_meta = {}
         self.peers = self.load_peers() # we can have bgp monitors peers here. it could be fixed by adding support for it here
         fabric = TemplateFabric()
         self.bgp_peer_add_template = fabric.from_file('bgpd.peer.conf.j2')
         self.bgp_peer_del_template = fabric.from_string('no neighbor {{ neighbor_addr }}')
         self.bgp_peer_shutdown = fabric.from_string('neighbor {{ neighbor_addr }} shutdown')
         self.bgp_peer_no_shutdown = fabric.from_string('no neighbor {{ neighbor_addr }} shutdown')
+        daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME, self.__neighbor_metadata_handler)
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
+
+    def __neighbor_metadata_handler(self, key, op, data):
+        if op == swsscommon.SET_COMMAND:
+            self.neig_meta[key] = data
+        elif op == swsscommon.DEL_COMMAND:
+            if key in self.neig_meta:
+                del self.neig_meta[key]
+            else:
+                syslog.syslog(syslog.LOG_ERR,"Can't remove key '%s' from neighbor metadata handler. The key doesn't exist" % key)
+        else:
+            syslog.syslog(syslog.LOG_ERR,"Wrong operation '%s' for neighbor metadata handler" % op)
+        self.process_backlog()
 
     def __bgp_handler(self, key, op, data):
         if self.bgp_asn == None:
@@ -127,8 +144,12 @@ class BGPConfigManager(Manager):
         cmds = []
         if op == swsscommon.SET_COMMAND:
             if key not in self.peers:
+                if 'name' in data and data['name'] not in self.neig_meta:
+                    # DEVICE_NEIGHBOR_METADATA should be populated before the rendering
+                    self.backlog_message.append(Backlog(self.__bgp_handler, key, op, data))
+                    return
                 try:
-                    txt = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, neighbor_addr=key, bgp_session=data)
+                    txt = self.bgp_peer_add_template.render(DEVICE_METADATA=self.meta, DEVICE_NEIGHBOR_METADATA=self.neig_meta, neighbor_addr=key, bgp_session=data)
                     cmds.append(txt)
                 except:
                     syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in rendering the template for "SET" command {}'.format(key, data))
@@ -156,7 +177,6 @@ class BGPConfigManager(Manager):
                 self.peers.remove(key)
             else:
                 syslog.syslog(syslog.LOG_WARNING, 'Peer {} is not found'.format(key))
-        self.bgp_messages = []
 
         if len(cmds) == 0:
             return
@@ -171,7 +191,7 @@ class BGPConfigManager(Manager):
         command = ["vtysh", "-f",  tmp_filename]
         run_command(command) #FIXME
         os.remove(tmp_filename)
-    
+
     def load_peers(self):
         peers = set()
         command = ["vtysh", "-c",  "show bgp neighbors json"]
