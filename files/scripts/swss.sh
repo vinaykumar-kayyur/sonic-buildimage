@@ -132,8 +132,17 @@ start() {
 wait() {
     start_peer_and_dependent_services
 
-    # Allow peer service some time to start up
-    sleep 5
+    # Allow some time for peer container to start
+    # NOTE: This assumes Docker containers share the same names as their
+    # corresponding services
+    for SECS in {1..60}; do
+        RUNNING=$(docker inspect -f '{{.State.Running}}' ${PEER})
+        if [[ x"$RUNNING" == x"true" ]]; then
+            break
+        else
+            sleep 1
+        fi
+    done
 
     # NOTE: This assumes Docker containers share the same names as their
     # corresponding services
