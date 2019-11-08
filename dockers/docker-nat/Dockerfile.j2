@@ -1,4 +1,4 @@
-{% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
+{% from "dockers/dockerfile-macros.j2" import install_debian_packages, copy_files %}
 FROM docker-config-engine-stretch
 
 ARG docker_container_name
@@ -27,16 +27,13 @@ RUN apt-get update        \
        bridge-utils      \
        conntrack
 
-COPY \
-{% for deb in docker_nat_debs.split(' ') -%}
-debs/{{ deb }}{{' '}}
-{%- endfor -%}
-debs/
+{% if docker_nat_debs.strip() -%}
+# Copy locally-built Debian package dependencies
+{{copy_files ("debs/", docker_nat_debs.split(' '), "/debs/") }}
 
-RUN dpkg -i \
-{% for deb in docker_nat_debs.split(' ') -%}
-debs/{{ deb }}{{' '}}
-{%- endfor %}
+# Install locally-built Debian packages and implicitly install their dependencies
+{{ install_debian_packages(docker_nat_debs.split(' ')) }}
+{%- endif %}
 
 COPY ["start.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
