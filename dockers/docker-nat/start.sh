@@ -9,8 +9,6 @@ supervisorctl start rsyslogd
 
 supervisorctl start natmgrd
 
-sleep 5
-
 supervisorctl start natsyncd
 
 supervisorctl start restore_nat_entries
