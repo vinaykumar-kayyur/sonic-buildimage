@@ -13,7 +13,6 @@ Description: restore_nat_entries.py -- restoring nat entries table into kernel d
 
 import sys
 import subprocess
-import swsssdk
 from swsscommon import swsscommon
 import logging
 import logging.handlers
@@ -25,6 +24,7 @@ NAT_WARM_BOOT_FILE = 'nat_entries.dump'
 IP_PROTO_TCP       = '6'
 
 MATCH_CONNTRACK_ENTRY = '^(\w+)\s+(\d+).*src=([\d.]+)\s+dst=([\d.]+)\s+sport=(\d+)\s+dport=(\d+).*src=([\d.]+)\s+dst=([\d.]+)\s+sport=(\d+)\s+dport=(\d+)'
+REDIS_SOCK = "/var/run/redis/redis.sock"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -44,10 +44,10 @@ def add_nat_conntrack_entry_in_kernel(ipproto, srcip, dstip, srcport, dstport, n
 
 # Set the statedb "NAT_RESTORE_TABLE|Flags", so natsyncd can start reconciliation
 def set_statedb_nat_restore_done():
-    db = swsssdk.SonicV2Connector(host='127.0.0.1')
-    db.connect(db.STATE_DB, False)
-    db.set(db.STATE_DB, 'NAT_RESTORE_TABLE|Flags', 'restored', 'true')
-    db.close(db.STATE_DB)
+    statedb = swsscommon.DBConnector(swsscommon.STATE_DB, REDIS_SOCK, 0)
+    tbl = swsscommon.Table(statedb, "NAT_RESTORE_TABLE")
+    fvs = swsscommon.FieldValuePairs([("restored", "true")])
+    tbl.set("Flags", fvs)
     return
 
 # This function is to restore the kernel nat entries based on the saved nat entries.
