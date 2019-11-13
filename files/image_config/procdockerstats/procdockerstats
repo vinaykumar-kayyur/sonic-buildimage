@@ -82,29 +82,29 @@ class ProcDockerStats:
         u = re.search('[a-zA-Z]+', value)
         v = float(filter(str.isdigit, value))
         unit = u.group(0)
-        b = 'B'
-        kb = 'KB'
-        mb = 'MB'
-        mib = 'MiB'
-        gib = 'GiB'       
-        if unit.lower() == b.lower():
+        UNITS_B = 'B'
+        UNITS_KB = 'KB'
+        UNITS_MB = 'MB'
+        UNITS_MiB = 'MiB'
+        UNITS_GiB = 'GiB'
+        if unit.lower() == UNITS_B.lower():
             return v
-        elif unit.lower() == kb.lower():
+        elif unit.lower() == UNITS_KB.lower():
             v1 = v * 1000
             return v1
-        elif unit.lower() == mb.lower():
-            v1 = v * 1000000
+        elif unit.lower() == UNITS_MB.lower():
+            v1 = v * 1000 * 1000
             return v1
-        elif unit.lower() == mib.lower():
-            v1 = v * 1048576
+        elif unit.lower() == UNITS_MiB.lower():
+            v1 = v * 1024 * 1024
             return v1
-        elif unit.lower() == gib.lower():
-            v1 = v * 1073741824
-            return v1
+        elif unit.lower() == UNITS_GiB.lower():
+            v1 = v * 1024 * 1024 * 1024
+            return round(v1)
 
     def create_docker_dict(self, dict_list):
         dockerdict = {}
-        for row in dict_list[0:]:            
+        for row in dict_list[0:]:
             cid = row.get('CONTAINER ID')
             if cid:
                 key = 'Docker_Stats|' + str(cid) 
@@ -155,7 +155,6 @@ class ProcDockerStats:
                 self.update_state_db(k1, k2, v2)
 
     def update_processstats_command(self):
-        
         data = self.run_command("ps -eo uid,pid,ppid,%mem,%cpu,stime,tty,time,cmd --sort -%cpu | head -5")
         processdata = self.format_process_cmd_output(data)
         value = ""
