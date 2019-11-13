@@ -132,11 +132,13 @@ function ShowProgressBar() {
         return "${EXIT_SUCCESS}"
     fi
 
+    # Print progress bar: use carriage return to overwrite command line content
     for i in "${SPIN[@]}"; do
         echo -ne "\r[${i}] ${1}"
         sleep 0.5s
     done
 
+    # Clear command line content + carriage return
     echo -ne "\033[1K\r"
 }
 
@@ -219,7 +221,7 @@ function UpgradeCPLDFW_Worker() {
     local -r _CPLD_REFRESH_FILE="${2}"
     local -r _ASIC_DEV="$(find /dev/mst -iname '*_pciconf0')"
 
-    if [[ "${UPDATE_MLNX_CPLD_FW}" = "1" ]]; then
+    if [[ -f /tmp/cpld_fw_updated ]]; then
         RunCmd "cpldupdate --dev ${_ASIC_DEV} ${_CPLD_REFRESH_FILE}"
         return "${EXIT_SUCCESS}"
     fi
@@ -231,7 +233,7 @@ function UpgradeCPLDFW_Worker() {
 function UpgradeCPLDFW() {
     local -r _CPLD_ARCHIVE="$1"
 
-    if [[ "${UPDATE_MLNX_CPLD_FW}" = "1" ]]; then
+    if [[ -f /tmp/cpld_fw_updated ]]; then
         LogWarning "forced CPLD refresh was requested for ${ONIE_PLATFORM}"
         CPLD_UPGRADE="${YES_PARAM}"
     fi
