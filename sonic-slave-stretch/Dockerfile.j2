@@ -291,10 +291,18 @@ RUN apt-get update && apt-get install -y \
         automake1.11 \
         libselinux1-dev \
 # For kdump-tools
-        liblzo2-dev
+        liblzo2-dev \
+# For SAI
+        protobuf-compiler \
+	libprotobuf-dev \ 
+	pkg-config \
+	xxd
 
 # For smartmontools 6.6-1
 RUN apt-get -t stretch-backports install -y debhelper
+
+RUN export PROTOBUF_COMPILER=/usr/bin/protoc \
+    && export PROTOBUF_INCLUDE_PATH=/usr/include
 
 # For linux build
 RUN apt-get -y build-dep linux

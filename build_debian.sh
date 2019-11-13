@@ -273,8 +273,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     cgroup-tools            \
     ipmitool                \
     ndisc6                  \
-    makedumpfile
-
+    makedumpfile            \
+    protobuf-compiler       \
+    libprotobuf-dev         \ 
+    pkg-config              \
+    xxd
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
