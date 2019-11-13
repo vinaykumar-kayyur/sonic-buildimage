@@ -1,12 +1,12 @@
 [Unit]
-Description=Control Plane ACL configuration daemon
+Description=Process and docker CPU/memory utilization data export daemon
 Requires=updategraph.service
 After=updategraph.service
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/procdockerstats
+Restart=Always
 
 [Install]
 WantedBy=multi-user.target
-
