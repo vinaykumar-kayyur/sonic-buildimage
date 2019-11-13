@@ -46,61 +46,62 @@ class ProcDockerStats:
         proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
         if proc.returncode != 0:
-        log_error("Error running command '{}'".format(cmd))
+            log_error("Error running command '{}'".format(cmd))
+            return None
         else:
             return stdout
 
     def format_docker_cmd_output(self, cmdout):
         lines = re.split("\n", cmdout)
         keys = re.split("   +", lines[0])
-        dict1 = dict()
-        dict_list = []
+        docker_data = dict()
+        docker_data_list = []
         for item in lines[1:]:
             values1 = re.split("   +", item)
-            dict1 =  dict(zip(keys, values1))
-            dict_list.append(dict1)
-        formatted_dict = self.create_docker_dict(dict_list)
+            docker_data =  dict(zip(keys, values1))
+            docker_data_list.append(docker_data)
+        formatted_dict = self.create_docker_dict(docker_data_list)
         return formatted_dict
 
     def format_process_cmd_output(self, cmdout):
         lines = re.split("\n", cmdout)
         keys = re.split(" +", lines[0])
         keylist = list(filter(None, keys))
-        dict1 = dict()
-        dict_list = []
+        process_data = dict()
+        process_data_list = []
         for item in lines[1:]:
             values1 = re.split(" +", str(item))
             # To remove extra space before UID
             val = list(filter(None, values1))
             # Merging extra columns created due to space in cmd ouput
             val[8:] = [''.join(val[8:])] 
-            dict1 = dict(zip(keylist, val))
-            dict_list.append(dict1)
-        return dict_list
+            process_data = dict(zip(keylist, val))
+            process_data_list.append(process_data)
+        return process_data_list
 
     def convert_to_bytes(self, value):
-        u = re.search('[a-zA-Z]+', value)
-        v = float(filter(str.isdigit, value))
-        unit = u.group(0)
+        unit_value = re.search('[a-zA-Z]+', value)
+        value_to_convert = float(filter(str.isdigit, value))
+        unit = unit_value.group(0)
         UNITS_B = 'B'
         UNITS_KB = 'KB'
         UNITS_MB = 'MB'
         UNITS_MiB = 'MiB'
         UNITS_GiB = 'GiB'
         if unit.lower() == UNITS_B.lower():
-            return int(round(v))
+            return int(round(value_to_convert))
         elif unit.lower() == UNITS_KB.lower():
-            v1 = v * 1000
-            return int(round(v1))
+            value_converted = value_to_convert * 1000
+            return int(round(value_converted))
         elif unit.lower() == UNITS_MB.lower():
-            v1 = v * 1000 * 1000
-            return int(round(v1))
+            value_converted = value_to_convert * 1000 * 1000
+            return int(round(value_converted))
         elif unit.lower() == UNITS_MiB.lower():
-            v1 = v * 1024 * 1024
-            return int(round(v1))
+            value_converted = value_to_convert * 1024 * 1024
+            return int(round(value_converted))
         elif unit.lower() == UNITS_GiB.lower():
-            v1 = v * 1024 * 1024 * 1024
-            return int(round(v1))
+            value_converted = value_to_convert * 1024 * 1024 * 1024
+            return int(round(value_converted))
 
     def create_docker_dict(self, dict_list):
         dockerdict = {}

@@ -240,6 +240,11 @@ sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service  $FILESYSTEM_ROOT/etc/systemd/s
 echo "caclmgrd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd $FILESYSTEM_ROOT/usr/bin/
 
+# Copy process docker cpu/memory utilization data export daemon
+sudo cp $IMAGE_CONFIGS/procdockerstats/procdockerstats.service  $FILESYSTEM_ROOT/etc/systemd/system/
+echo "procdockerstats.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/procdockerstats/procdockerstats $FILESYSTEM_ROOT/usr/bin/
+
 # Copy process-reboot-cause service files
 sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause.service  $FILESYSTEM_ROOT/etc/systemd/system/
 echo "process-reboot-cause.service" | sudo tee -a $GENERATED_SERVICE_FILE
