@@ -155,7 +155,7 @@ class ProcDockerStats:
         for k1,v1 in dockerdata.iteritems():
             for k2,v2 in v1.iteritems():
                 self.update_state_db(k1, k2, v2)
-                return True
+        return True
 
     def update_processstats_command(self):
         data = self.run_command("ps -eo uid,pid,ppid,%mem,%cpu,stime,tty,time,cmd --sort -%cpu | head -5")
