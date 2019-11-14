@@ -4,14 +4,14 @@ procdockerstats
 Daemon which periodically gathers process and docker statistics and pushes the data to STATE_DB
 '''
 
-import sys
 import os
-import time
-import syslog
-import subprocess
 import re
-import swsssdk 
+import subprocess
+import sys
+import syslog
+import time
 from datetime import datetime
+import swsssdk
 
 VERSION = '1.0'
 
@@ -154,6 +154,7 @@ class ProcDockerStats:
         for k1,v1 in dockerdata.iteritems():
             for k2,v2 in v1.iteritems():
                 self.update_state_db(k1, k2, v2)
+                return True
 
     def update_processstats_command(self):
         data = self.run_command("ps -eo uid,pid,ppid,%mem,%cpu,stime,tty,time,cmd --sort -%cpu | head -5")
@@ -189,9 +190,9 @@ class ProcDockerStats:
         self.update_dockerstats_command()
         datetimeobj = datetime.now()
         # Adding key to store latest update time.
-        self.update_state_db('Docker_Stats|LastUpdateTime', 'lastupdate', datetimeobj)
+        self.update_state_db('DOCKER_STATS|LastUpdateTime', 'lastupdate', datetimeobj)
         self.update_processstats_command()
-        self.update_state_db('Process_Stats|LastUpdateTime', 'lastupdate', datetimeobj)
+        self.update_state_db('PROCESS_STATS|LastUpdateTime', 'lastupdate', datetimeobj)
 
 # main start
 def main():
