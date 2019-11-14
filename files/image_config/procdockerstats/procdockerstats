@@ -1,7 +1,7 @@
 # !/usr/bin/env python
 '''
-This code is for a specific daemon, process-docker.
-Which sends process and docker CPU/memory utilization data to DB every 2 mins.
+procdockerstats
+Daemon which periodically gathers process and docker statistics and pushes the data to STATE_DB
 '''
 
 import sys
@@ -206,6 +206,7 @@ def main():
         pd.run()
         time.sleep(120)
     log_info("process-docker stats daemon exited")
-        
+
 if __name__ == '__main__':
     main()
+
