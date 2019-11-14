@@ -731,11 +731,11 @@ index 4016b15..81be5b7 100644
  	}
  
 +	/* refresh ports from the kernel */
-+	err = team_refresh(ctx->th);
-+	if (err) {
-+		teamd_log_err("%s: Team refresh failed.", tdport->ifname);
-+		goto timeout_callback_del;
-+	}
++//	err = team_refresh(ctx->th);
++//	if (err) {
++//		teamd_log_err("%s: Team refresh failed.", tdport->ifname);
++//		goto timeout_callback_del;
++//	}
 +
  	/* Newly added ports are disabled */
  	err = team_set_port_enabled(ctx->th, tdport->ifindex, false);
