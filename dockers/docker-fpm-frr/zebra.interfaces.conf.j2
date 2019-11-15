@@ -39,13 +39,23 @@ link-detect
 {%     endif %}
 {%   endfor %}
 {% endif %}
+{% if lo_ipv4_addrs|length > 0 or lo_ipv6_addrs|length > 0 %}
+interface Loopback0
+{% if lo_ipv4_addrs|length > 0 %}
+    ip address {{ lo_ipv4_addrs[0] }}
+{% endif %}
+{% if lo_ipv6_addrs|length > 0 %}
+    ipv6 address {{ lo_ipv6_addrs[0] }}
+{% endif %}
+!
+{% endif %}
 ! Set ip source to loopback for bgp learned routes
-{% if lo_ipv4_addrs|length > 0 -%} 
+{% if lo_ipv4_addrs|length > 0 %}
 route-map RM_SET_SRC permit 10
     set src {{ lo_ipv4_addrs[0] | ip }}
 !
 {% endif %}
-{% if lo_ipv6_addrs|length > 0 %} 
+{% if lo_ipv6_addrs|length > 0 %}
 route-map RM_SET_SRC6 permit 10
     set src {{ lo_ipv6_addrs[0] | ip }}
 !
