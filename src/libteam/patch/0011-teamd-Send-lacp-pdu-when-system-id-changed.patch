@@ -1,0 +1,41 @@
+From c45b4b2be82c960eb01fc884480f1ef9a6a2c1a6 Mon Sep 17 00:00:00 2001
+From: "jianjun.dong" <jianjun.dong@nephosinc.com>
+Date: Fri, 15 Nov 2019 00:47:40 -0800
+Subject: [PATCH] [PATCH] [libteam]: When change HW addr, send LACP PDU
+
+---
+ teamd/teamd_runner_lacp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
+index 23c8949..ea8e229 100644
+--- a/teamd/teamd_runner_lacp.c
++++ b/teamd/teamd_runner_lacp.c
+@@ -1200,11 +1200,15 @@ static int lacp_port_partner_update(struct lacp_port *lacp_port)
+ 	return 0;
+ }
+ 
++static int lacpdu_send(struct lacp_port *lacp_port);
++
+ static void lacp_port_actor_system_update(struct lacp_port *lacp_port)
+ {
+ 	struct lacpdu_info *actor = &lacp_port->actor;
+ 
+ 	memcpy(actor->system, lacp_port->ctx->hwaddr, ETH_ALEN);
++	teamd_log_dbg("Actor system id changed, send lacp pdu from %s.", lacp_port->tdport->ifname);
++	lacpdu_send(lacp_port);
+ }
+ 
+ static int lacp_portname_to_port_id(const char* name)
+@@ -1255,8 +1259,6 @@ static void lacp_port_actor_update(struct lacp_port *lacp_port)
+ 	lacp_port->actor.state = state;
+ }
+ 
+-static int lacpdu_send(struct lacp_port *lacp_port);
+-
+ static int lacp_port_set_state(struct lacp_port *lacp_port,
+ 			       enum lacp_port_state new_state)
+ {
+-- 
+2.11.0
+
