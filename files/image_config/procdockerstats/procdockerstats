@@ -120,8 +120,8 @@ class ProcDockerStats:
                 splitcol = row.get('MEM USAGE / LIMIT')
                 memuse = re.split(" / ", str(splitcol))
                 # converting MiB and GiB to bytes
-                dockerdict[key]['MEM'] = str(self.convert_to_bytes(memuse[0]))
-                dockerdict[key]['MEM_LIMIT'] = str(self.convert_to_bytes(memuse[1]))
+                dockerdict[key]['MEM_BYTES'] = str(self.convert_to_bytes(memuse[0]))
+                dockerdict[key]['MEM_LIMIT_BYTES'] = str(self.convert_to_bytes(memuse[1]))
 
                 splitcol = row.get('MEM %')
                 mem = re.split("%", str(splitcol))
@@ -129,13 +129,13 @@ class ProcDockerStats:
 
                 splitcol = row.get('NET I/O')
                 netio = re.split(" / ", str(splitcol))
-                dockerdict[key]['NET_IN'] = str(self.convert_to_bytes(netio[0]))
-                dockerdict[key]['NET_OUT'] = str(self.convert_to_bytes(netio[1]))
+                dockerdict[key]['NET_IN_BYTES'] = str(self.convert_to_bytes(netio[0]))
+                dockerdict[key]['NET_OUT_BYTES'] = str(self.convert_to_bytes(netio[1]))
                 
                 splitcol = row.get('BLOCK I/O')
                 blockio = re.split(" / ", str(splitcol))
-                dockerdict[key]['BLOCK_IN'] = str(self.convert_to_bytes(blockio[0]))
-                dockerdict[key]['BLOCK_OUT'] = str(self.convert_to_bytes(blockio[1]))
+                dockerdict[key]['BLOCK_IN_BYTES'] = str(self.convert_to_bytes(blockio[0]))
+                dockerdict[key]['BLOCK_OUT_BYTES'] = str(self.convert_to_bytes(blockio[1]))
 
                 dockerdict[key]['PIDS'] = row.get('PIDS')
         return dockerdict
