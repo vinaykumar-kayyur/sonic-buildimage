@@ -5,6 +5,20 @@ SHELL = /bin/bash
 MAIN_TARGET = libpam-radius-auth_$(PAM_RADIUS_VERSION)_amd64.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
+	# Build freeradius-1.1.4
+	pushd freeradius
+	-rm -rf freeradius-1.1.4
+	tar xvzf freeradius-1.1.4.tar.gz
+	popd
+	pushd freeradius/freeradius-1.1.4
+	# Apply patch
+	patch -p1 < ../patches/freeradius_configure.patch
+	patch -p1 < ../patches/freeradius_2007-04-06.patch
+	patch -p1 < ../patches/freeradius_libeap_deprecated_openssl_1_0.patch
+	./configure --disable-static --enable-libtool-lock
+	make
+	popd
+
 	# Obtain pam_radius
 	-rm -rf ./pam_radius
 	git clone https://github.com/FreeRADIUS/pam_radius.git
@@ -17,6 +31,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Apply patch
 	git apply patches/0001-chap-support.patch
+	git apply patches/0002-peap-mschapv2-support.patch
 
 	dpkg-buildpackage -rfakeroot -b -us -uc -nc
 	popd

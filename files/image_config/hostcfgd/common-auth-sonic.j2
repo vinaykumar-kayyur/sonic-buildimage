@@ -15,16 +15,16 @@ auth	[success=1 default=ignore]	pam_unix.so nullok try_first_pass
 {% elif auth['login'] == 'local,tacacs+' %}
 auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die maxtries=die' if not auth['failthrough'] }}]	pam_unix.so nullok try_first_pass
 {% for server in servers | sub(0, -1) %}
-auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_tacplus.so server={{ server.ip }}:{{ server.tcp_port }} secret={{ server.passkey }} login={{ server.auth_type }} timeout={{ server.timeout }} {% if server.vrf %} vrf={{ server.vrf }} {% endif %} try_first_pass
+auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_tacplus.so server={{ server.ip }}:{{ server.tcp_port }} secret={{ server.passkey }} login={{ server.auth_type }} timeout={{ server.timeout }} {% if server.vrf %} vrf={{ server.vrf }} {% endif %} {% if debug %} debug {% endif %} try_first_pass
 {% endfor %}
 {% if servers | count %}
 {% set last_server = servers | last %}
-auth	[success=1 default=ignore]	pam_tacplus.so server={{ last_server.ip }}:{{ last_server.tcp_port }} secret={{ last_server.passkey }} login={{ last_server.auth_type }} timeout={{ last_server.timeout }} {% if last_server.vrf %} vrf={{ last_server.vrf }} {% endif %} try_first_pass
+auth	[success=1 default=ignore]	pam_tacplus.so server={{ last_server.ip }}:{{ last_server.tcp_port }} secret={{ last_server.passkey }} login={{ last_server.auth_type }} timeout={{ last_server.timeout }} {% if last_server.vrf %} vrf={{ last_server.vrf }} {% endif %} {% if debug %} debug {% endif %} try_first_pass
 
 {% endif %}
 {% elif auth['login'] == 'tacacs+' or auth['login'] == 'tacacs+,local' %}
 {% for server in servers %}
-auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_tacplus.so server={{ server.ip }}:{{ server.tcp_port }} secret={{ server.passkey }} login={{ server.auth_type }} timeout={{ server.timeout }} {%if server.vrf %} vrf={{ server.vrf }} {% endif %} try_first_pass
+auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_tacplus.so server={{ server.ip }}:{{ server.tcp_port }} secret={{ server.passkey }} login={{ server.auth_type }} timeout={{ server.timeout }} {%if server.vrf %} vrf={{ server.vrf }} {% endif %} {% if debug %} debug {% endif %} try_first_pass
 {% endfor %}
 auth	[success=1 default=ignore]	pam_unix.so nullok try_first_pass
 
@@ -32,7 +32,7 @@ auth	[success=1 default=ignore]	pam_unix.so nullok try_first_pass
 auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die maxtries=die' if not auth['failthrough'] }}]	pam_unix.so nullok try_first_pass
 # For the RADIUS servers, on success jump to the cacheing the MPL(Privilege)
 {% for server in servers %}
-auth	[success={{ (servers | count) - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} try_first_pass
+auth	[success={{ (servers | count) - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} {% if debug %} debug {% endif %} try_first_pass
 {% endfor %}
 auth	requisite	pam_deny.so
 # Cache MPL(Privilege)
@@ -43,7 +43,7 @@ auth	[success=1 default=ignore]	pam_exec.so /usr/sbin/cache_radius
 auth	[success={{ (servers | count) }} default=ignore]	pam_succeed_if.so user = root
 # For the RADIUS servers, on success jump to the cache the MPL(Privilege)
 {% for server in servers %}
-auth	[success={{ (servers | count) + 1 - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} try_first_pass
+auth	[success={{ (servers | count) + 1 - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} {% if debug %} debug {% endif %} try_first_pass
 {% endfor %}
 # Local
 auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die maxtries=die' if not auth['failthrough'] }}]	pam_unix.so nullok try_first_pass
@@ -56,7 +56,7 @@ auth	[success=1 default=ignore]	pam_exec.so /usr/sbin/cache_radius
 auth	[success={{ (servers | count) + 2 }} default=ignore]	pam_succeed_if.so user = root
 # For the RADIUS servers, on success jump to the cache the MPL(Privilege)
 {% for server in servers %}
-auth	[success={{ (servers | count) - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} try_first_pass
+auth	[success={{ (servers | count) - loop.index0 }} new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_radius_auth.so conf=/etc/pam_radius_auth.d/{{ server.ip }}:{{ server.auth_port }}.conf privilege_level protocol={{ server.auth_type }} retry={{ server.retransmit }} {% if debug %} debug {% endif %} try_first_pass
 {% endfor %}
 auth	requisite	pam_deny.so
 # Cache MPL(Privilege)

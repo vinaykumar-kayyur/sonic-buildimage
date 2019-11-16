@@ -134,6 +134,7 @@ class AaaCfg(object):
             'login': 'local',
         }
         self.tacplus_global_default = {
+            'priority': 0,
             'auth_type': TACPLUS_SERVER_AUTH_TYPE_DEFAULT,
             'timeout': TACPLUS_SERVER_TIMEOUT_DEFAULT,
             'passkey': TACPLUS_SERVER_PASSKEY_DEFAULT
@@ -141,6 +142,7 @@ class AaaCfg(object):
         self.tacplus_global = {}
         self.tacplus_servers = {}
         self.radius_global_default = {
+            'priority': 0,
             'auth_port': RADIUS_SERVER_AUTH_PORT_DEFAULT,
             'auth_type': RADIUS_SERVER_AUTH_TYPE_DEFAULT,
             'retransmit': RADIUS_SERVER_RETRANSMIT_DEFAULT,
@@ -245,9 +247,9 @@ class AaaCfg(object):
         env.filters['sub'] = sub
         template = env.get_template(template_file)
         if 'radius' in auth['login']:
-            pam_conf = template.render(auth=auth, servers=radsrvs_conf)
+            pam_conf = template.render(debug=self.debug, auth=auth, servers=radsrvs_conf)
         else:
-            pam_conf = template.render(auth=auth, servers=servers_conf)
+            pam_conf = template.render(debug=self.debug, auth=auth, servers=servers_conf)
         
         with open(PAM_AUTH_CONF, 'w') as f:
             f.write(pam_conf)

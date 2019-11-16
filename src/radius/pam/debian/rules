@@ -30,9 +30,10 @@ build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
-	dh_auto_configure -- --enable-pamdir=/lib/$(DEB_HOST_MULTIARCH)/security --docdir=/usr/share/doc/libpam-tacplus
+	dh_auto_configure -- --enable-pamdir=/lib/$(DEB_HOST_MULTIARCH)/security
 
-	$(MAKE) -e
+#	$(MAKE) -e
+	$(MAKE)
 
 	touch build-stamp
 
@@ -78,6 +79,8 @@ install: build
 	dh_installdirs /lib /lib/$(DEB_HOST_MULTIARCH) /lib/$(DEB_HOST_MULTIARCH)/security /etc /usr/share/doc/libpam-radius-auth/html
 
 	install -p pam_radius_auth.so debian/libpam-radius-auth/lib/$(DEB_HOST_MULTIARCH)/security/pam_radius_auth.so
+	install -p ../freeradius/freeradius-1.1.4/src/lib/.libs/libradius-1.1.4.so debian/libpam-radius-auth/lib/$(DEB_HOST_MULTIARCH)/libradius-1.1.4.so
+	install -p ../freeradius/freeradius-1.1.4/src/modules/rlm_eap/libeap/.libs/libeap-1.1.4.so debian/libpam-radius-auth/lib/$(DEB_HOST_MULTIARCH)/libeap-1.1.4.so
 	install -p pam_radius_auth.conf debian/libpam-radius-auth/etc/pam_radius_auth.conf
 	install -p index.html debian/libpam-radius-auth/usr/share/doc/libpam-radius-auth/html/index.html
 	install -p debian/index.html debian/libpam-radius-auth/usr/share/doc/libpam-radius-auth/html/index.debian.html
