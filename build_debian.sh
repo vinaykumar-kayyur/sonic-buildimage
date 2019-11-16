@@ -275,7 +275,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     ndisc6                  \
     makedumpfile            \
     protobuf-compiler       \
-    libprotobuf-dev         \ 
+    libprotobuf-dev         \
     pkg-config              \
     xxd
 
