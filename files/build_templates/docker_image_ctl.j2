@@ -188,7 +188,10 @@ start() {
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
 
-    {%- if docker_container_name == "database" %}
+    {%- if docker_container_name == "pde" %}
+    # PDE does not have access to database
+    HWSKU=`cat /usr/share/sonic/device/$PLATFORM/default_sku | cut -d ' ' -f1`
+    {%- elif docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
     HWSKU=""
     {%- else %}

@@ -1,0 +1,63 @@
+#!/bin/bash
+
+usage()
+{
+    echo "usage: $0 <help/list/commands>"
+    exit 1
+}
+
+if [ $# -lt 1 ]
+then
+    usage
+fi
+
+case $1 in
+-h | help)
+    usage
+    ;;
+-l | ls | list)
+    docker exec -it -w /usr/local/sonic_pde_tests pde ls
+    exit 0
+    ;;
+*)
+    ;;
+esac
+
+# Make sure only root can run our script
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
+# Stop swss/syncd service to ensure there is only 1 SAI instance at a time
+systemctl stop swss
+
+if [ $(grep -c 'platform:ro' $(which pde.sh)) -gt 0 ]; then
+    systemctl stop pde
+    sleep 1
+    docker rename pde pde.orig
+    sed -i 's#platform:ro#platform#g' $(which pde.sh)
+    sed -i 's#hwsku:ro#hwsku#g' $(which pde.sh)
+    systemctl start pde
+fi
+
+# Allow 5 seconds for the docker-pde to be online
+err=1
+for t in $(seq 5); do
+    if [ $(docker ps | grep -c pde) -gt 0 ]; then
+        err=0
+        break
+    fi
+    sleep 1
+done
+if [ ${err} -ne 0 ]; then
+    echo "docker-pde is not alive, existing ..."
+    exit 1
+fi
+
+# Now launch the PDE pytest
+docker exec -it -w /usr/local/sonic_pde_tests pde pytest $*
+
+# Restart the swss service
+systemctl start swss
+
