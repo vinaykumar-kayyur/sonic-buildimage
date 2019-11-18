@@ -30,6 +30,9 @@ def generate_t1_sample_config(data):
                 'asn': str(peer_asn),
                 'keepalive': '60'
                 }
+        if data['PORT'][port]['speed'] == '100000':
+            data['PORT'][port]['fec'] = 'rs'
+
         port_count += 1
     return data;
 
@@ -52,6 +55,9 @@ def generate_l2_config(data):
     data['VLAN_MEMBER'] = {}
     for port in natsorted(data['PORT'].keys()):
         data['VLAN_MEMBER']['Vlan1000|{}'.format(port)] = {'tagging_mode': 'untagged'}
+        if data['PORT'][port]['speed'] == '100000':
+            data['PORT'][port]['fec'] = 'rs'
+
     return data
 
 _sample_generators = {
