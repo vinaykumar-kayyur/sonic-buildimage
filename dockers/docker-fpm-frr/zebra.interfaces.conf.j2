@@ -45,7 +45,7 @@ interface Loopback0
     ip address {{ lo_ipv4_addrs[0] }}
 {% endif %}
 {% if lo_ipv6_addrs|length > 0 %}
-    ipv6 address {{ lo_ipv6_addrs[0] }}
+    ipv6 address {{ lo_ipv6_addrs[0] | ip }}/{{ lo_ipv6_addrs[0] | prefixlen }}
 {% endif %}
 !
 {% endif %}
