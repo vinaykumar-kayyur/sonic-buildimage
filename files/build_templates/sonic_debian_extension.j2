@@ -258,6 +258,12 @@ sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause.service  $FILES
 echo "process-reboot-cause.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause $FILESYSTEM_ROOT/usr/bin/
 
+# Copy syspoll files
+sudo cp $IMAGE_CONFIGS/syspoll/syspoll.service $FILESYSTEM_ROOT/etc/systemd/system/
+echo "syspoll.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/syspoll/syspoll $FILESYSTEM_ROOT/usr/bin/
+
+
 ## Install package without starting service
 ## ref: https://wiki.debian.org/chroot
 sudo tee -a $FILESYSTEM_ROOT/usr/sbin/policy-rc.d > /dev/null <<EOF

@@ -1,0 +1,9 @@
+[Unit]
+Description=System information poller daemon
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/syspoll
+
+[Install]
+WantedBy=multi-user.target
