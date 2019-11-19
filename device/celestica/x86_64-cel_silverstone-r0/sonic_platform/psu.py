@@ -21,7 +21,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 PSU_NAME_LIST = ["PSU-1", "PSU-2"]
-PSU_NUM_FAN = PSU_NUM_FAN = [1, 1]
+PSU_NUM_FAN = [1, 1]
 
 IPMI_SENSOR_NETFN = "0x04"
 IPMI_OEM_NETFN = "0x3A"
