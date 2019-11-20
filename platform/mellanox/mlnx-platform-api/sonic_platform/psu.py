@@ -16,8 +16,8 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
-LED_ON = 1
-LED_OFF = 0
+LED_ON = '1'
+LED_OFF = '0'
 
 # Global logger class instance
 logger = Logger()
@@ -223,7 +223,7 @@ class Psu(PsuBase):
         try:
             if color == self.STATUS_LED_COLOR_GREEN:
                 with open(os.path.join(LED_PATH, self.psu_green_led_path), 'w') as psu_led:
-                    psu_led.write(str(LED_ON))
+                    psu_led.write(LED_ON)
                     status = True
             elif color == self.STATUS_LED_COLOR_RED:
                 # Some fan don't support red led but support orange led, in this case we set led to orange
@@ -234,7 +234,7 @@ class Psu(PsuBase):
                 else:
                     return False
                 with open(led_path, 'w') as psu_led:
-                    psu_led.write(str(LED_ON))
+                    psu_led.write(LED_ON)
                     status = True
             elif color == self.STATUS_LED_COLOR_OFF:
                 if self.STATUS_LED_COLOR_GREEN in led_cap_list:
@@ -269,15 +269,15 @@ class Psu(PsuBase):
 
         try:
             with open(os.path.join(LED_PATH, self.psu_green_led_path), 'r') as psu_led:
-                if '0' != psu_led.read().rstrip('\n'):
+                if LED_OFF != psu_led.read().rstrip('\n'):
                     return self.STATUS_LED_COLOR_GREEN
             if self.STATUS_LED_COLOR_RED in led_cap_list:
                 with open(os.path.join(LED_PATH, self.psu_red_led_path), 'r') as psu_led:
-                    if '0' != psu_led.read().rstrip('\n'):
+                    if LED_OFF != psu_led.read().rstrip('\n'):
                         return self.STATUS_LED_COLOR_RED
             if self.STATUS_LED_COLOR_ORANGE in led_cap_list:
                 with open(os.path.join(LED_PATH, self.psu_orange_led_path), 'r') as psu_led:
-                    if '0' != psu_led.read().rstrip('\n'):
+                    if LED_OFF != psu_led.read().rstrip('\n'):
                         return self.STATUS_LED_COLOR_RED
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to read led status for psu due to {}".format(repr(e)))

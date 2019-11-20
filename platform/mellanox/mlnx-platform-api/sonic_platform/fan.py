@@ -15,14 +15,14 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
-LED_ON = 1
-LED_OFF = 0
+LED_ON = '1'
+LED_OFF = '0'
 
 PWM_MAX = 255
 
 FAN_PATH = "/var/run/hw-management/thermal/"
 LED_PATH = "/var/run/hw-management/led/"
-# fan_dir only exist SPC2 switches
+# fan_dir only exist Spectrum 2 switches
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
 
 skus_with_fan_dir = {'ACS-MSN3700', 'ACS-MSN3700C', 'ACS-MSN3800'}
@@ -63,7 +63,7 @@ class Fan(FanBase):
 
     def get_direction(self):
         """
-        Retrieves the direction of fan
+        Retrieves the fan's direction
 
         Returns:
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
@@ -264,7 +264,7 @@ class Fan(FanBase):
         try:
             if color == self.STATUS_LED_COLOR_GREEN:
                 with open(os.path.join(LED_PATH, self.fan_green_led_path), 'w') as fan_led:
-                    fan_led.write(str(LED_ON))
+                    fan_led.write(LED_ON)
                     status = True
             elif color == self.STATUS_LED_COLOR_RED:
                 # Some fan don't support red led but support orange led, in this case we set led to orange
@@ -275,7 +275,7 @@ class Fan(FanBase):
                 else:
                     return False
                 with open(led_path, 'w') as fan_led:
-                    fan_led.write(str(LED_ON))
+                    fan_led.write(LED_ON)
                     status = True
             elif color == self.STATUS_LED_COLOR_OFF:
                 if self.STATUS_LED_COLOR_GREEN in led_cap_list:
@@ -310,15 +310,15 @@ class Fan(FanBase):
 
         try:
             with open(os.path.join(LED_PATH, self.fan_green_led_path), 'r') as fan_led:
-                if '0' != fan_led.read().rstrip('\n'):
+                if LED_OFF != fan_led.read().rstrip('\n'):
                     return self.STATUS_LED_COLOR_GREEN
             if self.STATUS_LED_COLOR_RED in led_cap_list:
                 with open(os.path.join(LED_PATH, self.fan_red_led_path), 'r') as fan_led:
-                    if '0' != fan_led.read().rstrip('\n'):
+                    if LED_OFF != fan_led.read().rstrip('\n'):
                         return self.STATUS_LED_COLOR_RED
             if self.STATUS_LED_COLOR_ORANGE in led_cap_list:
                 with open(os.path.join(LED_PATH, self.fan_orange_led_path), 'r') as fan_led:
-                    if '0' != fan_led.read().rstrip('\n'):
+                    if LED_OFF != fan_led.read().rstrip('\n'):
                         return self.STATUS_LED_COLOR_RED
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to read led status for fan {} due to {}".format(self.index, repr(e)))
