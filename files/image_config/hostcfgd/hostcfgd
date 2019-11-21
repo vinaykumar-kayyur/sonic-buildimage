@@ -340,7 +340,7 @@ class HostConfigDaemon:
                               .format(err.cmd, err.returncode, err.output))
             syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(key))
         else:
-            syslog.syslog(syslog.LOG_ERR, "Unexpected status value for {}".format(key))
+            syslog.syslog(syslog.LOG_ERR, "Unexpected status value '{}' for '{}'".format(status, key))
 
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
