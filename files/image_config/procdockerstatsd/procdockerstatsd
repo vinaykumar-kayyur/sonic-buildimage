@@ -37,7 +37,7 @@ def log_error(msg, also_print_to_console=False):
     syslog.closelog()
 
 # ========================== ProcessDocker class ==========================
-class ProcDockerStatsd:
+class ProcDockerStats:
 
     def __init__(self):
         self.state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
@@ -202,7 +202,7 @@ def main():
         log_error("Must be root to run process-docker daemon")
         print "Error: Must be root to run process-docker daemon"
         sys.exit(1)
-    pd = ProcDockerStatsd()
+    pd = ProcDockerStats()
     # Data need to be updated every 2 mins. hence adding delay of 120 seconds
     while True:
         pd.run()
