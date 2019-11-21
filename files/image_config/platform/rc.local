@@ -324,10 +324,4 @@ fi
 # Create dir where following scripts put their output files
 mkdir -p /var/platform
 
-# Write contents of system EEPROM as JSON file
-/usr/bin/decode-syseeprom | /usr/bin/syseeprom-to-json > /var/platform/syseeprom
-
-# Start system information poller
-/usr/bin/syspoll &
-
 exit 0
