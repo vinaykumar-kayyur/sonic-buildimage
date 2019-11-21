@@ -25,14 +25,12 @@ LED_PATH = "/var/run/hw-management/led/"
 # fan_dir only exist Spectrum 2 switches
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
 
-skus_with_fan_dir = {'ACS-MSN3700', 'ACS-MSN3700C', 'ACS-MSN3800'}
-
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
     STATUS_LED_COLOR_ORANGE = "orange"
 
-    def __init__(self, sku, fan_index, drawer_index = 1, psu_fan = False):
+    def __init__(self, has_fan_dir, fan_index, drawer_index = 1, psu_fan = False):
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.drawer_index = drawer_index + 1
@@ -55,7 +53,7 @@ class Fan(FanBase):
         self.fan_orange_led_path = "led_fan{}_orange".format(self.drawer_index)
         self.fan_pwm_path = "pwm1"
         self.fan_led_cap_path = "led_fan{}_capability".format(self.drawer_index)
-        if sku in skus_with_fan_dir:
+        if has_fan_dir:
             self.fan_dir = FAN_DIR
         else:
             self.fan_dir = None
@@ -81,7 +79,7 @@ class Fan(FanBase):
                 0 stands for reverse, in other words exhaust
         """
         if not self.fan_dir or self.is_psu_fan:
-            raise NotImplementedError
+            return self.FAN_DIRECTION_NOT_APPLICABLE
 
         try:
             with open(os.path.join(self.fan_dir), 'r') as fan_dir:
