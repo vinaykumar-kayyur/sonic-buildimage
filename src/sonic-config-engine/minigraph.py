@@ -813,7 +813,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         }
     }
     results['TELEMETRY'] = {
-        'gnmi':{
+        'gnmi': {
             'client_auth': 'true',
             'port': '50051',
             'log_level': '2'
