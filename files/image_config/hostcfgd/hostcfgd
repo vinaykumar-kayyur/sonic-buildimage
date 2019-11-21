@@ -338,7 +338,7 @@ class HostConfigDaemon:
                 except subprocess.CalledProcessError as err:
                     syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
                               .format(err.cmd, err.returncode, err.output))
-            syslog.syslog(syslog.LOG_INFO, "FEATURE {} is stopped and disabled".format(key))
+            syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(key))
 
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
@@ -357,4 +357,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
