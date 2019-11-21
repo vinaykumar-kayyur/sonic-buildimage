@@ -5,7 +5,7 @@ After=updategraph.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/procdockerstats
+ExecStart=/usr/bin/procdockerstatsd
 Restart=Always
 
 [Install]
