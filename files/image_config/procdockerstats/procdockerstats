@@ -158,7 +158,7 @@ class ProcDockerStats:
         return True
 
     def update_processstats_command(self):
-        data = self.run_command("ps -eo uid,pid,ppid,%mem,%cpu,stime,tty,time,cmd --sort -%cpu | head -5")
+        data = self.run_command("ps -eo uid,pid,ppid,%mem,%cpu,stime,tty,time,cmd --sort -%cpu | head -1024")
         processdata = self.format_process_cmd_output(data)
         value = ""
         # wipe out all data before updating with new values
