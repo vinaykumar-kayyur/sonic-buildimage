@@ -90,6 +90,7 @@ update_mgmt_interface_macaddr() {
 
 firsttime_exit() {
     rm -rf $FIRST_BOOT_FILE
+    exit 0
 }
 
 # Given a string of tuples of the form field=value, extract the value for a field
