@@ -1,0 +1,6 @@
+# LED microprocessor initialization for Dell S5232
+#
+#Support only after SAI 3.6
+#Led0
+#led auto on
+#led start
