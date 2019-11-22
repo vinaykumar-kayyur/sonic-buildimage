@@ -120,29 +120,23 @@ class Directory(object):
         self.data = defaultdict(dict)
         self.notify = defaultdict(lambda: defaultdict(list))
 
-    def path_exist(self, slot, path):
+    def path_traverse(self, slot, path):
         if slot not in self.data:
-            return False
+            return False, None
         elif path == '':
-            return True
+            return True, self.data[slot]
         d = self.data[slot]
         for p in path.split("/"):
             if p not in d:
-                return False
+                return False, None
             d = d[p]
-        return True
+        return True, d
+
+    def path_exist(self, slot, path):
+        return self.path_traverse(slot, path)[0]
 
     def get_path(self, slot, path):
-        if slot not in self.data:
-            return None
-        elif path == '':
-            return self.data[slot]
-        d = self.data[slot]
-        for p in path.split("/"):
-            if p not in d:
-                return None
-            d = d[p]
-        return d
+        return self.path_traverse(slot, path)[1]
 
     def put(self, slot, key, value):
         self.data[slot][key] = value
