@@ -7,7 +7,7 @@ TELEMETRY=`sonic-cfggen -d -v 'TELEMETRY.keys() | join(" ") if TELEMETRY'`
 
 TELEMETRY_ARGS=" -logtostderr"
 
-if [ ! -z "$X509" ]; then
+if [ -n "$X509" ]; then
 	SERVER_CRT=`sonic-cfggen -d -v "DEVICE_METADATA['x509']['server_crt']"`
 	SERVER_KEY=`sonic-cfggen -d -v "DEVICE_METADATA['x509']['server_key']"`
 	if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
@@ -47,4 +47,3 @@ else
 fi
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
-
