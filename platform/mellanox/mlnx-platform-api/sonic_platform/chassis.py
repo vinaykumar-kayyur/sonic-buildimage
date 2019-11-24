@@ -92,7 +92,7 @@ class Chassis(ChassisBase):
         num_of_fan, num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
         multi_rotor_in_drawer = num_of_fan > num_of_drawer
 
-        # Fan's direction is supported on spectrum 1 devices for now
+        # Fan's direction isn't supported on spectrum 1 devices for now
         mst_dev_list = glob(MST_DEVICE_NAME_PATTERN)
         if not mst_dev_list:
             raise RuntimeError("Can't get chip type due to {} not found".format(MST_DEVICE_NAME_PATTERN))
