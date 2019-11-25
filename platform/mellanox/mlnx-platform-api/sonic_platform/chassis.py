@@ -36,7 +36,7 @@ HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 
 MST_DEVICE_NAME_PATTERN = '/dev/mst/mt[0-9]*_pciconf0'
 MST_DEVICE_RE_PATTERN = '/dev/mst/mt([0-9]*)_pciconf0'
-CHIP_SPECTRUM1 = '52100'
+SPECTRUM1_CHIP_ID = '52100'
 
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
@@ -97,7 +97,7 @@ class Chassis(ChassisBase):
         if not mst_dev_list:
             raise RuntimeError("Can't get chip type due to {} not found".format(MST_DEVICE_NAME_PATTERN))
         m = re.search(MST_DEVICE_RE_PATTERN, mst_dev_list[0])
-        if m.group(1) == CHIP_SPECTRUM1:
+        if m.group(1) == SPECTRUM1_CHIP_ID:
             has_fan_dir = False
         else:
             has_fan_dir = True
