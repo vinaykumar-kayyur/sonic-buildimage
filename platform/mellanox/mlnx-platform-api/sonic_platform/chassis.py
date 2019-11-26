@@ -39,13 +39,12 @@ REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 REBOOT_CAUSE_FILE_LENGTH = 1
 
 # Global logger class instance
-SYSLOG_IDENTIFIER = "mlnx-chassis-api"
-logger = Logger(SYSLOG_IDENTIFIER)
+logger = Logger()
 
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-hwsku_dict_port = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 0, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 3, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0}
-port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1),(0, 18, 21, 22, 1)]
+hwsku_dict_port = {'ACS-MSN2010': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2700': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'LS-SN2700':0, 'ACS-MSN2740': 0, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'ACS-MSN3800': 4}
+port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1), (0, 18, 21, 22, 1), (0, 0, 63, 64, 1)]
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -320,11 +319,11 @@ class Chassis(ChassisBase):
             'reset_comex_wd'            :   "Reset requested from ComEx",
             'reset_from_asic'           :   "Reset requested from ASIC",
             'reset_reload_bios'         :   "Reset caused by BIOS reload",
-            'reset_sw_reset'            :   "Software reset",
             'reset_hotswap_or_halt'     :   "Reset caused by hotswap or halt",
             'reset_from_comex'          :   "Reset from ComEx",
             'reset_voltmon_upgrade_fail':   "Reset due to voltage monitor devices upgrade failure"
         }
+        self.reboot_by_software = 'reset_sw_reset'
         self.reboot_cause_initialized = True
 
 
@@ -350,6 +349,11 @@ class Chassis(ChassisBase):
         for reset_file, reset_cause in self.reboot_minor_cause_dict.iteritems():
             if self._verify_reboot_cause(reset_file):
                 return self.REBOOT_CAUSE_HARDWARE_OTHER, reset_cause
+
+        if self._verify_reboot_cause(self.reboot_by_software):
+            logger.log_info("Hardware reboot cause: the system was rebooted due to software requesting")
+        else:
+            logger.log_info("Hardware reboot cause: no hardware reboot cause found")
 
         return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
