@@ -10,9 +10,6 @@ RUN apt-get update
 
 RUN apt-get install -f -y iproute2=4.20.0-2~bpo9+1 libcap2-bin=1:2.25-1
 
-# redis-tools dependencies
-RUN apt-get install -y libatomic1 libjemalloc1 liblua5.1-0 lua-bitop lua-cjson
-
 COPY \
 {% for deb in docker_syncd_vs_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}

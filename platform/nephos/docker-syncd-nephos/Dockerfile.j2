@@ -20,9 +20,6 @@ python-debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
-# redis-tools dependencies
-RUN apt-get install -y libatomic1 libjemalloc1 liblua5.1-0 lua-bitop lua-cjson
-
 RUN apt-get install -y libxml2
 
 RUN dpkg -i \

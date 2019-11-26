@@ -20,12 +20,7 @@ RUN apt-get install -y \
         libunwind8-dev \
         libpython3.4 \
         libc-ares2 \
-        libgoogle-perftools4 \
-        libatomic1          \
-        libjemalloc1        \
-        liblua5.1-0         \
-        lua-bitop           \
-        lua-cjson
+        libgoogle-perftools4
 
 RUN dpkg -i \
 {% for deb in docker_syncd_bfn_debs.split(' ') -%}

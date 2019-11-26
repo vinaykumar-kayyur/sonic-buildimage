@@ -14,9 +14,6 @@ debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
-# redis-tools dependencies
-RUN apt-get install -y libatomic1 libjemalloc1 liblua5.1-0 lua-bitop lua-cjson
-
 RUN dpkg -i \
 {% for deb in docker_syncd_brcm_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
