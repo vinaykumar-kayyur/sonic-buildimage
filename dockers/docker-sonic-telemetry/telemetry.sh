@@ -46,5 +46,4 @@ else
 	TELEMETRY_ARGS+=" -v=2"
 fi
 
-cd /usr/sbin
-exec telemetry ${TELEMETRY_ARGS}
+exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
