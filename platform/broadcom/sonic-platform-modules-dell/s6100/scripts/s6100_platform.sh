@@ -109,8 +109,8 @@ switch_board_qsfp_mux() {
 #Attach/Detach the SFP modules on PCA9548_2
 switch_board_sfp() {
     case $1 in
-        "new_device")    i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
-                         i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
+        "new_device")    i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
+                         i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
                          ;;
         "delete_device") i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
                          i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
@@ -125,7 +125,7 @@ qsfp_device_mod() {
     case $1 in
         "new_device")    for ((i=$2;i<=$3;i++));
                          do
-                             i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
+                             i2c_config "echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
                          done
                          ;;
         "delete_device") for ((i=$2;i<=$3;i++));
@@ -217,6 +217,24 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
+track_reboot_reason() {
+    if [[ -d /sys/devices/platform/SMF.512/hwmon/ ]]; then
+        rv=$(cd /sys/devices/platform/SMF.512/hwmon/*; cat mb_poweron_reason)
+        reason=$(echo $rv | cut -d 'x' -f2)
+        if [ $reason == "ff" ]; then
+            cd /sys/devices/platform/SMF.512/hwmon/*
+            if [[ -e /tmp/notify_firstboot_to_platform ]]; then
+                echo 0x01 > mb_poweron_reason
+            else
+                echo 0xbb > mb_poweron_reason
+            fi
+        elif [ $reason == "bb" ] || [ $reason == "1" ]; then
+            cd /sys/devices/platform/SMF.512/hwmon/*
+            echo 0xaa > mb_poweron_reason
+        fi
+    fi
+}
+
 install_python_api_package() {
     device="/usr/share/sonic/device"
     platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
@@ -239,6 +257,7 @@ if [[ "$1" == "init" ]]; then
     modprobe dell_ich
     modprobe dell_s6100_iom_cpld
     modprobe dell_s6100_lpc
+    track_reboot_reason
 
     # Disable Watchdog Timer
     if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then

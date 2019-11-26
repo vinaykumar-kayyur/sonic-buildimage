@@ -19,8 +19,7 @@ except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 # Global logger class instance
-SYSLOG_IDENTIFIER = "mlnx-thermal-api"
-logger = Logger(SYSLOG_IDENTIFIER)
+logger = Logger()
 
 THERMAL_DEV_CATEGORY_CPU_CORE = "cpu_core"
 THERMAL_DEV_CATEGORY_CPU_PACK = "cpu_pack"
@@ -49,8 +48,8 @@ thermal_api_handler_cpu_pack = {
     THERMAL_API_GET_HIGH_THRESHOLD:"cpu_pack_max"
 }
 thermal_api_handler_module = {
-    THERMAL_API_GET_TEMPERATURE:"temp_input_module{}",
-    THERMAL_API_GET_HIGH_THRESHOLD:"temp_crit_module{}"
+    THERMAL_API_GET_TEMPERATURE:"module{}_temp_input",
+    THERMAL_API_GET_HIGH_THRESHOLD:"module{}_temp_crit"
 }
 thermal_api_handler_psu = {
     THERMAL_API_GET_TEMPERATURE:"psu{}_temp",
