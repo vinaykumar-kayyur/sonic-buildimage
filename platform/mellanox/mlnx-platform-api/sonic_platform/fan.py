@@ -22,7 +22,7 @@ PWM_MAX = 255
 
 FAN_PATH = "/var/run/hw-management/thermal/"
 LED_PATH = "/var/run/hw-management/led/"
-# fan_dir only exist Spectrum 2 switches
+# fan_dir isn't supported on Spectrum 1. It is supported on Spectrum 2 and later switches
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
 
 class Fan(FanBase):
