@@ -92,7 +92,7 @@ class Psu(PsuBase):
 
         fan = Fan(psu_index, psu_index, True)
         if fan.get_presence():
-            self._fan = fan
+            self._fan_list.append(fan)
 
     def _read_generic_file(self, filename, len):
         """
