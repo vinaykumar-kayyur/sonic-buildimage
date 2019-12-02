@@ -37,6 +37,8 @@ THERMAL_DEV_BOARD_AMBIENT = "board_amb"
 THERMAL_API_GET_TEMPERATURE = "get_temperature"
 THERMAL_API_GET_HIGH_THRESHOLD = "get_high_threshold"
 
+THERMAL_API_INVALID_HIGH_THRESHOLD = 0.0
+
 HW_MGMT_THERMAL_ROOT = "/var/run/hw-management/thermal/"
 
 thermal_api_handler_cpu_core = {
@@ -353,4 +355,6 @@ class Thermal(ThermalBase):
         if value_str is None:
             return None
         value_float = float(value_str)
+        if self.category == THERMAL_DEV_CATEGORY_MODULE and value_float == THERMAL_API_INVALID_HIGH_THRESHOLD:
+            return None
         return value_float / 1000.0

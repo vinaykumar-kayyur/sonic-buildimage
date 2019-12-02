@@ -42,8 +42,8 @@ class Fan(FanBase):
         else:
             self.fan_speed_get_path = "psu{}_fan1_speed_get".format(self.index)
             self.fan_presence_path = "psu{}_fan1_speed_get".format(self.index)
-            self.fan_max_speed_path = "psu{}_max".format(self.index)
             self._name = "fan(PSU{})".format(fan_index)
+            self.fan_max_speed_path = None
         self.fan_status_path = "fan{}_fault".format(self.index)
         self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
         self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
@@ -128,7 +128,11 @@ class Fan(FanBase):
                 speed_in_rpm = int(fan_curr_speed.read())
         except (ValueError, IOError):
             speed_in_rpm = 0
-        
+
+        if self.fan_max_speed_path is None:
+            # in case of max speed unsupported, we just return speed in unit of RPM.
+            return speed_in_rpm
+
         max_speed_in_rpm = self._get_max_speed_in_rpm()
         speed = 100*speed_in_rpm/max_speed_in_rpm
 
