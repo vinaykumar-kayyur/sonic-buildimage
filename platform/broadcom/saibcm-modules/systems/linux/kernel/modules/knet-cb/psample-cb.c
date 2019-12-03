@@ -65,8 +65,11 @@ extern int debug;
 #define SOC_HIGIG2_SOP        (0xfb) //0xfc - TODO: how can we differentiate between Higig and higig2?
 #define SOC_HIGIG2_START(x)   ((x[0] >> 24) & 0xff)
 #define SOC_HIGIG2_DSTPORT(x) ((x[0] >>  0) & 0xff)
-#define SOC_HIGIG2_SRCPORT(x) ((x[1] >> 16) & 0x7f)
+#define SOC_HIGIG2_SRCPORT(x) ((x[1] >> 16) & 0xff)
 #define SOC_DCB32_HG_OFFSET   (6)
+
+#define FCS_SZ 4
+#define PSAMPLE_NLA_PADDING 4
 
 #define PSAMPLE_RATE_DFLT 1
 #define PSAMPLE_SIZE_DFLT 128
@@ -100,6 +103,7 @@ typedef struct psample_stats_s {
     unsigned long pkts_d_metadata;
     unsigned long pkts_d_meta_srcport;
     unsigned long pkts_d_meta_dstport;
+    unsigned long pkts_d_invalid_size;
 } psample_stats_t;
 static psample_stats_t g_psample_stats = {0};
 
@@ -123,11 +127,12 @@ psample_netif_lookup_by_port(int unit, int port)
     list_for_each(list, &g_psample_info.netif_list) {
         psample_netif = (psample_netif_t*)list;
         if (psample_netif->port == port) {
-            break;
+            spin_unlock_irqrestore(&g_psample_info.lock, flags);
+            return psample_netif;
         }
     }
     spin_unlock_irqrestore(&g_psample_info.lock, flags);
-    return psample_netif;
+    return (NULL);
 }
         
 static int
@@ -310,7 +315,7 @@ psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_m
 
     /* find dst port netif (no need to lookup CPU port) */
     if (dstport != 0) {
-        if ((psample_netif = psample_netif_lookup_by_port(unit, srcport))) {
+        if ((psample_netif = psample_netif_lookup_by_port(unit, dstport))) {
             dst_ifindex = psample_netif->dev->ifindex;
         } else {
             g_psample_stats.pkts_d_meta_dstport++;
@@ -318,8 +323,8 @@ psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_m
         }
     }
 
-    PSAMPLE_CB_DBG_PRINT("%s: src_ifindex %d, dst_ifindex %d, trunc_size %d, sample_rate %d\n", 
-            __func__, src_ifindex, dst_ifindex, sample_size, sample_rate);
+    PSAMPLE_CB_DBG_PRINT("%s: srcport %d, dstport %d, src_ifindex %d, dst_ifindex %d, trunc_size %d, sample_rate %d\n", 
+            __func__, srcport, dstport, src_ifindex, dst_ifindex, sample_size, sample_rate);
 
     sflow_meta->src_ifindex = src_ifindex;
     sflow_meta->dst_ifindex = dst_ifindex;
@@ -343,7 +348,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         rv = psample_info_get (dev_no, &g_psample_info);
         if (rv < 0) {
             gprintk("%s: failed to get psample info\n", __func__);
-            return (0);
+            goto PSAMPLE_FILTER_CB_PKT_HANDLED;
         }
         info_get = 1;
     }
@@ -357,7 +362,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
     if (!group) {
         gprintk("%s: Could not find psample genetlink group %d\n", __func__, kf->cb_user_data);
         g_psample_stats.pkts_d_no_group++;
-        return (1);
+        goto PSAMPLE_FILTER_CB_PKT_HANDLED;
     }
 
     /* get psample metadata */
@@ -365,12 +370,24 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
     if (rv < 0) {
         gprintk("%s: Could not parse pkt metadata\n", __func__);
         g_psample_stats.pkts_d_metadata++;
-        return (1);
+        goto PSAMPLE_FILTER_CB_PKT_HANDLED;
     }
 
-    if (meta.trunc_size > size) {
-        meta.trunc_size = size;
+    /* Adjust original pkt size to remove 4B FCS */
+    if (size < FCS_SZ) {
+        g_psample_stats.pkts_d_invalid_size++;
+        goto PSAMPLE_FILTER_CB_PKT_HANDLED;
+    } else {
+       size -= FCS_SZ; 
     }
+
+    /* Account for padding in libnl used by psample */
+    if (meta.trunc_size >= size) {
+        meta.trunc_size = size - PSAMPLE_NLA_PADDING;
+    }
+
+    PSAMPLE_CB_DBG_PRINT("%s: group 0x%x, trunc_size %d, src_ifdx %d, dst_ifdx %d, sample_rate %d\n",
+            __func__, group->group_num, meta.trunc_size, meta.src_ifindex, meta.dst_ifindex, meta.sample_rate);
 
     /* drop if configured sample rate is 0 */
     if (meta.sample_rate > 0) {
@@ -379,8 +396,6 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         skb.len = size;
         skb.data = pkt;
 
-        PSAMPLE_CB_DBG_PRINT("%s: psample_sample_packet - group 0x%x, trunc_size %d, src_ifdx %d, dst_ifdx %d, sample_rate %d\n",
-                __func__, group->group_num, meta.trunc_size, meta.src_ifindex, meta.dst_ifindex, meta.sample_rate);
         psample_sample_packet(group, 
                               &skb, 
                               meta.trunc_size,
@@ -393,6 +408,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         g_psample_stats.pkts_d_sampling_disabled++;
     }    
 
+PSAMPLE_FILTER_CB_PKT_HANDLED:
     /* if sample reason only, consume pkt. else pass through */
     rv = psample_meta_sample_reason(pkt, pkt_meta);
     if (rv) {
@@ -686,10 +702,78 @@ struct file_operations psample_proc_size_file_ops = {
     release:    single_release,
 };
 
+/*
+ * psample debug Proc Read Entry
+ */
+static int
+psample_proc_debug_show(struct seq_file *m, void *v)
+{
+    seq_printf(m, "BCM KNET %s Callback Config\n", PSAMPLE_CB_NAME);
+    seq_printf(m, "  debug:           0x%x\n", debug);
+    seq_printf(m, "  cmic_type:       %d\n",   g_psample_info.hw.cmic_type);
+    seq_printf(m, "  dcb_type:        %d\n",   g_psample_info.hw.dcb_type);
+    seq_printf(m, "  dcb_size:        %d\n",   g_psample_info.hw.dcb_size);
+    seq_printf(m, "  pkt_hdr_size:    %d\n",   g_psample_info.hw.pkt_hdr_size);
+    seq_printf(m, "  cdma_channels:   %d\n",   g_psample_info.hw.cdma_channels);
+
+    return 0;
+}
+
+static int
+psample_proc_debug_open(struct inode * inode, struct file * file)
+{
+    return single_open(file, psample_proc_debug_show, NULL);
+}
+
+/*
+ * psample debug Proc Write Entry
+ *
+ *   Syntax:
+ *   debug=<mask>
+ *
+ *   Where <mask> corresponds to the debug module parameter.
+ *
+ *   Examples:
+ *   debug=0x1
+ */
+static ssize_t
+psample_proc_debug_write(struct file *file, const char *buf,
+                    size_t count, loff_t *loff)
+{
+    char debug_str[40];
+    char *ptr;
+
+    if (count > sizeof(debug_str)) {
+        count = sizeof(debug_str) - 1;
+        debug_str[count] = '\0';
+    }
+    if (copy_from_user(debug_str, buf, count)) {
+        return -EFAULT;
+    }
+
+    if ((ptr = strstr(debug_str, "debug=")) != NULL) {
+        ptr += 6;
+        debug = simple_strtol(ptr, NULL, 0);
+    } else {
+        gprintk("Warning: unknown configuration setting\n");
+    }
+
+    return count;
+}
+
+struct file_operations psample_proc_debug_file_ops = {
+    owner:      THIS_MODULE,
+    open:       psample_proc_debug_open,
+    read:       seq_read,
+    llseek:     seq_lseek,
+    write:      psample_proc_debug_write,
+    release:    single_release,
+};
+
 static int
 psample_proc_stats_show(struct seq_file *m, void *v)
 {
-    seq_printf(m, "Broadcom Linux KNET Call-Back: %s\n", PSAMPLE_CB_NAME);
+    seq_printf(m, "BCM KNET %s Callback Stats\n", PSAMPLE_CB_NAME);
     seq_printf(m, "  DCB type %d\n",                          g_psample_info.hw.dcb_type);
     seq_printf(m, "  pkts filter psample cb         %10lu\n", g_psample_stats.pkts_f_psample_cb);
     seq_printf(m, "  pkts sent to psample module    %10lu\n", g_psample_stats.pkts_f_psample_mod);
@@ -702,6 +786,7 @@ psample_proc_stats_show(struct seq_file *m, void *v)
     seq_printf(m, "  pkts drop metadata parse error %10lu\n", g_psample_stats.pkts_d_metadata);
     seq_printf(m, "  pkts with invalid src port     %10lu\n", g_psample_stats.pkts_d_meta_srcport);
     seq_printf(m, "  pkts with invalid dst port     %10lu\n", g_psample_stats.pkts_d_meta_dstport);
+    seq_printf(m, "  pkts with invalid orig pkt sz  %10lu\n", g_psample_stats.pkts_d_invalid_size);
     return 0;
 }
 
@@ -725,6 +810,7 @@ int psample_cleanup(void)
     remove_proc_entry("stats", psample_proc_root);
     remove_proc_entry("rate",  psample_proc_root);
     remove_proc_entry("size",  psample_proc_root);
+    remove_proc_entry("debug", psample_proc_root);
     return 0;
 }
 
@@ -758,6 +844,13 @@ int psample_init(void)
     PROC_CREATE(entry, "size", 0666, psample_proc_root, &psample_proc_size_file_ops);
     if (entry == NULL) {
         gprintk("%s: Unable to create procfs entry '/procfs/%s/size'\n", __func__, psample_procfs_path);
+        return -1;
+    }
+
+    /* create procfs for debug log */
+    PROC_CREATE(entry, "debug", 0666, psample_proc_root, &psample_proc_debug_file_ops);
+    if (entry == NULL) {
+        gprintk("%s: Unable to create procfs entry '/procfs/%s/debug'\n", __func__, psample_procfs_path);
         return -1;
     }
 
