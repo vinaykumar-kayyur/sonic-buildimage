@@ -13,6 +13,7 @@ try:
     from sonic_platform.psu import Psu
     from sonic_platform.qsfp import QSfp
     from sonic_platform.thermal import Thermal
+    from sonic_platform.transceiver_event import TransceiverEvent
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -48,6 +49,8 @@ class Chassis(ChassisBase):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
 
+        # Initialize TRANSCEIVER EVENT MONITOR
+        self.__xcvr_event = TransceiverEvent()
 
 ##############################################
 # Device methods
@@ -170,5 +173,8 @@ class Chassis(ChassisBase):
                       indicates that fan 0 has been removed, fan 2
                       has been inserted and sfp 11 has been removed.
         """
-        return True, {'sfp':{}}
+
+        rc, xcvr_event = self.__xcvr_event.get_transceiver_change_event(timeout) 
+
+        return rc, {'sfp': xcvr_event}
 
