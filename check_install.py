@@ -25,17 +25,16 @@ def main():
     grub_selection = "The highlighted entry will be executed"
 
     i = 0
-    while i < 10:
+    while True:
         try:
             p = pexpect.spawn("telnet 127.0.0.1 %s" % args.p, timeout=600, logfile=sys.stdout)
             break
         except Exception as e:
             print str(e)
-            time.sleep(1)
             i += 1
-
-    if i == 10:
-        raise
+            if i == 10:
+                raise
+            time.sleep(1)
 
     # select ONIE embed
     p.expect(grub_selection)
