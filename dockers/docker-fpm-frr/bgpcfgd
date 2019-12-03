@@ -223,6 +223,61 @@ class Manager(object):
         syslog.syslog(syslog.LOG_ERR, "%s wasn't implemented for %s" % (self.__name__, self.__class__))
 
 
+class BFDMgr(Manager):
+    def __init__(self, daemon, directory):
+        super(BFDMgr, self).__init__(
+            daemon,
+            directory,
+            [],
+            swsscommon.CONFIG_DB,
+            "BFD_PEER"
+        )
+
+    def bfd_handler(self, key, data):
+        syslog.syslog(syslog.LOG_INFO, '[bgp cfgd](bfd) value for {} changed to {}'.format(key, data))
+        #get frr bfd session key
+        key_params = key.split('|')
+        cmd = 'peer {}'.format(key_params[0])
+        if len(key_params) == 4 and key_params[3] == 'multihop':
+            cmd = cmd + ' multihop '
+        if len(key_params) > 2 and key_params[1] != 'null':
+            cmd = cmd + ' local-address ' + key_params[1]
+        if len(key_params) > 3 and key_params[2] != 'null':
+            cmd = cmd + ' interface ' + key_params[2]
+        if not data:
+            #BFD peer is deleted
+            command = "vtysh -c 'configure terminal' -c 'bfd' -c 'no {}'".format(cmd)
+            run_command(command)
+        else:
+            #create/update case
+            command = "vtysh -c 'configure terminal' -c 'bfd' -c '{}'".format(cmd)
+            for param in data:
+                if param == 'transmit_interval':
+                    command = command + " -c 'transmit-interval {}'".format(data[param])
+                elif param == 'receive_interval':
+                    command = command + " -c 'receive-interval {}'".format(data[param])
+                elif param == 'multiplier':
+                    command = command + " -c 'detect-multiplier {}'".format(data[param])
+                elif param == 'echo_mode' and data[param] == 'true':
+                    command = command + " -c 'echo-mode'"
+                elif param == 'echo_interval':
+                    command = command + " -c 'echo-interval {}'".format(data[param])
+                elif param == 'label':
+                    command = command + " -c 'label {}'".format(data[param])
+                elif param == 'admin_status' and data[param] == 'up':
+                    command = command + " -c 'no shutdown'"
+                elif param == 'admin_status' and data[param] == 'down':
+                    command = command + " -c 'shutdown'"
+            run_command(command) 
+
+    def set_handler(self, key, data):
+        self.bfd_handler(key, data)
+        return True
+
+    def del_handler(self, key):
+        self.bfd_handler(key, data)
+
+
 class BGPDeviceMetaMgr(Manager):
     def __init__(self, daemon, directory):
         super(BGPDeviceMetaMgr, self).__init__(
@@ -387,6 +442,7 @@ def main():
         BGPDeviceMetaMgr,
         BGPNeighborMetaMgr,
         BGPPeerMgr,
+        BFDMgr,
     ]
     wait_for_bgpd()
     daemon = Daemon()

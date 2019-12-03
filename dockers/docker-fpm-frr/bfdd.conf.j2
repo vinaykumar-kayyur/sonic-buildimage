@@ -1,0 +1,46 @@
+!
+{% block bfd_peers %}
+{% if BFD_PEER %}
+bfd
+{% for (peer_key, peer_info) in BFD_PEER.iteritems() %}
+{% set opt_args = '' %}
+{% if peer_key|length == 4 and peer_key[3] == 'multihop' %}
+{% set opt_args = opt_args~' '~'multihop' %}
+{% endif %}
+{% if peer_key[1] != 'null' %}
+{% set opt_args = opt_args~' '~'local-address'~' '~peer_key[1] %}
+{% endif %}
+{% if peer_key[2] != 'null' %}
+{% set opt_args = opt_args~' '~'interface'~' '~peer_key[2] %}
+{% endif %}
+  peer {{ peer_key[0] }}{{ opt_args }} 
+{# set the bfd peer timers #}
+{% if  (peer_info['transmit_interval'] is defined and peer_info['transmit_interval'] | int != 300) %}
+    transmit-interval {{ peer_info['transmit_interval'] }} 
+{% endif %}
+{% if  (peer_info['receive_interval'] is defined and peer_info['receive_interval'] | int != 300) %}
+    receive-interval {{ peer_info['receive_interval'] }}
+{% endif %}
+{% if  (peer_info['multiplier'] is defined and peer_info['multiplier'] | int != 3) %}
+    detect-multiplier {{ peer_info['multiplier'] }}
+{% endif %}
+{% if  (peer_info['echo_mode'] is defined and peer_info['echo_mode'] != 'false') %}
+    echo-mode
+{% endif %}
+{% if  (peer_info['echo_interval'] is defined and peer_info['echo_interval'] | int != 50) %}
+    echo-interval {{ peer_info['echo_interval'] }}
+{% endif %}
+{% if  (peer_info['label'] is defined and peer_info['label'] != '') %}
+    label {{ peer_info['label'] }}
+{% endif %}
+{% if  (peer_info['admin_status'] is defined and peer_info['admin_status'] == 'up') %}
+    no shutdown
+{% else %}
+    shutdown
+{% endif %}
+  !
+{% endfor %}
+!
+{% endif %}
+{% endblock bfd_peers%}
+!
