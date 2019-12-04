@@ -217,7 +217,7 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
-track_reboot_reason() {
+init_reset_reason() {
     /usr/share/sonic/device/x86_64-dell_s6100_c2538-r0/track_reboot_reason.sh
     status=$(echo $?)
     return status
@@ -245,7 +245,7 @@ if [[ "$1" == "init" ]]; then
     modprobe dell_ich
     modprobe dell_s6100_iom_cpld
     modprobe dell_s6100_lpc
-    track_reboot_reason
+    init_reset_reason
 
     # Disable Watchdog Timer
     if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then

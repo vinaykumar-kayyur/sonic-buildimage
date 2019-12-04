@@ -18,6 +18,7 @@ try:
     from sonic_platform.module import Module
     from sonic_platform.thermal import Thermal
     from sonic_platform.component import Component
+    from sonic_platform.watchdog import Watchdog
     from eeprom import Eeprom
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -76,6 +77,8 @@ class Chassis(ChassisBase):
         for i in range(MAX_S6100_COMPONENT):
             component = Component(i)
             self._component_list.append(component)
+
+        self._watchdog = Watchdog()
 
     def _get_reboot_reason_smf_register(self):
         # Returns 0xAA on software reload
@@ -202,7 +205,7 @@ class Chassis(ChassisBase):
 
         # In S6100, if Reset_Reason is not 11 and smf_mb_reg_reason
         # is ff or bb, then it is PowerLoss
-        if (reset_reason == 11):
+        if (reset_reason == 11 and smf_mb_reg_reason != 0x99):
             if (power_reason in self.power_reason_dict):
                 return (self.power_reason_dict[power_reason], None)
         else:
