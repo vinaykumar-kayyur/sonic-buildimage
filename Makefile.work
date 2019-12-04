@@ -8,6 +8,7 @@
 #  * ENABLE_DHCP_GRAPH_SERVICE: Enables get-graph service to fetch minigraph files
 #    through http.
 #  * ENABLE_PDE: Enables platform development environment.
+#  * ENABLE_ZTP: Enables zero touch provisioning.
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
@@ -75,11 +76,11 @@ endif
 ifeq ($(BLDENV), stretch)
 SLAVE_DIR = sonic-slave-stretch
 else
-SLAVE_DIR = sonic-slave
+SLAVE_DIR = sonic-slave-jessie
 endif
 SLAVE_BASE_TAG = $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile && sha1sum $(SLAVE_DIR)/Dockerfile | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
-SLAVE_BASE_IMAGE = $(SLAVE_DIR)-base
+SLAVE_BASE_IMAGE = $(SLAVE_DIR)
 SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER)
 
 OVERLAY_MODULE_CHECK := \
@@ -164,6 +165,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_PDE=$(ENABLE_PDE) \
+                           ENABLE_ZTP=$(ENABLE_ZTP) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
@@ -188,7 +190,8 @@ PDESUBMODULES = src/sonic-linux-kernel \
                 src/redis-dump-load \
                 src/sonic-sairedis \
                 src/sonic-platform-daemons \
-                src/sonic-platform-pde
+                src/sonic-platform-pde \
+                src/sonic-ztp
 
 .PHONY: sonic-slave-build sonic-slave-bash init initpde reset
 
