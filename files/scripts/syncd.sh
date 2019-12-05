@@ -7,6 +7,7 @@ LOCKFILE="/tmp/swss-syncd-lock"
 
 function debug()
 {
+    /usr/bin/logger $1
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
@@ -29,8 +30,8 @@ function unlock_service_state_change()
 
 function check_warm_boot()
 {
-    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|system" enable`
-    SERVICE_WARM_START=`/usr/bin/redis-cli -n 4 hget "WARM_RESTART|${SERVICE}" enable`
+    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
     # SYSTEM_WARM_START could be empty, always make WARM_BOOT meaningful.
     if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
         WARM_BOOT="true"
@@ -52,6 +53,30 @@ function wait_for_database_service()
     done
 }
 
+function getBootType()
+{
+    # same code snippet in files/build_templates/docker_image_ctl.j2
+    case "$(cat /proc/cmdline)" in
+    *SONIC_BOOT_TYPE=warm*)
+        TYPE='warm'
+        ;;
+    *SONIC_BOOT_TYPE=fastfast*)
+        TYPE='fastfast'
+        ;;
+    *SONIC_BOOT_TYPE=fast*|*fast-reboot*)
+        # check that the key exists
+        if [[ $(redis-cli -n 6 GET "FAST_REBOOT|system") == "1" ]]; then
+            TYPE='fast'
+        else
+            TYPE='cold'
+        fi
+        ;;
+    *)
+        TYPE='cold'
+    esac
+    echo "${TYPE}"
+}
+
 start() {
     debug "Starting ${SERVICE} service..."
 
@@ -64,18 +89,42 @@ start() {
 
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
-    # Don't flush DB during warm boot
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /usr/bin/docker exec database redis-cli -n 1 FLUSHDB
+    if [[ x"$WARM_BOOT" == x"true" ]]; then
+        # Leave a mark for syncd scripts running inside docker.
+        touch /host/warmboot/warm-starting
+    else
+        rm -f /host/warmboot/warm-starting
+    fi
 
-        # platform specific tasks
-        if [ x$sonic_asic_platform == x'mellanox' ]; then
+    # platform specific tasks
+
+    # start mellanox drivers regardless of
+    # boot type
+    if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
+        BOOT_TYPE=`getBootType`
+        if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
             export FAST_BOOT=1
-            /usr/bin/mst start
-            /usr/bin/mlnx-fw-upgrade.sh
-            /etc/init.d/sxdkernel start
-            /sbin/modprobe i2c-dev
-        elif [ x$sonic_asic_platform == x'cavium' ]; then
+        fi
+
+        if [[ x"$WARM_BOOT" != x"true" ]]; then
+            if [[ x"$(/bin/systemctl is-active pmon)" == x"active" ]]; then
+                /bin/systemctl stop pmon
+                debug "pmon is active while syncd starting, stop it first"
+            fi
+            /usr/bin/hw-management.sh chipdown
+        fi
+
+        if [[ x"$BOOT_TYPE" == x"fast" ]]; then
+            /usr/bin/hw-management.sh chipupdis
+        fi
+
+        /usr/bin/mst start
+        /usr/bin/mlnx-fw-upgrade.sh
+        /etc/init.d/sxdkernel start
+    fi
+
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        if [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh start
         fi
     fi
@@ -85,7 +134,15 @@ start() {
     debug "Started ${SERVICE} service..."
 
     unlock_service_state_change
-    /usr/bin/${SERVICE}.sh attach
+}
+
+wait() {
+    if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
+        debug "Starting pmon service..."
+        /bin/systemctl start pmon
+        debug "Started pmon service"
+    fi
+    /usr/bin/${SERVICE}.sh wait
 }
 
 stop() {
@@ -101,23 +158,31 @@ stop() {
         TYPE=cold
     fi
 
-    debug "${TYPE} shutdown syncd process ..."
-    /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --${TYPE}
+    if [[ x$sonic_asic_platform == x"mellanox" ]] && [[ x$TYPE == x"cold" ]]; then
+        debug "Stopping pmon service ahead of syncd..."
+        /bin/systemctl stop pmon
+        debug "Stopped pmon service"
+    fi
 
-    # wait until syncd quits gracefully
-    while docker top syncd | grep -q /usr/bin/syncd; do
-        sleep 0.1
-    done
+    if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
+        debug "${TYPE} shutdown syncd process ..."
+        /usr/bin/docker exec -i syncd /usr/bin/syncd_request_shutdown --${TYPE}
 
-    /usr/bin/docker exec -i syncd /bin/sync
-    debug "Finished ${TYPE} shutdown syncd process ..."
+        # wait until syncd quits gracefully
+        while docker top syncd | grep -q /usr/bin/syncd; do
+            sleep 0.1
+        done
+
+        /usr/bin/docker exec -i syncd /bin/sync
+        debug "Finished ${TYPE} shutdown syncd process ..."
+    fi
 
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
-    # if warm start enabled, don't stop peer service docker
+    # platform specific tasks
+
     if [[ x"$WARM_BOOT" != x"true" ]]; then
-        # platform specific tasks
         if [ x$sonic_asic_platform == x'mellanox' ]; then
             /etc/init.d/sxdkernel stop
             /usr/bin/mst stop
@@ -131,11 +196,11 @@ stop() {
 }
 
 case "$1" in
-    start|stop)
+    start|wait|stop)
         $1
         ;;
     *)
-        echo "Usage: $0 {start|stop}"
+        echo "Usage: $0 {start|wait|stop}"
         exit 1
         ;;
 esac

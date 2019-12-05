@@ -6,19 +6,6 @@
 # The loopback network interface
 auto lo
 iface lo inet loopback
-# Use command 'ip addr list dev lo' to check all addresses
-iface lo inet static
-    address 10.1.0.32
-    netmask 255.255.255.255
-#
-iface lo inet6 static
-    address fc00:1::32
-    netmask 128
-#
-iface lo inet static
-    address 10.10.0.99
-    netmask 255.255.255.255
-#
 
 # The management network interface
 auto eth0
@@ -27,7 +14,7 @@ iface eth0 inet static
     netmask 255.255.255.0
     ########## management network policy routing rules
     # management port up rules
-    up ip -4 route add default via 10.0.0.1 dev eth0 table default
+    up ip -4 route add default via 10.0.0.1 dev eth0 table default metric 201
     up ip -4 route add 10.0.0.0/24 dev eth0 table default
     up ip -4 rule add from 10.0.0.100/32 table default
     # management port down rules
@@ -39,12 +26,14 @@ iface eth0 inet6 static
     netmask 64
     ########## management network policy routing rules
     # management port up rules
-    up ip -6 route add default via 2603:10e2:0:2902::1 dev eth0 table default
+    up ip -6 route add default via 2603:10e2:0:2902::1 dev eth0 table default metric 201
     up ip -6 route add 2603:10e2:0:2902::/64 dev eth0 table default
     up ip -6 rule add from 2603:10e2:0:2902::8/128 table default
     # management port down rules
     down ip -6 route delete default via 2603:10e2:0:2902::1 dev eth0 table default
     down ip -6 route delete 2603:10e2:0:2902::/64 dev eth0 table default
     down ip -6 rule delete from 2603:10e2:0:2902::8/128 table default
+#
+source /etc/network/interfaces.d/*
 #
 

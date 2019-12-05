@@ -15,9 +15,16 @@ reload_minigraph()
         acl-loader update full /etc/sonic/acl.json
     fi
     config qos reload
-    pfcwd start_default
-}
+    DEVICE_TYPE=`sonic-cfggen -m -v DEVICE_METADATA.localhost.type`
+    if [ "${DEVICE_TYPE}" != "MgmtToRRouter" ]; then
+        pfcwd start_default
+    fi
 
+    if [[ -x /usr/bin/db_migrator.py ]]; then
+        # Set latest version number
+        /usr/bin/db_migrator.py -o set_version
+    fi
+}
 
 if [ ! -f /etc/sonic/updategraph.conf ]; then
     echo "No updategraph.conf found, generating a default one."
@@ -25,42 +32,6 @@ if [ ! -f /etc/sonic/updategraph.conf ]; then
 fi
 
 . /etc/sonic/updategraph.conf
-
-if [ -f /tmp/pending_config_migration ]; then
-    if [ "$enabled" = "true" ]; then
-        echo "Use minigraph.xml from old system..."
-        cp /etc/sonic/old_config/minigraph.xml /etc/sonic/
-        if [ -f /etc/sonic/old_config/snmp.yml ]; then
-            cp /etc/sonic/old_config/snmp.yml /etc/sonic/
-        fi
-        if [ -f /etc/sonic/old_config/acl.json ]; then
-            cp /etc/sonic/old_config/acl.json /etc/sonic/
-        fi
-        reload_minigraph
-        sonic-cfggen -d --print-data > /etc/sonic/config_db.json
-    else
-        echo "Use config_db.json from old system..."
-        cp /etc/sonic/old_config/config_db.json /etc/sonic/
-        sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
-    fi
-    rm -f /tmp/pending_config_migration
-    sed -i "/enabled=/d" /etc/sonic/updategraph.conf
-    echo "enabled=false" >> /etc/sonic/updategraph.conf
-    exit 0
-fi
-
-if [ -f /tmp/pending_config_initialization ]; then
-    rm -f /tmp/pending_config_initialization
-    if [ "$enabled" != "true" ]; then 
-        PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
-        PRESET=(`head -n 1 /usr/share/sonic/device/$PLATFORM/default_sku`)
-        sonic-cfggen -H -k ${PRESET[0]} --preset ${PRESET[1]} > /etc/sonic/config_db.json
-        redis-cli -n $CONFIG_DB_INDEX FLUSHDB
-        sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
-        redis-cli -n $CONFIG_DB_INDEX SET "CONFIG_DB_INITIALIZED" "1"
-        exit 0
-    fi
-fi
 
 if [ "$enabled" = "reload_only" ]; then
     reload_minigraph
@@ -74,9 +45,19 @@ if [ "$enabled" != "true" ]; then
     exit 0
 fi
 
+# If ZTP package is available and enabled, use ZTP to download and load the graph.
+if [ -e /usr/bin/ztp ] && [ "$(ztp status -c)" != "0:DISABLED" ]; then
+    echo "ZTP is available and enabled. Skipping graph update."
+    exit 0
+fi
+
 ACL_URL=$acl_src
 
 if [ "$src" = "dhcp" ]; then
+    # Enable dhcp client on management port eth0
+    /sbin/dhclient -4 -v -pf /run/dhclient.eth0.pid -lf /var/lib/dhcp/dhclient.eth0.leases -I -df /var/lib/dhcp/dhclient6.eth0.leases eth0 &
+    disown
+
     while [ ! -f /tmp/dhcp_graph_url ]; do
         echo "Waiting for DHCP response..."
         sleep 1
