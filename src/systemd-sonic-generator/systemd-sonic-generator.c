@@ -12,12 +12,11 @@
 #define MAX_NUM_TARGETS 5
 #define MAX_NUM_INSTALL_LINES 5
 #define MAX_NUM_UNITS 128
-#define NUM_ASICS 6
 
 static const char* UNIT_FILE_PREFIX = "/etc/systemd/system/";
 static const char* CONFIG_FILE = "/etc/sonic/generated_services.conf";
 static const char* MACHINE_CONF_FILE = "/host/machine.conf";
-static bool multi_asic;
+static int num_asics;
 
 void strip_trailing_newline(char* str) {
     /***
@@ -115,8 +114,8 @@ static int get_install_targets_from_line(char* target_string, char* install_type
         strcat(final_target, install_type);
 
         free(target);
-        
-        if (!multi_asic) {
+      
+        if (num_asics == 1) {	
             if (strcmp(final_target, "namespace@.target.wants") == 0)
                 continue;
         }
@@ -347,9 +346,9 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
     assert(target);
             
 
-    if (multi_asic && strstr(unit_file, "@") != NULL) {
+    if ((num_asics > 1) && strstr(unit_file, "@") != NULL) {
 
-        for (int i = 0; i < NUM_ASICS; i++) {
+        for (int i = 0; i < num_asics; i++) {
 
             if (strstr(target, "@") != NULL) {
                 target_instance = insert_instance_number(target, i);
@@ -376,17 +375,21 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
 }
 
 
-static bool is_multi_asic() {
+static int get_num_of_asic() {
     /***
     Determines if the current platform is single or multi-ASIC
     ***/
     FILE *fp;
+    FILE *env_fp;
     char *line = NULL;
     char* token;
     char* platform;
     size_t len = 0;
     ssize_t nread;
     bool ans;
+    char asic_file[512];
+    char* str_num_asic;
+    int num_asic = 1;
 
     fp = fopen(MACHINE_CONF_FILE, "r");
 
@@ -404,17 +407,37 @@ static bool is_multi_asic() {
         }
     }
 
-    if (platform != NULL && strcmp(platform, "multi-asic") == 0) {
-        ans = true;
-    }
-    else {
-        ans = false;
-    }
-
-    free(line);
     fclose(fp);
+    if(platform != NULL) {
+        snprintf(asic_file, 512, "/usr/share/sonic/device/%s/asic.conf", platform);
+        fp = fopen(asic_file, "r");
+        if (fp != NULL) {
+            while ((nread = getline(&line, &len, fp)) != -1) {
+                if (strstr(line, "NUM_ASIC") != NULL) {
+                    token = strtok(line, "=");
+                    str_num_asic = strtok(NULL, "=");
+                    strip_trailing_newline(str_num_asic);
+                    if (str_num_asic != NULL){
+                        sscanf(str_num_asic, "%d",&num_asic);
+                    }
+                    break;
+                }
+            }
+            fclose(fp);
+            free(line);
+        }
+    }
 
-    return ans;
+    /*set environment variable NUM_ASIC */
+    env_fp = fopen("/etc/environment", "a");
+    if (env_fp == NULL) {
+        fprintf(stderr, "Failed to open environment file\n");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(env_fp, "NUM_ASIC=%d\n", num_asic);
+    fclose(env_fp);
+    return num_asic;
+
 }
 
 
@@ -434,7 +457,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    multi_asic = is_multi_asic();
+    num_asics = get_num_of_asic();
 
     strcpy(install_dir, argv[1]);
     strcat(install_dir, "/");
@@ -444,7 +467,7 @@ int main(int argc, char **argv) {
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
         unit_instance = strdup(unit_files[i]);
-        if (!multi_asic && strstr(unit_instance, "@") != NULL) {
+        if ((num_asics == 1) && strstr(unit_instance, "@") != NULL) {
             if (strstr(unit_instance, "namespace") != NULL) {
                 free(unit_instance);
                 free(unit_files[i]);
