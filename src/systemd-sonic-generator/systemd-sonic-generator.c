@@ -115,11 +115,6 @@ static int get_install_targets_from_line(char* target_string, char* install_type
 
         free(target);
       
-        if (num_asics == 1) {	
-            if (strcmp(final_target, "namespace@.target.wants") == 0)
-                continue;
-        }
-
         targets[num_targets + existing_targets] = strdup(final_target);
         num_targets++;
     }
@@ -467,19 +462,6 @@ int main(int argc, char **argv) {
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
         unit_instance = strdup(unit_files[i]);
-        if ((num_asics == 1) && strstr(unit_instance, "@") != NULL) {
-            if (strstr(unit_instance, "namespace") != NULL) {
-                free(unit_instance);
-                free(unit_files[i]);
-                continue;
-            }
-
-            prefix = strtok(unit_instance, "@");
-            suffix = strtok(NULL, "@");
-
-            strcpy(unit_instance, prefix);
-            strcat(unit_instance, suffix);
-        }
 
         num_targets = get_install_targets(unit_instance, targets);
         if (num_targets < 0) {
