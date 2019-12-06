@@ -371,7 +371,7 @@ class BGPPeerMgr(Manager):
     @staticmethod
     def load_peers():
         vrfs = []
-        command = ["vtysh", "-c",  "show bgp vrfs json"]
+        command = ["vtysh", "-c", "show bgp vrfs json"]
         rc, out, err = run_command(command)
         if rc == 0:
             js_vrf = json.loads(out)
@@ -379,7 +379,7 @@ class BGPPeerMgr(Manager):
 
         peers = set()
         for vrf in vrfs:
-            command = ["vtysh", "-c",  'show bgp vrf {} neighbors json'.format(vrf)]
+            command = ["vtysh", "-c", 'show bgp vrf {} neighbors json'.format(vrf)]
             rc, out, err = run_command(command)
             if rc == 0:
                 js_bgp = json.loads(out)
