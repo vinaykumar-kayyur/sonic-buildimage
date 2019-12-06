@@ -114,14 +114,6 @@ def pfx_filter(value):
         table[key] = val
     return table
 
-def is_intf_exists(value):
-    if not value:
-        return False
-    link_state = '/sys/class/net/'+value+'/operstate'
-    if os.path.isfile(link_state):
-        return True
-    return False
-
 def ip_network(value):
     """ Extract network for network prefix """
     try:
@@ -289,7 +281,6 @@ def main():
         redis_bcc = RedisBytecodeCache(SonicV2Connector(host='127.0.0.1'))
         env = jinja2.Environment(loader=loader, trim_blocks=True, bytecode_cache=redis_bcc)
         env.filters['sort_by_port_index'] = sort_by_port_index
-        env.filters['is_intf_exists'] = is_intf_exists
         env.filters['ipv4'] = is_ipv4
         env.filters['ipv6'] = is_ipv6
         env.filters['unique_name'] = unique_name
