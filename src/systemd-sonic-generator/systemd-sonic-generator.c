@@ -461,7 +461,14 @@ int main(int argc, char **argv) {
 
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
-        unit_instance = strdup(unit_files[i]);
+	unit_instance = strdup(unit_files[i]);
+        if ((num_asics == 1) && strstr(unit_instance, "@") != NULL) {
+            prefix = strtok(unit_instance, "@");
+            suffix = strtok(NULL, "@");
+
+            strcpy(unit_instance, prefix);
+            strcat(unit_instance, suffix);
+        }
 
         num_targets = get_install_targets(unit_instance, targets);
         if (num_targets < 0) {
