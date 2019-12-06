@@ -165,10 +165,9 @@ function preStartAction()
 function postStartAction()
 {
 {%- if docker_container_name == "database" %}
-    if [ -z "$DEV" ]; then
+    if [ "$DEV" ]; then
         link_namespace $DEV
     fi
-{%- endif %}
     # Wait until redis starts
     /usr/bin/docker exec database ping_pong_db_insts
     if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast") && -f $WARM_DIR/dump.rdb ]]; then
@@ -322,7 +321,6 @@ start() {
     docker start {{docker_container_name}}
     postStartAction
     updateHostName "$HOSTNAME"
-{%- endif %}
 }
 
 wait() {
