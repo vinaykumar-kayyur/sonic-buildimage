@@ -83,12 +83,3 @@ class SYSStatusUtil():
 
     def dump_sysfs(self):
         return pddf_obj.cli_dump_dsysfs('sys-status')
-
-#if __name__== "__main__":
-    #obj=SYSStatusUtil()
-    #obj.get_board_info()
-    #obj.get_cpld_versio()
-    #obj.get_power_module_status()
-    #obj.get_system_reset_status()
-    #obj.get_misc_status()
-

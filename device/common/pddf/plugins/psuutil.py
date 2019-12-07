@@ -265,10 +265,3 @@ class PsuUtil(PsuBase):
     def dump_sysfs(self):
         return pddf_obj.cli_dump_dsysfs('psu')
 
-#if __name__== "__main__":
-    #obj=PsuUtil()
-    #print(obj.get_psu_status(1))
-    #print(obj.get_psu_status(2))
-    #print(obj.get_psu_presence(1))
-    #print(obj.get_psu_presence(2))
-    #print "END\n"

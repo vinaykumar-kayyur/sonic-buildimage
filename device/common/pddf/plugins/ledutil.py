@@ -57,25 +57,3 @@ class LedUtil:
                     return (status) 
 	status = "%s-%s:\t%s %s\n"%(device_name, index, color, color_state)
 	return (status)
-
-
-
-#def main():
-#        parser = argparse.ArgumentParser()
-#        parser.add_argument("--set", action='store', nargs="+",  help="set led color: --set <device_name> <index> <color> <color_state>")
-#        parser.add_argument("--get", action='store', nargs="+", help="get led color: --get <device_name> <index>")
-#        args = parser.parse_args()
-#        if args.set:
-#            obj=LedUtil()
-#	    if (len(args.set)==3):
-#            	obj.set_status_led(args.set[0], args.set[1], args.set[2])
-#	    else:
-#            	obj.set_status_led(args.set[0], args.set[1], args.set[2], args.set[3])
-#
-#        if args.get:
-#            obj=LedUtil()
-#            obj.get_status_led(args.get[0], args.get[1])
-
-#if __name__ == "__main__" :
-#        main()
-

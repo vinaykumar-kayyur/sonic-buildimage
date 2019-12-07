@@ -184,8 +184,6 @@ class FanUtil(FanBase):
             except IOError:
                 return False
 
-        #time.sleep(5)
-        #print "Done changing the speed of all the fans ... Reading the speed to crossscheck\n"
         return True
 
     def dump_sysfs(self):
@@ -200,15 +198,3 @@ class FanUtil(FanBase):
         raise NotImplementedError
 
 
-
-#if __name__== "__main__":
-    #obj=FanUtil()
-    ##for i in range(0,6):
-        ##obj.get_fan_present(i)
-
-    #obj.get_direction()
-    ##print(obj.get_direction())
-    #print(obj.get_speed())
-    #obj.set_speed(100)
-    #print "Chaning the speed back to 50%\n"
-    #obj.set_speed(50)

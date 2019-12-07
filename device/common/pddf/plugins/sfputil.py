@@ -200,11 +200,3 @@ class SfpUtil(SfpUtilBase):
 
     def dump_sysfs(self):
         return pddf_obj.cli_dump_dsysfs('xcvr')
-
-#if __name__== "__main__":
-    #obj=SfpUtil()
-    #for port in range(1, 32):
-        #obj.get_presence(port)
-    #print "\nQSFP ports:"
-    #print obj.qsfp_ports
-
