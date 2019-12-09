@@ -111,6 +111,39 @@ dport_map_port_111=32
 #dport_map_port_66=33
 #dport_map_port_130=34
 
+# interface type
+serdes_if_type_21=28
+serdes_if_type_17=28
+serdes_if_type_25=28
+serdes_if_type_29=28
+serdes_if_type_37=28
+serdes_if_type_33=28
+serdes_if_type_41=28
+serdes_if_type_45=28
+serdes_if_type_5=28
+serdes_if_type_1=28
+serdes_if_type_9=28
+serdes_if_type_13=28
+serdes_if_type_53=28
+serdes_if_type_49=28
+serdes_if_type_57=28
+serdes_if_type_61=28
+serdes_if_type_71=28
+serdes_if_type_67=28
+serdes_if_type_75=28
+serdes_if_type_79=28
+serdes_if_type_119=28
+serdes_if_type_115=28
+serdes_if_type_123=28
+serdes_if_type_127=28
+serdes_if_type_87=28
+serdes_if_type_83=28
+serdes_if_type_91=28
+serdes_if_type_95=28
+serdes_if_type_103=28
+serdes_if_type_99=28
+serdes_if_type_107=28
+serdes_if_type_111=28
 
 #Polarity flips
 #FC0
