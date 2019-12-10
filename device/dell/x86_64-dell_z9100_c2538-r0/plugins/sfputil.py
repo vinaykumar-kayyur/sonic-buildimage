@@ -142,9 +142,7 @@ class SfpUtil(SfpUtilBase):
             i2c_line = 16
 
         # Rationalize port settings
-        if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
-            port_num = port_num 
-        elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
+        if port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
             port_num = (port_num) % 12
         elif (port_num >= self.iom3_port_start and
                 port_num <= self.iom3_port_end):
