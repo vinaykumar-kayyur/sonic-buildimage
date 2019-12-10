@@ -20,70 +20,70 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 1
-    PORT_END = 56
+    PORT_START = 0 
+    PORT_END = 55
     PORTS_IN_BLOCK = 56
 
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:04:00.0/resource0"
 
     _port_to_i2c_mapping = {
-                1:  2,
-                2:  3,
-                3:  4,
-                4:  5,
-                5:  6,
-                6:  7,
-                7:  8,
-                8:  9,
-                9:  10, 
-                10: 11, 
-                11: 12,
-                12: 13,
-                13: 14,
-                14: 15,
-                15: 16,
-                16: 17,
-                17: 18,
-                18: 19,
-                19: 20,
-                20: 21,
-                21: 22,
-                22: 23,
-                23: 24,
-                24: 25,
-                25: 26,
-                26: 27,
-                27: 28,
-                28: 29,
-                29: 30,
-                30: 31,
-                31: 32,
-                32: 33,
-                33: 34,
-                34: 35,
-                35: 36,
-                36: 37,
-                37: 38,
-                38: 39,
-                39: 40,
-                40: 41,
-                41: 42,
-                42: 43,
-                43: 44,
-                44: 45,
-                45: 46,
-                46: 47,
-                47: 48,
-                48: 49,
+                0:  2,
+                1:  3,
+                2:  4,
+                3:  5,
+                4:  6,
+                5:  7,
+                6:  8,
+                7:  9,
+                8:  10, 
+                9: 11, 
+                10: 12,
+                11: 13,
+                12: 14,
+                13: 15,
+                14: 16,
+                15: 17,
+                16: 18,
+                17: 19,
+                18: 20,
+                19: 21,
+                20: 22,
+                21: 23,
+                22: 24,
+                23: 25,
+                24: 26,
+                25: 27,
+                26: 28,
+                27: 29,
+                28: 30,
+                29: 31,
+                30: 32,
+                31: 33,
+                32: 34,
+                33: 35,
+                34: 36,
+                35: 37,
+                36: 38,
+                37: 39,
+                38: 40,
+                39: 41,
+                40: 42,
+                41: 43,
+                42: 44,
+                43: 45,
+                44: 46,
+                45: 47,
+                46: 48,
+                47: 49,
                 # DD + QSFP28 
+                48: 50,
                 49: 50,
-                50: 50,
+                50: 51,
                 51: 51,
-                52: 51,
-                53: 52,
-                54: 53,
-                55: 54,
-                56: 55,
+                52: 52,
+                53: 53,
+                54: 54,
+		55: 55,
                 }
 
     _port_to_eeprom_mapping = {}
@@ -101,7 +101,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(49, self.PORTS_IN_BLOCK + 1)
+        return range(48, self.PORTS_IN_BLOCK + 1)
 
     @property
     def port_to_eeprom_mapping(self):
@@ -159,7 +159,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         # Port offset starts with 0x4004
-	port_offset = 16388 + ((port_num-1) * 16)
+	port_offset = 16388 + ((port_num) * 16)
 
 	status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
 	reg_value = int(status)
@@ -170,7 +170,7 @@ class SfpUtil(SfpUtilBase):
 
         # Mask off bit for presence
         mask = (1 << 1)
-        if (port_num > 48):
+        if (port_num > 47):
             mask = (1 << 4)
 
 
@@ -187,7 +187,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
 	# Port offset starts with 0x4000
-	port_offset = 16384 + ((port_num-1) * 16)
+	port_offset = 16384 + ((port_num) * 16)
 
 	status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
 	reg_value = int(status)
@@ -212,7 +212,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
 	# Port offset starts with 0x4000
-	port_offset = 16384 + ((port_num-1) * 16)
+	port_offset = 16384 + ((port_num) * 16)
 
 	status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
 	reg_value = int(status)
@@ -242,7 +242,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
 	# Port offset starts with 0x4000
-	port_offset = 16384 + ((port_num-1) * 16)
+	port_offset = 16384 + ((port_num) * 16)
 
 	status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
 	reg_value = int(status)

@@ -51,8 +51,8 @@ XCVR_DOM_CAPABILITY_WIDTH = 1
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 1
-    PORT_END = 66
+    PORT_START = 0
+    PORT_END = 65
     PORTS_IN_BLOCK = 64
 
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:04:00.0/resource0"
@@ -122,7 +122,7 @@ class SfpUtil(SfpUtilBase):
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
         for x in range(self.port_start, self.port_end + 1):
-            port_num = x + 1
+            port_num = x + 2
             self.port_to_eeprom_mapping[x] = eeprom_path.format(port_num)
             port_num = 0
         self.init_global_port_presence()
@@ -134,7 +134,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         # Port offset starts with 0x4004
-        port_offset = 16388 + ((port_num-1) * 16)
+        port_offset = 16388 + ((port_num) * 16)
 
         status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
         reg_value = int(status)
@@ -147,7 +147,7 @@ class SfpUtil(SfpUtilBase):
         mask = (1 << 4)
 
         # Mask off 1st bit for presence 65,66
-        if (port_num > 64):
+        if (port_num > 63):
             mask =  (1 << 0)
         # ModPrsL is active low
         if reg_value & mask == 0:
@@ -162,7 +162,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         # Port offset starts with 0x4000
-        port_offset = 16384 + ((port_num-1) * 16)
+        port_offset = 16384 + ((port_num) * 16)
 
         status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
         reg_value = int(status)
@@ -187,7 +187,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         # Port offset starts with 0x4000
-        port_offset = 16384 + ((port_num-1) * 16)
+        port_offset = 16384 + ((port_num) * 16)
 
         status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
         reg_value = int(status)
@@ -217,7 +217,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         # Port offset starts with 0x4000
-        port_offset = 16384 + ((port_num-1) * 16)
+        port_offset = 16384 + ((port_num) * 16)
 
         status = self.pci_get_value(self.BASE_RES_PATH, port_offset)
         reg_value = int(status)

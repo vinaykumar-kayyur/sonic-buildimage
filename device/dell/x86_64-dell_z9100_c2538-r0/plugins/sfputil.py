@@ -16,15 +16,15 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 1
-    PORT_END = 32
+    PORT_START = 0
+    PORT_END = 31
     PORTS_IN_BLOCK = 32
-    IOM_1_PORT_START = 1
-    IOM_1_PORT_END = 12
-    IOM_2_PORT_START = 13
-    IOM_2_PORT_END = 22
-    IOM_3_PORT_START = 23
-    IOM_3_PORT_END = 32
+    IOM_1_PORT_START = 0
+    IOM_1_PORT_END = 11
+    IOM_2_PORT_START = 12
+    IOM_2_PORT_END = 21
+    IOM_3_PORT_START = 22
+    IOM_3_PORT_END = 31
 
     BASE_VAL_PATH = "/sys/class/i2c-adapter/i2c-{0}/{0}-003e/"
     OIR_FD_PATH = "/sys/devices/platform/dell_ich.0/sci_int_gpio_sus6"
@@ -33,39 +33,38 @@ class SfpUtil(SfpUtilBase):
     epoll = -1
     _port_to_eeprom_mapping = {}
     _port_to_i2c_mapping = {
-           0: [0, 00], # Dummy Entry
-           1: [9, 18],
-           2: [9, 19],
-           3: [9, 20],
-           4: [9, 21],
-           5: [9, 22],
-           6: [9, 23],
-           7: [9, 24],
-           8: [9, 25],
-           9: [8, 26],
-           10: [8, 27],
-           11: [8, 28],
-           12: [8, 29],
-           13: [8, 31],  # reordered
-           14: [8, 30],
-           15: [8, 33],  # reordered
-           16: [8, 32],
-           17: [7, 34],
-           18: [7, 35],
-           19: [7, 36],
-           20: [7, 37],
-           21: [7, 38],
-           22: [7, 39],
-           23: [7, 40],
-           24: [7, 41],
-           25: [6, 42],
-           26: [6, 43],
-           27: [6, 44],
-           28: [6, 45],
-           29: [6, 46],
-           30: [6, 47],
-           31: [6, 48],
-           32: [6, 49]
+           0: [9, 18],
+           1: [9, 19],
+           2: [9, 20],
+           3: [9, 21],
+           4: [9, 22],
+           5: [9, 23],
+           6: [9, 24],
+           7: [9, 25],
+           8: [8, 26],
+           9: [8, 27],
+           10: [8, 28],
+           11: [8, 29],
+           12: [8, 31],  # reordered
+           13: [8, 30],
+           14: [8, 33],  # reordered
+           15: [8, 32],
+           16: [7, 34],
+           17: [7, 35],
+           18: [7, 36],
+           19: [7, 37],
+           20: [7, 38],
+           21: [7, 39],
+           22: [7, 40],
+           23: [7, 41],
+           24: [6, 42],
+           25: [6, 43],
+           26: [6, 44],
+           27: [6, 45],
+           28: [6, 46],
+           29: [6, 47],
+           30: [6, 48],
+           31: [6, 49]
            }
 
     @property
@@ -144,12 +143,12 @@ class SfpUtil(SfpUtilBase):
 
         # Rationalize port settings
         if port_num >= self.iom1_port_start and port_num <= self.iom1_port_end:
-            port_num = port_num - 1
+            port_num = port_num 
         elif port_num >= self.iom2_port_start and port_num <= self.iom2_port_end:
-            port_num = (port_num - 1) % 12
+            port_num = (port_num) % 12
         elif (port_num >= self.iom3_port_start and
                 port_num <= self.iom3_port_end):
-            port_num = (port_num - 1) % 22
+            port_num = (port_num) % 22
 
         return i2c_line, port_num
 
