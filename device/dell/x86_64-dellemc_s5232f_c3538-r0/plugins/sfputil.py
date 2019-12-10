@@ -334,6 +334,18 @@ class SfpUtil(SfpUtilBase):
                 transceiver_dom_info_dict['tx2power'] = 'N/A'
                 transceiver_dom_info_dict['tx3power'] = 'N/A'
                 transceiver_dom_info_dict['tx4power'] = 'N/A'
+            else:
+                dom_channel_monitor_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, (offset + QSFP_CHANNL_MON_OFFSET), QSFP_CHANNL_MON_WITH_TX_POWER_WIDTH)
+                if dom_channel_monitor_raw is not None:
+                    dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params_with_tx_power(dom_channel_monitor_raw, 0)
+                else:
+                    return None
+
+                transceiver_dom_info_dict['tx1power'] = dom_channel_monitor_data['data']['TX1Power']['value']
+                transceiver_dom_info_dict['tx2power'] = dom_channel_monitor_data['data']['TX2Power']['value']
+                transceiver_dom_info_dict['tx3power'] = dom_channel_monitor_data['data']['TX3Power']['value']
+                transceiver_dom_info_dict['tx4power'] = dom_channel_monitor_data['data']['TX4Power']['value']
+
             try:
                 sysfsfile_eeprom.close()
             except IOError:
@@ -352,7 +364,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_info_dict['tx4bias'] = dom_channel_monitor_data['data']['TX4Bias']['value']
 
         else:
-	   offset = 256
+           offset = 256
            file_path = self._get_port_eeprom_path(port_num, self.DOM_EEPROM_ADDR)
            if not self._sfp_eeprom_present(file_path, 0):
                return None
