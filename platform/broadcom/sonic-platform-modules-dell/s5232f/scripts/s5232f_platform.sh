@@ -56,10 +56,12 @@ switch_board_qsfp_mux() {
 switch_board_qsfp() {
         case $1 in
         "new_device")
-                        for ((i=2;i<=41;i++));
+                        for ((i=2;i<=33;i++));
                         do
-                            echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                            echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
+                        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-34/$1
+                        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-35/$1
                         ;;
  
         "delete_device")
