@@ -78,8 +78,6 @@ static ssize_t do_attr_operation(struct device *dev, struct device_attribute *da
     PDDF_ATTR *ptr = (PDDF_ATTR *)da;
     XCVR_DATA *pdata = (XCVR_DATA *)(ptr->addr);
 
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
-
     pdata->xcvr_attrs[pdata->len] = pdata->xcvr_attr;
     pdata->len++;
     memset(&pdata->xcvr_attr, 0, sizeof(pdata->xcvr_attr));
@@ -99,8 +97,6 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
     struct i2c_adapter *adapter;
     struct i2c_board_info board_info;
     struct i2c_client *client_ptr;
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
-    /*pddf_dbg(KERN_ERR "Creating an I2C client with parent_bus:0x%x, dev_type:%s, dev_addr:0x%x\n", cdata->parent_bus, cdata->dev_type, cdata->dev_addr);*/
 
     /* Populate the platform data for xcvr */
     if (strncmp(buf, "add", strlen(buf)-1)==0)
@@ -124,27 +120,6 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
                 xcvr_platform_data->xcvr_attrs[i] = pdata->xcvr_attrs[i];
             }
 
-            /* Verify that the data is written properly */
-#if 0
-            pddf_dbg(XCVR, KERN_ERR "\n\n########### xcvr_platform_data - start ##########\n");
-            pddf_dbg(XCVR, KERN_ERR "dev_idx: %d\n", xcvr_platform_data->idx);
-            pddf_dbg(XCVR, KERN_ERR "no_of_usr_attr: %d\n", xcvr_platform_data->len);
-            
-            for (i=0; i<num; i++)
-            {
-                pddf_dbg(XCVR, KERN_ERR "attr: %d\n", i);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_name: %s\n", xcvr_platform_data->xcvr_attrs[i].aname);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_client_type: %s\n", xcvr_platform_data->xcvr_attrs[i].devtype);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_clinet_addr: 0x%x\n", xcvr_platform_data->xcvr_attrs[i].devaddr);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_client_offset: 0x%x\n", xcvr_platform_data->xcvr_attrs[i].offset);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_client_mask: 0x%x\n", xcvr_platform_data->xcvr_attrs[i].mask);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_client_exp_val: 0x%x\n", xcvr_platform_data->xcvr_attrs[i].cmpval);
-                pddf_dbg(XCVR, KERN_ERR "usr_attr_len: %d\n", xcvr_platform_data->xcvr_attrs[i].len);
-            }
-            pddf_dbg(XCVR, KERN_ERR "########### xcvr_platform_data - start ##########\n\n");
-#endif
-
-
             board_info = (struct i2c_board_info) {
                 .platform_data = xcvr_platform_data,
             };
@@ -152,9 +127,7 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
             board_info.addr = cdata->dev_addr;
             strcpy(board_info.type, cdata->dev_type);
 
-            /*pddf_dbg(KERN_ERR "Creating a client %s on 0x%x, platform_data 0x%x\n", board_info.type, board_info.addr, board_info.platform_data);*/
             client_ptr = i2c_new_device(adapter, &board_info); 
-            //client_ptr = i2c_new_dummy(adapter, &board_info);
             if (client_ptr != NULL) {
                 i2c_put_adapter(adapter);
                 pddf_dbg(XCVR, KERN_ERR "Created a %s client: 0x%x\n", cdata->i2c_name, client_ptr);
@@ -298,5 +271,3 @@ module_exit(pddf_data_exit);
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("sfp platform data");
 MODULE_LICENSE("GPL");
-
-/*#endif*/

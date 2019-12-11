@@ -60,4 +60,4 @@ struct psu_data {
 };
 
 
-#endif //__PDDF_PSU_DRIVER_H__
+#endif

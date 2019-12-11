@@ -60,9 +60,6 @@ void get_psu_duplicate_sysfs(int idx, char *str)
         case PSU_TEMP1_INPUT:
             strcpy(str, "temp1_input");
             break;
-        /*case PSU_TEMP_FAULT:*/
-            /*strcpy(str, "temp1_fault");*/
-            /*break;*/
         default:
             break;
     }
@@ -126,7 +123,6 @@ int psu_update_attr(struct device *dev, struct psu_attr_info *data, PSU_DATA_ATT
     {
         dev_dbg(&client->dev, "Starting update for %s\n", data->name);
 
-        /*psu_dbg(KERN_ERR "%s: UPDATING %s ATTR FOR PSU,#### \n", __FUNCTION__, udata->aname );*/
         sysfs_attr_data = udata->access_data;
         if (sysfs_attr_data->pre_get != NULL)
         {
@@ -177,7 +173,6 @@ ssize_t psu_show_default(struct device *dev, struct device_attribute *da, char *
         get_psu_duplicate_sysfs(ptr->index , new_str);
         if ( strcmp(attr->dev_attr.attr.name, pdata->psu_attrs[i].aname) == 0 || strcmp(attr->dev_attr.attr.name, new_str) == 0 ) 
         {
-            /*printk(KERN_ERR "%s's show func: access_data from %s, idx %d, new_str=%s\n", attr->dev_attr.attr.name, pdata->psu_attrs[i].aname, ptr->index, new_str);*/
             sysfs_attr_info = &data->attr_info[i];
             usr_data = &pdata->psu_attrs[i];
             strcpy(new_str, "");
@@ -287,7 +282,6 @@ ssize_t psu_store_default(struct device *dev, struct device_attribute *da, const
     {
         /*No write attributes for now in PSU*/
         default:
-            /*printk(KERN_ERR "%s: Unable to find the attr index for %s\n", __FUNCTION__, usr_data->aname);*/
             goto exit;
     }
 
@@ -342,7 +336,6 @@ int sonic_i2c_get_psu_model_name_default(void *client, PSU_DATA_ATTR *adata, voi
     uint8_t offset = (uint8_t)adata->offset;
     int data_len = adata->len;
 
-    /*printk(KERN_ERR "###INSIDE GET MODEL NAME. client:0x%x, offset:0x%x, data_len:%d\n", client, offset, data_len);*/
     while (retry)
     {
         status = i2c_smbus_read_i2c_block_data((struct i2c_client *)client, offset, data_len-1, model);
@@ -383,7 +376,6 @@ int sonic_i2c_get_psu_mfr_id_default(void *client, PSU_DATA_ATTR *adata, void *d
     uint8_t offset = (uint8_t)adata->offset;
     int data_len = adata->len;
 
-    /*psu_dbg(KERN_ERR "###INSIDE GET MFR ID. client:0x%x, offset:0x%x, data_len:%d\n", client, offset, data_len);*/
     while (retry)
     {
         status = i2c_smbus_read_i2c_block_data((struct i2c_client *)client, offset, data_len-1, mfr_id);
@@ -424,7 +416,6 @@ int sonic_i2c_get_psu_serial_num_default(void *client, PSU_DATA_ATTR *adata, voi
     uint8_t offset = (uint8_t)adata->offset;
     int data_len = adata->len;
 
-    /*psu_dbg(KERN_ERR "###INSIDE GET SERIAL_NUM. client:0x%x, offset:0x%x, data_len:%d\n", client, offset, data_len);*/
     while (retry)
     {
         status = i2c_smbus_read_i2c_block_data((struct i2c_client *)client, offset, data_len-1, serial);

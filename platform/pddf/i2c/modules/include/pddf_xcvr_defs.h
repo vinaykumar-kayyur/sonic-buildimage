@@ -72,7 +72,6 @@ typedef enum xcvr_port_type_e {
     PDDF_PORT_TYPE_QSFP28
 } xcvr_port_type_t;
 
-/*static int data_parsing_complete = 0;*/
 /* Each client has this additional data
  */
 struct xcvr_data {
@@ -118,4 +117,4 @@ enum xcvr_sysfs_attributes {
 extern int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg);
 extern int board_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 
-#endif //__PDDF_XCVR_DEFS_H__
+#endif 

@@ -42,8 +42,6 @@
 #endif
 
 
-/*#define MAX_NUM_PSU 5*/
-/*#define MAX_PSU_ATTRS 20*/
 #define GEN_NAME_SIZE 32
 #define ERR_STR_SIZE 128
 
@@ -76,8 +74,6 @@ enum attribute_data_type {
 
 
 
-
-// PSU Specific details
 
 typedef struct NEW_DEV_ATTR
 {
@@ -134,4 +130,4 @@ typedef struct PDEVICE
 void add_device_table(char *name, void *ptr);
 
 
-#endif //__PDDF_CLIENT_DEFS_H__
+#endif 

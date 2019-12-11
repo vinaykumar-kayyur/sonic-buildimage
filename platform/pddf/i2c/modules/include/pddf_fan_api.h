@@ -34,4 +34,4 @@ extern int sonic_i2c_get_fan_pwm_default(void *client, FAN_DATA_ATTR *adata, voi
 extern int sonic_i2c_get_fan_fault_default(void *client, FAN_DATA_ATTR *adata, void *data);
 extern int sonic_i2c_set_fan_pwm_default(void *client, FAN_DATA_ATTR *adata, void *data);
 
-#endif //__PDDF_FAN_API_H__
+#endif 

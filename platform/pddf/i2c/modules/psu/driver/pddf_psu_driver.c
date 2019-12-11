@@ -125,8 +125,6 @@ static int psu_probe(struct i2c_client *client,
     char new_str[ATTR_NAME_LEN] = "";
 
 
-    /*pddf_dbg("GENERIC_PSU_DRIVER Probe called... \n");*/
-
     if (client == NULL) {
         printk("NULL Client.. \n");
         goto exit;
@@ -184,7 +182,6 @@ static int psu_probe(struct i2c_client *client,
         dy_ptr->index = sysfs_data_entry->a_ptr->index;
         
         data->psu_attribute_list[i] = &dy_ptr->dev_attr.attr;
-        /*pddf_dbg(KERN_ERR "PSU%d: Allocated %d: 0x%x\n", data->index+1, i, data->psu_attribute_list[i]);*/
         strcpy(data->attr_info[i].name, data_attr->aname);
         data->attr_info[i].valid = 0;
         mutex_init(&data->attr_info[i].update_lock);
@@ -273,7 +270,6 @@ static int psu_remove(struct i2c_client *client)
         ptr = (struct sensor_device_attribute *)data->psu_attribute_list[i];
         kfree(ptr);
         data->psu_attribute_list[i] = NULL;
-        /*pddf_dbg(KERN_ERR "PSU%d: Freed %d: 0x%x\n", data->index+1, i, ptr);*/
     }
     pddf_dbg(PSU, KERN_ERR "%s: Freed all the memory allocated for attributes\n", __FUNCTION__);
     kfree(data);
@@ -366,12 +362,9 @@ void __exit psu_exit(void)
 }
 EXPORT_SYMBOL(psu_exit);
 
-/*#ifdef SONIC*/
 module_init(psu_init);
 module_exit(psu_exit);
 
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("psu driver");
 MODULE_LICENSE("GPL");
-
-/*#endif*/

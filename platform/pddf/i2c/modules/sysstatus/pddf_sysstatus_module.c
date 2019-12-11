@@ -137,7 +137,6 @@ ssize_t show_sysstatus_data(struct device *dev, struct device_attribute *da, cha
     {
         if (strcmp(data->sysstatus_addr_attrs[i].aname, attr->dev_attr.attr.name) == 0 )
         {
-            /*pddf_dbg(KERN_ERR "%s: show func called for %s\n\n", __FUNCTION__, attr->dev_attr.attr.name);*/
             sysstatus_addr_attrs = &data->sysstatus_addr_attrs[i];
             
         }
@@ -151,7 +150,6 @@ ssize_t show_sysstatus_data(struct device *dev, struct device_attribute *da, cha
     else
     {
         status = board_i2c_cpld_read( sysstatus_addr_attrs->devaddr, sysstatus_addr_attrs->offset);
-        /*pddf_dbg(KERN_ERR "%s: Data read for %s is 0x%x\n", __FUNCTION__, sysstatus_addr_attrs->aname, status);*/
     }
     
     return sprintf(buf, "0x%x\n", (status&sysstatus_addr_attrs->mask)); 
@@ -235,4 +233,3 @@ module_exit(sysstatus_data_exit);
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("SYSSTATUS platform data");
 MODULE_LICENSE("GPL");
-

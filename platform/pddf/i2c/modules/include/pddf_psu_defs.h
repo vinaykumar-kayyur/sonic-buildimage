@@ -86,4 +86,4 @@ typedef struct PSU_PDATA
 extern int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg);
 extern int board_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 
-#endif //__PDDF_PSU_DEFS_H__
+#endif

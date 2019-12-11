@@ -96,7 +96,6 @@ struct i2c_board_info *i2c_get_mux_board_info(MUX_DATA* mdata, NEW_DEV_ATTR *dev
 }
 
 
-/*PDDF_DATA_ATTR(dev_ops, S_IWUSR, NULL, do_device_operation, PDDF_CHAR, 8, (void*)&pddf_attr, (void*)NULL);*/
 static ssize_t do_device_operation(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
     PDDF_ATTR *ptr = (PDDF_ATTR *)da;
@@ -106,14 +105,11 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
     struct i2c_board_info *board_info;
     struct i2c_client *client_ptr;
 
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
-    /*pddf_dbg(KERN_ERR "Creating an I2C MUX client with parent_bus:0x%x, dev_type:%s, dev_addr:0x%x\n", device_ptr->parent_bus, device_ptr->dev_type, device_ptr->dev_addr);*/
     if (strncmp(buf, "add", strlen(buf)-1)==0)
     {
         adapter = i2c_get_adapter(device_ptr->parent_bus);
         board_info = i2c_get_mux_board_info(mux_ptr, device_ptr);
 
-        /*pddf_dbg(KERN_ERR "Creating a client %s on 0x%x, platform_data 0x%x\n", board_info->type, board_info->addr, board_info->platform_data);*/
         client_ptr = i2c_new_device(adapter, board_info);
 
         if (client_ptr != NULL)
@@ -213,5 +209,3 @@ module_exit(mux_data_exit);
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("mux platform data");
 MODULE_LICENSE("GPL");
-
-/*#endif*/

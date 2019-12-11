@@ -41,4 +41,4 @@ extern ssize_t get_module_txdisable(struct device *dev, struct device_attribute 
 extern ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
 extern ssize_t get_module_txfault(struct device *dev, struct device_attribute *da, char *buf);
 
-#endif //__PDDF_XCVR_API_H__
+#endif

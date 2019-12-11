@@ -418,4 +418,3 @@ module_exit(pddf_fan_exit);
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("pddf_fan driver");
 MODULE_LICENSE("GPL");
-

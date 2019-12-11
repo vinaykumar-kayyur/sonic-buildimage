@@ -22,9 +22,6 @@
 #include <linux/dmi.h>
 
 
-//extern int hw_preaccess_func_cpld_mux_default(uint32_t unit, void *data);
-
-
 static LIST_HEAD(cpld_client_list);
 static struct mutex  list_lock;
 
@@ -129,8 +126,6 @@ int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg)
     struct cpld_client_node *cpld_node = NULL;
     int ret = -EPERM;
     
-    //hw_preaccess_func_cpld_mux_default((uint32_t)cpld_addr, NULL);
-
     mutex_lock(&list_lock);
 
     list_for_each(list_node, &cpld_client_list)
@@ -155,8 +150,6 @@ int board_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
     struct cpld_client_node *cpld_node = NULL;
     int ret = -EIO;
     
-    //hw_preaccess_func_cpld_mux_default((uint32_t)cpld_addr, NULL);
-
     mutex_lock(&list_lock);
 
     list_for_each(list_node, &cpld_client_list)

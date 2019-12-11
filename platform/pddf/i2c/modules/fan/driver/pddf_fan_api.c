@@ -183,7 +183,6 @@ ssize_t fan_show_default(struct device *dev, struct device_attribute *da, char *
         get_fan_duplicate_sysfs(ptr->index , new_str);
         if (strcmp(attr->dev_attr.attr.name, pdata->fan_attrs[i].aname) == 0 || strcmp(attr->dev_attr.attr.name, new_str) == 0)
         {
-            /*printk(KERN_ERR "%s's show func: access_data from %s, idx %d, new_str=%s\n", attr->dev_attr.attr.name, pdata->fan_attrs[i].aname, ptr->index, new_str);*/
             attr_info = &data->attr_info[i];
             usr_data = &pdata->fan_attrs[i];
             strcpy(new_str, "");
@@ -312,7 +311,6 @@ int sonic_i2c_get_fan_present_default(void *client, FAN_DATA_ATTR *udata, void *
     val = i2c_smbus_read_byte_data((struct i2c_client *)client, udata->offset);
     painfo->val.intval = ((val & udata->mask) == udata->cmpval);
 
-    /*fan_dbg(KERN_ERR "presence: val:0x%x, mask:0x%x, present_value = 0x%x\n", val, udata->mask, painfo->val.intval);*/
 
     return status;
 }
@@ -350,7 +348,6 @@ int sonic_i2c_get_fan_direction_default(void *client, FAN_DATA_ATTR *udata, void
 
     val = i2c_smbus_read_byte_data((struct i2c_client *)client, udata->offset);
     painfo->val.intval = ((val & udata->mask) == udata->cmpval);
-    /*fan_dbg(KERN_ERR "direction: val:0x%x, mask:0x%x, final val:0x%x\n", val, udata->mask, painfo->val.intval);*/
 
     return status;
 }

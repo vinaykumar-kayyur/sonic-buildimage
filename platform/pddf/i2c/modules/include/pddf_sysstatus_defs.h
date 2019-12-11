@@ -48,4 +48,4 @@ typedef struct SYSSTATUS_DATA
 
 
 
-#endif //__PDDF_SYSSTATUS_DEFS_H__        
+#endif

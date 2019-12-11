@@ -86,14 +86,12 @@ static ssize_t do_attr_operation(struct device *dev, struct device_attribute *da
     PSU_DATA *pdata = (PSU_DATA *)(ptr->addr);
     PSU_SYSFS_ATTR_DATA_ENTRY *access_ptr;
 
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
 
     pdata->psu_attrs[pdata->len] = pdata->psu_attr;
     access_ptr = get_psu_access_data(pdata->psu_attrs[pdata->len].aname);
     if (access_ptr != NULL && access_ptr->a_ptr != NULL)
     {
         pdata->psu_attrs[pdata->len].access_data = access_ptr->a_ptr ;
-        /*pddf_dbg(KERN_ERR "Attr:%s, access_data_ptr: 0x%x\n",pdata->psu_attrs[pdata->len].aname, pdata->psu_attrs[pdata->len].access_data);*/
     }
 
 
@@ -128,28 +126,6 @@ struct i2c_board_info *i2c_get_psu_board_info(PSU_DATA *pdata, NEW_DEV_ATTR *cda
             psu_platform_data->psu_attrs[i] = pdata->psu_attrs[i];
         }
 
-        /* Verify that the data is written properly */
-#if 0
-        pddf_dbg(PSU, KERN_ERR "\n\n########### psu_platform_data - start ##########\n");
-        pddf_dbg(PSU, KERN_ERR "psu_idx: %d\n", psu_platform_data->idx);
-        pddf_dbg(PSU, KERN_ERR "psu_fans: %d\n", psu_platform_data->num_psu_fans);
-        pddf_dbg(PSU, KERN_ERR "no_of_usr_attr: %d\n", psu_platform_data->len);
-
-        for (i=0; i<num; i++)
-        {
-            pddf_dbg(PSU, KERN_ERR "attr: %d\n", i);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_name: %s\n", psu_platform_data->psu_attrs[i].aname);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_client_type: %s\n", psu_platform_data->psu_attrs[i].devtype);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_clinet_addr: 0x%x\n", psu_platform_data->psu_attrs[i].devaddr);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_client_offset: 0x%x\n", psu_platform_data->psu_attrs[i].offset);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_client_mask: 0x%x\n", psu_platform_data->psu_attrs[i].mask);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_client_exp_val: 0x%x\n", psu_platform_data->psu_attrs[i].cmpval);
-            pddf_dbg(PSU, KERN_ERR "usr_attr_len: %d\n", psu_platform_data->psu_attrs[i].len);
-        }
-        pddf_dbg(PSU, KERN_ERR "########### psu_platform_data - start ##########\n\n");
-#endif
-
-
         board_info = (struct i2c_board_info) {
             .platform_data = psu_platform_data,
         };
@@ -166,7 +142,6 @@ struct i2c_board_info *i2c_get_psu_board_info(PSU_DATA *pdata, NEW_DEV_ATTR *cda
 }
 
 
-/*PDDF_DATA_ATTR(dev_ops, S_IWUSR, NULL, do_device_operation, PDDF_CHAR, 8, (void*)&pddf_attr, (void*)NULL);*/
 static ssize_t do_device_operation(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
     PDDF_ATTR *ptr = (PDDF_ATTR *)da;
@@ -177,17 +152,12 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
     struct i2c_client *client_ptr;
 
 
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
-
-
-    /*pddf_dbg(KERN_ERR "Creating an I2C client with parent_bus:0x%x, dev_type:%s, dev_addr:0x%x\n", cdata->parent_bus, cdata->dev_type, cdata->dev_addr);*/
     if (strncmp(buf, "add", strlen(buf)-1)==0)
     {
         adapter = i2c_get_adapter(cdata->parent_bus);
         board_info = i2c_get_psu_board_info(pdata, cdata);
 
         /* Populate the platform data for psu */
-        /*pddf_dbg(KERN_ERR "Creating a client %s on 0x%x, platform_data 0x%x\n", board_info->type, board_info->addr, board_info->platform_data);*/
         client_ptr = i2c_new_device(adapter, board_info);
         
         if(client_ptr != NULL)
@@ -309,5 +279,3 @@ module_exit(pddf_data_exit);
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("psu platform data");
 MODULE_LICENSE("GPL");
-
-/*#endif*/

@@ -152,47 +152,39 @@ ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const c
 {
     int ret = 0, num = 0;
 
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
 
     PDDF_ATTR *ptr = (PDDF_ATTR *)da;
-    /*pddf_dbg(KERN_ERR "[ WRITE ] ATTR PTR TYPE:%d, ADDR=%p\n", ptr->type, ptr->addr);*/
 
     switch(ptr->type)
     {
         case PDDF_CHAR:
             strncpy(ptr->addr, buf, strlen(buf)-1); // to discard newline char form buf
             ptr->addr[strlen(buf)-1] = '\0';
-            /*pddf_dbg(KERN_ERR "Stored value: %s\n", ptr->addr);*/
             break;
         case PDDF_UCHAR:
             ret = kstrtoint(buf,10,&num);
             if (ret==0)
                 *(unsigned char *)(ptr->addr) = (unsigned char)num;
-            /*pddf_dbg(KERN_ERR "Stored value: %d, num: %d\n", *(int*)(ptr->addr), num);*/
             break;
         case PDDF_INT_DEC:
             ret = kstrtoint(buf,10,&num);
             if (ret==0)
                 *(int *)(ptr->addr) = num;
-            /*pddf_dbg(KERN_ERR "Stored value: %d, num: %d\n", *(int*)(ptr->addr), num);*/
             break;
         case PDDF_INT_HEX:
             ret = kstrtoint(buf,16,&num);
             if (ret==0)
                 *(int *)(ptr->addr) = num;
-            /*pddf_dbg(KERN_ERR "Stored value: 0x%x, num: 0x%x\n", *(int*)(ptr->addr), num);*/
             break;
         case PDDF_USHORT:
             ret = kstrtoint(buf,16,&num);
             if (ret==0)
                 *(unsigned short *)(ptr->addr) = (unsigned short)num;
-            /*pddf_dbg(KERN_ERR "Stored value: 0x%x, num: 0x%x\n", *(int*)(ptr->addr), num);*/
             break;
         case PDDF_UINT32:
             ret = kstrtoint(buf,16,&num);
             if (ret==0)
                 *(uint32_t *)(ptr->addr) = (uint32_t)num;
-            /*pddf_dbg(KERN_ERR "Stored value: 0x%x, num: 0x%x\n", *(int*)(ptr->addr), num);*/
             break;
         default:
             break;

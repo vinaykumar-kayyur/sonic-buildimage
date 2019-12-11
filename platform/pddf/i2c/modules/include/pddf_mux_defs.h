@@ -26,4 +26,4 @@ typedef struct MUX_DATA
     int virt_bus;       // Virtual base bus number of the mux channels
 }MUX_DATA;
 
-#endif //__PAL_MUX_DEFS_H__
+#endif 

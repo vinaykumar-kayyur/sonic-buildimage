@@ -80,4 +80,4 @@ struct fan_data {
     struct fan_attr_info    attr_info[MAX_FAN_ATTRS];
 };
 
-#endif //__PDDF_FAN_DRIVER_H__
+#endif 

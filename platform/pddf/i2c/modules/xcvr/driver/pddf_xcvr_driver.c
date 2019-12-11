@@ -125,7 +125,6 @@ static int xcvr_probe(struct i2c_client *client,
 
     i2c_set_clientdata(client, data);
     data->valid = 0;
-    /*data->index = dev_id->driver_data;*/
 
     dev_info(&client->dev, "chip found\n");
 
@@ -143,7 +142,6 @@ static int xcvr_probe(struct i2c_client *client,
         for(j=0;j<XCVR_ATTR_MAX;j++)
         {
             aptr = &xcvr_attr_list[j]->dev_attr.attr;
-            /*pddf_dbg(KERN_ERR "i:%d, j:%d, aptr->name: %s, attr_data->name: %s\n", i, j, aptr->name, attr_data->aname);*/
 
             if (strncmp(aptr->name, attr_data->aname, strlen(attr_data->aname))==0)
                 break;
@@ -294,7 +292,5 @@ MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("Driver for transceiver operations");
 MODULE_LICENSE("GPL");
 
-/*#ifdef SONIC*/
 module_init(xcvr_init);
 module_exit(xcvr_exit);
-/*#endif*/

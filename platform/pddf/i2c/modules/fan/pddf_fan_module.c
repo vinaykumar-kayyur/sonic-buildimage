@@ -85,14 +85,12 @@ static ssize_t do_attr_operation(struct device *dev, struct device_attribute *da
     FAN_DATA *fdata = (FAN_DATA *)(ptr->addr);
     FAN_SYSFS_ATTR_DATA_ENTRY *entry_ptr;
 
-    /*pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);*/
 
     fdata->fan_attrs[fdata->len] = fdata->fan_attr;
     entry_ptr = get_fan_access_data(fdata->fan_attrs[fdata->len].aname);
     if (entry_ptr != NULL && entry_ptr->a_ptr != NULL)
     {
         fdata->fan_attrs[fdata->len].access_data = entry_ptr->a_ptr ;
-        /*pddf_dbg(KERN_ERR "Attr:%s, access_data_ptr: 0x%x\n",fdata->fan_attrs[fdata->len].aname, fdata->fan_attrs[fdata->len].access_data);*/
     }
 
     fdata->len++;
@@ -125,28 +123,6 @@ struct i2c_board_info *i2c_get_fan_board_info(FAN_DATA *fdata, NEW_DEV_ATTR *cda
             fan_platform_data->fan_attrs[i] = fdata->fan_attrs[i];
         }
 
-        /* Verify that the data is written properly */
-#if 0
-        pddf_dbg(FAN, KERN_ERR "\n\n########### fan_platform_data - start ##########\n");
-        pddf_dbg(FAN, KERN_ERR "num_of_fans: %d\n", fan_platform_data->num_fan);
-        pddf_dbg(FAN, KERN_ERR "no_of_usr_attr: %d\n", fan_platform_data->len);
-
-        for (i=0; i<num; i++)
-        {
-            pddf_dbg(FAN, KERN_ERR "attr: %d\n", i);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_name: %s\n", fan_platform_data->fan_attrs[i].aname);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_client_type: %s\n", fan_platform_data->fan_attrs[i].devtype);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_client_offset: 0x%x\n", fan_platform_data->fan_attrs[i].offset);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_client_mask: 0x%x\n", fan_platform_data->fan_attrs[i].mask);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_client_exp_val: 0x%x\n", fan_platform_data->fan_attrs[i].cmpval);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_len: %d\n", fan_platform_data->fan_attrs[i].len);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_mult: %d\n", fan_platform_data->fan_attrs[i].mult);
-            pddf_dbg(FAN, KERN_ERR "usr_attr_is_divisor: %d\n", fan_platform_data->fan_attrs[i].is_divisor);
-        }
-        pddf_dbg(FAN, KERN_ERR "########### fan_platform_data - end ##########\n\n");
-#endif
-
-
         board_info = (struct i2c_board_info) {
             .platform_data = fan_platform_data,
         };
@@ -163,7 +139,6 @@ struct i2c_board_info *i2c_get_fan_board_info(FAN_DATA *fdata, NEW_DEV_ATTR *cda
 }
 
 
-/*PDDF_DATA_ATTR(dev_ops, S_IWUSR, NULL, do_device_operation, PDDF_CHAR, 8, (void*)&pddf_attr, (void*)NULL);*/
 static ssize_t do_device_operation(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
     PDDF_ATTR *ptr = (PDDF_ATTR *)da;
@@ -173,14 +148,12 @@ static ssize_t do_device_operation(struct device *dev, struct device_attribute *
     struct i2c_board_info *board_info;
     struct i2c_client *client_ptr;
 
-    /*pddf_dbg(KERN_ERR "Creating an I2C client with parent_bus:0x%x, dev_type:%s, dev_addr:0x%x\n", cdata->parent_bus, cdata->dev_type, cdata->dev_addr);*/
     if (strncmp(buf, "add", strlen(buf)-1)==0)
     {
         adapter = i2c_get_adapter(cdata->parent_bus);
         board_info = i2c_get_fan_board_info(fdata, cdata);
 
         /* Populate the platform data for fan */
-        /*pddf_dbg(KERN_ERR "Creating a client %s on 0x%x, platform_data 0x%x\n", board_info->type, board_info->addr, board_info->platform_data);*/
         client_ptr = i2c_new_device(adapter, board_info);
         
         if(client_ptr != NULL)
@@ -300,4 +273,3 @@ module_exit(pddf_data_exit);
 MODULE_AUTHOR("Broadcom");
 MODULE_DESCRIPTION("fan platform data");
 MODULE_LICENSE("GPL");
-

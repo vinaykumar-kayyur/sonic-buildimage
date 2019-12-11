@@ -20,10 +20,6 @@
 #ifndef __PDDF_CPLD_DEFS_H__
 #define __PDDF_CPLD_DEFS_H__
 
-/**//* CPLD CLIENT DATA - PLATFORM DATA FOR PSU CLIENT */
-/*typedef struct CPLD_DATA*/
-/*{*/
-/*int virt_bus;*/
-/*}CPLD_DATA;*/
+/* CPLD CLIENT DATA - PLATFORM DATA FOR PSU CLIENT */
 
-#endif //__PDDF_CPLD_DEFS_H__
+#endif

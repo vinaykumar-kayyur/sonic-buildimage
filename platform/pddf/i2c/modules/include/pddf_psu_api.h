@@ -35,4 +35,4 @@ extern int sonic_i2c_get_psu_i_out_default(void *client, PSU_DATA_ATTR *adata, v
 extern int sonic_i2c_get_psu_p_out_default(void *client, PSU_DATA_ATTR *adata, void *data);
 extern int sonic_i2c_get_psu_fan1_speed_rpm_default(void *client, PSU_DATA_ATTR *adata, void *data);
 
-#endif //__PDDF_PSU_API_H__
+#endif

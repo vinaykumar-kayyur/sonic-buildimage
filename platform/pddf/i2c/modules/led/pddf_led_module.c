@@ -309,7 +309,6 @@ ssize_t show_pddf_data(struct device *dev, struct device_attribute *da,
 ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
         int ret = 0, num = 0;
-        //pddf_dbg(KERN_ERR "%s: %s", __FUNCTION__, buf);
         struct pddf_data_attribute *ptr = (struct pddf_data_attribute *)da;
         switch(ptr->type)
         {
