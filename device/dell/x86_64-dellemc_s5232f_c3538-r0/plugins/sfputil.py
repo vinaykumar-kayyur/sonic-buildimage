@@ -20,8 +20,8 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 0
-    PORT_END = 63
-    PORTS_IN_BLOCK = 64
+    PORT_END = 33
+    PORTS_IN_BLOCK = 31
 
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:04:00.0/resource0"
 
