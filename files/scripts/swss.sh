@@ -2,6 +2,7 @@
 
 SERVICE="swss"
 PEER="syncd"
+DEPENDENT="teamd radv dhcp_relay"
 DEBUGLOG="/tmp/swss-syncd-debug.log"
 LOCKFILE="/tmp/swss-syncd-lock"
 
@@ -78,11 +79,24 @@ function clean_up_tables()
     end" 0
 }
 
-startPeerService() {
+start_peer_and_dependent_services() {
     check_warm_boot
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         /bin/systemctl start ${PEER}
+        for dep in ${DEPENDENT}; do
+            /bin/systemctl start ${dep}
+        done
+    fi
+}
+
+stop_peer_and_dependent_services() {
+    # if warm start enabled or peer lock exists, don't stop peer service docker
+    if [[ x"$WARM_BOOT" != x"true" ]]; then
+        /bin/systemctl stop ${PEER}
+        for dep in ${DEPENDENT}; do
+            /bin/systemctl stop ${dep}
+        done
     fi
 }
 
@@ -116,8 +130,23 @@ start() {
 }
 
 wait() {
-    startPeerService
-    /usr/bin/${SERVICE}.sh wait
+    start_peer_and_dependent_services
+
+    # Allow some time for peer container to start
+    # NOTE: This assumes Docker containers share the same names as their
+    # corresponding services
+    for SECS in {1..60}; do
+        RUNNING=$(docker inspect -f '{{.State.Running}}' ${PEER})
+        if [[ x"$RUNNING" == x"true" ]]; then
+            break
+        else
+            sleep 1
+        fi
+    done
+
+    # NOTE: This assumes Docker containers share the same names as their
+    # corresponding services
+    /usr/bin/docker-wait-any ${SERVICE} ${PEER}
 }
 
 stop() {
@@ -135,10 +164,7 @@ stop() {
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
 
-    # if warm start enabled or peer lock exists, don't stop peer service docker
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
-        /bin/systemctl stop ${PEER}
-    fi
+    stop_peer_and_dependent_services
 }
 
 case "$1" in

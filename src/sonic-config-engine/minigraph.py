@@ -30,8 +30,18 @@ ns3 = "http://www.w3.org/2001/XMLSchema-instance"
 spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
 chassis_backend_role = 'ChassisBackendRouter'
 
+backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
+VLAN_SUB_INTERFACE_SEPARATOR = '.'
+VLAN_SUB_INTERFACE_VLAN_ID = '10'
+
 # Default Virtual Network Index (VNI) 
 vni_default = 8000
+
+###############################################################################
+#
+# Minigraph parsing functions
+#
+###############################################################################
 
 class minigraph_encoder(json.JSONEncoder):
     def default(self, obj):
@@ -179,6 +189,14 @@ def parse_dpg(dpg, hname):
             ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
             lo_intfs[(intfname, ipprefix)] = {}
 
+        mvrfConfigs = child.find(str(QName(ns, "MgmtVrfConfigs")))
+        mvrf = {}
+        if mvrfConfigs != None:
+            mv = mvrfConfigs.find(str(QName(ns1, "MgmtVrfGlobal")))
+            if mv != None:
+                mvrf_en_flag = mv.find(str(QName(ns, "mgmtVrfEnabled"))).text
+                mvrf["vrf_global"] = {"mgmtVrfEnabled": mvrf_en_flag}
+
         mgmtintfs = child.find(str(QName(ns, "ManagementIPInterfaces")))
         mgmt_intf = {}
         for mgmtintf in mgmtintfs.findall(str(QName(ns1, "ManagementIPInterface"))):
@@ -266,15 +284,17 @@ def parse_dpg(dpg, hname):
                     if member.lower().startswith('erspanv6'):
                         is_mirror_v6 = True
                     else:
-                        is_mirror = True;
-                    # Erspan session will be attached to all front panel ports,
-                    # if panel ports is a member port of LAG, should add the LAG 
-                    # to acl table instead of the panel ports
+                        is_mirror = True
+                    # Erspan session will be attached to all front panel ports
+                    # initially. If panel ports is a member port of LAG, then
+                    # the LAG will be added to acl table instead of the panel
+                    # ports. Non-active ports will be removed from this list
+                    # later after the rest of the minigraph has been parsed.
                     acl_intfs = pc_intfs[:]
                     for panel_port in port_alias_map.values():
                         if panel_port not in intfs_inpc:
                             acl_intfs.append(panel_port)
-                    break;
+                    break
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
                                  'ports': acl_intfs}
@@ -305,8 +325,8 @@ def parse_dpg(dpg, hname):
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
-        return intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
-    return None, None, None, None, None, None, None, None, None
+        return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
+    return None, None, None, None, None, None, None, None, None, None
 
 
 def parse_cpg(cpg, hname):
@@ -366,8 +386,8 @@ def parse_cpg(cpg, hname):
                                 'name': name,
                                 'ip_range': ip_range_group
                             }
-                            if bgpPeer.find(str(QName(ns1, "Address"))) is not None:
-                                bgp_peers_with_range[name]['src_address'] = bgpPeer.find(str(QName(ns1, "Address"))).text
+                            if bgpPeer.find(str(QName(ns, "Address"))) is not None:
+                                bgp_peers_with_range[name]['src_address'] = bgpPeer.find(str(QName(ns, "Address"))).text
                             if bgpPeer.find(str(QName(ns1, "PeerAsn"))) is not None:
                                 bgp_peers_with_range[name]['peer_asn'] = bgpPeer.find(str(QName(ns1, "PeerAsn"))).text
                 else:
@@ -375,8 +395,11 @@ def parse_cpg(cpg, hname):
                         bgp_session = bgp_sessions[peer]
                         if hostname.lower() == bgp_session['name'].lower():
                             bgp_session['asn'] = asn
+
+    bgp_monitors = { key: bgp_sessions[key] for key in bgp_sessions if bgp_sessions[key].has_key('asn') and bgp_sessions[key]['name'] == 'BGPMonitor' }
     bgp_sessions = { key: bgp_sessions[key] for key in bgp_sessions if bgp_sessions[key].has_key('asn') and int(bgp_sessions[key]['asn']) != 0 }
-    return bgp_sessions, myasn, bgp_peers_with_range
+
+    return bgp_sessions, myasn, bgp_peers_with_range, bgp_monitors
 
 
 def parse_meta(meta, hname):
@@ -448,7 +471,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
             break        
 
     results['VXLAN_TUNNEL'] = {chassis_vxlan_tunnel: {
-        'source_ip': lo_addr
+        'src_ip': lo_addr
     }}
 
     # Vnet information
@@ -457,44 +480,38 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
         'vni': chassis_vni
     }}
 
-    # Find L3 physical interfaces that should be enslaved to Vnet
+    # For each IP interface
     for intf in phyport_intfs:
-        # We only care about L3 physical interfaces 
-        if is_ip_prefix_in_key(intf) == False:
+        # A IP interface may have multiple entries. 
+        # For example, "Ethernet0": {}", "Ethernet0|192.168.1.1": {}"
+        # We only care about the one without IP information
+        if is_ip_prefix_in_key(intf) == True:
             continue 
-
-        # intf = (intf name, IP prefix)
-        intf_name = intf[0]
-        neighbor_router = results['DEVICE_NEIGHBOR'][intf_name]['name']
+            
+        neighbor_router = results['DEVICE_NEIGHBOR'][intf]['name']
             
         # If the neighbor router is an external router 
         if devices[neighbor_router]['type'] != chassis_backend_role:
-
             # Enslave the interface to a Vnet
-            if intf_name in phyport_intfs:
-                phyport_intfs[intf_name] = {'vnet_name': chassis_vnet}
-            else:
-                print >> sys.stderr, 'Warning: cannot find the key %s' % (intf_name) 
-
-    # Find L3 port chennel interfaces that should be enslaved to Vnet
+            phyport_intfs[intf] = {'vnet_name': chassis_vnet}
+           
+    # For each port channel IP interface
     for pc_intf in pc_intfs:
-        # We only care about L3 port channel interfaces 
-        if is_ip_prefix_in_key(pc_intf) == False:
+        # A port channel IP interface may have multiple entries. 
+        # For example, "Portchannel0": {}", "Portchannel0|192.168.1.1": {}"
+        # We only care about the one without IP information
+        if is_ip_prefix_in_key(pc_intf) == True:
             continue 
-
-        # Get port channel interface name
-        # pc intf = (pc intf name, IP prefix)
-        pc_intf_name = pc_intf[0]
 
         intf_name = None 
         # Get a physical interface that belongs to this port channel         
         for pc_member in pc_members:
-            if pc_member[0] == pc_intf_name:
+            if pc_member[0] == pc_intf:
                 intf_name = pc_member[1]
                 break 
 
         if intf_name == None:
-            print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf_name)
+            print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf)
             continue
 
         # Get the neighbor router of this port channel interface
@@ -502,13 +519,42 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
 
         # If the neighbor router is an external router 
         if devices[neighbor_router]['type'] != chassis_backend_role:
-
             # Enslave the port channel interface to a Vnet
-            if pc_intf_name in pc_intfs:
-                pc_intfs[pc_intf_name] = {'vnet_name': chassis_vnet}
-            else:
-                print >> sys.stderr, 'Warning: cannot find the key %s' % (pc_intf_name)           
+            pc_intfs[pc_intf] = {'vnet_name': chassis_vnet}        
 
+###############################################################################
+#
+# Post-processing functions
+#
+###############################################################################
+
+def filter_acl_mirror_table_bindings(acls, neighbors, port_channels):
+    """
+        Filters out inactive front-panel ports from the binding list for mirror
+        ACL tables. We define an "active" port as one that is a member of a
+        port channel or one that is connected to a neighboring device.
+    """
+
+    for acl_table, group_params in acls.iteritems():
+        group_type = group_params.get('type', None)
+
+        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
+            continue
+
+        active_ports = [ port for port in group_params.get('ports', []) if port in neighbors.keys() or port in port_channels ]
+
+        if not active_ports:
+            print >> sys.stderr, 'Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table)
+
+        acls[acl_table]['ports'] = active_ports
+
+    return acls
+
+###############################################################################
+#
+# Main functions
+#
+###############################################################################
 
 def parse_xml(filename, platform=None, port_config_file=None):
     root = ET.parse(filename).getroot()
@@ -518,6 +564,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     u_devices = None
     hwsku = None
     bgp_sessions = None
+    bgp_monitors = []
     bgp_asn = None
     intfs = None
     vlan_intfs = None
@@ -526,7 +573,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     vlan_members = None
     pcs = None
     mgmt_intf = None
-    lo_intf = None
+    lo_intfs = None
     neighbors = None
     devices = None
     hostname = None
@@ -559,9 +606,9 @@ def parse_xml(filename, platform=None, port_config_file=None):
     port_alias_map.update(alias_map)
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
-            (bgp_sessions, bgp_asn, bgp_peers_with_range) = parse_cpg(child, hostname)
+            (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
             (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
@@ -580,8 +627,15 @@ def parse_xml(filename, platform=None, port_config_file=None):
         'hostname': hostname,
         'hwsku': hwsku,
         'type': current_device['type']
-        }}
+        },
+        'x509': {
+            'server_crt': '/etc/sonic/telemetry/streamingtelemetryserver.cer',
+            'server_key': '/etc/sonic/telemetry/streamingtelemetryserver.key',
+            'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
+        }
+    }
     results['BGP_NEIGHBOR'] = bgp_sessions
+    results['BGP_MONITORS'] = bgp_monitors
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
     if mgmt_routes:
         # TODO: differentiate v4 and v6
@@ -602,12 +656,17 @@ def parse_xml(filename, platform=None, port_config_file=None):
         if alias in port_speeds_default:
             results['MGMT_PORT'][name]['speed'] = port_speeds_default[alias]
         results['MGMT_INTERFACE'][(name, key[1])] = mgmt_intf[key]
-    results['LOOPBACK_INTERFACE'] = lo_intfs
+    results['LOOPBACK_INTERFACE'] = {}
+    for lo_intf in lo_intfs:
+        results['LOOPBACK_INTERFACE'][lo_intf] = lo_intfs[lo_intf]
+        results['LOOPBACK_INTERFACE'][lo_intf[0]] = {}
+    results['MGMT_VRF_CONFIG'] = mvrf
 
     phyport_intfs = {}
     vlan_intfs = {}
     pc_intfs = {}
     vlan_invert_mapping = { v['alias']:k for k,v in vlans.items() if v.has_key('alias') }
+    vlan_sub_intfs = {}
 
     for intf in intfs:
         if intf[0][0:4] == 'Vlan':
@@ -709,6 +768,32 @@ def parse_xml(filename, platform=None, port_config_file=None):
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
+    if current_device['type'] in backend_device_types:
+        del results['INTERFACE']
+        del results['PORTCHANNEL_INTERFACE']
+
+        for intf in phyport_intfs.keys():
+            if isinstance(intf, tuple):
+                intf_info = list(intf)
+                intf_info[0] = intf_info[0] + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
+                sub_intf = tuple(intf_info)
+                vlan_sub_intfs[sub_intf] = {}
+            else:
+                sub_intf = intf + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
+                vlan_sub_intfs[sub_intf] = {"admin_status" : "up"}
+
+        for pc_intf in pc_intfs.keys():
+            if isinstance(pc_intf, tuple):
+                pc_intf_info = list(pc_intf)
+                pc_intf_info[0] = pc_intf_info[0] + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
+                sub_intf = tuple(pc_intf_info)
+                vlan_sub_intfs[sub_intf] = {}
+            else:
+                sub_intf = pc_intf + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
+                vlan_sub_intfs[sub_intf] = {"admin_status" : "up"}
+
+        results['VLAN_SUB_INTERFACE'] = vlan_sub_intfs
+
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
@@ -724,21 +809,34 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
+    results['ACL_TABLE'] = filter_acl_mirror_table_bindings(acls, neighbors, pcs)
+    results['FEATURE'] = {
+        'telemetry': {
+            'status': 'enabled'
+        }
+    }
+    results['TELEMETRY'] = {
+        'gnmi': {
+            'client_auth': 'true',
+            'port': '50051',
+            'log_level': '2'
+        }
+    }
 
-    results['ACL_TABLE'] = acls
-    mirror_sessions = {}
-    if erspan_dst:
-        lo_addr = '0.0.0.0'
-        for lo in lo_intfs:
-            lo_network = ipaddress.IPNetwork(lo[1])
-            if lo_network.version == 4:
-                lo_addr = str(lo_network.ip)
-                break
-        count = 0
-        for dst in erspan_dst:
-            mirror_sessions['everflow{}'.format(count)] = {"dst_ip": dst, "src_ip": lo_addr}
-            count += 1
-        results['MIRROR_SESSION'] = mirror_sessions
+    # Do not configure the minigraph's mirror session, which is currently unused
+    # mirror_sessions = {}
+    # if erspan_dst:
+    #     lo_addr = '0.0.0.0'
+    #     for lo in lo_intfs:
+    #         lo_network = ipaddress.IPNetwork(lo[1])
+    #         if lo_network.version == 4:
+    #             lo_addr = str(lo_network.ip)
+    #             break
+    #     count = 0
+    #     for dst in erspan_dst:
+    #         mirror_sessions['everflow{}'.format(count)] = {"dst_ip": dst, "src_ip": lo_addr}
+    #         count += 1
+    #     results['MIRROR_SESSION'] = mirror_sessions
 
     # Special parsing for spine chassis frontend routers
     if current_device['type'] == spine_chassis_frontend_role:

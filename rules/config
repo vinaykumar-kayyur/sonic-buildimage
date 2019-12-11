@@ -44,6 +44,9 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # If not set (default behavior) the default minigraph built into the image will be used.
 # ENABLE_DHCP_GRAPH_SERVICE = y
 
+# ENABLE_ZTP - installs Zero Touch Provisioning support.
+# ENABLE_ZTP = y
+
 # SHUTDOWN_BGP_ON_START - if set to y all bgp sessions will be in admin down state when
 # bgp service starts.
 # SHUTDOWN_BGP_ON_START = y
@@ -52,9 +55,9 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # by default for TOR switch
 # ENABLE_PFCWD_ON_START = y
 
-# SONIC_INSTALL_DEBUG_TOOLS - installs debugging tools in baseline docker
+# INSTALL_DEBUG_TOOLS - installs debugging tools in baseline docker
 # Uncomment next line to enable:
-# SONIC_INSTALL_DEBUG_TOOLS = y
+# INSTALL_DEBUG_TOOLS = y
 
 # SONIC_ROUTING_STACK - specify the routing-stack being elected to drive SONiC's control-plane.
 # Supported routing stacks on SONiC are:
@@ -95,3 +98,6 @@ FRR_USER_GID = 300
 
 # Default VS build memory preparation
 DEFAULT_VS_PREPARE_MEM = yes
+
+# ENABLE_SYSTEM_SFLOW - build docker-sonic-sflow for sFlow support
+ENABLE_SFLOW = y

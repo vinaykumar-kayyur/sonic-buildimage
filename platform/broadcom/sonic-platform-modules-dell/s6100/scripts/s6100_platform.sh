@@ -54,6 +54,26 @@ sys_eeprom() {
     esac
 }
 
+#Attach/Detach eeprom on each IOM
+switch_board_eeprom() {
+    case $1 in
+        "new_device")
+                      for ((i=14;i<=17;i++));
+                      do
+                          i2c_config "echo 24c02 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
+                      done
+                      ;;
+        "delete_device")
+                      for ((i=14;i<=17;i++));
+                      do
+                          i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
+                      done
+                      ;;
+        *)            echo "s6100_platform: switch_board_eeprom : invalid command !"
+                      ;;
+    esac
+}
+
 #Attach/Detach CPLD devices to drivers for each IOM
 switch_board_cpld() {
     case $1 in
@@ -109,8 +129,8 @@ switch_board_qsfp_mux() {
 #Attach/Detach the SFP modules on PCA9548_2
 switch_board_sfp() {
     case $1 in
-        "new_device")    i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
-                         i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
+        "new_device")    i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
+                         i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
                          ;;
         "delete_device") i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
                          i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
@@ -125,7 +145,7 @@ qsfp_device_mod() {
     case $1 in
         "new_device")    for ((i=$2;i<=$3;i++));
                          do
-                             i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
+                             i2c_config "echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
                          done
                          ;;
         "delete_device") for ((i=$2;i<=$3;i++));
@@ -217,12 +237,36 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
+track_reboot_reason() {
+    if [[ -d /sys/devices/platform/SMF.512/hwmon/ ]]; then
+        rv=$(cd /sys/devices/platform/SMF.512/hwmon/*; cat mb_poweron_reason)
+        reason=$(echo $rv | cut -d 'x' -f2)
+        if [ $reason == "ff" ]; then
+            cd /sys/devices/platform/SMF.512/hwmon/*
+            if [[ -e /tmp/notify_firstboot_to_platform ]]; then
+                echo 0x01 > mb_poweron_reason
+            else
+                echo 0xbb > mb_poweron_reason
+            fi
+        elif [ $reason == "bb" ] || [ $reason == "1" ]; then
+            cd /sys/devices/platform/SMF.512/hwmon/*
+            echo 0xaa > mb_poweron_reason
+        fi
+    fi
+}
+
 install_python_api_package() {
     device="/usr/share/sonic/device"
     platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
 
     rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
-    echo "pip install result = $rv"
+}
+
+remove_python_api_package() {
+    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv=$(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
 }
 
 init_devnum
@@ -233,6 +277,7 @@ if [[ "$1" == "init" ]]; then
     modprobe dell_ich
     modprobe dell_s6100_iom_cpld
     modprobe dell_s6100_lpc
+    track_reboot_reason
 
     # Disable Watchdog Timer
     if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then
@@ -242,6 +287,7 @@ if [[ "$1" == "init" ]]; then
     cpu_board_mux "new_device"
     switch_board_mux "new_device"
     sys_eeprom "new_device"
+    switch_board_eeprom "new_device"
     switch_board_cpld "new_device"
     switch_board_qsfp_mux "new_device"
     switch_board_sfp "new_device"
@@ -255,6 +301,7 @@ elif [[ "$1" == "deinit" ]]; then
     xcvr_presence_interrupts "disable"
     switch_board_sfp "delete_device"
     switch_board_cpld "delete_device"
+    switch_board_eeprom "delete_device"
     switch_board_mux "delete_device"
     sys_eeprom "delete_device"
     switch_board_qsfp "delete_device"
@@ -266,6 +313,7 @@ elif [[ "$1" == "deinit" ]]; then
     modprobe -r i2c-mux-pca954x
     modprobe -r i2c-dev
     modprobe -r dell_ich
+    remove_python_api_package
 else
      echo "s6100_platform : Invalid option !"
 fi
