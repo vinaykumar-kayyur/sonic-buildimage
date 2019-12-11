@@ -7,6 +7,7 @@ from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py
 from os import system
 from sys import exit
+import pytest
 
 # important reuirements parameters
 build_requirements = ['../../target/debs/stretch/libyang_1.0.73_amd64.deb',
@@ -40,6 +41,12 @@ class pkgBuild(build_py):
         # Continue usual build steps
         build_py.run(self)
 
+        # Continue usual build steps
+        # run pytest for libyang python APIs
+        self.pytest_args = []
+        errno = pytest.main(self.pytest_args)
+        if (errno):
+            exit(errno)
 
 setup(
     cmdclass={
@@ -69,7 +76,7 @@ setup(
     include_package_data=True,
     keywords='sonic_yang_mgmt',
     name='sonic_yang_mgmt',
-    # py_modules=['sonic_yang'],
+     py_modules=['sonic_yang'],
     packages=find_packages(),
     setup_requires=setup_requirements,
     version='1.0',
