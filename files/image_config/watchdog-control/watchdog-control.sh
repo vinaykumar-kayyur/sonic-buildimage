@@ -13,10 +13,9 @@ function debug()
 
 function disable_watchdog()
 {
-    # Disable Watchdog Timer
-    debug "Disabling Watchdog during the bootup"
-    if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then
-        /usr/local/bin/platform_watchdog_disable.sh
+    if [[ -x /usr/bin/watchdog ]]; then
+        debug "Disabling Watchdog during bootup"
+        /usr/bin/watchdog -d
     fi
 }
 
