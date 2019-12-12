@@ -22,20 +22,10 @@ except ImportError as e:
 COMPONENT_BIOS = "BIOS"
 COMPONENT_CPLD = "CPLD"
 
-BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
-
-MST_DEVICE_PATTERN = "/dev/mst/mt[0-9]*_pciconf0"
-MACHINE_CONF_FILE = "/host/machine.conf"
-MACHINE_CONF_MAX_SIZE = 2048
-
-ONIE_FW_UPDATE_CMD_ADD = "/usr/bin/onie-fw-update add {}"
-ONIE_FW_UPDATE_CMD_REMOVE = "/usr/bin/onie-fw-update remove {}"
-ONIE_FW_UPDATE_CMD_UPDATE = "/usr/bin/onie-fw-update update"
-ONIE_FW_UPDATE_CMD_SHOW = "/usr/bin/onie-fw-update show-pending"
-
 class Component(ComponentBase):
     def __init__(self):
-        image_ext_name = None
+        self.name = None
+        self.image_ext_name = None
 
 
     def get_name(self):
@@ -77,13 +67,13 @@ class Component(ComponentBase):
     def _check_file_validity(self, image_path):
         # check whether the image file exists
         if not os.path.isfile(image_path):
-            print("File {} doesn't exist or is not a file".format(image_path))
+            print("ERROR: File {} doesn't exist or is not a file".format(image_path))
             return False
 
         if self.image_ext_name is not None:
             name_list = os.path.splitext(image_path)
             if name_list[1] != self.image_ext_name:
-                print("Extend name of file {} is wrong. Image for {} should have extend name {}".format(image_path, self.name, self.image_ext_name))
+                print("ERROR: Extend name of file {} is wrong. Image for {} should have extend name {}".format(image_path, self.name, self.image_ext_name))
                 return False
 
         return True
@@ -101,8 +91,14 @@ class ComponentBIOS(Component):
     ONIE_REQUIRED_RELEASE = "0016"
 
     BIOS_VERSION_PARSE_PATTERN = 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
-
     BIOS_PENDING_UPDATE_PATTERN = '([0-9A-Za-z_]*.rom)[\s]*\|[\s]*bios_update'
+
+    ONIE_FW_UPDATE_CMD_ADD = "/usr/bin/onie-fw-update add {}"
+    ONIE_FW_UPDATE_CMD_REMOVE = "/usr/bin/onie-fw-update remove {}"
+    ONIE_FW_UPDATE_CMD_UPDATE = "/usr/bin/onie-fw-update update"
+    ONIE_FW_UPDATE_CMD_SHOW = "/usr/bin/onie-fw-update show-pending"
+
+    BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
 
     def __init__(self):
         self.name = COMPONENT_BIOS
@@ -140,7 +136,7 @@ class ComponentBIOS(Component):
         By using regular expression 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
         we can extrace the version string which is marked with * in the above context
         """
-        bios_ver_str = self._get_command_result(BIOS_QUERY_VERSION_COMMAND)
+        bios_ver_str = self._get_command_result(self.BIOS_QUERY_VERSION_COMMAND)
         try:
             m = re.search(self.BIOS_VERSION_PARSE_PATTERN, bios_ver_str)
             result = m.group(1)
@@ -153,8 +149,6 @@ class ComponentBIOS(Component):
 
     def _check_onie_version(self):
         # check ONIE version. To update ONIE requires version 5.2.0016 or later.
-        machine_conf = self._read_generic_file(MACHINE_CONF_FILE, MACHINE_CONF_MAX_SIZE)
-
         try:
             machine_info = get_machine_info()
             onie_version_string = machine_info['onie_version']
@@ -163,11 +157,12 @@ class ComponentBIOS(Component):
             onie_minor = m.group(self.ONIE_VERSION_MINOR_OFFSET)
             onie_release = m.group(self.ONIE_VERSION_RELEASE_OFFSET)
         except AttributeError as e:
-            print("Failed to parse ONIE version by {} from {} due to {}".format(
+            print("ERROR: Failed to parse ONIE version by {} from {} due to {}".format(
                                 self.ONIE_VERSION_PARSE_PATTERN, machine_conf, repr(e)))
             return False
+
         if onie_major < self.ONIE_REQUIRED_MAJOR or onie_minor < self.ONIE_REQUIRED_MINOR or onie_release < self.ONIE_REQUIRED_RELEASE:
-            print("ONIE {}.{}.{} or later is required".format(self.ONIE_REQUIRED_MAJOR, self.ONIE_REQUIRED_MINOR, self.ONIE_REQUIRED_RELEASE))
+            print("ERROR: ONIE {}.{}.{} or later is required".format(self.ONIE_REQUIRED_MAJOR, self.ONIE_REQUIRED_MINOR, self.ONIE_REQUIRED_RELEASE))
             return False
 
         return True
@@ -191,31 +186,31 @@ class ComponentBIOS(Component):
         if not self._check_file_validity(image_path):
             return False
 
-        # do the real work.
+        # do the real work
         try:
             # check whether there has already been some images pending
             # if yes, remove them
-            result = self._get_command_result(ONIE_FW_UPDATE_CMD_SHOW)
+            result = self._get_command_result(self.ONIE_FW_UPDATE_CMD_SHOW)
             pending_list = result.split("\n")
             for pending in pending_list:
                 m = re.match(self.BIOS_PENDING_UPDATE_PATTERN, pending)
                 if m is not None:
                     pending_image = m.group(1)
-                    self._get_command_result(ONIE_FW_UPDATE_CMD_REMOVE.format(pending_image))
-                    print("Image {} which is already pending to upgrade has been removed".format(pending_image))
+                    self._get_command_result(self.ONIE_FW_UPDATE_CMD_REMOVE.format(pending_image))
+                    print("WARNING: Image {} which is already pending to upgrade has been removed".format(pending_image))
 
-            result = subprocess.call(ONIE_FW_UPDATE_CMD_ADD.format(image_path).split())
+            result = subprocess.call(self.ONIE_FW_UPDATE_CMD_ADD.format(image_path).split())
             if result:
                 return False
-            result = subprocess.call(ONIE_FW_UPDATE_CMD_UPDATE.split())
+            result = subprocess.call(self.ONIE_FW_UPDATE_CMD_UPDATE.split())
             if result:
                 return False
         except Exception as e:
-            print("Installing BIOS failed due to {}".format(repr(e)))
+            print("ERROR: Installing BIOS failed due to {}".format(repr(e)))
             return False
 
-        print("Reboot via \"/sbin/reboot\" is required to finish BIOS installation.")
-        print("Please don't try installing a new sonic image before BIOS installation finishing")
+        print("INFO: Reboot via \"/sbin/reboot\" is required to finish BIOS installation.")
+        print("INFO: Please don't try installing a new sonic image before BIOS installation finishing")
         return True
 
 
@@ -225,6 +220,8 @@ class ComponentCPLD(Component):
 
     CPLD_UPDATE_COMMAND = "cpldupdate --dev {} {}"
     CPLD_INSTALL_SUCCESS_FLAG = "PASS!"
+
+    MST_DEVICE_PATTERN = "/dev/mst/mt[0-9]*_pciconf0"
 
     def __init__(self):
         self.name = COMPONENT_CPLD
@@ -250,11 +247,11 @@ class ComponentCPLD(Component):
         """
         cpld_version_file_list = glob(self.CPLD_VERSION_FILE_PATTERN)
         cpld_version = ''
-        if cpld_version_file_list is not None and cpld_version_file_list:
+        if cpld_version_file_list:
             cpld_version_file_list.sort()
             for version_file in cpld_version_file_list:
                 version = self._read_generic_file(version_file, self.CPLD_VERSION_MAX_LENGTH)
-                if not cpld_version == '':
+                if cpld_version:
                     cpld_version += '.'
                 cpld_version += version.rstrip('\n')
         else:
@@ -264,7 +261,7 @@ class ComponentCPLD(Component):
 
 
     def _get_mst_device(self):
-        mst_dev_list = glob(MST_DEVICE_PATTERN)
+        mst_dev_list = glob(self.MST_DEVICE_PATTERN)
         if mst_dev_list is None or len(mst_dev_list) != 1:
             return None
         return mst_dev_list
@@ -301,7 +298,7 @@ class ComponentCPLD(Component):
 
         mst_dev_list = self._get_mst_device()
         if mst_dev_list is None:
-            print("Failed to get mst device which is required for CPLD updating or multiple device files matched")
+            print("ERROR: Failed to get mst device which is required for CPLD updating or multiple device files matched")
             return False
 
         cmdline = self.CPLD_UPDATE_COMMAND.format(mst_dev_list[0], image_path)
@@ -326,8 +323,8 @@ class ComponentCPLD(Component):
             raise RuntimeError("Failed to execute command {} due to {}".format(cmdline, repr(e)))
 
         if success_flag:
-            print("Success. Refresh or power cycle is required to finish CPLD installation.")
+            print("INFO: Success. Refresh or power cycle is required to finish CPLD installation.")
         else:
-            print("Failed to install CPLD")
+            print("ERROR: Failed to install CPLD")
 
         return success_flag
