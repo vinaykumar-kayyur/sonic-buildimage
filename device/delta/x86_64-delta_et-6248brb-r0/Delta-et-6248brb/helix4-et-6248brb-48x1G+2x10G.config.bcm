@@ -63,6 +63,7 @@ phy_port_primary_and_offset_48=0x2907
 
 # bcm56340 port group setting
 bcm56340_4x10=1
+bcm56340_config=1
 portgroup_0=1
 portgroup_1=1
 portgroup_2=1
