@@ -40,6 +40,7 @@
 #define IS_POWER_GOOD(id, value)	(!!(value & BIT(2+id)))
 #define IS_PRESENT(id, value)		(!(value & BIT(id)))
 
+static ssize_t show_id(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t show_status(struct device *dev, struct device_attribute *da, char *buf);
 static struct as7816_64x_psu_data *as7816_64x_psu_update_device(struct device *dev);
 extern int accton_i2c_cpld_read (u8 cpld_addr, u8 reg);
@@ -61,17 +62,20 @@ struct as7816_64x_psu_data {
 
 enum as7816_64x_psu_sysfs_attributes {
 	PSU_PRESENT,
-	PSU_POWER_GOOD
+	PSU_POWER_GOOD,
+	CPLD_ID
 };
 
 /* sysfs attributes for hwmon 
  */
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status, NULL, PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_power_good, S_IRUGO, show_status, NULL, PSU_POWER_GOOD);
+static SENSOR_DEVICE_ATTR(cpld_id, S_IRUGO, show_id, NULL, CPLD_ID);
 
 static struct attribute *as7816_64x_psu_attributes[] = {
     &sensor_dev_attr_psu_present.dev_attr.attr,
     &sensor_dev_attr_psu_power_good.dev_attr.attr,
+    &sensor_dev_attr_cpld_id.dev_attr.attr,
     NULL
 };
 
@@ -99,6 +103,36 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 static const struct attribute_group as7816_64x_psu_group = {
     .attrs = as7816_64x_psu_attributes,
 };
+
+static ssize_t show_id(struct device *dev, struct device_attribute *da, char *buf)
+{
+    int i = 0;
+    u8 cpld_id[3] = {0};
+    struct i2c_client *client = to_i2c_client(dev);
+    struct as7816_64x_psu_data *data = i2c_get_clientdata(client);
+    int status = 0;
+
+    mutex_lock(&data->update_lock);
+    for (i = 0; i < ARRAY_SIZE(cpld_id)-1; i++) {
+        status = accton_i2c_cpld_read(PSU_STATUS_I2C_ADDR, 0xfd+i);
+        if (unlikely(status < 0)) {
+            goto exit;
+        }
+
+        cpld_id[i] = status;
+    }
+    mutex_unlock(&data->update_lock);
+
+    if (cpld_id[0] == 0xff && cpld_id[1] == 0xff) {
+        return sprintf(buf, "NULL\n");
+    }
+
+    return sprintf(buf, "%s\n", cpld_id);
+
+exit:
+    mutex_unlock(&data->update_lock);
+    return status;
+}
 
 static int as7816_64x_psu_probe(struct i2c_client *client,
             const struct i2c_device_id *dev_id)
