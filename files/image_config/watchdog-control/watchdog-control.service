@@ -1,6 +1,6 @@
 [Unit]
 Description=watchdog control service
-After=rc-local.service
+After=swss.service
 
 [Service]
 Type=simple
