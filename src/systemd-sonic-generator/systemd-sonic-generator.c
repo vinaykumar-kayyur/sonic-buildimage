@@ -114,6 +114,11 @@ static int get_install_targets_from_line(char* target_string, char* install_type
         strcat(final_target, install_type);
 
         free(target);
+        /* Topology service is not required for single-instance vs platform */
+        if ((strstr(target, "topology") != NULL) &&
+	    (num_asics == 1)) {
+	    continue;
+        }	    
       
         targets[num_targets + existing_targets] = strdup(final_target);
         num_targets++;
