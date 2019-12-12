@@ -8,9 +8,11 @@
 from __future__ import print_function
 try:
     from sonic_platform_base.component_base import ComponentBase
+    from sonic_device_util import get_machine_info
     from glob import glob
     import subprocess
     import io
+    import os
     import re
     import sys
 except ImportError as e:
@@ -21,30 +23,21 @@ COMPONENT_BIOS = "BIOS"
 COMPONENT_CPLD = "CPLD"
 
 BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
-CPLD_VERSION_FILE_PATTERN = '/var/run/hw-management/system/cpld[0-9]_version'
-CPLD_VERSION_MAX_LENGTH = 4
-
-CPLD_UPDATE_COMMAND = "cpldupdate --dev {} {}"
-CPLD_INSTALL_SUCCESS_FLAG = "PASS!"
 
 MST_DEVICE_PATTERN = "/dev/mst/mt[0-9]*_pciconf0"
 MACHINE_CONF_FILE = "/host/machine.conf"
 MACHINE_CONF_MAX_SIZE = 2048
 
-BIOS_VERSION_PARSE_PATTERN = 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
-ONIE_VERSION_PARSE_PATTERN = 'onie_version=[0-9]{4}\.[0-9]{2}-([0-9]+)\.([0-9]+)\.([0-9]+)'
-ONIE_VERSION_MAJOR_OFFSET = 1
-ONIE_VERSION_MINOR_OFFSET = 2
-ONIE_VERSION_RELEASE_OFFSET = 3
-# To update BIOS requires the ONIE with version 5.2.0016 or upper
-ONIE_REQUIRED_MAJOR = "5"
-ONIE_REQUIRED_MINOR = "2"
-ONIE_REQUIRED_RELEASE = "0016"
-
 ONIE_FW_UPDATE_CMD_ADD = "/usr/bin/onie-fw-update add {}"
+ONIE_FW_UPDATE_CMD_REMOVE = "/usr/bin/onie-fw-update remove {}"
 ONIE_FW_UPDATE_CMD_UPDATE = "/usr/bin/onie-fw-update update"
+ONIE_FW_UPDATE_CMD_SHOW = "/usr/bin/onie-fw-update show-pending"
 
 class Component(ComponentBase):
+    def __init__(self):
+        image_ext_name = None
+
+
     def get_name(self):
         """
         Retrieves the name of the component
@@ -81,18 +74,39 @@ class Component(ComponentBase):
         return result
 
 
-    def _does_file_exist(self, image_path):
-        image = glob(image_path)
-        if not image:
-            return False, "Failed to get the image file via {} or multiple files matched".format(image_path)
-        if len(image) != 1:
-            return False, "Multiple files {} matched {}".format(image, image_path)
-        return True, ""
+    def _check_file_validity(self, image_path):
+        # check whether the image file exists
+        if not os.path.isfile(image_path):
+            print("File {} doesn't exist or is not a file".format(image_path))
+            return False
+
+        if self.image_ext_name is not None:
+            name_list = os.path.splitext(image_path)
+            if name_list[1] != self.image_ext_name:
+                print("Extend name of file {} is wrong. Image for {} should have extend name {}".format(image_path, self.name, self.image_ext_name))
+                return False
+
+        return True
+
 
 
 class ComponentBIOS(Component):
+    # To update BIOS requires the ONIE with version 5.2.0016 or upper
+    ONIE_VERSION_PARSE_PATTERN = '[0-9]{4}\.[0-9]{2}-([0-9]+)\.([0-9]+)\.([0-9]+)'
+    ONIE_VERSION_MAJOR_OFFSET = 1
+    ONIE_VERSION_MINOR_OFFSET = 2
+    ONIE_VERSION_RELEASE_OFFSET = 3
+    ONIE_REQUIRED_MAJOR = "5"
+    ONIE_REQUIRED_MINOR = "2"
+    ONIE_REQUIRED_RELEASE = "0016"
+
+    BIOS_VERSION_PARSE_PATTERN = 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
+
+    BIOS_PENDING_UPDATE_PATTERN = '([0-9A-Za-z_]*.rom)[\s]*\|[\s]*bios_update'
+
     def __init__(self):
         self.name = COMPONENT_BIOS
+        self.image_ext_name = ".rom"
 
 
     def get_description(self):
@@ -128,13 +142,35 @@ class ComponentBIOS(Component):
         """
         bios_ver_str = self._get_command_result(BIOS_QUERY_VERSION_COMMAND)
         try:
-            m = re.search(BIOS_VERSION_PARSE_PATTERN, bios_ver_str)
+            m = re.search(self.BIOS_VERSION_PARSE_PATTERN, bios_ver_str)
             result = m.group(1)
         except AttributeError as e:
             raise RuntimeError("Failed to parse BIOS version by {} from {} due to {}".format(
-                               BIOS_VERSION_PARSE_PATTERN, bios_ver_str, repr(e)))
+                               self.BIOS_VERSION_PARSE_PATTERN, bios_ver_str, repr(e)))
 
         return result
+
+
+    def _check_onie_version(self):
+        # check ONIE version. To update ONIE requires version 5.2.0016 or later.
+        machine_conf = self._read_generic_file(MACHINE_CONF_FILE, MACHINE_CONF_MAX_SIZE)
+
+        try:
+            machine_info = get_machine_info()
+            onie_version_string = machine_info['onie_version']
+            m = re.search(self.ONIE_VERSION_PARSE_PATTERN, onie_version_string)
+            onie_major = m.group(self.ONIE_VERSION_MAJOR_OFFSET)
+            onie_minor = m.group(self.ONIE_VERSION_MINOR_OFFSET)
+            onie_release = m.group(self.ONIE_VERSION_RELEASE_OFFSET)
+        except AttributeError as e:
+            print("Failed to parse ONIE version by {} from {} due to {}".format(
+                                self.ONIE_VERSION_PARSE_PATTERN, machine_conf, repr(e)))
+            return False
+        if onie_major < self.ONIE_REQUIRED_MAJOR or onie_minor < self.ONIE_REQUIRED_MINOR or onie_release < self.ONIE_REQUIRED_RELEASE:
+            print("ONIE {}.{}.{} or later is required".format(self.ONIE_REQUIRED_MAJOR, self.ONIE_REQUIRED_MINOR, self.ONIE_REQUIRED_RELEASE))
+            return False
+
+        return True
 
 
     def install_firmware(self, image_path):
@@ -147,29 +183,27 @@ class ComponentBIOS(Component):
         Returns:
             A boolean, True if install was successful, False if not
         """
-        # check ONIE version. To update ONIE requires version 5.2.0016 or later.
-        machine_conf = self._read_generic_file(MACHINE_CONF_FILE, MACHINE_CONF_MAX_SIZE)
-        try:
-            m = re.search(ONIE_VERSION_PARSE_PATTERN, machine_conf)
-            onie_major = m.group(ONIE_VERSION_MAJOR_OFFSET)
-            onie_minor = m.group(ONIE_VERSION_MINOR_OFFSET)
-            onie_release = m.group(ONIE_VERSION_RELEASE_OFFSET)
-        except AttributeError as e:
-            print("Failed to parse ONIE version by {} from {} due to {}".format(
-                                BIOS_VERSION_PARSE_PATTERN, machine_conf, repr(e)))
-            return False
-        if onie_major < ONIE_REQUIRED_MAJOR or onie_minor < ONIE_REQUIRED_MINOR or onie_release < ONIE_REQUIRED_RELEASE:
-            print("ONIE {}.{}.{} or later is required".format(ONIE_REQUIRED_MAJOR, ONIE_REQUIRED_MINOR, ONIE_REQUIRED_RELEASE))
+        # check ONIE version requirement
+        if not self._check_onie_version():
             return False
 
         # check whether the file exists
-        image_exists, message = self._does_file_exist(image_path)
-        if not image_exists:
-            print(message)
+        if not self._check_file_validity(image_path):
             return False
 
         # do the real work.
         try:
+            # check whether there has already been some images pending
+            # if yes, remove them
+            result = self._get_command_result(ONIE_FW_UPDATE_CMD_SHOW)
+            pending_list = result.split("\n")
+            for pending in pending_list:
+                m = re.match(self.BIOS_PENDING_UPDATE_PATTERN, pending)
+                if m is not None:
+                    pending_image = m.group(1)
+                    self._get_command_result(ONIE_FW_UPDATE_CMD_REMOVE.format(pending_image))
+                    print("Image {} which is already pending to upgrade has been removed".format(pending_image))
+
             result = subprocess.call(ONIE_FW_UPDATE_CMD_ADD.format(image_path).split())
             if result:
                 return False
@@ -186,8 +220,15 @@ class ComponentBIOS(Component):
 
 
 class ComponentCPLD(Component):
+    CPLD_VERSION_FILE_PATTERN = '/var/run/hw-management/system/cpld[0-9]_version'
+    CPLD_VERSION_MAX_LENGTH = 4
+
+    CPLD_UPDATE_COMMAND = "cpldupdate --dev {} {}"
+    CPLD_INSTALL_SUCCESS_FLAG = "PASS!"
+
     def __init__(self):
         self.name = COMPONENT_CPLD
+        self.image_ext_name = ".vme"
 
 
     def get_description(self):
@@ -207,19 +248,26 @@ class ComponentCPLD(Component):
         Returns:
             A string containing the firmware version of the component
         """
-        cpld_version_file_list = glob(CPLD_VERSION_FILE_PATTERN)
+        cpld_version_file_list = glob(self.CPLD_VERSION_FILE_PATTERN)
         cpld_version = ''
         if cpld_version_file_list is not None and cpld_version_file_list:
             cpld_version_file_list.sort()
             for version_file in cpld_version_file_list:
-                version = self._read_generic_file(version_file, CPLD_VERSION_MAX_LENGTH)
+                version = self._read_generic_file(version_file, self.CPLD_VERSION_MAX_LENGTH)
                 if not cpld_version == '':
                     cpld_version += '.'
                 cpld_version += version.rstrip('\n')
         else:
-            raise RuntimeError("Failed to get CPLD version files by matching {}".format(CPLD_VERSION_FILE_PATTERN))
+            raise RuntimeError("Failed to get CPLD version files by matching {}".format(self.CPLD_VERSION_FILE_PATTERN))
 
         return cpld_version
+
+
+    def _get_mst_device(self):
+        mst_dev_list = glob(MST_DEVICE_PATTERN)
+        if mst_dev_list is None or len(mst_dev_list) != 1:
+            return None
+        return mst_dev_list
 
 
     def install_firmware(self, image_path):
@@ -247,18 +295,16 @@ class ComponentCPLD(Component):
                 3. Update CPLD via executing "cpldupdate --dev <devname> <vme_file>"
                 4. Check the result
         """
-        # check whether the file exists
-        image_exists, message = self._does_file_exist(image_path)
-        if not image_exists:
-            print(message)
+        # check whether the image file exists
+        if not self._check_file_validity(image_path):
             return False
 
-        mst_dev_list = glob(MST_DEVICE_PATTERN)
-        if not mst_dev_list or not len(mst_dev_list) == 1:
+        mst_dev_list = self._get_mst_device()
+        if mst_dev_list is None:
             print("Failed to get mst device which is required for CPLD updating or multiple device files matched")
             return False
 
-        cmdline = CPLD_UPDATE_COMMAND.format(mst_dev_list[0], image_path)
+        cmdline = self.CPLD_UPDATE_COMMAND.format(mst_dev_list[0], image_path)
         outputline = ""
         success_flag = False
         try:
@@ -272,8 +318,8 @@ class ComponentCPLD(Component):
                     sys.stdout.flush()
                     outputline += out
                 if (out == '\n' or out == '\r') and len(outputline):
-                    m = re.search(CPLD_INSTALL_SUCCESS_FLAG, outputline)
-                    if m and m.group(0) == CPLD_INSTALL_SUCCESS_FLAG:
+                    m = re.search(self.CPLD_INSTALL_SUCCESS_FLAG, outputline)
+                    if m and m.group(0) == self.CPLD_INSTALL_SUCCESS_FLAG:
                         success_flag = True
 
         except OSError as e:
