@@ -1,0 +1,10 @@
+[Unit]
+Description=watchdog control service
+After=rc-local.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/watchdog-control
+
+[Install]
+WantedBy=multi-user.target
