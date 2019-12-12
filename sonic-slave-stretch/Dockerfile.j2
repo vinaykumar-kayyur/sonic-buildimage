@@ -32,6 +32,14 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian stretch main contrib non
         echo 'deb [arch=arm64] http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list
 {%- endif %}
 
+## Config dpkg
+## install the configuration file if it’s currently missing
+RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confmiss"
+## combined with confold: overwrite configuration files that you have not modified
+RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confdef"
+## do not modify the current configuration file, the new version is installed with a .dpkg-dist suffix
+RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confold"
+
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
