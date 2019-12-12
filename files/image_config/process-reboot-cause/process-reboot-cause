@@ -97,11 +97,11 @@ def main():
                 proc_cmdline_reboot_cause = cause_file.readline().rstrip('\n')
                 cause_file.close()
             else:
-                # /proc/cmdline says it's a warm/fast reboot but /host/reboot-cause.txt doesn't agree.
+                # /proc/cmdline says it's a warm/fast reboot but /host/reboot-cause.txt doesn't exist.
                 # report an error.
                 log_error("/proc/cmdline indicates a fast/warm reboot but {} doesn't exist".format(REBOOT_CAUSE_DIR))
 
-        if proc_cmdline_reboot_cause:
+        if proc_cmdline_reboot_cause is not None:
             previous_reboot_cause = proc_cmdline_reboot_cause
         else:
             # 2. Check if the previous reboot was caused by hardware
