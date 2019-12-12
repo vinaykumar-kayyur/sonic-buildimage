@@ -54,7 +54,11 @@ RUN apt-get update &&        \
         libjemalloc1         \
         liblua5.1-0          \
         lua-bitop            \
-        lua-cjson
+        lua-cjson            \
+# For DHCP Monitor tool
+        libexplain-dev       \
+        libexplain51         \
+        libpcap-dev
 
 {% if CONFIGURED_ARCH == "armhf" %}
 # ip and ifconfig utility missing in docker for armhf

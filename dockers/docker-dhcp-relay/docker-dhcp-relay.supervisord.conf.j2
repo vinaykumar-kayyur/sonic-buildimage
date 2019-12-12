@@ -46,6 +46,11 @@ programs=
 isc-dhcp-relay-{{ vlan_name }}
 {%- endif %}
 {% endfor %}
+{% for vlan_name in VLAN %}
+{% if VLAN[vlan_name]['dhcp_servers'] %}
+,dhcpmon-{{ vlan_name }}
+{%- endif %}
+{% endfor %}
 
 
 {# Create a program entry for each DHCP relay agent instance #}
@@ -77,6 +82,26 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% endfor %}
 
 priority=3
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+
+[program:dhcpmon-{{ vlan_name }}]
+{# We treat this VLAN as a downstream interface (-id), as we only want to listen for requests #}
+command=/usr/sbin/dhcpmon -id {{ vlan_name }}
+{#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name != vlan_name %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% for (name, prefix) in INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+
+priority=4
 autostart=false
 autorestart=false
 stdout_logfile=syslog
