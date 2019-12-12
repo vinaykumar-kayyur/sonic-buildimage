@@ -293,6 +293,8 @@ set httpd unixsocket /var/run/monit.sock and
 #
    include /etc/monit/conf.d/*
    include /etc/monit/conf-enabled/*
+  
+   include /etc/monit/proc_stat
 #
 check filesystem root-overlay with path /
   if space usage > 90% for 5 times within 10 cycles then alert
