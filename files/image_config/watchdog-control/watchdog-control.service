@@ -4,7 +4,7 @@ After=rc-local.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/watchdog-control
+ExecStart=/usr/bin/watchdog-control.sh
 
 [Install]
 WantedBy=multi-user.target
