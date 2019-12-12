@@ -25,7 +25,7 @@ PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
 FIRST_BOOT_PLATFORM_FILE = "/tmp/notify_firstboot_to_platform"
 REBOOT_CAUSE_KEXEC = "/proc/cmdline"
 # The following SONIC_BOOT_TYPEs come from the warm/fast reboot script which is in sonic-utilities
-REBOOT_CAUSE_KEXEC_PATTERN = ".*SONIC_BOOT_TYPE=(fast-reboot|warm|fastfast)$"
+REBOOT_CAUSE_KEXEC_PATTERN = ".*SONIC_BOOT_TYPE=(fast-reboot|warm|fastfast|fast).*"
 
 UNKNOWN_REBOOT_CAUSE = "Unknown"
 
@@ -53,8 +53,8 @@ def log_error(msg):
 # ============================= Functions =============================
 def is_warmfast_reboot_from_proc_cmdline():
     if os.path.isfile(REBOOT_CAUSE_KEXEC):
-        cause_file = open(REBOOT_CAUSE_KEXEC, "r")
-        cause_file_kexec = cause_file.readline()
+        with open(REBOOT_CAUSE_KEXEC, "r") as cause_file:
+            cause_file_kexec = cause_file.readline()
         m = re.match(REBOOT_CAUSE_KEXEC_PATTERN, cause_file_kexec)
         if m and m.group(1):
             # the pattern matched so it's a fast/warm reboot
@@ -93,9 +93,8 @@ def main():
         #    If yes, the content of /hosts/reboot-cause/reboot-cause.txt will be treated as the reboot cause
         if is_warmfast_reboot_from_proc_cmdline():
             if os.path.isfile(REBOOT_CAUSE_FILE):
-                cause_file = open(REBOOT_CAUSE_FILE, "r")
-                proc_cmdline_reboot_cause = cause_file.readline().rstrip('\n')
-                cause_file.close()
+                with open(REBOOT_CAUSE_FILE, "r") as cause_file:
+                    proc_cmdline_reboot_cause = cause_file.readline().rstrip('\n')
             else:
                 # /proc/cmdline says it's a warm/fast reboot but /host/reboot-cause.txt doesn't exist.
                 # report an error.
@@ -116,9 +115,8 @@ def main():
                 # The reboot was not caused by hardware. If there is a REBOOT_CAUSE_FILE, it will
                 # contain any software-related reboot info. We will use it as the previous cause.
                 if os.path.isfile(REBOOT_CAUSE_FILE):
-                    cause_file = open(REBOOT_CAUSE_FILE, "r")
-                    previous_reboot_cause = cause_file.readline().rstrip('\n')
-                    cause_file.close()
+                    with open(REBOOT_CAUSE_FILE, "r") as cause_file:
+                        previous_reboot_cause = cause_file.readline().rstrip('\n')
                 # If it is FirstTime Boot and previous_reboot_cause is unknown
                 # and hardware_reboot cause is non_hardware then
                 # Update the reboot cause as required
@@ -136,9 +134,8 @@ def main():
         # If there is a REBOOT_CAUSE_FILE, it will contain any software-related
         # reboot info. We will use it as the previous cause.
         if os.path.isfile(REBOOT_CAUSE_FILE):
-            cause_file = open(REBOOT_CAUSE_FILE, "r")
-            previous_reboot_cause = cause_file.readline().rstrip('\n')
-            cause_file.close()
+            with open(REBOOT_CAUSE_FILE, "r") as cause_file:
+                previous_reboot_cause = cause_file.readline().rstrip('\n')
 
         # If it is FirstTime Boot and previous_reboot_cause is unknown
         # Update the reboot cause as required
@@ -147,9 +144,8 @@ def main():
                  previous_reboot_cause = UNKNOWN_REBOOT_CAUSE
             os.remove(FIRST_BOOT_PLATFORM_FILE)
     # Write the previous reboot cause to PREVIOUS_REBOOT_CAUSE_FILE
-    prev_cause_file = open(PREVIOUS_REBOOT_CAUSE_FILE, "w")
-    prev_cause_file.write(previous_reboot_cause)
-    prev_cause_file.close()
+    with open(PREVIOUS_REBOOT_CAUSE_FILE, "w") as prev_cause_file:
+        prev_cause_file.write(previous_reboot_cause)
 
     # Also log the previous reboot cause to the syslog
     log_info("Previous reboot cause: {}".format(previous_reboot_cause))
@@ -159,9 +155,8 @@ def main():
         os.remove(REBOOT_CAUSE_FILE)
 
     # Write a new default reboot cause file for the next reboot
-    cause_file = open(REBOOT_CAUSE_FILE, "w")
-    cause_file.write(UNKNOWN_REBOOT_CAUSE)
-    cause_file.close()
+    with open(REBOOT_CAUSE_FILE, "w") as cause_file:
+        cause_file.write(UNKNOWN_REBOOT_CAUSE)
 
 
 if __name__ == "__main__":
