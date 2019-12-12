@@ -394,7 +394,8 @@ static int get_num_of_asic() {
     }
 
     while ((nread = getline(&line, &len, fp)) != -1) {
-        if (strstr(line, "onie_platform") != NULL) {
+        if ((strstr(line, "onie_platform") != NULL) ||
+	    (strstr(line, "aboot_platform") != NULL)) {
             token = strtok(line, "=");
             platform = strtok(NULL, "=");
             strip_trailing_newline(platform);
