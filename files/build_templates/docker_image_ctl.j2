@@ -12,17 +12,17 @@ link_namespace() {
     # /var/run/netns so it can be managed with iproute2
 
     mkdir -p /var/run/netns
-    PID="$(docker inspect -f {{"'{{.State.Pid}}'"}} "{{docker_container_name}}$1")"
+    PID="$(docker inspect -f {{"'{{.State.Pid}}'"}} "{{docker_container_name}}$DEV")"
 
-    if `ip netns | grep --quiet "{{docker_container_name}}$1"`; then # namespace exists
-        if [ $(readlink -f /var/run/netns/ns$1) = $(readlink -f /proc/$PID/ns/net) ]; then # namespace is correctly linked
+    if `ip netns | grep --quiet "{{docker_container_name}}$DEV"`; then # namespace exists
+        if [ $(readlink -f /var/run/netns/$NET_NS$DEV) = $(readlink -f /proc/$PID/ns/net) ]; then # namespace is correctly linked
             return 0
         else # if it's incorrectly linked remove it
-            ip netns delete "{{docker_container_name}}$1"
+            ip netns delete "{{docker_container_name}}$DEV"
         fi
     fi
 
-    ln -s /proc/$PID/ns/net /var/run/netns/asic$1
+    ln -s /proc/$PID/ns/net /var/run/netns/$NET_NS$DEV
 }
 {%- endif %}
 
@@ -330,12 +330,13 @@ wait() {
 stop() {
     docker stop {{docker_container_name}}$DEV
 {%- if docker_container_name == "database" %}
-    ip netns delete "asic$DEV"
+    ip netns delete "$NET_NS$DEV"
 {%- endif %}
 }
 
 OP=$1
 DEV=$2 # namespace/device number to operate on
+NET_NS="asic" #name of the network namespace
 
 case "$1" in
     start|wait|stop)
