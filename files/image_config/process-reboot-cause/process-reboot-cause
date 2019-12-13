@@ -111,7 +111,7 @@ def main():
 
         # 1. Check if the previous reboot was warm/fast reboot by testing whether there is "fast|fastfast|warm" in /proc/cmdline
         #    If yes, the content of /hosts/reboot-cause/reboot-cause.txt will be treated as the reboot cause
-        proc_cmdline_reboot_cause = parse_warmfast_reboot_from_proc_cmdline():
+        proc_cmdline_reboot_cause = parse_warmfast_reboot_from_proc_cmdline()
         if proc_cmdline_reboot_cause:
             log_info("/proc/cmdline indicates reboot type: {}".format(proc_cmdline_reboot_cause))
             if os.path.isfile(REBOOT_CAUSE_FILE):
