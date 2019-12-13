@@ -55,8 +55,10 @@ class Component(ComponentBase):
         try:
             proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
-            proc.wait()
+            rc = proc.wait()
             result = stdout.rstrip('\n')
+            if rc != 0:
+                raise RuntimeError("Failed to execute command {}, return code {}, message {}".format(cmdline, rc, stdout))
 
         except OSError as e:
             raise RuntimeError("Failed to execute command {} due to {}".format(cmdline, repr(e)))
@@ -136,13 +138,12 @@ class ComponentBIOS(Component):
         By using regular expression 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
         we can extrace the version string which is marked with * in the above context
         """
-        bios_ver_str = self._get_command_result(self.BIOS_QUERY_VERSION_COMMAND)
         try:
+            bios_ver_str = self._get_command_result(self.BIOS_QUERY_VERSION_COMMAND)
             m = re.search(self.BIOS_VERSION_PARSE_PATTERN, bios_ver_str)
             result = m.group(1)
-        except AttributeError as e:
-            raise RuntimeError("Failed to parse BIOS version by {} from {} due to {}".format(
-                               self.BIOS_VERSION_PARSE_PATTERN, bios_ver_str, repr(e)))
+        except (AttributeError, RuntimeError) as e:
+            raise RuntimeError("Failed to parse BIOS version due to {}".format(repr(e)))
 
         return result
 
