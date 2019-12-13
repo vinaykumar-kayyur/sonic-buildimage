@@ -199,10 +199,10 @@ class ComponentBIOS(Component):
                     self._get_command_result(self.ONIE_FW_UPDATE_CMD_REMOVE.format(pending_image))
                     print("WARNING: Image {} which is already pending to upgrade has been removed".format(pending_image))
 
-            result = subprocess.call(self.ONIE_FW_UPDATE_CMD_ADD.format(image_path).split())
+            result = subprocess.check_call(self.ONIE_FW_UPDATE_CMD_ADD.format(image_path).split())
             if result:
                 return False
-            result = subprocess.call(self.ONIE_FW_UPDATE_CMD_UPDATE.split())
+            result = subprocess.check_call(self.ONIE_FW_UPDATE_CMD_UPDATE.split())
             if result:
                 return False
         except Exception as e:
@@ -212,6 +212,7 @@ class ComponentBIOS(Component):
         print("INFO: Reboot via \"/sbin/reboot\" is required to finish BIOS installation.")
         print("INFO: Please don't try installing a new sonic image before BIOS installation finishing")
         return True
+
 
 
 class ComponentCPLD(Component):
@@ -308,16 +309,23 @@ class ComponentCPLD(Component):
             proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
             while True:
                 out = proc.stdout.read(1)
+
                 if out == '' and proc.poll() != None:
                     break
+
                 if out != '':
                     sys.stdout.write(out)
                     sys.stdout.flush()
                     outputline += out
+
                 if (out == '\n' or out == '\r') and len(outputline):
                     m = re.search(self.CPLD_INSTALL_SUCCESS_FLAG, outputline)
                     if m and m.group(0) == self.CPLD_INSTALL_SUCCESS_FLAG:
                         success_flag = True
+
+            if proc.returncode:
+                print("ERROR: Upgrade CPLD failed, return code {}".format(proc.returncode))
+                success_flag = False
 
         except OSError as e:
             raise RuntimeError("Failed to execute command {} due to {}".format(cmdline, repr(e)))
