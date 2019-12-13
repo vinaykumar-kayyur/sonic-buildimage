@@ -31,8 +31,8 @@ REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 # On 201811 and later we have
 # BOOT_OPTIONS="$(echo $KERNEL_OPTIONS | sed -e 's/\s*linux\s*/BOOT_IMAGE=/') SONIC_BOOT_TYPE=${BOOT_TYPE_ARG}" where BOOT_TYPE_ARG can be warm, fastfast or fast
 # To extract the commom part of them, we should have the following PATTERN
-REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm\|fastfast).*"
-REBOOT_TYPE_KEXEC_PATTERN_FAST = ".*SONIC_BOOT_TYPE=(fast\|fast-reboot).*"
+REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
+REBOOT_TYPE_KEXEC_PATTERN_FAST = ".*SONIC_BOOT_TYPE=(fast|fast-reboot).*"
 
 UNKNOWN_REBOOT_CAUSE = "Unknown"
 
