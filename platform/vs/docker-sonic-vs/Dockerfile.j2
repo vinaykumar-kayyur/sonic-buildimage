@@ -41,7 +41,6 @@ RUN apt-get install -y net-tools \
                        libpython2.7 \
                        grub2-common \
                        python-click-default-group \
-                       python-click \
                        python-natsort \
                        python-tabulate \
                        bash-completion \
@@ -58,6 +57,7 @@ RUN pip install py2_ipaddress
 RUN pip install six
 RUN pip install pyroute2==0.5.3 netifaces==0.10.7
 RUN pip install monotonic==1.5
+RUN pip install click==7.0.0
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
