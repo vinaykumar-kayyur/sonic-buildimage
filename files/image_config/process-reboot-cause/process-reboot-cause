@@ -23,9 +23,15 @@ REBOOT_CAUSE_DIR = "/host/reboot-cause/"
 REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "reboot-cause.txt"
 PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
 FIRST_BOOT_PLATFORM_FILE = "/tmp/notify_firstboot_to_platform"
-REBOOT_CAUSE_KEXEC = "/proc/cmdline"
+REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 # The following SONIC_BOOT_TYPEs come from the warm/fast reboot script which is in sonic-utilities
-REBOOT_CAUSE_KEXEC_PATTERN = ".*SONIC_BOOT_TYPE=(fast-reboot|warm|fastfast|fast).*"
+# Because the system can be rebooted from some old versions, we have to take all possible BOOT options into consideration.
+# On 201803, 201807 we have
+# BOOT_OPTIONS="$(echo $KERNEL_OPTIONS | sed -e 's/\s*linux\s*/BOOT_IMAGE=/') fast-reboot"
+# On 201811 and later we have
+# BOOT_OPTIONS="$(echo $KERNEL_OPTIONS | sed -e 's/\s*linux\s*/BOOT_IMAGE=/') SONIC_BOOT_TYPE=${BOOT_TYPE_ARG}" where BOOT_TYPE_ARG can be warm, fastfast or fast
+# To extract the commom part of them, we should have the following PATTERN
+REBOOT_TYPE_KEXEC_PATTERN = ".*(fast-reboot|warm|fastfast|fast).*"
 
 UNKNOWN_REBOOT_CAUSE = "Unknown"
 
@@ -52,10 +58,10 @@ def log_error(msg):
 
 # ============================= Functions =============================
 def is_warmfast_reboot_from_proc_cmdline():
-    if os.path.isfile(REBOOT_CAUSE_KEXEC):
-        with open(REBOOT_CAUSE_KEXEC, "r") as cause_file:
+    if os.path.isfile(REBOOT_TYPE_KEXEC_FILE):
+        with open(REBOOT_TYPE_KEXEC_FILE, "r") as cause_file:
             cause_file_kexec = cause_file.readline()
-        m = re.match(REBOOT_CAUSE_KEXEC_PATTERN, cause_file_kexec)
+        m = re.match(REBOOT_TYPE_KEXEC_PATTERN, cause_file_kexec)
         if m and m.group(1):
             # the pattern matched so it's a fast/warm reboot
             return True
