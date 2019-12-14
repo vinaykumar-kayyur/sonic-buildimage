@@ -7,7 +7,6 @@ import socket
 import yaml
 import json
 import syslog
-from shutil import rmtree
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from azure.storage.file import FileService
@@ -61,26 +60,9 @@ def log_debug(m):
     log_msg(syslog.LOG_DEBUG, this_file, m)
 
 
-def mkdir(p):
-    l = p.split("/")
-    if p.endswith("/"): 
-        l.pop()
-
-    e = l[0:len(l)]
-
-    while not os.path.exists("/".join(e)):
-        e.pop()
-
-    while len(e) != len(l):
-        e.append(l[len(e)])
-        os.mkdir("/".join(e))
-
 def make_new_dir(p):
-    if os.path.isdir(p):
-        rmtree(p)
-    elif os.path.exists(p):
-        os.path.unlink(p)
-    mkdir(p)
+    os.system("rm -rf " + p)
+    os.system("mkdir -p " + p)
 
 def parse_a_json(data, prefix, val):
     for i in data:
@@ -117,7 +99,7 @@ class config:
 
         lpath = self.get_data(("metadata_files_in_archive", "core_info"))
         f = open(lpath, "w+")
-        f.write(json.dumps(info))
+        f.write(json.dumps(info, indent=4))
         f.close()
 
         return lpath
@@ -160,7 +142,7 @@ class Handler(FileSystemEventHandler):
 
         hostname = socket.gethostname()
         if not hostname:
-            raise Exception("Failed to read hostname from /etc/sonic/sonic_version.yml")
+            raise Exception("Failed to read hostname")
 
         acctname = cfg.get_data(("azure_sonic_core_storage", "account_name"))
         acctkey = cfg.get_data(("azure_sonic_core_storage", "account_key"))
@@ -270,10 +252,10 @@ class Handler(FileSystemEventHandler):
                 log_err("core uploader failed: Failed during upload (" + str(e) +")")
                 fail_msg = str(e)
                 i += 1
+                if i >= MAX_RETRIES:
+                    raise Exception("Failed while uploading. msg(" + fail_msg + ") after " + str(i) + " retries")
                 time.sleep(PAUSE_ON_FAIL)
 
-        if i >= MAX_RETRIES:
-            raise Exception("Failed while uploading. msg(" + fail_msg + ") after " + str(i) + " retries")
 
     @staticmethod
     def scan():
