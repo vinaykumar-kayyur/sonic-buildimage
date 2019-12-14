@@ -347,10 +347,6 @@ EOF
 sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
-## Config monit
-sudo cp files/image_config/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
-sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
-
 ## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 sudo augtool --autosave "
