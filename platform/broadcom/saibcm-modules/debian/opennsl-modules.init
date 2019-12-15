@@ -52,18 +52,7 @@ function load_kernel_modules()
     # If the platform env file exists, use the values defined.
     if [ -f $env_file ]
     then
-        for entry in `cat $env_file`
-        do
-            parameter=`echo $entry | cut -d= -f1`
-            value=`echo $entry | cut -d= -f2`
-
-            case $parameter in
-                "dmasize") dmasize=$value
-                        ;;
-                "usemsi") usemsi=$value
-                        ;;
-            esac
-        done
+        . $env_file
     fi
 
     modprobe linux-kernel-bde dmasize=$dmasize maxpayload=128 debug=4 dma_debug=1 usemsi=$usemsi
