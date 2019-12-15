@@ -292,15 +292,8 @@ RUN apt-get update && apt-get install -y \
         libselinux1-dev \
 # For kdump-tools
         liblzo2-dev \
-# For SAI
-        protobuf-compiler \
-        libprotobuf-dev \
-        pkg-config \
-        xxd
-
-# Environment for Protobuf
-ENV PROTOBUF_COMPILER /usr/bin/protoc
-ENV PROTOBUF_INCLUDE_PATH /usr/include
+# For SAI3.7
+        libprotobuf-dev
 
 # For smartmontools 6.6-1
 RUN apt-get -t stretch-backports install -y debhelper

@@ -32,14 +32,22 @@ function create_devices()
 #                                 level logs
 function load_kernel_modules()
 {
-    onie_platform="$(cat /host/machine.conf | grep onie_platform | cut -d= -f2)"
+    . /host/machine.conf
+
+    if [ -n "$aboot_platform" ]; then
+        platform=$aboot_platform
+    elif [ -n "$onie_platform" ]; then
+        platform=$onie_platform
+    else
+        platform="unknown"
+    fi
 
     # Set the default configuration for dmasize and usemsi parameters
     dmasize=32M
     usemsi=0
 
     # Check if the platform_env.conf file exists for this platform
-    env_file="/usr/share/sonic/device/$onie_platform/platform_env.conf"
+    env_file="/usr/share/sonic/device/$platform/platform_env.conf"
 
     # If the platform env file exists, use the values defined.
     if [ -f $env_file ]
@@ -60,14 +68,14 @@ function load_kernel_modules()
 
     modprobe linux-kernel-bde dmasize=$dmasize maxpayload=128 debug=4 dma_debug=1 usemsi=$usemsi
     modprobe linux-user-bde
-    modprobe psample
+    insmod /lib/modules/$(uname -r)/extra/psample.ko
     modprobe linux-bcm-knet use_rx_skb=1 rx_buffer_size=9238 debug=0x5020
     modprobe linux-knet-cb
 }
 
 function remove_kernel_modules()
 {
-    rmmod psample
+    rmmod /lib/modules/$(uname -r)/extra/psample.ko
     rmmod linux-knet-cb
     rmmod linux-bcm-knet
     rmmod linux-user-bde
