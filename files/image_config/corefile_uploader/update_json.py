@@ -23,7 +23,7 @@ def do_update(rcf, patchf):
     tmpf = rcf + TMP_SUFFIX
     bakf = rcf + BAK_SUFFIX
 
-    with open(srcf, "r") as f:
+    with open(rcf, "r") as f:
         dst = json.load(f)
 
     with open(patchf, "r") as f:
