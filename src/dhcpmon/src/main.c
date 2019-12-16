@@ -43,7 +43,7 @@ static const uint32_t dhcpmon_default_unhealthy_max_count = 10;
 static void usage(const char *prog)
 {
     printf("Usage: %s -id <south interface> {-iu <north interface>}+ [-w <snapshot window in sec>]"
-            "[-c <unhealthy status count] [-s <snap length>] [-t <pcap timeout>] [-d]\n", prog);
+            "[-c <unhealthy status count>] [-s <snap length>] [-t <pcap timeout>] [-d]\n", prog);
     printf("where\n");
     printf("\tsouth interface: is a vlan interface,\n");
     printf("\tnorth interface: is a TOR-T1 interface,\n");
@@ -55,7 +55,8 @@ static void usage(const char *prog)
     printf("\tsnap length: snap length of packet capture (default %d),\n", dhcpmon_default_snaplen);
     printf("\tpcap timeout: pcap library time out (default %d).\n", dhcpmon_default_pcap_timout_ms);
     printf("\t-d: daemonize %s.\n", prog);
-    exit(0);
+
+    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -148,7 +149,9 @@ int main(int argc, char **argv)
                 usage(basename(argv[0]));
                 break;
             case 'i':
-                dhcp_devman_add_intf(argv[i + 1], argv[i][2] == 'u');
+                if (dhcp_devman_add_intf(argv[i + 1], argv[i][2] == 'u') != 0) {
+                    usage(basename(argv[0]));
+                }
                 i += 2;
                 break;
             case 'd':

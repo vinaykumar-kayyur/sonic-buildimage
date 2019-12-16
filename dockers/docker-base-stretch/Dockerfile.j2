@@ -56,9 +56,8 @@ RUN apt-get update &&        \
         lua-bitop            \
         lua-cjson            \
 # For DHCP Monitor tool
-        libexplain-dev       \
         libexplain51         \
-        libpcap-dev
+        libpcap0.8
 
 {% if CONFIGURED_ARCH == "armhf" %}
 # ip and ifconfig utility missing in docker for armhf

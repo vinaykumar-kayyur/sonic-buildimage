@@ -44,14 +44,14 @@ static const char *DHCP_BPF = "udp and (port 67 or port 68)";
 
 /** global aggregate counter for DHCP interfaces */
 static dhcp_device_counters_t glob_counters[DHCP_DIR_COUNT] = {
-    [DHCP_RX] = { .discovery = 0, .offer = 0, .request = 0, .ack = 0 },
-    [DHCP_TX] = { .discovery = 0, .offer = 0, .request = 0, .ack = 0 },
+    [DHCP_RX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
+    [DHCP_TX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
 };
 
 /** global aggregate counter snapshot for DHCP interfaces */
 static dhcp_device_counters_t glob_counters_snapshot[DHCP_DIR_COUNT] = {
-    [DHCP_RX] = { .discovery = 0, .offer = 0, .request = 0, .ack = 0 },
-    [DHCP_TX] = { .discovery = 0, .offer = 0, .request = 0, .ack = 0 },
+    [DHCP_RX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
+    [DHCP_TX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
 };
 
 
@@ -71,9 +71,9 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context, const u_char *
     switch (dhcp_option[2])
     {
     case 1:
-        context->counters[dir].discovery++;
+        context->counters[dir].discover++;
         if ((context->is_uplink && dir == DHCP_TX) || (!context->is_uplink && dir == DHCP_RX)) {
-            __atomic_fetch_add(&glob_counters[dir].discovery, 1, __ATOMIC_SEQ_CST);
+            __atomic_fetch_add(&glob_counters[dir].discover, 1, __ATOMIC_SEQ_CST);
         }
         break;
     case 2:
@@ -94,12 +94,13 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context, const u_char *
             __atomic_fetch_add(&glob_counters[dir].ack, 1, __ATOMIC_SEQ_CST);
         }
         break;
+    case 4: // Decline
     case 6 ... 8:
-        // options NAK, Release, Inform
+        // type: NAK, Release, Inform
         break;
     default:
         syslog(LOG_WARNING, "pcap_callback(%s): Unknown DHCP option 53 type %d", context->intf,
-                dhcp_option[2]);
+               dhcp_option[2]);
         break;
     }
 }
@@ -122,7 +123,8 @@ static void pcap_callback(u_char *arg, const struct pcap_pkthdr *header, const u
     struct udphdr *udp = (struct udphdr*) (packet + UDP_START_OFFSET);
     int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
-    if (header->caplen > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) {
+    if ((header->caplen > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
+        (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
         int dhcp_sz = ntohs(udp->len) < header->caplen - UDP_START_OFFSET - sizeof(struct udphdr) ?
                       ntohs(udp->len) : header->caplen - UDP_START_OFFSET - sizeof(struct udphdr);
         int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
@@ -138,19 +140,21 @@ static void pcap_callback(u_char *arg, const struct pcap_pkthdr *header, const u
                                        ethhdr->ether_shost[5] == context->mac[5]) ?
                                        DHCP_TX : DHCP_RX;
 
-        int stop_dhcp_rpocessing = 0;
-        while (offset < dhcp_option_sz && dhcp_option[offset] != 255) {
+        int stop_dhcp_processing = 0;
+        while ((offset < (dhcp_option_sz + 1)) && (dhcp_option[offset] != 255)) {
             switch (dhcp_option[offset])
             {
             case 53:
-                handle_dhcp_option_53(context, &dhcp_option[offset], dir);
-                stop_dhcp_rpocessing = 1; // break while loop since we are only interested in Option 53
+                if (offset < (dhcp_option_sz + 1)) {
+                    handle_dhcp_option_53(context, &dhcp_option[offset], dir);
+                }
+                stop_dhcp_processing = 1; // break while loop since we are only interested in Option 53
                 break;
             default:
                 break;
             }
 
-            if (stop_dhcp_rpocessing == 1) {
+            if (stop_dhcp_processing == 1) {
                 break;
             }
 
@@ -161,8 +165,7 @@ static void pcap_callback(u_char *arg, const struct pcap_pkthdr *header, const u
             }
         }
     } else {
-        syslog(LOG_ALERT, "pcap_callback(%s): snap length is too low to capture DHCP options", context->intf);
-        exit(EXIT_FAILURE);
+        syslog(LOG_WARNING, "pcap_callback(%s): snap length is too small to capture DHCP options", context->intf);
     }
 }
 
@@ -202,21 +205,21 @@ static dhcp_mon_status_t dhcp_device_validate(dhcp_device_counters_t *counters,
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
-    if ((counters[DHCP_RX].discovery == counters_snapshot[DHCP_RX].discovery) &&
-        (counters[DHCP_RX].offer == counters_snapshot[DHCP_RX].offer) &&
-        (counters[DHCP_RX].request == counters_snapshot[DHCP_RX].request) &&
-        (counters[DHCP_RX].ack == counters_snapshot[DHCP_RX].ack)) {
+    if ((counters[DHCP_RX].discover == counters_snapshot[DHCP_RX].discover) &&
+        (counters[DHCP_RX].offer    == counters_snapshot[DHCP_RX].offer   ) &&
+        (counters[DHCP_RX].request  == counters_snapshot[DHCP_RX].request ) &&
+        (counters[DHCP_RX].ack      == counters_snapshot[DHCP_RX].ack     )    ) {
         rv = DHCP_MON_STATUS_INDETERMINATE;
     } else {
         // if we have rx DORA then we should have corresponding tx DORA (DORA being relayed)
-        if (((counters[DHCP_RX].discovery > counters_snapshot[DHCP_RX].discovery ) &&
-             (counters[DHCP_TX].discovery <= counters_snapshot[DHCP_TX].discovery)    ) ||
-            ((counters[DHCP_RX].offer > counters_snapshot[DHCP_RX].offer ) &&
-             (counters[DHCP_TX].offer <= counters_snapshot[DHCP_TX].offer)            ) ||
-            ((counters[DHCP_RX].request > counters_snapshot[DHCP_RX].request ) &&
-             (counters[DHCP_TX].request <= counters_snapshot[DHCP_TX].request)        ) ||
-            ((counters[DHCP_RX].ack > counters_snapshot[DHCP_RX].ack ) &&
-             (counters[DHCP_TX].ack <= counters_snapshot[DHCP_TX].ack)                )) {
+        if (((counters[DHCP_RX].discover >  counters_snapshot[DHCP_RX].discover) &&
+             (counters[DHCP_TX].discover <= counters_snapshot[DHCP_TX].discover)    ) ||
+            ((counters[DHCP_RX].offer    >  counters_snapshot[DHCP_RX].offer   ) &&
+             (counters[DHCP_TX].offer    <= counters_snapshot[DHCP_TX].offer   )    ) ||
+            ((counters[DHCP_RX].request  >  counters_snapshot[DHCP_RX].request ) &&
+             (counters[DHCP_TX].request  <= counters_snapshot[DHCP_TX].request )    ) ||
+            ((counters[DHCP_RX].ack      >  counters_snapshot[DHCP_RX].ack     ) &&
+             (counters[DHCP_TX].ack      <= counters_snapshot[DHCP_TX].ack     )    )) {
             rv = DHCP_MON_STATUS_UNHEALTHY;
         }
     }
@@ -234,7 +237,7 @@ static dhcp_mon_status_t dhcp_device_validate(dhcp_device_counters_t *counters,
 static void dhcp_print_counters(dhcp_device_counters_t *counters)
 {
     syslog(LOG_NOTICE, "DHCP Discover rx: %lu, tx:%lu, Offer rx: %lu, tx:%lu, Request rx: %lu, tx:%lu, ACK rx: %lu, tx:%lu\n",
-           counters[DHCP_RX].discovery, counters[DHCP_TX].discovery,
+           counters[DHCP_RX].discover, counters[DHCP_TX].discover,
            counters[DHCP_RX].offer, counters[DHCP_TX].offer,
            counters[DHCP_RX].request, counters[DHCP_TX].request,
            counters[DHCP_RX].ack, counters[DHCP_TX].ack);
@@ -248,7 +251,7 @@ static void dhcp_print_counters(dhcp_device_counters_t *counters)
  * @param context           pointer to device (interface) context
  * @param intf              interface name
  * @param snaplen           length of packet capture
- * @aparam timeout_ms       timeout for libpacp to report packets captured
+ * @param timeout_ms        timeout for libpacp to report packets captured
  *
  * @return 0 on success, otherwise for failure
  */

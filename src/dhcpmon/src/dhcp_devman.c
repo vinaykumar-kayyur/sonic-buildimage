@@ -85,6 +85,8 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
         }
 
         LIST_INSERT_HEAD(&intfs, dev, entry);
+
+        rv = 0;
     }
 
     return rv;
@@ -112,10 +114,23 @@ int dhcp_devman_start_capture(int snaplen, int timeout_ms)
 
                 rv = dhcp_device_start_capture(int_ptr->dev_context);
                 if (rv != 0) {
+                    syslog(LOG_ERR,
+                           "Failed to start capturing DHCP packets on interface %s, ip: 0x%08x, mac [%02x:%02x:%02x:%02x:%02x:%02x] \n",
+                           int_ptr->name, int_ptr->dev_context->ip, int_ptr->dev_context->mac[0],
+                           int_ptr->dev_context->mac[1], int_ptr->dev_context->mac[2], int_ptr->dev_context->mac[3],
+                           int_ptr->dev_context->mac[4], int_ptr->dev_context->mac[5]);
                     break;
                 }
             }
+            else {
+                syslog(LOG_ERR, "Failed to initialize device '%s'\n", int_ptr->name);
+                break;
+            }
         }
+    }
+    else {
+        syslog(LOG_ERR, "Invalid number of interfaces, downlink/south %d, uplink/north %d\n",
+               dhcp_num_south_intf, dhcp_num_north_intf);
     }
 
     return rv;

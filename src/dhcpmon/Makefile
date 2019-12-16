@@ -2,6 +2,8 @@ RM := rm -rf
 DHCPMON_TARGET := dhcpmon
 CP := cp
 MKDIR := mkdir
+CC := gcc
+MV := mv
 
 # All of the sources participating in the build are defined here
 -include src/subdir.mk
@@ -22,14 +24,14 @@ all: sonic-dhcpmon
 sonic-dhcpmon: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -pthread -o "$(DHCPMON_TARGET)" $(OBJS) $(USER_OBJS) $(LIBS)
+	$(CC) -pthread -o "$(DHCPMON_TARGET)" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 install:
 	$(MKDIR) -p $(DESTDIR)/usr/sbin
-	$(CP) $(DHCPMON_TARGET) $(DESTDIR)/usr/sbin
+	$(MV) $(DHCPMON_TARGET) $(DESTDIR)/usr/sbin
 
 deinstall:
 	$(RM) $(DESTDIR)/usr/sbin/$(DHCPMON_TARGET)

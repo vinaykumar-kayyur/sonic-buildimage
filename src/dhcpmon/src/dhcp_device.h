@@ -34,7 +34,7 @@ typedef enum
 /** DHCP device (interface) health counters */
 typedef struct
 {
-    uint64_t discovery;     /** DHCP discovery packets */
+    uint64_t discover;     /** DHCP discovery packets */
     uint64_t offer;         /** DHCP offer packets */
     uint64_t request;       /** DHCP request packets */
     uint64_t ack;           /** DHCP ack packets */
@@ -54,7 +54,7 @@ typedef struct
     dhcp_device_counters_t counters[DHCP_DIR_COUNT];
                                     /** current coutners of DORA packets */
     dhcp_device_counters_t counters_snapshot[DHCP_DIR_COUNT];
-                                     /** counter snapshot */
+                                    /** counter snapshot */
 } dhcp_device_context_t;
 
 /**
