@@ -40,6 +40,7 @@ WAIT_FILE_WRITE1 = (10 * 60)
 WAIT_FILE_WRITE2= (5 * 60)
 POLL_SLEEP = (60 * 60)
 MAX_RETRIES = 5
+UPLOAD_PREFIX = "UPLOADED_"
 
 log_level = syslog.LOG_DEBUG
 
@@ -232,6 +233,7 @@ class Handler(FileSystemEventHandler):
 
         Handler.upload_file(tarf_name, tarf_name)
 
+        os.rename(path, UPLOAD_PREFIX + path)
         log_debug("File uploaded - " +  path)
         os.chdir(INIT_CWD)
 
@@ -270,7 +272,7 @@ class Handler(FileSystemEventHandler):
     def scan():
         for e in os.listdir(CORE_FILE_PATH):
             fl = CORE_FILE_PATH + e
-            if os.path.isfile(fl):
+            if os.path.isfile(fl) and not e.startswith(UPLOAD_PREFIX):
                 Handler.handle_file(fl)
 
 
