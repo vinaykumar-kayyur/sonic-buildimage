@@ -9,7 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
 	rm -rf ./monit
 
-	# Clone isc-dhcp repo
+	# Clone monit repo
 	git clone https://salsa.debian.org/sk-guest/monit.git
 	pushd ./monit
 
