@@ -49,20 +49,11 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink);
  * @brief start packet capture on the devman interface list
  *
  * @param snaplen packet    capture snap length
- * @param timeout_ms        libpcap timeout before reporting packets to capture thread
+ * @param base              libevent base
  *
  * @return 0 on success, nonzero otherwise
  */
-int dhcp_devman_start_capture(int snaplen, int timeout_ms);
-
-/**
- * @code dhcp_devman_stop_capture();
- *
- * @brief stops packet capture.
- *
- * @return none
- */
-void dhcp_devman_stop_capture();
+int dhcp_devman_start_capture(int snaplen, struct event_base *base);
 
 /**
  * @code dhcp_devman_get_status();

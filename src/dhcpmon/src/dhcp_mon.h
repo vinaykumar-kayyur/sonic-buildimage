@@ -24,10 +24,30 @@ int dhcp_mon_init(int window_sec, int max_count);
 /**
  * @code dhcp_mon_shutdown();
  *
- * @brief shuts down monitoring thread
+ * @brief shuts down libevent loop
  *
  * @return none
  */
 void dhcp_mon_shutdown();
+
+/**
+ * @code dhcp_mon_start(snaplen);
+ *
+ * @brief start monitoring DHCP Relay
+ *
+ * @param snaplen       packet capture length
+ *
+ * @return none
+ */
+void dhcp_mon_start(int snaplen);
+
+/**
+ * @code dhcp_mon_stop();
+ *
+ * @brief stop monitoring DHCP Relay
+ *
+ * @return none
+ */
+void dhcp_mon_stop();
 
 #endif /* DHCP_MON_H_ */

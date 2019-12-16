@@ -93,18 +93,18 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
 }
 
 /**
- * @code dhcp_devman_start_capture(snaplen, timeout_ms);
+ * @code dhcp_devman_start_capture(snaplen, base);
  *
  * @brief start packet capture on the devman interface list
  */
-int dhcp_devman_start_capture(int snaplen, int timeout_ms)
+int dhcp_devman_start_capture(int snaplen, struct event_base *base)
 {
     int rv = -1;
     struct intf *int_ptr;
 
     if ((dhcp_num_south_intf == 1) && (dhcp_num_north_intf >= 1)) {
         LIST_FOREACH(int_ptr, &intfs, entry) {
-            rv = dhcp_device_init(&int_ptr->dev_context, int_ptr->name, snaplen, timeout_ms, int_ptr->is_uplink);
+            rv = dhcp_device_init(&int_ptr->dev_context, int_ptr->name, snaplen, int_ptr->is_uplink, base);
             if (rv == 0) {
                 syslog(LOG_INFO,
                        "Capturing DHCP packets on interface %s, ip: 0x%08x, mac [%02x:%02x:%02x:%02x:%02x:%02x] \n",
@@ -112,18 +112,8 @@ int dhcp_devman_start_capture(int snaplen, int timeout_ms)
                        int_ptr->dev_context->mac[1], int_ptr->dev_context->mac[2], int_ptr->dev_context->mac[3],
                        int_ptr->dev_context->mac[4], int_ptr->dev_context->mac[5]);
 
-                rv = dhcp_device_start_capture(int_ptr->dev_context);
-                if (rv != 0) {
-                    syslog(LOG_ERR,
-                           "Failed to start capturing DHCP packets on interface %s, ip: 0x%08x, mac [%02x:%02x:%02x:%02x:%02x:%02x] \n",
-                           int_ptr->name, int_ptr->dev_context->ip, int_ptr->dev_context->mac[0],
-                           int_ptr->dev_context->mac[1], int_ptr->dev_context->mac[2], int_ptr->dev_context->mac[3],
-                           int_ptr->dev_context->mac[4], int_ptr->dev_context->mac[5]);
-                    break;
-                }
             }
             else {
-                syslog(LOG_ERR, "Failed to initialize device '%s'\n", int_ptr->name);
                 break;
             }
         }
@@ -134,20 +124,6 @@ int dhcp_devman_start_capture(int snaplen, int timeout_ms)
     }
 
     return rv;
-}
-
-/**
- * @code dhcp_devman_stop_capture();
- *
- * @brief stops packet capture.
- */
-void dhcp_devman_stop_capture()
-{
-    struct intf *int_ptr;
-
-    LIST_FOREACH(int_ptr, &intfs, entry) {
-        dhcp_device_stop_capture(int_ptr->dev_context);
-    }
 }
 
 /**

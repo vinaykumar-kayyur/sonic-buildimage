@@ -7,12 +7,15 @@
 #ifndef DHCP_DEVICE_H_
 #define DHCP_DEVICE_H_
 
-#include <pcap.h>
 #include <stdint.h>
-#include <pthread.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <net/ethernet.h>
+
+#include <event2/listener.h>
+#include <event2/bufferevent.h>
+#include <event2/buffer.h>
+
 
 /** packet direction */
 typedef enum
@@ -34,7 +37,7 @@ typedef enum
 /** DHCP device (interface) health counters */
 typedef struct
 {
-    uint64_t discover;     /** DHCP discovery packets */
+    uint64_t discover;      /** DHCP discover packets */
     uint64_t offer;         /** DHCP offer packets */
     uint64_t request;       /** DHCP request packets */
     uint64_t ack;           /** DHCP ack packets */
@@ -43,14 +46,13 @@ typedef struct
 /** DHCP device (interface) context */
 typedef struct
 {
-    pcap_t *cap;                    /** libpcap cap struct */
-    struct bpf_program fp;          /** lippcap bpf code/program */
+    int sock;                       /** Raw socket associated with this device/interface */
     in_addr_t ip;                   /** network address of this device (interface) */
     uint8_t mac[ETHER_ADDR_LEN];    /** hardware address of this device (interface) */
     uint8_t is_uplink;              /** north interface? */
     char intf[IF_NAMESIZE];         /** device (interface) name */
-    char err_buf[PCAP_ERRBUF_SIZE]; /** error buffer for libpcap APIs */
-    pthread_t bpf_thread;           /** packet capture thread */
+    uint8_t *buffer;                /** buffer used to read socket data */
+    size_t snaplen;                 /** snap length or buffer size */
     dhcp_device_counters_t counters[DHCP_DIR_COUNT];
                                     /** current coutners of DORA packets */
     dhcp_device_counters_t counters_snapshot[DHCP_DIR_COUNT];
@@ -65,12 +67,15 @@ typedef struct
  * @param context(inout)    pointer to device (interface) context
  * @param intf              interface name
  * @param snaplen           length of packet capture
- * @aparam timeout_ms       timeout for libpacp to report packets captured
  * @param is_uplink         uplink interface
  *
  * @return 0 on success, otherwise for failure
  */
-int dhcp_device_init(dhcp_device_context_t **context, const char *intf, int snaplen, int timeout_ms, uint8_t is_uplink);
+int dhcp_device_init(dhcp_device_context_t **context,
+                     const char *intf,
+                     int snaplen,
+                     uint8_t is_uplink,
+                     struct event_base *base);
 
 /**
  * @code dhcp_device_shutdown(context);
@@ -82,28 +87,6 @@ int dhcp_device_init(dhcp_device_context_t **context, const char *intf, int snap
  * @return nonedhcp_device_shutdown
  */
 void dhcp_device_shutdown(dhcp_device_context_t *context);
-
-/**
- * @code dhcp_device_start_capture(context);
- *
- * @brief start packet capture on the device (interface)
- *
- * @param context   Device (interface) context
- *
- * @return 0 on success, nonzero otherwise
- */
-int dhcp_device_start_capture(dhcp_device_context_t *context);
-
-/**
- * @code dhcp_device_stop_capture(context);
- *
- * @brief stops packet capture.
- *
- * @param context   Device (interface) context
- *
- * @return none
- */
-void dhcp_device_stop_capture(dhcp_device_context_t *context);
 
 /**
  * @code dhcp_device_get_status(context);

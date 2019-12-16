@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <net/ethernet.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
@@ -19,15 +18,11 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <libexplain/ioctl.h>
+#include <linux/filter.h>
+#include <netpacket/packet.h>
 
 #include "dhcp_device.h"
 
-/** We are not interesting in putting the interface into promiscuous mode */
-#define DHCP_PROMISC_MODE 0
-/** Enable libpcap BPF compile optimization */
-#define DHCP_BPF_COMPILE_OPTIMIZE 1
-/** DHCP BPF libpcap netmask */
-#define DHCP_BPF_NETMASK 0
 /** Start of Ether header of a captured frame */
 #define ETHER_START_OFFSET  0
 /** Start of IP header of a captured frame */
@@ -39,8 +34,48 @@
 /** Start of DHCP Options segment of a captured frame */
 #define DHCP_OPTIONS_HEADER_SIZE 240
 
-/**  DHCP Berkley Packet Filter */
-static const char *DHCP_BPF = "udp and (port 67 or port 68)";
+#define OP_LDHA     (BPF_LD  | BPF_H   | BPF_ABS)   /** bpf ldh Abs */
+#define OP_LDHI     (BPF_LD  | BPF_H   | BPF_IND)   /** bpf ldh Ind */
+#define OP_LDB      (BPF_LD  | BPF_B   | BPF_ABS)   /** bpf ldb Abs*/
+#define OP_JEQ      (BPF_JMP | BPF_JEQ | BPF_K)     /** bpf jeq */
+#define OP_JGT      (BPF_JMP | BPF_JGT | BPF_K)     /** bpf jgt */
+#define OP_RET      (BPF_RET | BPF_K)               /** bpf ret */
+#define OP_JSET     (BPF_JMP | BPF_JSET | BPF_K)    /** bpf jset */
+#define OP_LDXB     (BPF_LDX | BPF_B    | BPF_MSH)  /** bpf ldxb */
+
+/** Berkley Packet Fitler program for "udp and (port 67 or port 68)". This program is obtained suing the following
+ * tcpdump command: 'tcpdump -dd "udp and (port 67 or port 68)"'
+ */
+static struct sock_filter dhcp_bpf_code[] = {
+    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c }, // (000) ldh      [12]
+    { .code = OP_JEQ,  .jt = 0,  .jf = 7,  .k = 0x000086dd }, // (001) jeq      #0x86dd          jt 2	jf 9
+    { .code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000014 }, // (002) ldb      [20]
+    { .code = OP_JEQ,  .jt = 0,  .jf = 18, .k = 0x00000011 }, // (003) jeq      #0x11            jt 4	jf 22
+    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000036 }, // (004) ldh      [54]
+    { .code = OP_JEQ,  .jt = 15, .jf = 0,  .k = 0x00000043 }, // (005) jeq      #0x43            jt 21	jf 6
+    { .code = OP_JEQ,  .jt = 14, .jf = 0,  .k = 0x00000044 }, // (006) jeq      #0x44            jt 21	jf 7
+    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000038 }, // (007) ldh      [56]
+    { .code = OP_JEQ,  .jt = 12, .jf = 11, .k = 0x00000043 }, // (008) jeq      #0x43            jt 21	jf 20
+    { .code = OP_JEQ,  .jt = 0,  .jf = 12, .k = 0x00000800 }, // (009) jeq      #0x800           jt 10	jf 22
+    { .code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000017 }, // (010) ldb      [23]
+    { .code = OP_JEQ,  .jt = 0,  .jf = 10, .k = 0x00000011 }, // (011) jeq      #0x11            jt 12	jf 22
+    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000014 }, // (012) ldh      [20]
+    { .code = OP_JSET, .jt = 8,  .jf = 0,  .k = 0x00001fff }, // (013) jset     #0x1fff          jt 22	jf 14
+    { .code = OP_LDXB, .jt = 0,  .jf = 0,  .k = 0x0000000e }, // (014) ldxb     4*([14]&0xf)
+    { .code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x0000000e }, // (015) ldh      [x + 14]
+    { .code = OP_JEQ,  .jt = 4,  .jf = 0,  .k = 0x00000043 }, // (016) jeq      #0x43            jt 21	jf 17
+    { .code = OP_JEQ,  .jt = 3,  .jf = 0,  .k = 0x00000044 }, // (017) jeq      #0x44            jt 21	jf 18
+    { .code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x00000010 }, // (018) ldh      [x + 16]
+    { .code = OP_JEQ,  .jt = 1,  .jf = 0,  .k = 0x00000043 }, // (019) jeq      #0x43            jt 21	jf 20
+    { .code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044 }, // (020) jeq      #0x44            jt 21	jf 22
+    { .code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000 }, // (021) ret      #262144
+    { .code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000 }, // (022) ret      #0
+};
+
+/** Filter program socket struct */
+static struct sock_fprog dhcp_sock_bfp = {
+    .len = sizeof(dhcp_bpf_code) / sizeof(*dhcp_bpf_code), .filter = dhcp_bpf_code
+};
 
 /** global aggregate counter for DHCP interfaces */
 static dhcp_device_counters_t glob_counters[DHCP_DIR_COUNT] = {
@@ -53,7 +88,6 @@ static dhcp_device_counters_t glob_counters_snapshot[DHCP_DIR_COUNT] = {
     [DHCP_RX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
     [DHCP_TX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
 };
-
 
 /**
  * @code handle_dhcp_option_53(context, dhcp_option, dir);
@@ -94,100 +128,82 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context, const u_char *
             __atomic_fetch_add(&glob_counters[dir].ack, 1, __ATOMIC_SEQ_CST);
         }
         break;
-    case 4: // Decline
+    case 4: // type: Decline
     case 6 ... 8:
         // type: NAK, Release, Inform
         break;
     default:
-        syslog(LOG_WARNING, "pcap_callback(%s): Unknown DHCP option 53 type %d", context->intf,
-               dhcp_option[2]);
+        syslog(LOG_WARNING, "handle_dhcp_option_53(%s): Unknown DHCP option 53 type %d", context->intf, dhcp_option[2]);
         break;
     }
 }
 
 /**
- * @code pcap_callback(arg, pcap_pkthdr, packet);
+ * @code read_callback(fd, event, arg);
  *
  * @brief callback for libpcap which is called every time out in order to process queued packet capture
  *
+ * @param fd            socket to read from
+ * @param event         libevent triggered event
  * @param arg           user provided argument for callback (interface context)
- * @param header        libpcap header for packet capture
  * @param packet        pointer to packet data
  *
  * @return none
  */
-static void pcap_callback(u_char *arg, const struct pcap_pkthdr *header, const u_char *packet)
+static void read_callback(int fd, short event, void *arg)
 {
     dhcp_device_context_t *context = (dhcp_device_context_t*) arg;
-    struct ether_header *ethhdr = (struct ether_header*) packet;
-    struct udphdr *udp = (struct udphdr*) (packet + UDP_START_OFFSET);
-    int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
+    ssize_t buffer_sz;
 
-    if ((header->caplen > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
-        (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
-        int dhcp_sz = ntohs(udp->len) < header->caplen - UDP_START_OFFSET - sizeof(struct udphdr) ?
-                      ntohs(udp->len) : header->caplen - UDP_START_OFFSET - sizeof(struct udphdr);
-        int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
+    while ((event == EV_READ) &&
+           ((buffer_sz = recv(fd, context->buffer, context->snaplen, MSG_DONTWAIT | MSG_TRUNC)) > 0)) {
+        struct ether_header *ethhdr = (struct ether_header*) context->buffer;
+        struct udphdr *udp = (struct udphdr*) (context->buffer + UDP_START_OFFSET);
+        int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
-        const u_char *dhcp_option = packet + dhcp_option_offset;
-        int offset = 0;
-
-        dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
-                                       ethhdr->ether_shost[1] == context->mac[1] &&
-                                       ethhdr->ether_shost[2] == context->mac[2] &&
-                                       ethhdr->ether_shost[3] == context->mac[3] &&
-                                       ethhdr->ether_shost[4] == context->mac[4] &&
-                                       ethhdr->ether_shost[5] == context->mac[5]) ?
-                                       DHCP_TX : DHCP_RX;
-
-        int stop_dhcp_processing = 0;
-        while ((offset < (dhcp_option_sz + 1)) && (dhcp_option[offset] != 255)) {
-            switch (dhcp_option[offset])
-            {
-            case 53:
-                if (offset < (dhcp_option_sz + 1)) {
-                    handle_dhcp_option_53(context, &dhcp_option[offset], dir);
+        if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
+            (ntohs(udp->len) > DHCP_OPTIONS_HEADER_SIZE)) {
+            int dhcp_sz = ntohs(udp->len) < buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr) ?
+                          ntohs(udp->len) : buffer_sz - UDP_START_OFFSET - sizeof(struct udphdr);
+            int dhcp_option_sz = dhcp_sz - DHCP_OPTIONS_HEADER_SIZE;
+            const u_char *dhcp_option = context->buffer + dhcp_option_offset;
+            dhcp_packet_direction_t dir = (ethhdr->ether_shost[0] == context->mac[0] &&
+                                           ethhdr->ether_shost[1] == context->mac[1] &&
+                                           ethhdr->ether_shost[2] == context->mac[2] &&
+                                           ethhdr->ether_shost[3] == context->mac[3] &&
+                                           ethhdr->ether_shost[4] == context->mac[4] &&
+                                           ethhdr->ether_shost[5] == context->mac[5]) ?
+                                           DHCP_TX : DHCP_RX;
+            int offset = 0;
+            int stop_dhcp_processing = 0;
+            while ((offset < (dhcp_option_sz + 1) )&& dhcp_option[offset] != 255) {
+                switch (dhcp_option[offset])
+                {
+                case 53:
+                    if (offset < (dhcp_option_sz + 2)) {
+                        handle_dhcp_option_53(context, &dhcp_option[offset], dir);
+                    }
+                    stop_dhcp_processing = 1; // break while loop since we are only interested in Option 53
+                    break;
+                default:
+                    break;
                 }
-                stop_dhcp_processing = 1; // break while loop since we are only interested in Option 53
-                break;
-            default:
-                break;
-            }
 
-            if (stop_dhcp_processing == 1) {
-                break;
-            }
+                if (stop_dhcp_processing == 1) {
+                    break;
+                }
 
-            if (dhcp_option[offset] == 0) { // DHCP Option Padding
-                offset++;
-            } else {
-                offset += dhcp_option[offset + 1] + 2;
+                if (dhcp_option[offset] == 0) { // DHCP Option Padding
+                    offset++;
+                } else {
+                    offset += dhcp_option[offset + 1] + 2;
+                }
             }
+        } else {
+            syslog(LOG_WARNING, "read_callback(%s): read length (%ld) is too small to capture DHCP options",
+                   context->intf, buffer_sz);
         }
-    } else {
-        syslog(LOG_WARNING, "pcap_callback(%s): snap length is too small to capture DHCP options", context->intf);
     }
-}
-
-/**
- * @code dhcp_device_process(arg);
- *
- * @brief validate current interface counters by comparing aggregate counter with snapshot counters.
- *
- * @param arg   user provided argument for capturing process (interface context)
- *
- * @return none
- */
-static void* dhcp_device_process(void *arg)
-{
-    dhcp_device_context_t *context = (dhcp_device_context_t*) arg;
-
-    if (pcap_loop(context->cap, -1, pcap_callback, arg) < 0) {
-        syslog(LOG_ALERT, "pcap_loop(%s): %s", context->intf, pcap_geterr(context->cap));
-        exit(EXIT_FAILURE);
-    }
-
-    pthread_exit(NULL);
 }
 
 /**
@@ -214,12 +230,12 @@ static dhcp_mon_status_t dhcp_device_validate(dhcp_device_counters_t *counters,
         // if we have rx DORA then we should have corresponding tx DORA (DORA being relayed)
         if (((counters[DHCP_RX].discover >  counters_snapshot[DHCP_RX].discover) &&
              (counters[DHCP_TX].discover <= counters_snapshot[DHCP_TX].discover)    ) ||
-            ((counters[DHCP_RX].offer    >  counters_snapshot[DHCP_RX].offer   ) &&
+            ((counters[DHCP_RX].offer    > counters_snapshot[DHCP_RX].offer    ) &&
              (counters[DHCP_TX].offer    <= counters_snapshot[DHCP_TX].offer   )    ) ||
-            ((counters[DHCP_RX].request  >  counters_snapshot[DHCP_RX].request ) &&
+            ((counters[DHCP_RX].request  > counters_snapshot[DHCP_RX].request  ) &&
              (counters[DHCP_TX].request  <= counters_snapshot[DHCP_TX].request )    ) ||
-            ((counters[DHCP_RX].ack      >  counters_snapshot[DHCP_RX].ack     ) &&
-             (counters[DHCP_TX].ack      <= counters_snapshot[DHCP_TX].ack     )    )) {
+            ((counters[DHCP_RX].ack      > counters_snapshot[DHCP_RX].ack      ) &&
+             (counters[DHCP_TX].ack      <= counters_snapshot[DHCP_TX].ack     )    )    ) {
             rv = DHCP_MON_STATUS_UNHEALTHY;
         }
     }
@@ -244,41 +260,68 @@ static void dhcp_print_counters(dhcp_device_counters_t *counters)
 }
 
 /**
- * @code init_libpcap(context, intf, snaplen, timeout_ms);
+ * @code init_socket(context, intf, snaplen, base);
  *
- * @brief initializes libpacp for a device (interface)
+ * @brief initializes socket, bind it to interface and bpf prgram, and
+ *        associate with libevent base
  *
  * @param context           pointer to device (interface) context
  * @param intf              interface name
  * @param snaplen           length of packet capture
- * @param timeout_ms        timeout for libpacp to report packets captured
+ * @param base              libevent base
  *
  * @return 0 on success, otherwise for failure
  */
-static int init_libpcap(dhcp_device_context_t *context, const char *intf, int snaplen, int timeout_ms)
+static int init_socket(dhcp_device_context_t *context,
+                       const char *intf,
+                       size_t snaplen,
+                       struct event_base *base)
 {
     int rv = -1;
 
     do {
+        if (snaplen < UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) {
+            syslog(LOG_ALERT, "init_socket(%s): snap length is too low to capture DHCP options", intf);
+            break;
+        }
+
+        context->sock = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, htons(ETH_P_ALL));
+        if (context->sock < 0) {
+            syslog(LOG_ALERT, "socket: failed to open socket with '%s'\n", strerror(errno));
+            break;
+        }
+
+        struct sockaddr_ll addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sll_ifindex = if_nametoindex(intf);
+        addr.sll_family = AF_PACKET;
+        addr.sll_protocol = htons(ETH_P_ALL);
+        if (bind(context->sock, (struct sockaddr *) &addr, sizeof(addr))) {
+            syslog(LOG_ALERT, "bind: failed to bind to interface '%s' with '%s'\n", intf, strerror(errno));
+            break;
+        }
+
+        if (setsockopt(context->sock, SOL_SOCKET, SO_ATTACH_FILTER, &dhcp_sock_bfp, sizeof(dhcp_sock_bfp)) != 0) {
+            syslog(LOG_ALERT, "setsockopt: failed to attach filter with '%s'\n", strerror(errno));
+            break;
+        }
+
+        context->buffer = (uint8_t *) malloc(snaplen);
+        if (context->buffer == NULL) {
+            syslog(LOG_ALERT, "malloc: failed to allocate memory for socket buffer '%s'\n", strerror(errno));
+            break;
+        }
+        context->snaplen = snaplen;
+
+        struct event *ev = event_new(base, context->sock, EV_READ | EV_PERSIST, read_callback, context);
+        if (ev == NULL) {
+            syslog(LOG_ALERT, "event_new: failed to allocate memory for libevent event '%s'\n", strerror(errno));
+            break;
+        }
+        event_add(ev, NULL);
+
         strncpy(context->intf, intf, sizeof(context->intf) - 1);
         context->intf[sizeof(context->intf) - 1] = '\0';
-
-        context->cap = pcap_open_live(context->intf, snaplen, DHCP_PROMISC_MODE, timeout_ms, context->err_buf);
-        if (context->cap == NULL) {
-            syslog(LOG_ALERT, "pcap_open_live(): %s", context->err_buf);
-            break;
-        }
-
-        if (pcap_compile(context->cap, &context->fp, DHCP_BPF,
-                         DHCP_BPF_COMPILE_OPTIMIZE, DHCP_BPF_NETMASK) != 0) {
-            syslog(LOG_ALERT, "pcap_compile: %s", pcap_geterr(context->cap));
-            break;
-        }
-
-        if (pcap_setfilter(context->cap, &context->fp) != 0) {
-            syslog(LOG_ALERT, "pcap_setfilter: %s", pcap_geterr(context->cap));
-            break;
-        }
 
         rv = 0;
     } while (0);
@@ -334,11 +377,15 @@ static int initialize_intf_mac_and_ip_addr(dhcp_device_context_t *context)
 }
 
 /**
- * @code dhcp_device_init(context, intf, snaplen, timeout_ms, is_uplink);
+ * @code dhcp_device_init(context, intf, snaplen, is_uplink);
  *
  * @brief initializes device (interface) that handles packet capture per interface.
  */
-int dhcp_device_init(dhcp_device_context_t **context, const char *intf, int snaplen, int timeout_ms, uint8_t is_uplink)
+int dhcp_device_init(dhcp_device_context_t **context,
+                     const char *intf,
+                     int snaplen,
+                     uint8_t is_uplink,
+                     struct event_base *base)
 {
     int rv = -1;
     dhcp_device_context_t *dev_context = NULL;
@@ -347,7 +394,7 @@ int dhcp_device_init(dhcp_device_context_t **context, const char *intf, int snap
 
         dev_context = (dhcp_device_context_t *) malloc(sizeof(dhcp_device_context_t));
         if ((dev_context != NULL) &&
-            (init_libpcap(dev_context, intf, snaplen, timeout_ms) == 0) &&
+            (init_socket(dev_context, intf, snaplen, base) == 0       ) &&
             (initialize_intf_mac_and_ip_addr(dev_context) == 0)) {
 
             dev_context->is_uplink = is_uplink;
@@ -370,36 +417,7 @@ int dhcp_device_init(dhcp_device_context_t **context, const char *intf, int snap
  */
 void dhcp_device_shutdown(dhcp_device_context_t *context)
 {
-    dhcp_device_stop_capture(context);
     free(context);
-}
-
-/**
- * @code dhcp_device_start_capture(context);
- *
- * @brief start packet capture on the device (interface)
- */
-int dhcp_device_start_capture(dhcp_device_context_t *context)
-{
-    int rv = -1;
-
-    if (context != NULL) {
-        rv = pthread_create(&context->bpf_thread, NULL, dhcp_device_process, context);
-    }
-
-    return rv;
-}
-
-/**
- * @code dhcp_device_stop_capture(context);
- *
- * @brief stops packet capture.
- */
-void dhcp_device_stop_capture(dhcp_device_context_t *context)
-{
-    if (context != NULL) {
-        pcap_breakloop(context->cap);
-    }
 }
 
 /**

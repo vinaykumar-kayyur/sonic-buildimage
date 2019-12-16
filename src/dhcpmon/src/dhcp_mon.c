@@ -22,86 +22,69 @@ static int window_interval_sec = 12;
 static int dhcp_unhealthy_max_count = 10;
 /** dhcp_mon_active control monitoring thread main loop */
 static int dhcp_mon_active = 0;
+/** libevent base struct */
+static struct event_base *base;
+/** libevent timeout event struct */
+static struct event *ev_timeout = NULL;
+/** libevent signal event struct */
+static struct event *ev_sigint;
 
 /**
- * @code dhcp_mon_process(arg);
+ * @code signal_callback(fd, event, arg);
  *
- * @brief monitoring thread main loop. It creates a timer that delivers SIGALRM every window_sec seconds.
- *        when signal is delivered, dhcp relay status is queried from devman.
+ * @brief signal handler for dhcpmon. It will initiate shutdown when signal is caught
  *
- * @param arg pointer to user argument
+ * @param fd        libevent socket
+ * @param event     event triggered
+ * @param arg       pointer user provided context (libevent base)
  *
- * @return pointer to exist status
+ * @return none
  */
-static void* dhcp_mon_process(void *arg)
+static void signal_callback(evutil_socket_t fd, short event, void *arg)
 {
-    int rv;
-    struct itimerspec ts;
-    sigset_t sigset;
-    struct sigevent se;
-    timer_t timer_id;
+    syslog(LOG_ALERT, "Received signal %d\n", event);
+    dhcp_devman_print_status();
+    dhcp_mon_stop();
+}
+
+/**
+ * @code timeout_callback(fd, event, arg);
+ *
+ * @brief periodic timer call back
+ *
+ * @param fd        libevent socket
+ * @param event     event triggered
+ * @param arg       pointer user provided context (libevent base)
+ *
+ * @return none
+ */
+static void timeout_callback(evutil_socket_t fd, short event, void *arg)
+{
     static int count = 0;
+    dhcp_mon_status_t dhcp_mon_status = dhcp_devman_get_status();
 
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGALRM);
-
-    /* setup timer */
-    ts.it_interval.tv_sec = window_interval_sec;
-    ts.it_interval.tv_nsec = 0;
-    ts.it_value.tv_sec = window_interval_sec;
-    ts.it_value.tv_nsec = 0;
-
-    se.sigev_value.sival_ptr = NULL;  // data passed with the notification
-    se.sigev_signo = SIGALRM;
-    se.sigev_notify = SIGEV_THREAD_ID;
-    se._sigev_un._tid = syscall(__NR_gettid);
-
-    rv = timer_create(CLOCK_REALTIME, &se, &timer_id);
-    if (rv != 0) {
-        syslog(LOG_ERR, "Timer creation failed with '%s'\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    } else {
-        timer_settime(timer_id, 0, &ts, NULL);
-    }
-
-    /* endless loop to wait for and handle a signal repeatedly */
-    while (dhcp_mon_active) {
-        int sig;
-        int error;
-
-        error = sigwait(&sigset, &sig);
-        if (error == 0) {
-            assert(sig == SIGALRM);
-
-            dhcp_mon_status_t dhcp_mon_status = dhcp_devman_get_status();
-            switch (dhcp_mon_status)
-            {
-            case DHCP_MON_STATUS_UNHEALTHY:
-                if (++count > dhcp_unhealthy_max_count) {
-                    syslog(LOG_ALERT, "DHCP Relay is not healthy after %d health checks\n", count);
-                }
-                break;
-            case DHCP_MON_STATUS_HEALTHY:
-                if (count > 0) {
-//                    syslog(LOG_INFO, "DHCP Relay became healthy after %d health checks\n", count);
-                    count = 0;
-                }
-                break;
-            case DHCP_MON_STATUS_INDETERMINATE:
-                if (count > 0) {
-//                    syslog(LOG_DEBUG, "DHCP Relay stays healthy after indeterminate status\n");
-                }
-                break;
-            default:
-                syslog(LOG_ERR, "DHCP Relay returned unknown status %d\n", dhcp_mon_status);
-                break;
-            }
-        } else {
-            syslog(LOG_ERR, "Received unknown signal %d\n", sig);
+    switch (dhcp_mon_status)
+    {
+    case DHCP_MON_STATUS_UNHEALTHY:
+        if (++count > dhcp_unhealthy_max_count) {
+            syslog(LOG_ALERT, "DHCP Relay is not healthy after %d health checks\n", count);
         }
+        break;
+    case DHCP_MON_STATUS_HEALTHY:
+        if (count > 0) {
+//            syslog(LOG_INFO, "DHCP Relay became healthy after %d health checks\n", count);
+            count = 0;
+        }
+        break;
+    case DHCP_MON_STATUS_INDETERMINATE:
+        if (count > 0) {
+//            syslog(LOG_DEBUG, "DHCP Relay stays healthy after indeterminate status\n");
+        }
+        break;
+    default:
+        syslog(LOG_ERR, "DHCP Relay returned unknown status %d\n", dhcp_mon_status);
+        break;
     }
-
-    pthread_exit(NULL);
 }
 
 /**
@@ -113,22 +96,32 @@ static void* dhcp_mon_process(void *arg)
  */
 int dhcp_mon_init(int window_sec, int max_count)
 {
-    int rv = 0;
+    int rv = -1;
 
-    sigset_t sigset;
-    pthread_t sig_thread;
+    do {
+        window_interval_sec = window_sec;
+        dhcp_unhealthy_max_count = max_count;
 
-    /* mask SIGALRM in all threads by default */
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGALRM);
-    sigprocmask(SIG_BLOCK, &sigset, NULL);
+        base = event_base_new();
+        if (base == NULL) {
+            syslog(LOG_ERR, "Could not initialize libevent!\n");
+            break;
+        }
 
-    window_interval_sec = window_sec;
-    dhcp_unhealthy_max_count = max_count;
+        ev_sigint = evsignal_new(base, SIGINT, signal_callback, base);
+        if (ev_sigint == NULL) {
+            syslog(LOG_ERR, "Could not event signal libevent!\n");
+            break;
+        }
 
-    dhcp_mon_active = 1;
-    /* create SIGALRM looper thread */
-    rv = pthread_create(&sig_thread, NULL, dhcp_mon_process, NULL);
+        ev_timeout = event_new(base, -1, EV_PERSIST, timeout_callback, base);
+        if (ev_timeout == NULL) {
+            syslog(LOG_ERR, "Could not event timer libevent!\n");
+            break;
+        }
+
+        rv = 0;
+    } while (0);
 
     return rv;
 }
@@ -136,11 +129,40 @@ int dhcp_mon_init(int window_sec, int max_count)
 /**
  * @code dhcp_mon_shutdown();
  *
- * @brief shuts down monitoring thread
- *
- * @return none
+ * @brief shuts down libevent loop
  */
 void dhcp_mon_shutdown()
 {
     dhcp_mon_active = 0;
+    event_base_free(base);
+}
+
+/**
+ * @code dhcp_mon_start(snaplen);
+ *
+ * @brief start monitoring DHCP Relay
+ */
+void dhcp_mon_start(int snaplen)
+{
+    if (dhcp_devman_start_capture(snaplen, base) == 0) {
+        evsignal_add(ev_sigint, NULL);
+
+        struct timeval event_time;
+        event_time.tv_sec = window_interval_sec;
+        event_time.tv_usec = 0;
+
+        evtimer_add(ev_timeout, &event_time);
+
+        event_base_dispatch(base);
+    }
+}
+
+/**
+ * @code dhcp_mon_stop();
+ *
+ * @brief stop monitoring DHCP Relay
+ */
+void dhcp_mon_stop()
+{
+    event_base_loopexit(base, NULL);
 }
