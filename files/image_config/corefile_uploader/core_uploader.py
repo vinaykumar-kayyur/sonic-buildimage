@@ -36,6 +36,9 @@ cwd = []
 
 HOURS_4 = (4 * 60 * 60)
 PAUSE_ON_FAIL = (60 * 60)
+WAIT_FILE_WRITE1 = (10 * 60)
+WAIT_FILE_WRITE2= (5 * 60)
+POLL_SLEEP = (60 * 60)
 MAX_RETRIES = 5
 
 log_level = syslog.LOG_DEBUG
@@ -116,7 +119,7 @@ class Watcher:
         self.observer.start()
         try:
             while True:
-                time.sleep(5)
+                time.sleep(POLL_SLEEP)
         except:
             self.observer.stop()
             log_err("Error in watcher")
@@ -184,15 +187,21 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def wait_for_file_write_complete(path):
-        ct_size = -1
+        mtime = 0
 
-        while ct_size != os.path.getsize(path):
-            ct_size = os.path.getsize(path)
-            time.sleep(2)
+        # Sleep for ample time enough for file dump to complete.
+        time.sleep(WAIT_FILE_WRITE1)
 
-        time.sleep(2)
-        if ct_size != os.path.getsize(path):
+        # Give another chance & poll until mtime stabilizes
+        while mtime != os.stat(path).st_mtime:
+            mtime = os.stat(path).st_mtime
+            time.sleep(10)
+
+        # A safety pause for double confirmation
+        time.sleep(WAIT_FILE_WRITE2)
+        if mtime != os.stat(path).st_mtime:
             raise Exception("Dump file creation is too slow: " + path)
+            # Give up as something is terribly wrong with this file.
 
         log_debug("File write complete - " +  path)
 
