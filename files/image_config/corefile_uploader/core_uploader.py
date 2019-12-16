@@ -183,6 +183,7 @@ class Handler(FileSystemEventHandler):
         elif event.event_type == 'created':
             # Take any action here when a file is first created.
             log_debug("Received create event - " +  event.src_path)
+            Handler.wait_for_file_write_complete(event.src_path)
             Handler.handle_file(event.src_path)
 
 
@@ -209,9 +210,6 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def handle_file(path):
-
-        Handler.wait_for_file_write_complete(path)
-
         lpath = "/".join(cwd)
         make_new_dir(lpath)
         os.chdir(lpath)
@@ -233,7 +231,6 @@ class Handler(FileSystemEventHandler):
 
         Handler.upload_file(tarf_name, tarf_name)
 
-        os.rename(path, UPLOAD_PREFIX + path)
         log_debug("File uploaded - " +  path)
         os.chdir(INIT_CWD)
 
@@ -243,7 +240,7 @@ class Handler(FileSystemEventHandler):
         i = 0
         fail_msg = ""
         
-        while i <= MAX_RETRIES:
+        while true:
             try:
                 svc = FileService(account_name=acctname, account_key=acctkey)
 
@@ -257,14 +254,14 @@ class Handler(FileSystemEventHandler):
 
                 svc.create_file_from_path(sharename, "/".join(l), fname, fpath)
                 log_debug("Remote file created: name{} path{}".format(fname, fpath))
+                os.rename(path, UPLOAD_PREFIX + path)
                 break
 
             except Exception as e:
-                log_err("core uploader failed: Failed during upload (" + str(e) +")")
-                fail_msg = str(e)
+                log_err("core uploader failed: Failed during upload (" + fpath + ") err: ("+ str(e) +") retry:" + str(retry))
+                if not os.path.exists(fpath):
+                    break
                 i += 1
-                if i >= MAX_RETRIES:
-                    raise Exception("Failed while uploading. msg(" + fail_msg + ") after " + str(i) + " retries")
                 time.sleep(PAUSE_ON_FAIL)
 
 
