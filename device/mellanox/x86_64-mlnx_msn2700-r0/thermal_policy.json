@@ -27,19 +27,6 @@
             ]
         },
         {
-            "name": "all fan absence",
-            "conditions": [
-                {
-                    "type": "fan.all.absence"
-                }
-            ],
-            "actions": [
-                {
-                    "type": "switch.shutdown"
-                }
-            ]
-        },
-        {
             "name": "any psu absence",
             "conditions": [
                 {
