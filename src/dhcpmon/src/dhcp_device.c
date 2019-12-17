@@ -47,29 +47,29 @@
  * tcpdump command: 'tcpdump -dd "udp and (port 67 or port 68)"'
  */
 static struct sock_filter dhcp_bpf_code[] = {
-    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c }, // (000) ldh      [12]
-    { .code = OP_JEQ,  .jt = 0,  .jf = 7,  .k = 0x000086dd }, // (001) jeq      #0x86dd          jt 2	jf 9
-    { .code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000014 }, // (002) ldb      [20]
-    { .code = OP_JEQ,  .jt = 0,  .jf = 18, .k = 0x00000011 }, // (003) jeq      #0x11            jt 4	jf 22
-    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000036 }, // (004) ldh      [54]
-    { .code = OP_JEQ,  .jt = 15, .jf = 0,  .k = 0x00000043 }, // (005) jeq      #0x43            jt 21	jf 6
-    { .code = OP_JEQ,  .jt = 14, .jf = 0,  .k = 0x00000044 }, // (006) jeq      #0x44            jt 21	jf 7
-    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000038 }, // (007) ldh      [56]
-    { .code = OP_JEQ,  .jt = 12, .jf = 11, .k = 0x00000043 }, // (008) jeq      #0x43            jt 21	jf 20
-    { .code = OP_JEQ,  .jt = 0,  .jf = 12, .k = 0x00000800 }, // (009) jeq      #0x800           jt 10	jf 22
-    { .code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000017 }, // (010) ldb      [23]
-    { .code = OP_JEQ,  .jt = 0,  .jf = 10, .k = 0x00000011 }, // (011) jeq      #0x11            jt 12	jf 22
-    { .code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000014 }, // (012) ldh      [20]
-    { .code = OP_JSET, .jt = 8,  .jf = 0,  .k = 0x00001fff }, // (013) jset     #0x1fff          jt 22	jf 14
-    { .code = OP_LDXB, .jt = 0,  .jf = 0,  .k = 0x0000000e }, // (014) ldxb     4*([14]&0xf)
-    { .code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x0000000e }, // (015) ldh      [x + 14]
-    { .code = OP_JEQ,  .jt = 4,  .jf = 0,  .k = 0x00000043 }, // (016) jeq      #0x43            jt 21	jf 17
-    { .code = OP_JEQ,  .jt = 3,  .jf = 0,  .k = 0x00000044 }, // (017) jeq      #0x44            jt 21	jf 18
-    { .code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x00000010 }, // (018) ldh      [x + 16]
-    { .code = OP_JEQ,  .jt = 1,  .jf = 0,  .k = 0x00000043 }, // (019) jeq      #0x43            jt 21	jf 20
-    { .code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044 }, // (020) jeq      #0x44            jt 21	jf 22
-    { .code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000 }, // (021) ret      #262144
-    { .code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000 }, // (022) ret      #0
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c}, // (000) ldh      [12]
+    {.code = OP_JEQ,  .jt = 0,  .jf = 7,  .k = 0x000086dd}, // (001) jeq      #0x86dd          jt 2	jf 9
+    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000014}, // (002) ldb      [20]
+    {.code = OP_JEQ,  .jt = 0,  .jf = 18, .k = 0x00000011}, // (003) jeq      #0x11            jt 4	jf 22
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000036}, // (004) ldh      [54]
+    {.code = OP_JEQ,  .jt = 15, .jf = 0,  .k = 0x00000043}, // (005) jeq      #0x43            jt 21	jf 6
+    {.code = OP_JEQ,  .jt = 14, .jf = 0,  .k = 0x00000044}, // (006) jeq      #0x44            jt 21	jf 7
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000038}, // (007) ldh      [56]
+    {.code = OP_JEQ,  .jt = 12, .jf = 11, .k = 0x00000043}, // (008) jeq      #0x43            jt 21	jf 20
+    {.code = OP_JEQ,  .jt = 0,  .jf = 12, .k = 0x00000800}, // (009) jeq      #0x800           jt 10	jf 22
+    {.code = OP_LDB,  .jt = 0,  .jf = 0,  .k = 0x00000017}, // (010) ldb      [23]
+    {.code = OP_JEQ,  .jt = 0,  .jf = 10, .k = 0x00000011}, // (011) jeq      #0x11            jt 12	jf 22
+    {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x00000014}, // (012) ldh      [20]
+    {.code = OP_JSET, .jt = 8,  .jf = 0,  .k = 0x00001fff}, // (013) jset     #0x1fff          jt 22	jf 14
+    {.code = OP_LDXB, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (014) ldxb     4*([14]&0xf)
+    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x0000000e}, // (015) ldh      [x + 14]
+    {.code = OP_JEQ,  .jt = 4,  .jf = 0,  .k = 0x00000043}, // (016) jeq      #0x43            jt 21	jf 17
+    {.code = OP_JEQ,  .jt = 3,  .jf = 0,  .k = 0x00000044}, // (017) jeq      #0x44            jt 21	jf 18
+    {.code = OP_LDHI, .jt = 0,  .jf = 0,  .k = 0x00000010}, // (018) ldh      [x + 16]
+    {.code = OP_JEQ,  .jt = 1,  .jf = 0,  .k = 0x00000043}, // (019) jeq      #0x43            jt 21	jf 20
+    {.code = OP_JEQ,  .jt = 0,  .jf = 1,  .k = 0x00000044}, // (020) jeq      #0x44            jt 21	jf 22
+    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00040000}, // (021) ret      #262144
+    {.code = OP_RET,  .jt = 0,  .jf = 0,  .k = 0x00000000}, // (022) ret      #0
 };
 
 /** Filter program socket struct */
@@ -79,14 +79,14 @@ static struct sock_fprog dhcp_sock_bfp = {
 
 /** global aggregate counter for DHCP interfaces */
 static dhcp_device_counters_t glob_counters[DHCP_DIR_COUNT] = {
-    [DHCP_RX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
-    [DHCP_TX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
+    [DHCP_RX] = {.discover = 0, .offer = 0, .request = 0, .ack = 0},
+    [DHCP_TX] = {.discover = 0, .offer = 0, .request = 0, .ack = 0},
 };
 
 /** global aggregate counter snapshot for DHCP interfaces */
 static dhcp_device_counters_t glob_counters_snapshot[DHCP_DIR_COUNT] = {
-    [DHCP_RX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
-    [DHCP_TX] = { .discover = 0, .offer = 0, .request = 0, .ack = 0 },
+    [DHCP_RX] = {.discover = 0, .offer = 0, .request = 0, .ack = 0},
+    [DHCP_TX] = {.discover = 0, .offer = 0, .request = 0, .ack = 0},
 };
 
 /**
@@ -156,7 +156,7 @@ static void read_callback(int fd, short event, void *arg)
     ssize_t buffer_sz;
 
     while ((event == EV_READ) &&
-           ((buffer_sz = recv(fd, context->buffer, context->snaplen, MSG_DONTWAIT | MSG_TRUNC)) > 0)) {
+           ((buffer_sz = recv(fd, context->buffer, context->snaplen, MSG_DONTWAIT)) > 0)) {
         struct ether_header *ethhdr = (struct ether_header*) context->buffer;
         struct udphdr *udp = (struct udphdr*) (context->buffer + UDP_START_OFFSET);
         int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;

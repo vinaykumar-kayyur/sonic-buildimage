@@ -111,7 +111,6 @@ int dhcp_devman_start_capture(int snaplen, struct event_base *base)
                        int_ptr->name, int_ptr->dev_context->ip, int_ptr->dev_context->mac[0],
                        int_ptr->dev_context->mac[1], int_ptr->dev_context->mac[2], int_ptr->dev_context->mac[3],
                        int_ptr->dev_context->mac[4], int_ptr->dev_context->mac[5]);
-
             }
             else {
                 break;

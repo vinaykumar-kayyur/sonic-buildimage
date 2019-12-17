@@ -11,7 +11,6 @@ XS-Go-Import-Path: github.com/Azure/sonic-buildimage
 Package: sonic-dhcpmon
 Architecture: any
 Built-Using: ${misc:Built-Using}
-Depends: libc6,
-         libpcap-dev,
-         libexplain-dev
+Depends: libexplain51,
+         libevent-2.0-5
 Description: SONiC DHCP Monitor
