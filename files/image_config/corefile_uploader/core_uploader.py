@@ -229,18 +229,18 @@ class Handler(FileSystemEventHandler):
         tar.close()
         log_debug("Tar file for upload created: " + tarf_name)
 
-        Handler.upload_file(tarf_name, tarf_name)
+        Handler.upload_file(tarf_name, tarf_name, path)
 
         log_debug("File uploaded - " +  path)
         os.chdir(INIT_CWD)
 
     @staticmethod
-    def upload_file(fname, fpath):
+    def upload_file(fname, fpath, coref):
         daemonname = fname.split(".")[0]
         i = 0
         fail_msg = ""
         
-        while true:
+        while True:
             try:
                 svc = FileService(account_name=acctname, account_key=acctkey)
 
@@ -254,11 +254,12 @@ class Handler(FileSystemEventHandler):
 
                 svc.create_file_from_path(sharename, "/".join(l), fname, fpath)
                 log_debug("Remote file created: name{} path{}".format(fname, fpath))
-                os.rename(path, UPLOAD_PREFIX + path)
+                newcoref = os.path.dirname(coref) + "/" + UPLOAD_PREFIX + os.path.basename(coref)
+                os.rename(coref, newcoref)
                 break
 
-            except Exception as e:
-                log_err("core uploader failed: Failed during upload (" + fpath + ") err: ("+ str(e) +") retry:" + str(retry))
+            except Exception as ex:
+                log_err("core uploader failed: Failed during upload (" + coref + ") err: ("+ str(ex) +") retry:" + str(i))
                 if not os.path.exists(fpath):
                     break
                 i += 1
