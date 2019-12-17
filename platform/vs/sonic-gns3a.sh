@@ -39,7 +39,7 @@ echo "
 {
     \"name\": \"SONiC\",
     \"category\": \"router\",
-    \"description\": \"SONiC Virtual Switch/Router\n\",
+    \"description\": \"SONiC Virtual Switch/Router\",
     \"vendor_name\": \"SONiC\",
     \"vendor_url\": \"https://azure.github.io/SONiC/\",
     \"product_name\": \"SONiC\",
