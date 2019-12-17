@@ -14,14 +14,6 @@
 case "$1" in
 start)
     echo -n "Setting up board... "
-    if [ `grep -c usemsi /etc/init.d/opennsl-modules` = "0" ]; then
-        sed -i "s/debug=4 dma_debug=1/debug=4 dma_debug=1 usemsi=1/g" /etc/init.d/opennsl-modules
-        rmmod linux_knet_cb
-        rmmod linux_bcm_knet
-        rmmod linux_user_bde
-        rmmod linux_kernel_bde
-        /etc/init.d/opennsl-modules start
-    fi
     depmod -a
     rmmod i2c-i801
     rmmod i2c-ismt
