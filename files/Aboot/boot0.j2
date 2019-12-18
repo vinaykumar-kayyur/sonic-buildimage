@@ -507,14 +507,19 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7280cr3k_32d4
         flash_size=7382
     fi
-    if in_array "$platform" "rook" "magpie" "woodpecker"; then
+    if [ "$sid" = "OtterLake" ]; then
+        aboot_machine=arista_7800_sup
+        flash_size=30000
+        sonic_mode=$supervisor_mode
+    fi
+    if in_array "$platform" "rook" "magpie" "woodpecker" "sprucefish"; then
         cmdline_add tsc=reliable
         cmdline_add pcie_ports=native
         cmdline_add rhash_entries=1
         cmdline_add usb-storage.delay_use=0
         cmdline_add reassign_prefmem
     fi
-    if in_array "$platform" "rook"; then
+    if in_array "$platform" "rook" "sprucefish"; then
         cmdline_add iommu=on
         cmdline_add intel_iommu=on
         read_system_eeprom
