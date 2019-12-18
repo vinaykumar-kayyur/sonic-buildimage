@@ -1,2 +1,5 @@
 __all__ = ["platform", "chassis"]
-from sonic_platform import *
+try:
+    from sonic_platform import *
+except ImportError as e:
+    pass
