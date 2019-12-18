@@ -108,6 +108,10 @@ ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
 endif
 
+ifeq ($(SONIC_ENABLE_SFLOW),y)
+ENABLE_SFLOW = y
+endif
+
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
 ifneq ($(CONFIGURED_PLATFORM), undefined)
@@ -186,12 +190,14 @@ $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
 $(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
+$(info "ENABLE_ZTP"                      : "$(ENABLE_ZTP)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
+$(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
@@ -609,15 +615,18 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(SONIC_DEVICE_DATA) \
                 $(PYTHON_CLICK) \
                 $(IFUPDOWN2) \
+                $(KDUMP_TOOLS) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
+	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(DEBS_PATH)/,$(SONIC_ZTP))) \
 	$(addprefix $(STRETCH_FILES_PATH)/, $(if $(filter $(CONFIGURED_ARCH),amd64), $(IXGBE_DRIVER))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY2))
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export debs_path="$(STRETCH_DEBS_PATH)"
@@ -632,6 +641,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
 	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
+	export enable_system_telemetry="$(ENABLE_SYSTEM_TELEMETRY)"
+	export enable_ztp="$(ENABLE_ZTP)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
 	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($*_INSTALLS))"

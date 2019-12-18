@@ -43,6 +43,7 @@
 #define IOREGION_LENGTH           0x4
 #define SMF_ADDR_REG_OFFSET         0
 #define SMF_READ_DATA_REG_OFFSET    2
+#define SMF_WRITE_DATA_REG_OFFSET   3
 #define SMF_REG_ADDR            0x200
 #define SMF_POR_SRC_REG         0x209
 #define SMF_RST_SRC_REG         0x20A
@@ -170,6 +171,8 @@
 #define EEPROM_LABEL_REV_SIZE      3
 #define EEPROM_PPID_SIZE           28
 
+/* Mailbox PowerOn Reason */
+#define TRACK_POWERON_REASON    0x05FF
 
 
 unsigned long  *mmio;
@@ -461,6 +464,18 @@ struct smf_sio_data {
         enum kinds kind;
 };
 
+static int smf_write_reg(struct smf_data *data, u16 reg, u16 dev_data)
+{
+        int res = 0;
+
+        mutex_lock(&data->lock);
+        outb_p(reg>> 8, data->addr + SMF_ADDR_REG_OFFSET);
+        outb_p(reg & 0xff, data->addr + SMF_ADDR_REG_OFFSET + 1);
+        outb_p(dev_data & 0xff, data->addr + SMF_WRITE_DATA_REG_OFFSET);
+        mutex_unlock(&data->lock);
+
+        return res;
+}
 
 static int smf_read_reg(struct smf_data *data, u16 reg) 
 { 
@@ -552,6 +567,40 @@ static ssize_t show_power_on_reason(struct device *dev,
     return sprintf(buf, "%x\n", ret);
 }
 
+/* SMF Mailbox Power ON Reason */
+static ssize_t set_mb_poweron_reason(struct device *dev,
+              struct device_attribute *devattr, const char *buf, size_t count)
+{
+    int              err = 0;
+    unsigned int     dev_data = 0;
+    struct smf_data *data = dev_get_drvdata(dev);
+
+    err = kstrtouint(buf, 16, &dev_data);
+    if (err)
+        return err;
+
+    err = smf_write_reg(data, TRACK_POWERON_REASON, dev_data);
+
+    if(err < 0)
+       return err;
+
+    return count;
+}
+
+static ssize_t show_mb_poweron_reason(struct device *dev,
+                struct device_attribute *devattr, char *buf)
+{
+    unsigned int     ret = 0;
+    struct smf_data *data = dev_get_drvdata(dev);
+
+    ret = smf_read_reg(data, TRACK_POWERON_REASON);
+
+    if(ret < 0)
+       return ret;
+
+    return sprintf(buf, "0x%x\n", ret);
+}
+
 /* FANIN ATTR */
 static ssize_t
 show_fan_label(struct device *dev, struct device_attribute *attr, char *buf)
@@ -582,7 +631,7 @@ static ssize_t show_fan(struct device *dev,
                         ret = smf_read_reg16(data, PSU_2_FAN_SPEED);
                         break;
                 case 12:
-                        ret = ~smf_read_reg(data, FAN_TRAY_PRESENCE);
+                        ret = (~smf_read_reg(data, FAN_TRAY_PRESENCE) & 0xff);
                         export_hex = 1;
                         break; 
 		       
@@ -633,14 +682,26 @@ static ssize_t show_fan_alarm(struct device *dev,
         struct smf_data *data = dev_get_drvdata(dev);
         int ret, psu_fan_status=0;
 
-        if(index < 2)
-                psu_fan_status = smf_read_reg(data, FAN_STATUS_GROUP_B);
+        if (data->kind == z9100smf) {
+                if ((index % 2) == 0)
+                        index = index / 2;
+                else
+                        index = (index / 2) + 5;
+        }
+
+        if (data->kind == s6100smf)
+                index = index / 2;
+
+        if (index > 7) {
+                psu_fan_status = ~smf_read_reg(data, FAN_STATUS_GROUP_A);
+                index = index % 8;
+        } else
+                psu_fan_status = ~smf_read_reg(data, FAN_STATUS_GROUP_B);
 
         if (psu_fan_status & (1 << (index)))
                 ret=0;
-
-        if (ret < 0)
-                return ret;
+        else
+                ret=1;
 
         return sprintf(buf, "%d\n", ret);  
 }
@@ -677,12 +738,12 @@ static ssize_t show_psu_fan(struct device *dev,
 
         if (index < FAN_601_FAULT){                               
                 fan_status = smf_read_reg(data, PSU_1_FAN_STATUS);
-                ret = fan_status & (1 << index);
+                ret = (fan_status >> index) & 1;
 
         }
         else{ 
                 fan_status = smf_read_reg(data, PSU_2_FAN_STATUS);
-                ret = fan_status & (1 << (index - 3));
+                ret = (fan_status >> (index - 3)) & 1;
         }
 
         if (ret < 0)
@@ -1270,17 +1331,15 @@ static ssize_t show_current(struct device *dev,
                 else
                         ret = smf_read_reg16(data, SWITCH_CURRENT_Z9100 + index * 2);
         else if (index < CURR602_INPUT)
-                curr = smf_read_reg16(data, PSU_1_INPUT_CURRENT + (index % 4) * 2);
+                ret = smf_read_reg16(data, PSU_1_INPUT_CURRENT + (index % 2) * 2);
         else
-                curr = smf_read_reg16(data, PSU_2_INPUT_CURRENT + (index % 4) * 2);
+                ret = smf_read_reg16(data, PSU_2_INPUT_CURRENT + (index % 4) * 2);
 
 
         if (ret < 0)
                 return ret;
 
-        /* TODO: docs say 10mA, value look like A? */
-        if(index < 2)
-                curr = ret*1000;
+        curr = ret*10;
 
         return sprintf(buf, "%d\n", curr);
 }
@@ -1981,11 +2040,16 @@ static SENSOR_DEVICE_ATTR(smf_reset_reason, S_IRUGO, show_reset_reason, NULL, 1)
 static SENSOR_DEVICE_ATTR(smf_poweron_reason, S_IRUGO,
                                             show_power_on_reason, NULL, 1);
 
+/* Mailbox Power tracking Reason */
+static SENSOR_DEVICE_ATTR(mb_poweron_reason, S_IRUGO|S_IWUSR,
+                            show_mb_poweron_reason, set_mb_poweron_reason, 0);
+
 static struct attribute *smf_dell_attrs[] = {
         &sensor_dev_attr_smf_version.dev_attr.attr,
         &sensor_dev_attr_smf_firmware_ver.dev_attr.attr,
         &sensor_dev_attr_smf_reset_reason.dev_attr.attr,
         &sensor_dev_attr_smf_poweron_reason.dev_attr.attr,
+        &sensor_dev_attr_mb_poweron_reason.dev_attr.attr,
         &sensor_dev_attr_fan_tray_presence.dev_attr.attr,
         &sensor_dev_attr_fan1_airflow.dev_attr.attr,
         &sensor_dev_attr_fan3_airflow.dev_attr.attr,

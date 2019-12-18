@@ -157,6 +157,9 @@ RUN apt-get update && apt-get install -y \
 {%- if CONFIGURED_ARCH == "amd64" %}
         linux-compiler-gcc-6-x86 \
 {%- endif %}
+{%- if CONFIGURED_ARCH == "armhf" %}
+        linux-compiler-gcc-6-arm \
+{%- endif %}
         linux-kbuild-4.9 \
 # teamd build
         libdaemon-dev \
@@ -286,7 +289,17 @@ RUN apt-get update && apt-get install -y \
         rrdtool \
 # For smartmontools 6.6-1
         automake1.11 \
-        libselinux1-dev
+        libselinux1-dev \
+# For kdump-tools
+        liblzo2-dev
+
+## Config dpkg
+## install the configuration file if it’s currently missing
+RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confmiss"
+## combined with confold: overwrite configuration files that you have not modified
+RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confdef"
+## do not modify the current configuration file, the new version is installed with a .dpkg-dist suffix
+RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confold"
 
 # For smartmontools 6.6-1
 RUN apt-get -t stretch-backports install -y debhelper
@@ -312,7 +325,7 @@ RUN export VERSION=1.11.5 \
 
 # For p4 build
 RUN pip install \
-        ctypesgen \
+        ctypesgen==0.r125 \
         crc16
 
 # For sonic config engine testing
