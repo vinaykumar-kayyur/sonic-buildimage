@@ -66,3 +66,6 @@
 [submodule "platform/mellanox/mlnx-sai/SAI-Implementation"]
 	path = platform/mellanox/mlnx-sai/SAI-Implementation
 	url = https://github.com/Mellanox/SAI-Implementation
+[submodule "src/sonic-stp"]
+    path = src/sonic-stp
+    url = https://github.com/Azure/sonic-stp
