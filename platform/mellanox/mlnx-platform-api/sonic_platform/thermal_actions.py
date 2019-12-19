@@ -25,6 +25,10 @@ class SetFanSpeedAction(ThermalPolicyActionBase):
         :return:
         """
         if SetFanSpeedAction.JSON_FIELD_SPEED in json_obj:
+            speed = float(json_obj[SetFanSpeedAction.JSON_FIELD_SPEED])
+            if speed < 0 or speed > 100:
+                raise ValueError('SetFanSpeedAction invalid speed value {} in policy.json, valid value should be [0, 100]'.
+                                 format(speed))
             self.speed = float(json_obj[SetFanSpeedAction.JSON_FIELD_SPEED])
         else:
             raise ValueError('SetFanSpeedAction missing mandatory field {} in policy.json'.
