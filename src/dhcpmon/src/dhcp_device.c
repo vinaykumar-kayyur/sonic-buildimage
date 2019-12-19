@@ -107,25 +107,25 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context, const u_char *
     case 1:
         context->counters[dir].discover++;
         if ((context->is_uplink && dir == DHCP_TX) || (!context->is_uplink && dir == DHCP_RX)) {
-            __atomic_fetch_add(&glob_counters[dir].discover, 1, __ATOMIC_SEQ_CST);
+            glob_counters[dir].discover++;
         }
         break;
     case 2:
         context->counters[dir].offer++;
         if ((!context->is_uplink && dir == DHCP_TX) || (context->is_uplink && dir == DHCP_RX)) {
-            __atomic_fetch_add(&glob_counters[dir].offer, 1, __ATOMIC_SEQ_CST);
+            glob_counters[dir].offer++;
         }
         break;
     case 3:
         context->counters[dir].request++;
         if ((context->is_uplink && dir == DHCP_TX) || (!context->is_uplink && dir == DHCP_RX)) {
-            __atomic_fetch_add(&glob_counters[dir].request, 1, __ATOMIC_SEQ_CST);
+            glob_counters[dir].request++;
         }
         break;
     case 5:
         context->counters[dir].ack++;
         if ((!context->is_uplink && dir == DHCP_TX) || (context->is_uplink && dir == DHCP_RX)) {
-            __atomic_fetch_add(&glob_counters[dir].ack, 1, __ATOMIC_SEQ_CST);
+            glob_counters[dir].ack++;
         }
         break;
     case 4: // type: Decline
@@ -176,7 +176,7 @@ static void read_callback(int fd, short event, void *arg)
                                            DHCP_TX : DHCP_RX;
             int offset = 0;
             int stop_dhcp_processing = 0;
-            while ((offset < (dhcp_option_sz + 1) )&& dhcp_option[offset] != 255) {
+            while ((offset < (dhcp_option_sz + 1)) && dhcp_option[offset] != 255) {
                 switch (dhcp_option[offset])
                 {
                 case 53:
@@ -393,17 +393,21 @@ int dhcp_device_init(dhcp_device_context_t **context,
     if ((context != NULL) && (strlen(intf) < sizeof(dev_context->intf))) {
 
         dev_context = (dhcp_device_context_t *) malloc(sizeof(dhcp_device_context_t));
-        if ((dev_context != NULL) &&
-            (init_socket(dev_context, intf, snaplen, base) == 0       ) &&
-            (initialize_intf_mac_and_ip_addr(dev_context) == 0)) {
+        if (dev_context != NULL) {
+            if ((init_socket(dev_context, intf, snaplen, base) == 0) &&
+                (initialize_intf_mac_and_ip_addr(dev_context) == 0 )    ) {
 
-            dev_context->is_uplink = is_uplink;
+                dev_context->is_uplink = is_uplink;
 
-            memset(&dev_context->counters, 0, sizeof(dev_context->counters));
-            memset(&dev_context->counters_snapshot, 0, sizeof(dev_context->counters_snapshot));
+                memset(&dev_context->counters, 0, sizeof(dev_context->counters));
+                memset(&dev_context->counters_snapshot, 0, sizeof(dev_context->counters_snapshot));
 
-            *context = dev_context;
-            rv = 0;
+                *context = dev_context;
+                rv = 0;
+            }
+        }
+        else {
+            syslog(LOG_ALERT, "malloc: failed to allocated device context memory for '%s'", dev_context->intf);
         }
     }
 

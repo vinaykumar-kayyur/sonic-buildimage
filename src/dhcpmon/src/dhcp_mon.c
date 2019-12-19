@@ -20,8 +20,6 @@
 static int window_interval_sec = 12;
 /** dhcp_unhealthy_max_count max count of consecutive unhealthy statuses before reporting to syslog */
 static int dhcp_unhealthy_max_count = 10;
-/** dhcp_mon_active control monitoring thread main loop */
-static int dhcp_mon_active = 0;
 /** libevent base struct */
 static struct event_base *base;
 /** libevent timeout event struct */
@@ -86,8 +84,8 @@ static void timeout_callback(evutil_socket_t fd, short event, void *arg)
 /**
  * @code dhcp_mon_init(window_sec, max_count);
  *
- * initializes monitoring thread that continuously collects dhcp relay health status every window_sec seconds.
- * It also write to syslog when dhcp relay has been unhealthy for consecutive max_count checks.
+ * initializes event base and periodic timer event that continuously collects dhcp relay health status every window_sec
+ * seconds. It also writes to syslog when dhcp relay has been unhealthy for consecutive max_count checks.
  *
  */
 int dhcp_mon_init(int window_sec, int max_count)
@@ -129,7 +127,6 @@ int dhcp_mon_init(int window_sec, int max_count)
  */
 void dhcp_mon_shutdown()
 {
-    dhcp_mon_active = 0;
     event_base_free(base);
 }
 

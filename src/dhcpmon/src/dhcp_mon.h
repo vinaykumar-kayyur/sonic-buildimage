@@ -11,8 +11,9 @@
 /**
  * @code dhcp_mon_init(window_ssec, max_count);
  *
- * @brief initializes monitoring thread that continuously collects dhcp relay health status every window_sec seconds.
- *        It also write to syslog when dhcp relay has been unhealthy for consecutive max_count checks.
+ * @brief initializes event base and periodic timer event that continuously collects dhcp relay health status every
+ *        window_sec seconds. It also writes to syslog when dhcp relay has been unhealthy for consecutive max_count
+ *        checks.
  *
  * @param window_sec time interval between health checks
  * @param max_count max count of consecutive unhealthy statuses before reporting to syslog

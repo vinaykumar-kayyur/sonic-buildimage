@@ -88,6 +88,9 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
 
         rv = 0;
     }
+    else {
+        syslog(LOG_ALERT, "malloc: failed to allocate memory for intf '%s'\n", name);
+    }
 
     return rv;
 }
