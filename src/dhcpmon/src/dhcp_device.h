@@ -60,7 +60,7 @@ typedef struct
 } dhcp_device_context_t;
 
 /**
- * @code dhcp_device_init(context, intf, snaplen, timeout_ms, is_uplink);
+ * @code dhcp_device_init(context, intf, snaplen, timeout_ms, is_uplink, base);
  *
  * @brief initializes device (interface) that handles packet capture per interface.
  *
@@ -68,6 +68,7 @@ typedef struct
  * @param intf              interface name
  * @param snaplen           length of packet capture
  * @param is_uplink         uplink interface
+ * @param base              pointer to libevent base
  *
  * @return 0 on success, otherwise for failure
  */

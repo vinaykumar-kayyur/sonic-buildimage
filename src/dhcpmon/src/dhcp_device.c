@@ -141,7 +141,7 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context, const u_char *
 /**
  * @code read_callback(fd, event, arg);
  *
- * @brief callback for libpcap which is called every time out in order to process queued packet capture
+ * @brief callback for libevent which is called every time out in order to read queued packet capture
  *
  * @param fd            socket to read from
  * @param event         libevent triggered event
@@ -377,7 +377,7 @@ static int initialize_intf_mac_and_ip_addr(dhcp_device_context_t *context)
 }
 
 /**
- * @code dhcp_device_init(context, intf, snaplen, is_uplink);
+ * @code dhcp_device_init(context, intf, snaplen, is_uplink, base);
  *
  * @brief initializes device (interface) that handles packet capture per interface.
  */

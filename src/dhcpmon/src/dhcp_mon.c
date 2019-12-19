@@ -72,14 +72,10 @@ static void timeout_callback(evutil_socket_t fd, short event, void *arg)
         break;
     case DHCP_MON_STATUS_HEALTHY:
         if (count > 0) {
-//            syslog(LOG_INFO, "DHCP Relay became healthy after %d health checks\n", count);
             count = 0;
         }
         break;
     case DHCP_MON_STATUS_INDETERMINATE:
-        if (count > 0) {
-//            syslog(LOG_DEBUG, "DHCP Relay stays healthy after indeterminate status\n");
-        }
         break;
     default:
         syslog(LOG_ERR, "DHCP Relay returned unknown status %d\n", dhcp_mon_status);
