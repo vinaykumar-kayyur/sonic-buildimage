@@ -392,6 +392,10 @@ if [ -f {{service}} ]; then
     echo "{{service}}" | sudo tee -a $GENERATED_SERVICE_FILE
 fi
 {% endfor %}
+
+# Remove services that are to be disabled by default
+sudo sed -i '/sflow.service/d' $GENERATED_SERVICE_FILE
+
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
