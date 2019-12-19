@@ -5,11 +5,11 @@
 # file: /etc/network/interfaces
 #
 {% endblock banner %}
+{% block mgmt_vrf %}
 {% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
 auto mgmt
 iface mgmt
     vrf-table 5000
-{% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
 # The loopback network interface for mgmt VRF that is required for applications like NTP
     up ip link add lo-m type dummy
     up ip link set dev lo-m master mgmt
@@ -17,7 +17,7 @@ iface mgmt
     up ip link set lo-m up
     down ip link delete dev lo-m
 {% endif %}
-{% endif %}
+{% endblock mgmt_vrf %}
 {% block loopback %}
 # The loopback network interface
 auto lo
