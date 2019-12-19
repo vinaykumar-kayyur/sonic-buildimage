@@ -1,0 +1,18 @@
+###############################################################################
+## Monit configuration for lldp container
+## process list:
+##	lldpd
+##	lldp-syncd
+##	lldpmgrd
+###############################################################################
+check process lldpd_monitor matching "lldpd: monitor"
+	if does not exist then alert
+
+check process lldpd_connected matching "lldpd: connected"
+	if does not exist then alert
+
+check process lldp_syncd matching "python2 -m lldp_syncd"
+	if does not exist then alert
+
+check process lldpmgrd matching "python /usr/bin/lldpmgrd"
+	if does not exist then alert
