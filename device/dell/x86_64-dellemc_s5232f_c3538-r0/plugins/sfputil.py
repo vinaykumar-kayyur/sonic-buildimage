@@ -208,7 +208,7 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
-    def get_transceiver_change_event(self,timeout=0):
+    def get_transceiver_change_event(self, timeout=0):
         port_dict = {}
         while True:
             for port_num in range(self.port_start, (self.port_end + 1)):
