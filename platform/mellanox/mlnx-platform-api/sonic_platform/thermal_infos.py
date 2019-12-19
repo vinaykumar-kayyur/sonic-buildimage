@@ -1,8 +1,8 @@
-from sonic_platform_base.sonic_thermal_control.thermal_info_base import ThermalInfoBase, thermal_info
+from sonic_platform_base.sonic_thermal_control.thermal_info_base import ThermalPolicyInfoBase, thermal_info
 
 
 @thermal_info('fan_info')
-class FanInfo(ThermalInfoBase):
+class FanInfo(ThermalPolicyInfoBase):
     """
     Fan information needed by thermal policy
     """
@@ -57,7 +57,7 @@ class FanInfo(ThermalInfoBase):
 
 
 @thermal_info('psu_info')
-class PsuInfo(ThermalInfoBase):
+class PsuInfo(ThermalPolicyInfoBase):
     """
     PSU information needed by thermal policy
     """
@@ -110,7 +110,7 @@ class PsuInfo(ThermalInfoBase):
 
 
 @thermal_info('chassis_info')
-class ChassisInfo(ThermalInfoBase):
+class ChassisInfo(ThermalPolicyInfoBase):
     """
     Chassis information needed by thermal policy
     """

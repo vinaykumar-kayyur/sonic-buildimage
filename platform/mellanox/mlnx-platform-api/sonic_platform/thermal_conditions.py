@@ -1,8 +1,8 @@
-from sonic_platform_base.sonic_thermal_control.thermal_condition_base import ThermalConditionBase, thermal_condition
+from sonic_platform_base.sonic_thermal_control.thermal_condition_base import ThermalPolicyConditionBase, thermal_condition
 
 
 @thermal_condition('fan.any.absence')
-class AnyFanAbsenceCondition(ThermalConditionBase):
+class AnyFanAbsenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import FanInfo
         if FanInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[FanInfo.INFO_NAME], FanInfo):
@@ -12,7 +12,7 @@ class AnyFanAbsenceCondition(ThermalConditionBase):
 
 
 @thermal_condition('fan.all.absence')
-class AllFanAbsenceCondition(ThermalConditionBase):
+class AllFanAbsenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import FanInfo
         if FanInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[FanInfo.INFO_NAME], FanInfo):
@@ -22,7 +22,7 @@ class AllFanAbsenceCondition(ThermalConditionBase):
 
 
 @thermal_condition('fan.all.presence')
-class AllFanPresenceCondition(ThermalConditionBase):
+class AllFanPresenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import FanInfo
         if FanInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[FanInfo.INFO_NAME], FanInfo):
@@ -32,7 +32,7 @@ class AllFanPresenceCondition(ThermalConditionBase):
 
 
 @thermal_condition('psu.any.absence')
-class AnyPsuAbsenceCondition(ThermalConditionBase):
+class AnyPsuAbsenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import PsuInfo
         if PsuInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[PsuInfo.INFO_NAME], PsuInfo):
@@ -42,7 +42,7 @@ class AnyPsuAbsenceCondition(ThermalConditionBase):
 
 
 @thermal_condition('psu.all.absence')
-class AllPsuAbsenceCondition(ThermalConditionBase):
+class AllPsuAbsenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import PsuInfo
         if PsuInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[PsuInfo.INFO_NAME], PsuInfo):
@@ -52,7 +52,7 @@ class AllPsuAbsenceCondition(ThermalConditionBase):
 
 
 @thermal_condition('psu.all.presence')
-class AllFanPresenceCondition(ThermalConditionBase):
+class AllFanPresenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import PsuInfo
         if PsuInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[PsuInfo.INFO_NAME], PsuInfo):
