@@ -1,0 +1,7 @@
+###############################################################################
+## Monit configuration for telemetry container
+## process list:
+##	telemetry
+###############################################################################
+check process telemetry matching "/usr/sbin/telemetry -logtostderr --insecure"
+	if does not exist then alert
