@@ -344,7 +344,7 @@ set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliv
 rm /files/etc/ssh/sshd_config/ciphers
 rm /files/etc/ssh/sshd_config/macs
 rm /files/etc/ssh/sshd_config/kexalgorithms
-set /files/etc/ssh/sshd_config/ciphers "aes192-ctr,aes256-ctr,aes256-ctr,aes256-gcm@openssh.com"
+set /files/etc/ssh/sshd_config/ciphers "aes192-ctr,aes256-ctr,aes256-gcm@openssh.com"
 set /files/etc/ssh/sshd_config/macs "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com"
 set /files/etc/ssh/sshd_config/kexalgorithms "ecdh-sha2-nistp384,ecdh-sha2-nistp521"
 set /files/etc/ssh/sshd_config/hostkeyalgorithms "ecdsa-sha2-nistp256"
