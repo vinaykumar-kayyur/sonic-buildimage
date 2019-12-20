@@ -16,7 +16,7 @@ class SetFanSpeedAction(ThermalPolicyActionBase):
 
     def load_from_json(self, json_obj):
         """
-        Construct ControlThermalControlAlgoAction via JSON. JSON example:
+        Construct SetFanSpeedAction via JSON. JSON example:
             {
                 "type": "fan.all.set_speed"
                 "speed": "100"
@@ -54,7 +54,7 @@ class SetAllFanSpeedAction(SetFanSpeedAction):
 
 
 @thermal_action('thermal_control.control')
-class ControlThermalControlAlgoAction(ThermalPolicyActionBase):
+class ControlThermalAlgoAction(ThermalPolicyActionBase):
     """
     Action to control the thermal control algorithm
     """
@@ -66,27 +66,27 @@ class ControlThermalControlAlgoAction(ThermalPolicyActionBase):
 
     def load_from_json(self, json_obj):
         """
-        Construct ControlThermalControlAlgoAction via JSON. JSON example:
+        Construct ControlThermalAlgoAction via JSON. JSON example:
             {
                 "type": "thermal_control.control"
                 "status": "true"
             }
-        :param json_obj: A JSON object representing a ControlThermalControlAlgoAction action.
+        :param json_obj: A JSON object representing a ControlThermalAlgoAction action.
         :return:
         """
-        if ControlThermalControlAlgoAction.JSON_FIELD_STATUS in json_obj:
-            status_str = json_obj[ControlThermalControlAlgoAction.JSON_FIELD_STATUS].lower()
+        if ControlThermalAlgoAction.JSON_FIELD_STATUS in json_obj:
+            status_str = json_obj[ControlThermalAlgoAction.JSON_FIELD_STATUS].lower()
             if status_str == 'true':
                 self.status = True
             elif status_str == 'false':
                 self.status = False
             else:
                 raise ValueError('Invalid {} field value, please specify true of false'.
-                                 format(ControlThermalControlAlgoAction.JSON_FIELD_STATUS))
+                                 format(ControlThermalAlgoAction.JSON_FIELD_STATUS))
         else:
-            raise ValueError('ControlThermalControlAlgoAction '
+            raise ValueError('ControlThermalAlgoAction '
                              'missing mandatory field {} in policy.json'.
-                             format(ControlThermalControlAlgoAction.JSON_FIELD_STATUS))
+                             format(ControlThermalAlgoAction.JSON_FIELD_STATUS))
 
     def execute(self, thermal_info_dict):
         """

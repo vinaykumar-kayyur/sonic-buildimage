@@ -52,7 +52,7 @@ class AllPsuAbsenceCondition(ThermalPolicyConditionBase):
 
 
 @thermal_condition('psu.all.presence')
-class AllFanPresenceCondition(ThermalPolicyConditionBase):
+class AllPsuPresenceCondition(ThermalPolicyConditionBase):
     def is_match(self, thermal_info_dict):
         from .thermal_infos import PsuInfo
         if PsuInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[PsuInfo.INFO_NAME], PsuInfo):

@@ -1,8 +1,9 @@
 import os
 import sys
 import pytest
+import json
 from mock import MagicMock
-from .mock_platform import MockChassis, MockFan
+from .mock_platform import MockChassis, MockFan, MockPsu
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
@@ -98,6 +99,171 @@ def test_psu_policy(thermal_manager):
     thermal_manager.start_thermal_control_algorithm.assert_called_once()
 
 
+def test_any_fan_absence_condition():
+    chassis = MockChassis()
+    chassis.make_fan_absence()
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
 
+    from sonic_platform.thermal_conditions import AnyFanAbsenceCondition
+    condition = AnyFanAbsenceCondition()
+    assert condition.is_match({'fan_info': fan_info})
+
+    fan = chassis.get_all_fans()[0]
+    fan.presence = True
+    fan_info.collect(chassis)
+    assert not condition.is_match({'fan_info': fan_info})
+
+
+def test_all_fan_absence_condition():
+    chassis = MockChassis()
+    chassis.make_fan_absence()
+    fan = MockFan()
+    fan_list = chassis.get_all_fans()
+    fan_list.append(fan)
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AllFanAbsenceCondition
+    condition = AllFanAbsenceCondition()
+    assert not condition.is_match({'fan_info': fan_info})
+
+    fan.presence = False
+    fan_info.collect(chassis)
+    assert condition.is_match({'fan_info': fan_info})
+
+
+def test_all_fan_presence_condition():
+    chassis = MockChassis()
+    chassis.make_fan_absence()
+    fan = MockFan()
+    fan_list = chassis.get_all_fans()
+    fan_list.append(fan)
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AllFanPresenceCondition
+    condition = AllFanPresenceCondition()
+    assert not condition.is_match({'fan_info': fan_info})
+
+    fan_list[0].presence = True
+    fan_info.collect(chassis)
+    assert condition.is_match({'fan_info': fan_info})
+
+
+def test_any_psu_absence_condition():
+    chassis = MockChassis()
+    chassis.make_psu_absence()
+    psu_info = PsuInfo()
+    psu_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AnyPsuAbsenceCondition
+    condition = AnyPsuAbsenceCondition()
+    assert condition.is_match({'psu_info': psu_info})
+
+    psu = chassis.get_all_psus()[0]
+    psu.presence = True
+    psu_info.collect(chassis)
+    assert not condition.is_match({'psu_info': psu_info})
+
+
+def test_all_psu_absence_condition():
+    chassis = MockChassis()
+    chassis.make_psu_absence()
+    psu = MockPsu()
+    psu_list = chassis.get_all_psus()
+    psu_list.append(psu)
+    psu_info = PsuInfo()
+    psu_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AllPsuAbsenceCondition
+    condition = AllPsuAbsenceCondition()
+    assert not condition.is_match({'psu_info': psu_info})
+
+    psu.presence = False
+    psu_info.collect(chassis)
+    assert condition.is_match({'psu_info': psu_info})
+
+
+def test_all_fan_presence_condition():
+    chassis = MockChassis()
+    chassis.make_psu_absence()
+    psu = MockPsu()
+    psu_list = chassis.get_all_psus()
+    psu_list.append(psu)
+    psu_info = PsuInfo()
+    psu_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AllPsuPresenceCondition
+    condition = AllPsuPresenceCondition()
+    assert not condition.is_match({'psu_info': psu_info})
+
+    psu_list[0].presence = True
+    psu_info.collect(chassis)
+    assert condition.is_match({'psu_info': psu_info})
+
+
+def test_load_set_fan_speed_action():
+    from sonic_platform.thermal_actions import SetAllFanSpeedAction
+    action = SetAllFanSpeedAction()
+    json_str = '{\"speed\": \"50\"}'
+    json_obj = json.loads(json_str)
+    action.load_from_json(json_obj)
+    assert action.speed == 50
+
+    json_str = '{\"speed\": \"-1\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+    json_str = '{\"speed\": \"101\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+    json_str = '{\"invalid\": \"101\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+
+def test_execute_set_fan_speed_action():
+    chassis = MockChassis()
+    fan_list = chassis.get_all_fans()
+    fan_list.append(MockFan())
+    fan_list.append(MockFan())
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
+
+    from sonic_platform.thermal_actions import SetAllFanSpeedAction
+    action = SetAllFanSpeedAction()
+    action.speed = 99
+    action.execute({'fan_info': fan_info})
+    assert fan_list[0].speed == 99
+    assert fan_list[1].speed == 99
+
+
+def test_load_control_thermal_algo_action():
+    from sonic_platform.thermal_actions import ControlThermalAlgoAction
+    action = ControlThermalAlgoAction()
+    json_str = '{\"status\": \"false\"}'
+    json_obj = json.loads(json_str)
+    action.load_from_json(json_obj)
+    assert not action.status 
+
+    json_str = '{\"status\": \"true\"}'
+    json_obj = json.loads(json_str)
+    action.load_from_json(json_obj)
+    assert action.status 
+
+    json_str = '{\"status\": \"invalid\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+    json_str = '{\"invalid\": \"true\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
 
 
