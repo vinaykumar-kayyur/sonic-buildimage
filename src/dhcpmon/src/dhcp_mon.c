@@ -24,8 +24,10 @@ static int dhcp_unhealthy_max_count = 10;
 static struct event_base *base;
 /** libevent timeout event struct */
 static struct event *ev_timeout = NULL;
-/** libevent signal event struct */
+/** libevent SIGINT signal event struct */
 static struct event *ev_sigint;
+/** libevent SIGTERM signal event struct */
+static struct event *ev_sigterm;
 
 /**
  * @code signal_callback(fd, event, arg);
@@ -104,13 +106,19 @@ int dhcp_mon_init(int window_sec, int max_count)
 
         ev_sigint = evsignal_new(base, SIGINT, signal_callback, base);
         if (ev_sigint == NULL) {
-            syslog(LOG_ERR, "Could not event signal libevent!\n");
+            syslog(LOG_ERR, "Could not create SIGINT libevent signal!\n");
+            break;
+        }
+
+        ev_sigterm = evsignal_new(base, SIGTERM, signal_callback, base);
+        if (ev_sigterm == NULL) {
+            syslog(LOG_ERR, "Could not create SIGTERM libevent signal!\n");
             break;
         }
 
         ev_timeout = event_new(base, -1, EV_PERSIST, timeout_callback, base);
         if (ev_timeout == NULL) {
-            syslog(LOG_ERR, "Could not event timer libevent!\n");
+            syslog(LOG_ERR, "Could not create libevent timer!\n");
             break;
         }
 
@@ -127,6 +135,14 @@ int dhcp_mon_init(int window_sec, int max_count)
  */
 void dhcp_mon_shutdown()
 {
+    event_del(ev_timeout);
+    event_del(ev_sigint);
+    event_del(ev_sigterm);
+
+    event_free(ev_timeout);
+    event_free(ev_sigint);
+    event_free(ev_sigterm);
+
     event_base_free(base);
 }
 
@@ -135,19 +151,41 @@ void dhcp_mon_shutdown()
  *
  * @brief start monitoring DHCP Relay
  */
-void dhcp_mon_start(int snaplen)
+int dhcp_mon_start(int snaplen)
 {
-    if (dhcp_devman_start_capture(snaplen, base) == 0) {
-        evsignal_add(ev_sigint, NULL);
+    int rv = -1;
 
-        struct timeval event_time;
-        event_time.tv_sec = window_interval_sec;
-        event_time.tv_usec = 0;
+    do
+    {
+        if (dhcp_devman_start_capture(snaplen, base) != 0) {
+            break;
+        }
 
-        evtimer_add(ev_timeout, &event_time);
+        if (evsignal_add(ev_sigint, NULL) != 0) {
+            syslog(LOG_ERR, "Could not add SIGINT libevent signal!\n");
+            break;
+        }
 
-        event_base_dispatch(base);
-    }
+        if (evsignal_add(ev_sigterm, NULL) != 0) {
+            syslog(LOG_ERR, "Could not add SIGTERM libevent signal!\n");
+            break;
+        }
+
+        struct timeval event_time = {.tv_sec = window_interval_sec, .tv_usec = 0};
+        if (evtimer_add(ev_timeout, &event_time) != 0) {
+            syslog(LOG_ERR, "Could not add event timer to libevent!\n");
+            break;
+        }
+
+        if (event_base_dispatch(base) != 0) {
+            syslog(LOG_ERR, "Could not start libevent dispatching loop!\n");
+            break;
+        }
+
+        rv = 0;
+    } while (0);
+
+    return rv;
 }
 
 /**

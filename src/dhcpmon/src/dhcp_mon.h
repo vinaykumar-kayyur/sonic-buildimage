@@ -38,9 +38,9 @@ void dhcp_mon_shutdown();
  *
  * @param snaplen       packet capture length
  *
- * @return none
+ * @return 0 upon success, otherwise upon failure
  */
-void dhcp_mon_start(int snaplen);
+int dhcp_mon_start(int snaplen);
 
 /**
  * @code dhcp_mon_stop();

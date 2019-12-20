@@ -158,9 +158,9 @@ int main(int argc, char **argv)
         dhcpmon_daemonize();
     }
 
-    if (dhcp_mon_init(window_interval, max_unhealthy_count) == 0) {
+    if ((dhcp_mon_init(window_interval, max_unhealthy_count) == 0) &&
+        (dhcp_mon_start(snaplen) == 0)) {
 
-        dhcp_mon_start(snaplen);
         rv = EXIT_SUCCESS;
 
         dhcp_mon_shutdown();
