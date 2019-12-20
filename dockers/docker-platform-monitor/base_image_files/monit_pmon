@@ -19,5 +19,5 @@ check process psud matching "/usr/bin/python /usr/bin/psud"
 check process syseepromd matching "/usr/bin/python /usr/bin/syseepromd"
 	if does not exist then alert
 
-
-
+check process xcvrd matching "/usr/bin/python /usr/bin/xcvrd"
+	if does not exist then alert
