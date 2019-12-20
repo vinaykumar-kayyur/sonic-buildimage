@@ -3,5 +3,5 @@
 ## process list:
 ##	radv
 ###############################################################################
-#check process radv matching "/usr/bin/radv"
-#	if does not exist then alert
+check process radv matching "/usr/bin/radv"
+	if does not exist then alert
