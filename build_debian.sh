@@ -344,9 +344,9 @@ set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliv
 rm /files/etc/ssh/sshd_config/ciphers
 rm /files/etc/ssh/sshd_config/macs
 rm /files/etc/ssh/sshd_config/kexalgorithms
-set /files/etc/ssh/sshd_config/ciphers "aes128-ctr,aes256-ctr"
-set /files/etc/ssh/sshd_config/macs "hmac-sha1,hmac-sha2-256,hmac-sha2-512"
-set /files/etc/ssh/sshd_config/kexalgorithms "diffie-hellman-group14-sha1,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha256"
+set /files/etc/ssh/sshd_config/ciphers "aes128-ctr,aes256-ctr,aes256-gcm@openssh.com,aes192-ctr,aes256-ctr"
+set /files/etc/ssh/sshd_config/macs "hmac-sha1,hmac-sha2-256,hmac-sha2-512,hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com"
+set /files/etc/ssh/sshd_config/kexalgorithms "diffie-hellman-group14-sha1,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha256,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521"
 save
 quit
 EOF
