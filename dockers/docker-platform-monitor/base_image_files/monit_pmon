@@ -1,0 +1,23 @@
+###############################################################################
+## Monit configuration for platform monitor container
+## process list:
+##	ledd
+##	fancontrol
+##	psud
+##	syseepromd
+##	xcvrd
+###############################################################################
+check process ledd matching "/usr/bin/python /usr/bin/ledd"
+	if does not exist then alert
+
+check process fancontrol matching "/bin/bash /usr/sbin/fancontrol"
+	if does not exist then alert
+
+check process psud matching "/usr/bin/python /usr/bin/psud"
+	if does not exist then alert
+
+check process syseepromd matching "/usr/bin/python /usr/bin/syseepromd"
+	if does not exist then alert
+
+check process xcvrd matching "/usr/bin/python /usr/bin/xcvrd"
+	if does not exist then alert
