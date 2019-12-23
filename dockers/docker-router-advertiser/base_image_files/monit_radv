@@ -1,7 +1,7 @@
 ###############################################################################
 ## Monit configuration for router advertiser container
 ## process list:
-##	radv
+##	radvd
 ###############################################################################
-check process radv matching "/usr/bin/radv"
+check process radvd matching "/usr/sbin/radvd"
 	if does not exist then alert
