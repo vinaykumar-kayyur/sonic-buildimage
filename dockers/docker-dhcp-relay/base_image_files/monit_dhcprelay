@@ -3,5 +3,5 @@
 ## process list:
 ##	dhcrelay
 ###############################################################################
-check process dhcprelay matching "/usr/bin/dhcrelay"
+check process dhcrelay matching "/usr/bin/dhcrelay"
 	if does not exist then alert
