@@ -2,10 +2,6 @@
 ## Monit configuration for syncd container
 ## process list:
 ##	syncd
-##	dsserve
 ###############################################################################
 check process syncd matching "/usr/bin/syncd --diag"
-	if does not exist then alert
-
-check process dsserve matching "/usr/bin/dsserve /usr/bin/syncd"
 	if does not exist then alert
