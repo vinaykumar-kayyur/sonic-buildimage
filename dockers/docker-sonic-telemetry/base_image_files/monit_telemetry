@@ -1,0 +1,11 @@
+###############################################################################
+## Monit configuration for telemetry container
+## process list:
+##	telemetry
+##	dialout_client
+###############################################################################
+check process telemetry matching "/usr/sbin/telemetry -logtostderr --insecure"
+	if does not exist then alert
+
+check process dialout_clienty matching "/usr/sbin/dialout_client_cli -insecure -logtostderr"
+	if does not exist then alert
