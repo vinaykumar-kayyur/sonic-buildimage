@@ -1,4 +1,5 @@
-from sonic_platform_base.sonic_thermal_control.thermal_action_base import ThermalPolicyActionBase, thermal_action
+from sonic_platform_base.sonic_thermal_control.thermal_action_base import ThermalPolicyActionBase
+from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 
 
 class SetFanSpeedAction(ThermalPolicyActionBase):
@@ -35,7 +36,7 @@ class SetFanSpeedAction(ThermalPolicyActionBase):
                              format(SetFanSpeedAction.JSON_FIELD_SPEED))
 
 
-@thermal_action('fan.all.set_speed')
+@thermal_json_object('fan.all.set_speed')
 class SetAllFanSpeedAction(SetFanSpeedAction):
     """
     Action to set speed for all fans
@@ -53,7 +54,7 @@ class SetAllFanSpeedAction(SetFanSpeedAction):
                 fan.set_speed(self.speed)
 
 
-@thermal_action('thermal_control.control')
+@thermal_json_object('thermal_control.control')
 class ControlThermalAlgoAction(ThermalPolicyActionBase):
     """
     Action to control the thermal control algorithm
