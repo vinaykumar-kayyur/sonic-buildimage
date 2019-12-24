@@ -14,6 +14,8 @@ from swsssdk import ConfigDBConnector
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
 PAM_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/common-auth-sonic.j2"
+PAM_SESSION_CONF = "/etc/pam.d/common-session-sonic"
+PAM_SESSION_CONF_TEMPLATE = "/usr/share/sonic/templates/common-session-sonic.j2"
 NSS_TACPLUS_CONF = "/etc/tacplus_nss.conf"
 NSS_TACPLUS_CONF_TEMPLATE = "/usr/share/sonic/templates/tacplus_nss.conf.j2"
 NSS_CONF = "/etc/nsswitch.conf"
@@ -128,7 +130,10 @@ class Iptables(object):
 class AaaCfg(object):
     def __init__(self):
         self.auth_default = {
-            'login': 'local',
+            'login': 'local'
+        }
+        self.acct_default = {
+            'session': ''
         }
         self.tacplus_global_default = {
             'auth_type': TACPLUS_SERVER_AUTH_TYPE_DEFAULT,
@@ -136,6 +141,7 @@ class AaaCfg(object):
             'passkey': TACPLUS_SERVER_PASSKEY_DEFAULT
         }
         self.auth = {}
+        self.acct = {}
         self.tacplus_global = {}
         self.tacplus_servers = {}
         self.debug = False
@@ -157,6 +163,8 @@ class AaaCfg(object):
                 self.auth['failthrough'] = is_true(data['failthrough'])
             if 'debug' in data:
                 self.debug = is_true(data['debug'])
+        if key == 'accounting':
+            self.acct =data
         if modify_conf:
             self.modify_conf_file()
 
@@ -184,6 +192,8 @@ class AaaCfg(object):
     def modify_conf_file(self):
         auth = self.auth_default.copy()
         auth.update(self.auth)
+        acct = self.acct_default.copy()
+        acct.update(self.acct)
         tacplus_global = self.tacplus_global_default.copy()
         tacplus_global.update(self.tacplus_global)
 
@@ -204,6 +214,14 @@ class AaaCfg(object):
         with open(PAM_AUTH_CONF, 'w') as f:
             f.write(pam_conf)
 
+        template_file = os.path.abspath(PAM_SESSION_CONF_TEMPLATE)
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
+        env.filters['sub'] = sub
+        template = env.get_template(template_file)
+        pam_conf = template.render(acct=acct, servers=servers_conf)
+        with open(PAM_SESSION_CONF, 'w') as f:
+            f.write(pam_conf)
+
         # Modify common-auth include file in /etc/pam.d/login and sshd
         if os.path.isfile(PAM_AUTH_CONF):
             self.modify_single_file('/etc/pam.d/sshd',  [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
@@ -211,6 +229,14 @@ class AaaCfg(object):
         else:
             self.modify_single_file('/etc/pam.d/sshd',  [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
             self.modify_single_file('/etc/pam.d/login', [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
+
+        # Modify common-session include file in /etc/pam.d/login and sshd
+        if os.path.isfile(PAM_AUTH_CONF):
+            os.system("sed -i -e '/^@include/s/common-session$/common-session-sonic/' /etc/pam.d/sshd")
+            os.system("sed -i -e '/^@include/s/common-session$/common-session-sonic/' /etc/pam.d/login")
+        else:
+            os.system("sed -i -e '/^@include/s/common-session-sonic$/common-sesssion/' /etc/pam.d/sshd")
+            os.system("sed -i -e '/^@include/s/common-session-sonic$/common-session/' /etc/pam.d/login")
 
         # Add tacplus in nsswitch.conf if TACACS+ enable
         if 'tacacs+' in auth['login']:
