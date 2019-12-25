@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import os
+import struct
 import subprocess
-
+from mmap import *
 
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
 EMPTY_STRING = ""
