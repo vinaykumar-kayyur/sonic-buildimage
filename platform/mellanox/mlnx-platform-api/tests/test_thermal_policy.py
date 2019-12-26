@@ -29,6 +29,9 @@ def test_load_policy(thermal_manager):
     assert 'any psu absence' in thermal_manager._policy_dict
     assert 'all fan and psu presence' in thermal_manager._policy_dict
 
+    assert thermal_manager._fan_speed_when_suspend == 60
+    assert thermal_manager._run_thermal_algorithm_at_boot_up == False
+
 
 def test_fan_info():
     chassis = MockChassis()
