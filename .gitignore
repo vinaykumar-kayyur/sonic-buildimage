@@ -23,6 +23,7 @@ target/
 # Subdirectories in src
 src/bash/*
 !src/bash/Makefile
+src/dhcpmon/debian/sonic-dhcpmon/
 src/ixgbe/*
 !src/ixgbe/Makefile
 src/isc-dhcp/*
