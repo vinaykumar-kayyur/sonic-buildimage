@@ -1,7 +1,7 @@
 From c6ee8c86c35f8b1e60bf4df0d7198f349f8552c1 Mon Sep 17 00:00:00 2001
 From: Stephen Sun <stephens@mellanox.com>
 Date: Wed, 25 Dec 2019 19:33:17 +0800
-Subject: [PATCH] [PATCH] Make hw-mgmt SimX compatiable.
+Subject: [PATCH] Make hw-mgmt SimX compatiable.
 
 Signed-off-by: Stephen Sun <stephens@mellanox.com>
 ---
