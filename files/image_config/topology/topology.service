@@ -2,7 +2,6 @@
 Description=Internal topology service
 Requires=database.service
 After=database.service
-Before=database.service
 PartOf=database.service
 
 [Service]
