@@ -240,6 +240,8 @@ def parse_dpg(dpg, hname):
                 vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid}
+            if len(vmbr_list):
+                vlan_attributes['members'] = vmbr_list
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
