@@ -34,6 +34,7 @@ RUN echo "deb [arch=arm64] http://archive.debian.org/debian jessie main contrib 
 ENV DEBIAN_FRONTEND=noninteractive
 
 COPY ["81norecommends", "/etc/apt/apt.conf.d"]
+COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
 
 RUN apt-get update && apt-get install -y \
         apt-utils \
