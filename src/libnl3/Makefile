@@ -16,9 +16,9 @@ DERIVED_TARGETS = libnl-3-dev_$(LIBNL3_VERSION)_$(CONFIGURED_ARCH).deb \
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtaining the libnl3
 	rm -rf ./libnl3-$(LIBNL3_VERSION_BASE)
-	wget -O libnl3_$(LIBNL3_VERSION_BASE).orig.tar.gz -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION_BASE).orig.tar.gz?sv=2015-04-05&sr=b&sig=b4DnqrIsyVBDLmYhw7qwfaUJWqGCX2lDVMmmx7ihfrU%3D&se=2028-06-16T21%3A06%3A00Z&sp=r"
-	wget -O libnl3_$(LIBNL3_VERSION).dsc -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION).dsc?sv=2015-04-05&sr=b&sig=AWTX45oDbeGA%2BRJZyiCcHmeIfCAgSeNV3IqopOBaRDg%3D&se=2028-06-16T21%3A05%3A30Z&sp=r"
-	wget -O libnl3_$(LIBNL3_VERSION).debian.tar.xz -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION).debian.tar.xz?sv=2015-04-05&sr=b&sig=upIZ9dp5WEcLqp3ODeWKJXq5pJWCfeT0TIM0bx76wxM%3D&se=2028-06-16T21%3A04%3A44Z&sp=r"
+	wget -O libnl3_$(LIBNL3_VERSION_BASE).orig.tar.gz -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION_BASE).orig.tar.gz?sv=2015-04-05&sr=b&sig=0HR%2FrWWL54Vl07bQCEX2MNxAnuGkci4KJqxNuDrv%2BCI%3D&se=2033-09-10T22%3A29%3A11Z&sp=r"
+	wget -O libnl3_$(LIBNL3_VERSION).dsc -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION).dsc?sv=2015-04-05&sr=b&sig=oi5kfvuaO%2FPHLdq16LpFGsIqYfEc%2FqYmzagYxDDa%2BV8%3D&se=2033-09-10T22%3A30%3A36Z&sp=r"
+	wget -O libnl3_$(LIBNL3_VERSION).debian.tar.xz -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION).debian.tar.xz?sv=2015-04-05&sr=b&sig=zOsJTFgzR5CYqDopVeKLunedng2KUsMwY06fbrunQCk%3D&se=2033-09-10T22%3A31%3A39Z&sp=r"
 	dpkg-source -x libnl3_$(LIBNL3_VERSION).dsc
 
 	pushd ./libnl3-$(LIBNL3_VERSION_BASE)
