@@ -1,9 +1,9 @@
 [Unit]
 Description=Internal topology service
-Requires=database@0.service database@1.service database@2.service database@3.service database@4.service database@5.service
-After=database@0.service database@1.service database@2.service database@3.service database@4.service database@5.service
-Before=database@0.service database@1.service database@2.service database@3.service database@4.service database@5.service
-PartOf=database@0.service database@1.service database@2.service database@3.service database@4.service database@5.service
+Requires=database.service
+After=database.service
+Before=database.service
+PartOf=database.service
 
 [Service]
 Type=oneshot

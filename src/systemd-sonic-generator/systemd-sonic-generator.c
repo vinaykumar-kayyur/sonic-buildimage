@@ -115,7 +115,7 @@ static int get_install_targets_from_line(char* target_string, char* install_type
 
         free(target);
         /* Topology service is not required for single-instance vs platform */
-        if ((strstr(target, "topology") != NULL) &&
+        if ((strcmp(target, "topology.service") == 0) &&
 	    (num_asics == 1)) {
 	    continue;
         }	    
@@ -204,6 +204,12 @@ static int get_unit_files(char* unit_files[]) {
             break;
         }
         strip_trailing_newline(line);
+
+        /* Topology service is not required for single-instance vs platform */
+        if ((strcmp(line, "topology.service") == 0) &&
+            (num_asics == 1)) {
+	    continue;
+	}
         unit_files[num_unit_files] = strdup(line);
         num_unit_files++;
     }
