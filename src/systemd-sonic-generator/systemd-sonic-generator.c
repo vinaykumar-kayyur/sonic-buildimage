@@ -9,14 +9,17 @@
 #include <sys/stat.h>
 #include <linux/limits.h>
 
-#define MAX_NUM_TARGETS 5
-#define MAX_NUM_INSTALL_LINES 5
+#define MAX_NUM_TARGETS 15
+#define MAX_NUM_INSTALL_LINES 15
 #define MAX_NUM_UNITS 128
+#define MAX_BUF_SIZE 512
 
 static const char* UNIT_FILE_PREFIX = "/etc/systemd/system/";
 static const char* CONFIG_FILE = "/etc/sonic/generated_services.conf";
 static const char* MACHINE_CONF_FILE = "/host/machine.conf";
 static int num_asics;
+static char** multi_instance_services;
+static int num_multi_inst;
 
 void strip_trailing_newline(char* str) {
     /***
@@ -76,6 +79,17 @@ static int get_target_lines(char* unit_file, char* target_lines[]) {
     return num_target_lines;
 }
 
+static bool is_multi_instance_service(char *service_name){
+    int i;
+    for(i=0; i < num_multi_inst; i++){
+        if (strstr(service_name, multi_instance_services[i]) != NULL) {
+            return true;
+        }
+    }
+    return false;
+
+}
+
 static int get_install_targets_from_line(char* target_string, char* install_type, char* targets[], int existing_targets) {
     /***
     Helper fuction for get_install_targets
@@ -114,16 +128,83 @@ static int get_install_targets_from_line(char* target_string, char* install_type
         strcat(final_target, install_type);
 
         free(target);
-        /* Topology service is not required for single-instance vs platform */
-        if ((strcmp(target, "topology.service") == 0) &&
-	    (num_asics == 1)) {
-	    continue;
-        }	    
-      
+        
         targets[num_targets + existing_targets] = strdup(final_target);
         num_targets++;
     }
     return num_targets;
+}
+
+static void replace_multi_inst_dep(char *src) {
+    FILE *fp_src;
+    FILE *fp_tmp;
+    char buf[MAX_BUF_SIZE];
+    char* line = NULL;
+    char* dot_ptr;
+    int i;
+    ssize_t len;
+    char *token;
+    char *word;
+    char *line_copy;
+    ssize_t nread;
+    bool section_done = false;
+    char tmp_file_path[PATH_MAX];
+    
+    fp_src = fopen(src, "r");
+    /* assumes that the service files has 3 sections,
+     * in the order: Unit, Service and Install.
+     * Read service dependency from Unit and Install 
+     * sections, replace if dependent on multi instance
+     * service.
+     */
+    snprintf(tmp_file_path, PATH_MAX, "%s.tmp", src);
+    fp_tmp = fopen(tmp_file_path, "w");
+    while ((nread = getline(&line, &len, fp_src)) != -1 ) {
+        if (strstr(line, "[Service]") != NULL) {
+            section_done = true;
+            fputs(line,fp_tmp);
+        } else if (strstr(line, "[Install]") != NULL)  {
+            section_done = false;
+            fputs(line,fp_tmp);
+        } else if ((strstr(line, "[Unit]") != NULL) ||
+           (strstr(line, "Description") != NULL) ||
+           (section_done == true)){
+            fputs(line,fp_tmp);
+        } else {
+            line_copy = strdup(line);
+            token = strtok(line_copy, "=");
+            while ((word = strtok(NULL, " "))){
+                if((strchr(word, '.') == NULL) ||
+                   (strchr(word, '@') != NULL)) {
+                    snprintf(buf, MAX_BUF_SIZE,"%s=%s\n",token, word);
+                    fputs(buf,fp_tmp);
+                } else {
+                    dot_ptr = strchr(word, '.');
+                    *dot_ptr = '\0';
+                    if (is_multi_instance_service(word)) {
+                        for(i = 0; i < num_asics; i++){
+                            snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.service\n",
+                                    token, word, i);
+                            fputs(buf,fp_tmp);
+                        }
+                    } else {
+                        snprintf(buf, MAX_BUF_SIZE,"%s=%s.service\n",token, word);
+                        fputs(buf, fp_tmp);
+                    }
+			    
+                }
+            }
+            free(line_copy);
+        }
+    }
+    fclose(fp_src);
+    fclose(fp_tmp);
+    free(line);
+    /* remove the .service file, rename the .service.tmp file
+     * as .service.
+     */
+    remove(src);
+    rename(tmp_file_path, src);
 }
 
 static int get_install_targets(char* unit_file, char* targets[]) {
@@ -142,9 +223,20 @@ static int get_install_targets(char* unit_file, char* targets[]) {
     char* line = NULL;
     bool first;
     char* target_suffix;
+    char *instance_name;
+    char *dot_ptr;
 
     strcpy(file_path, UNIT_FILE_PREFIX);
     strcat(file_path, unit_file);
+
+    instance_name = strdup(unit_file);
+    dot_ptr = strchr(instance_name, '.');
+    *dot_ptr = '\0';
+
+    if((num_asics > 1) && (!is_multi_instance_service(instance_name))) {
+        replace_multi_inst_dep(file_path);
+    }
+    free(instance_name);
 
     num_target_lines = get_target_lines(file_path, target_lines);
     if (num_target_lines < 0) {
@@ -188,6 +280,7 @@ static int get_unit_files(char* unit_files[]) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+    char *pos;
 
     fp = fopen(CONFIG_FILE, "r");
 
@@ -197,6 +290,9 @@ static int get_unit_files(char* unit_files[]) {
     }
 
     int num_unit_files = 0;
+    num_multi_inst = 0;
+
+    multi_instance_services = malloc(MAX_NUM_UNITS * sizeof(char *));
 
     while ((read = getline(&line, &len, fp)) != -1) {
         if (num_unit_files >= MAX_NUM_UNITS) {
@@ -205,13 +301,16 @@ static int get_unit_files(char* unit_files[]) {
         }
         strip_trailing_newline(line);
 
-        /* Topology service is not required for single-instance vs platform */
-        if ((strcmp(line, "topology.service") == 0) &&
-            (num_asics == 1)) {
-	    continue;
-	}
         unit_files[num_unit_files] = strdup(line);
         num_unit_files++;
+
+        /* Get the multi-instance services */
+        pos = strchr(line, '@');
+        if (pos != NULL) {
+            multi_instance_services[num_multi_inst] = malloc(strlen(line)*sizeof(char));
+            strncpy(multi_instance_services[num_multi_inst], line, pos-line);
+            num_multi_inst++;
+        }
     }
 
     free(line);
@@ -500,5 +599,11 @@ int main(int argc, char **argv) {
         free(unit_instance);
         free(unit_files[i]);
     }
+
+    for (int i = 0; i < num_multi_inst; i++) {
+        free(multi_instance_services[i]);
+    }
+    free(multi_instance_services);
+
     return 0;
 }
