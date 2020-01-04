@@ -50,6 +50,8 @@ src/isc-dhcp/*
 !src/isc-dhcp/Makefile
 !src/isc-dhcp/patch/
 src/libnl3/*
+!src/libnl3/libnl3_3.5.0-1.debian.tar.xz
+!src/libnl3/libnl3_3.5.0-1.dsc
 !src/libnl3/Makefile
 src/libteam/*
 !src/libteam/Makefile
