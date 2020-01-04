@@ -1,7 +1,7 @@
 ###############################################################################
 ## Monit configuration for BGP container
 ## process list:
-##  zebra	
+##  zebra
 ##  fpmsyncd
 ##  bgpd
 ##  staticd
