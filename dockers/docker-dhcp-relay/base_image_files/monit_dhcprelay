@@ -1,7 +1,0 @@
-###############################################################################
-## Monit configuration for DHCP_Relay container
-## process list:
-##	dhcrelay
-###############################################################################
-check process dhcrelay matching "/usr/bin/dhcrelay"
-	if does not exist then alert
