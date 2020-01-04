@@ -4,4 +4,4 @@
 ##	sflowmgrd
 ###############################################################################
 check process sflowmgrd matching "/usr/bin/sflowmgrd"
-	if does not exist then alert
+	if does not exist for 5 times within 5 cycles then alert
