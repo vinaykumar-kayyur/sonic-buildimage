@@ -2,4 +2,4 @@
 docker exec -i pmon sensors "$@"
 
 #To probe sensors not part of lm-sensors
-pegatron_porsche_util.py cmd device sensors
+pegatron_fn_6254_dn_f_util.py cmd device sensors

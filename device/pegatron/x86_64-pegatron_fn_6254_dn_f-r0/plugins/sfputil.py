@@ -187,7 +187,7 @@ class SfpUtil(SfpUtilBase):
 
                 fp_port_index = portname.split("Ethernet").pop()
                 fp_port_index = int(fp_port_index.split("s").pop(0))/4
-
+	    
 	    #Peter remove - 2018.04.13, this will cause can't show qsfp module when sfp_pot was set
             #if ((len(self.sfp_ports) > 0) and (fp_port_index not in self.sfp_ports)):
                 #continue

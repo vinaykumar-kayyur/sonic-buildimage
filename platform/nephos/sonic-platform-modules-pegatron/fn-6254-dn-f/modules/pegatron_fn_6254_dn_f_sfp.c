@@ -1,5 +1,5 @@
 /*
- * pegatron_porsche_sfp.c - A driver to read and write the EEPROM on optical transceivers
+ * pegatron_fn_6254_dn_f_sfp.c - A driver to read and write the EEPROM on optical transceivers
  * (SFP and QSFP)
  *
  * Copyright (C) 2014 Cumulus networks Inc.
@@ -192,7 +192,7 @@
 
 enum cpld_croups { cpld_group_a, cpld_group_b, cpld_group_c};
 
-struct porsche_sfp_platform_data {
+struct fn_6254_dn_f_sfp_platform_data {
 	u32		byte_len;		/* size (sum of all addr) */
 	u16		page_size;		/* for writes */
 	u8		flags;
@@ -204,8 +204,8 @@ struct porsche_sfp_platform_data {
 	unsigned int write_max;
 };
 
-struct porsche_sfp_data {
-	struct porsche_sfp_platform_data chip[MAX_PORT_NUM];
+struct fn_6254_dn_f_sfp_data {
+	struct fn_6254_dn_f_sfp_platform_data chip[MAX_PORT_NUM];
 
 	/*
 	 * Lock protects against activities from other Linux tasks,
@@ -239,8 +239,8 @@ static char SFP_CPLD_GROUPA_MAPPING[CPLDA_SFP_NUM][16]={0};
 static char SFP_CPLD_GROUPB_MAPPING[CPLDB_SFP_NUM][16]={0};
 static char SFP_CPLD_GROUPC_MAPPING[CPLDC_SFP_NUM][16]={0};
 
-extern int pegatron_porsche_cpld_read(unsigned short cpld_addr, u8 reg);
-extern int pegatron_porsche_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
+extern int pegatron_fn_6254_dn_f_cpld_read(unsigned short cpld_addr, u8 reg);
+extern int pegatron_fn_6254_dn_f_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 
 /*-------------------------------------------------------------------------*/
 /*
@@ -270,7 +270,7 @@ extern int pegatron_porsche_cpld_write(unsigned short cpld_addr, u8 reg, u8 valu
  * Offset within Lower Page 00h and Upper Page 00h are not recomputed
  */
 
-static uint8_t porsche_sfp_translate_offset(struct porsche_sfp_data *sfp,
+static uint8_t fn_6254_dn_f_sfp_translate_offset(struct fn_6254_dn_f_sfp_data *sfp,
 		loff_t *offset, struct i2c_client **client, int num)
 {
 	unsigned int page = 0;
@@ -299,10 +299,10 @@ static uint8_t porsche_sfp_translate_offset(struct porsche_sfp_data *sfp,
 	/* 0x80 places the offset in the top half, offset is last 7 bits */
 	*offset = SFP_PAGE_SIZE + (*offset & 0x7f);
 
-	return page;  /* note also returning cliporsche_sfp_translate_offsetent and offset */
+	return page;  /* note also returning clifn_6254_dn_f_sfp_translate_offsetent and offset */
 }
 
-static ssize_t porsche_sfp_eeprom_read(struct porsche_sfp_data *sfp,
+static ssize_t fn_6254_dn_f_sfp_eeprom_read(struct fn_6254_dn_f_sfp_data *sfp,
 		    struct i2c_client *client,
 		    char *buf, unsigned int offset, size_t count)
 {
@@ -340,7 +340,7 @@ static ssize_t porsche_sfp_eeprom_read(struct porsche_sfp_data *sfp,
 	return -ETIMEDOUT;
 }
 
-static ssize_t porsche_sfp_eeprom_write(struct porsche_sfp_data *sfp,
+static ssize_t fn_6254_dn_f_sfp_eeprom_write(struct fn_6254_dn_f_sfp_data *sfp,
 				struct i2c_client *client,
 				const char *buf,
 				unsigned int offset, size_t count)
@@ -385,7 +385,7 @@ static ssize_t porsche_sfp_eeprom_write(struct porsche_sfp_data *sfp,
 	return -ETIMEDOUT;
 }
 
-static ssize_t porsche_sfp_eeprom_update_client(struct porsche_sfp_data *sfp,
+static ssize_t fn_6254_dn_f_sfp_eeprom_update_client(struct fn_6254_dn_f_sfp_data *sfp,
 				char *buf, loff_t off, size_t count, int num)
 {
 	struct i2c_client *client;
@@ -394,13 +394,13 @@ static ssize_t porsche_sfp_eeprom_update_client(struct porsche_sfp_data *sfp,
 	loff_t phy_offset = off;
 	int ret = 0;
 
-	page = porsche_sfp_translate_offset(sfp, &phy_offset, &client, num);
+	page = fn_6254_dn_f_sfp_translate_offset(sfp, &phy_offset, &client, num);
 
 	dev_dbg(&client->dev,
 		"%s off %lld  page:%d phy_offset:%lld, count:%ld\n",
 		__func__, off, page, phy_offset, (long int) count);
 	if (page > 0) {
-		ret = porsche_sfp_eeprom_write(sfp, client, &page,
+		ret = fn_6254_dn_f_sfp_eeprom_write(sfp, client, &page,
 			SFP_PAGE_SELECT_REG, 1);
 		if (ret < 0) {
 			dev_dbg(&client->dev,
@@ -413,7 +413,7 @@ static ssize_t porsche_sfp_eeprom_update_client(struct porsche_sfp_data *sfp,
 	while (count) {
 		ssize_t	status;
 
-		status =  porsche_sfp_eeprom_read(sfp, client,
+		status =  fn_6254_dn_f_sfp_eeprom_read(sfp, client,
 			buf, phy_offset, count);
 
 		if (status <= 0) {
@@ -431,7 +431,7 @@ static ssize_t porsche_sfp_eeprom_update_client(struct porsche_sfp_data *sfp,
 	if (page > 0) {
 		/* return the page register to page 0 (why?) */
 		page = 0;
-		ret = porsche_sfp_eeprom_write(sfp, client, &page,
+		ret = fn_6254_dn_f_sfp_eeprom_write(sfp, client, &page,
 			SFP_PAGE_SELECT_REG, 1);
 		if (ret < 0) {
 			dev_err(&client->dev,
@@ -456,7 +456,7 @@ static ssize_t porsche_sfp_eeprom_update_client(struct porsche_sfp_data *sfp,
  *     - access begins legal but is too long, len is truncated to fit.
  *     - initial offset exceeds supported pages, return OPTOE_EOF (zero)
  */
-static ssize_t porsche_sfp_page_legal(struct porsche_sfp_data *sfp,
+static ssize_t fn_6254_dn_f_sfp_page_legal(struct fn_6254_dn_f_sfp_data *sfp,
 		loff_t off, size_t len, int num)
 {
 	struct i2c_client *client = sfp->client[0];
@@ -477,7 +477,7 @@ static ssize_t porsche_sfp_page_legal(struct porsche_sfp_data *sfp,
 		if (off >= TWO_ADDR_EEPROM_SIZE)
 			return SFP_EOF;
 		/* in between, are pages supported? */
-		status = porsche_sfp_eeprom_read(sfp, client, &regval,
+		status = fn_6254_dn_f_sfp_eeprom_read(sfp, client, &regval,
 				TWO_ADDR_PAGEABLE_REG, 1);
 		if (status < 0)
 			return status;  /* error out (no module?) */
@@ -491,7 +491,7 @@ static ssize_t porsche_sfp_page_legal(struct porsche_sfp_data *sfp,
 
 			/* will be accessing addr 0x51, is that supported? */
 			/* byte 92, bit 6 implies DDM support, 0x51 support */
-			status = porsche_sfp_eeprom_read(sfp, client, &regval,
+			status = fn_6254_dn_f_sfp_eeprom_read(sfp, client, &regval,
 						TWO_ADDR_0X51_REG, 1);
 			if (status < 0)
 				return status;
@@ -518,7 +518,7 @@ static ssize_t porsche_sfp_page_legal(struct porsche_sfp_data *sfp,
 		if (off >= ONE_ADDR_EEPROM_SIZE)
 			return SFP_EOF;
 		/* in between, are pages supported? */
-		status = porsche_sfp_eeprom_read(sfp, client, &regval,
+		status = fn_6254_dn_f_sfp_eeprom_read(sfp, client, &regval,
 				ONE_ADDR_PAGEABLE_REG, 1);
 		if (status < 0)
 			return status;  /* error out (no module?) */
@@ -549,7 +549,7 @@ static ssize_t porsche_sfp_page_legal(struct porsche_sfp_data *sfp,
 	return len;
 }
 
-static ssize_t porsche_sfp_read(struct porsche_sfp_data *sfp,
+static ssize_t fn_6254_dn_f_sfp_read(struct fn_6254_dn_f_sfp_data *sfp,
 		char *buf, loff_t off, size_t len, int num)
 {
 	int chunk;
@@ -571,7 +571,7 @@ static ssize_t porsche_sfp_read(struct porsche_sfp_data *sfp,
 	/*
 	 * Confirm this access fits within the device suppored addr range
 	 */
-	status = porsche_sfp_page_legal(sfp, off, len, num);
+	status = fn_6254_dn_f_sfp_page_legal(sfp, off, len, num);
 	if ((status == SFP_EOF) || (status < 0)) {
 		mutex_unlock(&sfp->lock);
 		return status;
@@ -623,7 +623,7 @@ static ssize_t porsche_sfp_read(struct porsche_sfp_data *sfp,
 		 * note: chunk_offset is from the start of the EEPROM,
 		 * not the start of the chunk
 		 */
-		status = porsche_sfp_eeprom_update_client(sfp, buf,
+		status = fn_6254_dn_f_sfp_eeprom_update_client(sfp, buf,
 				chunk_offset, chunk_len, num);
 		if (status != chunk_len) {
 			/* This is another 'no device present' path */
@@ -643,13 +643,13 @@ static ssize_t porsche_sfp_read(struct porsche_sfp_data *sfp,
 }
 
 static ssize_t 
-porsche_sfp_bin_read(struct file *filp, struct kobject *kobj,
+fn_6254_dn_f_sfp_bin_read(struct file *filp, struct kobject *kobj,
 		struct bin_attribute *attr,
 		char *buf, loff_t off, size_t count)
 {
 	int i;
 	u8 cpldData = 0;
-	struct porsche_sfp_data *sfp;
+	struct fn_6254_dn_f_sfp_data *sfp;
 
 	sfp = dev_get_drvdata(container_of(kobj, struct device, kobj));
 
@@ -658,7 +658,7 @@ porsche_sfp_bin_read(struct file *filp, struct kobject *kobj,
 	{
 		if(!strcmp(attr->attr.name, SFP_CPLD_GROUPB_MAPPING[i]))
 		{
-			pegatron_porsche_cpld_write(CPLDB_ADDRESS, SFP_1_12_SCL_BASE, i+1);
+			pegatron_fn_6254_dn_f_cpld_write(CPLDB_ADDRESS, SFP_1_12_SCL_BASE, i+1);
 			goto check_done;
 		}
 	}
@@ -667,7 +667,7 @@ porsche_sfp_bin_read(struct file *filp, struct kobject *kobj,
 	{
 		if(!strcmp(attr->attr.name, SFP_CPLD_GROUPA_MAPPING[i]))
 		{
-			pegatron_porsche_cpld_write(CPLDA_ADDRESS, SFP_13_36_SCL_BASE, i+1);
+			pegatron_fn_6254_dn_f_cpld_write(CPLDA_ADDRESS, SFP_13_36_SCL_BASE, i+1);
 			goto check_done;
 		}
 	}
@@ -681,17 +681,17 @@ porsche_sfp_bin_read(struct file *filp, struct kobject *kobj,
 			if(i >= 12)
 			{
 				cpldData = 0xff;
-				cpldData = pegatron_porsche_cpld_read(CPLDC_ADDRESS, QSFP_I2C_ENABLE_BASE);
+				cpldData = pegatron_fn_6254_dn_f_cpld_read(CPLDC_ADDRESS, QSFP_I2C_ENABLE_BASE);
 				CLEAR_BIT(cpldData, i-12);
-				pegatron_porsche_cpld_write(CPLDC_ADDRESS, QSFP_I2C_ENABLE_BASE, cpldData);
+				pegatron_fn_6254_dn_f_cpld_write(CPLDC_ADDRESS, QSFP_I2C_ENABLE_BASE, cpldData);
 			}
-			pegatron_porsche_cpld_write(CPLDC_ADDRESS, SFP_37_54_SCL_BASE, i+1);
+			pegatron_fn_6254_dn_f_cpld_write(CPLDC_ADDRESS, SFP_37_54_SCL_BASE, i+1);
 			goto check_done;
 		}
 	}
 
 check_done:
-	return porsche_sfp_read(sfp, buf, off, count, i);
+	return fn_6254_dn_f_sfp_read(sfp, buf, off, count, i);
 }
 
 #define SFP_EEPROM_ATTR(_num)    \
@@ -701,7 +701,7 @@ check_done:
                         .mode = S_IRUGO\
                 },  \
                 .size = TWO_ADDR_EEPROM_SIZE,    \
-                .read = porsche_sfp_bin_read,   \
+                .read = fn_6254_dn_f_sfp_bin_read,   \
                 }
 
 SFP_EEPROM_ATTR(1);SFP_EEPROM_ATTR(2);SFP_EEPROM_ATTR(3);SFP_EEPROM_ATTR(4);SFP_EEPROM_ATTR(5);SFP_EEPROM_ATTR(6);SFP_EEPROM_ATTR(7);SFP_EEPROM_ATTR(8);SFP_EEPROM_ATTR(9);
@@ -711,35 +711,35 @@ SFP_EEPROM_ATTR(28);SFP_EEPROM_ATTR(29);SFP_EEPROM_ATTR(30);SFP_EEPROM_ATTR(31);
 SFP_EEPROM_ATTR(37);SFP_EEPROM_ATTR(38);SFP_EEPROM_ATTR(39);SFP_EEPROM_ATTR(40);SFP_EEPROM_ATTR(41);SFP_EEPROM_ATTR(42);SFP_EEPROM_ATTR(43);SFP_EEPROM_ATTR(44);SFP_EEPROM_ATTR(45);
 SFP_EEPROM_ATTR(46);SFP_EEPROM_ATTR(47);SFP_EEPROM_ATTR(48);SFP_EEPROM_ATTR(49);SFP_EEPROM_ATTR(50);SFP_EEPROM_ATTR(51);SFP_EEPROM_ATTR(52);SFP_EEPROM_ATTR(53);SFP_EEPROM_ATTR(54);
 
-static struct bin_attribute *porsche_cpldA_sfp_epprom_attributes[] = {
+static struct bin_attribute *fn_6254_dn_f_cpldA_sfp_epprom_attributes[] = {
     &sfp13_eeprom_attr, &sfp14_eeprom_attr, &sfp15_eeprom_attr, &sfp16_eeprom_attr, &sfp17_eeprom_attr, &sfp18_eeprom_attr, &sfp19_eeprom_attr, &sfp20_eeprom_attr,
     &sfp21_eeprom_attr, &sfp22_eeprom_attr, &sfp23_eeprom_attr, &sfp24_eeprom_attr, &sfp25_eeprom_attr, &sfp26_eeprom_attr, &sfp27_eeprom_attr, &sfp28_eeprom_attr,
     &sfp29_eeprom_attr, &sfp30_eeprom_attr, &sfp31_eeprom_attr, &sfp32_eeprom_attr, &sfp33_eeprom_attr, &sfp34_eeprom_attr, &sfp35_eeprom_attr, &sfp36_eeprom_attr,
     NULL
 };
 
-static struct bin_attribute *porsche_cpldB_sfp_epprom_attributes[] = {
+static struct bin_attribute *fn_6254_dn_f_cpldB_sfp_epprom_attributes[] = {
     &sfp1_eeprom_attr, &sfp2_eeprom_attr, &sfp3_eeprom_attr, &sfp4_eeprom_attr, &sfp5_eeprom_attr, &sfp6_eeprom_attr, &sfp7_eeprom_attr, &sfp8_eeprom_attr,
     &sfp9_eeprom_attr, &sfp10_eeprom_attr, &sfp11_eeprom_attr, &sfp12_eeprom_attr,
     NULL
 };
 
-static struct bin_attribute *porsche_cpldC_sfp_epprom_attributes[] = {
+static struct bin_attribute *fn_6254_dn_f_cpldC_sfp_epprom_attributes[] = {
     &sfp37_eeprom_attr, &sfp38_eeprom_attr, &sfp39_eeprom_attr, &sfp40_eeprom_attr, &sfp41_eeprom_attr, &sfp42_eeprom_attr, &sfp43_eeprom_attr, &sfp44_eeprom_attr,
     &sfp45_eeprom_attr, &sfp46_eeprom_attr, &sfp47_eeprom_attr, &sfp48_eeprom_attr, &sfp49_eeprom_attr, &sfp50_eeprom_attr, &sfp51_eeprom_attr, &sfp52_eeprom_attr,
     &sfp53_eeprom_attr, &sfp54_eeprom_attr,
     NULL
 };
 
-static const struct attribute_group porsche_sfpA_group = { .bin_attrs = porsche_cpldA_sfp_epprom_attributes};
-static const struct attribute_group porsche_sfpB_group = { .bin_attrs = porsche_cpldB_sfp_epprom_attributes};
-static const struct attribute_group porsche_sfpC_group = { .bin_attrs = porsche_cpldC_sfp_epprom_attributes};
+static const struct attribute_group fn_6254_dn_f_sfpA_group = { .bin_attrs = fn_6254_dn_f_cpldA_sfp_epprom_attributes};
+static const struct attribute_group fn_6254_dn_f_sfpB_group = { .bin_attrs = fn_6254_dn_f_cpldB_sfp_epprom_attributes};
+static const struct attribute_group fn_6254_dn_f_sfpC_group = { .bin_attrs = fn_6254_dn_f_cpldC_sfp_epprom_attributes};
 
-static int porsche_sfp_device_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
+static int fn_6254_dn_f_sfp_device_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
 {
 	int i, err;
-	struct porsche_sfp_platform_data chip[MAX_PORT_NUM];
-	struct porsche_sfp_data *sfp;
+	struct fn_6254_dn_f_sfp_platform_data chip[MAX_PORT_NUM];
+	struct fn_6254_dn_f_sfp_data *sfp;
 
 	if (client->addr != SFP_EEPROM_A0_ADDR) {
 		DBG(printk(KERN_ALERT "%s - probe, bad i2c addr: 0x%x\n", __func__, client->addr));
@@ -747,7 +747,7 @@ static int porsche_sfp_device_probe(struct i2c_client *client, const struct i2c_
 		goto exit;
 	}
 
-	sfp = kzalloc(sizeof(struct porsche_sfp_data) +
+	sfp = kzalloc(sizeof(struct fn_6254_dn_f_sfp_data) +
 			NUM_ADDRESS * sizeof(struct i2c_client *),
 			GFP_KERNEL);
 	if (!sfp) {
@@ -766,7 +766,7 @@ static int porsche_sfp_device_probe(struct i2c_client *client, const struct i2c_
 				chip[i].byte_len = TWO_ADDR_EEPROM_SIZE;
 			}
 
-			err = sysfs_create_group(&client->dev.kobj, &porsche_sfpA_group);
+			err = sysfs_create_group(&client->dev.kobj, &fn_6254_dn_f_sfpA_group);
 			if (err)
 				goto err_clients;
 			break;
@@ -777,7 +777,7 @@ static int porsche_sfp_device_probe(struct i2c_client *client, const struct i2c_
 				chip[i].byte_len = TWO_ADDR_EEPROM_SIZE;
 			}
 
-			err = sysfs_create_group(&client->dev.kobj, &porsche_sfpB_group);
+			err = sysfs_create_group(&client->dev.kobj, &fn_6254_dn_f_sfpB_group);
 			if (err)
 				goto err_clients;
 			break;
@@ -796,7 +796,7 @@ static int porsche_sfp_device_probe(struct i2c_client *client, const struct i2c_
 				}
 			}
 
-			err = sysfs_create_group(&client->dev.kobj, &porsche_sfpC_group);
+			err = sysfs_create_group(&client->dev.kobj, &fn_6254_dn_f_sfpC_group);
 			if (err)
 				goto err_clients;
 			break;
@@ -848,9 +848,9 @@ exit:
 	return err;	
 }
 
-static int porsche_sfp_device_remove(struct i2c_client *client)
+static int fn_6254_dn_f_sfp_device_remove(struct i2c_client *client)
 {
-	struct porsche_sfp_data *sfp;
+	struct fn_6254_dn_f_sfp_data *sfp;
 	int i;
 
 	sfp = i2c_get_clientdata(client);
@@ -858,13 +858,13 @@ static int porsche_sfp_device_remove(struct i2c_client *client)
 	switch(sfp->driver_data)
     {
         case cpld_group_a:
-            sysfs_remove_group(&client->dev.kobj, &porsche_sfpA_group);
+            sysfs_remove_group(&client->dev.kobj, &fn_6254_dn_f_sfpA_group);
             break;
         case cpld_group_b:
-            sysfs_remove_group(&client->dev.kobj, &porsche_sfpB_group);
+            sysfs_remove_group(&client->dev.kobj, &fn_6254_dn_f_sfpB_group);
             break;
         case cpld_group_c:
-            sysfs_remove_group(&client->dev.kobj, &porsche_sfpC_group);
+            sysfs_remove_group(&client->dev.kobj, &fn_6254_dn_f_sfpC_group);
             break;
         default:
             dev_dbg(&client->dev, "i2c_remove_CPLD failed (0x%x)\n", client->addr);
@@ -879,24 +879,24 @@ static int porsche_sfp_device_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id porsche_sfp_id[] = {
-    { "porsche_sfpA", cpld_group_a },
-    { "porsche_sfpB", cpld_group_b },
-    { "porsche_sfpC", cpld_group_c },
+static const struct i2c_device_id fn_6254_dn_f_sfp_id[] = {
+    { "fn_6254_dn_f_sfpA", cpld_group_a },
+    { "fn_6254_dn_f_sfpB", cpld_group_b },
+    { "fn_6254_dn_f_sfpC", cpld_group_c },
     {}
 };
-MODULE_DEVICE_TABLE(i2c, porsche_sfp_id);
+MODULE_DEVICE_TABLE(i2c, fn_6254_dn_f_sfp_id);
 
-static struct i2c_driver porsche_sfp_driver = {
+static struct i2c_driver fn_6254_dn_f_sfp_driver = {
     .driver = {
-        .name     = "pegatron_porsche_sfp",
+        .name     = "pegatron_fn_6254_dn_f_sfp",
     },
-    .probe        = porsche_sfp_device_probe,
-    .remove       = porsche_sfp_device_remove,
-    .id_table     = porsche_sfp_id,
+    .probe        = fn_6254_dn_f_sfp_device_probe,
+    .remove       = fn_6254_dn_f_sfp_device_remove,
+    .id_table     = fn_6254_dn_f_sfp_id,
 };
 
-static int __init porsche_sfp_init(void)
+static int __init fn_6254_dn_f_sfp_init(void)
 {
 	int i;
 
@@ -924,18 +924,18 @@ static int __init porsche_sfp_init(void)
 
 	io_limit = rounddown_pow_of_two(io_limit);
 
-	return i2c_add_driver(&porsche_sfp_driver);
+	return i2c_add_driver(&fn_6254_dn_f_sfp_driver);
 }
 
-static void __exit porsche_sfp_exit(void)
+static void __exit fn_6254_dn_f_sfp_exit(void)
 {
-	i2c_del_driver(&porsche_sfp_driver);
+	i2c_del_driver(&fn_6254_dn_f_sfp_driver);
 }
 
 MODULE_AUTHOR("Peter5 Lin <Peter5_Lin@pegatroncorp.com.tw>");
-MODULE_DESCRIPTION("porsche_sfp driver");
+MODULE_DESCRIPTION("fn_6254_dn_f_sfp driver");
 MODULE_LICENSE("GPL");
 
-module_init(porsche_sfp_init);
-module_exit(porsche_sfp_exit);
+module_init(fn_6254_dn_f_sfp_init);
+module_exit(fn_6254_dn_f_sfp_exit);
 

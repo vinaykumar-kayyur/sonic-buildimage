@@ -42,10 +42,10 @@
 #define FAN_ENABLE_COMMAND              0x21
 #define FAN_LED_SETTO_MANUAL_COMMAND    0x30
 #define FAN_LED_SETTO_AUTO_COMMAND      0x31
-#define FAN_LED_GREENON_COMMAND         0x40
-#define FAN_LED_GREENOFF_COMMAND        0x41
-#define FAN_LED_AMBERON_COMMAND         0x50
-#define FAN_LED_AMBEROFF_COMMAND        0x51
+#define FAN_LED_GREENOFF_COMMAND        0x40
+#define FAN_LED_GREENON_COMMAND         0x41
+#define FAN_LED_AMBEROFF_COMMAND        0x50
+#define FAN_LED_AMBERON_COMMAND         0x51
 #define SMART_FAN_ENABLE_BIT            0
 #define SMART_FAN_SETTING_ENABLE_BIT    0
 #define SA56004X_REMOTE_TEMP_ALERT_BIT  4
@@ -55,21 +55,16 @@
 #define SET_BIT(data, bit)              data |= (1 << bit)
 #define CLEAR_BIT(data, bit)            data &= ~(1 << bit)
 
-enum chips
-{   
-    mercedes3 = 0,
-    cadillac,
-    porsche,
-};
-
 enum fan_alert
 {
-    FAN_OUTER_RPM_OVER_ALERT_BIT = 0,
-    FAN_OUTER_RPM_UNDER_ALERT_BIT, 
+    FAN_WRONG_AIRFLOW = 0,
+    FAN_OUTER_RPM_OVER_ALERT_BIT,
+    FAN_OUTER_RPM_UNDER_ALERT_BIT,
+    FAN_OUTER_RPM_ZERO_ALERT_BIT,
     FAN_INNER_RPM_OVER_ALERT_BIT,
     FAN_INNER_RPM_UNDER_ALERT_BIT,
-    FAN_CONNECT_ALERT_BIT,
-    FAN_DISCONNECT_ALERT_BIT,
+    FAN_INNER_RPM_ZERO_ALERT_BIT,
+    FAN_NOTCONNECT_ALERT_BIT,
 };
 
 enum fan_status
@@ -137,8 +132,9 @@ enum hwmon_mcu_register
 
     MONITOR_ADC_VOLTAGE_REG = 96,
 
-    LM_0X49_TEMP_REG = 112,
-    LM_0X48_TEMP_REG,
+    LM_0X48_TEMP_REG = 112,
+    LM_0X49_TEMP_REG,
+    LM_0X4A_TEMP_REG,
     SA56004X_LOCAL_TEMP_REG,
     SA56004X_REMOTE_TEMP_REG,
     
@@ -730,9 +726,10 @@ static ssize_t get_fan_enable(struct device *dev, struct device_attribute *da,
 static ssize_t set_fan_enable(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0;
-    u8 reg = SF_PWM_MID_REG;
+    u8 reg = FAN1_STATUS_REG + attr->index;
     long val = 0;
 
     if (kstrtol(buf, 10, &val))
@@ -769,9 +766,10 @@ static ssize_t get_fan_led_auto(struct device *dev, struct device_attribute *da,
 static ssize_t set_fan_led_auto(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0;
-    u8 reg = SF_PWM_MID_REG;
+    u8 reg = FAN1_STATUS_REG + attr->index;
     long val = 0;
 
     if (kstrtol(buf, 10, &val))
@@ -808,9 +806,10 @@ static ssize_t get_fan_led_green(struct device *dev, struct device_attribute *da
 static ssize_t set_fan_led_green(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0;
-    u8 reg = SF_PWM_MID_REG;
+    u8 reg = FAN1_STATUS_REG + attr->index;
     long val = 0;
 
     if (kstrtol(buf, 10, &val))
@@ -847,9 +846,10 @@ static ssize_t get_fan_led_amber(struct device *dev, struct device_attribute *da
 static ssize_t set_fan_led_amber(struct device *dev, struct device_attribute *da,
              const char *buf, size_t count)
 {
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0;
-    u8 reg = SF_PWM_MID_REG;
+    u8 reg = FAN1_STATUS_REG + attr->index;
     long val = 0;
 
     if (kstrtol(buf, 10, &val))
@@ -922,7 +922,22 @@ static ssize_t get_temp_alert(struct device *dev, struct device_attribute *da,
 
     data = pega_hwmon_mcu_read(client, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    GET_BIT(data, SA56004X_REMOTE_TEMP_ALERT_BIT + attr->index, val);
+    GET_BIT(data, attr->index, val);
+
+    return sprintf(buf, "%d\n", val);
+}
+
+static ssize_t get_fan_wrong_airflow_alert(struct device *dev, struct device_attribute *da,
+             char *buf)
+{
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    struct i2c_client *client = to_i2c_client(dev);   
+    u8 data = 0, val = 0;
+    u8 reg = FAN1_ALERT_REG + attr->index;
+
+    data = pega_hwmon_mcu_read(client, reg);
+    DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
+    GET_BIT(data, FAN_WRONG_AIRFLOW, val);
 
     return sprintf(buf, "%d\n", val);
 }
@@ -957,6 +972,21 @@ static ssize_t get_fan_outerRPMUnder_alert(struct device *dev, struct device_att
     return sprintf(buf, "%d\n", val);
 }
 
+static ssize_t get_fan_outerRPMZero_alert(struct device *dev, struct device_attribute *da,
+             char *buf)
+{
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    struct i2c_client *client = to_i2c_client(dev);   
+    u8 data = 0, val = 0;
+    u8 reg = FAN1_ALERT_REG + attr->index;
+
+    data = pega_hwmon_mcu_read(client, reg);
+    DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
+    GET_BIT(data, FAN_OUTER_RPM_ZERO_ALERT_BIT, val);
+
+    return sprintf(buf, "%d\n", val);
+}
+
 static ssize_t get_fan_innerRPMOver_alert(struct device *dev, struct device_attribute *da,
              char *buf)
 {
@@ -987,7 +1017,7 @@ static ssize_t get_fan_innerRPMUnder_alert(struct device *dev, struct device_att
     return sprintf(buf, "%d\n", val);
 }
 
-static ssize_t get_fan_connect_alert(struct device *dev, struct device_attribute *da,
+static ssize_t get_fan_innerRPMZero_alert(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -997,12 +1027,12 @@ static ssize_t get_fan_connect_alert(struct device *dev, struct device_attribute
 
     data = pega_hwmon_mcu_read(client, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    GET_BIT(data, FAN_CONNECT_ALERT_BIT, val);
+    GET_BIT(data, FAN_INNER_RPM_ZERO_ALERT_BIT, val);
 
     return sprintf(buf, "%d\n", val);
 }
 
-static ssize_t get_fan_disconnect_alert(struct device *dev, struct device_attribute *da,
+static ssize_t get_fan_notconnect_alert(struct device *dev, struct device_attribute *da,
              char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
@@ -1012,7 +1042,7 @@ static ssize_t get_fan_disconnect_alert(struct device *dev, struct device_attrib
 
     data = pega_hwmon_mcu_read(client, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    GET_BIT(data, FAN_DISCONNECT_ALERT_BIT, val);
+    GET_BIT(data, FAN_NOTCONNECT_ALERT_BIT, val);
 
     return sprintf(buf, "%d\n", val);
 }
@@ -1081,7 +1111,7 @@ static ssize_t get_adc_vol(struct device *dev, struct device_attribute *da,
     data = pega_hwmon_mcu_read(client, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
 
-    return sprintf(buf, "%d.%02d\n", data/1000, (data/10)%12);
+    return sprintf(buf, "%d.%02d\n", data/1000, data%1000);
 }
 
 static ssize_t get_hwmon_temp(struct device *dev, struct device_attribute *da,
@@ -1090,7 +1120,7 @@ static ssize_t get_hwmon_temp(struct device *dev, struct device_attribute *da,
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev); 
     u8 data = 0;  
-    u8 reg = LM_0X49_TEMP_REG + attr->index;
+    u8 reg = LM_0X48_TEMP_REG + attr->index;
 
     data = pega_hwmon_mcu_read(client, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
@@ -1106,12 +1136,14 @@ static ssize_t get_hwmon_temp(struct device *dev, struct device_attribute *da,
     static SENSOR_DEVICE_ATTR(fan##_num##_led_green,  S_IRUGO | S_IWUSR, get_fan_led_green, set_fan_led_green, _num-1);  \
     static SENSOR_DEVICE_ATTR(fan##_num##_led_amber,  S_IRUGO | S_IWUSR, get_fan_led_amber, set_fan_led_amber, _num-1);  \
     static SENSOR_DEVICE_ATTR(fan##_num##_status_alert,  S_IRUGO, get_fan_status_alert, NULL, _num-1);  \
+    static SENSOR_DEVICE_ATTR(fan##_num##_wrongAirflow_alert,  S_IRUGO, get_fan_wrong_airflow_alert, NULL, _num-1);  \
     static SENSOR_DEVICE_ATTR(fan##_num##_outerRPMOver_alert,  S_IRUGO, get_fan_outerRPMOver_alert, NULL, _num-1);  \
     static SENSOR_DEVICE_ATTR(fan##_num##_outerRPMUnder_alert,  S_IRUGO, get_fan_outerRPMUnder_alert, NULL, _num-1);  \
+    static SENSOR_DEVICE_ATTR(fan##_num##_outerRPMZero_alert,  S_IRUGO, get_fan_outerRPMZero_alert, NULL, _num-1);  \
     static SENSOR_DEVICE_ATTR(fan##_num##_innerRPMOver_alert,  S_IRUGO, get_fan_innerRPMOver_alert, NULL, _num-1);  \
     static SENSOR_DEVICE_ATTR(fan##_num##_innerRPMUnder_alert,  S_IRUGO, get_fan_innerRPMUnder_alert, NULL, _num-1);  \
-    static SENSOR_DEVICE_ATTR(fan##_num##_connect_alert,  S_IRUGO, get_fan_connect_alert, NULL, _num-1);  \
-    static SENSOR_DEVICE_ATTR(fan##_num##_disconnect_alert,  S_IRUGO, get_fan_disconnect_alert, NULL, _num-1)
+    static SENSOR_DEVICE_ATTR(fan##_num##_innerRPMZero_alert,  S_IRUGO, get_fan_innerRPMZero_alert, NULL, _num-1);  \
+    static SENSOR_DEVICE_ATTR(fan##_num##_notconnect_alert,  S_IRUGO, get_fan_notconnect_alert, NULL, _num-1);  
 
 SET_FAN_ATTR(1);SET_FAN_ATTR(2);SET_FAN_ATTR(3);SET_FAN_ATTR(4);SET_FAN_ATTR(5);
 
@@ -1142,10 +1174,12 @@ static SENSOR_DEVICE_ATTR(smartFan_max_pwm,  S_IRUGO | S_IWUSR, get_smartFan_max
 static SENSOR_DEVICE_ATTR(smartFan_mid_pwm,  S_IRUGO | S_IWUSR, get_smartFan_mid_pwm, set_smartFan_mid_pwm, 0);
 static SENSOR_DEVICE_ATTR(smartFan_min_pwm,  S_IRUGO | S_IWUSR, get_smartFan_min_pwm, set_smartFan_min_pwm, 0);
 
-static SENSOR_DEVICE_ATTR(lm75_49_temp_alert,  S_IRUGO, get_temp_alert, NULL, 3);
-static SENSOR_DEVICE_ATTR(lm75_48_temp_alert,  S_IRUGO, get_temp_alert, NULL, 2);
-static SENSOR_DEVICE_ATTR(SA56004X_Ltemp_alert,  S_IRUGO, get_temp_alert, NULL, 1);
-static SENSOR_DEVICE_ATTR(SA56004X_Rtemp_alert,  S_IRUGO, get_temp_alert, NULL, 0);
+static SENSOR_DEVICE_ATTR(lm75_48_temp_alert,  S_IRUGO, get_temp_alert, NULL, 5);
+static SENSOR_DEVICE_ATTR(lm75_49_temp_alert,  S_IRUGO, get_temp_alert, NULL, 4);
+static SENSOR_DEVICE_ATTR(lm75_4a_temp_alert,  S_IRUGO, get_temp_alert, NULL, 3);
+static SENSOR_DEVICE_ATTR(sa56004x_Ltemp_alert,  S_IRUGO, get_temp_alert, NULL, 2);
+static SENSOR_DEVICE_ATTR(sa56004x_Rtemp_alert,  S_IRUGO, get_temp_alert, NULL, 1);
+static SENSOR_DEVICE_ATTR(fanBoard_alert,  S_IRUGO, get_temp_alert, NULL, 0);
 
 static SENSOR_DEVICE_ATTR(i2c_fb_timeout,  S_IRUGO, get_i2c_timeout, NULL, 0);
 static SENSOR_DEVICE_ATTR(i2c_remote_timeout,  S_IRUGO, get_i2c_timeout, NULL, 1);
@@ -1154,10 +1188,11 @@ static SENSOR_DEVICE_ATTR(i2c_lm75_48_timeout,  S_IRUGO, get_i2c_timeout, NULL, 
 static SENSOR_DEVICE_ATTR(i2c_lm75_49_timeout,  S_IRUGO, get_i2c_timeout, NULL, 4);
 static SENSOR_DEVICE_ATTR(alert_mode,  S_IRUGO | S_IWUSR, get_alert_mode, set_alert_mode, 0);
 
-static SENSOR_DEVICE_ATTR(lm75_49_temp,  S_IRUGO, get_hwmon_temp, NULL, 0);
-static SENSOR_DEVICE_ATTR(lm75_48_temp,  S_IRUGO, get_hwmon_temp, NULL, 1);
-static SENSOR_DEVICE_ATTR(SA56004_local_temp,  S_IRUGO, get_hwmon_temp, NULL, 2);
-static SENSOR_DEVICE_ATTR(SA56004_remote_temp,  S_IRUGO, get_hwmon_temp, NULL, 3);
+static SENSOR_DEVICE_ATTR(lm75_48_temp,  S_IRUGO, get_hwmon_temp, NULL, 0);
+static SENSOR_DEVICE_ATTR(lm75_49_temp,  S_IRUGO, get_hwmon_temp, NULL, 1);
+static SENSOR_DEVICE_ATTR(lm75_4a_temp,  S_IRUGO, get_hwmon_temp, NULL, 2);
+static SENSOR_DEVICE_ATTR(sa56004x_local_temp,  S_IRUGO, get_hwmon_temp, NULL, 3);
+static SENSOR_DEVICE_ATTR(sa56004x_remote_temp,  S_IRUGO, get_hwmon_temp, NULL, 4);
 
 static struct attribute *pega_hwmon_mcu_attributes[] = {
     &sensor_dev_attr_mb_fw_upgrade.dev_attr.attr,
@@ -1248,8 +1283,16 @@ static struct attribute *pega_hwmon_mcu_attributes[] = {
 
     &sensor_dev_attr_lm75_48_temp_alert.dev_attr.attr,
     &sensor_dev_attr_lm75_49_temp_alert.dev_attr.attr,
-    &sensor_dev_attr_SA56004X_Ltemp_alert.dev_attr.attr,
-    &sensor_dev_attr_SA56004X_Rtemp_alert.dev_attr.attr,
+    &sensor_dev_attr_lm75_4a_temp_alert.dev_attr.attr,
+    &sensor_dev_attr_sa56004x_Ltemp_alert.dev_attr.attr,
+    &sensor_dev_attr_sa56004x_Rtemp_alert.dev_attr.attr,
+    &sensor_dev_attr_fanBoard_alert.dev_attr.attr,
+
+    &sensor_dev_attr_fan1_wrongAirflow_alert.dev_attr.attr,
+    &sensor_dev_attr_fan2_wrongAirflow_alert.dev_attr.attr,
+    &sensor_dev_attr_fan3_wrongAirflow_alert.dev_attr.attr,
+    &sensor_dev_attr_fan4_wrongAirflow_alert.dev_attr.attr,
+    &sensor_dev_attr_fan5_wrongAirflow_alert.dev_attr.attr,
 
     &sensor_dev_attr_fan1_outerRPMOver_alert.dev_attr.attr,
     &sensor_dev_attr_fan2_outerRPMOver_alert.dev_attr.attr,
@@ -1263,6 +1306,12 @@ static struct attribute *pega_hwmon_mcu_attributes[] = {
     &sensor_dev_attr_fan4_outerRPMUnder_alert.dev_attr.attr,
     &sensor_dev_attr_fan5_outerRPMUnder_alert.dev_attr.attr,
 
+    &sensor_dev_attr_fan1_outerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan2_outerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan3_outerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan4_outerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan5_outerRPMZero_alert.dev_attr.attr,
+
     &sensor_dev_attr_fan1_innerRPMOver_alert.dev_attr.attr,
     &sensor_dev_attr_fan2_innerRPMOver_alert.dev_attr.attr,
     &sensor_dev_attr_fan3_innerRPMOver_alert.dev_attr.attr,
@@ -1275,17 +1324,17 @@ static struct attribute *pega_hwmon_mcu_attributes[] = {
     &sensor_dev_attr_fan4_innerRPMUnder_alert.dev_attr.attr,
     &sensor_dev_attr_fan5_innerRPMUnder_alert.dev_attr.attr,
 
-    &sensor_dev_attr_fan1_connect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan2_connect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan3_connect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan4_connect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan5_connect_alert.dev_attr.attr,
+    &sensor_dev_attr_fan1_innerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan2_innerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan3_innerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan4_innerRPMZero_alert.dev_attr.attr,
+    &sensor_dev_attr_fan5_innerRPMZero_alert.dev_attr.attr,
 
-    &sensor_dev_attr_fan1_disconnect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan2_disconnect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan3_disconnect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan4_disconnect_alert.dev_attr.attr,
-    &sensor_dev_attr_fan5_disconnect_alert.dev_attr.attr,
+    &sensor_dev_attr_fan1_notconnect_alert.dev_attr.attr,
+    &sensor_dev_attr_fan2_notconnect_alert.dev_attr.attr,
+    &sensor_dev_attr_fan3_notconnect_alert.dev_attr.attr,
+    &sensor_dev_attr_fan4_notconnect_alert.dev_attr.attr,
+    &sensor_dev_attr_fan5_notconnect_alert.dev_attr.attr,
 
     &sensor_dev_attr_i2c_fb_timeout.dev_attr.attr,
     &sensor_dev_attr_i2c_remote_timeout.dev_attr.attr,
@@ -1303,10 +1352,11 @@ static struct attribute *pega_hwmon_mcu_attributes[] = {
     &sensor_dev_attr_ADC7_vol.dev_attr.attr,
     &sensor_dev_attr_ADC8_vol.dev_attr.attr,
 
-    &sensor_dev_attr_lm75_49_temp.dev_attr.attr,
     &sensor_dev_attr_lm75_48_temp.dev_attr.attr,
-    &sensor_dev_attr_SA56004_local_temp.dev_attr.attr,
-    &sensor_dev_attr_SA56004_remote_temp.dev_attr.attr,
+    &sensor_dev_attr_lm75_49_temp.dev_attr.attr,
+    &sensor_dev_attr_lm75_4a_temp.dev_attr.attr,
+    &sensor_dev_attr_sa56004x_local_temp.dev_attr.attr,
+    &sensor_dev_attr_sa56004x_remote_temp.dev_attr.attr,
 
     NULL
 };
@@ -1339,7 +1389,7 @@ static int pega_hwmon_mcu_remove(struct i2c_client *client)
 }
 
 static const struct i2c_device_id pega_hwmon_mcu_id[] = {
-    { "porsche_hwmon_mcu", porsche },
+    { "pega_hwmon_mcu", 0 },
     {}
 };
 MODULE_DEVICE_TABLE(i2c, pega_hwmon_mcu_id);

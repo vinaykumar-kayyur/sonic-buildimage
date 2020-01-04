@@ -19,13 +19,14 @@ PACKAGE_PRE_NAME := sonic-platform-pegatron
 KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_SRC_DIR:= $(shell pwd)
-MODULE_DIRS:= porsche
+MODULE_DIRS:= porsche fn-6254-dn-f
 MODULE_DIR := modules
 UTILS_DIR := utils
 SERVICE_DIR := service
 SCRIPTS_DIR := scripts
 CONF_DIR := conf
-
+PROCESS_DIR := pegaProcess
+IXGBE_VERSION := 5.2.4
 %:
 	dh $@ --with systemd,python2,python3 --buildsystem=pybuild
 
@@ -35,10 +36,20 @@ clean:
 	dh_clean
 
 build:
-	#make modules -C $(KERNEL_SRC)/build M=$(MODULE_SRC)
+	# For fn-6254-dn-f ixgbe driver
+	rm -rf ./ixgbe-$(IXGBE_VERSION)
+	wget -O ixgbe.tar.gz "https://sonicstorage.blob.core.windows.net/packages/ixgbe-5.2.4.tar.gz?sv=2015-04-05&sr=b&sig=AaqJHHaPiJRp8R3HKobi0GNDgHAVnqijk6hpahwJ0Mg%3D&se=2154-10-05T22%3A19%3A29Z&sp=r"
+	tar xzf ixgbe.tar.gz
+	rm ixgbe-$(IXGBE_VERSION)/src/Makefile ixgbe-$(IXGBE_VERSION)/src/common.mk ixgbe-$(IXGBE_VERSION)/src/Module.supported
+	git init ixgbe-$(IXGBE_VERSION)/src
+	git --git-dir=./ixgbe-$(IXGBE_VERSION)/src/.git --work-tree=ixgbe-$(IXGBE_VERSION)/src add --all
+	git --git-dir=./ixgbe-$(IXGBE_VERSION)/src/.git --work-tree=ixgbe-$(IXGBE_VERSION)/src commit -m "unmodified ixgbe source"
+	cp ./fn-6254-dn-f/modules/pegatron_fn_6254_dn_f_ixgbe/0001-modify-Intel-ixgbe-driver-for-fn-6254-dn-f.patch ./ixgbe-$(IXGBE_VERSION)/src/
+	git --git-dir=./ixgbe-$(IXGBE_VERSION)/src/.git --work-tree=ixgbe-$(IXGBE_VERSION)/src am 0001-modify-Intel-ixgbe-driver-for-fn-6254-dn-f.patch
+	cp ./ixgbe-$(IXGBE_VERSION)/src/* $(MOD_SRC_DIR)/fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/
+	
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
-		#$(PYTHON) $${mod}/setup.py build; \
 	done)
 
 binary: binary-arch binary-indep
@@ -59,16 +70,21 @@ binary-indep:
 
 	# Custom package commands
 	(for mod in $(MODULE_DIRS); do \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin; \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/usr/bin; \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /usr/local/bin; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /usr/local/bin/${PROCESS_DIR}; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /usr/bin; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} /lib/systemd/system; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(MODULE_DIR)/*.ko debian/$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
 		cp $(MOD_SRC_DIR)/$${mod}/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service debian/$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SCRIPTS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/bin/; \
-		#$(PYTHON) $${mod}/setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
+		cp $(MOD_SRC_DIR)/$${mod}/${PROCESS_DIR}/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/${PROCESS_DIR}; \
 	done)
+
+	# For fn-6254-dn-f ixgbe driver
+	cp $(MOD_SRC_DIR)/fn-6254-dn-f/$(MODULE_DIR)/pegatron_fn_6254_dn_f_ixgbe/pegatron_fn_6254_dn_f_ixgbe.ko debian/$(PACKAGE_PRE_NAME)-fn-6254-dn-f/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
+
 	# Resuming debhelper scripts
 	dh_testroot
 	dh_install

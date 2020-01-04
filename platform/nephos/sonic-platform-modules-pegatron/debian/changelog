@@ -1,3 +1,10 @@
+sonic-pegatron-platform-modules (1.0.0) unstable; urgency=low
+
+  * Add fn-6254-dn-f
+  * Modify porsche utility
+
+ -- Pegatron <Peter5_Lin@pegatroncorp.com>  Mon, 12 Aug 2019 17:41:32 +0800
+
 sonic-pegatron-platform-modules (0.1) unstable; urgency=low
 
   * Initial release

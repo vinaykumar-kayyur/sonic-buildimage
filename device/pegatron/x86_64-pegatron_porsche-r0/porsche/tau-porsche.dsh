@@ -1,52 +1,52 @@
 init start stage unit=0 low-level
-init set port-map unit=0 port=0 eth-macro=2 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=1 eth-macro=2 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=2 eth-macro=2 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=3 eth-macro=2 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=4 eth-macro=3 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=5 eth-macro=3 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=6 eth-macro=3 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=7 eth-macro=3 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=8 eth-macro=4 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=9 eth-macro=4 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=10 eth-macro=4 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=11 eth-macro=4 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=12 eth-macro=5 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=13 eth-macro=5 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=14 eth-macro=5 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=15 eth-macro=5 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=16 eth-macro=8 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=17 eth-macro=8 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=18 eth-macro=8 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=19 eth-macro=8 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=20 eth-macro=10 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=21 eth-macro=10 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=22 eth-macro=10 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=23 eth-macro=10 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=24 eth-macro=12 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=25 eth-macro=12 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=26 eth-macro=12 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=27 eth-macro=12 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=28 eth-macro=14 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=29 eth-macro=14 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=30 eth-macro=14 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=31 eth-macro=14 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=32 eth-macro=16 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=33 eth-macro=16 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=34 eth-macro=16 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=35 eth-macro=16 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=36 eth-macro=17 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=37 eth-macro=17 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=38 eth-macro=17 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=39 eth-macro=17 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=40 eth-macro=18 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=41 eth-macro=18 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=42 eth-macro=18 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=43 eth-macro=18 lane=3 max-speed=10g active=true
-init set port-map unit=0 port=44 eth-macro=19 lane=0 max-speed=10g active=true
-init set port-map unit=0 port=45 eth-macro=19 lane=1 max-speed=10g active=true
-init set port-map unit=0 port=46 eth-macro=19 lane=2 max-speed=10g active=true
-init set port-map unit=0 port=47 eth-macro=19 lane=3 max-speed=10g active=true
+init set port-map unit=0 port=0 eth-macro=2 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=1 eth-macro=2 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=2 eth-macro=2 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=3 eth-macro=2 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=4 eth-macro=3 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=5 eth-macro=3 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=6 eth-macro=3 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=7 eth-macro=3 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=8 eth-macro=4 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=9 eth-macro=4 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=10 eth-macro=4 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=11 eth-macro=4 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=12 eth-macro=5 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=13 eth-macro=5 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=14 eth-macro=5 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=15 eth-macro=5 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=16 eth-macro=8 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=17 eth-macro=8 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=18 eth-macro=8 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=19 eth-macro=8 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=20 eth-macro=10 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=21 eth-macro=10 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=22 eth-macro=10 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=23 eth-macro=10 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=24 eth-macro=12 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=25 eth-macro=12 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=26 eth-macro=12 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=27 eth-macro=12 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=28 eth-macro=14 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=29 eth-macro=14 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=30 eth-macro=14 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=31 eth-macro=14 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=32 eth-macro=16 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=33 eth-macro=16 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=34 eth-macro=16 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=35 eth-macro=16 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=36 eth-macro=17 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=37 eth-macro=17 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=38 eth-macro=17 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=39 eth-macro=17 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=40 eth-macro=18 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=41 eth-macro=18 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=42 eth-macro=18 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=43 eth-macro=18 lane=3 max-speed=25g active=true
+init set port-map unit=0 port=44 eth-macro=19 lane=0 max-speed=25g active=true
+init set port-map unit=0 port=45 eth-macro=19 lane=1 max-speed=25g active=true
+init set port-map unit=0 port=46 eth-macro=19 lane=2 max-speed=25g active=true
+init set port-map unit=0 port=47 eth-macro=19 lane=3 max-speed=25g active=true
 init set port-map unit=0 port=48 eth-macro=20 lane=0 max-speed=100g active=true
 init set port-map unit=0 port=49 eth-macro=21 lane=0 max-speed=100g active=true
 init set port-map unit=0 port=50 eth-macro=26 lane=0 max-speed=100g active=true
@@ -488,7 +488,7 @@ phy set pre-emphasis unit=0 portlist=53 lane-cnt=4 property=c2 data=0x02.02.02.0
 phy set pre-emphasis unit=0 portlist=53 lane-cnt=4 property=cn1 data=0x00.00.00.00
 phy set pre-emphasis unit=0 portlist=53 lane-cnt=4 property=c0 data=0x1A.1A.1A.1A
 phy set pre-emphasis unit=0 portlist=53 lane-cnt=4 property=c1 data=0x07.07.07.07
-port set property unit=0 portlist=0-47 speed=10g
+port set property unit=0 portlist=0-47 speed=25g
 port set property unit=0 portlist=0-47 medium-type=sr
 port set property unit=0 portlist=48-53 speed=100g
 port set property unit=0 portlist=48-53 medium-type=sr4

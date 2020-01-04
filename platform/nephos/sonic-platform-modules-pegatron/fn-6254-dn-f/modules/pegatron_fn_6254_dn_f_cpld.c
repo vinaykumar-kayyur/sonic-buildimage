@@ -1,5 +1,5 @@
 /*
- * A CPLD driver for the porsche
+ * A CPLD driver for the fn_6254_dn_f
  *
  * Copyright (C) 2018 Pegatron Corporation.
  * Peter5_Lin <Peter5_Lin@pegatroncorp.com.tw>
@@ -29,8 +29,8 @@
 #include <linux/err.h>
 #include <linux/mutex.h>
 
-#undef pegatron_porsche_DEBUG
-#ifdef pegatron_porsche_DEBUG
+#undef pegatron_fn_6254_dn_f_DEBUG
+#ifdef pegatron_fn_6254_dn_f_DEBUG
 #define DBG(x) x
 #else
 #define DBG(x)
@@ -76,7 +76,7 @@
 
 static LIST_HEAD(cpld_client_list);
 static struct mutex  list_lock;
-/* Addresses scanned for pegatron_porsche_cpld
+/* Addresses scanned for pegatron_fn_6254_dn_f_cpld
  */
 static const unsigned short normal_i2c[] = { CPLDA_ADDRESS, CPLDB_ADDRESS, CPLDC_ADDRESS, I2C_CLIENT_END };
 
@@ -85,7 +85,7 @@ struct cpld_client_node {
     struct list_head   list;
 };
 
-int pegatron_porsche_cpld_read(unsigned short addr, u8 reg)
+int pegatron_fn_6254_dn_f_cpld_read(unsigned short addr, u8 reg)
 {
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
@@ -108,9 +108,9 @@ int pegatron_porsche_cpld_read(unsigned short addr, u8 reg)
 
     return data;
 }
-EXPORT_SYMBOL(pegatron_porsche_cpld_read);
+EXPORT_SYMBOL(pegatron_fn_6254_dn_f_cpld_read);
 
-int pegatron_porsche_cpld_write(unsigned short addr, u8 reg, u8 val)
+int pegatron_fn_6254_dn_f_cpld_write(unsigned short addr, u8 reg, u8 val)
 {
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
@@ -133,7 +133,7 @@ int pegatron_porsche_cpld_write(unsigned short addr, u8 reg, u8 val)
 
     return ret;
 }
-EXPORT_SYMBOL(pegatron_porsche_cpld_write);
+EXPORT_SYMBOL(pegatron_fn_6254_dn_f_cpld_write);
 
 static ssize_t read_cpld_HWversion(struct device *dev, struct device_attribute *da,
              char *buf)
@@ -141,7 +141,7 @@ static ssize_t read_cpld_HWversion(struct device *dev, struct device_attribute *
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = CPLD_VERSION_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
 
     return sprintf(buf, "%02x\n", (data >> 5) & 0x7);
@@ -153,7 +153,7 @@ static ssize_t read_cpld_SWversion(struct device *dev, struct device_attribute *
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = CPLD_VERSION_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
 
     return sprintf(buf, "%02x\n", (data & 0x1f));
@@ -165,7 +165,7 @@ static ssize_t show_allled_ctrl(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = SYNC_CONTROL_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     data &= 0x3;
 
@@ -184,11 +184,11 @@ static ssize_t set_allled_ctrl(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     data = val | (data & 0xfc);
 
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -199,7 +199,7 @@ static ssize_t show_serial_led(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val = 0, reg = SYNC_CONTROL_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, CPLD_SERIAL_LED_BIT, val);
 
@@ -218,14 +218,14 @@ static ssize_t set_serial_led(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
     
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     if(val)
         SET_BIT(data, CPLD_SERIAL_LED_BIT);
     else
         CLEAR_BIT(data, CPLD_SERIAL_LED_BIT);
     
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -236,7 +236,7 @@ static ssize_t show_sys_led(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = CPLD_SYS_PWR_LED_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     data = (data >> 5) & 0x7;
 
@@ -255,11 +255,11 @@ static ssize_t set_sys_led(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     data = (val << 5) | (data & 0x1f);
 
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -269,7 +269,7 @@ static ssize_t show_pwr_led(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = CPLD_SYS_PWR_LED_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     data = (data >> 2) & 0x7;
 
@@ -289,11 +289,11 @@ static ssize_t set_pwr_led(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     data = (val << 2) | (data & 0xe3);
 
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -303,7 +303,7 @@ static ssize_t show_loc_led(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = CPLD_LOC_FAN_LED_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     data = (data>>4) & 0x3;
 
@@ -322,10 +322,10 @@ static ssize_t set_loc_led(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     data = (val << 4) | (data & 0xf);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -336,7 +336,7 @@ static ssize_t show_fan_led(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, reg = CPLD_LOC_FAN_LED_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     data &= 0x7;
 
@@ -355,10 +355,10 @@ static ssize_t set_fan_led(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     data = val | (data & 0xf8);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -369,7 +369,7 @@ static ssize_t show_eeprom_write_enable(struct device *dev, struct device_attrib
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val = 0, reg = CPLD_EEPROM_WRITE_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, reg, val);
 
@@ -388,14 +388,14 @@ static ssize_t set_eeprom_write_enable(struct device *dev, struct device_attribu
         return -EINVAL;
     }
     
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     if(val)
         SET_BIT(data, CPLD_EEPROM_WRITE_BIT);
     else
         CLEAR_BIT(data, CPLD_EEPROM_WRITE_BIT);
     
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -407,7 +407,7 @@ static ssize_t read_psu_present(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val = 0, reg = CPLD_PSU_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, (CPLD_PSU_PRESENT_BASE + attr->index), val);
 
@@ -421,7 +421,7 @@ static ssize_t read_psu_status(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val=0, reg = CPLD_PSU_REG;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, (CPLD_PSU_PWOK_BASE + attr->index), val);
 
@@ -444,7 +444,7 @@ static ssize_t get_sfp_present(struct device *dev, struct device_attribute *da,
     u8 reg = 0, data = 0, val = 0;
 
     GET_SFP_STATUS_ADDRESS(attr->index, reg);
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, SFP_PRESENT_BASE + 4*(attr->index % 2), val);
 
@@ -460,7 +460,7 @@ static ssize_t get_sfp_tx_disable(struct device *dev, struct device_attribute *d
 
     GET_SFP_STATUS_ADDRESS(attr->index, reg);
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, SFP_TXDISABLE_BASE + 4*(attr->index % 2), val);
 
@@ -481,14 +481,14 @@ static ssize_t set_sfp_tx_disable(struct device *dev, struct device_attribute *d
 
     GET_SFP_STATUS_ADDRESS(attr->index, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
 
     if(val)
         SET_BIT(data, SFP_TXDISABLE_BASE + 4*(attr->index % 2));
     else
         CLEAR_BIT(data, SFP_TXDISABLE_BASE + 4*(attr->index % 2));
 
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count; 
 }
@@ -501,7 +501,7 @@ static ssize_t get_sfp_rx_loss(struct device *dev, struct device_attribute *da,
 
     GET_SFP_STATUS_ADDRESS(attr->index, reg);
     
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, SFP_RXLOSS_BASE + 4*(attr->index % 2), val);
 
@@ -516,7 +516,7 @@ static ssize_t get_sfp_tx_fault(struct device *dev, struct device_attribute *da,
 
     GET_SFP_STATUS_ADDRESS(attr->index, reg);
     
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, SFP_TXFAULT_BASE + 4*(attr->index % 2), val);
 
@@ -530,7 +530,7 @@ static ssize_t get_qsfp_present(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val = 0, reg = QSFP_PRESENT_ADDRESS;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, (attr->index % QSFP_FIRST_PORT), val);
 
@@ -544,7 +544,7 @@ static ssize_t get_qsfp_reset(struct device *dev, struct device_attribute *da,
     struct i2c_client *client = to_i2c_client(dev);   
     u8 reg = (QSFP_RESET_ADDRESS_BASE + attr->index % QSFP_FIRST_PORT / 4), data =0;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     data = (data >> ((attr->index % QSFP_FIRST_PORT % 4)*2)) & 0x3;
 
@@ -564,13 +564,13 @@ static ssize_t set_qsfp_reset(struct device *dev, struct device_attribute *da,
         return -EINVAL;
     }
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     CLEAR_BIT(data, (attr->index % 4)*2);
     CLEAR_BIT(data, (attr->index % 4)*2+1);
     data |= (val & 0x3) << ((attr->index % QSFP_FIRST_PORT % 4)*2);
 
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -582,7 +582,7 @@ static ssize_t get_qsfp_lowpower(struct device *dev, struct device_attribute *da
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val = 0, reg = QSFP_LOW_POWER_ADDRESS;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, (attr->index % QSFP_FIRST_PORT), val);
     return sprintf(buf, "%02x\n", val);
@@ -600,14 +600,14 @@ static ssize_t set_qsfp_lowpower(struct device *dev, struct device_attribute *da
     {
         return -EINVAL;
     }
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     if(val)
         SET_BIT(data, (attr->index % QSFP_FIRST_PORT));
     else
         CLEAR_BIT(data, (attr->index % QSFP_FIRST_PORT));
 
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -619,7 +619,7 @@ static ssize_t get_qsfp_modeseln(struct device *dev, struct device_attribute *da
     struct i2c_client *client = to_i2c_client(dev);   
     u8 data = 0, val = 0, reg = QSFP_MODSELN_ADDRESS;
 
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     GET_BIT(data, (attr->index % QSFP_FIRST_PORT), val);
     return sprintf(buf, "%02x\n", val);
@@ -637,14 +637,14 @@ static ssize_t set_qsfp_modeseln(struct device *dev, struct device_attribute *da
     {
         return -EINVAL;
     }
-    data = pegatron_porsche_cpld_read(client->addr, reg);
+    data = pegatron_fn_6254_dn_f_cpld_read(client->addr, reg);
     DBG(printk(KERN_ALERT "%s - addr: 0x%x, reg: %x, data: %x\r\n", __func__, client->addr, reg, data));
     if(val)
         SET_BIT(data, (attr->index % QSFP_FIRST_PORT));
     else
         CLEAR_BIT(data, (attr->index % QSFP_FIRST_PORT));
 
-    pegatron_porsche_cpld_write(client->addr, reg, data);
+    pegatron_fn_6254_dn_f_cpld_write(client->addr, reg, data);
 
     return count;
 }
@@ -683,7 +683,7 @@ SET_SFP_ATTR(37);SET_SFP_ATTR(38);SET_SFP_ATTR(39);SET_SFP_ATTR(40);SET_SFP_ATTR
 SET_SFP_ATTR(46);SET_SFP_ATTR(47);SET_SFP_ATTR(48);
 SET_QSFP_ATTR(49);SET_QSFP_ATTR(50);SET_QSFP_ATTR(51);SET_QSFP_ATTR(52);SET_QSFP_ATTR(53);SET_QSFP_ATTR(54);
 
-static struct attribute *pegatron_porsche_cpldA_attributes[] = {
+static struct attribute *pegatron_fn_6254_dn_f_cpldA_attributes[] = {
     &sensor_dev_attr_cpld_hw_version.dev_attr.attr,
     &sensor_dev_attr_cpld_sw_version.dev_attr.attr,
 
@@ -811,7 +811,7 @@ static struct attribute *pegatron_porsche_cpldA_attributes[] = {
     NULL
 };
 
-static struct attribute *pegatron_porsche_cpldB_attributes[] = {
+static struct attribute *pegatron_fn_6254_dn_f_cpldB_attributes[] = {
     &sensor_dev_attr_cpld_hw_version.dev_attr.attr,
     &sensor_dev_attr_cpld_sw_version.dev_attr.attr,
     &sensor_dev_attr_cpld_allled_ctrl.dev_attr.attr,
@@ -888,7 +888,7 @@ static struct attribute *pegatron_porsche_cpldB_attributes[] = {
     NULL
 };
 
-static struct attribute *pegatron_porsche_cpldC_attributes[] = {
+static struct attribute *pegatron_fn_6254_dn_f_cpldC_attributes[] = {
     &sensor_dev_attr_cpld_hw_version.dev_attr.attr,
     &sensor_dev_attr_cpld_sw_version.dev_attr.attr,
 
@@ -984,11 +984,11 @@ static struct attribute *pegatron_porsche_cpldC_attributes[] = {
     NULL
 };
 
-static const struct attribute_group pegatron_porsche_cpldA_group = { .attrs = pegatron_porsche_cpldA_attributes};
-static const struct attribute_group pegatron_porsche_cpldB_group = { .attrs = pegatron_porsche_cpldB_attributes};
-static const struct attribute_group pegatron_porsche_cpldC_group = { .attrs = pegatron_porsche_cpldC_attributes};
+static const struct attribute_group pegatron_fn_6254_dn_f_cpldA_group = { .attrs = pegatron_fn_6254_dn_f_cpldA_attributes};
+static const struct attribute_group pegatron_fn_6254_dn_f_cpldB_group = { .attrs = pegatron_fn_6254_dn_f_cpldB_attributes};
+static const struct attribute_group pegatron_fn_6254_dn_f_cpldC_group = { .attrs = pegatron_fn_6254_dn_f_cpldC_attributes};
 
-static void pegatron_porsche_cpld_add_client(struct i2c_client *client)
+static void pegatron_fn_6254_dn_f_cpld_add_client(struct i2c_client *client)
 {
     struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
     
@@ -1004,7 +1004,7 @@ static void pegatron_porsche_cpld_add_client(struct i2c_client *client)
     mutex_unlock(&list_lock);
 }
 
-static void pegatron_porsche_cpld_remove_client(struct i2c_client *client)
+static void pegatron_fn_6254_dn_f_cpld_remove_client(struct i2c_client *client)
 {
     struct list_head        *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
@@ -1030,7 +1030,7 @@ static void pegatron_porsche_cpld_remove_client(struct i2c_client *client)
     mutex_unlock(&list_lock);
 }
 
-static int pegatron_porsche_cpld_probe(struct i2c_client *client,
+static int pegatron_fn_6254_dn_f_cpld_probe(struct i2c_client *client,
             const struct i2c_device_id *dev_id)
 {  
     int status;
@@ -1045,13 +1045,13 @@ static int pegatron_porsche_cpld_probe(struct i2c_client *client,
     switch(client->addr)
     {
         case CPLDA_ADDRESS:
-            status = sysfs_create_group(&client->dev.kobj, &pegatron_porsche_cpldA_group);
+            status = sysfs_create_group(&client->dev.kobj, &pegatron_fn_6254_dn_f_cpldA_group);
             break;
         case CPLDB_ADDRESS:
-            status = sysfs_create_group(&client->dev.kobj, &pegatron_porsche_cpldB_group);
+            status = sysfs_create_group(&client->dev.kobj, &pegatron_fn_6254_dn_f_cpldB_group);
             break;
         case CPLDC_ADDRESS:
-            status = sysfs_create_group(&client->dev.kobj, &pegatron_porsche_cpldC_group);
+            status = sysfs_create_group(&client->dev.kobj, &pegatron_fn_6254_dn_f_cpldC_group);
             break;
         default:
             dev_dbg(&client->dev, "i2c_check_CPLD failed (0x%x)\n", client->addr);
@@ -1065,7 +1065,7 @@ static int pegatron_porsche_cpld_probe(struct i2c_client *client,
     }
 
     dev_info(&client->dev, "chip found\n");
-    pegatron_porsche_cpld_add_client(client);
+    pegatron_fn_6254_dn_f_cpld_add_client(client);
     
     return 0; 
 
@@ -1073,18 +1073,18 @@ exit:
     return status;
 }
 
-static int pegatron_porsche_cpld_remove(struct i2c_client *client)
+static int pegatron_fn_6254_dn_f_cpld_remove(struct i2c_client *client)
 {
     switch(client->addr)
     {
         case CPLDA_ADDRESS:
-            sysfs_remove_group(&client->dev.kobj, &pegatron_porsche_cpldA_group);
+            sysfs_remove_group(&client->dev.kobj, &pegatron_fn_6254_dn_f_cpldA_group);
             break;
         case CPLDB_ADDRESS:
-            sysfs_remove_group(&client->dev.kobj, &pegatron_porsche_cpldB_group);
+            sysfs_remove_group(&client->dev.kobj, &pegatron_fn_6254_dn_f_cpldB_group);
             break;
         case CPLDC_ADDRESS:
-            sysfs_remove_group(&client->dev.kobj, &pegatron_porsche_cpldC_group);
+            sysfs_remove_group(&client->dev.kobj, &pegatron_fn_6254_dn_f_cpldC_group);
             break;
         default:
             dev_dbg(&client->dev, "i2c_remove_CPLD failed (0x%x)\n", client->addr);
@@ -1092,42 +1092,42 @@ static int pegatron_porsche_cpld_remove(struct i2c_client *client)
     }
 
   
-    pegatron_porsche_cpld_remove_client(client);  
+    pegatron_fn_6254_dn_f_cpld_remove_client(client);  
     return 0;
 }
 
-static const struct i2c_device_id pegatron_porsche_cpld_id[] = {
-    { "porsche_cpld", 0 },
+static const struct i2c_device_id pegatron_fn_6254_dn_f_cpld_id[] = {
+    { "fn_6254_dn_f_cpld", 0 },
     {}
 };
-MODULE_DEVICE_TABLE(i2c, pegatron_porsche_cpld_id);
+MODULE_DEVICE_TABLE(i2c, pegatron_fn_6254_dn_f_cpld_id);
 
-static struct i2c_driver pegatron_porsche_cpld_driver = {
+static struct i2c_driver pegatron_fn_6254_dn_f_cpld_driver = {
     .class      = I2C_CLASS_HWMON,
     .driver = {
-        .name = "pegatron_porsche_cpld",
+        .name = "pegatron_fn_6254_dn_f_cpld",
     },
-    .probe      = pegatron_porsche_cpld_probe,
-    .remove     = pegatron_porsche_cpld_remove,
-    .id_table   = pegatron_porsche_cpld_id,
+    .probe      = pegatron_fn_6254_dn_f_cpld_probe,
+    .remove     = pegatron_fn_6254_dn_f_cpld_remove,
+    .id_table   = pegatron_fn_6254_dn_f_cpld_id,
     .address_list = normal_i2c,
 };
 
-static int __init pegatron_porsche_cpld_init(void)
+static int __init pegatron_fn_6254_dn_f_cpld_init(void)
 {
     mutex_init(&list_lock);
 
-    return i2c_add_driver(&pegatron_porsche_cpld_driver);
+    return i2c_add_driver(&pegatron_fn_6254_dn_f_cpld_driver);
 }
 
-static void __exit pegatron_porsche_cpld_exit(void)
+static void __exit pegatron_fn_6254_dn_f_cpld_exit(void)
 {
-    i2c_del_driver(&pegatron_porsche_cpld_driver);
+    i2c_del_driver(&pegatron_fn_6254_dn_f_cpld_driver);
 }
 
 MODULE_AUTHOR("Peter5 Lin <Peter5_Lin@pegatroncorp.com.tw>");
-MODULE_DESCRIPTION("pegatron_porsche_cpld driver");
+MODULE_DESCRIPTION("pegatron_fn_6254_dn_f_cpld driver");
 MODULE_LICENSE("GPL");
 
-module_init(pegatron_porsche_cpld_init);
-module_exit(pegatron_porsche_cpld_exit);
+module_init(pegatron_fn_6254_dn_f_cpld_init);
+module_exit(pegatron_fn_6254_dn_f_cpld_exit);
