@@ -1,8 +1,10 @@
 # monit package
 
 MONIT_VERSION = 5.20.0-6
+CONFIGURED_ARCH = amd64
 
 export MONIT_VERSION
+export CONFIGURED_ARCH
 
 MONIT = monit_$(MONIT_VERSION)_$(CONFIGURED_ARCH).deb
 $(MONIT)_SRC_PATH = $(SRC_PATH)/monit
