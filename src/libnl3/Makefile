@@ -16,10 +16,11 @@ DERIVED_TARGETS = libnl-3-dev_$(LIBNL3_VERSION)_$(CONFIGURED_ARCH).deb \
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtaining the libnl3
 	rm -rf ./libnl3-$(LIBNL3_VERSION_BASE)
-	wget -O libnl3_$(LIBNL3_VERSION_BASE).orig.tar.gz -N "https://sonicstorage.blob.core.windows.net/packages/libnl3_$(LIBNL3_VERSION_BASE).orig.tar.gz?sv=2015-04-05&sr=b&sig=0HR%2FrWWL54Vl07bQCEX2MNxAnuGkci4KJqxNuDrv%2BCI%3D&se=2033-09-10T22%3A29%3A11Z&sp=r"
-	dpkg-source -x libnl3_$(LIBNL3_VERSION).dsc
+	git clone https://github.com/thom311/libnl libnl3-$(LIBNL3_VERSION_BASE)
+	pushd libnl3-$(LIBNL3_VERSION_BASE)
+	git checkout tags/libnl$(subst .,_,$(LIBNL3_VERSION_BASE))
 
-	pushd ./libnl3-$(LIBNL3_VERSION_BASE)
+	ln -s ../debian debian
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
