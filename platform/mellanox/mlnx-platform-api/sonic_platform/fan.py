@@ -42,7 +42,7 @@ class Fan(FanBase):
         else:
             self.fan_speed_get_path = "psu{}_fan1_speed_get".format(self.index)
             self.fan_presence_path = "psu{}_fan1_speed_get".format(self.index)
-            self._name = "fan(PSU{})".format(fan_index)
+            self._name = 'psu_{}_fan_{}'.format(self.index, fan_index)
             self.fan_max_speed_path = None
         self.fan_status_path = "fan{}_fault".format(self.index)
         self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
