@@ -31,10 +31,6 @@ class FanUtil(FanBase):
     GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
     sku_without_fan_direction = ['ACS-MSN2010', 'ACS-MSN2100', 'ACS-MSN2410', 'ACS-MSN2700', 'Mellanox-SN2700', 'Mellanox-SN2700-D48C8', 'LS-SN2700', 'ACS-MSN2740']
     sku_with_unpluggable_fan = ['ACS-MSN2010', 'ACS-MSN2100']
-    # Possible fan directions (relative to port-side of device)
-    FAN_DIRECTION_INTAKE = "intake"
-    FAN_DIRECTION_EXHAUST = "exhaust"
-    FAN_DIRECTION_NOT_APPLICABLE = "N/A"
 
     def __init__(self):
         FanBase.__init__(self)
