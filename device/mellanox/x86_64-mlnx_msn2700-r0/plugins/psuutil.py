@@ -26,6 +26,7 @@ class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
     MAX_PSU_FAN = 1
+    MAX_NUM_PSU = 2
     GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
     # for spectrum1 switches with plugable PSUs, the output voltage file is psuX_volt
     # for spectrum2 switches the output voltage file is psuX_volt_out2
@@ -58,7 +59,7 @@ class PsuUtil(PsuBase):
 
         :return: An integer, the number of PSUs available on the device
         """
-        return 2
+        return self.MAX_NUM_PSU
 
     def _read_file(self, file_pattern, index):
         """
@@ -88,6 +89,8 @@ class PsuUtil(PsuBase):
         """
         if index is None:
             return False
+        if index > self.MAX_NUM_PSU:
+            raise RuntimeError("index ({}) shouldn't be greater than {}".format(index, self.MAX_NUM_PSU))
 
         status = self._read_file(self.psu_oper_status, index)
 
@@ -102,7 +105,9 @@ class PsuUtil(PsuBase):
         :return: Boolean, True if PSU is plugged, False if not
         """
         if index is None:
-            return False
+            raise RuntimeError("index shouldn't be None")
+        if index > self.MAX_NUM_PSU:
+            raise RuntimeError("index ({}) shouldn't be greater than {}".format(index, self.MAX_NUM_PSU))
 
         status = self._read_file(self.psu_presence, index)
 
@@ -116,14 +121,14 @@ class PsuUtil(PsuBase):
         :return: An integer, value of o/p voltage in mV if PSU is good, else zero
         """
         if index is None:
-            return 0
+            raise RuntimeError("index shouldn't be None")
 
         if not self.get_psu_presence(index) or not self.get_psu_status(index):
             return 0
 
         voltage = self._read_file(self.psu_voltage, index)
 
-        return float(voltage) / 1000.0
+        return voltage
 
     def get_output_current(self, index):
         """
@@ -133,14 +138,14 @@ class PsuUtil(PsuBase):
         :return: An integer, value of o/p current in mA if PSU is good, else zero
         """
         if index is None:
-            return 0
+            raise RuntimeError("index shouldn't be None")
 
         if not self.get_psu_presence(index) or not self.get_psu_status(index):
             return 0
 
         current = self._read_file(self.psu_current, index)
 
-        return float(current) / 1000.0
+        return current
 
     def get_output_power(self, index):
         """
@@ -150,14 +155,14 @@ class PsuUtil(PsuBase):
         :return: An integer, value of o/p power in micro Watts if PSU is good, else zero
         """
         if index is None:
-            return 0
+            raise RuntimeError("index shouldn't be None")
 
         if not self.get_psu_presence(index) or not self.get_psu_status(index):
             return 0
 
         power = self._read_file(self.psu_power, index)
 
-        return float(power) / 1000000.0
+        return power
 
     def get_fan_speed(self, index, fan_index):
         """
@@ -168,9 +173,9 @@ class PsuUtil(PsuBase):
         :return: An integer, value of PSU-fan speed in rpm if PSU-fan is good, else zero
         """
         if index is None:
-            return 0
+            raise RuntimeError("index shouldn't be None")
         if fan_index > self.MAX_PSU_FAN:
-            return 0
+            raise RuntimeError("fan_index ({}) shouldn't be greater than {}".format(fan_index, self.MAX_PSU_FAN))
         if not self.get_psu_presence(index) or not self.get_psu_status(index):
             return 0
 

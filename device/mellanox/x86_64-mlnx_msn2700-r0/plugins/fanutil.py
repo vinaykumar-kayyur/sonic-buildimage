@@ -19,7 +19,7 @@ except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 def log_err(msg):
-    syslog.openlog("psuutil")
+    syslog.openlog("fanutil")
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
 
@@ -27,9 +27,14 @@ class FanUtil(FanBase):
     """Platform-specific FanUtil class"""
 
     PWM_MAX = 255
+    MAX_FAN_PER_DRAWER = 2
     GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
-    sku_without_fandir = ['ACS-MSN2010', 'ACS-MSN2100', 'ACS-MSN2410', 'ACS-MSN2700', 'Mellanox-SN2700', 'Mellanox-SN2700-D48C8', 'LS-SN2700', 'ACS-MSN2740']
+    sku_without_fan_direction = ['ACS-MSN2010', 'ACS-MSN2100', 'ACS-MSN2410', 'ACS-MSN2700', 'Mellanox-SN2700', 'Mellanox-SN2700-D48C8', 'LS-SN2700', 'ACS-MSN2740']
     sku_with_unpluggable_fan = ['ACS-MSN2010', 'ACS-MSN2100']
+    # Possible fan directions (relative to port-side of device)
+    FAN_DIRECTION_INTAKE = "intake"
+    FAN_DIRECTION_EXHAUST = "exhaust"
+    FAN_DIRECTION_NOT_APPLICABLE = "N/A"
 
     def __init__(self):
         FanBase.__init__(self)
@@ -45,7 +50,7 @@ class FanUtil(FanBase):
             self.unpluggable_fan = False
         self.fan_get_speed = "thermal/fan{}_speed_get"
         self.fan_set_speed = "thermal/fan{}_speed_set"
-        if self.sku_name in self.sku_without_fandir:
+        if self.sku_name in self.sku_without_fan_direction:
             self.fan_direction = None
         else:
             self.fan_direction = "system/fan_dir"
@@ -71,7 +76,7 @@ class FanUtil(FanBase):
         return num_of_fan, num_of_drawer
 
     def _convert_fan_index_to_drawer_index(self, index):
-        return (index + 1) / 2
+        return (index + self.MAX_FAN_PER_DRAWER - 1) / self.MAX_FAN_PER_DRAWER
 
     def _read_file(self, file_pattern, index = 0):
         """
@@ -83,11 +88,11 @@ class FanUtil(FanBase):
         """
         return_value = 0
         try:
-            with open(self.fan_path + file_pattern.format(index), 'r') as file_to_read:
+            with open(os.path.join(self.fan_path, file_pattern.format(index)), 'r') as file_to_read:
                 return_value = int(file_to_read.read())
         except IOError:
             log_err("Read file {} failed".format(self.fan_path + file_pattern.format(index)))
-            return 0
+            return return_value
 
         return return_value
 
@@ -123,7 +128,7 @@ class FanUtil(FanBase):
         :return: Boolean, True if FAN is plugged, False if not
         """
         if index > self.num_of_fan:
-            return False
+            raise RuntimeError("index ({}) shouldn't be greater than number of fans ({})".format(index, self.num_of_fan))
 
         if self.unpluggable_fan:
             return True
@@ -155,7 +160,7 @@ class FanUtil(FanBase):
             return self.FAN_DIRECTION_NOT_APPLICABLE
 
         if index > self.num_of_fan:
-            return self.FAN_DIRECTION_NOT_APPLICABLE
+            raise RuntimeError("index ({}) shouldn't be greater than number of fans ({})".format(index, self.num_of_fan))
 
         drawer_index = self._convert_fan_index_to_drawer_index(index)
 
