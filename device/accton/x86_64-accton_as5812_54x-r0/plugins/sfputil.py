@@ -157,15 +157,17 @@ class SfpUtil(SfpUtilBase):
         
         present_path = present_path + "module_present_" + str(port_num)            
         self.__port_to_is_present = present_path
-
+        
+        content="0"
         try:
             val_file = open(self.__port_to_is_present)
+            content = val_file.readline().rstrip()
+            val_file.close()
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print "Error: unable to access file: %s" % str(e)          
             return False
 
-        content = val_file.readline().rstrip()
-        val_file.close()
+       
 
         # content is a string, either "0" or "1"
         if content == "1":
@@ -189,14 +191,14 @@ class SfpUtil(SfpUtilBase):
         q = self.qsfp_sb_remap(port_num)
         lp_mode_path = lp_mode_path + str(q)
         
+        content = "0"
         try:
             val_file = open(lp_mode_path)
+            content = val_file.readline().rstrip()
+            val_file.close()
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)          
             return False
-
-        content = val_file.readline().rstrip()
-        val_file.close()
 
         # content is a string, either "0" or "1"
         if content == "1":
