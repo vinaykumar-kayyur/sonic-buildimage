@@ -1,0 +1,14 @@
+[Unit]
+Description=Inspur sc5630el platform initialization service
+#After=local-fs.target
+Before=pmon.service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/inspur_sc5630el_util.py install
+ExecStop=/usr/local/bin/inspur_sc5630el_util.py clean
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
