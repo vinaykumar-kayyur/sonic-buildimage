@@ -114,14 +114,14 @@ class SfpUtil(SfpUtilBase):
         index = ((port_num-1)%24) +1 
         port_ps = path.format(cpld_ps, index)
 
+        content = "0"
         try:
             val_file = open(port_ps)
+            content = val_file.readline().rstrip()
+            val_file.close()
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
-            return False
-
-        content = val_file.readline().rstrip()
-        val_file.close()
+            print "Error: unable to access file: %s" % str(e)          
+            return False       
 
         # content is a string, either "0" or "1"
         if content == "1":

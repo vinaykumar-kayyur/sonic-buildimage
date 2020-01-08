@@ -140,7 +140,7 @@ class SfpUtil(SfpUtilBase):
             eeprom = open(self.port_to_eeprom_mapping[port_num], "rb")
             eeprom.seek(93)
             lpmode = ord(eeprom.read(1))
-
+i
             if ((lpmode & 0x3) == 0x3):
                 return True # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
             else:
