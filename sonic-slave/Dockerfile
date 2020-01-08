@@ -239,7 +239,10 @@ RUN apt-get update && apt-get install -y \
 # For sonic vs image build
         dosfstools \
         qemu-kvm \
-        libvirt-bin
+        libvirt-bin \
+# For DHCP Monitor tool
+        libexplain-dev \
+        libevent-dev
 
 # For linux build
 RUN apt-get -y build-dep linux
