@@ -1,4 +1,10 @@
 #!/bin/bash
+#topolgy script for 6 ASIC PLATFORM
+FIRST_FRONTEND_ASIC=0
+LAST_FRONTEND_ASIC=3
+FIRST_BACKEND_ASIC=4
+LAST_BACKEND_ASIC=5
+NUM_INTERFACES_PER_ASIC=32
 
 start () {
     # Move external links into assigned frontend namespaces
@@ -6,9 +12,9 @@ start () {
     # eth16 - eth31: asic3 
     # eth32 - eth47: asic4
     # eth48 - eth63: asic5
-    for ASIC in `seq 0 3`; do
+    for ASIC in `seq $FIRST_FRONTEND_ASIC $LAST_FRONTEND_ASIC`; do
         for NUM in `seq 1 16`; do
-            ORIG="eth$((16 * $(($ASIC - 2)) + $NUM - 1))"
+            ORIG="eth$((16 * $ASIC + $NUM - 1))"
             TEMP="ethTemp999"
             NEW="eth$(($NUM + 16))"
             ip link set dev $ORIG down
@@ -20,11 +26,11 @@ start () {
     done
 
     # Connect all backend namespaces to frontend namespaces
-    for BACKEND in `seq 4 5`; do
-        for FRONTEND in `seq 0 3`; do
+    for BACKEND in `seq $FIRST_BACKEND_ASIC $LAST_BACKEND_ASIC`; do
+        for FRONTEND in `seq $FIRST_FRONTEND_ASIC $LAST_FRONTEND_ASIC`; do
             for LINK in `seq 1 8`; do
-                BACK_NAME="eth$((8 * $(($FRONTEND - 2)) + $LINK))"
-                FRONT_NAME="eth$((8 * $BACKEND + $LINK))" 
+                BACK_NAME="eth$((8 * $FRONTEND + $LINK))"
+		FRONT_NAME="eth$((8 * $(($LAST_BACKEND_ASIC - $BACKEND)) + $LINK))" 
                 TEMP_BACK="ethBack999"
                 TEMP_FRONT="ethFront999"
                 
@@ -43,11 +49,11 @@ start () {
 }
 
 stop() {
-    for ASIC in `seq 0 3`; do
+    for ASIC in `seq $FIRST_FRONTEND_ASIC $LAST_FRONTEND_ASIC`; do
         for NUM in `seq 1 16`; do
             TEMP="eth999"
             OLD="eth$(($NUM + 16))"
-            NAME="eth$((16 * $(($ASIC - 2)) + $NUM - 1))"
+            NAME="eth$((16 * $ASIC + $NUM - 1))"
             sudo ip netns exec asic$ASIC ip link set dev $OLD down
             sudo ip netns exec asic$ASIC ip link set dev $OLD name $TEMP
             sudo ip netns exec asic$ASIC ip link set dev $TEMP netns 1
@@ -56,8 +62,8 @@ stop() {
         done
     done
 
-    for ASIC in `seq 4 5`; do
-        for NUM in `seq 1 32`; do
+    for ASIC in `seq $FIRST_BACKEND_ASIC $LAST_BACKEND_ASIC`; do
+        for NUM in `seq 1 $NUM_INTERFACES_PER_ASIC`; do
             sudo ip netns exec asic$ASIC ip link set dev eth$NUM down
             sudo ip netns exec asic$ASIC ip link delete dev eth$NUM
         done
