@@ -140,12 +140,13 @@ static void replace_multi_inst_dep(char *src) {
     FILE *fp_tmp;
     char buf[MAX_BUF_SIZE];
     char* line = NULL;
-    char* dot_ptr;
     int i;
     ssize_t len;
     char *token;
     char *word;
     char *line_copy;
+    char *service_name;
+    char *type;
     ssize_t nread;
     bool section_done = false;
     char tmp_file_path[PATH_MAX];
@@ -179,20 +180,21 @@ static void replace_multi_inst_dep(char *src) {
                     snprintf(buf, MAX_BUF_SIZE,"%s=%s\n",token, word);
                     fputs(buf,fp_tmp);
                 } else {
-                    dot_ptr = strchr(word, '.');
-                    *dot_ptr = '\0';
+                    service_name = strdup(word);
+                    service_name = strtok(service_name, ".");
                     if (is_multi_instance_service(word)) {
                         for(i = 0; i < num_asics; i++){
-                            snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.service\n",
-                                    token, word, i);
+                            snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
+                                    token, service_name, i, type);
                             fputs(buf,fp_tmp);
                         }
                     } else {
-                        snprintf(buf, MAX_BUF_SIZE,"%s=%s.service\n",token, word);
+                        snprintf(buf, MAX_BUF_SIZE,"%s=%s.%s\n",token, service_name, type);
                         fputs(buf, fp_tmp);
                     }
 			    
                 }
+                free(service_name);
             }
             free(line_copy);
         }
