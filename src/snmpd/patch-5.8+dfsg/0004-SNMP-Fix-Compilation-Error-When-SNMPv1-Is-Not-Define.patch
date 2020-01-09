@@ -1,0 +1,63 @@
+From e78080e98f8b8712b5ca7df7b605ac766719aeda Mon Sep 17 00:00:00 2001
+From: Tamer Ahmed <tamer.ahmed@microsoft.com>
+Date: Wed, 8 Jan 2020 16:29:28 -0800
+Subject: [PATCH 4/4] [SNMP] Fix Compilation Error When SNMPv1 Is Not Defined
+
+signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
+---
+ include/net-snmp/library/default_store.h | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/include/net-snmp/library/default_store.h b/include/net-snmp/library/default_store.h
+index b1a73fe..8ac8c69 100644
+--- a/include/net-snmp/library/default_store.h
++++ b/include/net-snmp/library/default_store.h
+@@ -4,7 +4,7 @@
+  */
+ /*
+  * Portions of this file are copyrighted by:
+- * Copyright © 2003 Sun Microsystems, Inc. All rights reserved.
++ * Copyright ï¿½ 2003 Sun Microsystems, Inc. All rights reserved.
+  * Use is subject to license terms specified in the COPYING file
+  * distributed with the Net-SNMP package.
+  *
+@@ -193,18 +193,25 @@ extern          "C" {
+      */
+ #ifndef NETSNMP_FEATURE_REMOVE_RUNTIME_DISABLE_VERSION
+ 
+-#if !defined(NETSNMP_DISABLE_SNMPV1) || !defined(NETSNMP_DISABLE_SNMPV2C)
+-
++#if !defined(NETSNMP_DISABLE_SNMPV1)
+ #define NETSNMP_RUNTIME_PROTOCOL_SKIP_V1(pc_ver) \
+     ((pc_ver == SNMP_VERSION_1) &&                                     \
+      netsnmp_ds_get_boolean(NETSNMP_DS_LIBRARY_ID,                      \
+                             NETSNMP_DS_LIB_DISABLE_V1))
++#else
++#define NETSNMP_RUNTIME_PROTOCOL_SKIP_V1(pc_ver) (0)
++#endif
+ 
++#if !defined(NETSNMP_DISABLE_SNMPV2C)
+ #define NETSNMP_RUNTIME_PROTOCOL_SKIP_V2(pc_ver) \
+     ((pc_ver == SNMP_VERSION_2c) &&                                     \
+      netsnmp_ds_get_boolean(NETSNMP_DS_LIBRARY_ID,                      \
+                             NETSNMP_DS_LIB_DISABLE_V2c))
++#else
++#define NETSNMP_RUNTIME_PROTOCOL_SKIP_V2(pc_ver) (0)
++#endif
+ 
++#if !defined(NETSNMP_DISABLE_SNMPV1) || !defined(NETSNMP_DISABLE_SNMPV2C)
+ #define NETSNMP_RUNTIME_PROTOCOL_CHECK_V1V2(pc_ver, pc_target) do {    \
+         if (NETSNMP_RUNTIME_PROTOCOL_SKIP_V1(pc_ver) ||                \
+             NETSNMP_RUNTIME_PROTOCOL_SKIP_V2(pc_ver)) {                \
+@@ -213,8 +220,6 @@ extern          "C" {
+         }                                                              \
+     } while(0)
+ #else
+-#define NETSNMP_RUNTIME_PROTOCOL_SKIP_V1(pc_ver) (0)
+-#define NETSNMP_RUNTIME_PROTOCOL_SKIP_V2(pc_ver) (0)
+ #define NETSNMP_RUNTIME_PROTOCOL_CHECK_V1V2(ver, gt) do { ; } while(0)
+ #endif
+ 
+-- 
+2.17.1
+

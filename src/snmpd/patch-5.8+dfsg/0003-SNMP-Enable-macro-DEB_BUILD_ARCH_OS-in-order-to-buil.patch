@@ -1,0 +1,26 @@
+From e295778839bde2c3bc84ba1dd51c847ce9ec05db Mon Sep 17 00:00:00 2001
+From: Tamer Ahmed <tamer.ahmed@microsoft.com>
+Date: Wed, 8 Jan 2020 13:34:03 -0800
+Subject: [PATCH 3/3] [SNMP] Enable macro DEB_BUILD_ARCH_OS in order to build
+ ipv6 feature
+
+signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
+---
+ debian/rules | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/debian/rules b/debian/rules
+index 8778221..9df3958 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -3,6 +3,7 @@
+ 
+ export DEB_BUILD_MAINT_OPTIONS := hardening=+all
+ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
++DEB_BUILD_ARCH_OS  ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH_OS)
+ 
+ LIB_VERSION = 35
+ 
+-- 
+2.17.1
+
