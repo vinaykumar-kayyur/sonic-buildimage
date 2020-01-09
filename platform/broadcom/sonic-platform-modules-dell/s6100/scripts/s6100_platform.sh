@@ -217,12 +217,6 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
-init_reset_reason() {
-    /usr/share/sonic/device/x86_64-dell_s6100_c2538-r0/track_reboot_reason.sh
-    status=$(echo $?)
-    return status
-}
-
 install_python_api_package() {
     device="/usr/share/sonic/device"
     platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
@@ -245,7 +239,8 @@ if [[ "$1" == "init" ]]; then
     modprobe dell_ich
     modprobe dell_s6100_iom_cpld
     modprobe dell_s6100_lpc
-    init_reset_reason
+    modprobe nvram
+    systemctl start s6100-reboot-cause.service
 
     # Disable Watchdog Timer
     if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then
@@ -279,6 +274,7 @@ elif [[ "$1" == "deinit" ]]; then
     modprobe -r i2c-mux-pca954x
     modprobe -r i2c-dev
     modprobe -r dell_ich
+    modprobe -r nvram
     remove_python_api_package
 else
      echo "s6100_platform : Invalid option !"

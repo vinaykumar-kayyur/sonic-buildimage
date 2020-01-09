@@ -25,8 +25,11 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         try:
             self.eeprom_data = self.read_eeprom()
         except:
-            self.eeprom_data = "N/A"
-            raise RuntimeError("Eeprom is not Programmed")
+            try:
+                self.eeprom_data = self.read_eeprom()
+            except:
+                self.eeprom_data = "N/A"
+                raise RuntimeError("Eeprom is not Programmed")
         else:
             eeprom = self.eeprom_data
 
