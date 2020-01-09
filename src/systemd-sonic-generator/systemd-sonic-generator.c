@@ -151,15 +151,16 @@ static void replace_multi_inst_dep(char *src) {
     bool section_done = false;
     char tmp_file_path[PATH_MAX];
     
-    fp_src = fopen(src, "r");
     /* assumes that the service files has 3 sections,
      * in the order: Unit, Service and Install.
      * Read service dependency from Unit and Install 
      * sections, replace if dependent on multi instance
      * service.
      */
+    fp_src = fopen(src, "r");
     snprintf(tmp_file_path, PATH_MAX, "%s.tmp", src);
     fp_tmp = fopen(tmp_file_path, "w");
+
     while ((nread = getline(&line, &len, fp_src)) != -1 ) {
         if (strstr(line, "[Service]") != NULL) {
             section_done = true;
@@ -182,6 +183,7 @@ static void replace_multi_inst_dep(char *src) {
                 } else {
                     service_name = strdup(word);
                     service_name = strtok(service_name, ".");
+		    type = strtok(NULL, " ");
                     if (is_multi_instance_service(word)) {
                         for(i = 0; i < num_asics; i++){
                             snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
@@ -192,9 +194,8 @@ static void replace_multi_inst_dep(char *src) {
                         snprintf(buf, MAX_BUF_SIZE,"%s=%s.%s\n",token, service_name, type);
                         fputs(buf, fp_tmp);
                     }
-			    
+                    free(service_name);
                 }
-                free(service_name);
             }
             free(line_copy);
         }
@@ -303,9 +304,6 @@ static int get_unit_files(char* unit_files[]) {
         }
         strip_trailing_newline(line);
 
-        unit_files[num_unit_files] = strdup(line);
-        num_unit_files++;
-
         /* Get the multi-instance services */
         pos = strchr(line, '@');
         if (pos != NULL) {
@@ -313,6 +311,14 @@ static int get_unit_files(char* unit_files[]) {
             strncpy(multi_instance_services[num_multi_inst], line, pos-line);
             num_multi_inst++;
         }
+
+        /* topology service to be started only for multiasic VS platform */
+        if ((strcmp(line, "topology.service") == 0) &&
+                        (num_asics == 1)) {
+            continue;
+        }
+        unit_files[num_unit_files] = strdup(line);
+        num_unit_files++;
     }
 
     free(line);
