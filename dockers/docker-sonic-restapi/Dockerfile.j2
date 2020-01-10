@@ -9,11 +9,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update
 
-## Install redis-tools dependencies
-## TODO: implicitly install dependencies
-RUN apt-get -y install libjemalloc1
-RUN pip install setuptools
-
 {% if docker_sonic_restapi_debs.strip() -%}
 # Copy locally-built Debian package dependencies
 {{ copy_files("debs/", docker_sonic_restapi_debs.split(' '), "/debs/") }}
