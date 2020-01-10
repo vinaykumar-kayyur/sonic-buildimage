@@ -60,3 +60,14 @@ $(eval $(call add_derived_package,$(LIBSNMP_BASE),$(TKMIB)))
 #
 DBG_SRC_ARCHIVE += snmpd
 
+export LIBSNMP_BASE
+export SNMPTRAPD
+export SNMP
+export SNMPD
+export SNMP_DBG
+export SNMPD_DBG
+export LIBSNMP
+export LIBSNMP_DBG
+export LIBSNMP_DEV
+export LIBSNMP_PERL
+export TKMIB
