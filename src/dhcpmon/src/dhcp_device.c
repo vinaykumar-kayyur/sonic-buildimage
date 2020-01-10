@@ -17,7 +17,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <syslog.h>
-#include <libexplain/ioctl.h>
 #include <linux/filter.h>
 #include <netpacket/packet.h>
 
@@ -356,14 +355,14 @@ static int initialize_intf_mac_and_ip_addr(dhcp_device_context_t *context)
 
         // Get network address
         if (ioctl(fd, SIOCGIFADDR, &ifr) == -1) {
-            syslog(LOG_ALERT, "ioctl: %s", explain_ioctl(fd, SIOCGIFADDR, &ifr));
+            syslog(LOG_ALERT, "ioctl: %s", strerror(errno));
             break;
         }
         context->ip = ((struct sockaddr_in*) &ifr.ifr_addr)->sin_addr.s_addr;
 
         // Get mac address
         if (ioctl(fd, SIOCGIFHWADDR, &ifr) == -1) {
-            syslog(LOG_ALERT, "ioctl: %s", explain_ioctl(fd, SIOCGIFHWADDR, &ifr));
+            syslog(LOG_ALERT, "ioctl: %s", strerror(errno));
             break;
         }
         memcpy(context->mac, ifr.ifr_hwaddr.sa_data, sizeof(context->mac));

@@ -241,7 +241,6 @@ RUN apt-get update && apt-get install -y \
         qemu-kvm \
         libvirt-bin \
 # For DHCP Monitor tool
-        libexplain-dev \
         libevent-dev
 
 # For linux build
