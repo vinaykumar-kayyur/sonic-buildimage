@@ -1,7 +1,7 @@
 From e295778839bde2c3bc84ba1dd51c847ce9ec05db Mon Sep 17 00:00:00 2001
 From: Tamer Ahmed <tamer.ahmed@microsoft.com>
 Date: Wed, 8 Jan 2020 13:34:03 -0800
-Subject: [PATCH 3/3] [SNMP] Enable macro DEB_BUILD_ARCH_OS in order to build
+Subject: [SNMP] Enable macro DEB_BUILD_ARCH_OS in order to build
  ipv6 feature
 
 signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>

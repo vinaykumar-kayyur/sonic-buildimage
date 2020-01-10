@@ -1,7 +1,7 @@
 From e78080e98f8b8712b5ca7df7b605ac766719aeda Mon Sep 17 00:00:00 2001
 From: Tamer Ahmed <tamer.ahmed@microsoft.com>
 Date: Wed, 8 Jan 2020 16:29:28 -0800
-Subject: [PATCH 4/4] [SNMP] Fix Compilation Error When SNMPv1 Is Not Defined
+Subject: [SNMP] Fix Compilation Error When SNMPv1 Is Not Defined
 
 signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
 ---

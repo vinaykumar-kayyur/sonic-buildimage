@@ -1,7 +1,7 @@
 From e213bbf6dc8f1431ebb9ab9d1d57dcb6f37b5b20 Mon Sep 17 00:00:00 2001
 From: Tamer Ahmed <tamer.ahmed@microsoft.com>
 Date: Wed, 8 Jan 2020 10:05:16 -0800
-Subject: [PATCH 2/3] [SNMP] Disable SNMPv1
+Subject: [SNMP] Disable SNMPv1
 
 signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
 ---
