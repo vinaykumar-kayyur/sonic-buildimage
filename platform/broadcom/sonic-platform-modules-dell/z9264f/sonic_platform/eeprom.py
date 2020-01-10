@@ -138,8 +138,3 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         found in the system EEPROM.
         """
         return self.eeprom_tlv_dict
-
-
-
-
-
