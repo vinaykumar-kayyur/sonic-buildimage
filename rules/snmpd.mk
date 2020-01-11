@@ -43,6 +43,7 @@ $(eval $(call add_derived_package,$(LIBSNMP_BASE),$(LIBSNMP_DBG)))
 
 LIBSNMP_DEV = libsnmp-dev_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(LIBSNMP_DEV)_DEPENDS += $(LIBSNMP)
+$(LIBSNMP_DEV)_RDEPENDS += $(LIBSENSORS_DEV)
 $(eval $(call add_derived_package,$(LIBSNMP_BASE),$(LIBSNMP_DEV)))
 
 LIBSNMP_PERL = libsnmp-perl_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb

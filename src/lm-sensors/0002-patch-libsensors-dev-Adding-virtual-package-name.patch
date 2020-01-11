@@ -1,0 +1,25 @@
+From 46f15b164e2e26b05b1a88b931bb40a01a4e6904 Mon Sep 17 00:00:00 2001
+From: Tamer Ahmed <tamer.ahmed@microsoft.com>
+Date: Fri, 10 Jan 2020 13:59:41 -0800
+Subject: [libsensors-dev] Adding virtual package name
+
+signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
+---
+ debian/control | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/lm-sensors/lm-sensors-3.4.0/debian/control b/src/lm-sensors/lm-sensors-3.4.0/debian/control
+index 0000000..59e99a8
+--- a/src/lm-sensors/lm-sensors-3.4.0/debian/control
++++ b/src/lm-sensors/lm-sensors-3.4.0/debian/control
+@@ -38,6 +38,7 @@ Description: library to read temperature/voltage/fan sensors
+  This package contains a shared library for querying lm-sensors.
+ 
+ Package: libsensors4-dev
++Provides: libsensors-dev
+ Architecture: any
+ Depends: libsensors4 (= ${binary:Version}), ${misc:Depends}
+ Conflicts: lm-sensors (<< 1:3.1.1-6), libsensors-dev
+-- 
+2.17.1
+
