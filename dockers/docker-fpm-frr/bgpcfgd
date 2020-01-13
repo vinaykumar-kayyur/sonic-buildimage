@@ -283,6 +283,8 @@ class BGPPeerMgr(Manager):
         }
 
     def set_handler(self, key, data):
+        if not self.directory.path_exist("meta", "localhost/bgp_asn"):
+            return False
         key = self.normalize_key(key)
         vrf, nbr = key.split('|', 1)
         if key not in self.peers:
