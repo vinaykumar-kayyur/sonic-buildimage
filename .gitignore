@@ -111,7 +111,6 @@ dockers/docker-fpm-frr/Dockerfile
 dockers/docker-fpm-gobgp/Dockerfile
 dockers/docker-fpm-quagga/Dockerfile
 dockers/docker-lldp-sv2/Dockerfile
-dockers/docker-namespace/Dockerfile
 dockers/docker-orchagent/Dockerfile
 dockers/docker-platform-monitor/Dockerfile
 dockers/docker-router-advertiser/Dockerfile
