@@ -19,7 +19,7 @@ LIBSENSORS_DBG = libsensors4-dbgsym_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH
 $(eval $(call add_derived_package,$(LIBSENSORS),$(LIBSENSORS_DBG)))
 
 LIBSENSORS_DEV = libsensors4-dev_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
-$(eval $(call add_derived_package,$(LM_SENSORS),$(LIBSENSORS_DEV)))
+$(eval $(call add_derived_package,$(LIBSENSORS),$(LIBSENSORS_DEV)))
 
 SENSORD = sensord_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(SENSORD)))
