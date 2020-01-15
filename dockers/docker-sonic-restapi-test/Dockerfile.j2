@@ -1,0 +1,41 @@
+{% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
+FROM docker-config-engine-stretch
+
+ARG docker_container_name
+RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update
+RUN pwd
+
+{% if docker_sonic_restapi_test_debs.strip() -%}
+# Copy locally-built Debian package dependencies
+{{ copy_files("debs/", docker_sonic_restapi_test_debs.split(' '), "/debs/") }}
+
+# Install locally-built Debian packages and implicitly install their dependencies
+{{ install_debian_packages( docker_sonic_restapi_test_debs.split(' ')) }}
+{%- endif %}
+
+# Adjust redis configurations
+RUN sed -ri 's/^(save .*$)/# \1/g;                                                      \
+             s/^daemonize yes$/daemonize no/;                                           \
+             s/^logfile .*$/logfile ""/;                                                \
+             s/^# syslog-enabled no$/syslog-enabled no/;                                \
+             s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/; \
+             s/^bind 127.0.0.1/bind 0.0.0.0/ \
+            ' /etc/redis/redis.conf
+
+# COPY ["supervisor/redis.conf", "/etc/supervisor/conf.d/"]
+COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["start.sh", "/usr/bin"]
+
+COPY ["CreateMockPort.sh", "/usr/bin"]
+
+COPY ["debug/*", "/usr/bin/"]
+
+## Clean up
+RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+
+ENTRYPOINT ["/usr/bin/supervisord"]
