@@ -27,7 +27,7 @@ RUN sed -ri 's/^(save .*$)/# \1/g;                                              
              s/^bind 127.0.0.1/bind 0.0.0.0/ \
             ' /etc/redis/redis.conf
 
-# COPY ["supervisor/redis.conf", "/etc/supervisor/conf.d/"]
+COPY ["supervisor/redis.conf", "/etc/supervisor/conf.d/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["start.sh", "/usr/bin"]
 
