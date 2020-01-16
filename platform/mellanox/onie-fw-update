@@ -61,7 +61,7 @@ change_grub_boot_order()
 	find_onie_menuentry
 	rc=$?
 	if [ $rc -eq 0 ]; then
-		grub-reboot --boot-directory=$os_boot $onie_entry
+		grub-editenv $os_boot/grub/grubenv set onie_entry=ONIE
 	else
 		echo "ERROR: ONIE entry wasn't found in grub config"
 		return 1

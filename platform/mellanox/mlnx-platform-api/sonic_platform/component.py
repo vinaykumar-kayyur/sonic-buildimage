@@ -210,8 +210,7 @@ class ComponentBIOS(Component):
             print("ERROR: Installing BIOS failed due to {}".format(repr(e)))
             return False
 
-        print("INFO: Reboot via \"/sbin/reboot\" is required to finish BIOS installation.")
-        print("INFO: Please don't try installing a new sonic image before BIOS installation finishing")
+        print("INFO: Reboot is required to finish BIOS installation.")
         return True
 
 
