@@ -105,6 +105,8 @@ debs/{{ deb }}{{' '}}
 
 RUN pip install ansible==2.8.7
 
+RUN pip install pysubnettree
+
 RUN mkdir /var/run/sshd
 EXPOSE 22
 
