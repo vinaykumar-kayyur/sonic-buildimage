@@ -33,6 +33,9 @@ RUN echo "deb [arch=arm64] http://archive.debian.org/debian jessie main contrib 
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
+COPY ["81norecommends", "/etc/apt/apt.conf.d"]
+COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
+
 RUN apt-get update && apt-get install -y \
         apt-utils \
         default-jre-headless \
@@ -63,6 +66,7 @@ RUN apt-get update && apt-get install -y \
         perl-modules \
         libswitch-perl \
         dh-systemd \
+        debootstrap \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -92,6 +96,7 @@ RUN apt-get update && apt-get install -y \
         libxml-simple-perl \
         graphviz \
         aspell \
+        aspell-en \
 # For linux build
         bc \
         fakeroot \
@@ -249,6 +254,7 @@ RUN apt-get update && apt-get install -y \
 # For python-click build
         python-sphinx \
         python-docutils \
+        python-colorama \
         python3-all \
         python3-setuptools \
         python3-sphinx \
@@ -294,6 +300,10 @@ RUN export VERSION=1.11.5 \
 # Upgrade pip2
 # Note: use pip2 specific version so jinja2 2.10 will install
 RUN python2 -m pip install -U pip==9.0.3
+
+# For python wheel
+RUN pip install wheel
+RUN pip3 install wheel
 
 # For p4 build
 RUN pip install \
