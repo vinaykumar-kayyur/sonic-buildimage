@@ -87,7 +87,7 @@ class Daemon(object):
         self.subscribers = set()
 
     def add_manager(self, db_name, table_name, callback):
-        db = swsscommon.SonicDBConfig::getDbId(db_name)
+        db = swsscommon.SonicDBConfig.getDbId(db_name)
         if db not in self.db_connectors:
             self.db_connectors[db] = swsscommon.DBConnector(db_name, 0)
 
