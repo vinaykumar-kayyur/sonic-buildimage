@@ -24,7 +24,6 @@ start)
 stop)
     /usr/local/bin/s5296f_platform.sh deinit
     echo "done."
-
     ;;
 
 force-reload|restart)
