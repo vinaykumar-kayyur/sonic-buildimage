@@ -2,29 +2,11 @@
 
 SERVICE="bgp"
 DEBUGLOG="/tmp/bgp_debug.log"
-LOCKFILE="/tmp/bgp-lock"
 
 function debug()
 {
 		/usr/bin/logger $1
 		/bin/echo `date` "- $1" >> ${DEBUGLOG}
-}
-
-function lock_service_state_change()
-{
-    debug "Locking ${LOCKFILE} from ${SERVICE} service"
-
-    exec {LOCKFD}>${LOCKFILE}
-    /usr/bin/flock -x ${LOCKFD}
-    trap "/usr/bin/flock -u ${LOCKFD}" 0 2 3 15
-
-    debug "Locked ${LOCKFILE} (${LOCKFD}) from ${SERVICE} service"
-}
-
-function unlock_service_state_change()
-{
-    debug "Unlocking ${LOCKFILE} (${LOCKFD}) from ${SERVICE} service"
-    /usr/bin/flock -u ${LOCKFD}
 }
 
 function check_warm_boot()
@@ -41,7 +23,7 @@ function check_warm_boot()
 function validate_restore_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|orchagent" restore_count`
+        RESTORE_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|bgp" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
             WARM_BOOT="false"
@@ -49,25 +31,9 @@ function validate_restore_count()
     fi
 }
 
-function wait_for_database_service()
-{
-    # Wait for redis server start before database clean
-    until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]];
-        do sleep 1;
-    done
-
-    # Wait for configDB initialization
-    until [[ $(/usr/bin/docker exec database redis-cli -n 4 GET "CONFIG_DB_INITIALIZED") ]];
-        do sleep 1;
-    done
-}
-
 start() {
     debug "Starting ${SERVICE} service..."
 
-    lock_service_state_change
-
-    wait_for_database_service
     check_warm_boot
     validate_restore_count
 
@@ -77,8 +43,6 @@ start() {
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
 
-    # Unlock has to happen before reaching out to peer service
-    unlock_service_state_change
 }
 
 attach() {
@@ -89,22 +53,19 @@ attach() {
 stop() {
     debug "Stopping ${SERVICE} service..."
 
-    [[ -f ${LOCKFILE} ]] || /usr/bin/touch ${LOCKFILE}
-
-    lock_service_state_change
     check_warm_boot
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
 
-		# Kill bgpd to start the bgp graceful restart procedure, otherwise it sends Notification to peer
-		debug "Stopping ${SERVICE} service..."
-		/usr/bin/docker exec -i bgp pkill -9 zebra
-		/usr/bin/docker exec -i bgp pkill -9 bgpd || [ $? == 1 ]
+		# Kill bgpd to start the bgp graceful restart procedure
+		if [[ x"$WARM_BOOT" == x"true" ]]; then
+				debug "Kill zebra first"
+				/usr/bin/docker exec -i bgp pkill -9 zebra
+				/usr/bin/docker exec -i bgp pkill -9 bgpd || [ $? == 1 ]
+		fi
 		
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
-    # Unlock has to happen before reaching out to peer service
-    unlock_service_state_change
 }
 
 case "$1" in
