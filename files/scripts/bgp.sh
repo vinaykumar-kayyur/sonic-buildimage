@@ -5,8 +5,8 @@ DEBUGLOG="/tmp/bgp_debug.log"
 
 function debug()
 {
-		/usr/bin/logger $1
-		/bin/echo `date` "- $1" >> ${DEBUGLOG}
+    /usr/bin/logger $1
+    /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
 function check_warm_boot()
