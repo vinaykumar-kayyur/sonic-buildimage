@@ -44,7 +44,7 @@ def main():
 
             config_db = swsssdk.ConfigDBConnector()
             config_db.connect()
-            docker_config = config_db.get_table(TABLE_NAME)
+            docker_config = config_db.get_table(CONTAINER_FEATURE_TABLE_NAME)
             if docker_config and docker_config.has_key(CONTAINER_NAME):
                 restart_feature = docker_config[CONTAINER_NAME].get('auto_restart')
 
