@@ -113,6 +113,10 @@ function preStartAction()
     fi
 
     echo -n "" > /tmp/snmpagentaddr.yml
+    # TODO
+    # we should avoid using 'keys' operation via redis-cli or sonic-db-cli
+    # there would be an issue when KEY in database contains space or '\n'
+    # for loop on the non-tty 'keys' output will take the space or `\n` as seperator when parsing the element
     keys=`sonic-db-cli CONFIG_DB keys "SNMP_AGENT_ADDRESS_CONFIG|*"`
     count=1
     for key in $keys;do
