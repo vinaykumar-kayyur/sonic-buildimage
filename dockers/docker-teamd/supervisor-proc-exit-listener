@@ -12,7 +12,7 @@ from supervisor import childutils
 # supervisor.conf file), one per line
 CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 
-# This table in the database contains the features for container and each 
+# This table in database contains the features for container and each 
 # feature in a row will be configured a state or number.
 TABLE_NAME = 'CONTAINER_FEATURE'
 
