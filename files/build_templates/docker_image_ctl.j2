@@ -273,10 +273,10 @@ start() {
         NET="host"
     else
         {%- if docker_container_name == "database" %} 
-	NET="bridge"
-	{%- else %}
+        NET="bridge"
+        {%- else %}
         NET="container:database$DEV"
-	{%- endif %}
+        {%- endif %}
     fi
 
 {%- if sonic_asic_platform == "mellanox" %}
