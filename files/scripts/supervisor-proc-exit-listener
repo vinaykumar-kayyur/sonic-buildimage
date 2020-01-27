@@ -4,6 +4,8 @@ import os
 import signal
 import sys
 import syslog
+import swsssdk
+import getopt
 
 from supervisor import childutils
 
@@ -11,7 +13,17 @@ from supervisor import childutils
 # supervisor.conf file), one per line
 CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 
-def main():
+# This table in databse contains the features for container and each
+# feature for a row will be configured a state or number.
+CONTAINER_FEATURE_TABLE_NAME = 'CONTAINER_FEATURE'
+
+def main(argv):
+    container_name = ''
+    opts, args = getopt.getopt(argv, "c:", ["container-name"])
+    for opt, arg in opts:
+        if opt in ("-c", "--container-name"):
+            container_name = arg
+
     # Read the list of critical processes from a file
     with open(CRITICAL_PROCESSES_FILE, 'r') as f:
         critical_processes = [line.rstrip('\n') for line in f]
@@ -35,12 +47,18 @@ def main():
             processname = payload_headers['processname']
             groupname = payload_headers['groupname']
 
-            # If a critical process exited unexpectedly, terminate supervisor
-            if expected == 0 and processname in critical_processes or groupname in critical_processes:
+            config_db = swsssdk.ConfigDBConnector()
+            config_db.connect()
+            docker_config = config_db.get_table(CONTAINER_FEATURE_TABLE_NAME)
+            if docker_config and docker_config.has_key(container_name):
+                restart_feature = docker_config[container_name].get('auto_restart')
+
+            # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
+            if restart_feature == 'enabled' and expected == 0 and (processname in critical_processes or groupname in critical_processes):
                 MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
                 msg = MSG_FORMAT_STR.format(payload_headers['processname'])
                 syslog.syslog(syslog.LOG_INFO, msg)
                 os.kill(os.getppid(), signal.SIGTERM)
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
