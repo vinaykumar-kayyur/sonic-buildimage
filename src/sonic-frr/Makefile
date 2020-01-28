@@ -5,7 +5,6 @@ SHELL = /bin/bash
 MAIN_TARGET = $(FRR)
 DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG) $(FRR_SNMP) $(FRR_SNMP_DBG)
 SUFFIX = $(shell date +%Y%m%d\.%H%M%S)
-FRR_BRANCH = frr/$(FRR_VERSION)
 STG_BRANCH = stg_temp.$(SUFFIX)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
@@ -21,7 +20,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git checkout $(FRR_BRANCH)
 	stg branch --delete $(STG_BRANCH)
 	git rev-parse --short HEAD | xargs git checkout
-	git checkout master
 	git branch -D $(FRR_BRANCH)
 	popd
 	mv $(DERIVED_TARGET) $* $(DEST)/
