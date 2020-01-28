@@ -68,7 +68,7 @@
 	url = https://github.com/Mellanox/SAI-Implementation
 [submodule "src/sonic-mgmt-framework"]
 	path = src/sonic-mgmt-framework
-	url = https://github.com/Azure/sonic-mgmt-framework
+	url = https://github.com/tahmed-dev/sonic-mgmt
 [submodule "src/sonic-telemetry"]
 	path = src/sonic-telemetry
 	url = https://github.com/Azure/sonic-telemetry
