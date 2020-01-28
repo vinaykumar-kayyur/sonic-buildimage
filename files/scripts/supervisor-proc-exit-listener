@@ -19,7 +19,7 @@ CONTAINER_FEATURE_TABLE_NAME = 'CONTAINER_FEATURE'
 
 def main(argv):
     container_name = ''
-    opts, args = getopt.getopt(argv, "c:", ["container-name"])
+    opts, args = getopt.getopt(argv, "c:", ["container-name="])
     for opt, arg in opts:
         if opt in ("-c", "--container-name"):
             container_name = arg
