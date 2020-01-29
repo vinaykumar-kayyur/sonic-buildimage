@@ -19,11 +19,15 @@ CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 CONTAINER_FEATURE_TABLE_NAME = 'CONTAINER_FEATURE'
 
 def main(argv):
-    container_name = ''
+    container_name = None
     opts, args = getopt.getopt(argv, "c:", ["container-name="])
     for opt, arg in opts:
         if opt in ("-c", "--container-name"):
             container_name = arg
+
+    if not container_name:
+        syslog.syslog(syslog.LOG_ERROR, "Container name not specified. Exiting...")
+        sys.exit(0)
 
     # Read the list of critical processes from a file
     with open(CRITICAL_PROCESSES_FILE, 'r') as f:
@@ -53,6 +57,10 @@ def main(argv):
             docker_config = config_db.get_table(CONTAINER_FEATURE_TABLE_NAME)
             if docker_config and docker_config.has_key(container_name):
                 restart_feature = docker_config[container_name].get('auto_restart')
+
+            if not restart_feature:
+                syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting".format(container_name))
+                sys.exit(0)
 
             # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
             if restart_feature == 'enabled' and expected == 0 and (processname in critical_processes or groupname in critical_processes):
