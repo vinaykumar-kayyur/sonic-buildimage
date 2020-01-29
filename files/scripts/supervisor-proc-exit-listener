@@ -58,7 +58,7 @@ def main(argv):
             if docker_config and docker_config.has_key(container_name):
                 restart_feature = docker_config[container_name].get('auto_restart')
                 if not restart_feature:
-                    syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting".format(container_name))
+                    syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting...".format(container_name))
                     sys.exit(2)
 
             # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
