@@ -240,7 +240,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     # Notify firstboot to Platform, to use it for reboot-cause
     touch /tmp/notify_firstboot_to_platform
 
-    # create reboot-cause/platform/$platform/ directory
+    # create /host/reboot-cause/platform/ directory
     # /host/reboot-cause/platform/reboot-reason
     # will be used to track last reboot reason
     if [ ! -d /host/reboot-cause/platform ]; then
