@@ -27,7 +27,7 @@ def main(argv):
 
     if not container_name:
         syslog.syslog(syslog.LOG_ERROR, "Container name not specified. Exiting...")
-        sys.exit(2)
+        sys.exit(1)
 
     # Read the list of critical processes from a file
     with open(CRITICAL_PROCESSES_FILE, 'r') as f:
