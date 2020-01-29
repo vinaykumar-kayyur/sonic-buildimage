@@ -55,11 +55,15 @@ def main(argv):
             config_db = swsssdk.ConfigDBConnector()
             config_db.connect()
             docker_config = config_db.get_table(CONTAINER_FEATURE_TABLE_NAME)
-            if docker_config and docker_config.has_key(container_name):
-                restart_feature = docker_config[container_name].get('auto_restart')
-                if not restart_feature:
-                    syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting...".format(container_name))
-                    sys.exit(2)
+            if docker_config:
+                if docker_config.has_key(container_name):
+                    restart_feature = docker_config[container_name].get('auto_restart')
+                    if not restart_feature:
+                        syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting...".format(container_name))
+                        sys.exit(2)
+                else:
+                        syslog.syslog(syslog.LOG_ERROR, "Unable to find container '{}' in feature table. Exiting...".format(container_name))
+                        sys.exit(3)
 
             # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
             if restart_feature == 'enabled' and expected == 0 and (processname in critical_processes or groupname in critical_processes):
