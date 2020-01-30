@@ -1,16 +1,17 @@
-From a1edbce39e46b5c8bd5bd7db17fc11fa30e7dd73 Mon Sep 17 00:00:00 2001
-From: pavel-shirshov <pavelsh@microsoft.com>
-Date: Mon, 27 Aug 2018 16:50:16 +0800
-Subject: [PATCH] [SNMP] Stop spamming logs with statfs permission denied log
- message #1668
+From 671b158301a7679d318cf176662dfb910a81d3b5 Mon Sep 17 00:00:00 2001
+From: Tamer Ahmed <tamer.ahmed@microsoft.com>
+Date: Wed, 8 Jan 2020 09:17:54 -0800
+Subject: [SNMP] Stop spamming logs with statfs permission denied
+ log message #1668
 
+Signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
 ---
  agent/mibgroup/hardware/fsys/fsys_mntctl.c | 2 --
- agent/mibgroup/hardware/fsys/fsys_mntent.c | 2 --
- 2 files changed, 4 deletions(-)
+ agent/mibgroup/hardware/fsys/fsys_mntent.c | 4 ----
+ 2 files changed, 6 deletions(-)
 
 diff --git a/agent/mibgroup/hardware/fsys/fsys_mntctl.c b/agent/mibgroup/hardware/fsys/fsys_mntctl.c
-index 9fbb068..adc38d6 100644
+index e7d9a1c..b0752c7 100644
 --- a/agent/mibgroup/hardware/fsys/fsys_mntctl.c
 +++ b/agent/mibgroup/hardware/fsys/fsys_mntctl.c
 @@ -163,8 +163,6 @@ netsnmp_fsys_arch_load( void )
@@ -23,18 +24,20 @@ index 9fbb068..adc38d6 100644
          }
          entry->units =  stat_buf.f_bsize;
 diff --git a/agent/mibgroup/hardware/fsys/fsys_mntent.c b/agent/mibgroup/hardware/fsys/fsys_mntent.c
-index 94d23db..5ad5e43 100644
+index 3cdcea1..363ce56 100644
 --- a/agent/mibgroup/hardware/fsys/fsys_mntent.c
 +++ b/agent/mibgroup/hardware/fsys/fsys_mntent.c
-@@ -238,8 +238,6 @@ netsnmp_fsys_arch_load( void )
+@@ -245,10 +245,6 @@ netsnmp_fsys_arch_load( void )
          if ( NSFS_STATFS( entry->path, &stat_buf ) < 0 )
  #endif
          {
--            snprintf( tmpbuf, sizeof(tmpbuf), "Cannot statfs %s", entry->path );
--            snmp_log_perror( tmpbuf );
-             continue;
-         }
-         entry->units =  stat_buf.NSFS_SIZE;
+-            tmpbuf = NULL;
+-            if (asprintf(&tmpbuf, "Cannot statfs %s", entry->path) >= 0)
+-                snmp_log_perror(tmpbuf);
+-            free(tmpbuf);
+             entry->units = stat_buf.NSFS_SIZE;
+             entry->size  = 0;
+             entry->used  = 0;
 -- 
-2.7.4
+2.17.1
 

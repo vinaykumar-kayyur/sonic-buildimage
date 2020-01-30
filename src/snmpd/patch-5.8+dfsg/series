@@ -1,0 +1,5 @@
+0001-SNMP-Stop-spamming-logs-with-statfs-permission-denie.patch
+0002-SNMP-Disable-SNMPv1.patch
+0003-SNMP-Enable-macro-DEB_BUILD_ARCH_OS-in-order-to-buil.patch
+0004-SNMP-Fix-Compilation-Error-When-SNMPv1-Is-Not-Define.patch
+0005-SNMP-Re-add-native-VRF-support-to-net-snmp.patch
