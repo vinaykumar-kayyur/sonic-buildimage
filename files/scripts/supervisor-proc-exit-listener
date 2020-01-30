@@ -54,19 +54,27 @@ def main(argv):
 
             config_db = swsssdk.ConfigDBConnector()
             config_db.connect()
-            docker_config = config_db.get_table(CONTAINER_FEATURE_TABLE_NAME)
-            if docker_config and docker_config.has_key(container_name):
-                restart_feature = docker_config[container_name].get('auto_restart')
-                if not restart_feature:
-                    syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting...".format(container_name))
-                    sys.exit(2)
+            container_features_table = config_db.get_table(CONTAINER_FEATURE_TABLE_NAME)
+            if not container_features_table:
+                syslog.syslog(syslog.LOG_ERROR, "Unable to retrieve container features table from Config DB. Exiting...")
+                sys.exit(2)
 
-                # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
-                if restart_feature == 'enabled' and expected == 0 and (processname in critical_processes or groupname in critical_processes):
-                    MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
-                    msg = MSG_FORMAT_STR.format(payload_headers['processname'])
-                    syslog.syslog(syslog.LOG_INFO, msg)
-                    os.kill(os.getppid(), signal.SIGTERM)
+            if not container_features_table.has_key(container_name):
+                syslog.syslog(syslog.LOG_ERROR, "Unable to retrieve features for container '{}'. Exiting...".format(container_name))
+                sys.exit(3)
+
+            restart_feature = container_features_table[container_name].get('auto_restart')
+            if not restart_feature:
+                syslog.syslog(syslog.LOG_ERROR, "Unable to determine auto-restart feature status for container '{}'. Exiting...".format(container_name))
+                sys.exit(4)
+
+            # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
+            if restart_feature == 'enabled' and expected == 0 and (processname in critical_processes or groupname in critical_processes):
+                MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
+                msg = MSG_FORMAT_STR.format(payload_headers['processname'])
+                syslog.syslog(syslog.LOG_INFO, msg)
+                os.kill(os.getppid(), signal.SIGTERM)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
