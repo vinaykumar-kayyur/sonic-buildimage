@@ -14,9 +14,12 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
+    from sonic_platform.component import Component
 
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+MAX_Z9264F_COMPONENT = 8 # BIOS,BMC,FPGA,SYSTEM CPLD,4 SLAVE CPLDs
 
 
 class Chassis(ChassisBase):
@@ -52,6 +55,9 @@ class Chassis(ChassisBase):
 
         self._eeprom = Eeprom()
 
+        for i in range(MAX_Z9264F_COMPONENT):
+            component = Component(i)
+            self._component_list.append(component)
         for port_num in range(self.PORT_START, (self.PORT_END + 1)):
             presence = self.get_sfp(port_num).get_presence()
             if presence:
