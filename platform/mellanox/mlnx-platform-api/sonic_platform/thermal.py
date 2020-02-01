@@ -63,9 +63,8 @@ thermal_api_handler_psu = {
     THERMAL_API_GET_HIGH_CRITICAL_THRESHOLD:None
 }
 thermal_api_handler_gearbox = {
-    THERMAL_API_GET_TEMPERATURE:"temp_input_gearbox{}",
-    THERMAL_API_GET_HIGH_THRESHOLD:None,
-    THERMAL_API_GET_HIGH_CRITICAL_THRESHOLD:None
+    THERMAL_API_GET_TEMPERATURE:"gearbox{}_temp_input",
+    THERMAL_API_GET_HIGH_THRESHOLD:None
 }
 thermal_ambient_apis = {
     THERMAL_DEV_ASIC_AMBIENT : "asic",
