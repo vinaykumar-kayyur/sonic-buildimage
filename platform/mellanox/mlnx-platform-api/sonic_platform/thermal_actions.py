@@ -28,11 +28,11 @@ class SetFanSpeedAction(ThermalPolicyActionBase):
         if SetFanSpeedAction.JSON_FIELD_SPEED in json_obj:
             speed = float(json_obj[SetFanSpeedAction.JSON_FIELD_SPEED])
             if speed < 0 or speed > 100:
-                raise ValueError('SetFanSpeedAction invalid speed value {} in policy.json, valid value should be [0, 100]'.
+                raise ValueError('SetFanSpeedAction invalid speed value {} in JSON policy file, valid value should be [0, 100]'.
                                  format(speed))
             self.speed = float(json_obj[SetFanSpeedAction.JSON_FIELD_SPEED])
         else:
-            raise ValueError('SetFanSpeedAction missing mandatory field {} in policy.json'.
+            raise ValueError('SetFanSpeedAction missing mandatory field {} in JSON policy file'.
                              format(SetFanSpeedAction.JSON_FIELD_SPEED))
 
 
@@ -86,7 +86,7 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
                                  format(ControlThermalAlgoAction.JSON_FIELD_STATUS))
         else:
             raise ValueError('ControlThermalAlgoAction '
-                             'missing mandatory field {} in policy.json'.
+                             'missing mandatory field {} in JSON policy file'.
                              format(ControlThermalAlgoAction.JSON_FIELD_STATUS))
 
     def execute(self, thermal_info_dict):
