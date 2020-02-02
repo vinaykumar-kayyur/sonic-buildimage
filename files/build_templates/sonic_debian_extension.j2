@@ -265,7 +265,7 @@ sudo bash -c "echo dhcp_as_static=true >> $FILESYSTEM_ROOT/etc/sonic/updategraph
 sudo bash -c "echo enabled=false > $FILESYSTEM_ROOT/etc/sonic/updategraph.conf"
 {% endif %}
 
-# Generate initial SONiC configureation file
+# Generate initial SONiC configuration file
 j2 files/build_templates/init_cfg.json.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/init_cfg.json
 
 # Copy config-setup script and service file
