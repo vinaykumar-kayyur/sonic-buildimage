@@ -103,7 +103,7 @@ function check_faulty_fan
     # FanTray2
     if [ "$fan3" -le "1000" ] || [ "$fan4" -le "1000" ]; then
 
-	# First time detecting failure
+        # First time detecting failure
         if [ $FAULTY_FANTRAY2 -lt "2" ]; then
 
             FAULTY_FANTRAY2=2
@@ -118,7 +118,7 @@ function check_faulty_fan
     # FanTray3
     if [ "$fan5" -le "1000" ] || [ "$fan6" -le "1000" ]; then
 
-	# First time detecting failure
+        # First time detecting failure
         if [ $FAULTY_FANTRAY3 -lt "2" ]; then
 
             FAULTY_FANTRAY3=2
