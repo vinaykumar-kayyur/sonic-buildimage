@@ -13,7 +13,7 @@
                     "acl_group", "acl_entry", "acl_counter", "fdb_entry"] %}
             "{{crm_res}}_threshold_type": "percentage",
             "{{crm_res}}_low_threshold": "70",
-            "{{crm_res}}_high_threshold": "85"{% if not loop.last %}, {% endif -%}
+            "{{crm_res}}_high_threshold": "85"{% if not loop.last %},{% endif -%}
 {% endfor %}
         }
     }
