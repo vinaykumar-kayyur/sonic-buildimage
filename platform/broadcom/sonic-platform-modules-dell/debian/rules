@@ -38,7 +38,7 @@ override_dh_auto_build:
 		fi; \
 		echo "making man page alias $$mod -> $$mod APIs";\
 		make -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
-	done) \
+	done); \
 	set +e;
 
 override_dh_auto_install:
