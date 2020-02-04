@@ -12,6 +12,7 @@ COMMON_DIR := common
 	dh $@
 
 override_dh_auto_build:
+	set -e; \
 	(for mod in $(MODULE_DIRS); do \
 		if [ $$mod = "s6100" ]; then \
 			cp $(COMMON_DIR)/dell_pmc.c $(MOD_SRC_DIR)/$${mod}/modules/dell_s6100_lpc.c; \
@@ -37,7 +38,8 @@ override_dh_auto_build:
 		fi; \
 		echo "making man page alias $$mod -> $$mod APIs";\
 		make -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
-	done)
+	done) \
+	set +e;
 
 override_dh_auto_install:
 	(for mod in $(MODULE_DIRS); do \
