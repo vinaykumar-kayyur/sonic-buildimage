@@ -29,7 +29,8 @@ rm -f /var/run/rsyslogd.pid
 
 supervisorctl start rsyslogd
 
-mkdir -p /var/run/redis
+mkdir -p /var/run/redis/sonic-db
+cp /etc/default/sonic-db/database_config.json /var/run/redis/sonic-db/
 
 supervisorctl start redis-server
 
@@ -66,6 +67,12 @@ supervisorctl start buffermgrd
 supervisorctl start nbrmgrd
 
 supervisorctl start vxlanmgrd
+
+supervisorctl start sflowmgrd
+
+supervisorctl start natmgrd
+
+supervisorctl start natsyncd
 
 # Start arp_update when VLAN exists
 VLAN=`sonic-cfggen -d -v 'VLAN.keys() | join(" ") if VLAN'`

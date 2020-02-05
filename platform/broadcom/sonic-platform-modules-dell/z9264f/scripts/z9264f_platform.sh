@@ -17,9 +17,9 @@ init_devnum() {
 # Attach/Detach syseeprom on CPU board
 sys_eeprom() {
     case $1 in
-        "new_device")    echo 24c16 0x50 > /sys/bus/i2c/devices/i2c-0/$1
+        "new_device")    echo 24c16 0x50 > /sys/bus/i2c/devices/i2c-${devnum}/$1
                          ;;
-        "delete_device") echo 0x50 > /sys/bus/i2c/devices/i2c-0/$1
+        "delete_device") echo 0x50 > /sys/bus/i2c/devices/i2c-${devnum}/$1
                          ;;
         *)               echo "z9264f_platform: sys_eeprom : invalid command !"
                          ;;
@@ -58,7 +58,7 @@ switch_board_qsfp() {
         "new_device")
                         for ((i=2;i<=65;i++));
                         do
-                            echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                            echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
  
@@ -70,6 +70,29 @@ switch_board_qsfp() {
                         ;;
 
         *)              echo "z9264f_platform: switch_board_qsfp: invalid command !"
+                        ;;
+    esac
+}
+
+#Attach/Detach 2 instances of EEPROM driver SFP+ ports
+#eeprom can dump data using below command
+switch_board_sfp() {
+        case $1 in
+        "new_device")
+                        for ((i=66;i<=67;i++));
+                        do
+                            echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                        done
+                        ;;
+ 
+        "delete_device")
+                        for ((i=66;i<=67;i++));
+                        do
+                            echo 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                        done
+                        ;;
+
+        *)              echo "z9264f_platform: switch_board_sfp: invalid command !"
                         ;;
     esac
 }
@@ -102,6 +125,20 @@ init_switch_port_led() {
     fi
 }
 
+install_python_api_package() {
+    device="/usr/share/sonic/device"
+    platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+
+    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
+}
+
+remove_python_api_package() {
+    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv=$(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
+}
+
 init_devnum
 
 if [ "$1" == "init" ]; then
@@ -114,17 +151,20 @@ if [ "$1" == "init" ]; then
     sys_eeprom "new_device"
     switch_board_qsfp_mux "new_device"
     switch_board_qsfp "new_device"
+    switch_board_sfp "new_device"
     switch_board_modsel
     init_switch_port_led
+    install_python_api_package
     python /usr/bin/qsfp_irq_enable.py
 
 elif [ "$1" == "deinit" ]; then
     sys_eeprom "delete_device"
     switch_board_qsfp "delete_device"
     switch_board_qsfp_mux "delete_device"
-
+    switch_board_sfp "delete_device"
     modprobe -r i2c-mux-pca954x
     modprobe -r i2c-dev
+    remove_python_api_package
 else
      echo "z9264f_platform : Invalid option !"
 fi

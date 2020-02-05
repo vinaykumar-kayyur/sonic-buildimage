@@ -30,8 +30,8 @@ function unlock_service_state_change()
 
 function check_warm_boot()
 {
-    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    SYSTEM_WARM_START=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_WARM_START=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
     # SYSTEM_WARM_START could be empty, always make WARM_BOOT meaningful.
     if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
         WARM_BOOT="true"
@@ -43,12 +43,10 @@ function check_warm_boot()
 function wait_for_database_service()
 {
     # Wait for redis server start before database clean
-    until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]];
-        do sleep 1;
-    done
+    /usr/bin/docker exec database ping_pong_db_insts
 
     # Wait for configDB initialization
-    until [[ $(/usr/bin/docker exec database redis-cli -n 4 GET "CONFIG_DB_INITIALIZED") ]];
+    until [[ $(sonic-db-cli CONFIG_DB GET "CONFIG_DB_INITIALIZED") ]];
         do sleep 1;
     done
 }
@@ -64,7 +62,12 @@ function getBootType()
         TYPE='fastfast'
         ;;
     *SONIC_BOOT_TYPE=fast*|*fast-reboot*)
-        TYPE=$(awk '{ if ($1 <= 180) print "fast"; else print "cold" }' /proc/uptime)
+        # check that the key exists
+        if [[ $(sonic-db-cli STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
+            TYPE='fast'
+        else
+            TYPE='cold'
+        fi
         ;;
     *)
         TYPE='cold'
@@ -104,10 +107,7 @@ start() {
         if [[ x"$WARM_BOOT" != x"true" ]]; then
             if [[ x"$(/bin/systemctl is-active pmon)" == x"active" ]]; then
                 /bin/systemctl stop pmon
-                /usr/bin/hw-management.sh chipdown
-                /bin/systemctl restart pmon
-            else
-                /usr/bin/hw-management.sh chipdown
+                debug "pmon is active while syncd starting, stop it first"
             fi
         fi
 
@@ -134,6 +134,11 @@ start() {
 }
 
 wait() {
+    if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
+        debug "Starting pmon service..."
+        /bin/systemctl start pmon
+        debug "Started pmon service"
+    fi
     /usr/bin/${SERVICE}.sh wait
 }
 
@@ -148,6 +153,12 @@ stop() {
         TYPE=warm
     else
         TYPE=cold
+    fi
+
+    if [[ x$sonic_asic_platform == x"mellanox" ]] && [[ x$TYPE == x"cold" ]]; then
+        debug "Stopping pmon service ahead of syncd..."
+        /bin/systemctl stop pmon
+        debug "Stopped pmon service"
     fi
 
     if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
