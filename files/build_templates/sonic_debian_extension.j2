@@ -81,6 +81,10 @@ sudo mkdir -p $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/ifupdown2_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
+# Install ipables  (and its dependencies via 'apt-get -y install -f')
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/iptables_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
 # Install dependencies for SONiC config engine
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
     python-dev     \
@@ -169,8 +173,18 @@ sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
 sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 
 # Install a custom version of kdump-tools  (and its dependencies via 'apt-get -y install -f')
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo DEBIAN_FRONTEND=noninteractive dpkg --root=$FILESYSTEM_ROOT -i $debs_path/kdump-tools_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=truechroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends --force-no install
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends --force-no install
+fi
+
+# Install custom-built monit package and SONiC configuration files
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/monit_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo cp $IMAGE_CONFIGS/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
+sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
+sudo cp $IMAGE_CONFIGS/monit/conf.d/* $FILESYSTEM_ROOT/etc/monit/conf.d/
+sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/conf.d/*
 
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
@@ -225,7 +239,6 @@ sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.service $FILESYSTEM_ROOT/etc/systemd/system/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable core_uploader.service
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.py $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/corefile_uploader/update_json.py $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_analyzer.rc.json $FILESYSTEM_ROOT_ETC_SONIC/
 sudo chmod og-rw $FILESYSTEM_ROOT_ETC_SONIC/core_analyzer.rc.json
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install azure-storage
@@ -245,6 +258,13 @@ sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy miscellaneous scripts
 sudo cp $IMAGE_CONFIGS/misc/docker-wait-any $FILESYSTEM_ROOT/usr/bin/
+
+# Copy internal topology configuration scripts
+{%- if sonic_asic_platform == "vs" %}
+sudo cp $IMAGE_CONFIGS/topology/topology.service $FILESYSTEM_ROOT/etc/systemd/system/
+echo "topology.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/topology/topology.sh $FILESYSTEM_ROOT/usr/bin
+{%- endif %}
 
 # Copy updategraph script and service file
 j2 files/build_templates/updategraph.service.j2 | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/updategraph.service
@@ -287,6 +307,11 @@ sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/procdockerstatsd/procdockerstatsd.service  $FILESYSTEM_ROOT/etc/systemd/system/
 echo "procdockerstatsd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/procdockerstatsd/procdockerstatsd $FILESYSTEM_ROOT/usr/bin/
+
+# Copy systemd timer configuration
+# It implements delayed start of services
+sudo cp $BUILD_TEMPLATES/process-reboot-cause.timer $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable process-reboot-cause.timer
 
 # Copy process-reboot-cause service files
 sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause.service  $FILESYSTEM_ROOT/etc/systemd/system/
@@ -389,6 +414,13 @@ sudo cp {{script}} $FILESYSTEM_ROOT/usr/bin/
 {% for service in installer_services.split(' ') -%}
 if [ -f {{service}} ]; then
     sudo cp {{service}} $FILESYSTEM_ROOT/etc/systemd/system/
+
+    {% if "@" in service %}
+    MULTI_INSTANCE="{{service}}"
+    SINGLE_INSTANCE=${MULTI_INSTANCE/"@"}
+    sudo cp $SINGLE_INSTANCE $FILESYSTEM_ROOT/etc/systemd/system/
+    {% endif %}
+
     echo "{{service}}" | sudo tee -a $GENERATED_SERVICE_FILE
 fi
 {% endfor %}
@@ -427,6 +459,7 @@ sudo cp $files_path/$MLNX_SPC_FW_FILE $FILESYSTEM_ROOT/etc/mlnx/fw-SPC.mfa
 sudo cp $files_path/$MLNX_SPC2_FW_FILE $FILESYSTEM_ROOT/etc/mlnx/fw-SPC2.mfa
 sudo cp $files_path/$ISSU_VERSION_FILE $FILESYSTEM_ROOT/etc/mlnx/issu-version
 sudo cp $files_path/$MLNX_FFB_SCRIPT $FILESYSTEM_ROOT/usr/bin/mlnx-ffb.sh
+sudo cp $files_path/$ONIE_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/onie-fw-update.sh
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 
