@@ -16,5 +16,10 @@
             "{{crm_res}}_high_threshold": "85"{% if not loop.last %},{% endif -%}
 {% endfor %}
         }
+    },
+    "CONTAINER_FEATURE": {
+        "teamd": {
+            "auto_restart": "enabled"
+        }
     }
 }
