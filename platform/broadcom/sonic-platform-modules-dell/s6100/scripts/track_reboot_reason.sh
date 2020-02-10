@@ -91,8 +91,8 @@ _is_thermal_reset() {
     prev_thermal=$(cat $REBOOT_REASON_FILE)
     curr_poweron_reason=$(cat $SMF_POWERON_REASON)
     if [[ $curr_poweron_reason = "11" ]]; then
-       echo 0
-       return
+        echo 0
+        return
     fi
     if [[ $prev_thermal = $curr_poweron_reason ]]; then
         echo 2
@@ -120,14 +120,14 @@ _is_watchdog_reset(){
 
 _is_unknown_reset(){
     if [[ -f $REBOOT_CAUSE_FILE ]]; then
-	if [[ $1 = 0 ]]; then
-	    echo "Unknown software reboot" > $REBOOT_CAUSE_FILE
-	    return
-	fi
+        if [[ $1 = 0 ]]; then
+            echo "Unknown software reboot" > $REBOOT_CAUSE_FILE
+            return
+        fi
         curr_poweron_reason=$(cat $SMF_POWERON_REASON)
-	curr_reset_reason=$SMF_RESET
-	mb_poweron_reason=$(cat $MAILBOX_POWERON_REASON)
-	echo "Unknown POR: $curr_poweron_reason RST: $curr_reset_reason MBR: $mb_poweron_reason" > $REBOOT_CAUSE_FILE
+        curr_reset_reason=$SMF_RESET
+        mb_poweron_reason=$(cat $MAILBOX_POWERON_REASON)
+        echo "Unknown POR: $curr_poweron_reason RST: $curr_reset_reason MBR: $mb_poweron_reason" > $REBOOT_CAUSE_FILE
     fi
     
 }
@@ -159,7 +159,7 @@ update_mailbox_register(){
         elif [[ $reason = "cc" ]]; then
             echo 0xaa > $MAILBOX_POWERON_REASON
         else
-	    _is_unknown_reset $is_thermal_reboot
+            _is_unknown_reset $is_thermal_reboot
             echo 0x99 > $MAILBOX_POWERON_REASON
         fi
     fi

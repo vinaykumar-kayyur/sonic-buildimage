@@ -243,7 +243,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
     # Create /host/reboot-cause/platform/ directory
     # can be used to track last reboot reason by some platforms
     if [ ! -d /host/reboot-cause/platform ]; then
-	mkdir -p /host/reboot-cause/platform
+        mkdir -p /host/reboot-cause/platform
     fi
 
     if [ -d /host/image-$SONIC_VERSION/platform/$platform ]; then
