@@ -1,6 +1,6 @@
 [Unit]
 Description=DHCP relay container
-Requires=updategraph.service
+Requires=updategraph.service database.service
 After=updategraph.service swss.service syncd.service teamd.service
 Before=ntp-config.service
 StartLimitIntervalSec=1200

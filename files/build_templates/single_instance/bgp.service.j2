@@ -1,6 +1,6 @@
 [Unit]
 Description=BGP container
-Requires=updategraph.service
+Requires=updategraph.service database.service
 After=updategraph.service
 Before=ntp-config.service
 
