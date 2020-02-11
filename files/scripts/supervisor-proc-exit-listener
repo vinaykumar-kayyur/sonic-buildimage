@@ -52,8 +52,7 @@ def main(argv):
             processname = payload_headers['processname']
             groupname = payload_headers['groupname']
 
-            # If container is database, we do not need read the status of auto-restart feature from Config_DB.
-            # Otherwise, we will fetch the status.
+            # Read the status of auto-restart feature from Config_DB.
             if container_name != 'database':
                 config_db = swsssdk.ConfigDBConnector()
                 config_db.connect()
