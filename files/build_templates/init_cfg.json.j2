@@ -17,7 +17,7 @@
 {% endfor %}
         }
     },
-    "Feature": {
+    "FEATURE": {
 {%- for feature in ["sflow", "telemetry"] %}
         "{{feature}}": {
             "status": "disabled"
@@ -25,8 +25,8 @@
 {% endfor %}
     },
     "CONTAINER_FEATURE": {
-{%- for container in ["teamd", "swss", "syncd", "pmon", "lldp", "bgp", "dhcp-relay",
-                      "radv", "sflow", "snmp", "telemetry", "database"] %}
+{%- for container in ["bgp", "database", "dhcp-relay", "lldp", "pmon", "radv", "sflow",
+                      "snmp", "swss", "syncd", "teamd", "telemetry"] %}
         "{{container}}": {
             "auto_restart": "disabled",
             "high_mem_alert": "disabled"
