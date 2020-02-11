@@ -52,6 +52,8 @@ def main(argv):
             processname = payload_headers['processname']
             groupname = payload_headers['groupname']
 
+            # If container is database, we do not need read the status of auto-restart feature from Config_DB.
+            # Otherwise, we will fetch the status.
             if container_name != 'database':
                 config_db = swsssdk.ConfigDBConnector()
                 config_db.connect()
@@ -69,7 +71,8 @@ def main(argv):
                     syslog.syslog(syslog.LOG_ERR, "Unable to determine auto-restart feature status for container '{}'. Exiting...".format(container_name))
                     sys.exit(4)
 
-            # If auto-restart feature is enabled and a critical process exited unexpectedly, terminate supervisor
+            # If container is database or auto-restart feature is enabled and at the same time 
+            # a critical process exited unexpectedly, terminate supervisor
             if (container_name == 'database' or restart_feature == 'enabled') and expected == 0 and 
                     (processname in critical_processes or groupname in critical_processes):
                 MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
