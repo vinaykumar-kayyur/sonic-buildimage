@@ -17,6 +17,13 @@
 {% endfor %}
         }
     },
+    "Feature": {
+{%- for feature in ["sflow", "telemetry"] %}
+        "{{feature}}": {
+            "status": "disabled"
+        }{% if not loop.last %},{% endif -%}
+{% endfor %}
+    },
     "CONTAINER_FEATURE": {
 {%- for container in ["teamd", "swss", "syncd", "pmon", "lldp", "bgp", "dhcp-relay",
                       "radv", "sflow", "snmp", "telemetry", "database"] %}
