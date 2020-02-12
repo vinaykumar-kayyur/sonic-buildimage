@@ -113,10 +113,10 @@ class ThermalUtil(object):
 
 def main():
     thermal = ThermalUtil()
-    logging.debug('termal1=%d', thermal._get_thermal_val(1))
-    logging.debug('termal2=%d', thermal._get_thermal_val(2))
-    logging.debug('termal3=%d', thermal._get_thermal_val(3))
-    logging.debug('termal4=%d', thermal._get_thermal_val(4))
-    logging.debug('termal5=%d', thermal._get_thermal_val(5))
+    logging.debug('thermal1=%d', thermal._get_thermal_val(1))
+    logging.debug('thermal2=%d', thermal._get_thermal_val(2))
+    logging.debug('thermal3=%d', thermal._get_thermal_val(3))
+    logging.debug('thermal4=%d', thermal._get_thermal_val(4))
+    logging.debug('thermal5=%d', thermal._get_thermal_val(5))
 if __name__ == '__main__':
     main()
