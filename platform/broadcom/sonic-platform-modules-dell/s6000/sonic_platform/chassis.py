@@ -11,6 +11,7 @@ try:
     import os
     import time
     import datetime
+    import struct
     import subprocess
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
@@ -41,8 +42,10 @@ class Chassis(ChassisBase):
     reset_reason_dict = {}
     reset_reason_dict[0xe] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
     reset_reason_dict[0x6] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
+    reset_reason_dict[0x7] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER
 
     def __init__(self):
+        ChassisBase.__init__(self)
         # Initialize SFP list
         self.PORT_START = 0
         self.PORT_END = 31
@@ -65,7 +68,7 @@ class Chassis(ChassisBase):
         # Get Transceiver status
         self.modprs_register = self._get_transceiver_status()
 
-        self.sys_eeprom = Eeprom()
+        self._eeprom = Eeprom()
         for i in range(MAX_S6000_FAN):
             fan = Fan(i)
             self._fan_list.append(fan)
@@ -99,13 +102,43 @@ class Chassis(ChassisBase):
         rv = rv.lstrip(" ")
         return rv
 
+    def _nvram_write(self, offset, val):
+        resource = "/dev/nvram"
+        fd = os.open(resource, os.O_RDWR)
+        if (fd < 0):
+            print('File open failed ',resource)
+            return
+        if (os.lseek(fd, offset, os.SEEK_SET) != offset):
+            print('lseek failed on ',resource)
+            return
+        ret = os.write(fd, struct.pack('B', val))
+        if ret != 1:
+            print('Write failed ',str(ret))
+            return
+        os.close(fd)
+
+    def _get_thermal_reset(self):
+        reset_file = "/host/reboot-cause/reboot-cause.txt"
+        if (not os.path.isfile(reset_file)):
+            return False
+        try:
+            with open(reset_file, 'r') as fd:
+                rv = fd.read()
+        except Exception as error:
+            return False
+
+        if "Thermal Overload" in rv:
+            return True
+
+        return False
+
     def get_name(self):
         """
         Retrieves the name of the chassis
         Returns:
             string: The name of the chassis
         """
-        return self.sys_eeprom.modelstr()
+        return self._eeprom.modelstr()
 
     def get_presence(self):
         """
@@ -121,7 +154,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of chassis
         """
-        return self.sys_eeprom.part_number_str()
+        return self._eeprom.part_number_str()
 
     def get_serial(self):
         """
@@ -129,7 +162,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of chassis
         """
-        return self.sys_eeprom.serial_str()
+        return self._eeprom.serial_str()
 
     def get_status(self):
         """
@@ -148,7 +181,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self.sys_eeprom.base_mac_addr()
+        return self._eeprom.base_mac_addr()
 
     def get_serial_number(self):
         """
@@ -158,7 +191,7 @@ class Chassis(ChassisBase):
             A string containing the hardware serial number for this
             chassis.
         """
-        return self.sys_eeprom.serial_number_str()
+        return self._eeprom.serial_number_str()
 
     def get_system_eeprom_info(self):
         """
@@ -170,7 +203,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their
             corresponding values.
         """
-        return self.sys_eeprom.system_eeprom_info()
+        return self._eeprom.system_eeprom_info()
 
     def get_reboot_cause(self):
         """
@@ -180,6 +213,8 @@ class Chassis(ChassisBase):
         # NVRAM. Only Warmboot and Coldboot reason are supported here.
         # Since it does not support any hardware reason, we return
         # non_hardware as default
+        if self._get_thermal_reset() == True:
+            self._nvram_write(0x49, 0x7)
 
         lrr = self._get_cpld_register('last_reboot_reason')
         if (lrr != 'ERR'):
