@@ -38,4 +38,4 @@ systemctl restart networking
 # Clean-up created files
 rm -f /tmp/ztp_input.json /tmp/ztp_port_data.json
 
-ifdown lo && ifup lo
+ifdown --force lo && ifup lo
