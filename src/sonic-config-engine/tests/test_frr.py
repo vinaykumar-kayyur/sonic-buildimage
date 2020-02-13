@@ -48,15 +48,15 @@ class TestCfgGen(TestCase):
         return r, "Diff:\n" + diff_output
 
 
-    def test_config_frr(self):
-        self.assertTrue(*self.run_case('frr.conf.j2', 'frr.conf'))
+#    def test_config_frr(self):
+#        self.assertTrue(*self.run_case('frr.conf.j2', 'frr.conf'))
 
-    def test_bgpd_frr(self):
-        self.assertTrue(*self.run_case('bgpd.conf.j2', 'bgpd_frr.conf'))
+#    def test_bgpd_frr(self):
+#        self.assertTrue(*self.run_case('bgpd.conf.j2', 'bgpd_frr.conf'))
 
-    def test_zebra_frr(self):
-        self.assertTrue(*self.run_case('zebra.conf.j2', 'zebra_frr.conf'))
+#    def test_zebra_frr(self):
+#        self.assertTrue(*self.run_case('zebra.conf.j2', 'zebra_frr.conf'))
 
-    def test_staticd_frr(self):
-        self.assertTrue(*self.run_case('staticd.conf.j2', 'staticd_frr.conf'))
+#    def test_staticd_frr(self):
+#        self.assertTrue(*self.run_case('staticd.conf.j2', 'staticd_frr.conf'))
 
