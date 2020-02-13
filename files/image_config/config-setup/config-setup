@@ -107,7 +107,7 @@ reload_minigraph()
         echo "{}" > /etc/sonic/init_cfg.json
     fi
     sonic-db-cli CONFIG_DB FLUSHDB
-    sonic-cfggen -H -m -j /etc/sonic/init_cfg.json --write-to-db
+    sonic-cfggen -H -j /etc/sonic/init_cfg.json -m --write-to-db
     sonic-db-cli CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
     if [ -f /etc/sonic/acl.json ]; then
         acl-loader update full /etc/sonic/acl.json
