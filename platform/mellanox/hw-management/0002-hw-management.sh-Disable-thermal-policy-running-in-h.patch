@@ -1,0 +1,30 @@
+From 42cefa91796e8768792eb64538714cc55d5a11e2 Mon Sep 17 00:00:00 2001
+From: Stephen Sun <stephens@mellanox.com>
+Date: Fri, 14 Feb 2020 13:48:00 +0800
+Subject: [PATCH] [hw-management.sh]Disable thermal policy running in hw-mgmt
+ service SONiC thermal control algorithm has been supported.
+
+---
+ usr/usr/bin/hw-management.sh | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/usr/usr/bin/hw-management.sh b/usr/usr/bin/hw-management.sh
+index cff10fe..605ba23 100755
+--- a/usr/usr/bin/hw-management.sh
++++ b/usr/usr/bin/hw-management.sh
+@@ -593,7 +593,11 @@ do_start()
+ 	echo $asic_bus > $config_path/asic_bus
+ 	connect_platform
+ 
+-	$THERMAL_CONTROL $thermal_type $max_tachos $max_psus&
++#
++#	Disable thermal control algorithm in hw-management service
++#	because there has already been that in SONiC
++#
++#	$THERMAL_CONTROL $thermal_type $max_tachos $max_psus&
+ }
+ 
+ do_stop()
+-- 
+1.9.1
+
