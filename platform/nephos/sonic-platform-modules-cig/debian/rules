@@ -13,7 +13,7 @@ include /usr/share/dpkg/pkg-info.mk
 
 export INSTALL_MOD_DIR:=extra
 
-PYTHON         ?= python2.7
+PYTHON         ?= python2
 
 PACKAGE_PRE_NAME := sonic-platform-cig
 KVERSION   ?= $(shell uname -r)
