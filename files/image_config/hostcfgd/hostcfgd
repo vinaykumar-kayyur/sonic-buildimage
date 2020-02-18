@@ -249,7 +249,15 @@ class AaaCfg(object):
         if 'radius' in auth['login']:
             pam_conf = template.render(debug=self.debug, auth=auth, servers=radsrvs_conf)
         else:
-            pam_conf = template.render(debug=self.debug, auth=auth, servers=servers_conf)
+            # Need to escape some chars.
+            pat = re.compile(']')
+            servers_conf4pam = []
+            for server in servers_conf:
+                server4pam = server.copy()
+                server4pam['passkey'] = pat.sub(r'\]', server['passkey'])
+                servers_conf4pam.append(server4pam)
+            servers_conf4pam = sorted(servers_conf4pam, key=lambda t: int(t['priority']), reverse=True)
+            pam_conf = template.render(debug=self.debug, auth=auth, servers=servers_conf4pam)
         
         with open(PAM_AUTH_CONF, 'w') as f:
             f.write(pam_conf)
