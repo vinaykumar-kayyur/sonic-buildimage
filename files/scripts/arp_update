@@ -47,6 +47,7 @@ while /bin/true; do
       eval `eval $ip6cmd`
   done
 
+  # sleep here before handling the mismatch as it is not required during startup
   sleep 300
 
   # refresh neighbor entries from APP_DB in case of mismatch with kernel
