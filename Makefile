@@ -1,6 +1,7 @@
 # SONiC make file
 
-NOJESSIE ?= 0
+# NOJESSIE ?= 0
+NOJESSIE = 1
 
 %::
 	@echo "+++ --- Making $@ --- +++"

@@ -33,10 +33,10 @@ SONIC_CONFIG_MAKE_JOBS = $(shell nproc)
 # SONIC_CONFIG_ENABLE_COLORS = y
 
 # DEFAULT_USERNAME - default username for installer build
-DEFAULT_USERNAME = admin
+DEFAULT_USERNAME = centec
 
 # DEFAULT_PASSWORD - default password for installer build
-DEFAULT_PASSWORD = YourPaSsWoRd
+DEFAULT_PASSWORD = centec
 
 # ENABLE_DHCP_GRAPH_SERVICE - specify the source of minigraph to generate configuration file.
 # If set to y SONiC will get the minigraph from graph service. Graph service URL need to be
