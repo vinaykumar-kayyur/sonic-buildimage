@@ -107,7 +107,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
 sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
-sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages}} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
+sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT bash -c 'apt-mark auto `apt-mark showmanual`'
 
 ## Note: set lang to prevent locale warnings in your chroot
@@ -240,7 +240,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     openssh-server          \
     python                  \
     python-setuptools       \
-    monit                   \
     python-apt              \
     traceroute              \
     iputils-ping            \
@@ -273,7 +272,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     cgroup-tools            \
     ipmitool                \
     ndisc6                  \
-    makedumpfile
+    makedumpfile            \
+    conntrack
 
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
@@ -348,10 +348,6 @@ EOF
 sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
-## Config monit
-sudo cp files/image_config/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
-sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
-
 ## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 sudo augtool --autosave "
@@ -379,6 +375,12 @@ set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_ignore 2
 
 set /files/etc/sysctl.conf/net.ipv4.neigh.default.base_reachable_time_ms 1800000
 set /files/etc/sysctl.conf/net.ipv6.neigh.default.base_reachable_time_ms 1800000
+set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh1 1024
+set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh1 1024
+set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh2 2048
+set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh2 2048
+set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh3 4096
+set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh3 4096
 
 set /files/etc/sysctl.conf/net.ipv6.conf.default.forwarding 1
 set /files/etc/sysctl.conf/net.ipv6.conf.all.forwarding 1
