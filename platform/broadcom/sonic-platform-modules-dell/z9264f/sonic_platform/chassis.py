@@ -15,6 +15,7 @@ try:
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
     from sonic_platform.psu import Psu
+    from sonic_platform.watchdog import Watchdog
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -53,6 +54,8 @@ class Chassis(ChassisBase):
             self._sfp_list.append(sfp_node)
 
         self._eeprom = Eeprom()
+
+        self._watchdog = Watchdog()
 
         for i in range(MAX_Z9264F_PSU):
             psu = Psu(i)
