@@ -11,7 +11,7 @@ ExecStart=-/etc/init.d/opennsl-modules start
 # This delay cuts too deep into warm reboot time budget.
 # We could skip this step because we don't expect stopping
 # opennsl service in any context other than rebooting.
-# ExecStop=-/etc/init.d/opennsl-modules stop
+ExecStop=-/etc/init.d/opennsl-modules stop
 RemainAfterExit=yes
 
 [Install]
