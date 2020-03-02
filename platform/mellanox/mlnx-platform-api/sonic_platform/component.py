@@ -18,6 +18,11 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+EMPTY = ''
+ZERO = '0'
+COMMA = ','
+NEWLINE = '\n'
+
 #components definitions
 COMPONENT_BIOS = "BIOS"
 COMPONENT_CPLD = "CPLD"
@@ -25,6 +30,7 @@ COMPONENT_CPLD = "CPLD"
 class Component(ComponentBase):
     def __init__(self):
         self.name = None
+        self.description = None
         self.image_ext_name = None
 
 
@@ -38,17 +44,30 @@ class Component(ComponentBase):
         return self.name
 
 
-    def _read_generic_file(self, filename, len):
+    def get_description(self):
+        """
+        Retrieves the description of the component
+
+        Returns:
+            A string containing the description of the component
+        """
+        return self.description
+
+
+    def _read_generic_file(self, filename, len, ignore_errors=True):
         """
         Read a generic file, returns the contents of the file
         """
-        result = ''
+        result = None
+
         try:
             with io.open(filename, 'r') as fileobj:
                 result = fileobj.read(len)
-            return result
         except IOError as e:
-            raise RuntimeError("Failed to read file {} due to {}".format(filename, repr(e)))
+            if not ignore_errors:
+                raise RuntimeError("Failed to read file {} due to {}".format(filename, repr(e)))
+
+        return result
 
 
     def _get_command_result(self, cmdline):
@@ -83,6 +102,10 @@ class Component(ComponentBase):
 
 
 class ComponentBIOS(Component):
+    COMPONENT_NAME = 'BIOS'
+    COMPONENT_DESCRIPTION = 'BIOS - Basic Input/Output System'
+    COMPONENT_FIRMWARE_EXTENSION = '.rom'
+
     # To update BIOS requires the ONIE with version 5.2.0016 or upper
     ONIE_VERSION_PARSE_PATTERN = '[0-9]{4}\.[0-9]{2}-([0-9]+)\.([0-9]+)\.([0-9]+)'
     ONIE_VERSION_MAJOR_OFFSET = 1
@@ -103,18 +126,9 @@ class ComponentBIOS(Component):
     BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
 
     def __init__(self):
-        self.name = COMPONENT_BIOS
-        self.image_ext_name = ".rom"
-
-
-    def get_description(self):
-        """
-        Retrieves the description of the component
-
-        Returns:
-            A string containing the description of the component
-        """
-        return "BIOS - Basic Input/Output System"
+        self.name = self.COMPONENT_NAME
+        self.description = self.COMPONENT_DESCRIPTION
+        self.image_ext_name = self.COMPONENT_FIRMWARE_EXTENSION
 
 
     def get_firmware_version(self):
@@ -210,34 +224,35 @@ class ComponentBIOS(Component):
             print("ERROR: Installing BIOS failed due to {}".format(repr(e)))
             return False
 
-        print("INFO: Reboot is required to finish BIOS installation.")
+        print("INFO: Reboot is required to finish BIOS installation")
         return True
 
 
 
 class ComponentCPLD(Component):
-    CPLD_VERSION_FILE_PATTERN = '/var/run/hw-management/system/cpld[0-9]_version'
-    CPLD_VERSION_MAX_LENGTH = 4
+    COMPONENT_NAME = 'CPLD'
+    COMPONENT_DESCRIPTION = "CPLD - includes all CPLDs in the switch"
+    COMPONENT_FIRMWARE_EXTENSION = '.vme'
 
-    CPLD_UPDATE_COMMAND = "cpldupdate --dev {} {}"
-    CPLD_INSTALL_SUCCESS_FLAG = "PASS!"
+    CPLD_NUMBER_FILE = '/var/run/hw-management/config/cpld_num'
+    CPLD_PART_NUMBER_FILE = '/var/run/hw-management/system/cpld{}_pn'
+    CPLD_VERSION_FILE = '/var/run/hw-management/system/cpld{}_version'
+    CPLD_VERSION_MINOR_FILE = '/var/run/hw-management/system/cpld{}_version_minor'
 
-    MST_DEVICE_PATTERN = "/dev/mst/mt[0-9]*_pciconf0"
+    CPLD_NUMBER_MAX_LENGTH = 1
+    CPLD_PART_NUMBER_MAX_LENGTH = 6
+    CPLD_VERSION_MAX_LENGTH = 2
+    CPLD_VERSION_MINOR_MAX_LENGTH = 2
+
+    CPLD_UPDATE_COMMAND = 'cpldupdate --dev {} {}'
+    CPLD_INSTALL_SUCCESS_FLAG = 'PASS!'
+
+    MST_DEVICE_PATTERN = '/dev/mst/mt[0-9]*_pci_cr0'
 
     def __init__(self):
-        self.name = COMPONENT_CPLD
-        self.image_ext_name = ".vme"
-
-
-    def get_description(self):
-        """
-        Retrieves the description of the component
-
-        Returns:
-            A string containing the description of the component
-        """
-        return "CPLD - includes all CPLDs in the switch"
-
+        self.name = self.COMPONENT_NAME
+        self.description = self.COMPONENT_DESCRIPTION
+        self.image_ext_name = self.COMPONENT_FIRMWARE_EXTENSION
 
     def get_firmware_version(self):
         """
@@ -246,17 +261,34 @@ class ComponentCPLD(Component):
         Returns:
             A string containing the firmware version of the component
         """
-        cpld_version_file_list = glob(self.CPLD_VERSION_FILE_PATTERN)
-        cpld_version = ''
-        if cpld_version_file_list:
-            cpld_version_file_list.sort()
-            for version_file in cpld_version_file_list:
-                version = self._read_generic_file(version_file, self.CPLD_VERSION_MAX_LENGTH)
-                if cpld_version:
-                    cpld_version += '.'
-                cpld_version += version.rstrip('\n')
-        else:
-            raise RuntimeError("Failed to get CPLD version files by matching {}".format(self.CPLD_VERSION_FILE_PATTERN))
+        cpld_version = EMPTY
+
+        cpld_number = self._read_generic_file(self.CPLD_NUMBER_FILE, self.CPLD_NUMBER_MAX_LENGTH, False)
+        cpld_number = cpld_number.rstrip(NEWLINE)
+
+        for cpld_idx in xrange(1, int(cpld_number) + 1):
+            part_number_file = self.CPLD_PART_NUMBER_FILE.format(cpld_idx)
+            version_file = self.CPLD_VERSION_FILE.format(cpld_idx)
+            version_minor_file = self.CPLD_VERSION_MINOR_FILE.format(cpld_idx)
+
+            part_number = self._read_generic_file(part_number_file, self.CPLD_PART_NUMBER_MAX_LENGTH)
+            version = self._read_generic_file(version_file, self.CPLD_VERSION_MAX_LENGTH, False)
+            version_minor = self._read_generic_file(version_minor_file, self.CPLD_VERSION_MINOR_MAX_LENGTH)
+
+            if part_number is None:
+                part_number = ZERO
+
+            if version_minor is None:
+                version_minor = ZERO
+
+            part_number = part_number.rstrip(NEWLINE).zfill(self.CPLD_PART_NUMBER_MAX_LENGTH)
+            version = version.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MAX_LENGTH)
+            version_minor = version_minor.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MINOR_MAX_LENGTH)
+
+            if cpld_version:
+                cpld_version += COMMA
+
+            cpld_version += "CPLD{}:CPLD{}_REV{}{}".format(cpld_idx, part_number, version, version_minor)
 
         return cpld_version
 
@@ -331,7 +363,7 @@ class ComponentCPLD(Component):
             raise RuntimeError("Failed to execute command {} due to {}".format(cmdline, repr(e)))
 
         if success_flag:
-            print("INFO: Success. Refresh or power cycle is required to finish CPLD installation.")
+            print("INFO: Refresh or power cycle is required to finish CPLD installation")
         else:
             print("ERROR: Failed to install CPLD")
 
