@@ -1,1 +1,2 @@
-BOARD_CONFIG_FILE_PATH=/etc/centec/ES6428A-X48Q2H4.json
+SAI_INIT_CONFIG_FILE=/usr/share/sonic/hwsku/chip_profile.ini
+SAI_HW_PORT_PROFILE_ID_CONFIG_FILE=/usr/share/sonic/hwsku/data_path.ini
