@@ -298,7 +298,7 @@ def main():
     if args.var_json != None:
         if args.key != None:
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json], args.key), indent=4, cls=minigraph_encoder))
-        else:
+        elif args.var_json in data:
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json]), indent=4, cls=minigraph_encoder))
 
     if args.write_to_db:
