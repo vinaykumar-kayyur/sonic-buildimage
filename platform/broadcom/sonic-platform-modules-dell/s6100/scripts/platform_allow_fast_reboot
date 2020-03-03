@@ -6,10 +6,10 @@ ssd_type=$(show platform ssdhealth | grep "3IE3" | wc -l)
 if [ $ssd_type -ne 0 ];then
     if [ -f /tmp/install_timestamp ];then
 	secs1=`cat /tmp/install_timestamp`
-        secs2=`date +%s`
-        secs=$(( secs2 - secs1 ))
+	secs2=`date +%s`
+	secs=$(( secs2 - secs1 ))
 	rem_secs=$(( 120 - secs ))
-        if [ $secs -lt 120 ];then
+	if [ $secs -lt 120 ];then
 	    echo "Fast-reboot disallowed within 2 minutes after sonic install. Please try after $rem_secs seconds"
 	    exit "${SONIC_INSTALL_TIME_CHECK_FAILED}"
         else
