@@ -23,10 +23,6 @@ ZERO = '0'
 COMMA = ','
 NEWLINE = '\n'
 
-#components definitions
-COMPONENT_BIOS = "BIOS"
-COMPONENT_CPLD = "CPLD"
-
 class Component(ComponentBase):
     def __init__(self):
         self.name = None
