@@ -1,0 +1,6 @@
+#! /bin/bash
+
+ssd_type=$(show platform ssdhealth | grep "3IE3" | wc -l)
+if [ $ssd_type -ne 0 ];then
+    date +%s > /tmp/install_timestamp
+fi

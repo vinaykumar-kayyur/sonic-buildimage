@@ -3,4 +3,4 @@ Description=Discard unused blocks
 
 [Service]
 Type=oneshot
-ExecStart=/sbin/fstrim -av
+ExecStart=/usr/bin/sonic-fstrim
