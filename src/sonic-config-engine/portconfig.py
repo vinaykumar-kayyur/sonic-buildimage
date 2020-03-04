@@ -28,6 +28,7 @@ def get_port_config(hwsku=None, platform=None, port_config_file=None):
 def parse_port_config_file(port_config_file):
     ports = {}
     port_alias_map = {}
+    port_alias_asic_map = {}
     # Default column definition
     titles = ['name', 'lanes', 'alias', 'index']
     with open(port_config_file) as data:
@@ -49,6 +50,14 @@ def parse_port_config_file(port_config_file):
             data.setdefault('alias', name)
             ports[name] = data
             port_alias_map[data['alias']] = name
-    return (ports, port_alias_map)
+            # asic_name to sonic_name mapping also included in
+            # port_alias_map
+            if (('asic_name' in data) and
+                (data['asic_name'] != name)):
+                port_alias_map[data['asic_name']] = name
+            # alias to asic_name mapping
+            if 'asic_name' in data:
+                port_alias_asic_map[data['alias']] = data['asic_name'].strip()
+    return (ports, port_alias_map, port_alias_asic_map)
 
 
