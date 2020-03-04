@@ -50,7 +50,8 @@ class Component(ComponentBase):
         return self.description
 
 
-    def _read_generic_file(self, filename, len, ignore_errors=True):
+    @staticmethod
+    def _read_generic_file(filename, len, ignore_errors=False):
         """
         Read a generic file, returns the contents of the file
         """
@@ -66,7 +67,8 @@ class Component(ComponentBase):
         return result
 
 
-    def _get_command_result(self, cmdline):
+    @staticmethod
+    def _get_command_result(cmdline):
         try:
             proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
@@ -107,17 +109,17 @@ class ComponentBIOS(Component):
     ONIE_VERSION_MAJOR_OFFSET = 1
     ONIE_VERSION_MINOR_OFFSET = 2
     ONIE_VERSION_RELEASE_OFFSET = 3
-    ONIE_REQUIRED_MAJOR = "5"
-    ONIE_REQUIRED_MINOR = "2"
-    ONIE_REQUIRED_RELEASE = "0016"
+    ONIE_REQUIRED_MAJOR = '5'
+    ONIE_REQUIRED_MINOR = '2'
+    ONIE_REQUIRED_RELEASE = '0016'
 
     BIOS_VERSION_PARSE_PATTERN = 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
     BIOS_PENDING_UPDATE_PATTERN = '([0-9A-Za-z_]*.rom)[\s]*\|[\s]*bios_update'
 
-    ONIE_FW_UPDATE_CMD_ADD = "/usr/bin/onie-fw-update.sh add {}"
-    ONIE_FW_UPDATE_CMD_REMOVE = "/usr/bin/onie-fw-update.sh remove {}"
-    ONIE_FW_UPDATE_CMD_UPDATE = "/usr/bin/onie-fw-update.sh update"
-    ONIE_FW_UPDATE_CMD_SHOW = "/usr/bin/onie-fw-update.sh show-pending"
+    ONIE_FW_UPDATE_CMD_ADD = '/usr/bin/onie-fw-update.sh add {}'
+    ONIE_FW_UPDATE_CMD_REMOVE = '/usr/bin/onie-fw-update.sh remove {}'
+    ONIE_FW_UPDATE_CMD_UPDATE = '/usr/bin/onie-fw-update.sh update'
+    ONIE_FW_UPDATE_CMD_SHOW = '/usr/bin/onie-fw-update.sh show-pending'
 
     BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
 
@@ -226,8 +228,8 @@ class ComponentBIOS(Component):
 
 
 class ComponentCPLD(Component):
-    COMPONENT_NAME = 'CPLD'
-    COMPONENT_DESCRIPTION = "CPLD - includes all CPLDs in the switch"
+    COMPONENT_NAME = 'CPLD{}'
+    COMPONENT_DESCRIPTION = 'CPLD - Complex Programmable Logic Device'
     COMPONENT_FIRMWARE_EXTENSION = '.vme'
 
     CPLD_NUMBER_FILE = '/var/run/hw-management/config/cpld_num'
@@ -245,10 +247,12 @@ class ComponentCPLD(Component):
 
     MST_DEVICE_PATTERN = '/dev/mst/mt[0-9]*_pci_cr0'
 
-    def __init__(self):
-        self.name = self.COMPONENT_NAME
+    def __init__(self, idx):
+        self.idx = idx
+        self.name = self.COMPONENT_NAME.format(self.idx)
         self.description = self.COMPONENT_DESCRIPTION
         self.image_ext_name = self.COMPONENT_FIRMWARE_EXTENSION
+
 
     def get_firmware_version(self):
         """
@@ -257,36 +261,26 @@ class ComponentCPLD(Component):
         Returns:
             A string containing the firmware version of the component
         """
-        cpld_version = EMPTY
 
-        cpld_number = self._read_generic_file(self.CPLD_NUMBER_FILE, self.CPLD_NUMBER_MAX_LENGTH, False)
-        cpld_number = cpld_number.rstrip(NEWLINE)
+        part_number_file = self.CPLD_PART_NUMBER_FILE.format(self.idx)
+        version_file = self.CPLD_VERSION_FILE.format(self.idx)
+        version_minor_file = self.CPLD_VERSION_MINOR_FILE.format(self.idx)
 
-        for cpld_idx in xrange(1, int(cpld_number) + 1):
-            part_number_file = self.CPLD_PART_NUMBER_FILE.format(cpld_idx)
-            version_file = self.CPLD_VERSION_FILE.format(cpld_idx)
-            version_minor_file = self.CPLD_VERSION_MINOR_FILE.format(cpld_idx)
+        part_number = self._read_generic_file(part_number_file, self.CPLD_PART_NUMBER_MAX_LENGTH, True)
+        version = self._read_generic_file(version_file, self.CPLD_VERSION_MAX_LENGTH)
+        version_minor = self._read_generic_file(version_minor_file, self.CPLD_VERSION_MINOR_MAX_LENGTH, True)
 
-            part_number = self._read_generic_file(part_number_file, self.CPLD_PART_NUMBER_MAX_LENGTH)
-            version = self._read_generic_file(version_file, self.CPLD_VERSION_MAX_LENGTH, False)
-            version_minor = self._read_generic_file(version_minor_file, self.CPLD_VERSION_MINOR_MAX_LENGTH)
+        if part_number is None:
+            part_number = ZERO
 
-            if part_number is None:
-                part_number = ZERO
+        if version_minor is None:
+            version_minor = ZERO
 
-            if version_minor is None:
-                version_minor = ZERO
+        part_number = part_number.rstrip(NEWLINE).zfill(self.CPLD_PART_NUMBER_MAX_LENGTH)
+        version = version.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MAX_LENGTH)
+        version_minor = version_minor.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MINOR_MAX_LENGTH)
 
-            part_number = part_number.rstrip(NEWLINE).zfill(self.CPLD_PART_NUMBER_MAX_LENGTH)
-            version = version.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MAX_LENGTH)
-            version_minor = version_minor.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MINOR_MAX_LENGTH)
-
-            if cpld_version:
-                cpld_version += COMMA
-
-            cpld_version += "CPLD{}:CPLD{}_REV{}{}".format(cpld_idx, part_number, version, version_minor)
-
-        return cpld_version
+        return "CPLD{}_REV{}{}".format(part_number, version, version_minor)
 
 
     def _get_mst_device(self):
@@ -364,3 +358,16 @@ class ComponentCPLD(Component):
             print("ERROR: Failed to install CPLD")
 
         return success_flag
+
+
+    @classmethod
+    def get_component_list(cls):
+        component_list = [ ]
+
+        cpld_number = cls._read_generic_file(cls.CPLD_NUMBER_FILE, cls.CPLD_NUMBER_MAX_LENGTH)
+        cpld_number = cpld_number.rstrip(NEWLINE)
+
+        for cpld_idx in xrange(1, int(cpld_number) + 1):
+            component_list.append(cls(cpld_idx))
+
+        return component_list
