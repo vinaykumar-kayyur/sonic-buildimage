@@ -15,6 +15,9 @@ case "$1" in
 start)
     echo -n "Setting up board... "
     /usr/bin/48x2q4z_platform.sh init
+    /usr/bin/add_crontab_remove_syslog.sh
+    /usr/bin/remove_syslog.sh
+    /usr/bin/create_eeprom.sh
 
     echo "done."
     ;;
