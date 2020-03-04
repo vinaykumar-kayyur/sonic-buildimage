@@ -14,13 +14,16 @@
 case "$1" in
 start)
     echo -n "Setting up board... "
-    /usr/bin/48x2q4z_platform.sh init
+    /usr/bin/es6220_platform.sh init
+    /usr/bin/add_crontab_remove_syslog.sh
+    /usr/bin/remove_syslog.sh
+    /usr/bin/create_eeprom.sh
 
     echo "done."
     ;;
 
 stop)
-    /usr/bin/48x2q4z_platform.sh deinit
+    /usr/bin/es6220_platform.sh deinit
     echo "done."
 
     ;;
@@ -30,7 +33,7 @@ force-reload|restart)
     ;;
 
 *)
-    echo "Usage: service platform-modules-e582-48x2q4z {start|stop}"
+    echo "Usage: service platform-modules-embedway-es6220 {start|stop}"
     exit 1
     ;;
 esac
