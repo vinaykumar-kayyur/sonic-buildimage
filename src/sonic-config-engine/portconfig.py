@@ -50,14 +50,14 @@ def parse_port_config_file(port_config_file):
             data.setdefault('alias', name)
             ports[name] = data
             port_alias_map[data['alias']] = name
-            # asic_name to sonic_name mapping also included in
+            # asic_port_name to sonic_name mapping also included in
             # port_alias_map
-            if (('asic_name' in data) and
-                (data['asic_name'] != name)):
-                port_alias_map[data['asic_name']] = name
-            # alias to asic_name mapping
-            if 'asic_name' in data:
-                port_alias_asic_map[data['alias']] = data['asic_name'].strip()
+            if (('asic_port_name' in data) and
+                (data['asic_port_name'] != name)):
+                port_alias_map[data['asic_port_name']] = name
+            # alias to asic_port_name mapping
+            if 'asic_port_name' in data:
+                port_alias_asic_map[data['alias']] = data['asic_port_name'].strip()
     return (ports, port_alias_map, port_alias_asic_map)
 
 

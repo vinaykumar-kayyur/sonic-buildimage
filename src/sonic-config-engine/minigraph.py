@@ -84,6 +84,7 @@ def parse_png(png, hname, device_hostname):
     mgmt_port = ''
     port_speeds = {}
     console_ports = {}
+    device_neighbors = []
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -118,6 +119,10 @@ def parse_png(png, hname, device_hostname):
                 startport = link.find(str(QName(ns, "StartPort"))).text
                 bandwidth_node = link.find(str(QName(ns, "Bandwidth")))
                 bandwidth = bandwidth_node.text if bandwidth_node is not None else None
+                # Chassis internal node is used in multi-asic device or chassis minigraph
+                # where the minigraph will contain the internal asic connectivity and
+                # external neighbor information. The ChassisInternal node will be used to 
+                # determine if the link is internal to the device or chassis.
                 chassis_internal_node = link.find(str(QName(ns, "ChassisInternal")))
                 chassis_internal = chassis_internal_node.text if chassis_internal_node is not None else "false"
 
@@ -129,6 +134,7 @@ def parse_png(png, hname, device_hostname):
                                 (hname in port_alias_asic_map[endport])):
                             endport = port_alias_asic_map[endport]
                             neighbors[port_alias_map[endport]] = {'name': startdevice, 'port': startport}
+                            device_neighbors.append(startdevice)
                             if bandwidth:
                                 port_speeds[port_alias_map[endport]] = bandwidth
 
@@ -137,6 +143,7 @@ def parse_png(png, hname, device_hostname):
                                (hname in port_alias_asic_map[startport])):
                             startport = port_alias_asic_map[startport]
                             neighbors[port_alias_map[startport]] = {'name': enddevice, 'port': endport}
+                            device_neighbors.append(enddevice)
                             if bandwidth:
                                 port_speeds[port_alias_map[startport]] = bandwidth
                 else:
@@ -145,6 +152,7 @@ def parse_png(png, hname, device_hostname):
                         if port_alias_map.has_key(endport):
                             endport = port_alias_map[endport]
                         neighbors[endport] = {'name': startdevice, 'port': startport}
+                        device_neighbors.append(startdevice)
                         if bandwidth:
                             port_speeds[endport] = bandwidth
 
@@ -153,6 +161,7 @@ def parse_png(png, hname, device_hostname):
                         if port_alias_map.has_key(startport):
                             startport = port_alias_map[startport]
                         neighbors[startport] = {'name': enddevice, 'port': endport}
+                        device_neighbors.append(enddevice)
                         if bandwidth:
                             port_speeds[startport] = bandwidth
 
@@ -181,7 +190,7 @@ def parse_png(png, hname, device_hostname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, device_neighbors)
 
 
 def parse_dpg(dpg, hname):
@@ -582,7 +591,10 @@ def filter_acl_mirror_table_bindings(acls, neighbors, port_channels):
 # Main functions
 #
 ###############################################################################
-
+# hostname paramter: To parse minigraph.xml that contains multiple hosts 
+# information, like in case of multi-asic device or chassis device, this 
+# parameter can be used to specify the specific hostname for which configuration
+# has to be generated.
 def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     root = ET.parse(filename).getroot()
     mini_graph_path = filename
@@ -640,20 +652,15 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname, device_hostname)
+            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, device_neighbors) = parse_png(child, hostname, device_hostname)
         elif child.tag == str(QName(ns, "UngDec")):
-            (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, device_hostname)
+            (u_neighbors, u_devices, _, _, _, _, _, _, _) = parse_png(child, hostname, device_hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, sub_role) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
             (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
-    # for this hostname, if sub_role is defined, add sub_role as type in 
-    # device_metadata
-    if sub_role is not None:
-        current_device['type'] = sub_role
-
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
@@ -669,6 +676,11 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
             'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
         }
     }
+    # for this hostname, if sub_role is defined, add sub_role in 
+    # device_metadata
+    if sub_role is not None:
+        current_device['sub_role'] = sub_role
+        results['DEVICE_METADATA']['localhost']['sub_role'] =  sub_role
     results['BGP_NEIGHBOR'] = bgp_sessions
     results['BGP_MONITORS'] = bgp_monitors
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
@@ -839,7 +851,7 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
             del neighbors[nghbr]
 
     results['DEVICE_NEIGHBOR'] = neighbors
-    results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key.lower() != hostname.lower() }
+    results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key in device_neighbors }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
