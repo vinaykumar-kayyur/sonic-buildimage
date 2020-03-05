@@ -27,7 +27,7 @@ index 7592b01..2062bf2 100644
 +	err = teamd_config_bool_get(ctx, &lacp->cfg.fallback, "$.runner.fallback");
 +	if (err)
 +		lacp->cfg.fallback = LACP_CFG_DFLT_FALLBACK;
-+	teamd_log_dbg("Using fallback \"%d\".", lacp->cfg.fallback);
++	teamd_log_dbg(ctx, "Using fallback \"%d\".", lacp->cfg.fallback);
 +
  	err = teamd_config_int_get(ctx, &tmp, "$.runner.min_ports");
  	if (err) {
@@ -43,7 +43,7 @@ index 7592b01..2062bf2 100644
 + */
 +static bool is_lacp_fallback_eligible(struct lacp_port *lacp_port)
 +{
-+	teamd_log_dbg("%s fallback eligible state \"%d \" cfg \"%d\".",
++	teamd_log_dbg(lacp_port->ctx, "%s fallback eligible state \"%d \" cfg \"%d\".",
 +				lacp_port->tdport->ifname, lacp_port->state,
 +				lacp_port->lacp->cfg.fallback);
 +	return lacp_port->state == PORT_STATE_DEFAULTED &&

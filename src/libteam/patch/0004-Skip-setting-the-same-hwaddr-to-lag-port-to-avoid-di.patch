@@ -19,7 +19,7 @@ index dc46a62..bf42347 100644
 +
 +	if(!memcmp(hwaddr, ctx->hwaddr, hwaddr_len)) {
 +		err = 0;
-+		teamd_log_dbg("Skip setting same hwaddr string: \"%s\".", hwaddr_str);
++		teamd_log_dbg(ctx, "Skip setting same hwaddr string: \"%s\".", hwaddr_str);
 +	}
 +	else{
 +		err = team_hwaddr_set(ctx->th, ctx->ifindex, hwaddr, hwaddr_len);

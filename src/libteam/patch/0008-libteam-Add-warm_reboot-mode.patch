@@ -211,7 +211,7 @@ index 166da57..03f8d63 100644
  	int err;
  
 +	if (ctx->keep_ports) {
-+		teamd_log_dbg("%s: Keeping port (found ifindex \"%d\").",
++		teamd_log_dbg(ctx, "%s: Keeping port (found ifindex \"%d\").",
 +		      tdport->ifname, tdport->ifindex);
 +		return 0;
 +	}
@@ -345,7 +345,7 @@ index 55abe88..f225fb2 100644
 +	char filename[PATH_MAX];
 +	int err, nitems;
 +
-+	teamd_log_dbg("WR-mode. function lacpdu_read(): %s", lacp_port->tdport->ifname);
++	teamd_log_dbg(lacp_port->ctx, "WR-mode. function lacpdu_read(): %s", lacp_port->tdport->ifname);
 +
 +	generate_path(lacp_port->ctx, filename, lacp_port->tdport->ifname);
 +
@@ -423,7 +423,7 @@ index 55abe88..f225fb2 100644
 +	FILE *fp;
 +	int data1, data2, i, err;
 +
-+	teamd_log_dbg("WR-mode. function lacp_state_load()");
++	teamd_log_dbg(ctx, "WR-mode. function lacp_state_load()");
 +
 +	generate_path(ctx, filename, ctx->team_devname);
 +
@@ -489,7 +489,7 @@ index 55abe88..f225fb2 100644
  	int err;
  
 +	if (lacp->ctx->warm_start_mode) {
-+		teamd_log_dbg("WR-mode. function lacp_update_carrier()");
++		teamd_log_dbg(lacp->ctx, "WR-mode. function lacp_update_carrier()");
 +	}
 +
  	ports_enabled = 0;
@@ -561,7 +561,7 @@ index 55abe88..f225fb2 100644
 +	}
 +
 +	if (ports_enabled >= lacp->cfg.min_ports) {
-+		teamd_log_dbg("Enable carrier. Number of enabled ports %d >= configured min_ports %d",
++		teamd_log_dbg(lacp->ctx, "Enable carrier. Number of enabled ports %d >= configured min_ports %d",
 +				ports_enabled, lacp->cfg.min_ports);
 +		return lacp_set_carrier(lacp, true);
 +	}
@@ -721,7 +721,7 @@ index 55abe88..f225fb2 100644
  	struct lacp *lacp = creator_priv;
  	int err;
  
-+	teamd_log_dbg("function lacp_port_added(): %s", tdport->ifname);
++	teamd_log_dbg(ctx, "function lacp_port_added(): %s", tdport->ifname);
 +
  	lacp_port->ctx = ctx;
  	lacp_port->tdport = tdport;
@@ -745,7 +745,7 @@ index 55abe88..f225fb2 100644
  	struct lacp_port *lacp_port = priv;
  
 -	lacp_port_set_state(lacp_port, PORT_STATE_DISABLED);
-+	teamd_log_dbg("function lacp_port_removed(): %s", tdport->ifname);
++	teamd_log_dbg(lacp_port->ctx, "function lacp_port_removed(): %s", tdport->ifname);
 +
 +	if (!lacp_port->ctx->keep_ports) {
 +		/* Don't transition into DISABLED state,
@@ -826,7 +826,7 @@ index 55abe88..f225fb2 100644
 +	lacp->carrier_up = false;
 +
 +	if (ctx->warm_start_mode) {
-+		teamd_log_dbg("WR-mode. function lacp_carrier_init()");
++		teamd_log_dbg(ctx, "WR-mode. function lacp_carrier_init()");
 +
 +		/* Disable WR start mode if LAG interface was down */
 +		if (lacp->wr.carrier_up) {
