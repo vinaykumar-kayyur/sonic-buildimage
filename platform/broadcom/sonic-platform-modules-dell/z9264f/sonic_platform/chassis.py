@@ -14,6 +14,7 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
+    from sonic_platform.component import Component
     from sonic_platform.psu import Psu
     from sonic_platform.fan import Fan
     from sonic_platform.thermal import Thermal
@@ -22,6 +23,7 @@ except ImportError as e:
 
 MAX_Z9264F_FANTRAY =4
 MAX_Z9264F_FAN = 2
+MAX_Z9264F_COMPONENT = 8 # BIOS,BMC,FPGA,SYSTEM CPLD,4 SLAVE CPLDs
 MAX_Z9264F_PSU = 2
 MAX_Z9264F_THERMAL = 8
 
@@ -58,7 +60,11 @@ class Chassis(ChassisBase):
             self._sfp_list.append(sfp_node)
 
         self._eeprom = Eeprom()
-
+        
+        for i in range(MAX_Z9264F_COMPONENT):
+            component = Component(i)
+            self._component_list.append(component)
+            
         for i in range(MAX_Z9264F_PSU):
             psu = Psu(i)
             self._psu_list.append(psu)
@@ -71,7 +77,7 @@ class Chassis(ChassisBase):
         for i in range(MAX_Z9264F_THERMAL):
             thermal = Thermal(i)
             self._thermal_list.append(thermal)
-
+        
         for port_num in range(self.PORT_START, (self.PORT_END + 1)):
             presence = self.get_sfp(port_num).get_presence()
             if presence:
