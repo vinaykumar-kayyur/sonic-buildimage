@@ -6,16 +6,16 @@
 #
 
 start() {
-	TOPOLOGY_SCRIPT="topology.sh"
-	PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
-	HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
-        /usr/share/sonic/device/$PLATFORM/$HWSKU/$TOPOLOGY_SCRIPT start
+    TOPOLOGY_SCRIPT="topology.sh"
+    PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+    HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
+    /usr/share/sonic/device/$PLATFORM/$HWSKU/$TOPOLOGY_SCRIPT start
 }
 stop() {
-        TOPOLOGY_SCRIPT="topology.sh"
-        PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
-        HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
-        /usr/share/sonic/device/$PLATFORM/$HWSKU/$TOPOLOGY_SCRIPT stop 
+    TOPOLOGY_SCRIPT="topology.sh"
+    PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+    HWSKU=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
+    usr/share/sonic/device/$PLATFORM/$HWSKU/$TOPOLOGY_SCRIPT stop 
 }
 
 case "$1" in
