@@ -234,7 +234,7 @@ def parse_dpg(dpg, hname):
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vmbr_list = vintfmbr.split(';')
-            for i, member in enumerate(vmbr_list):
+            for member in vmbr_list:
                 try:
                     intf_vlan_mbr[member].append(vlanid)
                 except:
