@@ -28,11 +28,14 @@ To compile ONIE, you need to change the directories to "build-config" and then t
 
 For example:
 
+```
   $ cd build-config
   $ make -j4 MACHINEROOT=../machine/juniper MACHINE=juniper_qfx5210 all
+```
 
 ONIE binaries are located at the directory /build/images. The following command shows how to navigate the directory to view the ONIE binaries:
 
+```
 stack@controller:~/ONIE_J/onie/build/images$ ls -rlt
 
 total 40740
@@ -42,22 +45,29 @@ total 40740
 -rw-rw-r-- 1 stack stack  9811831 Aug  3 12:32 onie-updater-x86_64-juniper_x86-r0    -- ONIE self-update image for installing ONIE.
 -rw-rw-r-- 1 stack stack 22151168 Aug  3 12:33 onie-recovery-x86_64-juniper_x86-r0.iso   -- Recovery ISO image to create a bootable USB memory device for installing/recovery ONIE.
 -rw-rw-r-- 1 stack stack 31465984 Aug  3 12:33 onie-recovery-x86_64-juniper_qfx5210-r0.efi64.pxe   -- Recovery PXE image used for installing ONIE using PXE Network install.
+```
 
 
 Note: Use the following command to build a demo target:
 
+```
   $ make -j4 MACHINEROOT=../machine/juniper MACHINE=juniper_qfx5210 all demo
+```
 
 In addition to the above list of binary files, the following two binary files are also created:
 
+```
 -rw-rw---- 1 build build 12576008 Aug 19 16:30 demo-installer-x86_64-juniper_qfx5210-r0.bin
 -rw-rw---- 1 build build 12576008 Aug 19 16:30 demo-diag-installer-x86_64-juniper_qfx5210-r0.bin
+```
 
 You can install these binary files by using the 'onie-nos-install' command to test the install / boot workflow.
 
 Use the following command for make clean:
 
+```
  $ make machine-clean MACHINEROOT=../machine/juniper MACHINE=juniper_qfx5210
+```
 
 
 ## Installing ONIE on a New QFX5210-64C-S Switch
@@ -76,11 +86,15 @@ You can use the recovery ISO (.iso) image to create a bootable USB memory device
 
 To create a bootable USB memory device, use the "dd" command on a Linux workstation as follows:
 
+```
  $ dd if=<machine>.iso of=/dev/sdX bs=10M
+```
 
 For example:
 
+```
  $ dd if=onie-recovery-x86_64-juniper_qfx5210-r0.iso of=/dev/sdb bs=10M
+```
 
 You can find the correct "/dev/sdX" by validating the "dmesg" output after inserting an USB device into the Linux workstation.
 
@@ -206,8 +220,10 @@ Note: Unmount the USB memory device after copying the sonic-broadcom.bin. For ex
 
 Run the following command to install SONIC:
    
+```
 For example, 
 ONIE:/var/tmp # onie-nos-install /var/tmp/sonic-broadcom.bin
+```
 
 ## Booting SONiC 
 
@@ -248,7 +264,9 @@ To upgrade the SONiC operating system to a latest version, you need to:
  1. Copy the latest image of the SONiC image to the QFX5210-64C-S switch. 
  2. Run the following command from the directory where the latest SONiC image has been copied.
 
+```
 $ sudo ./sonic-braodcom.bin 
+```
 
 
 ## Uninstalling SONiC image
