@@ -229,16 +229,14 @@ def parse_dpg(dpg, hname):
         vlan_intfs = []
         vlans = {}
         vlan_members = {}
-        intf_vlan_mbr = {}
+        intf_vlan_mbr = defaultdict(list)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vmbr_list = vintfmbr.split(';')
             for member in vmbr_list:
-                try:
-                    intf_vlan_mbr[member].append(vlanid)
-                except:
-                    intf_vlan_mbr[member] = [vlanid]
+                intf_vlan_mbr[member].append(vlanid)
+
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
