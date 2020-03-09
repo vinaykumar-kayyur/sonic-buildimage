@@ -18,8 +18,8 @@ fi
 
 [ -f /var/run/dhclient.eth0.pid ] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
 
-ip addr flush dev lo
-
 systemctl restart networking
 
-ifdown --force lo && ifup lo
+ifdown --force lo
+ip addr flush dev lo
+ifup lo
