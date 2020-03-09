@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# DHCLIENT exit hook for ip address update in app db
+#
+
+
+set -x
+
+PYTHON_PATH=/usr/bin/python
+SCRIPT=/usr/bin/dhcp_mgmt_conf.py
+
+
+dhcp_mgmt_conf_handle() {
+    IF_NAME=$interface
+    echo "dhcp_mgmt_conf_handle, interface : $IF_NAME"
+
+    if [ "$IF_NAME" = "eth0" ]; then
+        echo "DHCP exit hook is called for $IF_NAME, reason : $reason"
+
+        case $reason in
+            BOUND|REBOOT|BOUND6)
+            if [ -n "$new_ip_address" ] &&  [ -n "$new_subnet_mask" ]; then
+
+                $PYTHON_PATH $SCRIPT $IF_NAME add $new_ip_address $new_subnet_mask
+            fi
+            ;;
+            RENEW|REBIND|RENEW6|REBIND6)
+            if [ -n "$old_ip_address" ] && [ -n "$old_subnet_mask" ]; then
+                $PYTHON_PATH $SCRIPT $IF_NAME del $old_ip_address $old_subnet_mask
+            fi
+
+            if [ -n "$new_ip_address" ] &&  [ -n "$new_subnet_mask" ]; then
+                $PYTHON_PATH $SCRIPT $IF_NAME add $new_ip_address $new_subnet_mask
+            fi
+
+            ;;
+            EXPIRE|FAIL|RELEASE|STOP)
+            if [ -n "$new_ip_address" ] &&  [ -n "$new_subnet_mask" ]; then
+                $PYTHON_PATH $SCRIPT $IF_NAME del $new_ip_address $new_subnet_mask
+            fi
+
+            if [ -n "$old_ip_address" ] && [ -n "$old_subnet_mask" ]; then
+                $PYTHON_PATH $SCRIPT $IF_NAME del $old_ip_address $old_subnet_mask
+            fi
+            ;;
+            TIMEOUT)
+            ;;
+        esac
+    fi
+}
+
+echo "dhcp_mgmt_conf"
+dhcp_mgmt_conf_handle
