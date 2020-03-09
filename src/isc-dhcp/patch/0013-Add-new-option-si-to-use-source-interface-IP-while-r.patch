@@ -1,17 +1,17 @@
-From 711bcb53f28603c4b0a2d18b6f4354b508d68b35 Mon Sep 17 00:00:00 2001
+From f9dec851c44cdeff7036ae5f013b0b64d39d06b0 Mon Sep 17 00:00:00 2001
 From: Joe LeVeque <jolevequ@microsoft.com>
 Date: Wed, 4 Mar 2020 19:46:21 +0000
 Subject: [PATCH] Add new option -si to use source interface IP while relaying
  packets to upstream ports
 
 ---
- common/socket.c  | 96 ++++++++++++++++++++++++++++++++++++++++++++++++
- includes/dhcpd.h |  1 +
- relay/dhcrelay.c |  8 ++++
- 3 files changed, 105 insertions(+)
+ common/socket.c  | 119 ++++++++++++++++++++++++++++++++++++-----------
+ includes/dhcpd.h |   1 +
+ relay/dhcrelay.c |   8 ++++
+ 3 files changed, 100 insertions(+), 28 deletions(-)
 
 diff --git a/common/socket.c b/common/socket.c
-index e8851b4..4e88945 100644
+index e8851b4..ddd1f2e 100644
 --- a/common/socket.c
 +++ b/common/socket.c
 @@ -78,6 +78,29 @@ static unsigned int global_v4_socket_references = 0;
@@ -44,11 +44,24 @@ index e8851b4..4e88945 100644
  /*
   * If we can't bind() to a specific interface, then we can only have
   * a single socket. This variable insures that we don't try to listen
-@@ -629,6 +652,78 @@ ssize_t send_packet (interface, packet, raw, len, from, to, hto)
+@@ -629,37 +652,77 @@ ssize_t send_packet (interface, packet, raw, len, from, to, hto)
  	struct hardware *hto;
  {
  	int result;
-+#if 1
+-#ifdef IGNORE_HOSTUNREACH
+-	int retry = 0;
+-	do {
+-#endif
+-#if defined(IP_PKTINFO) && defined(IP_RECVPKTINFO) && defined(USE_V4_PKTINFO)
+-		struct in_pktinfo pktinfo;
+-
+-		if (interface->ifp != NULL) {
+-			memset(&pktinfo, 0, sizeof (pktinfo));
+-			pktinfo.ipi_ifindex = interface->ifp->ifr_index;
+-			if (setsockopt(interface->wfdesc, IPPROTO_IP,
+-				       IP_PKTINFO, (char *)&pktinfo,
+-				       sizeof(pktinfo)) < 0) 
+-				log_fatal("setsockopt: IP_PKTINFO: %m");
 +	struct msghdr m;
 +	struct iovec v;
 +	struct sockaddr_in dst;
@@ -66,7 +79,17 @@ index e8851b4..4e88945 100644
 +		if (v4_control_buf == NULL) {
 +			log_error("send_packet: unable to allocate cmsg header");
 +			return(ENOMEM);
-+		}
+ 		}
+-#endif
+-		result = sendto (interface -> wfdesc, (char *)raw, len, 0,
+-				 (struct sockaddr *)to, sizeof *to);
+-#ifdef IGNORE_HOSTUNREACH
+-	} while (to -> sin_addr.s_addr == htonl (INADDR_BROADCAST) &&
+-		 result < 0 &&
+-		 (errno == EHOSTUNREACH ||
+-		  errno == ECONNREFUSED) &&
+-		 retry++ < 10);
+-#endif
 +	}
 +	memset(v4_control_buf, 0, v4_control_buf_len);
 +
@@ -116,18 +139,14 @@ index e8851b4..4e88945 100644
 +		pktinfo->ipi_spec_dst = from;
 +
 +	result = sendmsg(interface->wfdesc, &m, 0);
-+	if (result < 0) {
+ 	if (result < 0) {
+-		log_error ("send_packet: %m");
+-		if (errno == ENETUNREACH)
+-			log_error ("send_packet: please consult README file%s",
+-				   " regarding broadcast address.");
 +		log_error("send_packet: %m");
-+	}
-+#else
- #ifdef IGNORE_HOSTUNREACH
- 	int retry = 0;
- 	do {
-@@ -660,6 +755,7 @@ ssize_t send_packet (interface, packet, raw, len, from, to, hto)
- 			log_error ("send_packet: please consult README file%s",
- 				   " regarding broadcast address.");
  	}
-+#endif /* 1 */
++
  	return result;
  }
  
