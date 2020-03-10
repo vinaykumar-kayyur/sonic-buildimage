@@ -85,7 +85,7 @@ function postStartAction()
             if [ -r /etc/sonic/init_cfg$DEV.json ]; then
                 sonic-netns-exec "$NET_NS" sonic-cfggen -j /etc/sonic/init_cfg$DEV.json -j /etc/sonic/config_db$DEV.json --write-to-db
             else
-                sonic-netns-exec "$NET_NS" sonic-cfggen -j /etc/sonic/config_db.json --write-to-db
+                sonic-netns-exec "$NET_NS" sonic-cfggen -j /etc/sonic/config_db$DEV.json --write-to-db
             fi
         fi
 
