@@ -209,7 +209,7 @@ $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
 $(info "ENABLE_NAT"                      : "$(ENABLE_NAT)")
-$(info "TELEMETRY_READONLY"              : "$(TELEMETRY_READONLY)")
+$(info "TELEMETRY_READWRITE"             : "$(TELEMETRY_READWRITE)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
@@ -727,7 +727,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
-	TELEMETRY_READONLY="$(TELEMETRY_READONLY)" \
 		./build_debian.sh $(LOG)
 
 	USERNAME="$(USERNAME)" \
