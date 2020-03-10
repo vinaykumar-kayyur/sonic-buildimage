@@ -120,7 +120,7 @@ c. Set the hard drive boot order as follows:
 
    For example, consider "JetFlashTranscend 8GB 8.07" as the USB memory device, the boot order will display as follows:
 
-
+```
     Boot Option Priorities
 
     Boot Option #1          [JetFlashTranscend 8...]
@@ -130,13 +130,13 @@ c. Set the hard drive boot order as follows:
     Boot Option #3          [IBA GE Slot 00A0 v1543]
 
     Boot Option #4          [UEFI: Built-in EFI ...]
-
+```
 
 d. Go to "Save & Exit" in the BIOS screen and from the Boot Override option select the USB memory device (For example, JetFlashTranscend 8GB 8.07).
 
 e. After a few seconds, the QFX5210-64C-S switch would restart and boot from the USB memory device and then you will see the following on the console screen:
 
-
+```
                      GNU GRUB  version 2.02~beta2+e4a1fe391
 
 
@@ -174,6 +174,7 @@ e. After a few seconds, the QFX5210-64C-S switch would restart and boot from the
       Use the ^ and v keys to select which entry is highlighted.
 
       Press enter to boot the selected OS, `e' to edit the commands before booting or `c' for a command-line.
+```
 
 f. Select "ONIE: Embed ONIE" to create a fresh partition to install ONIE automatically. 
 	
@@ -231,6 +232,7 @@ The QFX5210-64C-S switch restarts automatically after the SONiC image has been s
 
 1) Select SONiC from the GRUB boot manager. 
 
+```
                       GNU GRUB  version 2.02
 
  +----------------------------------------------------------------------------+
@@ -251,6 +253,7 @@ The QFX5210-64C-S switch restarts automatically after the SONiC image has been s
       Use the ^ and v keys to select which entry is highlighted.          
       Press enter to boot the selected OS, `e' to edit the commands       
       before booting or `c' for a command-line. 
+```
 
 2. At the SONiC login prompt, enter the username as admin and password as YourPaSsWoRd.
 
