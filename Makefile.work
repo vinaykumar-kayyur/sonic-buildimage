@@ -31,6 +31,9 @@
 #  *                 Default: yes
 #  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
+#  * TELEMETRY_READWRITE: Enable write/config operations via the gNMI interface.
+#  *                 Default: unset
+#  *                 Values: y
 #
 ###############################################################################
 
