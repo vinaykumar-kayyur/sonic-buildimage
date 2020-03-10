@@ -667,6 +667,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export install_debug_image="$(INSTALL_DEBUG_TOOLS)"
+	export multi_instance="false"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
@@ -684,16 +685,17 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			)
 		fi
 
-		if [ -f files/build_templates/multi_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service.j2 ]; then
-			j2 files/build_templates/multi_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
-
-			# performs the same check as the elif above, except with make commands so eval behaves properly
-			$(if $(shell ls files/build_templates/multi_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service.j2 2>/dev/null),\
+		if [ -f files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
+			export multi_instance="true"
+			j2 files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
+			$(if $(shell ls files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
 				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE = yes)
-			 )
-		fi
-		if [ -f files/build_templates/single_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
-			j2 files/build_templates/single_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+			)
+			export multi_instance="false"
+			j2 files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+			$(if $(shell ls files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
+			)
 		fi
 		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
