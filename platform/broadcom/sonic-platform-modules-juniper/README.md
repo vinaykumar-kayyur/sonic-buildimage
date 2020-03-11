@@ -139,40 +139,22 @@ e. After a few seconds, the QFX5210-64C-S switch would restart and boot from the
 ```
                      GNU GRUB  version 2.02~beta2+e4a1fe391
 
-
-
  +----------------------------------------------------------------------------+
-
  |*ONIE: Rescue                                                               |
-
  | ONIE: Embed ONIE                                                           |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  |                                                                            |
-
  +----------------------------------------------------------------------------+
-
-
 
       Use the ^ and v keys to select which entry is highlighted.
-
       Press enter to boot the selected OS, `e' to edit the commands before booting or `c' for a command-line.
 ```
 
