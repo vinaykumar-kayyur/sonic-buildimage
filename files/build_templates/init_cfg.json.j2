@@ -25,8 +25,8 @@
 {% endfor %}
     },
     "CONTAINER_FEATURE": {
-{%- for container in ["bgp", "database", "dhcp_relay", "lldp", "pmon", "radv", "restapi", "sflow",
-                      "snmp", "swss", "syncd", "teamd", "telemetry", "nat"] %}
+{%- for container in ["bgp", "database", "dhcp_relay", "lldp", "nat", "pmon", "radv", "restapi", "sflow",
+                      "snmp", "swss", "syncd", "teamd", "telemetry"] %}
         "{{container}}": {
             "auto_restart": "disabled",
             "high_mem_alert": "disabled"
