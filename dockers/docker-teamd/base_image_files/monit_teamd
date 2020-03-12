@@ -1,0 +1,7 @@
+###############################################################################
+## Monit configuration for teamd container
+## process list:
+##  teamd
+###############################################################################
+check program monit_teamd with path "/usr/bin/monit_multiprocesses.py --container-name teamd"
+    if status != 0 then alert

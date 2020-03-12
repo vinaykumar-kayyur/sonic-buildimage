@@ -1,0 +1,7 @@
+###############################################################################
+## Monit configuration for dhcp_relay container
+## process list
+##  dhcrelay
+###############################################################################
+check program monit_dhcrelay with path "/usr/bin/monit_multiprocesses.py --container-name dhcp_relay"
+    if status != 0 then alert
