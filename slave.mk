@@ -685,33 +685,14 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			)
 		fi
 		# Any service template, inside instance directory, will be used to generate .service and @.service file.
-		# @.service will be used to create multiple instances of the same service. 
-		# These services will be marked with TEMPLATE flag to denote that these services will be started 
-		# in namespace context in case of multi-asic platforms.
-		# If a service template is marked as globalservice.j2, that template will be used to generate .service 
-		# and @.service file. This service will be marked as GLOBAL and TEMPLATE to denote that
-		# this service will be started in host context and namespace context in case of multi-asic platforms. 
-		# For single asic platforms, only .service files will be used.
-		if [ -f files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
+		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
 			export multi_instance="true"
-			j2 files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
-			$(if $(shell ls files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
+			$(if $(shell ls files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
 				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE = yes)
 			)
 			export multi_instance="false"
-			j2 files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
-		fi
-		if [ -f files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).globalservice.j2 ]; then
-			export multi_instance="true"
-			j2 files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).globalservice.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
-			$(if $(shell ls files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).globalservice.j2 2>/dev/null),\
-				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE = yes)
-			)
-			export multi_instance="false"
-			j2 files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).globalservice.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
-			$(if $(shell ls files/build_templates/instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).globalservice.j2 2>/dev/null),\
-				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
-			)
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
 		fi
 		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh

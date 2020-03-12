@@ -1,18 +1,18 @@
 [Unit]
-Description=LLDP container
+Description=Database container
 {% if multi_instance == 'true' %}
-Requires=database@%i.service
-After=database@%i.service swss@%i.service syncd@%i.service
+Requires=docker.service database.service
+After=docker.service database.service
 {% else %}
-Requires=updategraph.service
-After=updategraph.service swss.service syncd.service
+Requires=docker.service
+After=docker.service
+After=rc-local.service
 {% endif %}
-Before=ntp-config.service
 StartLimitIntervalSec=1200
 StartLimitBurst=3
 
 [Service]
-User={{ sonicadmin_user }}
+User=root
 {% if multi_instance == 'true' %}
 ExecStartPre=/usr/bin/{{docker_container_name}}.sh start %i
 ExecStart=/usr/bin/{{docker_container_name}}.sh wait %i
