@@ -18,9 +18,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-EMPTY = ''
 ZERO = '0'
-COMMA = ','
 NEWLINE = '\n'
 
 class Component(ComponentBase):
@@ -242,6 +240,9 @@ class ComponentCPLD(Component):
     CPLD_VERSION_MAX_LENGTH = 2
     CPLD_VERSION_MINOR_MAX_LENGTH = 2
 
+    CPLD_PART_NUMBER_DEFAULT = ZERO
+    CPLD_VERSION_MINOR_DEFAULT = ZERO
+
     CPLD_UPDATE_COMMAND = 'cpldupdate --dev {} {}'
     CPLD_INSTALL_SUCCESS_FLAG = 'PASS!'
 
@@ -271,10 +272,10 @@ class ComponentCPLD(Component):
         version_minor = self._read_generic_file(version_minor_file, self.CPLD_VERSION_MINOR_MAX_LENGTH, True)
 
         if part_number is None:
-            part_number = ZERO
+            part_number = self.CPLD_PART_NUMBER_DEFAULT
 
         if version_minor is None:
-            version_minor = ZERO
+            version_minor = self.CPLD_VERSION_MINOR_DEFAULT
 
         part_number = part_number.rstrip(NEWLINE).zfill(self.CPLD_PART_NUMBER_MAX_LENGTH)
         version = version.rstrip(NEWLINE).zfill(self.CPLD_VERSION_MAX_LENGTH)
