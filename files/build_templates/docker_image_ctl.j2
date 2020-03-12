@@ -15,7 +15,7 @@ link_namespace() {
     PID="$(docker inspect -f {{"'{{.State.Pid}}'"}} "{{docker_container_name}}$DEV")"
 
     if `ip netns | grep --quiet -w "$NET_NS"`; then # namespace exists
-        if `ip netns pid "$PID" | grep  --quiet -w $PID`; then # namespace is correctly linked
+        if `ip netns pids "$NET_NS" | grep  --quiet -w $PID`; then # namespace is correctly linked
             return 0
         else # if it's incorrectly linked remove it
             ip netns delete $NET_NS
@@ -187,8 +187,9 @@ start() {
     fi
 {%- if docker_container_name == "bgp" %}
     if [ "$DEV" ]; then
-        if [ ! -d "/etc/sonic/frr$DEV" ]; then
-            cp -r /etc/sonic/frr /etc/sonic/frr$DEV
+        if [ ! -d "/etc/sonic/frr/$DEV" ]; then
+            mkdir /etc/sonic/frr/$DEV
+            cp -r /etc/sonic/frr/*.conf /etc/sonic/frr/$DEV
         fi
     fi
 {%- endif %}
@@ -222,7 +223,7 @@ start() {
 {%- endif %}
 {%- endif %}
 {%- if docker_container_name == "bgp" %}
-        -v /etc/sonic/frr$DEV:/etc/frr:rw \
+        -v /etc/sonic/frr/$DEV:/etc/frr:rw \
 {%- endif %}
         -v /var/run/redis$DEV:/var/run/redis:rw \
         -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/platform:ro \
