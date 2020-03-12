@@ -80,6 +80,9 @@ def main():
         check_teamd_process()
     elif args.container_name == 'dhcp_relay':
         check_dhcp_relay_process()
+    else:
+        syslog.syslog(syslog.LOG_ERR, "container name is invalid. Exiting...")
+        sys.exit(2)
 
 if __name__ == '__main__':
     main()
