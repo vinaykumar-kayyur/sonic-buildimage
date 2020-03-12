@@ -16,3 +16,11 @@ agentx
 !
 {% include "bgpd.conf.default.j2" %}
 !
+{% block bgp_error_handling_init %}
+{% if BGP_ERROR_CFG_TABLE %}
+{% if BGP_ERROR_CFG_TABLE['config']['enable'] == 'true' %}
+bgp error-handling enable
+{% endif %}
+{% endif %}
+{% endblock bgp_error_handling_init %}
+
