@@ -14,8 +14,9 @@ link_namespace() {
     mkdir -p /var/run/netns
     PID="$(docker inspect -f {{"'{{.State.Pid}}'"}} "{{docker_container_name}}$DEV")"
 
-    if `ip netns | grep --quiet -w "$NET_NS"`; then # namespace exists
-        if `ip netns pids "$NET_NS" | grep  --quiet -w $PID`; then # namespace is correctly linked
+    PIDS=`ip netns pids "$NET_NS" 2>/dev/null`
+    if [ "$?" -eq "0" ]; then
+        if `echo $PIDS | grep  --quiet -w $PID`; then # namespace is correctly linked
             return 0
         else # if it's incorrectly linked remove it
             ip netns delete $NET_NS
