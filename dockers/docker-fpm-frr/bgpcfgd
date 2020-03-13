@@ -306,7 +306,7 @@ class BGPPeerMgr(Manager):
                 return False
             elif target_interface.has_key("vnet_name") and target_interface["vnet_name"]:
                 # Ignore the route that is in a vnet
-                syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, data))
+                syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, target_interface["vnet_name"]))
                 return True
 
             neigmeta = self.directory.get_slot("neigmeta")
