@@ -26,6 +26,5 @@ ifeq ($(ENABLE_SYNCD_RPC),y)
 $(LIBSAIREDIS)_DEPENDS += $(LIBSAITHRIFT_DEV)
 endif
 
-
 # Runtime dependency on sai is set only for syncd
 $(SYNCD)_RDEPENDS += $(BFN_SAI) $(WNC_OSW1800_PLATFORM) $(BFN_INGRASYS_PLATFORM) $(BFN_PLATFORM)
