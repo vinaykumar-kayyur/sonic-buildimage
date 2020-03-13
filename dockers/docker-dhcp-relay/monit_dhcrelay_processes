@@ -32,7 +32,7 @@ def retrieve_vlans():
 
     return vlans
 
-def check_dhcp_relay_process():
+def check_dhcrelay_processes():
     vlans = retrieve_vlans()
     cmd = "sudo monit procmatch '/usr/sbin/dhcrelay -d -m discard'"
     cmd_res = subprocess.check_output(cmd, shell=True)
@@ -44,7 +44,7 @@ def check_dhcp_relay_process():
 
        
 def main():
-    check_dhcp_relay_process()
+    check_dhcrelay_processes()
 
 if __name__ == '__main__':
     main()

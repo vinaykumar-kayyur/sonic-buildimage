@@ -31,7 +31,7 @@ def retrieve_portchannels():
 
     return port_channels
 
-def check_teamd_process():
+def check_teamd_processes():
     port_channels = retrieve_portchannels()
     cmd = "sudo monit procmatch '/usr/bin/teamd -r -t '"
     cmd_res = subprocess.check_output(cmd, shell=True)
@@ -42,7 +42,7 @@ def check_teamd_process():
             syslog.syslog(syslog.LOG_ERR, "Teamd process with {} is not running.".format(port_channel))
 
 def main():
-    check_teamd_process()
+    check_teamd_processes()
 
 if __name__ == '__main__':
     main()
