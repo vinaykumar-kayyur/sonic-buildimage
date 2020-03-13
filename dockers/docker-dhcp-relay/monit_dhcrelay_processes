@@ -1,13 +1,13 @@
 #!/usr/bin/python
 '''
 This script is used to monitor dhcrelay processes in dhcp_relay docker container. 
-Since Monit can only monitor the process with unique name, it is unable to do 
-this monitoring for dhcrelay processes. Usually there will be multiple dhcrelay 
-processes which executes a same commad but with different arguments. The number 
-of dhcrelay processes is determined by Vlans which have non-empry list of dhcp servers.
+Since Monit can only monitor the processes with unique names, it is unable to do 
+this monitoring for dhcrelay processes. There can exit multiple dhcrelay 
+processes which executes a same command but with different arguments. The number 
+of dhcrelay processes is determined by Vlans which have non-empty list of dhcp servers.
 As such, we let Monit to monitor this script which will read number of vlans with 
-no-empty list of dhcp servers form Config_DB, then find whether there exist a 
-process in Linux corresponding to a vlan. If this script fails to find  such process, 
+non-empty list of dhcp servers form Config_DB, then find whether there exists a 
+process in Linux corresponding to a vlan. If this script fails to find such process, 
 it will write an alert message into syslog file.
 '''
 

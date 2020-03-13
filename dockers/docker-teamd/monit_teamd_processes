@@ -1,12 +1,12 @@
 #!/usr/bin/python
 '''
-This script is used to monitor teamd process in teamd docker container. 
-Since Monit can only monitor the process with unique name,
-it is unable to do this monitoring for teamd processes. Usually there will be
+This script is used to monitor teamd processes in teamd docker container. 
+Since Monit can only monitor the processes with unique names,
+it is unable to do this monitoring for teamd processes. There can exist
 multiple teamd processes which executes a same command but with different arguments. 
 The number of teamd processes is decided by the number of port channels in Config_DB.
 As such, we let Monit to monitor this script which will read number of port channels, 
-then find whether there exist a process in Linux corresponding to a port channel. 
+then find whether there exists a process in Linux corresponding to a port channel. 
 If this script fails to find such process, it will write an alert message into syslog file.
 '''
 
