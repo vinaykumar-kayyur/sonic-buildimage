@@ -151,19 +151,19 @@ def parse_png(png, hname, device_hostname):
                         (startdevice.lower() != device_hostname.lower())):
                         if port_alias_map.has_key(endport):
                             endport = port_alias_map[endport]
-                        neighbors[endport] = {'name': startdevice, 'port': startport}
-                        device_neighbors.append(startdevice)
-                        if bandwidth:
-                            port_speeds[endport] = bandwidth
+                            neighbors[endport] = {'name': startdevice, 'port': startport}
+                            device_neighbors.append(startdevice)
+                            if bandwidth:
+                                port_speeds[endport] = bandwidth
 
                     if ((startdevice.lower() == hname.lower()) and
                         (enddevice.lower() != device_hostname.lower())):
                         if port_alias_map.has_key(startport):
                             startport = port_alias_map[startport]
-                        neighbors[startport] = {'name': enddevice, 'port': endport}
-                        device_neighbors.append(enddevice)
-                        if bandwidth:
-                            port_speeds[startport] = bandwidth
+                            neighbors[startport] = {'name': enddevice, 'port': endport}
+                            device_neighbors.append(enddevice)
+                            if bandwidth:
+                                port_speeds[startport] = bandwidth
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
