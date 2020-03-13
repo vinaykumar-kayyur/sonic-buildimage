@@ -311,7 +311,7 @@ def parse_dpg(dpg, hname):
                 elif is_mirror_v6:
                     acls[aclname]['type'] = 'MIRRORV6'
                 else:
-                    acls[aclname]['type'] = 'L3' if aclname.lower().find('v6') == -1 else 'L3V6'
+                    acls[aclname]['type'] = 'L3V6' if  'v6' in aclname.lower() else 'L3'
             else:
                 # This ACL has no interfaces to attach to -- consider this a control plane ACL
                 try:
