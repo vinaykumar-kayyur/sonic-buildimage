@@ -27,3 +27,4 @@ $(DOCKER_DHCP_RELAY)_RUN_OPT += --privileged -t
 $(DOCKER_DHCP_RELAY)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_DHCP_RELAY)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
 $(DOCKER_DHCP_RELAY)_BASE_IMAGE_FILES += monit_dhcp_relay:/etc/monit/conf.d
+$(DOCKER_DHCP_RELAY)_BASE_IMAGE_FILES += monit_dhcrelay_processes:/usr/bin/monit_dhcrelay_processes

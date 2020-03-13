@@ -3,5 +3,5 @@
 ## process list:
 ##  teamd
 ###############################################################################
-check program monit_teamd with path "/usr/bin/monit_multiprocesses.py --container-name teamd"
+check program monit_teamd with path "/usr/bin/monit_teamd_processes"
     if status != 0 then alert

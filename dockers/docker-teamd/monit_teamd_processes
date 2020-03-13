@@ -1,0 +1,48 @@
+#!/usr/bin/python
+'''
+This script is used to monitor teamd process in teamd docker container. 
+Since Monit can only monitor the process with unique name,
+it is unable to do this monitoring for teamd processes. Usually there will be
+multiple teamd processes which executes a same command but with different arguments. 
+The number of teamd processes is decided by the number of port channels in Config_DB.
+As such, we let Monit to monitor this script which will read number of port channels, 
+then find whether there exist a process in Linux corresponding to a port channel. 
+If this script fails to find such process, it will write an alert message into syslog file.
+'''
+
+import os
+import subprocess
+import re
+import sys
+import syslog
+
+from swsssdk import ConfigDBConnector
+
+
+def retrieve_portchannels():
+    port_channels = []
+
+    config_db = ConfigDBConnector()
+    config_db.connect()
+    port_channel_table = config_db.get_table('PORTCHANNEL')
+
+    for key in port_channel_table.keys():
+        port_channels.append(key)
+
+    return port_channels
+
+def check_teamd_process():
+    port_channels = retrieve_portchannels()
+    cmd = "sudo monit procmatch '/usr/bin/teamd -r -t '"
+    cmd_res = subprocess.check_output(cmd, shell=True)
+ 
+    for port_channel in port_channels:
+        found_process = re.findall(port_channel, cmd_res)
+        if len(found_process) == 0:
+            syslog.syslog(syslog.LOG_ERR, "Teamd process with {} is not running.".format(port_channel))
+
+def main():
+    check_teamd_process()
+
+if __name__ == '__main__':
+    main()

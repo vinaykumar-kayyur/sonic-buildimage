@@ -1,0 +1,50 @@
+#!/usr/bin/python
+'''
+This script is used to monitor dhcrelay processes in dhcp_relay docker container. 
+Since Monit can only monitor the process with unique name, it is unable to do 
+this monitoring for dhcrelay processes. Usually there will be multiple dhcrelay 
+processes which executes a same commad but with different arguments. The number 
+of dhcrelay processes is determined by Vlans which have non-empry list of dhcp servers.
+As such, we let Monit to monitor this script which will read number of vlans with 
+no-empty list of dhcp servers form Config_DB, then find whether there exist a 
+process in Linux corresponding to a vlan. If this script fails to find  such process, 
+it will write an alert message into syslog file.
+'''
+
+import os
+import subprocess
+import re
+import sys
+import syslog
+
+from swsssdk import ConfigDBConnector
+
+def retrieve_vlans():
+    vlans = []
+
+    config_db = ConfigDBConnector()
+    config_db.connect()
+    vlan_table = config_db.get_table('VLAN')
+
+    for vlan in vlan_table.keys():
+        if vlan_table[vlan].has_key('dhcp_servers') and len(vlan_table[vlan]['dhcp_servers']) != 0:
+            vlans.append(vlan)
+
+    return vlans
+
+def check_dhcp_relay_process():
+    vlans = retrieve_vlans()
+    cmd = "sudo monit procmatch '/usr/sbin/dhcrelay -d -m discard'"
+    cmd_res = subprocess.check_output(cmd, shell=True)
+    
+    for vlan in vlans:
+        found_process = re.findall(vlan, cmd_res)
+        if len(found_process) == 0:
+            syslog.syslog(syslog.LOG_ERR, "dhcrelay process with {} is not running.".format(vlan))
+
+       
+def main():
+    check_dhcp_relay_process()
+
+if __name__ == '__main__':
+    main()

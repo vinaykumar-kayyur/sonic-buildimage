@@ -185,8 +185,6 @@ sudo cp $IMAGE_CONFIGS/monit/monitrc $FILESYSTEM_ROOT/etc/monit/
 sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/monitrc
 sudo cp $IMAGE_CONFIGS/monit/conf.d/* $FILESYSTEM_ROOT/etc/monit/conf.d/
 sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/conf.d/*
-sudo cp $IMAGE_CONFIGS/monit/monit_multiprocesses.py $FILESYSTEM_ROOT/usr/bin/
-sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/monit_multiprocesses.py
 
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
