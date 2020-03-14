@@ -16,8 +16,8 @@ start () {
         for NUM in `seq 1 16`; do
             ORIG="eth$((16 * $ASIC + $NUM))"
             TEMP="ethTemp999"
-	    NEW="eth$(($NUM))"
-	    echo "$ASIC : $NEW old $ORIG"
+            NEW="eth$(($NUM))"
+            echo "$ASIC : $NEW old $ORIG"
             ip link set dev $ORIG down
             ip link set dev $ORIG name $TEMP # rename to prevent conflicts before renaming in new namespace
             ip link set dev $TEMP netns asic$ASIC

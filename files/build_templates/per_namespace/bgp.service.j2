@@ -1,8 +1,8 @@
 [Unit]
 Description=BGP container
 Requires=database{% if multi_instance == 'true' %}@%i{% endif %}.service
-After=database{% if multi_instance == 'true' %}@%i{% endif %}.service
 Requires=updategraph.service
+After=database{% if multi_instance == 'true' %}@%i{% endif %}.service
 After=updategraph.service
 Before=ntp-config.service
 StartLimitIntervalSec=1200
