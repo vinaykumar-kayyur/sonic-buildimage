@@ -293,21 +293,22 @@ class BGPPeerMgr(Manager):
             cmd = None
 
             if "local_addr" not in data:
-                syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in missing required attribute "local_addr"'.format(key))
-                return False
+                syslog.syslog(syslog.LOG_WARNING, 'Peer {}. Error in missing required attribute "local_addr"'.format(key))
+            else:
 
-            # Check if this route is belong to a vnet
-            interfaces = self.directory.get_slot("interface")
-            target_interface = None
-            for metadata in interfaces.values():
-                if metadata["ip"] == data["local_addr"]:
-                    target_interface = metadata
-            if target_interface is None:
-                return False
-            elif target_interface.has_key("vnet_name") and target_interface["vnet_name"]:
-                # Ignore the route that is in a vnet
-                syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, target_interface["vnet_name"]))
-                return True
+                # Check if this route is belong to a vnet
+                interfaces = self.directory.get_slot("interface")
+                target_interface = None
+                for metadata in interfaces.values():
+                    if metadata["ip"] == data["local_addr"]:
+                        target_interface = metadata
+                        break
+                if target_interface is None:
+                    return False
+                elif target_interface.has_key("vnet_name") and target_interface["vnet_name"]:
+                    # Ignore the route that is in a vnet
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, target_interface["vnet_name"]))
+                    return True
 
             neigmeta = self.directory.get_slot("neigmeta")
             if 'name' in data and data["name"] not in neigmeta:
@@ -467,6 +468,15 @@ class LoopbackInterfaceMgr(InterfaceMgr):
         )
 
 
+class VlanInterfaceMgr(InterfaceMgr):
+    def __init__(self, daemon, directory):
+        super(VlanInterfaceMgr, self).__init__(
+            daemon,
+            directory,
+            swsscommon.CFG_VLAN_INTF_TABLE_NAME
+        )
+
+
 def wait_for_bgpd():
     # wait for 20 seconds
     stop_time = datetime.datetime.now() + datetime.timedelta(seconds=20)
@@ -487,6 +497,7 @@ def main():
         BGPPeerMgr,
         InterfaceMgr,
         LoopbackInterfaceMgr,
+        VlanInterfaceMgr,
     ]
     wait_for_bgpd()
     daemon = Daemon()
