@@ -1,16 +1,11 @@
 [Unit]
 Description=syncd service
-{% if multi_instance == 'true' %}
-Requires=database@%i.service
-Requires=updategraph.service
-After=database@%i.service swss@%i.service
-   {% if sonic_asic_platform == 'vs' %}
+Requires=database{% if multi_instance == 'true' %}@%i{% endif %}.service
+After=database{% if multi_instance == 'true' %}@%i{% endif %}.service
+After=swss{% if multi_instance == 'true' %}@%i{% endif %}.service
+{% if multi_instance == 'true' and sonic_asic_platform == 'vs' %}
 Requires=topology.service
 After=topology.service
-   {% endif %}
-{% else %}
-Requires=database.service
-After=database.service swss.service
 {% endif %}
 {% if sonic_asic_platform == 'broadcom' %}
 Requires=opennsl-modules.service

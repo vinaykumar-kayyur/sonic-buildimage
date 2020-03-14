@@ -1,12 +1,7 @@
 [Unit]
 Description=TEAMD container
-{% if multi_instance == 'true' %}
-Requires=swss@%i.service
-After=swss@%i.service
-{% else %}
-After=swss.service
-{% endif %}
 Requires=updategraph.service
+After=swss{% if multi_instance == 'true' %}@%i{% endif %}.service
 After=updategraph.service
 Before=ntp-config.service
 StartLimitIntervalSec=1200

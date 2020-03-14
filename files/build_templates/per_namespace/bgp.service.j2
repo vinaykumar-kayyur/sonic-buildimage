@@ -1,9 +1,7 @@
 [Unit]
 Description=BGP container
-{% if multi_instance == 'true' %}
-Requires=database@%i.service
-After=database@%i.service
-{% endif %}
+Requires=database{% if multi_instance == 'true' %}@%i{% endif %}.service
+After=database{% if multi_instance == 'true' %}@%i{% endif %}.service
 Requires=updategraph.service
 After=updategraph.service
 Before=ntp-config.service
