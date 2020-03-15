@@ -15,6 +15,7 @@ import subprocess
 import re
 import sys
 import syslog
+import psutil
 
 from swsssdk import ConfigDBConnector
 
@@ -31,14 +32,17 @@ def retrieve_portchannels():
 
     return port_channels
 
+def is_process_running(port_channel):
+    for process in psutil.process_iter(['name', 'cmdline']):
+        if port_channel in process.cmdline() and process.name() == 'teamd':
+            return True
+    return False;
+
 def check_teamd_processes():
     port_channels = retrieve_portchannels()
-    cmd = "sudo monit procmatch '/usr/bin/teamd -r -t '"
-    cmd_res = subprocess.check_output(cmd, shell=True)
  
     for port_channel in port_channels:
-        found_process = re.findall(port_channel, cmd_res)
-        if len(found_process) == 0:
+        if not is_process_running(port_channel):
             syslog.syslog(syslog.LOG_ERR, "Teamd process with {} is not running.".format(port_channel))
 
 def main():

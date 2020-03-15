@@ -16,6 +16,7 @@ import subprocess
 import re
 import sys
 import syslog
+import psutil
 
 from swsssdk import ConfigDBConnector
 
@@ -32,14 +33,18 @@ def retrieve_vlans():
 
     return vlans
 
+def is_process_running(vlan):
+    for process in psutil.process_iter(['name', 'cmdline']):
+        if vlan in process.cmdline() and process.name() == 'dhcrelay':
+            return True
+    return False;
+
+
 def check_dhcrelay_processes():
     vlans = retrieve_vlans()
-    cmd = "sudo monit procmatch '/usr/sbin/dhcrelay -d -m discard'"
-    cmd_res = subprocess.check_output(cmd, shell=True)
     
     for vlan in vlans:
-        found_process = re.findall(vlan, cmd_res)
-        if len(found_process) == 0:
+        if not is_process_running(vlan):
             syslog.syslog(syslog.LOG_ERR, "dhcrelay process with {} is not running.".format(vlan))
 
        
