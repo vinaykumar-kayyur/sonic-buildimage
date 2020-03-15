@@ -11,8 +11,6 @@ If this script fails to find such process, it will write an alert message into s
 '''
 
 import os
-import subprocess
-import re
 import sys
 import syslog
 import psutil

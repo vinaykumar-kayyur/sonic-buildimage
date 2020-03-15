@@ -12,8 +12,6 @@ it will write an alert message into syslog file.
 '''
 
 import os
-import subprocess
-import re
 import sys
 import syslog
 import psutil
@@ -39,7 +37,6 @@ def is_process_running(vlan):
             return True
     return False;
 
-
 def check_dhcrelay_processes():
     vlans = retrieve_vlans()
     
@@ -47,7 +44,6 @@ def check_dhcrelay_processes():
         if not is_process_running(vlan):
             syslog.syslog(syslog.LOG_ERR, "dhcrelay process with {} is not running.".format(vlan))
 
-       
 def main():
     check_dhcrelay_processes()
 
