@@ -99,8 +99,10 @@ class Psu(PsuBase):
             psu_presence = os.path.join(self.psu_path, psu_presence)
             self.psu_presence = psu_presence
 
-        fan = Fan(sku, psu_index, psu_index, True)
-        self._fan_list.append(fan)
+        # unplugable PSU has no FAN
+        if sku not in hwsku_dict_with_unplugable_psu:
+            fan = Fan(sku, psu_index, psu_index, True)
+            self._fan_list.append(fan)
 
         self.psu_green_led_path = "led_psu_green"
         self.psu_red_led_path = "led_psu_red"
