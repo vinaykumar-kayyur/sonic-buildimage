@@ -265,6 +265,10 @@ platform_specific() {
         aboot_machine=arista_7060_cx32s
         flash_size=3700
     fi
+    if [ "$sid" = "UpperlakePlus" ]; then
+        aboot_machine=arista_7060cx2_32s
+        flash_size=3700
+    fi
     if [ "$sid" = "Gardena" ] || [ "$sid" = "GardenaE" ]; then
         aboot_machine=arista_7260cx3_64
         flash_size=28000
