@@ -112,13 +112,23 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
         :return:
         """
         from .thermal_infos import ChassisInfo
+        from .thermal_infos import FanInfo
+        from .thermal import Thermal
         if ChassisInfo.INFO_NAME in thermal_info_dict:
             chassis_info_obj = thermal_info_dict[ChassisInfo.INFO_NAME]
             chassis = chassis_info_obj.get_chassis()
             thermal_manager = chassis.get_thermal_manager()
             if self.status:
                 thermal_manager.start_thermal_control_algorithm()
+
+                # Check thermal zone temperature, if all thermal zone temperature
+                # return to normal and FAN speed is still 100%, set it to 60% to
+                # save power
+                if Thermal.check_thermal_zone_temperature():
+                    fan_info_obj = thermal_info_dict[FanInfo.INFO_NAME]
+                    for fan in fan_info_obj.get_presence_fans():
+                        if fan.get_target_speed() != 100:
+                            break
+                        fan.set_speed(60)
             else:
                 thermal_manager.stop_thermal_control_algorithm()
-
-

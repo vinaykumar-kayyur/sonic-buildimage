@@ -102,7 +102,7 @@ def test_fan_policy(thermal_manager):
     Thermal.check_thermal_zone_temperature = MagicMock(return_value=True)
     thermal_manager.run_policy(chassis)
     thermal_manager.start_thermal_control_algorithm.assert_called_once()
-    Thermal.check_thermal_zone_temperature.assert_called_once()
+    assert Thermal.check_thermal_zone_temperature.call_count == 2
     assert fan_list[0].speed == 60
     assert fan_list[1].speed == 60
 
@@ -114,7 +114,7 @@ def test_fan_policy(thermal_manager):
     Thermal.check_thermal_zone_temperature = MagicMock(return_value=False)
     thermal_manager.run_policy(chassis)
     assert thermal_manager.start_thermal_control_algorithm.call_count == 2
-    Thermal.check_thermal_zone_temperature.assert_called_once()
+    assert Thermal.check_thermal_zone_temperature.call_count == 2
     assert fan_list[0].speed == 100
     assert fan_list[1].speed == 100
 
