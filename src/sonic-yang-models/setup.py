@@ -10,10 +10,17 @@ from sys import exit
 import pytest
 import os
 
+# find path of pkgs from os environment vars
+prefix = '/sonic'; debs = os.environ["STRETCH_DEBS_PATH"]
+deps_path = '{}/{}'.format(prefix, debs)
+# dependencies
+libyang = '{}/{}'.format(deps_path, os.environ["LIBYANG"])
+libyangCpp = '{}/{}'.format(deps_path, os.environ["LIBYANG_CPP"])
+libyangPy2 = '{}/{}'.format(deps_path, os.environ["LIBYANG_PY2"])
+libyangPy3 = '{}/{}'.format(deps_path, os.environ["LIBYANG_PY3"])
+
 # important reuirements parameters
-build_requirements = ['../../target/debs/stretch/libyang_1.0.73_amd64.deb',
-                      '../../target/debs/stretch/libyang-cpp_1.0.73_amd64.deb',
-                      '../../target/debs/stretch/python3-yang_1.0.73_amd64.deb',]
+build_requirements = [libyang, libyangCpp, libyangPy2, libyangPy3,]
 
 setup_requirements = ['pytest-runner']
 
@@ -28,15 +35,9 @@ class pkgBuild(build_py):
     """Custom Build PLY"""
 
     def run (self):
-        # json file for YANG model test cases.
-        test_yangJson_file = './tests/yangTest.json'
-        # YANG models are in below dir
-        yang_model_dir = './yang-models/'
-        # yang model tester python module
-        yang_test_py = './tests/yangModelTesting.py'
         #  install libyang
         for req in build_requirements:
-            if 'target/debs'in req:
+            if '.deb'in req:
                 pkg_install_cmd = "sudo dpkg -i {}".format(req)
                 if (system(pkg_install_cmd)):
                     print("{} installation failed".format(req))
@@ -44,6 +45,12 @@ class pkgBuild(build_py):
                 else:
                     print("{} installed".format(req))
 
+        # json file for YANG model test cases.
+        test_yangJson_file = './tests/yang_model_tests/yangTest.json'
+        # YANG models are in below dir
+        yang_model_dir = './yang-models/'
+        # yang model tester python module
+        yang_test_py = './tests/yang_model_tests/yangModelTesting.py'
         #  run tests for yang models
         test_yang_cmd = "python {} -f {} -y {}".format(yang_test_py, test_yangJson_file, yang_model_dir)
         if (system(test_yang_cmd)):
