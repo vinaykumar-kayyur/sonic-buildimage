@@ -6,8 +6,6 @@ from .thermal_infos import *
 
 
 class ThermalManager(ThermalManagerBase):
-    THERMAL_ALGORITHM_CONTROL_PATH = '/var/run/hw-management/config/suspend'
-
     @classmethod
     def start_thermal_control_algorithm(cls):
         """
@@ -16,7 +14,8 @@ class ThermalManager(ThermalManagerBase):
         Returns:
             bool: True if set success, False if fail. 
         """
-        cls._control_thermal_control_algorithm(False)
+        from .thermal import Thermal
+        Thermal.set_thermal_algorithm_status(True)
 
     @classmethod
     def stop_thermal_control_algorithm(cls):
@@ -26,25 +25,7 @@ class ThermalManager(ThermalManagerBase):
         Returns:
             bool: True if set success, False if fail. 
         """
-        cls._control_thermal_control_algorithm(True)
+        from .thermal import Thermal
+        Thermal.set_thermal_algorithm_status(False)
 
-    @classmethod
-    def _control_thermal_control_algorithm(cls, suspend):
-        """
-        Control thermal control algorithm
 
-        Args:
-            suspend: Bool, indicate suspend the algorithm or not
-
-        Returns:
-            bool: True if set success, False if fail. 
-        """
-        status = True
-        write_value = 1 if suspend else 0
-        try:
-            with open(cls.THERMAL_ALGORITHM_CONTROL_PATH, 'w') as control_file:
-                control_file.write(str(write_value))
-        except (ValueError, IOError):
-            status = False
-
-        return status

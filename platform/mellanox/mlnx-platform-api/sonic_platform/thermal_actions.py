@@ -54,6 +54,22 @@ class SetAllFanSpeedAction(SetFanSpeedAction):
                 fan.set_speed(self.speed)
 
 
+@thermal_json_object('fan.all.check_and_set_speed')
+class CheckAndSetAllFanSpeedAction(SetAllFanSpeedAction):
+    """
+    Action to check thermal zone temperature and recover speed for all fans
+    """
+    def execute(self, thermal_info_dict):
+        """
+        Check thermal zone and set speed for all fans
+        :param thermal_info_dict: A dictionary stores all thermal information.
+        :return:
+        """
+        from .thermal import Thermal
+        if Thermal.check_thermal_zone_temperature():
+            SetAllFanSpeedAction.execute(self, thermal_info_dict)
+        
+
 @thermal_json_object('thermal_control.control')
 class ControlThermalAlgoAction(ThermalPolicyActionBase):
     """

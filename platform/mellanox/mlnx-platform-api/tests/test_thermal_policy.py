@@ -11,6 +11,10 @@ sys.path.insert(0, modules_path)
 
 from sonic_platform.thermal_manager import ThermalManager
 from sonic_platform.thermal_infos import FanInfo, PsuInfo
+from sonic_platform.fan import Fan
+from sonic_platform.thermal import Thermal
+
+Thermal.check_thermal_zone_temperature = MagicMock()
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -27,6 +31,7 @@ def test_load_policy(thermal_manager):
 
     assert 'any fan absence' in thermal_manager._policy_dict
     assert 'any psu absence' in thermal_manager._policy_dict
+    assert 'any fan broken' in thermal_manager._policy_dict
     assert 'all fan and psu presence' in thermal_manager._policy_dict
 
     assert thermal_manager._fan_speed_when_suspend == 60
@@ -40,6 +45,7 @@ def test_fan_info():
     fan_info.collect(chassis)
     assert len(fan_info.get_absence_fans()) == 1
     assert len(fan_info.get_presence_fans()) == 0
+    assert len(fan_info.get_fault_fans()) == 0
     assert fan_info.is_status_changed()
 
     fan_list = chassis.get_all_fans()
@@ -47,8 +53,15 @@ def test_fan_info():
     fan_info.collect(chassis)
     assert len(fan_info.get_absence_fans()) == 0
     assert len(fan_info.get_presence_fans()) == 1
+    assert len(fan_info.get_fault_fans()) == 0
     assert fan_info.is_status_changed()
 
+    fan_list[0].status = False
+    fan_info.collect(chassis)
+    assert len(fan_info.get_absence_fans()) == 0
+    assert len(fan_info.get_presence_fans()) == 1
+    assert len(fan_info.get_fault_fans()) == 1
+    assert fan_info.is_status_changed()
 
 def test_psu_info():
     chassis = MockChassis()
@@ -86,8 +99,24 @@ def test_fan_policy(thermal_manager):
     thermal_manager.stop_thermal_control_algorithm.assert_called_once()
 
     fan_list[0].presence = True
+    Thermal.check_thermal_zone_temperature = MagicMock(return_value=True)
     thermal_manager.run_policy(chassis)
     thermal_manager.start_thermal_control_algorithm.assert_called_once()
+    Thermal.check_thermal_zone_temperature.assert_called_once()
+    assert fan_list[0].speed == 60
+    assert fan_list[1].speed == 60
+
+    fan_list[0].status = False
+    thermal_manager.run_policy(chassis)
+    assert thermal_manager.stop_thermal_control_algorithm.call_count == 2
+
+    fan_list[0].status = True
+    Thermal.check_thermal_zone_temperature = MagicMock(return_value=False)
+    thermal_manager.run_policy(chassis)
+    assert thermal_manager.start_thermal_control_algorithm.call_count == 2
+    Thermal.check_thermal_zone_temperature.assert_called_once()
+    assert fan_list[0].speed == 100
+    assert fan_list[1].speed == 100
 
 
 def test_psu_policy(thermal_manager):
@@ -156,6 +185,44 @@ def test_all_fan_presence_condition():
     assert not condition.is_match({'fan_info': fan_info})
 
     fan_list[0].presence = True
+    fan_info.collect(chassis)
+    assert condition.is_match({'fan_info': fan_info})
+
+def test_any_fan_fault_condition():
+    chassis = MockChassis()
+    fan = MockFan()
+    fan_list = chassis.get_all_fans()
+    fan_list.append(fan)
+    fault_fan = MockFan()
+    fault_fan.status = False
+    fan_list.append(fault_fan)
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AnyFanFaultCondition
+    condition = AnyFanFaultCondition()
+    assert condition.is_match({'fan_info': fan_info})
+
+    fault_fan.status = True
+    fan_info.collect(chassis)
+    assert not condition.is_match({'fan_info': fan_info})
+
+def test_all_fan_good_condition():
+    chassis = MockChassis()
+    fan = MockFan()
+    fan_list = chassis.get_all_fans()
+    fan_list.append(fan)
+    fault_fan = MockFan()
+    fault_fan.status = False
+    fan_list.append(fault_fan)
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
+
+    from sonic_platform.thermal_conditions import AllFanGoodCondition
+    condition = AllFanGoodCondition()
+    assert not condition.is_match({'fan_info': fan_info})
+
+    fault_fan.status = True
     fan_info.collect(chassis)
     assert condition.is_match({'fan_info': fan_info})
 
@@ -274,6 +341,53 @@ def test_load_control_thermal_algo_action():
     json_obj = json.loads(json_str)
     with pytest.raises(ValueError):
         action.load_from_json(json_obj)
+
+def test_load_check_and_set_speed_action():
+    from sonic_platform.thermal_actions import CheckAndSetAllFanSpeedAction
+    action = CheckAndSetAllFanSpeedAction()
+    json_str = '{\"speed\": \"40\"}'
+    json_obj = json.loads(json_str)
+    action.load_from_json(json_obj)
+    assert action.speed == 40
+
+    json_str = '{\"speed\": \"-1\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+    json_str = '{\"speed\": \"101\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+    json_str = '{\"invalid\": \"60\"}'
+    json_obj = json.loads(json_str)
+    with pytest.raises(ValueError):
+        action.load_from_json(json_obj)
+
+def test_execute_check_and_set_fan_speed_action():
+    chassis = MockChassis()
+    fan_list = chassis.get_all_fans()
+    fan_list.append(MockFan())
+    fan_list.append(MockFan())
+    fan_info = FanInfo()
+    fan_info.collect(chassis)
+    Thermal.check_thermal_zone_temperature = MagicMock(return_value=True)
+
+    from sonic_platform.thermal_actions import CheckAndSetAllFanSpeedAction
+    action = CheckAndSetAllFanSpeedAction()
+    action.speed = 99
+    action.execute({'fan_info': fan_info})
+    assert fan_list[0].speed == 99
+    assert fan_list[1].speed == 99
+
+    Thermal.check_thermal_zone_temperature = MagicMock(return_value=False)
+    fan_list[0].speed = 100
+    fan_list[1].speed = 100
+    action.speed = 60
+    action.execute({'fan_info': fan_info})
+    assert fan_list[0].speed == 100
+    assert fan_list[1].speed == 100
 
 def test_load_duplicate_condition():
     from sonic_platform_base.sonic_thermal_control.thermal_policy import ThermalPolicy

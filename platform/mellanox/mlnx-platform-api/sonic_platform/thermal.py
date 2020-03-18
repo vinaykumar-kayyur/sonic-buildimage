@@ -42,6 +42,16 @@ THERMAL_API_INVALID_HIGH_THRESHOLD = 0.0
 
 HW_MGMT_THERMAL_ROOT = "/var/run/hw-management/thermal/"
 
+THERMAL_ZONE_ASIC_PATH = "/var/run/hw-management/thermal/mlxsw/"
+THERMAL_ZONE_MODULE_PATH = "/var/run/hw-management/thermal/mlxsw-module{}/"
+THERMAL_ZONE_GEARBOX_PATH = "/var/run/hw-management/thermal/mlxsw-gearbox{}/"
+THERMAL_ZONE_MODE = "thermal_zone_mode"
+THERMAL_ZONE_TEMPERATURE = "thermal_zone_temp"
+THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_norm"
+
+MODULE_COUNTER_PATH = "/var/run/hw-management/config/module_counter"
+GEARBOX_COUNTER_PATH = "/var/run/hw-management/config/gearbox_counter"
+
 thermal_api_handler_cpu_core = {
     THERMAL_API_GET_TEMPERATURE:"cpu_core{}",
     THERMAL_API_GET_HIGH_THRESHOLD:"cpu_core{}_max",
@@ -246,6 +256,7 @@ def initialize_thermals(sku, thermal_list, psu_list):
     # create thermal objects for all categories of sensors
     tp_index = hwsku_dict_thermal[sku]
     thermal_profile = thermal_profile_list[tp_index]
+    Thermal.thermal_profile = thermal_profile
     for category in thermal_device_categories_all:
         if category == THERMAL_DEV_CATEGORY_AMBIENT:
             count, ambient_list = thermal_profile[category]
@@ -274,6 +285,9 @@ def initialize_thermals(sku, thermal_list, psu_list):
 
 
 class Thermal(ThermalBase):
+    thermal_profile = None
+    thermal_algorithm_status = False
+
     def __init__(self, category, index, has_index, dependency = None):
         """
         index should be a string for category ambient and int for other categories
@@ -404,3 +418,95 @@ class Thermal(ThermalBase):
         if self.category == THERMAL_DEV_CATEGORY_MODULE and value_float == THERMAL_API_INVALID_HIGH_THRESHOLD:
             return None
         return value_float / 1000.0
+
+
+    @classmethod
+    def _write_generic_file(cls, filename, content):
+        """
+        Write a generic file if content changed
+        """
+        try:
+            with open(filename, 'w+') as file_obj:
+                origin_content = file_obj.read()
+                if origin_content != content:
+                    file_obj.write(content)
+        except Exception as e:
+            logger.log_info("Fail to write file {} due to {}".format(filename, repr(e)))
+
+    @classmethod
+    def set_thermal_algorithm_status(cls, status):
+        """
+        Enable/disable kernel thermal algorithm
+        """
+        if not cls.thermal_profile:
+            raise Exception("Fail to get thermal profile for this switch")
+
+        if cls.thermal_algorithm_status == status:
+            return
+
+        cls.thermal_algorithm_status = status
+        content = "enabled" if status else "disabled"
+        cls._write_generic_file(join(THERMAL_ZONE_ASIC_PATH, THERMAL_ZONE_MODE), content)
+
+        if THERMAL_DEV_CATEGORY_MODULE in cls.thermal_profile:
+            start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_MODULE]
+            if count != 0:
+                for index in range(count):
+                    cls._write_generic_file(join(THERMAL_ZONE_MODULE_PATH.format(start + index), THERMAL_ZONE_MODE), content)
+
+        if THERMAL_DEV_CATEGORY_GEARBOX in cls.thermal_profile:
+            start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_GEARBOX]
+            if count != 0:
+                for index in range(count):
+                    cls._write_generic_file(join(THERMAL_ZONE_GEARBOX_PATH.format(start + index), THERMAL_ZONE_MODE), content)
+
+    @classmethod
+    def check_thermal_zone_temperature(cls):
+        """
+        Check thermal zone current temperature with normal temperature
+
+        Returns:
+            True if all thermal zones current temperature less or equal than normal temperature
+        """
+        if not cls.thermal_profile:
+            raise Exception("Fail to get thermal profile for this switch")
+
+        if not cls._check_thermal_zone_temperature(THERMAL_ZONE_ASIC_PATH):
+            return False
+
+        if THERMAL_DEV_CATEGORY_MODULE in cls.thermal_profile:
+            start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_MODULE]
+            if count != 0:
+                for index in range(count):
+                    if not cls._check_thermal_zone_temperature(THERMAL_ZONE_MODULE_PATH.format(start + index)):
+                        return False
+
+        if THERMAL_DEV_CATEGORY_GEARBOX in cls.thermal_profile:
+            start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_GEARBOX]
+            if count != 0:
+                for index in range(count):
+                    if not cls._check_thermal_zone_temperature(THERMAL_ZONE_GEARBOX_PATH.format(start + index)):
+                        return False
+
+        return True
+
+
+    @classmethod
+    def _check_thermal_zone_temperature(cls, thermal_zone_path):
+        normal_temp_path = join(thermal_zone_path, THERMAL_ZONE_NORMAL_TEMPERATURE)
+        current_temp_path = join(thermal_zone_path, THERMAL_ZONE_TEMPERATURE)
+        normal = None
+        current = None
+        try:    
+            with open(normal_temp_path, 'r') as file_obj:
+                normal = float(file_obj.read())
+
+            with open(current_temp_path, 'r') as file_obj:
+                current = float(file_obj.read())
+
+            return current <= normal
+        except Exception as e:
+            logger.log_info("Fail to check thermal zone temperature for file {} due to {}".format(thermal_zone_path, repr(e)))
+
+
+

@@ -32,6 +32,20 @@ class AllFanPresenceCondition(FanCondition):
         return len(fan_info_obj.get_absence_fans()) == 0 if fan_info_obj else False
 
 
+@thermal_json_object('fan.any.fault')
+class AnyFanFaultCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_fault_fans()) > 0 if fan_info_obj else False
+
+
+@thermal_json_object('fan.all.good')
+class AllFanGoodCondition(FanCondition):
+    def is_match(self, thermal_info_dict):
+        fan_info_obj = self.get_fan_info(thermal_info_dict)
+        return len(fan_info_obj.get_fault_fans()) == 0 if fan_info_obj else False
+
+
 class PsuCondition(ThermalPolicyConditionBase):
     def get_psu_info(self, thermal_info_dict):
         from .thermal_infos import PsuInfo

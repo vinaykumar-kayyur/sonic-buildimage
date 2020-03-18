@@ -24,6 +24,7 @@ FAN_PATH = "/var/run/hw-management/thermal/"
 LED_PATH = "/var/run/hw-management/led/"
 # fan_dir isn't supported on Spectrum 1. It is supported on Spectrum 2 and later switches
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
+COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
 
 # SKUs with unplugable FANs:
 # 1. don't have fanX_status and should be treated as always present
@@ -231,13 +232,15 @@ class Fan(FanBase):
             bool: True if set success, False if fail. 
         """
         status = True
-        pwm = int(round(PWM_MAX*speed/100.0))
 
         if self.is_psu_fan:
             #PSU fan speed is not setable.
             return False
         
         try:
+            cooling_level = int(speed / 10)
+            self.set_cooling_level(cooling_level)
+            pwm = int(round(PWM_MAX*speed/100.0))
             with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
                 fan_pwm.write(str(pwm))
         except (ValueError, IOError):
@@ -352,3 +355,27 @@ class Fan(FanBase):
         """
         # The tolerance value is fixed as 20% for all the Mellanox platform
         return 20
+
+    @classmethod
+    def set_cooling_level(cls, level):
+        """
+        Change cooling level. The input level should be an integer value [1, 10].
+        1 means 10%, 2 means 20%, 10 means 100%.
+        """
+        if not isinstance(level, int):
+            raise RuntimeError("Failed to set cooling level, input parameter must be integer")
+
+        if level < 1 or level > 10:
+            raise RuntimeError("Failed to set cooling level, level value must be in range [1, 10], got {}".format(level))
+
+        try:
+            # reset FAN driver and change cooling state
+            with open(COOLING_STATE_PATH, 'w') as cooling_state:
+                cooling_state.write(level + 10)
+
+            # make cooling state diplay correct value
+            with open(COOLING_STATE_PATH, 'w') as cooling_state:
+                cooling_state.write(level)
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to set cooling level - {}".format(e))
+

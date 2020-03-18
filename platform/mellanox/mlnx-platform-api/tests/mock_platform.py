@@ -2,12 +2,16 @@ class MockFan:
     def __init__(self):
         self.presence = True
         self.speed = 60
+        self.status = True
 
     def get_presence(self):
         return self.presence
 
     def set_speed(self, speed):
         self.speed = speed
+
+    def get_status(self):
+        return self.status
 
 
 class MockPsu:
