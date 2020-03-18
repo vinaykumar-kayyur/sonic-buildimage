@@ -7,11 +7,23 @@ from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py
 from os import system
 from sys import exit
+import pytest
+import os
+
+# find path of pkgs from os environment vars
+prefix = '/sonic'; debs = os.environ["STRETCH_DEBS_PATH"]
+wheels = os.environ["PYTHON_WHEELS_PATH"]
+wheels_path = '{}/{}'.format(prefix, wheels)
+deps_path = '{}/{}'.format(prefix, debs)
+# dependencies
+libyang = '{}/{}'.format(deps_path, os.environ["LIBYANG"])
+libyangCpp = '{}/{}'.format(deps_path, os.environ["LIBYANG_CPP"])
+libyangPy2 = '{}/{}'.format(deps_path, os.environ["LIBYANG_PY2"])
+libyangPy3 = '{}/{}'.format(deps_path, os.environ["LIBYANG_PY3"])
+sonicYangModels = '{}/{}'.format(wheels_path, os.environ["SONIC_YANG_MODELS_PY3"])
 
 # important reuirements parameters
-build_requirements = ['../../target/debs/stretch/libyang_1.0.73_amd64.deb',
-                      '../../target/debs/stretch/libyang-cpp_1.0.73_amd64.deb',
-                      '../../target/debs/stretch/python2-yang_1.0.73_amd64.deb']
+build_requirements = [libyang, libyangCpp, libyangPy2, libyangPy3, sonicYangModels,]
 
 install_requirements = []
 
@@ -28,12 +40,20 @@ class pkgBuild(build_py):
     """Custom Build PLY"""
 
     def run (self):
-        # install libyang, it will be used for testing a build time
+        #  install libyang and sonic_yang_models
         for req in build_requirements:
-            if 'target/debs'in req:
+            if '.deb' in req:
                 pkg_install_cmd = "sudo dpkg -i {}".format(req)
                 if (system(pkg_install_cmd)):
-                    print("{} installed failed".format(req))
+                    print("{} installation failed".format(req))
+                    exit(1)
+                else:
+                    print("{} installed".format(req))
+            elif '.whl' in req:
+                pkg_install_cmd = "pip3 install {}".format(req)
+                if (system(pkg_install_cmd)):
+                    print("{} installation failed".format(req))
+                    exit(1)
                 else:
                     print("{} installed".format(req))
 
@@ -61,7 +81,8 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    description="Package contains YANG models for sonic.",
+    description="Package contains Python Library for YANG for sonic.",
+    options={'bdist_wheel':{'python_tag':'py'}},
     install_requires=install_requirements,
     tests_require = test_requirements,
     license="GNU General Public License v3",
