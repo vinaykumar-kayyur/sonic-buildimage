@@ -46,6 +46,7 @@ THERMAL_ZONE_ASIC_PATH = "/var/run/hw-management/thermal/mlxsw/"
 THERMAL_ZONE_MODULE_PATH = "/var/run/hw-management/thermal/mlxsw-module{}/"
 THERMAL_ZONE_GEARBOX_PATH = "/var/run/hw-management/thermal/mlxsw-gearbox{}/"
 THERMAL_ZONE_MODE = "thermal_zone_mode"
+THERMAL_ZONE_POLICY = "thermal_zone_policy"
 THERMAL_ZONE_TEMPERATURE = "thermal_zone_temp"
 THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_norm"
 
@@ -446,19 +447,23 @@ class Thermal(ThermalBase):
 
         cls.thermal_algorithm_status = status
         content = "enabled" if status else "disabled"
+        policy = "step_wise" if status else "user_space"
         cls._write_generic_file(join(THERMAL_ZONE_ASIC_PATH, THERMAL_ZONE_MODE), content)
+        cls._write_generic_file(join(THERMAL_ZONE_ASIC_PATH, THERMAL_ZONE_POLICY), policy)
 
         if THERMAL_DEV_CATEGORY_MODULE in cls.thermal_profile:
             start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_MODULE]
             if count != 0:
                 for index in range(count):
                     cls._write_generic_file(join(THERMAL_ZONE_MODULE_PATH.format(start + index), THERMAL_ZONE_MODE), content)
+                    cls._write_generic_file(join(THERMAL_ZONE_MODULE_PATH.format(start + index), THERMAL_ZONE_POLICY), policy)
 
         if THERMAL_DEV_CATEGORY_GEARBOX in cls.thermal_profile:
             start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_GEARBOX]
             if count != 0:
                 for index in range(count):
                     cls._write_generic_file(join(THERMAL_ZONE_GEARBOX_PATH.format(start + index), THERMAL_ZONE_MODE), content)
+                    cls._write_generic_file(join(THERMAL_ZONE_GEARBOX_PATH.format(start + index), THERMAL_ZONE_POLICY), policy)
 
     @classmethod
     def check_thermal_zone_temperature(cls):
