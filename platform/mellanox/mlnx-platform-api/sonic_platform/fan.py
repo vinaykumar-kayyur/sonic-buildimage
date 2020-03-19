@@ -371,11 +371,11 @@ class Fan(FanBase):
         try:
             # reset FAN driver and change cooling state
             with open(COOLING_STATE_PATH, 'w') as cooling_state:
-                cooling_state.write(level + 10)
+                cooling_state.write(str(level + 10))
 
             # make cooling state diplay correct value
             with open(COOLING_STATE_PATH, 'w') as cooling_state:
-                cooling_state.write(level)
+                cooling_state.write(str(level))
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to set cooling level - {}".format(e))
 
