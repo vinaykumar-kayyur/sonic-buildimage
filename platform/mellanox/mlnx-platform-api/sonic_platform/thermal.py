@@ -434,14 +434,14 @@ class Thermal(ThermalBase):
             logger.log_info("Fail to write file {} due to {}".format(filename, repr(e)))
 
     @classmethod
-    def set_thermal_algorithm_status(cls, status):
+    def set_thermal_algorithm_status(cls, status, force=True):
         """
         Enable/disable kernel thermal algorithm
         """
         if not cls.thermal_profile:
             raise Exception("Fail to get thermal profile for this switch")
 
-        if cls.thermal_algorithm_status == status:
+        if not force and cls.thermal_algorithm_status == status:
             return
 
         cls.thermal_algorithm_status = status

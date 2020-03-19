@@ -15,6 +15,7 @@ from sonic_platform.fan import Fan
 from sonic_platform.thermal import Thermal
 
 Thermal.check_thermal_zone_temperature = MagicMock()
+Thermal.set_thermal_algorithm_status = MagicMock()
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -90,30 +91,28 @@ def test_fan_policy(thermal_manager):
     chassis = MockChassis()
     chassis.make_fan_absence()
     chassis.fan_list.append(MockFan())
-    thermal_manager.start_thermal_control_algorithm = MagicMock()
-    thermal_manager.stop_thermal_control_algorithm = MagicMock()
     thermal_manager.run_policy(chassis)
 
     fan_list = chassis.get_all_fans()
     assert fan_list[1].speed == 100
-    thermal_manager.stop_thermal_control_algorithm.assert_called_once()
+    Thermal.set_thermal_algorithm_status.assert_called_with(False, False)
 
     fan_list[0].presence = True
     Thermal.check_thermal_zone_temperature = MagicMock(return_value=True)
     thermal_manager.run_policy(chassis)
-    thermal_manager.start_thermal_control_algorithm.assert_called_once()
+    Thermal.set_thermal_algorithm_status.assert_called_with(True, False)
     assert Thermal.check_thermal_zone_temperature.call_count == 2
     assert fan_list[0].speed == 60
     assert fan_list[1].speed == 60
 
     fan_list[0].status = False
     thermal_manager.run_policy(chassis)
-    assert thermal_manager.stop_thermal_control_algorithm.call_count == 2
+    Thermal.set_thermal_algorithm_status.assert_called_with(False, False)
 
     fan_list[0].status = True
     Thermal.check_thermal_zone_temperature = MagicMock(return_value=False)
     thermal_manager.run_policy(chassis)
-    assert thermal_manager.start_thermal_control_algorithm.call_count == 2
+    Thermal.set_thermal_algorithm_status.assert_called_with(True, False)
     assert Thermal.check_thermal_zone_temperature.call_count == 2
     assert fan_list[0].speed == 100
     assert fan_list[1].speed == 100
@@ -123,18 +122,16 @@ def test_psu_policy(thermal_manager):
     chassis = MockChassis()
     chassis.make_psu_absence()
     chassis.fan_list.append(MockFan())
-    thermal_manager.start_thermal_control_algorithm = MagicMock()
-    thermal_manager.stop_thermal_control_algorithm = MagicMock()
     thermal_manager.run_policy(chassis)
 
     fan_list = chassis.get_all_fans()
     assert fan_list[0].speed == 100
-    thermal_manager.stop_thermal_control_algorithm.assert_called_once()
+    Thermal.set_thermal_algorithm_status.assert_called_with(False, False)
 
     psu_list = chassis.get_all_psus()
     psu_list[0].presence = True
     thermal_manager.run_policy(chassis)
-    thermal_manager.start_thermal_control_algorithm.assert_called_once()
+    Thermal.set_thermal_algorithm_status.assert_called_with(True, False)
 
 
 def test_any_fan_absence_condition():
