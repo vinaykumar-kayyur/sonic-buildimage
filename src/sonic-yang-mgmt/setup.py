@@ -25,11 +25,9 @@ sonicYangModels = '{}/{}'.format(wheels_path, os.environ["SONIC_YANG_MODELS_PY3"
 # important reuirements parameters
 build_requirements = [libyang, libyangCpp, libyangPy2, libyangPy3, sonicYangModels,]
 
-install_requirements = []
+setup_requirements = ['pytest-runner']
 
-setup_requirements = ['pytest-runner',]
-
-test_requirements = ['pytest>=3',]
+test_requirements = ['pytest>=3']
 
 # read me
 with open('README.rst') as readme_file:
@@ -57,9 +55,14 @@ class pkgBuild(build_py):
                 else:
                     print("{} installed".format(req))
 
+        # run pytest for libyang python APIs
+        self.pytest_args = []
+        errno = pytest.main(self.pytest_args)
+        if (errno):
+            exit(errno)
+
         # Continue usual build steps
         build_py.run(self)
-
 
 setup(
     cmdclass={
@@ -83,14 +86,13 @@ setup(
     ],
     description="Package contains Python Library for YANG for sonic.",
     options={'bdist_wheel':{'python_tag':'py'}},
-    install_requires=install_requirements,
     tests_require = test_requirements,
     license="GNU General Public License v3",
     long_description=readme + '\n\n',
     include_package_data=True,
     keywords='sonic_yang_mgmt',
     name='sonic_yang_mgmt',
-    # py_modules=['sonic_yang'],
+    py_modules=['sonic_yang', '_sonic_yang_ext'],
     packages=find_packages(),
     setup_requires=setup_requirements,
     version='1.0',
