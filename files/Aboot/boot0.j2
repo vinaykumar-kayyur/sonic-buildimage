@@ -278,6 +278,16 @@ platform_specific() {
         flash_size=28000
         echo "hugepages=128" >> /tmp/append
     fi
+    if [ "$sid" = "Mineral" ]; then
+        aboot_machine=arista_7170_32c
+        flash_size=28000
+        echo "hugepages=128" >> /tmp/append
+    fi
+    if [ "$sid" = "MineralD" ]; then
+        aboot_machine=arista_7170_32cd
+        flash_size=28000
+        echo "hugepages=128" >> /tmp/append
+    fi
     if [ "$sid" = "Lodoga" ]; then
         aboot_machine=arista_7050cx3_32s
         flash_size=3700
