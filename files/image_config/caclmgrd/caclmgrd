@@ -354,6 +354,19 @@ class ControlPlaneAclManager(object):
                                   ("DST_IP" in rule_props and rule_props["DST_IP"])):
                                 table_ip_version = 4
 
+                        if ((("SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]) or
+                            ("DST_IPV6" in rule_props and rule_props["DST_IPV6"])) and
+                            (table_ip_version == 4)):
+                            log_error("CtrlPlane ACL table {} is a IPv4 based table and rule {} is a IPV6 rule!"
+                                                          .format(table_name, rule_id))
+                            sys.exit(1)
+                        elif ((("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
+                            ("DST_IP" in rule_props and rule_props["DST_IP"])) and
+                            (table_ip_version == 6)):
+                            log_error("CtrlPlane ACL table {} is a IPv6 based table and rule {} is a IPV4 rule!"
+                                                          .format(table_name, rule_id))
+                            sys.exit(1)
+
                 # If we were unable to determine whether this ACL table contains
                 # IPv4 or IPv6 rules, log a message and skip processing this table.
                 if not table_ip_version:
