@@ -73,6 +73,7 @@ class Chassis(ChassisBase):
     power_reason_dict[44] = ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN_SPEED
 
     def __init__(self):
+        ChassisBase.__init__(self)
         PORT_START = 0
         PORT_END = 31
         PORTS_IN_BLOCK = (PORT_END + 1)
@@ -92,9 +93,8 @@ class Chassis(ChassisBase):
                            self.PORT_I2C_MAPPING[index][1])
             self._sfp_list.append(sfp_node)
 
-        ChassisBase.__init__(self)
         # Initialize EEPROM
-        self.sys_eeprom = Eeprom()
+        self._eeprom = Eeprom()
         for i in range(MAX_Z9100_FANTRAY):
             for j in range(MAX_Z9100_FAN):
                 fan = Fan(i, j)
@@ -137,7 +137,7 @@ class Chassis(ChassisBase):
         Returns:
             string: The name of the chassis
         """
-        return self.sys_eeprom.modelstr()
+        return self._eeprom.modelstr()
 
     def get_presence(self):
         """
@@ -153,7 +153,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of chassis
         """
-        return self.sys_eeprom.part_number_str()
+        return self._eeprom.part_number_str()
 
     def get_serial(self):
         """
@@ -163,7 +163,7 @@ class Chassis(ChassisBase):
         """
         return self.sys_eeprom.serial_str()
     
-     def get_sfp(self, index):
+    def get_sfp(self, index):
         """
         Retrieves sfp represented by (0-based) index <index>
 
@@ -183,7 +183,6 @@ class Chassis(ChassisBase):
         except IndexError:
             sys.stderr.write("SFP index {} out of range (0-{})\n".format(
                              index, len(self._sfp_list)-1))
-
         return sfp
 
     def get_status(self):
@@ -203,7 +202,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self.sys_eeprom.base_mac_addr()
+        return self._eeprom.base_mac_addr()
 
     def get_serial_number(self):
         """
@@ -212,7 +211,7 @@ class Chassis(ChassisBase):
         Returns:
             A string containing the hardware serial number for this chassis.
         """
-        return self.sys_eeprom.serial_number_str()
+        return self._eeprom.serial_number_str()
 
     def get_system_eeprom_info(self):
         """
@@ -223,7 +222,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
-        return self.sys_eeprom.system_eeprom_info()
+        return self._eeprom.system_eeprom_info()
 
     def get_reboot_cause(self):
         """

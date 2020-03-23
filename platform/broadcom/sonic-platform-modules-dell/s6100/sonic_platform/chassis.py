@@ -18,7 +18,9 @@ try:
     from sonic_platform.module import Module
     from sonic_platform.thermal import Thermal
     from sonic_platform.component import Component
+    from sonic_platform.watchdog import Watchdog
     from eeprom import Eeprom
+    import time
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -43,6 +45,8 @@ class Chassis(ChassisBase):
     reset_reason_dict[33] = ChassisBase.REBOOT_CAUSE_WATCHDOG
     reset_reason_dict[44] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
     reset_reason_dict[55] = ChassisBase.REBOOT_CAUSE_NON_HARDWARE
+    reset_reason_dict[66] = ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER
+    reset_reason_dict[77] = ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER
 
     power_reason_dict = {}
     power_reason_dict[11] = ChassisBase.REBOOT_CAUSE_POWER_LOSS
@@ -54,10 +58,11 @@ class Chassis(ChassisBase):
 
         ChassisBase.__init__(self)
         # Initialize EEPROM
-        self.sys_eeprom = Eeprom()
+        self._eeprom = Eeprom()
         for i in range(MAX_S6100_MODULE):
             module = Module(i)
             self._module_list.append(module)
+            self._sfp_list.extend(module._sfp_list)
 
         for i in range(MAX_S6100_FAN):
             fan = Fan(i)
@@ -75,10 +80,15 @@ class Chassis(ChassisBase):
             component = Component(i)
             self._component_list.append(component)
 
+        self._watchdog = Watchdog()
+
     def _get_reboot_reason_smf_register(self):
-        # Returns 0xAA on software reload
-        # Returns 0xFF on power-cycle
-        # Returns 0x01 on first-boot
+        # In S6100, mb_poweron_reason register will
+        # Returns 0xaa or 0xcc on software reload
+        # Returns 0xff or 0xbb on power-cycle
+        # Returns 0xdd on Watchdog
+        # Returns 0xee on Thermal Shutdown
+        # Returns 0x99 on Unknown reset
         smf_mb_reg_reason = self._get_pmc_register('mb_poweron_reason')
         return int(smf_mb_reg_reason, 16)
 
@@ -107,7 +117,7 @@ class Chassis(ChassisBase):
         Returns:
             string: The name of the chassis
         """
-        return self.sys_eeprom.modelstr()
+        return self._eeprom.modelstr()
 
     def get_presence(self):
         """
@@ -123,7 +133,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of chassis
         """
-        return self.sys_eeprom.part_number_str()
+        return self._eeprom.part_number_str()
 
     def get_serial(self):
         """
@@ -131,7 +141,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of chassis
         """
-        return self.sys_eeprom.serial_str()
+        return self._eeprom.serial_str()
 
     def get_status(self):
         """
@@ -150,7 +160,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self.sys_eeprom.base_mac_addr()
+        return self._eeprom.base_mac_addr()
 
     def get_serial_number(self):
         """
@@ -160,7 +170,7 @@ class Chassis(ChassisBase):
             A string containing the hardware serial number for this
             chassis.
         """
-        return self.sys_eeprom.serial_number_str()
+        return self._eeprom.serial_number_str()
 
     def get_system_eeprom_info(self):
         """
@@ -170,7 +180,7 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
-        return self.sys_eeprom.system_eeprom_info()
+        return self._eeprom.system_eeprom_info()
 
     def get_reboot_cause(self):
         """
@@ -187,27 +197,21 @@ class Chassis(ChassisBase):
         power_reason = int(self._get_pmc_register('smf_poweron_reason'))
         smf_mb_reg_reason = self._get_reboot_reason_smf_register()
 
-        if ((smf_mb_reg_reason == 0x01) and (power_reason == 0x11)):
+        if ((smf_mb_reg_reason == 0xbb) or (smf_mb_reg_reason == 0xff)):
+            return (ChassisBase.REBOOT_CAUSE_POWER_LOSS, None)
+        elif ((smf_mb_reg_reason == 0xaa) or (smf_mb_reg_reason == 0xcc)):
             return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
-
-        # Reset_Reason = 11 ==> PowerLoss
-        # So return the reboot reason from Last Power_Reason Dictionary
-        # If Reset_Reason is not 11 return from Reset_Reason dictionary
-        # Also check if power_reason, reset_reason are valid values by
-        # checking key presence in dictionary else return
-        # REBOOT_CAUSE_HARDWARE_OTHER as the Power_Reason and Reset_Reason
-        # registers returned invalid data
-
-        # In S6100, if Reset_Reason is not 11 and smf_mb_reg_reason
-        # is ff or bb, then it is PowerLoss
-        if (reset_reason == 11):
-            if (power_reason in self.power_reason_dict):
-                return (self.power_reason_dict[power_reason], None)
+        elif (smf_mb_reg_reason == 0xdd):
+            return (ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
+        elif (smf_mb_reg_reason == 0xee):
+            return (self.power_reason_dict[power_reason], None)
+        elif (reset_reason == 66):
+            return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER,
+                    "Emulated Cold Reset")
+        elif (reset_reason == 77):
+            return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER,
+                    "Emulated Warm Reset")
         else:
-            if ((smf_mb_reg_reason == 0xbb) or (smf_mb_reg_reason == 0xff)):
-                return (ChassisBase.REBOOT_CAUSE_POWER_LOSS, None)
-
-            if (reset_reason in self.reset_reason_dict):
-                return (self.reset_reason_dict[reset_reason], None)
+            return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
 
         return (ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Invalid Reason")
