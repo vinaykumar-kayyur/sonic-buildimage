@@ -165,12 +165,12 @@ class Chassis(ChassisBase):
     
     def get_sfp(self, index):
         """
-        Retrieves sfp represented by (0-based) index <index>
+        Retrieves sfp represented by (1-based) index <index>
 
         Args:
-            index: An integer, the index (0-based) of the sfp to retrieve.
+            index: An integer, the index (1-based) of the sfp to retrieve.
                    The index should be the sequence of a physical port in a chassis,
-                   starting from 0.
+                   starting from 1.
                    For example, 0 for Ethernet0, 1 for Ethernet4 and so on.
 
         Returns:
@@ -181,7 +181,7 @@ class Chassis(ChassisBase):
         try:
             sfp = self._sfp_list[index-1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)-1))
         return sfp
 
