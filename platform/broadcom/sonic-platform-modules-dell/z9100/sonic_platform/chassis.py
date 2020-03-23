@@ -161,7 +161,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of chassis
         """
-        return self.sys_eeprom.serial_str()
+        return self._eeprom.serial_str()
     
     def get_sfp(self, index):
         """
