@@ -383,7 +383,8 @@ write_boot_configs() {
 
     mkdir -p "$image_path"
     cat /tmp/append > $cmdline_image
-    [ -e ${target_path}/machine.conf ] || write_machine_config
+    [ -s ${target_path}/machine.conf ] || write_machine_config
+    sync
 }
 
 run_kexec() {
