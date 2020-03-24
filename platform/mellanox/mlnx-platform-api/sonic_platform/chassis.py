@@ -154,7 +154,7 @@ class Chassis(ChassisBase):
         # Initialize component list
         from sonic_platform.component import ComponentBIOS, ComponentCPLD
         self._component_list.append(ComponentBIOS())
-        self._component_list.append(ComponentCPLD())
+        self._component_list.extend(ComponentCPLD.get_component_list())
 
 
     def get_name(self):
@@ -470,3 +470,8 @@ class Chassis(ChassisBase):
             return True, {'sfp':port_dict}
         else:
             return True, {'sfp':{}}
+
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
+
