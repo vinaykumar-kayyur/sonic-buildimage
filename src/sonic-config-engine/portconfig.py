@@ -3,11 +3,13 @@ import os
 import sys
 
 
-def get_port_config_file_name(hwsku=None, platform=None):
+def get_port_config_file_name(hwsku=None, platform=None, asic=None):
     port_config_candidates = []
     port_config_candidates.append('/usr/share/sonic/hwsku/port_config.ini')
     if hwsku:
         if platform:
+            if asic:
+                port_config_candidates.append(os.path.join('/usr/share/sonic/device', platform, hwsku, asic,'port_config.ini'))
             port_config_candidates.append(os.path.join('/usr/share/sonic/device', platform, hwsku, 'port_config.ini'))
         port_config_candidates.append(os.path.join('/usr/share/sonic/platform', hwsku, 'port_config.ini'))
         port_config_candidates.append(os.path.join('/usr/share/sonic', hwsku, 'port_config.ini'))
@@ -17,11 +19,12 @@ def get_port_config_file_name(hwsku=None, platform=None):
     return None
     
 
-def get_port_config(hwsku=None, platform=None, port_config_file=None):
+
+def get_port_config(hwsku=None, platform=None, port_config_file=None,asic=None):
     if not port_config_file:
         port_config_file = get_port_config_file_name(hwsku, platform)
         if not port_config_file:
-            return ({}, {})
+            return ({}, {}, {})
     return parse_port_config_file(port_config_file)
 
 

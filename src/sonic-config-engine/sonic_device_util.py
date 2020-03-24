@@ -3,7 +3,7 @@ import os
 import yaml
 import subprocess
 import re
-
+from natsort import natsorted
 DOCUMENTATION = '''
 ---
 module: sonic_device_util
@@ -29,6 +29,39 @@ def get_machine_info():
             machine_vars[tokens[0]] = tokens[1].strip()
     return machine_vars
 
+def get_num_npus():
+   platform = get_platform_info(get_machine_info)
+   num_npus = 1
+   asic_conf_file_path = os.path.join('/usr/share/sonic/device', platform, 'asic.conf')
+   if not os.path.isFile(asic_conf_file_path):
+	return num_npus
+   with open(asic_conf_file_path) as asic_conf_file:
+	for line in asic_conf_file:
+	    tokens = line.split('=')
+            if len(tokens) < 2:
+               continue      
+	    if token[0].lower() == 'num_asic':
+		num_npus = token[1].strip()
+   		return num_npus
+
+def get_namespaces():
+    """
+    In a multi NPU platform, each NPU is in a Linux Namespace.
+    This method returns list of all the Namespace present on the device
+    """
+    ns_list = []
+    try:
+        proc = subprocess.Popen('ip netns list | cut -d"(" -f1', 
+                                stdout=subprocess.PIPE,
+                                shell=True,
+                                stderr=subprocess.STDOUT)
+        stdout = proc.communicate()[0]
+        proc.wait()
+        ns_list = [n for n in stdout.split()]
+    except OSError,e:
+        raise OSError("Unable to get namespace list")
+    return natsorted(ns_list)
+
 def get_platform_info(machine_info):
     if machine_info != None:
         if machine_info.has_key('onie_platform'):
@@ -51,7 +84,7 @@ def get_sonic_version_info():
 def valid_mac_address(mac):
     return bool(re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac))
 
-def get_system_mac():
+def get_system_mac(namespace=None):
     version_info = get_sonic_version_info()
 
     if (version_info['asic_type'] == 'mellanox'):
@@ -76,7 +109,11 @@ def get_system_mac():
         profile_cmd = 'cat /usr/share/sonic/device/' + platform +'/'+ hwsku +'/profile.ini | cut -f2 -d='
         hw_mac_entry_cmds = [ profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
     else:
-        hw_mac_entry_cmds = [ "ip link show eth0 | grep ether | awk '{print $2}'" ]
+        if namespace is not None:
+            ip_link_show_cmd = "sudo ip -n {} link show eth0".format(namespace)
+        else:
+            ip_link_show_cmd = "ip link show eth0"
+        hw_mac_entry_cmds = [ip_link_show_cmd + " | grep ether | awk '{print $2}'"]
 
     for get_mac_cmd in hw_mac_entry_cmds:
         proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

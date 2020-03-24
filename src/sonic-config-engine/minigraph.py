@@ -629,7 +629,14 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     bgp_peers_with_range = None
     deployment_id = None
 
-    hwsku_qn = QName(ns, "HwSku")
+    
+    #hostname is the asic_name, get the asic_id from the asic_name
+    if hostname is not None:
+        asic_id = hostname[-1]
+    else:
+        asic_id = None
+
+    hwsku_qn = QName(ns, "HwSku") 
     hostname_qn = QName(ns, "Hostname")
     docker_routing_config_mode_qn = QName(ns, "DockerRoutingConfigMode")
     for child in root:
@@ -642,7 +649,8 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
 
     if hostname is None:
         hostname = device_hostname
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku, platform, port_config_file)
+
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file,asic=asic_id)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -661,6 +669,7 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
             (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
+
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
@@ -911,6 +920,13 @@ def parse_device_desc_xml(filename):
 
     return results
 
+def parse_asic_sub_role(filename, asic_name):
+    root = ET.parse(filename).getroot()
+    mini_graph_path = filename
+    for child in root:
+        if child.tag == str(QName(ns, "MetadataDeclaration")):
+             _, _, _, _, _, _, _, sub_role = parse_meta(child, asic_name)
+	     return sub_role
 
 port_alias_map = {}
 port_alias_asic_map = {}
