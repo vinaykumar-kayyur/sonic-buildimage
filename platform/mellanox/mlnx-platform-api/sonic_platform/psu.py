@@ -37,7 +37,7 @@ hwsku_dict_with_unplugable_psu = ['ACS-MSN2010', 'ACS-MSN2100']
 
 # in most SKUs the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
-hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1}
+hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1, 'ACS-MSN4700': 1}
 psu_profile_list = [
     # default filename convention
     {
@@ -45,7 +45,7 @@ psu_profile_list = [
         PSU_VOLTAGE : "power/psu{}_volt",
         PSU_POWER : "power/psu{}_power"
     },
-    # for 3700, 3700c, 3800
+    # for 3700, 3700c, 3800, 4700
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
@@ -68,6 +68,7 @@ class Psu(PsuBase):
         psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
         #psu_oper_status should always be present for all SKUs
         self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
+        self._name = "PSU{}".format(psu_index + 1)
 
         if sku in hwsku_dict_psu:
             filemap = psu_profile_list[hwsku_dict_psu[sku]]
@@ -100,7 +101,10 @@ class Psu(PsuBase):
 
         fan = Fan(sku, psu_index, psu_index, True)
         if fan.get_presence():
-            self._fan = fan
+            self._fan_list.append(fan)
+
+    def get_name(self):
+        return self._name
 
         self.psu_green_led_path = "led_psu_green"
         self.psu_red_led_path = "led_psu_red"
