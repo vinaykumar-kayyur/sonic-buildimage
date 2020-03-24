@@ -8,9 +8,11 @@ provides access to hardware watchdog on Mellanox platforms
 """
 
 import os
+import re
 import fcntl
 import array
 import time
+import subprocess
 
 from sonic_platform_base.watchdog_base import WatchdogBase
 
@@ -233,12 +235,92 @@ class WatchdogType1(WatchdogImplBase):
 
         return timeleft
 
+
 class WatchdogType2(WatchdogImplBase):
     """
     Watchdog type 2
     """
 
     pass
+
+
+class WatchdogType3(WatchdogBase):
+    """
+    Type 3 should support timeleft and maximum
+    timeout is 65535 sec.
+    This is temporary implementation, because
+    watchdog kernel driver haven't implemented support for
+    watchdog type 3 on recent CPLDs. Eventually this should be
+    removed and WatchdogImplBase which is based on linux
+    watchdog API should be sufficient.
+    """
+
+    HW_MGMT_WD = "/usr/bin/hw-management-wd.sh"
+
+    def __init__(self):
+        """ initialize WatchdogType3 """
+
+        self._is_armed = False
+
+    def arm(self, timeout):
+        """
+        Implements arm WatchdogBase API
+        """
+
+        if timeout < 0:
+            return WD_COMMON_ERROR
+        proc = subprocess.Popen(
+                "{} start {}".format(self.HW_MGMT_WD, timeout).split(),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        if proc.returncode != 0:
+            return WD_COMMON_ERROR
+        self._is_armed = True
+        match = re.match(".* timeout ([0-9]+) .*", out)
+        if match is None:
+            raise Exception("unexpected output of {}".format(self.HW_MGMT_WD))
+        actual_timeout, = match.groups()
+        return int(actual_timeout)
+
+    def disarm(self):
+        """
+        Implements disarm WatchdogBase API
+        """
+
+        if not self._is_armed:
+            return False
+
+        proc = subprocess.Popen("{} stop".format(self.HW_MGMT_WD).split(),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        if proc.returncode != 0:
+            return WD_COMMON_ERROR
+        self._is_armed = False
+
+        return True
+
+    def is_armed(self):
+        """ Implements is_armed WatchdogBase API """
+
+        return self._is_armed
+
+    def get_remaining_time(self):
+        """ Implements get_remaining_time WatchdogBase API """
+
+        if not self._is_armed:
+            return WD_COMMON_ERROR
+
+        proc = subprocess.Popen("{} tleft".format(self.HW_MGMT_WD).split(),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = proc.communicate()
+        if proc.returncode != 0:
+            return WD_COMMON_ERROR
+        match = re.match(".* timeleft: ([0-9]+) .*", out)
+        if match is None:
+            raise Exception("unexpected {} output".format(self.HW_MGMT_WD))
+        tleft, = match.groups()
+
+        return int(tleft)
 
 
 def is_mlnx_wd_main(dev):
@@ -265,6 +347,17 @@ def is_wd_type2(dev):
     return os.path.exists("{}/{}/timeleft".format(WD_SYSFS_PATH, dev))
 
 
+def is_wd_type3(dev):
+    """
+    Checks if dev is Mellanox type 3 watchdog
+    """
+
+    proc = subprocess.Popen('{} help'.format(WatchdogType3.HW_MGMT_WD).split(),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.communicate()
+    return proc.returncode == 0
+
+
 def get_watchdog():
     """
     Return WatchdogType1 or WatchdogType2 based on system
@@ -280,9 +373,12 @@ def get_watchdog():
 
     watchdog = None
 
-    if is_wd_type2(watchdog_main_device_name):
+    if is_wd_type3(watchdog_main_device_name):
+        watchdog = WatchdogType3()
+    elif is_wd_type2(watchdog_main_device_name):
         watchdog = WatchdogType2(watchdog_device_path)
     else:
         watchdog = WatchdogType1(watchdog_device_path)
 
     return watchdog
+

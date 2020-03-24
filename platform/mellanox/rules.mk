@@ -31,3 +31,11 @@ $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(APPLIBS) $(SX_COMPLIB) $(SXD_LIBS) $(SX_
 
 # Inject mlnx mlx libs to platform monitor
 $(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(MFT)
+
+# W/A:
+# Inject mlnx hw-management to platform monitor
+# temporary change to include iorw utility and
+# hw-managemnt-wd.sh for temporary WatchdogType3
+# implementation. Please, refer to comment about
+# WatchdogType3 in platform/mellanox/mlnx-platform-api/sonic_platform/watchdog.py
+$(DOCKER_PLATFORM_MONITOR)_DEPENDS += $(MLNX_HW_MANAGEMENT)
