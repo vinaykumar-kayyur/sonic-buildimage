@@ -272,6 +272,7 @@ class BGPPeerMgr(Manager):
             [
                 ("meta", "localhost/bgp_asn"),
                 ("neigmeta", ""),
+                ("interface", "")
             ],
             "CONFIG_DB",
             swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME
@@ -290,6 +291,25 @@ class BGPPeerMgr(Manager):
         vrf, nbr = key.split('|', 1)
         if key not in self.peers:
             cmd = None
+
+            if "local_addr" not in data:
+                syslog.syslog(syslog.LOG_WARNING, 'Peer {}. Error in missing required attribute "local_addr"'.format(key))
+            else:
+
+                # Check if this route is belong to a vnet
+                interfaces = self.directory.get_slot("interface")
+                target_interface = None
+                for metadata in interfaces.values():
+                    if metadata["ip"] == data["local_addr"]:
+                        target_interface = metadata
+                        break
+                if target_interface is None:
+                    return False
+                elif target_interface.has_key("vnet_name") and target_interface["vnet_name"]:
+                    # Ignore the route that is in a vnet
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, target_interface["vnet_name"]))
+                    return True
+
             neigmeta = self.directory.get_slot("neigmeta")
             if 'name' in data and data["name"] not in neigmeta:
                 return False
@@ -390,6 +410,73 @@ class BGPPeerMgr(Manager):
         return peers
 
 
+def prefix_attr(attr, value):
+    if not value:
+        return None
+    else:
+        try:
+            prefix = netaddr.IPNetwork(str(value))
+        except:
+            return None
+    return str(getattr(prefix, attr))
+
+
+class InterfaceMgr(Manager):
+    def __init__(self, daemon, directory, interface_table = swsscommon.CFG_INTF_TABLE_NAME):
+        super(InterfaceMgr, self).__init__(
+            daemon,
+            directory,
+            [],
+            "CONFIG_DB",
+            interface_table
+        )
+        self.interfaces = {}
+
+    def set_handler(self, key, data):
+        # There are two entries for an interface in CFG_INTF_TABLE.
+        # One of them is to specify ip and prefix.
+        # In this case, the key contains '|', like "Ethernet0|192.168.0.6/30".
+        # Another one is to specify whether this interface belongs to a vnet
+        # In this case, the key only includes the interface name
+        if '|' in key:
+            key, network = key.split('|', 1)
+            data["ip"] = prefix_attr("ip", network)
+            data["prefixlen"] = prefix_attr("prefixlen", network)
+
+        # Put the interface data into directory only if two entries have both been set
+        # Otherwise cache the first come entry
+        if key in self.interfaces:
+            self.interfaces[key].update(data)
+            self.directory.put("interface", key, self.interfaces[key])
+            del self.interfaces[key]
+        else:
+            self.interfaces[key] = data
+        return True
+
+    def del_handler(self, key):
+        if '|' in key:
+            key, _ = key.split('|', 1)
+        self.directory.remove("interface", key)
+
+
+class LoopbackInterfaceMgr(InterfaceMgr):
+    def __init__(self, daemon, directory):
+        super(LoopbackInterfaceMgr, self).__init__(
+            daemon,
+            directory,
+            swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME
+        )
+
+
+class VlanInterfaceMgr(InterfaceMgr):
+    def __init__(self, daemon, directory):
+        super(VlanInterfaceMgr, self).__init__(
+            daemon,
+            directory,
+            swsscommon.CFG_VLAN_INTF_TABLE_NAME
+        )
+
+
 def wait_for_bgpd():
     # wait for 20 seconds
     stop_time = datetime.datetime.now() + datetime.timedelta(seconds=20)
@@ -408,6 +495,9 @@ def main():
         BGPDeviceMetaMgr,
         BGPNeighborMetaMgr,
         BGPPeerMgr,
+        InterfaceMgr,
+        LoopbackInterfaceMgr,
+        VlanInterfaceMgr,
     ]
     wait_for_bgpd()
     daemon = Daemon()
