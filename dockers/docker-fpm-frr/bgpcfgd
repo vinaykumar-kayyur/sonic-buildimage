@@ -477,6 +477,15 @@ class VlanInterfaceMgr(InterfaceMgr):
         )
 
 
+class PortChannelInterfaceMgr(InterfaceMgr):
+    def __init__(self, daemon, directory):
+        super(PortChannelInterfaceMgr, self).__init__(
+            daemon,
+            directory,
+            swsscommon.CFG_LAG_INTF_TABLE_NAME
+        )
+
+
 def wait_for_bgpd():
     # wait for 20 seconds
     stop_time = datetime.datetime.now() + datetime.timedelta(seconds=20)
@@ -498,6 +507,7 @@ def main():
         InterfaceMgr,
         LoopbackInterfaceMgr,
         VlanInterfaceMgr,
+        PortChannelInterfaceMgr,
     ]
     wait_for_bgpd()
     daemon = Daemon()
