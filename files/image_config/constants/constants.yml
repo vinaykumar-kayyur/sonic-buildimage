@@ -7,6 +7,8 @@ constants:
     families:
       - ipv4
       - ipv6
+    use_deployment_id: false
+    use_neighbors_meta: false
     graceful_restart:
       enabled: true
       restart_time: 240
@@ -17,50 +19,16 @@ constants:
       ipv4: 64
       ipv6: 64
     peers:
-      dynamic: # BGP_PEER_RANGE
-        BGP_SPEAKER: # defines peer_group
-          enabled: true
-      monitors: # BGP_MONITORS
-        BGPMON: # defines peer_group
-          enabled: true
-      general: # bgpcfgd
-        T0_V4: # from t0 to t1
-          enabled: true
-          level: ToRRouter
-          deployment_id: 1
-          family: ipv4
-        T0_V6:
-          enabled: true
-          level: ToRRouter
-          deployment_id: 1
-          family: ipv6
-        T1_V4:
-          enabled: true
-          level: LeafRouter
-          deployment_id: 1
-          family: ipv4
-        T1_V6:
-          enabled: true
-          level: LeafRouter
-          deployment_id: 1
-          family: ipv6
-        T2_V4:
-          enabled: true
-          level: SpineRouter
-          deployment_id: 1
-          family: ipv4
-        T2_V6:
-          enabled: true
-          level: SpineRouter
-          deployment_id: 1
-          family: ipv6
-        ER_V4:
-          enabled: true
-          level: ToRRouter
-          deployment_id: 2
-          family: ipv4
-        ER_V6:
-          enabled: true
-          level: ToRRouter
-          deployment_id: 2
-          family: ipv6
+      general: # peer_type
+        db_table: "BGP_NEIGHBOR"
+        template_dir: "general"
+      monitors: # peer_type
+        enabled: true
+        db_table: "BGP_MONITORS"
+        peer_group: "BGPMON"
+        template_dir: "monitors"
+      dynamic: # peer_type
+        enabled: true
+        db_table: "BGP_PEER_RANGE"
+        peer_group: "BGP_SPEAKER"
+        template_dir: "dynamic"

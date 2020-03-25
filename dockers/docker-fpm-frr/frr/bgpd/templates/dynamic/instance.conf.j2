@@ -1,7 +1,7 @@
 !
-! template: frr/bgpd/templates/BGP_SPEAKER/instance.conf.j2
+! template: bgpd/templates/dynamic/instance.conf.j2
 !
-{% from "frr/common/functions.conf.j2" import get_ipv4_loopback_address %}
+{% from "common/functions.conf.j2" import get_ipv4_loopback_address %}
 !
   neighbor {{ bgp_session['name'] }} peer-group
   neighbor {{ bgp_session['name'] }} passive
@@ -13,7 +13,7 @@
 {% if bgp_session['peer_asn'] is defined %}
   neighbor {{ bgp_session['name'] }} remote-as {{ bgp_session['peer_asn'] }}
 {% else %}
-  neighbor {{ bgp_session['name'] }} remote-as {{ constants.deployment_id_asn_map[DEVICE_METADATA['localhost']['deployment_id']] }}
+  neighbor {{ bgp_session['name'] }} remote-as {{ constants.deployment_id_asn_map[CONFIG_DB__DEVICE_METADATA['localhost']['deployment_id']] }}
 {% endif %}
 !
 {# FIXME: bgp_session['ip_range'] check the type #}
@@ -24,7 +24,7 @@
 {% if bgp_session['src_address'] is defined %}
   neighbor {{ bgp_session['name'] }} update-source {{ bgp_session['src_address'] | ip }}
 {% else %}
-  neighbor {{ bgp_session['name'] }} update-source {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}
+  neighbor {{ bgp_session['name'] }} update-source {{ get_ipv4_loopback_address(CONFIG_DB__LOOPBACK_INTERFACE, "Loopback1") | ip }}
 {% endif %}
 !
   address-family ipv4
@@ -34,5 +34,5 @@
     neighbor {{ bgp_session['name'] }} activate
   exit-address-family
 !
-! end of template: frr/bgpd/templates/BGP_SPEAKER/instance.conf.j2
+! end of template: bgpd/templates/BGP_SPEAKER/instance.conf.j2
 !
