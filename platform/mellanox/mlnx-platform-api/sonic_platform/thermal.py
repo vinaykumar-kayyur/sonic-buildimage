@@ -52,6 +52,7 @@ THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_norm"
 
 MODULE_COUNTER_PATH = "/var/run/hw-management/config/module_counter"
 GEARBOX_COUNTER_PATH = "/var/run/hw-management/config/gearbox_counter"
+MODULE_TEMPERATURE_FAULT_PATH = "/var/run/hw-management/thermal/module{}_temp_fault"
 
 thermal_api_handler_cpu_core = {
     THERMAL_API_GET_TEMPERATURE:"cpu_core{}",
@@ -336,7 +337,8 @@ class Thermal(ThermalBase):
         return self.name
 
 
-    def _read_generic_file(self, filename, len):
+    @classmethod
+    def _read_generic_file(cls, filename, len):
         """
         Read a generic file, returns the contents of the file
         """
@@ -511,7 +513,6 @@ class Thermal(ThermalBase):
 
         return True
 
-
     @classmethod
     def _check_thermal_zone_temperature(cls, thermal_zone_path):
         normal_temp_path = join(thermal_zone_path, THERMAL_ZONE_NORMAL_TEMPERATURE)
@@ -529,5 +530,30 @@ class Thermal(ThermalBase):
         except Exception as e:
             logger.log_info("Fail to check thermal zone temperature for file {} due to {}".format(thermal_zone_path, repr(e)))
 
+    @classmethod
+    def check_module_temperature_trustable(cls):
+        if not cls.thermal_profile:
+            raise Exception("Fail to get thermal profile for this switch")
 
+        start, count = cls.thermal_profile[THERMAL_DEV_CATEGORY_MODULE]
+        for index in range(count):
+            fault_file_path = MODULE_TEMPERATURE_FAULT_PATH.format(index + start)
+            fault = cls._read_generic_file(fault_file_path, 0)
+            if fault.strip() != '0':
+                return 'untrust'
+        return 'trust'
 
+    @classmethod
+    def get_air_flow_direction(cls):
+        fan_ambient_path = join(HW_MGMT_THERMAL_ROOT, THERMAL_DEV_FAN_AMBIENT)
+        port_ambient_path = join(HW_MGMT_THERMAL_ROOT, THERMAL_DEV_PORT_AMBIENT)
+
+        # if there is any exception, let it raise
+        fan_ambient_temp = int(self._read_generic_file(fan_ambient_path))
+        port_ambient_temp = int(self._read_generic_file(port_ambient_path))
+        if fan_ambient_temp > port_ambient_temp:
+            return 'p2c', fan_ambient_temp
+        elif fan_ambient_temp < port_ambient_temp:
+            return 'c2p', port_ambient_temp
+        else:
+            return 'unk', fan_ambient_temp

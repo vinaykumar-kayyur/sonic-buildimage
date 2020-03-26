@@ -426,4 +426,47 @@ def test_load_policy_with_same_conditions():
     with pytest.raises(Exception):
         MockThermalManager.load(os.path.join(test_path, 'policy_with_same_conditions.json'))
     
+def test_dynamic_minimum_table_data():
+    from sonic_platform.device_data import DEVICE_DATA
+    for sku, sku_data in DEVICE_DATA.items():
+        if 'thermal' in sku_data and 'minimum_table' in sku_data['thermal']:
+            minimum_table = sku_data['thermal']['minimum_table']
+            check_minimum_table_data(sku, minimum_table)
+
+def check_minimum_table_data(sku, minimum_table):
+    valid_dir = ['p2c', 'c2p', 'unk']
+    valid_trust_state = ['trust', 'untrust']
+
+    for category, data in minimum_table.items():
+        key_data = category.split('_')
+        assert key_data[0] in valid_dir
+        assert key_data[1] in valid_trust_state
+
+        data_list = [(value, key) for key, value in data.items()]
+        data_list.sort(key=lambda x : x[0])
+
+        previous_edge = None
+        previous_cooling_level = None
+        for item in data_list:
+            cooling_level = item[0]
+            range_str = item[1]
+            
+            ranges = range_str.split(':')
+            low = int(ranges[0])
+            high = int(ranges[1])
+            assert low < high
+
+            if previous_edge is None:
+                assert low == -127
+            else:
+                assert low - previous_edge == 1, '{}-{}-{} error, item={}'.format(sku, key_data[0], key_data[1], item)
+            previous_edge = high
+
+            assert 10 <= cooling_level <= 20
+            if previous_cooling_level is not None:
+                assert cooling_level > previous_cooling_level
+            previous_cooling_level = cooling_level
+
+
+
 

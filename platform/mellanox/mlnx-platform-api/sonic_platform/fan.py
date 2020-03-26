@@ -38,6 +38,7 @@ class Fan(FanBase):
     """Platform-specific Fan class"""
 
     STATUS_LED_COLOR_ORANGE = "orange"
+    min_cooling_level = 2
 
     def __init__(self, has_fan_dir, fan_index, drawer_index = 1, psu_fan = False, sku = None):
         # API index is starting from 0, Mellanox platform index is starting from 1
@@ -243,6 +244,9 @@ class Fan(FanBase):
         
         try:
             cooling_level = int(speed / 10)
+            if cooling_level < self.min_cooling_level:
+                cooling_level = self.min_cooling_level
+                speed = self.min_cooling_level * 10
             self.set_cooling_level(cooling_level)
             pwm = int(round(PWM_MAX*speed/100.0))
             with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
@@ -382,4 +386,13 @@ class Fan(FanBase):
                 cooling_state.write(str(level))
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to set cooling level - {}".format(e))
+
+    @classmethod
+    def get_cooling_level(cls):
+        try:
+            with open(COOLING_STATE_PATH, 'r') as cooling_state:
+                cooling_level = int(cooling_state.read())
+                return cooling_level
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to get cooling level - {}".format(e))
 

@@ -75,3 +75,29 @@ class AllPsuPresenceCondition(PsuCondition):
         psu_info_obj = self.get_psu_info(thermal_info_dict)
         return len(psu_info_obj.get_absence_psus()) == 0 if psu_info_obj else False
 
+
+class MinCoolingLevelChangeCondition(ThermalPolicyConditionBase):
+    trust_state = None
+    air_flow_dir = None
+    temperature = None
+    
+    def is_match(self, thermal_info_dict):
+        from .thermal import Thermal
+
+        trust_state = Thermal.check_module_temperature_trustable()
+        air_flow_dir, temperature = Thermal.get_air_flow_direction()
+
+        change_cooling_level = False
+        if trust_state != self.trust_state:
+            self.trust_state = trust_state
+            change_cooling_level = True
+        
+        if air_flow_dir != self.air_flow_dir:
+            self.air_flow_dir = air_flow_dir
+            change_cooling_level = True
+
+        if temperature != self.temperature:
+            self.temperature = temperature
+            change_cooling_level = True
+
+        return change_cooling_level
