@@ -467,6 +467,48 @@ def check_minimum_table_data(sku, minimum_table):
                 assert cooling_level > previous_cooling_level
             previous_cooling_level = cooling_level
 
+def test_dynamic_minimum_policy(thermal_manager):
+    from sonic_platform.thermal_conditions import MinCoolingLevelChangeCondition
+    from sonic_platform.thermal_actions import ChangeMinCoolingLevelAction
+    from sonic_platform.thermal_infos import ChassisInfo
+    from sonic_platform.thermal import Thermal
+    from sonic_platform.fan import Fan
+    ThermalManager.initialize()
+    assert 'DynamicMinCoolingLevelPolicy' in thermal_manager._policy_dict
+    policy = thermal_manager._policy_dict['DynamicMinCoolingLevelPolicy']
+    assert MinCoolingLevelChangeCondition in policy.conditions
+    assert ChangeMinCoolingLevelAction in policy.actions
 
+    condition = policy.conditions[MinCoolingLevelChangeCondition]
+    action = policy.actions[ChangeMinCoolingLevelAction]
+    Thermal.check_module_temperature_trustable = MagicMock(return_value='trust')
+    Thermal.get_air_flow_direction = MagicMock(return_value=('p2c', 35000))
+    assert condition.is_match(None)
+    assert MinCoolingLevelChangeCondition.trust_state == 'trust'
+    assert MinCoolingLevelChangeCondition.air_flow_dir == 'p2c'
+    assert MinCoolingLevelChangeCondition.temperature == 35000
+    assert not condition.is_match(None)
 
+    Thermal.check_module_temperature_trustable = MagicMock(return_value='untrust')
+    assert condition.is_match(None)
+    assert MinCoolingLevelChangeCondition.trust_state == 'untrust'
 
+    Thermal.get_air_flow_direction = MagicMock(return_value=('c2p', 35000))
+    assert condition.is_match(None)
+    assert MinCoolingLevelChangeCondition.air_flow_dir == 'c2p'
+
+    Thermal.get_air_flow_direction = MagicMock(return_value=('c2p', 25000))
+    assert condition.is_match(None)
+    assert MinCoolingLevelChangeCondition.temperature == 25000
+
+    chassis = MockChassis()
+    chassis.sku_name = 'invalid'
+    info = ChassisInfo()
+    info._chassis = chassis
+    thermal_info_dict = {ChassisInfo.INFO_NAME: info}
+    action.execute(thermal_info_dict)
+    assert Fan.min_cooling_level == 6
+
+    chassis.sku_name = 'ACS-MSN2700'
+    action.execute(thermal_info_dict)
+    assert Fan.min_cooling_level == 4
