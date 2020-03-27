@@ -1,4 +1,4 @@
-# mellanox firmware
+# mellanox asic firmware
 
 MLNX_FW_BASE_PATH = $(MLNX_SDK_BASE_PATH)
 
