@@ -506,9 +506,14 @@ def test_dynamic_minimum_policy(thermal_manager):
     info = ChassisInfo()
     info._chassis = chassis
     thermal_info_dict = {ChassisInfo.INFO_NAME: info}
+    Fan.get_cooling_level = MagicMock(return_value=5)
+    Fan.set_cooling_level = MagicMock()
     action.execute(thermal_info_dict)
     assert Fan.min_cooling_level == 6
+    Fan.set_cooling_level.assert_called_with(6)
+    Fan.set_cooling_level.call_count = 0
 
     chassis.sku_name = 'ACS-MSN2700'
     action.execute(thermal_info_dict)
     assert Fan.min_cooling_level == 4
+    assert Fan.set_cooling_level.call_count == 0

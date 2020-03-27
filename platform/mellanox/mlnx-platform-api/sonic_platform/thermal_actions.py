@@ -138,17 +138,20 @@ class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
         chassis = thermal_info_dict[ChassisInfo.INFO_NAME].get_chassis()
         if chassis.sku_name not in DEVICE_DATA or 'thermal' not in DEVICE_DATA[chassis.sku_name] or 'minimum_table' not in DEVICE_DATA[chassis.sku_name]['thermal']:
             Fan.min_cooling_level = ChangeMinCoolingLevelAction.UNKNOWN_SKU_COOLING_LEVEL
-            return
+        else:
+            air_flow_dir = MinCoolingLevelChangeCondition.air_flow_dir
+            trust_state = MinCoolingLevelChangeCondition.trust_state
+            temperature = MinCoolingLevelChangeCondition.temperature
+            minimum_table = DEVICE_DATA[chassis.sku_name]['thermal']['minimum_table']['{}_{}'.format(air_flow_dir, trust_state)]
 
-        air_flow_dir = MinCoolingLevelChangeCondition.air_flow_dir
-        trust_state = MinCoolingLevelChangeCondition.trust_state
-        temperature = MinCoolingLevelChangeCondition.temperature
-        minimum_table = DEVICE_DATA[chassis.sku_name]['thermal']['minimum_table']['{}_{}'.format(air_flow_dir, trust_state)]
-
-        for key, cooling_level in minimum_table.items():
-            temp_range = key.split(':')
-            temp_min = int(temp_range[0]) * 1000
-            temp_max = int(temp_range[1]) * 1000
-            if temp_min <= temperature <= temp_max:
-                Fan.min_cooling_level = cooling_level - 10
-                break
+            for key, cooling_level in minimum_table.items():
+                temp_range = key.split(':')
+                temp_min = int(temp_range[0]) * 1000
+                temp_max = int(temp_range[1]) * 1000
+                if temp_min <= temperature <= temp_max:
+                    Fan.min_cooling_level = cooling_level - 10
+                    break
+        
+        current_cooling_level = Fan.get_cooling_level()
+        if current_cooling_level < Fan.min_cooling_level:
+            Fan.set_cooling_level(Fan.min_cooling_level)
