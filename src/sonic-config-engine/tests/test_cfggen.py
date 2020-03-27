@@ -2,6 +2,9 @@ from unittest import TestCase
 import subprocess
 import os
 
+TOR_ROUTER = 'ToRRouter'
+BACKEND_TOR_ROUTER = 'BackEndToRRouter'
+
 class TestCfgGen(TestCase):
 
     def setUp(self):
@@ -55,10 +58,12 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertTrue(len(output.strip()) > 0)
 
-    def test_jinja_expression(self):
-        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
+    def test_jinja_expression(self, graph=None, expected_router_type='LeafRouter'):
+        if graph is None:
+            graph = self.sample_graph
+        argument = '-m "' + graph + '" -v "DEVICE_METADATA[\'localhost\'][\'type\']"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), 'LeafRouter')
+        self.assertEqual(output.strip(), expected_router_type)
 
     def test_additional_json_data(self):
         argument = '-a \'{"key1":"value1"}\' -v key1'
@@ -90,19 +95,23 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'value1\nvalue2')
 
+    # FIXME: This test depends heavily on the ordering of the interfaces and
+    # it is not at all intuitive what that ordering should be. Could make it
+    # more robust by adding better parsing logic.
     def test_minigraph_acl(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v ACL_TABLE'
         output = self.run_script(argument, True)
         self.assertEqual(output.strip(), "Warning: Ignoring Control Plane ACL NTP_ACL without type\n"
                                          "Warning: ignore interface 'fortyGigE0/2' as it is not in the port_config.ini\n"
                                          "Warning: ignore interface 'fortyGigE0/2' in DEVICE_NEIGHBOR as it is not in the port_config.ini\n"
-                                         "{'DATAACL': {'type': 'L3', 'policy_desc': 'DATAACL', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04']}, "
-                                         "'NTP_ACL': {'services': ['NTP'], 'type': 'CTRLPLANE', 'policy_desc': 'NTP_ACL'}, "
-                                         "'EVERFLOW': {'type': 'MIRROR', 'policy_desc': 'EVERFLOW', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet24', 'Ethernet40', 'Ethernet20', 'Ethernet44', 'Ethernet48', 'Ethernet28', 'Ethernet96', 'Ethernet92', 'Ethernet76', 'Ethernet72', 'Ethernet52', 'Ethernet80', 'Ethernet56', 'Ethernet32', 'Ethernet16', 'Ethernet36', 'Ethernet12', 'Ethernet60', 'Ethernet8', 'Ethernet4', 'Ethernet0', 'Ethernet64', 'Ethernet68', 'Ethernet84', 'Ethernet88', 'Ethernet108', 'Ethernet104', 'Ethernet100']}, "
-                                         "'ROUTER_PROTECT': {'services': ['SSH', 'SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'ROUTER_PROTECT'}, "
-                                         "'SNMP_ACL': {'services': ['SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'SNMP_ACL'}, "
-                                         "'SSH_ACL': {'services': ['SSH'], 'type': 'CTRLPLANE', 'policy_desc': 'SSH_ACL'}, "
-                                         "'EVERFLOWV6': {'type': 'MIRRORV6', 'policy_desc': 'EVERFLOWV6', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet24', 'Ethernet40', 'Ethernet20', 'Ethernet44', 'Ethernet48', 'Ethernet28', 'Ethernet96', 'Ethernet92', 'Ethernet76', 'Ethernet72', 'Ethernet52', 'Ethernet80', 'Ethernet56', 'Ethernet32', 'Ethernet16', 'Ethernet36', 'Ethernet12', 'Ethernet60', 'Ethernet8', 'Ethernet4', 'Ethernet0', 'Ethernet64', 'Ethernet68', 'Ethernet84', 'Ethernet88', 'Ethernet108', 'Ethernet104', 'Ethernet100']}}")
+                                         "{'NTP_ACL': {'services': ['NTP'], 'type': 'CTRLPLANE', 'policy_desc': 'NTP_ACL', 'stage': 'ingress'}, "
+                                         "'EVERFLOW': {'stage': 'ingress', 'type': 'MIRROR', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4'], 'policy_desc': 'EVERFLOW'}, "
+                                         "'ROUTER_PROTECT': {'services': ['SSH', 'SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'ROUTER_PROTECT', 'stage': 'ingress'}, "
+                                         "'DATAACLINGRESS': {'stage': 'ingress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04'], 'policy_desc': 'DATAACLINGRESS'}, "
+                                         "'SNMP_ACL': {'services': ['SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'SNMP_ACL', 'stage': 'ingress'}, "
+                                         "'SSH_ACL': {'services': ['SSH'], 'type': 'CTRLPLANE', 'policy_desc': 'SSH_ACL', 'stage': 'ingress'}, "
+                                         "'DATAACLEGRESS': {'stage': 'egress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02'], 'policy_desc': 'DATAACLEGRESS'}, "
+                                         "'EVERFLOWV6': {'stage': 'ingress', 'type': 'MIRRORV6', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4'], 'policy_desc': 'EVERFLOWV6'}}")
 
 #     everflow portion is not used
 #     def test_minigraph_everflow(self):
@@ -160,6 +169,9 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'name': 'ARISTA04T1', 'port': 'Ethernet1/1'}")
 
+    # FIXME: This test depends heavily on the ordering of the interfaces and
+    # it is not at all intuitive what that ordering should be. Could make it
+    # more robust by adding better parsing logic.
     def test_minigraph_extra_neighbors(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v DEVICE_NEIGHBOR'
         output = self.run_script(argument)
@@ -167,6 +179,7 @@ class TestCfgGen(TestCase):
                 "{'Ethernet116': {'name': 'ARISTA02T1', 'port': 'Ethernet1/1'}, "
                 "'Ethernet124': {'name': 'ARISTA04T1', 'port': 'Ethernet1/1'}, "
                 "'Ethernet112': {'name': 'ARISTA01T1', 'port': 'Ethernet1/1'}, "
+                "'Ethernet4': {'name': 'Servers0', 'port': 'eth0'}, "
                 "'Ethernet120': {'name': 'ARISTA03T1', 'port': 'Ethernet1/1'}}")
 
     def test_minigraph_port_description(self):
@@ -182,7 +195,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_peers_with_range(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v BGP_PEER_RANGE.values\(\)'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "[{'name': 'BGPSLBPassive', 'ip_range': ['10.10.10.10/26', '100.100.100.100/26']}]")
+        self.assertEqual(output.strip(), "[{'src_address': '10.1.0.32', 'name': 'BGPSLBPassive', 'ip_range': ['10.10.10.10/26', '100.100.100.100/26']}]")
 
     def test_minigraph_deployment_id(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'deployment_id\']"'
@@ -260,3 +273,61 @@ class TestCfgGen(TestCase):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "VXLAN_TUNNEL"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "")
+
+    def test_minigraph_bgp_mon(self):
+        argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "BGP_MONITORS"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "{'10.20.30.40': {'rrclient': 0, 'name': 'BGPMonitor', 'local_addr': '10.1.0.32', 'nhopself': 0, 'holdtime': '10', 'asn': '0', 'keepalive': '3'}}")
+
+    def test_minigraph_sub_port_interfaces(self, check_stderr=True):
+        try:
+            print '\n    Change device type to %s' % (BACKEND_TOR_ROUTER)
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_TOR_ROUTER, self.sample_graph_simple), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_TOR_ROUTER, self.sample_graph_simple), shell=True)
+
+            self.test_jinja_expression(self.sample_graph_simple, BACKEND_TOR_ROUTER)
+
+
+            # INTERFACE table does not exist
+            argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "INTERFACE"'
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), "")
+
+            # PORTCHANNEL_INTERFACE table does not exist
+            argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v "PORTCHANNEL_INTERFACE"'
+            output = self.run_script(argument)
+            self.assertEqual(output.strip(), "")
+
+            # All the other tables stay unchanged
+            self.test_var_json_data()
+            self.test_minigraph_vlans()
+            self.test_minigraph_vlan_members()
+            self.test_minigraph_vlan_interfaces()
+            self.test_minigraph_portchannels()
+            self.test_minigraph_ethernet_interfaces()
+            self.test_minigraph_extra_ethernet_interfaces()
+            self.test_minigraph_vnet()
+            self.test_minigraph_vxlan()
+
+            # VLAN_SUB_INTERFACE
+            argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v VLAN_SUB_INTERFACE'
+            output = self.run_script(argument)
+            print output.strip()
+            self.assertEqual(output.strip(), \
+                    "{('PortChannel01.10', '10.0.0.56/31'): {}, "
+                    "'Ethernet0.10': {'admin_status': 'up'}, "
+                    "('Ethernet0.10', '10.0.0.58/31'): {}, "
+                    "('PortChannel01.10', 'FC00::71/126'): {}, "
+                    "'PortChannel01.10': {'admin_status': 'up'}, "
+                    "('Ethernet0.10', 'FC00::75/126'): {}}")
+
+        finally:
+            print '\n    Change device type back to %s' % (TOR_ROUTER)
+            if check_stderr:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, self.sample_graph_simple), stderr=subprocess.STDOUT, shell=True)
+            else:
+                output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, self.sample_graph_simple), shell=True)
+
+            self.test_jinja_expression(self.sample_graph_simple, TOR_ROUTER)

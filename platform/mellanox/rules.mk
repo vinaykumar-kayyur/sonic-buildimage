@@ -10,9 +10,9 @@ include $(PLATFORM_PATH)/docker-saiserver-mlnx.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/docker-ptf-mlnx.mk
-include $(PLATFORM_PATH)/mlnx-sfpd.mk
 include $(PLATFORM_PATH)/mlnx-ffb.mk
 include $(PLATFORM_PATH)/issu-version.mk
+include $(PLATFORM_PATH)/onie-fw-update.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM)
