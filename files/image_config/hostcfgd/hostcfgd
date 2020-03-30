@@ -512,10 +512,11 @@ class MgmtIntfCfg:
         if not self.mgmt_vrf_cfg.handle_mgmt_intf_gwaddr_cfg(op, ifname, gwaddr):
             try:
                 ip_conf = netaddr.IPNetwork(ip_prefix)
-                if op == "DELETE":
-                    cmd = "ip route del {}/{} via {} dev {}".format(ip_conf.network, ip_conf.prefixlen, gwaddr, ifname)
-                else:
-                    cmd = "ip route add {}/{} via {} dev {}".format(ip_conf.network, ip_conf.prefixlen, gwaddr, ifname)
+                ver = "-4"
+                if ip_conf.version == 6:
+                    ver = "-6"
+
+                cmd = "ip {} route {} {}/{} via {} dev {}".format(ver, op.lower(), ip_conf.network, ip_conf.prefixlen, gwaddr, ifname)
 
                 syslog.syslog(syslog.LOG_INFO, "Configure gwaddr , cmd : {}".format(cmd))
                 subprocess.check_call(cmd, shell=True)
@@ -525,13 +526,14 @@ class MgmtIntfCfg:
 
     def mgmt_intf_default_gwaddr_set (self, ifname, default_gw, op):
         try:
-            if op == "DELETE":
-                cmd = "ip route del default via {} dev {}".format(default_gw, ifname)
-            else:
-                cmd = "ip route add default via {} dev {}".format(default_gw, ifname)
+            ver = "-4"
+            mgmt_conf = netaddr.IPNetwork(default_gw)
+            if mgmt_conf.version == 6:
+                ver = "-6"
+
+            cmd = "ip {} route {} default via {} dev {}".format(ver, op.lower(), default_gw, ifname)
 
             syslog.syslog(syslog.LOG_INFO, "Configure Default Gateway, cmd : {}".format(cmd))
-
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError as err:
             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
@@ -571,17 +573,14 @@ class MgmtIntfCfg:
 
     def mgmt_intf_ip_prefix_set (self, ifname, ip_prefix, op):
         try:
-            if op == "DELETE":
-                reset_prefix = "0.0.0.0"
-                mgmt_conf = netaddr.IPNetwork(reset_prefix)
-                cmd = "ip addr del {} dev {}".format(ip_prefix, ifname)
-            else:
-                mgmt_conf = netaddr.IPNetwork(ip_prefix)
-                cmd = "ip addr add {} dev {}".format(ip_prefix, ifname)
-
+            ver = "-4"
+            mgmt_conf = netaddr.IPNetwork(ip_prefix)
+            if mgmt_conf.version == 6:
+                ver = "-6"
+            cmd = "ip {} addr {} {} dev {}".format(ver, op.lower(), ip_prefix, ifname)
             syslog.syslog(syslog.LOG_INFO, "Configure ip_prefix, op : {}, ip_prefix: {}, cmd : {}, mgmt_conf: {}".format(op, ip_prefix, cmd, mgmt_conf))
             subprocess.check_call(cmd, shell=True)
-            cmd = "ip rule add from {} table default".format(str(mgmt_conf.ip))
+            cmd = "ip {} rule {} from {} table default pref 1003".format(ver, op.lower(), str(mgmt_conf.ip))
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError as err:
             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
@@ -656,11 +655,11 @@ class MgmtIntfCfg:
                     appdb_entry['ipv6_dhcp_client'] = cfgdb_entry['ipv6_dhcp_client']
 
                 if ('ipv4_default_gwaddr' in appdb_entry):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DELETE")
+                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DEL")
                     del appdb_entry['ipv4_default_gwaddr']
 
                 if ('ipv6_default_gwaddr' in appdb_entry):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DELETE")
+                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DEL")
                     del appdb_entry['ipv6_default_gwaddr']
 
                 self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
@@ -707,37 +706,36 @@ class MgmtIntfCfg:
                     self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv4_default_gwaddr'], "ADD")
                     appdb_entry['ipv4_default_gwaddr'] = cfgdb_entry['ipv4_default_gwaddr']
                 elif (('ipv4_default_gwaddr' in cfgdb_entry) and (cfgdb_entry['ipv4_default_gwaddr'] != appdb_entry['ipv4_default_gwaddr'])):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DELETE")
+                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DEL")
                     self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv4_default_gwaddr'], "ADD")
                     appdb_entry['ipv4_default_gwaddr'] = cfgdb_entry['ipv4_default_gwaddr']
                 elif (('ipv4_default_gwaddr' not in cfgdb_entry) and ('ipv4_default_gwaddr' in appdb_entry)):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DELETE")
+                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DEL")
                     del appdb_entry['ipv4_default_gwaddr']
 
                 if (('ipv6_default_gwaddr' in cfgdb_entry) and ('ipv6_default_gwaddr' not in appdb_entry)):
                     self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv6_default_gwaddr'], "ADD")
                     appdb_entry['ipv6_default_gwaddr'] = cfgdb_entry['ipv6_default_gwaddr']
                 elif (('ipv6_default_gwaddr' in cfgdb_entry) and (cfgdb_entry['ipv6_default_gwaddr'] != appdb_entry['ipv6_default_gwaddr'])):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DELETE")
+                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DEL")
                     self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv6_default_gwaddr'], "ADD")
                     appdb_entry['ipv6_default_gwaddr'] = cfgdb_entry['ipv6_default_gwaddr']
                 elif (('ipv6_default_gwaddr' not in cfgdb_entry) and ('ipv6_default_gwaddr' in appdb_entry)):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DELETE")
+                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DEL")
                     del appdb_entry['ipv6_default_gwaddr']
 
                 self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
         else:
-            input_ip = ipaddress.IPNetwork(intf_keys[1])
             if op == "CREATE" or op == "UPDATE" :
                 self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "ADD")
                 if (('gwaddr' in data) and ((appdb_entry == {}) or ('gwaddr' not in appdb_entry))):
                     self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "ADD")
                     appdb_entry['gwaddr'] = data['gwaddr']
                 elif (('gwaddr' in data) and ('gwaddr' not in cfgdb_entry) and ('gwaddr' in appdb_entry)):
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'],"DELETE")
+                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'],"DEL")
                     del appdb_entry['gwaddr']
                 elif (('gwaddr' in data) and (data['gwaddr'] != appdb_entry['gwaddr'])):
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DELETE")
+                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DEL")
                     self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "ADD")
                     appdb_entry['gwaddr'] = data['gwaddr']
 
@@ -747,9 +745,9 @@ class MgmtIntfCfg:
                 self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
 
             else:
-                self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "DELETE")
+                self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "DEL")
                 if ('gwaddr' in data):
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "DELETE")
+                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "DEL")
                 self.app_db.delete_entry(APP_MGMT_INTF_TABLE, cur_appdb_key)
 
 
