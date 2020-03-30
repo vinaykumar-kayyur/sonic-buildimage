@@ -16,6 +16,10 @@ SONIC_CONFIG_BUILD_JOBS = 1
 # Corresponding -j argument will be passed to make/dpkg commands that build separate packages
 SONIC_CONFIG_MAKE_JOBS = $(shell nproc)
 
+# DEFAULT_BUILD_LOG_TIMESTAMP - add timestamp in build log
+# Supported format: simple, none
+DEFAULT_BUILD_LOG_TIMESTAMP = none
+
 # SONIC_USE_DOCKER_BUILDKIT - use docker buildkit for build.
 # If set to y SONiC build system will set environment variable DOCKER_BUILDKIT=1
 # to enable docker buildkit.
@@ -43,6 +47,9 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # passed through DHCP option 225.
 # If not set (default behavior) the default minigraph built into the image will be used.
 # ENABLE_DHCP_GRAPH_SERVICE = y
+
+# ENABLE_ZTP - installs Zero Touch Provisioning support.
+# ENABLE_ZTP = y
 
 # SHUTDOWN_BGP_ON_START - if set to y all bgp sessions will be in admin down state when
 # bgp service starts.
@@ -93,8 +100,29 @@ DEFAULT_KERNEL_PROCURE_METHOD = build
 FRR_USER_UID = 300
 FRR_USER_GID = 300
 
+# DPKG cache allows the .deb files to be stored in the cache path. This allows the submodules
+# package to be cached and restored back if its commit hash is not modified and its dependencies are not modified.
+# SONIC_DPKG_CACHE_METHOD - Default method of deb package caching
+#	none    :  no caching
+#	rwcache :  Use cache if exists else build the source and update the cache
+#	wcache  :  Dont use the cache and just build the source and update the cache
+#	rcache  :  Use cache if exists, but dont update the cache
+#	cache   :  Same as rwcache
+# SONIC_DPKG_CACHE_SOURCE - Stores the cache location details
+SONIC_DPKG_CACHE_METHOD ?= none
+SONIC_DPKG_CACHE_SOURCE ?= /var/cache/sonic/artifacts
+
 # Default VS build memory preparation
 DEFAULT_VS_PREPARE_MEM = yes
 
 # ENABLE_SYSTEM_SFLOW - build docker-sonic-sflow for sFlow support
 ENABLE_SFLOW = y
+
+# ENABLE_MGMT_FRAMEWORK - build docker-sonic-mgt-framework for CLI and REST server support
+ENABLE_MGMT_FRAMEWORK = y
+
+# ENABLE_RESTAPI - build docker-sonic-restapi for configuring the switch using REST APIs
+ENABLE_RESTAPI = n
+
+# ENABLE_NAT - build docker-sonic-nat for nat support
+ENABLE_NAT = y

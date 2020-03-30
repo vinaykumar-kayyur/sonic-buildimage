@@ -145,16 +145,15 @@ class SfpUtil(SfpUtilBase):
         path = "/sys/bus/i2c/devices/{0}/module_present_{1}"
         port_ps = path.format(cpld_ps, port_num)
 
+        content="0"
         try:
             val_file = open(port_ps)
+            content = val_file.readline().rstrip()
+            val_file.close()
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print "Error: unable to access file: %s" % str(e)
             return False
 
-        content = val_file.readline().rstrip()
-        val_file.close()
-
-        # content is a string, either "0" or "1"
         if content == "1":
             return True
 
@@ -175,12 +174,13 @@ class SfpUtil(SfpUtilBase):
             eeprom.seek(93)
             lpmode = ord(eeprom.read(1))
 
-            if ((lpmode & 0x3) == 0x1):
-                return False # High Power Mode if "Power override" bit is 1 and "Power set" bit is 0
+            if ((lpmode & 0x3) == 0x3):
+                return True # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
             else:
-                return True # Low Power Mode if one of the following conditions is matched:
-                            # 1. Power override" bit is 0
-                            # 2. Power override" bit is 1 and "Power set" bit is 1
+                return False # High Power Mode if one of the following conditions is matched:
+                             # 1. "Power override" bit is 0
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+
         except IOError as e:
             print "Error: unable to open file: %s" % str(e)
             return False
@@ -219,8 +219,30 @@ class SfpUtil(SfpUtilBase):
                 time.sleep(0.01)
 
     def reset(self, port_num):
-        raise NotImplementedError
+        if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
+            return False
 
+        cpld_i = self.get_cpld_num(port_num)
+        cpld_ps = self._cpld_mapping[cpld_i]
+        path = "/sys/bus/i2c/devices/{0}/module_reset_{1}"
+        port_ps = path.format(cpld_ps, port_num)
+        
+        self.__port_to_mod_rst = port_ps
+        try:
+            reg_file = open(self.__port_to_mod_rst, 'r+', buffering=0)
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        #toggle reset
+        reg_file.seek(0)
+        reg_file.write('1')
+        time.sleep(1)
+        reg_file.seek(0)
+        reg_file.write('0')
+        reg_file.close()
+        
+        return True
     @property
     def _get_present_bitmap(self):
         nodes = []
