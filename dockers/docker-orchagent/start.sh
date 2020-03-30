@@ -13,9 +13,9 @@ fi
 
 export platform=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
 
-rm -f /var/run/rsyslogd.pid
+#rm -f /var/run/rsyslogd.pid
 
-supervisorctl start rsyslogd
+#supervisorctl start rsyslogd
 
 supervisorctl start orchagent
 
