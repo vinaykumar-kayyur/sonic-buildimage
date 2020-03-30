@@ -479,15 +479,20 @@ else
 fi
 
 # Decompress the file for the file system directly to the partition
-unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
-
-if [ "$install_env" = "onie" ]; then
-    TAR_EXTRA_OPTION="--numeric-owner"
+if [ x"$docker_inram" = x"on" ]; then
+    # when disk is small, keep dockerfs.tar.gz in disk, expand it into ramfs during initrd
+    unzip -o $ONIE_INSTALLER_PAYLOAD -d $demo_mnt/$image_dir
 else
-    TAR_EXTRA_OPTION="--numeric-owner --warning=no-timestamp"
+    unzip -o $ONIE_INSTALLER_PAYLOAD -x "$FILESYSTEM_DOCKERFS" -d $demo_mnt/$image_dir
+
+    if [ "$install_env" = "onie" ]; then
+        TAR_EXTRA_OPTION="--numeric-owner"
+    else
+        TAR_EXTRA_OPTION="--numeric-owner --warning=no-timestamp"
+    fi
+    mkdir -p $demo_mnt/$image_dir/$DOCKERFS_DIR
+    unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 fi
-mkdir -p $demo_mnt/$image_dir/$DOCKERFS_DIR
-unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 
 if [ "$install_env" = "onie" ]; then
     # Store machine description in target file system
@@ -550,15 +555,21 @@ EOF
 # Add the logic to support grub-reboot and grub-set-default
 cat <<EOF >> $grub_cfg
 if [ -s \$prefix/grubenv ]; then
-  load_env
+    load_env
 fi
-if [ "\${saved_entry}" ] ; then
-   set default="\${saved_entry}"
+if [ "\${saved_entry}" ]; then
+    set default="\${saved_entry}"
 fi
-if [ "\${next_entry}" ] ; then
-   set default="\${next_entry}"
-   set next_entry=
-   save_env next_entry
+if [ "\${next_entry}" ]; then
+    set default="\${next_entry}"
+    unset next_entry
+    save_env next_entry
+fi
+if [ "\${onie_entry}" ]; then
+    set next_entry="\${default}"
+    set default="\${onie_entry}"
+    unset onie_entry
+    save_env onie_entry next_entry
 fi
 
 EOF
@@ -595,12 +606,12 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-4.9.0-9-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-4.9.0-11-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-4.9.0-9-2-amd64
+        initrd  /$image_dir/boot/initrd.img-4.9.0-11-2-amd64
 }
 EOF
 

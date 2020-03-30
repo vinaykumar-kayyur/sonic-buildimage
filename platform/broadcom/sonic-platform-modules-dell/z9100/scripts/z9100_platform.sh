@@ -107,8 +107,8 @@ switch_board_qsfp_mux() {
 #Attach/Detach the SFP modules on PCA9548_2
 switch_board_sfp() {
     case $1 in
-        "new_device")    i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
-                         i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
+        "new_device")    i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
+                         i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
                          ;;
         "delete_device") i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
                          i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
@@ -125,7 +125,7 @@ switch_board_qsfp() {
         "new_device")
                         for ((i=18;i<=49;i++));
                         do
-                            i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
+                            i2c_config "echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
                         done
                         ;;
         "delete_device")
@@ -200,6 +200,20 @@ init_switch_port_led() {
 
 }
 
+install_python_api_package() {
+    device="/usr/share/sonic/device"
+    platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+
+    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
+}
+
+remove_python_api_package() {
+    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv = $(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
+}
+
 init_devnum
 
 if [[ "$1" == "init" ]]; then
@@ -220,6 +234,7 @@ if [[ "$1" == "init" ]]; then
 
     #Copy led_proc_init.soc
     init_switch_port_led
+    install_python_api_package
 
     value=0x0
     echo $value > /sys/class/i2c-adapter/i2c-14/14-003e/qsfp_lpmode
@@ -241,6 +256,7 @@ elif [[ "$1" == "deinit" ]]; then
     modprobe -r i2c-mux-pca954x
     modprobe -r i2c-dev
     modprobe -r dell_ich
+    remove_python_api_package
 else
      echo "z9100_platform : Invalid option !"
 fi

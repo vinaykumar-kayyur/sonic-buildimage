@@ -27,18 +27,16 @@ pktdma_poll_mode_channel_bitmap=1
 
 l2xmsg_mode=1
 l2xmsg_hostbuf_size=8192
-ipv6_lpm_128b_enable=0
-num_ipv6_lpm_128b_entries=0
+ipv6_lpm_128b_enable=1
 max_vp_lags=0
 
 l3_alpm_enable=2
 l2_mem_entries=32768
 l3_mem_entries=16384
-l3_max_ecmp_mode=1 
+l3_max_ecmp_mode=1
 
 bcm_tunnel_term_compatible_mode=1
 ifp_inports_support_enable=1
-mmu_init_config="MSFT-TD3-Tier1"
 
 stable_size=0x5500000
 
@@ -443,7 +441,7 @@ dport_map_port_26=26
 dport_map_port_27=27
 dport_map_port_28=28
 dport_map_port_29=29
-dport_map_port_30=20
+dport_map_port_30=30
 dport_map_port_31=31
 dport_map_port_32=32
 dport_map_port_33=33
@@ -456,7 +454,8 @@ dport_map_port_39=39
 dport_map_port_40=40
 dport_map_port_41=41
 dport_map_port_42=42
-dport_map_port_43=44
+dport_map_port_43=43
+dport_map_port_44=44
 dport_map_port_45=45
 dport_map_port_46=46
 dport_map_port_47=47
@@ -542,4 +541,4 @@ dport_map_port_129=126
 dport_map_port_66=127
 dport_map_port_130=128
 
-
+mmu_init_config="TD3-DEFAULT"
