@@ -296,29 +296,16 @@ class BGPPeerMgr(Manager):
             if "local_addr" not in data:
                 syslog.syslog(syslog.LOG_WARNING, 'Peer {}. Error in missing required attribute "local_addr"'.format(key))
             else:
-                # The route that belongs to a vnet cannot be advertised by the default BGP session.
-                # So we need to check whether this route belongs to a vnet.
-                local_addresses = self.directory.get_slot("local_addresses")
-                # Check if the information for the local address of this route has been set
-                # Which means we can find the interface for this route by its local address
-                # We can only process this route message when the local address was set
-                if data["local_addr"] not in local_addresses:
+                # The bgp session that belongs to a vnet cannot be advertised as the default BGP session.
+                # So we need to check whether this bgp session belongs to a vnet.
+                interface = self.get_local_interface(data["local_addr"])
+                if not interface:
                     return False
-                local_address = local_addresses[data["local_addr"]]
-                interfaces = self.directory.get_slot("interfaces")
-                # Check if the information for the interface of this local address has set
-                # Which means we can determine whether this route belongs to a vnet
-                # Because the vnet name will be set in the interface
-                # Ref:https://github.com/Azure/SONiC/blob/master/doc/vxlan/Vxlan_hld.md#212-vnetinterface-table
-                if local_address.has_key("interface") and local_address["interface"] in interfaces:
-                    interface = interfaces[local_address["interface"]]
-                    # Check if this route is belong to a vnet
-                    if interface.has_key("vnet_name") and interface["vnet_name"]:
-                        # Ignore the route that is in a vnet
-                        syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, interface["vnet_name"]))
-                        return True
-                else:
-                    return False
+                vnet = self.get_vnet(interface)
+                if vnet:
+                    # Ignore the bgp session that is in a vnet
+                    syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, vnet))
+                    return True
 
             neigmeta = self.directory.get_slot("neigmeta")
             if 'name' in data and data["name"] not in neigmeta:
@@ -392,6 +379,25 @@ class BGPPeerMgr(Manager):
         os.remove(tmp_filename)
         return rc == 0
 
+    def get_local_interface(self, local_addr):
+        local_addresses = self.directory.get_slot("local_addresses")
+        # Check if the local address of this bgp session has been set
+        if local_addr not in local_addresses:
+            return None
+        local_address = local_addresses[local_addr]
+        interfaces = self.directory.get_slot("interfaces")
+        # Check if the information for the interface of this local address has been set
+        if local_address.has_key("interface") and local_address["interface"] in interfaces:
+            return interfaces[local_address["interface"]]
+        else:
+            return None
+
+    def get_vnet(self, interface):
+        if interface.has_key("vnet_name") and interface["vnet_name"]:
+            return interface["vnet_name"]
+        else:
+            return None
+
     @staticmethod
     def normalize_key(key):
         if '|' not in key:
@@ -420,17 +426,6 @@ class BGPPeerMgr(Manager):
         return peers
 
 
-def prefix_attr(attr, value):
-    if not value:
-        return None
-    else:
-        try:
-            prefix = netaddr.IPNetwork(str(value))
-        except:
-            return None
-    return str(getattr(prefix, attr))
-
-
 class InterfaceMgr(Manager):
     def __init__(self, daemon, directory, interface_table = swsscommon.CFG_INTF_TABLE_NAME):
         super(InterfaceMgr, self).__init__(
@@ -450,8 +445,13 @@ class InterfaceMgr(Manager):
         if '|' in key:
             data = {}
             data["interface"], network = key.split('|', 1)
-            data["prefixlen"] = prefix_attr("prefixlen", network)
-            ip = prefix_attr("ip", network)
+            try:
+                network = netaddr.IPNetwork(str(network))
+            except:
+                syslog.syslog(syslog.LOG_WARNING, 'Subnet {} format is wrong'.format(network))
+                return False
+            data["prefixlen"] = str(network.prefixlen)
+            ip = str(network.ip)
             self.directory.put("local_addresses", ip, data)
         else:
             self.directory.put("interfaces", key, data)
@@ -460,7 +460,12 @@ class InterfaceMgr(Manager):
     def del_handler(self, key):
         if '|' in key:
             _, network = key.split('|', 1)
-            ip = prefix_attr("ip", network)
+            try:
+                network = netaddr.IPNetwork(str(network))
+            except:
+                syslog.syslog(syslog.LOG_WARNING, 'Subnet {} format is wrong'.format(network))
+                return False
+            ip = str(network.ip)
             self.directory.remove("local_addresses", ip)
         else:
             self.directory.remove("interfaces", key)
