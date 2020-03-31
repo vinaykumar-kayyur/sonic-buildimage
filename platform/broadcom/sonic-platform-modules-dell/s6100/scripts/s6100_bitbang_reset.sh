@@ -11,7 +11,9 @@ pcisysfs.py --set --val 0xffffffff --offset 0x018 --res /sys/devices/pci0000\:00
 #Enable I2C bit-banging
 pcisysfs.py --set --val 0x80000000 --offset 0x388 --res /sys/devices/pci0000\:00/0000\:00\:13.0/resource0
 
-while true;do
+count=1
+while [ $count -le 9 ];
+do
     # Bit-bang an I2C STOP cycle
 
     # SCL=0, SDA=0
@@ -41,6 +43,7 @@ while true;do
 	logger -p NOTICE "After I2C_bitbang- MCTRL:$(printf "0x%x" $mctrl)","MSTS:$(printf "0x%x" $msts)","DBSTS:$(printf "0x%x" $dbsts)"
 	break
     fi
+    count=$(( $count + 1 ))
 done
 
 #Disable I2C bit-banging
