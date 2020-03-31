@@ -296,7 +296,8 @@ class BGPPeerMgr(Manager):
             if "local_addr" not in data:
                 syslog.syslog(syslog.LOG_WARNING, 'Peer {}. Error in missing required attribute "local_addr"'.format(key))
             else:
-
+                # The route that belongs to a vnet cannot be advertised by the default BGP session.
+                # So we need to check whether this route belongs to a vnet.
                 local_addresses = self.directory.get_slot("local_addresses")
                 # Check if the information for the local address of this route has been set
                 # Which means we can find the interface for this route by its local address
