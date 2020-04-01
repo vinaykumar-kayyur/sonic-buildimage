@@ -418,11 +418,8 @@ class InterfaceMgr(Manager):
         )
 
     def set_handler(self, key, data):
-        # There are two types of entries for an interface.
-        # One of them is to specify ip and prefix.
-        # In this case, the key contains '|', like "Ethernet0|192.168.0.6/30".
-        # Another one is to specify whether this interface belongs to a vnet
-        # In this case, the key only includes the interface name.
+        # Interface table can have two keys, 
+        # one with ip prefix and one without ip prefix
         if '|' in key:
             data = {}
             data["interface"], network = key.split('|', 1)
