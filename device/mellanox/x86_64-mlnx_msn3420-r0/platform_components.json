@@ -1,0 +1,10 @@
+{
+    "chassis": {
+        "x86_64-mlnx_msn3420-r0": {
+            "component": {
+                "BIOS": { },
+                "CPLD": { }
+            }
+        }
+    }
+}
