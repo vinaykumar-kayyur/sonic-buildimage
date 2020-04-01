@@ -300,6 +300,12 @@ class BGPPeerMgr(Manager):
                 # So we need to check whether this bgp session belongs to a vnet.
                 interface = InterfaceMgr.get_local_interface(self.directory, data["local_addr"])
                 if not interface:
+                    syslog.syslog(syslog.LOG_INFO,
+                            'Peer {} with local address {} wait for the corresponding interface to be set'.format(
+                                key,
+                                data["local_addr"]
+                            )
+                        )
                     return False
                 vnet = InterfaceMgr.get_vnet(interface)
                 if vnet:
@@ -316,6 +322,12 @@ class BGPPeerMgr(Manager):
 
             neigmeta = self.directory.get_slot("neigmeta")
             if 'name' in data and data["name"] not in neigmeta:
+                syslog.syslog(syslog.LOG_INFO,
+                        'Peer {} with neighbor name {} wait for the corresponding neighbor metadata to be set'.format(
+                            key,
+                            data["name"]
+                        )
+                    )
                 return False
             try:
                 cmd = self.templates["add"].render(
