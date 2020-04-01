@@ -64,7 +64,8 @@ RUN sed --in-place 's/httpredir.debian.org/debian-archive.trafficmanager.net/' /
         rsyslog             \
         ntp                 \
         ntpstat             \
-        ntpdate
+        ntpdate             \
+        libpcre3-dev
 
 RUN dpkg -i \
 {% for deb in docker_ptf_debs.split(' ') -%}
@@ -117,7 +118,10 @@ RUN rm -rf /debs \
     && pip install pyaml   \
     && mkdir -p /opt       \
     && cd /opt             \
-    && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py
+    && wget https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py    \
+    && wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz \
+    && rm -f go1.14.linux-amd64.tar.gz
 
 ## Adjust sshd settings
 RUN mkdir /var/run/sshd \
