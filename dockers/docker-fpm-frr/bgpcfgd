@@ -304,7 +304,14 @@ class BGPPeerMgr(Manager):
                 vnet = InterfaceMgr.get_vnet(interface)
                 if vnet:
                     # Ignore the bgp session that is in a vnet
-                    syslog.syslog(syslog.LOG_INFO, 'Peer {} in vnet {}'.format(key, vnet))
+                    syslog.syslog(
+                            syslog.LOG_INFO,
+                            'Ignore the BGP peer {} as the interface {} is in vnet {}'.format(
+                                key,
+                                interface,
+                                vnet
+                            )
+                        )
                     return True
 
             neigmeta = self.directory.get_slot("neigmeta")
@@ -426,7 +433,13 @@ class InterfaceMgr(Manager):
             try:
                 network = netaddr.IPNetwork(str(network))
             except:
-                syslog.syslog(syslog.LOG_WARNING, 'Subnet {} format is wrong'.format(network))
+                syslog.syslog(
+                        syslog.LOG_WARNING,
+                        'Subnet {} format is wrong for interface {}'.format(
+                            network,
+                            data["interface"]
+                        )
+                    )
                 return False
             data["prefixlen"] = str(network.prefixlen)
             ip = str(network.ip)
@@ -437,11 +450,17 @@ class InterfaceMgr(Manager):
 
     def del_handler(self, key):
         if '|' in key:
-            _, network = key.split('|', 1)
+            interface, network = key.split('|', 1)
             try:
                 network = netaddr.IPNetwork(str(network))
             except:
-                syslog.syslog(syslog.LOG_WARNING, 'Subnet {} format is wrong'.format(network))
+                syslog.syslog(
+                        syslog.LOG_WARNING,
+                        'Subnet {} format is wrong for interface {}'.format(
+                            network,
+                            interface
+                        )
+                    )
                 return False
             ip = str(network.ip)
             self.directory.remove("local_addresses", ip)
