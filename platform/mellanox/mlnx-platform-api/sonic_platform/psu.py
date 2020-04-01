@@ -37,7 +37,7 @@ hwsku_dict_with_unplugable_psu = ['ACS-MSN2010', 'ACS-MSN2100']
 
 # in most SKUs the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
-hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1}
+hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1, 'ACS-MSN4700': 1}
 psu_profile_list = [
     # default filename convention
     {
@@ -45,7 +45,7 @@ psu_profile_list = [
         PSU_VOLTAGE : "power/psu{}_volt",
         PSU_POWER : "power/psu{}_power"
     },
-    # for 3700, 3700c, 3800
+    # for 3700, 3700c, 3800, 4700
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
@@ -99,17 +99,19 @@ class Psu(PsuBase):
             psu_presence = os.path.join(self.psu_path, psu_presence)
             self.psu_presence = psu_presence
 
-        fan = Fan(sku, psu_index, psu_index, True)
-        if fan.get_presence():
+        # unplugable PSU has no FAN
+        if sku not in hwsku_dict_with_unplugable_psu:
+            fan = Fan(sku, psu_index, psu_index, True)
             self._fan_list.append(fan)
-
-    def get_name(self):
-        return self._name
 
         self.psu_green_led_path = "led_psu_green"
         self.psu_red_led_path = "led_psu_red"
         self.psu_orange_led_path = "led_psu_orange"
         self.psu_led_cap_path = "led_psu_capability"
+
+
+    def get_name(self):
+        return self._name
 
 
     def _read_generic_file(self, filename, len):
@@ -287,3 +289,21 @@ class Psu(PsuBase):
             raise RuntimeError("Failed to read led status for psu due to {}".format(repr(e)))
 
         return self.STATUS_LED_COLOR_OFF
+
+
+    def get_power_available_status(self):
+        """
+        Gets the power available status
+
+        Returns:
+            True if power is present and power on. 
+            False and "absence of PSU" if power is not present.
+            False and "absence of power" if power is present but not power on.
+        """
+        if not self.get_presence():
+            return False, "absence of PSU"
+        elif not self.get_powergood_status():
+            return False, "absence of power"
+        else:
+            return True, ""
+

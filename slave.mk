@@ -159,6 +159,10 @@ ifeq ($(KERNEL_PROCURE_METHOD),)
 override KERNEL_PROCURE_METHOD := $(DEFAULT_KERNEL_PROCURE_METHOD)
 endif
 
+ifeq ($(BUILD_LOG_TIMESTAMP),)
+override BUILD_LOG_TIMESTAMP := $(DEFAULT_BUILD_LOG_TIMESTAMP)
+endif
+
 MAKEFLAGS += -j $(SONIC_BUILD_JOBS)
 export SONIC_CONFIG_MAKE_JOBS
 
@@ -205,6 +209,7 @@ $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
+$(info "BUILD_LOG_TIMESTAMP"             : "$(BUILD_LOG_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
@@ -397,13 +402,13 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		# Apply series of patches if exist
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 		# Build project
-		pushd $($*_SRC_PATH) $(LOG)
-		[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
+		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
+		if [ -f ./autogen.sh ]; then ./autogen.sh $(LOG); fi
 		$(if $($*_DPKG_TARGET),
 			DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
 			DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
 		)
-		popd $(LOG)
+		popd $(LOG_SIMPLE)
 		# Clean up
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
 		# Take built package(s)
@@ -493,10 +498,10 @@ $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PA
 		# Apply series of patches if exist
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 		# Build project
-		pushd $($*_SRC_PATH) $(LOG)
+		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		rm -rf deb_dist/* $(LOG)
 		python setup.py --command-packages=stdeb.command bdist_deb $(LOG)
-		popd $(LOG)
+		popd $(LOG_SIMPLE)
 		# Clean up
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
 		# Take built package(s)
@@ -529,14 +534,14 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
-		pushd $($*_SRC_PATH) $(LOG)
+		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi
-		[ "$($*_TEST)" = "n" ] || python$($*_PYTHON_VERSION) setup.py test $(LOG)
+		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 		# clean up
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt pop -a -f; fi
-		popd $(LOG)
+		popd $(LOG_SIMPLE)
 		mv $($*_SRC_PATH)/dist/$* $(PYTHON_WHEELS_PATH) $(LOG)
 		
 		# Save the target deb into DPKG cache
@@ -773,6 +778,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export install_debug_image="$(INSTALL_DEBUG_TOOLS)"
+	export multi_instance="false"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
@@ -783,18 +789,21 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 
 		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
 			j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+
+			# Set the flag GLOBAL for all the global system-wide dockers.
+			$(if $(shell ls files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
+			)
 		fi
-
-		if [ -f files/build_templates/multi_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service.j2 ]; then
-			j2 files/build_templates/multi_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
-
-			# performs the same check as the elif above, except with make commands so eval behaves properly
-			$(if $(shell ls files/build_templates/multi_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service.j2 2>/dev/null),\
+		# Any service template, inside instance directory, will be used to generate .service and @.service file.
+		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
+			export multi_instance="true"
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
+			$(if $(shell ls files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
 				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE = yes)
-			 )
-		fi
-		if [ -f files/build_templates/single_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
-			j2 files/build_templates/single_instance/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+			)
+			export multi_instance="false"
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
 		fi
 		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
@@ -805,8 +814,12 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 
 	# Marks template services with an "@" according to systemd convention
 	# If the $($docker)_TEMPLATE) variable is set, the service will be treated as a template
+	# If the $($docker)_GLOBAL) and $($docker)_TEMPLATE) variables are set the service will be added both as a global and template service.
 	$(foreach docker, $($*_DOCKERS),\
 		$(if $($(docker:-dbg.gz=.gz)_TEMPLATE),\
+			$(if $($(docker:-dbg.gz=.gz)_GLOBAL),\
+				$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")\
+			)\
 			$(eval SERVICES += "$(addsuffix @.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
 			$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
 		)
