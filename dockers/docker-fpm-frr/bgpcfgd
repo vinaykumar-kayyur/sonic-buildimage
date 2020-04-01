@@ -481,6 +481,13 @@ class InterfaceMgr(Manager):
 
     @staticmethod
     def get_local_interface(directory, local_addr):
+        """
+        @summary: Get interface according to the local address from the directory
+        @param directory: Directory object that stored metadata of interfaces
+        @param local_addr: Local address of the interface
+        @return: Return the metadata of the interface with the local address
+                 If the interface has not been set, return None
+        """
         local_addresses = directory.get_slot("local_addresses")
         # Check if the local address of this bgp session has been set
         if local_addr not in local_addresses:
@@ -495,6 +502,12 @@ class InterfaceMgr(Manager):
 
     @staticmethod
     def get_vnet(interface):
+        """
+        @summary: Get the VNet name of the interface
+        @param interface: The metadata of the interface
+        @return: Return the vnet name of the interface if this interface belongs to a vnet,
+                 Otherwise return None
+        """
         if interface.has_key("vnet_name") and interface["vnet_name"]:
             return interface["vnet_name"]
         else:
