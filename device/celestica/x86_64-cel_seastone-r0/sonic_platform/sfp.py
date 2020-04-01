@@ -100,7 +100,7 @@ class Sfp(SfpBase):
     def __init__(self, sfp_index):
         # Init index
         self.index = sfp_index
-        self.port_num = self.index
+        self.port_num = self.index + 1
 
         # Init eeprom path
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
@@ -593,7 +593,7 @@ class Sfp(SfpBase):
         reg_value = int(content, 16)
 
         # Determind if port_num start from 1 or 0
-        bit_index = self.port_num - 1 if self.PORT_START == 1 else self.port_num
+        bit_index = self.index
 
         # Mask off the bit corresponding to our port
         mask = (1 << bit_index)
@@ -710,7 +710,7 @@ class Sfp(SfpBase):
         reg_value = int(content, 16)
 
         # Determind if port_num start from 1 or 0
-        bit_index = self.port_num - 1 if self.PORT_START == 1 else self.port_num
+        bit_index = self.index
 
         # Mask off the bit corresponding to our port
         mask = (1 << bit_index)
@@ -823,7 +823,7 @@ class Sfp(SfpBase):
         reg_value = int(content, 16)
 
         # Determind if port_num start from 1 or 0
-        bit_index = self.port_num - 1 if self.PORT_START == 1 else self.port_num
+        bit_index = self.index
 
         # Mask off the bit corresponding to our port
         mask = (1 << bit_index)
@@ -907,7 +907,7 @@ class Sfp(SfpBase):
         reg_value = int(content, 16)
 
         # Determind if port_num start from 1 or 0
-        bit_index = self.port_num - 1 if self.PORT_START == 1 else self.port_num
+        bit_index = self.index
 
         # Mask off the bit corresponding to our port
         mask = (1 << bit_index)
