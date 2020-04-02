@@ -139,6 +139,9 @@ INCLUDE_RESTAPI = n
 # INCLUDE_NAT - build docker-nat for nat support
 INCLUDE_NAT = y
 
+# ENABLE_ACMS - build docker-acms for managing certificates on the device
+ENABLE_ACMS = y
+
 # TELEMETRY_WRITABLE - Enable write/config operations via the gNMI interface.
 # Uncomment to enable:
 # TELEMETRY_WRITABLE = y
