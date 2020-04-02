@@ -5,10 +5,25 @@ REGISTRY_SERVER=$2
 REGISTRY_USERNAME=$3
 REGISTRY_PASSWD=$4
 PLATFORM=$5
-SONIC_VERSION=$6
-DOCKER_IMAGE_TAG=$7
+SONIC_VERSION=""
+DOCKER_IMAGE_TAG=""
+
+shift 5
+
+if [ "$#" != "0" ]
+then
+    SONIC_VERSION=$1
+    shift
+fi
+
+if [ "$#" != "0" ]
+    DOCKER_IMAGE_TAG=$1
+fi
 
 push_it() {
+    # $1 - Given image name
+    # $2 - Remote image name
+
     docker tag $1 $2
     echo "Pushing $2"
     image_sha=$(docker push $2 | sed -n "s/.*: digest: sha256:\([0-9a-f]*\).*/\\1/p")
@@ -30,7 +45,8 @@ docker login -u $REGISTRY_USERNAME -p "$REGISTRY_PASSWD" $REGISTRY_SERVER
 docker_image_name=$(basename $DOCKER_IMAGE_FILE | cut -d. -f1)
 
 remote_image_name=$REGISTRY_SERVER/sonic-dockers/$PLATFORM/$docker_image_name
-push_it $docker_image_name $remote_image_name:$SONIC_VERSION
+
+push_it $docker_image_name ${remote_image_name}${SONIC_VERSION:+:$SONIC_VERSION}
 
 if [ ! -z $DOCKER_IMAGE_TAG ]
 then
