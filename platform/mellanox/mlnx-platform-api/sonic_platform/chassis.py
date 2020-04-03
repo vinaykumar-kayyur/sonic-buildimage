@@ -11,6 +11,7 @@
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.component_base import ComponentBase
+    from sonic_device_util import get_machine_info
     from sonic_daemon_base.daemon_base import Logger
     from os import listdir
     from os.path import isfile, join
@@ -48,7 +49,7 @@ logger = Logger()
 
 # magic code defnition for port number, qsfp port position of each hwsku
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-hwsku_dict_port = {'ACS-MSN2010': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2700': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'LS-SN2700':0, 'ACS-MSN2740': 0, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'ACS-MSN3800': 4}
+hwsku_dict_port = {'ACS-MSN2010': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2700': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'LS-SN2700':0, 'ACS-MSN2740': 0, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'ACS-MSN3800': 4, 'Mellanox-SN3800-D112C8': 4, 'ACS-MSN4700': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1), (0, 18, 21, 22, 1), (0, 0, 63, 64, 1)]
 
 class Chassis(ChassisBase):
@@ -59,6 +60,11 @@ class Chassis(ChassisBase):
 
         # Initialize SKU name
         self.sku_name = self._get_sku_name()
+        mi = get_machine_info()
+        if mi is not None:
+            self.name = mi['onie_platform']
+        else:
+            self.name = self.sku_name
 
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
@@ -104,9 +110,9 @@ class Chassis(ChassisBase):
 
         for index in range(num_of_fan):
             if multi_rotor_in_drawer:
-                fan = Fan(has_fan_dir, index, index/2)
+                fan = Fan(has_fan_dir, index, index/2, False, self.sku_name)
             else:
-                fan = Fan(has_fan_dir, index, index)
+                fan = Fan(has_fan_dir, index, index, False, self.sku_name)
             self._fan_list.append(fan)
 
 
@@ -148,7 +154,17 @@ class Chassis(ChassisBase):
         # Initialize component list
         from sonic_platform.component import ComponentBIOS, ComponentCPLD
         self._component_list.append(ComponentBIOS())
-        self._component_list.append(ComponentCPLD())
+        self._component_list.extend(ComponentCPLD.get_component_list())
+
+
+    def get_name(self):
+        """
+        Retrieves the name of the device
+
+        Returns:
+            string: The name of the device
+        """
+        return self.name
 
 
     ##############################################
@@ -454,3 +470,8 @@ class Chassis(ChassisBase):
             return True, {'sfp':port_dict}
         else:
             return True, {'sfp':{}}
+
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
+
