@@ -279,12 +279,11 @@ class BGPPeerMgr(Manager):
             swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME
         )
         self.peers = self.load_peers()
-        fabric = TemplateFabric()
+        self.fabric = TemplateFabric()
         self.templates = {
-            "add":         fabric.from_file('bgpd.peer.conf.j2'),
-            "delete":      fabric.from_string('no neighbor {{ neighbor_addr }}'),
-            "shutdown":    fabric.from_string('neighbor {{ neighbor_addr }} shutdown'),
-            "no shutdown": fabric.from_string('no neighbor {{ neighbor_addr }} shutdown'),
+            "delete":      self.fabric.from_string('no neighbor {{ neighbor_addr }}'),
+            "shutdown":    self.fabric.from_string('neighbor {{ neighbor_addr }} shutdown'),
+            "no shutdown": self.fabric.from_string('no neighbor {{ neighbor_addr }} shutdown'),
         }
 
     def set_handler(self, key, data):
@@ -330,6 +329,12 @@ class BGPPeerMgr(Manager):
                     )
                 return False
             try:
+                if "add" not in self.templates:
+                    device_metadata = self.directory.get_slot("meta")
+                    if device_metadata["localhost"]["type"] == "SpineChassisFrontendRouter":
+                        self.templates["add"] = self.fabric.from_file('bgpd.peer.spine_chassis_frontend_router.j2')
+                    else:
+                        self.templates["add"] = self.fabric.from_file('bgpd.peer.conf.j2')
                 cmd = self.templates["add"].render(
                     DEVICE_METADATA=self.directory.get_slot("meta"),
                     DEVICE_NEIGHBOR_METADATA=neigmeta,
