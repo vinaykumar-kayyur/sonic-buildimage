@@ -208,6 +208,23 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
+if [ "$INSTALL_KUBERNETES" == "y" ]
+then
+    KUBERNETES_VERSION="${KUBERNETES_VERSION:-1.18.0-00}"
+    ## Install Kubernetes
+    echo '[INFO] Install kubernetes'
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/k8s.gpg -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/k8s.gpg
+    sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/k8s.gpg
+    sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -qy install kubeadm=${KUBERNETES_VERSION}
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -qy install kubectl=${KUBERNETES_VERSION}
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -qy install kubelet=${KUBERNETES_VERSION}
+else
+    echo '[INFO] Skipping Install kubernetes'
+fi
+
 ## Add docker config drop-in to specify dockerd command line
 sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
 ## Note: $_ means last argument of last command
