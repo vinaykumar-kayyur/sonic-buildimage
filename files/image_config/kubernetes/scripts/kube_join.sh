@@ -28,4 +28,16 @@ sleep 2
 
 /etc/sonic/kubeadm_join.sh
 
-
+# if join fails, ensure the following
+# a) Ensure both master & node run same or compatible k8s versions
+# b) If node already exists, delete it
+#       "kubectl drain <node name> --ignore-daemonsets; kubectl delete node <node name>"
+# c) If you are using calico, you *may* need to set the following in master.
+#    Ensure calico.yaml has the following and apply at master.
+#    # Auto-detection method.
+#    - name: IP_AUTODETECTION_METHOD
+#      value: "interface=<master route dev name>,eth0"
+#     e.g. value: "interface=ens192,eth0"
+# 
+#    kubectl apply -f calico.yaml
+# 
