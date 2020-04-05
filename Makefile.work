@@ -209,7 +209,7 @@ ifneq ($(BLDENV), )
 endif
 endif
 	@$(OVERLAY_MODULE_CHECK)
-	
+
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
 	    { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Building... ; \
 	    $(DOCKER_BASE_BUILD) ; }
@@ -225,6 +225,9 @@ ifeq "$(KEEP_SLAVE_ON)" "yes"
 else
 	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) $(SONIC_BUILD_INSTRUCTION) $@
 endif
+
+sonic-slave-base-build :
+	$(DOCKER_BASE_BUILD)
 
 sonic-slave-build :
 	$(DOCKER_BASE_BUILD)
