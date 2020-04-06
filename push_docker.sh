@@ -1,23 +1,29 @@
-#! /bin/bash 
-
 DOCKER_IMAGE_FILE=$1
 REGISTRY_SERVER=$2
-REGISTRY_USERNAME=$3
-REGISTRY_PASSWD=$4
-PLATFORM=$5
-SONIC_VERSION=""
+REGISTRY_PORT=$3
+REGISTRY_USERNAME=$4
+REGISTRY_PASSWD=$5
 DOCKER_IMAGE_TAG=""
+PLATFORM=""
+SONIC_VERSION=""
 
 shift 5
 
 if [ "$#" != "0" ]
 then
-    SONIC_VERSION=$1
+    DOCKER_IMAGE_TAG=$1
     shift
 fi
 
 if [ "$#" != "0" ]
-    DOCKER_IMAGE_TAG=$1
+then
+    PLATFORM=$1
+    shift
+fi
+
+if [ "$#" != "0" ]
+then
+    SONIC_VERSION=$1
 fi
 
 push_it() {
@@ -33,26 +39,40 @@ push_it() {
 }
 
 set -e
-echo "Docker load $DOCKER_IMAGE_FILE"
-docker load < $DOCKER_IMAGE_FILE
+
+echo "Loading image ${DOCKER_IMAGE_FILE}"
+docker load < ${DOCKER_IMAGE_FILE}
+
+## Fetch the Jenkins build number if inside it
+[ ${BUILD_NUMBER} ] || {
+    echo "No BUILD_NUMBER found, setting to 0."
+    BUILD_NUMBER="0"
+}
 
 ## Login the docker image registry server
 ## Note: user name and password are passed from command line
-echo "Docker login $REGISTRY_USERNAME@$REGISTRY_SERVER"
-docker login -u $REGISTRY_USERNAME -p "$REGISTRY_PASSWD" $REGISTRY_SERVER
+docker login -u ${REGISTRY_USERNAME} -p "${REGISTRY_PASSWD}" ${REGISTRY_SERVER}:${REGISTRY_PORT}
 
-## Get image name
-docker_image_name=$(basename $DOCKER_IMAGE_FILE | cut -d. -f1)
+## Get Docker image name
+docker_image_name=$(basename ${DOCKER_IMAGE_FILE} | cut -d. -f1)
+remote_image_name=${REGISTRY_SERVER}:${REGISTRY_PORT}/${docker_image_name}
 
-remote_image_name=$REGISTRY_SERVER/sonic-dockers/$PLATFORM/$docker_image_name
+[ -z "${DOCKER_IMAGE_TAG}" ] || {
+    push_it ${docker_image_name} ${remote_image_name}:${DOCKER_IMAGE_TAG}
+}
 
-push_it $docker_image_name ${remote_image_name}${SONIC_VERSION:+:$SONIC_VERSION}
+[ -n "${SONIC_VERSION}" ] || {
+    # If SONIC_VERSION is not given, tag it with build number.
+    timestamp="$(date -u +%Y%m%d)"
+    build_version="${timestamp}.bld-${BUILD_NUMBER}"
+    push_it ${docker_image_name} ${remote_image_name}:${build_version}
+}
 
-if [ ! -z $DOCKER_IMAGE_TAG ]
-then
-    push_it $docker_image_name $remote_image_name:$DOCKER_IMAGE_TAG
-fi
+[ -z "${SONIC_VERSION}" ] || {
+    remote_image_name=${REGISTRY_SERVER}/sonic-dockers/${PLATFORM}/${docker_image_name}:${SONIC_VERSION}
+    push_it ${docker_image_name} ${remote_image_name}
+}
 
-echo "Remove $docker_image_name"
 docker rmi $docker_image_name || true
 echo "Job completed"
+
