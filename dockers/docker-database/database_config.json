@@ -4,7 +4,7 @@
             "hostname" : "127.0.0.1",
             "port" : 6379,
             "unix_socket_path" : "/var/run/redis/redis.sock",
-            "persistence" : "yes"
+            "persistence_for_warm_boot" : "yes"
         }
     },
     "DATABASES" : {
