@@ -424,7 +424,6 @@ sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_join.sh $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_reset.sh $FILESYSTEM_ROOT/usr/bin/
 ## Pod's hooks on PostStart & PreStop
 sudo cp $IMAGE_CONFIGS/kubernetes/scripts/pod_hook.sh $FILESYSTEM_ROOT_ETC_SONIC_PODS/
-sudo cp $IMAGE_CONFIGS/kubernetes/scripts/pod_readiness.sh $FILESYSTEM_ROOT_ETC_SONIC_PODS/
 {% endif %}
 
 sudo umount $FILESYSTEM_ROOT/target
