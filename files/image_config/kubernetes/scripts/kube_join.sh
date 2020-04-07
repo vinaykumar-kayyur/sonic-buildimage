@@ -31,6 +31,7 @@ sleep 2
 # if join fails, ensure the following
 # a) Ensure both master & node run same or compatible k8s versions
 # b) If node already exists, delete it
+#       run "kubectl get nodes" to list nodes.
 #       "kubectl drain <node name> --ignore-daemonsets; kubectl delete node <node name>"
 # c) If you are using calico, you *may* need to set the following in master.
 #    Ensure calico.yaml has the following and apply at master.

@@ -248,7 +248,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install watchdo
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures
 
 {% if install_kubernetes == "y" %}
-# copy kubelet service files
+# Copy kubelet service files
 sudo cp $IMAGE_CONFIGS/kubernetes/kubelet/10-kubeadm.conf $FILESYSTEM_ROOT/etc/systemd/system/kubelet.service.d/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 {% endif %}
@@ -410,15 +410,14 @@ sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS ta
 {% endif %}
 {% endfor %}
 
-            
 {% if install_kubernetes == "y" %}
 ## Pull in kubernetes docker images
 echo "pulling universal k8s images ..."
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull k8s.gcr.io/pause:3.2
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull k8s.gcr.io/kube-proxy:v1.18.0
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/node:v3.12.0
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/pod2daemon-flexvol:v3.12.0
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/cni:v3.12.0
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull k8s.gcr.io/pause:${K8s_GCR_IO_PAUSE_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull k8s.gcr.io/kube-proxy:v${KUBERNETES_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/node:v${K8s_CNI_CALICO_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/pod2daemon-flexvol:v${K8s_CNI_CALICO_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/cni:v${K8s_CNI_CALICO_VERSION}
 echo "docker images pull complete"
 ## Until we bootstrap scripts to bring up kubernetes
 sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_join.sh $FILESYSTEM_ROOT/usr/bin/
