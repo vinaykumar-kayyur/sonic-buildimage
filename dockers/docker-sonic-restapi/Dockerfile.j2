@@ -20,6 +20,7 @@ RUN apt-get update
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 
+COPY ["start.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
 ENTRYPOINT ["/usr/bin/supervisord"]
