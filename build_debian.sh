@@ -281,6 +281,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     ndisc6                  \
     makedumpfile            \
     conntrack               \
+    python-pip              \
     python3-pip
 
 
