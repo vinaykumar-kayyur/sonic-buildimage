@@ -1,0 +1,3 @@
+kdal/dal.ko /lib/modules/4.9.0-11-2-arm64/kernel/extra
+48t4x_p/modules/centec_e530_48t4x_p_platform.ko /lib/modules/4.9.0-11-2-arm64/kernel/extra
+48t4x_p/service/48t4x_p_platform.service /lib/systemd/system
