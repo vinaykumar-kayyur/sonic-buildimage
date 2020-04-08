@@ -599,7 +599,6 @@ class device_monitor(object):
             return
         systemLED_file.write(str(system_led_value))
         systemLED_file.close() 
-        pass
 
     def manage_device(self):
         thermal = QFX5210_ThermalUtil()
