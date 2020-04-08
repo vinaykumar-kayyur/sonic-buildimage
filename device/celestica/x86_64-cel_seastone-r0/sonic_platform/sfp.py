@@ -942,4 +942,4 @@ class Sfp(SfpBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        return self.get_presence() and self.get_transceiver_bulk_status()
+        return self.get_presence() and not self.get_reset_status()
