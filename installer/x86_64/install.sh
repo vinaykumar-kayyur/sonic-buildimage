@@ -494,6 +494,12 @@ else
     unzip -op $ONIE_INSTALLER_PAYLOAD "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $demo_mnt/$image_dir/$DOCKERFS_DIR
 fi
 
+if [ "$install_env" != "onie" ] && [ -d $demo_mnt/$image_dir/$INSTALLER_MIGRATION_HOOKS ]; then
+    rm -rf /var/run/config-setup/$INSTALLER_MIGRATION_HOOKS
+    mkdir -p /var/run/config-setup
+    cp -Rvf $demo_mnt/$image_dir/$INSTALLER_MIGRATION_HOOKS /var/run/config-setup
+fi
+
 if [ "$install_env" = "onie" ]; then
     # Store machine description in target file system
     if [ -f /etc/machine-build.conf ]; then
