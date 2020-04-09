@@ -89,31 +89,25 @@ class Chassis(ChassisBase):
 
 
     def initialize_fan(self):
+        from .device_data import DEVICE_DATA
         from sonic_platform.fan import Fan
-        from sonic_platform.fan import FAN_PATH
-        self.fan_module = Fan
-        self.fan_path = FAN_PATH
-        # Initialize FAN list
-        multi_rotor_in_drawer = False
-        num_of_fan, num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
-        multi_rotor_in_drawer = num_of_fan > num_of_drawer
+        from .fan_drawer import RealDrawer, VirtualDrawer
 
-        # Fan's direction isn't supported on spectrum 1 devices for now
-        mst_dev_list = glob(MST_DEVICE_NAME_PATTERN)
-        if not mst_dev_list:
-            raise RuntimeError("Can't get chip type due to {} not found".format(MST_DEVICE_NAME_PATTERN))
-        m = re.search(MST_DEVICE_RE_PATTERN, mst_dev_list[0])
-        if m.group(1) == SPECTRUM1_CHIP_ID:
-            has_fan_dir = False
-        else:
-            has_fan_dir = True
-
-        for index in range(num_of_fan):
-            if multi_rotor_in_drawer:
-                fan = Fan(has_fan_dir, index, index/2, False, self.sku_name)
-            else:
-                fan = Fan(has_fan_dir, index, index, False, self.sku_name)
-            self._fan_list.append(fan)
+        fan_data = DEVICE_DATA[self.sku_name]['fans']
+        drawer_num = fan_data['drawer_num']
+        drawer_type = fan_data['drawer_type']
+        fan_num_per_drawer = fan_data['fan_num_per_drawer']
+        support_fan_direction = fan_data['support_fan_direction']
+        drawer_ctor = RealDrawer if drawer_type == 'real' else VirtualDrawer
+        fan_index = 0
+        for drawer_index in range(drawer_num):
+            drawer = drawer_ctor(drawer_index, fan_data)
+            self._fan_drawer_list.append(drawer)
+            for index in range(fan_num_per_drawer):
+                fan = Fan(fan_index, drawer)
+                fan_index += 1
+                drawer._fan_list.append(fan)
+                self._fan_list.append(fan)
 
 
     def initialize_sfp(self):
