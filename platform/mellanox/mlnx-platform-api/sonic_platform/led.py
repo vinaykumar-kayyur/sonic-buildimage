@@ -1,8 +1,4 @@
 import os
-try:
-    from sonic_platform_base.fan_base import FanBase
-except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
 
 
 class Led(object):

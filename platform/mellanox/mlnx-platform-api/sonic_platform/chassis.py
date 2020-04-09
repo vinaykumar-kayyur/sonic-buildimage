@@ -15,7 +15,6 @@ try:
     from sonic_daemon_base.daemon_base import Logger
     from os import listdir
     from os.path import isfile, join
-    from glob import glob
     import sys
     import io
     import re
@@ -97,7 +96,6 @@ class Chassis(ChassisBase):
         drawer_num = fan_data['drawer_num']
         drawer_type = fan_data['drawer_type']
         fan_num_per_drawer = fan_data['fan_num_per_drawer']
-        support_fan_direction = fan_data['support_fan_direction']
         drawer_ctor = RealDrawer if drawer_type == 'real' else VirtualDrawer
         fan_index = 0
         for drawer_index in range(drawer_num):

@@ -12,7 +12,7 @@ import os.path
 
 try:
     from sonic_platform_base.fan_base import FanBase
-    from .led import FanLed, VirtualLed, PsuLed
+    from .led import FanLed, VirtualLed
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -27,7 +27,7 @@ class Fan(FanBase):
     """Platform-specific Fan class"""
 
     def __init__(self, fan_index, fan_drawer, psu_fan = False):
-        super(FanBase, self).__init__()
+        super(Fan, self).__init__()
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.fan_drawer = fan_drawer
@@ -252,29 +252,3 @@ class Fan(FanBase):
         """
         # The tolerance value is fixed as 20% for all the Mellanox platform
         return 20
-
-
-class PsuFan(FanBase):
-    def __init__(self):
-        super(FanBase, self).__init__()
-
-    def get_direction(self):
-        """
-        Retrieves the fan's direction
-
-        Returns:
-            A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
-            depending on fan direction
-
-        Notes:
-            What Mellanox calls forward: 
-            Air flows from fans side to QSFP side, for example: MSN2700-CS2F
-            which means intake in community
-            What Mellanox calls reverse:
-            Air flow from QSFP side to fans side, for example: MSN2700-CS2R
-            which means exhaust in community
-            According to hw-mgmt:
-                1 stands for forward, in other words intake
-                0 stands for reverse, in other words exhaust
-        """
-        return self.FAN_DIRECTION_NOT_APPLICABLE
