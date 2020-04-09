@@ -9,6 +9,7 @@
 #############################################################################
 
 import os.path
+import subprocess
 
 try:
     from sonic_platform_base.fan_base import FanBase
@@ -22,17 +23,24 @@ PWM_MAX = 255
 
 FAN_PATH = "/var/run/hw-management/thermal/"
 LED_PATH = "/var/run/hw-management/led/"
+CONFIG_PATH = "/var/run/hw-management/config"
 # fan_dir isn't supported on Spectrum 1. It is supported on Spectrum 2 and later switches
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
+COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
 
 # SKUs with unplugable FANs:
 # 1. don't have fanX_status and should be treated as always present
 hwsku_dict_with_unplugable_fan = ['ACS-MSN2010', 'ACS-MSN2100']
 
+
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
     STATUS_LED_COLOR_ORANGE = "orange"
+    min_cooling_level = 2
+    # PSU fan speed vector
+    PSU_FAN_SPEED = ['0x3c', '0x3c', '0x3c', '0x3c', '0x3c',
+                     '0x3c', '0x3c', '0x46', '0x50', '0x5a', '0x64']
 
     def __init__(self, has_fan_dir, fan_index, drawer_index = 1, psu_fan = False, sku = None):
         # API index is starting from 0, Mellanox platform index is starting from 1
@@ -54,6 +62,10 @@ class Fan(FanBase):
             self.fan_presence_path = "psu{}_fan1_speed_get".format(self.index)
             self._name = 'psu_{}_fan_{}'.format(self.index, 1)
             self.fan_max_speed_path = None
+            self.psu_i2c_bus_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_bus'.format(self.index))
+            self.psu_i2c_addr_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_addr'.format(self.index))
+            self.psu_i2c_command_path = os.path.join(CONFIG_PATH, 'fan_command')
+
         self.fan_status_path = "fan{}_fault".format(self.index)
         self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
         self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
@@ -231,13 +243,34 @@ class Fan(FanBase):
             bool: True if set success, False if fail. 
         """
         status = True
-        pwm = int(round(PWM_MAX*speed/100.0))
 
         if self.is_psu_fan:
-            #PSU fan speed is not setable.
-            return False
-        
+            from .thermal import logger
+            try:
+                with open(self.psu_i2c_bus_path, 'r') as f:
+                    bus = f.read().strip()
+                with open(self.psu_i2c_addr_path, 'r') as f:
+                    addr = f.read().strip()
+                with open(self.psu_i2c_command_path, 'r') as f:
+                    command = f.read().strip()
+                speed = Fan.PSU_FAN_SPEED[int(speed / 10)]
+                command = "i2cset -f -y {0} {1} {2} {3} wp".format(bus, addr, command, speed)
+                res = subprocess.check_call(command, shell = True)
+                return True
+            except subprocess.CalledProcessError as ce:
+                logger.log_error('Failed to call command {}, return code={}, command output={}'.format(ce.cmd, ce.returncode, ce.output))
+                return False
+            except Exception as e:
+                logger.log_error('Failed to set PSU FAN speed - {}'.format(e))
+                return False
+
         try:
+            cooling_level = int(speed / 10)
+            if cooling_level < self.min_cooling_level:
+                cooling_level = self.min_cooling_level
+                speed = self.min_cooling_level * 10
+            self.set_cooling_level(cooling_level)
+            pwm = int(round(PWM_MAX*speed/100.0))
             with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
                 fan_pwm.write(str(pwm))
         except (ValueError, IOError):
@@ -352,3 +385,36 @@ class Fan(FanBase):
         """
         # The tolerance value is fixed as 20% for all the Mellanox platform
         return 20
+
+    @classmethod
+    def set_cooling_level(cls, level):
+        """
+        Change cooling level. The input level should be an integer value [1, 10].
+        1 means 10%, 2 means 20%, 10 means 100%.
+        """
+        if not isinstance(level, int):
+            raise RuntimeError("Failed to set cooling level, input parameter must be integer")
+
+        if level < 1 or level > 10:
+            raise RuntimeError("Failed to set cooling level, level value must be in range [1, 10], got {}".format(level))
+
+        try:
+            # reset FAN driver and change cooling state
+            with open(COOLING_STATE_PATH, 'w') as cooling_state:
+                cooling_state.write(str(level + 10))
+
+            # make cooling state display correct value
+            with open(COOLING_STATE_PATH, 'w') as cooling_state:
+                cooling_state.write(str(level))
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to set cooling level - {}".format(e))
+
+    @classmethod
+    def get_cooling_level(cls):
+        try:
+            with open(COOLING_STATE_PATH, 'r') as cooling_state:
+                cooling_level = int(cooling_state.read())
+                return cooling_level
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to get cooling level - {}".format(e))
+

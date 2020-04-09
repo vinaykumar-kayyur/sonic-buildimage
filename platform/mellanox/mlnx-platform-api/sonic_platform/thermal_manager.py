@@ -1,12 +1,20 @@
 import os
 from sonic_platform_base.sonic_thermal_control.thermal_manager_base import ThermalManagerBase
+from sonic_platform_base.sonic_thermal_control.thermal_policy import ThermalPolicy
 from .thermal_actions import *
 from .thermal_conditions import *
 from .thermal_infos import *
 
 
 class ThermalManager(ThermalManagerBase):
-    THERMAL_ALGORITHM_CONTROL_PATH = '/var/run/hw-management/config/suspend'
+    @classmethod
+    def initialize(cls):
+        """
+        Initialize thermal manager, including register thermal condition types and thermal action types
+        and any other vendor specific initialization.
+        :return:
+        """
+        cls._add_private_thermal_policy()
 
     @classmethod
     def start_thermal_control_algorithm(cls):
@@ -16,7 +24,8 @@ class ThermalManager(ThermalManagerBase):
         Returns:
             bool: True if set success, False if fail. 
         """
-        cls._control_thermal_control_algorithm(False)
+        from .thermal import Thermal
+        Thermal.set_thermal_algorithm_status(True)
 
     @classmethod
     def stop_thermal_control_algorithm(cls):
@@ -26,25 +35,17 @@ class ThermalManager(ThermalManagerBase):
         Returns:
             bool: True if set success, False if fail. 
         """
-        cls._control_thermal_control_algorithm(True)
+        from .thermal import Thermal
+        Thermal.set_thermal_algorithm_status(False)
 
     @classmethod
-    def _control_thermal_control_algorithm(cls, suspend):
-        """
-        Control thermal control algorithm
+    def _add_private_thermal_policy(cls):
+        dynamic_min_speed_policy = ThermalPolicy()
+        dynamic_min_speed_policy.conditions[MinCoolingLevelChangeCondition] = MinCoolingLevelChangeCondition()
+        dynamic_min_speed_policy.actions[ChangeMinCoolingLevelAction] = ChangeMinCoolingLevelAction()
+        cls._policy_dict['DynamicMinCoolingLevelPolicy'] = dynamic_min_speed_policy
 
-        Args:
-            suspend: Bool, indicate suspend the algorithm or not
-
-        Returns:
-            bool: True if set success, False if fail. 
-        """
-        status = True
-        write_value = 1 if suspend else 0
-        try:
-            with open(cls.THERMAL_ALGORITHM_CONTROL_PATH, 'w') as control_file:
-                control_file.write(str(write_value))
-        except (ValueError, IOError):
-            status = False
-
-        return status
+        update_psu_fan_speed_policy = ThermalPolicy()
+        update_psu_fan_speed_policy.conditions[CoolingLevelChangeCondition] = CoolingLevelChangeCondition()
+        update_psu_fan_speed_policy.actions[UpdatePsuFanSpeedAction] = UpdatePsuFanSpeedAction()
+        cls._policy_dict['UpdatePsuFanSpeedPolicy'] = update_psu_fan_speed_policy
