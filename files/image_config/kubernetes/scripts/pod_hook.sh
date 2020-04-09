@@ -1,6 +1,5 @@
 #! /bin/bash
 
-
 start() {
     # create /etc/sonic/pods/<container name>.pod with container id
     cat /proc/self/cgroup   | head -n1 | rev | cut -f1 -d'/' | rev > /etc/sonic/pods/$1.pod
