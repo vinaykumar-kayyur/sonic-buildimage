@@ -262,10 +262,7 @@ class sfp_event:
                     port_change[port] = sfp_state
                     found += 1
 
-        if found == 0:
-            return False
-        else:
-            return True
+        return found != 0
 
     def on_pmpe(self, fd_p):
         ''' on port module plug event handler '''
