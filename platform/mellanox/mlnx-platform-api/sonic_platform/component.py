@@ -14,7 +14,6 @@ try:
     import io
     import os
     import re
-    import sys
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
