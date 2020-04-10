@@ -419,11 +419,6 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/pod2daemon-flexvol:v${K8s_CNI_CALICO_VERSION}
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/cni:v${K8s_CNI_CALICO_VERSION}
 echo "docker images pull complete"
-## Until we bootstrap scripts to bring up kubernetes
-sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_join.sh $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_reset.sh $FILESYSTEM_ROOT/usr/bin/
-## Pod's hooks on PostStart & PreStop
-sudo cp $IMAGE_CONFIGS/kubernetes/scripts/pod_hook.sh $FILESYSTEM_ROOT_ETC_SONIC_PODS/
 {% endif %}
 
 sudo umount $FILESYSTEM_ROOT/target
