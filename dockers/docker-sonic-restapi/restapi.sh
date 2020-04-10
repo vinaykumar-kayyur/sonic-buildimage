@@ -6,13 +6,19 @@ do
     client_auth=`sonic-cfggen -d -v "RESTAPI['config']['client_auth']"`
     if [[ $client_auth == 'true' ]]; then
         certs=`sonic-cfggen -d -v "RESTAPI['certs']"`
+        allow_insecure=`sonic-cfggen -d -v "RESTAPI['config']['allow_insecure']"`
+        if [[ $allow_insecure == 'true' ]]; then
+            RESTAPI_ARGS=" -enablehttp=true"
+        else
+            RESTAPI_ARGS=" -enablehttp=false"
+        fi
         if [[ -n "$certs" ]]; then
                 SERVER_CRT=`sonic-cfggen -d -v "RESTAPI['certs']['server_crt']"`
                 SERVER_KEY=`sonic-cfggen -d -v "RESTAPI['certs']['server_key']"`
                 CLIENT_CA_CRT=`sonic-cfggen -d -v "RESTAPI['certs']['client_ca_crt']"`
                 CLIENT_CRT_CNAME=`sonic-cfggen -d -v "RESTAPI['certs']['client_crt_cname']"`
                 if [[ -f $SERVER_CRT && -f $SERVER_KEY && -f $CLIENT_CA_CRT ]]; then
-                    RESTAPI_ARGS+=" -enablehttps=true -enablehttp=false -servercert=$SERVER_CRT -serverkey=$SERVER_KEY -clientcert=$CLIENT_CA_CRT -clientcertcommonname=$CLIENT_CRT_CNAME"
+                    RESTAPI_ARGS+=" -enablehttps=true -servercert=$SERVER_CRT -serverkey=$SERVER_KEY -clientcert=$CLIENT_CA_CRT -clientcertcommonname=$CLIENT_CRT_CNAME"
                     break
                 fi
         fi
