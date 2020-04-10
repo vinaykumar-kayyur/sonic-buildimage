@@ -33,43 +33,6 @@ PSU_POWER = "power"
 
 platform_dict_psu = {'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4700-r0': 1}
 
-psu_profile_list = [
-    # default filename convention
-    {
-        PSU_CURRENT : "power/psu{}_curr",
-        PSU_VOLTAGE : "power/psu{}_volt",
-        PSU_POWER : "power/psu{}_power"
-    },
-    # for 3420, 3700, 3700c, 3800, 4700
-    {
-        PSU_CURRENT : "power/psu{}_curr",
-        PSU_VOLTAGE : "power/psu{}_volt_out2",
-        PSU_POWER : "power/psu{}_power"
-    }
-]
-
-class Psu(PsuBase):
-    """Platform-specific Psu class"""
-
-    shared_led = None
-
-    def __init__(self, psu_index, platform):
-        global psu_list
-        PsuBase.__init__(self)
-        # PSU is 1-based on Mellanox platform
-        self.index = psu_index + 1
-        psu_list.append(self.index)
-        self.psu_path = "/var/run/hw-management/"
-        psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
-        #psu_oper_status should always be present for all platforms
-        self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
-        self._name = "PSU{}".format(psu_index + 1)
-
-        if platform in platform_dict_psu:
-            filemap = psu_profile_list[platform_dict_psu[platform]]
-        else:
-            filemap = psu_profile_list[0]
-
         self.psu_data = DEVICE_DATA[platform]['psus']
 
         if not self.psu_data['hot_swappable']:
