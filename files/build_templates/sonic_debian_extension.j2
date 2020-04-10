@@ -247,7 +247,8 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures
 
 {% if install_kubernetes == "y" %}
 # Copy kubelet service files
-sudo cp $IMAGE_CONFIGS/kubernetes/kubelet/10-kubeadm.conf $FILESYSTEM_ROOT/etc/systemd/system/kubelet.service.d/
+# Keep it disabled until join, else it continuously restart and as well spew too many
+# non-required log lines wasting syslog resources.
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 {% endif %}
 
