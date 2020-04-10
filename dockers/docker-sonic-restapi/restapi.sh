@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 RESTAPI_ARGS=""
-while [ : ]
+while true
 do
     client_auth=`sonic-cfggen -d -v "RESTAPI['config']['client_auth']"`
     if [[ $client_auth == 'true' ]]; then
@@ -12,7 +12,6 @@ do
                 CLIENT_CA_CRT=`sonic-cfggen -d -v "RESTAPI['certs']['client_ca_crt']"`
                 CLIENT_CRT_CNAME=`sonic-cfggen -d -v "RESTAPI['certs']['client_crt_cname']"`
                 if [[ -f $SERVER_CRT && -f $SERVER_KEY && -f $CLIENT_CA_CRT ]]; then
-                    logger files found
                     RESTAPI_ARGS+=" -enablehttps=true -enablehttp=false -servercert=$SERVER_CRT -serverkey=$SERVER_KEY -clientcert=$CLIENT_CA_CRT -clientcertcommonname=$CLIENT_CRT_CNAME"
                     break
                 fi
