@@ -15,7 +15,7 @@ from sonic_daemon_base.daemon_base import Logger
 # 0x1 plug in
 # 0x2 plug out
 # 0x3 plug in with error
-# 0x4 disabled, at this status SFP eeprom is not accessable, 
+# 0x4 disabled, at this status SFP eeprom is not accessible, 
 #     and presence status also will be not present, 
 #     so treate it as plug out.
 SDK_SFP_STATE_IN  = 0x1
@@ -70,10 +70,10 @@ sdk_sfp_err_type_dict = {
 }
 
 sfp_value_status_dict = {
-        SDK_SFP_STATE_IN:  STATUS_PLUGIN,
-        SDK_SFP_STATE_OUT: STATUS_PLUGOUT,
-        SDK_SFP_STATE_ERR: STATUS_ERROR,
-        SDK_SFP_STATE_DIS: STATUS_PLUGOUT,
+    SDK_SFP_STATE_IN:  STATUS_PLUGIN,
+    SDK_SFP_STATE_OUT: STATUS_PLUGOUT,
+    SDK_SFP_STATE_ERR: STATUS_ERROR,
+    SDK_SFP_STATE_DIS: STATUS_PLUGOUT,
 }
 
 # system level event/error
@@ -234,7 +234,6 @@ class sfp_event:
                     break
 
                 sfp_state = sfp_value_status_dict.get(module_state, STATUS_UNKNOWN)
-                sfp_event = sfp_state
                 if sfp_state == STATUS_UNKNOWN:
                     # in the following sequence, STATUS_UNKNOWN can be returned.
                     # so we shouldn't raise exception here.
@@ -250,7 +249,8 @@ class sfp_event:
                 # If get SFP status error(0x3) from SDK, then need to read the error_type to get the detailed error
                 if sfp_state == STATUS_ERROR:
                     if error_type in sdk_sfp_err_type_dict.keys():
-                        sfp_event = sdk_sfp_err_type_dict[error_type]
+                        # In SFP at error status case, need to overwrite the sfp_state with the exact error code
+                        sfp_state = sdk_sfp_err_type_dict[error_type]
                     else:
                         # For errors don't block the eeprom accessing, we don't report it to XCVRD
                         logger.log_info("SFP error on port but not blocking eeprom read, error_type {}".format(error_type))
@@ -258,8 +258,8 @@ class sfp_event:
                         continue
 
                 for port in port_list:
-                    logger.log_info("SFP on port {} state {}".format(port, sfp_event))
-                    port_change[port] = sfp_event
+                    logger.log_info("SFP on port {} state {}".format(port, sfp_state))
+                    port_change[port] = sfp_state
                     found += 1
 
         if found == 0:
@@ -297,13 +297,13 @@ class sfp_event:
             module_id = pmpe_t.module_id
 
             if module_state == SDK_SFP_STATE_ERR:
-                logger.log_error("Receive PMPE error event on module {}: status {} error type {} ".format(module_id, module_state, error_type))
+                logger.log_error("Receive PMPE error event on module {}: status {} error type {}".format(module_id, module_state, error_type))
             elif module_state == SDK_SFP_STATE_DIS:
-                logger.log_info("Receive PMPE disable event on module {}: status {} ".format(module_id, module_state))
+                logger.log_info("Receive PMPE disable event on module {}: status {}".format(module_id, module_state))
             elif module_state == SDK_SFP_STATE_IN or module_state == SDK_SFP_STATE_OUT:
-                logger.log_info("Receive PMPE plug in/out event on module {}: status {} ".format(module_id, module_state))
+                logger.log_info("Receive PMPE plug in/out event on module {}: status {}".format(module_id, module_state))
             else:
-                logger.log_error("Receive PMPE unknown event on module {}: status {} ".format(module_id, module_state))
+                logger.log_error("Receive PMPE unknown event on module {}: status {}".format(module_id, module_state))
             for i in xrange(port_list_size):
                 logical_port = sx_port_log_id_t_arr_getitem(logical_port_list, i)
                 rc = sx_api_port_device_get(self.handle, 1 , 0, port_attributes_list,  port_cnt_p)
