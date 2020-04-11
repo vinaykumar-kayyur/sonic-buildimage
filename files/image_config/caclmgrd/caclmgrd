@@ -11,7 +11,7 @@
 #
 
 try:
-    import ipaddr as ipaddress
+    import ipaddress
     import os
     import subprocess
     import sys
@@ -61,12 +61,21 @@ class ControlPlaneAclManager(object):
 
     ACL_TABLE_TYPE_CTRLPLANE = "CTRLPLANE"
 
-    # To specify a port range, use iptables format: separate start and end
-    # ports with a colon, e.g., "1000:2000"
+    # To specify a port range instead of a single port, use iptables format:
+    # separate start and end ports with a colon, e.g., "1000:2000"
     ACL_SERVICES = {
-        "NTP": {"ip_protocols": ["udp"], "dst_ports": ["123"]},
-        "SNMP": {"ip_protocols": ["tcp", "udp"], "dst_ports": ["161"]},
-        "SSH": {"ip_protocols": ["tcp"], "dst_ports": ["22"]}
+        "NTP": {
+            "ip_protocols": ["udp"],
+            "dst_ports": ["123"]
+        },
+        "SNMP": {
+            "ip_protocols": ["tcp", "udp"],
+            "dst_ports": ["161"]
+        },
+        "SSH": {
+            "ip_protocols": ["tcp"],
+            "dst_ports": ["22"]
+        }
     }
 
     def __init__(self):
@@ -125,6 +134,10 @@ class ControlPlaneAclManager(object):
             A list of strings, each string is an iptables shell command
 
         """
+        LOOPBACK_INTERFACE_TABLE = "LOOPBACK_INTERFACE"
+        MGMT_INTERFACE_TABLE = "MGMT_INTERFACE"
+        VLAN_INTERFACE_TABLE = "VLAN_INTERFACE"
+
         iptables_cmds = []
 
         # First, add iptables commands to set default policies to accept all
@@ -147,13 +160,53 @@ class ControlPlaneAclManager(object):
         iptables_cmds.append("ip6tables -F")
         iptables_cmds.append("ip6tables -X")
 
-        # Add iptables commands to allow all IPv4 and IPv6 traffic from localhost
+        # Add iptables/ip6tables commands to allow all traffic from localhost
         iptables_cmds.append("iptables -A INPUT -s 127.0.0.1 -i lo -j ACCEPT")
         iptables_cmds.append("ip6tables -A INPUT -s ::1 -i lo -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow all incoming packets from established
+        # TCP sessions or new TCP sessions which are related to established TCP sessions
+        iptables_cmds.append("iptables -A INPUT -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow bidirectional ICMPv4 ping and traceroute
+        # TODO: Support processing ICMPv4 service ACL rules, and remove this blanket acceptance
+        iptables_cmds.append("iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT")
+        iptables_cmds.append("iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow bidirectional ICMPv6 ping and traceroute
+        # TODO: Support processing ICMPv6 service ACL rules, and remove this blanket acceptance
+        iptables_cmds.append("ip6tables -A INPUT -p icmpv6 --icmpv6-type echo-request -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p icmpv6 --icmpv6-type echo-reply -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow all incoming Neighbor Discovery Protocol (NDP) NS/NA/RS/RA messages
+        # TODO: Support processing NDP service ACL rules, and remove this blanket acceptance
+        iptables_cmds.append("ip6tables -A INPUT -p icmpv6 --icmpv6-type neighbor-solicitation -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p icmpv6 --icmpv6-type neighbor-advertisement -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p icmpv6 --icmpv6-type router-solicitation -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow all incoming IPv4 DHCP packets
+        iptables_cmds.append("iptables -A INPUT -p udp --dport 67:68 --sport 67:68 -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p udp --dport 67:68 --sport 67:68 -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow all incoming IPv6 DHCP packets
+        iptables_cmds.append("iptables -A INPUT -p udp --dport 546:547 --sport 546:547 -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p udp --dport 546:547 --sport 546:547 -j ACCEPT")
+
+        # Add iptables/ip6tables commands to allow all incoming BGP traffic
+        # TODO: Determine BGP ACLs based on configured device sessions, and remove this blanket acceptance
+        iptables_cmds.append("iptables -A INPUT -p tcp --dport 179 -j ACCEPT")
+        iptables_cmds.append("iptables -A INPUT -p tcp --sport 179 -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p tcp --dport 179 -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p tcp --sport 179 -j ACCEPT")
+
 
         # Get current ACL tables and rules from Config DB
         self._tables_db_info = self.config_db.get_table(self.ACL_TABLE)
         self._rules_db_info = self.config_db.get_table(self.ACL_RULE)
+
+        unconfigured_services = self.ACL_SERVICES.keys()
 
         # Walk the ACL tables
         for (table_name, table_data) in self._tables_db_info.iteritems():
@@ -211,6 +264,10 @@ class ControlPlaneAclManager(object):
                             .format(table_name))
                     continue
 
+                # We found ACL rules that we can apply for this service. Remove this service from our list of unconfigured services.
+                if acl_service in unconfigured_services:
+                    unconfigured_services.remove(acl_service)
+
                 # For each ACL rule in this table (in descending order of priority)
                 for priority in sorted(acl_rules.iterkeys(), reverse=True):
                     rule_props = acl_rules[priority]
@@ -246,6 +303,63 @@ class ControlPlaneAclManager(object):
                             rule_cmd += " -j {}".format(rule_props["PACKET_ACTION"])
 
                             iptables_cmds.append(rule_cmd)
+
+        # For any services which we did not find ACL configuration for, we add an
+        # iptables rule to allow all incoming packets. This way we don't block
+        # services like SSH on an unconfigured device
+        for acl_service in unconfigured_services:
+            log_info("Did not find or could not apply ACL configuration for {0}. Allowing all incoming traffic for this service...".format(acl_service))
+            ip_protocols = self.ACL_SERVICES[acl_service]["ip_protocols"]
+            dst_ports = self.ACL_SERVICES[acl_service]["dst_ports"]
+            for ip_protocol in ip_protocols:
+                for dst_port in dst_ports:
+                    iptables_cmds.append("iptables -A INPUT -p {0} --dport {1} -j ACCEPT".format(ip_protocol, dst_port))
+                    iptables_cmds.append("ip6tables -A INPUT -p {0} --dport {1} -j ACCEPT".format(ip_protocol, dst_port))
+
+        # Add iptables rules to drop all packets destined for loopback interface IP addresses
+        # (and in the case of V6, all point-to-point addresses in the /64 subnet)
+        loopback_iface_table = self.config_db.get_table(LOOPBACK_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in loopback_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                iptables_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                iptables_cmds.append("ip6tables -A INPUT -d {}/64 -j DROP".format(ip_ntwrk.network_address))
+            else:
+                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+
+        # Add iptables rules to drop all packets destined for management interface IP addresses
+        mgmt_iface_table = self.config_db.get_table(MGMT_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in mgmt_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                iptables_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                iptables_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(ip_ntwrk.network_address))
+            else:
+                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+
+        # Add iptables rules to drop all packets destined for our VLAN interface gateway IP addresses
+        vlan_iface_table = self.config_db.get_table(VLAN_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in vlan_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                iptables_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(list(ip_ntwrk.hosts())[0]))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                iptables_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(list(ip_ntwrk.hosts())[0]))
+            else:
+                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+
+        # Add iptables/ip6tables commands to allow all incoming packets with TTL of 0 or 1
+        # This allows the device to respond to tools like tcptraceroute
+        iptables_cmds.append("iptables -A INPUT -m ttl --ttl-lt 2 -j ACCEPT")
+        iptables_cmds.append("ip6tables -A INPUT -p tcp -m hl --hl-lt 2 -j ACCEPT")
+
+        # Finally, add iptables/ip6tables commands to drop all other incoming packets
+        iptables_cmds.append("iptables -A INPUT -j DROP")
+        iptables_cmds.append("iptables -A FORWARD -j DROP")
+        iptables_cmds.append("ip6tables -A INPUT -j DROP")
+        iptables_cmds.append("ip6tables -A FORWARD -j DROP")
 
         return iptables_cmds
 
