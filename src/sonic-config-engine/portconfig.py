@@ -20,9 +20,9 @@ def get_port_config_file_name(hwsku=None, platform=None, asic=None):
     
 
 
-def get_port_config(hwsku=None, platform=None, port_config_file=None,asic=None):
+def get_port_config(hwsku=None, platform=None, port_config_file=None, asic=None):
     if not port_config_file:
-        port_config_file = get_port_config_file_name(hwsku, platform)
+        port_config_file = get_port_config_file_name(hwsku, platform, asic)
         if not port_config_file:
             return ({}, {}, {})
     return parse_port_config_file(port_config_file)

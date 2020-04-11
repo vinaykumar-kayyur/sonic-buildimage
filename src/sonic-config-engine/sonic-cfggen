@@ -196,7 +196,7 @@ def main():
     group.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
     group.add_argument("-M", "--device-description", help="device description xml file")
     group.add_argument("-k", "--hwsku", help="HwSKU")
-    parser.add_argument("-ns", "--namespace", help="namespace name, used with -m or -k", nargs='?', const=None)
+    parser.add_argument("-n", "--namespace", help="namespace name, used with -m or -k", nargs='?', const=None)
     parser.add_argument("-p", "--port-config", help="port config file, used with -m or -k", nargs='?', const=None)
     parser.add_argument("-y", "--yaml", help="yaml file that contains additional variables", action='append', default=[])
     parser.add_argument("-j", "--json", help="json file that contains additional variables", action='append', default=[])
@@ -234,7 +234,7 @@ def main():
             'hwsku': hwsku
             }}}
         deep_update(data, hardware_data)
-        (ports, _) = get_port_config(hwsku, platform, args.port_config,asic_id)
+        (ports, _, _) = get_port_config(hwsku, platform, args.port_config, asic_id)
         if not ports:
             print('Failed to get port config', file=sys.stderr)
             sys.exit(1)

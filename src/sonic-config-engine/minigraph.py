@@ -131,7 +131,7 @@ def parse_png(png, hname, device_hostname):
                 if chassis_internal == "false" and hname.lower() != device_hostname.lower():
                     if (enddevice.lower() == device_hostname.lower()):
                         if ((port_alias_asic_map.has_key(endport)) and
-                                (hname in port_alias_asic_map[endport])):
+                                (hname.lower() in port_alias_asic_map[endport].lower())):
                             endport = port_alias_asic_map[endport]
                             neighbors[port_alias_map[endport]] = {'name': startdevice, 'port': startport}
                             device_neighbors.append(startdevice)
@@ -140,7 +140,7 @@ def parse_png(png, hname, device_hostname):
 
                     if (startdevice.lower() == device_hostname.lower()):
                         if ((port_alias_asic_map.has_key(startport)) and
-                               (hname in port_alias_asic_map[startport])):
+                               (hname.lower() in port_alias_asic_map[startport].lower())):
                             startport = port_alias_asic_map[startport]
                             neighbors[port_alias_map[startport]] = {'name': enddevice, 'port': endport}
                             device_neighbors.append(enddevice)
@@ -151,19 +151,19 @@ def parse_png(png, hname, device_hostname):
                         (startdevice.lower() != device_hostname.lower())):
                         if port_alias_map.has_key(endport):
                             endport = port_alias_map[endport]
-                            neighbors[endport] = {'name': startdevice, 'port': startport}
-                            device_neighbors.append(startdevice)
-                            if bandwidth:
-                                port_speeds[endport] = bandwidth
+                        neighbors[endport] = {'name': startdevice, 'port': startport}
+                        device_neighbors.append(startdevice)
+                        if bandwidth:
+                            port_speeds[endport] = bandwidth
 
                     if ((startdevice.lower() == hname.lower()) and
                         (enddevice.lower() != device_hostname.lower())):
                         if port_alias_map.has_key(startport):
                             startport = port_alias_map[startport]
-                            neighbors[startport] = {'name': enddevice, 'port': endport}
-                            device_neighbors.append(enddevice)
-                            if bandwidth:
-                                port_speeds[startport] = bandwidth
+                        neighbors[startport] = {'name': enddevice, 'port': endport}
+                        device_neighbors.append(enddevice)
+                        if bandwidth:
+                            port_speeds[startport] = bandwidth
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
@@ -193,7 +193,16 @@ def parse_png(png, hname, device_hostname):
     return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, device_neighbors)
 
 
-def parse_dpg(dpg, hname):
+def parse_dpg(dpg, hname, device_hostname):
+
+    #In Multi-NPU platforms the acl intfs are defined for only for the host.
+    # to get the aclintfs node first.
+    for child in dpg:
+
+        aclintfs = child.find(str(QName(ns, "AclInterfaces")))
+        if aclintfs is not None:
+            break 
+    
     for child in dpg:
         hostname = child.find(str(QName(ns, "Hostname")))
         if hostname.text.lower() != hname.lower():
@@ -287,9 +296,9 @@ def parse_dpg(dpg, hname):
                 vlan_attributes['alias'] = vintfname
             vlans[sonic_vlan_name] = vlan_attributes
 
-        aclintfs = child.find(str(QName(ns, "AclInterfaces")))
+                 
         acls = {}
-        for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
+        for aclintf in  aclintfs.findall(str(QName(ns, "AclInterface"))) :
             aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
@@ -330,7 +339,7 @@ def parse_dpg(dpg, hname):
                     break
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
-                                 'ports': acl_intfs}
+                                'ports': acl_intfs}
                 if is_mirror:
                     acls[aclname]['type'] = 'MIRROR'
                 elif is_mirror_v6:
@@ -353,8 +362,8 @@ def parse_dpg(dpg, hname):
                             acls[aclname]['services'].append(aclservice)
                     else:
                         acls[aclname] = {'policy_desc': aclname,
-                                         'type': 'CTRLPLANE',
-                                         'services': [aclservice]}
+                                        'type': 'CTRLPLANE',
+                                        'services': [aclservice]}
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
 
@@ -545,7 +554,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
             if pc_member[0] == pc_intf:
                 intf_name = pc_member[1]
                 break 
-
+        
         if intf_name == None:
             print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf)
             continue
@@ -615,6 +624,7 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     lo_intfs = None
     neighbors = None
     devices = None
+    sub_role=None
     docker_routing_config_mode = "separated"
     port_speeds_default = {}
     port_speed_png = {}
@@ -650,13 +660,13 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     if hostname is None:
         hostname = device_hostname
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file,asic=asic_id)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
+            (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname, device_hostname)
         elif child.tag == str(QName(ns, "CpgDec")):
             (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
         elif child.tag == str(QName(ns, "PngDec")):
@@ -750,9 +760,11 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
 
     for port_name in port_speed_png:
         # not consider port not in port_config.ini
-        if port_name not in ports:
-            print >> sys.stderr, "Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name
-            continue
+        #If no port_config_file is found ports is empty so ignore this error
+        if port_config_file is not None:
+            if port_name not in ports:
+                print >> sys.stderr, "Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name
+                continue
 
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
@@ -856,7 +868,8 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     for nghbr in neighbors.keys():
         # remove port not in port_config.ini
         if nghbr not in ports:
-            print >> sys.stderr, "Warning: ignore interface '%s' in DEVICE_NEIGHBOR as it is not in the port_config.ini" % nghbr
+            if port_config_file is not None:
+                print >> sys.stderr, "Warning: ignore interface '%s' in DEVICE_NEIGHBOR as it is not in the port_config.ini" % nghbr
             del neighbors[nghbr]
 
     results['DEVICE_NEIGHBOR'] = neighbors
@@ -921,8 +934,9 @@ def parse_device_desc_xml(filename):
     return results
 
 def parse_asic_sub_role(filename, asic_name):
+    if not os.path.isfile(filename):
+        return None
     root = ET.parse(filename).getroot()
-    mini_graph_path = filename
     for child in root:
         if child.tag == str(QName(ns, "MetadataDeclaration")):
              _, _, _, _, _, _, _, sub_role = parse_meta(child, asic_name)
