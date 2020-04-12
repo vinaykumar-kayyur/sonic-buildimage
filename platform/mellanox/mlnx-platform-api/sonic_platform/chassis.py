@@ -448,7 +448,7 @@ class Chassis(ChassisBase):
             timeout = MAX_SELECT_DELAY
             while True:
                 status = self.sfp_event.check_sfp_status(port_dict, timeout)
-                if not bool(port_dict):
+                if bool(port_dict):
                     break
         else:
             status = self.sfp_event.check_sfp_status(port_dict, timeout)
