@@ -29,7 +29,7 @@ then
         ip_version=V6
       ;;
     esac
-    sonic-cfggen -d -a "{\"route_map_name\":\"$route_map_name\", \"ip_version\": \"$ip_version\"}" -y /etc/sonic/constants.yml -t /usr/share/sonic/templates/frr/bgpd/tsa/bgpd.tsa.isolate.conf.j2 > "$TSA_FILE"
+    sonic-cfggen -d -a "{\"route_map_name\":\"$route_map_name\", \"ip_version\": \"$ip_version\"}" -y /etc/sonic/constants.yml -t /usr/share/sonic/templates/bgpd/tsa/bgpd.tsa.isolate.conf.j2 > "$TSA_FILE"
     vtysh -f "$TSA_FILE"
     rm -f "$TSA_FILE"
   done
