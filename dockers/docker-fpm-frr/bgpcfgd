@@ -481,7 +481,8 @@ class BGPPeerMgrBase(Manager):
                 return False
             kwargs['CONFIG_DB__DEVICE_NEIGHBOR_METADATA'] = neigmeta
 
-        self.peer_group_mgr.update(data['name'], **kwargs)  # FIXME: data['name']
+        tag = data['name'] if 'name' in data else nbr
+        self.peer_group_mgr.update(tag, **kwargs)
 
         try:
             cmd = self.templates["add"].render(**kwargs)
