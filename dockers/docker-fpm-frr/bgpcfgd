@@ -134,7 +134,7 @@ class TemplateFabric(object):
         else:
             try:
                 addr = netaddr.IPNetwork(str(value))
-            except:
+            except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
                 return False
         return addr.version == 4
 
@@ -147,7 +147,7 @@ class TemplateFabric(object):
         else:
             try:
                 addr = netaddr.IPNetwork(str(value))
-            except:
+            except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
                 return False
         return addr.version == 6
 
@@ -158,7 +158,7 @@ class TemplateFabric(object):
         else:
             try:
                 prefix = netaddr.IPNetwork(str(value))
-            except:
+            except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
                 return None
         return str(getattr(prefix, attr))
 
@@ -376,8 +376,8 @@ class BGPPeerGroupMgr(object):
     def update_policy(self, name, **kwargs):
         try:
             policy = self.policy_template.render(**kwargs)
-        except:
-            syslog.syslog(syslog.LOG_ERR, "Can't render policy template name: '%s'" % name)
+        except jinja2.TemplateError as e:
+            syslog.syslog(syslog.LOG_ERR, "Can't render policy template name: '%s': %s" % (name, str(e)))
             return False
 
         return self.update_entity(policy, "Routing policy for peer '%s'" % name)
@@ -385,8 +385,8 @@ class BGPPeerGroupMgr(object):
     def update_pg(self, name, **kwargs):
         try:
             pg = self.peergroup_template.render(**kwargs)
-        except:
-            syslog.syslog(syslog.LOG_ERR, "Can't render peer-group template: '%s'" % name)
+        except jinja2.TemplateError as e:
+            syslog.syslog(syslog.LOG_ERR, "Can't render peer-group template: '%s': %s" % (name, str(e)))
             return False
 
         if kwargs['vrf'] == 'default':
@@ -486,8 +486,9 @@ class BGPPeerMgrBase(Manager):
 
         try:
             cmd = self.templates["add"].render(**kwargs)
-        except:
-            syslog.syslog(syslog.LOG_ERR, 'Peer "(%s|%s)". Error in rendering the template for "SET" command "%s"' % print_data)
+        except jinja2.TemplateError as e:
+            msg = 'Peer "(%s|%s)". Error in rendering the template for "SET" command "%s"' % print_data
+            syslog.syslog(syslog.LOG_ERR, "%s: %s" % (msg, str(e)))
             return True
         if cmd is not None:
             ret_code = self.apply_op(cmd, vrf)
