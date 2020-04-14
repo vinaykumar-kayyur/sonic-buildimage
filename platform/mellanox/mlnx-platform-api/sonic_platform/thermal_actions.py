@@ -129,24 +129,14 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
         """
         from .thermal_infos import FanInfo
         from .thermal import Thermal
+        from .thermal_conditions import UpdateCoolingLevelToMinCondition
         from .fan import Fan
         Thermal.set_thermal_algorithm_status(self.status, False)
         if self.status:
             # Check thermal zone temperature, if all thermal zone temperature
-            # back to normal and FAN speed is still 100%, set it to minimum allowed speed to
+            # back to normal, set it to minimum allowed speed to
             # save power
-            if Thermal.check_thermal_zone_temperature():
-                fan_info_obj = thermal_info_dict[FanInfo.INFO_NAME]
-                update_psu_fan_speed = False
-                speed = Fan.min_cooling_level * 10
-                for fan in fan_info_obj.get_presence_fans():
-                    if fan.get_target_speed() != 100:
-                        break
-                    update_psu_fan_speed = True
-                    fan.set_speed(speed)
-
-                if update_psu_fan_speed:
-                    SetAllFanSpeedAction.set_psu_fan_speed(thermal_info_dict, speed)
+            UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
 
         logger.log_info('Changed thermal algorithm status to {}'.format(self.status))
 
@@ -158,15 +148,16 @@ class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
         from .fan import Fan
         from .thermal_infos import ChassisInfo
         from .thermal_conditions import MinCoolingLevelChangeCondition
+        from .thermal_conditions import UpdateCoolingLevelToMinCondition
 
         chassis = thermal_info_dict[ChassisInfo.INFO_NAME].get_chassis()
-        if chassis.sku_name not in DEVICE_DATA or 'thermal' not in DEVICE_DATA[chassis.sku_name] or 'minimum_table' not in DEVICE_DATA[chassis.sku_name]['thermal']:
+        if chassis.platform_name not in DEVICE_DATA or 'thermal' not in DEVICE_DATA[chassis.platform_name] or 'minimum_table' not in DEVICE_DATA[chassis.platform_name]['thermal']:
             Fan.min_cooling_level = ChangeMinCoolingLevelAction.UNKNOWN_SKU_COOLING_LEVEL
         else:
             air_flow_dir = MinCoolingLevelChangeCondition.air_flow_dir
             trust_state = MinCoolingLevelChangeCondition.trust_state
             temperature = MinCoolingLevelChangeCondition.temperature
-            minimum_table = DEVICE_DATA[chassis.sku_name]['thermal']['minimum_table']['{}_{}'.format(air_flow_dir, trust_state)]
+            minimum_table = DEVICE_DATA[chassis.platform_name]['thermal']['minimum_table']['{}_{}'.format(air_flow_dir, trust_state)]
 
             for key, cooling_level in minimum_table.items():
                 temp_range = key.split(':')
@@ -178,8 +169,11 @@ class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
         
         current_cooling_level = Fan.get_cooling_level()
         if current_cooling_level < Fan.min_cooling_level:
-            Fan.set_cooling_level(Fan.min_cooling_level)
+            Fan.set_cooling_level(Fan.min_cooling_level, Fan.min_cooling_level)
             SetAllFanSpeedAction.set_psu_fan_speed(thermal_info_dict, Fan.min_cooling_level * 10)
+        else:
+            Fan.set_cooling_level(Fan.min_cooling_level, current_cooling_level)
+            UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
 
         logger.log_info('Changed minimum cooling level to {}'.format(Fan.min_cooling_level))
 
@@ -188,3 +182,24 @@ class UpdatePsuFanSpeedAction(ThermalPolicyActionBase):
     def execute(self, thermal_info_dict):
         from .thermal_conditions import CoolingLevelChangeCondition
         SetAllFanSpeedAction.set_psu_fan_speed(thermal_info_dict, CoolingLevelChangeCondition.cooling_level * 10)
+
+
+class UpdateCoolingLevelToMinAction(ThermalPolicyActionBase):
+    def execute(self, thermal_info_dict):
+        self.update_cooling_level_to_minimum(thermal_info_dict)
+
+    @classmethod
+    def update_cooling_level_to_minimum(cls, thermal_info_dict):
+        from .fan import Fan
+        from .thermal import Thermal
+        from .thermal_conditions import UpdateCoolingLevelToMinCondition
+        if Thermal.check_thermal_zone_temperature():
+            fan_info_obj = thermal_info_dict[FanInfo.INFO_NAME]
+            speed = Fan.min_cooling_level * 10
+            for fan in fan_info_obj.get_presence_fans():
+                fan.set_speed(speed)
+            SetAllFanSpeedAction.set_psu_fan_speed(thermal_info_dict, speed)
+            UpdateCoolingLevelToMinCondition.enable = False
+        else:
+            UpdateCoolingLevelToMinCondition.enable = True
+

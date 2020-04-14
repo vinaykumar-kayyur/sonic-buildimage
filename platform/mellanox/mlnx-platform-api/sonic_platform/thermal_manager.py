@@ -58,3 +58,8 @@ class ThermalManager(ThermalManagerBase):
         update_psu_fan_speed_policy.conditions[CoolingLevelChangeCondition] = CoolingLevelChangeCondition()
         update_psu_fan_speed_policy.actions[UpdatePsuFanSpeedAction] = UpdatePsuFanSpeedAction()
         cls._policy_dict['UpdatePsuFanSpeedPolicy'] = update_psu_fan_speed_policy
+
+        update_cooling_level_policy = ThermalPolicy()
+        update_cooling_level_policy.conditions[UpdateCoolingLevelToMinCondition] = UpdateCoolingLevelToMinCondition()
+        update_cooling_level_policy.actions[UpdateCoolingLevelToMinAction] = UpdateCoolingLevelToMinAction()
+        cls._policy_dict['UpdateCoolingLevelPolicy'] = update_cooling_level_policy

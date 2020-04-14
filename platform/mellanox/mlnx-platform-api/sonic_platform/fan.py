@@ -28,9 +28,9 @@ CONFIG_PATH = "/var/run/hw-management/config"
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
 COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
 
-# SKUs with unplugable FANs:
+# Platforms with unplugable FANs:
 # 1. don't have fanX_status and should be treated as always present
-hwsku_dict_with_unplugable_fan = ['ACS-MSN2010', 'ACS-MSN2100']
+platform_with_unplugable_fan = ['x86_64-mlnx_msn2010-r0', 'x86_64-mlnx_msn2100-r0']
 
 
 class Fan(FanBase):
@@ -38,17 +38,19 @@ class Fan(FanBase):
 
     STATUS_LED_COLOR_ORANGE = "orange"
     min_cooling_level = 2
+    MIN_VALID_COOLING_LEVEL = 1
+    MAX_VALID_COOLING_LEVEL = 10
     # PSU fan speed vector
     PSU_FAN_SPEED = ['0x3c', '0x3c', '0x3c', '0x3c', '0x3c',
                      '0x3c', '0x3c', '0x46', '0x50', '0x5a', '0x64']
 
-    def __init__(self, has_fan_dir, fan_index, drawer_index = 1, psu_fan = False, sku = None):
+    def __init__(self, has_fan_dir, fan_index, drawer_index = 1, psu_fan = False, platform = None):
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.drawer_index = drawer_index + 1
 
         self.is_psu_fan = psu_fan
-        self.always_presence = False if sku not in hwsku_dict_with_unplugable_fan else True
+        self.always_presence = False if platform not in platform_with_unplugable_fan else True
 
         self.fan_min_speed_path = "fan{}_min".format(self.index)
         if not self.is_psu_fan:
@@ -269,7 +271,7 @@ class Fan(FanBase):
             if cooling_level < self.min_cooling_level:
                 cooling_level = self.min_cooling_level
                 speed = self.min_cooling_level * 10
-            self.set_cooling_level(cooling_level)
+            self.set_cooling_level(cooling_level, cooling_level)
             pwm = int(round(PWM_MAX*speed/100.0))
             with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
                 fan_pwm.write(str(pwm))
@@ -387,7 +389,7 @@ class Fan(FanBase):
         return 20
 
     @classmethod
-    def set_cooling_level(cls, level):
+    def set_cooling_level(cls, level, cur_state):
         """
         Change cooling level. The input level should be an integer value [1, 10].
         1 means 10%, 2 means 20%, 10 means 100%.
@@ -395,17 +397,23 @@ class Fan(FanBase):
         if not isinstance(level, int):
             raise RuntimeError("Failed to set cooling level, input parameter must be integer")
 
-        if level < 1 or level > 10:
-            raise RuntimeError("Failed to set cooling level, level value must be in range [1, 10], got {}".format(level))
+        if level < MIN_VALID_COOLING_LEVEL or level > MAX_VALID_COOLING_LEVEL:
+            raise RuntimeError("Failed to set cooling level, level value must be in range [{}, {}], got {}".format(
+                MIN_VALID_COOLING_LEVEL,
+                MAX_VALID_COOLING_LEVEL,
+                level
+                ))
 
         try:
-            # reset FAN driver and change cooling state
+            # Reset FAN cooling level vector. According to low level team,
+            # if we need set cooling level to X, we need first write a (10+X) 
+            # to cooling_cur_state file to reset the cooling level vector.
             with open(COOLING_STATE_PATH, 'w') as cooling_state:
                 cooling_state.write(str(level + 10))
 
-            # make cooling state display correct value
+            # We need set cooling level after resetting the cooling level vector 
             with open(COOLING_STATE_PATH, 'w') as cooling_state:
-                cooling_state.write(str(level))
+                cooling_state.write(str(cur_state))
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to set cooling level - {}".format(e))
 

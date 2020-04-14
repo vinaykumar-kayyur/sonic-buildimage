@@ -428,12 +428,12 @@ def test_load_policy_with_same_conditions():
     
 def test_dynamic_minimum_table_data():
     from sonic_platform.device_data import DEVICE_DATA
-    for sku, sku_data in DEVICE_DATA.items():
-        if 'thermal' in sku_data and 'minimum_table' in sku_data['thermal']:
-            minimum_table = sku_data['thermal']['minimum_table']
-            check_minimum_table_data(sku, minimum_table)
+    for platform, platform_data in DEVICE_DATA.items():
+        if 'thermal' in platform_data and 'minimum_table' in platform_data['thermal']:
+            minimum_table = platform_data['thermal']['minimum_table']
+            check_minimum_table_data(platform, minimum_table)
 
-def check_minimum_table_data(sku, minimum_table):
+def check_minimum_table_data(platform, minimum_table):
     valid_dir = ['p2c', 'c2p', 'unk']
     valid_trust_state = ['trust', 'untrust']
 
@@ -459,7 +459,7 @@ def check_minimum_table_data(sku, minimum_table):
             if previous_edge is None:
                 assert low == -127
             else:
-                assert low - previous_edge == 1, '{}-{}-{} error, item={}'.format(sku, key_data[0], key_data[1], item)
+                assert low - previous_edge == 1, '{}-{}-{} error, item={}'.format(platform, key_data[0], key_data[1], item)
             previous_edge = high
 
             assert 10 <= cooling_level <= 20
@@ -502,7 +502,7 @@ def test_dynamic_minimum_policy(thermal_manager):
     assert MinCoolingLevelChangeCondition.temperature == 25
 
     chassis = MockChassis()
-    chassis.sku_name = 'invalid'
+    chassis.platform_name = 'invalid'
     info = ChassisInfo()
     info._chassis = chassis
     thermal_info_dict = {ChassisInfo.INFO_NAME: info}
@@ -510,10 +510,10 @@ def test_dynamic_minimum_policy(thermal_manager):
     Fan.set_cooling_level = MagicMock()
     action.execute(thermal_info_dict)
     assert Fan.min_cooling_level == 6
-    Fan.set_cooling_level.assert_called_with(6)
+    Fan.set_cooling_level.assert_called_with(6, 6)
     Fan.set_cooling_level.call_count = 0
 
-    chassis.sku_name = 'ACS-MSN2700'
+    chassis.platform_name = 'x86_64-mlnx_msn2700-r0'
     action.execute(thermal_info_dict)
     assert Fan.min_cooling_level == 4
-    assert Fan.set_cooling_level.call_count == 0
+    Fan.set_cooling_level.assert_called_with(4, 5)

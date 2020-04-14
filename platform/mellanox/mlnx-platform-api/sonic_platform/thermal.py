@@ -50,8 +50,6 @@ THERMAL_ZONE_POLICY = "thermal_zone_policy"
 THERMAL_ZONE_TEMPERATURE = "thermal_zone_temp"
 THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_norm"
 
-MODULE_COUNTER_PATH = "/var/run/hw-management/config/module_counter"
-GEARBOX_COUNTER_PATH = "/var/run/hw-management/config/gearbox_counter"
 MODULE_TEMPERATURE_FAULT_PATH = "/var/run/hw-management/thermal/module{}_temp_fault"
 
 thermal_api_handler_cpu_core = {
@@ -442,7 +440,8 @@ class Thermal(ThermalBase):
     @classmethod
     def _write_generic_file(cls, filename, content):
         """
-        Write a generic file if content changed
+        Generic functions to write content to a specified file path if 
+        the content has changed.
         """
         try:
             with open(filename, 'w+') as file_obj:
@@ -455,7 +454,15 @@ class Thermal(ThermalBase):
     @classmethod
     def set_thermal_algorithm_status(cls, status, force=True):
         """
-        Enable/disable kernel thermal algorithm
+        Enable/disable kernel thermal algorithm.
+        When enable kernel thermal algorithm, kernel will adjust fan speed
+        according to thermal zones temperature. Please note that kernel will
+        only adjust fan speed when temperature across some "edge", e.g temperature
+        changes to exceed high threshold.
+        When disable kernel thermal algorithm, kernel no longer adjust fan speed.
+        We usually disable the algorithm when we want to set a fix speed. E.g, when 
+        a fan unit is removed from system, we will set fan speed to 100% and disable 
+        the algorithm to avoid it adjust the speed.
         """
         if not cls.thermal_profile:
             raise Exception("Fail to get thermal profile for this switch")

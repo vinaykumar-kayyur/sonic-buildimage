@@ -115,3 +115,17 @@ class CoolingLevelChangeCondition(ThermalPolicyConditionBase):
             return True
         else:
             return False
+
+
+class UpdateCoolingLevelToMinCondition(ThermalPolicyConditionBase):
+    enable = False
+    def is_match(self, thermal_info_dict):
+        if not UpdateCoolingLevelToMinCondition.enable:
+            return False
+
+        from .fan import Fan
+        current_cooling_level = Fan.get_cooling_level()
+        if current_cooling_level == Fan.min_cooling_level:
+            UpdateCoolingLevelToMinCondition.enable = False
+            return False
+        return True
