@@ -12,7 +12,7 @@ import os.path
 
 try:
     from sonic_platform_base.fan_base import FanBase
-    from .led import FanLed, VirtualLed
+    from .led import FanLed, ComponentFaultyIndicator
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -34,10 +34,10 @@ class Fan(FanBase):
 
         self.is_psu_fan = psu_fan
         if self.fan_drawer:
-            self.led = VirtualLed(self.fan_drawer.get_led())
+            self.led = ComponentFaultyIndicator(self.fan_drawer.get_led())
         elif self.is_psu_fan:
             from .psu import Psu
-            self.led = VirtualLed(Psu.get_shared_led())
+            self.led = ComponentFaultyIndicator(Psu.get_shared_led())
         else:
             self.led = FanLed(self.index)
 

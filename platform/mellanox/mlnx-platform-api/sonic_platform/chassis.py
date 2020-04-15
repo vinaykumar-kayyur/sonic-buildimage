@@ -28,6 +28,7 @@ MAX_SELECT_DELAY = 3600
 MLNX_NUM_PSU = 2
 
 GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
+GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
 
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
@@ -59,6 +60,7 @@ class Chassis(ChassisBase):
 
         # Initialize SKU name
         self.sku_name = self._get_sku_name()
+        self.platform_name = self._get_platform_name()
         mi = get_machine_info()
         if mi is not None:
             self.name = mi['onie_platform']
@@ -83,7 +85,7 @@ class Chassis(ChassisBase):
         # Initialize PSU list
         self.psu_module = Psu
         for index in range(MLNX_NUM_PSU):
-            psu = Psu(index, self.sku_name)
+            psu = Psu(index, self.platform_name)
             self._psu_list.append(psu)
 
 
@@ -92,7 +94,7 @@ class Chassis(ChassisBase):
         from sonic_platform.fan import Fan
         from .fan_drawer import RealDrawer, VirtualDrawer
 
-        fan_data = DEVICE_DATA[self.sku_name]['fans']
+        fan_data = DEVICE_DATA[self.platform_name]['fans']
         drawer_num = fan_data['drawer_num']
         drawer_type = fan_data['drawer_type']
         fan_num_per_drawer = fan_data['fan_num_per_drawer']
@@ -233,6 +235,12 @@ class Chassis(ChassisBase):
 
     def _get_sku_name(self):
         p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        return out.rstrip('\n')
+
+
+    def _get_platform_name(self):
+        p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 

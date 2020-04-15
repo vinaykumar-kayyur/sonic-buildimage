@@ -184,7 +184,7 @@ class SharedLed(object):
         return self._led.get_status()
 
 
-class VirtualLed(object):
+class ComponentFaultyIndicator(object):
     def __init__(self, shared_led):
         self._color = Led.STATUS_LED_COLOR_GREEN
         self._shared_led = shared_led

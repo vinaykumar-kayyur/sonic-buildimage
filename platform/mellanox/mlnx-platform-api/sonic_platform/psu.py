@@ -13,7 +13,7 @@ try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_daemon_base.daemon_base import Logger
     from sonic_platform.fan import Fan
-    from .led import PsuLed, SharedLed, VirtualLed
+    from .led import PsuLed, SharedLed, ComponentFaultyIndicator
     from .device_data import DEVICE_DATA
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -28,9 +28,9 @@ PSU_CURRENT = "current"
 PSU_VOLTAGE = "voltage"
 PSU_POWER = "power"
 
-# in most SKUs the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
+# in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
-hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1, 'ACS-MSN4700': 1}
+platform_dict_psu = {'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4700-r0': 1}
 psu_profile_list = [
     # default filename convention
     {
@@ -51,7 +51,7 @@ class Psu(PsuBase):
 
     shared_led = None
 
-    def __init__(self, psu_index, sku):
+    def __init__(self, psu_index, platform):
         global psu_list
         PsuBase.__init__(self)
         # PSU is 1-based on Mellanox platform
@@ -59,25 +59,25 @@ class Psu(PsuBase):
         psu_list.append(self.index)
         self.psu_path = "/var/run/hw-management/"
         psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
-        #psu_oper_status should always be present for all SKUs
+        #psu_oper_status should always be present for all platforms
         self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
         self._name = "PSU{}".format(psu_index + 1)
 
-        if sku in hwsku_dict_psu:
-            filemap = psu_profile_list[hwsku_dict_psu[sku]]
+        if platform in platform_dict_psu:
+            filemap = psu_profile_list[platform_dict_psu[platform]]
         else:
             filemap = psu_profile_list[0]
 
-        self.psu_data = DEVICE_DATA[sku]['psus']
+        self.psu_data = DEVICE_DATA[platform]['psus']
 
         if not self.psu_data['hot_swappable']:
-            self.always_presence = True
+            self.always_present = True
             self.psu_voltage = None
             self.psu_current = None
             self.psu_power = None
             self.psu_presence = None
         else:
-            self.always_presence = False
+            self.always_present = False
             psu_voltage = filemap[PSU_VOLTAGE].format(self.index)
             psu_voltage = os.path.join(self.psu_path, psu_voltage)
             self.psu_voltage = psu_voltage
@@ -100,7 +100,7 @@ class Psu(PsuBase):
             self._fan_list.append(fan)
 
         if self.psu_data['led_num'] == 1:
-            self.led = VirtualLed(Psu.get_shared_led())
+            self.led = ComponentFaultyIndicator(Psu.get_shared_led())
         else: # 2010/2100
             self.led = PsuLed(self.index)
 
@@ -141,8 +141,8 @@ class Psu(PsuBase):
         Returns:
             bool: True if PSU is present, False if not
         """
-        if self.always_presence:
-            return self.always_presence
+        if self.always_present:
+            return self.always_present
         else:
             status = self._read_generic_file(self.psu_presence, 0)
             return status == 1
