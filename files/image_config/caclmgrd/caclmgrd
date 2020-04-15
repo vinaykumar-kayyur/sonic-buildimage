@@ -124,6 +124,50 @@ class ControlPlaneAclManager(object):
         tcp_flags_str = tcp_flags_str[:-1]
         return tcp_flags_str
 
+    def generate_block_ip2me_traffic_iptables_commands(self):
+        LOOPBACK_INTERFACE_TABLE = "LOOPBACK_INTERFACE"
+        MGMT_INTERFACE_TABLE = "MGMT_INTERFACE"
+        VLAN_INTERFACE_TABLE = "VLAN_INTERFACE"
+
+        block_ip2me_cmds = []
+
+        # Add iptables rules to drop all packets destined for loopback interface IP addresses
+        # (and in the case of V6, all point-to-point addresses in the /64 subnet)
+        loopback_iface_table = self.config_db.get_table(LOOPBACK_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in loopback_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/64 -j DROP".format(ip_ntwrk.network_address))
+            else:
+                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+
+        # Add iptables rules to drop all packets destined for management interface IP addresses
+        mgmt_iface_table = self.config_db.get_table(MGMT_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in mgmt_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(ip_ntwrk.network_address))
+            else:
+                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+
+        # Add iptables rules to drop all packets destined for our VLAN interface gateway IP addresses
+        vlan_iface_table = self.config_db.get_table(VLAN_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in vlan_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(list(ip_ntwrk.hosts())[0]))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(list(ip_ntwrk.hosts())[0]))
+            else:
+                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+
+        return block_ip2me_cmds
+
+
     def get_acl_rules_and_translate_to_iptables_commands(self):
         """
         Retrieves current ACL tables and rules from Config DB, translates
@@ -134,10 +178,6 @@ class ControlPlaneAclManager(object):
             A list of strings, each string is an iptables shell command
 
         """
-        LOOPBACK_INTERFACE_TABLE = "LOOPBACK_INTERFACE"
-        MGMT_INTERFACE_TABLE = "MGMT_INTERFACE"
-        VLAN_INTERFACE_TABLE = "VLAN_INTERFACE"
-
         iptables_cmds = []
 
         # First, add iptables commands to set default policies to accept all
@@ -316,39 +356,8 @@ class ControlPlaneAclManager(object):
                     iptables_cmds.append("iptables -A INPUT -p {0} --dport {1} -j ACCEPT".format(ip_protocol, dst_port))
                     iptables_cmds.append("ip6tables -A INPUT -p {0} --dport {1} -j ACCEPT".format(ip_protocol, dst_port))
 
-        # Add iptables rules to drop all packets destined for loopback interface IP addresses
-        # (and in the case of V6, all point-to-point addresses in the /64 subnet)
-        loopback_iface_table = self.config_db.get_table(LOOPBACK_INTERFACE_TABLE)
-        for ((iface_name, iface_cidr), _) in loopback_iface_table.iteritems():
-            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
-            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                iptables_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
-            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                iptables_cmds.append("ip6tables -A INPUT -d {}/64 -j DROP".format(ip_ntwrk.network_address))
-            else:
-                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
-
-        # Add iptables rules to drop all packets destined for management interface IP addresses
-        mgmt_iface_table = self.config_db.get_table(MGMT_INTERFACE_TABLE)
-        for ((iface_name, iface_cidr), _) in mgmt_iface_table.iteritems():
-            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
-            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                iptables_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
-            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                iptables_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(ip_ntwrk.network_address))
-            else:
-                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
-
-        # Add iptables rules to drop all packets destined for our VLAN interface gateway IP addresses
-        vlan_iface_table = self.config_db.get_table(VLAN_INTERFACE_TABLE)
-        for ((iface_name, iface_cidr), _) in vlan_iface_table.iteritems():
-            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
-            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                iptables_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(list(ip_ntwrk.hosts())[0]))
-            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                iptables_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(list(ip_ntwrk.hosts())[0]))
-            else:
-                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+        # Add iptables commands to block ip2me traffic
+        iptables_cmds += self.generate_block_ip2me_traffic_iptables_commands()
 
         # Add iptables/ip6tables commands to allow all incoming packets with TTL of 0 or 1
         # This allows the device to respond to tools like tcptraceroute
