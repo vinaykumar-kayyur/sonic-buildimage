@@ -397,10 +397,10 @@ class Fan(FanBase):
         if not isinstance(level, int):
             raise RuntimeError("Failed to set cooling level, input parameter must be integer")
 
-        if level < MIN_VALID_COOLING_LEVEL or level > MAX_VALID_COOLING_LEVEL:
+        if level < cls.MIN_VALID_COOLING_LEVEL or level > cls.MAX_VALID_COOLING_LEVEL:
             raise RuntimeError("Failed to set cooling level, level value must be in range [{}, {}], got {}".format(
-                MIN_VALID_COOLING_LEVEL,
-                MAX_VALID_COOLING_LEVEL,
+                cls.MIN_VALID_COOLING_LEVEL,
+                cls.MAX_VALID_COOLING_LEVEL,
                 level
                 ))
 

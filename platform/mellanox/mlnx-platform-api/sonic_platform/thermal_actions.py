@@ -193,6 +193,7 @@ class UpdateCoolingLevelToMinAction(ThermalPolicyActionBase):
         from .fan import Fan
         from .thermal import Thermal
         from .thermal_conditions import UpdateCoolingLevelToMinCondition
+        from .thermal_infos import FanInfo
         if Thermal.check_thermal_zone_temperature():
             fan_info_obj = thermal_info_dict[FanInfo.INFO_NAME]
             speed = Fan.min_cooling_level * 10
