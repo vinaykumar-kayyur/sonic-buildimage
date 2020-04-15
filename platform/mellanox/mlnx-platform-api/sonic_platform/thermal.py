@@ -343,7 +343,7 @@ class Thermal(ThermalBase):
         result = None
         try:
             with open(filename, 'r') as fileobj:
-                result = fileobj.read()
+                result = fileobj.read().strip()
         except Exception as e:
             logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
         return result

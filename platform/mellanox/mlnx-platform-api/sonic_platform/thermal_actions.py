@@ -161,8 +161,8 @@ class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
 
             for key, cooling_level in minimum_table.items():
                 temp_range = key.split(':')
-                temp_min = int(temp_range[0])
-                temp_max = int(temp_range[1])
+                temp_min = int(temp_range[0].strip())
+                temp_max = int(temp_range[1].strip())
                 if temp_min <= temperature <= temp_max:
                     Fan.min_cooling_level = cooling_level - 10
                     break

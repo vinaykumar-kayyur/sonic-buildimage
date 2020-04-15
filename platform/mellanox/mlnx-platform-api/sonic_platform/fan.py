@@ -104,7 +104,7 @@ class Fan(FanBase):
 
         try:
             with open(os.path.join(self.fan_dir), 'r') as fan_dir:
-                fan_dir_bits = int(fan_dir.read())
+                fan_dir_bits = int(fan_dir.read().strip())
                 fan_mask = 1 << self.drawer_index - 1
                 if fan_dir_bits & fan_mask:
                     return self.FAN_DIRECTION_INTAKE
@@ -130,7 +130,7 @@ class Fan(FanBase):
         else:
             try:
                 with open(os.path.join(FAN_PATH, self.fan_status_path), 'r') as fault_status:
-                    status = int(fault_status.read())
+                    status = int(fault_status.read().strip())
             except (ValueError, IOError):
                 status = 1
 
@@ -156,7 +156,7 @@ class Fan(FanBase):
             else:
                 try:
                     with open(os.path.join(FAN_PATH, self.fan_presence_path), 'r') as presence_status:
-                        status = int(presence_status.read())
+                        status = int(presence_status.read().strip())
                 except (ValueError, IOError):
                     status = 0
 
@@ -178,7 +178,7 @@ class Fan(FanBase):
         speed = 0
         try:
             with open(os.path.join(FAN_PATH, self.fan_max_speed_path), 'r') as max_fan_speed:
-                speed = int(max_fan_speed.read())
+                speed = int(max_fan_speed.read().strip())
         except (ValueError, IOError):
             speed = 0
         
@@ -195,7 +195,7 @@ class Fan(FanBase):
         speed = 0
         try:
             with open(os.path.join(FAN_PATH, self.fan_speed_get_path), 'r') as fan_curr_speed:
-                speed_in_rpm = int(fan_curr_speed.read())
+                speed_in_rpm = int(fan_curr_speed.read().strip())
         except (ValueError, IOError):
             speed_in_rpm = 0
 
@@ -224,7 +224,7 @@ class Fan(FanBase):
 
         try:
             with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'r') as fan_pwm:
-                pwm = int(fan_pwm.read())
+                pwm = int(fan_pwm.read().strip())
         except (ValueError, IOError):
             pwm = 0
         
@@ -421,7 +421,7 @@ class Fan(FanBase):
     def get_cooling_level(cls):
         try:
             with open(COOLING_STATE_PATH, 'r') as cooling_state:
-                cooling_level = int(cooling_state.read())
+                cooling_level = int(cooling_state.read().strip())
                 return cooling_level
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to get cooling level - {}".format(e))
