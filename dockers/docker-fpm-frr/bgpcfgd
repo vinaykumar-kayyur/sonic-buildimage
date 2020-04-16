@@ -559,6 +559,58 @@ class BGPDataBaseMgr(Manager):
         self.directory.remove(self.db_id, self.table_name, key)
 
 
+class InterfaceMgr(Manager):
+    """ This class updates the Directory object when interface-related table is updated """
+    def __init__(self, common_objs, db, table):
+        """
+        Initialize the object
+        :param common_objs: common object dictionary
+        :param db: name of the db
+        :param table: name of the table in the db
+        """
+        super(InterfaceMgr, self).__init__(
+            common_objs,
+            [],
+            db,
+            table,
+        )
+
+    def set_handler(self, key, data):
+        """ Implementation of 'SET' command.
+        Similar to BGPDataBaseMgr but enriches data object with additional data """
+        # Interface table can have two keys,
+        # one with ip prefix and one without ip prefix
+        if '|' in key:
+            interface_name, network_str = key.split('|', 1)
+            try:
+                network = netaddr.IPNetwork(str(network_str))
+            except:
+                log_warn("Subnet '%s' format is wrong for interface '%s'" % (network_str, data["interface"]))
+                return True
+            data["interface"] = interface_name
+            data["prefixlen"] = str(network.prefixlen)
+            ip = str(network.ip)
+            self.directory.put("LOCAL", "local_addresses", ip, data)
+        self.directory.put(self.db_id, self.table_name, key, data)
+        self.directory.put("LOCAL", "interfaces", key, data)
+        return True
+
+    def del_handler(self, key):
+        """ Implementation of 'DEL' command
+        Also removes data object enrichment """
+        if '|' in key:
+            interface, network = key.split('|', 1)
+            try:
+                network = netaddr.IPNetwork(str(network))
+            except:
+                log_warn("Subnet '%s' format is wrong for interface '%s'" % (network,interface))
+                return True
+            ip = str(network.ip)
+            self.directory.remove("LOCAL", "local_addresses", ip)
+        self.directory.remove(self.db_id, self.table_name, key)
+        self.directory.remove("LOCAL", "interfaces", key)
+
+
 class BGPPeerGroupMgr(object):
     """ This class represents peer-group and routing policy for the peer_type """
     def __init__(self, common_objs, base_template):
@@ -641,6 +693,7 @@ class BGPPeerMgrBase(Manager):
         :param peer_type: type of the peers. It is used to find right templates
         """
         self.common_objs = common_objs
+        self.constants = self.common_objs["constants"]
         self.fabric = common_objs['tf']
         self.peer_type = peer_type
 
@@ -655,6 +708,8 @@ class BGPPeerMgrBase(Manager):
         deps = [
                 ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),
                 ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME, "Loopback0"),
+                ("LOCAL", "local_addresses", ""),
+                ("LOCAL", "interfaces", ""),
         ]
 
         self.check_neig_meta = 'bgp' in self.constants \
@@ -709,6 +764,22 @@ class BGPPeerMgrBase(Manager):
             log_warn("Loppback0 ipv4 address is not presented yet")
             return False
         #
+        if "local_addr" not in data:
+            log_warn("Peer %s. Error in missing required attribute 'local_addr'" % nbr)
+        else:
+            # The bgp session that belongs to a vnet cannot be advertised as the default BGP session.
+            # So we need to check whether this bgp session belongs to a vnet.
+            interface = self.get_local_interface(data["local_addr"])
+            if not interface:
+                print_data = nbr, data["local_addr"]
+                log_info("Peer '%s' with local address '%s' wait for the corresponding interface to be set" % print_data)
+                return False
+            vnet = self.get_vnet(interface)
+            if vnet:
+                # Ignore the bgp session that is in a vnet
+                log_info("Ignore the BGP peer '%s' as the interface '%s' is in vnet '%s'" % (nbr, interface, vnet))
+                return True
+
         kwargs = {
             'CONFIG_DB__DEVICE_METADATA': self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME),
             'constants': self.constants,
@@ -721,6 +792,7 @@ class BGPPeerMgrBase(Manager):
         if self.check_neig_meta:
             neigmeta = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME)
             if 'name' in data and data["name"] not in neigmeta:
+                log_info("DEVICE_NEIGHBOR_METADATA is not ready for neighbor '%s' - '%s'" % (nbr, data['name']))
                 return False
             kwargs['CONFIG_DB__DEVICE_NEIGHBOR_METADATA'] = neigmeta
 
@@ -839,6 +911,39 @@ class BGPPeerMgrBase(Manager):
 
         return loopback0_ipv4
 
+    def get_local_interface(self, local_addr):
+        """
+        Get interface according to the local address from the directory
+        :param: directory: Directory object that stored metadata of interfaces
+        :param: local_addr: Local address of the interface
+        :return: Return the metadata of the interface with the local address
+                 If the interface has not been set, return None
+        """
+        local_addresses = self.directory.get_slot("LOCAL", "local_addresses")
+        # Check if the local address of this bgp session has been set
+        if local_addr not in local_addresses:
+            return None
+        local_address = local_addresses[local_addr]
+        interfaces = self.directory.get_slot("LOCAL", "interfaces")
+        # Check if the information for the interface of this local address has been set
+        if local_address.has_key("interface") and local_address["interface"] in interfaces:
+            return interfaces[local_address["interface"]]
+        else:
+            return None
+
+    @staticmethod
+    def get_vnet(interface):
+        """
+        Get the VNet name of the interface
+        :param: interface: The metadata of the interface
+        :return: Return the vnet name of the interface if this interface belongs to a vnet,
+                 Otherwise return None
+        """
+        if interface.has_key("vnet_name") and interface["vnet_name"]:
+            return interface["vnet_name"]
+        else:
+            return None
+
     @staticmethod
     def split_key(key):
         """
@@ -912,6 +1017,10 @@ def main():
     db_managers_init = [  # list of db tables to initialize DB managers
         ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME),
+    ]
+
+    iface_managers_init = [ # list of db tables to initialize IfaceManager
+        ("CONFIG_DB", swsscommon.CFG_INTF_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_VLAN_INTF_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_LAG_INTF_TABLE_NAME),
@@ -936,6 +1045,10 @@ def main():
 
     for db, table in db_managers_init:
         mgr = BGPDataBaseMgr(common_objs, db, table)
+        runner.add_manager(mgr)
+
+    for db, table in iface_managers_init:
+        mgr = InterfaceMgr(common_objs, db, table)
         runner.add_manager(mgr)
 
     for db, peer_table_name, peer_type in peer_managers_init:
