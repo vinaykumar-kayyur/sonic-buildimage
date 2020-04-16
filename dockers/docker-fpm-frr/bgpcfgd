@@ -851,17 +851,21 @@ class BGPPeerMgrBase(Manager):
         return peers
 
 
-def wait_for_bgpd():  # FIXME: rename to wait_for_daemons(daemons, seconds)
-    """ Wait until FRR daemons are ready for requests """
-    stop_time = datetime.datetime.now() + datetime.timedelta(seconds=20)
-    syslog.syslog(syslog.LOG_INFO, "Start waiting for bgpd: %s" % str(datetime.datetime.now()))
+def wait_for_daemons(daemons, seconds):
+    """
+    Wait until FRR daemons are ready for requests
+    :param daemons: list of FRR daemons to wait
+    :param seconds: number of seconds to wait, until raise an error
+    """
+    stop_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
+    syslog.syslog(syslog.LOG_INFO, "Start waiting for FRR daemons: %s" % str(datetime.datetime.now()))
     while datetime.datetime.now() < stop_time:
         ret_code, out, err = run_command(["vtysh", "-c", "show daemons"], hide_errors=True)
-        if ret_code == 0 and "bgpd" in out and "zebra" in out:
-            syslog.syslog(syslog.LOG_INFO, "bgpd and zebra connected to vtysh: %s" % str(datetime.datetime.now()))
+        if ret_code == 0 and all(daemon in out for daemon in daemons):
+            syslog.syslog(syslog.LOG_INFO, "All required daemons have connected to vtysh: %s" % str(datetime.datetime.now()))
             return
         time.sleep(0.1)  # sleep 100 ms
-    raise RuntimeError("bgpd hasn't been started in 20 seconds")
+    raise RuntimeError("bgpd hasn't been started in %d seconds" % seconds)
 
 
 def read_constants():
@@ -887,7 +891,7 @@ def main():
         ("BGP_PEER_RANGE", "dynamic"),
     ]
 
-    wait_for_bgpd()
+    wait_for_daemons(["bgpd", "zebra", "staticd"], seconds=20)
 
     daemon = Daemon()
 
