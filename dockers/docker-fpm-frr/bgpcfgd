@@ -255,13 +255,13 @@ class TemplateFabric(object):
             table[key] = val
         return table
 
-# FIXME: should db_table registry be one type, and another type just string?
+
 class Directory(object):
     """ This class stores values and notifies callbacks which were registered to be executed as soon
         as some value is changed. This class works as DB cache mostly """
     def __init__(self):
         self.data = defaultdict(dict)  # storage. A key is a slot name, a value is a dictionary with data
-        self.notify = defaultdict(lambda: defaultdict(list))  # registered callbacks
+        self.notify = defaultdict(lambda: defaultdict(list))  # registered callbacks: slot -> path -> handlers[]
 
     @staticmethod
     def get_slot_name(db, table):
@@ -389,7 +389,7 @@ class Directory(object):
         slot = self.get_slot_name(db, table)
         return slot in self.data
 
-    def available_deps(self, deps):  # FIXME: should it be part of put?
+    def available_deps(self, deps):
         """
         Check if all items from the deps list is available in the storage
         :param deps: list of dependencies
@@ -423,7 +423,7 @@ class Runner(object):
         """ Constructor """
         self.db_connectors = {}
         self.selector = swsscommon.Select()
-        self.callbacks = defaultdict(lambda : defaultdict(list))  # db -> table -> []
+        self.callbacks = defaultdict(lambda : defaultdict(list))  # db -> table -> handlers[]
         self.subscribers = set()
 
     def add_manager(self, manager):
