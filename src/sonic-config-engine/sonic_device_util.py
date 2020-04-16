@@ -17,6 +17,8 @@ description:
 TODO: this file shall be renamed and moved to other places in future
 to have it shared with multiple applications. 
 '''
+SONIC_DEVICE_PATH = '/usr/share/sonic/device'
+
 def get_machine_info():
     if not os.path.isfile('/host/machine.conf'):
         return None
@@ -32,7 +34,7 @@ def get_machine_info():
 def get_num_npus():
    platform = get_platform_info(get_machine_info)
    num_npus = 1
-   asic_conf_file_path = os.path.join('/usr/share/sonic/device', platform, 'asic.conf')
+   asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, 'asic.conf')
    if not os.path.isFile(asic_conf_file_path):
 	return num_npus
    with open(asic_conf_file_path) as asic_conf_file:
@@ -40,8 +42,8 @@ def get_num_npus():
 	    tokens = line.split('=')
             if len(tokens) < 2:
                continue      
-	    if token[0].lower() == 'num_asic':
-		num_npus = token[1].strip()
+	    if tokens[0].lower() == 'num_asic':
+		num_npus = tokens[1].strip()
    		return num_npus
 
 def get_namespaces():
@@ -106,7 +108,7 @@ def get_system_mac(namespace=None):
         # Try valid mac in eeprom, else fetch it from eth0
         platform = get_platform_info(get_machine_info())
         hwsku = get_machine_info()['onie_machine']
-        profile_cmd = 'cat /usr/share/sonic/device/' + platform +'/'+ hwsku +'/profile.ini | cut -f2 -d='
+        profile_cmd = 'cat' + SONIC_DEVICE_PATH + '/' + platform +'/'+ hwsku +'/profile.ini | cut -f2 -d='
         hw_mac_entry_cmds = [ profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
     else:
         if namespace is not None:

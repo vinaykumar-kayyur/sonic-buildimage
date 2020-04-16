@@ -624,7 +624,7 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     lo_intfs = None
     neighbors = None
     devices = None
-    sub_role=None
+    sub_role = None
     docker_routing_config_mode = "separated"
     port_speeds_default = {}
     port_speed_png = {}
