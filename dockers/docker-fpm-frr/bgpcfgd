@@ -633,7 +633,7 @@ class BGPPeerGroupMgr(object):
 
 class BGPPeerMgrBase(Manager):
     """ Manager of BGP peers """
-    def __init__(self, common_objs, table_name, peer_type):
+    def __init__(self, common_objs, db_name, table_name, peer_type):
         """
         Initialize the object
         :param common_objs: common objects
@@ -642,8 +642,6 @@ class BGPPeerMgrBase(Manager):
         """
         self.common_objs = common_objs
         self.fabric = common_objs['tf']
-        self.constants = common_objs['constants']
-        self.table_name = table_name
         self.peer_type = peer_type
 
         base_template = "bgpd/templates/" + self.constants["bgp"]["peers"][peer_type]["template_dir"] + "/"
@@ -675,7 +673,7 @@ class BGPPeerMgrBase(Manager):
         super(BGPPeerMgrBase, self).__init__(
             common_objs,
             deps,
-            "CONFIG_DB",
+            db_name,
             table_name,
         )
 
@@ -915,12 +913,14 @@ def main():
         ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME),
+        ("CONFIG_DB", swsscommon.CFG_VLAN_INTF_TABLE_NAME),
+        ("CONFIG_DB", swsscommon.CFG_LAG_INTF_TABLE_NAME),
     ]
 
     peer_managers_init = [  # list of Peer Managers
-        (swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general"),
-        ("BGP_MONITORS", "monitors"),
-        ("BGP_PEER_RANGE", "dynamic"),
+        ("CONFIG_DB", swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general"),
+        ("CONFIG_DB", "BGP_MONITORS", "monitors"),
+        ("CONFIG_DB", "BGP_PEER_RANGE", "dynamic"),
     ]
 
     wait_for_daemons(["bgpd", "zebra", "staticd"], seconds=20)
@@ -938,8 +938,8 @@ def main():
         mgr = BGPDataBaseMgr(common_objs, db, table)
         runner.add_manager(mgr)
 
-    for peer_table_name, peer_type in peer_managers_init:
-        mgr = BGPPeerMgrBase(common_objs, peer_table_name, peer_type)
+    for db, peer_table_name, peer_type in peer_managers_init:
+        mgr = BGPPeerMgrBase(common_objs, db, peer_table_name, peer_type)
         runner.add_manager(mgr)
 
     runner.run()
