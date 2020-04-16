@@ -231,7 +231,7 @@ class TemplateFabric(object):
         return table
 
 # FIXME: should db_table registry be one type, and another type just string?
-class Directory(object):  # FIXME: Rename to Registry?
+class Directory(object):
     """ This class stores values and notifies callbacks which were registered to be executed as soon
         as some value is changed. This class works as DB cache mostly """
     def __init__(self):
