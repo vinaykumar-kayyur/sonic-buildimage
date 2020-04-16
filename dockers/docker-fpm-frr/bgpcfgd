@@ -386,9 +386,8 @@ class Directory(object):
             slot = self.get_slot_name(db, table)
             self.notify[slot][path].append(handler)
 
-# FIXME: rename to Runner?
-# FIXME: Inverse dependency. Don't add Managers to Daemon, but add Managers to Daemon
-class Daemon(object):
+
+class Runner(object):
     """ Implements main io-loop of the application
         It will run event handlers inside of Manager objects
         when corresponding db/table is updated
@@ -402,14 +401,15 @@ class Daemon(object):
         self.callbacks = defaultdict(lambda : defaultdict(list))  # db -> table -> []
         self.subscribers = set()
 
-    def add_manager(self, db_name, table_name, callback):
+    def add_manager(self, manager):
         """
-        Add an object which implements Manager class.
-        As soon as new events will
-        :param db_name:
-        :param table_name:
-        :param callback:
+        Add a manager to the Runner.
+        As soon as new events will be receiving by Runner,
+        handlers of corresponding objects will be executed
+        :param manager: an object implementing Manager
         """
+        db_name = manager.get_database()
+        table_name = manager.get_table_name()
         db = swsscommon.SonicDBConfig.getDbId(db_name)
         if db not in self.db_connectors:
             self.db_connectors[db] = swsscommon.DBConnector(db_name, 0)
@@ -419,12 +419,12 @@ class Daemon(object):
             subscriber = swsscommon.SubscriberStateTable(conn, table_name)
             self.subscribers.add(subscriber)
             self.selector.addSelectable(subscriber)
-        self.callbacks[db][table_name].append(callback)
+        self.callbacks[db][table_name].append(manager.handler)
 
     def run(self):
         """ Main loop """
         while g_run:
-            state, _ = self.selector.select(Daemon.SELECT_TIMEOUT)
+            state, _ = self.selector.select(Runner.SELECT_TIMEOUT)
             if state == self.selector.TIMEOUT:
                 continue
             elif state == self.selector.ERROR:
@@ -450,7 +450,6 @@ class Manager(object):
         :param database: database name
         :param table_name: table name
         """
-        self.daemon = common_objs['daemon']
         self.directory = common_objs['directory']
         self.cfg_mgr = common_objs['cfg_mgr']
         self.constants = common_objs['constants']
@@ -458,8 +457,15 @@ class Manager(object):
         self.db_id = database
         self.table_name = table_name
         self.set_queue = []
-        self.daemon.add_manager(database, table_name, self.handler)  # add the instance of the class to Daemon object
         self.directory.subscribe(deps, self.on_deps_change)  # subscribe this class method on directory changes
+
+    def get_database(self):
+        """ Return associated database """
+        return self.db_id
+
+    def get_table_name(self):
+        """ Return associated table name"""
+        return self.table_name
 
     def handler(self, key, op, data):
         """
@@ -893,27 +899,24 @@ def main():
 
     wait_for_daemons(["bgpd", "zebra", "staticd"], seconds=20)
 
-    daemon = Daemon()
+    runner = Runner()
 
     common_objs = {
-        'daemon':    daemon,
         'directory': Directory(),
         'cfg_mgr':   ConfigMgr(),
         'tf':        TemplateFabric(),
         'constants': read_constants(),
     }
 
-    manager_instanses = []
-
     for db, table in db_managers_init:
         mgr = BGPDataBaseMgr(common_objs, db, table)
-        manager_instanses.append(mgr)
+        runner.add_manager(mgr)
 
     for peer_table_name, peer_type in peer_managers_init:
         mgr = BGPPeerMgrBase(common_objs, peer_table_name, peer_type)
-        manager_instanses.append(mgr)
+        runner.add_manager(mgr)
 
-    daemon.run()
+    runner.run()
 
     return
 
