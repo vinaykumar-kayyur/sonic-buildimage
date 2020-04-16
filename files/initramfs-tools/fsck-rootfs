@@ -22,10 +22,13 @@ if [ ! -z $root_val ]; then
     fstype=$(blkid -o value -s TYPE $root_val)
     case "$fstype" in
         ext4)
-            fsck.ext4 -v -p $root_val 2>&1 | gzip -c > /tmp/fsck.log.gz
+            cmd="fsck.ext4 -v -p"
             ;;
         ext3)
-            fsck.ext3 -v -p $root_val 2>&1 | gzip -c > /tmp/fsck.log.gz
+            cmd="fsck.ext3 -v -p"
             ;;
     esac
+    if [ ! -z "$cmd" ]; then
+        $cmd $root_val 2>&1 | gzip -c > /tmp/fsck.log.gz
+    fi
 fi
