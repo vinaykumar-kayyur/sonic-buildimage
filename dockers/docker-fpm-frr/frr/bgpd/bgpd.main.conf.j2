@@ -11,6 +11,21 @@ ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERF
 !
 ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | replace('/128', '/64') | ip_network }}/64
 !
+!
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalFrontend' %}
+route-map HIDE_INTERNAL permit 10
+  set community local-AS
+!
+{% endif %}
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalBackend' %}
+route-map OVERRIDE_ORIGINATOR_ID permit 10
+{%   for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{%     if prefix | ipv4 and name == 'Loopback0' %}
+  set originator-id {{ prefix | ip }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+!
 router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 !
 {% block bgp_init %}
@@ -49,6 +64,11 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 {% endfor %}
 {% endblock vlan_advertisement %}
+!
+!
+{% if DEVICE_METADATA['localhost']['type'] == 'InternalFrontend' %}
+  redistribute connected route-map HIDE_INTERNAL
+{% endif %}
 !
 {% if constants.bgp.maximum_paths.enabled is defined and constants.bgp.maximum_paths.enabled %}
 {% block maximum_paths %}
