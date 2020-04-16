@@ -25,6 +25,13 @@ g_debug = True
 
 
 def run_command(command, shell=False, hide_errors=False):
+    """
+    Run a linux command. The command is defined as a list. See subprocess.Popen documentation on format
+    :param command: command to execute. Type: List of strings
+    :param shell: execute the command through shell when True. Type: Boolean
+    :param hide_errors: don't report errors to syslog when True. Type: Boolean
+    :return: Tuple: integer exit code from the command, stdout as a string, stderr as a string
+    """
     if g_debug:
         syslog.syslog(syslog.LOG_DEBUG, "execute command '%s'." % str(command))
     p = subprocess.Popen(command, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -38,13 +45,16 @@ def run_command(command, shell=False, hide_errors=False):
 
 
 class ConfigMgr(object):
+    """ The class represents frr configuration """
     def __init__(self):
         self.current_config = None
 
     def reset(self):
+        """ Reset stored config """
         self.current_config = None
 
     def update(self):
+        """ Read current config from FRR """
         self.current_config = None
         ret_code, out, err = run_command(["vtysh", "-c", "show running-config"])
         if ret_code != 0:
@@ -53,9 +63,19 @@ class ConfigMgr(object):
         self.current_config = self.to_canonical(out)
 
     def push(self, cmd):
+        """
+        Push new changes to FRR
+        :param cmd: configuration change for FRR. Type: String
+        :return: True if change was applied successfully, False otherwise
+        """
         return self.write(cmd)
 
     def write(self, cmd):
+        """
+        Write configuration change to FRR.
+        :param cmd: new configuration to write into FRR. Type: String
+        :return: True if change was applied successfully, False otherwise
+        """
         fd, tmp_filename = tempfile.mkstemp(dir='/tmp')
         os.close(fd)
         with open(tmp_filename, 'w') as fp:
@@ -72,6 +92,11 @@ class ConfigMgr(object):
 
     @staticmethod
     def to_canonical(raw_config):
+        """
+        Convert FRR config into canonical format
+        :param raw_config: config in frr format
+        :return: frr config in canonical format
+        """
         parsed_config = []
         cur_offset = 0
         lines = raw_config.split("\n")
@@ -95,10 +120,16 @@ class ConfigMgr(object):
 
     @staticmethod
     def count_spaces(line):
+        """ Count leading spaces in the line """
         return len(line) - len(line.lstrip())
 
     @staticmethod
     def from_canonical(canonical_config):
+        """
+        Convert config from canonical format into FRR raw format
+        :param canonical_config: config in a canonical format
+        :return: config in the FRR raw format
+        """
         out = ""
         for lines in canonical_config:
             spaces = len(lines) - 1
@@ -108,6 +139,7 @@ class ConfigMgr(object):
 
 
 class TemplateFabric(object):
+    """ Fabric for rendering jinja2 templates """
     def __init__(self):
         j2_template_paths = ['/usr/share/sonic/templates']
         j2_loader = jinja2.FileSystemLoader(j2_template_paths)
@@ -120,13 +152,24 @@ class TemplateFabric(object):
         self.env = j2_env
 
     def from_file(self, filename):
+        """
+        Read a template from a file
+        :param filename: filename of the file. Type String
+        :return: Jinja2 template object
+        """
         return self.env.get_template(filename)
 
     def from_string(self, tmpl):
+        """
+        Read a template from a string
+        :param tmpl: Text representation of Jinja2 template
+        :return: Jinja2 template object
+        """
         return self.env.from_string(tmpl)
 
     @staticmethod
     def is_ipv4(value):
+        """ Return True if the value is an ipv4 address """
         if not value:
             return False
         if isinstance(value, netaddr.IPNetwork):
@@ -140,6 +183,7 @@ class TemplateFabric(object):
 
     @staticmethod
     def is_ipv6(value):
+        """ Return True if the value is an ipv6 address """
         if not value:
             return False
         if isinstance(value, netaddr.IPNetwork):
@@ -153,6 +197,12 @@ class TemplateFabric(object):
 
     @staticmethod
     def prefix_attr(attr, value):
+        """
+        Extract attribute fron IPNetwork object
+        :param attr: attribute to extract
+        :param value: the string representation of ip prefix which will be converted to IPNetwork.
+        :return: the value of the extracted attribute
+        """
         if not value:
             return None
         else:
@@ -180,17 +230,31 @@ class TemplateFabric(object):
             table[key] = val
         return table
 
-
-class Directory(object):
+# FIXME: should db_table registry be one type, and another type just string?
+class Directory(object):  # FIXME: Rename to Registry?
+    """ This class stores values and notifies callbacks which were registered to be executed as soon
+        as some value is changed. This class works as DB cache mostly """
     def __init__(self):
-        self.data = defaultdict(dict)
-        self.notify = defaultdict(lambda: defaultdict(list))
+        self.data = defaultdict(dict)  # storage. A key is a slot name, a value is a dictionary with data
+        self.notify = defaultdict(lambda: defaultdict(list))  # registered callbacks
 
     @staticmethod
     def get_slot_name(db, table):
+        """ Convert db, table pair into a slot name """
         return db + "__" + table
 
     def path_traverse(self, slot, path):
+        """
+        Traverse a path in the storage.
+        If the path is an empty string, it returns a value as it is.
+        If the path is not an empty string, the method will traverse through the dictionary value.
+        Example:
+            self.data["key_1"] = { "abc": { "cde": { "fgh": "val_1", "ijk": "val_2" } } }
+            self.path_traverse("key_1", "abc/cde") will return True, { "fgh": "val_1", "ijk": "val_2" }
+        :param slot: storage key
+        :param path: storage path as a string where each internal key is separated by '/'
+        :return: a pair: True if the path was found, object if it was found
+        """
         if slot not in self.data:
             return False, None
         elif path == '':
@@ -203,14 +267,36 @@ class Directory(object):
         return True, d
 
     def path_exist(self, db, table, path):
+        """
+        Check if the path exists in the storage
+        :param db: db name
+        :param table: table name
+        :param path: requested path
+        :return: True if the path is available, False otherwise
+        """
         slot = self.get_slot_name(db, table)
         return self.path_traverse(slot, path)[0]
 
     def get_path(self, db, table, path):
+        """
+        Return the requested path from the storage
+        :param db: db name
+        :param table: table name
+        :param path: requested path
+        :return: object if the path was found, None otherwise
+        """
         slot = self.get_slot_name(db, table)
         return self.path_traverse(slot, path)[1]
 
     def put(self, db, table, key, value):
+        """
+        Put information into the storage. Notify handlers which are dependant to the information
+        :param db: db name
+        :param table: table name
+        :param key: key to change
+        :param value: value to put
+        :return:
+        """
         slot = self.get_slot_name(db, table)
         self.data[slot][key] = value
         if slot in self.notify:
@@ -220,14 +306,33 @@ class Directory(object):
                         handler()
 
     def get(self, db, table, key):
+        """
+        Get a value from the storage
+        :param db: db name
+        :param table: table name
+        :param key: ket to get
+        :return: value for the key
+        """
         slot = self.get_slot_name(db, table)
         return self.data[slot][key]
 
     def get_slot(self, db, table):
+        """
+        Get an object from the storage
+        :param db: db name
+        :param table: table name
+        :return: object for the slot
+        """
         slot = self.get_slot_name(db, table)
         return self.data[slot]
 
     def remove(self, db, table, key):
+        """
+        Remove a value from the storage
+        :param db: db name
+        :param table: table name
+        :param key: key to remove
+        """
         slot = self.get_slot_name(db, table)
         if slot in self.data:
             if key in self.data[slot]:
@@ -238,6 +343,11 @@ class Directory(object):
             syslog.syslog(syslog.LOG_ERR, "Directory: Can't remove key '%s' from slot '%s'. The slot doesn't exist" % (key, slot))
 
     def remove_slot(self, db, table):
+        """
+        Remove an object from the storage
+        :param db: db name
+        :param table: table name
+        """
         slot = self.get_slot_name(db, table)
         if slot in self.data:
             del self.data[slot]
@@ -245,31 +355,61 @@ class Directory(object):
             syslog.syslog(syslog.LOG_ERR, "Directory: Can't remove slot '%s'. The slot doesn't exist" % slot)
 
     def available(self, db, table):
+        """
+        Check if the table is available
+        :param db: db name
+        :param table: table name
+        :return: True if the slot is available, False if not
+        """
         slot = self.get_slot_name(db, table)
         return slot in self.data
 
-    def available_deps(self, deps):
+    def available_deps(self, deps):  # FIXME: should it be part of put?
+        """
+        Check if all items from the deps list is available in the storage
+        :param deps: list of dependencies
+        :return: True if all dependencies are presented, False otherwise
+        """
         res = True
         for db, table, path in deps:
             res = res and self.path_exist(db, table, path)
         return res
 
     def subscribe(self, deps, handler):
+        """
+        Subscribe the handler to be run as soon as all dependencies are presented
+        :param deps:
+        :param handler:
+        :return:
+        """
         for db, table, path in deps:
             slot = self.get_slot_name(db, table)
             self.notify[slot][path].append(handler)
 
-
+# FIXME: rename to Runner?
+# FIXME: Inverse dependency. Don't add Managers to Daemon, but add Managers to Daemon
 class Daemon(object):
+    """ Implements main io-loop of the application
+        It will run event handlers inside of Manager objects
+        when corresponding db/table is updated
+    """
     SELECT_TIMEOUT = 1000
 
     def __init__(self):
+        """ Constructor """
         self.db_connectors = {}
         self.selector = swsscommon.Select()
         self.callbacks = defaultdict(lambda : defaultdict(list))  # db -> table -> []
         self.subscribers = set()
 
     def add_manager(self, db_name, table_name, callback):
+        """
+        Add an object which implements Manager class.
+        As soon as new events will
+        :param db_name:
+        :param table_name:
+        :param callback:
+        """
         db = swsscommon.SonicDBConfig.getDbId(db_name)
         if db not in self.db_connectors:
             self.db_connectors[db] = swsscommon.DBConnector(db_name, 0)
@@ -282,6 +422,7 @@ class Daemon(object):
         self.callbacks[db][table_name].append(callback)
 
     def run(self):
+        """ Main loop """
         while g_run:
             state, _ = self.selector.select(Daemon.SELECT_TIMEOUT)
             if state == self.selector.TIMEOUT:
@@ -300,7 +441,15 @@ class Daemon(object):
 
 
 class Manager(object):
+    """ This class represents a SONiC DB table """
     def __init__(self, common_objs, deps, database, table_name):
+        """
+        Initialize class
+        :param common_objs: common object dictionary
+        :param deps: dependcies list
+        :param database: database name
+        :param table_name: table name
+        """
         self.daemon = common_objs['daemon']
         self.directory = common_objs['directory']
         self.cfg_mgr = common_objs['cfg_mgr']
@@ -309,14 +458,20 @@ class Manager(object):
         self.db_id = database
         self.table_name = table_name
         self.set_queue = []
-        self.daemon.add_manager(database, table_name, self.handler)
-        self.directory.subscribe(deps, self.on_deps_change)
+        self.daemon.add_manager(database, table_name, self.handler)  # add the instance of the class to Daemon object
+        self.directory.subscribe(deps, self.on_deps_change)  # subscribe this class method on directory changes
 
     def handler(self, key, op, data):
+        """
+        This method is executed on each add/remove event on the table.
+        :param key: key of the table entry
+        :param op: operation on the table entry. Could be either 'SET' or 'DEL'
+        :param data: associated data of the event. Empty for 'DEL' operation.
+        """
         if op == swsscommon.SET_COMMAND:
-            if self.directory.available_deps(self.deps):
+            if self.directory.available_deps(self.deps):  # all requred dependencies are set in the Directory?
                 res = self.set_handler(key, data)
-                if not res:
+                if not res:  # set handler returned False, which means it is not ready to process is. Save it for later.
                     self.set_queue.append((key, data))
             else:
                 self.set_queue.append((key, data))
@@ -326,6 +481,7 @@ class Manager(object):
             syslog.syslog(syslog.LOG_ERR, 'Invalid operation "%s" for key "%s"' % (op, key))
 
     def on_deps_change(self):
+        """ This method is being executed on every dependency change """
         if not self.directory.available_deps(self.deps):
             return
         new_queue = []
@@ -336,14 +492,23 @@ class Manager(object):
         self.set_queue = new_queue
 
     def set_handler(self, key, data):
+        """ Placeholder for 'SET' command """
         syslog.syslog(syslog.LOG_ERR, "%s wasn't implemented for %s" % (self.__name__, self.__class__))
 
     def del_handler(self, key):
+        """ Placeholder for 'DEL' command """
         syslog.syslog(syslog.LOG_ERR, "%s wasn't implemented for %s" % (self.__name__, self.__class__))
 
 
 class BGPDataBaseMgr(Manager):
+    """ This class updates the Directory object when db table is updated """
     def __init__(self, common_objs, db, table):
+        """
+        Initialize the object
+        :param common_objs: common object dictionary
+        :param db: name of the db
+        :param table: name of the table in the db
+        """
         super(BGPDataBaseMgr, self).__init__(
             common_objs,
             [],
@@ -352,16 +517,24 @@ class BGPDataBaseMgr(Manager):
         )
 
     def set_handler(self, key, data):
+        """ Implementation of 'SET' command for this class """
         self.directory.put(self.db_id, self.table_name, key, data)
 
         return True
 
     def del_handler(self, key):
+        """ Implementation of 'DEL' command for this class """
         self.directory.remove(self.db_id, self.table_name, key)
 
 
 class BGPPeerGroupMgr(object):
+    """ This class represents peer-group and routing policy for the peer_type """
     def __init__(self, common_objs, base_template):
+        """
+        Construct the object
+        :param common_objs: common objects
+        :param base_template: path to the directory with Jinja2 templates
+        """
         self.cfg_mgr = common_objs['cfg_mgr']
         self.constants = common_objs['constants']
         tf = common_objs['tf']
@@ -369,11 +542,21 @@ class BGPPeerGroupMgr(object):
         self.peergroup_template = tf.from_file(base_template + "peer-group.conf.j2")
 
     def update(self, name, **kwargs):
+        """
+        Update peer-group and routing policy for the peer with the name
+        :param name: name of the peer. Used for logging only
+        :param kwargs: dictionary with parameters for rendering
+        """
         rc_policy = self.update_policy(name, **kwargs)
         rc_pg = self.update_pg(name, **kwargs)
         return rc_policy and rc_pg
 
     def update_policy(self, name, **kwargs):
+        """
+        Update routing policy for the peer
+        :param name: name of the peer. Used for logging only
+        :param kwargs: dictionary with parameters for rendering
+        """
         try:
             policy = self.policy_template.render(**kwargs)
         except jinja2.TemplateError as e:
@@ -383,6 +566,11 @@ class BGPPeerGroupMgr(object):
         return self.update_entity(policy, "Routing policy for peer '%s'" % name)
 
     def update_pg(self, name, **kwargs):
+        """
+        Update peer-group for the peer
+        :param name: name of the peer. Used for logging only
+        :param kwargs: dictionary with parameters for rendering
+        """
         try:
             pg = self.peergroup_template.render(**kwargs)
         except jinja2.TemplateError as e:
@@ -397,6 +585,12 @@ class BGPPeerGroupMgr(object):
         return self.update_entity(cmd, "Peer-group for peer '%s'" % name)
 
     def update_entity(self, cmd, txt):
+        """
+        Send commands to FRR
+        :param cmd: commands to send in a raw form
+        :param txt: text for the syslog output
+        :return:
+        """
         ret_code = self.cfg_mgr.push(cmd)
         if ret_code:
             syslog.syslog(syslog.LOG_INFO, "%s was updated" % txt)
@@ -406,7 +600,14 @@ class BGPPeerGroupMgr(object):
 
 
 class BGPPeerMgrBase(Manager):
+    """ Manager of BGP peers """
     def __init__(self, common_objs, table_name, peer_type):
+        """
+        Initialize the object
+        :param common_objs: common objects
+        :param table_name: name of the table with peers
+        :param peer_type: type of the peers. It is used to find right templates
+        """
         self.common_objs = common_objs
         self.fabric = common_objs['tf']
         self.constants = common_objs['constants']
@@ -451,6 +652,11 @@ class BGPPeerMgrBase(Manager):
         return
 
     def set_handler(self, key, data):
+        """
+         It runs on 'SET' command
+        :param key: key of the changed table
+        :param data: the data associated with the chabge
+        """
         vrf, nbr = self.split_key(key)
         if key not in self.peers:
             return self.add_peer(vrf, nbr, data)
@@ -458,6 +664,13 @@ class BGPPeerMgrBase(Manager):
             return self.update_peer(vrf, nbr, data)
 
     def add_peer(self, vrf, nbr, data):
+        """
+        Add a peer into FRR. This is used if the peer is not existed in FRR yet
+        :param vrf: vrf name. Name is equal "default" for the global vrf
+        :param nbr: neighbor ip address (name for dynamic peer type)
+        :param data: associated data
+        :return: True if this adding was successful, False otherwise
+        """
         print_data = vrf, nbr, data
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
         #
@@ -502,8 +715,14 @@ class BGPPeerMgrBase(Manager):
         return True
 
     def update_peer(self, vrf, nbr, data):
-        # when the peer is already configured we support "shutdown/no shutdown"
-        # commands for the peers only
+        """
+        Update a peer. This is used when the peer is already in the FRR
+        Update support only "admin_status" for now
+        :param vrf: vrf name. Name is equal "default" for the global vrf
+        :param nbr: neighbor ip address (name for dynamic peer type)
+        :param data: associated data
+        :return: True if this adding was successful, False otherwise
+        """
         if "admin_status" in data:
             self.change_admin_status(vrf, nbr, data)
         else:
@@ -512,6 +731,13 @@ class BGPPeerMgrBase(Manager):
         return True
 
     def change_admin_status(self, vrf, nbr, data):
+        """
+        Change admin status of a peer
+        :param vrf: vrf name. Name is equal "default" for the global vrf
+        :param nbr: neighbor ip address (name for dynamic peer type)
+        :param data: associated data
+        :return: True if this adding was successful, False otherwise
+        """
         if data['admin_status'] == 'up':
             self.apply_admin_status(vrf, nbr, "no shutdown", "up")
         elif data['admin_status'] == 'down':
@@ -521,6 +747,14 @@ class BGPPeerMgrBase(Manager):
             syslog.syslog(syslog.LOG_ERR, "Peer '%s|%s': Can't update the peer. It has wrong attribute value attr['admin_status'] = '%s'" % print_data)
 
     def apply_admin_status(self, vrf, nbr, template_name, admin_state):
+        """
+        Render admin state template and apply the command to the FRR
+        :param vrf: vrf name. Name is equal "default" for the global vrf
+        :param nbr: neighbor ip address (name for dynamic peer type)
+        :param template_name: name of the template to render
+        :param admin_state: desired admin state
+        :return: True if this adding was successful, False otherwise
+        """
         print_data = vrf, nbr, admin_state
         ret_code = self.apply_op(self.templates[template_name].render(neighbor_addr=nbr), vrf)
         if ret_code:
@@ -529,6 +763,10 @@ class BGPPeerMgrBase(Manager):
             syslog.syslog(syslog.LOG_ERR, "Can't set peer '%s|%s' admin state to '%s'." % print_data)
 
     def del_handler(self, key):
+        """
+        'DEL' handler for the BGP PEER tables
+        :param key: key of the neighbor
+        """
         vrf, nbr = self.split_key(key)
         if key not in self.peers:
             syslog.syslog(syslog.LOG_WARNING, 'Peer "(%s|%s)" has not been found' % (vrf, nbr))
@@ -542,6 +780,12 @@ class BGPPeerMgrBase(Manager):
             syslog.syslog(syslog.LOG_ERR, "Peer '(%s|%s)' hasn't been removed" % (vrf, nbr))
 
     def apply_op(self, cmd, vrf):
+        """
+        Push commands cmd into FRR
+        :param cmd: commands in raw format
+        :param vrf: vrf where the commands should be applied
+        :return: True if no errors, False if there are errors
+        """
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
         if vrf == 'default':
             cmd = ('router bgp %s\n' % bgp_asn) + cmd
@@ -550,6 +794,10 @@ class BGPPeerMgrBase(Manager):
         return self.cfg_mgr.push(cmd)
 
     def get_lo0_ipv4(self):
+        """
+        Extract Loopback0 ipv4 address from the Directory
+        :return: ipv4 address for Loopback0, None if nothing found
+        """
         loopback0_ipv4 = None
         for loopback in self.directory.get_slot("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME).iterkeys():
            if loopback.startswith("Loopback0|"):
@@ -563,6 +811,11 @@ class BGPPeerMgrBase(Manager):
 
     @staticmethod
     def split_key(key):
+        """
+        Split key into ip address and vrf name. If there is no vrf, "default" would be return for vrf
+        :param key: key to split
+        :return: vrf name extracted from the key, peer ip address extracted from the key
+        """
         if '|' not in key:
             return 'default', key
         else:
@@ -570,6 +823,10 @@ class BGPPeerMgrBase(Manager):
 
     @staticmethod
     def load_peers():
+        """
+        Load peers from FRR.
+        :return: set of peers, which are already installed in FRR
+        """
         vrfs = []
         command = ["vtysh", "-c",  "show bgp vrfs json"]
         ret_code, out, err = run_command(command)
@@ -594,8 +851,8 @@ class BGPPeerMgrBase(Manager):
         return peers
 
 
-def wait_for_bgpd():
-    # wait for 20 seconds
+def wait_for_bgpd():  # FIXME: rename to wait_for_daemons(daemons, seconds)
+    """ Wait until FRR daemons are ready for requests """
     stop_time = datetime.datetime.now() + datetime.timedelta(seconds=20)
     syslog.syslog(syslog.LOG_INFO, "Start waiting for bgpd: %s" % str(datetime.datetime.now()))
     while datetime.datetime.now() < stop_time:
@@ -608,22 +865,23 @@ def wait_for_bgpd():
 
 
 def read_constants():
+    """ Read file with constants values from /etc/sonic/constants.yml """
     with open('/etc/sonic/constants.yml') as fp:
         content = yaml.load(fp)
         if "constants" not in content:
-            syslog.syslog(syslog.LOG_CRIT, "constants.yml doesn't have 'constants' key")
-            raise Exception("constants.yml doesn't have 'constants' key")
+            syslog.syslog(syslog.LOG_CRIT, "/etc/sonic/constants.yml doesn't have 'constants' key")
+            raise Exception("/etc/sonic/constants.yml doesn't have 'constants' key")
         return content["constants"]
 
 
 def main():
-    db_managers_init = [
+    db_managers_init = [  # list of db tables to initialize DB managers
         ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME),
         ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME),
     ]
 
-    peer_managers_init = [
+    peer_managers_init = [  # list of Peer Managers
         (swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general"),
         ("BGP_MONITORS", "monitors"),
         ("BGP_PEER_RANGE", "dynamic"),
@@ -657,6 +915,7 @@ def main():
 
 
 def signal_handler(signum, frame):
+    """ signal handler """
     global g_run
     g_run = False
 
