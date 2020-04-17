@@ -837,7 +837,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
     if (!verify_ndisc)
         return;
 
-    if (iccp_check_if_addr_from_netlink(AF_INET6, ndisc_msg->ipv6_addr, ndisc_lif))
+    if (iccp_check_if_addr_from_netlink(AF_INET6, (uint8_t *)ndisc_msg->ipv6_addr, ndisc_lif))
     {
         ICCPD_LOG_DEBUG(__FUNCTION__, "NA %s is identical with the ipv6 address of interface %s",
                                       show_ipv6_str((char *)ndisc_msg->ipv6_addr), ndisc_lif->name);
