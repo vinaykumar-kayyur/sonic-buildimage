@@ -128,42 +128,65 @@ class ControlPlaneAclManager(object):
         LOOPBACK_INTERFACE_TABLE = "LOOPBACK_INTERFACE"
         MGMT_INTERFACE_TABLE = "MGMT_INTERFACE"
         VLAN_INTERFACE_TABLE = "VLAN_INTERFACE"
+        PORTCHANNEL_INTERFACE_TABLE = "PORTCHANNEL_INTERFACE"
+        INTERFACE_TABLE = "INTERFACE"
 
         block_ip2me_cmds = []
 
         # Add iptables rules to drop all packets destined for loopback interface IP addresses
-        # (and in the case of V6, all point-to-point addresses in the /64 subnet)
         loopback_iface_table = self.config_db.get_table(LOOPBACK_INTERFACE_TABLE)
         for ((iface_name, iface_cidr), _) in loopback_iface_table.iteritems():
             ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
             if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                block_ip2me_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
             elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/64 -j DROP".format(ip_ntwrk.network_address))
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
             else:
-                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+                log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         # Add iptables rules to drop all packets destined for management interface IP addresses
         mgmt_iface_table = self.config_db.get_table(MGMT_INTERFACE_TABLE)
         for ((iface_name, iface_cidr), _) in mgmt_iface_table.iteritems():
             ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
             if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                block_ip2me_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(ip_ntwrk.network_address))
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
             elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(ip_ntwrk.network_address))
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
             else:
-                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+                log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         # Add iptables rules to drop all packets destined for our VLAN interface gateway IP addresses
         vlan_iface_table = self.config_db.get_table(VLAN_INTERFACE_TABLE)
         for ((iface_name, iface_cidr), _) in vlan_iface_table.iteritems():
             ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
             if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                block_ip2me_cmds.append("iptables -A INPUT -d {}/32 -j DROP".format(list(ip_ntwrk.hosts())[0]))
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/{} -j DROP".format(list(ip_ntwrk.hosts())[0], ip_ntwrk.max_prefixlen))
             elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/128 -j DROP".format(list(ip_ntwrk.hosts())[0]))
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/{} -j DROP".format(list(ip_ntwrk.hosts())[0], ip_ntwrk.max_prefixlen))
             else:
-                log_warning("Unrecognized IP address type: {}".format(ip_ntwrk))
+                log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
+
+        # Add iptables rules to drop all packets destined for point-to-point interface IP addresses
+        # (All portchannel interfaces and configured front-panel interfaces)
+        portchannel_iface_table = self.config_db.get_table(PORTCHANNEL_INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in portchannel_iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
+            else:
+                log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
+
+        iface_table = self.config_db.get_table(INTERFACE_TABLE)
+        for ((iface_name, iface_cidr), _) in iface_table.iteritems():
+            ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+            if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                block_ip2me_cmds.append("iptables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
+            elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                block_ip2me_cmds.append("ip6tables -A INPUT -d {}/{} -j DROP".format(ip_ntwrk.network_address, ip_ntwrk.max_prefixlen))
+            else:
+                log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         return block_ip2me_cmds
 
