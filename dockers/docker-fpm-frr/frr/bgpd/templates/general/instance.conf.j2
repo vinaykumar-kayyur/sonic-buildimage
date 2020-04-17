@@ -27,6 +27,11 @@
 {% if bgp_session['nhopself'] | int != 0 %}
     neighbor {{ neighbor_addr }} next-hop-self
 {% endif %}
+!
+{% if CONFIG_DB__DEVICE_METADATA['localhost']['type'] == 'InternalBackend' %}
+  neighbor {{ neighbor_addr }} route-map OVERRIDE_ORIGINATOR_ID in
+{% endif %}
+!
 {% if bgp_session["asn"] == bgp_asn
    and CONFIG_DB__DEVICE_METADATA['localhost']['type'] == "SpineChassisFrontendRouter" %}
   address-family l2vpn evpn
