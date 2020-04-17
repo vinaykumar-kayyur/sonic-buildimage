@@ -36,7 +36,7 @@ def get_num_npus():
    num_npus = 1
    asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, 'asic.conf')
    if not os.path.isFile(asic_conf_file_path):
-	return num_npus
+	return 1
    with open(asic_conf_file_path) as asic_conf_file:
 	for line in asic_conf_file:
 	    tokens = line.split('=')
@@ -111,11 +111,11 @@ def get_system_mac(namespace=None):
         profile_cmd = 'cat' + SONIC_DEVICE_PATH + '/' + platform +'/'+ hwsku +'/profile.ini | cut -f2 -d='
         hw_mac_entry_cmds = [ profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'" ]
     else:
+        mac_address_cmd = "cat /sys/class/net/eth0/address"
         if namespace is not None:
-            ip_link_show_cmd = "sudo ip -n {} link show eth0".format(namespace)
-        else:
-            ip_link_show_cmd = "ip link show eth0"
-        hw_mac_entry_cmds = [ip_link_show_cmd + " | grep ether | awk '{print $2}'"]
+            mac_address_cmd = "sudo ip netns exec {} {}".format(namespace, mac_address_cmd)
+       
+        hw_mac_entry_cmds = [mac_address_cmd]
 
     for get_mac_cmd in hw_mac_entry_cmds:
         proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
