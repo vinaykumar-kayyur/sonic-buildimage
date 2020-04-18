@@ -478,14 +478,14 @@ class Manager(object):
         self.cfg_mgr = common_objs['cfg_mgr']
         self.constants = common_objs['constants']
         self.deps = deps
-        self.db_id = database
+        self.db_name = database
         self.table_name = table_name
         self.set_queue = []
         self.directory.subscribe(deps, self.on_deps_change)  # subscribe this class method on directory changes
 
     def get_database(self):
         """ Return associated database """
-        return self.db_id
+        return self.db_name
 
     def get_table_name(self):
         """ Return associated table name"""
@@ -550,13 +550,13 @@ class BGPDataBaseMgr(Manager):
 
     def set_handler(self, key, data):
         """ Implementation of 'SET' command for this class """
-        self.directory.put(self.db_id, self.table_name, key, data)
+        self.directory.put(self.db_name, self.table_name, key, data)
 
         return True
 
     def del_handler(self, key):
         """ Implementation of 'DEL' command for this class """
-        self.directory.remove(self.db_id, self.table_name, key)
+        self.directory.remove(self.db_name, self.table_name, key)
 
 
 class InterfaceMgr(Manager):
@@ -591,7 +591,7 @@ class InterfaceMgr(Manager):
             data["prefixlen"] = str(network.prefixlen)
             ip = str(network.ip)
             self.directory.put("LOCAL", "local_addresses", ip, data)
-        self.directory.put(self.db_id, self.table_name, key, data)
+        self.directory.put(self.db_name, self.table_name, key, data)
         self.directory.put("LOCAL", "interfaces", key, data)
         return True
 
@@ -607,7 +607,7 @@ class InterfaceMgr(Manager):
                 return True
             ip = str(network.ip)
             self.directory.remove("LOCAL", "local_addresses", ip)
-        self.directory.remove(self.db_id, self.table_name, key)
+        self.directory.remove(self.db_name, self.table_name, key)
         self.directory.remove("LOCAL", "interfaces", key)
 
 
@@ -1008,7 +1008,7 @@ class ZebraSetSrc(Manager):
 
     def set_handler(self, key, data):
         """ Implementation of 'SET' command for this class """
-        self.directory.put(self.db_id, self.table_name, key, data)
+        self.directory.put(self.db_name, self.table_name, key, data)
         #
         if key.startswith("Loopback0|") and "state" in data and data["state"] == "ok":
             ip_addr_w_mask = key.replace("Loopback0|", "")
@@ -1038,7 +1038,7 @@ class ZebraSetSrc(Manager):
 
     def del_handler(self, key):
         """ Implementation of 'DEL' command for this class """
-        self.directory.remove(self.db_id, self.table_name, key)
+        self.directory.remove(self.db_name, self.table_name, key)
         log_warn("Delete command is not supported for 'zebra set src' templates")
 
 
