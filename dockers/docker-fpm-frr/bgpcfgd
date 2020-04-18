@@ -584,7 +584,7 @@ class InterfaceMgr(Manager):
             interface_name, network_str = key.split('|', 1)
             try:
                 network = netaddr.IPNetwork(str(network_str))
-            except:
+            except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
                 log_warn("Subnet '%s' format is wrong for interface '%s'" % (network_str, data["interface"]))
                 return True
             data["interface"] = interface_name
@@ -602,7 +602,7 @@ class InterfaceMgr(Manager):
             interface, network = key.split('|', 1)
             try:
                 network = netaddr.IPNetwork(str(network))
-            except:
+            except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
                 log_warn("Subnet '%s' format is wrong for interface '%s'" % (network,interface))
                 return True
             ip = str(network.ip)
@@ -962,7 +962,6 @@ class BGPPeerMgrBase(Manager):
         Load peers from FRR.
         :return: set of peers, which are already installed in FRR
         """
-        vrfs = []
         command = ["vtysh", "-c",  "show bgp vrfs json"]
         ret_code, out, err = run_command(command)
         if ret_code == 0:
@@ -1100,7 +1099,7 @@ def main():
     runner.run()
 
 
-def signal_handler(signum, frame):
+def signal_handler(_, __):  # signal_handler(signum, frame)
     """ signal handler """
     global g_run
     g_run = False
