@@ -715,7 +715,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
             sprintf(arp_info->ifname, "%s", arp_msg->ifname);
             memcpy(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
             ICCPD_LOG_NOTICE(__FUNCTION__, "Update ARP for %s by ARP reply, intf %s mac [%02X:%02X:%02X:%02X:%02X:%02X]",
-                            show_ip_str(arp_msg->ipv4_addr), arp_msg->name,
+                            show_ip_str(arp_msg->ipv4_addr), arp_msg->ifname,
                             arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
         }
         break;
