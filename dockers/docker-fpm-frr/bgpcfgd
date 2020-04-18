@@ -1070,52 +1070,34 @@ def read_constants():
 
 
 def main():
-    db_managers_init = [  # list of db tables to initialize DB managers
-        ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME),
-        ("CONFIG_DB", swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME),
-    ]
-
-    iface_managers_init = [ # list of db tables to initialize IfaceManager
-        ("CONFIG_DB", swsscommon.CFG_INTF_TABLE_NAME),
-        ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME),
-        ("CONFIG_DB", swsscommon.CFG_VLAN_INTF_TABLE_NAME),
-        ("CONFIG_DB", swsscommon.CFG_LAG_INTF_TABLE_NAME),
-    ]
-
-    peer_managers_init = [  # list of Peer Managers
-        ("CONFIG_DB", swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general"),
-        ("CONFIG_DB", "BGP_MONITORS", "monitors"),
-        ("CONFIG_DB", "BGP_PEER_RANGE", "dynamic"),
-    ]
-
     wait_for_daemons(["bgpd", "zebra", "staticd"], seconds=20)
-
-    runner = Runner()
-
+    #
     common_objs = {
         'directory': Directory(),
         'cfg_mgr':   ConfigMgr(),
         'tf':        TemplateFabric(),
         'constants': read_constants(),
     }
-
-    for db, table in db_managers_init:
-        mgr = BGPDataBaseMgr(common_objs, db, table)
+    managers = [
+        # Config DB managers
+        BGPDataBaseMgr(common_objs, "CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME),
+        BGPDataBaseMgr(common_objs, "CONFIG_DB", swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME),
+        # Interface managers
+        InterfaceMgr(common_objs, "CONFIG_DB", swsscommon.CFG_INTF_TABLE_NAME),
+        InterfaceMgr(common_objs, "CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME),
+        InterfaceMgr(common_objs, "CONFIG_DB", swsscommon.CFG_VLAN_INTF_TABLE_NAME),
+        InterfaceMgr(common_objs, "CONFIG_DB", swsscommon.CFG_LAG_INTF_TABLE_NAME),
+        # State DB managers
+        ZebraSetSrc(common_objs, "STATE_DB", swsscommon.STATE_INTERFACE_TABLE_NAME),
+        # Peer Managers
+        BGPPeerMgrBase(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general"),
+        BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_MONITORS", "monitors"),
+        BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_PEER_RANGE", "dynamic"),
+    ]
+    runner = Runner()
+    for mgr in managers:
         runner.add_manager(mgr)
-
-    for db, table in iface_managers_init:
-        mgr = InterfaceMgr(common_objs, db, table)
-        runner.add_manager(mgr)
-
-    for db, peer_table_name, peer_type in peer_managers_init:
-        mgr = BGPPeerMgrBase(common_objs, db, peer_table_name, peer_type)
-        runner.add_manager(mgr)
-
-    runner.add_manager(ZebraSetSrc(common_objs, "STATE_DB", swsscommon.STATE_INTERFACE_TABLE_NAME))
-
     runner.run()
-
-    return
 
 
 def signal_handler(signum, frame):
