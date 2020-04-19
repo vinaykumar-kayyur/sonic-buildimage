@@ -21,7 +21,7 @@ from swsscommon import swsscommon
 
 
 g_run = True
-g_debug = True
+g_debug = False
 
 
 def log_debug(msg):
