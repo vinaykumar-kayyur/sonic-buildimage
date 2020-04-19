@@ -592,10 +592,12 @@ if [ "$install_env" = "sonic" ]; then
     onie_menuentry=$(cat /host/grub/grub.cfg | sed "/menuentry ONIE/,/}/!d")
 elif [ "$install_env" = "build" ]; then
     grub_cfg_root=%%SONIC_ROOT%%
-else
-    grub_cfg_root=$(blkid "$demo_dev" | grep -oE "[[:blank:]]UUID=\".*\"" | sed s/\"//g | sed s/\ //g)
-    if [ -z "$grub_cfg_root" ]; then
+else # install_env = "onie"
+    uuid=$(blkid "$demo_dev" | sed -ne 's/.* UUID=\"\([^"]*\)\".*/\1/p')
+    if [ -z "$uuid" ]; then
         grub_cfg_root=$demo_dev
+    else
+        grub_cfg_root=UUID=$uuid
     fi
 fi
 
