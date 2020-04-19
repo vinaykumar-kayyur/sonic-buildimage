@@ -107,7 +107,8 @@ class ConfigMgr(object):
             fp.write("%s\n" % cmd)
         command = ["vtysh", "-f", tmp_filename]
         ret_code, out, err = run_command(command)
-        os.remove(tmp_filename)
+        if not g_debug:
+            os.remove(tmp_filename)
         if ret_code != 0:
             err_tuple = str(cmd), ret_code, out, err
             log_err("ConfigMgr::push(): can't push configuration '%s', rc='%d', stdout='%s', stderr='%s'" % err_tuple)
@@ -772,7 +773,7 @@ class BGPPeerMgrBase(Manager):
             interface = self.get_local_interface(data["local_addr"])
             if not interface:
                 print_data = nbr, data["local_addr"]
-                log_info("Peer '%s' with local address '%s' wait for the corresponding interface to be set" % print_data)
+                log_debug("Peer '%s' with local address '%s' wait for the corresponding interface to be set" % print_data)
                 return False
             vnet = self.get_vnet(interface)
             if vnet:
