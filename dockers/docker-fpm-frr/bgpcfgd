@@ -10,11 +10,11 @@ import traceback
 import os
 import tempfile
 import json
-import yaml
 from collections import defaultdict, OrderedDict
 from pprint import pprint
 from functools import partial
 
+import yaml
 import jinja2
 import netaddr
 from swsscommon import swsscommon
@@ -105,7 +105,7 @@ class ConfigMgr(object):
         os.close(fd)
         with open(tmp_filename, 'w') as fp:
             fp.write("%s\n" % cmd)
-        command = ["vtysh", "-f",  tmp_filename]
+        command = ["vtysh", "-f", tmp_filename]
         ret_code, out, err = run_command(command)
         os.remove(tmp_filename)
         if ret_code != 0:
@@ -249,7 +249,7 @@ class TemplateFabric(object):
         if not value:
             return table
 
-        for key,val in value.items():
+        for key, val in value.items():
             if not isinstance(key, tuple):
                 continue
             table[key] = val
@@ -423,7 +423,7 @@ class Runner(object):
         """ Constructor """
         self.db_connectors = {}
         self.selector = swsscommon.Select()
-        self.callbacks = defaultdict(lambda : defaultdict(list))  # db -> table -> handlers[]
+        self.callbacks = defaultdict(lambda: defaultdict(list))  # db -> table -> handlers[]
         self.subscribers = set()
 
     def add_manager(self, manager):
@@ -525,11 +525,11 @@ class Manager(object):
 
     def set_handler(self, key, data):
         """ Placeholder for 'SET' command """
-        log_err("%s wasn't implemented for %s" % (self.__name__, self.__class__))
+        log_err("set_handler() wasn't implemented for %s" % self.__class__.__name__)
 
     def del_handler(self, key):
         """ Placeholder for 'DEL' command """
-        log_err("%s wasn't implemented for %s" % (self.__name__, self.__class__))
+        log_err("del_handler wasn't implemented for %s" % self.__class__.__name__)
 
 
 class BGPDataBaseMgr(Manager):
@@ -603,8 +603,8 @@ class InterfaceMgr(Manager):
             try:
                 network = netaddr.IPNetwork(str(network))
             except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
-                log_warn("Subnet '%s' format is wrong for interface '%s'" % (network,interface))
-                return True
+                log_warn("Subnet '%s' format is wrong for interface '%s'" % (network, interface))
+                return
             ip = str(network.ip)
             self.directory.remove("LOCAL", "local_addresses", ip)
         self.directory.remove(self.db_name, self.table_name, key)
@@ -706,10 +706,10 @@ class BGPPeerMgrBase(Manager):
         }
 
         deps = [
-                ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),
-                ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME, "Loopback0"),
-                ("LOCAL", "local_addresses", ""),
-                ("LOCAL", "interfaces", ""),
+            ("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/bgp_asn"),
+            ("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME, "Loopback0"),
+            ("LOCAL", "local_addresses", ""),
+            ("LOCAL", "interfaces", ""),
         ]
 
         self.check_neig_meta = 'bgp' in self.constants \
@@ -902,7 +902,7 @@ class BGPPeerMgrBase(Manager):
         """
         loopback0_ipv4 = None
         for loopback in self.directory.get_slot("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME).iterkeys():
-           if loopback.startswith("Loopback0|"):
+            if loopback.startswith("Loopback0|"):
                 loopback0_prefix_str = loopback.replace("Loopback0|", "")
                 loopback0_ip_str = loopback0_prefix_str[:loopback0_prefix_str.find('/')]
                 if TemplateFabric.is_ipv4(loopback0_ip_str):
@@ -962,25 +962,25 @@ class BGPPeerMgrBase(Manager):
         Load peers from FRR.
         :return: set of peers, which are already installed in FRR
         """
-        command = ["vtysh", "-c",  "show bgp vrfs json"]
+        command = ["vtysh", "-c", "show bgp vrfs json"]
         ret_code, out, err = run_command(command)
         if ret_code == 0:
             js_vrf = json.loads(out)
             vrfs = js_vrf['vrfs'].keys()
         else:
-            log_crit("Can't read bgp vrfs")
-            raise Exception("Can't read bgp vrfs")
+            log_crit("Can't read bgp vrfs: %s" % err)
+            raise Exception("Can't read bgp vrfs: %s" % err)
         peers = set()
         for vrf in vrfs:
-            command = ["vtysh", "-c",  'show bgp vrf %s neighbors json' % str(vrf)]
+            command = ["vtysh", "-c", 'show bgp vrf %s neighbors json' % str(vrf)]
             ret_code, out, err = run_command(command)
             if ret_code == 0:
                 js_bgp = json.loads(out)
                 for nbr in js_bgp.keys():
                     peers.add((vrf, nbr))
             else:
-                log_crit("Can't read vrf '%s' neighbors" % vrf)
-                raise Exception("Can't read vrf '%s' neighbors" % vrf)
+                log_crit("Can't read vrf '%s' neighbors: %s" % (vrf, str(err)))
+                raise Exception("Can't read vrf '%s' neighbors: %s" % (vrf, str(err)))
 
         return peers
 
@@ -1054,6 +1054,8 @@ def wait_for_daemons(daemons, seconds):
         if ret_code == 0 and all(daemon in out for daemon in daemons):
             log_info("All required daemons have connected to vtysh: %s" % str(datetime.datetime.now()))
             return
+        else:
+            log_warn("Can't read daemon status from FRR: %s" % str(err))
         time.sleep(0.1)  # sleep 100 ms
     raise RuntimeError("bgpd hasn't been started in %d seconds" % seconds)
 
@@ -1069,6 +1071,7 @@ def read_constants():
 
 
 def main():
+    """ Main function """
     wait_for_daemons(["bgpd", "zebra", "staticd"], seconds=20)
     #
     common_objs = {
