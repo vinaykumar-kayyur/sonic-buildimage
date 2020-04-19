@@ -66,10 +66,10 @@ class TestMultiNpuCfgGen(TestCase):
     def test_print_data(self):
         argument = "-m \"{}\" --print-data".format(self.sample_graph)
         output = self.run_script(argument)
-        self.assertTrue(len(output.strip()) > 0)
+        self.assertGreater(len(output.strip()) , 0)
         for asic in range(NUM_ASIC):
             output = self.run_script_for_asic(argument, asic)
-            self.assertTrue(len(output.strip()) > 0)
+            self.assertGreater(len(output.strip()) , 0)
     
         
     def test_additional_json_data(self):
