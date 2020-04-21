@@ -241,25 +241,15 @@ class MgmtVrfCfg:
         if self.mgmt_vrf_table_created == False:
             syslog.syslog(syslog.LOG_INFO, "Create MGMT VRF table:")
             cmd = 'ip link add name mgmt type vrf table {}'.format(MGMT_VRF_TABLE_ID)
-            syslog.syslog(syslog.LOG_INFO, "Create MGMT VRF table, cmd - {}".format(cmd))
-            try:
-                subprocess.check_call(cmd, shell=True)
+            if run_command(cmd) == True:
                 self.mgmt_vrf_table_created = True
-            except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                        .format(err.cmd, err.returncode, err.output))
 
     def delete_mgmt_vrf_table(self):
         if self.mgmt_vrf_table_created == True:
             syslog.syslog(syslog.LOG_INFO, "Delete MGMT VRF table:")
             cmd = 'ip link delete mgmt'
-            syslog.syslog(syslog.LOG_INFO, "Delete MGMT VRF table, cmd - {}".format(cmd))
-            try:
-                subprocess.check_call(cmd, shell=True)
+            if run_command(cmd) == True:
                 self.mgmt_vrf_table_created = False
-            except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                        .format(err.cmd, err.returncode, err.output))
 
     def configure_mgmt_vrf(self):
         syslog.syslog(syslog.LOG_INFO, "Configure MGMT VRF:")
@@ -267,50 +257,24 @@ class MgmtVrfCfg:
         self.create_mgmt_vrf_table()
 
         cmd = 'ip link set dev mgmt up'
-        syslog.syslog(syslog.LOG_INFO, "Set MGMT VRF up, cmd - {}".format(cmd))
-
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        if run_command(cmd) == False:
             return
 
         syslog.syslog(syslog.LOG_INFO, "Add lo intf:")
         cmd = 'ip link add lo-m type dummy'
-        syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        if run_command(cmd) == False:
             return
 
         cmd = 'ip addr add 127.0.0.1/8 dev lo-m'
-        syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        if run_command(cmd) == False:
             return
 
         cmd = 'ip link set lo-m up'
-        syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        if run_command(cmd) == False:
             return
 
         cmd = 'ip link set dev lo-m master mgmt'
-        syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        if run_command(cmd) == False:
             return
 
         self.bind_mgmt_intf()
@@ -326,21 +290,11 @@ class MgmtVrfCfg:
                 mgmt_intf_name = it
 
                 cmd = 'ip link set dev {} master mgmt'.format(mgmt_intf_name)
-                syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                            .format(err.cmd, err.returncode, err.output))
+                if run_command(cmd) == False:
                     return
 
                 cmd = 'sysctl -w net.ipv4.tcp_l3mdev_accept=1'
-                syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                            .format(err.cmd, err.returncode, err.output))
+                if run_command(cmd) == False:
                     return
 
                 mgmt_intf_bound = True
@@ -358,51 +312,29 @@ class MgmtVrfCfg:
                 if 'gwaddr' in entry:
                     mgmt_intf_gwaddr = entry['gwaddr']
                     cmd = 'ip route add table {} 0.0.0.0/0 via {}'.format(MGMT_VRF_TABLE_ID, mgmt_intf_gwaddr)
-                    syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-                    try:
-                        subprocess.check_call(cmd, shell=True)
-                    except subprocess.CalledProcessError as err:
-                        syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                                .format(err.cmd, err.returncode, err.output))
+                    if run_command(cmd) == False:
                         return
 
     def unconfigure_mgmt_vrf(self):
         syslog.syslog(syslog.LOG_INFO, "Unconfigure MGMT VRF:")
 
         cmd = 'ip link delete lo-m'
-        syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        if run_command(cmd) == True:
+            self.delete_mgmt_vrf_table()
 
-        self.delete_mgmt_vrf_table()
         return
 
     def handle_mgmt_intf_gwaddr_cfg(self, op, ifname, gwaddr):
         syslog.syslog(syslog.LOG_INFO, "Received MGMT Intf gwaddr config, op: {}, ifname: {}, gwaddr: {}".format(op, ifname, gwaddr))
         keys = self.config_db.get_keys(CFG_MGMT_VRF)
         if keys:
-            syslog.syslog(syslog.LOG_INFO, "MGMT VRF created")
             cmd = 'ip route del table {} 0.0.0.0/0'.format(MGMT_VRF_TABLE_ID)
-            syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-            try:
-                subprocess.check_call(cmd, shell=True)
-            except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
-                pass
+            run_command(cmd)
             
             if op == "ADD":
                 cmd = 'ip route add table {} 0.0.0.0/0 via {}'.format(MGMT_VRF_TABLE_ID, gwaddr)
-                syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
-                    pass
-
-        return True
+                run_command(cmd)
+            return True
 
     def handle_mgmt_intf_creation(self, mgmt_intf_key):
         syslog.syslog(syslog.LOG_INFO, "Received MGMT Intf creation, key: {}".format(mgmt_intf_key))
@@ -424,6 +356,44 @@ class MgmtVrfCfg:
         except:
             syslog.syslog(syslog.LOG_ERR, "{} MGMT VRF Configuration failed.".format(key))
 
+    def mgmt_vrf_table_get(self):
+        vrf_table = 'default'
+        entry = self.config_db.get_entry(CFG_MGMT_VRF, CFG_MGMT_VRF_KEY)
+        if entry:
+            if (('mgmtVrfEnabled' in entry) and (entry['mgmtVrfEnabled'] == 'true')):
+                vrf_table = '5000'
+
+        return vrf_table
+
+
+
+
+def run_command(cmd):
+    syslog.syslog(syslog.LOG_INFO, "Config cmd - {}".format(cmd))
+    try:
+        subprocess.check_call(cmd, shell=True)
+    except subprocess.CalledProcessError as err:
+        syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                .format(err.cmd, err.returncode, err.output))
+        return False
+
+    return True
+
+def cfg_attr_set (cmd, attr = None, value = None, appIntf = None):
+
+    rc = run_command(cmd)
+    if appIntf != None and rc == True:
+        appIntf[attr] = value
+
+    return rc
+
+def is_attr_cfg_required (attr, cfg_data, app_data, cfgAllAtrr = True):
+    rc = False
+
+    if ((cfgAllAtrr == True) or (attr not in app_data) or (cfg_data[attr] != app_data[attr])):
+        rc = True
+
+    return rc
 
 
 class MgmtIntfCfg:
@@ -458,39 +428,19 @@ class MgmtIntfCfg:
 
     def mgmt_intf_mtu_set (self, ifname, mtu, appIntf):
         cmd = 'ifconfig {} mtu {}'.format(ifname, mtu)
-        syslog.syslog(syslog.LOG_INFO, "Configure MTU, cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-            appIntf['mtu'] = mtu
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        cfg_attr_set(cmd, 'mtu', mtu, appIntf)
 
     def mgmt_intf_admin_status_set (self, ifname, admin_status, appIntf):
         cmd = 'ifconfig {} {}'.format(ifname, admin_status)
-        syslog.syslog(syslog.LOG_INFO, "Configure admin_status, cmd - {}".format(cmd))
-        try:
-            subprocess.check_call(cmd, shell=True)
-            appIntf['admin_status'] = admin_status
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        cfg_attr_set(cmd, 'admin_status', admin_status, appIntf)
 
     def mgmt_intf_description_set (self, ifname, description, appIntf):
-        syslog.syslog(syslog.LOG_INFO, "Configure description, cmd - {}".format(description))
         appIntf['description'] = description
 
     def mgmt_intf_speed_set (self, ifname, speed, autoneg, appIntf):
         duplex = "full"
         cmd = 'ethtool -s {} speed {} duplex {} autoneg {}; ifup {}'.format(ifname, speed, duplex, autoneg, ifname)
-        syslog.syslog(syslog.LOG_INFO, "Configure SPEED, cmd - {}".format(cmd))
-
-        try:
-            subprocess.check_call(cmd, shell=True)
-            appIntf['speed'] = speed
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                    .format(err.cmd, err.returncode, err.output))
+        cfg_attr_set(cmd, 'speed', speed, appIntf)
 
     def mgmt_intf_autoneg_set (self, ifname, autoneg, appIntf):
         an = "on"
@@ -500,44 +450,18 @@ class MgmtIntfCfg:
             an = "off"
 
         cmd = "ethtool -s {} autoneg {}".format(ifname, an)
-        syslog.syslog(syslog.LOG_INFO, "Configure autoneg, cmd - {}".format(cmd))
-
-        try:
-            subprocess.check_call(cmd, shell=True)
-            appIntf['autoneg'] = autoneg
-        except subprocess.CalledProcessError as err:
-             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
+        cfg_attr_set(cmd, 'autoneg', autoneg, appIntf)
 
     def mgmt_intf_gwaddr_set(self, ifname, ip_prefix, gwaddr, op):
-        if not self.mgmt_vrf_cfg.handle_mgmt_intf_gwaddr_cfg(op, ifname, gwaddr):
-            try:
-                ip_conf = netaddr.IPNetwork(ip_prefix)
-                ver = "-4"
-                if ip_conf.version == 6:
-                    ver = "-6"
+        vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
+        ip_conf = netaddr.IPNetwork(ip_prefix)
+        ver = "-4"
+        if ip_conf.version == 6:
+            ver = "-6"
 
-                cmd = "ip {} route {} {}/{} via {} dev {}".format(ver, op.lower(), ip_conf.network, ip_conf.prefixlen, gwaddr, ifname)
+        cmd = "ip {} route {} default via {} dev {} table {}".format(ver, op.lower(), gwaddr, ifname, vrf_table)
+        cfg_attr_set(cmd)
 
-                syslog.syslog(syslog.LOG_INFO, "Configure gwaddr , cmd : {}".format(cmd))
-                subprocess.check_call(cmd, shell=True)
-            except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
-                pass
-
-    def mgmt_intf_default_gwaddr_set (self, ifname, default_gw, op):
-        try:
-            ver = "-4"
-            mgmt_conf = netaddr.IPNetwork(default_gw)
-            if mgmt_conf.version == 6:
-                ver = "-6"
-
-            cmd = "ip {} route {} default via {} dev {}".format(ver, op.lower(), default_gw, ifname)
-
-            syslog.syslog(syslog.LOG_INFO, "Configure Default Gateway, cmd : {}".format(cmd))
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
-            pass
 
     def mgmt_intf_dhclient_set (self, ifname, attr, enable):
         version  = ""
@@ -550,69 +474,76 @@ class MgmtIntfCfg:
             cmd_opt = "-D LL"
 
         if enable == True:
-            try:
-                path = "/var/run/dhclient{}.{}.pid".format(file_ext, ifname)
-                if os.path.exists(path):
-                    cmd = "[ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(file_ext, ifname, file_ext, ifname, file_ext, ifname)
-                    subprocess.check_call(cmd, shell=True)
-            except subprocess.CalledProcessError as err:
-                pass
+            path = "/var/run/dhclient{}.{}.pid".format(file_ext, ifname)
+            if os.path.exists(path):
+                cmd = "[ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(file_ext, ifname, file_ext, ifname, file_ext, ifname)
+                run_command(cmd)
 
-        try:
-            if enable == True:
-                cmd = "/sbin/dhclient {} -pf /run/dhclient{}.{}.pid -lf /var/lib/dhcp/dhclient{}.{}.leases {} -nw {} ".format(version, file_ext, ifname, file_ext, ifname, ifname, cmd_opt)
-            else:
-                cmd = "/sbin/dhclient {} -r {} && [ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(version, ifname, file_ext, ifname, file_ext, ifname, file_ext, ifname)
+        if enable == True:
+            cmd = "/sbin/dhclient {} -pf /run/dhclient{}.{}.pid -lf /var/lib/dhcp/dhclient{}.{}.leases {} -nw {} ".format(version, file_ext, ifname, file_ext, ifname, ifname, cmd_opt)
+        else:
+            cmd = "/sbin/dhclient {} -r {} && [ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(version, ifname, file_ext, ifname, file_ext, ifname, file_ext, ifname)
 
-            syslog.syslog(syslog.LOG_INFO, "Configure dhclient , cmd : {}".format(cmd))
-
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
-            pass
+        run_command(cmd)
 
     def mgmt_intf_ip_prefix_set (self, ifname, ip_prefix, op):
-        try:
-            ver = "-4"
-            mgmt_conf = netaddr.IPNetwork(ip_prefix)
-            if mgmt_conf.version == 6:
-                ver = "-6"
-            cmd = "ip {} addr {} {} dev {}".format(ver, op.lower(), ip_prefix, ifname)
-            syslog.syslog(syslog.LOG_INFO, "Configure ip_prefix, op : {}, ip_prefix: {}, cmd : {}, mgmt_conf: {}".format(op, ip_prefix, cmd, mgmt_conf))
-            subprocess.check_call(cmd, shell=True)
-            cmd = "ip {} rule {} from {} table default pref 1003".format(ver, op.lower(), str(mgmt_conf.ip))
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}".format(err.cmd, err.returncode, err.output))
-            pass
+        ver = "-4"
+        mgmt_conf = netaddr.IPNetwork(ip_prefix)
+        if mgmt_conf.version == 6:
+            ver = "-6"
+
+        cmd = "ip {} addr {} {} dev {}".format(ver, op.lower(), ip_prefix, ifname)
+        cfg_attr_set(cmd)
+
+        cmd = "ip {} rule {} from {} table default".format(ver, op.lower(), str(mgmt_conf.ip))
+        cfg_attr_set(cmd)
+
+    def mgmt_intf_forced_mgmt_routes_set (self, ifname, ip_prefix, forced_routes, op, app_forced_routes = []):
+        vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
+        if op == "UPDATE":
+            routes_add = []
+            routes_del = []
+            for cfg_route in forced_routes:
+                if cfg_route not in app_forced_routes:
+                    routes_add.append(cfg_route)
+
+            for cfg_route in app_forced_routes:
+                if cfg_route not in forced_routes:
+                    routes_del.append(cfg_route)
+
+            self.mgmt_intf_forced_mgmt_routes_set(ifname, ip_prefix, routes_del, "DEL")
+            self.mgmt_intf_forced_mgmt_routes_set(ifname, ip_prefix, routes_add, "ADD")
+            return routes_add
+        else:
+            for route in forced_routes:
+                cmd = "ip rule {} to {} table {}".format(op.lower(), route, vrf_table)
+                cfg_attr_set(cmd)
+                return forced_routes
+
 
     def handle_mgmt_port_cfg(self, key, data):
         mgmt_intf =  self.app_db.get_entry(APP_MGMT_PORT_TABLE, key)
-        is_all = False
+        cfgAllAtrr = False
         if mgmt_intf == {}:
-            is_all = True
+            cfgAllAttr = True
 
-        try:
-            if (('mtu' in data) and ((is_all == True) or (mgmt_intf == {}) or ('mtu' not in mgmt_intf) or (data['mtu'] != mgmt_intf['mtu']))):
-                self.mgmt_intf_mtu_set(key, data['mtu'], mgmt_intf)
-
-            if (('description' in data) and ((is_all == True) or (mgmt_intf == {}) or ('description' not in mgmt_intf) or (data['description'] != mgmt_intf['description']))):
-                self.mgmt_intf_description_set(key, data['description'], mgmt_intf)
-
-            if (('admin_status' in data) and ((is_all == True) or (mgmt_intf == {}) or ('admin_status' not in mgmt_intf) or (data['admin_status'] != mgmt_intf['admin_status']))):
-                self.mgmt_intf_admin_status_set(key, data['admin_status'], mgmt_intf)
-
-            if (('autoneg' in data) and ((is_all == True) or (mgmt_intf == {}) or ('autoneg' not in mgmt_intf) or (data['autoneg'] != mgmt_intf['autoneg']))):
-                self.mgmt_intf_autoneg_set(key, data['autoneg'], mgmt_intf)
-
-            if (('speed' in data) and ((is_all == True) or (mgmt_intf == {}) or ('speed' not in mgmt_intf) or (data['speed'] != mgmt_intf['speed']))):
-                autoneg = "on"
-                if 'autoneg' in data:
-                    if data['autoneg'] == "false":
-                        autoneg = "off"
-                self.mgmt_intf_speed_set(key, data['speed'], autoneg, mgmt_intf)
-        except:
-            syslog.syslog(syslog.LOG_ERR, "{} MGMT Port Config set failed.".format(key))
+        attr_func_map = {
+                'mtu'         : self.mgmt_intf_mtu_set,
+                'description' : self.mgmt_intf_description_set,
+                'admin_status': self.mgmt_intf_admin_status_set,
+                'autoneg'     : self.mgmt_intf_autoneg_set,
+                'speed'       : self.mgmt_intf_speed_set,
+                }
+        for attr in data:
+            if (is_attr_cfg_required(attr, data, mgmt_intf, cfgAllAtrr) == True):
+                if attr == 'speed':
+                    autoneg = "on"
+                    if 'autoneg' in data:
+                        if data['autoneg'] == "false":
+                            autoneg = "off"
+                    attr_func_map[attr](key, data[attr], autoneg, mgmt_intf)
+                else:
+                    attr_func_map[attr](key, data[attr], mgmt_intf)
 
         self.app_db.set_entry(APP_MGMT_PORT_TABLE, key, mgmt_intf)
 
@@ -620,124 +551,93 @@ class MgmtIntfCfg:
     def handle_mgmt_intf_cfg(self, key, data):
         cur_appdb_key = key.replace('|', ':')
         intf_keys = key.split("|")
+        db_key = key
+        if (len(intf_keys) > 1):
+            db_key = tuple(intf_keys)
+
         cfgdb_entry = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, key)
         appdb_entry = self.app_db.get_entry(APP_MGMT_INTF_TABLE, cur_appdb_key)
+        cfg_keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        app_keys = self.app_db.get_keys(APP_MGMT_INTF_TABLE)
         op = "DELETE"
-        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
-
-        for it in keys:
-            if len(it) != 2:
-                it = (it, )
-                it_key = it[0]
-            else:
-                it_key = it[0] + "|" + it[1]
-
-            if it_key == key:
-                op = "CREATE"
-                break
-
-        if op == "CREATE":
-            if cfgdb_entry != {} and appdb_entry != {}:
+        if ((db_key in cfg_keys) or (key in cfg_keys)):
+            if ((db_key in app_keys) or (cur_appdb_key in app_keys)):
                 op = "UPDATE"
-
+            else:
+                op = "CREATE"
 
         if (len(intf_keys) < 2):
             if op == "DELETE":
                 cfgdb_entry['ipv4_dhcp_client'] = "true"
                 cfgdb_entry['ipv6_dhcp_client'] = "true"
-
-                if (('ipv4_dhcp_client' not in appdb_entry) or (appdb_entry['ipv4_dhcp_client'] != cfgdb_entry['ipv4_dhcp_client'])):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv4_dhcp_client", True)
-                    appdb_entry['ipv4_dhcp_client'] = cfgdb_entry['ipv4_dhcp_client']
-
-                if (('ipv6_dhcp_client' not in appdb_entry) or (appdb_entry['ipv6_dhcp_client'] != cfgdb_entry['ipv6_dhcp_client'])):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv6_dhcp_client", True)
-                    appdb_entry['ipv6_dhcp_client'] = cfgdb_entry['ipv6_dhcp_client']
-
-                if ('ipv4_default_gwaddr' in appdb_entry):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DEL")
-                    del appdb_entry['ipv4_default_gwaddr']
-
-                if ('ipv6_default_gwaddr' in appdb_entry):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DEL")
-                    del appdb_entry['ipv6_default_gwaddr']
-
-                self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
                 self.config_db.set_entry(CFG_MGMT_INTF_TABLE, key, cfgdb_entry)
 
-            elif op == "CREATE":
-                syslog.syslog(syslog.LOG_ERR, "handle_mgmt_intf_cfg: operation is CREATE, return after vrf create handling")
-                self.mgmt_vrf_cfg.handle_mgmt_intf_creation(key)
+            for attr in cfgdb_entry:
+                if is_attr_cfg_required(attr, cfgdb_entry, appdb_entry, False):
+                    self.mgmt_intf_dhclient_set(intf_keys[0], attr, cfgdb_entry[attr] == "true")
+                    appdb_entry[attr] = cfgdb_entry[attr]
+            self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
 
-                if ('ipv4_dhcp_client' in cfgdb_entry):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv4_dhcp_client", cfgdb_entry['ipv4_dhcp_client'] == "true")
-                    appdb_entry['ipv4_dhcp_client'] = cfgdb_entry['ipv4_dhcp_client']
-
-                if ('ipv6_dhcp_client' in cfgdb_entry):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv6_dhcp_client", cfgdb_entry['ipv6_dhcp_client'] == "true")
-                    appdb_entry['ipv6_dhcp_client'] = cfgdb_entry['ipv6_dhcp_client']
-
-                if ('ipv4_default_gwaddr' in cfgdb_entry):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv4_default_gwaddr'], "ADD")
-                    appdb_entry['ipv4_default_gwaddr'] = cfgdb_entry['ipv4_default_gwaddr']
-
-                if ('ipv6_default_gwaddr' in cfgdb_entry):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv6_default_gwaddr'], "ADD")
-                    appdb_entry['ipv6_default_gwaddr'] = cfgdb_entry['ipv6_default_gwaddr']
-
-                self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
-
-            elif op == "UPDATE":
-                if (('ipv4_dhcp_client' in cfgdb_entry) and ('ipv4_dhcp_client' not in appdb_entry)):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv4_dhcp_client", cfgdb_entry['ipv4_dhcp_client'] == "true")
-                    appdb_entry['ipv4_dhcp_client'] = cfgdb_entry['ipv4_dhcp_client']
-                elif (('ipv4_dhcp_client' in cfgdb_entry) and (cfgdb_entry['ipv4_dhcp_client'] != appdb_entry['ipv4_dhcp_client'])):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv4_dhcp_client", cfgdb_entry['ipv4_dhcp_client'] == "true")
-                    appdb_entry['ipv4_dhcp_client'] = cfgdb_entry['ipv4_dhcp_client']
-
-                if (('ipv6_dhcp_client' in cfgdb_entry) and ('ipv6_dhcp_client' not in appdb_entry)):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv6_dhcp_client", cfgdb_entry['ipv6_dhcp_client'] == "true")
-                    appdb_entry['ipv6_dhcp_client'] = cfgdb_entry['ipv6_dhcp_client']
-                elif (('ipv6_dhcp_client' in cfgdb_entry) and (cfgdb_entry['ipv6_dhcp_client'] != appdb_entry['ipv6_dhcp_client'])):
-                    self.mgmt_intf_dhclient_set(intf_keys[0], "ipv6_dhcp_client", cfgdb_entry['ipv6_dhcp_client'] == "true")
-                    appdb_entry['ipv6_dhcp_client'] = cfgdb_entry['ipv6_dhcp_client']
-
-                if (('ipv4_default_gwaddr' in cfgdb_entry) and ('ipv4_default_gwaddr' not in appdb_entry)):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv4_default_gwaddr'], "ADD")
-                    appdb_entry['ipv4_default_gwaddr'] = cfgdb_entry['ipv4_default_gwaddr']
-                elif (('ipv4_default_gwaddr' in cfgdb_entry) and (cfgdb_entry['ipv4_default_gwaddr'] != appdb_entry['ipv4_default_gwaddr'])):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DEL")
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv4_default_gwaddr'], "ADD")
-                    appdb_entry['ipv4_default_gwaddr'] = cfgdb_entry['ipv4_default_gwaddr']
-                elif (('ipv4_default_gwaddr' not in cfgdb_entry) and ('ipv4_default_gwaddr' in appdb_entry)):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv4_default_gwaddr'], "DEL")
-                    del appdb_entry['ipv4_default_gwaddr']
-
-                if (('ipv6_default_gwaddr' in cfgdb_entry) and ('ipv6_default_gwaddr' not in appdb_entry)):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv6_default_gwaddr'], "ADD")
-                    appdb_entry['ipv6_default_gwaddr'] = cfgdb_entry['ipv6_default_gwaddr']
-                elif (('ipv6_default_gwaddr' in cfgdb_entry) and (cfgdb_entry['ipv6_default_gwaddr'] != appdb_entry['ipv6_default_gwaddr'])):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DEL")
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], cfgdb_entry['ipv6_default_gwaddr'], "ADD")
-                    appdb_entry['ipv6_default_gwaddr'] = cfgdb_entry['ipv6_default_gwaddr']
-                elif (('ipv6_default_gwaddr' not in cfgdb_entry) and ('ipv6_default_gwaddr' in appdb_entry)):
-                    self.mgmt_intf_default_gwaddr_set(intf_keys[0], appdb_entry['ipv6_default_gwaddr'], "DEL")
-                    del appdb_entry['ipv6_default_gwaddr']
-
-                self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
         else:
-            if op == "CREATE" or op == "UPDATE" :
+            if op == "CREATE":
                 self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "ADD")
-                if (('gwaddr' in data) and ((appdb_entry == {}) or ('gwaddr' not in appdb_entry))):
+                if ('gwaddr' in data):
                     self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "ADD")
                     appdb_entry['gwaddr'] = data['gwaddr']
-                elif (('gwaddr' in data) and ('gwaddr' not in cfgdb_entry) and ('gwaddr' in appdb_entry)):
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'],"DEL")
-                    del appdb_entry['gwaddr']
-                elif (('gwaddr' in data) and (data['gwaddr'] != appdb_entry['gwaddr'])):
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DEL")
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "ADD")
-                    appdb_entry['gwaddr'] = data['gwaddr']
+
+                if ('forced_mgmt_routes' in data):
+                    forced_routes = data['forced_mgmt_routes']
+                    self.mgmt_intf_forced_mgmt_routes_set(intf_keys[0], intf_keys[1], forced_routes, "ADD")
+                    appdb_entry['forced_mgmt_routes'] = data['forced_mgmt_routes']
+
+                if appdb_entry == {}:
+                    appdb_entry["NULL"] = "NULL"
+
+                self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
+            elif op == "UPDATE":
+                '''
+                Case 1: gwaddr attribute delete case, gwaddr present in appdb entry
+                        and not in config db entry
+                Case 2: gwaddr attribute add case, gwaddr is present in config db
+                        entry but not in appdb entry
+                case 3: gwaddr attribute modify case, gwaddr present in both config
+                        and app db entry but they are different
+                '''
+                if ('gwaddr' not in cfgdb_entry):
+                    if ('gwaddr' in appdb_entry):
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DEL")
+                        del appdb_entry['gwaddr']
+                else:
+                    if ('gwaddr' not in appdb_entry):
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], cfgdb_entry['gwaddr'], "ADD")
+                    elif (cfgdb_entry['gwaddr'] != appdb_entry['gwaddr']):
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DEL")
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], cfgdb_entry['gwaddr'], "ADD")
+
+                    appdb_entry['gwaddr'] = cfgdb_entry['gwaddr']
+
+                '''
+                Handle forced routes config UPDATE operation
+                '''
+                cfg_forced_routes = []
+                app_forced_routes = []
+                if ('forced_mgmt_routes' in cfgdb_entry):
+                    cfg_forced_routes = cfgdb_entry['forced_mgmt_routes']
+                if ('forced_mgmt_routes' in appdb_entry):
+                    app_forced_routes = appdb_entry['forced_mgmt_routes']
+
+                '''
+                check is forced_mgmt_routes present in config db or app db entry
+                handle update case.
+                '''
+                if (len(cfg_forced_routes) > 0 or len(app_forced_routes) > 0):
+                    cfg_forced_routes = self.mgmt_intf_forced_mgmt_routes_set(intf_keys[0], intf_keys[1],
+                                                    cfg_forced_routes, op, app_forced_routes)
+                
+                    if len(cfg_forced_routes) == 0:
+                        del appdb_entry['forced_mgmt_routes']
+                    else:
+                        appdb_entry['forced_mgmt_routes'] = cfgdb_entry['forced_mgmt_routes']
 
                 if appdb_entry == {}:
                     appdb_entry["NULL"] = "NULL"
@@ -746,8 +646,13 @@ class MgmtIntfCfg:
 
             else:
                 self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "DEL")
-                if ('gwaddr' in data):
-                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "DEL")
+                if ('gwaddr' in appdb_entry):
+                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'], "DEL")
+
+                if ('forced_mgmt_routes' in appdb_entry):
+                    forced_routes = appdb_entry['forced_mgmt_routes']
+                    self.mgmt_intf_forced_mgmt_routes_set(intf_keys[0], intf_keys[1], forced_routes, "DEL")
+
                 self.app_db.delete_entry(APP_MGMT_INTF_TABLE, cur_appdb_key)
 
 
