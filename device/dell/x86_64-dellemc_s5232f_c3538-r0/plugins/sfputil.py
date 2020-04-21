@@ -14,7 +14,6 @@ try:
     from mmap import *
     from sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_sfp.sff8436 import sff8436Dom
-    from sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_sfp.sff8472 import sff8472Dom
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
