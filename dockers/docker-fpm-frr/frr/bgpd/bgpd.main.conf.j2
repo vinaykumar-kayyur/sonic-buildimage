@@ -9,7 +9,9 @@
 !
 ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 !
+{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
 ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | replace('/128', '/64') | ip_network }}/64
+{% endif %}
 !
 !
 {% if DEVICE_METADATA['localhost']['type'] == 'InternalFrontend' %}
@@ -48,9 +50,11 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {# advertise loopback #}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 !
+{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
   address-family ipv6
     network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/64
   exit-address-family
+{% endif %}
 {% endblock bgp_init %}
 !
 {% block vlan_advertisement %}
