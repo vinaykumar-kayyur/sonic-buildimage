@@ -213,8 +213,11 @@ class SfpUtil(SfpUtilBase):
 
         return True
 
-    def get_transceiver_change_event(self):
+    def get_transceiver_change_event(self, timeout=0):
         port_dict = {}
+        sleep_time_ms = 500  # Poll interval, in milliseconds
+        sleep_time = sleep_time_ms / 1000.0
+        elapsed_time_ms = 0
         while True:
             for port_num in range(self.port_start, (self.port_end + 1)):
                 presence = self.get_presence(port_num)
@@ -227,6 +230,12 @@ class SfpUtil(SfpUtilBase):
                     port_dict[port_num] = '0'
 
                 if(len(port_dict) > 0):
-                    return True, port_dict
+                    break
 
-            time.sleep(0.5)
+            if len(port_dict) > 0:
+                break
+            if timeout != 0:
+                elapsed_time_ms += sleep_time_ms
+                if elapsed_time_ms > timeout:
+                    break
+            time.sleep(sleep_time)
