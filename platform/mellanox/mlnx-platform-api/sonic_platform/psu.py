@@ -30,8 +30,48 @@ PSU_POWER = "power"
 
 # in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
+<<<<<<< HEAD
 
 platform_dict_psu = {'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4700-r0': 1}
+=======
+platform_dict_psu = {'x86_64-mlnx_msn3420-r0':1, 'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4600c-r0':1, 'x86_64-mlnx_msn4700-r0': 1}
+psu_profile_list = [
+    # default filename convention
+    {
+        PSU_CURRENT : "power/psu{}_curr",
+        PSU_VOLTAGE : "power/psu{}_volt",
+        PSU_POWER : "power/psu{}_power"
+    },
+    # for 3420, 3700, 3700c, 3800, 4600c, 4700
+    {
+        PSU_CURRENT : "power/psu{}_curr",
+        PSU_VOLTAGE : "power/psu{}_volt_out2",
+        PSU_POWER : "power/psu{}_power"
+    }
+]
+
+class Psu(PsuBase):
+    """Platform-specific Psu class"""
+
+    STATUS_LED_COLOR_ORANGE = "orange"
+
+    def __init__(self, psu_index, platform):
+        global psu_list
+        PsuBase.__init__(self)
+        # PSU is 1-based on Mellanox platform
+        self.index = psu_index + 1
+        psu_list.append(self.index)
+        self.psu_path = "/var/run/hw-management/"
+        psu_oper_status = "thermal/psu{}_pwr_status".format(self.index)
+        #psu_oper_status should always be present for all SKUs
+        self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
+        self._name = "PSU{}".format(psu_index + 1)
+
+        if platform in platform_dict_psu:
+            filemap = psu_profile_list[platform_dict_psu[platform]]
+        else:
+            filemap = psu_profile_list[0]
+>>>>>>> added platform 3420 and 4600c to platform utils
 
         self.psu_data = DEVICE_DATA[platform]['psus']
 
