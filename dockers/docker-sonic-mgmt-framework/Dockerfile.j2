@@ -1,4 +1,4 @@
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -20,7 +20,7 @@ RUN pip install connexion==1.1.15 \
 
 ## Install redis-tools dependencies
 ## TODO: implicitly install dependencies
-RUN apt-get -y install libjemalloc1 libatomic1 liblua5.1-0 lua-bitop lua-cjson
+RUN apt-get -y install libjemalloc2 libatomic1 liblua5.1-0 lua-bitop lua-cjson
 
 COPY \
 {% for deb in docker_sonic_mgmt_framework_debs.split(' ') -%}

@@ -1,7 +1,8 @@
-# Docker base image (based on Debian Stretch)
+# Docker base image (based on Debian Buster)
 
-DOCKER_BASE_STRETCH = docker-base-stretch.gz
-$(DOCKER_BASE_STRETCH)_PATH = $(DOCKERS_PATH)/docker-base-stretch
+DOCKER_BASE_STRETCH = docker-base-buster.gz
+$(DOCKER_BASE_STRETCH)_PATH = $(DOCKERS_PATH)/docker-base-buster
+
 $(DOCKER_BASE_STRETCH)_DEPENDS += $(SUPERVISOR) $(REDIS_TOOLS)
 $(DOCKER_BASE_STRETCH)_DEPENDS += $(SOCAT)
 

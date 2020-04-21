@@ -643,10 +643,10 @@ else
 endif
 endif
 
-$(foreach IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(IMAGE)_DEBS_PATH := $(STRETCH_DEBS_PATH)))
-$(foreach IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(IMAGE)_FILES_PATH := $(STRETCH_FILES_PATH)))
-$(foreach IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(IMAGE)_DEBS_PATH := $(STRETCH_DEBS_PATH)))
-$(foreach IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(IMAGE)_FILES_PATH := $(STRETCH_FILES_PATH)))
+$(foreach IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(IMAGE)_DEBS_PATH := $(DEBS_PATH)))
+$(foreach IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH)))
+$(foreach IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(IMAGE)_DEBS_PATH := $(DEBS_PATH)))
+$(foreach IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH)))
 
 # Targets for building docker images
 $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start \

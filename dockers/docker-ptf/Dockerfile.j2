@@ -1,10 +1,11 @@
 {% if CONFIGURED_ARCH == "armhf" %}
-FROM multiarch/debian-debootstrap:armhf-stretch
+FROM multiarch/debian-debootstrap:armhf-buster
 {% elif CONFIGURED_ARCH == "arm64" %}
-FROM multiarch/debian-debootstrap:arm64-stretch
+FROM multiarch/debian-debootstrap:arm64-buster
 {% else %}
-FROM debian:stretch
+FROM debian:buster
 {% endif %}
+
 
 MAINTAINER Pavel Shirshov
 

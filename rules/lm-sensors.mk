@@ -1,7 +1,7 @@
 # lm-senensors package
 
-LM_SENSORS_VERSION=3.4.0
-LM_SENSORS_VERSION_FULL=$(LM_SENSORS_VERSION)-4
+LM_SENSORS_VERSION=3.5.0
+LM_SENSORS_VERSION_FULL=$(LM_SENSORS_VERSION)-3
 
 LM_SENSORS = lm-sensors_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(LM_SENSORS)_SRC_PATH = $(SRC_PATH)/lm-sensors
@@ -9,13 +9,16 @@ $(LM_SENSORS)_SRC_PATH = $(SRC_PATH)/lm-sensors
 LM_SENSORS_DBG = lm-sensors-dbgsym_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(LM_SENSORS_DBG)))
 
+LIBSENSORS_CONFIG = libsensors-config_$(LM_SENSORS_VERSION_FULL)_all.deb
+$(eval $(call add_derived_package,$(LM_SENSORS),$(LIBSENSORS_CONFIG)))
+
 FANCONTROL = fancontrol_$(LM_SENSORS_VERSION_FULL)_all.deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(FANCONTROL)))
 
-LIBSENSORS = libsensors4_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+LIBSENSORS = libsensors5_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(LIBSENSORS)))
 
-LIBSENSORS_DBG = libsensors4-dbgsym_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+LIBSENSORS_DBG = libsensors5-dbgsym_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(LM_SENSORS),$(LIBSENSORS_DBG)))
 
 SENSORD = sensord_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
@@ -27,6 +30,7 @@ $(eval $(call add_derived_package,$(LM_SENSORS),$(SENSORD_DBG)))
 
 SONIC_MAKE_DEBS += $(LM_SENSORS)
 
+
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.
 #
@@ -35,6 +39,7 @@ DBG_SRC_ARCHIVE += lm-sensors
 export LM_SENSORS
 export FANCONTROL
 export LIBSENSORS
+export LIBSENSORS_CONFIG
 export SENSORD
 export LM_SENSORS_VERSION
 export LM_SENSORS_VERSION_FULL

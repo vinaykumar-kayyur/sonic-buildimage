@@ -8,7 +8,7 @@ FROM debian:buster
 
 MAINTAINER gulv@microsoft.com
 
-COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
+COPY ["no-check-valid-until","81norecommends","/etc/apt/apt.conf.d/"]
 
 RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list && \
@@ -67,6 +67,7 @@ RUN apt-get update && apt-get install -y \
         perl-modules \
         libswitch-perl \
         dh-systemd \
+        debootstrap \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -99,6 +100,7 @@ RUN apt-get update && apt-get install -y \
         libxml-simple-perl \
         graphviz \
         aspell \
+        aspell-en \
 # For linux build
         bc \
         fakeroot \
@@ -154,6 +156,7 @@ RUN apt-get update && apt-get install -y \
         cpio \
         squashfs-tools \
         zip \
+        pigz \
 # For broadcom sdk build
 {%- if CONFIGURED_ARCH == "amd64" %}
         linux-compiler-gcc-8-x86 \
@@ -299,10 +302,20 @@ RUN apt-get update && apt-get install -y \
         libnetfilter-conntrack-dev \
         libnftnl-dev \
 # For SAI3.7
-        libprotobuf-dev \
+        #libprotobuf-dev \
 # For DHCP Monitor tool
         libexplain-dev \
-        libevent-dev
+        libevent-dev \
+# For mgmt-framework
+        libdbus-c++-dev \
+	autogen libopts25-dev  pps-tools dh-apparmor \
+        equivs libffi-dev xauth python-colorama
+
+# Use older version of libprotobuf until libsai is linked with the latest
+RUN curl -LO http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf-dev_3.0.0-9_amd64.deb && \
+    curl -LO http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf-lite10_3.0.0-9_amd64.deb && \
+    curl -LO http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf10_3.0.0-9_amd64.deb && \
+    dpkg -i libprotobuf-lite10_3.0.0-9_amd64.deb libprotobuf10_3.0.0-9_amd64.deb libprotobuf-dev_3.0.0-9_amd64.deb
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
@@ -331,13 +344,15 @@ RUN export VERSION=1.11.5 \
  && echo 'export PATH=$PATH:$GOROOT/bin' >> /etc/bash.bashrc \
  && rm go$VERSION.linux-*.tar.gz
 
+RUN pip install wheel && pip3 install wheel
+
 # For p4 build
 RUN pip install \
         ctypesgen==0.r125 \
         crc16
 
 # For sonic config engine testing
-RUN pip install pyangbind==0.6.0
+RUN pip install pyang==2.1.1 pyangbind==0.6.0
 # Note: force upgrade debian packaged jinja2, if installed
 RUN pip install --force-reinstall --upgrade "jinja2>=2.10"
 
@@ -373,7 +388,6 @@ RUN pip install ijson==2.6.1
 RUN pip3 install ijson==2.6.1
 RUN pip install jsondiff==1.2.0
 RUN pip install xmltodict==0.12.0
-RUN pip install pyang==2.1.1
 
 # For mgmt-framework build
 RUN pip install mmh3

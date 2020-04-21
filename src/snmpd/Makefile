@@ -33,6 +33,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg init
 	stg import -s ../patch-$(SNMPD_VERSION)/series
 
+	# Should move this to a patch
+	sed -i 's/load_defaults (/\/\/load_defaults (/'  apps/snmptrapd_sql.c
+	sed -i 's/my_init()/\/\/my_init()/' apps/snmptrapd_sql.c
+
+
 	fakeroot debian/rules -j$(SONIC_CONFIG_MAKE_JOBS) binary
 	popd
 

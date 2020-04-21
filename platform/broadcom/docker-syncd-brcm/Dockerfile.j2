@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages %}
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -8,6 +8,13 @@ RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%s
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update
+RUN apt-get install -y wget zlib1g-dev
+
+RUN wget http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf-dev_3.0.0-9_amd64.deb \
+    	http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf-lite10_3.0.0-9_amd64.deb \
+    	http://ftp.us.debian.org/debian/pool/main/p/protobuf/libprotobuf10_3.0.0-9_amd64.deb && \
+    dpkg -i libprotobuf-lite10_3.0.0-9_amd64.deb libprotobuf10_3.0.0-9_amd64.deb libprotobuf-dev_3.0.0-9_amd64.deb
+
 
 COPY \
 {% for deb in docker_syncd_brcm_debs.split(' ') -%}
