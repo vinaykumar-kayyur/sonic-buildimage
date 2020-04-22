@@ -19,7 +19,23 @@ ORCHAGENT_ARGS+="-b 8192 "
 
 # Add platform specific arguments if necessary
 if [ "$platform" == "broadcom" ]; then
+    # Check if there is an "id field" in the DEVICE_METADATA in configDB.
+    #"DEVICE_METADATA": {
+    #    "localhost": {
+    #        ....
+    #        "id": "0",
+    #    }
+    #},
+    # ID field could be integers just to denote the asic instance like 0,1,2...
+    # OR could be PCI device ID's which will be strings like "03:00.0"
+    # depending on what the SAI/SDK expects.
+    inst_id=`sonic-cfggen -d -v DEVICE_METADATA.localhost.id`
+    if [ -n "$inst_id" ]
+    then
+        ORCHAGENT_ARGS+="-i $inst_id "
+    fi
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
+
 elif [ "$platform" == "cavium" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 elif [ "$platform" == "nephos" ]; then
