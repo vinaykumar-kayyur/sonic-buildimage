@@ -766,7 +766,7 @@ class BGPPeerMgrBase(Manager):
             return False
         #
         if "local_addr" not in data:
-            log_warn("Peer %s. Error in missing required attribute 'local_addr'" % nbr)
+            log_warn("Peer %s. Missing attribute 'local_addr'" % nbr)
         else:
             # The bgp session that belongs to a vnet cannot be advertised as the default BGP session.
             # So we need to check whether this bgp session belongs to a vnet.
