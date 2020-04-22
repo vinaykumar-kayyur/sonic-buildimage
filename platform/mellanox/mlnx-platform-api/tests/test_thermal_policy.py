@@ -482,10 +482,9 @@ def test_dynamic_minimum_policy(thermal_manager):
     condition = policy.conditions[MinCoolingLevelChangeCondition]
     action = policy.actions[ChangeMinCoolingLevelAction]
     Thermal.check_module_temperature_trustable = MagicMock(return_value='trust')
-    Thermal.get_air_flow_direction = MagicMock(return_value=('p2c', 35000))
+    Thermal.get_min_amb_temperature = MagicMock(return_value=35000)
     assert condition.is_match(None)
     assert MinCoolingLevelChangeCondition.trust_state == 'trust'
-    assert MinCoolingLevelChangeCondition.air_flow_dir == 'p2c'
     assert MinCoolingLevelChangeCondition.temperature == 35
     assert not condition.is_match(None)
 
@@ -493,11 +492,10 @@ def test_dynamic_minimum_policy(thermal_manager):
     assert condition.is_match(None)
     assert MinCoolingLevelChangeCondition.trust_state == 'untrust'
 
-    Thermal.get_air_flow_direction = MagicMock(return_value=('c2p', 35000))
+    Thermal.get_air_flow_direction = MagicMock(return_value=35000)
     assert condition.is_match(None)
-    assert MinCoolingLevelChangeCondition.air_flow_dir == 'c2p'
 
-    Thermal.get_air_flow_direction = MagicMock(return_value=('c2p', 25000))
+    Thermal.get_air_flow_direction = MagicMock(return_value=25000)
     assert condition.is_match(None)
     assert MinCoolingLevelChangeCondition.temperature == 25
 
