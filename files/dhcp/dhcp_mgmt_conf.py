@@ -1,13 +1,9 @@
 #!/usr/bin/python -u
 # -*- coding: utf-8 -*-
 
-import os
-import re
 import sys
-import subprocess
 import syslog
 import ipaddress
-import netaddr
 from swsssdk import ConfigDBConnector
 
 APP_MGMT_INTF_TABLE = "MGMT_INTF_TABLE"
