@@ -9,6 +9,7 @@
 #    through http.
 #  * ENABLE_ZTP: Enables zero touch provisioning.
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
+#  * INSTALL_KUBERNETES: Allows including Kubernetes
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
 #  * ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
@@ -75,11 +76,14 @@ ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
 
-ifeq ($(BLDENV), stretch)
+ifeq ($(BLDENV), buster)
+SLAVE_DIR = sonic-slave-buster
+else ifeq ($(BLDENV), stretch)
 SLAVE_DIR = sonic-slave-stretch
 else
 SLAVE_DIR = sonic-slave-jessie
 endif
+
 SLAVE_BASE_TAG = $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile && sha1sum $(SLAVE_DIR)/Dockerfile | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
 SLAVE_BASE_IMAGE = $(SLAVE_DIR)
@@ -176,6 +180,10 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_ZTP=$(ENABLE_ZTP) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
+                           INSTALL_KUBERNETES=$(INSTALL_KUBERNETES) \
+                           KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
+                           K8s_GCR_IO_PAUSE_VERSION=$(K8s_GCR_IO_PAUSE_VERSION) \
+                           K8s_CNI_CALICO_VERSION=$(K8s_CNI_CALICO_VERSION) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
                            SONIC_INSTALL_DEBUG_TOOLS=$(INSTALL_DEBUG_TOOLS) \
@@ -192,7 +200,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            HTTPS_PROXY=$(https_proxy) \
                            SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
                            SONIC_ENABLE_RESTAPI=$(ENABLE_RESTAPI) \
-                           EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
+                           EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
@@ -209,7 +217,7 @@ ifneq ($(BLDENV), )
 endif
 endif
 	@$(OVERLAY_MODULE_CHECK)
-	
+
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
 	    { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Building... ; \
 	    $(DOCKER_BASE_BUILD) ; }
@@ -225,6 +233,9 @@ ifeq "$(KEEP_SLAVE_ON)" "yes"
 else
 	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) $(SONIC_BUILD_INSTRUCTION) $@
 endif
+
+sonic-slave-base-build :
+	$(DOCKER_BASE_BUILD)
 
 sonic-slave-build :
 	$(DOCKER_BASE_BUILD)

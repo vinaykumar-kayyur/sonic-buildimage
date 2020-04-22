@@ -42,9 +42,9 @@ FILESYSTEM_ROOT_ETC_SONIC="$FILESYSTEM_ROOT_ETC/sonic"
 GENERATED_SERVICE_FILE="$FILESYSTEM_ROOT/etc/sonic/generated_services.conf"
 
 clean_sys() {
-    sudo umount $FILESYSTEM_ROOT/sys/fs/cgroup/*            \
-                $FILESYSTEM_ROOT/sys/fs/cgroup              \
-                $FILESYSTEM_ROOT/sys || true
+    sudo chroot $FILESYSTEM_ROOT umount /sys/fs/cgroup/*            \
+                                        /sys/fs/cgroup              \
+                                        /sys || true
 }
 trap_push clean_sys
 sudo LANG=C chroot $FILESYSTEM_ROOT mount sysfs /sys -t sysfs
@@ -115,6 +115,15 @@ SWSSSDK_PY2_WHEEL_NAME=$(basename {{swsssdk_py2_wheel_path}})
 sudo cp {{swsssdk_py2_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SWSSSDK_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
+
+# Install sonic-yang-models py3 package, install dependencies
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
+SONIC_YANG_MODEL_PY3_WHEEL_NAME=$(basename {{sonic_yang_models_py3_wheel_path}})
+sudo cp {{sonic_yang_models_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MODEL_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
 
 # Install sonic-platform-common Python 2 package
 PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{platform_common_py2_wheel_path}})
@@ -245,6 +254,13 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install azure-s
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install watchdog
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures
 
+{% if install_kubernetes == "y" %}
+# Copy kubelet service files
+# Keep it disabled until join, else it continuously restart and as well spew too many
+# non-required log lines wasting syslog resources.
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
+{% endif %}
+
 # Copy the buffer configuration template
 sudo cp $BUILD_TEMPLATES/buffers_config.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
@@ -284,6 +300,7 @@ j2 files/build_templates/init_cfg.json.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/
 # Copy config-setup script and service file
 j2 files/build_templates/config-setup.service.j2 | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/config-setup.service
 sudo cp $IMAGE_CONFIGS/config-setup/config-setup $FILESYSTEM_ROOT/usr/bin/config-setup
+echo "config-setup.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable config-setup.service
 
 # Copy SNMP configuration files
@@ -327,7 +344,14 @@ sudo chmod a+x $FILESYSTEM_ROOT/usr/sbin/policy-rc.d
 {% if installer_debs.strip() -%}
 {% for deb in installer_debs.strip().split(' ') -%}
 {% if sonic_asic_platform == "mellanox" %}
-sudo dpkg --extract {{deb}} $FILESYSTEM_ROOT
+if [ -e tmpdir ] ;
+then
+    rm -rf tmpdir;
+fi
+sudo mkdir tmpdir
+sudo dpkg --extract {{deb}} tmpdir
+for subdir in $(ls tmpdir) ; do sudo cp -R tmpdir/$subdir/* $FILESYSTEM_ROOT/$subdir; done
+sudo rm -rf tmpdir
 {% else %}
 sudo dpkg --root=$FILESYSTEM_ROOT -i {{deb}} || sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 {% endif %}
@@ -386,6 +410,11 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 fi
 
 {% if installer_images.strip() -%}
+clean_proc() {
+    sudo umount /proc || true
+}
+trap_push clean_proc
+sudo mount proc /proc -t proc
 sudo mkdir $FILESYSTEM_ROOT/target
 sudo mount --bind target $FILESYSTEM_ROOT/target
 sudo chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS info
@@ -400,8 +429,21 @@ sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS ta
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagebasename}}:latest
 {% endif %}
 {% endfor %}
+
+{% if install_kubernetes == "y" %}
+## Pull in kubernetes docker images
+echo "pulling universal k8s images ..."
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull k8s.gcr.io/pause:${K8s_GCR_IO_PAUSE_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull k8s.gcr.io/kube-proxy:v${KUBERNETES_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/node:v${K8s_CNI_CALICO_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/pod2daemon-flexvol:v${K8s_CNI_CALICO_VERSION}
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/cni:v${K8s_CNI_CALICO_VERSION}
+echo "docker images pull complete"
+{% endif %}
+
 sudo umount $FILESYSTEM_ROOT/target
 sudo rm -r $FILESYSTEM_ROOT/target
+sudo umount /proc || true
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo umount $FILESYSTEM_ROOT/dockerfs
     sudo rm -fr $FILESYSTEM_ROOT/dockerfs
@@ -426,6 +468,9 @@ if [ -f {{service}} ]; then
     echo "{{service}}" | sudo tee -a $GENERATED_SERVICE_FILE
 fi
 {% endfor %}
+if [ -f iccpd.service ]; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable iccpd.service
+fi
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
@@ -433,6 +478,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 # Copy swss and syncd service script
 sudo LANG=C cp $SCRIPTS_DIR/swss.sh $FILESYSTEM_ROOT/usr/local/bin/swss.sh
 sudo LANG=C cp $SCRIPTS_DIR/syncd.sh $FILESYSTEM_ROOT/usr/local/bin/syncd.sh
+
+# Copy sonic-netns-exec script
+sudo LANG=C cp $SCRIPTS_DIR/sonic-netns-exec $FILESYSTEM_ROOT/usr/bin/sonic-netns-exec
 
 # Copy systemd timer configuration
 # It implements delayed start of services
@@ -459,9 +507,11 @@ sudo cp {{src}} $FILESYSTEM_ROOT/{{dst}}
 sudo mkdir -p $FILESYSTEM_ROOT/etc/mlnx/
 sudo cp $files_path/$MLNX_SPC_FW_FILE $FILESYSTEM_ROOT/etc/mlnx/fw-SPC.mfa
 sudo cp $files_path/$MLNX_SPC2_FW_FILE $FILESYSTEM_ROOT/etc/mlnx/fw-SPC2.mfa
+sudo cp $files_path/$MLNX_SPC3_FW_FILE $FILESYSTEM_ROOT/etc/mlnx/fw-SPC3.mfa
 sudo cp $files_path/$ISSU_VERSION_FILE $FILESYSTEM_ROOT/etc/mlnx/issu-version
 sudo cp $files_path/$MLNX_FFB_SCRIPT $FILESYSTEM_ROOT/usr/bin/mlnx-ffb.sh
-sudo cp $files_path/$ONIE_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/onie-fw-update.sh
+sudo cp $files_path/$MLNX_ONIE_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_ONIE_FW_UPDATE
+sudo cp $files_path/$MLNX_SSD_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_SSD_FW_UPDATE
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 
