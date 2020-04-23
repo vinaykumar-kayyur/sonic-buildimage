@@ -12,6 +12,7 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.component_base import ComponentBase
     from sonic_device_util import get_machine_info
+    from sonic_device_util import get_platform_info
     from sonic_daemon_base.daemon_base import Logger
     from os import listdir
     from os.path import isfile, join
@@ -60,8 +61,9 @@ class Chassis(ChassisBase):
 
         # Initialize SKU name
         self.sku_name = self._get_sku_name()
-        self.platform_name = self._get_platform_name()
+
         mi = get_machine_info()
+        self.platform_name = get_platform_info(mi)
         if mi is not None:
             self.name = mi['onie_platform']
         else:
@@ -235,12 +237,6 @@ class Chassis(ChassisBase):
 
     def _get_sku_name(self):
         p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        return out.rstrip('\n')
-
-
-    def _get_platform_name(self):
-        p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 
