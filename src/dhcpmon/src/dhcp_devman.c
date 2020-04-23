@@ -28,6 +28,10 @@ static uint32_t dhcp_num_south_intf = 0;
 /** dhcp_num_north_intf number of north interfaces */
 static uint32_t dhcp_num_north_intf = 0;
 
+/** Loopback interface IP address corresponding vlan downlink IP
+ *  This IP is used to filter Offer/Ack packet coming from DHCp servers */
+static in_addr_t loopback_ip = 0;
+
 /**
  * @code dhcp_devman_init();
  *
@@ -84,9 +88,12 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
             assert(dhcp_num_south_intf <= 1);
         }
 
-        LIST_INSERT_HEAD(&intfs, dev, entry);
+        rv = dhcp_device_init(&dev->dev_context, dev->name, dev->is_uplink);
+        if (rv == 0 && !is_uplink) {
+            rv = dhcp_device_get_ip(dev->dev_context, &loopback_ip);
+        }
 
-        rv = 0;
+        LIST_INSERT_HEAD(&intfs, dev, entry);
     }
     else {
         syslog(LOG_ALERT, "malloc: failed to allocate memory for intf '%s'\n", name);
@@ -100,14 +107,14 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
  *
  * @brief start packet capture on the devman interface list
  */
-int dhcp_devman_start_capture(int snaplen, struct event_base *base)
+int dhcp_devman_start_capture(size_t snaplen, struct event_base *base)
 {
     int rv = -1;
     struct intf *int_ptr;
 
     if ((dhcp_num_south_intf == 1) && (dhcp_num_north_intf >= 1)) {
         LIST_FOREACH(int_ptr, &intfs, entry) {
-            rv = dhcp_device_init(&int_ptr->dev_context, int_ptr->name, snaplen, int_ptr->is_uplink, base);
+            rv = dhcp_device_start_capture(int_ptr->dev_context, snaplen, base, loopback_ip);
             if (rv == 0) {
                 syslog(LOG_INFO,
                        "Capturing DHCP packets on interface %s, ip: 0x%08x, mac [%02x:%02x:%02x:%02x:%02x:%02x] \n",

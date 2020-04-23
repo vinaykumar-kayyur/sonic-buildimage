@@ -36,13 +36,13 @@ static struct event *ev_sigterm;
  *
  * @param fd        libevent socket
  * @param event     event triggered
- * @param arg       pointer user provided context (libevent base)
+ * @param arg       pointer to user provided context (libevent base)
  *
  * @return none
  */
 static void signal_callback(evutil_socket_t fd, short event, void *arg)
 {
-    syslog(LOG_ALERT, "Received signal %d\n", event);
+    syslog(LOG_ALERT, "Received signal %s\n", strsignal(fd));
     dhcp_devman_print_status();
     dhcp_mon_stop();
 }
@@ -151,7 +151,7 @@ void dhcp_mon_shutdown()
  *
  * @brief start monitoring DHCP Relay
  */
-int dhcp_mon_start(int snaplen)
+int dhcp_mon_start(size_t snaplen)
 {
     int rv = -1;
 

@@ -36,24 +36,24 @@ void dhcp_devman_shutdown();
  *
  * @brief adds interface to the device manager.
  *
- * @param name interface name
- * @param is_uplink true for uplink (north) interface
+ * @param name              interface name
+ * @param is_uplink         true for uplink (north) interface
  *
  * @return 0 on success, nonzero otherwise
  */
 int dhcp_devman_add_intf(const char *name, uint8_t is_uplink);
 
 /**
- * @code dhcp_devman_start_capture(snaplen, timeout_ms);
+ * @code dhcp_devman_start_capture(snaplen, base);
  *
  * @brief start packet capture on the devman interface list
  *
- * @param snaplen packet    capture snap length
+ * @param snaplen packet    packet capture snap length
  * @param base              libevent base
  *
  * @return 0 on success, nonzero otherwise
  */
-int dhcp_devman_start_capture(int snaplen, struct event_base *base);
+int dhcp_devman_start_capture(size_t snaplen, struct event_base *base);
 
 /**
  * @code dhcp_devman_get_status();
