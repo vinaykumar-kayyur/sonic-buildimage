@@ -29,6 +29,7 @@ MAX_SELECT_DELAY = 3600
 MLNX_NUM_PSU = 2
 
 GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
+GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
 
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
@@ -60,6 +61,7 @@ class Chassis(ChassisBase):
 
         # Initialize SKU name
         self.sku_name = self._get_sku_name()
+        self.platform_name = self._get_platform_name()
         mi = get_machine_info()
         if mi is not None:
             self.name = mi['onie_platform']
@@ -110,9 +112,9 @@ class Chassis(ChassisBase):
 
         for index in range(num_of_fan):
             if multi_rotor_in_drawer:
-                fan = Fan(has_fan_dir, index, index/2, False, self.sku_name)
+                fan = Fan(has_fan_dir, index, index/2, False, self.platform_name)
             else:
-                fan = Fan(has_fan_dir, index, index, False, self.sku_name)
+                fan = Fan(has_fan_dir, index, index, False, self.platform_name)
             self._fan_list.append(fan)
 
 
@@ -241,6 +243,12 @@ class Chassis(ChassisBase):
 
     def _get_sku_name(self):
         p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        return out.rstrip('\n')
+
+
+    def _get_platform_name(self):
+        p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 
@@ -448,25 +456,12 @@ class Chassis(ChassisBase):
             timeout = MAX_SELECT_DELAY
             while True:
                 status = self.sfp_event.check_sfp_status(port_dict, timeout)
-                if not port_dict == {}:
+                if bool(port_dict):
                     break
         else:
             status = self.sfp_event.check_sfp_status(port_dict, timeout)
 
         if status:
-            # get_change_event has the meaning of retrieving all the notifications through a single call.
-            # Typically this is implemented via a select framework which requires the underlay file-reading 
-            # interface able to retrieve all notifications without blocking once the fd has been selected. 
-            # However, sdk doesn't provide any interface satisfied the requirement. as a result,
-            # check_sfp_status returns only one notification may indicate more notifications in its queue.
-            # In this sense, we have to iterate in a loop to get all the notifications in case that
-            # the first call returns at least one.
-            i = 0
-            while i < self.MAX_SELECT_EVENT_RETURNED:
-                status = self.sfp_event.check_sfp_status(port_dict, 0)
-                if not status:
-                    break
-                i = i + 1
             return True, {'sfp':port_dict}
         else:
             return True, {'sfp':{}}
