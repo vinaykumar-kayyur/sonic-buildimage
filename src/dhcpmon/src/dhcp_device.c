@@ -117,15 +117,14 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
         giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
                        dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         context->counters[dir].discover++;
-        if ((context->loopback_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
-            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST &&
-             iphdr->ip_src.s_addr == INADDR_ANY)) {
+        if ((context->vlan_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
+            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
             glob_counters[dir].discover++;
         }
         break;
     case 2:
         context->counters[dir].offer++;
-        if ((context->loopback_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
+        if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             glob_counters[dir].offer++;
         }
@@ -134,15 +133,14 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
         giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
                        dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         context->counters[dir].request++;
-        if ((context->loopback_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
-            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST &&
-             iphdr->ip_src.s_addr == INADDR_ANY)) {
+        if ((context->vlan_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
+            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
             glob_counters[dir].request++;
         }
         break;
     case 5:
         context->counters[dir].ack++;
-        if ((context->loopback_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
+        if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             glob_counters[dir].ack++;
         }
@@ -422,14 +420,14 @@ int dhcp_device_init(dhcp_device_context_t **context, const char *intf, uint8_t 
 }
 
 /**
- * @code dhcp_device_start_capture(context, snaplen, base, loopback_ip);
+ * @code dhcp_device_start_capture(context, snaplen, base, vlan_ip);
  *
  * @brief starts packet capture on this interface
  */
 int dhcp_device_start_capture(dhcp_device_context_t *context,
                               size_t snaplen,
                               struct event_base *base,
-                              in_addr_t loopback_ip)
+                              in_addr_t vlan_ip)
 {
     int rv = -1;
 
@@ -444,7 +442,7 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
             break;
         }
 
-        context->loopback_ip = loopback_ip;
+        context->vlan_ip = vlan_ip;
 
         context->buffer = (uint8_t *) malloc(snaplen);
         if (context->buffer == NULL) {

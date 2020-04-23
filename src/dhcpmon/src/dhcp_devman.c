@@ -28,9 +28,9 @@ static uint32_t dhcp_num_south_intf = 0;
 /** dhcp_num_north_intf number of north interfaces */
 static uint32_t dhcp_num_north_intf = 0;
 
-/** Loopback interface IP address corresponding vlan downlink IP
- *  This IP is used to filter Offer/Ack packet coming from DHCp servers */
-static in_addr_t loopback_ip = 0;
+/** On Device  vlan interface IP address corresponding vlan downlink IP
+ *  This IP is used to filter Offer/Ack packet coming from DHCP server */
+static in_addr_t vlan_ip = 0;
 
 /**
  * @code dhcp_devman_init();
@@ -90,7 +90,7 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
 
         rv = dhcp_device_init(&dev->dev_context, dev->name, dev->is_uplink);
         if (rv == 0 && !is_uplink) {
-            rv = dhcp_device_get_ip(dev->dev_context, &loopback_ip);
+            rv = dhcp_device_get_ip(dev->dev_context, &vlan_ip);
         }
 
         LIST_INSERT_HEAD(&intfs, dev, entry);
@@ -114,7 +114,7 @@ int dhcp_devman_start_capture(size_t snaplen, struct event_base *base)
 
     if ((dhcp_num_south_intf == 1) && (dhcp_num_north_intf >= 1)) {
         LIST_FOREACH(int_ptr, &intfs, entry) {
-            rv = dhcp_device_start_capture(int_ptr->dev_context, snaplen, base, loopback_ip);
+            rv = dhcp_device_start_capture(int_ptr->dev_context, snaplen, base, vlan_ip);
             if (rv == 0) {
                 syslog(LOG_INFO,
                        "Capturing DHCP packets on interface %s, ip: 0x%08x, mac [%02x:%02x:%02x:%02x:%02x:%02x] \n",

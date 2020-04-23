@@ -49,7 +49,7 @@ typedef struct
     int sock;                       /** Raw socket associated with this device/interface */
     in_addr_t ip;                   /** network address of this device (interface) */
     uint8_t mac[ETHER_ADDR_LEN];    /** hardware address of this device (interface) */
-    in_addr_t loopback_ip;          /** Vlan loopback IP address */
+    in_addr_t vlan_ip;              /** Vlan IP address */
     uint8_t is_uplink;              /** north interface? */
     char intf[IF_NAMESIZE];         /** device (interface) name */
     uint8_t *buffer;                /** buffer used to read socket data */
@@ -88,21 +88,21 @@ int dhcp_device_init(dhcp_device_context_t **context,
                      uint8_t is_uplink);
 
 /**
- * @code dhcp_device_start_capture(context, snaplen, base, loopback_ip);
+ * @code dhcp_device_start_capture(context, snaplen, base, vlan_ip);
  *
  * @brief starts packet capture on this interface
  *
  * @param context           pointer to device (interface) context
  * @param snaplen           length of packet capture
  * @param base              pointer to libevent base
- * @param loopback_ip       vlan loopback IP address
+ * @param vlan_ip           vlan IP address
  *
  * @return 0 on success, otherwise for failure
  */
 int dhcp_device_start_capture(dhcp_device_context_t *context,
                               size_t snaplen,
                               struct event_base *base,
-                              in_addr_t loopback_ip);
+                              in_addr_t vlan_ip);
 
 /**
  * @code dhcp_device_shutdown(context);
