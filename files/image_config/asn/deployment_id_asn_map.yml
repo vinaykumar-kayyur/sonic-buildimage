@@ -1,2 +1,5 @@
 deployment_id_asn_map:
   "1" : 65432
+
+allow_list_enabled: true
+allow_list_default_action: permit   # or deny

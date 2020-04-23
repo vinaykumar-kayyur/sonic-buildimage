@@ -50,6 +50,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   exit-address-family
 {% endif %}
 {% endfor %}
+  maximum-paths 64
 {% endblock bgp_init %}
 {% endif %}
 {% block vlan_advertisement %}
@@ -126,9 +127,31 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endblock bgp_monitors %}
 !
 {% if DEVICE_METADATA['localhost'].has_key('bgp_asn') %}
-maximum-paths 64
-!
 route-map ISOLATE permit 10
-set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+ set as-path prepend {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
+!
+{% endif %}
+!
+route-map FROM_PEER_V4 permit 1
+  call ALLOW_LIST_V4
+  on-match next
+!
+route-map FROM_PEER_V4 permit 10
+!
+route-map FROM_PEER_V6 permit 1
+  call ALLOW_LIST_V6
+  on-match next
+!
+route-map FROM_PEER_V6 permit 10
+!
+{% if allow_list_enabled %}
+route-map ALLOW_LIST_V4 {{ allow_list_default_action }} 65535
+!
+route-map ALLOW_LIST_V6 {{ allow_list_default_action }} 65535
+!
+ip prefix-list ALLOW_ADDRESS_ALLOW_ALL_V4 seq 10 permit any
+!
+ipv6 prefix-list ALLOW_ADDRESS_ALLOW_ALL_V6 seq 10 permit any
+!
 {% endif %}
 !

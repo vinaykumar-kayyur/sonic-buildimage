@@ -17,6 +17,7 @@
 {% endif %}
     neighbor {{ neighbor_addr }} activate
     neighbor {{ neighbor_addr }} soft-reconfiguration inbound
+    neighbor {{ neighbor_addr }} route-map FROM_PEER_V4 in
     maximum-paths 64
   exit-address-family
 {% endif %}
@@ -27,6 +28,7 @@
 {% endif %}
     neighbor {{ neighbor_addr }} activate
     neighbor {{ neighbor_addr }} soft-reconfiguration inbound
+    neighbor {{ neighbor_addr }} route-map FROM_PEER_V6 in
     maximum-paths 64
   exit-address-family
 {% endif %}

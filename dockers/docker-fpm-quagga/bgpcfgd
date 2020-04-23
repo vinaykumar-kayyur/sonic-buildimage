@@ -8,10 +8,10 @@ import syslog
 import signal
 import traceback
 import os
-import shutil
 from collections import defaultdict
-from pprint import pprint
+#from pprint import pprint
 
+import yaml
 import jinja2
 import netaddr
 from swsscommon import swsscommon
@@ -19,6 +19,34 @@ from swsscommon import swsscommon
 
 g_run = True
 g_debug = False
+g_allow_list_enabled = False
+
+EMPTY_COMMUNITY = "empty"
+
+def log_debug(msg):
+    """ Send a message msg to the syslog as DEBUG """
+    if g_debug:
+        syslog.syslog(syslog.LOG_DEBUG, msg)
+
+def log_notice(msg):
+    """ Send a message msg to the syslog as NOTICE """
+    syslog.syslog(syslog.LOG_NOTICE, msg)
+
+def log_info(msg):
+    """ Send a message msg to the syslog as INFO """
+    syslog.syslog(syslog.LOG_INFO, msg)
+
+def log_warn(msg):
+    """ Send a message msg to the syslog as WARNING """
+    syslog.syslog(syslog.LOG_WARNING, msg)
+
+def log_err(msg):
+    """ Send a message msg to the syslog as ERR """
+    syslog.syslog(syslog.LOG_ERR, msg)
+
+def log_crit(msg):
+    """ Send a message msg to the syslog as CRIT """
+    syslog.syslog(syslog.LOG_CRIT, msg)
 
 
 def run_command(command, shell=False):
@@ -31,6 +59,7 @@ def run_command(command, shell=False):
         syslog.syslog(syslog.LOG_ERR, 'command execution returned {}. Command: "{}", stdout: "{}", stderr: "{}"'.format(p.returncode, str_cmd, stdout, stderr))
 
     return p.returncode, stdout, stderr
+
 
 class TemplateFabric(object):
     def __init__(self):
@@ -84,6 +113,9 @@ class BGPConfigManager(object):
         self.bgp_messages = []
         self.peers = self.load_peers() # we can have bgp monitors peers here. it could be fixed by adding support for it here
         fabric = TemplateFabric()
+        if g_allow_list_enabled:
+            self.allow_list_controller = BGPAllowList(self.peers)
+        self.allow_list_queue = defaultdict(list)  # peer_ip -> [prefixes, community]
         self.bgp_peer_add_template = fabric.from_file('bgpd.peer.conf.j2')
         self.bgp_peer_del_template = fabric.from_string('no neighbor {{ neighbor_addr }}')
         self.bgp_peer_shutdown = fabric.from_string('neighbor {{ neighbor_addr }} shutdown')
@@ -93,6 +125,8 @@ class BGPConfigManager(object):
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_DEVICE_NEIGHBOR_METADATA_TABLE_NAME, self.__neighbor_metadata_handler)
         daemon.add_manager(swsscommon.CONFIG_DB, swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, self.__bgp_handler)
         daemon.add_manager(swsscommon.STATE_DB, swsscommon.STATE_INTERFACE_TABLE_NAME, self.__if_handler)
+        if g_allow_list_enabled:
+            daemon.add_manager(swsscommon.CONFIG_DB, "BGP_ALLOWED_PREFIXES", self.__bgp_allowed_handler)
 
     def load_peers(self):
         peers = set()
@@ -111,7 +145,8 @@ class BGPConfigManager(object):
                             continue
                         space = line.find(" ")
                         if space == -1:
-                            peers.add(line)
+                            if line.strip() != "":
+                                peers.add(line)
                         else:
                             peers.add(line[:space])
         return peers
@@ -157,14 +192,15 @@ class BGPConfigManager(object):
                     self.lo_ipv6 = ip_addr
                     txt = self.zebra_set_src_template.render(rm_name="RM_SET_SRC6", lo_ip=ip_addr, ip_proto="v6")
                 else:
-                    syslog.syslog(syslog.LOG_ERR, "Got ambigous ip addres '%s'" % ip_addr)
+                    syslog.syslog(syslog.LOG_ERR, "Got ambiguous ip address '%s'" % ip_addr)
+                    return
             except:
                 syslog.syslog(syslog.LOG_ERR, "Error while rendering set src template" % ip_addr)
             else:
                 cmds.append(txt)
                 syslog.syslog(syslog.LOG_INFO, "Generate set src configuration with Loopback0 ipv4 '%s'" % ip_addr)
         elif op == swsscommon.DEL_COMMAND:
-            syslog.syslog(syslog.LOG_INFO, "Delete command is not supported for set src templates" % ip_addr)
+            syslog.syslog(syslog.LOG_INFO, "Delete command is not supported for set src templates: '%s'" % key)
 
         for cmd in cmds:
             self.__apply_cmd(cmd, zebra=True)
@@ -185,6 +221,13 @@ class BGPConfigManager(object):
                     except:
                         syslog.syslog(syslog.LOG_ERR, 'Peer {}. Error in rendering the template for "SET" command {}'.format(key, data))
                     else:
+                        if g_allow_list_enabled:
+                            peer_ip = key.upper()
+                            self.allow_list_controller.add_peer(peer_ip)
+                            if peer_ip in self.allow_list_queue:
+                                for prefixes, community in self.allow_list_queue[peer_ip]:
+                                    self.allow_list_controller.add_allow_list(peer_ip, prefixes, community)
+                                del self.allow_list_queue[peer_ip]
                         syslog.syslog(syslog.LOG_INFO, 'Peer {} added with attributes {}'.format(key, data))
                         self.peers.add(key)
                 else:
@@ -203,6 +246,9 @@ class BGPConfigManager(object):
                         syslog.syslog(syslog.LOG_INFO, "Peer {}: Can't update the peer. No 'admin_status' attribute in the request".format(key))
             elif op == swsscommon.DEL_COMMAND:
                 if key in self.peers:
+                    if g_allow_list_enabled:
+                        peer_ip = key.upper()
+                        self.allow_list_controller.remove_peer(peer_ip)
                     cmds.append(self.bgp_peer_del_template.render(neighbor_addr=key))
                     syslog.syslog(syslog.LOG_INFO, 'Peer {} has been removed'.format(key))
                     self.peers.remove(key)
@@ -214,7 +260,7 @@ class BGPConfigManager(object):
             self.__apply_cmd(cmd)
 
     def __apply_cmd(self, cmd, zebra=False):
-        lines = [line for line in cmd.split("\n") if not line.startswith('!') and line.strip() != ""]
+        lines = [line for line in cmd.split("\n") if not line.lstrip().startswith('!') and line.strip() != ""]
         if len(lines) == 0:
             return
         offset = len(lines[0]) - len(lines[0].lstrip())
@@ -246,6 +292,683 @@ class BGPConfigManager(object):
         # If ASN is not set, we just cache this message until the ASN is set.
         if self.bgp_asn is not None:
             self.__update_bgp()
+
+    def __bgp_allowed_handler(self, key, op, data):
+        if op == swsscommon.SET_COMMAND:
+            if data is None:
+                log_err("Received BGP ALLOWED 'SET' message without data")
+                return
+            neighbor_ip, community = key.split('|', 1) if '|' in key else (key, EMPTY_COMMUNITY)
+            if TemplateFabric.is_ipv4(neighbor_ip):
+                if 'prefixes_v4' not in data:
+                    log_err("Received BGP ALLOWED 'SET' message. 'prefixes_v4' not found in data")
+                    return
+                prefixes = data['prefixes_v4'].split(',')
+            elif TemplateFabric.is_ipv6(neighbor_ip):
+                if 'prefixes_v6' not in data:
+                    log_err("Received BGP ALLOWED 'SET' message. 'prefixes_v6' not found in data")
+                    return
+                prefixes = data['prefixes_v6'].split(',')
+            else:
+                log_err("Received BGP ALLOWED 'SET' message. Wrong key: '%s'" % key)
+                return
+            log_debug("Received BGP ALLOWED 'SET' message. '%s' '%s' '%s'" % (neighbor_ip, community, str(prefixes)))
+            if neighbor_ip in self.peers:
+                peer_ip = neighbor_ip.upper()
+                self.allow_list_controller.add_allow_list(peer_ip, prefixes, community)
+            else:
+                self.allow_list_queue[neighbor_ip].append((prefixes, community))
+        elif op == swsscommon.DEL_COMMAND:
+            neighbor_ip, community = key.split('|', 1) if '|' in key else (key, EMPTY_COMMUNITY)
+            log_debug("Received BGP ALLOWED 'DEL' message. '%s' '%s'" % (neighbor_ip, community))
+            if neighbor_ip in self.peers:
+                peer_ip = neighbor_ip.upper()
+                self.allow_list_controller.remove_allow_list(peer_ip, community)
+        else:
+            log_err("Received BGP ALLOWED invalid message. Operation: '%s'" % str(op))
+            return
+
+
+class BGPAllowList(object):
+    """
+    This class encapsulate BGP Allow List feature methods.
+    This class doesn't have any state.
+    All state stores inside of BGP daemon.
+    """
+    # Templates for prefix-list names
+    # The first %s argument contains bgp neighbor ip address (either ipv4 or ipv6)
+    # The second %s argument contains bgp community value
+    PEER_PL_NAME_TMPL = 'PEER_%s'  # template for a name for the PEER prefix-list
+    ALLOW_ADDRESS_PL_NAME_TMPL = "ALLOW_ADDRESS_%s_%s"  # template for a name for the ALLOW_ADDRESS prefix-list
+    ALLOW_ADDRESS_PL_NAME_PER_PEER_TMPL = "ALLOW_ADDRESS_%s_"  # template to match ALLOW_ADDRESS prefix-list for a peer
+    #
+    ALLOW_ALL_IPV4_PL_NAME = "ALLOW_ADDRESS_ALLOW_ALL_V4"  # Name of a prefix list which allows all V4 addresses
+    ALLOW_ALL_IPV6_PL_NAME = "ALLOW_ADDRESS_ALLOW_ALL_V6"  # Name of a prefix list which allows all V6 addresses
+    ALLOW_ALL_PL_NAME_MATCH = "ALLOW_ADDRESS_ALLOW_ALL_V"  # string to filter allow_all
+    ROUTE_MAP_V4_NAME = "ALLOW_LIST_V4"  # ALLOW_LIST route-map name for V4
+    ROUTE_MAP_V6_NAME = "ALLOW_LIST_V6"  # ALLOW_LIST route-map name for V6
+    V4 = "v4"  # constant for af enum: V4
+    V6 = "v6"  # constant for af enum: V6
+
+    def __init__(self, peers):
+        """
+        Initialise the class.
+        Insert required entries into the allow list route map
+        :param peers: list of peers
+        """
+        for peer_ip in peers:
+            self.add_peer(peer_ip.upper())
+
+    def add_peer(self, peer_ip):
+        """
+        Add a peer with ip address peer_ip
+        All ip prefixes are allowed to be used after adding
+        :param peer_ip: ip address of a peer. It could be either ipv4 or ipv6
+        :return: True if adding was successful, False otherwise
+        """
+        log_info("AllowList::Adding peer '%s'" % peer_ip)
+        af, peer_pl_name, _ = self.__generate_pl_names(peer_ip, EMPTY_COMMUNITY)
+        address_pl_name = self.ALLOW_ALL_IPV4_PL_NAME if af == self.V4 else self.ALLOW_ALL_IPV6_PL_NAME
+        if af == self.V4:
+            rc = self.__update_prefix_list(af, peer_pl_name, [ "%s/%d" % (peer_ip, 32) ])
+            if not rc:
+                log_crit("AllowList::add_peer: Can't add 'Peer' prefix-list: '%s'" % peer_pl_name)
+                return False
+        rc = self.__update_allow_route_map_entry(af, peer_pl_name, address_pl_name, EMPTY_COMMUNITY)
+        if not rc:
+            log_crit("AllowList::add_peer: Can't add 'Peer' prefix-list '%s' to 'AllowListV*' route-map" % peer_pl_name)
+        log_debug("AllowList::add_peer. '%s': %s" % (peer_ip, "Done" if rc else "Error"))
+        return rc
+
+    def remove_peer(self, peer_ip):
+        """
+        Remove a peer with ip address peer_ip
+        :param peer_ip: ip address of a peer. It could be either ipv4 or ipv6
+        :return: True if removal was successful, False otherwise
+        """
+        log_info("AllowList::Removing peer '%s'" % peer_ip)
+        af, peer_pl_name, _ = self.__generate_pl_names(peer_ip, EMPTY_COMMUNITY)
+        rc = True
+        rc = rc and self.__remove_all_route_map_entries_for_peer(af, peer_pl_name)
+        rc = rc and self.__remove_all_allow_prefix_lists_for_peer(af, peer_ip)
+        if af == self.V4:
+            rc = rc and self.__remove_prefix_lists(af, [peer_pl_name])
+        rc = rc and self.__remove_all_communities_for_peer(peer_ip)
+        if not rc:
+            log_crit("AllowList::remove_peer: Something went wrong. Peer ip: '%s'" % peer_ip)
+        log_debug("AllowList::remove_peer. '%s': %s" % (peer_ip, "Done" if rc else "Error"))
+        return rc
+
+    def add_allow_list(self, peer_ip, allow_prefixes, allow_community):
+        """
+        Update "Allow List" on the peer
+        After that entry only specific prefixes are allowed from the peer.
+        :param peer_ip: ip address of a peer. It could be either ipv4 or ipv6
+        :param allow_prefixes: list of prefixes, which are allowed for the peer
+        :param allow_community: community, which must be associated with the prefixes to be allowed.
+                                if the community equal to "empty", all prefixes without community will be allowed
+        :return: True if updating was successful, False otherwise
+        """
+        info = peer_ip, str(allow_prefixes), allow_community
+        log_info("AllowList::Updating peer 'Allow list' '%s'. Prefixes: '%s' Community: '%s'" % info)
+        af, peer_pl_name, allow_address_pl_name = self.__generate_pl_names(peer_ip, allow_community)
+        rc = True
+        rc = rc and self.__remove_default_route_map_entries_for_peer(af, peer_pl_name)
+        rc = rc and self.__update_prefix_list(af, allow_address_pl_name, allow_prefixes)
+        rc = rc and self.__update_community(peer_ip, allow_community)
+        rc = rc and self.__update_allow_route_map_entry(af, peer_pl_name, allow_address_pl_name, allow_community)
+        if rc:
+            rc = self.__restart_peer(peer_ip)
+            if not rc:
+                log_crit("AllowList::add_allow_list: Peer restart was unsuccessful. Peer '%s'" % peer_ip)
+        else:
+            out = "peer='%s' prefixes='%s' community='%s'" % (peer_ip, allow_prefixes, allow_community)
+            log_crit("AllowList::add_allow_list: Something went wrong. Peer wasn't restarted. %s" % out)
+        log_debug("AllowList::add_allow_list. '%s': %s" % (peer_ip, "Done" if rc else "Error"))
+        return rc
+
+    def remove_allow_list(self, peer_ip, allow_community):
+        """
+        Remove "Allow list" from the peer.
+        :param peer_ip: ip address of a peer. It could be either ipv4 or ipv6
+        :param allow_community: community, which must be associated with the prefixes to be allowed.
+                                if the community equal to "empty", all prefixes without community will be allowed
+        :return: True if the operation was successful, False otherwise
+        """
+        info = peer_ip, allow_community
+        log_info("AllowList::Removing peer 'Allow list' '%s'. Community: '%s'" % info)
+        af, peer_pl_name, allow_address_pl_name = self.__generate_pl_names(peer_ip, allow_community)
+        rc = True
+        rc = rc and self.__remove_specific_route_map_entries_for_peer(af, peer_pl_name, allow_community)
+        rc = rc and self.__remove_prefix_lists(af, [allow_address_pl_name])
+        rc = rc and self.__remove_community(peer_ip, allow_community)
+        rc1, entries = self.__find_all_route_map_entries_for_peer(af, peer_pl_name)
+        if not rc or not rc1:
+            out = "peer_ip='%s' community='%s'" % (peer_ip, allow_community)
+            log_crit("AllowList::remove_allow_list: Something went wrong. %s" % out)
+            return False
+        if len(entries) == 0:
+            # Install default "Allow list" route-map entry for the peer
+            address_pl_name = self.ALLOW_ALL_IPV4_PL_NAME if af == self.V4 else self.ALLOW_ALL_IPV6_PL_NAME
+            rc = self.__update_allow_route_map_entry(af, peer_pl_name, address_pl_name, EMPTY_COMMUNITY)
+        if rc:
+            rc = rc and self.__restart_peer(peer_ip)
+            if not rc:
+                log_crit("AllowList::remove_allow_list: Peer restart was unsuccessful. Peer '%s'" % peer_ip)
+        else:
+            log_crit("AllowList::remove_allow_list: Something went wrong. Peer wasn't restarted. %s" % peer_ip)
+        log_debug("AllowList::remove_allow_list. '%s': %s" % (peer_ip, "Done" if rc else "Error"))
+        return rc
+
+    def __generate_pl_names(self, peer_ip, community):
+        """
+        Generate prefix-list names for a given peer_ip and community value
+        :param peer_ip: ip address of a neighbor
+        :param community: community, which we want to use to filter prefixes
+        :return: a tuple address family of the peer_ip, prefix-list name to filter the peer,
+                 prefix-list name to filter "Allow address" list
+        """
+        af = self.V4 if TemplateFabric.is_ipv4(peer_ip) else self.V6
+        if af == self.V4:
+            peer_pl_name = self.PEER_PL_NAME_TMPL % peer_ip
+        else:  # quagga support matching ipv4 next-hop only by acl or prefix-list. and ipv6 next-hop only by itself
+            peer_pl_name = peer_ip
+        allow_address_pl_name = self.ALLOW_ADDRESS_PL_NAME_TMPL % (peer_ip, community)
+        res = af, peer_pl_name, allow_address_pl_name
+        log_debug("AllowList::__generate_pl_names: returns '%s', '%s', '%s'" % res)
+        return af, peer_pl_name, allow_address_pl_name
+
+    def __update_prefix_list(self, af, pl_name, allow_list):
+        """
+        Create or update a prefix-list with name pl_name.
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param pl_name: prefix-list name
+        :param allow_list: prefix-list entries
+        :return: True if updating was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__update_prefix_list. af='%s' prefix-list name=%s" % (af, pl_name))
+        family = 'ip' if af == self.V4 else 'ipv6'
+        match_string = '%s prefix-list %s seq ' % (family, pl_name)
+        rc, conf = self.__load_configuration()
+        if not rc:
+            return False
+        entries = []
+        for line in conf.split('\n'):
+            if line.lstrip().startswith('!'):
+                continue
+            if line.startswith(match_string):
+                found = line[len(match_string):].split(' ')
+                assert len(found) == 3 and found[0].isdigit() and found[1] == 'permit'
+                entries.append(found[2])
+        if set(entries) == set(allow_list):
+            log_debug("AllowList::__update_prefix_list: '%s':'%s' Prefixes is already updated" % (af, pl_name))
+            return True
+        cmds = []
+        if len(entries) > 0:
+            cmds.append('no %s prefix-list %s' % (family, pl_name))
+        for prefix in allow_list:
+            cmds.append('%s prefix-list %s permit %s' % (family, pl_name, prefix))
+        result = True
+        for cmd in cmds:
+            command = ["vtysh", "-c", "conf t", "-c", cmd]
+            rc, _, __ = run_command(command)
+            result = result and rc == 0
+        return result
+
+    def __remove_all_allow_prefix_lists_for_peer(self, af, peer_ip):
+        """
+        Removes all "Allow list" prefix-lists for the peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_ip: ip address of a neighbor
+        :return: True if removal was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__remove_all_prefix_lists_for_peer. af='%s' peer='%s'" % (af, peer_ip))
+        rc, pl_entries = self.__find_all_prefix_lists_for_peer(af, peer_ip)
+        if not rc:
+            return False
+        return self.__remove_prefix_lists(af, pl_entries)
+
+    def __find_all_prefix_lists_for_peer(self, af, peer_ip):
+        """
+        Find all "Allow list" prefix-lists for the peer.
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_ip: ip address of a neighbor
+        :return: a tuple. First element: True if adding was successful, False otherwise
+                          Second element: list of prefix-list names which are connected to the peer
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__find_all_prefix_lists_for_peer. af='%s' peer='%s'" % (af, peer_ip))
+        prefix_list_prefix = self.ALLOW_ADDRESS_PL_NAME_PER_PEER_TMPL % peer_ip
+        family = 'ip' if af == self.V4 else 'ipv6'
+        match_string = '%s prefix-list %s' % (family, prefix_list_prefix)
+        rc, conf = self.__load_configuration()
+        if not rc:
+            return False, None
+        result = []
+        for line in conf.split('\n'):
+            if line.lstrip().startswith('!'):
+                continue
+            if line.startswith(match_string):
+                found = line.strip().split(' ')
+                assert len(found) == 7
+                assert found[3] == 'seq' and found[4].isdigit()
+                assert found[5] == 'permit'
+                result.append(found[2])
+        return True, result
+
+    def __remove_prefix_lists(self, af, pl_names):
+        """
+        Remove prefix-lists in the address-family af.
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param pl_names: list of prefix-list names
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__remove_prefix_lists. af='%s' pl_names='%s'" % (af, pl_names))
+        family = 'ip' if af == self.V4 else 'ipv6'
+        rc = True
+        for pl_name in pl_names:
+            command = ["vtysh", "-c", "conf t", "-c", "no %s prefix-list %s" % (family, pl_name)]
+            rc1, _, __ = run_command(command)
+            rc = rc and rc1 == 0
+        return rc
+
+    def __update_allow_route_map_entry(self, af, peer_pl_name, allow_address_pl_name, community_name):
+        """
+        Add or update a "Allow address" route-map entry with the parameters
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: name of a "Peer" prefix-list
+        :param allow_address_pl_name: name of a "Allow address" prefix-list
+        :param community_name: name of the community
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        info = af, peer_pl_name, allow_address_pl_name, community_name
+        log_debug("AllowList::__update_allow_route_map_entry. af='%s' Peer pl='%s' Address pl='%s' cl='%s'" % info)
+        rc, entries = self.__parse_allow_route_map_entries(af)
+        if not rc:
+            return False
+        for sequence_number, values in entries.items():
+            if sequence_number == 65535:
+                continue
+            host_pl_presented = values['pl_peer'] == peer_pl_name
+            allow_list_presented = values['pl_allow_list'] == allow_address_pl_name
+            community_presented = values['community'] == community_name
+            if host_pl_presented and allow_list_presented and community_presented:
+                log_debug("AllowList::__update_allow_route_map_entry. The route map entry is already presented")
+                return True
+        sequence_number = self.__find_next_seq_number(entries.keys(), community_name != EMPTY_COMMUNITY)
+        return self.__install_allow_route_map_entry(af, sequence_number, peer_pl_name, allow_address_pl_name, community_name)
+
+    @staticmethod
+    def __find_next_seq_number(seq_numbers, has_community):
+        """
+        Find a next available "Allow list" route-map entry number
+        :param seq_numbers: a list of already used sequence numbers
+        :param has_community: True, if the route-map entry has community
+        :return: next available route-map sequence number
+        """
+        used_sequence_numbers = set(seq_numbers)
+        sequence_number = None
+        if has_community:  # put entries without communities after 32768
+            start_seq = 10
+            end_seq = 29990
+        else:
+            start_seq = 30000
+            end_seq = 65530
+        for i in range(start_seq, end_seq, 10):
+            if i not in used_sequence_numbers:
+                sequence_number = i
+                break
+        assert sequence_number is not None
+        info = sequence_number, "yes" if has_community else "no"
+        log_debug("AllowList::__find_next_seq_number '%d' has_community='%s'" % info)
+        return sequence_number
+
+    def __install_allow_route_map_entry(self, af, seq_number, peer_pl_name, allow_address_pl_name, community_name):
+        """
+        Install "Allow list" route-map entry
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param seq_number: sequence number
+        :param peer_pl_name: "Peer" prefix-list name
+        :param allow_address_pl_name: "Allow address" prefix-list name
+        :param community_name: "Allow address" community name
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        info = af, seq_number, peer_pl_name, allow_address_pl_name, community_name
+        out = "af='%s' seqno='%d' Peer pl='%s' Allow pl='%s' cl='%s'" % info
+        log_debug("AllowList::__install_allow_route_map_entry. %s" % out)
+        cmds = [
+            'vtysh',
+            '-c',
+            'conf t',
+            '-c',
+            'route-map %s permit %d' % (self.ROUTE_MAP_V4_NAME if af == self.V4 else self.ROUTE_MAP_V6_NAME, seq_number)
+        ]
+        rc, _, __ = run_command(cmds)
+        if rc != 0:
+            return False
+        if af == self.V4:
+            rc, _, __ = run_command(cmds + ["-c", "match ip address prefix-list %s" % allow_address_pl_name])
+            if rc != 0:
+                return False
+            rc, _, __ = run_command(cmds + ["-c", "match ip next-hop prefix-list %s" % peer_pl_name])
+            if rc != 0:
+                return False
+        else:  # af == self.V6
+            rc, _, __ = run_command(cmds + ["-c", "match ipv6 address prefix-list %s" % allow_address_pl_name])
+            if rc != 0:
+                return False
+            rc, _, __ = run_command(cmds + ["-c", "match ipv6 next-hop %s" % peer_pl_name])
+            if rc != 0:
+                return False
+        if not community_name.endswith(EMPTY_COMMUNITY):
+            rc, _, __ = run_command(cmds + ["-c", "match community %s" % community_name])
+            if rc != 0:
+                return False
+        return True
+
+    def __remove_all_route_map_entries_for_peer(self, af, peer_pl_name):
+        """
+        Remove all route-map entries for a peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: "Peer" prefix-list name for the peer
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList:__remove_all_route_map_entries_for_peer. af='%s' Peer pl='%s'" % (af, peer_pl_name))
+        rc1, rm_entries = self.__find_all_route_map_entries_for_peer(af, peer_pl_name)
+        if not rc1:
+            return False
+        return self.__remove_allow_route_map_entries(af, rm_entries)
+
+    def __remove_default_route_map_entries_for_peer(self, af, peer_pl_name):
+        """
+        Remove default route-map entry for a peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: "Peer" prefix-list name for the peer
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList:__remove_default_route_map_entries_for_peer. af='%s' Peer pl='%s'" % (af, peer_pl_name))
+        rc1, rm_entries = self.__find_default_route_map_entries_for_peer(af, peer_pl_name)
+        if not rc1:
+            return False
+        return self.__remove_allow_route_map_entries(af, rm_entries)
+
+    def __remove_specific_route_map_entries_for_peer(self, af, peer_pl_name, community_name):
+        """
+        Remove specific route-map entry for a peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: "Peer" prefix-list name for the peer
+        :param community_name: community list name
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        info = "af='%s' Peer pl='%s' cl='%s'" % (af, peer_pl_name, community_name)
+        log_debug("AllowList:__remove_specific_route_map_entries_for_peer. %s" % info)
+        pred = lambda v: v['pl_peer'] == peer_pl_name and v['community'] == community_name
+        rc, rm_entries = self.__find_route_map_entries_for_peer(af, peer_pl_name, pred)
+        if not rc:
+            return False
+        return self.__remove_allow_route_map_entries(af, rm_entries)
+
+    def __find_all_route_map_entries_for_peer(self, af, peer_pl_name):
+        """
+        Find all route-map entries for a peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: "Peer" prefix-list name for the peer
+        :return: A tuple, First element: True if operation was successful, False otherwise
+                          Second element: list of route-map sequence numbers for the peer
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__find_all_route_map_entries_for_peer. af='%s' Peer pl='%s'" % (af, peer_pl_name))
+        return self.__find_route_map_entries_for_peer(af, peer_pl_name, lambda v: True)
+
+    def __find_default_route_map_entries_for_peer(self, af, peer_pl_name):
+        """
+        Find default route-map entry for a peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: "Peer" prefix-list name for the peer
+        :return: A tuple, First element: True if operation was successful, False otherwise
+                          Second element: list of route-map sequence numbers with default entry for the peer
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__find_default_route_map_entries_for_peer. af='%s' Peer pl='%s'" % (af, peer_pl_name))
+        pred = lambda v: v['pl_allow_list'].startswith(self.ALLOW_ALL_PL_NAME_MATCH)
+        return self.__find_route_map_entries_for_peer(af, peer_pl_name, pred)
+
+    def __find_route_map_entries_for_peer(self, af, peer_pl_name, predicate):
+        """
+        Find default route-map entry for a peer
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param peer_pl_name: "Peer" prefix-list name for the peer
+        :param predicate:
+        :return: A tuple, First element: True if operation was successful, False otherwise
+                          Second element: list of route-map sequence numbers with default entry for the peer
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__find_default_route_map_entries_for_peer. af='%s' Peer pl='%s'" % (af, peer_pl_name))
+        rc, entries = self.__parse_allow_route_map_entries(af)
+        if not rc:
+            return False, None
+        res = [ seq_n for seq_n, values in entries.items() if values['pl_peer'] == peer_pl_name and predicate(values) ]
+        return True, res
+
+    def __remove_allow_route_map_entries(self, af, seq_numbers):
+        """
+        Remove "Allow list" route-map entries
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :param seq_numbers: list of the route-map sequence numbers to delete
+        :return: True if operation was successful, False otherwise
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__remove_allow_route_map_entries. af='%s' entries='%s'" % (af, str(seq_numbers)))
+        rm_name = self.ROUTE_MAP_V4_NAME if af == self.V4 else self.ROUTE_MAP_V6_NAME
+        rc = True
+        for seq_no in seq_numbers:
+            cmds = [
+                'vtysh',
+                '-c',
+                'conf t',
+                '-c',
+                'no route-map %s permit %d' % (rm_name, seq_no)
+            ]
+            rc1, _, __ = run_command(cmds)
+            rc = rc and rc1 == 0
+        return rc
+
+    def __parse_allow_route_map_entries(self, af):
+        """
+        Parse "Allow list" route-map entries.
+        :param af: "v4" to create ipv4 prefix-list, "v6" to create ipv6 prefix-list
+        :return: A tuple, First element: True if operation was successful, False otherwise
+                          Second element: list of object with parsed route-map entries
+        """
+        assert af == self.V4 or af == self.V6
+        log_debug("AllowList::__parse_allow_route_map_entries. af='%s'" % af)
+        rc, conf = self.__load_configuration()
+        if not rc:
+            return False, None
+        match_string = 'route-map %s permit ' % (self.ROUTE_MAP_V4_NAME if af == self.V4 else self.ROUTE_MAP_V6_NAME)
+        entries = {}
+        inside_route_map = False
+        route_map_seq_number = None
+        pl_peer_name = None
+        pl_allow_list_name = None
+        community_name = EMPTY_COMMUNITY
+        if af == self.V4:
+            match_pl_peer = ' match ip next-hop prefix-list '
+            match_pl_allow_list = ' match ip address prefix-list '
+        else:  # self.V6
+            match_pl_peer = ' match ipv6 next-hop '
+            match_pl_allow_list = ' match ipv6 address prefix-list '
+        match_community = ' match community '
+        for line in conf.split('\n'):
+            if line.lstrip().startswith('!'):
+                continue
+            if inside_route_map:
+                if line.startswith(match_pl_peer):
+                    pl_peer_name = line[len(match_pl_peer):]
+                    continue
+                elif line.startswith(match_pl_allow_list):
+                    pl_allow_list_name = line[len(match_pl_allow_list):]
+                    continue
+                elif line.startswith(match_community):
+                    community_name = line[len(match_community):]
+                    continue
+                else:
+                    assert pl_peer_name is not None and pl_allow_list_name is not None and community_name is not None
+                    entries[route_map_seq_number] = {
+                        'pl_peer': pl_peer_name,
+                        'pl_allow_list': pl_allow_list_name,
+                        'community': community_name,
+                    }
+                    inside_route_map = False
+                    pl_peer_name = None
+                    pl_allow_list_name = None
+                    community_name = EMPTY_COMMUNITY
+                    route_map_seq_number = None
+            if line.startswith(match_string):
+                found = line[len(match_string):]
+                assert found.isdigit()
+                route_map_seq_number = int(found)
+                inside_route_map = True
+        return True, entries
+
+    def __update_community(self, peer_ip, community):
+        """
+        Update community for a peer
+        :param peer_ip: ip address for the peer
+        :param community: community value for the peer
+        :return: True if operation was successful, False otherwise
+        """
+        log_debug("AllowList::__update_community. Peer='%s' community='%s'" % (peer_ip, community))
+        if community == EMPTY_COMMUNITY:  # we don't need to do anything for EMPTY community
+            return True
+        rc, is_presented = self.__is_community_present(peer_ip, community)
+        if not rc:
+            return False
+        if is_presented:
+            log_debug("AllowList::__update_community. Community is already presented.")
+            return True
+        return self.__push_community(peer_ip, community, "")
+
+    def __remove_community(self, peer_ip, community):
+        """
+        Remove community for a peer
+        :param peer_ip: ip address for the peer
+        :param community: community value for the peer
+        :return: True if operation was successful, False otherwise
+        """
+        log_debug("AllowList::__remove_community. Peer='%s' community='%s'" % (peer_ip, community))
+        if community == EMPTY_COMMUNITY:  # we don't need to do anything for EMPTY community
+            return True
+        rc, is_presented = self.__is_community_present(peer_ip, community)
+        if not rc:
+            return False
+        if not is_presented:
+            log_debug("AllowList::__remove_community. Community is already removed.")
+            return True
+        return self.__push_community(peer_ip, community, "no ")
+
+    def __push_community(self, peer_ip, community, cmd_prefix):
+        """
+        Push community configuration to the bgp
+        :param peer_ip: ip address for the peer
+        :param community: community value for the peer
+        :param cmd_prefix: prefix to insert before the command
+        :return: True if operation was successful, False otherwise
+        """
+        info = peer_ip, community, cmd_prefix
+        log_debug("AllowList::__push_community. Peer='%s' community='%s' prefix='%s'" % info)
+        community_list_name = self.ALLOW_ADDRESS_PL_NAME_TMPL % (peer_ip, community)
+        cmd = '%sip community-list standard %s permit %s' % (cmd_prefix, community_list_name, community)
+        rc, _, __ = run_command([
+            "vtysh",
+            "-c",
+            "conf t",
+            "-c",
+            cmd,
+        ])
+        return rc == 0
+
+    def __is_community_present(self, peer_ip, community):
+        """
+        Return True if community for the peer_ip exists
+        :param peer_ip: ip address for the peer
+        :param community: community value for the peer
+        :return: A tuple. First element: True if operation was successful, False otherwise
+                          Second element: True if the community exists
+        """
+        log_debug("AllowList::__is_community_present. Peer='%s' community='%s'" % (peer_ip, community))
+        community_list_name = self.ALLOW_ADDRESS_PL_NAME_TMPL % (peer_ip, community)
+        match_string = 'ip community-list standard %s permit %s' % (community_list_name, community)
+        rc, conf = self.__load_configuration()
+        if not rc:
+            return False, None
+        for line in conf.split('\n'):
+            if line.lstrip().startswith('!'):
+                continue
+            if line.strip() == match_string:
+                return True, True
+        return True, False
+
+    def __remove_all_communities_for_peer(self, peer_ip):
+        """
+        Remove all communities for the peer
+        :param peer_ip: ip address for the peer
+        :return: True if operation was successful, False otherwise
+        """
+        log_debug("AllowList::__remove_all_communities_for_peer. Peer='%s'" % peer_ip)
+        community_list_prefix = self.ALLOW_ADDRESS_PL_NAME_PER_PEER_TMPL % peer_ip
+        match_string = 'ip community-list standard %s' % community_list_prefix
+        rc, conf = self.__load_configuration()
+        if not rc:
+            return False
+        communities = []
+        for line in conf.split('\n'):
+            if line.lstrip().startswith('!'):
+                continue
+            if line.strip().startswith(match_string):
+                found = line.strip().split(' ')
+                assert len(found) == 6 and found[4] == 'permit'
+                communities.append(found[-1])
+        rc = True
+        for community in communities:
+            rc = rc and self.__remove_community(peer_ip, community)
+        return rc
+
+    def __restart_peer(self, peer_ip):
+        """
+        Initiate bgp soft reconfiguration for a neighbor
+        :param peer_ip: ip address of bgp neighbor
+        :return: True if operation was successful, False otherwise
+        """
+        log_info("AllowList::Restarting peer. Peer='%s'" % peer_ip)
+        af = self.V4 if TemplateFabric.is_ipv4(peer_ip) else self.V6
+        if af == self.V4:
+            rc, _, __ = run_command(["vtysh", "-c", "clear ip bgp %s soft in" % peer_ip])
+        else:
+            # quagga doesn't support ipv6 soft restart
+            rc, _, __ = run_command(["vtysh", "-c", "clear ip bgp %s" % peer_ip])
+        return rc == 0
+
+    @staticmethod
+    def __load_configuration():
+        """
+        Load configuration from bgp
+        :return: A tuple. First element: True if operation was successful, False otherwise
+                          Second element: loaded configuration as a raw string
+        """
+        log_debug("AllowList::__load_configuration.")
+        rc, out, _ = run_command(["vtysh", "-c", "show run"])
+        if rc != 0:
+            return False, None
+        return True, out
 
 
 class Daemon(object):
@@ -303,7 +1026,16 @@ def wait_for_bgpd():
     raise RuntimeError("bgpd hasn't been started in 20 seconds")
 
 
+def load_constants(name):
+    with open(name) as fp:
+        constants = yaml.load(fp)
+    return constants
+
+
 def main():
+    global g_allow_list_enabled
+    constants = load_constants('/etc/sonic/deployment_id_asn_map.yml')
+    g_allow_list_enabled = 'allow_list_enabled' in constants and constants['allow_list_enabled']
     wait_for_bgpd()
     daemon = Daemon()
     bgp_manager = BGPConfigManager(daemon)
@@ -316,7 +1048,7 @@ def signal_handler(signum, frame):
 
 
 if __name__ == '__main__':
-    rc = 0
+    return_code = 0
     try:
         syslog.openlog('bgpcfgd')
         signal.signal(signal.SIGTERM, signal_handler)
@@ -326,13 +1058,17 @@ if __name__ == '__main__':
         syslog.syslog(syslog.LOG_NOTICE, "Keyboard interrupt")
     except RuntimeError as e:
         syslog.syslog(syslog.LOG_CRIT, "%s" % str(e))
-        rc = -2
+        return_code = -2
+        if g_debug:
+            raise
     except Exception as e:
         syslog.syslog(syslog.LOG_CRIT, "Got an exception %s: Traceback: %s" % (str(e), traceback.format_exc()))
-        rc = -1
+        return_code = -1
+        if g_debug:
+            raise
     finally:
         syslog.closelog()
     try:
-        sys.exit(rc)
+        sys.exit(return_code)
     except SystemExit:
-        os._exit(rc)
+        os._exit(return_code)
