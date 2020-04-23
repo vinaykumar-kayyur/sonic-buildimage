@@ -419,6 +419,8 @@ def parse_meta(meta, hname):
     mgmt_routes = []
     erspan_dst = []
     deployment_id = None
+    k8s_master = None
+    k8s_insecure = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -441,7 +443,11 @@ def parse_meta(meta, hname):
                     erspan_dst = value_group
                 elif name == "DeploymentId":
                     deployment_id = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id
+                elif name == "KubernetesMaster":
+                    k8s_master = value
+                elif name == "KubernetesInsecure":
+                    k8s_insecure = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, k8s_master, k8s_insecure
 
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
@@ -599,6 +605,8 @@ def parse_xml(filename, platform=None, port_config_file=None):
     erspan_dst = []
     bgp_peers_with_range = None
     deployment_id = None
+    k8s_master = None
+    k8s_insecure = None
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
@@ -623,7 +631,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "UngDec")):
             (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
-            (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
+            (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, k8s_master, k8s_insecure) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
             (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
@@ -638,6 +646,12 @@ def parse_xml(filename, platform=None, port_config_file=None):
         'type': current_device['type']
         }
     }
+
+    results['KUBERNETES_MASTER'] = {'SERVER': {
+        'IP': k8s_master,
+        'insecure': k8s_insecure
+        }}
+
     results['BGP_NEIGHBOR'] = bgp_sessions
     results['BGP_MONITORS'] = bgp_monitors
     results['BGP_PEER_RANGE'] = bgp_peers_with_range

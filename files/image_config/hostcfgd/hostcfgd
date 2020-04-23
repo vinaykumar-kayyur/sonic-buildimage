@@ -220,6 +220,47 @@ class AaaCfg(object):
             f.write(nss_tacplus_conf)
 
 
+class k8s(object):
+    def __init__(self):
+        self.k8s_master = ""
+        self.insecure = False
+
+    # Load conf from ConfigDb
+    def load(self, data):
+        syslog.syslog(syslog.LOG_INFO, "kube_: load called: {} ".format(str(data)))
+        if 'SERVER' in data:
+            if 'IP' in data['SERVER']:
+                self.k8s_master = data['SERVER']['IP']
+            if 'insecure' in data['SERVER']:
+                self.insecure = data['SERVER']['insecure']
+        self.do_update()
+
+    def update(self, key, data):
+        syslog.syslog(syslog.LOG_INFO, "kube_: update called: key={} data={} ".format(key, str(data)))
+        if key == 'SERVER':
+            ip = ""
+            if 'insecure' in data:
+                self.insecure = data['insecure']
+            else:
+                self.insecure = False
+            if 'IP' in data:
+                ip = data['IP']
+            if self.k8s_master != ip:
+                self.k8s_master = ip
+                self.do_update()
+
+    def do_update(self):
+        if self.k8s_master:
+            cmd = "/usr/bin/kube_join.sh -s {} -a".format(self.k8s_master)
+            if self.insecure:
+                cmd += " -i"
+        else:
+            cmd = "/usr/bin/kube_reset.sh"
+
+        ret = subprocess.call(cmd, shell=True)
+        syslog.syslog(syslog.LOG_INFO, "cmd: {}  ret={}".format(cmd, ret))
+
+
 class HostConfigDaemon:
     def __init__(self):
         self.config_db = ConfigDBConnector()
@@ -233,6 +274,9 @@ class HostConfigDaemon:
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
+        k8sdata = self.config_db.get_table('KUBERNETES_MASTER')
+        self.k8s = k8s()
+        self.k8s.load(k8sdata)
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -301,12 +345,16 @@ class HostConfigDaemon:
         else:
             syslog.syslog(syslog.LOG_ERR, "Unexpected status value '{}' for '{}'".format(status, key))
 
+    def k8s_handler(self, key, data):
+        self.k8s.update(key, data)
+
     def start(self):
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
         self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_status_handler(key, data))
+        self.config_db.subscribe('KUBERNETES_MASTER', lambda table, key, data: self.k8s_handler(key, data))
         self.config_db.listen()
 
 

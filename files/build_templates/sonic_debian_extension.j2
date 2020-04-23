@@ -255,7 +255,6 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install watchdo
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures
 
 {% if install_kubernetes == "y" %}
-# Copy kubelet service files
 # Keep it disabled until join, else it continuously restart and as well spew too many
 # non-required log lines wasting syslog resources.
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
@@ -439,6 +438,10 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/pod2daemon-flexvol:v${K8s_CNI_CALICO_VERSION}
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT docker pull calico/cni:v${K8s_CNI_CALICO_VERSION}
 echo "docker images pull complete"
+sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_join.sh $FILESYSTEM_ROOT/usr/bin/
+sudo cp $IMAGE_CONFIGS/kubernetes/scripts/kube_reset.sh $FILESYSTEM_ROOT/usr/bin/
+sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/kube_join.sh
+sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/kube_reset.sh
 {% endif %}
 
 sudo umount $FILESYSTEM_ROOT/target
