@@ -90,7 +90,7 @@ static dhcp_device_counters_t glob_counters_snapshot[DHCP_DIR_COUNT] = {
 };
 
 /**
- * @code handle_dhcp_option_53(context, dhcp_option, dir, iphdr);
+ * @code handle_dhcp_option_53(context, dhcp_option, dir, iphdr, dhcphdr);
  *
  * @brief handle the logic related to DHCP option 53
  *
@@ -98,19 +98,25 @@ static dhcp_device_counters_t glob_counters_snapshot[DHCP_DIR_COUNT] = {
  * @param dhcp_option   pointer to DHCP option buffer space
  * @param dir           packet direction
  * @param iphdr         pointer to packet IP header
+ * @param dhcphdr       pointer to DHCP header
  *
  * @return none
  */
 static void handle_dhcp_option_53(dhcp_device_context_t *context,
                                   const u_char *dhcp_option,
                                   dhcp_packet_direction_t dir,
-                                  struct ip *iphdr)
+                                  struct ip *iphdr,
+                                  uint8_t *dhcphdr)
 {
+    in_addr_t giaddr;
+    giaddr = ntohl(dhcphdr[24] << 24 | dhcphdr[25] << 16 | dhcphdr[26] << 8 | dhcphdr[27]);
     switch (dhcp_option[2])
     {
     case 1:
         context->counters[dir].discover++;
-        if ((context->is_uplink && dir == DHCP_TX) || (!context->is_uplink && dir == DHCP_RX)) {
+        if (((context->loopback_ip == giaddr) && (context->is_uplink && dir == DHCP_TX)) ||
+            ((!context->is_uplink && dir == DHCP_RX) && (iphdr->ip_dst.s_addr == INADDR_BROADCAST) &&
+             (iphdr->ip_src.s_addr == INADDR_ANY))) {
             glob_counters[dir].discover++;
         }
         break;
@@ -123,7 +129,9 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
         break;
     case 3:
         context->counters[dir].request++;
-        if ((context->is_uplink && dir == DHCP_TX) || (!context->is_uplink && dir == DHCP_RX)) {
+        if (((context->loopback_ip == giaddr) && (context->is_uplink && dir == DHCP_TX)) ||
+            ((!context->is_uplink && dir == DHCP_RX) && (iphdr->ip_dst.s_addr == INADDR_BROADCAST) &&
+             (iphdr->ip_src.s_addr == INADDR_ANY))) {
             glob_counters[dir].request++;
         }
         break;
@@ -164,6 +172,7 @@ static void read_callback(int fd, short event, void *arg)
         struct ether_header *ethhdr = (struct ether_header*) context->buffer;
         struct ip *iphdr = (struct ip*) (context->buffer + IP_START_OFFSET);
         struct udphdr *udp = (struct udphdr*) (context->buffer + UDP_START_OFFSET);
+        uint8_t *dhcphdr = context->buffer + DHCP_START_OFFSET;
         int dhcp_option_offset = DHCP_START_OFFSET + DHCP_OPTIONS_HEADER_SIZE;
 
         if ((buffer_sz > UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) &&
@@ -186,7 +195,7 @@ static void read_callback(int fd, short event, void *arg)
                 {
                 case 53:
                     if (offset < (dhcp_option_sz + 2)) {
-                        handle_dhcp_option_53(context, &dhcp_option[offset], dir, iphdr);
+                        handle_dhcp_option_53(context, &dhcp_option[offset], dir, iphdr, dhcphdr);
                     }
                     stop_dhcp_processing = 1; // break while loop since we are only interested in Option 53
                     break;
@@ -426,7 +435,7 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
         }
 
         if (snaplen < UDP_START_OFFSET + sizeof(struct udphdr) + DHCP_OPTIONS_HEADER_SIZE) {
-            syslog(LOG_ALERT, "dhcp_device_start_capture(%s): snap length is too low to capture DHCP options", context);
+            syslog(LOG_ALERT, "dhcp_device_start_capture(%s): snap length is too low to capture DHCP options", context->intf);
             break;
         }
 
