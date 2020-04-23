@@ -1,6 +1,6 @@
 
 SPATH       := $($(WPASUPPLICANT)_SRC_PATH)
-DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/wpa.mk rules/wpa.dep   
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/wpasupplicant.mk rules/wpasupplicant.dep   
 DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
 DEP_FILES   += $(shell git ls-files $(SPATH))
 
