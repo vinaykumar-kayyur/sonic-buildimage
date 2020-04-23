@@ -777,7 +777,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(KDUMP_TOOLS) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS) \
-                $(MONIT)) \
+                $(MONIT) \
+                $(WPASUPPLICANT)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
 	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
