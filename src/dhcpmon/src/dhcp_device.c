@@ -111,36 +111,38 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
                                   uint8_t *dhcphdr)
 {
     in_addr_t giaddr;
-    giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
-                   dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
     switch (dhcp_option[2])
     {
     case 1:
+        giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
+                       dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         context->counters[dir].discover++;
-        if (((context->loopback_ip == giaddr) && (context->is_uplink && dir == DHCP_TX)) ||
-            ((!context->is_uplink && dir == DHCP_RX) && (iphdr->ip_dst.s_addr == INADDR_BROADCAST) &&
-             (iphdr->ip_src.s_addr == INADDR_ANY))) {
+        if ((context->loopback_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
+            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST &&
+             iphdr->ip_src.s_addr == INADDR_ANY)) {
             glob_counters[dir].discover++;
         }
         break;
     case 2:
         context->counters[dir].offer++;
-        if (((context->loopback_ip == iphdr->ip_dst.s_addr) && (context->is_uplink && dir == DHCP_RX)) ||
+        if ((context->loopback_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             glob_counters[dir].offer++;
         }
         break;
     case 3:
+        giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
+                       dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         context->counters[dir].request++;
-        if (((context->loopback_ip == giaddr) && (context->is_uplink && dir == DHCP_TX)) ||
-            ((!context->is_uplink && dir == DHCP_RX) && (iphdr->ip_dst.s_addr == INADDR_BROADCAST) &&
-             (iphdr->ip_src.s_addr == INADDR_ANY))) {
+        if ((context->loopback_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
+            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST &&
+             iphdr->ip_src.s_addr == INADDR_ANY)) {
             glob_counters[dir].request++;
         }
         break;
     case 5:
         context->counters[dir].ack++;
-        if (((context->loopback_ip == iphdr->ip_dst.s_addr) && (context->is_uplink && dir == DHCP_RX)) ||
+        if ((context->loopback_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             glob_counters[dir].ack++;
         }
