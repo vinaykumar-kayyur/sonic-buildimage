@@ -33,6 +33,8 @@
 #define DHCP_START_OFFSET (UDP_START_OFFSET + sizeof(struct udphdr))
 /** Start of DHCP Options segment of a captured frame */
 #define DHCP_OPTIONS_HEADER_SIZE 240
+/** Offset of DHCP GIADDR */
+#define DHCP_GIADDR_OFFSET 24
 
 #define OP_LDHA     (BPF_LD  | BPF_H   | BPF_ABS)   /** bpf ldh Abs */
 #define OP_LDHI     (BPF_LD  | BPF_H   | BPF_IND)   /** bpf ldh Ind */
@@ -109,7 +111,8 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
                                   uint8_t *dhcphdr)
 {
     in_addr_t giaddr;
-    giaddr = ntohl(dhcphdr[24] << 24 | dhcphdr[25] << 16 | dhcphdr[26] << 8 | dhcphdr[27]);
+    giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
+                   dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
     switch (dhcp_option[2])
     {
     case 1:
