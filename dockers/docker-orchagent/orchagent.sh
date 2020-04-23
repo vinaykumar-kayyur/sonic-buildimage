@@ -27,10 +27,10 @@ ORCHAGENT_ARGS+="-b 8192 "
 # ID field could be integers just to denote the asic instance like 0,1,2...
 # OR could be PCI device ID's which will be strings like "03:00.0"
 # depending on what the SAI/SDK expects.
-inst_id=`sonic-cfggen -d -v DEVICE_METADATA.localhost.asic_id`
-if [ -n "$inst_id" ]
+asic_id=`sonic-cfggen -d -v DEVICE_METADATA.localhost.asic_id`
+if [ -n "$asic_id" ]
 then
-    ORCHAGENT_ARGS+="-i $inst_id "
+    ORCHAGENT_ARGS+="-i $asic_id "
 fi
 
 # Add platform specific arguments if necessary
