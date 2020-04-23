@@ -227,7 +227,6 @@ class k8s(object):
 
     # Load conf from ConfigDb
     def load(self, data):
-        syslog.syslog(syslog.LOG_INFO, "kube_: load called: {} ".format(str(data)))
         if 'SERVER' in data:
             if 'IP' in data['SERVER']:
                 self.k8s_master = data['SERVER']['IP']
@@ -236,7 +235,6 @@ class k8s(object):
         self.do_update()
 
     def update(self, key, data):
-        syslog.syslog(syslog.LOG_INFO, "kube_: update called: key={} data={} ".format(key, str(data)))
         if key == 'SERVER':
             ip = ""
             if 'insecure' in data:
