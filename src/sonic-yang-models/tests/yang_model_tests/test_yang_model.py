@@ -168,6 +168,22 @@ class Test_yang_models:
             'PORT_NEG_TEST': {
                 'desc': 'LOAD PORT TABLE FEC PATTERN FAILURE',
                 'eStr': self.defaultYANGFailure['Pattern'] + ['rc']
+            },
+            'CRM_WITH_WRONG_PERCENTAGE': {
+                'desc': 'CRM_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'CRM_WITH_CORRECT_USED_VALUE': {
+                'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE': {
+                'desc': 'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'VERSIONS_WITH_INCORRECT_PATTERN': {
+                'desc': 'VERSIONS_WITH_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
             }
         }
 
