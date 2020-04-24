@@ -10,9 +10,19 @@ args_str=""
 
 ASYNC_RUN=false
 debug=false
-oneshot=false
 force=false
 test_only=false
+
+take_lock() {
+    # Check is Lock File exists, if not create it and set trap on exit
+    if { set -C; 2>/dev/null >/var/lock/kube_join.lock; }; then
+        trap "rm -f /var/lock/kube_join.lock" EXIT
+    else
+        echo "Lock file exists; exiting"
+        exit
+    fi
+
+}
 
 set_env() {
     # Required when running as CRON job
@@ -34,10 +44,8 @@ log_err() {
 }
 
 create_cron() {
-    if ! ${oneshot}; then
-        log_info "Creating Cron job /usr/bin/kube_join.sh ${args_str}"
-        ( crontab -l | grep -v "kube_join" ; echo "*/10 * * * * /usr/bin/kube_join.sh ${args_str}" ) | crontab -
-    fi
+    log_info "Creating Cron job /usr/bin/kube_join.sh ${args_str}"
+    ( crontab -l | grep -v "kube_join" ; echo "*/10 * * * * /usr/bin/kube_join.sh ${args_str}" ) | crontab -
 }
 
 drop_cron() {
@@ -50,7 +58,6 @@ download_file() {
     myfile=$(mktemp "${TMPDIR:-/tmp/}$(basename $0).XXXXXXXXXXXX")
     if ! curl -f -s ${CURL_FLAGS} -o ${myfile} https://${API_SERVER}/admin.conf; then
         log_err "Failed to download https://${API_SERVER}/admin.conf"
-        create_cron
         exit -1
     fi
     cp ${myfile} /etc/sonic/kube_admin.conf
@@ -74,15 +81,12 @@ is_connected() {
     fi
 }
 
-while getopts ":s:iadoft" opt
+while getopts ":s:iadft" opt
 do
     case ${opt} in
         i ) # Do insecured pull
             CURL_FLAGS="${CURL_FLAGS} --insecure"
             args_str+=" -i"
-            ;;
-        o ) # Do one shot attempt
-            oneshot=true
             ;;
         a ) # Do asynchronous run
             ASYNC_RUN=true
@@ -94,7 +98,7 @@ do
             API_SERVER=${OPTARG}
             args_str+=" -s ${OPTARG}"
             ;;
-        f ) # Do one shot attempt
+        f ) # Force the join
             force=true
             ;;
         t ) # Test only
@@ -107,7 +111,6 @@ Usage: [-i] [-a] [-d] [-s <API Server IP>] [-f]
     -i -- Does insecure curl download of kubeconfig file 
     -a -- Async mode
     -d -- Debug mode
-    -o -- Single shot
     -f -- Force join
     -t -- test only 
 EOF
@@ -130,6 +133,7 @@ if ! ${force}; then
     # check if already connected to this master
     if is_connected; then
         echo "Already connected to API Server: ${API_SERVER}; skip joining; You may override with -f"
+        drop_cron
         exit 0
     fi
 fi
@@ -145,6 +149,9 @@ then
     exit 0
 fi
 
+# Take exclusive lock; Exits if fails.
+take_lock
+
 set_env
 
 # pre-requisite
@@ -155,13 +162,8 @@ log_info "Resetting kubeadm ..."
 /usr/bin/kube_reset.sh -f
 mkdir -p /var/lib/kubelet/
 
-# Download kubeconfig file
+# Download kubeconfig file; Exits if fails.
 download_file
-
-# The server is reachable. drop cron.
-echo "Drop cron, if any"
-drop_cron
-
 
 # Enable kubelet service which is disabled upon install
 log_info "enable & start kubelet.service"
