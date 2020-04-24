@@ -10,7 +10,7 @@ from sys import exit
 import pytest
 
 # find path of pkgs from os environment vars
-prefix = '/sonic'; debs = environ["STRETCH_DEBS_PATH"]
+prefix = '../../'; debs = environ["IMAGE_DISTRO_DEBS_PATH"]
 wheels = environ["PYTHON_WHEELS_PATH"]
 wheels_path = '{}/{}'.format(prefix, wheels)
 deps_path = '{}/{}'.format(prefix, debs)
