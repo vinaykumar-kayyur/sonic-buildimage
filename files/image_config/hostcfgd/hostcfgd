@@ -259,7 +259,7 @@ class k8s_config(object):
         if ret != 0:
             syslog.syslog(syslog.LOG_ERR, "cmd: {}  ret={}".format(cmd, ret))
         else:
-            syslog.syslog(syslog.LOG_INFO, "cmd: {} succeeded.".format(cmd, ret))
+            syslog.syslog(syslog.LOG_INFO, "cmd: {} succeeded.".format(cmd))
 
 
 class HostConfigDaemon:
