@@ -54,7 +54,6 @@ drop_cron() {
 }
 
 download_file() {
-
     myfile=$(mktemp "${TMPDIR:-/tmp/}$(basename $0).XXXXXXXXXXXX")
     if ! curl -f -s ${CURL_FLAGS} -o ${myfile} https://${API_SERVER}/admin.conf; then
         log_err "Failed to download https://${API_SERVER}/admin.conf"
@@ -66,7 +65,6 @@ download_file() {
 }
 
 is_connected() {
-
     pid=""
     if [ -f /etc/sonic/kube_admin.conf ]; then
         master=`kubectl --kubeconfig /etc/sonic/kube_admin.conf get nodes | grep master | cut -f1 -d' '`
@@ -79,6 +77,19 @@ is_connected() {
     else
         return 1
     fi
+}
+
+usage() {
+    cat << EOF
+Usage: [-i] [-a] [-d] [-s <API Server IP>] [-f]
+
+    -s -- IP address of API server"
+    -i -- Does insecure curl download of kubeconfig file 
+    -a -- Async mode
+    -d -- Debug mode
+    -f -- Force join
+    -t -- test only 
+EOF
 }
 
 while getopts ":s:iadft" opt
@@ -104,28 +115,20 @@ do
         t ) # Test only
             test_only=true
             ;;
-        \? ) cat << EOF
-Usage: [-i] [-a] [-d] [-s <API Server IP>] [-f]
-
-    -s -- IP address of API server"
-    -i -- Does insecure curl download of kubeconfig file 
-    -a -- Async mode
-    -d -- Debug mode
-    -f -- Force join
-    -t -- test only 
-EOF
+        \? ) # Usage
+            usage
             exit -1
             ;;
     esac
 done
 
 if [ -z "${API_SERVER}" ]; then
-    log_err "API SERVER IP address is required"
+    echo "API SERVER IP address is required"
     exit 1
 fi
 
 if [ $EUID -ne 0 ]; then
-    log_err "This script must be run as root" 
+    echo "This script must be run as root" 
     exit 1
 fi
 

@@ -220,7 +220,7 @@ class AaaCfg(object):
             f.write(nss_tacplus_conf)
 
 
-class k8s(object):
+class k8s_config(object):
     def __init__(self):
         self.k8s_master = ""
         self.insecure = False
@@ -256,7 +256,10 @@ class k8s(object):
             cmd = "/usr/bin/kube_reset.sh"
 
         ret = subprocess.call(cmd, shell=True)
-        syslog.syslog(syslog.LOG_INFO, "cmd: {}  ret={}".format(cmd, ret))
+        if ret != 0:
+            syslog.syslog(syslog.LOG_ERR, "cmd: {}  ret={}".format(cmd, ret))
+        else:
+            syslog.syslog(syslog.LOG_INFO, "cmd: {} succeeded.".format(cmd, ret))
 
 
 class HostConfigDaemon:
@@ -273,7 +276,7 @@ class HostConfigDaemon:
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
         k8sdata = self.config_db.get_table('KUBERNETES_MASTER')
-        self.k8s = k8s()
+        self.k8s = k8s_confg()
         self.k8s.load(k8sdata)
 
     def aaa_handler(self, key, data):
