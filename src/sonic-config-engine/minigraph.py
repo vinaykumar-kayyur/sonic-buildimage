@@ -102,7 +102,7 @@ def parse_png(png, hname):
                             'baud_rate': baudrate,
                             'flow_control': flowcontrol
                             }
-                    if startdevice.lower() == hname.lower():
+                    else:
                         console_ports[startport] = {
                             'remote_device': enddevice,
                             'baud_rate': baudrate,
@@ -455,7 +455,7 @@ def parse_cpg(cpg, hname):
                         'keepalive': keepalive,
                         'nhopself': nhopself
                     }
-                if start_router.lower() == hname.lower():
+                elif start_router.lower() == hname.lower():
                     bgp_sessions[end_peer.lower()] = {
                         'name': end_router,
                         'local_addr': start_peer.lower(),
