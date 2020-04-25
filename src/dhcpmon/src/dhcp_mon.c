@@ -68,6 +68,7 @@ static void timeout_callback(evutil_socket_t fd, short event, void *arg)
     case DHCP_MON_STATUS_UNHEALTHY:
         if (++count > dhcp_unhealthy_max_count) {
             syslog(LOG_ALERT, "DHCP Relay is not healthy after %d health checks\n", count);
+            dhcp_devman_print_status();
         }
         break;
     case DHCP_MON_STATUS_HEALTHY:
