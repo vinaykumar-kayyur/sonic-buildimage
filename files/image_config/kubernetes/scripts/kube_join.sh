@@ -211,7 +211,7 @@ sleep 10s
 
 node=`hostname`
 
-ver=`grep build_version /etc/sonic/sonic_version.yml| cut -f2- -d' '`
+ver=`grep build_version /etc/sonic/sonic_version.yml| cut -f2- -d' '| tr -d "'"`
 log_info "Add label node=${node} sonic_version=${ver}"
 kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${node} sonic_version=${ver}
 
