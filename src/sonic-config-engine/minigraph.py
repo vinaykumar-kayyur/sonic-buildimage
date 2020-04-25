@@ -75,7 +75,7 @@ def parse_device(device):
             deployment_id = node.text
     return (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id)
 
-def parse_png(png, hname, device_hostname):
+def parse_png(png, hname):
     neighbors = {}
     devices = {}
     console_dev = ''
@@ -119,51 +119,21 @@ def parse_png(png, hname, device_hostname):
                 startport = link.find(str(QName(ns, "StartPort"))).text
                 bandwidth_node = link.find(str(QName(ns, "Bandwidth")))
                 bandwidth = bandwidth_node.text if bandwidth_node is not None else None
-                # Chassis internal node is used in multi-asic device or chassis minigraph
-                # where the minigraph will contain the internal asic connectivity and
-                # external neighbor information. The ChassisInternal node will be used to 
-                # determine if the link is internal to the device or chassis.
-                chassis_internal_node = link.find(str(QName(ns, "ChassisInternal")))
-                chassis_internal = chassis_internal_node.text if chassis_internal_node is not None else "false"
+                if (enddevice.lower() == hname.lower()):
+                    if port_alias_map.has_key(endport):
+                        endport = port_alias_map[endport]
+                    neighbors[endport] = {'name': startdevice, 'port': startport}
+                    device_neighbors.append(startdevice)
+                    if bandwidth:
+                        port_speeds[endport] = bandwidth
 
-                # if hname is ASIC name and the link is an external link
-                # include the external neighbor inforamtion in ASIC ports table 
-                if chassis_internal == "false" and hname.lower() != device_hostname.lower():
-                    if (enddevice.lower() == device_hostname.lower()):
-                        if ((port_alias_asic_map.has_key(endport)) and
-                                (hname.lower() in port_alias_asic_map[endport].lower())):
-                            endport = port_alias_asic_map[endport]
-                            neighbors[port_alias_map[endport]] = {'name': startdevice, 'port': startport}
-                            device_neighbors.append(startdevice)
-                            if bandwidth:
-                                port_speeds[port_alias_map[endport]] = bandwidth
-
-                    if (startdevice.lower() == device_hostname.lower()):
-                        if ((port_alias_asic_map.has_key(startport)) and
-                               (hname.lower() in port_alias_asic_map[startport].lower())):
-                            startport = port_alias_asic_map[startport]
-                            neighbors[port_alias_map[startport]] = {'name': enddevice, 'port': endport}
-                            device_neighbors.append(enddevice)
-                            if bandwidth:
-                                port_speeds[port_alias_map[startport]] = bandwidth
-                else:
-                    if ((enddevice.lower() == hname.lower()) and
-                        (startdevice.lower() != device_hostname.lower())):
-                        if port_alias_map.has_key(endport):
-                            endport = port_alias_map[endport]
-                        neighbors[endport] = {'name': startdevice, 'port': startport}
-                        device_neighbors.append(startdevice)
-                        if bandwidth:
-                            port_speeds[endport] = bandwidth
-
-                    if ((startdevice.lower() == hname.lower()) and
-                        (enddevice.lower() != device_hostname.lower())):
-                        if port_alias_map.has_key(startport):
-                            startport = port_alias_map[startport]
-                        neighbors[startport] = {'name': enddevice, 'port': endport}
-                        device_neighbors.append(enddevice)
-                        if bandwidth:
-                            port_speeds[startport] = bandwidth
+                if (startdevice.lower() == hname.lower()):
+                    if port_alias_map.has_key(startport):
+                        startport = port_alias_map[startport]
+                    neighbors[startport] = {'name': enddevice, 'port': endport}
+                    device_neighbors.append(enddevice)
+                    if bandwidth:
+                        port_speeds[startport] = bandwidth
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
@@ -192,11 +162,85 @@ def parse_png(png, hname, device_hostname):
 
     return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, device_neighbors)
 
+def parse_asic_png(png, asic_name, hostname):
+    neighbors = {}
+    devices = {}
+    port_speeds = {}
+    device_neighbors = []
+    for child in png:
+        if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
+            for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
+                linktype = link.find(str(QName(ns, "ElementType"))).text
+                if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink" and linktype != "DeviceSerialLink":
+                    continue
+                enddevice = link.find(str(QName(ns, "EndDevice"))).text
+                endport = link.find(str(QName(ns, "EndPort"))).text
+                startdevice = link.find(str(QName(ns, "StartDevice"))).text
+                startport = link.find(str(QName(ns, "StartPort"))).text
+                bandwidth_node = link.find(str(QName(ns, "Bandwidth")))
+                bandwidth = bandwidth_node.text if bandwidth_node is not None else None
+                # Chassis internal node is used in multi-asic device or chassis minigraph
+                # where the minigraph will contain the internal asic connectivity and
+                # external neighbor information. The ChassisInternal node will be used to
+                # determine if the link is internal to the device or chassis.
+                chassis_internal_node = link.find(str(QName(ns, "ChassisInternal")))
+                chassis_internal = chassis_internal_node.text if chassis_internal_node is not None else "false"
 
-def parse_dpg(dpg, hname, device_hostname):
+                # If the link is an external link include the external neighbor
+                # information in ASIC ports table
+                if chassis_internal.lower() == "false":
+                    # if chassis internal is false, the interface name will be
+                    # interface alias which should be converted to asic port name
+                    if (enddevice.lower() == hostname.lower()):
+                        if ((port_alias_asic_map.has_key(endport)) and
+                                (asic_name.lower() in port_alias_asic_map[endport].lower())):
+                            endport = port_alias_asic_map[endport]
+                            neighbors[port_alias_map[endport]] = {'name': startdevice, 'port': startport}
+                            device_neighbors.append(startdevice)
+                            if bandwidth:
+                                port_speeds[port_alias_map[endport]] = bandwidth
 
-    #In Multi-NPU platforms the acl intfs are defined for only for the host.
-    # to get the aclintfs node first.
+                    if (startdevice.lower() == hostname.lower()):
+                        if ((port_alias_asic_map.has_key(startport)) and
+                               (asic_name.lower() in port_alias_asic_map[startport].lower())):
+                            startport = port_alias_asic_map[startport]
+                            neighbors[port_alias_map[startport]] = {'name': enddevice, 'port': endport}
+                            device_neighbors.append(enddevice)
+                            if bandwidth:
+                                port_speeds[port_alias_map[startport]] = bandwidth
+                else:
+                    if ((enddevice.lower() == asic_name.lower()) and
+                        (startdevice.lower() != hostname.lower())):
+                        if port_alias_map.has_key(endport):
+                            endport = port_alias_map[endport]
+                        neighbors[endport] = {'name': startdevice, 'port': startport}
+                        device_neighbors.append(startdevice)
+                        if bandwidth:
+                            port_speeds[endport] = bandwidth
+
+                    if ((startdevice.lower() == asic_name.lower()) and
+                        (enddevice.lower() != hostname.lower())):
+                        if port_alias_map.has_key(startport):
+                            startport = port_alias_map[startport]
+                        neighbors[startport] = {'name': enddevice, 'port': endport}
+                        device_neighbors.append(enddevice)
+                        if bandwidth:
+                            port_speeds[startport] = bandwidth
+
+        if child.tag == str(QName(ns, "Devices")):
+            for device in child.findall(str(QName(ns, "Device"))):
+                (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
+                device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
+                if deployment_id:
+                    device_data['deployment_id'] = deployment_id
+                devices[name] = device_data
+    return (neighbors, devices, port_speeds, device_neighbors)
+
+def parse_dpg(dpg, hname):
+
+    """In Multi-NPU platforms the acl intfs are defined only for the host.
+    Get the aclintfs node first.
+    """
     for child in dpg:
 
         aclintfs = child.find(str(QName(ns, "AclInterfaces")))
@@ -488,6 +532,22 @@ def parse_meta(meta, hname):
                     sub_role = value
     return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, sub_role
 
+def parse_asic_meta(meta, hname):
+    deployment_id = None
+    sub_role = None
+    device_metas = meta.find(str(QName(ns, "Devices")))
+    for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
+        if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
+            properties = device.find(str(QName(ns1, "Properties")))
+            for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
+                name = device_property.find(str(QName(ns1, "Name"))).text
+                value = device_property.find(str(QName(ns1, "Value"))).text
+                if name == "DeploymentId":
+                    deployment_id = value
+                elif name == "SubRole":
+                    sub_role = value
+    return deployment_id, sub_role
+
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
     port_descriptions = {}
@@ -609,11 +669,10 @@ def filter_acl_mirror_table_bindings(acls, neighbors, port_channels):
 # Main functions
 #
 ###############################################################################
-# hostname paramter: To parse minigraph.xml that contains multiple hosts 
-# information, like in case of multi-asic device or chassis device, this 
-# parameter can be used to specify the specific hostname for which configuration
-# has to be generated.
-def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
+def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
+    """ To parse minigraph.xml of multi-asic device asic_name parameter
+    is used to specify the asic for which the configuration has to be 
+    generated. """
     root = ET.parse(filename).getroot()
     mini_graph_path = filename
 
@@ -648,26 +707,22 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
     bgp_peers_with_range = None
     deployment_id = None
 
-    
     #hostname is the asic_name, get the asic_id from the asic_name
-    if hostname is not None:
-        asic_id = hostname[-1]
+    if asic_name is not None:
+        asic_id = asic_name[-1]
     else:
         asic_id = None
 
-    hwsku_qn = QName(ns, "HwSku") 
+    hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
     docker_routing_config_mode_qn = QName(ns, "DockerRoutingConfigMode")
     for child in root:
         if child.tag == str(hwsku_qn):
             hwsku = child.text
         if child.tag == str(hostname_qn):
-            device_hostname = child.text
+            hostname = child.text
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
-
-    if hostname is None:
-        hostname = device_hostname
 
     (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id)
     port_alias_map.update(alias_map)
@@ -675,28 +730,45 @@ def parse_xml(filename, platform=None, port_config_file=None, hostname=None):
 
     for child in root:
         if child.tag == str(QName(ns, "DpgDec")):
-            (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname, device_hostname)
+            if asic_name is None:
+                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
+            else:
+                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
         elif child.tag == str(QName(ns, "CpgDec")):
-            (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
+            if asic_name is None:
+                (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
+            else:
+                (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
         elif child.tag == str(QName(ns, "PngDec")):
-            (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, device_neighbors) = parse_png(child, hostname, device_hostname)
+            if asic_name is None:
+                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, device_neighbors) = parse_png(child, hostname)
+            else:
+                (neighbors, devices, port_speed_png, device_neighbors) = parse_asic_png(child, asic_name, hostname)
         elif child.tag == str(QName(ns, "UngDec")):
-            (u_neighbors, u_devices, _, _, _, _, _, _, _) = parse_png(child, hostname, device_hostname)
+            (u_neighbors, u_devices, _, _, _, _, _, _, _) = parse_png(child, device_hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
-            (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, sub_role) = parse_meta(child, hostname)
+            if asic_name is None:
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, sub_role) = parse_meta(child, hostname)
+            else:
+                (deployment_id, sub_role) = parse_asic_meta(child, asic_name)
         elif child.tag == str(QName(ns, "DeviceInfos")):
             (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
-    current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
+    if asic_name is None:
+        current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
+        name = hostname
+    else:
+        current_device = [devices[key] for key in devices if key.lower() == asic_name.lower()][0]
+        name = asic_name
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
         'docker_routing_config_mode': docker_routing_config_mode,
-        'hostname': hostname,
+        'hostname': name,
         'hwsku': hwsku,
-        'type': current_device['type']
+        'type': current_device['type']    
         }
     }
     # for this hostname, if sub_role is defined, add sub_role in 
@@ -948,8 +1020,8 @@ def parse_asic_sub_role(filename, asic_name):
     root = ET.parse(filename).getroot()
     for child in root:
         if child.tag == str(QName(ns, "MetadataDeclaration")):
-             _, _, _, _, _, _, _, sub_role = parse_meta(child, asic_name)
-	     return sub_role
+            _, sub_role = parse_asic_meta(child, asic_name)
+	    return sub_role
 
 port_alias_map = {}
 port_alias_asic_map = {}

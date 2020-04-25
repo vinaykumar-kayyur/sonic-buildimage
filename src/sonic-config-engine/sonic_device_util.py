@@ -36,7 +36,7 @@ def get_num_npus():
    num_npus = 1
    asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, 'asic.conf')
    if not os.path.isFile(asic_conf_file_path):
-	return 1
+	return num_npus
    with open(asic_conf_file_path) as asic_conf_file:
 	for line in asic_conf_file:
 	    tokens = line.split('=')
