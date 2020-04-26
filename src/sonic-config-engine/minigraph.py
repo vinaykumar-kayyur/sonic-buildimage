@@ -644,7 +644,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     }
 
     results['KUBERNETES_MASTER'] = {'SERVER': {
-        'IP': k8s_master,
+        'IP': k8s_master
         }}
 
     results['BGP_NEIGHBOR'] = bgp_sessions

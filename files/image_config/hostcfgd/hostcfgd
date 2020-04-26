@@ -237,14 +237,19 @@ class k8s_config(object):
     def update(self, key, data):
         if key == 'SERVER':
             ip = ""
+            upd = False
+            insec = False
             if 'insecure' in data:
-                self.insecure = data['insecure']
-            else:
-                self.insecure = False
+                insec = data['insecure']
             if 'IP' in data:
                 ip = data['IP']
             if self.k8s_master != ip:
                 self.k8s_master = ip
+                upd = True
+            if self.insecure != insec:
+                self.insecure = insec
+                upd = True
+            if upd:
                 self.do_update()
 
     def do_update(self):
@@ -276,7 +281,7 @@ class HostConfigDaemon:
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
         k8sdata = self.config_db.get_table('KUBERNETES_MASTER')
-        self.k8s = k8s_confg()
+        self.k8s = k8s_config()
         self.k8s.load(k8sdata)
 
     def aaa_handler(self, key, data):
