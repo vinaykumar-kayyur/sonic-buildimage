@@ -239,16 +239,16 @@ def parse_asic_png(png, asic_name, hostname):
 
 def parse_dpg(dpg, hname):
 
-    """In Multi-NPU platforms the acl intfs are defined only for the host.
-    Get the aclintfs node first.
-    """
-    for child in dpg:
 
-        aclintfs = child.find(str(QName(ns, "AclInterfaces")))
-        if aclintfs is not None:
-            break 
-    
+
     for child in dpg:
+        """In Multi-NPU platforms the acl intfs are defined only for the host not for individual asic.
+            There is just one aclintf node in the minigraph
+             Get the aclintfs node first.
+        """
+        if child.find(str(QName(ns, "AclInterfaces"))) is not None:
+            aclintfs = child.find(str(QName(ns, "AclInterfaces")))
+    
         hostname = child.find(str(QName(ns, "Hostname")))
         if hostname.text.lower() != hname.lower():
             continue
