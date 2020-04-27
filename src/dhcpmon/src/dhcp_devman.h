@@ -32,6 +32,15 @@ void dhcp_devman_init();
 void dhcp_devman_shutdown();
 
 /**
+ * @code dhcp_devman_get_vlan_intf();
+ *
+ * @brief Accessor method
+ *
+ * @return pointer to vlan ip interface name
+ */
+const char* dhcp_devman_get_vlan_intf();
+
+/**
  * @code dhcp_devman_add_intf(name, uplink);
  *
  * @brief adds interface to the device manager.

@@ -32,6 +32,19 @@ static uint32_t dhcp_num_north_intf = 0;
  *  This IP is used to filter Offer/Ack packet coming from DHCP server */
 static in_addr_t vlan_ip = 0;
 
+/** vlan interface name */
+static char vlan_intf[IF_NAMESIZE] = "Undefined";
+
+/**
+ * @code dhcp_devman_get_vlan_intf();
+ *
+ * Accessor method
+ */
+const char* dhcp_devman_get_vlan_intf()
+{
+    return vlan_intf;
+}
+
 /**
  * @code dhcp_devman_init();
  *
@@ -91,6 +104,9 @@ int dhcp_devman_add_intf(const char *name, uint8_t is_uplink)
         rv = dhcp_device_init(&dev->dev_context, dev->name, dev->is_uplink);
         if (rv == 0 && !is_uplink) {
             rv = dhcp_device_get_ip(dev->dev_context, &vlan_ip);
+
+            strncpy(vlan_intf, name, sizeof(vlan_intf) - 1);
+            vlan_intf[sizeof(vlan_intf) - 1] = '\0';
         }
 
         LIST_INSERT_HEAD(&intfs, dev, entry);
