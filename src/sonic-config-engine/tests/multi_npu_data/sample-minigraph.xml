@@ -40,7 +40,7 @@
         <HoldTime>10</HoldTime>
         <KeepAliveTime>3</KeepAliveTime>
       </BGPSession>
-	    <BGPSession>
+      <BGPSession>
         <ElementType>BGPSession</ElementType>
         <MacSec>false</MacSec>
         <StartRouter>ASIC2</StartRouter>
@@ -84,7 +84,7 @@
         <HoldTime>0</HoldTime>
         <KeepAliveTime>0</KeepAliveTime>
       </BGPSession>
-		  <BGPSession>
+      <BGPSession>
         <MacSec>false</MacSec>
         <StartRouter>ASIC0</StartRouter>
         <StartPeer>10.0.0.0</StartPeer>
@@ -103,7 +103,7 @@
         <HoldTime>10</HoldTime>
         <KeepAliveTime>3</KeepAliveTime>
       </BGPSession>
-	    <BGPSession>
+      <BGPSession>
         <MacSec>false</MacSec>
         <StartRouter>ASIC1</StartRouter>
         <StartPeer>10.0.0.8</StartPeer>
@@ -143,7 +143,7 @@
         </a:Peers>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
-       <a:BGPRouterDeclaration>
+      <a:BGPRouterDeclaration>
         <a:ASN>65100</a:ASN>
         <a:BgpGroups/>
         <a:Hostname>ASIC0</a:Hostname>
@@ -179,7 +179,7 @@
         </a:Peers>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
-	  <a:BGPRouterDeclaration>
+      <a:BGPRouterDeclaration>
         <a:ASN>65100</a:ASN>
         <a:BgpGroups/>
         <a:Hostname>ASIC1</a:Hostname>
@@ -198,7 +198,7 @@
             <RouteMapOut i:nil="true"/>
             <Vrf i:nil="true"/>
           </BGPPeer>
-		  <BGPPeer>
+          <BGPPeer>
             <ElementType>BGPPeer</ElementType>
             <Address>10.0.0.9</Address>
             <RouteMapIn i:nil="true"/>
@@ -214,8 +214,8 @@
           </BGPPeer>
         </a:Peers>
         <a:RouteMaps/>
-		</a:BGPRouterDeclaration>
-    <a:BGPRouterDeclaration>
+      </a:BGPRouterDeclaration>
+      <a:BGPRouterDeclaration>
         <a:ASN>65100</a:ASN>
         <a:BgpGroups/>
         <a:Hostname>ASIC2</a:Hostname>
@@ -327,8 +327,7 @@
           <SubInterface/>
         </PortChannel>
       </PortChannelInterfaces>
-      <VlanInterfaces>
-      </VlanInterfaces>
+      <VlanInterfaces></VlanInterfaces>
       <IPInterfaces>
         <IPInterface>
           <Name i:nil="true"/>
@@ -382,7 +381,7 @@
       <DownstreamSummaries/>
       <DownstreamSummarySet xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
     </DeviceDataPlaneInfo>
-	 <DeviceDataPlaneInfo>
+    <DeviceDataPlaneInfo>
       <IPSecTunnels/>
       <LoopbackIPInterfaces xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
         <a:LoopbackIPInterface>
@@ -484,7 +483,7 @@
           <AttachTo>Eth6-ASIC1;Eth7-ASIC1</AttachTo>
           <SubInterface/>
         </PortChannel>
-		        <PortChannel>
+        <PortChannel>
           <Name>PortChannel0008</Name>
           <AttachTo>Eth0-ASIC1;Eth1-ASIC1</AttachTo>
           <SubInterface/>
@@ -505,7 +504,7 @@
           <AttachTo>PortChannel4004</AttachTo>
           <Prefix>10.1.0.7/31</Prefix>
         </IPInterface>
-		        <IPInterface>
+        <IPInterface>
           <Name i:nil="true"/>
           <AttachTo>PortChannel0008</AttachTo>
           <Prefix>10.0.0.8/31</Prefix>
@@ -520,8 +519,8 @@
       <NatInterfaces xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
       <DownstreamSummaries/>
       <DownstreamSummarySet xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
-    </DeviceDataPlaneInfo> 
-     <DeviceDataPlaneInfo>
+    </DeviceDataPlaneInfo>
+    <DeviceDataPlaneInfo>
       <IPSecTunnels/>
       <LoopbackIPInterfaces xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
         <a:LoopbackIPInterface>
@@ -629,7 +628,7 @@
       <DownstreamSummaries/>
       <DownstreamSummarySet xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
     </DeviceDataPlaneInfo>
- </DpgDec>
+  </DpgDec>
   <PngDec>
     <DeviceInterfaceLinks>
       <DeviceLinkBase>
@@ -660,7 +659,7 @@
         <StartDevice>multi_npu_platform_01</StartDevice>
         <StartPort>Ethernet1/9</StartPort>
       </DeviceLinkBase>
- <DeviceLinkBase i:type="DeviceInterfaceLink">
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <Bandwidth>40000</Bandwidth>
         <ChassisInternal>true</ChassisInternal>
@@ -671,7 +670,7 @@
         <StartPort>Eth4-ASIC0</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
-    <DeviceLinkBase i:type="DeviceInterfaceLink">
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <Bandwidth>40000</Bandwidth>
         <ChassisInternal>true</ChassisInternal>
@@ -681,7 +680,7 @@
         <StartDevice>ASIC0</StartDevice>
         <StartPort>Eth5-ASIC0</StartPort>
         <Validate>true</Validate>
-       </DeviceLinkBase>
+      </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <Bandwidth>40000</Bandwidth>
@@ -704,7 +703,7 @@
         <StartPort>Eth7-ASIC0</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
-            <DeviceLinkBase i:type="DeviceInterfaceLink">
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <Bandwidth>40000</Bandwidth>
         <ChassisInternal>true</ChassisInternal>
@@ -726,7 +725,7 @@
         <StartPort>Eth5-ASIC1</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
-       <DeviceLinkBase i:type="DeviceInterfaceLink">
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <Bandwidth>40000</Bandwidth>
         <ChassisInternal>true</ChassisInternal>
@@ -748,8 +747,7 @@
         <StartPort>Eth7-ASIC1</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
-
- <DeviceLinkBase i:type="DeviceInterfaceLink">
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <Bandwidth>40000</Bandwidth>
         <ChassisInternal>true</ChassisInternal>
@@ -837,42 +835,42 @@
         <StartPort>Ethernet1/8</StartPort>
         <Validate>true</Validate>
       </DeviceLinkBase>
-   </DeviceInterfaceLinks>
+    </DeviceInterfaceLinks>
     <Devices>
       <Device i:type="LeafRouter">
         <Hostname>multi_npu_platform_01</Hostname>
         <HwSku>multi-npu-01</HwSku>
         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
-           <a:IPPrefix>3.10.147.150</a:IPPrefix>
+          <a:IPPrefix>3.10.147.150</a:IPPrefix>
         </ManagementAddress>
       </Device>
       <Device i:type="SpineRouter">
-         <Hostname>07T2</Hostname>
-         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
-           <a:IPPrefix>89.139.132.43</a:IPPrefix>
-         </ManagementAddress>
-         <HwSku>VM</HwSku>
+        <Hostname>07T2</Hostname>
+        <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
+          <a:IPPrefix>89.139.132.43</a:IPPrefix>
+        </ManagementAddress>
+        <HwSku>VM</HwSku>
       </Device>
       <Device i:type="SpineRouter">
-         <Hostname>01T2</Hostname>
-         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
-           <a:IPPrefix>89.139.132.40</a:IPPrefix>
-         </ManagementAddress>
-         <HwSku>VM</HwSku>
+        <Hostname>01T2</Hostname>
+        <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
+          <a:IPPrefix>89.139.132.40</a:IPPrefix>
+        </ManagementAddress>
+        <HwSku>VM</HwSku>
       </Device>
       <Device i:type="SpineRouter">
-         <Hostname>05T2</Hostname>
-         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
-           <a:IPPrefix>89.139.132.42</a:IPPrefix>
-         </ManagementAddress>
-         <HwSku>VM</HwSku>
+        <Hostname>05T2</Hostname>
+        <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
+          <a:IPPrefix>89.139.132.42</a:IPPrefix>
+        </ManagementAddress>
+        <HwSku>VM</HwSku>
       </Device>
       <Device i:type="SpineRouter">
-         <Hostname>03T2</Hostname>
-         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
-           <a:IPPrefix>89.139.132.41</a:IPPrefix>
-         </ManagementAddress>
-         <HwSku>VM</HwSku>
+        <Hostname>03T2</Hostname>
+        <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
+          <a:IPPrefix>89.139.132.41</a:IPPrefix>
+        </ManagementAddress>
+        <HwSku>VM</HwSku>
       </Device>
       <Device i:type="Asic">
         <ElementType>Asic</ElementType>
@@ -973,8 +971,8 @@
         <SerialNumber i:nil="true"/>
         <Hostname>ASIC3</Hostname>
         <HwSku>multi-npu-asic</HwSku>
-      </Device>   
-   </Devices>
+      </Device>
+    </Devices>
   </PngDec>
   <DeviceInfos>
     <DeviceInfo>
@@ -1087,9 +1085,9 @@
       </EthernetInterfaces>
       <FlowControl>true</FlowControl>
       <Height>0</Height>
-      <HwSku>multi-npu-01</HwSku> 
+      <HwSku>multi-npu-01</HwSku>
       <ManagementInterfaces/>
-    </DeviceInfo> 
+    </DeviceInfo>
   </DeviceInfos>
   <MetadataDeclaration>
     <Devices xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
@@ -1145,10 +1143,10 @@
             <a:Name>ErspanDestinationIpv4</a:Name>
             <a:Reference i:nil="true"/>
             <a:Value>10.20.6.16</a:Value>
-         </a:DeviceProperty>
+          </a:DeviceProperty>
         </a:Properties>
       </a:DeviceMetadata>
-    <a:DeviceMetadata>
+      <a:DeviceMetadata>
         <a:Name>ASIC0</a:Name>
         <a:Properties>
           <a:DeviceProperty>
@@ -1208,7 +1206,7 @@
           </a:DeviceProperty>
         </a:Properties>
       </a:DeviceMetadata>
-	</Devices>
+    </Devices>
     <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
   </MetadataDeclaration>
   <Hostname>multi_npu_platform_01</Hostname>

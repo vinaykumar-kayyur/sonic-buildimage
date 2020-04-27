@@ -18,6 +18,7 @@ TODO: this file shall be renamed and moved to other places in future
 to have it shared with multiple applications. 
 '''
 SONIC_DEVICE_PATH = '/usr/share/sonic/device'
+NPU_NAME_PREFIX = 'asic'
 
 def get_machine_info():
     if not os.path.isfile('/host/machine.conf'):
@@ -29,14 +30,20 @@ def get_machine_info():
             if len(tokens) < 2:
                 continue
             machine_vars[tokens[0]] = tokens[1].strip()
-    return machine_vars
+    return machine_vars 
+
+def get_npu_id_from_name(npu_name):
+    reg = re.compile("^{}".format(NPU_NAME_PREFIX))
+    if reg.match(npu_name) is None:
+        return None
+    asic_id = npu_name[reg.match(npu_name).end():]
+    return asic_id
 
 def get_num_npus():
-   platform = get_platform_info(get_machine_info)
-   num_npus = 1
+   platform = get_platform_info(get_machine_info())
    asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, 'asic.conf')
-   if not os.path.isFile(asic_conf_file_path):
-	return num_npus
+   if not os.path.isfile(asic_conf_file_path):
+        return 1
    with open(asic_conf_file_path) as asic_conf_file:
 	for line in asic_conf_file:
 	    tokens = line.split('=')
