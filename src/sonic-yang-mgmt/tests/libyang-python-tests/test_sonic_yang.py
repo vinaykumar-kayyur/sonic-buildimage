@@ -273,7 +273,8 @@ class Test_SonicYang(object):
 
         syc.loadYangModel()
 
-        syc.load_data(json.loads(jIn), allowExtraTables=False)
+        # Allow additional tabbles in config, since all yang models are not merged #
+        syc.load_data(json.loads(jIn))
 
         syc.get_data()
 
