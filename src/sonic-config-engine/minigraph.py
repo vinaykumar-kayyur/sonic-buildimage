@@ -14,6 +14,7 @@ from lxml import etree as ET
 from lxml.etree import QName
 
 from portconfig import get_port_config
+from sonic_device_util import get_npu_id_from_name
 
 """minigraph.py
 version_added: "1.9"
@@ -709,7 +710,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
 
     #hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
-        asic_id = asic_name[-1]
+        asic_id = get_npu_id_from_name(asic_name)
     else:
         asic_id = None
 
