@@ -41,14 +41,14 @@
  **/
 typedef enum
 {
-   DHCP_MESSAGE_TYPE_DISCOVER       = 1,
-   DHCP_MESSAGE_TYPE_OFFER          = 2,
-   DHCP_MESSAGE_TYPE_REQUEST        = 3,
-   DHCP_MESSAGE_TYPE_DECLINE        = 4,
-   DHCP_MESSAGE_TYPE_ACK            = 5,
-   DHCP_MESSAGE_TYPE_NAK            = 6,
-   DHCP_MESSAGE_TYPE_RELEASE        = 7,
-   DHCP_MESSAGE_TYPE_INFORM         = 8
+    DHCP_MESSAGE_TYPE_DISCOVER = 1,
+    DHCP_MESSAGE_TYPE_OFFER    = 2,
+    DHCP_MESSAGE_TYPE_REQUEST  = 3,
+    DHCP_MESSAGE_TYPE_DECLINE  = 4,
+    DHCP_MESSAGE_TYPE_ACK      = 5,
+    DHCP_MESSAGE_TYPE_NAK      = 6,
+    DHCP_MESSAGE_TYPE_RELEASE  = 7,
+    DHCP_MESSAGE_TYPE_INFORM   = 8
 } dhcp_message_type;
 
 #define OP_LDHA     (BPF_LD  | BPF_H   | BPF_ABS)   /** bpf ldh Abs */
