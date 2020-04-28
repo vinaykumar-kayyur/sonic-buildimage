@@ -82,7 +82,7 @@ void dhcp_devman_shutdown()
 }
 
 /**
- * @code dhcp_devman_add_intf(name, uplink);
+ * @code dhcp_devman_add_intf(name, is_uplink);
  *
  * @brief adds interface to the device manager.
  */

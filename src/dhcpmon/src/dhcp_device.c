@@ -36,6 +36,21 @@
 /** Offset of DHCP GIADDR */
 #define DHCP_GIADDR_OFFSET 24
 
+/**
+ * DHCP message types
+ **/
+typedef enum
+{
+   DHCP_MESSAGE_TYPE_DISCOVER       = 1,
+   DHCP_MESSAGE_TYPE_OFFER          = 2,
+   DHCP_MESSAGE_TYPE_REQUEST        = 3,
+   DHCP_MESSAGE_TYPE_DECLINE        = 4,
+   DHCP_MESSAGE_TYPE_ACK            = 5,
+   DHCP_MESSAGE_TYPE_NAK            = 6,
+   DHCP_MESSAGE_TYPE_RELEASE        = 7,
+   DHCP_MESSAGE_TYPE_INFORM         = 8
+} dhcp_message_type;
+
 #define OP_LDHA     (BPF_LD  | BPF_H   | BPF_ABS)   /** bpf ldh Abs */
 #define OP_LDHI     (BPF_LD  | BPF_H   | BPF_IND)   /** bpf ldh Ind */
 #define OP_LDB      (BPF_LD  | BPF_B   | BPF_ABS)   /** bpf ldb Abs*/
@@ -45,8 +60,9 @@
 #define OP_JSET     (BPF_JMP | BPF_JSET | BPF_K)    /** bpf jset */
 #define OP_LDXB     (BPF_LDX | BPF_B    | BPF_MSH)  /** bpf ldxb */
 
-/** Berkley Packet Fitler program for "udp and (port 67 or port 68)". This program is obtained suing the following
- * tcpdump command: 'tcpdump -dd "udp and (port 67 or port 68)"'
+/** Berkeley Packet Filter program for "udp and (port 67 or port 68)".
+ * This program is obtained using the following command tcpdump:
+ * `tcpdump -dd "udp and (port 67 or port 68)"`
  */
 static struct sock_filter dhcp_bpf_code[] = {
     {.code = OP_LDHA, .jt = 0,  .jf = 0,  .k = 0x0000000c}, // (000) ldh      [12]
@@ -113,7 +129,7 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
     in_addr_t giaddr;
     switch (dhcp_option[2])
     {
-    case 1:
+    case DHCP_MESSAGE_TYPE_DISCOVER:
         giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
                        dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         context->counters[dir].discover++;
@@ -122,14 +138,14 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
             glob_counters[dir].discover++;
         }
         break;
-    case 2:
+    case DHCP_MESSAGE_TYPE_OFFER:
         context->counters[dir].offer++;
         if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             glob_counters[dir].offer++;
         }
         break;
-    case 3:
+    case DHCP_MESSAGE_TYPE_REQUEST:
         giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
                        dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
         context->counters[dir].request++;
@@ -138,15 +154,17 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
             glob_counters[dir].request++;
         }
         break;
-    case 5:
+    case DHCP_MESSAGE_TYPE_ACK:
         context->counters[dir].ack++;
         if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
             (!context->is_uplink && dir == DHCP_TX)) {
             glob_counters[dir].ack++;
         }
         break;
-    case 4: // type: Decline
-    case 6 ... 8: // type: NAK, Release, Inform
+    case DHCP_MESSAGE_TYPE_DECLINE:
+    case DHCP_MESSAGE_TYPE_NAK:
+    case DHCP_MESSAGE_TYPE_RELEASE:
+    case DHCP_MESSAGE_TYPE_INFORM:
         break;
     default:
         syslog(LOG_WARNING, "handle_dhcp_option_53(%s): Unknown DHCP option 53 type %d", context->intf, dhcp_option[2]);
