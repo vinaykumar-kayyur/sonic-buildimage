@@ -836,7 +836,19 @@ def parse_xml(filename, platform=None, port_config_file=None):
             'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
         }
     }
-
+    results['RESTAPI'] = {
+        'config': {
+            'client_auth': 'true',
+            'allow_insecure': 'false',
+            'log_level': 'trace'
+        },
+        'certs': {
+            'server_crt': '/etc/sonic/certificates/restapiserver.crt',
+            'server_key': '/etc/sonic/certificates/restapiserver.key',
+            'client_ca_crt': '/etc/sonic/certificates/restapiclient.crt',
+            'client_crt_cname': 'client.restapi.sonic'
+        }
+    }
     # Do not configure the minigraph's mirror session, which is currently unused
     # mirror_sessions = {}
     # if erspan_dst:
