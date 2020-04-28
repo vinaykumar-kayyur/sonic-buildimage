@@ -18,6 +18,10 @@
  *  Maintainer: Jim Jiang from nephos
  */
 
+#include <stdint.h>
+#include <stdbool.h>
+#include "../../include/system.h"
+
 #define MCLAGDCTL_PARA1_LEN 16
 #define MCLAGDCTL_PARA2_LEN 32
 #define MCLAGDCTL_PARA3_LEN 64
@@ -44,6 +48,18 @@ enum MAC_AGE_TYPE_CTL
     MAC_AGE_PEER_CTL    = 2     /*MAC in peer switch is ageout*/
 };
 
+enum L2MC_TYPE_CTL
+{
+    L2MC_TYPE_STATIC_CTL     = 1,
+    L2MC_TYPE_DYNAMIC_CTL    = 2,
+};
+
+enum L2MC_DEL_TYPE_CTL
+{
+    L2MC_DEL_LOCAL_CTL   = 1,
+    L2MC_DEL_PEER_CTL    = 2
+};
+
 enum id_command_type
 {
     ID_CMDTYPE_NONE = 0,
@@ -63,6 +79,8 @@ enum mclagdctl_notify_peer_type
     INFO_TYPE_DUMP_STATE,
     INFO_TYPE_DUMP_ARP,
     INFO_TYPE_DUMP_MAC,
+    INFO_TYPE_DUMP_L2MC,
+    INFO_TYPE_DUMP_L2MC_MROUTER,
     INFO_TYPE_DUMP_LOCAL_PORTLIST,
     INFO_TYPE_DUMP_PEER_PORTLIST,
     INFO_TYPE_CONFIG_LOGLEVEL,
@@ -151,6 +169,21 @@ struct mclagd_mac_msg
     unsigned char age_flag;/*local or peer is age?*/
 };
 
+struct mclagd_l2mc_msg
+{
+    unsigned char     op_type;/*add or del*/
+    unsigned char     l2mc_type;/*static or dynamic*/
+    uint8_t     saddr[INET_ADDRSTRLEN];
+    uint8_t     gaddr[INET_ADDRSTRLEN];
+    unsigned short vid;
+    /*Current if name that set in chip*/
+    char     ifname[MCLAGDCTL_MAX_L_PORT_NANE];
+    /*if we set the mac to peer-link, origin_ifname store the
+       original if name that learned from chip*/
+    char     origin_ifname[MCLAGDCTL_MAX_L_PORT_NANE];
+    unsigned char del_flag;/*local or peer is age?*/
+};
+
 struct mclagd_local_if
 {
     int ifindex;
@@ -189,6 +222,10 @@ extern int mclagdctl_enca_dump_arp(char *msg, int mclag_id, int argc, char **arg
 extern int mclagdctl_parse_dump_arp(char *msg, int data_len);
 extern int mclagdctl_enca_dump_mac(char *msg, int mclag_id, int argc, char **argv);
 extern int mclagdctl_parse_dump_mac(char *msg, int data_len);
+extern int mclagdctl_enca_dump_l2mc(char *msg, int mclag_id, int argc, char **argv);
+extern int mclagdctl_enca_dump_l2mc_mrouter(char *msg, int mclag_id, int argc, char **argv);
+extern int mclagdctl_parse_dump_l2mc(char *msg, int data_len);
+extern int mclagdctl_parse_dump_l2mc_mrouter(char *msg, int data_len);
 extern int mclagdctl_enca_dump_local_portlist(char *msg, int mclag_id,  int argc, char **argv);
 extern int mclagdctl_parse_dump_local_portlist(char *msg, int data_len);
 extern int mclagdctl_enca_dump_peer_portlist(char *msg, int mclag_id,  int argc, char **argv);

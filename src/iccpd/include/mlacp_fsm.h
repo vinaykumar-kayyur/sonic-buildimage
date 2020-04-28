@@ -26,6 +26,7 @@
 #define _MLACP_FSM_H
 
 #include "../include/port.h"
+#include "../include/mlacp_tlv.h"
 
 #define MLCAP_SYNC_PHY_DEV_SEC     1     /*every 1 sec*/
 
@@ -87,6 +88,11 @@ struct mLACP
     TAILQ_HEAD(arp_info_list, Msg) arp_list;
     TAILQ_HEAD(mac_msg_list, Msg) mac_msg_list;
     TAILQ_HEAD(mac_info_list, Msg) mac_list;
+    TAILQ_HEAD(l2mc_msg_list, L2MCMsg) l2mc_msg_list;
+    TAILQ_HEAD(l2mcmrtr_msg_list, L2MCMsg) l2mcmrtr_msg_list;
+
+    struct l2mc_rb_tree l2mc_rb;
+    struct l2mc_mrouter_rb_tree l2mc_mrouter_rb;
 
     LIST_HEAD(lif_list, LocalInterface) lif_list;
     LIST_HEAD(lif_purge_list, LocalInterface) lif_purge_list;

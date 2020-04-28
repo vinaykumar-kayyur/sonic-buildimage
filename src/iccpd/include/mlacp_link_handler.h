@@ -26,6 +26,10 @@
 #include "../include/iccp_csm.h"
 #include "../include/mlacp_tlv.h"
 
+#define MCLAG_MAX_MSG_LEN 4096
+#define ICCP_MLAGSYNCD_SEND_MSG_BUFFER_SIZE MCLAG_MAX_MSG_LEN
+#define ICCP_MLAGSYNCD_RECV_MSG_BUFFER_SIZE (MCLAG_MAX_MSG_LEN * 256)
+
 /*****************************************
 * Link Handler
 *
@@ -42,11 +46,14 @@ void mlacp_mlag_link_del_handler(struct CSM *csm, struct LocalInterface *lif);
 void set_peerlink_mlag_port_learn(struct LocalInterface *lif, int enable);
 void peerlink_port_isolate_cleanup(struct CSM* csm);
 void update_peerlink_isolate_from_all_csm_lif(struct CSM* csm);
+int iccp_mclagsyncd_msg_handler(struct System *sys);
 
 int mlacp_fsm_arp_set(char *ifname, uint32_t ip, char *mac);
 int mlacp_fsm_arp_del(char *ifname, uint32_t ip);
 void del_mac_from_chip(struct MACMsg* mac_msg);
 void add_mac_to_chip(struct MACMsg* mac_msg, uint8_t mac_type);
+void del_l2mc_from_chip(struct L2MCMsg* l2mc_msg, uint8_t l2mc_mlag_type);
+void add_l2mc_to_chip(struct L2MCMsg* l2mc_msg, uint8_t l2mc_type, uint8_t l2mc_mlag_type);
 uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t set );
 void iccp_get_fdb_change_from_syncd( void);
 

@@ -29,6 +29,9 @@
 
 #define MAX_MSG_LOG_SIZE    128
 
+/* Header version for message sent from ICCPd to Mclagsyncd */
+#define ICCPD_TO_MCLAGSYNCD_HDR_VERSION  1
+
 /*
  * RFC 5561
  * 4.  Capability Message
@@ -97,7 +100,8 @@
 #define TLV_T_MLACP_ARP_INFO            0x1036
 #define TLV_T_MLACP_STP_INFO            0x1037//no support
 #define TLV_T_MLACP_MAC_INFO            0x1038
-#define TLV_T_MLACP_WARMBOOT_FLAG       0x1039
+#define TLV_T_MLACP_L2MC_INFO           0x1039
+#define TLV_T_MLACP_WARMBOOT_FLAG       0x103A
 #define TLV_T_MLACP_LIST_END            0x104a //list end
 
 /* Debug */
@@ -177,6 +181,9 @@ static char* get_tlv_type_string(int type)
 
         case TLV_T_MLACP_STP_INFO:
             return "TLV_T_MLACP_STP_INFO";
+        
+        case TLV_T_MLACP_L2MC_INFO:
+            return "TLV_T_MLACP_L2MC_INFO";
     }
 
     return "UNKNOWN";
@@ -425,8 +432,10 @@ struct AppDisconnectCauseTLV
 /*syncd send msg type to iccpd*/
 typedef enum mclag_syncd_msg_type_e_
 {
-    MCLAG_SYNCD_MSG_TYPE_NONE           = 0,
-    MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION  = 1
+    MCLAG_SYNCD_MSG_TYPE_NONE                   = 0,
+    MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION          = 1,
+    MCLAG_SYNCD_MSG_TYPE_L2MC_OPERATION         = 2,
+    MCLAG_SYNCD_MSG_TYPE_L2MC_MROUTER_OPERATION = 3
 }mclag_syncd_msg_type_e;
 
 typedef enum mclag_msg_type_e_
@@ -437,6 +446,8 @@ typedef enum mclag_msg_type_e_
     MCLAG_MSG_TYPE_FLUSH_FDB            = 3,
     MCLAG_MSG_TYPE_SET_MAC              = 4,
     MCLAG_MSG_TYPE_SET_FDB              = 5,
+    MCLAG_MSG_TYPE_SET_L2MC             = 6,
+    MCLAG_MSG_TYPE_SET_L2MC_MROUTER     = 7,
     MCLAG_MSG_TYPE_GET_FDB_CHANGES      = 20
 }mclag_msg_type_e;
 
@@ -479,6 +490,17 @@ struct mclag_fdb_info
     char port_name[MAX_L_PORT_NAME];
     short type;     /*dynamic or static*/
     short op_type;  /*add or del*/
+};
+
+struct mclag_l2mc_info
+{
+    uint8_t     saddr[INET_ADDRSTRLEN];
+    uint8_t     gaddr[INET_ADDRSTRLEN];
+    unsigned int vid;
+    char port_name[MAX_L_PORT_NAME];
+    short type;    /*dynamic or static*/
+    short op_type; /*add or del*/
+    bool leave;
 };
 
 /* For storing message log: For Notification TLV */

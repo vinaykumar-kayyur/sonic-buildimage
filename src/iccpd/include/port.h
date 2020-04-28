@@ -25,8 +25,15 @@
 #define PORT_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <time.h>
 #include <sys/queue.h>
+
+#include "../include/openbsd_tree.h"
+
+#ifndef INET_ADDRSTRLEN
+#define INET_ADDRSTRLEN 16
+#endif /* INET_ADDRSTRLEN */
 
 #define ETHER_ADDR_LEN 6
 #define ETHER_ADDR_STR_LEN 18

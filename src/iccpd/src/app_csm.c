@@ -139,7 +139,7 @@ void app_csm_enqueue_msg(struct CSM* csm, struct Msg* msg)
             }
         }
 
-        if (tlv > TLV_T_MLACP_CONNECT && tlv <= TLV_T_MLACP_MAC_INFO)
+        if (tlv > TLV_T_MLACP_CONNECT && tlv <= TLV_T_MLACP_L2MC_INFO)
             mlacp_enqueue_msg(csm, msg);
         else
             TAILQ_INSERT_TAIL(&(csm->app_csm.app_msg_list), msg, tail);

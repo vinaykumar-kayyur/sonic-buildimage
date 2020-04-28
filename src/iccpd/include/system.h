@@ -52,6 +52,30 @@ struct CSM;
     #define MAX_BUFSIZE 4096
 #endif
 
+#define L2MC_IN_MSG_LIST(head, elm, field)   \
+    (((elm)->field.tqe_next != NULL) ||     \
+    ((elm)->field.tqe_prev != NULL))
+
+#define L2MC_TAILQ_REMOVE(head, elm, field) do {  \
+    TAILQ_REMOVE(head, elm, field);              \
+    (elm)->field.tqe_next = NULL;                \
+    (elm)->field.tqe_prev = NULL;                \
+} while (/*CONSTCOND*/0)
+
+#define L2MC_RB_REMOVE(name, head, elm) do {  \
+    RB_REMOVE(name, head, elm);              \
+    (elm)->l2mc_entry_rb.rbt_parent = NULL;   \
+    (elm)->l2mc_entry_rb.rbt_left = NULL;     \
+    (elm)->l2mc_entry_rb.rbt_right = NULL;    \
+} while (/*CONSTCOND*/0)
+
+#define L2MC_MROUTER_RB_REMOVE(name, head, elm) do {  \
+    RB_REMOVE(name, head, elm);              \
+    (elm)->l2mc_mrouter_entry_rb.rbt_parent = NULL;   \
+    (elm)->l2mc_mrouter_entry_rb.rbt_left = NULL;     \
+    (elm)->l2mc_mrouter_entry_rb.rbt_right = NULL;    \
+} while (/*CONSTCOND*/0)
+
 struct System
 {
     int server_fd;/* Peer-Link Socket*/

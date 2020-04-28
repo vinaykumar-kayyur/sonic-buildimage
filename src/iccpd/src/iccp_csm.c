@@ -776,6 +776,31 @@ int iccp_csm_init_msg(struct Msg** msg, char* data, int len)
     return MCLAG_ERROR;
 }
 
+/* L2MC Message initialization */
+int iccp_csm_init_l2mc_msg(struct L2MCMsg **l2mc_msg, char* data, int len)
+{
+    struct L2MCMsg* iccp_l2mc_msg = NULL;
+
+    if (l2mc_msg == NULL)
+        return -2;
+
+    if (data == NULL || len <= 0)
+        return MCLAG_ERROR;
+
+    iccp_l2mc_msg = (struct L2MCMsg*)malloc(sizeof(struct L2MCMsg));
+    if (iccp_l2mc_msg == NULL)
+       return -3;
+
+    memset(iccp_l2mc_msg, 0, sizeof(struct L2MCMsg));
+    memcpy(iccp_l2mc_msg, data, len);
+
+    *l2mc_msg = iccp_l2mc_msg;
+
+    return 0;
+}
+
+
+
 void iccp_csm_stp_role_count(struct CSM *csm)
 {
     /* decide the role, lower ip to be active & socket client*/
