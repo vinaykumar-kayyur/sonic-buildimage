@@ -27,7 +27,7 @@
 {%   endif %}
 {% endif %}
 !
-{% if bgp_session['rrclient'] | int != 0  %}
+{% if bgp_session['rrclient'] | int != 0 %}
     neighbor {{ neighbor_addr }} route-reflector-client
 {% endif %}
 !
@@ -35,7 +35,7 @@
     neighbor {{ neighbor_addr }} next-hop-self
 {% endif %}
 {% if 'ASIC' in bgp_session['name'] %}
-  neighbor {{ neighbor_addr }} next-hop-self force
+    neighbor {{ neighbor_addr }} next-hop-self force
 {% endif %}
 !
 {% if bgp_session["asn"] == bgp_asn and CONFIG_DB__DEVICE_METADATA['localhost']['type'] == "SpineChassisFrontendRouter" %}
