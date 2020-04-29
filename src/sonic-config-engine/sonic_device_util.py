@@ -33,11 +33,10 @@ def get_machine_info():
     return machine_vars 
 
 def get_npu_id_from_name(npu_name):
-    reg = re.compile("^{}".format(NPU_NAME_PREFIX))
-    if reg.match(npu_name) is None:
+    if npu_name.startswith(NPU_NAME_PREFIX):
+        return npu_name[len(NPU_NAME_PREFIX):]
+    else:
         return None
-    asic_id = npu_name[reg.match(npu_name).end():]
-    return asic_id
 
 def get_num_npus():
    platform = get_platform_info(get_machine_info())

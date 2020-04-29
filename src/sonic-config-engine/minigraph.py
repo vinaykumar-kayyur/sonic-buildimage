@@ -341,7 +341,7 @@ def parse_dpg(dpg, hname):
                 vlan_attributes['alias'] = vintfname
             vlans[sonic_vlan_name] = vlan_attributes
 
-                 
+          
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
             if aclintf.find(str(QName(ns, "InAcl"))) is not None:
@@ -623,8 +623,8 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
         for pc_member in pc_members:
             if pc_member[0] == pc_intf:
                 intf_name = pc_member[1]
-                break 
-        
+                break
+ 
         if intf_name == None:
             print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf)
             continue
@@ -769,7 +769,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': name,
         'hwsku': hwsku,
-        'type': current_device['type']    
+        'type': current_device['type']   
         }
     }
     # for this hostname, if sub_role is defined, add sub_role in 
