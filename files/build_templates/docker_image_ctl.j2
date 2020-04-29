@@ -177,33 +177,57 @@ start() {
     {%- if docker_container_name == "database" %}
     echo "Creating new {{docker_container_name}}$DEV container"
     # if database_config exists in old_config, use it; otherwise use the default one in new image
-    if [ -f /etc/sonic/old_config/database_config.json ]; then
+    if [ -f /etc/sonic/old_config/database_config$DEV.json ]; then
         echo "Use database_config.json from old system..."
-        mv /etc/sonic/old_config/database_config.json /etc/sonic/
+        mv /etc/sonic/old_config/database_config$DEV.json /etc/sonic/
     fi
     {%- else %}
     echo "Creating new {{docker_container_name}}$DEV container with HWSKU $HWSKU"
     {%- endif %}
 
+    # In Multi ASIC platforms the global database config file database_global.json will exist.
+    # Parse the file and get the include path for the database_config.json files used in
+    # various namesapces. The database_config paths are relative to the DIR of SONIC_DB_GLOBAL_JSON.
+    SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
+    if [ -f "$SONIC_DB_GLOBAL_JSON" ]; then
+        db_configs=(`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
+                     global_db_config_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
+                     print(\" \".join([os.path.join(global_db_config_dir,str(elem['include'])) \
+                     for elem in data['INCLUDES']])); f.close()" $SONIC_DB_GLOBAL_JSON`)
+    fi
+
     if [ -z "$DEV" ]; then
         NET="host"
 
-        # For Multi-ASIC platform we have to mount the redis paths for the DB's running in different
-        # namespaces, which is of this format /var/run/redis<0,1,2,...>, into the single instance
-        # dockers like snmp, pmon on linux host.
+        # For Multi-ASIC platform we have to mount the redis paths for database instances running in different
+        # namespaces, into the single instance dockers like snmp, pmon on linux host. These global dockers
+        # will need to get/set tables from databases in different namespaces.
+        # /var/run/redis0 ---> mounted as --> /var/run/redis0
+        # /var/run/redis1 ---> mounted as --> /var/run/redis1 .. etc
+        # The below logic extracts the base DIR's where database_config.json's for various namespaces exist.
+
         {%- if docker_container_name != "database" %}
-        if [ $NUM_ASIC -gt 1 ]; then
-            asic_inst=0;
-            while [ $asic_inst -lt $NUM_ASIC ]; do
-                REDIS_MNT=$REDIS_MNT" -v /var/run/redis$asic_inst:/var/run/redis$asic_inst:rw "
-                asic_inst=$(($asic_inst + 1))
+        if [ -n "$db_configs" ]; then
+            id=1
+            {% raw %}
+            while [ $id -lt "${#db_configs[@]}" ]; do
+                file="${db_configs[$id]}"
+                redis_dir=`echo $file | cut -d "/" -f 1-8`
+                REDIS_MNT=$REDIS_MNT" -v $redis_dir:$redis_dir:rw "
+                id=`expr $id + 1`
             done
+            {% endraw %}
         fi
         {%- endif %}
-     else
-        # Add the database instance specific redis directory also into the docker. This is needed inside
-        # the docker as we use this as the globally unique unix socket path in the database_config.json.
-        REDIS_MNT=" -v /var/run/redis$DEV:/var/run/redis$DEV:rw "
+    else
+        # This part of code is applicable for Multi-ASIC platforms. Here we mount the namespace specific
+        # redis directory into the docker running in that namespace. Below eg: is for namespace "asic1"
+        # /var/run/redis1 ---> mounted as --> /var/run/redis1
+        if [ -n "$db_configs" ]; then
+            file=${db_configs[$DEV+1]}
+            redis_dir=`echo $file | cut -d "/" -f 1-8`
+            REDIS_MNT=" -v $redis_dir:$redis_dir:rw "
+        fi
 
         {%- if docker_container_name == "database" %}
         NET="bridge"
