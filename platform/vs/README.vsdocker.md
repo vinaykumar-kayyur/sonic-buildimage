@@ -21,8 +21,10 @@ $ docker run --privileged --network container:sw --name vs -d docker-sonic-vs
 
 ```
 $ docker exec -it vs bash
-root@2e9b5c2dc2a2:/# ifconfig Ethernet0 10.0.0.0/31 up
-root@2e9b5c2dc2a2:/# ifconfig Ethernet4 10.0.0.2/31 up
+root@2e9b5c2dc2a2:/# config interface ip add Ethernet0 10.0.0.0/31
+root@2e9b5c2dc2a2:/# config interface ip add Ethernet4 10.0.0.2/31
+root@2e9b5c2dc2a2:/# config interface startup Ethernet0
+root@2e9b5c2dc2a2:/# config interface startup Ethernet4
 ```
 
 4. Setup IP in the server network namespace
