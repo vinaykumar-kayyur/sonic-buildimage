@@ -1515,7 +1515,7 @@ int iccp_handle_events(struct System * sys)
 
         if (events[i].data.fd == sys->sync_fd)
         {
-            iccp_receive_fdb_handler_from_syncd(sys);
+            iccp_mclagsyncd_msg_handler(sys);
 
             continue;
         }

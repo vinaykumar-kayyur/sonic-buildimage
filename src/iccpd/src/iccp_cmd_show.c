@@ -272,6 +272,142 @@ int iccp_mac_dump(char * *buf, int *num, int mclag_id)
     return EXEC_TYPE_SUCCESS;
 }
 
+int iccp_l2mc_dump(char * *buf, int *num, int mclag_id)
+{
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
+    struct Msg *msg = NULL;
+    struct L2MCMsg *iccpd_l2mc = NULL;
+    struct mclagd_l2mc_msg mclagd_l2mc;
+    int l2mc_num = 0;
+    int id_exist = 0;
+    char * l2mc_buf = NULL;
+    int l2mc_buf_size = MCLAGDCTL_CMD_SIZE;
+
+    if (!(sys = system_get_instance()))
+    {
+        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
+        return EXEC_TYPE_NO_EXIST_SYS;
+    }
+
+    l2mc_buf = (char*)malloc(l2mc_buf_size);
+    if (!l2mc_buf)
+        return EXEC_TYPE_FAILED;
+
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        if (mclag_id > 0)
+        {
+            if (csm->mlag_id == mclag_id)
+                id_exist = 1;
+            else
+                continue;
+        }
+
+        RB_FOREACH (iccpd_l2mc, l2mc_rb_tree, &MLACP(csm).l2mc_rb)
+        {
+            memset(&mclagd_l2mc, 0, sizeof(struct mclagd_l2mc_msg));
+
+            mclagd_l2mc.op_type = iccpd_l2mc->op_type;
+            mclagd_l2mc.l2mc_type = iccpd_l2mc->l2mc_type;
+            memcpy(mclagd_l2mc.saddr, iccpd_l2mc->saddr, INET_ADDRSTRLEN);
+            memcpy(mclagd_l2mc.gaddr, iccpd_l2mc->gaddr, INET_ADDRSTRLEN);
+            mclagd_l2mc.vid = iccpd_l2mc->vid;
+            memcpy(mclagd_l2mc.ifname, iccpd_l2mc->ifname, strlen(iccpd_l2mc->ifname));
+            memcpy(mclagd_l2mc.origin_ifname, iccpd_l2mc->origin_ifname, strlen(iccpd_l2mc->origin_ifname));
+            mclagd_l2mc.del_flag = iccpd_l2mc->del_flag;
+
+            memcpy(l2mc_buf + MCLAGD_REPLY_INFO_HDR + l2mc_num * sizeof(struct mclagd_l2mc_msg),
+                   &mclagd_l2mc, sizeof(struct mclagd_l2mc_msg));
+
+            l2mc_num++;
+
+            if ((l2mc_num + 1) * sizeof(struct mclagd_l2mc_msg) > (l2mc_buf_size - MCLAGD_REPLY_INFO_HDR))
+            {
+                l2mc_buf_size += MCLAGDCTL_CMD_SIZE;
+                l2mc_buf = (char*)realloc(l2mc_buf, l2mc_buf_size);
+                if (!l2mc_buf)
+                    return EXEC_TYPE_FAILED;
+            }
+        }
+        }
+
+    *buf = l2mc_buf;
+    *num = l2mc_num;
+
+    if (mclag_id > 0 && !id_exist)
+        return EXEC_TYPE_NO_EXIST_MCLAGID;
+
+    return EXEC_TYPE_SUCCESS;
+}
+
+int iccp_l2mc_mrouter_dump(char * *buf, int *num, int mclag_id)
+{
+    struct System *sys = NULL;
+    struct CSM *csm = NULL;
+    struct Msg *msg = NULL;
+    struct L2MCMsg *iccpd_l2mc = NULL;
+    struct mclagd_l2mc_msg mclagd_l2mc;
+    int l2mc_num = 0;
+    int id_exist = 0;
+    char * l2mc_buf = NULL;
+    int l2mc_buf_size = MCLAGDCTL_CMD_SIZE;
+
+    if (!(sys = system_get_instance()))
+    {
+        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
+        return EXEC_TYPE_NO_EXIST_SYS;
+    }
+
+    l2mc_buf = (char*)malloc(l2mc_buf_size);
+    if (!l2mc_buf)
+        return EXEC_TYPE_FAILED;
+
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        if (mclag_id > 0)
+        {
+            if (csm->mlag_id == mclag_id)
+                id_exist = 1;
+            else
+                continue;
+        }
+
+        RB_FOREACH (iccpd_l2mc, l2mc_mrouter_rb_tree, &MLACP(csm).l2mc_mrouter_rb)
+        {
+            memset(&mclagd_l2mc, 0, sizeof(struct mclagd_l2mc_msg));
+
+            mclagd_l2mc.op_type = iccpd_l2mc->op_type;
+            mclagd_l2mc.l2mc_type = iccpd_l2mc->l2mc_type;
+            mclagd_l2mc.vid = iccpd_l2mc->vid;
+            memcpy(mclagd_l2mc.ifname, iccpd_l2mc->ifname, strlen(iccpd_l2mc->ifname));
+            memcpy(mclagd_l2mc.origin_ifname, iccpd_l2mc->origin_ifname, strlen(iccpd_l2mc->origin_ifname));
+            mclagd_l2mc.del_flag = iccpd_l2mc->del_flag;
+
+            memcpy(l2mc_buf + MCLAGD_REPLY_INFO_HDR + l2mc_num * sizeof(struct mclagd_l2mc_msg),
+                   &mclagd_l2mc, sizeof(struct mclagd_l2mc_msg));
+
+            l2mc_num++;
+
+            if ((l2mc_num + 1) * sizeof(struct mclagd_l2mc_msg) > (l2mc_buf_size - MCLAGD_REPLY_INFO_HDR))
+            {
+                l2mc_buf_size += MCLAGDCTL_CMD_SIZE;
+                l2mc_buf = (char*)realloc(l2mc_buf, l2mc_buf_size);
+                if (!l2mc_buf)
+                    return EXEC_TYPE_FAILED;
+            }
+        }
+        }
+
+    *buf = l2mc_buf;
+    *num = l2mc_num;
+
+    if (mclag_id > 0 && !id_exist)
+        return EXEC_TYPE_NO_EXIST_MCLAGID;
+
+    return EXEC_TYPE_SUCCESS;
+}
+
 int iccp_local_if_dump(char * *buf,  int *num, int mclag_id)
 {
     struct System *sys = NULL;
