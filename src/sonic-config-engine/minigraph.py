@@ -506,7 +506,7 @@ def parse_meta(meta, hname):
     mgmt_routes = []
     erspan_dst = []
     deployment_id = None
-    sub_role = None
+    region = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -529,9 +529,9 @@ def parse_meta(meta, hname):
                     erspan_dst = value_group
                 elif name == "DeploymentId":
                     deployment_id = value
-                elif name == "SubRole":
-                    sub_role = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, sub_role
+                elif name == "Region":
+                    region = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region
 
 def parse_asic_meta(meta, hname):
     deployment_id = None
@@ -707,6 +707,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     erspan_dst = []
     bgp_peers_with_range = None
     deployment_id = None
+    region = None
 
     #hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
@@ -749,7 +750,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
             (u_neighbors, u_devices, _, _, _, _, _, _, _) = parse_png(child, device_hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
             if asic_name is None:
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, sub_role) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region) = parse_meta(child, hostname)
             else:
                 (deployment_id, sub_role) = parse_asic_meta(child, asic_name)
         elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -766,6 +767,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
+        'region': region,
         'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': name,
         'hwsku': hwsku,
