@@ -139,8 +139,11 @@ start() {
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=`$SONIC_CFGGEN -H -v DEVICE_METADATA.localhost.platform`
 
-    # Parse the device specific asic conf file
-    source /usr/share/sonic/device/$PLATFORM/asic.conf
+    # Parse the device specific asic conf file, if it exists
+    ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
+    if [ -f "$ASIC_CONF" ]; then
+        source $ASIC_CONF
+    fi
 
     {%- if docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
