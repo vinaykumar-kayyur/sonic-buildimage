@@ -5,7 +5,7 @@ HOWTO Use Virtual Switch (Docker)
 
 ```
 $ docker run -id --name sw debian bash
-$ sudo ./create_vnet.sh sw
+$ sudo ./create_vnet.sh -n 2 sw
 $ ip netns list
 sw-srv1 (id: 6)
 sw-srv0 (id: 5)

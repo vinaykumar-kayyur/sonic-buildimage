@@ -9,11 +9,13 @@ ln -sf /usr/share/sonic/device/$PLATFORM/$HWSKU /usr/share/sonic/hwsku
 
 pushd /usr/share/sonic/hwsku
 
+# filter available front panel ports in lanemap.ini
 [ -f lanemap.ini.orig ] || cp lanemap.ini lanemap.ini.orig
 for p in $(ip link show | grep -oE "eth[0-9]+" | grep -v eth0); do
     grep ^$p: lanemap.ini.orig
 done > lanemap.ini
 
+# filter available sonic front panel ports in port_config.ini
 [ -f port_config.ini.orig ] || cp port_config.ini port_config.ini.orig
 grep ^# port_config.ini.orig > port_config.ini
 for lanes in $(awk -F ':' '{print $2}' lanemap.ini); do
