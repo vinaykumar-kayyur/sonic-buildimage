@@ -4,6 +4,7 @@ import yaml
 import subprocess
 import re
 from natsort import natsorted
+import glob
 DOCUMENTATION = '''
 ---
 module: sonic_device_util
@@ -19,7 +20,7 @@ to have it shared with multiple applications.
 '''
 SONIC_DEVICE_PATH = '/usr/share/sonic/device'
 NPU_NAME_PREFIX = 'asic'
-
+NAMESPACE_PATH_GLOB = '/run/netns/*'
 def get_machine_info():
     if not os.path.isfile('/host/machine.conf'):
         return None
@@ -39,18 +40,18 @@ def get_npu_id_from_name(npu_name):
         return None
 
 def get_num_npus():
-   platform = get_platform_info(get_machine_info())
-   asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, 'asic.conf')
-   if not os.path.isfile(asic_conf_file_path):
+    platform = get_platform_info(get_machine_info())
+    asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, 'asic.conf')
+    if not os.path.isfile(asic_conf_file_path):
         return 1
-   with open(asic_conf_file_path) as asic_conf_file:
-	for line in asic_conf_file:
-	    tokens = line.split('=')
+    with open(asic_conf_file_path) as asic_conf_file:
+        for line in asic_conf_file:
+            tokens = line.split('=')
             if len(tokens) < 2:
-               continue      
-	    if tokens[0].lower() == 'num_asic':
-		num_npus = tokens[1].strip()
-   		return num_npus
+               continue
+            if tokens[0].lower() == 'num_asic':
+                num_npus = tokens[1].strip()
+        return num_npus
 
 def get_namespaces():
     """
@@ -58,16 +59,9 @@ def get_namespaces():
     This method returns list of all the Namespace present on the device
     """
     ns_list = []
-    try:
-        proc = subprocess.Popen('ip netns list | cut -d"(" -f1', 
-                                stdout=subprocess.PIPE,
-                                shell=True,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        ns_list = [n for n in stdout.split()]
-    except OSError,e:
-        raise OSError("Unable to get namespace list")
+    for path in glob.glob(NAMESPACE_PATH_GLOB):
+        ns = os.path.basename(path)
+        ns_list.append(ns)
     return natsorted(ns_list)
 
 def get_platform_info(machine_info):
