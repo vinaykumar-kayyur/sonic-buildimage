@@ -32,7 +32,3 @@ if __name__ == "__main__":
     else:
         syslog.syslog(syslog.LOG_INFO, "Args : {}".format(sys.argv))
         update_dhcp_mgmt_ip_info()
-
-
-
-
