@@ -87,7 +87,6 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/iptables_*.deb || \
 
 # Install dependencies for SONiC config engine
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
-    build-essential libssl-dev libffi-dev     \
     python-dev     \
     python-lxml    \
     python-yaml    \
