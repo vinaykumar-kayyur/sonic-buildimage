@@ -366,7 +366,7 @@ def run_command(cmd):
 
 def cfg_attr_set (cmd, attr = None, value = None, appIntf = None):
     rc = run_command(cmd)
-    if appIntf != None and rc == True:
+    if appIntf != None:
         appIntf[attr] = value
 
     return rc
@@ -385,6 +385,7 @@ class MgmtIntfCfg:
         self.app_db.db_connect('APPL_DB', wait_for_init=False, retry_on=True)
         self.config_db = cfg_db
         self.mgmt_vrf_cfg = mgmt_vrf_cfg
+        self.mgmt_cfg_appdb_cleanup()
         self.mgmt_intf_handle_default_cfg("eth0")
 
     def mgmt_intf_handle_default_cfg (self, ifname):
@@ -400,19 +401,35 @@ class MgmtIntfCfg:
 
         self.handle_mgmt_port_cfg(ifname, mgmt_intf)
 
-        mgmt_intf = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, ifname)
-        if mgmt_intf == {}:
+        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        if len(keys) == 0:
+            mgmt_intf = {}
             mgmt_intf['ipv4_dhcp_client'] = "true"
             mgmt_intf['ipv6_dhcp_client'] = "true"
             self.config_db.set_entry(CFG_MGMT_INTF_TABLE, ifname, mgmt_intf)
             self.app_db.set_entry(APP_MGMT_INTF_TABLE, ifname, mgmt_intf)
+        else:
+            for it in keys:
+                if type(it) is unicode:
+                    key = it
+                else:
+                    key = it[0] + "|" + it[1]
+                data = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, key)
+                self.handle_mgmt_intf_cfg(key, data)
+
+    def mgmt_cfg_appdb_cleanup (self):
+        tbl_list = [APP_MGMT_PORT_TABLE, APP_MGMT_INTF_TABLE]
+        for tbl in tbl_list:
+            keys = self.app_db.get_keys(tbl)
+            for key in keys:
+                self.app_db.delete_entry(tbl, key)
 
     def mgmt_intf_mtu_set (self, ifname, mtu, appIntf):
         cmd = 'ifconfig {} mtu {}'.format(ifname, mtu)
         cfg_attr_set(cmd, 'mtu', mtu, appIntf)
 
     def mgmt_intf_admin_status_set (self, ifname, admin_status, appIntf):
-        cmd = 'ifconfig {} {}'.format(ifname, admin_status)
+        cmd = 'ip link set {} {}'.format(ifname, admin_status)
         cfg_attr_set(cmd, 'admin_status', admin_status, appIntf)
 
     def mgmt_intf_description_set (self, ifname, description, appIntf):
@@ -420,7 +437,7 @@ class MgmtIntfCfg:
 
     def mgmt_intf_speed_set (self, ifname, speed, autoneg, appIntf):
         duplex = "full"
-        cmd = 'ethtool -s {} speed {} duplex {} autoneg {}; ifup {}'.format(ifname, speed, duplex, autoneg, ifname)
+        cmd = 'ifdown --force {}; ethtool -s {} speed {} duplex {} autoneg {}; ifup --force {}'.format(ifname, ifname, speed, duplex, autoneg, ifname)
         cfg_attr_set(cmd, 'speed', speed, appIntf)
 
     def mgmt_intf_autoneg_set (self, ifname, autoneg, appIntf):
