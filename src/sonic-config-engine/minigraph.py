@@ -240,12 +240,12 @@ def parse_asic_png(png, asic_name, hostname):
                     ext_neighbors, ext_port_speeds, ext_asic_neighbors = parse_asic_external_link(link, asic_name, hostname)
                     neighbors.update(ext_neighbors)
                     port_speeds.update(ext_port_speeds)
-                    asic_neighbors.append(ext_asic_neighbors)    
+                    asic_neighbors.extend(ext_asic_neighbors)    
                 else:
                     int_neighbors, int_port_speeds, int_asic_neighbors = parse_asic_internal_link(link, asic_name, hostname)
                     neighbors.update(int_neighbors)
                     port_speeds.update(int_port_speeds)
-                    asic_neighbors.append(int_asic_neighbors)
+                    asic_neighbors.extend(int_asic_neighbors)
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
