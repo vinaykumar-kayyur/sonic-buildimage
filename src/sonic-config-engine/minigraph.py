@@ -636,7 +636,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
             if pc_member[0] == pc_intf:
                 intf_name = pc_member[1]
                 break
- 
+
         if intf_name == None:
             print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf)
             continue
@@ -758,7 +758,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "UngDec")):
-                (u_neighbors, u_devices, _, _, _, _, _, _, _) = parse_png(child, device_hostname)
+                (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, device_hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
                 (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
