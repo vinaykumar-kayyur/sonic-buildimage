@@ -278,7 +278,7 @@ def main():
 
     if args.platform_info:
         if asic_name is not None and asic_role.lower() == "backend":
-            mac = get_system_mac(asic_name)
+            mac = get_system_mac(namespace=asic_name)
         else:
             mac = get_system_mac()
 
