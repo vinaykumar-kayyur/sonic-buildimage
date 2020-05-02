@@ -162,7 +162,6 @@ def parse_png(png, hname):
 def parse_asic_external_link(link, asic_name, hostname):
     neighbors = {}
     port_speeds = {}
-    asic_neighbors = []
     enddevice = link.find(str(QName(ns, "EndDevice"))).text
     endport = link.find(str(QName(ns, "EndPort"))).text
     startdevice = link.find(str(QName(ns, "StartDevice"))).text
@@ -176,7 +175,6 @@ def parse_asic_external_link(link, asic_name, hostname):
                 (asic_name.lower() in port_alias_asic_map[endport].lower())):
             endport = port_alias_asic_map[endport]
             neighbors[port_alias_map[endport]] = {'name': startdevice, 'port': startport}
-            asic_neighbors.append(startdevice)
             if bandwidth:
                 port_speeds[port_alias_map[endport]] = bandwidth
     elif (startdevice.lower() == hostname.lower()):
@@ -184,16 +182,14 @@ def parse_asic_external_link(link, asic_name, hostname):
                 (asic_name.lower() in port_alias_asic_map[startport].lower())):
             startport = port_alias_asic_map[startport]
             neighbors[port_alias_map[startport]] = {'name': enddevice, 'port': endport}
-            asic_neighbors.append(enddevice)
             if bandwidth:
                 port_speeds[port_alias_map[startport]] = bandwidth
 
-    return neighbors, port_speeds, asic_neighbors
+    return neighbors, port_speeds
 
 def parse_asic_internal_link(link, asic_name, hostname):
     neighbors = {}
     port_speeds = {}
-    asic_neighbors = []
     enddevice = link.find(str(QName(ns, "EndDevice"))).text
     endport = link.find(str(QName(ns, "EndPort"))).text
     startdevice = link.find(str(QName(ns, "StartDevice"))).text
@@ -205,7 +201,6 @@ def parse_asic_internal_link(link, asic_name, hostname):
         if port_alias_map.has_key(endport):
             endport = port_alias_map[endport]
             neighbors[endport] = {'name': startdevice, 'port': startport}
-            asic_neighbors.append(startdevice)
             if bandwidth:
                 port_speeds[endport] = bandwidth
     elif ((startdevice.lower() == asic_name.lower()) and
@@ -213,17 +208,15 @@ def parse_asic_internal_link(link, asic_name, hostname):
         if port_alias_map.has_key(startport):
             startport = port_alias_map[startport]
             neighbors[startport] = {'name': enddevice, 'port': endport}
-            asic_neighbors.append(enddevice)
             if bandwidth:
                 port_speeds[startport] = bandwidth
 
-    return neighbors, port_speeds, asic_neighbors
+    return neighbors, port_speeds
 
 def parse_asic_png(png, asic_name, hostname):
     neighbors = {}
     devices = {}
     port_speeds = {}
-    asic_neighbors = []
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -237,15 +230,13 @@ def parse_asic_png(png, asic_name, hostname):
                 # If the link is an external link include the external neighbor
                 # information in ASIC ports table
                 if chassis_internal.lower() == "false":
-                    ext_neighbors, ext_port_speeds, ext_asic_neighbors = parse_asic_external_link(link, asic_name, hostname)
+                    ext_neighbors, ext_port_speeds = parse_asic_external_link(link, asic_name, hostname)
                     neighbors.update(ext_neighbors)
                     port_speeds.update(ext_port_speeds)
-                    asic_neighbors.extend(ext_asic_neighbors)    
                 else:
-                    int_neighbors, int_port_speeds, int_asic_neighbors = parse_asic_internal_link(link, asic_name, hostname)
+                    int_neighbors, int_port_speeds = parse_asic_internal_link(link, asic_name, hostname)
                     neighbors.update(int_neighbors)
                     port_speeds.update(int_port_speeds)
-                    asic_neighbors.extend(int_asic_neighbors)
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
@@ -254,7 +245,7 @@ def parse_asic_png(png, asic_name, hostname):
                 if deployment_id:
                     device_data['deployment_id'] = deployment_id
                 devices[name] = device_data
-    return (neighbors, devices, port_speeds, asic_neighbors)
+    return (neighbors, devices, port_speeds)
 
 def parse_dpg(dpg, hname):
     for child in dpg:
@@ -357,7 +348,6 @@ def parse_dpg(dpg, hname):
                 vlan_attributes['alias'] = vintfname
             vlans[sonic_vlan_name] = vlan_attributes
 
-          
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
             if aclintf.find(str(QName(ns, "InAcl"))) is not None:
@@ -768,10 +758,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
-            elif child.tag == str(QName(ns, "UngDec")):
-                (u_neighbors, u_devices, _, _) = parse_asic_png(child, asic_name, hostname) 
             elif child.tag == str(QName(ns, "PngDec")):
-                (neighbors, devices, port_speed_png, asic_neighbors) = parse_asic_png(child, asic_name, hostname)
+                (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
                 (sub_role) = parse_asic_meta(child, asic_name)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -975,7 +963,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     if asic_name is None:
         results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key.lower() != hostname.lower() }
     else:
-        results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key in asic_neighbors }
+        results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key in {device['name'] for device in neighbors.values()} }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
