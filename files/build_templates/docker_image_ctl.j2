@@ -105,7 +105,11 @@ function postStartAction()
 
     if [[ -x /usr/bin/db_migrator.py ]]; then
         # Migrate the DB to the latest schema version if needed
-        /usr/bin/db_migrator.py -o migrate
+        if [ -z "$DEV" ]; then
+            /usr/bin/db_migrator.py -o migrate
+        else
+            /usr/bin/db_migrator.py -o migrate -n $NET_NS
+        fi
     fi
 {%- elif docker_container_name == "swss" %}
     docker exec swss$DEV rm -f /ready   # remove cruft
@@ -179,6 +183,13 @@ start() {
 
     {%- if docker_container_name == "database" %}
     echo "Creating new {{docker_container_name}}$DEV container"
+    if [ -z "$DEV" ]; then
+        # if database_global exists in old_config, use it; otherwise use the default one in new image
+        if [ -f /etc/sonic/old_config/database_global.json ]; then
+            echo "Use database_global.json from old system..."
+            mv /etc/sonic/old_config/database_global.json /etc/sonic/
+        fi
+    fi
     # if database_config exists in old_config, use it; otherwise use the default one in new image
     if [ -f /etc/sonic/old_config/database_config$DEV.json ]; then
         echo "Use database_config.json from old system..."
@@ -193,10 +204,10 @@ start() {
     # various namesapces. The database_config paths are relative to the DIR of SONIC_DB_GLOBAL_JSON.
     SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
     if [ -f "$SONIC_DB_GLOBAL_JSON" ]; then
-        db_configs=(`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
-                     global_db_config_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
-                     print(\" \".join([os.path.join(global_db_config_dir,str(elem['include'])) \
-                     for elem in data['INCLUDES']])); f.close()" $SONIC_DB_GLOBAL_JSON`)
+        db_configs=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
+                    global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
+                    print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']).partition('sonic-db')[0]\
+                    for elem in data['INCLUDES'] if 'namespace' in elem])); f.close()" $SONIC_DB_GLOBAL_JSON`
     fi
 
     if [ -z "$DEV" ]; then
@@ -208,27 +219,24 @@ start() {
         # /var/run/redis0 ---> mounted as --> /var/run/redis0
         # /var/run/redis1 ---> mounted as --> /var/run/redis1 .. etc
         # The below logic extracts the base DIR's where database_config.json's for various namespaces exist.
+        # db_configs is a string of form "/var/run/redis0/ /var/run/redis1/ /var/run/redis2/"
 
         {%- if docker_container_name != "database" %}
         if [ -n "$db_configs" ]; then
-            id=1
-            {% raw %}
-            while [ $id -lt "${#db_configs[@]}" ]; do
-                file="${db_configs[$id]}"
-                redis_dir=`echo $file | cut -d "/" -f 1-8`
+            for redis_dir in $db_configs
+            do
                 REDIS_MNT=$REDIS_MNT" -v $redis_dir:$redis_dir:rw "
-                id=`expr $id + 1`
             done
-            {% endraw %}
         fi
         {%- endif %}
     else
         # This part of code is applicable for Multi-ASIC platforms. Here we mount the namespace specific
         # redis directory into the docker running in that namespace. Below eg: is for namespace "asic1"
         # /var/run/redis1 ---> mounted as --> /var/run/redis1
+        # db_configs is a string of form "/var/run/redis0/ /var/run/redis1/ /var/run/redis2/"
         if [ -n "$db_configs" ]; then
-            file=${db_configs[$DEV+1]}
-            redis_dir=`echo $file | cut -d "/" -f 1-8`
+            id=`expr $DEV + 1`
+            redis_dir=`echo $db_configs | cut -d " " -f $id`
             REDIS_MNT=" -v $redis_dir:$redis_dir:rw "
         fi
 
@@ -321,8 +329,8 @@ DEV=$2 # namespace/device number to operate on
 NAMESPACE_PREFIX="asic"
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
-    SONIC_CFGGEN="sonic-cfggen -n $NET_NS"
-    SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
+    SONIC_CFGGEN="sudo sonic-cfggen -n $NET_NS"
+    SONIC_DB_CLI="sudo sonic-db-cli -n $NET_NS"
  else
     NET_NS=""
     SONIC_CFGGEN="sonic-cfggen"

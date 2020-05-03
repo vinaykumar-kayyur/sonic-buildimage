@@ -1,4 +1,4 @@
-{% set namespace_cnt = NAMESPACE_CNT|int %}
+{% set namespace_cnt = NAMESPACE_COUNT|int %}
 {
     "INCLUDES" : [
         {
@@ -7,7 +7,7 @@
 {% if namespace_cnt > 1 %}
 {% for ns in range(namespace_cnt) %}
         {
-            "namespace" : "{{PREFIX}}{{ns}}",
+            "namespace" : "{{NAMESPACE_PREFIX}}{{ns}}",
             "include" : "../../redis{{ns}}/sonic-db/database_config.json"
 {% if ns == namespace_cnt-1  %}
         }
