@@ -229,7 +229,7 @@ def main():
     asic_id = None
     if asic_name is not None:
         asic_id = get_npu_id_from_name(asic_name)
-        asic_role = parse_asic_sub_role(args.minigraph if args.minigraph else '/etc/sonic/minigraph.xml', asic_name)
+
 
     if hwsku is not None:
         hardware_data = {'DEVICE_METADATA': {'localhost': {
@@ -276,8 +276,18 @@ def main():
         deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
 
 
+    # for multi Asic platforms to generate the platform info for an Asic
+    # the minigraph file must be provided
     if args.platform_info:
-        if asic_name is not None and asic_role.lower() == "backend":
+        asic_role = None
+        mac = None
+        if asic_name is not None:
+            if args.minigraph is None:
+                print('Failed to get minigraph')
+                sys.exit(1)
+            asic_role = parse_asic_sub_role(args.minigraph, asic_name)
+
+        if asic_role is not None and asic_role.lower() == "backend":
             mac = get_system_mac(namespace=asic_name)
         else:
             mac = get_system_mac()
