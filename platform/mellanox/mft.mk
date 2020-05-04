@@ -1,7 +1,7 @@
 # Mellanox SAI
 
-MFT_VERSION = 4.12.0
-MFT_REVISION = 104
+MFT_VERSION = 4.14.0
+MFT_REVISION = 500
 
 export MFT_VERSION MFT_REVISION
 
@@ -15,5 +15,3 @@ $(eval $(call add_derived_package,$(MFT),$(KERNEL_MFT)))
 
 MFT_OEM = mft-oem_$(MFT_VERSION)-$(MFT_REVISION)_amd64.deb
 $(eval $(call add_derived_package,$(MFT),$(MFT_OEM)))
-
-SONIC_STRETCH_DEBS += $(KERNEL_MFT)

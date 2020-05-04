@@ -257,7 +257,14 @@ def parse_dpg(dpg, hname):
         aclintfs = child.find(str(QName(ns, "AclInterfaces")))
         acls = {}
         for aclintf in aclintfs.findall(str(QName(ns, "AclInterface"))):
-            aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
+            if aclintf.find(str(QName(ns, "InAcl"))) is not None:
+                aclname = aclintf.find(str(QName(ns, "InAcl"))).text.upper().replace(" ", "_").replace("-", "_")
+                stage = "ingress"
+            elif aclintf.find(str(QName(ns, "OutAcl"))) is not None:
+                aclname = aclintf.find(str(QName(ns, "OutAcl"))).text.upper().replace(" ", "_").replace("-", "_")
+                stage = "egress"
+            else:
+                system.exit("Error: 'AclInterface' must contain either an 'InAcl' or 'OutAcl' subelement.")
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
@@ -274,7 +281,7 @@ def parse_dpg(dpg, hname):
                     # to LAG will be applied to all the LAG members internally by SAI/SDK
                     acl_intfs.append(member)
                 elif vlans.has_key(member):
-                    print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a Vlan interface, which is currently not supported"
+                    acl_intfs.append(member)
                 elif port_alias_map.has_key(member):
                     acl_intfs.append(port_alias_map[member])
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
@@ -297,13 +304,14 @@ def parse_dpg(dpg, hname):
                     break
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
+                                 'stage': stage,
                                  'ports': acl_intfs}
                 if is_mirror:
                     acls[aclname]['type'] = 'MIRROR'
                 elif is_mirror_v6:
                     acls[aclname]['type'] = 'MIRRORV6'
                 else:
-                    acls[aclname]['type'] = 'L3'
+                    acls[aclname]['type'] = 'L3V6' if  'v6' in aclname.lower() else 'L3'
             else:
                 # This ACL has no interfaces to attach to -- consider this a control plane ACL
                 try:
@@ -321,6 +329,7 @@ def parse_dpg(dpg, hname):
                     else:
                         acls[aclname] = {'policy_desc': aclname,
                                          'type': 'CTRLPLANE',
+                                         'stage': stage,
                                          'services': [aclservice]}
                 except:
                     print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
@@ -410,6 +419,7 @@ def parse_meta(meta, hname):
     mgmt_routes = []
     erspan_dst = []
     deployment_id = None
+    region = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -432,7 +442,9 @@ def parse_meta(meta, hname):
                     erspan_dst = value_group
                 elif name == "DeploymentId":
                     deployment_id = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id
+                elif name == "Region":
+                    region = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region
 
 def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
@@ -590,6 +602,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
     erspan_dst = []
     bgp_peers_with_range = None
     deployment_id = None
+    region = None
 
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
@@ -614,7 +627,7 @@ def parse_xml(filename, platform=None, port_config_file=None):
         elif child.tag == str(QName(ns, "UngDec")):
             (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
         elif child.tag == str(QName(ns, "MetadataDeclaration")):
-            (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id) = parse_meta(child, hostname)
+            (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region) = parse_meta(child, hostname)
         elif child.tag == str(QName(ns, "DeviceInfos")):
             (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
@@ -623,15 +636,11 @@ def parse_xml(filename, platform=None, port_config_file=None):
     results['DEVICE_METADATA'] = {'localhost': {
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
+        'region': region,
         'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': hostname,
         'hwsku': hwsku,
         'type': current_device['type']
-        },
-        'x509': {
-            'server_crt': '/etc/sonic/telemetry/streamingtelemetryserver.cer',
-            'server_key': '/etc/sonic/telemetry/streamingtelemetryserver.key',
-            'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
         }
     }
     results['BGP_NEIGHBOR'] = bgp_sessions
@@ -820,9 +829,26 @@ def parse_xml(filename, platform=None, port_config_file=None):
             'client_auth': 'true',
             'port': '50051',
             'log_level': '2'
+        },
+        'certs': {
+            'server_crt': '/etc/sonic/telemetry/streamingtelemetryserver.cer',
+            'server_key': '/etc/sonic/telemetry/streamingtelemetryserver.key',
+            'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
         }
     }
-
+    results['RESTAPI'] = {
+        'config': {
+            'client_auth': 'true',
+            'allow_insecure': 'false',
+            'log_level': 'trace'
+        },
+        'certs': {
+            'server_crt': '/etc/sonic/credentials/restapiserver.crt',
+            'server_key': '/etc/sonic/credentials/restapiserver.key',
+            'client_ca_crt': '/etc/sonic/credentials/restapiclient.crt',
+            'client_crt_cname': 'client.restapi.sonic'
+        }
+    }
     # Do not configure the minigraph's mirror session, which is currently unused
     # mirror_sessions = {}
     # if erspan_dst:
