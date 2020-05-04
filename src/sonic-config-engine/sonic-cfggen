@@ -276,19 +276,17 @@ def main():
         deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
 
 
-    # for multi Asic platforms to generate the platform info for an Asic
-    # the minigraph file must be provided
+    # the minigraph file must be provided to get the mac address for backend asics
     if args.platform_info:
         asic_role = None
-        mac = None
         if asic_name is not None:
-            if args.minigraph is None:
-                print('Failed to get minigraph')
-                sys.exit(1)
-            asic_role = parse_asic_sub_role(args.minigraph, asic_name)
+            if args.minigraph is not None:
+                asic_role = parse_asic_sub_role(args.minigraph, asic_name)
 
-        if asic_role is not None and asic_role.lower() == "backend":
-            mac = get_system_mac(namespace=asic_name)
+            if asic_role is not None and asic_role.lower() == "backend":
+                mac = get_system_mac(namespace=asic_name)
+            else:
+                mac = get_system_mac()
         else:
             mac = get_system_mac()
 
