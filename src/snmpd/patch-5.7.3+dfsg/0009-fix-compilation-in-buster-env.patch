@@ -1,0 +1,21 @@
+diff --git a/apps/snmptrapd_sql.c b/apps/snmptrapd_sql.c
+index 671e542..68c4b8c 100644
+--- a/apps/snmptrapd_sql.c
++++ b/apps/snmptrapd_sql.c
+@@ -438,13 +438,13 @@ netsnmp_mysql_init(void)
+     }
+ 
+ #ifdef HAVE_BROKEN_LIBMYSQLCLIENT
+-    my_init();
++    //my_init();
+ #else
+     MY_INIT("snmptrapd");
+ #endif
+ 
+     /** load .my.cnf values */
+-    load_defaults ("my", _sql.groups, &not_argc, &not_argv);
++    //load_defaults ("my", _sql.groups, &not_argc, &not_argv);
+     for(i=0; i < not_argc; ++i) {
+         if (NULL == not_argv[i])
+             continue;
+
