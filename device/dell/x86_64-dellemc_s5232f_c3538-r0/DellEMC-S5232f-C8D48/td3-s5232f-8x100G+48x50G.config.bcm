@@ -101,6 +101,8 @@ portmap_123.0=121:50:2
 portmap_125.0=123:50:2
 portmap_127.0=125:50:2
 portmap_129.0=127:50:2
+portmap_130.0=128:10:m
+portmap_66.0=129:10:m
 
 
 phy_chain_tx_lane_map_physical{1.0}=0x0132
