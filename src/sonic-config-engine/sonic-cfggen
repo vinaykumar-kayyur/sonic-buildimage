@@ -204,6 +204,7 @@ def main():
     parser.add_argument("-s", "--redis-unix-sock-file", help="unix sock file for redis connection")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--template", help="render the data with the template file")
+    parser.add_argument("-T", "--template_dir", help="search base for the template files", action='store')
     group.add_argument("-v", "--var", help="print the value of a variable, support jinja2 expression")
     group.add_argument("--var-json", help="print the value of a variable, in json format")
     group.add_argument("-w", "--write-to-db", help="write config into configdb", action='store_true')
@@ -233,6 +234,10 @@ def main():
             sys.exit(1)
         deep_update(data, {'PORT': ports})
 
+    for json_file in args.json:
+        with open(json_file, 'r') as stream:
+            deep_update(data, FormatConverter.to_deserialized(json.load(stream)))
+
     if args.minigraph != None:
         minigraph = args.minigraph
         if platform:
@@ -254,10 +259,6 @@ def main():
                 additional_data = yaml.load(stream)
             deep_update(data, FormatConverter.to_deserialized(additional_data))
 
-    for json_file in args.json:
-        with open(json_file, 'r') as stream:
-            deep_update(data, FormatConverter.to_deserialized(json.load(stream)))
-
     if args.additional_data != None:
         deep_update(data, json.loads(args.additional_data))
 
@@ -273,9 +274,12 @@ def main():
             }}}
         deep_update(data, hardware_data)
 
-    if args.template != None:
+    if args.template is not None:
         template_file = os.path.abspath(args.template)
         paths  = ['/', '/usr/share/sonic/templates', os.path.dirname(template_file)]
+        if args.template_dir is not None:
+            template_dir = os.path.abspath(args.template_dir)
+            paths.append(template_dir)
         loader = jinja2.FileSystemLoader(paths)
 
         redis_bcc = RedisBytecodeCache(SonicV2Connector(host='127.0.0.1'))
@@ -286,7 +290,7 @@ def main():
         env.filters['unique_name'] = unique_name
         env.filters['pfx_filter'] = pfx_filter
         env.filters['ip_network'] = ip_network
-        for attr in ['ip', 'network', 'prefixlen', 'netmask']:
+        for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
             env.filters[attr] = partial(prefix_attr, attr)
         template = env.get_template(template_file)
         print(template.render(sort_data(data)))
@@ -295,7 +299,7 @@ def main():
         template = jinja2.Template('{{' + args.var + '}}')
         print(template.render(data))
 
-    if args.var_json != None:
+    if args.var_json != None and args.var_json in data:
         if args.key != None:
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json], args.key), indent=4, cls=minigraph_encoder))
         else:
