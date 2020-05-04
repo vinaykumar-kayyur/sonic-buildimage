@@ -32,13 +32,15 @@
 #include <linux/leds.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
-#include <linux/i2c/pca954x.h>
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0))
 #include <linux/i2c/pca953x.h>
+#include <linux/i2c/pca954x.h>
 #else
 #include <linux/platform_data/pca953x.h>
+#include <linux/platform_data/pca954x.h>
 #endif
-#include <linux/i2c/pmbus.h>
+//#include <linux/i2c/pmbus.h>
+#include <linux/pmbus.h>
 
 #define MUX_INFO(bus, deselect) \
 	{.adap_id = bus, .deselect_on_exit = deselect}

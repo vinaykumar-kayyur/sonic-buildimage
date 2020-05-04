@@ -29,7 +29,7 @@
 #include <linux/i2c.h>
 #include "pmbus.h"
 #include <linux/delay.h>
-#include <linux/i2c/pmbus.h>
+#include <linux/pmbus.h>
 
 
 enum id_name {

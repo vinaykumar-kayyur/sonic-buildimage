@@ -12,6 +12,8 @@
  * warranty of any kind, whether express or implied.
  */
 
+#include <linux/version.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/jiffies.h>
 #include <linux/delay.h>
@@ -19,8 +21,11 @@
 #include <linux/device.h>
 #include <linux/i2c.h>
 #include <linux/i2c-mux.h>
-
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0))
 #include <linux/i2c/pca954x.h>
+#else
+#include <linux/platform_data/pca954x.h>
+#endif
 
 /*
  * The PCA9641 is a 2-to-1 I2C master demultiplexer with an arbiter function.
@@ -295,9 +300,9 @@ static int pca9641_probe(struct i2c_client *client,
 	 * I2C accesses are unprotected here.
 	 * We have to lock the adapter before releasing the bus.
 	 */
-	i2c_lock_adapter(adap);
+        i2c_lock_bus(adap, I2C_LOCK_ROOT_ADAPTER);
 	pca9641_release_bus(client);
-	i2c_unlock_adapter(adap);
+        i2c_unlock_bus(adap, I2C_LOCK_ROOT_ADAPTER);
 
 	/* Create mux adapter */
 
