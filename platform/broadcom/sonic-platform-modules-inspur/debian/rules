@@ -7,7 +7,7 @@ KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_SRC_DIR:= $(shell pwd)
 
 PACKAGE_PRE_NAME := sonic-platform-inspur
-MODULE_DIRS := superior victoria sc5610b1 sc5630el
+MODULE_DIRS := sc5630el
 MODULE_SRC  := modules
 UTILITY_SRC := utils
 SERVICE_SRC := service
