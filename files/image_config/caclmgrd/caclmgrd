@@ -269,7 +269,7 @@ class ControlPlaneAclManager(object):
         self._tables_db_info = self.config_db.get_table(self.ACL_TABLE)
         self._rules_db_info = self.config_db.get_table(self.ACL_RULE)
 
-        unconfigured_services = self.ACL_SERVICES.keys()
+        num_ctrl_plane_acl_rules = 0
 
         # Walk the ACL tables
         for (table_name, table_data) in self._tables_db_info.iteritems():
@@ -327,10 +327,6 @@ class ControlPlaneAclManager(object):
                             .format(table_name))
                     continue
 
-                # We found ACL rules that we can apply for this service. Remove this service from our list of unconfigured services.
-                if acl_service in unconfigured_services:
-                    unconfigured_services.remove(acl_service)
-
                 # For each ACL rule in this table (in descending order of priority)
                 for priority in sorted(acl_rules.iterkeys(), reverse=True):
                     rule_props = acl_rules[priority]
@@ -366,18 +362,7 @@ class ControlPlaneAclManager(object):
                             rule_cmd += " -j {}".format(rule_props["PACKET_ACTION"])
 
                             iptables_cmds.append(rule_cmd)
-
-        # For any services which we did not find ACL configuration for, we add an
-        # iptables rule to allow all incoming packets. This way we don't block
-        # services like SSH on an unconfigured device
-        for acl_service in unconfigured_services:
-            log_info("Did not find or could not apply ACL configuration for {0}. Allowing all incoming traffic for this service...".format(acl_service))
-            ip_protocols = self.ACL_SERVICES[acl_service]["ip_protocols"]
-            dst_ports = self.ACL_SERVICES[acl_service]["dst_ports"]
-            for ip_protocol in ip_protocols:
-                for dst_port in dst_ports:
-                    iptables_cmds.append("iptables -A INPUT -p {0} --dport {1} -j ACCEPT".format(ip_protocol, dst_port))
-                    iptables_cmds.append("ip6tables -A INPUT -p {0} --dport {1} -j ACCEPT".format(ip_protocol, dst_port))
+                            num_ctrl_plane_acl_rules += 1
 
         # Add iptables commands to block ip2me traffic
         iptables_cmds += self.generate_block_ip2me_traffic_iptables_commands()
@@ -387,11 +372,13 @@ class ControlPlaneAclManager(object):
         iptables_cmds.append("iptables -A INPUT -m ttl --ttl-lt 2 -j ACCEPT")
         iptables_cmds.append("ip6tables -A INPUT -p tcp -m hl --hl-lt 2 -j ACCEPT")
 
-        # Finally, add iptables/ip6tables commands to drop all other incoming packets
-        iptables_cmds.append("iptables -A INPUT -j DROP")
-        iptables_cmds.append("iptables -A FORWARD -j DROP")
-        iptables_cmds.append("ip6tables -A INPUT -j DROP")
-        iptables_cmds.append("ip6tables -A FORWARD -j DROP")
+        # Finally, if the device has control plane ACLs configured,
+        # add iptables/ip6tables commands to drop all other incoming packets
+        if num_ctrl_plane_acl_rules > 0:
+            iptables_cmds.append("iptables -A INPUT -j DROP")
+            iptables_cmds.append("iptables -A FORWARD -j DROP")
+            iptables_cmds.append("ip6tables -A INPUT -j DROP")
+            iptables_cmds.append("ip6tables -A FORWARD -j DROP")
 
         return iptables_cmds
 
