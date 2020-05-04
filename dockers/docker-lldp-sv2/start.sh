@@ -2,6 +2,11 @@
 
 sonic-cfggen -d -t /usr/share/sonic/templates/lldpd.conf.j2 > /etc/lldpd.conf
 
+# update the hostname. Not using device metadata as in multi-npu platform each namespace
+# has its own device metadata hostname. Using the hostname set by docker using host enviroment
+
+sed -e "s/\${hostname}/$(hostname)/" -i /etc/lldpd.conf 
+
 mkdir -p /var/sonic
 echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
 
