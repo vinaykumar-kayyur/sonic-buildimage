@@ -201,7 +201,7 @@ start() {
 {%- if docker_container_name == "snmp" %}
     NET_NS_MOUNT=""
     if [ -d "/var/run/netns/" ]; then
-	NS_PATH="/var/run/netns/*"
+        NS_PATH="/var/run/netns/*"
         for NS_FILE in $NS_PATH 
         do
             LINK=`readlink -q $NS_FILE`
