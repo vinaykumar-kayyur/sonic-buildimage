@@ -67,11 +67,8 @@ RUN apt-get -y install       \
         iproute2             \
         net-tools
 
-# Note: force upgrade debian packaged jinja2, if installed
-RUN pip install --force-reinstall --upgrade "jinja2>=2.10"
-
 # For templating
-RUN pip install j2cli==0.3.10
+RUN pip install j2cli
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 

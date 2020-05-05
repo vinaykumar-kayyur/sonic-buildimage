@@ -204,10 +204,10 @@ start() {
     # various namesapces. The database_config paths are relative to the DIR of SONIC_DB_GLOBAL_JSON.
     SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
     if [ -f "$SONIC_DB_GLOBAL_JSON" ]; then
-        db_configs=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
-                    global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
-                    print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']).partition('sonic-db')[0]\
-                    for elem in data['INCLUDES'] if 'namespace' in elem])); f.close()" $SONIC_DB_GLOBAL_JSON`
+        redis_dir_list=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
+                        global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
+                        print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']).partition('sonic-db')[0]\
+                        for elem in data['INCLUDES'] if 'namespace' in elem])); f.close()" $SONIC_DB_GLOBAL_JSON`
     fi
 
     if [ -z "$DEV" ]; then
@@ -219,11 +219,11 @@ start() {
         # /var/run/redis0 ---> mounted as --> /var/run/redis0
         # /var/run/redis1 ---> mounted as --> /var/run/redis1 .. etc
         # The below logic extracts the base DIR's where database_config.json's for various namespaces exist.
-        # db_configs is a string of form "/var/run/redis0/ /var/run/redis1/ /var/run/redis2/"
+        # redis_dir_list is a string of form "/var/run/redis0/ /var/run/redis1/ /var/run/redis2/"
 
         {%- if docker_container_name != "database" %}
-        if [ -n "$db_configs" ]; then
-            for redis_dir in $db_configs
+        if [ -n "$redis_dir_list" ]; then
+            for redis_dir in $redis_dir_list
             do
                 REDIS_MNT=$REDIS_MNT" -v $redis_dir:$redis_dir:rw "
             done
@@ -233,10 +233,10 @@ start() {
         # This part of code is applicable for Multi-ASIC platforms. Here we mount the namespace specific
         # redis directory into the docker running in that namespace. Below eg: is for namespace "asic1"
         # /var/run/redis1 ---> mounted as --> /var/run/redis1
-        # db_configs is a string of form "/var/run/redis0/ /var/run/redis1/ /var/run/redis2/"
-        if [ -n "$db_configs" ]; then
+        # redis_dir_list is a string of form "/var/run/redis0/ /var/run/redis1/ /var/run/redis2/"
+        if [ -n "$redis_dir_list" ]; then
             id=`expr $DEV + 1`
-            redis_dir=`echo $db_configs | cut -d " " -f $id`
+            redis_dir=`echo $redis_dir_list | cut -d " " -f $id`
             REDIS_MNT=" -v $redis_dir:$redis_dir:rw "
         fi
 
