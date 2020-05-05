@@ -341,7 +341,7 @@ class MgmtVrfCfg:
                     self.unconfigure_mgmt_vrf()
             else:
                 self.unconfigure_mgmt_vrf()
-        except:
+        except Exception as inst:
             syslog.syslog(syslog.LOG_ERR, "{} MGMT VRF Configuration failed.".format(key))
 
     def mgmt_vrf_table_get(self):
