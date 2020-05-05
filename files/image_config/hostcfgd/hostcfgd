@@ -371,10 +371,10 @@ def cfg_attr_set (cmd, attr = None, value = None, appIntf = None):
 
     return rc
 
-def is_attr_cfg_required (attr, cfg_data, app_data, cfgAllAtrr = True):
+def is_attr_cfg_required (attr, cfg_data, app_data, cfgAllAttr = True):
     rc = False
 
-    if ((cfgAllAtrr == True) or (attr not in app_data) or (cfg_data[attr] != app_data[attr])):
+    if ((cfgAllAttr == True) or (attr not in app_data) or (cfg_data[attr] != app_data[attr])):
         rc = True
 
     return rc
@@ -553,7 +553,7 @@ class MgmtIntfCfg:
 
     def handle_mgmt_port_cfg(self, key, data):
         mgmt_intf =  self.app_db.get_entry(APP_MGMT_PORT_TABLE, key)
-        cfgAllAtrr = False
+        cfgAllAttr = False
         if mgmt_intf == {}:
             cfgAllAttr = True
 
@@ -565,7 +565,7 @@ class MgmtIntfCfg:
                 'speed'       : self.mgmt_intf_speed_set,
                 }
         for attr in data:
-            if (is_attr_cfg_required(attr, data, mgmt_intf, cfgAllAtrr) == True):
+            if (is_attr_cfg_required(attr, data, mgmt_intf, cfgAllAttr) == True):
                 if attr == 'speed':
                     autoneg = "on"
                     if 'autoneg' in data:
