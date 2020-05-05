@@ -199,12 +199,15 @@ start() {
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
 {%- endif %}
 {%- if docker_container_name == "snmp" %}
-    NET_NS_PATH="/var/run/netns/*"
-    for NS_FILE in $NET_NS_PATH
-    do
-        LINK=`readlink -q $NS_FILE`
-        NET_NS_MOUNT=$NET_NS_MOUNT" -v $LINK:$NS_FILE:ro"
-    done
+    NET_NS_MOUNT=""
+    if [ -d "/var/run/netns/" ]; then
+	NS_PATH="/var/run/netns/*"
+        for NS_FILE in $NS_PATH 
+        do
+            LINK=`readlink -q $NS_FILE`
+            NET_NS_MOUNT=$NET_NS_MOUNT" -v $LINK:$NS_FILE:ro"
+        done
+    fi
 {%- endif %}
     docker create {{docker_image_run_opt}} \
         --net=$NET \
