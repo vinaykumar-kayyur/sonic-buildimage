@@ -92,6 +92,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-yaml    \
     python-bitarray
 
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
+        libssl-dev \
+        libffi-dev
+fi
+
 # Install SONiC config engine Python package
 CONFIG_ENGINE_WHEEL_NAME=$(basename {{config_engine_wheel_path}})
 sudo cp {{config_engine_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_WHEEL_NAME
@@ -514,6 +520,12 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable telemetry.timer
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-dev
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get autoremove -y
+
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y \
+        libssl-dev \
+        libffi-dev
+fi
 
 {% for file in installer_extra_files.split(' ') -%}
 {% if file.strip() -%}
