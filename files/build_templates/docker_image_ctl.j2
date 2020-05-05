@@ -198,6 +198,14 @@ start() {
 {%- if sonic_asic_platform == "mellanox" %}
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
 {%- endif %}
+{%- if docker_container_name == "snmp" %}
+    NET_NS_PATH="/var/run/netns/*"
+    for NS_FILE in $NET_NS_PATH
+    do
+        LINK=`readlink -q $NS_FILE`
+        NET_NS_MOUNT=$NET_NS_MOUNT" -v $LINK:$NS_FILE:ro"
+    done
+{%- endif %}
     docker create {{docker_image_run_opt}} \
         --net=$NET \
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
@@ -231,6 +239,9 @@ start() {
         -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/platform:ro \
 {%- if docker_container_name != "database" %}
         -v /usr/share/sonic/device/$PLATFORM/$HWSKU/$DEV:/usr/share/sonic/hwsku:ro \
+{%- endif %}
+{%- if docker_container_name != "snmp" %}
+        $NET_NS_MOUNT \        
 {%- endif %}
 {%- if sonic_asic_platform != "mellanox" %}
         --tmpfs /tmp \
