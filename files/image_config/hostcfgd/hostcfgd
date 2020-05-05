@@ -429,8 +429,14 @@ class MgmtIntfCfg:
         cfg_attr_set(cmd, 'mtu', mtu, appIntf)
 
     def mgmt_intf_admin_status_set (self, ifname, admin_status, appIntf):
+        if (admin_status != "up"):
+            self.handle_admin_status_change(ifname, "DEL")
+
         cmd = 'ip link set {} {}'.format(ifname, admin_status)
         cfg_attr_set(cmd, 'admin_status', admin_status, appIntf)
+
+        if (admin_status == "up"):
+            self.handle_admin_status_change(ifname, "ADD")
 
     def mgmt_intf_description_set (self, ifname, description, appIntf):
         appIntf['description'] = description
@@ -450,14 +456,36 @@ class MgmtIntfCfg:
         cmd = "ethtool -s {} autoneg {}".format(ifname, an)
         cfg_attr_set(cmd, 'autoneg', autoneg, appIntf)
 
+    def handle_admin_status_change(self, ifname, oper):
+        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        for it in keys:
+            if type(it) is unicode:
+                continue
+
+            if it[0] == ifname:
+                data = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, it)
+                if ('gwaddr' in data):
+                    self.mgmt_intf_gwaddr_set(ifname, it[1], data['gwaddr'], oper)
+
+                self.mgmt_intf_ip_prefix_set(ifname, it[1], oper)
+
+                if ('forced_mgmt_routes' in data):
+                    forced_routes = data['forced_mgmt_routes']
+                    self.mgmt_intf_forced_mgmt_routes_set(ifname, it[1], forced_routes, oper)
+
+
+
     def mgmt_intf_gwaddr_set(self, ifname, ip_prefix, gwaddr, op):
         vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
         ip_conf = netaddr.IPNetwork(ip_prefix)
         ver = "-4"
+        ext = ""
         if ip_conf.version == 6:
             ver = "-6"
+        if op.lower() == "add":
+            ext = "metric 201"
 
-        cmd = "ip {} route {} default via {} dev {} table {}".format(ver, op.lower(), gwaddr, ifname, vrf_table)
+        cmd = "ip {} route {} default via {} dev {} table {} {}".format(ver, op.lower(), gwaddr, ifname, vrf_table, ext)
         cfg_attr_set(cmd)
 
     def mgmt_intf_dhclient_set (self, ifname, attr, enable):
@@ -484,15 +512,21 @@ class MgmtIntfCfg:
         run_command(cmd)
 
     def mgmt_intf_ip_prefix_set (self, ifname, ip_prefix, op):
+        vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
         ver = "-4"
+        plen = "32"
         mgmt_conf = netaddr.IPNetwork(ip_prefix)
         if mgmt_conf.version == 6:
             ver = "-6"
+            plen = "128"
 
         cmd = "ip {} addr {} {} dev {}".format(ver, op.lower(), ip_prefix, ifname)
         cfg_attr_set(cmd)
 
-        cmd = "ip {} rule {} from {} table default".format(ver, op.lower(), str(mgmt_conf.ip))
+        cmd = "ip {} route {} {}/{} dev {} table {}".format(ver, op.lower(), str(mgmt_conf.network), mgmt_conf.prefixlen, ifname, vrf_table)
+        cfg_attr_set(cmd)
+
+        cmd = "ip {} rule {} from {}/{} table {}".format(ver, op.lower(), str(mgmt_conf.ip), plen, vrf_table)
         cfg_attr_set(cmd)
 
     def mgmt_intf_forced_mgmt_routes_set (self, ifname, ip_prefix, forced_routes, op, app_forced_routes = []):
