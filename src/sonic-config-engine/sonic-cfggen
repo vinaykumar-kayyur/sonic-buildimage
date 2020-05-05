@@ -197,7 +197,7 @@ def main():
     group.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
     group.add_argument("-M", "--device-description", help="device description xml file")
     group.add_argument("-k", "--hwsku", help="HwSKU")
-    parser.add_argument("-n", "--namespace", help="namespace name, used with -m or -k", nargs='?', const=None)
+    parser.add_argument("-n", "--namespace", help="namespace name", nargs='?', const=None, default=None)
     parser.add_argument("-p", "--port-config", help="port config file, used with -m or -k", nargs='?', const=None)
     parser.add_argument("-y", "--yaml", help="yaml file that contains additional variables", action='append', default=[])
     parser.add_argument("-j", "--json", help="json file that contains additional variables", action='append', default=[])
@@ -215,7 +215,6 @@ def main():
     group.add_argument("--preset", help="generate sample configuration from a preset template", choices=get_available_config())
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-K", "--key", help="Lookup for a specific key")
-    parser.add_argument("-n", "--namespace", help="Namespace string to use asic0/asic1.../asicn", default=None)
     args = parser.parse_args()
 
     platform = get_platform_info(get_machine_info())
