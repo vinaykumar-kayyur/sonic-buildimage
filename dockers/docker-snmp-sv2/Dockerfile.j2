@@ -18,9 +18,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # The file referenced (`/usr/share/dpkg/no-pie-compile.specs`) is in the `libdpkg-perl` package on Debian
 RUN apt-get update   && \
     apt-get install -y  \
-        libpci3 libsensors5 \
-        python3.7 python3-pip \
-        python3.7-dev \
+        python3         \
+        python3-pip     \
+        python3-dev     \
         ca-certificates \
         gcc             \
         make            \
@@ -45,11 +45,11 @@ RUN sed -i '/^#.* en_US.* /s/^#//' /etc/locale.gen
 RUN locale-gen
 
 # Install up-to-date version of pip
-RUN pip3 install --no-cache-dir setuptools  wheel
+RUN pip3 install --no-cache-dir setuptools wheel
 
 # Install pyyaml dependency for use by some plugins
 # Install smbus dependency for use by some plugins
-RUN pip3 install --no-cache-dir \
+RUN python3 -m pip install --no-cache-dir \
         hiredis                             \
         pyyaml                              \
         smbus
@@ -66,8 +66,7 @@ RUN python3 -m sonic_ax_impl install
 
 # Clean up
 RUN apt-get -y purge     \
-        libpython3.7-dev \
-        libpython3.7     \
+        libpython3-dev   \
         curl             \
         gcc              \
         make             \
