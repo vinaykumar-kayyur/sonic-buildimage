@@ -464,10 +464,9 @@ class MgmtIntfCfg:
 
             if it[0] == ifname:
                 data = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, it)
+                self.mgmt_intf_ip_prefix_set(ifname, it[1], oper)
                 if ('gwaddr' in data):
                     self.mgmt_intf_gwaddr_set(ifname, it[1], data['gwaddr'], oper)
-
-                self.mgmt_intf_ip_prefix_set(ifname, it[1], oper)
 
                 if ('forced_mgmt_routes' in data):
                     forced_routes = data['forced_mgmt_routes']
@@ -505,11 +504,15 @@ class MgmtIntfCfg:
                 run_command(cmd)
 
         if enable == True:
+            cmd = 'sysctl net.ipv6.conf.eth0.accept_ra=1'
+            run_command(cmd)
             cmd = "/sbin/dhclient {} -pf /run/dhclient{}.{}.pid -lf /var/lib/dhcp/dhclient{}.{}.leases {} -nw {} ".format(version, file_ext, ifname, file_ext, ifname, ifname, cmd_opt)
+            run_command(cmd)
         else:
             cmd = "/sbin/dhclient {} -r {} && [ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(version, ifname, file_ext, ifname, file_ext, ifname, file_ext, ifname)
-
-        run_command(cmd)
+            run_command(cmd)
+            cmd = 'sysctl net.ipv6.conf.eth0.accept_ra=0'
+            run_command(cmd)
 
     def mgmt_intf_ip_prefix_set (self, ifname, ip_prefix, op):
         vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
