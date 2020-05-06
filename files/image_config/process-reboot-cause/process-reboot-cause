@@ -82,6 +82,8 @@ def find_software_reboot_cause():
         log_info("Reboot cause file {} not found".format(REBOOT_CAUSE_FILE))
 
     if os.path.isfile(FIRST_BOOT_PLATFORM_FILE):
+        if software_reboot_cause == UNKNOWN_REBOOT_CAUSE:
+            software_reboot_cause = "SONiC image installation"
         os.remove(FIRST_BOOT_PLATFORM_FILE)
 
     return software_reboot_cause
