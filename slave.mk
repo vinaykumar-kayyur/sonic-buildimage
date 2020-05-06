@@ -34,8 +34,12 @@ endif
 PYTHON_DEBS_PATH = $(TARGET_PATH)/python-debs
 PYTHON_WHEELS_PATH = $(TARGET_PATH)/python-wheels
 PROJECT_ROOT = $(shell pwd)
+JESSIE_DEBS_PATH = $(TARGET_PATH)/debs/jessie
+JESSIE_FILES_PATH = $(TARGET_PATH)/files/jessie
 STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
+BUSTER_DEBS_PATH = $(TARGET_PATH)/debs/buster
+BUSTER_FILES_PATH = $(TARGET_PATH)/files/buster
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 
@@ -45,10 +49,17 @@ CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo amd64)
 ifeq ($(PLATFORM_ARCH),)
 	override PLATFORM_ARCH = $(CONFIGURED_ARCH)
 endif
+IMAGE_DISTRO := buster
+IMAGE_DISTRO_DEBS_PATH = $(TARGET_PATH)/debs/$(IMAGE_DISTRO)
+IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
+
 export BUILD_NUMBER
 export BUILD_TIMESTAMP
 export CONFIGURED_PLATFORM
 export CONFIGURED_ARCH
+export PYTHON_WHEELS_PATH
+export IMAGE_DISTRO
+export IMAGE_DISTRO_DEBS_PATH
 
 ###############################################################################
 ## Utility rules
@@ -62,12 +73,16 @@ ifneq ($(CONFIGURED_PLATFORM),generic)
 endif
 
 configure :
-	@mkdir -p target/debs
-	@mkdir -p target/debs/stretch
-	@mkdir -p target/files
-	@mkdir -p target/files/stretch
-	@mkdir -p target/python-debs
-	@mkdir -p target/python-wheels
+	@mkdir -p $(DEBS_PATH)
+	@mkdir -p $(JESSIE_DEBS_PATH)
+	@mkdir -p $(STRETCH_DEBS_PATH)
+	@mkdir -p $(BUSTER_DEBS_PATH)
+	@mkdir -p $(FILES_PATH)
+	@mkdir -p $(JESSIE_FILES_PATH)
+	@mkdir -p $(STRETCH_FILES_PATH)
+	@mkdir -p $(BUSTER_FILES_PATH)
+	@mkdir -p $(PYTHON_DEBS_PATH)
+	@mkdir -p $(PYTHON_WHEELS_PATH)
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
 
@@ -191,6 +206,7 @@ $(info "USERNAME"                        : "$(USERNAME)")
 $(info "PASSWORD"                        : "$(PASSWORD)")
 $(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
 $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
+$(info "INSTALL_KUBERNETES"              : "$(INSTALL_KUBERNETES)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
 $(info "INSTALL_DEBUG_TOOLS"             : "$(INSTALL_DEBUG_TOOLS)")
 $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
@@ -282,7 +298,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform \
 
 		$(foreach deb,$* $($*_DERIVED_DEBS), \
 			{ curl -L -f -o $(DEBS_PATH)/$(deb) $($(deb)_URL) $(LOG) || { exit 1 ; } } ; )
-		
+
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
 	fi
@@ -524,7 +540,8 @@ SONIC_TARGET_LIST += $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS
 #     $(SOME_NEW_WHL)_DEPENDS = $(SOME_OTHER_WHL1) $(SOME_OTHER_WHL2) ...
 #     SONIC_PYTHON_WHEELS += $(SOME_NEW_WHL)
 $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS))) \
-			$(call dpkg_depend,$(PYTHON_WHEELS_PATH)/%.dep)
+			$(call dpkg_depend,$(PYTHON_WHEELS_PATH)/%.dep) \
+			$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEBS_DEPENDS)))
 
 	$(HEADER)
 
@@ -543,7 +560,7 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt pop -a -f; fi
 		popd $(LOG_SIMPLE)
 		mv $($*_SRC_PATH)/dist/$* $(PYTHON_WHEELS_PATH) $(LOG)
-		
+
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
 	fi
@@ -598,23 +615,43 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES))
 
-# Build jessie docker images only in jessie slave docker,
-# jessie docker images only in jessie slave docker
+DOCKER_IMAGES_FOR_INSTALLERS := $(sort $(foreach installer,$(SONIC_INSTALLERS),$($(installer)_DOCKERS)))
+
+$(foreach DOCKER_IMAGE,$(SONIC_JESSIE_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(JESSIE_DEBS_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_JESSIE_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(JESSIE_FILES_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_JESSIE_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(JESSIE_DEBS_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_JESSIE_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(JESSIE_FILES_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(STRETCH_DEBS_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(STRETCH_FILES_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_DEBS_PATH := $(STRETCH_DEBS_PATH)))
+$(foreach DOCKER_IMAGE,$(SONIC_STRETCH_DBG_DOCKERS), $(eval $(DOCKER_IMAGE)_FILES_PATH := $(STRETCH_FILES_PATH)))
+
 ifeq ($(BLDENV),)
-	DOCKER_IMAGES_FOR_INSTALLERS := $(sort $(foreach installer,$(SONIC_INSTALLERS),$($(installer)_DOCKERS)))
 	DOCKER_IMAGES := $(SONIC_JESSIE_DOCKERS)
 	DOCKER_DBG_IMAGES := $(SONIC_JESSIE_DBG_DOCKERS)
-	SONIC_JESSIE_DOCKERS_FOR_INSTALLERS = $(filter $(SONIC_JESSIE_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_JESSIE_TARGETS))
-	SONIC_JESSIE_DBG_DOCKERS_FOR_INSTALLERS = $(filter $(SONIC_JESSIE_DBG_DOCKERS), $(patsubst %.gz,%-$(DBG_IMAGE_MARK).gz, $(SONIC_JESSIE_DOCKERS_FOR_INSTALLERS)))
+	JESSIE_DOCKER_IMAGES = $(filter $(SONIC_JESSIE_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS))
+	JESSIE_DBG_DOCKER_IMAGES = $(filter $(SONIC_JESSIE_DBG_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS))
 else
-	DOCKER_IMAGES := $(filter-out $(SONIC_JESSIE_DOCKERS), $(SONIC_DOCKER_IMAGES))
-	DOCKER_DBG_IMAGES := $(filter-out $(SONIC_JESSIE_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
+ifeq ($(BLDENV),stretch)
+	DOCKER_IMAGES := $(SONIC_STRETCH_DOCKERS)
+	DOCKER_DBG_IMAGES := $(SONIC_STRETCH_DBG_DOCKERS)
+	STRETCH_DOCKER_IMAGES = $(filter $(SONIC_STRETCH_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS))
+	STRETCH_DBG_DOCKER_IMAGES = $(filter $(SONIC_STRETCH_DBG_DOCKERS),$(DOCKER_IMAGES_FOR_INSTALLERS) $(EXTRA_DOCKER_TARGETS))
+else
+	DOCKER_IMAGES = $(filter-out $(SONIC_JESSIE_DOCKERS) $(SONIC_STRETCH_DOCKERS),$(SONIC_DOCKER_IMAGES))
+	DOCKER_DBG_IMAGES = $(filter-out $(SONIC_JESSIE_DBG_DOCKERS) $(SONIC_STRETCH_DBG_DOCKERS), $(SONIC_DOCKER_DBG_IMAGES))
 endif
+endif
+
+$(foreach IMAGE,$(DOCKER_IMAGES), $(eval $(IMAGE)_DEBS_PATH := $(DEBS_PATH)))
+$(foreach IMAGE,$(DOCKER_IMAGES), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH)))
+$(foreach IMAGE,$(DOCKER_DBG_IMAGES), $(eval $(IMAGE)_DEBS_PATH := $(DEBS_PATH)))
+$(foreach IMAGE,$(DOCKER_DBG_IMAGES), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH)))
 
 # Targets for building docker images
 $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start \
-		$$(addprefix $(DEBS_PATH)/,$$($$*.gz_DEPENDS)) \
-		$$(addprefix $(FILES_PATH)/,$$($$*.gz_FILES)) \
+		$$(addprefix $$($$*.gz_DEBS_PATH)/,$$($$*.gz_DEPENDS)) \
+		$$(addprefix $$($$*.gz_FILES_PATH)/,$$($$*.gz_FILES)) \
 		$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*.gz_PYTHON_DEBS)) \
 		$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*.gz_PYTHON_WHEELS)) \
 		$$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS))) \
@@ -634,8 +671,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		mkdir -p $($*.gz_PATH)/files $(LOG)
 		mkdir -p $($*.gz_PATH)/python-debs $(LOG)
 		mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
-		sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
-		sudo mount --bind $(FILES_PATH) $($*.gz_PATH)/files $(LOG)
+		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+		sudo mount --bind $($*.gz_FILES_PATH) $($*.gz_PATH)/files $(LOG)
 		sudo mount --bind $(PYTHON_DEBS_PATH) $($*.gz_PATH)/python-debs $(LOG)
 		sudo mount --bind $(PYTHON_WHEELS_PATH) $($*.gz_PATH)/python-wheels $(LOG)
 		# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
@@ -659,7 +696,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		docker save $* | gzip -c > $@
 		# Clean up
 		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt pop -a -f; popd; fi
-		
+
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*.gz,$@)
 	fi
@@ -670,7 +707,7 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES))
 
 # Targets for building docker images
 $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAGE_MARK).gz : .platform docker-start \
-		$$(addprefix $(DEBS_PATH)/,$$($$*.gz_DBG_DEPENDS)) \
+		$$(addprefix $$($$*.gz_DEBS_PATH)/,$$($$*.gz_DBG_DEPENDS)) \
 		$$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$*.gz)) \
 		$(call dpkg_depend,$(TARGET_PATH)/%-$(DBG_IMAGE_MARK).gz.dep)
 	$(HEADER)
@@ -682,7 +719,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 	if [ -z '$($*-$(DBG_IMAGE_MARK).gz_CACHE_LOADED)' ] ; then
 
 		mkdir -p $($*.gz_PATH)/debs $(LOG)
-		sudo mount --bind $(DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
 		# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_IMAGE_PACKAGES)))\n" | awk '!a[$$0]++'))
@@ -729,10 +766,10 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         build_debian.sh \
         scripts/dbg_files.sh \
         build_image.sh \
-        $$(addsuffix -install,$$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_DEPENDS))) \
-        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_INSTALLS)) \
-        $$(addprefix $(STRETCH_DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
-        $(addprefix $(STRETCH_DEBS_PATH)/,$(INITRAMFS_TOOLS) \
+        $$(addsuffix -install,$$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_DEPENDS))) \
+        $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_INSTALLS)) \
+        $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
+        $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
                 $(SONIC_DEVICE_DATA) \
                 $(PYTHON_CLICK) \
@@ -743,20 +780,20 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(MONIT)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
-	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(DEBS_PATH)/,$(SONIC_ZTP))) \
-	$(addprefix $(STRETCH_FILES_PATH)/, $(if $(filter $(CONFIGURED_ARCH),amd64), $(IXGBE_DRIVER))) \
+	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY2))
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3))
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
-	export debs_path="$(STRETCH_DEBS_PATH)"
+	export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
 	export files_path="$(FILES_PATH)"
 	export python_debs_path="$(PYTHON_DEBS_PATH)"
-	export initramfs_tools="$(STRETCH_DEBS_PATH)/$(INITRAMFS_TOOLS)"
-	export linux_kernel="$(STRETCH_DEBS_PATH)/$(LINUX_KERNEL)"
+	export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
+	export linux_kernel="$(IMAGE_DISTRO_DEBS_PATH)/$(LINUX_KERNEL)"
 	export onie_recovery_image="$(FILES_PATH)/$(ONIE_RECOVERY_IMAGE)"
 	export kversion="$(KVERSION)"
 	export image_type="$($*_IMAGE_TYPE)"
@@ -769,15 +806,17 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_ztp="$(ENABLE_ZTP)"
 	export enable_nat="$(ENABLE_NAT)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
+	export install_kubernetes="$(INSTALL_KUBERNETES)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
-	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($*_INSTALLS))"
-	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(STRETCH_DEBS_PATH)/$(deb))))"
+	export installer_debs="$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$($*_INSTALLS))"
+	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(IMAGE_DISTRO_DEBS_PATH)/$(deb))))"
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export install_debug_image="$(INSTALL_DEBUG_TOOLS)"
+	export sonic_yang_models_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3))"
 	export multi_instance="false"
 
 	$(foreach docker, $($*_DOCKERS),\
@@ -825,7 +864,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		)
 	)
 	export installer_services="$(SERVICES)"
-									
+
 	export installer_extra_files="$(foreach docker, $($*_DOCKERS), $(foreach file, $($(docker:-dbg.gz=.gz)_BASE_IMAGE_FILES), $($(docker:-dbg.gz=.gz)_PATH)/base_image_files/$(file)))"
 
 	j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
@@ -923,12 +962,11 @@ clean :: .platform clean-logs $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN_FILES) $$(SONI
 
 all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
 
-stretch : $$(addprefix $(DEBS_PATH)/,$$(SONIC_STRETCH_DEBS)) \
-          $$(addprefix $(FILES_PATH)/,$$(SONIC_STRETCH_FILES)) \
-          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DOCKERS_FOR_INSTALLERS)) \
-          $$(addprefix $(TARGET_PATH)/,$$(SONIC_STRETCH_DBG_DOCKERS_FOR_INSTALLERS))
+stretch : $$(addprefix $(TARGET_PATH)/,$$(STRETCH_DOCKER_IMAGES)) \
+          $$(addprefix $(TARGET_PATH)/,$$(STRETCH_DBG_DOCKER_IMAGES))
 
-jessie : $$(addprefix $(TARGET_PATH)/,$$(SONIC_JESSIE_DOCKERS_FOR_INSTALLERS))
+jessie : $$(addprefix $(TARGET_PATH)/,$$(JESSIE_DOCKER_IMAGES)) \
+         $$(addprefix $(TARGET_PATH)/,$$(JESSIE_DBG_DOCKER_IMAGES))
 
 ###############################################################################
 ## Standard targets

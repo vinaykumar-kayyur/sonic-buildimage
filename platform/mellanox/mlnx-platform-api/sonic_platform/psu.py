@@ -37,7 +37,7 @@ hwsku_dict_with_unplugable_psu = ['ACS-MSN2010', 'ACS-MSN2100']
 
 # in most SKUs the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
-hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1, 'ACS-MSN4700': 1}
+hwsku_dict_psu = {'ACS-MSN3700': 1, 'ACS-MSN3700C': 1, 'ACS-MSN3800': 1, 'Mellanox-SN3800-D112C8': 1, 'ACS-MSN4700': 1, 'ACS-MSN3420': 1, 'ACS-MSN4600C': 1}
 psu_profile_list = [
     # default filename convention
     {
@@ -45,7 +45,7 @@ psu_profile_list = [
         PSU_VOLTAGE : "power/psu{}_volt",
         PSU_POWER : "power/psu{}_power"
     },
-    # for 3700, 3700c, 3800, 4700
+    # for 3420, 3700, 3700c, 3800, 4700
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
@@ -81,6 +81,8 @@ class Psu(PsuBase):
             self.psu_current = None
             self.psu_power = None
             self.psu_presence = None
+            self.psu_temp = None
+            self.psu_temp_threshold = None
         else:
             self.always_presence = False
             psu_voltage = filemap[PSU_VOLTAGE].format(self.index)
@@ -99,9 +101,12 @@ class Psu(PsuBase):
             psu_presence = os.path.join(self.psu_path, psu_presence)
             self.psu_presence = psu_presence
 
+            self.psu_temp = os.path.join(self.psu_path, 'thermal/psu{}_temp'.format(self.index))
+            self.psu_temp_threshold = os.path.join(self.psu_path, 'thermal/psu{}_temp_max'.format(self.index))
+
         # unplugable PSU has no FAN
         if sku not in hwsku_dict_with_unplugable_psu:
-            fan = Fan(sku, psu_index, psu_index, True)
+            fan = Fan(False, psu_index, psu_index, True)
             self._fan_list.append(fan)
 
         self.psu_green_led_path = "led_psu_green"
@@ -121,7 +126,7 @@ class Psu(PsuBase):
         result = 0
         try:
             with open(filename, 'r') as fileobj:
-                result = int(fileobj.read())
+                result = int(fileobj.read().strip())
         except Exception as e:
             logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
         return result
@@ -306,4 +311,60 @@ class Psu(PsuBase):
             return False, "absence of power"
         else:
             return True, ""
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125 
+        """
+        if self.psu_temp is not None and self.get_powergood_status():
+            try:
+                temp = self._read_generic_file(self.psu_temp, 0)
+                return float(temp) / 1000
+            except Exception as e:
+                logger.log_info("Fail to get temperature for PSU {} due to - {}".format(self._name, repr(e)))
+        
+        return None
+
+    def get_temperature_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of PSU
+
+        Returns:
+            A float number, the high threshold temperature of PSU in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        if self.psu_temp_threshold is not None and self.get_powergood_status():
+            try:
+                temp_threshold = self._read_generic_file(self.psu_temp_threshold, 0)
+                return float(temp_threshold) / 1000
+            except Exception as e:
+                logger.log_info("Fail to get temperature threshold for PSU {} due to - {}".format(self._name, repr(e)))
+        
+        return None
+
+    def get_voltage_high_threshold(self):
+        """
+        Retrieves the high threshold PSU voltage output
+
+        Returns:
+            A float number, the high threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        # hw-management doesn't expose those sysfs for now
+        raise NotImplementedError
+
+    def get_voltage_low_threshold(self):
+        """
+        Retrieves the low threshold PSU voltage output
+
+        Returns:
+            A float number, the low threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        # hw-management doesn't expose those sysfs for now
+        raise NotImplementedError
 
