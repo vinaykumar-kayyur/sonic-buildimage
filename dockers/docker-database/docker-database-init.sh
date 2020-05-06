@@ -21,11 +21,6 @@ then
     fi
 fi
 
-# Touch a file "db_config_generated" once the database_config.json is created, used for synchronization.
-if [ -f $REDIS_DIR/sonic-db/database_config.json ]; then
-    touch $REDIS_DIR/db_config_generated
-fi
-
 # generate all redis server supervisord configuration file
 sonic-cfggen -j /var/run/redis/sonic-db/database_config.json -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
 
