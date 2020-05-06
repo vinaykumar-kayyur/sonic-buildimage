@@ -125,16 +125,16 @@ class ControlPlaneAclManager(object):
         return tcp_flags_str
 
     def generate_block_ip2me_traffic_iptables_commands(self):
-        LOOPBACK_INTERFACE_TABLE = "LOOPBACK_INTERFACE"
-        MGMT_INTERFACE_TABLE = "MGMT_INTERFACE"
-        VLAN_INTERFACE_TABLE = "VLAN_INTERFACE"
-        PORTCHANNEL_INTERFACE_TABLE = "PORTCHANNEL_INTERFACE"
-        INTERFACE_TABLE = "INTERFACE"
+        LOOPBACK_INTERFACE_TABLE_NAME = "LOOPBACK_INTERFACE"
+        MGMT_INTERFACE_TABLE_NAME = "MGMT_INTERFACE"
+        VLAN_INTERFACE_TABLE_NAME = "VLAN_INTERFACE"
+        PORTCHANNEL_INTERFACE_TABLE_NAME = "PORTCHANNEL_INTERFACE"
+        INTERFACE_TABLE_NAME = "INTERFACE"
 
         block_ip2me_cmds = []
 
         # Add iptables rules to drop all packets destined for loopback interface IP addresses
-        loopback_iface_table = self.config_db.get_table(LOOPBACK_INTERFACE_TABLE)
+        loopback_iface_table = self.config_db.get_table(LOOPBACK_INTERFACE_TABLE_NAME)
         if loopback_iface_table:
             for ((iface_name, iface_cidr), _) in loopback_iface_table.iteritems():
                 ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
@@ -146,7 +146,7 @@ class ControlPlaneAclManager(object):
                     log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         # Add iptables rules to drop all packets destined for management interface IP addresses
-        mgmt_iface_table = self.config_db.get_table(MGMT_INTERFACE_TABLE)
+        mgmt_iface_table = self.config_db.get_table(MGMT_INTERFACE_TABLE_NAME)
         if mgmt_iface_table:
             for ((iface_name, iface_cidr), _) in mgmt_iface_table.iteritems():
                 ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
@@ -158,7 +158,7 @@ class ControlPlaneAclManager(object):
                     log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         # Add iptables rules to drop all packets destined for our VLAN interface gateway IP addresses
-        vlan_iface_table = self.config_db.get_table(VLAN_INTERFACE_TABLE)
+        vlan_iface_table = self.config_db.get_table(VLAN_INTERFACE_TABLE_NAME)
         if vlan_iface_table:
             for ((iface_name, iface_cidr), _) in vlan_iface_table.iteritems():
                 ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
@@ -171,7 +171,7 @@ class ControlPlaneAclManager(object):
 
         # Add iptables rules to drop all packets destined for point-to-point interface IP addresses
         # (All portchannel interfaces and configured front-panel interfaces)
-        portchannel_iface_table = self.config_db.get_table(PORTCHANNEL_INTERFACE_TABLE)
+        portchannel_iface_table = self.config_db.get_table(PORTCHANNEL_INTERFACE_TABLE_NAME)
         if portchannel_iface_table:
             for ((iface_name, iface_cidr), _) in portchannel_iface_table.iteritems():
                 ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
@@ -182,7 +182,7 @@ class ControlPlaneAclManager(object):
                 else:
                     log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
-        iface_table = self.config_db.get_table(INTERFACE_TABLE)
+        iface_table = self.config_db.get_table(INTERFACE_TABLE_NAME)
         if iface_table:
             for ((iface_name, iface_cidr), _) in iface_table.iteritems():
                 ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
