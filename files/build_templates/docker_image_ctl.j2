@@ -107,8 +107,6 @@ function postStartAction()
         # Migrate the DB to the latest schema version if needed
         if [ -z "$DEV" ]; then
             /usr/bin/db_migrator.py -o migrate
-        else
-            /usr/bin/db_migrator.py -o migrate -n $NET_NS
         fi
     fi
 {%- elif docker_container_name == "swss" %}
