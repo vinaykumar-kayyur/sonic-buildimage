@@ -142,6 +142,14 @@ start() {
     # Obtain our HWSKU as we will mount directories with these names in each docker
     HWSKU=`sonic-netns-exec "$NET_NS" sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`
     {%- endif %}
+    {%- if docker_container_name == "snmp" %}
+    MOUNTS=`docker inspect -f '{{ .Mounts }}' {{docker_container_name}}`
+    # If previously mounted /var/run/netns exists the remove docker
+    if `echo $MOUNTS | grep --quiet "/var/run/netns"`; then
+        docker rm -f {{docker_container_name}}$DEV
+        echo "Removing {{docker_container_name}}$DEV container to clean-up netns mount."
+    fi
+    {%- endif %}
 
     DOCKERCHECK=`docker inspect --type container {{docker_container_name}}$DEV 2>/dev/null`
     if [ "$?" -eq "0" ]; then
