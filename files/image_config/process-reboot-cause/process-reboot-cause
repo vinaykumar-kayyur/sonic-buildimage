@@ -12,6 +12,8 @@ try:
     import sys
     import syslog
     import re
+
+    import sonic_device_util
 except ImportError as err:
     raise ImportError("%s - required module not found" % str(err))
 
@@ -35,7 +37,6 @@ REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
 REBOOT_TYPE_KEXEC_PATTERN_FAST = ".*SONIC_BOOT_TYPE=(fast|fast-reboot).*"
 
 REBOOT_CAUSE_UNKNOWN = "Unknown"
-REBOOT_CAUSE_SONIC_IMAGE_INSTALL = "SONiC image installation"
 
 
 # ========================== Syslog wrappers ==========================
@@ -84,7 +85,9 @@ def find_software_reboot_cause():
 
     if os.path.isfile(FIRST_BOOT_PLATFORM_FILE):
         if software_reboot_cause == REBOOT_CAUSE_UNKNOWN:
-            software_reboot_cause = REBOOT_CAUSE_SONIC_IMAGE_INSTALL
+            version_info = sonic_device_util.get_sonic_version_info()
+            build_version = version_info['build_version'] if version_info else "unknown"
+            software_reboot_cause += " (First boot of SONiC version {})".format(build_version)
         os.remove(FIRST_BOOT_PLATFORM_FILE)
 
     return software_reboot_cause
