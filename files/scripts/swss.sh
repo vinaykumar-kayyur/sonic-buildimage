@@ -51,8 +51,7 @@ function validate_restore_count()
 function wait_for_database_service()
 {
     # Wait for redis server start before database clean
-    # TODO: should use $SONIC_DB_CLI if Judy's PR 4477 is in first, otherwise PR 4477 should change this part
-    until [[ $(/usr/bin/sonic-netns-exec "$NET_NS" sonic-db-cli PING | grep -c PONG) -gt 0 ]]; do
+    until [[ $($SONIC_DB_CLI PING | grep -c PONG) -gt 0 ]]; do
       sleep 1;
     done
 
