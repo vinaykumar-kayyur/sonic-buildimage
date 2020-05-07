@@ -224,6 +224,7 @@ class k8s_config(object):
     def __init__(self):
         self.k8s_master = ""
         self.insecure = False
+        self.disable = False
 
     # Load conf from ConfigDb
     def load(self, data):
@@ -231,29 +232,38 @@ class k8s_config(object):
             if 'IP' in data['SERVER']:
                 self.k8s_master = data['SERVER']['IP']
             if 'insecure' in data['SERVER']:
-                self.insecure = data['SERVER']['insecure']
+                self.insecure = is_true(data['SERVER']['insecure'])
+            if 'disable' in data['SERVER']:
+                self.disable = is_true(data['SERVER']['disable'])
         self.do_update()
 
     def update(self, key, data):
         if key == 'SERVER':
-            ip = ""
             upd = False
-            insec = False
+            upd_ip = ""
+            upd_insecure = False
+            upd_disable = False
+
             if 'insecure' in data:
-                insec = data['insecure']
+                upd_insecure = is_true(data['insecure'])
+            if 'disable' in data:
+                upd_disable = is_true(data['disable'])
             if 'IP' in data:
-                ip = data['IP']
-            if self.k8s_master != ip:
-                self.k8s_master = ip
+                upd_ip = data['IP']
+            if self.k8s_master != upd_ip:
+                self.k8s_master = upd_ip
                 upd = True
-            if self.insecure != insec:
-                self.insecure = insec
+            if self.insecure != upd_insecure:
+                self.insecure = upd_insecure
+                upd = True
+            if self.disable != upd_disable:
+                self.disable = upd_disable
                 upd = True
             if upd:
                 self.do_update()
 
     def do_update(self):
-        if self.k8s_master:
+        if self.k8s_master and not self.disable:
             cmd = "/usr/bin/kube_join.sh -s {} -a".format(self.k8s_master)
             if self.insecure:
                 cmd += " -i"

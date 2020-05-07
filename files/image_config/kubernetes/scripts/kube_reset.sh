@@ -4,6 +4,17 @@
 #
 exec 1> >(logger -s -t kube_reset_stdout) 2>&1
 
+
+is_connected() {
+    if [ -f /etc/sonic/kube_admin.conf ]; then
+        master=`kubectl --request-timeout 5s --kubeconfig /etc/sonic/kube_admin.conf get nodes | grep master | cut -f1 -d' '`
+        if [ -n "${master}" ]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 do_reset=false
 test_only=false
 
@@ -61,6 +72,18 @@ if ${test_only}; then
 fi
 
 if ${do_reset}; then
+    if is_connected; then
+        hname=`hostname | tr '[:upper:]' '[:lower:]'`
+        ver=`grep build_version /etc/sonic/sonic_version.yml| cut -f2- -d' '| tr -d "'"`
+        nodename=${hname}-${ver}
+
+        echo "Remove labels, drain & delete node ${nodename}"
+        kubectl --request-timeout 15s --kubeconfig /etc/sonic/kube_admin.conf label nodes ${nodename} enable_pods-
+        kubectl --request-timeout 25s --kubeconfig /etc/sonic/kube_admin.conf drain ${nodename} --ignore-daemonsets
+        kubectl --request-timeout 25s --kubeconfig /etc/sonic/kube_admin.conf delete node ${nodename}
+fi
+
+
     echo "Resetting kubeadm ..."
     kubeadm reset -f
     rm -rf /etc/cni/net.d

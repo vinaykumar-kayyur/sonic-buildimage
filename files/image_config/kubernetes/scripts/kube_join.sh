@@ -173,9 +173,16 @@ log_info "enable & start kubelet.service"
 systemctl enable kubelet.service
 systemctl start kubelet.service
 
+# Coin nodename as "hostname" + "SONiC version", as same host with different versions
+# are different instances of the same physical host from kubernetes perspective.
+#
+hname=`hostname | tr '[:upper:]' '[:lower:]'`
+ver=`grep build_version /etc/sonic/sonic_version.yml| cut -f2- -d' '| tr -d "'"`
+nodename=${hname}-${ver}
+
 # Call join
 log_info "Calling kubeadm join command as suggested by master ..."
-kubeadm join --discovery-file /etc/sonic/kube_admin.conf
+kubeadm join --discovery-file /etc/sonic/kube_admin.conf --node-name ${nodename}
 ret=$?
 
 tmpf=$(mktemp "${TMPDIR:-/tmp/}$(basename $0).XXXXXXXXXXXX")
@@ -209,19 +216,20 @@ echo "If you need refer ${tmpf} for some troubleshooting tips"
 log_info "Pause few seconds before adding label; sleep ..."
 sleep 10s
 
-node=`hostname`
 
-ver=`grep build_version /etc/sonic/sonic_version.yml| cut -f2- -d' '| tr -d "'"`
-log_info "Add label node=${node} sonic_version=${ver}"
-kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${node} sonic_version=${ver}
+log_info "Add label node=${nodename} sonic_version=${ver}"
+kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${nodename} sonic_version=${ver}
 
 type=`sudo redis-cli -n 4 hget "DEVICE_METADATA|localhost" type`
-log_info "Add label node=${node} deployment_type=${type}"
-kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${node} deployment_type=${type}
+log_info "Add label node=${nodename} deployment_type=${type}"
+kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${nodename} deployment_type=${type}
 
 sku=`sudo redis-cli -n 4 hget "DEVICE_METADATA|localhost" hwsku`
-log_info "Add label node=${node} hwsku=${sku}"
-kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${node} hwsku=${sku}
+log_info "Add label node=${nodename} hwsku=${sku}"
+kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${nodename} hwsku=${sku}
+
+log_info "Add label node=${nodename} enable_pods=true"
+kubectl --kubeconfig /etc/sonic/kube_admin.conf label nodes ${nodename} enable_pods=true
 
 echo "Joined successfully"
 
