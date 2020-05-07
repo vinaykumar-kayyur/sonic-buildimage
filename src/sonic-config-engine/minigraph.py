@@ -556,7 +556,7 @@ def parse_linkmeta(meta, hname):
                 port = t[1]
                 break
         else:
-            # Cannot find a match hname, something went wrong
+            # Cannot find a matching hname, something went wrong
             continue
 
         properties = linkmeta.find(str(QName(ns1, "Properties")))
