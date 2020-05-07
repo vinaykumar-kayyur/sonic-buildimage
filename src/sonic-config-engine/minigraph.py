@@ -797,6 +797,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
                 (sub_role) = parse_asic_meta(child, asic_name)
+            elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
+                linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
