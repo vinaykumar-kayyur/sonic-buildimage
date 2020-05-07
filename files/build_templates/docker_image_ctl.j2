@@ -202,6 +202,7 @@ start() {
     # various namesapces. The database_config paths are relative to the DIR of SONIC_DB_GLOBAL_JSON.
     SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
     if [ -f "$SONIC_DB_GLOBAL_JSON" ]; then
+        # TODO Create a separate python script with the below logic and invoke it here.
         redis_dir_list=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
                         global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
                         print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']).partition('sonic-db')[0]\
