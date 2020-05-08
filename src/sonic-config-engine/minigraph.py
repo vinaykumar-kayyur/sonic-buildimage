@@ -897,7 +897,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         if port.get('speed') == '100000':
             port['fec'] = 'rs'
 
-        # If FECDisabled, any pervious decision will be override
+        # If FECDisabled, any previous decision will be override
         if port_config_file:
             alias = port.get('alias')
         else:
