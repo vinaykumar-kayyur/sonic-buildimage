@@ -193,7 +193,7 @@ class TestCfgGen(TestCase):
         # Test for FECDisabled
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet4\']"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'lanes': '25,26,27,28', 'fec': 'none', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '10000', 'description': 'Servers0:eth0'}")
+        self.assertEqual(output.strip(), "{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000'}")
 
     def test_minigraph_bgp(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v "BGP_NEIGHBOR[\'10.0.0.59\']"'

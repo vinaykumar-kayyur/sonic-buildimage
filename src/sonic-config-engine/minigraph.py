@@ -894,16 +894,15 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in ports.items():
-        if port.get('speed') == '100000':
-            port['fec'] = 'rs'
-
-        # If FECDisabled, any previous decision will be override
+        # get port alias from port_config.ini
         if port_config_file:
             alias = port.get('alias')
         else:
             alias = port_name
-        if linkmetas.get(alias, {}).get("FECDisabled") == "True":
-            port['fec'] = 'none'
+        # generate default 100G FEC
+        # Note: FECDisabled only be effective on 100G port right now
+        if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
+            port['fec'] = 'rs'
 
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:

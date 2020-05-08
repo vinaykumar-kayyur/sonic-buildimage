@@ -385,7 +385,7 @@
       <DeviceLinkBase>
         <ElementType>DeviceInterfaceLink</ElementType>
         <AutoNegotiation>true</AutoNegotiation>
-        <Bandwidth>10000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <EndDevice>switch-t0</EndDevice>
         <EndPort>fortyGigE0/4</EndPort>
         <FlowControl>true</FlowControl>
