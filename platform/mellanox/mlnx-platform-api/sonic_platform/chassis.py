@@ -63,11 +63,12 @@ class Chassis(ChassisBase):
         self.sku_name = self._get_sku_name()
 
         mi = get_machine_info()
-        self.platform_name = get_platform_info(mi)
         if mi is not None:
             self.name = mi['onie_platform']
+            self.platform_name = get_platform_info(mi)
         else:
             self.name = self.sku_name
+            self.platform_name = self._get_platform_name()
 
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
@@ -237,6 +238,12 @@ class Chassis(ChassisBase):
 
     def _get_sku_name(self):
         p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        return out.rstrip('\n')
+
+
+    def _get_platform_name(self):
+        p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 
