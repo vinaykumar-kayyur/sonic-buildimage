@@ -132,16 +132,20 @@ route-map ISOLATE permit 10
 !
 {% endif %}
 !
+{% if allow_list_enabled %}
 route-map FROM_PEER_V4 permit 1
   call ALLOW_LIST_V4
   on-match next
 !
+{% endif %}
 route-map FROM_PEER_V4 permit 10
 !
+{% if allow_list_enabled %}
 route-map FROM_PEER_V6 permit 1
   call ALLOW_LIST_V6
   on-match next
 !
+{% endif %}
 route-map FROM_PEER_V6 permit 10
 !
 {% if allow_list_enabled %}
