@@ -381,6 +381,7 @@
         <EndPort>Ethernet1/1</EndPort>
         <StartDevice>switch-t0</StartDevice>
         <StartPort>fortyGigE0/124</StartPort>
+        <Bandwidth>100000</Bandwidth>
       </DeviceLinkBase>
       <DeviceLinkBase>
         <ElementType>DeviceInterfaceLink</ElementType>
