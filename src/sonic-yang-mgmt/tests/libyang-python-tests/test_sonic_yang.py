@@ -21,7 +21,7 @@ class Test_SonicYang(object):
 
     @pytest.fixture(autouse=True, scope='class')
     def data(self):
-        test_file = "/sonic/src/sonic-yang-mgmt/tests/libyang-python-tests/test_SonicYang.json"
+        test_file = "./tests/libyang-python-tests/test_SonicYang.json"
         data = self.jsonTestParser(test_file)
         return data
 
@@ -265,8 +265,8 @@ class Test_SonicYang(object):
         # In this test, xlation and revXlation is tested with latest Sonic
         # YANG model.
 
-        yang_dir = "/sonic/src/sonic-yang-models/yang-models/"
-        yang_test_file = "/sonic/src/sonic-yang-models/tests/yang_model_tests/yangTest.json"
+        yang_dir = "../sonic-yang-models/yang-models/"
+        yang_test_file = "../sonic-yang-models/tests/yang_model_tests/yangTest.json"
         jIn = self.readIjsonInput(yang_test_file, 'SAMPLE_CONFIG_DB_JSON')
         # load yang models
         syc = sy.sonic_yang(yang_dir)
