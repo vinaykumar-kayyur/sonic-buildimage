@@ -187,5 +187,47 @@ DEVICE_DATA = {
             'hot_swappable': True,
             'led_num': 1
         }
+    },
+    'x86_64-mlnx_msn3420-r0': {
+        'thermal': {
+            'minimum_table': {
+                "unk_trust":   {"-127:120":16},
+                "unk_untrust": {"-127:120":16},
+            }
+        },
+        'fans': {
+            'drawer_num': 5,
+            'drawer_type': 'real',
+            'fan_num_per_drawer': 2,
+            'support_fan_direction': True,
+            'hot_swappable': True
+        },
+        'psus': {
+            'psu_num': 2,
+            'fan_num_per_psu': 1,
+            'hot_swappable': True,
+            'led_num': 1
+        }
+    },
+    'x86_64-mlnx_msn4600c-r0': {
+        'thermal': {
+            'minimum_table': {
+                "unk_trust":   {"-127:120":16},
+                "unk_untrust": {"-127:120":16},
+            }
+        },
+        'fans': {
+            'drawer_num': 3,
+            'drawer_type': 'real',
+            'fan_num_per_drawer': 1,
+            'support_fan_direction': True,
+            'hot_swappable': True
+        },
+        'psus': {
+            'psu_num': 2,
+            'fan_num_per_psu': 1,
+            'hot_swappable': True,
+            'led_num': 1
+        }
     }
 }
