@@ -17,6 +17,7 @@ class TestJ2Files(TestCase):
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
         self.mlnx_port_config = os.path.join(self.test_dir, 'sample-port-config-mlnx.ini')
         self.dell6100_t0_minigraph = os.path.join(self.test_dir, 'sample-dell-6100-t0-minigraph.xml')
+        self.deployment_id = os.path.join(self.test_dir, "../../../files/image_config/asn/deployment_id_asn_map.yml")
         self.output_file = os.path.join(self.test_dir, 'output')
 
     def run_script(self, argument):
@@ -59,7 +60,7 @@ class TestJ2Files(TestCase):
 
     def test_bgpd_quagga(self):
         conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'bgpd.conf.j2')
-        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + conf_template + ' > ' + self.output_file
+        argument = '-y ' + self.deployment_id + ' -m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + conf_template + ' > ' + self.output_file
         self.run_script(argument)
         original_filename = os.path.join(self.test_dir, 'sample_output', 'bgpd_quagga.conf')
         r = filecmp.cmp(original_filename, self.output_file)
