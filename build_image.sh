@@ -1,8 +1,19 @@
 #!/bin/bash
 ## This script is to generate an ONIE installer image based on a file system overload
 
+## Enable debug output for script
+set -x -e
+
 ## Read ONIE image related config file
-. ./onie-image.conf
+
+CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
+
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    . ./onie-image-${CONFIGURED_ARCH}.conf
+else
+    . ./onie-image.conf
+fi
+
 [ -n "$ONIE_IMAGE_PART_SIZE" ] || {
     echo "Error: Invalid ONIE_IMAGE_PART_SIZE in onie image config file"
     exit 1
@@ -56,8 +67,11 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     echo "Creating SONiC raw partition : $OUTPUT_RAW_IMAGE of size $RAW_IMAGE_DISK_SIZE MB"
     fallocate -l "$RAW_IMAGE_DISK_SIZE"M $OUTPUT_RAW_IMAGE
 
+    # ensure proc is mounted
+    sudo mount proc /proc -t proc || true
+
     ## Generate a partition dump that can be used to 'dd' in-lieu of using the onie-nos-installer
-    ## Run the installer 
+    ## Run the installer
     ## The 'build' install mode of the installer is used to generate this dump.
     sudo chmod a+x $OUTPUT_ONIE_IMAGE
     sudo ./$OUTPUT_ONIE_IMAGE
@@ -85,7 +99,7 @@ elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
     generate_onie_installer_image
 
-    SONIC_USERNAME=$USERNAME PASSWD=$PASSWORD sudo -E ./build_kvm_image.sh $KVM_IMAGE_DISK $onie_recovery_image $OUTPUT_ONIE_IMAGE $KVM_IMAGE_DISK_SIZE
+    SONIC_USERNAME=$USERNAME PASSWD=$PASSWORD sudo -E ./scripts/build_kvm_image.sh $KVM_IMAGE_DISK $onie_recovery_image $OUTPUT_ONIE_IMAGE $KVM_IMAGE_DISK_SIZE
 
     if [ $? -ne 0 ]; then
         echo "Error : build kvm image failed"

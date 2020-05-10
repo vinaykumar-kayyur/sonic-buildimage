@@ -11,7 +11,15 @@ setup(
     maintainer='Kevin Wang',
     maintainer_email='kevinw@mellanox.com',
     packages=[
-        'sonic_platform_api',
+        'sonic_platform',
+        'tests'
+    ],
+    setup_requires= [
+        'pytest-runner'
+    ],
+    tests_require = [
+        'pytest',
+        'mock>=2.0.0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -25,6 +33,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Utilities',
     ],
-    keywords='sonic SONiC platform-api PLATFORM-API',
+    keywords='sonic SONiC platform PLATFORM',
+    test_suite='setup.get_test_suite'
 )
 

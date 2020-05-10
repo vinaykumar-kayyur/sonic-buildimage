@@ -107,8 +107,8 @@ switch_board_qsfp_mux() {
 #Attach/Detach the SFP modules on PCA9548_2
 switch_board_sfp() {
     case $1 in
-        "new_device")    i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
-                         i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
+        "new_device")    i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
+                         i2c_config "echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
                          ;;
         "delete_device") i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-11/$1"
                          i2c_config "echo 0x50 > /sys/bus/i2c/devices/i2c-12/$1"
@@ -125,7 +125,7 @@ switch_board_qsfp() {
         "new_device")
                         for ((i=18;i<=49;i++));
                         do
-                            i2c_config "echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
+                            i2c_config "echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1"
                         done
                         ;;
         "delete_device")
@@ -171,6 +171,49 @@ reset_muxes() {
     io_rd_wr.py --set --val 0xff --offset 0x20b
 }
 
+# Copy led_proc_init.soc file according to the HWSKU
+init_switch_port_led() {
+    T0="Force10-Z9100-C8D48"
+    T1="Force10-Z9100-C32"
+    device="/usr/share/sonic/device"
+    platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+    hwsku=$(cat /etc/sonic/config_db.json | grep -A2 "DEVICE_METADATA" | grep "hwsku" | cut -d ":" -f2 | sed 's/"//g' | sed 's/,//g'| xargs )
+
+    if [ -z "$hwsku" ]; then
+          #Check minigraph for hwsku
+          cat /etc/sonic/minigraph.xml | grep $T1  > /dev/null
+          if [ $? -eq 0 ]; then
+                  hwsku=$T1
+          else
+                  hwsku=$T0
+          fi
+    fi
+
+    led_proc_init="$device/$platform/$hwsku/led_proc_init.soc"
+
+    # Remove old HWSKU LED file..
+    rm -rf $device/$platform/led_proc_init.soc
+
+    if [ -e $led_proc_init ] && [ ! -e $device/$platform/led_proc_init.soc ]; then
+      cp $led_proc_init $device/$platform
+    fi
+
+}
+
+install_python_api_package() {
+    device="/usr/share/sonic/device"
+    platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+
+    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
+}
+
+remove_python_api_package() {
+    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv = $(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
+}
+
 init_devnum
 
 if [[ "$1" == "init" ]]; then
@@ -188,6 +231,16 @@ if [[ "$1" == "init" ]]; then
     switch_board_sfp "new_device"
     switch_board_qsfp "new_device"
     xcvr_presence_interrupts "enable"
+
+    #Copy led_proc_init.soc
+    init_switch_port_led
+    install_python_api_package
+
+    value=0x0
+    echo $value > /sys/class/i2c-adapter/i2c-14/14-003e/qsfp_lpmode
+    echo $value > /sys/class/i2c-adapter/i2c-15/15-003e/qsfp_lpmode
+    echo $value > /sys/class/i2c-adapter/i2c-16/16-003e/qsfp_lpmode
+
 elif [[ "$1" == "deinit" ]]; then
     xcvr_presence_interrupts "disable"
     switch_board_sfp "delete_device"
@@ -203,6 +256,7 @@ elif [[ "$1" == "deinit" ]]; then
     modprobe -r i2c-mux-pca954x
     modprobe -r i2c-dev
     modprobe -r dell_ich
+    remove_python_api_package
 else
      echo "z9100_platform : Invalid option !"
 fi

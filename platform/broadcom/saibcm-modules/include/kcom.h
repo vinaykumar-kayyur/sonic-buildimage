@@ -46,6 +46,7 @@
 #define KCOM_M_HW_INIT          4  /* H/W initialized */
 #define KCOM_M_ETH_HW_CONFIG    5  /* ETH HW config*/
 #define KCOM_M_DETACH           6  /* Detach kernel module */
+#define KCOM_M_REPROBE          7  /* Reprobe device */
 #define KCOM_M_NETIF_CREATE     11 /* Create network interface */
 #define KCOM_M_NETIF_DESTROY    12 /* Destroy network interface */
 #define KCOM_M_NETIF_LIST       13 /* Get list of network interface IDs */
@@ -59,7 +60,7 @@
 #define KCOM_M_DBGPKT_GET       42 /* Get debug packet function info */
 #define KCOM_M_WB_CLEANUP       51 /* Clean up for warmbooting */
 
-#define KCOM_VERSION            9  /* Protocol version */
+#define KCOM_VERSION            10 /* Protocol version */
 
 /*
  * Message status codes
@@ -120,6 +121,13 @@ typedef struct kcom_msg_hdr_s {
 
 #define KCOM_NETIF_NAME_MAX     16
 
+/*
+ * Max size of Sand System Headers
+ * For DNX, Module Header(20B) + PTCH(2B) + ITMH(5B)
+ * For DPP, PTCH(2B) + ITMH(4B)
+ */
+#define KCOM_NETIF_SYSTEM_HEADERS_SIZE_MAX     27
+
 typedef struct kcom_netif_s {
     uint16 id;
     uint8 type;
@@ -132,6 +140,8 @@ typedef struct kcom_netif_s {
     uint8 macaddr[6];
     uint8 ptch[2];
     uint8 itmh[4];
+    uint8 system_headers[KCOM_NETIF_SYSTEM_HEADERS_SIZE_MAX];
+    uint8 system_headers_size;
     char name[KCOM_NETIF_NAME_MAX];
 } kcom_netif_t;
 
@@ -215,6 +225,13 @@ typedef struct kcom_filter_s {
         uint8 b[KCOM_FILTER_BYTES_MAX];
         uint32 w[KCOM_FILTER_WORDS_MAX];
     } mask;
+    /** Information to parse Dune system headers */
+    uint32 ftmh_lb_key_ext_size;
+    uint32 ftmh_stacking_ext_size;
+    uint32 pph_base_size;
+    uint32 pph_lif_ext_size[8];
+    uint8  udh_enable;
+    uint32 udh_length_type[4];
 } kcom_filter_t;
 
 /*
@@ -305,7 +322,7 @@ typedef struct kcom_eth_hw_config_s {
     uint8 chan;
     uint32 flags;
     uint32 value;
-  } kcom_eth_hw_config_t;
+} kcom_eth_hw_config_t;
 
 /*
  * Message types
@@ -378,6 +395,14 @@ typedef struct kcom_msg_detach_s {
     kcom_msg_hdr_t hdr;
     uint32 flags;
 } kcom_msg_detach_t;
+
+/*
+ * Reprobe switch device.
+ */
+typedef struct kcom_msg_reprobe_s {
+    kcom_msg_hdr_t hdr;
+    uint32 flags;
+} kcom_msg_reprobe_t;
 
 /*
  * Enable/Disable debugging packet function.
@@ -461,8 +486,7 @@ typedef struct kcom_msg_filter_destroy_s {
  * Get list of currently defined packet filters.
  */
 #ifndef KCOM_FILTER_MAX
-/* SAI_FIXUP - Increased the filters to 1024 from 128 */
-#define KCOM_FILTER_MAX          1024
+#define KCOM_FILTER_MAX          128
 #endif
 
 typedef struct kcom_msg_filter_list_s {
@@ -498,6 +522,7 @@ typedef union kcom_msg_s {
     kcom_msg_hw_init_t hw_init;
     kcom_msg_eth_hw_config_t eth_hw_config;
     kcom_msg_detach_t detach;
+    kcom_msg_reprobe_t reprobe;
     kcom_msg_netif_create_t netif_create;
     kcom_msg_netif_destroy_t netif_destroy;
     kcom_msg_netif_list_t netif_list;

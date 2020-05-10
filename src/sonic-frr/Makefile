@@ -2,21 +2,26 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
+MAIN_TARGET = $(FRR)
+DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG) $(FRR_SNMP) $(FRR_SNMP_DBG)
+SUFFIX = $(shell date +%Y%m%d\.%H%M%S)
+STG_BRANCH = stg_temp.$(SUFFIX)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
-
 	# Build the package
 	pushd ./frr
-
-	# This could very well be tools/tarsource.sh -V -e sonic
-	tools/tarsource.sh -V
-	# This is a no-op but here in case the changelog stops being a symlink
-	debchange -b -v $(FRR_VERSION)-1~sonic.debian8+1 'SONiC FRR debian package build'
-	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib
-	cd ..
-	mv frr_$(FRR_VERSION)-*_amd64.deb frr_$(FRR_VERSION)-1~sonic.debian8+1_amd64.deb
-	mv $* $(DEST)/
-
+	git checkout -b $(FRR_BRANCH) origin/$(FRR_BRANCH)
+	stg branch --create $(STG_BRANCH) $(FRR_TAG)
+	stg import -s ../patch/series
+	tools/tarsource.sh -V -e '-sonic'
+	dpkg-buildpackage -rfakeroot -b -us -uc -Ppkg.frr.nortrlib -j$(SONIC_CONFIG_MAKE_JOBS)
+	stg undo || true
+	git clean -xfdf
+	git checkout $(FRR_BRANCH)
+	stg branch --delete $(STG_BRANCH)
+	git rev-parse --short HEAD | xargs git checkout
+	git branch -D $(FRR_BRANCH)
 	popd
+	mv $(DERIVED_TARGET) $* $(DEST)/
 
+$(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
