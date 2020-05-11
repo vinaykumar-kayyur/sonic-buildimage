@@ -15,14 +15,23 @@ is_connected() {
     return 1
 }
 
+drop_cron() {
+    echo "Dropping Cron job /usr/bin/kube_join.sh"
+    ( crontab -l | grep -v "kube_join" ) | crontab -
+}
+
 do_reset=false
 test_only=false
+do_drop_cron=false
 
-while getopts ":ft" opt
+while getopts ":fct" opt
 do
     case ${opt} in
         f ) # Force a reset
             do_reset=true
+            ;;
+        c ) # Drop the CRON job
+            do_drop_cron=true
             ;;
         t ) # Force a reset
             test_only=true
@@ -69,6 +78,11 @@ if ${test_only}; then
         echo "reset is not required and not forced either"
     fi
     exit 0
+fi
+
+# If there is a pending CRON job to join, drop it.
+if ${do_drop_cron}; then
+    drop_cron
 fi
 
 if ${do_reset}; then

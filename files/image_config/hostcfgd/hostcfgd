@@ -268,7 +268,7 @@ class k8s_config(object):
             if self.insecure:
                 cmd += " -i"
         else:
-            cmd = "/usr/bin/kube_reset.sh"
+            cmd = "/usr/bin/kube_reset.sh -c"
 
         ret = subprocess.call(cmd, shell=True)
         if ret != 0:
