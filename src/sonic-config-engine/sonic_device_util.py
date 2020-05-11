@@ -45,6 +45,8 @@ def get_npu_id_from_name(npu_name):
 
 def get_num_npus():
     platform = get_platform_info(get_machine_info())
+    if platform is None:
+        return 1
     asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, ASIC_CONF_FILENAME)
     if not os.path.isfile(asic_conf_file_path):
         return 1
