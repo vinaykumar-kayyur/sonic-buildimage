@@ -150,8 +150,14 @@ route-map FROM_PEER_V6 permit 10
 !
 {% if allow_list_enabled %}
 route-map ALLOW_LIST_V4 {{ allow_list_default_action }} 65535
+{%   if allow_list_default_action.strip() == 'permit' %}
+  set community {{ allow_list_drop_prefix }} additive
+{%   endif %}
 !
 route-map ALLOW_LIST_V6 {{ allow_list_default_action }} 65535
+{%   if allow_list_default_action.strip() == 'permit' %}
+  set community {{ allow_list_drop_prefix }} additive
+{%   endif %}
 !
 ip prefix-list ALLOW_ADDRESS_ALLOW_ALL_V4 seq 10 permit any
 !

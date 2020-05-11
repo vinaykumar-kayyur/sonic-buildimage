@@ -3,3 +3,4 @@ deployment_id_asn_map:
 
 allow_list_enabled: true
 allow_list_default_action: permit   # or deny
+allow_list_drop_prefix: 5060:12345  # value of the community to identify a prefix to drop. Make sense only with allow_list_default_action equal to 'permit'
