@@ -30,8 +30,8 @@
 /var/log/telemetry.log
 /var/log/frr/bgpd.log
 /var/log/frr/zebra.log
-/var/log/swss/sairedis.rec
-/var/log/swss/swss.rec
+/var/log/swss*/sairedis.rec
+/var/log/swss*/swss.rec
 {
     size 1M
     rotate 5000
@@ -84,7 +84,7 @@
         done
     endscript
     postrotate
-        if [ $(echo $1 | grep -c "/var/log/swss/") -gt 0 ]; then
+        if [ $(echo $1 | grep -c "/var/log/swss") -gt 0 ]; then
             pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
         else
             /bin/kill -HUP $(cat /var/run/rsyslogd.pid)
