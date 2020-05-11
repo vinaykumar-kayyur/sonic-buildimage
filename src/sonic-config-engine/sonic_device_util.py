@@ -57,7 +57,7 @@ def get_num_npus():
                continue
             if tokens[0].lower() == 'num_asic':
                 num_npus = tokens[1].strip()
-        return num_npus
+        return int(num_npus)
 
 def get_namespaces():
     """
