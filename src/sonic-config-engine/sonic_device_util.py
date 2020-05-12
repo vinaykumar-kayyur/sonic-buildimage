@@ -25,6 +25,8 @@ SONIC_DEVICE_PATH = '/usr/share/sonic/device'
 NPU_NAME_PREFIX = 'asic'
 NAMESPACE_PATH_GLOB = '/run/netns/*'
 ASIC_CONF_FILENAME = 'asic.conf'
+FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
+BACKEND_ASIC_SUB_ROLE = 'BackEnd'
 def get_machine_info():
     if not os.path.isfile('/host/machine.conf'):
         return None
@@ -45,7 +47,7 @@ def get_npu_id_from_name(npu_name):
 
 def get_num_npus():
     platform = get_platform_info(get_machine_info())
-    if platform is None:
+    if not platform:
         return 1
     asic_conf_file_path = os.path.join(SONIC_DEVICE_PATH, platform, ASIC_CONF_FILENAME)
     if not os.path.isfile(asic_conf_file_path):
@@ -89,10 +91,7 @@ def get_platform():
 
 def is_multi_npu():
     num_npus = get_num_npus()
-    if num_npus > 1:
-        return True
-    else:
-        return False
+    return (num_npus > 1)
 
 def get_all_namespaces():
     """
@@ -112,9 +111,9 @@ def get_all_namespaces():
             config_db.connect()
 
             metadata = config_db.get_table('DEVICE_METADATA')
-            if metadata['localhost']['sub_role'] == 'FrontEnd':
+            if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
                 front_ns.append(namespace)
-            elif metadata['localhost']['sub_role'] == 'BackEnd':
+            elif metadata['localhost']['sub_role'] == BACKEND_ASIC_SUB_ROLE:
                 back_ns.append(namespace)
 
     return {'front_ns':front_ns, 'back_ns':back_ns}
