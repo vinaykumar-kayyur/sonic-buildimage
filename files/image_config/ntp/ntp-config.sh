@@ -7,8 +7,8 @@ reboot_type='cold'
 
 function get_database_reboot_type()
 {
-    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SYSTEM_FAST_START=`/usr/bin/redis-cli -n 6 get "FAST_REBOOT|system"`
+    SYSTEM_WARM_START=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SYSTEM_FAST_START=`sonic-db-cli STATE_DB get "FAST_REBOOT|system"`
 
     if [[ x"${SYSTEM_WARM_START}" == x"true" ]]; then
         reboot_type='warm'
