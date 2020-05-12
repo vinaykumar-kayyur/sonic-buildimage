@@ -5,8 +5,7 @@ import subprocess
 import re
 from natsort import natsorted
 import glob
-from swsssdk import ConfigDBConnector
-from swsssdk import SonicDBConfig
+from swsssdk import ConfigDBConnector, SonicDBConfig
 
 DOCUMENTATION = '''
 ---
