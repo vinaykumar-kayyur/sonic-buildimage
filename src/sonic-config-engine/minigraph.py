@@ -408,7 +408,7 @@ def parse_dpg(dpg, hname):
                         # because of port_alias_asic_map we can have duplicate in port_alias_map
                         # so check if already present do not add
                         if panel_port not in intfs_inpc and panel_port not in acl_intfs:
-                           acl_intfs.append(panel_port)
+                            acl_intfs.append(panel_port)
                     break
             if acl_intfs:
                 acls[aclname] = {'policy_desc': aclname,
