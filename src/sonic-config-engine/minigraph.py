@@ -718,10 +718,14 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         group_type = group_params.get('type', None)
         filter_acls[acl_table] = acls[acl_table]
 
-        if group_type == 'CTRLPLANE':
+        # For Control Plane and Data ACL no filtering is needed
+        # Control Plane ACL has no Interface associated and
+        # Data Plane ACL Interface are attached via minigraph
+        # AclInterface.
+        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
             continue
 
-        # Filters out back-panel ports from the binding list for Data/Everflow
+        # Filters out back-panel ports from the binding list for Everflow (Mirror)
         # ACL tables. We define an "back-panel" port as one that is a member of a
         # port channel connected to back asic or directly connected to back asic.
         # This will be applicable in Multi-NPU Platforms.
@@ -736,11 +740,7 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         # Filters out inactive front-panel ports from the binding list for mirror
         # ACL tables. We define an "active" port as one that is a member of a
         # front pannel port channel or one that is connected to a neighboring device via front panel port.
-        active_ports = []
-        if group_type != 'MIRROR' and group_type != 'MIRRORV6':
-           active_ports = [port for port in front_panel_ports]
-        else:
-           active_ports = [port for port in front_panel_ports if port in neighbors.keys() or port in front_port_channel_intf]
+        active_ports = [port for port in front_panel_ports if port in neighbors.keys() or port in front_port_channel_intf]
         
         if not active_ports:
             print >> sys.stderr, 'Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table)
