@@ -687,6 +687,7 @@ _dal_set_msi_enabe(unsigned int lchip, unsigned int irq_num)
         }
         else
         {
+#if 0
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 79))
             ret = pci_enable_msi_exact(dev->pci_dev, irq_num);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 26, 32))
@@ -703,6 +704,7 @@ _dal_set_msi_enabe(unsigned int lchip, unsigned int irq_num)
 
             msi_irq_base[lchip] = dev->pci_dev->irq;
             msi_irq_num[lchip] = irq_num;
+#endif
         }
     }
 
