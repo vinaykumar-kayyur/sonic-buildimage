@@ -9,7 +9,7 @@ SKU = 'multi-npu-01'
 ASIC_SKU = 'multi-npu-asic'
 NUM_ASIC = 4
 HOSTNAME = 'multi_npu_platform_01'
-
+DEVICE_TYPE = 'LeafRouter'
 
 class TestMultiNpuCfgGen(TestCase):
 
@@ -215,7 +215,7 @@ class TestMultiNpuCfgGen(TestCase):
             asic_name  = "asic{}".format(asic)
             self.assertEqual(output['localhost']['hostname'], 'multi_npu_platform_01')
             self.assertEqual(output['localhost']['asic_name'], asic_name)
-            self.assertEqual(output['localhost']['type'], 'Asic')
+            self.assertEqual(output['localhost']['type'], DEVICE_TYPE)
             if asic == 0 or asic == 1:
                 self.assertEqual(output['localhost']['sub_role'], 'FrontEnd')
             else:

@@ -38,7 +38,7 @@ VLAN_SUB_INTERFACE_VLAN_ID = '10'
 FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
 BACKEND_ASIC_SUB_ROLE = 'BackEnd'
 BACKEND_ASIC_INTERFACE_NAME_PREFIX = 'Ethernet-BP'
-
+INTERNAL_BGP_SESSION_NAME_PREFIX = 'ASIC'
 # Default Virtual Network Index (VNI) 
 vni_default = 8000
 
@@ -749,6 +749,17 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
 
     return filter_acls
 
+def enable_internal_bgp_session(bgp_sessions):
+    '''
+    In Multi-NPU session the internal sessions will always be up.
+    So adding the admin-status 'up' configuration to bgp sessions
+    '''
+
+    for peer_ip in bgp_sessions.keys():
+        session_name = bgp_sessions[peer_ip]['name']
+        if session_name.startswith(INTERNAL_BGP_SESSION_NAME_PREFIX):
+            bgp_sessions[peer_ip].update({'admin_status': 'up'})
+
 ###############################################################################
 #
 # Main functions
@@ -842,6 +853,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
+                enable_internal_bgp_session(bgp_sessions)
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
@@ -850,6 +862,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
+
+    # set the host device type in asic metadata also
+    device_type = devices[hostname]['type']
 
     if asic_name is None:
         current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
@@ -864,7 +879,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': hostname,
         'hwsku': hwsku,
-        'type': current_device['type']
+        'type': device_type
         }
     }
     # for this hostname, if sub_role is defined, add sub_role in 
