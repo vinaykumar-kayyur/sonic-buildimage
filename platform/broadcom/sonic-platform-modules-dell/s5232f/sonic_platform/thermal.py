@@ -11,7 +11,7 @@
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
-    from sonic_platform.ipmihelper import IpmiSensor, IpmiFru
+    from sonic_platform.ipmihelper import IpmiSensor
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

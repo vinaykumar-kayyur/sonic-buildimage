@@ -11,7 +11,6 @@
 try:
     import os
     import sys 
-    import select
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
@@ -34,8 +33,6 @@ class Chassis(ChassisBase):
     """
     DELLEMC Platform-specific Chassis class
     """
-
-    OIR_FD_PATH = "/sys/bus/pci/devices/0000:04:00.0/port_msi"
 
     oir_fd = -1
     epoll = -1
@@ -82,42 +79,6 @@ class Chassis(ChassisBase):
             self.epoll.close()
             self.oir_fd.close()
 
-# not needed /delete after validation
-
-    def _get_register(self, reg_file):
-        retval = 'ERR'
-        if (not os.path.isfile(reg_file)):
-            print reg_file,  'not found !'
-            return retval
-
-        try:
-            with os.fdopen(os.open(reg_file, os.O_RDONLY)) as fd:
-                retval = fd.read()
-        except:
-            pass
-        retval = retval.rstrip('\r\n')
-        retval = retval.lstrip(" ")
-        return retval
-
-# not needed /delete after validation
-
-    def _check_interrupts(self, port_dict):
-        retval = 0
-        is_port_dict_updated = False
-        for port_num in range(self.PORT_START, (self.PORT_END + 1)):
-            # sfp get uses zero-indexing, but port numbers start from 1
-            sfp = self.get_sfp(port_num)
-            presence = sfp.get_presence()
-            if(presence and (self._global_port_pres_dict[port_num] == '0')):
-                is_port_dict_updated = True
-                self._global_port_pres_dict[port_num] = '1'
-                port_dict[port_num] = '1'
-            elif(not presence and (self._global_port_pres_dict[port_num] == '1')):
-                is_port_dict_updated = True
-                self._global_port_pres_dict[port_num] = '0'
-                port_dict[port_num] = '0'
-        return retval, is_port_dict_updated
-
 # check for this event change for sfp / do we need to handle timeout/sleep
 
     def get_change_event(self, timeout=0):
@@ -129,6 +90,10 @@ class Chassis(ChassisBase):
         port_dict = {}
         change_dict = {}
         change_dict['sfp'] = port_dict
+        elapsed_time_ms = 0
+        sleep_time_ms = 500
+        sleep_time = sleep_time_ms / 1000
+
         while True:
             for port_num in range(self.PORT_START, (self.PORT_END + 1)):
                 presence = self.get_sfp(port_num).get_presence()
@@ -142,10 +107,13 @@ class Chassis(ChassisBase):
 
                 if(len(port_dict) > 0):
                     return True, change_dict 
+            if timeout != 0:
+                elapsed_time_ms += sleep_time_ms
+                if elapsed_time_ms > timeout:
+                    break
 
-            sleep(0.5)
-
-
+            time.sleep(sleep_time)
+        return True, change_dict 
 
     def get_sfp(self, index):
         """

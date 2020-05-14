@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import os
-    import re
     import subprocess
     from sonic_platform_base.component_base import ComponentBase
     import sonic_platform.hwaccess as hwaccess
@@ -62,7 +60,7 @@ class Component(ComponentBase):
          ],
 
         ['BMC',
-         'Platform management controller for on-board temperature '
+         'Platform management controller for on-board temperature ',
          'monitoring, in-chassis power, Fan and LED control',
          get_bmc_version
          ],
