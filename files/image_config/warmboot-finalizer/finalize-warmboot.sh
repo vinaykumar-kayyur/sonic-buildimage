@@ -3,7 +3,7 @@
 VERBOSE=no
 
 # Check components
-COMP_LIST="orchagent neighsyncd bgp"
+COMP_LIST="orchagent neighsyncd bgp natsyncd"
 EXP_STATE="reconciled"
 
 ASSISTANT_SCRIPT="/usr/bin/neighbor_advertiser"
@@ -29,7 +29,9 @@ function wait_for_database_service()
     debug "Wait for database to become ready..."
 
     # Wait for redis server start before database clean
-    /usr/bin/docker exec database ping_pong_db_insts
+    until [[ $(sonic-db-cli PING | grep -c PONG) -gt 0 ]]; do
+      sleep 1;
+    done
 
     # Wait for configDB initialization
     until [[ $(sonic-db-cli CONFIG_DB GET "CONFIG_DB_INITIALIZED") ]];
