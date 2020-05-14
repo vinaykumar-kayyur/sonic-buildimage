@@ -31,7 +31,7 @@ class Thermal(ThermalBase):
         ['PSU2 Airflow Sensor', 0x8]
     ]
 
-    def __init__(self, thermal_index):
+    def __init__(self, thermal_index=0):
         ThermalBase.__init__(self)
         self.index = thermal_index + 1
         self.sensor = IpmiSensor(self.SENSOR_MAPPING[self.index - 1][1])

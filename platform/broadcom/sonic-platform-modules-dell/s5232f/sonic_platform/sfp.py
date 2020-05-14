@@ -158,7 +158,7 @@ class Sfp(SfpBase):
     """
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:04:00.0/resource0"
 
-    def __init__(self, index, sfp_type, eeprom_path):
+    def __init__(self, index=0, sfp_type=0, eeprom_path=''):
         SfpBase.__init__(self)
         self.sfp_type = sfp_type
         self.index = index
