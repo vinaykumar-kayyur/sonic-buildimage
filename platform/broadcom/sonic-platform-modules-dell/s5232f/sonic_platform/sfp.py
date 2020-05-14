@@ -13,7 +13,6 @@ try:
     import time
     import struct
     import mmap
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
