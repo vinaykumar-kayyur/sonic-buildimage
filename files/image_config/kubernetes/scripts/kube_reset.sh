@@ -95,7 +95,7 @@ if ${do_reset}; then
         kubectl --request-timeout 15s --kubeconfig /etc/sonic/kube_admin.conf label nodes ${nodename} enable_pods-
         kubectl --request-timeout 25s --kubeconfig /etc/sonic/kube_admin.conf drain ${nodename} --ignore-daemonsets
         kubectl --request-timeout 25s --kubeconfig /etc/sonic/kube_admin.conf delete node ${nodename}
-fi
+    fi
 
 
     echo "Resetting kubeadm ..."
