@@ -26,7 +26,11 @@
 
 # Initialize constants
 UPDATEGRAPH_CONF=/etc/sonic/updategraph.conf
+INIT_CFG_JSON=/etc/sonic/init_cfg.json
 CONFIG_DB_JSON=/etc/sonic/config_db.json
+CONFIG_DB_PATH=/etc/sonic/
+CONFIG_DB_PREFIX=config_db
+CONFIG_DB_SUFFIX=.json
 MINGRAPH_FILE=/etc/sonic/minigraph.xml
 TMP_ZTP_CONFIG_DB_JSON=/tmp/ztp_config_db.json
 FACTORY_DEFAULT_HOOKS=/etc/config-setup/factory-default-hooks.d
@@ -99,6 +103,60 @@ run_hookdir() {
     return $exit_status
 }
 
+initalize_configdb()
+{
+    # Create correct argument based on per-asic name space in multi-npu platforms
+    if [[ ! -z "$2" ]]; then
+        NAMESPACE_ARGUMENT=${NAMESPACE_OPTION}${NAMESPACE_PREFIX}$2
+        IP_NETNS_CMD=${IP_NETNS_CMD_PREFIX}${NAMESPACE_PREFIX}$2
+    else
+        NAMESPACE_ARGUMENT=$2
+        IP_NETNS_CMD=$2
+    fi 
+    
+    if [ "$1" == "init" ]; then
+        # case when config db need to be created/initialized from minigraph
+        sonic-db-cli ${NAMESPACE_ARGUMENT} CONFIG_DB FLUSHDB
+        sonic-cfggen -H -m -j ${INIT_CFG_JSON} ${NAMESPACE_ARGUMENT} --write-to-db
+        sonic-db-cli ${NAMESPACE_ARGUMENT} CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
+        sonic-cfggen -d --print-data > ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$2${CONFIG_DB_SUFFIX}
+        if [[ ($NUM_ASIC -gt 1) && ( -z "$2") ]]; then
+            return 0
+        fi
+        # this will be run only in per-asic namespace only in multi-npu platforms
+        ${IP_NETNS_CMD} config qos reload
+        ${IP_NETNS_CMD} pfcwd start_default
+    elif [ "$1" == "reload" ]; then
+        # case when config db is already present from previous image file system
+        sonic-cfggen ${NAMESPACE_ARGUMENT} -j ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$2${CONFIG_DB_SUFFIX} --write-to-db
+    fi
+
+    return 0
+}
+configdb_migrator()
+{
+    if [[ ! -z "$2" ]]; then
+        NAMESPACE_ARGUMENT=${NAMESPACE_OPTION}${NAMESPACE_PREFIX}$2
+    else
+        NAMESPACE_ARGUMENT=$2
+    fi 
+
+    if [ "$1" == "init" ]; then
+        # case when config db created/initialized from minigraph need to be migrated
+        if [[ -x /usr/bin/db_migrator.py ]]; then
+            # Set latest version number
+            /usr/bin/db_migrator.py ${NAMESPACE_ARGUMENT} -o set_version
+        fi
+    elif [ "$1" == "reload" ]; then
+        # case when config db is already present from previous image file system
+        # need to be migrated
+        if [[ -x /usr/bin/db_migrator.py ]]; then
+            # Migrate the DB to the latest schema version if needed
+            /usr/bin/db_migrator.py ${NAMESPACE_ARGUMENT} -o migrate
+        fi
+    fi
+}
+
 # Reload minigraph.xml file on disk
 reload_minigraph()
 {
@@ -106,21 +164,62 @@ reload_minigraph()
     if [ ! -f /etc/sonic/init_cfg.json ]; then
         echo "{}" > /etc/sonic/init_cfg.json
     fi
-    sonic-db-cli CONFIG_DB FLUSHDB
-    sonic-cfggen -H -m -j /etc/sonic/init_cfg.json --write-to-db
-    sonic-db-cli CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
+
+    # Initialize config db for single-npu platform and global config db for multi-npu
+    # platforms
+    initalize_configdb init ''
+    asic_num=0
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
+    do
+        # Intiialize per asic/namespace config db
+        initalize_configdb init $asic_num
+        ((asic_num = asic_num + 1))
+    done   
     if [ -f /etc/sonic/acl.json ]; then
+        # For acl the acl-loader command takes care for multi-npu platforms
         acl-loader update full /etc/sonic/acl.json
     fi
-    config qos reload
-    pfcwd start_default
-
-    if [[ -x /usr/bin/db_migrator.py ]]; then
-        # Set latest version number
-        /usr/bin/db_migrator.py -o set_version
-    fi
+    
+    # Initialize config db migrator for single-npu platform and global config db for multi-npu
+    # platforms
+    configdb_migrator init ''
+    asic_num=0
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
+    do
+        # Initialize config db migrator for per-asic namespace config db
+        # in multi-npu platforms
+        configdb_migrator init $asic_num
+        ((asic_num = asic_num + 1))
+    done   
 }
 
+# Reload exisitng config db file on disk
+reload_configdb()
+{
+    echo "Reloading existing config db..."
+    # Reload existing config db for single-npu platform and global config db for multi-npu
+    # platforms
+    initalize_configdb reload ''
+    asic_num=0
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
+    do
+        # Reload exisitng per asic/namespace config db
+        initalize_configdb reload $asic_num
+        ((asic_num = asic_num + 1))
+    done
+    
+    # Initialize existing config db migrator for single-npu platform and global config db for multi-npu
+    # platforms
+    configdb_migrator reload ''
+    asic_num=0
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
+    do
+        # Initialize existing config db migrator for single-npu platform and global config db for multi-npu
+        # platforms
+        configdb_migrator reload $asic_num
+        ((asic_num = asic_num + 1))
+    done   
+}
 # Restore SONiC configuration from a backup copy
 function copy_config_files_and_directories()
 {
@@ -281,15 +380,51 @@ copy_post_migration_hooks()
     fi
 }
 
+# Get the list of config db for both
+# single and multi-npu platforms
+get_config_db_file_list()
+{
+    config_db_file_list=${CONFIG_DB_PREFIX}${CONFIG_DB_SUFFIX}
+    asic_num=0
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
+    do
+        config_db_file_list+=' '${CONFIG_DB_PREFIX}$asic_num${CONFIG_DB_SUFFIX}
+        ((asic_num = asic_num + 1))
+    done
+
+    echo $config_db_file_list
+}
+# Check if all needed config db are prsesnt for both
+# single and multi-npu platforms
+check_config_db_present()
+{
+    if [[ ! -r ${CONFIG_DB_JSON} ]]; then
+       return 1
+    fi
+    asic_num=0
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
+    do
+        if [[ ! -r ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$asic_num${CONFIG_DB_SUFFIX} ]]; then
+            return 1
+        fi
+        ((asic_num = asic_num + 1))
+    done
+
+    return 0   
+}
+
 # Perform configuration migration from backup copy.
 #  - This step is performed when a new image is installed and SONiC switch boots into it
 do_config_migration()
 {
     # Identify list of files to migrate
-    copy_list="minigraph.xml snmp.yml acl.json config_db.json frr"
+    copy_list="minigraph.xml snmp.yml acl.json frr"
 
     # Migrate all configuration files from old to new
     copy_config_files_and_directories $copy_list
+    
+    # Migrate all config_db from old to new
+    copy_config_files_and_directories $(get_config_db_file_list)
 
     # Migrate post-migration hooks
     copy_post_migration_hooks
@@ -302,21 +437,14 @@ do_config_migration()
         disable_updategraph
         rm -f /tmp/pending_config_migration
         exit 0
-    elif [ -r ${CONFIG_DB_JSON} ]; then
+    elif check_config_db_present; then
         echo "Use config_db.json from old system..."
-        sonic-cfggen -j ${CONFIG_DB_JSON} --write-to-db
-
-        if [[ -x /usr/bin/db_migrator.py ]]; then
-            # Migrate the DB to the latest schema version if needed
-            /usr/bin/db_migrator.py -o migrate
-        fi
+        reload_configdb
         # Disable updategraph
         disable_updategraph
     elif [ -r ${MINGRAPH_FILE} ]; then
         echo "Use minigraph.xml from old system..."
         reload_minigraph
-        sonic-cfggen -d --print-data > ${CONFIG_DB_JSON}
-
         # Disable updategraph
         disable_updategraph
     else
@@ -351,6 +479,14 @@ boot_config()
         do_config_migration
     fi
 
+    # For multi-npu platfrom we don't support config initlaiztion. Assumption
+    # is there should be existing minigraph or config_db from previous image
+    # file system to trigger. pending_config_initialization will remain set
+    # for multi-npu platforms if we reach this case.
+    if [[ ($NUM_ASIC -gt 1) ]]; then
+        return 0
+    fi	
+
     if [ -e /tmp/pending_config_initialization ] || [ -e  ${CONFIG_SETUP_INITIALIZATION_FLAG} ]; then
         do_config_initialization
     fi
@@ -373,6 +509,16 @@ boot_config()
 }
 
 ### Execution starts here ###
+PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+# Parse the device specific asic conf file, if it exists
+ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
+if [ -f "$ASIC_CONF" ]; then
+source $ASIC_CONF
+fi
+
+NAMESPACE_OPTION='-n '
+NAMESPACE_PREFIX='asic'
+IP_NETNS_CMD_PREFIX='sudo ip netns exec '
 
 CMD=$1
 # Default command is boot
