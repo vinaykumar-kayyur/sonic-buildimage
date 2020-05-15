@@ -217,3 +217,4 @@ serdes_fec_enable
 pbmp_gport_stack
 reglist_enable
 scache_filename
+serdes_tx_taps_cd.bcm56980
