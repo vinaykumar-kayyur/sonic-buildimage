@@ -6,7 +6,6 @@
 try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
-    import sys
     from sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_sfp.sff8436 import sff8436InterfaceId
@@ -37,27 +36,10 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        # Switch CPLD back to MB MUX
-        try:
-            file = open("/sys/devices/platform/delta-agc032-cpupld.0/cpu_i2c_mux_sel", 'r+')
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
-            return False
-
-#        file.seek(0)
-#        file.write('1')
-#        file.close()
-
         return range(0, self.PORTS_IN_BLOCK)
 
     @property
     def port_to_eeprom_mapping(self):
-        try:
-            file = open("/sys/devices/platform/delta-agc032-cpupld.0/cpu_i2c_mux_sel", 'r+')
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
-            return False
-
         return self._port_to_eeprom_mapping
 
     def __init__(self):
