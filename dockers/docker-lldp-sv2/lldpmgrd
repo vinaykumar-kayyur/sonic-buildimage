@@ -107,6 +107,8 @@ class LldpManager(object):
         # Retrieve all entires for this port from the Port table
         port_table = swsscommon.Table(self.appl_db, swsscommon.APP_PORT_TABLE_NAME)
         (status, fvp) = port_table.get(port_name)
+        # Retrieve PortInitDone entry from the Port table
+        (init_status, init_fvp) = port_table.get("PortInitDone")
         if status:
             # Convert list of tuples to a dictionary
             port_table_dict = dict(fvp)
@@ -119,7 +121,9 @@ class LldpManager(object):
             else:
                 return False
         else:
-            log_error("Port '{}' not found in {} table in App DB".format(port_name, swsscommon.APP_PORT_TABLE_NAME))
+            #The initialization procedure is done, but no this port entry
+            if init_status:
+                log_error("Port '{}' not found in {} table in App DB".format(port_name, swsscommon.APP_PORT_TABLE_NAME))
             return False
 
     def generate_pending_lldp_config_cmd_for_port(self, port_name):
