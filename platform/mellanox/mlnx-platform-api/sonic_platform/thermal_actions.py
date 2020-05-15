@@ -131,14 +131,17 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
         from .thermal import Thermal
         from .thermal_conditions import UpdateCoolingLevelToMinCondition
         from .fan import Fan
-        Thermal.set_thermal_algorithm_status(self.status, False)
-        if self.status:
-            # Check thermal zone temperature, if all thermal zone temperature
-            # back to normal, set it to minimum allowed speed to
-            # save power
-            UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
+        status_changed = Thermal.set_thermal_algorithm_status(self.status, False)
 
-        logger.log_info('Changed thermal algorithm status to {}'.format(self.status))
+        # Only update cooling level if thermal algorithm status changed
+        if status_changed:
+            if self.status:
+                # Check thermal zone temperature, if all thermal zone temperature
+                # back to normal, set it to minimum allowed speed to
+                # save power
+                UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
+
+            logger.log_info('Changed thermal algorithm status to {}'.format(self.status))
 
 
 class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):

@@ -220,7 +220,7 @@ class Fan(FanBase):
         """
         status = True
 
-        if self.is_psu_fan:
+        if self.is_psu_fan and self.get_presence():
             from .thermal import logger
             try:
                 with open(self.psu_i2c_bus_path, 'r') as f:
