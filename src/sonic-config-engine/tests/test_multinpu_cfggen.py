@@ -116,7 +116,7 @@ class TestMultiNpuCfgGen(TestCase):
         self.assertDictEqual(output, {'eth0': {'alias': 'eth0', 'admin_status': 'up'}})
         for asic in range(NUM_ASIC):
             output = json.loads(self.run_script_for_asic(argument, asic, self.port_config[asic]))
-            self.assertDictEqual(output, {})
+            self.assertDictEqual(output, {'eth0': {'alias': 'eth0', 'admin_status': 'up'}})
 
     def test_frontend_asic_portchannels(self):
         argument = "-m {} -p {} -n asic0 --var-json \"PORTCHANNEL\"".format(self.sample_graph, self.port_config[0])
@@ -213,9 +213,35 @@ class TestMultiNpuCfgGen(TestCase):
         for asic in range(NUM_ASIC):
             output = json.loads(self.run_script_for_asic(argument, asic,self.port_config[asic]))
             asic_name  = "asic{}".format(asic)
-            self.assertEqual(output['localhost']['hostname'], asic_name)
+            self.assertEqual(output['localhost']['hostname'], 'multi_npu_platform_01')
+            self.assertEqual(output['localhost']['asic_name'], asic_name)
             self.assertEqual(output['localhost']['type'], 'Asic')
             if asic == 0 or asic == 1:
                 self.assertEqual(output['localhost']['sub_role'], 'FrontEnd')
             else:
                 self.assertEqual(output['localhost']['sub_role'], 'BackEnd')
+
+    def test_global_asic_acl(self):
+        argument = "-m {} --var-json \"ACL_TABLE\"".format(self.sample_graph)
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, {\
+                             'DATAACL':   {'policy_desc': 'DATAACL',    'ports': ['PortChannel0002','PortChannel0008'], 'stage': 'ingress', 'type': 'L3'},
+                             'EVERFLOW':  {'policy_desc': 'EVERFLOW',   'ports': ['PortChannel0002','PortChannel0008'], 'stage': 'ingress', 'type': 'MIRROR'},
+                             'EVERFLOWV6':{'policy_desc': 'EVERFLOWV6', 'ports': ['PortChannel0002','PortChannel0008'], 'stage': 'ingress', 'type': 'MIRRORV6'},
+                             'SNMP_ACL':  {'policy_desc': 'SNMP_ACL',    'services': ['SNMP'],        'stage': 'ingress', 'type': 'CTRLPLANE'},
+                             'SSH_ONLY':  {'policy_desc': 'SSH_ONLY',    'services': ['SSH'],         'stage': 'ingress', 'type': 'CTRLPLANE'}})
+
+    def test_front_end_asic_acl(self):
+        argument = "-m {} -p {} -n asic0 --var-json \"ACL_TABLE\"".format(self.sample_graph, self.port_config[0])
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, {\
+                             'DATAACL':   {'policy_desc': 'DATAACL',    'ports': ['PortChannel0002'], 'stage': 'ingress', 'type': 'L3'},
+                             'EVERFLOW':  {'policy_desc': 'EVERFLOW',   'ports': ['PortChannel0002'], 'stage': 'ingress', 'type': 'MIRROR'},
+                             'EVERFLOWV6':{'policy_desc': 'EVERFLOWV6', 'ports': ['PortChannel0002'], 'stage': 'ingress', 'type': 'MIRRORV6'},
+                             'SNMP_ACL':  {'policy_desc': 'SNMP_ACL',    'services': ['SNMP'],        'stage': 'ingress', 'type': 'CTRLPLANE'},
+                             'SSH_ONLY':  {'policy_desc': 'SSH_ONLY',    'services': ['SSH'],         'stage': 'ingress', 'type': 'CTRLPLANE'}})
+
+    def test_back_end_asic_acl(self):
+        argument = "-m {} -p {} -n asic3 --var-json \"ACL_TABLE\"".format(self.sample_graph, self.port_config[3])
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, {})
