@@ -1,0 +1,64 @@
+From 86a52f7446a3a104c0f0c88e168b1b2acd6b5b49 Mon Sep 17 00:00:00 2001
+From: Venkatesan Mahalingam <venkatesan_mahalinga@dell.com>
+Date: Sat, 2 May 2020 13:55:43 -0700
+Subject: [PATCH] Add support for TACACS+ source address
+
+---
+ nss_tacplus.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/nss_tacplus.c b/nss_tacplus.c
+index 64a9328..9fc082b 100644
+--- a/nss_tacplus.c
++++ b/nss_tacplus.c
+@@ -73,6 +73,7 @@ typedef struct {
+ static tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
+ static int tac_srv_no;
+ static useradd_info_t useradd_grp_list[MAX_TACACS_USER_PRIV + 1];
++static struct addrinfo *source_addr;
+ 
+ static char *tac_service = "shell";
+ static char *tac_protocol = "ssh";
+@@ -262,6 +263,21 @@ static int parse_config(const char *file)
+         else if(!strncmp(buf, "user_priv=", 10)) {
+             parse_user_priv(buf);
+         }
++        else if(!strncmp(buf, "src_ip=", 7)) {
++            struct addrinfo hints;
++            char *ip = buf + 7;
++
++            memset(&hints, 0, sizeof hints);
++            hints.ai_family = AF_UNSPEC;
++            hints.ai_socktype = SOCK_STREAM;
++
++            if(source_addr)
++                freeaddrinfo(source_addr);
++
++            if(0 != getaddrinfo(ip, NULL, &hints, &source_addr))
++                syslog(LOG_ERR, "%s: error setting the source ip information",
++                    nssname);
++        }
+         else if(!strncmp(buf, "server=", 7)) {
+             if(TAC_PLUS_MAXSERVERS <= tac_srv_no) {
+                 syslog(LOG_ERR, "%s: tac server num is more than %d",
+@@ -282,6 +298,8 @@ static int parse_config(const char *file)
+                         nssname, n, tac_ntop(tac_srv[n].addr->ai_addr),
+                         tac_srv[n].key[0], tac_srv[n].timeout);
+         }
++        syslog(LOG_DEBUG, "%s: src_ip=%s", nssname, NULL == source_addr
++                    ? "NULL" : tac_ntop(source_addr->ai_addr));
+         syslog(LOG_DEBUG, "%s: many_to_one %s", nssname, 1 == many_to_one
+                     ? "enable" : "disable");
+         for(n = MIN_TACACS_USER_PRIV; n <= MAX_TACACS_USER_PRIV; n++) {
+@@ -690,7 +708,7 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
+     if(!*tac_service) /* reported at config file processing */
+         return -1;
+ 
+-    fd = tac_connect_single(tac_srv[srvr].addr, tac_srv[srvr].key, NULL,
++    fd = tac_connect_single(tac_srv[srvr].addr, tac_srv[srvr].key, source_addr,
+                             tac_srv[srvr].timeout, vrfname[0] ? vrfname : NULL);
+     if(fd >= 0) {
+         *attr = NULL; /* so tac_add_attr() allocates memory */
+-- 
+2.7.4
+
