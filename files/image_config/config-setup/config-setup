@@ -105,13 +105,12 @@ run_hookdir() {
 
 initalize_configdb()
 {
+    NAMESPACE_ARGUMENT=''
+    IP_NETNS_CMD=''
     # Create correct argument based on per-asic name space in multi-npu platforms
-    if [[ ! -z "$2" ]]; then
+    if [[ $# -eq 2 ]]; then
         NAMESPACE_ARGUMENT=${NAMESPACE_OPTION}${NAMESPACE_PREFIX}$2
         IP_NETNS_CMD=${IP_NETNS_CMD_PREFIX}${NAMESPACE_PREFIX}$2
-    else
-        NAMESPACE_ARGUMENT=$2
-        IP_NETNS_CMD=$2
     fi 
     
     if [ "$1" == "init" ]; then
@@ -119,8 +118,8 @@ initalize_configdb()
         sonic-db-cli ${NAMESPACE_ARGUMENT} CONFIG_DB FLUSHDB
         sonic-cfggen -H -m -j ${INIT_CFG_JSON} ${NAMESPACE_ARGUMENT} --write-to-db
         sonic-db-cli ${NAMESPACE_ARGUMENT} CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
-        sonic-cfggen -d --print-data > ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$2${CONFIG_DB_SUFFIX}
-        if [[ ($NUM_ASIC -gt 1) && ( -z "$2") ]]; then
+        sonic-cfggen ${NAMESPACE_ARGUMENT} -d --print-data > ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$2${CONFIG_DB_SUFFIX}
+        if [[ ($NUM_ASIC -gt 1) && ($# -eq 1) ]]; then
             return 0
         fi
         # this will be run only in per-asic namespace only in multi-npu platforms
@@ -135,10 +134,11 @@ initalize_configdb()
 }
 configdb_migrator()
 {
-    if [[ ! -z "$2" ]]; then
+    NAMESPACE_ARGUMENT=''
+    IP_NETNS_CMD=''
+    # Create correct argument based on per-asic name space in multi-npu platforms
+    if [[ $# -eq 2 ]]; then
         NAMESPACE_ARGUMENT=${NAMESPACE_OPTION}${NAMESPACE_PREFIX}$2
-    else
-        NAMESPACE_ARGUMENT=$2
     fi 
 
     if [ "$1" == "init" ]; then
@@ -167,10 +167,9 @@ reload_minigraph()
 
     # Initialize config db for single-npu platform and global config db for multi-npu
     # platforms
-    initalize_configdb init ''
+    initalize_configdb init
     asic_num=0
-    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
-    do
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]; do
         # Intiialize per asic/namespace config db
         initalize_configdb init $asic_num
         ((asic_num = asic_num + 1))
@@ -182,10 +181,9 @@ reload_minigraph()
     
     # Initialize config db migrator for single-npu platform and global config db for multi-npu
     # platforms
-    configdb_migrator init ''
+    configdb_migrator init
     asic_num=0
-    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
-    do
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]; do
         # Initialize config db migrator for per-asic namespace config db
         # in multi-npu platforms
         configdb_migrator init $asic_num
@@ -199,10 +197,9 @@ reload_configdb()
     echo "Reloading existing config db..."
     # Reload existing config db for single-npu platform and global config db for multi-npu
     # platforms
-    initalize_configdb reload ''
+    initalize_configdb reload
     asic_num=0
-    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
-    do
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]; do
         # Reload exisitng per asic/namespace config db
         initalize_configdb reload $asic_num
         ((asic_num = asic_num + 1))
@@ -210,10 +207,9 @@ reload_configdb()
     
     # Initialize existing config db migrator for single-npu platform and global config db for multi-npu
     # platforms
-    configdb_migrator reload ''
+    configdb_migrator reload
     asic_num=0
-    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
-    do
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]; do
         # Initialize existing config db migrator for single-npu platform and global config db for multi-npu
         # platforms
         configdb_migrator reload $asic_num
@@ -386,8 +382,7 @@ get_config_db_file_list()
 {
     config_db_file_list=${CONFIG_DB_PREFIX}${CONFIG_DB_SUFFIX}
     asic_num=0
-    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
-    do
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]; do
         config_db_file_list+=' '${CONFIG_DB_PREFIX}$asic_num${CONFIG_DB_SUFFIX}
         ((asic_num = asic_num + 1))
     done
@@ -396,14 +391,13 @@ get_config_db_file_list()
 }
 # Check if all needed config db are prsesnt for both
 # single and multi-npu platforms
-check_config_db_present()
+check_all_config_db_present()
 {
     if [[ ! -r ${CONFIG_DB_JSON} ]]; then
        return 1
     fi
     asic_num=0
-    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]
-    do
+    while [[ ($asic_num -lt $NUM_ASIC) && ($NUM_ASIC -gt 1) ]]; do
         if [[ ! -r ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$asic_num${CONFIG_DB_SUFFIX} ]]; then
             return 1
         fi
@@ -437,7 +431,7 @@ do_config_migration()
         disable_updategraph
         rm -f /tmp/pending_config_migration
         exit 0
-    elif check_config_db_present; then
+    elif check_all_config_db_present; then
         echo "Use config_db.json from old system..."
         reload_configdb
         # Disable updategraph
@@ -513,7 +507,7 @@ PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
 # Parse the device specific asic conf file, if it exists
 ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
 if [ -f "$ASIC_CONF" ]; then
-source $ASIC_CONF
+    source $ASIC_CONF
 fi
 
 NAMESPACE_OPTION='-n '
