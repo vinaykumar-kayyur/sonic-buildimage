@@ -10,10 +10,6 @@
 
 try:
     import sys
-    import re
-    import os
-    import subprocess
-    import json
     from sonic_platform_base.chassis_base import ChassisBase
     from helper import APIHelper
 except ImportError as e:
