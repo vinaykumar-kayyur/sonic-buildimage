@@ -113,7 +113,7 @@ initalize_configdb()
         IP_NETNS_CMD=${IP_NETNS_CMD_PREFIX}${NAMESPACE_PREFIX}$2
     fi 
     
-    if [ "$1" == "init" ]; then
+    if [[ "$1" == "init" ]]; then
         # case when config db need to be created/initialized from minigraph
         sonic-db-cli ${NAMESPACE_ARGUMENT} CONFIG_DB FLUSHDB
         sonic-cfggen -H -m -j ${INIT_CFG_JSON} ${NAMESPACE_ARGUMENT} --write-to-db
@@ -125,7 +125,7 @@ initalize_configdb()
         # this will be run only in per-asic namespace only in multi-npu platforms
         ${IP_NETNS_CMD} config qos reload
         ${IP_NETNS_CMD} pfcwd start_default
-    elif [ "$1" == "reload" ]; then
+    elif [[ "$1" == "reload" ]]; then
         # case when config db is already present from previous image file system
         sonic-cfggen ${NAMESPACE_ARGUMENT} -j ${CONFIG_DB_PATH}${CONFIG_DB_PREFIX}$2${CONFIG_DB_SUFFIX} --write-to-db
     fi
@@ -135,19 +135,18 @@ initalize_configdb()
 configdb_migrator()
 {
     NAMESPACE_ARGUMENT=''
-    IP_NETNS_CMD=''
     # Create correct argument based on per-asic name space in multi-npu platforms
     if [[ $# -eq 2 ]]; then
         NAMESPACE_ARGUMENT=${NAMESPACE_OPTION}${NAMESPACE_PREFIX}$2
     fi 
 
-    if [ "$1" == "init" ]; then
+    if [[ "$1" == "init" ]]; then
         # case when config db created/initialized from minigraph need to be migrated
         if [[ -x /usr/bin/db_migrator.py ]]; then
             # Set latest version number
             /usr/bin/db_migrator.py ${NAMESPACE_ARGUMENT} -o set_version
         fi
-    elif [ "$1" == "reload" ]; then
+    elif [[ "$1" == "reload" ]]; then
         # case when config db is already present from previous image file system
         # need to be migrated
         if [[ -x /usr/bin/db_migrator.py ]]; then
@@ -174,7 +173,7 @@ reload_minigraph()
         initalize_configdb init $asic_num
         ((asic_num = asic_num + 1))
     done   
-    if [ -f /etc/sonic/acl.json ]; then
+    if [[ -f /etc/sonic/acl.json ]]; then
         # For acl the acl-loader command takes care for multi-npu platforms
         acl-loader update full /etc/sonic/acl.json
     fi
@@ -506,7 +505,7 @@ boot_config()
 PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
 # Parse the device specific asic conf file, if it exists
 ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
-if [ -f "$ASIC_CONF" ]; then
+if [[ -f "$ASIC_CONF" ]]; then
     source $ASIC_CONF
 fi
 
