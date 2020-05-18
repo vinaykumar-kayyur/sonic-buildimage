@@ -11,8 +11,7 @@
 try:
     import os
     import select
-    import subprocess
-    import re
+    import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.fan import Fan
@@ -191,7 +190,7 @@ class Chassis(ChassisBase):
             string: Serial number of chassis
         """
         return self._eeprom.serial_str()
-    
+
     def get_sfp(self, index):
         """
         Retrieves sfp represented by (1-based) index <index>
@@ -401,7 +400,7 @@ class Chassis(ChassisBase):
                                           self._check_interrupts(port_dict)
 
             return retval, ret_dict
-        except:
+        except Exception:
             return False, ret_dict
         finally:
             if self.oir_fd != -1:
@@ -410,5 +409,3 @@ class Chassis(ChassisBase):
                 self.oir_fd.close()
                 self.oir_fd = -1
                 self.epoll = -1
-
-        return False, ret_dict
