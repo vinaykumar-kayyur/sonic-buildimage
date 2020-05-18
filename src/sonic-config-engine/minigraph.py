@@ -864,8 +864,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
     # set the host device type in asic metadata also
-    device_type = devices[hostname]['type']
-
+    device_type = [devices[key]['type'] for key in devices if key.lower() == hostname.lower()][0]
     if asic_name is None:
         current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
     else:
