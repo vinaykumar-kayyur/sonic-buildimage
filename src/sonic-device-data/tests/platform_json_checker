@@ -7,9 +7,9 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 try:
-  basestring
+    basestring
 except NameError:
-  basestring = str
+    basestring = str
 
 # Global variable
 PORT_ATTRIBUTES = ["index", "lanes", "alias_at_lanes", "breakout_modes"]
