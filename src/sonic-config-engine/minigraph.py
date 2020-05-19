@@ -749,15 +749,19 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
 
     return filter_acls
 
-def enable_internal_bgp_session(bgp_sessions):
+def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
     '''
     In Multi-NPU session the internal sessions will always be up.
     So adding the admin-status 'up' configuration to bgp sessions
+    BGP session between FrontEnd and BackEnd Asics are internal bgp sessions
     '''
+    local_sub_role = parse_asic_sub_role(filename, asic_name)
 
     for peer_ip in bgp_sessions.keys():
-        session_name = bgp_sessions[peer_ip]['name']
-        if session_name.startswith(INTERNAL_BGP_SESSION_NAME_PREFIX):
+        peer_name = bgp_sessions[peer_ip]['name']
+        peer_sub_role = parse_asic_sub_role(filename, peer_name)
+        if ((local_sub_role == FRONTEND_ASIC_SUB_ROLE and peer_sub_role == BACKEND_ASIC_SUB_ROLE) or
+            (local_sub_role == BACKEND_ASIC_SUB_ROLE and peer_sub_role == FRONTEND_ASIC_SUB_ROLE)):
             bgp_sessions[peer_ip].update({'admin_status': 'up'})
 
 ###############################################################################
@@ -853,7 +857,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
-                enable_internal_bgp_session(bgp_sessions)
+                enable_internal_bgp_session(bgp_sessions, filename, asic_name)
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
