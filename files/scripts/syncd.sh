@@ -178,7 +178,6 @@ stop() {
             debug "syncd process in container syncd$DEV did not exit gracefully" 
         fi
 
-
         /usr/bin/docker exec -i syncd$DEV /bin/sync
         debug "Finished ${TYPE} shutdown syncd process ..."
     fi
