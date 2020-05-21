@@ -1,1 +1,2 @@
-__all__ = ["platform", "chassis"]
+import chassis
+import platform
