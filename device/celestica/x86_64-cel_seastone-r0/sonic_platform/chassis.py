@@ -62,11 +62,10 @@ class Chassis(ChassisBase):
         prev_reboot_cause = {
             '0x11': (self.REBOOT_CAUSE_POWER_LOSS, 'Power on reset'),
             '0x22': (self.REBOOT_CAUSE_WATCHDOG, 'Watchdog reset'),
-            '0x33': (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Power cycle reset triggered by CPU'),
-            '0x44': (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Power cycle reset triggered by front panel button'),
+            '0x33': (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Power cycle reset triggered by CPU')
         }.get(hw_reboot_cause, (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Unknown reason'))
 
-        if sw_reboot_cause != 'Unknown' and hw_reboot_cause == '0x11':
+        if sw_reboot_cause != 'Unknown' and ( hw_reboot_cause == '0x11' or hw_reboot_cause == '0x33'):
             prev_reboot_cause = (self.REBOOT_CAUSE_NON_HARDWARE, sw_reboot_cause)
 
         return prev_reboot_cause
