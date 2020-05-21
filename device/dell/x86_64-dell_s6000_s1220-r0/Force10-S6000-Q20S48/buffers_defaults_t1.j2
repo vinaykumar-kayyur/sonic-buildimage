@@ -6,19 +6,19 @@
         {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{% endif %}
     {% endfor %}
     {% for port_idx in range(8,14) %}
-        {% if PORT_ALL.append("Ethernet%d" % (port_idx*4)) %}{% endif %}
-        {% if PORT_ALL.append("Ethernet%d" % ((port_idx*4)+1)) %}{% endif %}
-        {% if PORT_ALL.append("Ethernet%d" % ((port_idx*4)+2)) %}{% endif %}
-        {% if PORT_ALL.append("Ethernet%d" % ((port_idx*4)+3)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 1)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 3)) %}{% endif %}
     {% endfor %}
     {% for port_idx in range(14,18) %}
         {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{% endif %}
     {% endfor %}
     {% for port_idx in range(18,24) %}
-        {% if PORT_ALL.append("Ethernet%d" % (port_idx*4)) %}{% endif %}
-        {% if PORT_ALL.append("Ethernet%d" % ((port_idx*4)+1)) %}{% endif %}
-        {% if PORT_ALL.append("Ethernet%d" % ((port_idx*4)+2)) %}{% endif %}
-        {% if PORT_ALL.append("Ethernet%d" % ((port_idx*4)+3)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 1)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 2)) %}{% endif %}
+        {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4 + 3)) %}{% endif %}
     {% endfor %}
     {% for port_idx in range(24,32) %}
         {% if PORT_ALL.append("Ethernet%d" % (port_idx * 4)) %}{% endif %}
