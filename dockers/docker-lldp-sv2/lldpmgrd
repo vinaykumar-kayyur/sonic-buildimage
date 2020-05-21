@@ -84,22 +84,18 @@ class LldpManager(object):
         pending_cmds: Dictionary where key is port name, value is pending
                       LLDP configuration command to run
     """
-    REDIS_HOSTNAME = "localhost"
-    REDIS_PORT = 6379
     REDIS_TIMEOUT_MS = 0
 
     def __init__(self):
         # Open a handle to the Config database
-        self.config_db = swsscommon.DBConnector(swsscommon.CONFIG_DB,
-                                                self.REDIS_HOSTNAME,
-                                                self.REDIS_PORT,
-                                                self.REDIS_TIMEOUT_MS)
+        self.config_db = swsscommon.DBConnector("CONFIG_DB",
+                                                self.REDIS_TIMEOUT_MS,
+                                                True)
 
         # Open a handle to the Application database
-        self.appl_db = swsscommon.DBConnector(swsscommon.APPL_DB,
-                                                self.REDIS_HOSTNAME,
-                                                self.REDIS_PORT,
-                                                self.REDIS_TIMEOUT_MS)
+        self.appl_db = swsscommon.DBConnector("APPL_DB",
+                                              self.REDIS_TIMEOUT_MS,
+                                              True)
 
         self.pending_cmds = {}
 
@@ -123,7 +119,11 @@ class LldpManager(object):
             else:
                 return False
         else:
-            log_error("Port '{}' not found in {} table in App DB".format(port_name, swsscommon.APP_PORT_TABLE_NAME))
+            # Retrieve PortInitDone entry from the Port table
+            (init_status, init_fvp) = port_table.get("PortInitDone")
+            #The initialization procedure is done, but don't have this port entry
+            if init_status:
+                log_error("Port '{}' not found in {} table in App DB".format(port_name, swsscommon.APP_PORT_TABLE_NAME))
             return False
 
     def generate_pending_lldp_config_cmd_for_port(self, port_name):
@@ -157,7 +157,7 @@ class LldpManager(object):
 
         # if there is a description available, also configure that
         if port_desc:
-            lldpcli_cmd += " description {}".format(port_desc)
+            lldpcli_cmd += " description '{}'".format(port_desc)
         else:
             log_info("Unable to retrieve description for port '{}'. Not adding port description".format(port_name))
 

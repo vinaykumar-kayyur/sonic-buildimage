@@ -53,6 +53,11 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'Force10-Z9100')
 
+    def test_minigraph_region(self):
+        argument = '-v "DEVICE_METADATA[\'localhost\'][\'region\']" -m "' + self.sample_graph_metadata + '"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), 'usfoo')
+
     def test_print_data(self):
         argument = '-m "' + self.sample_graph + '" --print-data'
         output = self.run_script(argument)
@@ -102,15 +107,15 @@ class TestCfgGen(TestCase):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v ACL_TABLE'
         output = self.run_script(argument, True)
         self.assertEqual(output.strip(), "Warning: Ignoring Control Plane ACL NTP_ACL without type\n"
-                                         "Warning: ignore interface 'fortyGigE0/2' as it is not in the port_config.ini\n"
-                                         "Warning: ignore interface 'fortyGigE0/2' in DEVICE_NEIGHBOR as it is not in the port_config.ini\n"
-                                         "{'DATAACL': {'type': 'L3', 'policy_desc': 'DATAACL', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04']}, "
-                                         "'NTP_ACL': {'services': ['NTP'], 'type': 'CTRLPLANE', 'policy_desc': 'NTP_ACL'}, "
-                                         "'EVERFLOW': {'type': 'MIRROR', 'policy_desc': 'EVERFLOW', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4']}, "
-                                         "'ROUTER_PROTECT': {'services': ['SSH', 'SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'ROUTER_PROTECT'}, "
-                                         "'SNMP_ACL': {'services': ['SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'SNMP_ACL'}, "
-                                         "'SSH_ACL': {'services': ['SSH'], 'type': 'CTRLPLANE', 'policy_desc': 'SSH_ACL'}, "
-                                         "'EVERFLOWV6': {'type': 'MIRRORV6', 'policy_desc': 'EVERFLOWV6', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4']}}")
+                                         "{'NTP_ACL': {'services': ['NTP'], 'type': 'CTRLPLANE', 'policy_desc': 'NTP_ACL', 'stage': 'ingress'}, "
+                                         "'EVERFLOW': {'stage': 'ingress', 'type': 'MIRROR', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4'], 'policy_desc': 'EVERFLOW'}, "
+                                         "'EVERFLOW_EGRESS': {'stage': 'egress', 'type': 'MIRROR', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4'], 'policy_desc': 'EVERFLOW_EGRESS'}, "
+                                         "'ROUTER_PROTECT': {'services': ['SSH', 'SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'ROUTER_PROTECT', 'stage': 'ingress'}, "
+                                         "'DATAACLINGRESS': {'stage': 'ingress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04'], 'policy_desc': 'DATAACLINGRESS'}, "
+                                         "'SNMP_ACL': {'services': ['SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'SNMP_ACL', 'stage': 'ingress'}, "
+                                         "'SSH_ACL': {'services': ['SSH'], 'type': 'CTRLPLANE', 'policy_desc': 'SSH_ACL', 'stage': 'ingress'}, "
+                                         "'DATAACLEGRESS': {'stage': 'egress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02'], 'policy_desc': 'DATAACLEGRESS'}, "
+                                         "'EVERFLOWV6': {'stage': 'ingress', 'type': 'MIRRORV6', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4'], 'policy_desc': 'EVERFLOWV6'}}")
 
 #     everflow portion is not used
 #     def test_minigraph_everflow(self):
@@ -184,7 +189,18 @@ class TestCfgGen(TestCase):
     def test_minigraph_port_description(self):
         argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet124\']"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "{'lanes': '101,102,103,104', 'description': 'ARISTA04T1:Ethernet1/1', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/124', 'admin_status': 'up'}")
+        self.assertEqual(output.strip(), "{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
+
+    def test_minigraph_port_fec_disabled(self):
+        # Test for FECDisabled
+        argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet4\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000'}")
+
+    def test_minigraph_port_rs(self):
+        argument = '-m "' + self.sample_graph_t0 + '" -p "' + self.port_config + '" -v "PORT[\'Ethernet124\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
 
     def test_minigraph_bgp(self):
         argument = '-m "' + self.sample_graph_bgp_speaker + '" -p "' + self.port_config + '" -v "BGP_NEIGHBOR[\'10.0.0.59\']"'
@@ -330,3 +346,13 @@ class TestCfgGen(TestCase):
                 output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, self.sample_graph_simple), shell=True)
 
             self.test_jinja_expression(self.sample_graph_simple, TOR_ROUTER)
+
+    def test_show_run_acl(self):
+        argument = '-a \'{"key1":"value"}\' --var-json ACL_RULE'
+        output = self.run_script(argument)
+        self.assertEqual(output, '')
+
+    def test_show_run_interfaces(self):
+        argument = '-a \'{"key1":"value"}\' --var-json INTERFACE'
+        output = self.run_script(argument)
+        self.assertEqual(output, '')
