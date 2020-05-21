@@ -9,7 +9,6 @@
 #############################################################################
 
 try:
-    import sys
     import subprocess
     from sonic_platform_base.chassis_base import ChassisBase
 except ImportError as e:
@@ -57,8 +56,7 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-        description = 'None'
-        reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+        description = 'Unknown reason'
 
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         prev_reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + PREV_REBOOT_CAUSE_FILE)
