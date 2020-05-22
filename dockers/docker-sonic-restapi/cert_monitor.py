@@ -16,6 +16,9 @@ REDIS_TIMEOUT_MS = 0
 logger = Logger()
 
 def get_pid(process_name):
+    '''
+    return Process ID of the given process
+    '''
     cmd = "ps aux"
     response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = response.communicate()
@@ -32,14 +35,20 @@ def get_pid(process_name):
         return pid           
 
 def monitor_certificates(certificates, path_to_cert_tracker):
+    '''
+    Continuously monitor for change in 'last modified' time of the certs and restart restapi if
+    change is detected
+    '''
     while True:
         if os.path.isfile(path_to_cert_tracker):
+            # load last read 'last modified' times
             cert_tracker = json.load(open(path_to_cert_tracker))
         else:
             cert_tracker = {}
         restart = False
         for certificate in certificates:
             if os.path.isfile(certificate):
+                # Get 'last modified' time of the symbolic link of the cert
                 m_time = os.lstat(certificate).st_mtime
                 if certificate in cert_tracker:
                     if cert_tracker[certificate] != m_time:
@@ -48,11 +57,13 @@ def monitor_certificates(certificates, path_to_cert_tracker):
                 cert_tracker[certificate] = m_time
             else:
                 logger.log_error("monitor_certificates: "+certificate+" not found!")
+        # Save 'last modifed' times
         json.dump(cert_tracker, open(path_to_cert_tracker, "w"))
 
         if restart:
             pid = get_pid(RESTAPI_SERVER_PROCESS)
             if pid:
+                # Send SIGQUIT to go-server-server
                 cmd = "kill -3 "+pid
                 response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = response.communicate()
@@ -66,6 +77,7 @@ def monitor_certificates(certificates, path_to_cert_tracker):
             else:
                 logger.log_warn("monitor_certificates: RESTAPI Server (go-server-server) is not running!")
             
+            # Safe to restart restapi server now
             cmd = "supervisorctl restart restapi"
             response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = response.communicate()
