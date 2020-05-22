@@ -7,5 +7,4 @@ Standards-Version: 3.9.3
 
 Package: sonic-platform-inspur-sc5630el
 Architecture: amd64
-Depends: linux-image-4.9.0-9-2-amd64
 Description: Kernel modules for Inspur platform devices such as eeprom, psu, sfp
