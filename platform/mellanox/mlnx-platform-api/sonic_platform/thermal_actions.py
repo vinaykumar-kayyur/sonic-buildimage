@@ -86,7 +86,9 @@ class CheckAndSetAllFanSpeedAction(SetAllFanSpeedAction):
             SetAllFanSpeedAction.execute(self, thermal_info_dict)
         
 
-@thermal_json_object('thermal_control.control')
+# Hide this action since there is a bug in kernel, enable/disable
+# thermal algorithm will cause kernel dead lock
+#@thermal_json_object('thermal_control.control')
 class ControlThermalAlgoAction(ThermalPolicyActionBase):
     """
     Action to control the thermal control algorithm
@@ -139,6 +141,12 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
             UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
 
         logger.log_info('Changed thermal algorithm status to {}'.format(self.status))
+
+
+@thermal_json_object('thermal.recover')
+class ThermalRecoverAction(ThermalPolicyActionBase):
+    def execute(self, thermal_info_dict):
+         UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
 
 
 class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
