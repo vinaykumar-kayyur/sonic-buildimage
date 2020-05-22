@@ -19,20 +19,13 @@ def get_pid(process_name):
     '''
     return Process ID of the given process
     '''
-    cmd = "ps aux"
+    cmd = "pgrep -f "+process_name
     response = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = response.communicate()
     if (response.returncode != 0):
         logger.log_error(stderr, True)
         return None
-    else:
-        pid = None
-        processes = stdout.splitlines()
-        for process in processes:
-            if process_name in process:
-                pid = process.split()[1]
-                break
-        return pid           
+    return stdout
 
 def monitor_certificates(certificates, path_to_cert_tracker):
     '''
