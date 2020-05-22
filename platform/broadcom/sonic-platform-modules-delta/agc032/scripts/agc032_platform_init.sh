@@ -2,7 +2,7 @@
 
 #platform init script for Delta agc032
 
-#fan speed monitol start
+#fan speed monitor start
 /usr/share/sonic/device/x86_64-delta_agc032-r0/fancontrol.service /usr/share/sonic/device/x86_64-delta_agc032-r0/fancontrol &
 
 #Get syseeprom information
