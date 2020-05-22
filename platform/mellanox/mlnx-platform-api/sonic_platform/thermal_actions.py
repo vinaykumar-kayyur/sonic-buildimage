@@ -86,9 +86,7 @@ class CheckAndSetAllFanSpeedAction(SetAllFanSpeedAction):
             SetAllFanSpeedAction.execute(self, thermal_info_dict)
         
 
-# Hide this action since there is a bug in kernel, enable/disable
-# thermal algorithm will cause kernel dead lock
-#@thermal_json_object('thermal_control.control')
+@thermal_json_object('thermal_control.control')
 class ControlThermalAlgoAction(ThermalPolicyActionBase):
     """
     Action to control the thermal control algorithm
