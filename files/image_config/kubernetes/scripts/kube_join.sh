@@ -83,7 +83,7 @@ usage() {
     cat << EOF
 Usage: [-i] [-a] [-d] [-s <API Server IP>] [-f]
 
-    -s -- IP address of API server"
+    -s -- IP address of API server
     -i -- Does insecure curl download of kubeconfig file 
     -a -- Async mode
     -d -- Debug mode
