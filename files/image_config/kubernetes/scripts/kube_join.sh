@@ -88,7 +88,7 @@ Usage: [-i] [-a] [-d] [-s <API Server IP>] [-f]
     -a -- Async mode
     -d -- Debug mode
     -f -- Force join
-    -t -- test only 
+    -t -- Test only 
 EOF
 }
 
