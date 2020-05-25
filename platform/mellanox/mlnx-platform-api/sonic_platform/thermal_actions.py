@@ -66,9 +66,6 @@ class SetAllFanSpeedAction(SetFanSpeedAction):
                 for psu_fan in psu.get_all_fans():
                     psu_fan.set_speed(speed)
 
-            logger.log_info('Updated PSU FAN speed to {}%'.format(speed))
-
-
 
 @thermal_json_object('fan.all.check_and_set_speed')
 class CheckAndSetAllFanSpeedAction(SetAllFanSpeedAction):
@@ -176,8 +173,6 @@ class ChangeMinCoolingLevelAction(ThermalPolicyActionBase):
         else:
             Fan.set_cooling_level(Fan.min_cooling_level, current_cooling_level)
             UpdateCoolingLevelToMinAction.update_cooling_level_to_minimum(thermal_info_dict)
-
-        logger.log_info('Changed minimum cooling level to {}'.format(Fan.min_cooling_level))
 
 
 class UpdatePsuFanSpeedAction(ThermalPolicyActionBase):
