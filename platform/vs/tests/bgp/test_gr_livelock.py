@@ -97,6 +97,8 @@ def test_gr_livelock(dvs, testlog):
     dvs.servers[1].runcmd("ip addr add 10.0.0.3/31 dev eth0")
     dvs.servers[1].runcmd("ifconfig eth0 up")
 
+    dvs.runcmd("ip link set dev eth1 up")
+    dvs.runcmd("ip link set dev eth2 up")
     time.sleep(5)
 
     # Run two bgp neighbors
