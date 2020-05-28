@@ -102,6 +102,7 @@ sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install "redis==2.10.6"
 
 # Install redis-dump-load Python 3 package
+# Note: the scripts will be overwritten by corresponding Python 2 package
 REDIS_DUMP_LOAD_PY3_WHEEL_NAME=$(basename {{redis_dump_load_py3_wheel_path}})
 sudo cp {{redis_dump_load_py3_wheel_path}} $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $REDIS_DUMP_LOAD_PY3_WHEEL_NAME
