@@ -15,6 +15,8 @@ def test_InvalidNexthop(dvs, testlog):
     dvs.servers[0].runcmd("ip addr add fc00::2/126 dev eth0")
     dvs.servers[0].runcmd("ifconfig eth0 up")
 
+    dvs.runcmd("ip link set dev eth1 up")
+    dvs.runcmd("ip link set dev eth2 up")
     time.sleep(5)
 
     print dvs.runcmd("supervisorctl status")
