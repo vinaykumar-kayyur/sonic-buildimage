@@ -39,6 +39,7 @@
 #
 
 PIDFILE="/var/run/fancontrol.pid"
+THERMAL_OVERLOAD_CONTROL_FILE="/usr/local/bin/thermal_overload_control.sh"
 
 #DEBUG=1
 MAX=255
@@ -68,6 +69,8 @@ function LoadConfig
 	MINPWM=`egrep '^MINPWM=.*$' $1 | sed -e 's/MINPWM=//g'`
 	MAXPWM=`egrep '^MAXPWM=.*$' $1 | sed -e 's/MAXPWM=//g'`
 	THYST=`egrep '^THYST=.*$' $1 | sed -e 's/THYST=//g'`
+	MAXTEMPCRIT=`egrep '^MAXTEMPCRIT=.*$' $1 | sed -e 's/MAXTEMPCRIT=//g'`
+	MAXTEMPTYPE=`egrep '^MAXTEMPTYPE=.*$' $1 | sed -e 's/MAXTEMPTYPE=//g'`
 	echo 
 	# Check whether all mandatory settings are set
 	if [[ -z ${INTERVAL} || -z ${FCTEMPS} || -z ${MINTEMP} || -z ${MAXTEMP} || -z ${MINSTART} || -z ${MINSTOP} ]]
@@ -158,6 +161,23 @@ function LoadConfig
 		let fcvcount=fcvcount+1
 	done
 	echo
+
+
+	let tscount=0
+	for ts in $MAXTEMPCRIT
+	do
+		CSTEMP[$tscount]=`echo $ts | cut -d '=' -f1`
+		CSMAXTEMPCRIT[$tscount]=`echo $ts | cut -d '=' -f2`
+		CSMAXTEMPTYPE=($(echo $MAXTEMPTYPE |sed -e 's/ /\n/g'| cut -d'=' -f2))
+		
+		echo
+		echo "Settings for ${CSMAXTEMPTYPE[$tscount]} temperature sensor:"
+		echo "  Depends on ${CSTEMP[$tscount]}"
+		echo "  MAXTEMPCRIT=${CSMAXTEMPCRIT[$tscount]}"
+		let tscount=tscount+1
+	done
+	echo
+
 }
 
 function CheckFanFault()
@@ -171,6 +191,28 @@ function CheckFanFault()
 			return 1 # fan fault detected
 		fi
 		let fancount=$fancount+1
+	done
+	return 0
+}
+
+function CheckTempOver()
+{
+	let tempcount=0
+	while (( $tempcount < ${#CSTEMP[@]} )) # go through all temp.
+	do
+		ctemp=`cat ${CSTEMP[$tempcount]}`
+		let maxcrit="${CSMAXTEMPCRIT[$tempcount]}*1000"
+		if [ $ctemp -ge $maxcrit ]
+		then
+			logger "Thermal overload : ${CSMAXTEMPTYPE[$tempcount]} temperature ${ctemp} > ${maxcrit}"
+			if [ -f "$THERMAL_OVERLOAD_CONTROL_FILE" ]
+			then
+				toc_cmd="${THERMAL_OVERLOAD_CONTROL_FILE} ${CSMAXTEMPTYPE[$tempcount],,}"
+				bash $toc_cmd
+				exit 1
+			fi
+		fi
+		let tempcount=$tempcount+1
 	done
 	return 0
 }
@@ -468,6 +510,7 @@ function UpdateFanSpeeds
 
 		#if some fan fault detected all pwm=100%
 		CheckFanFault
+		CheckTempOver
 		if [ $? -ne 0 ]
 		then
 			echo $MAX > $pwmo
