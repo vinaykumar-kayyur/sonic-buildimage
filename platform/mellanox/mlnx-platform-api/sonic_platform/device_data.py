@@ -70,5 +70,21 @@ DEVICE_DATA = {
                 "unk_untrust": {"-127:120":16},
             }
         }
+    },
+    'x86_64-mlnx_msn3420-r0': {
+        'thermal': {
+            'minimum_table': {
+                "unk_trust":   {"-127:120":16},
+                "unk_untrust": {"-127:120":16},
+            }
+        }
+    },
+    'x86_64-mlnx_msn4600c-r0': {
+        'thermal': {
+            'minimum_table': {
+                "unk_trust":   {"-127:120":16},
+                "unk_untrust": {"-127:120":16},
+            }
+        }
     }
 }
