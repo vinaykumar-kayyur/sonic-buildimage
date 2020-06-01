@@ -267,12 +267,12 @@ class HostConfigDaemon:
         for key in status_data.keys():
             if not key:
                 syslog.syslog(syslog.LOG_WARNING, "FEATURE key is missing")
-                return
+                continue
 
             status = status_data[key]['status']
             if not status:
                 syslog.syslog(syslog.LOG_WARNING, "status is missing for {}".format(key))
-                return
+                continue
             if status == "enabled":
                 start_cmds=[]
                 start_cmds.append("sudo systemctl unmask {}.service".format(key))
@@ -285,7 +285,7 @@ class HostConfigDaemon:
                     except subprocess.CalledProcessError as err:
                         syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
                                   .format(err.cmd, err.returncode, err.output))
-                        return
+                        continue
                 syslog.syslog(syslog.LOG_INFO, "Feature '{}' is enabled and started".format(key))
             elif status == "disabled":
                 stop_cmds=[]
@@ -299,7 +299,7 @@ class HostConfigDaemon:
                     except subprocess.CalledProcessError as err:
                         syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
                                   .format(err.cmd, err.returncode, err.output))
-                        return
+                        continue
                 syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(key))
             else:
                 syslog.syslog(syslog.LOG_ERR, "Unexpected status value '{}' for '{}'".format(status, key))
