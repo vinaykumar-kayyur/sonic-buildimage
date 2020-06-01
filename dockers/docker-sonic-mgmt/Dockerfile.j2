@@ -115,6 +115,10 @@ RUN pip install azure-kusto-data==0.0.13 \
 RUN pip install wheel==0.33.6
 RUN pip install pytest-ansible==2.2.2
 
+# Apply 'become_user' patch for pytest-ansible
+RUN curl -fsSL https://github.com/ansible/pytest-ansible/commit/d33c025f070a9c870220a157cc5a999fda68de44.patch | \
+    patch /usr/local/lib/python2.7/dist-packages/pytest_ansible/module_dispatcher/v28.py
+
 ## Copy and install sonic-mgmt docker dependencies
 COPY \
 {% for deb in docker_sonic_mgmt_debs.split(' ') -%}
