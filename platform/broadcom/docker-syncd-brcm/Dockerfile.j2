@@ -15,6 +15,8 @@ debs/{{ deb }}{{' '}}
 {%- endfor -%}
 debs/
 
+RUN apt-get install -y --no-install-recommends protobuf-compiler
+
 # Install locally-built Debian packages and implicitly install their dependencies
 {{ install_debian_packages(docker_syncd_brcm_debs.split(' ')) }}
 
