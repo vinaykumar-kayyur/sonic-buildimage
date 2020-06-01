@@ -10,15 +10,6 @@
 #############################################################################
 
 try:
-    import exceptions
-    import binascii
-    import time
-    import optparse
-    import warnings
-    import os
-    import sys
-    import subprocess
-    from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")

@@ -7,10 +7,6 @@
 
 try:
     import time
-    import os
-    import logging
-    import struct
-    import syslog
     from socket import *
     from select import *
     from sonic_sfp.sfputilbase import SfpUtilBase
@@ -140,4 +136,3 @@ class SfpUtil(SfpUtilBase):
                     port_dict[x] = presence
                     return True, port_dict
             time.sleep(0.5)
-        return False, {}
