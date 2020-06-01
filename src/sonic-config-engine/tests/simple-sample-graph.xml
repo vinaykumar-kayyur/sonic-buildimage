@@ -162,8 +162,19 @@
           <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
           <VlanID>1000</VlanID>
           <Tag>1000</Tag>
+          <Type i:nil="true"/>
           <Subnets>192.168.0.0/27</Subnets>
         </VlanInterface>
+        <VlanInterface>
+          <Name>kk1</Name>
+          <AttachTo>fortyGigE0/12</AttachTo>
+          <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
+          <VlanID>2020</VlanID>
+          <Tag>2020</Tag>
+          <Type>UserDefinedL2Vlan</Type>
+          <Subnets>192.168.0.0/28</Subnets>
+        </VlanInterface>
+
       </VlanInterfaces>
       <IPInterfaces>
         <IPInterface>
