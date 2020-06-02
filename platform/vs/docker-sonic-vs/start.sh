@@ -52,6 +52,8 @@ cp /etc/default/sonic-db/database_config.json /var/run/redis/sonic-db/
 supervisorctl start redis-server
 
 /usr/bin/configdb-load.sh
+[ -f /var/sonic/config_db.json ] && config load -y /var/sonic/config_db.json
+config save -y
 
 supervisorctl start syncd
 
@@ -78,6 +80,8 @@ supervisorctl start vlanmgrd
 supervisorctl start zebra
 
 supervisorctl start staticd
+
+supervisorctl start bgpd
 
 supervisorctl start buffermgrd
 
