@@ -41,7 +41,7 @@ def readJson(filename):
                 print("Json file does not exist")
         data_dict = ast.literal_eval(json.dumps(data))
         return data_dict
-    except:
+    except Exception as e:
         print("error occurred while parsing json:", sys.exc_info()[1])
         return None
 
@@ -54,7 +54,7 @@ def db_connect_configdb():
         return None
     try:
         config_db.connect()
-    except:
+    except Exception as e:
         config_db = None
     return config_db
 
@@ -109,7 +109,7 @@ def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_conf
             port_alias_map = {}
             port_alias_asic_map = {}
             for intf_name in ports.keys():
-                port_alias_map[ports[intf_name]["alias"]]= intf_name
+                port_alias_map[ports[intf_name]["alias"]] = intf_name
             return (ports, port_alias_map, port_alias_asic_map)
 
     if not port_config_file:
