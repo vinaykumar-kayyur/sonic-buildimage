@@ -70,6 +70,8 @@ RUN apt-get update &&        \
         python-setuptools    \
         python-wheel
 
+# For templating
+RUN pip install j2cli
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 
