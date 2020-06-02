@@ -37,12 +37,8 @@ from functools import partial
 from minigraph import minigraph_encoder
 from minigraph import parse_xml
 from minigraph import parse_device_desc_xml
-<<<<<<< HEAD
 from minigraph import parse_asic_sub_role
-from portconfig import get_port_config
-=======
 from portconfig import get_port_config, get_port_config_file_name, get_breakout_mode
->>>>>>> [buildImage] Add support of platform.json parsing to portconfig.py file
 from sonic_device_util import get_machine_info
 from sonic_device_util import get_platform_info
 from sonic_device_util import get_system_mac
