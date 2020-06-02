@@ -8,7 +8,7 @@ import pytest
 def test_InvalidNexthop(dvs, testlog):
 
     dvs.copy_file("/etc/frr/", "bgp/files/invalid_nexthop/bgpd.conf")
-    dvs.runcmd("supervisorctl start bgpd")
+    dvs.runcmd("supervisorctl restart bgpd")
     dvs.runcmd("ip addr add fc00::1/126 dev Ethernet0")
     dvs.runcmd("config interface startup Ethernet0")
 
