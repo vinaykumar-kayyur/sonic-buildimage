@@ -111,13 +111,7 @@ RUN apt-get update                  \
 RUN pip install azure-kusto-data==0.0.13 \
                 azure-kusto-ingest==0.0.13
 
-# Install pytest-ansible module
 RUN pip install wheel==0.33.6
-RUN pip install pytest-ansible==2.2.2
-
-# Apply 'become_user' patch for pytest-ansible
-RUN curl -fsSL https://github.com/ansible/pytest-ansible/commit/d33c025f070a9c870220a157cc5a999fda68de44.patch | \
-    patch /usr/local/lib/python2.7/dist-packages/pytest_ansible/module_dispatcher/v28.py
 
 ## Copy and install sonic-mgmt docker dependencies
 COPY \
@@ -134,6 +128,13 @@ debs/{{ deb }}{{' '}}
 RUN pip install ansible==2.8.7
 
 RUN pip install pysubnettree
+
+# Install pytest-ansible module
+RUN git clone https://github.com/ansible/pytest-ansible.git \
+    && cd pytest-ansible \
+    && python setup.py install \
+    && cd .. \
+    && rm -fr pytest-ansible
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
