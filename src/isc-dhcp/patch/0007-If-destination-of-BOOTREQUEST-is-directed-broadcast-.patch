@@ -76,7 +76,7 @@ index 98ac46a..53afecc 100644
  		dfree(iface->addresses, MDL);
  		iface->addresses = tmp;
 +
-+				 tmp = dmalloc(new_max * sizeof(struct in_addr), MDL);
++		tmp = dmalloc(new_max * sizeof(struct in_addr), MDL);
 +		if (tmp == NULL) {
 +			log_fatal("Out of memory saving IPv4 netmask "
 +					  "on interface.");
