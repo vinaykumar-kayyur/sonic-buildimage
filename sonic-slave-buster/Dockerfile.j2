@@ -304,7 +304,21 @@ RUN apt-get update && apt-get install -y \
         xxd \
 # For DHCP Monitor tool
         libexplain-dev \
-        libevent-dev
+        libevent-dev   \
+        # For WPA supplication
+        libssl-dev           \
+        dbus                 \
+        libdbus-1-dev        \
+        libdbus-glib-1-2     \
+        libdbus-glib-1-dev   \
+        libreadline-dev      \
+        libncurses5-dev      \
+        libnl-genl-3-dev     \
+        libnl-3-dev          \
+        libnl-route-3-dev    \
+        libpcsclite-dev      \
+        docbook-to-man       \
+        docbook-utils
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
