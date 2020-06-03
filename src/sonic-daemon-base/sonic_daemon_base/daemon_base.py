@@ -27,7 +27,7 @@ PLATFORM_KEY = 'DEVICE_METADATA.localhost.platform'
 
 # Port config information
 PORT_CONFIG = 'port_config.ini'
-PLATFORM_CAP = 'platform.json'
+PLATFORM_JSON = 'platform.json'
 
 EEPROM_MODULE_NAME = 'eeprom'
 EEPROM_CLASS_NAME = 'board'
@@ -152,7 +152,7 @@ class DaemonBase(object):
         (platform_path, hwsku_path) = self.get_path_to_platform_and_hwsku()
 
         # First check for the presence of the new 'platform.json' file
-        port_config_file_path = "/".join([platform_path, PLATFORM_CAP])
+        port_config_file_path = "/".join([platform_path, PLATFORM_JSON])
         if not os.path.isfile(port_config_file_path):
 
             # platform.json doesn't exist. Try loading the legacy 'port_config.ini' file

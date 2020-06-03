@@ -5,7 +5,7 @@ import json
 import ast
 
 # Global Variable
-PLATFORM_CAP = "platform_output.json"
+PLATFORM_OUTPUT_FILE = "platform_output.json"
 
 class TestCfgGenPlatformJson(TestCase):
 
@@ -66,7 +66,7 @@ class TestCfgGenPlatformJson(TestCase):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.platform_json + '" -S "' + self.hwsku_json  + '" -v "PORT"'
         output = self.run_script(argument)
 
-        sample_file = os.path.join(self.test_dir, 'sample_output', "platform_output.json")
+        sample_file = os.path.join(self.test_dir, 'sample_output', PLATFORM_OUTPUT_FILE)
         fh = open(sample_file, 'rb')
         fh_data = json.load(fh)
         fh.close()
