@@ -6,6 +6,8 @@ try:
     import json
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
+
+# TODO: need to remove basestring once migrate to Python 3 and just change to str
 try:
     basestring
 except NameError:
@@ -22,7 +24,6 @@ def usage():
     print "Usage: " + sys.argv[0] + " <platform_json_file>"
     sys.exit(1)
 
-
 def check_port_attr(port_attr):
     for each_key in port_attr:
         if each_key not in PORT_ATTRIBUTES:
@@ -31,6 +32,7 @@ def check_port_attr(port_attr):
         if not port_attr[each_key]:
             print "Error: "+ each_key + " has no value."
             return False
+        # TODO: need to remove basestring once migrate to Python 3 and just change to str
         if not isinstance(port_attr[each_key], basestring):
             print "Error:value type of  "+ each_key + " must be string."
             return False
@@ -43,7 +45,6 @@ def check_file(platform_json_file):
         port_dict = json.loads(platform_file_data)
 
         for each_port in port_dict[INTF_KEY]:
-
             # Validate port at top level
             port_id = re.search(PORT_REG, each_port)
             if port_id is  None:
@@ -61,7 +62,6 @@ def check_file(platform_json_file):
             #Validate port attributes for each port
             if not check_port_attr(port_attr):
                 return False
-
     except IOError:
         print "Error: Cannot open file " + platform_json_file
         return False
@@ -69,12 +69,9 @@ def check_file(platform_json_file):
         print "Error in parsing json file " + platform_json_file + " "
         print str(e)
         return False
-
     return True
 
-
 def main(argv):
-
     if len(argv) > 0 and argv[0] == "-h":
         usage()
 
