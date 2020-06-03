@@ -49,6 +49,7 @@ echo "
     \"maintainer\": \"SONiC\",
     \"maintainer_email\": \"sonicproject@googlegroups.com\",
     \"usage\": \"Supports SONiC release: ${RELEASE}\",
+    \"first_port_name\": \"eth0\",
     \"qemu\": {
         \"adapter_type\": \"e1000\",
         \"adapters\": 10,
