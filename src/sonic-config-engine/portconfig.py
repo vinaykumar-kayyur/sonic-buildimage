@@ -180,7 +180,7 @@ def gen_port_config(ports, parent_intf_id, index, alias_at_lanes, lanes, k,  off
         parent_intf_id = int(offset)+int(parent_intf_id)
         alias_start = 0 + offset
 
-        step = int(assigned_lane)/int(num_lane_used)
+        step = int(assigned_lane)//int(num_lane_used)
         for i in range(0,int(assigned_lane), step):
             intf_name = PORT_STR + str(parent_intf_id)
             ports[intf_name] = {}
