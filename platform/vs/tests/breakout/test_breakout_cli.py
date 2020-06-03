@@ -27,7 +27,7 @@ class TestBreakoutCli(object):
         (exitcode, result) = dvs.runcmd("config interface breakout {} {} -y".format(interface, brkout_mode))
 
         if result.strip("\n")[0] == "[ERROR] Breakout feature is not available without platform.json file" :
-            pytest.exit("**** This test is not needed ****")
+            pytest.skip("**** This test is not needed ****")
         root_dir = os.path.dirname('/')
         (exitcode, output_dict) = dvs.runcmd("jq '.' new_port_config.json")
         if output_dict is None:
