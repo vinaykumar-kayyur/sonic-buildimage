@@ -25,7 +25,7 @@ UTILS_DIR := utils
 SERVICE_DIR := service
 CLASSES_DIR := classes
 CONF_DIR := conf
-KDAL_DIR := kdal
+KDAL_DIR := ../../centec/centec-dal/
 
 %:
 	dh $@ --with systemd,python2,python3 --buildsystem=pybuild
