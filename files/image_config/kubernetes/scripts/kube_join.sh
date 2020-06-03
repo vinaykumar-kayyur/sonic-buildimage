@@ -59,6 +59,13 @@ download_file() {
         log_err "Failed to download https://${API_SERVER}/admin.conf"
         exit -1
     fi
+
+    # Replace Master-IP address in admin.conf to API_SERVER
+    # The IP in admin.conf could be different, if API_SERVER is a 
+    # VIP from a Load-balancer.
+    #
+    sed -i "s/server:.*:6443/server: https:\/\/${API_SERVER}:6443/" ${myfile}
+
     cp ${myfile} /etc/sonic/kube_admin.conf
     rm -f ${myfile}
     log_info "Downloaded kubeconfig into /etc/sonic/kube_admin.conf"
