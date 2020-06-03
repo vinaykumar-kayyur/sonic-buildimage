@@ -77,7 +77,7 @@ index 0cb2ef6..418b943 100644
  "                [-id interface0 [ ... -id interfaceN]\n" \
  "                [-U interface]\n" \
 -"                server0 [ ... serverN]\n\n" \
-+"                server0 [ ... serverN]\n\n"  DHCRELAY_OPTION82_USAGE \
++"                server0 [ ... serverN]\n\n" DHCRELAY_OPTION82_USAGE \
  "       %s {--version|--help|-h}"
  #else
  #define DHCRELAY_USAGE \
@@ -90,7 +90,7 @@ index 0cb2ef6..418b943 100644
  "                [-id interface0 [ ... -id interfaceN]\n" \
  "                [-U interface]\n" \
 -"                server0 [ ... serverN]\n\n" \
-+"                server0 [ ... serverN]\n\n"  DHCRELAY_OPTION82_USAGE \
++"                server0 [ ... serverN]\n\n" DHCRELAY_OPTION82_USAGE \
  "       %s {--version|--help|-h}"
  #endif
  #endif
