@@ -1,0 +1,72 @@
+#!/usr/bin/env python2
+
+"""
+    healthd
+    System health monitor daemon for SONiC
+"""
+
+import threading
+from sonic_daemon_base.daemon_base import Logger
+from sonic_daemon_base.daemon_base import DaemonBase
+from health_checker.manager import HealthCheckerManager
+
+SYSLOG_IDENTIFIER = 'healthd'
+logger = Logger(SYSLOG_IDENTIFIER)
+
+
+class HealthDaemon(DaemonBase):
+    def __init__(self):
+        """
+        Constructor of HealthDaemon
+        """
+        DaemonBase.__init__(self)
+        self.stop_event = threading.Event()
+
+    # Signal handler
+    def signal_handler(self, sig, frame):
+        """
+        Signal handler
+        :param sig: Signal number
+        :param frame: not used
+        :return:
+        """
+        if sig == signal.SIGHUP:
+            logger.log_info("Caught SIGHUP - ignoring...")
+        elif sig == signal.SIGINT:
+            logger.log_info("Caught SIGINT - exiting...")
+            self.stop_event.set()
+        elif sig == signal.SIGTERM:
+            logger.log_info("Caught SIGTERM - exiting...")
+            self.stop_event.set()
+        else:
+            logger.log_warning("Caught unhandled signal '" + sig + "'")
+
+    def run(self):
+        logger.log_info("Starting up...")
+
+        import sonic_platform.platform
+        chassis = sonic_platform.platform.Platform().get_chassis()
+        manager = HealthCheckerManager()
+        while 1:
+            stat = manager.check()
+            self._process_stat(stat)
+
+            if self.stop_event.wait(manager.config.interval):
+                break
+
+        # do some cleanup?
+
+    def _process_stat(self, stat):
+        pass #  TODO: set led and push some data to database
+
+        
+#
+# Main =========================================================================
+#
+def main():
+    thermal_control = HealthDaemon()
+    thermal_control.run()
+
+
+if __name__ == '__main__':
+    main()

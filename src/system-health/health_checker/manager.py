@@ -3,7 +3,8 @@ class HealthCheckerManager(object):
         self._checkers = []
 
         from .config import Config
-        self._config = Config()
+        self.config = Config()
+        self.initialize()
 
     def initialize(self):
         from .service_checker import ServiceChecker
@@ -13,20 +14,20 @@ class HealthCheckerManager(object):
 
     def check(self):
         stats = {}
-        self._config.load_config()
+        self.config.load_config()
         for checker in self._checkers:
             self._do_check(checker, stats)
 
-        if self._config.external_checkers:
+        if self.config.external_checkers:
             from .external_checker import ExternalChecker
-            for external_checker in self._config.external_checkers:
+            for external_checker in self.config.external_checkers:
                 checker = ExternalChecker(external_checker)
                 self._do_check(checker, stats)
         return stats
 
     def _do_check(self, checker, stats):
         try:
-            checker.check(self._config)
+            checker.check(self.config)
             category = checker.get_category()
             error_list = checker.get_error_list()
             if category not in stats:
