@@ -87,7 +87,7 @@ index 00c81d3..54f132a 100644
  					*/
  					if (packet->htype && !packet->giaddr.s_addr) {
  						int ret = 0, vlanid = 0;
- 						char ifalias[IFNAMSIZ] = { 0 };
++						char ifalias[IFNAMSIZ] = { 0 };
  
  						ret = _bridgefdbquery(print_hw_addr(packet->htype, packet->hlen, packet->chaddr),
  											  ifname,
