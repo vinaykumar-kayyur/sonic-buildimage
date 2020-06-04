@@ -192,7 +192,7 @@ class Psu(PsuBase):
                     caps = psu_led_cap.read()
                     cap_list = caps.split()
         except (ValueError, IOError):
-            status = 0
+            pass
         
         return cap_list
 

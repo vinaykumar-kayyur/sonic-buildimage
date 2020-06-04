@@ -11,7 +11,6 @@ sys.path.insert(0, modules_path)
 
 from sonic_platform.thermal_manager import ThermalManager
 from sonic_platform.thermal_infos import FanInfo, PsuInfo
-from sonic_platform.fan import Fan
 from sonic_platform.thermal import Thermal
 
 Thermal.check_thermal_zone_temperature = MagicMock()
@@ -167,23 +166,6 @@ def test_all_fan_absence_condition():
     fan_info.collect(chassis)
     assert condition.is_match({'fan_info': fan_info})
 
-
-def test_all_fan_presence_condition():
-    chassis = MockChassis()
-    chassis.make_fan_absence()
-    fan = MockFan()
-    fan_list = chassis.get_all_fans()
-    fan_list.append(fan)
-    fan_info = FanInfo()
-    fan_info.collect(chassis)
-
-    from sonic_platform.thermal_conditions import AllFanPresenceCondition
-    condition = AllFanPresenceCondition()
-    assert not condition.is_match({'fan_info': fan_info})
-
-    fan_list[0].presence = True
-    fan_info.collect(chassis)
-    assert condition.is_match({'fan_info': fan_info})
 
 def test_any_fan_fault_condition():
     chassis = MockChassis()
