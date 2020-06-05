@@ -465,3 +465,37 @@ class Chassis(ChassisBase):
         from .thermal_manager import ThermalManager
         return ThermalManager
 
+    def get_asic_temperature(self):
+        """
+        Retrieves current temperature reading from ASIC sensor
+
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125 
+        """
+        from . import thermal
+        temperature_file = join(thermal.THERMAL_ZONE_ASIC_PATH, thermal.THERMAL_ZONE_TEMPERATURE)
+        value_str = thermal.Thermal._read_generic_file(temperature_file, 0)
+        if value_str is None:
+            return None
+
+        value_float = float(value_str)
+        return value_float / 1000.0
+            
+    def get_asic_temperature_threshold(self):
+        """
+        Retrieves the high threshold temperature of ASIC
+
+        Returns:
+            A float number, the high threshold temperature of ASIC in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        from . import thermal
+        threshold_file = join(thermal.THERMAL_ZONE_ASIC_PATH, thermal.THERMAL_ZONE_HIGH_TEMPERATURE)
+        value_str = thermal.Thermal._read_generic_file(threshold_file, 0)
+        if value_str is None:
+            return None
+
+        value_float = float(value_str)
+        return value_float / 1000.0
+
