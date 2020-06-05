@@ -40,6 +40,12 @@ def obfuscate(data):
     else:
         return data
 
+# TODO:
+# Per review comments: All worker classes expect load method to be called
+# only once. To be robust, load method should include a check to ensure
+# that expectation, else throw exception.
+#
+
 class Iptables(object):
     def __init__(self):
         '''
