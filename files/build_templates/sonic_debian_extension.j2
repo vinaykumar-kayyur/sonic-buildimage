@@ -558,3 +558,22 @@ sudo chown -R $FRR_USER_UID:$FRR_USER_GID $FILESYSTEM_ROOT/etc/sonic/frr
 sudo chmod -R 640 $FILESYSTEM_ROOT/etc/sonic/frr/
 sudo chmod 750 $FILESYSTEM_ROOT/etc/sonic/frr
 {%- endif %}
+
+# Mask services which are disabled by default
+MASK_SERVICES_SCRIPT=/tmp/mask_services.py
+sudo tee $FILESYSTEM_ROOT/$MASK_SERVICES_SCRIPT > /dev/null <<EOF
+#!/usr/bin/env python3
+
+import json
+import subprocess
+
+with open('/etc/sonic/init_cfg.json') as init_cfg_file:
+    init_cfg = json.load(init_cfg_file)
+    if 'FEATURE' in init_cfg:
+        for feature_name, feature_props in init_cfg['FEATURE'].items():
+            if 'status' in feature_props and feature_props['status'] == 'disabled':
+                subprocess.run(['systemctl', 'mask', '{}.service'.format(feature_name)])
+EOF
+sudo chmod a+x $FILESYSTEM_ROOT/$MASK_SERVICES_SCRIPT
+sudo LANG=C chroot $FILESYSTEM_ROOT $MASK_SERVICES_SCRIPT
+sudo rm -rf $FILESYSTEM_ROOT/$MASK_SERVICES_SCRIPT
