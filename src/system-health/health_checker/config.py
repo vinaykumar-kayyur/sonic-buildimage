@@ -4,6 +4,10 @@ import json
 
 class Config(object):
     DEFAULT_INTERVAL = 60
+    DEFAULT_LED_CONFIG = {
+        'fault': 'amber',
+        'normal': 'green',
+    }
 
     def __init__(self):
         self._config_file = ''  # TODO: init
@@ -36,7 +40,16 @@ class Config(object):
 
     def _reset(self):
         self._last_mtime = None
+        self.config_data = None
         self.interval = Config.DEFAULT_INTERVAL
         self.ignore_services = None
         self.ignore_devices = None
         self.external_checkers = None
+
+    def get_led_color(self, status):
+        if self.config_data and 'led_color' in self.config_data:
+            if status in self.config_data['led_color']:
+                return self.config_data['led_color'][status]
+        
+        return self.DEFAULT_LED_CONFIG[status]
+

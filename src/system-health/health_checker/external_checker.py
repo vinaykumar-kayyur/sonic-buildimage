@@ -10,7 +10,7 @@ class ExternalChecker(HealthChecker):
 
     def reset(self):
         self._category = None
-        self._error_list = None
+        self._error_info = None
 
     def get_category(self):
         return self._category
@@ -27,12 +27,17 @@ class ExternalChecker(HealthChecker):
 
         self._category = lines[0]
         if len(lines) > 1:
-            self._error_list = []
+            self._error_info = {}
             for line in lines[1:]:
                 line = line.strip()
                 if not line:
                     continue
-                self._error_list.append(line)
+                pos = line.find(':')
+                if pos == -1:
+                    continue
+                obj_name = line[:pos]
+                error_msg = line[pos:]
+                self._error_info[obj_name] = error_msg
         return
 
     def __str__(self):

@@ -8,6 +8,7 @@
 import threading
 from sonic_daemon_base.daemon_base import Logger
 from sonic_daemon_base.daemon_base import DaemonBase
+from swsssdk import SonicV2Connector
 from health_checker.manager import HealthCheckerManager
 
 SYSLOG_IDENTIFIER = 'healthd'
@@ -15,12 +16,22 @@ logger = Logger(SYSLOG_IDENTIFIER)
 
 
 class HealthDaemon(DaemonBase):
+    SYSTEM_HEALTH_TABLE_NAME = 'SYSTEM_HEALTH_INFO'
+
     def __init__(self):
         """
         Constructor of HealthDaemon
         """
         DaemonBase.__init__(self)
+        self._db = SonicV2Connector(host="127.0.0.1")
+        self._db.connect(self._db.STATE_DB)
         self.stop_event = threading.Event()
+
+    def deinit(self):
+        self._clear_system_health_table()
+
+    def _clear_system_health_table(self):
+        self._db.delete_all_by_pattern(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME)
 
     # Signal handler
     def signal_handler(self, sig, frame):
@@ -49,15 +60,31 @@ class HealthDaemon(DaemonBase):
         manager = HealthCheckerManager()
         while 1:
             stat = manager.check()
-            self._process_stat(stat)
+            self._process_stat(chassis, manager.config, stat)
 
             if self.stop_event.wait(manager.config.interval):
                 break
 
-        # do some cleanup?
+        self.deinit()
 
-    def _process_stat(self, stat):
-        pass #  TODO: set led and push some data to database
+    def _process_stat(self, chassis, config, stat):
+        self._clear_system_health_table()
+        status = True
+        for category, error_info in stat.items():
+            if error_info:
+                status = False
+                for obj_name, error_msg in error_info.items():
+                    self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, '', obj_name, error_msg)
+
+        summary = 'OK' if status else 'Not OK'
+        self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, '', 'summary', '')
+        led_status = 'normal' if status else 'fault'
+        try:
+            chassis.set_status_led(config.get_led_color(led_status))
+        except NotImplementedError:
+            logger.log_info('chassis.set_status_led is not implemented')
+        except Exception as e:
+            logger.log_error('Failed to set system led due to - {}'.format(repr(e)))
 
         
 #

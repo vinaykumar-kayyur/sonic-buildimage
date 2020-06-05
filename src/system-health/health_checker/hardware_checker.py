@@ -3,7 +3,6 @@ from swsssdk import SonicV2Connector
 from .health_checker import checker, HealthChecker
 
 
-@checker()
 class HardwareChecker(HealthChecker):
     CHASSIS_TABLE_NAME = 'CHASSIS_INFO'
     CHASSIS_KEY = '{}|chassis 1'.format(CHASSIS_TABLE_NAME)
@@ -25,130 +24,132 @@ class HardwareChecker(HealthChecker):
         self._check_psu_status(config)
 
     def _check_asic_status(self, config):
-        if 'asic' in config.ignore_devices:
+        if config.ignore_devices and 'asic' in config.ignore_devices:
             return
 
         temperature = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temperature')
         temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temperature_threshold')
         if not temperature:
-            self._error_list.append('Failed to get ASIC temperature')
+            self._error_info['ASIC'] = 'Failed to get ASIC temperature'
         elif not temperature_threshold:
-            self._error_list.append('Failed to get ASIC temperature threshold')
+            self._error_info['ASIC'] = 'Failed to get ASIC temperature threshold'
         else:
             temperature = float(temperature)
             temperature_threshold = float(temperature_threshold)
             if temperature > temperature_threshold:
-                self._error_list.append('ASIC temperature is too hot, temperature={}, threshold={}'.format(temperature,
-                                                                                                           temperature_threshold))
+                self._error_info['ASIC'] = 'ASIC temperature is too hot, temperature={}, threshold={}'.format(temperature,
+                                                                                                           temperature_threshold)
 
     def _check_fan_status(self, config):
-        if 'fan' in config.ignore_devices:
+        if config.ignore_devices and 'fan' in config.ignore_devices:
             return
 
         keys = self._db.keys(self._db.STATE_DB, HardwareChecker.FAN_TABLE_NAME + '*')
         if not keys:
-            self._error_list.append('Failed to get fan information')
+            self._error_info['fan'] = 'Failed to get fan information'
             return
 
         for key in natsorted(keys):
             key_list = key.split('|')
             if len(key_list) != 2:  # error data in DB, log it and ignore
-                self._error_list.append('Invalid key for FAN_INFO: {}'.format(key))
+                self._error_info[key] = 'Invalid key for FAN_INFO: {}'.format(key)
                 continue
 
             name = key_list[1]
-            if name in config.ignore_devices:
+            if config.ignore_devices and name in config.ignore_devices:
                 continue
             data_dict = self._db.get_all(self._db.STATE_DB, key)
             presence = bool(data_dict['presence'])
             if not presence:
-                self._error_list.append('{} is missing'.format(name))
+                self._error_info[name] = '{} is missing'.format(name)
                 continue
 
             status = bool(data_dict['status'])
             if not status:
-                self._error_list.append('{} is broken'.format(name))
+                self._error_info[name] = '{} is broken'.format(name)
                 continue
 
             if not self._ignore_check(config.ignore_devices, 'fan', name, 'speed'):
-                speed = data_dict['speed']
-                speed_threshold = data_dict['target_speed']
+                speed = data_dict.get('speed', None)
+                speed_min_th = data_dict.get('speed_min_th', None)
+                speed_max_th = data_dict.get('speed_max_th', None)
                 if not speed:
-                    self._error_list.append('Failed to get speed data for {}'.format(name))
-                elif not speed_threshold:
-                    self._error_list.append('Failed to get speed threshold for {}'.format(name))
+                    self._error_info[name] = 'Failed to get speed data for {}'.format(name)
+                elif not speed_min_th:
+                    self._error_info[name] = 'Failed to get speed minimum threshold for {}'.format(name)
+                elif not speed_max_th:
+                    self._error_info[name] = 'Failed to get speed maximum threshold for {}'.format(name)
                 else:
                     speed = float(speed)
-                    thresholds = speed_threshold.split(',')
-                    min_speed = float(thresholds[0])
-                    max_speed = float(thresholds[1])
-                    if speed < min_speed or speed > max_speed:
-                        self._error_list.append(
-                            '{} speed is out of range, speed={}, range=[{},{}]'.format(name, speed, min_speed, max_speed))
+                    speed_min_th = float(speed_min_th)
+                    speed_max_th = float(speed_max_th)
+                    if speed < speed_min_th or speed > speed_max_th:
+                        self._error_info[name] = '{} speed is out of range, speed={}, range=[{},{}]'.format(name, speed, speed_min_th, speed_max_th)
 
     def _check_psu_status(self, config):
-        if 'psu' in config.ignore_devices:
+        if config.ignore_devices and 'psu' in config.ignore_devices:
             return
 
         keys = self._db.keys(self._db.STATE_DB, HardwareChecker.PSU_TABLE_NAME + '*')
         if not keys:
-            self._error_list.append('Failed to get PSU information')
+            self._error_info['PSU'] = 'Failed to get PSU information'
             return
 
         for key in natsorted(keys):
             key_list = key.split('|')
             if len(key_list) != 2:  # error data in DB, log it and ignore
-                self._error_list.append('Invalid key for PSU_INFO: {}'.format(key))
+                self._error_info[key] = 'Invalid key for PSU_INFO: {}'.format(key)
                 continue
 
             name = key_list[1]
-            if name in config.ignore_devices:
+            if config.ignore_devices and name in config.ignore_devices:
                 continue
 
             data_dict = self._db.get_all(self._db.STATE_DB, key)
             presence = bool(data_dict['presence'])
             if not presence:
-                self._error_list.append('{} is missing'.format(name))
+                self._error_info[name] = '{} is missing'.format(name)
                 continue
 
             status = bool(data_dict['status'])
             if not status:
-                self._error_list.append('{} is out of power'.format(name))
+                self._error_info[name] = '{} is out of power'.format(name)
                 continue
 
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'temperature'):
                 temperature = data_dict['temperature']
                 temperature_threshold = data_dict['temperature_threshold']
                 if temperature is None:
-                    self._error_list.append('Failed to get temperature data for {}'.format(name))
+                    self._error_info[name] = 'Failed to get temperature data for {}'.format(name)
                 elif temperature_threshold is None:
-                    self._error_list.append('Failed to get temperature threshold data for {}'.format(name))
+                    self._error_info[name] = 'Failed to get temperature threshold data for {}'.format(name)
                 else:
                     temperature = float(temperature)
                     temperature_threshold = float(temperature_threshold)
                     if temperature > temperature_threshold:
-                        self._error_list.append(
-                            '{} temperature is too hot, temperature={}, threshold={}'.format(name, temperature,
-                                                                                             temperature_threshold))
+                        self._error_info[name] = '{} temperature is too hot, temperature={}, threshold={}'.format(name, temperature,
+                                                                                             temperature_threshold)
+
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'voltage'):
-                voltage = data_dict['voltage']
-                voltage_threshold = data_dict['voltage_threshold']
+                voltage = data_dict.get('voltage', None)
+                voltage_min_th = data_dict.get('voltage_min_th', None)
+                voltage_max_th = data_dict.get('voltage_max_th', None)
                 if voltage is None:
-                    self._error_list.append('Failed to get voltage data for {}'.format(name))
-                elif voltage_threshold is None:
-                    self._error_list.append('Failed to get voltage threshold data for {}'.format(name))
+                    self._error_info[name] = 'Failed to get voltage data for {}'.format(name)
+                elif voltage_min_th is None:
+                    self._error_info[name] = 'Failed to get voltage minimum threshold data for {}'.format(name)
+                elif voltage_max_th is None:
+                    self._error_info[name] = 'Failed to get voltage maximum threshold data for {}'.format(name)
                 else:
                     voltage = float(voltage)
-                    thresholds = voltage_threshold.split(',')
-                    min_voltage = float(thresholds[0])
-                    max_voltage = float(thresholds[1])
-                    if voltage < min_voltage or voltage > max_voltage:
-                        self._error_list.append(
-                            '{} voltage is out of range, voltage={}, range=[{},{}]'.format(name, voltage, min_voltage,
-                                                                                           max_voltage))
+                    voltage_min_th = float(voltage_min_th)
+                    voltage_max_th = float(voltage_max_th)
+                    if voltage < voltage_min_th or voltage > voltage_max_th:
+                        self._error_info[name] = '{} voltage is out of range, voltage={}, range=[{},{}]'.format(name, voltage, voltage_min_th,
+                                                                                           voltage_max_th)
 
     def reset(self):
-        self._error_list = []
+        self._error_info = {}
 
     @classmethod
     def _ignore_check(cls, ignore_set, category, object_name, check_point):
