@@ -140,13 +140,16 @@ RUN ln -s /usr/bin/tcpdump /usr/sbin/tcpdump
 RUN mkdir -p /var/log/supervisor
 
 # add dependencies to build gnmi_get
-RUN wget https://dl.google.com/go/go1.12.linux-amd64.tar.gz \
-    && tar xf go1.12.linux-amd64.tar.gz \
-    && export GOROOT = /usr/local/go \
-    && export PATH = $PATH:$GOROOT/bin \
-    && export GOPATH = $HOME/go \
-    && go get github.com/jipanyang/gnxi/gnmi_get
-
+RUN wget -O go.tgz https://dl.google.com/go/go1.12.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go.tgz \
+    && export PATH=$PATH:/usr/local/go/bin \
+    && go version \
+    && mkdir $HOME/go \
+    && export GOPATH=$HOME/go \
+    && go env \
+    && go get github.com/jipanyang/gnxi/gnmi_get \
+    && ls -l $HOME/go/bin
+    
 EXPOSE 22 8009
 
 ENTRYPOINT ["/usr/local/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
