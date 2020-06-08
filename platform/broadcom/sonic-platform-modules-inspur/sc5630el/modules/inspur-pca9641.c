@@ -1,11 +1,11 @@
 /*
  * I2C master demultiplexer driver for PCA9641 
  *
- * Copyright (c) 2010 Ericsson AB.
+ * Copyright (c) 2018 Inspur Electronic Information Industry Co.,Ltd
  *
  * Author: ChihPeiChang <chihpeichang@inspur.com>
  *
- * Derived from:
+ * Derived from: pca9541.c
  *
  * This file is licensed under the terms of the GNU General Public
  * License version 2. This program is licensed "as is" without any

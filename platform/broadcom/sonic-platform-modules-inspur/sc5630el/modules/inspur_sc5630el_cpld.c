@@ -126,9 +126,7 @@
 */
 #define SYS_OS_LED_REG    0x1E
 #define SYS_OS_LED_BITS   0x1
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
 #define SYS_PORT_LED_BITS   0x4
-#endif
 
 //Port Reset register
 #define PORT_RESET_REG    0xE
@@ -301,9 +299,7 @@ enum sysfs_cpld_attributes {
   R54210_2_RESET,
   R5387_RESET,
   DEBUG_RESET,
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
   PORT_CONTROL,
-#endif
 };
 
 /* ------------------------------------------------------------------------------
@@ -331,11 +327,7 @@ static SENSOR_DEVICE_ATTR(os_control,  (0660), sys_led_read, sys_led_write, OS_C
 static SENSOR_DEVICE_ATTR(first_cpld_version, S_IRUGO, cpld_show_version, NULL, FIRST_CPLD_VERSION);
 static SENSOR_DEVICE_ATTR(second_cpld_version, S_IRUGO, cpld_show_version, NULL, SECOND_CPLD_VERSION);
 static SENSOR_DEVICE_ATTR(third_cpld_version, S_IRUGO, cpld_show_version, NULL, THIRD_CPLD_VERSION);
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
 static SENSOR_DEVICE_ATTR(port_control,  (0660), sys_led_read, sys_led_write, PORT_CONTROL);
-#endif
-
-
 
 static SENSOR_DEVICE_ATTR(p0_fault,  (0660), port_fault_read, port_fault_write, P0_FAULT);
 static SENSOR_DEVICE_ATTR(p1_fault,  (0660), port_fault_read, port_fault_write, P1_FAULT);
@@ -491,9 +483,7 @@ static struct attribute *inspur_sc5630el_cpld_attributes[] = {
   &sensor_dev_attr_r54210_2_reset.dev_attr.attr,
   &sensor_dev_attr_r5387_reset.dev_attr.attr,
   &sensor_dev_attr_debug_reset.dev_attr.attr,
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
   &sensor_dev_attr_port_control.dev_attr.attr,
-#endif
   NULL
 };
 
@@ -581,9 +571,7 @@ static ssize_t sys_led_read(struct device *dev, struct device_attribute *attr, c
 		case LOC_LED:
 		  command = SYS_LOC_LED_REG;
           break; 	
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
         case PORT_CONTROL:
-#endif
         case OS_CONTORL:
           command = SYS_OS_LED_REG;
           break;
@@ -642,10 +630,8 @@ static ssize_t sys_led_read(struct device *dev, struct device_attribute *attr, c
 				dev_dbg(&client->dev, "should be read 20 regs, but now only read %d\n", data_num);
 			val=ret_data[19];
 			res = val;
-			break;	
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
+			break;
         case PORT_CONTROL:
-#endif
         case OS_CONTORL:
 			data_num = i2c_smbus_read_i2c_block_data(client, CPLD_MB_BASE_REG, 31, ret_data);
 			if (data_num != 31)
@@ -665,11 +651,9 @@ static ssize_t sys_led_write(struct device *dev, struct device_attribute *attr, 
     struct i2c_client *client = to_i2c_client(dev);
     struct sensor_device_attribute *sda = to_sensor_dev_attr(attr);
     int error, write, command;
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
     unsigned char ret_data[32];
     int data_num =0; 
     int read = 0; 
-#endif
 
     error = kstrtoint(buf, 10, &write);
     if (error)
@@ -702,7 +686,6 @@ static ssize_t sys_led_write(struct device *dev, struct device_attribute *attr, 
             return -EINVAL;
 			command = SYS_LOC_LED_REG;
 			break;	
-#if 1//zhougl, 2019-10-23, ISU20191008259600026, add port led register bit.
         case OS_CONTORL:
             if (write < 0 || write > 3) 
                 return -EINVAL;
@@ -726,7 +709,6 @@ static ssize_t sys_led_write(struct device *dev, struct device_attribute *attr, 
             write |= read << 0;
 	  		command = SYS_OS_LED_REG;
 	  		break;
-#endif
     }
 
 	
@@ -1771,9 +1753,12 @@ int platform_inspur_sc5630el(void)
 }
 EXPORT_SYMBOL(platform_inspur_sc5630el);
 
-MODULE_AUTHOR("inspur");
-MODULE_DESCRIPTION("inspur_cpld driver");
-MODULE_LICENSE("GPL");
-
 module_init(inspur_i2c_cpld_init);
 module_exit(inspur_i2c_cpld_exit);
+
+
+MODULE_AUTHOR("sdn@inspur.com");
+MODULE_VERSION("1.0");
+MODULE_DESCRIPTION("Inspur cpld driver");
+MODULE_LICENSE("GPL");
+

@@ -39,8 +39,11 @@
 #include <linux/platform_data/pca953x.h>
 #include <linux/platform_data/pca954x.h>
 #endif
-//#include <linux/i2c/pmbus.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,13,0))
+#include <linux/i2c/pmbus.h>
+#else 
 #include <linux/pmbus.h>
+#endif
 
 #define MUX_INFO(bus, deselect) \
 	{.adap_id = bus, .deselect_on_exit = deselect}
@@ -346,11 +349,12 @@ static struct pmbus_platform_data liteon_pdata = {
 
 static struct i2c_board_info sc5630el_i2c_devices[] = {
 	{
-		I2C_BOARD_INFO("pca9548", 0x77),		// 0
+		I2C_BOARD_INFO("pca9548", 0x77),
 		.platform_data = &pca9548_root_data,
 	},
 	{
-		I2C_BOARD_INFO("inspur-sfpio", 0x20),	// 9548 ch0, port control
+		I2C_BOARD_INFO("inspur-pca9641", 0x70),	// 9548 ch0, port control
+		.platform_data = &pca9641_1_data,
 	},
 	{
 		I2C_BOARD_INFO("24c16", 0x50),	// 9548 ch1, eeprom
@@ -376,10 +380,11 @@ static struct i2c_board_info sc5630el_i2c_devices[] = {
 		.platform_data = &pca9641_7_data,
 	},
 	{
-		I2C_BOARD_INFO("inspur-optoe", 0x50),	// 9548 ch7, port eeprom
+		I2C_BOARD_INFO("inspur-pca9641", 0x09),	// 9548 ch7, port eeprom
+		.platform_data = &pca9641_8_data,
 	},
 	{
-		I2C_BOARD_INFO("pca9546", 0x71),		// 9 0x77 ch0
+		I2C_BOARD_INFO("pca9546", 0x71),		// 0x77 ch0
 		.platform_data = &pca9546_portmux_data,
 	},
 	{
@@ -409,7 +414,7 @@ static struct i2c_board_info sc5630el_i2c_devices[] = {
 		.platform_data = &liteon_pdata,
 	},
 	{
-		I2C_BOARD_INFO("pca9555", 0x25),		// 18 0x77 ch6
+		I2C_BOARD_INFO("pca9555", 0x25),		// 0x77 ch6
 		.platform_data = &pca9555_fanled_data,
 	},
 	{
@@ -417,7 +422,7 @@ static struct i2c_board_info sc5630el_i2c_devices[] = {
 		.platform_data = &pca9555_hwalert_data,
 	},
 	{
-		I2C_BOARD_INFO("pca9548", 0x70),		// 20 0x77 ch7
+		I2C_BOARD_INFO("pca9548", 0x70),		// 0x77 ch7
 		.platform_data = &pca9548_sfp1_data,
 	},
 	{
@@ -441,7 +446,7 @@ static struct i2c_board_info sc5630el_i2c_devices[] = {
 		.platform_data = &pca9548_sfp6_data,
 	},
 	{
-		I2C_BOARD_INFO("pca9548", 0x76),		// 26 0x77 ch7
+		I2C_BOARD_INFO("pca9548", 0x76),		// 0x77 ch7
 		.platform_data = &pca9548_qsfp_data,
 	},
 	{
@@ -473,7 +478,7 @@ static struct i2c_board_info sc5630el_i2c_devices[] = {
 		.platform_data = &pca9555_lpmode_data,
 	},
 	{
-		I2C_BOARD_INFO("pca9555", 0x27),		// 34 0x71 ch0
+		I2C_BOARD_INFO("pca9555", 0x27),		// 0x71 ch0
 		.platform_data = &pca9555_intrpresent_data,
 	},
 	{
@@ -497,7 +502,7 @@ static struct i2c_board_info sc5630el_i2c_devices[] = {
 		.platform_data = &pca9555_modabsent2_data,
 	},
 	{
-		I2C_BOARD_INFO("pca9555", 0x25),		// 40 0x71 ch1
+		I2C_BOARD_INFO("pca9555", 0x25),		// 0x71 ch1
 		.platform_data = &pca9555_modabsent3_data,
 	},
 	{
@@ -546,13 +551,13 @@ static int __init sc5630el_platform_init(void)
 	adapter = i2c_get_adapter(0);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[0]);		// root 9548
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(0) end\n");
+	dev_info(&client->dev, "[CC] i2c_get_adapter(0) end\n");
 	
 // 9641 muxes
 	adapter = i2c_get_adapter(0x10);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[1]);		// port control
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(10) end\n");
+	dev_info(&client->dev, "[CC] i2c_get_adapter(10) end\n");
 
 	adapter = i2c_get_adapter(0x11);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[2]);		// eeprom
@@ -581,20 +586,19 @@ static int __init sc5630el_platform_init(void)
 	adapter = i2c_get_adapter(0x17);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[8]);		// port eeprom
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(17) end\n");
+	dev_info(&client->dev, "[CC] i2c_get_adapter(17) end\n");
 
-/*
+
 	adapter = i2c_get_adapter(0x60);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[9]);		// 9546_portmux
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(60) end\n");
-*/
+	dev_info(&client->dev, "[CC] i2c_get_adapter(60) end\n");
 
 	//adapter = i2c_get_adapter(0x61);
 	//client = i2c_new_device(adapter, &sc5630el_i2c_devices[10]);		// dummy
 	//client = i2c_new_device(adapter, &sc5630el_i2c_devices[11]);		// dummy
 	//i2c_put_adapter(adapter);
-	//dev_err(&client->dev, "[CC] i2c_get_adapter(61) end - remove 9641\n");
+	//dev_info(&client->dev, "[CC] i2c_get_adapter(61) end - remove 9641\n");
 
 	adapter = i2c_get_adapter(0x62);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[12]);		// emc1413
@@ -620,7 +624,6 @@ static int __init sc5630el_platform_init(void)
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[18]);		// fanled
 	i2c_put_adapter(adapter);
 
-/*
 	adapter = i2c_get_adapter(0x67);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[20]);		// SFP1
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[21]);		// SFP2
@@ -630,10 +633,8 @@ static int __init sc5630el_platform_init(void)
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[25]);		// SFP6
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[26]);		// QSFP
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(67) end\n");
-*/
+	dev_info(&client->dev, "[CC] i2c_get_adapter(67) end\n");
 
-/*
 	adapter = i2c_get_adapter(0x18);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[27]);		// txfault1
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[28]);		// txfault2
@@ -644,7 +645,7 @@ static int __init sc5630el_platform_init(void)
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[33]);		// lpmode
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[34]);		// intr,present
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(18) end\n");
+	dev_info(&client->dev, "[CC] i2c_get_adapter(18) end\n");
 
 	adapter = i2c_get_adapter(0x19);
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[35]);		// txdisable1
@@ -654,10 +655,8 @@ static int __init sc5630el_platform_init(void)
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[39]);		// modabsent2
 	client = i2c_new_device(adapter, &sc5630el_i2c_devices[40]);		// modabsent3
 	i2c_put_adapter(adapter);
-	dev_err(&client->dev, "[CC] i2c_get_adapter(19) end\n");
-*/
+	dev_info(&client->dev, "[CC] i2c_get_adapter(19) end\n");
 
-/*
 	for(i = 32; i < 80; i ++){									// SFP28 1~48 EEPROM
 		adapter = i2c_get_adapter(i);
 		client = i2c_new_device(adapter, &sc5630el_i2c_devices[41]);
@@ -668,7 +667,6 @@ static int __init sc5630el_platform_init(void)
 		client = i2c_new_device(adapter, &sc5630el_i2c_devices[42]);
 		i2c_put_adapter(adapter);
 	}
-*/
 
 	return 0;
 
@@ -689,9 +687,7 @@ static void __exit sc5630el_platform_exit(void)
 module_init(sc5630el_platform_init);
 module_exit(sc5630el_platform_exit);
 
-
-//MODULE_AUTHOR("ChihPei Chang <chihpeichang@inspur.com>");
-MODULE_AUTHOR("switchsupport@inspur.com");
+MODULE_AUTHOR("sdn@inspur.com");
 MODULE_VERSION("1.0");
 MODULE_DESCRIPTION("Inspur Platform Driver of SC5630EL");
 MODULE_LICENSE("GPL");

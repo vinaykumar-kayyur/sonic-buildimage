@@ -181,6 +181,6 @@ static struct i2c_driver _i2c_device_driver = {
 
 module_i2c_driver(_i2c_device_driver);   // Simply module_init() & module_exit()
 
-MODULE_AUTHOR("switchsupport@inspur.com");
-MODULE_DESCRIPTION ("SONiC EEPROM platform driver for SC5630EL");
+MODULE_AUTHOR("sdn@inspur.com");
+MODULE_DESCRIPTION ("SONiC EEPROM driver via ipmi");
 MODULE_LICENSE("GPL");

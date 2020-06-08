@@ -278,6 +278,6 @@ static struct i2c_driver _inspur_sc5630el_psu = {
 
 module_i2c_driver(_inspur_sc5630el_psu);   // Simply module_init() & module_exit()
 
-MODULE_AUTHOR("switchsupport@inspur.com");
-MODULE_DESCRIPTION ("SONiC PSU platform driver for SC5630EL ");
+MODULE_AUTHOR("sdn@inspur.com");
+MODULE_DESCRIPTION ("SONiC PSU driver via ipmi ");
 MODULE_LICENSE("GPL");
