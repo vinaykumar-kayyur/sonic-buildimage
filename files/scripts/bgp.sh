@@ -47,10 +47,10 @@ start() {
     validate_restore_count
 
     check_fast_boot
-		
+
     debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
     debug "Fast boot flag: ${SERVICE} ${Fast_BOOT}."
-		
+
     # start service docker
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
@@ -75,7 +75,7 @@ stop() {
         /usr/bin/docker exec -i bgp pkill -9 zebra
         /usr/bin/docker exec -i bgp pkill -9 bgpd || [ $? == 1 ]
     fi
-		
+
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
 
