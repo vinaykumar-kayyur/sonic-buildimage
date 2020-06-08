@@ -37,7 +37,7 @@ function check_fast_boot ()
         FAST_BOOT = "true"
     else
         FAST_BOOT = "false"
-		fi
+    fi
 }
 
 start() {
