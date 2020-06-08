@@ -27,8 +27,8 @@ class HardwareChecker(HealthChecker):
         if config.ignore_devices and 'asic' in config.ignore_devices:
             return
 
-        temperature = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temperature')
-        temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temperature_threshold')
+        temperature = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temp')
+        temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temp_th')
         if not temperature:
             self._error_info['ASIC'] = 'Failed to get ASIC temperature'
         elif not temperature_threshold:
@@ -71,18 +71,20 @@ class HardwareChecker(HealthChecker):
 
             if not self._ignore_check(config.ignore_devices, 'fan', name, 'speed'):
                 speed = data_dict.get('speed', None)
-                speed_min_th = data_dict.get('speed_min_th', None)
-                speed_max_th = data_dict.get('speed_max_th', None)
+                speed_target = data_dict.get('speed_target', None)
+                speed_tolerance = data_dict.get('speed_tolerance', None)
                 if not speed:
-                    self._error_info[name] = 'Failed to get speed data for {}'.format(name)
-                elif not speed_min_th:
-                    self._error_info[name] = 'Failed to get speed minimum threshold for {}'.format(name)
-                elif not speed_max_th:
-                    self._error_info[name] = 'Failed to get speed maximum threshold for {}'.format(name)
+                    self._error_info[name] = 'Failed to get actual speed data for {}'.format(name)
+                elif not speed_target:
+                    self._error_info[name] = 'Failed to get target speed date for {}'.format(name)
+                elif not speed_tolerance:
+                    self._error_info[name] = 'Failed to get speed tolerance for {}'.format(name)
                 else:
                     speed = float(speed)
-                    speed_min_th = float(speed_min_th)
-                    speed_max_th = float(speed_max_th)
+                    speed_target = float(speed_target)
+                    speed_tolerance = float(speed_tolerance)
+                    speed_min_th = speed_target * (1 - float(speed_tolerance) / 100)
+                    speed_max_th = speed_target * (1 + float(speed_tolerance) / 100)
                     if speed < speed_min_th or speed > speed_max_th:
                         self._error_info[name] = '{} speed is out of range, speed={}, range=[{},{}]'.format(name, speed, speed_min_th, speed_max_th)
 
@@ -117,8 +119,8 @@ class HardwareChecker(HealthChecker):
                 continue
 
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'temperature'):
-                temperature = data_dict['temperature']
-                temperature_threshold = data_dict['temperature_threshold']
+                temperature = data_dict['temp']
+                temperature_threshold = data_dict['temp_th']
                 if temperature is None:
                     self._error_info[name] = 'Failed to get temperature data for {}'.format(name)
                 elif temperature_threshold is None:
