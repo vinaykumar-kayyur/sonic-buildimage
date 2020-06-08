@@ -37,7 +37,10 @@ FACTORY_DEFAULT_HOOKS=/etc/config-setup/factory-default-hooks.d
 CONFIG_PRE_MIGRATION_HOOKS=/etc/config-setup/config-migration-pre-hooks.d
 CONFIG_POST_MIGRATION_HOOKS=/etc/config-setup/config-migration-post-hooks.d
 CONFIG_SETUP_VAR_DIR=/var/lib/config-setup
+CONFIG_SETUP_TMP_DIR=/var/run/config-setup
+CONFIG_PRE_INSTALLER_MIGRATION_HOOKS=${CONFIG_SETUP_TMP_DIR}/installer-migration-hooks
 CONFIG_SETUP_PRE_MIGRATION_FLAG=${CONFIG_SETUP_VAR_DIR}/pending_pre_migration
+CONFIG_PRE_INSTALLER_MIGRATION_FLAG=${CONFIG_SETUP_VAR_DIR}/pending_pre_installer_migration
 CONFIG_SETUP_POST_MIGRATION_FLAG=${CONFIG_SETUP_VAR_DIR}/pending_post_migration
 CONFIG_SETUP_INITIALIZATION_FLAG=${CONFIG_SETUP_VAR_DIR}/pending_initialization
 
@@ -255,6 +258,10 @@ do_config_initialization()
 
     if  ztp_is_enabled ; then
         echo "No configuration detected, initiating zero touch provisioning..."
+        # Generate and load factory default configuration
+        generate_config factory ${CONFIG_DB_JSON}
+        # Remove any default configuration that was created so that ZTP can be performed
+        rm -f ${CONFIG_DB_JSON}
         generate_config ztp ${TMP_ZTP_CONFIG_DB_JSON}
         load_config ${TMP_ZTP_CONFIG_DB_JSON}
         rm -f ${TMP_ZTP_CONFIG_DB_JSON}
@@ -263,15 +270,28 @@ do_config_initialization()
     rm -f /tmp/pending_config_initialization
 }
 
-# Restore config-setup post migration hooks from a backup copy
-copy_post_migration_hooks()
+# Restore config-setup migration hooks from a backup copy. If the current image has a hook script
+# with the same filename as the backup hook being restored, it will not be overwritten.
+copy_migration_hooks()
 {
     BACKUP_DIR=/etc/sonic/old_config/config-migration-post-hooks.d
     if [ -d ${BACKUP_DIR} ]; then
         [ -d ${CONFIG_POST_MIGRATION_HOOKS} ] || mkdir -p ${CONFIG_POST_MIGRATION_HOOKS}
         for hook in $(ls -1 ${BACKUP_DIR}) ; do
+            # Copy the hook script only if it is not present in the destination directory
             if [ ! -e ${CONFIG_POST_MIGRATION_HOOKS}/$hook ]; then
                 cp -ar ${BACKUP_DIR}/$hook ${CONFIG_POST_MIGRATION_HOOKS}
+            fi
+        done
+    fi
+
+    BACKUP_DIR=/etc/sonic/old_config/config-migration-pre-hooks.d
+    if [ -d ${BACKUP_DIR} ]; then
+        [ -d ${CONFIG_PRE_MIGRATION_HOOKS} ] || mkdir -p ${CONFIG_PRE_MIGRATION_HOOKS}
+        for hook in $(ls -1 ${BACKUP_DIR}) ; do
+            # Copy the hook script only if it is not present in the destination directory
+            if [ ! -e ${CONFIG_PRE_MIGRATION_HOOKS}/$hook ]; then
+                cp -ar ${BACKUP_DIR}/$hook ${CONFIG_PRE_MIGRATION_HOOKS}
             fi
         done
     fi
@@ -321,8 +341,8 @@ do_config_migration()
     # Migrate all config_db from old to new
     copy_config_files_and_directories $(get_config_db_file_list)
 
-    # Migrate post-migration hooks
-    copy_post_migration_hooks
+    # Migrate migration hooks
+    copy_migration_hooks
 
     # Execute custom hooks if present
     run_hookdir ${CONFIG_POST_MIGRATION_HOOKS} ${CONFIG_SETUP_POST_MIGRATION_FLAG}
@@ -356,9 +376,19 @@ do_config_backup()
     rm -rf /host/old_config
     cp -ar /etc/sonic /host/old_config
     [ -d ${CONFIG_POST_MIGRATION_HOOKS} ] && cp -arL ${CONFIG_POST_MIGRATION_HOOKS} /host/old_config
+    [ -d ${CONFIG_PRE_MIGRATION_HOOKS} ] && cp -arL ${CONFIG_PRE_MIGRATION_HOOKS} /host/old_config
 
-    # Execute custom hooks if present
+    # Execute custom pre hooks if present
     run_hookdir ${CONFIG_PRE_MIGRATION_HOOKS} ${CONFIG_SETUP_PRE_MIGRATION_FLAG}
+    # Execute installer hooks that are copied over by the SONiC installer image
+    if [ -d ${CONFIG_PRE_INSTALLER_MIGRATION_HOOKS} ]; then
+        run_hookdir ${CONFIG_PRE_INSTALLER_MIGRATION_HOOKS} ${CONFIG_PRE_INSTALLER_MIGRATION_FLAG}
+    else
+        # Execute installer hooks that are included along with the current image version
+        SONIC_VERSION=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version)
+        CONFIG_PRE_INSTALLER_MIGRATION_HOOKS_ON_DISK="/host/image-${SONIC_VERSION}/installer-migration-hooks"
+        run_hookdir ${CONFIG_PRE_INSTALLER_MIGRATION_HOOKS_ON_DISK} ${CONFIG_PRE_INSTALLER_MIGRATION_FLAG}
+    fi
 }
 
 # Process switch bootup event
