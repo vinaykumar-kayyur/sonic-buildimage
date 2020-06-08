@@ -491,7 +491,7 @@ class Chassis(ChassisBase):
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
         from . import thermal
-        threshold_file = join(thermal.THERMAL_ZONE_ASIC_PATH, thermal.THERMAL_ZONE_HIGH_TEMPERATURE)
+        threshold_file = join(thermal.THERMAL_ZONE_ASIC_PATH, thermal.THERMAL_ZONE_HOT_TEMPERATURE)
         value_str = thermal.Thermal._read_generic_file(threshold_file, 0)
         if value_str is None:
             return None
