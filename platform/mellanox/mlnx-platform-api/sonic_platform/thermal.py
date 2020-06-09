@@ -124,7 +124,7 @@ thermal_api_names = [
     THERMAL_API_GET_HIGH_THRESHOLD
 ]
 
-hwsku_dict_thermal = {'ACS-MSN2700': 0, 'LS-SN2700':0, 'ACS-MSN2740': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 4, 'ACS-MSN3700': 5, 'ACS-MSN3700C': 6, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'ACS-MSN3800': 7, 'Mellanox-SN3800-D112C8': 7, 'ACS-MSN4700': 8, 'ACS-MSN3420': 9, 'ACS-MSN4600C': 9}
+hwsku_dict_thermal = {'ACS-MSN2700': 0, 'LS-SN2700':0, 'ACS-MSN2740': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 4, 'ACS-MSN3700': 5, 'ACS-MSN3700C': 6, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'ACS-MSN3800': 7, 'Mellanox-SN3800-D112C8': 7, 'ACS-MSN4700': 8, 'ACS-MSN3420': 9, 'ACS-MSN4600C': 10}
 thermal_profile_list = [
     # 2700
     {
@@ -267,7 +267,7 @@ thermal_profile_list = [
     },
     # 3420
     {
-        THERMAL_DEV_CATEGORY_CPU_CORE:(0, 4),
+        THERMAL_DEV_CATEGORY_CPU_CORE:(0, 2),
         THERMAL_DEV_CATEGORY_MODULE:(1, 60),
         THERMAL_DEV_CATEGORY_PSU:(1, 2),
         THERMAL_DEV_CATEGORY_CPU_PACK:(0,1),
@@ -495,12 +495,15 @@ class Thermal(ThermalBase):
         We usually disable the algorithm when we want to set a fix speed. E.g, when 
         a fan unit is removed from system, we will set fan speed to 100% and disable 
         the algorithm to avoid it adjust the speed.
+
+        Returns:
+            True if thermal algorithm status changed.
         """
         if not cls.thermal_profile:
             raise Exception("Fail to get thermal profile for this switch")
 
         if not force and cls.thermal_algorithm_status == status:
-            return
+            return False
 
         cls.thermal_algorithm_status = status
         content = "enabled" if status else "disabled"
@@ -521,6 +524,7 @@ class Thermal(ThermalBase):
                 for index in range(count):
                     cls._write_generic_file(join(THERMAL_ZONE_GEARBOX_PATH.format(start + index), THERMAL_ZONE_MODE), content)
                     cls._write_generic_file(join(THERMAL_ZONE_GEARBOX_PATH.format(start + index), THERMAL_ZONE_POLICY), policy)
+        return True
 
     @classmethod
     def check_thermal_zone_temperature(cls):

@@ -202,6 +202,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_ENABLE_RESTAPI=$(ENABLE_RESTAPI) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
+                           SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -283,8 +284,8 @@ reset :
 	        fi
 	        git clean -xfdf;
 	        git reset --hard;
-	        git submodule foreach --recursive git clean -xfdf;
-	        git submodule foreach --recursive git reset --hard;
+	        git submodule foreach --recursive 'git clean -xfdf || true';
+	        git submodule foreach --recursive 'git reset --hard || true';
 	        git submodule update --init --recursive;
 	        echo "Reset complete!";
 	    else
