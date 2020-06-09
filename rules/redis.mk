@@ -1,6 +1,6 @@
 # redis package
 
-REDIS_VERSION = 5.0.3-3~bpo9+2
+REDIS_VERSION = 6.0.4-1~bpo10+1
 
 REDIS_TOOLS = redis-tools_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(REDIS_TOOLS)_SRC_PATH = $(SRC_PATH)/redis
