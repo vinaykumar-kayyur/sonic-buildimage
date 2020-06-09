@@ -1,6 +1,6 @@
 from natsort import natsorted
 from swsssdk import SonicV2Connector
-from .health_checker import checker, HealthChecker
+from .health_checker import HealthChecker
 
 
 class HardwareChecker(HealthChecker):

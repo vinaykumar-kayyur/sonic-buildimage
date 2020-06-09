@@ -1,9 +1,8 @@
 import subprocess
-from .health_checker import checker, HealthChecker
+from .health_checker import HealthChecker
 from .utils import run_command
 
 
-@checker()
 class ServiceChecker(HealthChecker):
     CHECK_MONIT_SERVICE_CMD = 'systemctl is-active monit.service'
     CHECK_CMD = 'monit summary -B'
@@ -25,7 +24,7 @@ class ServiceChecker(HealthChecker):
 
     def check(self, config):
         self.reset()
-        output = run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD)
+        output = run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD).strip()
         if output != 'active':
             self._error_info['monit'] = 'monit service is not running'
             return
@@ -50,5 +49,5 @@ class ServiceChecker(HealthChecker):
             service_type = line[type_begin:].strip()
             expect_status = ServiceChecker.EXPECT_STATUS_DICT[service_type]
             if expect_status != status:
-                self._error_info['monit'] = '{} is not {}'
+                self._error_info[name] = '{} is not {}'.format(name, expect_status)
         return

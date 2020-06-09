@@ -5,6 +5,7 @@
     System health monitor daemon for SONiC
 """
 
+import signal
 import threading
 from sonic_daemon_base.daemon_base import Logger
 from sonic_daemon_base.daemon_base import DaemonBase
@@ -74,10 +75,10 @@ class HealthDaemon(DaemonBase):
             if error_info:
                 status = False
                 for obj_name, error_msg in error_info.items():
-                    self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, '', obj_name, error_msg)
+                    self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, obj_name, error_msg)
 
         summary = 'OK' if status else 'Not OK'
-        self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, '', 'summary', '')
+        self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, 'summary', summary)
         led_status = 'normal' if status else 'fault'
         try:
             chassis.set_status_led(config.get_led_color(led_status))
