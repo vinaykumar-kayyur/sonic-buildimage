@@ -228,6 +228,10 @@ start() {
             done
         fi
         {%- endif %}
+        # single NPU systems and container running on the host network continue to use the json-file as log-driver
+        {%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
+            LOG_OPTS="--log-opt max-size=2M --log-opt max-file=5"
+        {%- endif %}
     else
         # This part of code is applicable for Multi-ASIC platforms. Here we mount the namespace specific
         # redis directory into the docker running in that namespace. Below eg: is for namespace "asic1"
@@ -238,7 +242,9 @@ start() {
             redis_dir=`echo $redis_dir_list | cut -d " " -f $id`
             REDIS_MNT=" -v $redis_dir:$redis_dir:rw "
         fi
-
+        # Containers in the docker network will use the syslog-driver as log-driver. This is mainly applicable for Multi NPU system
+        LOG_OPTS="--log-driver=syslog --log-opt syslog-address=udp://127.0.0.1:514 --log-opt syslog-format=rfc5424 \
+                                       --log-opt syslog-facility=daemon --log-opt tag={{docker_container_name}}$DEV"
         {%- if docker_container_name == "database" %}
         NET="bridge"
         {%- else %}
@@ -262,9 +268,7 @@ start() {
 {%- if install_debug_image == "y" %}
         -v /src:/src:ro -v /debug:/debug:rw \
 {%- endif %}
-{%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
-        --log-opt max-size=2M --log-opt max-file=5 \
-{%- endif %}
+          $LOG_OPTS \
 {%- if sonic_asic_platform == "mellanox" %}
 {%- if docker_container_name == "syncd" %}
         -v /var/log/mellanox/sniffer:/var/log/mellanox/sniffer:rw \
