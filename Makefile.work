@@ -207,6 +207,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_TELEMETRY_WRITABLE=$(SONIC_TELEMETRY_WRITABLE) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
+                           SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
