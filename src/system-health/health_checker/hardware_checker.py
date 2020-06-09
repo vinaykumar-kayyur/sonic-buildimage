@@ -4,8 +4,7 @@ from .health_checker import checker, HealthChecker
 
 
 class HardwareChecker(HealthChecker):
-    CHASSIS_TABLE_NAME = 'CHASSIS_INFO'
-    CHASSIS_KEY = '{}|chassis 1'.format(CHASSIS_TABLE_NAME)
+    ASIC_TEMPERATURE_KEY = 'TEMPERATURE_INFO|ASIC'
     FAN_TABLE_NAME = 'FAN_INFO'
     PSU_TABLE_NAME = 'PSU_INFO'
 
@@ -27,8 +26,8 @@ class HardwareChecker(HealthChecker):
         if config.ignore_devices and 'asic' in config.ignore_devices:
             return
 
-        temperature = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temp')
-        temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.CHASSIS_KEY, 'temp_th')
+        temperature = self._db.get(self._db.STATE_DB, HardwareChecker.ASIC_TEMPERATURE_KEY, 'temperature')
+        temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.ASIC_TEMPERATURE_KEY, 'high_threshold')
         if not temperature:
             self._error_info['ASIC'] = 'Failed to get ASIC temperature'
         elif not temperature_threshold:
