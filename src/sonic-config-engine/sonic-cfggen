@@ -308,7 +308,7 @@ def main():
             device_id = get_npu_pci_device_id(asic_id)
             # if the pci_id obtained is None, exit with error
             if device_id is None:
-                print('Failed to get pci ID for', asic_name)
+                print('Failed to get pci ID for', asic_name, file=sys.stderr)
                 sys.exit(1)
             hardware_data['DEVICE_METADATA']['localhost'].update(asic_id=device_id)
         deep_update(data, hardware_data)
