@@ -1,0 +1,7 @@
+# system health python2 wheel
+
+SYSTEM_HEALTH = system_health-1.0-py2-none-any.whl
+$(SYSTEM_HEALTH)_SRC_PATH = $(SRC_PATH)/system-health
+$(SYSTEM_HEALTH)_PYTHON_VERSION = 2
+$(SYSTEM_HEALTH)_WHEEL_DEPENDS = $(SONIC_DAEMON_BASE_PY2)
+SONIC_PYTHON_WHEELS += $(SYSTEM_HEALTH)

@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitor system health
+Requires=pmon.service
+After=pmon.service
+
+[Service]
+ExecStart=/usr/local/bin/healthd
+
+[Install]
+WantedBy=multi-user.target
