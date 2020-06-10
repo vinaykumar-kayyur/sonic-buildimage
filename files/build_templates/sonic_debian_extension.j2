@@ -159,6 +159,12 @@ sudo cp {{daemon_base_py2_wheel_path}} $FILESYSTEM_ROOT/$DAEMON_BASE_PY2_WHEEL_N
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $DAEMON_BASE_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$DAEMON_BASE_PY2_WHEEL_NAME
 
+# Install system-health Python 2 package
+SYSTEM_HEALTH_PY2_WHEEL_NAME=$(basename {{system_health_py2_wheel_path}})
+sudo cp {{system_health_py2_wheel_path}} $FILESYSTEM_ROOT/$SYSTEM_HEALTH_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SYSTEM_HEALTH_PY2_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SYSTEM_HEALTH_PY2_WHEEL_NAME
+
 # Install built Python Click package (and its dependencies via 'apt-get -y install -f')
 # Do this before installing sonic-utilities so that it doesn't attempt to install
 # an older version as part of its dependencies
