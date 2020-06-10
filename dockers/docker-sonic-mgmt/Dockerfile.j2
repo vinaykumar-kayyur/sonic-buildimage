@@ -129,9 +129,10 @@ RUN pip install ansible==2.8.7
 
 RUN pip install pysubnettree
 
-# Install pytest-ansible module
+# Install pytest-ansible module with 'become', 'become_user' parameters support
 RUN git clone https://github.com/ansible/pytest-ansible.git \
     && cd pytest-ansible \
+    && git checkout d33c025f070a9c870220a157cc5a999fda68de44 \
     && python setup.py install \
     && cd .. \
     && rm -fr pytest-ansible
