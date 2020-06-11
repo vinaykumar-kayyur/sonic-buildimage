@@ -14,12 +14,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install required packages
 RUN apt-get update   && \
     apt-get install -y  \
-        libdbus-1-3     \
-        libdaemon0      \
-        libjansson4     \
         libc-ares2      \
         iproute2        \
-        libpython2.7    \
         libjson-c3      \
         logrotate       \
         libunwind8
@@ -43,9 +39,8 @@ RUN apt-get clean -y      && \
     apt-get autoremove -y && \
     rm -rf /debs ~/.cache
 
-COPY ["bgpcfgd", "start.sh", "/usr/bin/"]
-COPY ["*.j2", "/usr/share/sonic/templates/"]
-COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["frr", "/usr/share/sonic/templates"]
+COPY ["bgpcfgd", "docker_init.sh", "/usr/bin/"]
 COPY ["snmp.conf", "/etc/snmp/frr.conf"]
 COPY ["TSA", "/usr/bin/TSA"]
 COPY ["TSB", "/usr/bin/TSB"]
@@ -56,4 +51,4 @@ RUN chmod a+x /usr/bin/TSA && \
     chmod a+x /usr/bin/TSB && \
     chmod a+x /usr/bin/TSC
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/bin/docker_init.sh"]
