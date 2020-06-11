@@ -11,8 +11,8 @@ function debug()
 
 function check_warm_boot()
 {
-    SYSTEM_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
-    SERVICE_WARM_START=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
+    SYSTEM_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    SERVICE_WARM_START=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_ENABLE_TABLE|${SERVICE}" enable`
     if [[ x"$SYSTEM_WARM_START" == x"true" ]] || [[ x"$SERVICE_WARM_START" == x"true" ]]; then
         WARM_BOOT="true"
     else
@@ -23,7 +23,7 @@ function check_warm_boot()
 function validate_restore_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|bgp" restore_count`
+        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_TABLE|bgp" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
             WARM_BOOT="false"
@@ -72,7 +72,7 @@ stop() {
     # Kill bgpd to start the bgp graceful restart procedure
     if [[ x"$WARM_BOOT" == x"true" ]] || [[ x"$FAST_BOOT" == x"true" ]]; then
         debug "Kill zebra first"
-        /usr/bin/docker exec -i bgp pkill -9 zebra
+        /usr/bin/docker exec -i bgp pkill -9 zebra || [ $? == 1 ]
         /usr/bin/docker exec -i bgp pkill -9 bgpd || [ $? == 1 ]
     fi
 
