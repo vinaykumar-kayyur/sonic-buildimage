@@ -40,7 +40,7 @@ class ExternalChecker(HealthChecker):
                 if pos == -1:
                     continue
                 obj_name = line[:pos]
-                error_msg = line[pos:]
+                error_msg = line[pos+1:]
                 self._error_info[obj_name] = error_msg
         return
 
