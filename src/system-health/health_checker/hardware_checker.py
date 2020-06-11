@@ -62,13 +62,13 @@ class HardwareChecker(HealthChecker):
             if config.ignore_devices and name in config.ignore_devices:
                 continue
             data_dict = self._db.get_all(self._db.STATE_DB, key)
-            presence = bool(data_dict['presence'])
-            if not presence:
+            presence = data_dict.get('presence', 'false')
+            if presence.lower() != 'true':
                 self._error_info[name] = '{} is missing'.format(name)
                 continue
 
-            status = bool(data_dict['status'])
-            if not status:
+            status = data_dict.get('status', 'false')
+            if status.lower() != 'true':
                 self._error_info[name] = '{} is broken'.format(name)
                 continue
 
@@ -120,13 +120,13 @@ class HardwareChecker(HealthChecker):
                 continue
 
             data_dict = self._db.get_all(self._db.STATE_DB, key)
-            presence = bool(data_dict['presence'])
-            if not presence:
+            presence = data_dict.get('presence', 'false')
+            if presence.lower() != 'true':
                 self._error_info[name] = '{} is missing or not available'.format(name)
                 continue
 
-            status = bool(data_dict['status'])
-            if not status:
+            status = data_dict.get('status', 'false')
+            if status.lower() != 'true':
                 self._error_info[name] = '{} is out of power'.format(name)
                 continue
 
