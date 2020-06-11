@@ -1,6 +1,14 @@
+import time
+
+
 class HealthCheckerManager(object):
+    STATE_BOOTING = 'booting'
+    STATE_RUNNING = 'running'
+
     def __init__(self):
         self._checkers = []
+        self._start_time = time.time()
+        self._state = self.STATE_BOOTING
 
         from .config import Config
         self.config = Config()
@@ -15,6 +23,11 @@ class HealthCheckerManager(object):
     def check(self):
         stats = {}
         self.config.load_config()
+        # check state first to avoid user change boot timeout in configuration file
+        # after finishing system boot
+        if self._state == self.STATE_BOOTING and self._is_system_booting():
+            return self._state, stats
+
         for checker in self._checkers:
             self._do_check(checker, stats)
 
@@ -23,7 +36,7 @@ class HealthCheckerManager(object):
             for external_checker in self.config.external_checkers:
                 checker = ExternalChecker(external_checker)
                 self._do_check(checker, stats)
-        return stats
+        return self._state, stats
 
     def _do_check(self, checker, stats):
         try:
@@ -41,4 +54,12 @@ class HealthCheckerManager(object):
                 stats['Internal'] = {str(checker): error_msg}
             else:
                 stats['Internal'].update({str(checker): error_msg})
+
+    def _is_system_booting(self):
+        now = time.time()
+        timeout = self.config.get_bootup_timeout()
+        booting = now - self._start_time < timeout
+        if not booting:
+            self._state = self.STATE_RUNNING
+        return booting
 

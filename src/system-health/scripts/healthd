@@ -60,8 +60,11 @@ class HealthDaemon(DaemonBase):
         chassis = sonic_platform.platform.Platform().get_chassis()
         manager = HealthCheckerManager()
         while 1:
-            stat = manager.check()
-            self._process_stat(chassis, manager.config, stat)
+            state, stat = manager.check()
+            if state == HealthCheckerManager.STATE_RUNNING:
+                self._process_stat(chassis, manager.config, stat)
+            else:
+                self._set_system_led(chassis, manager.config, 'booting')
 
             if self.stop_event.wait(manager.config.interval):
                 break
@@ -80,8 +83,11 @@ class HealthDaemon(DaemonBase):
         summary = 'OK' if status else 'Not OK'
         self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, 'summary', summary)
         led_status = 'normal' if status else 'fault'
+        self._set_system_led(chassis, config, led_status)
+
+    def _set_system_led(self, chassis, config, status):
         try:
-            chassis.set_status_led(config.get_led_color(led_status))
+            chassis.set_status_led(config.get_led_color(status))
         except NotImplementedError:
             logger.log_info('chassis.set_status_led is not implemented')
         except Exception as e:

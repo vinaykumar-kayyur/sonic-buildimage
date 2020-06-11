@@ -6,9 +6,11 @@ from sonic_device_util import get_platform_info
 
 class Config(object):
     DEFAULT_INTERVAL = 60
+    DEFAULT_BOOTUP_TIMEOUT = 300
     DEFAULT_LED_CONFIG = {
         'fault': 'red',
         'normal': 'green',
+        'booting': 'orange_blink'
     }
     GET_PLATFORM_CMD = 'sonic-cfggen -d -v DEVICE_METADATA.localhost.platform'
     CONFIG_FILE = 'system_health_monitoring_config.json'
@@ -64,6 +66,14 @@ class Config(object):
                 return self.config_data['led_color'][status]
         
         return self.DEFAULT_LED_CONFIG[status]
+
+    def get_bootup_timeout(self):
+        if self.config_data and 'boot_timeout' in self.config_data:
+            try:
+                return int(self.config_data['boot_timeout'])
+            except ValueError:
+                pass
+        return self.DEFAULT_BOOTUP_TIMEOUT
 
     def _get_platform_name(self):
         from .utils import run_command
