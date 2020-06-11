@@ -1,7 +1,7 @@
 [Unit]
 Description=Monitor system health
-Requires=pmon.service
-After=pmon.service
+Requires=rc-local.service
+After=rc-local.service
 
 [Service]
 ExecStart=/usr/local/bin/healthd
