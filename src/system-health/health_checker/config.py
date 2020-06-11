@@ -43,12 +43,9 @@ class Config(object):
                     self.config_data = json.load(f)
 
                 self.interval = self.config_data.get('interval', Config.DEFAULT_INTERVAL)
-                if 'services_to_ignore' in self.config_data:
-                    self.ignore_services = set(self.config_data['services_to_ignore'])
-                if 'devices_to_ignore' in self.config_data:
-                    self.ignore_devices = set(self.config_data['devices_to_ignore'])
-                if 'external_checkers' in self.config_data:
-                    self.external_checkers = set(self.config_data['external_checkers'])
+                self.ignore_services = self._get_list_data('services_to_ignore')
+                self.ignore_devices = self._get_list_data('devices_to_ignore')
+                self.external_checkers = self._get_list_data('external_checkers')
             except Exception as e:
                 self._reset()
 
@@ -70,7 +67,10 @@ class Config(object):
     def get_bootup_timeout(self):
         if self.config_data and 'boot_timeout' in self.config_data:
             try:
-                return int(self.config_data['boot_timeout'])
+                timeout = int(self.config_data['boot_timeout'])
+                if timeout <= 0:
+                    timeout = self.DEFAULT_BOOTUP_TIMEOUT
+                return timeout
             except ValueError:
                 pass
         return self.DEFAULT_BOOTUP_TIMEOUT
@@ -79,4 +79,11 @@ class Config(object):
         from .utils import run_command
         output = run_command(Config.GET_PLATFORM_CMD)
         return output.strip()
+
+    def _get_list_data(self, key):
+        if key in self.config_data:
+            data = self.config_data[key]
+            if isinstance(data, list):
+                return set(data)
+        return None
 

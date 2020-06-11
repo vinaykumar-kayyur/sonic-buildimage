@@ -9,7 +9,7 @@ class ExternalChecker(HealthChecker):
         self._category = None
 
     def reset(self):
-        self._category = None
+        self._category = 'Unknown'
         self._error_info = {}
 
     def get_category(self):
@@ -17,6 +17,8 @@ class ExternalChecker(HealthChecker):
 
     def check(self, config):
         self.reset()
+        if not isinstance(self._cmd, str):
+            self._error_info[str(self)] = 'Command of external checker must be str'
         output = run_command(self._cmd)
         if not output:
             self._error_info[str(self)] = 'Failed to get output of command \"{}\"'.format(self._cmd)
