@@ -48,7 +48,7 @@ def readJson(filename):
 def db_connect_configdb():
     """
     Connect to configdb
-    """
+
     config_db = ConfigDBConnector()
     if config_db is None:
         return None
@@ -57,6 +57,9 @@ def db_connect_configdb():
     except Exception as e:
         config_db = None
     return config_db
+    """
+    # Temporary verfication for 'config load_minigraph' hang issue.
+    return None
 
 def get_port_config_file_name(hwsku=None, platform=None, asic=None):
 
