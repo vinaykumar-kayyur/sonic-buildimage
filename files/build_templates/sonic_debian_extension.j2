@@ -353,6 +353,15 @@ echo "procdockerstatsd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/procdockerstatsd/procdockerstatsd $FILESYSTEM_ROOT/usr/bin/
 
 # Copy systemd timer configuration
+sudo cp $BUILD_TEMPLATES/pcie-mon.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable pcie-mon.timer
+
+# Copy pcie-mon service files
+sudo cp $IMAGE_CONFIGS/pcie-mon/pcie-mon.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "pcie-mon.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/pcie-mon.sh $FILESYSTEM_ROOT/usr/bin/
+
+# Copy systemd timer configuration
 # It implements delayed start of services
 sudo cp $BUILD_TEMPLATES/process-reboot-cause.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable process-reboot-cause.timer

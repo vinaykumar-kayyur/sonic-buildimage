@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitor the PCIe device status periodically every 1 min
+
+[Timer]
+OnBootSec=10sec
+OnUnitActiveSec=1min 
+Unit=pcie-mon.service
+
+[Install]
+WantedBy=timers.target
