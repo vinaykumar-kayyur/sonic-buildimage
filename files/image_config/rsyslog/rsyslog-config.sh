@@ -13,12 +13,11 @@ fi
 # on Single NPU platforms we continue to use loopback adddres
 
 if [[ ($NUM_ASIC -gt 1) ]]; then
-    intf="docker0"
+    udp_server_ip=$(ip -o -4 addr list docker0 | awk '{print $4}' | cut -d/ -f1)
 else
-    intf="lo"
+    udp_server_ip=$(ip -o -4 addr list lo scope host | awk '{print $4}' | cut -d/ -f1)
 fi
 
-udp_server_ip=$(ip -o -4 addr list $intf | awk '{print $4}' | cut -d/ -f1)
 sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog.conf.j2 -a "{\"udp_server_ip\": \"$udp_server_ip\"}"  >/etc/rsyslog.conf
 
 systemctl restart rsyslog

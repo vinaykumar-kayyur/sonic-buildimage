@@ -36,6 +36,7 @@ function updateSyslogConf()
         TARGET_IP=$(ip -o -4 addr list docker0 | awk '{print $4}' | cut -d/ -f1)
         CONTAINER_NAME="{{docker_container_name}}$DEV"
         TMP_FILE="/tmp/rsyslog.$CONTAINER_NAME.conf"
+
         sonic-cfggen  -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
         docker cp $TMP_FILE {{docker_container_name}}$DEV:/etc/rsyslog.conf
         rm -rf $TMP_FILE
@@ -244,10 +245,7 @@ start() {
             done
         fi
         {%- endif %}
-        # single NPU systems and container running on the host network continue to use the json-file as log-driver
-        {%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
-            LOG_OPTS="--log-opt max-size=2M --log-opt max-file=5"
-        {%- endif %}
+
     else
         # This part of code is applicable for Multi-ASIC platforms. Here we mount the namespace specific
         # redis directory into the docker running in that namespace. Below eg: is for namespace "asic1"
@@ -258,15 +256,6 @@ start() {
             redis_dir=`echo $redis_dir_list | cut -d " " -f $id`
             REDIS_MNT=" -v $redis_dir:$redis_dir:rw "
         fi
-        {%- if '--log-driver=json-file' in docker_image_run_opt %}
-            LOG_OPTS="--log-opt max-size=2M --log-opt max-file=5"
-        {%- else %}
-            # Containers in the docker network will use the syslog-driver as log-driver. This is mainly applicable for Multi NPU system
-            # In this case the syslog service on the host is listening on the docker0 address
-            syslog_address=$(ip -o -4 addr list docker0 | awk '{print $4}' | cut -d/ -f1)
-            LOG_OPTS="--log-driver=syslog --log-opt syslog-address=udp://$syslog_address:514 --log-opt syslog-format=rfc5424 \
-                                          --log-opt syslog-facility=daemon --log-opt tag={{docker_container_name}}$DEV"
-        {%- endif %}
         {%- if docker_container_name == "database" %}
         NET="bridge"
         {%- else %}
@@ -290,7 +279,9 @@ start() {
 {%- if install_debug_image == "y" %}
         -v /src:/src:ro -v /debug:/debug:rw \
 {%- endif %}
-        $LOG_OPTS \
+{%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
+        --log-opt max-size=2M --log-opt max-file=5 \
+{%- endif %}
 {%- if sonic_asic_platform == "mellanox" %}
 {%- if docker_container_name == "syncd" %}
         -v /var/log/mellanox/sniffer:/var/log/mellanox/sniffer:rw \
