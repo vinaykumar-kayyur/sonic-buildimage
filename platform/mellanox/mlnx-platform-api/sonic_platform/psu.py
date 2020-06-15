@@ -30,10 +30,6 @@ PSU_POWER = "power"
 
 # in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
-<<<<<<< HEAD
-
-platform_dict_psu = {'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4700-r0': 1}
-=======
 platform_dict_psu = {'x86_64-mlnx_msn3420-r0':1, 'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4600c-r0':1, 'x86_64-mlnx_msn4700-r0': 1}
 psu_profile_list = [
     # default filename convention
@@ -71,7 +67,6 @@ class Psu(PsuBase):
             filemap = psu_profile_list[platform_dict_psu[platform]]
         else:
             filemap = psu_profile_list[0]
->>>>>>> added platform 3420 and 4600c to platform utils
 
         self.psu_data = DEVICE_DATA[platform]['psus']
 
