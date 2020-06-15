@@ -49,7 +49,7 @@ REBOOT_CAUSE_FILE_LENGTH = 1
 logger = Logger()
 
 # System LED system fs definitions for 201911 branch only
-LED_GREEN = '/run/hw-management/led/led_status_green'
+SYSTEM_STATUS_LED_GREEN_FILE = '/run/hw-management/led/led_status_green'
 LED_ON = '1'
 
 # magic code defnition for port number, qsfp port position of each hwsku
@@ -481,7 +481,7 @@ class Chassis(ChassisBase):
         This is for 201911 branch only
         """
         try:
-            with open(LED_GREEN, 'w') as f:
+            with open(SYSTEM_STATUS_LED_GREEN_FILE, 'w') as f:
                 f.write(LED_ON)
         except:
             pass
