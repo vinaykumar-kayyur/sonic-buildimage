@@ -37,7 +37,7 @@ function updateSyslogConf()
         CONTAINER_NAME="{{docker_container_name}}$DEV"
         TMP_FILE="/tmp/rsyslog.$CONTAINER_NAME.conf"
 
-        sonic-cfggen  -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
+        sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
         docker cp $TMP_FILE {{docker_container_name}}$DEV:/etc/rsyslog.conf
         rm -rf $TMP_FILE
     fi
