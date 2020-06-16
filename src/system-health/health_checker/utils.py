@@ -7,3 +7,10 @@ def run_command(command):
         return process.communicate()[0].encode('utf-8')
     except:
         return None
+
+
+def get_uptime():
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+
+    return uptime_seconds

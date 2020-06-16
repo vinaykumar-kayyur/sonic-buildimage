@@ -7,7 +7,6 @@ class HealthCheckerManager(object):
 
     def __init__(self):
         self._checkers = []
-        self._start_time = time.time()
         self._state = self.STATE_BOOTING
 
         from .config import Config
@@ -56,9 +55,10 @@ class HealthCheckerManager(object):
                 stats['Internal'].update({str(checker): error_msg})
 
     def _is_system_booting(self):
-        now = time.time()
+        from .utils import get_uptime
+        uptime = get_uptime()
         timeout = self.config.get_bootup_timeout()
-        booting = now - self._start_time < timeout
+        booting = uptime < timeout
         if not booting:
             self._state = self.STATE_RUNNING
         return booting
