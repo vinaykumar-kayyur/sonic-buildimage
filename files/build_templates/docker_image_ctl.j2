@@ -245,7 +245,6 @@ start() {
             done
         fi
         {%- endif %}
-
     else
         # This part of code is applicable for Multi-ASIC platforms. Here we mount the namespace specific
         # redis directory into the docker running in that namespace. Below eg: is for namespace "asic1"
@@ -256,6 +255,7 @@ start() {
             redis_dir=`echo $redis_dir_list | cut -d " " -f $id`
             REDIS_MNT=" -v $redis_dir:$redis_dir:rw "
         fi
+
         {%- if docker_container_name == "database" %}
         NET="bridge"
         {%- else %}
