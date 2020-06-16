@@ -13,10 +13,6 @@ except ImportError, e:
 #
 # Constants ====================================================================
 #
-
-# Redis DB information
-REDIS_HOSTNAME = 'localhost'
-REDIS_PORT = 6379
 REDIS_TIMEOUT_MSECS = 0
 
 # Platform root directory inside docker
@@ -36,12 +32,11 @@ EEPROM_CLASS_NAME = 'board'
 # Helper functions =============================================================
 #
 
-def db_connect(db):
+def db_connect(db_name):
     from swsscommon import swsscommon
-    return swsscommon.DBConnector(db,
-                                  REDIS_HOSTNAME,
-                                  REDIS_PORT,
-                                  REDIS_TIMEOUT_MSECS)
+    return swsscommon.DBConnector(db_name,
+                                  REDIS_TIMEOUT_MSECS,
+                                  True)
 
 #
 # Helper classes ===============================================================
