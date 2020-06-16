@@ -287,9 +287,9 @@ start() {
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
 {%- endif %}
 {%- endif %}
-{% -if docker_container_name == "swss" %}
+{%- if docker_container_name == "swss" %}
        -v /var/log/swss$DEV:/var/log/swss:rw \
-{% -endif %}
+{%- endif %}
 {%- if docker_container_name == "bgp" %}
         -v /etc/sonic/frr/$DEV:/etc/frr:rw \
 {%- endif %}
