@@ -10,7 +10,7 @@ CONFIG_TYPE=`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["docker_routing_co
 if [[ ! -z "$NAMESPACE_ID" ]]; then
    # FRR is not running in host namespace so we need to delete
    # default gw kernel route added by docker network via eth0 and add it back 
-   # with higer administrative distance so that default route learn
+   # with higher administrative distance so that default route learnt
    # by FRR becomes best route if/when available
    GATEWAY_IP=$(ip route show 0.0.0.0/0 dev eth0 | awk '{print $3}')
    ip route del 0.0.0.0/0 dev eth0
@@ -19,7 +19,7 @@ if [[ ! -z "$NAMESPACE_ID" ]]; then
    # Upon learning about a route that is not originated by FRR we read the metric value as a uint32_t. 
    # The top byte of the value is interpreted as the Administrative Distance and 
    # the low three bytes are read in as the metric.
-   # so here we are programming administrative distace of 210 (210 << 24) > 200 (for routes learn via IBGP)
+   # so here we are programming administrative distance of 210 (210 << 24) > 200 (for routes learnt via IBGP)
    ip route add 0.0.0.0/0 via $GATEWAY_IP dev eth0 metric 3523215360 
 fi
 
