@@ -29,19 +29,24 @@ class HardwareChecker(HealthChecker):
         temperature = self._db.get(self._db.STATE_DB, HardwareChecker.ASIC_TEMPERATURE_KEY, 'temperature')
         temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.ASIC_TEMPERATURE_KEY, 'high_threshold')
         if not temperature:
-            self._error_info['ASIC'] = 'Failed to get ASIC temperature'
+            self.set_object_not_ok('ASIC', 'ASIC', 'Failed to get ASIC temperature')
         elif not temperature_threshold:
-            self._error_info['ASIC'] = 'Failed to get ASIC temperature threshold'
+            self.set_object_not_ok('ASIC', 'ASIC', 'Failed to get ASIC temperature threshold')
         else:
             try:
                 temperature = float(temperature)
                 temperature_threshold = float(temperature_threshold)
                 if temperature > temperature_threshold:
-                    self._error_info['ASIC'] = 'ASIC temperature is too hot, temperature={}, threshold={}'.format(temperature,
-                                                                                                                  temperature_threshold)
+                    self.set_object_not_ok('ASIC', 'ASIC',
+                                           'ASIC temperature is too hot, temperature={}, threshold={}'.format(
+                                               temperature,
+                                               temperature_threshold))
+                else:
+                    self.set_object_ok('ASIC', 'ASIC')
             except ValueError as e:
-                self._error_info['ASIC'] = 'Invalidd ASIC temperature data, temperature={}, threshold={}'.format(temperature,
-                                                                                                                 temperature_threshold)
+                self.set_object_not_ok('ASIC', 'ASIC',
+                                       'Invalid ASIC temperature data, temperature={}, threshold={}'.format(temperature,
+                                                                                                            temperature_threshold))
 
     def _check_fan_status(self, config):
         if config.ignore_devices and 'fan' in config.ignore_devices:
@@ -49,13 +54,13 @@ class HardwareChecker(HealthChecker):
 
         keys = self._db.keys(self._db.STATE_DB, HardwareChecker.FAN_TABLE_NAME + '*')
         if not keys:
-            self._error_info['fan'] = 'Failed to get fan information'
+            self.set_object_not_ok('Fan', 'Fan', 'Failed to get fan information')
             return
 
         for key in natsorted(keys):
             key_list = key.split('|')
             if len(key_list) != 2:  # error data in DB, log it and ignore
-                self._error_info[key] = 'Invalid key for FAN_INFO: {}'.format(key)
+                self.set_object_not_ok('Fan', key, 'Invalid key for FAN_INFO: {}'.format(key))
                 continue
 
             name = key_list[1]
@@ -64,12 +69,12 @@ class HardwareChecker(HealthChecker):
             data_dict = self._db.get_all(self._db.STATE_DB, key)
             presence = data_dict.get('presence', 'false')
             if presence.lower() != 'true':
-                self._error_info[name] = '{} is missing'.format(name)
+                self.set_object_not_ok('Fan', name, '{} is missing'.format(name))
                 continue
 
             status = data_dict.get('status', 'false')
             if status.lower() != 'true':
-                self._error_info[name] = '{} is broken'.format(name)
+                self.set_object_not_ok('Fan', name, '{} is broken'.format(name))
                 continue
 
             if not self._ignore_check(config.ignore_devices, 'fan', name, 'speed'):
@@ -77,11 +82,14 @@ class HardwareChecker(HealthChecker):
                 speed_target = data_dict.get('speed_target', None)
                 speed_tolerance = data_dict.get('speed_tolerance', None)
                 if not speed:
-                    self._error_info[name] = 'Failed to get actual speed data for {}'.format(name)
+                    self.set_object_not_ok('Fan', name, 'Failed to get actual speed data for {}'.format(name))
+                    continue
                 elif not speed_target:
-                    self._error_info[name] = 'Failed to get target speed date for {}'.format(name)
+                    self.set_object_not_ok('Fan', name, 'Failed to get target speed date for {}'.format(name))
+                    continue
                 elif not speed_tolerance:
-                    self._error_info[name] = 'Failed to get speed tolerance for {}'.format(name)
+                    self.set_object_not_ok('Fan', name, 'Failed to get speed tolerance for {}'.format(name))
+                    continue
                 else:
                     try:
                         speed = float(speed)
@@ -90,15 +98,22 @@ class HardwareChecker(HealthChecker):
                         speed_min_th = speed_target * (1 - float(speed_tolerance) / 100)
                         speed_max_th = speed_target * (1 + float(speed_tolerance) / 100)
                         if speed < speed_min_th or speed > speed_max_th:
-                            self._error_info[name] = '{} speed is out of range, speed={}, range=[{},{}]'.format(name, 
-                                                                                                                speed, 
-                                                                                                                speed_min_th, 
-                                                                                                                speed_max_th)
+                            self.set_object_not_ok('Fan', name,
+                                                   '{} speed is out of range, speed={}, range=[{},{}]'.format(name,
+                                                                                                              speed,
+                                                                                                              speed_min_th,
+                                                                                                              speed_max_th))
+                            continue
                     except ValueError:
-                        self._error_info[name] = 'Invalid fan speed data for {}, speed={}, target={}, tolerance={}'.format(name, 
-                                                                                                                     speed, 
-                                                                                                                     speed_target, 
-                                                                                                                     speed_tolerance)
+                        self.set_object_not_ok('Fan', name,
+                                               'Invalid fan speed data for {}, speed={}, target={}, tolerance={}'.format(
+                                                   name,
+                                                   speed,
+                                                   speed_target,
+                                                   speed_tolerance))
+                        continue
+
+            self.set_object_ok('Fan', name)
 
     def _check_psu_status(self, config):
         if config.ignore_devices and 'psu' in config.ignore_devices:
@@ -106,13 +121,13 @@ class HardwareChecker(HealthChecker):
 
         keys = self._db.keys(self._db.STATE_DB, HardwareChecker.PSU_TABLE_NAME + '*')
         if not keys:
-            self._error_info['PSU'] = 'Failed to get PSU information'
+            self.set_object_not_ok('PSU', 'PSU', 'Failed to get PSU information')
             return
 
         for key in natsorted(keys):
             key_list = key.split('|')
             if len(key_list) != 2:  # error data in DB, log it and ignore
-                self._error_info[key] = 'Invalid key for PSU_INFO: {}'.format(key)
+                self.set_object_not_ok('PSU', key, 'Invalid key for PSU_INFO: {}'.format(key))
                 continue
 
             name = key_list[1]
@@ -122,34 +137,38 @@ class HardwareChecker(HealthChecker):
             data_dict = self._db.get_all(self._db.STATE_DB, key)
             presence = data_dict.get('presence', 'false')
             if presence.lower() != 'true':
-                self._error_info[name] = '{} is missing or not available'.format(name)
+                self.set_object_not_ok('PSU', name, '{} is missing or not available'.format(name))
                 continue
 
             status = data_dict.get('status', 'false')
             if status.lower() != 'true':
-                self._error_info[name] = '{} is out of power'.format(name)
+                self.set_object_not_ok('PSU', name, '{} is out of power'.format(name))
                 continue
 
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'temperature'):
                 temperature = data_dict.get('temp', None)
                 temperature_threshold = data_dict.get('temp_th', None)
                 if temperature is None:
-                    self._error_info[name] = 'Failed to get temperature data for {}'.format(name)
+                    self.set_object_not_ok('PSU', name, 'Failed to get temperature data for {}'.format(name))
                     continue
                 elif temperature_threshold is None:
-                    self._error_info[name] = 'Failed to get temperature threshold data for {}'.format(name)
+                    self.set_object_not_ok('PSU', name, 'Failed to get temperature threshold data for {}'.format(name))
                     continue
                 else:
                     try:
                         temperature = float(temperature)
                         temperature_threshold = float(temperature_threshold)
                         if temperature > temperature_threshold:
-                            self._error_info[name] = '{} temperature is too hot, temperature={}, threshold={}'.format(name, temperature,
-                                                                                                temperature_threshold)
+                            self.set_object_not_ok('PSU', name,
+                                                   '{} temperature is too hot, temperature={}, threshold={}'.format(
+                                                       name, temperature,
+                                                       temperature_threshold))
                             continue
                     except ValueError:
-                        self._error_info[name] = 'Invalid temperature data for {}, temperature={}, threshold={}'.format(name, temperature,
-                                                                                                temperature_threshold)
+                        self.set_object_not_ok('PSU', name,
+                                               'Invalid temperature data for {}, temperature={}, threshold={}'.format(
+                                                   name, temperature,
+                                                   temperature_threshold))
                         continue
 
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'voltage'):
@@ -157,29 +176,34 @@ class HardwareChecker(HealthChecker):
                 voltage_min_th = data_dict.get('voltage_min_th', None)
                 voltage_max_th = data_dict.get('voltage_max_th', None)
                 if voltage is None:
-                    self._error_info[name] = 'Failed to get voltage data for {}'.format(name)
+                    self.set_object_not_ok('PSU', name, 'Failed to get voltage data for {}'.format(name))
                 elif voltage_min_th is None:
-                    self._error_info[name] = 'Failed to get voltage minimum threshold data for {}'.format(name)
+                    self.set_object_not_ok('PSU', name,
+                                           'Failed to get voltage minimum threshold data for {}'.format(name))
                 elif voltage_max_th is None:
-                    self._error_info[name] = 'Failed to get voltage maximum threshold data for {}'.format(name)
+                    self.set_object_not_ok('PSU', name,
+                                           'Failed to get voltage maximum threshold data for {}'.format(name))
                 else:
                     try:
                         voltage = float(voltage)
                         voltage_min_th = float(voltage_min_th)
                         voltage_max_th = float(voltage_max_th)
                         if voltage < voltage_min_th or voltage > voltage_max_th:
-                            self._error_info[name] = '{} voltage is out of range, voltage={}, range=[{},{}]'.format(name, 
-                                                                                                                    voltage, 
-                                                                                                                    voltage_min_th,
-                                                                                                                    voltage_max_th)
+                            self.set_object_not_ok('PSU', name,
+                                                   '{} voltage is out of range, voltage={}, range=[{},{}]'.format(name,
+                                                                                                                  voltage,
+                                                                                                                  voltage_min_th,
+                                                                                                                  voltage_max_th))
                     except ValueError:
-                        self._error_info[name] = 'Invalid voltage data for {}, voltage={}, range=[{},{}]'.format(name, 
-                                                                                                                 voltage, 
-                                                                                                                 voltage_min_th,
-                                                                                                                 voltage_max_th)
+                        self.set_object_not_ok('PSU', name,
+                                               'Invalid voltage data for {}, voltage={}, range=[{},{}]'.format(name,
+                                                                                                               voltage,
+                                                                                                               voltage_min_th,
+                                                                                                               voltage_max_th))
+            self.set_object_ok('PSU', name)
 
     def reset(self):
-        self._error_info = {}
+        self._info = {}
 
     @classmethod
     def _ignore_check(cls, ignore_set, category, object_name, check_point):

@@ -86,4 +86,3 @@ class Config(object):
             if isinstance(data, list):
                 return set(data)
         return None
-

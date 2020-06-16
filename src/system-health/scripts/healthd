@@ -72,13 +72,15 @@ class HealthDaemon(DaemonBase):
         self.deinit()
 
     def _process_stat(self, chassis, config, stat):
+        from health_checker.health_checker import HealthChecker
         self._clear_system_health_table()
         status = True
-        for category, error_info in stat.items():
-            if error_info:
-                status = False
-                for obj_name, error_msg in error_info.items():
-                    self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, obj_name, error_msg)
+        for category, info in stat.items():
+            for obj_name, obj_data in info.items():
+                if obj_data[HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK:
+                    status = False
+                    self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, obj_name,
+                                 obj_data[HealthChecker.INFO_FIELD_OBJECT_MSG])
 
         summary = 'OK' if status else 'Not OK'
         self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, 'summary', summary)
@@ -93,7 +95,7 @@ class HealthDaemon(DaemonBase):
         except Exception as e:
             logger.log_error('Failed to set system led due to - {}'.format(repr(e)))
 
-        
+
 #
 # Main =========================================================================
 #

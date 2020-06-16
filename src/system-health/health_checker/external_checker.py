@@ -10,28 +10,26 @@ class ExternalChecker(HealthChecker):
 
     def reset(self):
         self._category = 'Unknown'
-        self._error_info = {}
+        self._info = {}
 
     def get_category(self):
         return self._category
 
     def check(self, config):
         self.reset()
-        if not isinstance(self._cmd, str):
-            self._error_info[str(self)] = 'Command of external checker must be str'
+
         output = run_command(self._cmd)
         if not output:
-            self._error_info[str(self)] = 'Failed to get output of command \"{}\"'.format(self._cmd)
+            self.set_object_not_ok('External', str(self), 'Failed to get output of command \"{}\"'.format(self._cmd))
             return
 
         lines = output.splitlines()
         if not lines:
-            self._error_info[str(self)] = 'Invalid output of command ({})'.format(self._cmd)
+            self.set_object_not_ok('External', str(self), 'Invalid output of command \"{}\"'.format(self._cmd))
             return
 
         self._category = lines[0]
         if len(lines) > 1:
-            self._error_info = {}
             for line in lines[1:]:
                 line = line.strip()
                 if not line:
@@ -41,7 +39,7 @@ class ExternalChecker(HealthChecker):
                     continue
                 obj_name = line[:pos]
                 error_msg = line[pos+1:]
-                self._error_info[obj_name] = error_msg
+                self.set_object_not_ok('External', obj_name, error_msg)
         return
 
     def __str__(self):

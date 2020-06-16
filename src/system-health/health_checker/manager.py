@@ -41,18 +41,22 @@ class HealthCheckerManager(object):
         try:
             checker.check(self.config)
             category = checker.get_category()
-            error_info = checker.get_error_info()
+            info = checker.get_info()
             if category not in stats:
-                stats[category] = {} if error_info is None else error_info
+                stats[category] = info
             else:
-                if error_info:
-                    stats[category].update(error_info)
+                stats[category].update(info)
         except Exception as e:
+            from .health_checker import HealthChecker
             error_msg = 'Failed to perform health check for {} due to exception - {}'.format(checker, repr(e))
+            entry = {str(checker): {
+                    HealthChecker.INFO_FIELD_OBJECT_STATUS: HealthChecker.STATUS_NOT_OK,
+                    HealthChecker.INFO_FIELD_OBJECT_MSG: error_msg
+                }}
             if 'Internal' not in stats:
-                stats['Internal'] = {str(checker): error_msg}
+                stats['Internal'] = entry
             else:
-                stats['Internal'].update({str(checker): error_msg})
+                stats['Internal'].update(entry)
 
     def _is_system_booting(self):
         from .utils import get_uptime
@@ -62,4 +66,3 @@ class HealthCheckerManager(object):
         if not booting:
             self._state = self.STATE_RUNNING
         return booting
-
