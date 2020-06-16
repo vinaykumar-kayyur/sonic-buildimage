@@ -49,7 +49,7 @@ psu_profile_list = [
 class Psu(PsuBase):
     """Platform-specific Psu class"""
 
-    STATUS_LED_COLOR_ORANGE = "orange"
+    shared_led = None
 
     def __init__(self, psu_index, platform):
         global psu_list
