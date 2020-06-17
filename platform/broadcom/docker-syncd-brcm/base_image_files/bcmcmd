@@ -1,3 +1,29 @@
 #!/bin/bash
+function print_error() {
+    echo "No such container $NS"
+    echo "usage bcmcmd <container name> <command>"
+    exit
+}
+PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
 
-docker exec -i syncd bcmcmd "$@"
+# Parse the device specific asic conf file, if it exists
+ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
+if [ -f "$ASIC_CONF" ]; then
+    source $ASIC_CONF
+fi
+NS_PREFIX="syncd"
+if [[ ($NUM_ASIC -gt 1) ]]; then
+    NS=$1
+    shift
+    if [[ $NS == $NS_PREFIX* ]]; then
+        DEV=${NS#"$NS_PREFIX"}
+        if [ "$DEV" -ge $NUM_ASIC ] && [ "$DEV" -lt 0 ]; then
+            print_error
+        fi
+    else
+        print_error
+    fi
+fi
+
+docker exec -i syncd$DEV bcmcmd "$@"
+
