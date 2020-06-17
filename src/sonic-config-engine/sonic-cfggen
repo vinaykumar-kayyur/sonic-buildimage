@@ -261,11 +261,11 @@ def main():
         minigraph = args.minigraph
         if platform:
             if args.port_config != None:
-                deep_update(data, parse_xml(minigraph, platform, args.port_config, asic_name=asic_name))
+                deep_update(data, parse_xml(minigraph, platform, args.port_config, asic_name=asic_name, hwsku_config_file=args.hwsku_config))
             else:
                 deep_update(data, parse_xml(minigraph, platform, asic_name=asic_name))
         else:
-            deep_update(data, parse_xml(minigraph, port_config_file=args.port_config, hwsku_config_file=args.hwsku_config, asic_name=asic_name))
+            deep_update(data, parse_xml(minigraph, port_config_file=args.port_config, asic_name=asic_name, hwsku_config_file=args.hwsku_config))
 
     if args.device_description != None:
         deep_update(data, parse_device_desc_xml(args.device_description))

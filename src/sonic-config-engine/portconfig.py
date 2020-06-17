@@ -53,7 +53,13 @@ def db_connect_configdb():
     if config_db is None:
         return None
     try:
-        config_db.db_connect('CONFIG_DB')
+        """
+        This could be blocking during the config load_minigraph phase,
+        as the CONFIG_DB_INITIALIZED is not yet set in the configDB.
+        We can ignore the check by using config_db.db_connect('CONFIG_DB') instead
+        """
+        # Connect only if available & initialized
+        config_db.connect(wait_for_init=False)
     except Exception as e:
         config_db = None
     return config_db
@@ -104,7 +110,7 @@ def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_conf
     if config_db is not None and port_config_file is None:
 
         port_data = config_db.get_table("PORT")
-        if port_data is not None:
+        if bool(port_data):
             ports = ast.literal_eval(json.dumps(port_data))
             port_alias_map = {}
             port_alias_asic_map = {}
