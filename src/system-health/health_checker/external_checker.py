@@ -37,8 +37,8 @@ class ExternalChecker(HealthChecker):
                 pos = line.find(':')
                 if pos == -1:
                     continue
-                obj_name = line[:pos]
-                msg = line[pos+1:]
+                obj_name = line[:pos].strip()
+                msg = line[pos+1:].strip()
                 if msg != 'OK':
                     self.set_object_not_ok('External', obj_name, msg)
                 else:
