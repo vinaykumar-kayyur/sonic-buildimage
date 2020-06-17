@@ -16,7 +16,6 @@ function debug()
     fi
 }
 
-
 function check_pcie_devices()
 {
     show platform pcieinfo -c > $TEMP_PCIE_MON_F
@@ -49,7 +48,7 @@ function check_and_rescan_pcie_devices()
         fi
         debug "PCIe RESCAN"
         echo 1 > /sys/bus/pci/rescan
-	let "i+=1"
+        let "i+=1"
         sleep 1
     done
     exit 1
