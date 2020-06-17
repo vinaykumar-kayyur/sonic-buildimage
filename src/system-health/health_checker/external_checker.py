@@ -38,8 +38,11 @@ class ExternalChecker(HealthChecker):
                 if pos == -1:
                     continue
                 obj_name = line[:pos]
-                error_msg = line[pos+1:]
-                self.set_object_not_ok('External', obj_name, error_msg)
+                msg = line[pos+1:]
+                if msg != 'OK':
+                    self.set_object_not_ok('External', obj_name, msg)
+                else:
+                    self.set_object_ok('External', obj_name)
         return
 
     def __str__(self):
