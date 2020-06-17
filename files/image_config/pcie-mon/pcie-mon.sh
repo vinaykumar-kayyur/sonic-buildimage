@@ -6,6 +6,7 @@ RESULTS="PCIe Device Checking All Test"
 PASS="PASSED"
 TEMP_PCIE_MON_F="/tmp/pcie-mon.txt"
 STATUS=1
+MAX_RESCAN=15
 
 function debug()
 {
@@ -31,10 +32,27 @@ function check_pcie_devices()
     rm $TEMP_PCIE_MON_F
     if [ $STATUS = 0 ]; then
         debug "PCIe check passed"
-	exit 0
+        return 0
     fi
     debug "PCIe check failed"
+    return 1
+}
+
+function check_and_rescan_pcie_devices()
+{
+    i=0
+    while [ $i -lt $MAX_RESCAN ];
+    do
+        ret=check_pcie_devices
+        if [ $ret -eq 0]
+            exit 0
+        fi
+        debug "PCIe RESCAN"
+        echo 1 > /sys/bus/pci/rescan
+	let "i+=1"
+        sleep 1
+    done
     exit 1
 }
 
-check_pcie_devices
+check_and_rescan_pcie_devices
