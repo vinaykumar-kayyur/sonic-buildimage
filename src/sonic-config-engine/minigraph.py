@@ -348,7 +348,7 @@ def parse_dpg(dpg, hname):
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
-                if vlantype_name == "UserDefinedL2Vlan":
+                if vlantype_name == "Tagged":
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
                 else:
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
