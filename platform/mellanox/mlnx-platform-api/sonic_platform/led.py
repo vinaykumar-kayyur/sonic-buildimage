@@ -257,8 +257,6 @@ class SystemLed(Led):
         self._orange_led_path = os.path.join(Led.LED_PATH, "led_status_orange")
         self._led_cap_path = os.path.join(Led.LED_PATH, "led_status_capability")
 
-        self.set_status(Led.STATUS_LED_COLOR_GREEN)
-
     def get_green_led_path(self):
         return self._green_led_path
 
