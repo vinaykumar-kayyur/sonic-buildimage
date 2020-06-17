@@ -17,7 +17,7 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
     shift
     if [[ $NS == $NS_PREFIX* ]]; then
         DEV=${NS#"$NS_PREFIX"}
-        if [ "$DEV" -ge $NUM_ASIC ] && [ "$DEV" -lt 0 ]; then
+        if [ "$DEV" -ge $NUM_ASIC ] || [ "$DEV" -lt 0 ]; then
             print_error
         fi
     else
