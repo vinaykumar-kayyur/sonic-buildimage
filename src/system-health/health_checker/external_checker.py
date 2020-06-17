@@ -9,7 +9,7 @@ class ExternalChecker(HealthChecker):
         self._category = None
 
     def reset(self):
-        self._category = 'Unknown'
+        self._category = 'External'
         self._info = {}
 
     def get_category(self):
