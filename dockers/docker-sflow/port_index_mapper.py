@@ -14,16 +14,18 @@ import syslog
 import signal
 import traceback
 from pyroute2 import IPDB
+from pyroute2.iproute import RTM_NEWLINK, RTM_DELLINK
 from swsssdk import SonicV2Connector, port_util
-
-RTM_NEWLINK = 16
-RTM_DELLINK = 17
 
 PORT_INDEX_TABLE_NAME = 'PORT_INDEX_TABLE'
 SYSLOG_IDENTIFIER = 'port_index_mapper'
 
 ipdb = None
 state_db = None
+
+def set_port_index_table_entry(key, index, ifindex):
+    state_db.set(state_db.STATE_DB, key, 'index', index)
+    state_db.set(state_db.STATE_DB, key, 'ifindex', ifindex)
 
 def interface_callback(ipdb, nlmsg, action):
     global state_db
@@ -54,8 +56,7 @@ def interface_callback(ipdb, nlmsg, action):
         _hash = '{}|{}'.format(PORT_INDEX_TABLE_NAME, ifname)
     
         if msgtype == RTM_NEWLINK:
-            state_db.set(state_db.STATE_DB, _hash, 'index', str(index))
-            state_db.set(state_db.STATE_DB, _hash, 'ifindex', nlmsg['index'])
+            set_port_index_table_entry(_hash, str(index), nlmsg['index'])
         elif msgtype == RTM_DELLINK:
             state_db.delete(state_db.STATE_DB, _hash)
 
@@ -80,8 +81,7 @@ def main():
             continue
         ifindex = ipdb.interfaces[ifname]['index']
         _hash = '{}|{}'.format(PORT_INDEX_TABLE_NAME, ifname)
-        state_db.set(state_db.STATE_DB, _hash, 'index', str(index))
-        state_db.set(state_db.STATE_DB, _hash, 'ifindex', str(ifindex))
+        set_port_index_table_entry(_hash, str(index), str(ifindex))
 
     ipdb.register_callback(interface_callback)
 
