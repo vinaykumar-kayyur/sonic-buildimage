@@ -177,12 +177,15 @@ class HardwareChecker(HealthChecker):
                 voltage_max_th = data_dict.get('voltage_max_th', None)
                 if voltage is None:
                     self.set_object_not_ok('PSU', name, 'Failed to get voltage data for {}'.format(name))
+                    continue
                 elif voltage_min_th is None:
                     self.set_object_not_ok('PSU', name,
                                            'Failed to get voltage minimum threshold data for {}'.format(name))
+                    continue
                 elif voltage_max_th is None:
                     self.set_object_not_ok('PSU', name,
                                            'Failed to get voltage maximum threshold data for {}'.format(name))
+                    continue
                 else:
                     try:
                         voltage = float(voltage)
@@ -194,12 +197,14 @@ class HardwareChecker(HealthChecker):
                                                                                                                   voltage,
                                                                                                                   voltage_min_th,
                                                                                                                   voltage_max_th))
+                            continue
                     except ValueError:
                         self.set_object_not_ok('PSU', name,
                                                'Invalid voltage data for {}, voltage={}, range=[{},{}]'.format(name,
                                                                                                                voltage,
                                                                                                                voltage_min_th,
                                                                                                                voltage_max_th))
+                        continue
             self.set_object_ok('PSU', name)
 
     def reset(self):
