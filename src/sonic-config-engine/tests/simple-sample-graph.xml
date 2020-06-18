@@ -170,7 +170,7 @@
           <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
           <VlanID>2020</VlanID>
           <Tag>2020</Tag>
-          <Type>UserDefinedL2Vlan</Type>
+          <Type>Tagged</Type>
           <Subnets>192.168.0.0/28</Subnets>
         </VlanInterface>
       </VlanInterfaces>
