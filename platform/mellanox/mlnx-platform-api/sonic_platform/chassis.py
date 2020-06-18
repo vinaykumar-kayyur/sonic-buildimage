@@ -465,4 +465,3 @@ class Chassis(ChassisBase):
         from .thermal_manager import ThermalManager
         return ThermalManager
 
-
