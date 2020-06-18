@@ -10,14 +10,16 @@ DOCKER_PDE_DBG = $(DOCKER_PDE_STEM)-$(DBG_IMAGE_MARK).gz
 $(DOCKER_PDE)_PATH = $(DOCKERS_PATH)/$(DOCKER_PDE_STEM)
 
 $(DOCKER_PDE)_DEPENDS += $(PYTHON_NETIFACES)
-ifeq ($(CONFIGURED_PLATFORM),broadcom)
-$(DOCKER_PDE)_DEPENDS += $(BRCM_SAI) $(SONIC_PLATFORM_PDE)
-endif
+$(DOCKER_PDE)_DEPENDS += $(SONIC_PLATFORM_PDE) $(BRCM_SAI)
+
 $(DOCKER_PDE_RDEPENDS += $(PYTHON_NETIFACES)
 
 $(DOCKER_PDE)_PYTHON_DEBS += $(SONIC_UTILS)
 $(DOCKER_PDE)_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY2)
-
+ifeq ($(PDDF_SUPPORT), y)
+$(DOCKER_PDE)_PYTHON_WHEELS += $(PDDF_PLATFORM_API_BASE_PY2)
+endif
+$(DOCKER_PDE)_PYTHON_WHEELS += $(SONIC_DAEMON_BASE_PY2)
 $(DOCKER_PDE)_DBG_DEPENDS = $($(DOCKER_CONFIG_ENGINE_STRETCH)_DBG_DEPENDS)
 $(DOCKER_PDE)_DBG_IMAGE_PACKAGES = $($(DOCKER_CONFIG_ENGINE_STRETCH)_DBG_IMAGE_PACKAGES)
 
@@ -40,7 +42,10 @@ $(DOCKER_PDE)_RUN_OPT += -v /var/log/syslog:/var/log/syslog:ro
 $(DOCKER_PDE)_RUN_OPT += -v /lib/modules:/lib/modules:ro
 $(DOCKER_PDE)_RUN_OPT += -v /boot:/boot:ro
 
-$(DOCKER_PDE)_BASE_IMAGE_FILES += port_breakout.py:/usr/local/bin/port_breakout.py
-$(DOCKER_PDE)_BASE_IMAGE_FILES += pde-test-harness:/usr/local/bin/pde-test-harness
+$(DOCKER_PDE)_RUN_OPT += -v /usr/share/sonic/device/pddf:/usr/share/sonic/device/pddf:ro
+$(DOCKER_PDE)_BASE_IMAGE_FILES += pde-test:/usr/local/bin/pde-test
+$(DOCKER_PDE)_BASE_IMAGE_FILES += pde-bench:/usr/local/bin/pde-bench
+$(DOCKER_PDE)_BASE_IMAGE_FILES += pde-stress:/usr/local/bin/pde-stress
+$(DOCKER_PDE)_BASE_IMAGE_FILES += pde-bench-knet:/usr/local/bin/pde-bench-knet
 
 endif
