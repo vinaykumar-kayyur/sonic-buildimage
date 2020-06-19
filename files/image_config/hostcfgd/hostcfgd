@@ -325,7 +325,7 @@ class HostConfigDaemon:
         update_feature_status(feature_name, status)
 
     def start(self):
-        # Update all feature statues once upon starting
+        # Update all feature statuses once upon starting
         self.update_all_feature_statuses()
 
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
