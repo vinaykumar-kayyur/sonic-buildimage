@@ -186,9 +186,9 @@ static void replace_multi_inst_dep(char *src) {
                     snprintf(buf, MAX_BUF_SIZE,"%s=%s\n",token, word);
                     fputs(buf,fp_tmp);
                 } else {
-		    service_name = strdup(word);
-		    service_name = strtok_r(service_name, ".", &save_ptr2);
-		    type = strtok_r(NULL, " ", &save_ptr2);
+                    service_name = strdup(word);
+                    service_name = strtok_r(service_name, ".", &save_ptr2);
+                    type = strtok_r(NULL, " ", &save_ptr2);
                     if (is_multi_instance_service(word)) {
                         for(i = 0; i < num_asics; i++) {
                             snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
@@ -518,7 +518,7 @@ static int get_num_of_asic() {
 
     while ((nread = getline(&line, &len, fp)) != -1) {
         if ((strstr(line, "onie_platform") != NULL) ||
-	    (strstr(line, "aboot_platform") != NULL)) {
+            (strstr(line, "aboot_platform") != NULL)) {
             token = strtok(line, "=");
             platform = strtok(NULL, "=");
             strip_trailing_newline(platform);
@@ -585,7 +585,7 @@ int main(int argc, char **argv) {
 
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
-	unit_instance = strdup(unit_files[i]);
+        unit_instance = strdup(unit_files[i]);
         if ((num_asics == 1) && strstr(unit_instance, "@") != NULL) {
             prefix = strtok(unit_instance, "@");
             suffix = strtok(NULL, "@");
