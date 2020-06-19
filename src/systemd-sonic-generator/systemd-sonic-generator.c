@@ -146,9 +146,7 @@ static void replace_multi_inst_dep(char *src) {
     char *word;
     char *line_copy;
     char *service_name;
-    char *dot;
     char *type;
-    char *units_list;
     char *save_ptr1 = NULL;
     char *save_ptr2 = NULL;
     ssize_t nread;
@@ -578,8 +576,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    //num_asics = get_num_of_asic();
-    num_asics = 6;
+    num_asics = get_num_of_asic();
 
     strcpy(install_dir, argv[1]);
     strcat(install_dir, "/");
