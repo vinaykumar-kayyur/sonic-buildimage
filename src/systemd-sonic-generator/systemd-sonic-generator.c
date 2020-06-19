@@ -146,13 +146,19 @@ static void replace_multi_inst_dep(char *src) {
     char *word;
     char *line_copy;
     char *service_name;
+    char *dot;
     char *type;
+    char *units_list;
+    char *save_ptr1 = NULL;
+    char *save_ptr2 = NULL;
     ssize_t nread;
     bool section_done = false;
     char tmp_file_path[PATH_MAX];
     
-    /* assumes that the service files has 3 sections,
+    /* Assumes that the service files has 3 sections,
      * in the order: Unit, Service and Install.
+     * Assumes that the timer file has 3 sectiosn, 
+     * in the order: Unit, Timer and Install.
      * Read service dependency from Unit and Install 
      * sections, replace if dependent on multi instance
      * service.
@@ -162,30 +168,31 @@ static void replace_multi_inst_dep(char *src) {
     fp_tmp = fopen(tmp_file_path, "w");
 
     while ((nread = getline(&line, &len, fp_src)) != -1 ) {
-        if (strstr(line, "[Service]") != NULL) {
+        if ((strstr(line, "[Service]") != NULL) || 
+            (strstr(line, "[Timer]") != NULL)) {
             section_done = true;
             fputs(line,fp_tmp);
-        } else if (strstr(line, "[Install]") != NULL)  {
+        } else if (strstr(line, "[Install]") != NULL) {
             section_done = false;
             fputs(line,fp_tmp);
         } else if ((strstr(line, "[Unit]") != NULL) ||
            (strstr(line, "Description") != NULL) ||
-           (section_done == true)){
+           (section_done == true)) {
             fputs(line,fp_tmp);
         } else {
             line_copy = strdup(line);
-            token = strtok(line_copy, "=");
-            while ((word = strtok(NULL, " "))){
+            token = strtok_r(line_copy, "=", &save_ptr1);
+            while ((word = strtok_r(NULL, " ", &save_ptr1))) {
                 if((strchr(word, '.') == NULL) ||
                    (strchr(word, '@') != NULL)) {
                     snprintf(buf, MAX_BUF_SIZE,"%s=%s\n",token, word);
                     fputs(buf,fp_tmp);
                 } else {
-                    service_name = strdup(word);
-                    service_name = strtok(service_name, ".");
-		    type = strtok(NULL, " ");
+		    service_name = strdup(word);
+		    service_name = strtok_r(service_name, ".", &save_ptr2);
+		    type = strtok_r(NULL, " ", &save_ptr2);
                     if (is_multi_instance_service(word)) {
-                        for(i = 0; i < num_asics; i++){
+                        for(i = 0; i < num_asics; i++) {
                             snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
                                     token, service_name, i, type);
                             fputs(buf,fp_tmp);
@@ -571,7 +578,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    num_asics = get_num_of_asic();
+    //num_asics = get_num_of_asic();
+    num_asics = 6;
 
     strcpy(install_dir, argv[1]);
     strcat(install_dir, "/");
