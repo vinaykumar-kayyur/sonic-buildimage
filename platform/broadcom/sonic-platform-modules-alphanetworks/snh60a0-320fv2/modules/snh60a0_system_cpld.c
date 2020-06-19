@@ -14,7 +14,6 @@
  * GNU General Public License for more details. 
  * see <http://www.gnu.org/licenses/>
  *
- * Based on ad7414.c
  * Copyright 2006 Stefan Roese <sr at denx.de>, DENX Software Engineering
  *
  * This program is free software; you can redistribute it and/or modify
