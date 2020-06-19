@@ -17,7 +17,6 @@
  *
  * Copyright (C)  Brandon Chuang <brandon_chuang@accton.com.tw>
  *
- * Based on ad7414.c
  * Copyright 2006 Stefan Roese <sr at denx.de>, DENX Software Engineering
  *
  * This program is free software; you can redistribute it and/or modify
@@ -54,7 +53,7 @@
 
 #if (DEBUG_MODE == 1)
 	#define DEBUG_PRINT(fmt, args...)                                        \
-		printk (KERN_INFO "%s[%s,%d]: " fmt "\r\n", __FILE__, __FUNCTION__, __LINE__, ##args)
+		printk (KERN_INFO "[%s,%d]: " fmt "\r\n", __FUNCTION__, __LINE__, ##args)
 #else
 	#define DEBUG_PRINT(fmt, args...)
 #endif
@@ -185,6 +184,7 @@ struct sfp_port_data {
 	oom_driver_port_type_t port_type;
 	u64					   present;   /* present status, bit0:port0, bit1:port1 and so on */
 	u64					   port_reset;   /* reset status, bit0:port0, bit1:port1 and so on */
+	u64					   port_lpmode;   /* lpmode status, bit0:port0, bit1:port1 and so on */
 
 	struct sfp_msa_data	  *msa;
 	struct sfp_ddm_data   *ddm;
@@ -395,6 +395,18 @@ enum sfp_sysfs_tx_fault_attributes {
 	PORT7_TX_FAULT4,
 	PORT8_TX_FAULT4,
 	PORT_TX_FAULT_MAX
+};
+
+enum sfp_sysfs_lpmode_attributes {
+	PORT1_LPMODE,
+	PORT2_LPMODE,
+	PORT3_LPMODE,
+	PORT4_LPMODE,
+	PORT5_LPMODE,
+	PORT6_LPMODE,
+	PORT7_LPMODE,
+	PORT8_LPMODE,
+	PORT_LPMODE_MAX
 };
 
 enum sfp_sysfs_eeprom_attributes {
@@ -621,7 +633,7 @@ static ssize_t show_port_reset(struct device *dev, struct device_attribute *da,
     }
 
     sfp_update_port_reset(client);
-    is_reset = (data->port_reset & BIT_INDEX(attr->index))? 0 : 1;
+    is_reset = (data->port_reset & BIT_INDEX(attr->index));
 
     return sprintf(buf, "%d\n", is_reset);
 }
@@ -652,14 +664,14 @@ static ssize_t sfp_set_port_reset(struct device *dev, struct device_attribute *d
     /* Update reset status. CPLD defined 0 is reset state, 1 is normal state.
      * is_reset: 0 is not reset. 1 is reset.
      */
-    if (is_reset == 0) {
-        data->port_reset |= BIT_INDEX(attr->index);
+    if (is_reset == 1) {
+        cpld_val |= BIT_INDEX(attr->index);
     }
     else {
-        data->port_reset &= ~BIT_INDEX(attr->index);
+        cpld_val &= ~BIT_INDEX(attr->index);
     }
 
-    alpha_i2c_cpld_write(0x5f, cpld_reg, cpld_val);
+    i2c_smbus_write_byte_data(client, cpld_reg, cpld_val);
     DEBUG_PRINT("write cpld reg = 0x%x value = 0x%x", cpld_reg, cpld_val);
 
     mutex_unlock(&data->update_lock);
@@ -787,6 +799,91 @@ static ssize_t qsfp_set_tx_disable(struct device *dev, struct device_attribute *
 	return count;
 }
 
+static struct sfp_port_data *qsfp_update_port_lpmode(struct i2c_client *client)
+{
+    struct sfp_port_data *data = i2c_get_clientdata(client);
+    int i = 0;
+    int status = -1;
+    u8 regs[] = {0x9};
+
+    mutex_lock(&data->update_lock);
+
+    /* Read lpmode status of port 1~32 */
+    data->port_lpmode = 0;
+
+    for (i = 0; i < ARRAY_SIZE(regs); i++) {
+	status = i2c_smbus_read_byte_data(client, regs[i]);
+
+        if (status < 0) {
+            DEBUG_PRINT("cpld(0x60) reg(0x%x) err %d", regs[i], status);
+            goto exit;
+        }
+        
+        DEBUG_PRINT("lpmode status = 0x%x", status);
+        data->port_lpmode |= (u64)status << (i*8);
+    }
+
+    DEBUG_PRINT("lpmode status = 0x%llx", data->port_lpmode);
+exit:
+    mutex_unlock(&data->update_lock);
+    return data;
+}
+
+static ssize_t qsfp_show_port_lpmode(struct device *dev, struct device_attribute *da,
+                         char *buf)
+{
+    struct i2c_client *client = to_i2c_client(dev);
+    struct sfp_port_data *data = i2c_get_clientdata(client);
+	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    int is_lpmode = 0;
+
+    qsfp_update_port_lpmode(client);
+    is_lpmode = (data->port_lpmode & BIT_INDEX(attr->index))?1:0;
+
+    return sprintf(buf, "%d\n", is_lpmode);
+}
+
+static ssize_t qsfp_set_port_lpmode(struct device *dev, struct device_attribute *da,
+			const char *buf, size_t count)
+{
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    struct i2c_client *client = to_i2c_client(dev);
+    struct sfp_port_data *data = i2c_get_clientdata(client);
+    u8 cpld_reg = 0, cpld_val = 0; /*, cpld_bit = 0; //remove unused variable   */
+    long is_lpmode;
+    int error;
+
+    error = kstrtol(buf, 10, &is_lpmode);
+    if (error) {
+        return error;
+    }
+
+    mutex_lock(&data->update_lock);
+
+    cpld_reg = 0x09;
+
+    cpld_val = i2c_smbus_read_byte_data(client, cpld_reg);
+
+    DEBUG_PRINT("current cpld reg = 0x%x value = 0x%x", cpld_reg, cpld_val);
+
+    /* Update lpmode status. CPLD defined 0 is normal mode, 1 is Low Power mode.
+     * is_lpmode: 0 is normal mode. 1 is Low Power mode.
+     */
+    if (is_lpmode == 1) {
+        cpld_val |= BIT_INDEX(attr->index);
+    }
+    else {
+        cpld_val &= ~BIT_INDEX(attr->index);
+    }
+
+    i2c_smbus_write_byte_data(client, cpld_reg, cpld_val);
+    DEBUG_PRINT("write cpld reg = 0x%x value = 0x%x", cpld_reg, cpld_val);
+
+    mutex_unlock(&data->update_lock);
+
+    return count;
+}
+
 static ssize_t sfp_show_ddm_implemented(struct device *dev, struct device_attribute *da,
 			 char *buf)
 {
@@ -833,6 +930,7 @@ static ssize_t sfp_show_tx_rx_status(struct device *dev, struct device_attribute
 	return sprintf(buf, "%d\n", val);
 }
 
+
 static ssize_t qsfp_show_eeprom(struct device *dev, struct device_attribute *da,
 			 char *buf)
 {
@@ -841,7 +939,7 @@ static ssize_t qsfp_show_eeprom(struct device *dev, struct device_attribute *da,
 	char devfile[96];
     struct file *sfd;
 	int i2c_index = 0;
-	int status, result, offset = 0xb;
+	int result, offset = 0xb;
     int rdlen, rc;
     mm_segment_t old_fs;
 	char buffer[256];
@@ -1087,11 +1185,32 @@ DECLARE_PORT_TX_FAULTn_SENSOR_DEVICE_ATTR(4, 1, 2, 3, 4, 5, 6, 7, 8)
 	&sensor_dev_attr_sfp##PORT8##_eeprom.dev_attr.attr,	
 DECLARE_PORT_EEPROMn_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 
+#define DECLARE_PORT_LPMODE_SENSOR_DEVICE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
+	static SENSOR_DEVICE_ATTR(sfp##PORT1##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT1##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT2##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT2##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT3##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT3##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT4##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT4##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT5##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT5##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT6##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT6##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT7##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT7##_LPMODE); \
+	static SENSOR_DEVICE_ATTR(sfp##PORT8##_lpmode, S_IWUSR | S_IRUGO, qsfp_show_port_lpmode, qsfp_set_port_lpmode, PORT##PORT8##_LPMODE);
+#define DECLARE_PORT_LPMODE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
+    &sensor_dev_attr_sfp##PORT1##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT2##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT3##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT4##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT5##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT6##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT7##_lpmode.dev_attr.attr, \
+	&sensor_dev_attr_sfp##PORT8##_lpmode.dev_attr.attr,	
+DECLARE_PORT_LPMODE_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
+
 static struct attribute *qsfp_attributes[] = {
 	DECLARE_PORT_NUMBER_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	DECLARE_PORT_TYPE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	DECLARE_PORT_IS_PRESENT_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	DECLARE_PORT_RESET_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
+	DECLARE_PORT_LPMODE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	DECLARE_PORT_RX_LOSn_ATTR(1, 1, 2, 3, 4, 5, 6, 7, 8)
 	DECLARE_PORT_RX_LOSn_ATTR(2, 1, 2, 3, 4, 5, 6, 7, 8)
 	DECLARE_PORT_RX_LOSn_ATTR(3, 1, 2, 3, 4, 5, 6, 7, 8)
@@ -1128,7 +1247,8 @@ static struct attribute *sfp_msa_attributes[] = {
 	static SENSOR_DEVICE_ATTR(sfp##PORT6##_rx_los, S_IRUGO, sfp_show_tx_rx_status, NULL, PORT##PORT6##_RX_LOS); \
 	static SENSOR_DEVICE_ATTR(sfp##PORT7##_rx_los, S_IRUGO, sfp_show_tx_rx_status, NULL, PORT##PORT7##_RX_LOS); \
 	static SENSOR_DEVICE_ATTR(sfp##PORT8##_rx_los, S_IRUGO, sfp_show_tx_rx_status, NULL, PORT##PORT8##_RX_LOS);
-#define DECLARE_RX_LOS_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) &sensor_dev_attr_sfp##PORT1##_rx_los.dev_attr.attr, \
+#define DECLARE_RX_LOS_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
+    &sensor_dev_attr_sfp##PORT1##_rx_los.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT2##_rx_los.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT3##_rx_los.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT4##_rx_los.dev_attr.attr, \
@@ -1147,7 +1267,8 @@ DECLARE_RX_LOS_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	static SENSOR_DEVICE_ATTR(sfp##PORT6##_tx_disable, S_IWUSR | S_IRUGO, sfp_show_tx_rx_status, sfp_set_tx_disable, PORT##PORT6##_TX_DISABLE); \
 	static SENSOR_DEVICE_ATTR(sfp##PORT7##_tx_disable, S_IWUSR | S_IRUGO, sfp_show_tx_rx_status, sfp_set_tx_disable, PORT##PORT7##_TX_DISABLE); \
 	static SENSOR_DEVICE_ATTR(sfp##PORT8##_tx_disable, S_IWUSR | S_IRUGO, sfp_show_tx_rx_status, sfp_set_tx_disable, PORT##PORT8##_TX_DISABLE);
-#define DECLARE_TX_DISABLE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) &sensor_dev_attr_sfp##PORT1##_tx_disable.dev_attr.attr, \
+#define DECLARE_TX_DISABLE_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
+    &sensor_dev_attr_sfp##PORT1##_tx_disable.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT2##_tx_disable.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT3##_tx_disable.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT4##_tx_disable.dev_attr.attr, \
@@ -1166,7 +1287,8 @@ DECLARE_TX_DISABLE_SENSOR_DEVICE_ATTR(1, 2, 3, 4, 5, 6, 7, 8)
 	static SENSOR_DEVICE_ATTR(sfp##PORT6##_tx_fault, S_IRUGO, sfp_show_tx_rx_status, NULL, PORT##PORT6##_TX_FAULT); \
 	static SENSOR_DEVICE_ATTR(sfp##PORT7##_tx_fault, S_IRUGO, sfp_show_tx_rx_status, NULL, PORT##PORT7##_TX_FAULT); \
 	static SENSOR_DEVICE_ATTR(sfp##PORT8##_tx_fault, S_IRUGO, sfp_show_tx_rx_status, NULL, PORT##PORT8##_TX_FAULT);
-#define DECLARE_TX_FAULT_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) &sensor_dev_attr_sfp##PORT1##_tx_fault.dev_attr.attr, \
+#define DECLARE_TX_FAULT_ATTR(PORT1, PORT2, PORT3, PORT4, PORT5, PORT6, PORT7, PORT8) \
+    &sensor_dev_attr_sfp##PORT1##_tx_fault.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT2##_tx_fault.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT3##_tx_fault.dev_attr.attr, \
 	&sensor_dev_attr_sfp##PORT4##_tx_fault.dev_attr.attr, \

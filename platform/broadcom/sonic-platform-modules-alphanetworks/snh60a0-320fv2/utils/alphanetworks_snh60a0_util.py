@@ -345,9 +345,9 @@ def system_ready():
     return True
                
 def do_install():
-    tmp = "find /var/lib/docker/overlay -iname fancontrol | grep usr/sbin/fancontrol | xargs cat | sed '429d' | sed '428a if \[ $? -ne 1 \]' | sed '425d' | sed '424a return' > /tmp/tmp_fancontrol"
+    tmp = "find /var/lib/docker/overlay2 -iname fancontrol | grep usr/sbin/fancontrol | xargs cat | sed '492d' | sed '491a if \[ $? -ne 1 \]' | sed '488d' | sed '487a return' > /tmp/tmp_fancontrol"
     status, output = log_os_system(tmp, 1)
-    tmp = "fancontrol_tmp=`find /var/lib/docker/overlay -iname fancontrol | grep usr/sbin/fancontrol` ; cp /tmp/tmp_fancontrol $fancontrol_tmp"
+    tmp = "fancontrol_tmp=`find /var/lib/docker/overlay2 -iname fancontrol | grep usr/sbin/fancontrol` ; cp /tmp/tmp_fancontrol $fancontrol_tmp"
     status, output = log_os_system(tmp, 1)
     print "Checking system...."
     if driver_check() == False:
