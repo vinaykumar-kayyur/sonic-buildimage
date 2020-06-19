@@ -23,7 +23,7 @@ function check_and_rescan_pcie_devices()
             debug "PCIe check passed"
             exit
         else
-            debug "PCIe RESCAN"
+            debug "PCIe check failed, try pci bus rescan"
             echo 1 > /sys/bus/pci/rescan
          fi
          sleep 1

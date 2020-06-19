@@ -1,0 +1,9 @@
+[Unit]
+Description=Start the pcie-chk.service in 10 seconds after boot
+
+[Timer]
+OnBootSec=10sec
+Unit=pcie-chk.service
+
+[Install]
+WantedBy=timers.target
