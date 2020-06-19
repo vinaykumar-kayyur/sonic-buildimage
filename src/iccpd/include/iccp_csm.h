@@ -45,10 +45,10 @@
 
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
-#endif /* INET_ADDRSTRLEN */
+#endif                          /* INET_ADDRSTRLEN */
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 46
-#endif /* INET6_ADDRSTRLEN */
+#endif                          /* INET6_ADDRSTRLEN */
 /* For socket binding */
 #define ICCP_TCP_PORT 8888
 #define MAX_ACCEPT_CONNETIONS 20
@@ -116,6 +116,9 @@ struct CSM
     char peer_ip[INET_ADDRSTRLEN];
     char sender_ip[INET_ADDRSTRLEN];
     void* sock_read_event_ptr;
+
+    int keepalive_time;
+    int session_timeout;
 
     /* Msg queue */
     TAILQ_HEAD(msg_list, Msg) msg_list;

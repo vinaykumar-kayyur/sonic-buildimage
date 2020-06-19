@@ -37,6 +37,9 @@ int do_one_neigh_request(struct nlmsghdr *n);
 
 void iccp_from_netlink_port_state_handler( char * ifname, int state);
 
+void update_orphan_port_mac(struct CSM *csm, struct LocalInterface *lif, int state);
+
 void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n);
+
 #endif // LACP_IFM_H
 

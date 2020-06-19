@@ -99,9 +99,12 @@ int iccp_sys_local_if_list_get_init()
         nl_cb_put(cb);
         if (ret < 0)
         {
-            ICCPD_LOG_ERR(__FUNCTION__, "receive netlink msg error. ret = %d  errno = %d ", ret, errno);
             if (ret != -NLE_DUMP_INTR)
+            {
+                ICCPD_LOG_ERR(__FUNCTION__, "No retry, receive netlink msg error. ret = %d  errno = %d ", ret, errno);
                 return ret;
+            }
+            ICCPD_LOG_NOTICE(__FUNCTION__, "Retry: receive netlink msg error. ret = %d  errno = %d ", ret, errno);
             retry = 1;
         }
     }
@@ -920,6 +923,7 @@ void iccp_from_netlink_port_state_handler( char * ifname, int state)
     struct LocalInterface *lif_po = NULL;
     struct System *sys;
     int po_is_active = 0;
+    int is_mclag_intf = 0;
 
     if ((sys = system_get_instance()) == NULL)
     {
@@ -948,17 +952,29 @@ void iccp_from_netlink_port_state_handler( char * ifname, int state)
             if (lif_po->type == IF_T_PORT_CHANNEL && strncmp(lif_po->name, ifname, MAX_L_PORT_NAME) == 0)
             {
                 mlacp_portchannel_state_handler(csm, lif_po, po_is_active);
+                is_mclag_intf = 1;
             }
         }
+        if (!is_mclag_intf)
+       {
+           lif_po = local_if_find_by_name(ifname);
+           update_orphan_port_mac(csm, lif_po, po_is_active);
+       }
+
     }
 
     return;
 }
 
+//this function is no more required - vlan membership updates comes through
+//state db updates from mclagsyncd
 void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
 {
+#if 0
     struct LocalInterface *lif = NULL;
     int msglen = 0;
+    uint16_t start_vid = 0, tmp_vid = 0;
+    uint16_t end_vid = 0;
 
     msglen = n->nlmsg_len;
 
@@ -982,6 +998,7 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
 
         if (ifm->ifi_family != AF_BRIDGE)
         {
+            SYSTEM_INCR_NETLINK_NOT_AFBRIDGE_COUNT(ifm->ifi_family);
             return;
         }
 
@@ -1000,9 +1017,10 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
                 struct rtattr *i, *list = tb[IFLA_AF_SPEC];
                 int rem = RTA_PAYLOAD(list);
                 struct VLAN_ID *vlan = NULL;
+                struct VLAN_ID *vlan_temp = NULL;
 
                 /*set vlan flag is removed*/
-                LIST_FOREACH(vlan, &(lif->vlan_list), port_next)
+                RB_FOREACH (vlan, vlan_rb_tree, &(lif->vlan_tree))
                 {
                     vlan->vlan_removed = 1;
                 }
@@ -1016,17 +1034,42 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
 
                     vinfo = RTA_DATA(i);
 
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "vlan %d, flag %x, lif_name %s", vinfo->vid, vinfo->flags, lif->name);
+                    if (vinfo->flags & BRIDGE_VLAN_INFO_RANGE_BEGIN) {
+                        start_vid = vinfo->vid;
+                        tmp_vid = start_vid + 1;
+                    }
+
+                    if (vinfo->flags & BRIDGE_VLAN_INFO_RANGE_END) {
+                        end_vid = vinfo->vid;
+
+                        if ((start_vid != 0) && (end_vid > tmp_vid))
+                        {
+                            while (tmp_vid < end_vid)
+                            {
+                                local_if_add_vlan(lif, tmp_vid);
+                                tmp_vid++;
+                            }
+                            tmp_vid = 0; start_vid = 0; end_vid = 0;
+                        }
+                    }
+
                     local_if_add_vlan(lif, vinfo->vid);
                 }
 
                 /*After update vlan list, remove unused item*/
-                LIST_FOREACH(vlan, &(lif->vlan_list), port_next)
+                RB_FOREACH_SAFE (vlan, vlan_rb_tree, &(lif->vlan_tree), vlan_temp)
                 {
                     if (vlan->vlan_removed == 1)
                     {
                         ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", lif->name, vlan->vid);
-
-                        LIST_REMOVE(vlan, port_next);
+#if 0
+                        if (lif->is_peer_link && vlan->vlan_itf)
+                        {
+                            recover_vlan_if_mac_on_standby (vlan->vlan_itf, 1);
+                        }
+#endif
+                        VLAN_RB_REMOVE(vlan_rb_tree, &(lif->vlan_tree), vlan);
                         free(vlan);
                     }
                 }
@@ -1035,4 +1078,5 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
 
         n = NLMSG_NEXT(n, msglen);
     }
+#endif
 }

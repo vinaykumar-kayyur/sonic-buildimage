@@ -53,4 +53,11 @@ int mlacp_prepare_for_Aggport_config(struct CSM* csm, char* buf, size_t max_buf_
 int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf, size_t max_buf_size, struct LocalInterface* port_channel);
 int mlacp_prepare_for_port_peerlink_info(struct CSM* csm, char* buf, size_t max_buf_size, struct LocalInterface* peerlink_port);
 int iccp_netlink_if_hwaddr_set(uint32_t ifindex, uint8_t *addr, unsigned int addr_len);
+int mlacp_prepare_for_if_up_ack(
+    struct CSM        *csm,
+    char              *buf,
+    size_t            max_buf_size,
+    uint8_t           if_type,
+    uint16_t          if_id,
+    uint8_t           port_isolation_enable);
 #endif

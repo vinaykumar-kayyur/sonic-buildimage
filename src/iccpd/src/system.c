@@ -22,11 +22,15 @@
  */
 
 #include <stdio.h>
+#include <netlink/msg.h>
 
 #include "../include/iccp_csm.h"
 #include "../include/logger.h"
 #include "../include/iccp_netlink.h"
 #include "../include/scheduler.h"
+
+#define ETHER_ADDR_LEN 6
+char mac_print_str[ETHER_ADDR_STR_LEN];
 
 /* Singleton */
 struct System* system_get_instance()
@@ -53,6 +57,7 @@ void system_init(struct System* sys)
     if (sys == NULL )
         return;
 
+    memset(sys, 0, sizeof(struct System));
     sys->server_fd = -1;
     sys->sync_fd = -1;
     sys->sync_ctrl_fd = -1;
@@ -92,11 +97,16 @@ void system_finalize()
     if ((sys = system_get_instance()) == NULL )
         return;
 
-    ICCPD_LOG_INFO(__FUNCTION__, "System resource pool is destructing.");
+    ICCPD_LOG_NOTICE(__FUNCTION__,
+        "System resource pool is destructing. Warmboot exit (%d)",
+        sys->warmboot_exit);
 
     while (!LIST_EMPTY(&(sys->csm_list)))
     {
         csm = LIST_FIRST(&(sys->csm_list));
+        /* Remove ICCP info from STATE_DB if it is not warm reboot */
+        if (sys->warmboot_exit != WARM_REBOOT)
+            mlacp_link_del_iccp_info(csm->mlag_id);
         iccp_csm_finalize(csm);
     }
 
@@ -185,6 +195,34 @@ struct CSM* system_get_csm_by_peer_ip(const char* peer_ip)
     return NULL;
 }
 
+//function to get CSM by peer interface name
+struct CSM* system_get_csm_by_peer_ifname(char *ifname)
+{
+    struct CSM *csm = NULL;
+    struct System* sys = NULL;
+
+    if (!ifname)
+    {
+        return NULL;
+    }
+
+    if ((sys = system_get_instance()) == NULL)
+    {
+        return NULL;
+    }
+
+    /* traverse all CSM and find matching csm with peer ifname */
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        //return  matching csm
+        if (strcmp(ifname, csm->peer_itf_name) == 0)
+        {
+            return csm;
+        }
+    }
+    return NULL;
+}
+
 struct CSM* system_get_csm_by_mlacp_id(int id)
 {
     struct System* sys = NULL;
@@ -200,4 +238,127 @@ struct CSM* system_get_csm_by_mlacp_id(int id)
     }
 
     return NULL;
+}
+
+SYNCD_TX_DBG_CNTR_MSG_e system_syncdtx_to_dbg_msg_type(uint32_t msg_type)
+{
+    switch(msg_type)
+    {
+        case MCLAG_MSG_TYPE_PORT_ISOLATE:
+            return SYNCD_TX_DBG_CNTR_MSG_PORT_ISOLATE;
+
+        case MCLAG_MSG_TYPE_PORT_MAC_LEARN_MODE:
+            return SYNCD_TX_DBG_CNTR_MSG_PORT_MAC_LEARN_MODE;
+
+        case MCLAG_MSG_TYPE_FLUSH_FDB:
+            return SYNCD_TX_DBG_CNTR_MSG_FLUSH_FDB;
+
+        case MCLAG_MSG_TYPE_SET_MAC:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_IF_MAC;
+
+        case MCLAG_MSG_TYPE_SET_FDB:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_FDB;
+
+        case MCLAG_MSG_TYPE_SET_TRAFFIC_DIST_ENABLE:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_TRAFFIC_DIST_ENABLE;
+
+        case MCLAG_MSG_TYPE_SET_TRAFFIC_DIST_DISABLE:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_TRAFFIC_DIST_DISABLE;
+
+        case MCLAG_MSG_TYPE_SET_ICCP_STATE:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_ICCP_STATE;
+
+        case MCLAG_MSG_TYPE_SET_ICCP_ROLE:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_ICCP_ROLE;
+
+        case MCLAG_MSG_TYPE_SET_ICCP_SYSTEM_ID:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_ICCP_SYSTEM_ID;
+
+        case MCLAG_MSG_TYPE_SET_REMOTE_IF_STATE:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_REMOTE_IF_STATE;
+
+        case MCLAG_MSG_TYPE_DEL_ICCP_INFO:
+            return SYNCD_TX_DBG_CNTR_MSG_DEL_ICCP_INFO;
+
+        case MCLAG_MSG_TYPE_DEL_REMOTE_IF_INFO:
+            return SYNCD_TX_DBG_CNTR_MSG_DEL_REMOTE_IF_INFO;
+
+        case MCLAG_MSG_TYPE_SET_PEER_LINK_ISOLATION:
+            return SYNCD_TX_DBG_CNTR_MSG_PEER_LINK_ISOLATION;
+
+        case MCLAG_MSG_TYPE_SET_ICCP_PEER_SYSTEM_ID:
+            return SYNCD_TX_DBG_CNTR_MSG_SET_ICCP_PEER_SYSTEM_ID;
+
+        default:
+            return SYNCD_TX_DBG_CNTR_MSG_MAX;
+    }
+}
+
+SYNCD_RX_DBG_CNTR_MSG_e system_syncdrx_to_dbg_msg_type(uint32_t msg_type)
+{
+    switch(msg_type)
+    {
+        case MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION:
+            return SYNCD_RX_DBG_CNTR_MSG_MAC;
+        case MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_DOMAIN:
+            return SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_DOMAIN;
+        case MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_IFACE:
+            return SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_IFACE;
+        default:
+            return SYNCD_RX_DBG_CNTR_MSG_MAX;
+    }
+}
+
+char *mac_addr_to_str(uint8_t mac_addr[ETHER_ADDR_LEN])
+{
+    memset(mac_print_str, 0, sizeof(mac_print_str));
+    snprintf(mac_print_str, sizeof(mac_print_str), "%02x:%02x:%02x:%02x:%02x:%02x",
+        mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+
+    return mac_print_str;
+}
+
+void system_update_netlink_counters(
+    uint16_t netlink_msg_type,
+    struct nlmsghdr *nlh)
+{
+    struct System *sys;
+    struct ndmsg *ndm = NLMSG_DATA(nlh);
+
+    sys = system_get_instance();
+    if (!sys)
+        return;
+
+    switch (netlink_msg_type)
+    {
+        case RTM_NEWLINK:
+            ++sys->dbg_counters.newlink_count;
+            break;
+        case RTM_DELLINK:
+            ++sys->dbg_counters.dellink_count;
+            break;
+        case RTM_NEWNEIGH:
+            ++sys->dbg_counters.newnbr_count;
+            if (ndm->ndm_family == AF_BRIDGE)
+                ++sys->dbg_counters.newmac_count;
+            break;
+        case RTM_DELNEIGH:
+            ++sys->dbg_counters.delnbr_count;
+            if (ndm->ndm_family == AF_BRIDGE)
+                ++sys->dbg_counters.delmac_count;
+            break;
+        case RTM_NEWADDR:
+            ++sys->dbg_counters.newaddr_count;
+            break;
+        case RTM_DELADDR:
+            ++sys->dbg_counters.deladdr_count;
+            break;
+        default:
+            ++sys->dbg_counters.unknown_type_count;
+            if (sys->dbg_counters.unknown_type_count < 5)
+            {
+                ICCPD_LOG_NOTICE(__FUNCTION__, "NETLINK_COUNTER: Unknown type %d", netlink_msg_type);
+            }
+            break;
+    }
 }

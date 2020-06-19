@@ -23,8 +23,15 @@
 #ifndef __MLACP_LINK_HANDLER__
 #define __MLACP_LINK_HANDLER__
 
+#include <stdbool.h>
 #include "../include/iccp_csm.h"
 #include "../include/mlacp_tlv.h"
+
+#define MCLAG_MAX_MSG_LEN 4096
+#define ICCP_MLAGSYNCD_SEND_MSG_BUFFER_SIZE MCLAG_MAX_MSG_LEN
+#define ICCP_MLAGSYNCD_RECV_MSG_BUFFER_SIZE (MCLAG_MAX_MSG_LEN * 256)
+
+extern char g_iccp_recv_buf[];
 
 /*****************************************
 * Link Handler
@@ -43,18 +50,35 @@ void set_peerlink_mlag_port_learn(struct LocalInterface *lif, int enable);
 void peerlink_port_isolate_cleanup(struct CSM* csm);
 void update_peerlink_isolate_from_all_csm_lif(struct CSM* csm);
 
-void del_mac_from_chip(struct MACMsg *mac_msg);
-void add_mac_to_chip(struct MACMsg *mac_msg, uint8_t mac_type);
-uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg *mac_msg, uint8_t set);
-void iccp_get_fdb_change_from_syncd(void);
+void del_mac_from_chip(struct MACMsg* mac_msg);
+void add_mac_to_chip(struct MACMsg* mac_msg, uint8_t mac_type);
+uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t set, uint8_t update_peer);
 
 extern int mclagd_ctl_sock_create();
 extern int mclagd_ctl_sock_accept(int fd);
 extern int mclagd_ctl_interactive_process(int client_fd);
 extern int parseMacString(const char *str_mac, uint8_t *bin_mac);
+
 char *show_ip_str(uint32_t ipv4_addr);
 char *show_ipv6_str(char *ipv6_addr);
 
 void syncd_info_close();
 int iccp_connect_syncd();
+
+void mlacp_link_disable_traffic_distribution(struct LocalInterface *lif);
+void mlacp_link_enable_traffic_distribution(struct LocalInterface *lif);
+int mlacp_link_set_iccp_state(int mlag_id, bool is_oper_up);
+int mlacp_link_set_iccp_role(int mlag_id, bool is_active_role, uint8_t *system_id);
+int mlacp_link_set_iccp_system_id(int mlag_id, uint8_t *system_id);
+int mlacp_link_del_iccp_info(int mlag_id);
+int mlacp_link_set_remote_if_state(int mlag_id, char *po_name, bool is_oper_up);
+int mlacp_link_del_remote_if_info(int mlag_id, char *po_name);
+int mlacp_link_set_peerlink_port_isolation(int mlag_id, char *po_name, bool is_isolation_enable);
+int mlacp_link_set_iccp_peer_system_id(int mlag_id, uint8_t *system_id);
+
+void mlacp_mlag_intf_detach_handler(struct CSM* csm, struct LocalInterface* local_if);
+void mlacp_peer_mlag_intf_delete_handler(struct CSM* csm, char *mlag_if_name);
+
+int iccp_mclagsyncd_msg_handler(struct System *sys);
+
 #endif

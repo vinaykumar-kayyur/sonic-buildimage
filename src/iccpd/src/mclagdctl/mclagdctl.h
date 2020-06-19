@@ -17,7 +17,11 @@
  *
  *  Maintainer: Jim Jiang from nephos
  */
+#include <stdint.h>
+#include <stdbool.h>
+#include "../../include/system.h"
 
+#define ETHER_ADDR_LEN 6
 #define MCLAGDCTL_PARA1_LEN 16
 #define MCLAGDCTL_PARA2_LEN 32
 #define MCLAGDCTL_PARA3_LEN 64
@@ -54,8 +58,11 @@ enum id_command_type
     ID_CMDTYPE_D_P,
     ID_CMDTYPE_D_P_L,
     ID_CMDTYPE_D_P_P,
+    ID_CMDTYPE_D_D,
+    ID_CMDTYPE_D_D_C,
     ID_CMDTYPE_C,
     ID_CMDTYPE_C_L,
+    ID_CMDTYPE_C_D,
 };
 
 enum mclagdctl_notify_peer_type
@@ -67,6 +74,7 @@ enum mclagdctl_notify_peer_type
     INFO_TYPE_DUMP_MAC,
     INFO_TYPE_DUMP_LOCAL_PORTLIST,
     INFO_TYPE_DUMP_PEER_PORTLIST,
+    INFO_TYPE_DUMP_DBG_COUNTERS,
     INFO_TYPE_CONFIG_LOGLEVEL,
     INFO_TYPE_FINISH,
 };
@@ -122,12 +130,15 @@ struct mclagd_state
 {
     int mclag_id;
     int keepalive;
+    int info_sync_done;
     char local_ip[MCLAGDCTL_INET_ADDR_LEN];
     char peer_ip[MCLAGDCTL_INET_ADDR_LEN];
     char peer_link_if[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char peer_link_mac[MCLAGDCTL_ETHER_ADDR_LEN];
     int role;
     char enabled_po[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
+    int session_timeout;
+    int keepalive_time;
     char loglevel[MCLAGDCTL_PARA1_LEN];
 };
 
@@ -151,7 +162,7 @@ struct mclagd_mac_msg
 {
     unsigned char     op_type;/*add or del*/
     unsigned char     fdb_type;/*static or dynamic*/
-    char     mac_str[ETHER_ADDR_STR_LEN];
+    uint8_t     mac_addr[ETHER_ADDR_LEN];
     unsigned short vid;
     /*Current if name that set in chip*/
     char     ifname[MCLAGDCTL_MAX_L_PORT_NANE];
@@ -178,7 +189,7 @@ struct mclagd_local_if
     unsigned char po_active;
     char mlacp_state[MCLAGDCTL_PARA1_LEN];
     unsigned char isolate_to_peer_link;
-
+    bool is_traffic_disable;
     char vlanlist[MCLAGDCTL_PARA3_LEN];
 };
 
@@ -192,6 +203,15 @@ struct mclagd_peer_if
     int po_id;
     unsigned char po_active;
 };
+
+typedef struct mclagd_dbg_counter_info
+{
+    system_dbg_counter_info_t system_dbg;
+    uint8_t    num_iccp_counter_blocks;
+    uint8_t    iccp_dbg_counters[0];
+    /* Variable length counter buffers containing N mlacp_dbg_counter_info_t
+     */
+}mclagd_dbg_counter_info_t;
 
 extern int mclagdctl_enca_dump_state(char *msg, int mclag_id,  int argc, char **argv);
 extern int mclagdctl_parse_dump_state(char *msg, int data_len);
@@ -208,3 +228,7 @@ extern int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len);
 int mclagdctl_enca_config_loglevel(char *msg, int log_level,  int argc, char **argv);
 int mclagdctl_parse_config_loglevel(char *msg, int data_len);
 
+extern int mclagdctl_enca_dump_dbg_counters(char *msg, int mclag_id, int argc, char **argv);
+extern int mclagdctl_parse_dump_dbg_counters(char *msg, int data_len);
+extern int mclagdctl_enca_dump_unique_ip(char *msg, int mclag_id, int argc, char **argv);
+extern int mclagdctl_parse_dump_unique_ip(char *msg, int data_len);
