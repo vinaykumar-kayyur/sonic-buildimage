@@ -6,7 +6,9 @@ REDIS_TOOLS = redis-tools_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(REDIS_TOOLS)_SRC_PATH = $(SRC_PATH)/redis
 $(REDIS_TOOLS)_DEPENDS += $(LIBHIREDIS_DEV)
 $(REDIS_TOOLS)_RDEPENDS += $(LIBHIREDIS)
+ifeq ($(BLDENV),buster)
 SONIC_MAKE_DEBS += $(REDIS_TOOLS)
+endif
 
 REDIS_TOOLS_DBG = redis-tools-dbgsym_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(eval $(call add_derived_package,$(REDIS_TOOLS),$(REDIS_TOOLS_DBG)))
