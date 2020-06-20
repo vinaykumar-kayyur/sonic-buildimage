@@ -1,6 +1,6 @@
 
 SPATH       := $($(SONIC_BGPCFGD)_SRC_PATH)
-DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/sonic-bgpcfgd.mk rules/sonic-bgpcfgd.dep
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/sonic_bgpcfgd.mk rules/sonic_bgpcfgd.dep
 DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
 DEP_FILES   += $(shell git ls-files $(SPATH))
 
