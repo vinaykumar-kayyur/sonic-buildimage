@@ -52,7 +52,7 @@ def update_feature_status(feature_name, status):
             try:
                 subprocess.check_call(cmd, shell=True)
             except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
                               .format(err.cmd, err.returncode, err.output))
                 continue
         syslog.syslog(syslog.LOG_INFO, "Feature '{}' is enabled and started".format(feature_name))
@@ -66,7 +66,7 @@ def update_feature_status(feature_name, status):
             try:
                 subprocess.check_call(cmd, shell=True)
             except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
                               .format(err.cmd, err.returncode, err.output))
                 continue
         syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(feature_name))
@@ -148,7 +148,7 @@ class Iptables(object):
             try:
                 subprocess.check_call(cmd, shell=True)
             except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
                               .format(err.cmd, err.returncode, err.output))
 
 class AaaCfg(object):
