@@ -8,13 +8,21 @@
 ! TSA configuration
 !
 ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
+{% if multi_npu()  == true %}
+  ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}/32
+{% endif %}
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
 ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | replace('/128', '/64') | ip_network }}/64
 {% endif %}
+{% if multi_npu() == true %}
+{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") != 'None' %}
+  ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | replace('/128', '/64') | ip_network }}/64
+{% endif %}
+{% endif %}
 !
 !
-{% if DEVICE_METADATA['localhost']['sub_role'] == 'FrontEnd' %}
+{% if multi_npu() == true %}
 route-map HIDE_INTERNAL permit 10
   set community local-AS
 !
@@ -37,15 +45,29 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 !
 {# set router-id #}
+{% if multi_npu()  == true %}
+  bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}
+{% else %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}
+{% endif %}
 !
 {# advertise loopback #}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
+{% if multi_npu() == true  %}
+  network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}/32 route-map HIDE_INTERNAL
+{% endif %}
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
   address-family ipv6
     network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/64
   exit-address-family
+{% endif %}
+{% if multi_npu() == true %}
+{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") != 'None' %}
+  address-family ipv6
+    network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}/64 route-map HIDE_INTERNAL
+  exit-address-family
+{% endif %}
 {% endif %}
 {% endblock bgp_init %}
 !
