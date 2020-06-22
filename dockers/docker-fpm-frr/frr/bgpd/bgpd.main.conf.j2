@@ -9,15 +9,15 @@
 !
 ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 {% if multi_npu()  == true %}
-  ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}/32
+  ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32
 {% endif %}
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
 ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | replace('/128', '/64') | ip_network }}/64
 {% endif %}
 {% if multi_npu() == true %}
-{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") != 'None' %}
-  ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | replace('/128', '/64') | ip_network }}/64
+{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") != 'None' %}
+  ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | replace('/128', '/64') | ip_network }}/64
 {% endif %}
 {% endif %}
 !
@@ -46,7 +46,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 !
 {# set router-id #}
 {% if multi_npu()  == true %}
-  bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}
+  bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}
 {% else %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}
 {% endif %}
@@ -54,7 +54,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {# advertise loopback #}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
 {% if multi_npu() == true  %}
-  network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}/32 route-map HIDE_INTERNAL
+  network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32 route-map HIDE_INTERNAL
 {% endif %}
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
@@ -63,9 +63,9 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
   exit-address-family
 {% endif %}
 {% if multi_npu() == true %}
-{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") != 'None' %}
+{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") != 'None' %}
   address-family ipv6
-    network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback1") | ip }}/64 route-map HIDE_INTERNAL
+    network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/64 route-map HIDE_INTERNAL
   exit-address-family
 {% endif %}
 {% endif %}

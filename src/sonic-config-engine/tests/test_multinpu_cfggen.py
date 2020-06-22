@@ -259,18 +259,18 @@ class TestMultiNpuCfgGen(TestCase):
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, { \
                              "Loopback0": {},
-                             "Loopback1": {},
+                             "Loopback4096": {},
                              "Loopback0|10.1.0.32/32": {},
                              "Loopback0|FC00:1::32/128": {},
-                             "Loopback1|8.0.0.0/32": {},
-                             "Loopback1|FD00:1::32/128": {}})
+                             "Loopback4096|8.0.0.0/32": {},
+                             "Loopback4096|FD00:1::32/128": {}})
 
         argument = "-m {} -n asic3 --var-json \"LOOPBACK_INTERFACE\"".format(self.sample_graph)
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {\
                                       "Loopback0": {},
-                                      "Loopback1": {},
+                                      "Loopback4096": {},
                                       "Loopback0|10.1.0.32/32": {},
                                       "Loopback0|FC00:1::32/128": {},
-                                      "Loopback1|8.0.0.5/32": {},
-                                      "Loopback1|FD00:4::32/128": {}})
+                                      "Loopback4096|8.0.0.5/32": {},
+                                      "Loopback4096|FD00:4::32/128": {}})

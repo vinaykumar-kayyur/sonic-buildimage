@@ -387,7 +387,7 @@
         <a:LoopbackIPInterface>
           <ElementType>LoopbackInterface</ElementType>
           <Name>HostIP</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.NetMux">
             <b:IPPrefix>8.0.0.0/32</b:IPPrefix>
           </a:Prefix>
@@ -395,7 +395,7 @@
         </a:LoopbackIPInterface>
         <a:LoopbackIPInterface>
           <Name>HostIP1</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.Evolution">
             <b:IPPrefix>FD00:1::32/128</b:IPPrefix>
           </a:Prefix>
@@ -465,7 +465,7 @@
         <a:LoopbackIPInterface>
           <ElementType>LoopbackInterface</ElementType>
           <Name>HostIP</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.NetMux">
             <b:IPPrefix>8.0.0.1/32</b:IPPrefix>
           </a:Prefix>
@@ -473,7 +473,7 @@
         </a:LoopbackIPInterface>
         <a:LoopbackIPInterface>
           <Name>HostIP1</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.Evolution">
             <b:IPPrefix>FD00:2::32/128</b:IPPrefix>
           </a:Prefix>
@@ -542,7 +542,7 @@
         <a:LoopbackIPInterface>
           <ElementType>LoopbackInterface</ElementType>
           <Name>HostIP</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.NetMux">
             <b:IPPrefix>8.0.0.4/32</b:IPPrefix>
           </a:Prefix>
@@ -550,7 +550,7 @@
         </a:LoopbackIPInterface>
         <a:LoopbackIPInterface>
           <Name>HostIP1</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.Evolution">
             <b:IPPrefix>FD00:3::32/128</b:IPPrefix>
           </a:Prefix>
@@ -604,7 +604,7 @@
         <a:LoopbackIPInterface>
           <ElementType>LoopbackInterface</ElementType>
           <Name>HostIP</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.NetMux">
             <b:IPPrefix>8.0.0.5/32</b:IPPrefix>
           </a:Prefix>
@@ -612,7 +612,7 @@
         </a:LoopbackIPInterface>
         <a:LoopbackIPInterface>
           <Name>HostIP1</Name>
-          <AttachTo>Loopback1</AttachTo>
+          <AttachTo>Loopback4096</AttachTo>
           <a:Prefix xmlns:b="Microsoft.Search.Autopilot.Evolution">
             <b:IPPrefix>FD00:4::32/128</b:IPPrefix>
           </a:Prefix>
