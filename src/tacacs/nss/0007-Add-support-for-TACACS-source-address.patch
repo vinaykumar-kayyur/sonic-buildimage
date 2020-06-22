@@ -1,15 +1,15 @@
-From e01ec7cbc302269953a4a9cdc2031a34a042b6de Mon Sep 17 00:00:00 2001
+From 4a4c8c0136fff6130b816f6cff5541b6f3fdd806 Mon Sep 17 00:00:00 2001
 From: Venkatesan Mahalingam <venkatesan_mahalinga@dell.com>
 Date: Tue, 16 Jun 2020 09:52:13 -0700
 Subject: [PATCH] Add support for TACACS+ source address.
 
 Signed-off-by: Venkatesan Mahalingam <venkatesan_mahalinga@dell.com>
 ---
- nss_tacplus.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ nss_tacplus.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index 7feeda6..735736e 100644
+index 7feeda6..7205b09 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
 @@ -73,6 +73,7 @@ typedef struct {
@@ -20,17 +20,18 @@ index 7feeda6..735736e 100644
  
  static char *tac_service = "shell";
  static char *tac_protocol = "ssh";
-@@ -247,6 +248,9 @@ static int parse_config(const char *file)
+@@ -247,6 +248,10 @@ static int parse_config(const char *file)
          return NSS_STATUS_UNAVAIL;
      }
  
-+    if(source_addr)
++    if(source_addr) {
 +        freeaddrinfo(source_addr);
 +        source_addr = NULL;
++    }
      debug = false;
      tac_srv_no = 0;
      while(fgets(buf, sizeof buf, fp)) {
-@@ -262,6 +266,18 @@ static int parse_config(const char *file)
+@@ -262,6 +267,18 @@ static int parse_config(const char *file)
          else if(!strncmp(buf, "user_priv=", 10)) {
              parse_user_priv(buf);
          }
@@ -49,7 +50,7 @@ index 7feeda6..735736e 100644
          else if(!strncmp(buf, "server=", 7)) {
              if(TAC_PLUS_MAXSERVERS <= tac_srv_no) {
                  syslog(LOG_ERR, "%s: tac server num is more than %d",
-@@ -282,6 +298,8 @@ static int parse_config(const char *file)
+@@ -282,6 +299,8 @@ static int parse_config(const char *file)
                          nssname, n, tac_ntop(tac_srv[n].addr->ai_addr),
                          tac_srv[n].key[0], tac_srv[n].timeout);
          }
@@ -58,7 +59,7 @@ index 7feeda6..735736e 100644
          syslog(LOG_DEBUG, "%s: many_to_one %s", nssname, 1 == many_to_one
                      ? "enable" : "disable");
          for(n = MIN_TACACS_USER_PRIV; n <= MAX_TACACS_USER_PRIV; n++) {
-@@ -675,7 +693,7 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
+@@ -675,7 +694,7 @@ connect_tacacs(struct tac_attrib **attr, int srvr)
      if(!*tac_service) /* reported at config file processing */
          return -1;
  
