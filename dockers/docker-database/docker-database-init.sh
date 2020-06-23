@@ -9,7 +9,13 @@ else
     INTFC=eth0
     LOOPBACK_IP=127.0.0.1
 fi
-local_ip=$(ip -4 -o addr show $INTFC | awk '{print $4}' | cut -d'/' -f1)
+local_ip=$(ip -4 -o addr show $INTFC | awk '{print $4}' | cut -d'/' -f1 | head -1)
+
+# if the ip address was not retrieved correctly, put the loopbackIP as the default.
+if [[ $local_ip == "" ]]
+then
+    local_ip=127.0.0.1
+fi
 export HOST_IP=$local_ip
 
 REDIS_DIR=/var/run/redis$NAMESPACE_ID
