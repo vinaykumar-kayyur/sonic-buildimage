@@ -10,8 +10,8 @@ import swsssdk
 
 from supervisor import childutils
 
-# Contents of file should be the names of critical processes and group name 
-# (as defined in supervisor.conf file), one per line
+# Contents of file should be the names of critical processes (e.g. program:<process_name>) 
+# and group name (e.g. group:<group_name>) (as defined in supervisor.conf file), one per line
 CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 
 # This table in databse contains the features for container and each
