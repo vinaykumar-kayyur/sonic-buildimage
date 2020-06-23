@@ -24,12 +24,12 @@ function check_and_rescan_pcie_devices()
             debug "PCIe check passed"
             exit
         else
-            redis-cli -n 6 SET "PCIE_STATE|system" "0"
             debug "PCIe check failed, try pci bus rescan"
             echo 1 > /sys/bus/pci/rescan
          fi
          sleep 1
      done
+     redis-cli -n 6 SET "PCIE_STATE|system" "0"
 }
 
 check_and_rescan_pcie_devices
