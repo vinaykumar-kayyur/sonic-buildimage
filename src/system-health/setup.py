@@ -12,9 +12,17 @@ setup(
     maintainer_email='junchaow@mellanox.com',
     packages=[
         'health_checker',
+        'tests'
     ],
     scripts=[
         'scripts/healthd',
+    ],
+    setup_requires= [
+        'pytest-runner'
+    ],
+    tests_require = [
+        'pytest',
+        'mock>=2.0.0'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -29,5 +37,6 @@ setup(
         'Topic :: System :: Hardware',
     ],
     keywords='SONiC sonic HEALTH health',
+    test_suite='setup.get_test_suite'
 )
 

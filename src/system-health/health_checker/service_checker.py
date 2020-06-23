@@ -1,6 +1,6 @@
 import subprocess
 from .health_checker import HealthChecker
-from .utils import run_command
+from . import utils
 
 
 class ServiceChecker(HealthChecker):
@@ -24,12 +24,12 @@ class ServiceChecker(HealthChecker):
 
     def check(self, config):
         self.reset()
-        output = run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD).strip()
+        output = utils.run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD).strip()
         if output != 'active':
             self.set_object_not_ok('Service', 'monit', 'monit service is not running')
             return
 
-        output = run_command(ServiceChecker.CHECK_CMD)
+        output = utils.run_command(ServiceChecker.CHECK_CMD)
         lines = output.splitlines()
         if not lines or len(lines) < ServiceChecker.MIN_CHECK_CMD_LINES:
             self.set_object_not_ok('Service', 'monit', 'output of \"monit summary -B\" is invalid or incompatible')

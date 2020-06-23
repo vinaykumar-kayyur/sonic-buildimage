@@ -1,5 +1,5 @@
 from .health_checker import HealthChecker
-from .utils import run_command
+from . import utils
 
 
 class ExternalChecker(HealthChecker):
@@ -18,12 +18,29 @@ class ExternalChecker(HealthChecker):
     def check(self, config):
         self.reset()
 
-        output = run_command(self._cmd)
+        output = utils.run_command(self._cmd)
         if not output:
             self.set_object_not_ok('External', str(self), 'Failed to get output of command \"{}\"'.format(self._cmd))
             return
 
-        lines = output.splitlines()
+        output = output.strip()
+        if not output:
+            self.set_object_not_ok('External', str(self), 'Failed to get output of command \"{}\"'.format(self._cmd))
+            return
+
+        raw_lines = output.splitlines()
+        if not raw_lines:
+            self.set_object_not_ok('External', str(self), 'Invalid output of command \"{}\"'.format(self._cmd))
+            return
+
+        lines = []
+        for line in raw_lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            lines.append(line)
+
         if not lines:
             self.set_object_not_ok('External', str(self), 'Invalid output of command \"{}\"'.format(self._cmd))
             return
@@ -31,9 +48,6 @@ class ExternalChecker(HealthChecker):
         self._category = lines[0]
         if len(lines) > 1:
             for line in lines[1:]:
-                line = line.strip()
-                if not line:
-                    continue
                 pos = line.find(':')
                 if pos == -1:
                     continue

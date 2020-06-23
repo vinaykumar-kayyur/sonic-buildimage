@@ -42,7 +42,7 @@ class Config(object):
                 with open(self._config_file, 'r') as f:
                     self.config_data = json.load(f)
 
-                self.interval = self.config_data.get('interval', Config.DEFAULT_INTERVAL)
+                self.interval = self.config_data.get('polling_interval', Config.DEFAULT_INTERVAL)
                 self.ignore_services = self._get_list_data('services_to_ignore')
                 self.ignore_devices = self._get_list_data('devices_to_ignore')
                 self.external_checkers = self._get_list_data('external_checkers')
