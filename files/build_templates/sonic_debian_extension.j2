@@ -353,13 +353,13 @@ echo "procdockerstatsd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/procdockerstatsd/procdockerstatsd $FILESYSTEM_ROOT/usr/bin/
 
 # Copy systemd timer configuration
-sudo cp $BUILD_TEMPLATES/pcie-chk.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable pcie-chk.timer
+sudo cp $BUILD_TEMPLATES/pcie-check.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable pcie-check.timer
 
-# Copy pcie-chk service files
-sudo cp $IMAGE_CONFIGS/pcie-chk/pcie-chk.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "pcie-chk.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/pcie-chk.sh $FILESYSTEM_ROOT/usr/bin/
+# Copy pcie-check service files
+sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "pcie-check.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/pcie-check.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy systemd timer configuration
 # It implements delayed start of services

@@ -20,7 +20,7 @@ function check_and_rescan_pcie_devices()
     for i in $(seq 1 1 $MAX_RESCAN)
     do
         if [ "$PCIE_CHK_CMD" = "$EXPECTED" ]; then
-            redis-cli -n 6 SET "PCIE_STATE|system" "1"
+            redis-cli -n 6 SET "PCIE_STATUS|PCIE_DEVICES" "PASSED"
             debug "PCIe check passed"
             exit
         else
@@ -29,7 +29,7 @@ function check_and_rescan_pcie_devices()
          fi
          sleep 1
      done
-     redis-cli -n 6 SET "PCIE_STATE|system" "0"
+     redis-cli -n 6 SET "PCIE_STATUS|PCIE_DEVICES" "FAILED"
 }
 
 check_and_rescan_pcie_devices
