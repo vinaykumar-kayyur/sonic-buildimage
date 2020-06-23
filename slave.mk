@@ -230,7 +230,7 @@ $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
 $(info "ENABLE_NAT"                      : "$(ENABLE_NAT)")
-$(info "SONIC_TELEMETRY_WRITABLE"       : "$(SONIC_TELEMETRY_WRITABLE)")
+$(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info )
 
 include Makefile.cache
