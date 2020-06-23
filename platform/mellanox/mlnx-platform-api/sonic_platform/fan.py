@@ -25,7 +25,6 @@ CONFIG_PATH = "/var/run/hw-management/config"
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
 COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
 
-
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
@@ -221,6 +220,8 @@ class Fan(FanBase):
         status = True
 
         if self.is_psu_fan:
+            if not self.get_presence():
+                return False
             from .thermal import logger
             try:
                 with open(self.psu_i2c_bus_path, 'r') as f:

@@ -528,6 +528,7 @@ def parse_meta(meta, hname):
     erspan_dst = []
     deployment_id = None
     region = None
+    cloudtype = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -552,7 +553,9 @@ def parse_meta(meta, hname):
                     deployment_id = value
                 elif name == "Region":
                     region = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region
+                elif name == "CloudType":
+                    cloudtype = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype
 
 
 def parse_linkmeta(meta, hname):
@@ -749,12 +752,27 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
 
     return filter_acls
 
+def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
+    '''
+    In Multi-NPU session the internal sessions will always be up.
+    So adding the admin-status 'up' configuration to bgp sessions
+    BGP session between FrontEnd and BackEnd Asics are internal bgp sessions
+    '''
+    local_sub_role = parse_asic_sub_role(filename, asic_name)
+
+    for peer_ip in bgp_sessions.keys():
+        peer_name = bgp_sessions[peer_ip]['name']
+        peer_sub_role = parse_asic_sub_role(filename, peer_name)
+        if ((local_sub_role == FRONTEND_ASIC_SUB_ROLE and peer_sub_role == BACKEND_ASIC_SUB_ROLE) or
+            (local_sub_role == BACKEND_ASIC_SUB_ROLE and peer_sub_role == FRONTEND_ASIC_SUB_ROLE)):
+            bgp_sessions[peer_ip].update({'admin_status': 'up'})
+
 ###############################################################################
 #
 # Main functions
 #
 ###############################################################################
-def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
+def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hwsku_config_file=None):
     """ Parse minigraph xml file.
 
     Keyword arguments:
@@ -764,6 +782,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     asic_name -- asic name; to parse multi-asic device minigraph to 
     generate asic specific configuration.
      """
+
     root = ET.parse(filename).getroot()
 
     u_neighbors = None
@@ -797,6 +816,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     bgp_peers_with_range = None
     deployment_id = None
     region = None
+    cloudtype = None
     hostname = None
     linkmetas = {}
 
@@ -817,7 +837,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -832,7 +852,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -842,6 +862,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
+                enable_internal_bgp_session(bgp_sessions, filename, asic_name)
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
@@ -851,6 +872,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
 
+    # set the host device type in asic metadata also
+    device_type = [devices[key]['type'] for key in devices if key.lower() == hostname.lower()][0]
     if asic_name is None:
         current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
     else:
@@ -861,10 +884,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         'bgp_asn': bgp_asn,
         'deployment_id': deployment_id,
         'region': region,
+        'cloudtype': cloudtype,
         'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': hostname,
         'hwsku': hwsku,
-        'type': current_device['type']
+        'type': device_type
         }
     }
     # for this hostname, if sub_role is defined, add sub_role in 
@@ -943,10 +967,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
 
     for port_name, port in ports.items():
         # get port alias from port_config.ini
-        if port_config_file:
-            alias = port.get('alias')
-        else:
-            alias = port_name
+        alias = port.get('alias', port_name)
         # generate default 100G FEC
         # Note: FECDisabled only be effective on 100G port right now
         if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':

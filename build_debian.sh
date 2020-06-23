@@ -37,7 +37,7 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 else
     DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
 fi
-LINUX_KERNEL_VERSION=4.19.0-6
+LINUX_KERNEL_VERSION=4.19.0-6-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -204,7 +204,12 @@ sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
                                     "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION}
+if dpkg --compare-versions ${DOCKER_VERSION} ge "18.09"; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION}
+else
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
+fi
+
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
 if [ "$INSTALL_KUBERNETES" == "y" ]
@@ -217,6 +222,14 @@ then
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    if [[ $KUBERNETES_VERSION == 1.18.0 ]]; then 
+        # kubeadm 1.18.0 package auto install has some dependency error so install
+        # those package explicitly.
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=0.7.5-00
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=1.18.3-00
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=1.18.3-00
+    fi
+    # else kubeadm package auto install kubelet & kubectl
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
     # kubeadm package auto install kubelet & kubectl
 else
@@ -592,4 +605,4 @@ pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERF
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
 pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
-sudo zip -g $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
+sudo zip -g -n .squashfs:.gz $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
