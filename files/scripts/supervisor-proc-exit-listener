@@ -10,13 +10,27 @@ import swsssdk
 
 from supervisor import childutils
 
-# Contents of file should be the names of critical processes (as defined in
-# supervisor.conf file), one per line
+# Contents of file should be the names of critical processes and group name 
+# (as defined in supervisor.conf file), one per line
 CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 
 # This table in databse contains the features for container and each
 # feature for a row will be configured a state or number.
 CONTAINER_FEATURE_TABLE_NAME = 'CONTAINER_FEATURE'
+
+# Read the list of critical processes and group name from a file
+def get_group_list_and_critical_processes():
+    group_list = []
+    critical_processes = [] 
+
+    with open(CRITICAL_PROCESSES_FILE, 'r') as file:
+	for line in file:
+            if line.find("group") != -1:
+                group_list.append(line.split(":")[-1].strip(' \n'))
+            elif line.find("program") != -1:
+                critical_processes.append(line.split(":")[-1].strip(' \n'))
+  
+    return group_list, critical_processes
 
 def main(argv):
     container_name = None
@@ -29,9 +43,7 @@ def main(argv):
         syslog.syslog(syslog.LOG_ERR, "Container name not specified. Exiting...")
         sys.exit(1)
 
-    # Read the list of critical processes from a file
-    with open(CRITICAL_PROCESSES_FILE, 'r') as f:
-        critical_processes = [line.rstrip('\n') for line in f]
+    group_list, critical_processes = get_group_list_and_critical_processes()
 
     while True:
         # Transition from ACKNOWLEDGED to READY
@@ -73,7 +85,7 @@ def main(argv):
             # If container is database or auto-restart feature is enabled and at the same time 
             # a critical process exited unexpectedly, terminate supervisor
             if ((container_name == 'database' or restart_feature == 'enabled') and expected == 0 and 
-                    (processname in critical_processes or groupname in critical_processes)):
+                    (processname in critical_processes or groupname in group_list)):
                 MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
                 msg = MSG_FORMAT_STR.format(payload_headers['processname'])
                 syslog.syslog(syslog.LOG_INFO, msg)
