@@ -18,7 +18,7 @@ CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 # feature for a row will be configured a state or number.
 CONTAINER_FEATURE_TABLE_NAME = 'CONTAINER_FEATURE'
 
-# Read the list of critical processes and group name from a file
+# Read the list of critical processes and group names from a file
 def get_group_list_and_critical_processes():
     group_list = []
     critical_processes = [] 
