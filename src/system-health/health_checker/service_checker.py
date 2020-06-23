@@ -1,4 +1,3 @@
-import subprocess
 from .health_checker import HealthChecker
 from . import utils
 

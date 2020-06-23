@@ -1,6 +1,3 @@
-import time
-
-
 class HealthCheckerManager(object):
     STATE_BOOTING = 'booting'
     STATE_RUNNING = 'running'
