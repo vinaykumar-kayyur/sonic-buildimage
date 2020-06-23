@@ -20,9 +20,11 @@ function check_and_rescan_pcie_devices()
     for i in $(seq 1 1 $MAX_RESCAN)
     do
         if [ "$PCIE_CHK_CMD" = "$EXPECTED" ]; then
+            redis-cli -n 6 SET "PCIE_STATE|system" "1"
             debug "PCIe check passed"
             exit
         else
+            redis-cli -n 6 SET "PCIE_STATE|system" "0"
             debug "PCIe check failed, try pci bus rescan"
             echo 1 > /sys/bus/pci/rescan
          fi
