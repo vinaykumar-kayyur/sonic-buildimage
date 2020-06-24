@@ -7,16 +7,19 @@ then
     INTFC=lo
 else
     INTFC=eth0
-    LOOPBACK_IP=127.0.0.1
 fi
-local_ip=$(ip -4 -o addr show $INTFC | awk '{print $4}' | cut -d'/' -f1 | head -1)
 
-# if the ip address was not retrieved correctly, put the loopbackIP as the default.
-if [[ $local_ip == "" ]]
+# Get the ip address of the interface
+# if the ip address was not retrieved correctly, put localhost(127.0.0.1) as the default.
+host_ip=$(ip -4 -o addr show $INTFC | awk '{print $4}' | cut -d'/' -f1 | head -1)
+if [[ $host_ip == "" ]]
 then
-    local_ip=127.0.0.1
+    host_ip=127.0.0.1
 fi
-export HOST_IP=$local_ip
+
+# Export the host_ip as environment variable used in database_config.json.j2 to derive the hostname
+# as defined "hostname" : "{{HOST_IP}}"
+export HOST_IP=$host_ip
 
 REDIS_DIR=/var/run/redis$NAMESPACE_ID
 mkdir -p $REDIS_DIR/sonic-db
@@ -40,9 +43,6 @@ then
 fi
 
 # generate all redis server supervisord configuration file
-# Pass the Loopback IP explicitly in case of namespaces other than the linux host namespace.
-# This is needed as there are applications who hardcoded host=loopback IP in Connector classes.
-# Redis server will then bind on multiple IP addresses viz <loopback ip> , <eth0 ip>
-sonic-cfggen -j /var/run/redis/sonic-db/database_config.json -a "{\"LOOPBACK_IP\":\"$LOOPBACK_IP\"}" -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
+sonic-cfggen -j /var/run/redis/sonic-db/database_config.json -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
 
 exec /usr/bin/supervisord
