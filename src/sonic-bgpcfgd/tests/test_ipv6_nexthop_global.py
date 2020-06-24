@@ -2,8 +2,10 @@ import os
 import re
 
 from app.template import TemplateFabric
+from .util import load_constants
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
+
 
 def parse_instance_conf(filename):
     activate_re = re.compile(r'^neighbor\s+(\S+)\s+activate$')
@@ -99,11 +101,7 @@ def check_routemap(path, route_map_name):
     assert checked, "route-map %s wasn't found" % route_map_name
 
 def test_v6_next_hop_global():
-    paths = [
-        "tests/data/monitors",
-        "tests/data/dynamic",
-        "tests/data/general",
-    ]
+    paths = ["tests/data/%s" % value for value in load_constants().values()]
     for path in paths:
         test_cases = process_instances(path)
         for test_case in test_cases:
