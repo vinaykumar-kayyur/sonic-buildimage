@@ -1,6 +1,5 @@
 import os
 import json
-import pytest
 
 
 from app.template import TemplateFabric
@@ -9,7 +8,6 @@ from app.config import ConfigMgr
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 
-# ToDo: Check for gloabl for ipv6. route-map _must be_ in the v6 instance or peer-group.
 
 def load_tests(path):
     param_files = [name for name in os.listdir(path)
