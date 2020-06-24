@@ -1,9 +1,9 @@
 import syslog
 
+from .vars import g_debug
 
 def log_debug(msg):
     """ Send a message msg to the syslog as DEBUG """
-    global g_debug
     if g_debug:
         syslog.syslog(syslog.LOG_DEBUG, msg)
 

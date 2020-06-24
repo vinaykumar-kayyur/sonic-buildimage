@@ -1,6 +1,7 @@
 import os
 import tempfile
 
+from .vars import g_debug
 from .log import log_crit, log_err
 from .util import run_command
 
@@ -37,7 +38,6 @@ class ConfigMgr(object):
         :param cmd: new configuration to write into FRR. Type: String
         :return: True if change was applied successfully, False otherwise
         """
-        global g_debug
         fd, tmp_filename = tempfile.mkstemp(dir='/tmp')
         os.close(fd)
         with open(tmp_filename, 'w') as fp:
