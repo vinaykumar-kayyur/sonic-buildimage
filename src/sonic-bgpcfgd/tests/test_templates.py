@@ -4,12 +4,14 @@ import json
 
 from app.template import TemplateFabric
 from app.config import ConfigMgr
-
+from .util import load_constants
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 
 
-def load_tests(path):
+def load_tests(peer_type, template_name):
+    constants = load_constants()
+    path = "tests/data/%s/%s" % (constants[peer_type], template_name)
     param_files = [name for name in os.listdir(path)
                    if os.path.isfile(os.path.join(path, name)) and name.startswith("param_")]
     tests = []
@@ -19,7 +21,8 @@ def load_tests(path):
         full_param_fname = os.path.join(path, param_fname)
         full_result_fname = os.path.join(path, result_fname)
         tests.append((casename, full_param_fname, full_result_fname))
-    return tests
+    tmpl_path = os.path.join("bgpd", "templates", constants[peer_type], "%s.j2" % template_name)
+    return tmpl_path, tests
 
 def load_json(fname):
     with open(fname) as param_fp:
@@ -90,46 +93,37 @@ def run_tests(test_name, template_fname, tests):
 # Tests
 
 def test_general_policies():
-    tests = load_tests("tests/data/general/policies.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "general", "policies.conf.j2")
-    run_tests("general_policies", tmpl_fname, tests)
+    test_data = load_tests("general", "policies.conf")
+    run_tests("general_policies", *test_data)
 
 def test_general_pg():
-    tests = load_tests("tests/data/general/peer-group.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "general", "peer-group.conf.j2")
-    run_tests("general_pg", tmpl_fname, tests)
+    test_data = load_tests("general", "peer-group.conf")
+    run_tests("general_pg", *test_data)
 
 def test_general_instance():
-    tests = load_tests("tests/data/general/instance.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "general", "instance.conf.j2")
-    run_tests("general_instance", tmpl_fname, tests)
+    test_data = load_tests("general", "instance.conf")
+    run_tests("general_instance", *test_data)
 
 def test_dynamic_policies():
-    tests = load_tests("tests/data/dynamic/policies.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "dynamic", "policies.conf.j2")
-    run_tests("dynamic_policies", tmpl_fname, tests)
+    test_data = load_tests("dynamic", "policies.conf")
+    run_tests("dynamic_policies", *test_data)
 
 def test_dynamic_pg():
-    tests = load_tests("tests/data/dynamic/peer-group.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "dynamic", "peer-group.conf.j2")
-    run_tests("dynamic_pg", tmpl_fname, tests)
+    test_data = load_tests("dynamic", "peer-group.conf")
+    run_tests("dynamic_pg", *test_data)
 
 def test_dynamic_instance():
-    tests = load_tests("tests/data/dynamic/instance.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "dynamic", "instance.conf.j2")
-    run_tests("dynamic_instance", tmpl_fname, tests)
+    test_data = load_tests("dynamic", "instance.conf")
+    run_tests("dynamic_instance", *test_data)
 
 def test_monitors_policies():
-    tests = load_tests("tests/data/monitors/policies.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "monitors", "policies.conf.j2")
-    run_tests("monitors_policies", tmpl_fname, tests)
+    test_data = load_tests("monitors", "policies.conf")
+    run_tests("monitors_policies", *test_data)
 
 def test_monitors_pg():
-    tests = load_tests("tests/data/monitors/peer-group.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "monitors", "peer-group.conf.j2")
-    run_tests("monitors_pg", tmpl_fname, tests)
+    test_data = load_tests("monitors", "peer-group.conf")
+    run_tests("monitors_pg", *test_data)
 
 def test_monitors_instance():
-    tests = load_tests("tests/data/monitors/instance.conf")
-    tmpl_fname = os.path.join("bgpd", "templates", "monitors", "instance.conf.j2")
-    run_tests("monitors_instance", tmpl_fname, tests)
+    test_data = load_tests("monitors", "instance.conf")
+    run_tests("monitors_instance", *test_data)
