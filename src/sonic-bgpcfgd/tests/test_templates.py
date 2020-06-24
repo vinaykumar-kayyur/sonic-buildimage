@@ -82,7 +82,7 @@ def run_tests(test_name, template_fname, tests):
         params = load_json(param_fname)
         raw_generated_result = str(template.render(params))
         assert "None" not in raw_generated_result, "Test %s.%s" % (test_name, case_name)
-        write_result(result_fname, raw_generated_result)
+        # this is used only for initial generation write_result(result_fname, raw_generated_result)
         canonical_generated_result = ConfigMgr.to_canonical(raw_generated_result)
         with open(result_fname) as result_fp:
             raw_saved_result = result_fp.read()
