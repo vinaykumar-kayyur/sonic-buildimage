@@ -336,15 +336,22 @@ def parse_dpg(dpg, hname):
         vlan_intfs = []
         vlans = {}
         vlan_members = {}
+        vlantype_name = ""
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
+            vlantype = vintf.find(str(QName(ns, "Type")))
+            if vlantype != None:
+                vlantype_name = vintf.find(str(QName(ns, "Type"))).text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
-                vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
+                if vlantype_name == "Tagged":
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
+                else:
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid}
 
@@ -772,7 +779,7 @@ def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
 # Main functions
 #
 ###############################################################################
-def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
+def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hwsku_config_file=None):
     """ Parse minigraph xml file.
 
     Keyword arguments:
@@ -782,6 +789,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     asic_name -- asic name; to parse multi-asic device minigraph to 
     generate asic specific configuration.
      """
+
     root = ET.parse(filename).getroot()
 
     u_neighbors = None
@@ -836,7 +844,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -966,10 +974,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
 
     for port_name, port in ports.items():
         # get port alias from port_config.ini
-        if port_config_file:
-            alias = port.get('alias')
-        else:
-            alias = port_name
+        alias = port.get('alias', port_name)
         # generate default 100G FEC
         # Note: FECDisabled only be effective on 100G port right now
         if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
