@@ -17,6 +17,12 @@ function debug()
 
 function check_and_rescan_pcie_devices()
 {
+    PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+    if [ ! -f /usr/share/sonic/device/$PLATFORM/plugins/pcie.yaml ]; then
+        debug "pcie.yaml does not exist! can't check pcie status!"
+        exit
+    fi
+
     for i in $(seq 1 1 $MAX_RESCAN)
     do
         if [ "$PCIE_CHK_CMD" = "$EXPECTED" ]; then
