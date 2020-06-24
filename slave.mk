@@ -128,11 +128,11 @@ INSTALL_DEBUG_TOOLS = y
 endif
 
 ifeq ($(SONIC_ENABLE_SFLOW),y)
-ENABLE_SFLOW = y
+ENABLE_SFLOW = n
 endif
 
 ifeq ($(SONIC_ENABLE_NAT),y)
-ENABLE_NAT = y
+ENABLE_NAT = n
 endif
 
 
@@ -829,6 +829,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_restapi="$(ENABLE_RESTAPI)"
 	export enable_ztp="$(ENABLE_ZTP)"
 	export enable_nat="$(ENABLE_NAT)"
+	export enable_sflow="$(ENABLE_SFLOW)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
 	export install_kubernetes="$(INSTALL_KUBERNETES)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
