@@ -2,8 +2,8 @@ SHELL = /bin/bash
 .ONESHELL:
 .SHELLFLAGS += -e
 
-REDIS_VERSION = 6.0.4
-REDIS_VERSION_FULL = $(REDIS_VERSION)-1~bpo10+1
+REDIS_VERSION = 5.0.3
+REDIS_VERSION_FULL = $(REDIS_VERSION)-3~bpo9+2
 
 MAIN_TARGET = redis-server_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = redis-tools_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
@@ -15,7 +15,10 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	mkdir redis_build
 	pushd redis_build
 
-	dget "http://http.debian.net/debian/pool/main/r/redis/redis_$(REDIS_VERSION_FULL).dsc"
+	wget -O redis_$(REDIS_VERSION).orig.tar.gz -N "http://http.debian.net/debian/pool/main/r/redis/redis_$(REDIS_VERSION).orig.tar.gz"
+	wget -O redis_$(REDIS_VERSION_FULL).dsc -N "http://http.debian.net/debian/pool/main/r/redis/redis_$(REDIS_VERSION_FULL).dsc"
+	wget -O redis_$(REDIS_VERSION_FULL).debian.tar.xz -N "http://http.debian.net/debian/pool/main/r/redis/redis_$(REDIS_VERSION_FULL).debian.tar.xz"
+	dpkg-source -x redis_$(REDIS_VERSION_FULL).dsc
 
 	pushd redis-$(REDIS_VERSION)
 	export ARCH=""
