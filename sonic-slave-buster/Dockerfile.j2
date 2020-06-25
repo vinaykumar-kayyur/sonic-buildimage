@@ -180,7 +180,6 @@ RUN apt-get update && apt-get install -y \
         libnanomsg-dev \
         python-stdeb \
 # For redis build
-        tcl-tls \
         libjemalloc-dev \
         liblua5.1-0-dev \
         lua-bitop-dev  \
@@ -223,7 +222,7 @@ RUN apt-get update && apt-get install -y \
         libsensors4-dev \
         libwrap0-dev \
 # For lldpd
-        debhelper=13~bpo10+1 \
+	debhelper \
         autotools-dev \
         libbsd-dev \
         pkg-config \
