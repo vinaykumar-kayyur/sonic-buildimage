@@ -17,17 +17,13 @@ then
     host_ip=127.0.0.1
 fi
 
-# Export the host_ip as environment variable used in database_config.json.j2 to derive the hostname
-# as defined "hostname" : "{{HOST_IP}}"
-export HOST_IP=$host_ip
-
 REDIS_DIR=/var/run/redis$NAMESPACE_ID
 mkdir -p $REDIS_DIR/sonic-db
 
 if [ -f /etc/sonic/database_config$NAMESPACE_ID.json ]; then
     cp /etc/sonic/database_config$NAMESPACE_ID.json $REDIS_DIR/sonic-db/database_config.json
 else
-    j2 /usr/share/sonic/templates/database_config.json.j2 > $REDIS_DIR/sonic-db/database_config.json
+    HOST_IP=$host_ip j2 /usr/share/sonic/templates/database_config.json.j2 > $REDIS_DIR/sonic-db/database_config.json
 fi
 
 mkdir -p /etc/supervisor/conf.d/
