@@ -59,6 +59,8 @@ supervisorctl start orchagent
 
 supervisorctl start portsyncd
 
+supervisorctl start coppmgrd
+
 supervisorctl start neighsyncd
 
 supervisorctl start teamsyncd
