@@ -10,13 +10,19 @@ import swsssdk
 
 from supervisor import childutils
 
-# Contents of file should be the names of critical processes (as defined in
-# supervisor.conf file), one per line
+# Each line of this file should specify either one critical process or one critical
+# process group, (as defined in supervisord.conf file), in the following format:
+#
+# program:<critical_process>
+# group:<group_name>
 CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 
 # This table in databse contains the features for container and each
 # feature for a row will be configured a state or number.
 CONTAINER_FEATURE_TABLE_NAME = 'CONTAINER_FEATURE'
+
+# Read the critical processes/group names from CRITICAL_PROCESS_FILE
+#def get_critical_group
 
 def main(argv):
     container_name = None
