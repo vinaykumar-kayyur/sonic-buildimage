@@ -6,7 +6,9 @@ REDIS_TOOLS = redis-tools_$(REDIS_VERSION)_$(CONFIGURED_ARCH).deb
 $(REDIS_TOOLS)_SRC_PATH = $(SRC_PATH)/redis
 $(REDIS_TOOLS)_DEPENDS += $(LIBHIREDIS_DEV)
 $(REDIS_TOOLS)_RDEPENDS += $(LIBHIREDIS)
-ifeq ($(BLDENV),buster)
+# TODO: docker-sonic-p4 depends on redis-tools in Jessie.
+#       Remove this file and src/redis after that resolved.
+ifneq ($(BLDENV),buster)
 SONIC_MAKE_DEBS += $(REDIS_TOOLS)
 endif
 
