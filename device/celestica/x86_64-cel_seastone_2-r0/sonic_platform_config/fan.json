@@ -1,0 +1,125 @@
+{
+        "fan_num_per_drawer": 2,
+        "drawer_num": 4,
+        "get_name": {
+                "oper_type": "fixed_list",
+                "value": [
+                        "Fan1-F",
+                        "Fan1-R",
+                        "Fan2-F",
+                        "Fan2-R",
+                        "Fan3-F",
+                        "Fan3-R",
+                        "Fan4-F",
+                        "Fan4-R"
+                ]
+        },
+        "get_presence": {
+                "oper_type": "ipmi",
+                "template": "ipmitool raw 0x3a 0x03 0x03 {}",
+                "command": [
+                        "0x00",
+                        "0x00",
+                        "0x01",
+                        "0x01",
+                        "0x02",
+                        "0x02",
+                        "0x03",
+                        "0x03"
+                ],
+                "formula": "True if '00' in '{}' else False"
+        },
+        "get_model": {
+                "oper_type": "ipmi",
+                "template": "ipmitool fru list {} | grep 'Board Part Number'",
+                "command": [
+                        "5",
+                        "5",
+                        "6",
+                        "6",
+                        "7",
+                        "7",
+                        "8",
+                        "8"
+                ],
+                "formula": "'{}'.split()[-1]"
+        },
+        "get_serial": {
+                "oper_type": "ipmi",
+                "template": "ipmitool fru list {} | grep 'Board Serial'",
+                "command": [
+                        "5",
+                        "5",
+                        "6",
+                        "6",
+                        "7",
+                        "7",
+                        "8",
+                        "8"
+                ],
+                "formula": "'{}'.split()[-1]"
+        },
+        "get_status": {},
+        "get_direction": {
+                "oper_type": "ipmi",
+                "template": "ipmitool fru list {} | grep 'F2B\\|B2F'",
+                "command": [
+                        "5",
+                        "5",
+                        "6",
+                        "6",
+                        "7",
+                        "7",
+                        "8",
+                        "8"
+                ],
+                "formula": "'intake' if 'B2F' in '{}' else 'exhaust'"
+        },
+        "get_speed": {
+                "oper_type": "ipmi",
+                "template": "ipmitool raw 0x04 0x2d {}",
+                "command": [
+                        "0x81",
+                        "0x80",
+                        "0x83",
+                        "0x82",
+                        "0x85",
+                        "0x84",
+                        "0x87",
+                        "0x86"
+                ],
+                "formula": "int('{}'.split()[0],16)*150",
+                "max_front": 23000,
+                "max_rear": 20500
+        },
+        "get_target_speed": {
+                "oper_type": "fixed",
+                "value": "N/A"
+        },
+        "get_speed_tolerance": {
+                "oper_type": "fixed",
+                "value": 10
+        },
+        "set_speed": {
+                "oper_type": "ipmi",
+                "template": "ipmitool 0x04 {}",
+                "command": [
+                        "0x5 0x2 {}",
+                        "0x6 0x2 {}",
+                        "0x6 0x6 {}",
+                        "0x6 0x5 {}"
+                ],
+                "formula": "{}/100*255"
+        },
+        "get_status_led": {
+                "oper_type": "ipmi",
+                "template": "ipmitool 0x04 {}",
+                "command": [
+                        "0x5 0x2",
+                        "0x6 0x2",
+                        "0x6 0x6",
+                        "0x6 0x5"
+                ],
+                "formula": "'red' if {} == '0x00' else 'green'"
+        }
+}
