@@ -507,6 +507,14 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7280cr3k_32d4
         flash_size=7382
     fi
+    if [ "$sid" = "Clearwater2" ]; then
+        aboot_machine=arista_7800r3_48cq2_lc
+        sonic_mode="$linecard_mode"
+    fi
+    if [ "$sid" = "Clearwater2Ms" ]; then
+        aboot_machine=arista_7800r3_48cqm2_lc
+        sonic_mode="$linecard_mode"
+    fi
     if [ "$sid" = "OtterLake" ]; then
         aboot_machine=arista_7800_sup
         flash_size=30000
