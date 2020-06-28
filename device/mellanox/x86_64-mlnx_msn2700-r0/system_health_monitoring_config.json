@@ -7,6 +7,5 @@
       "fault": "orange",
       "normal": "green",
       "booting": "orange_blink"
-    },
-    "boot_timeout": 300
+    }
 }
