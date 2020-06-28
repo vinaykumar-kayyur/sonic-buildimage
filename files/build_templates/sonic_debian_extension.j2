@@ -353,6 +353,24 @@ sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEM
 echo "caclmgrd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd $FILESYSTEM_ROOT/usr/bin/
 
+# Allow systemd-coredump to perform cleanup of core files and not tmpfiles.d
+sudo sed -i "/\/var\/lib\/systemd\/coredump/d" $FILESYSTEM_ROOT/usr/lib/tmpfiles.d/systemd.conf
+
+# Customize systemd-coredump configuration
+sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/coredump.conf.d
+sudo cp $IMAGE_CONFIGS/coredump/coredump.conf.d/00-sonic-coredump.conf $FILESYSTEM_ROOT/etc/systemd/coredump.conf.d
+# Setup service to configure coredump service
+sudo cp $IMAGE_CONFIGS/coredump/coredump-config.service $FILESYSTEM_ROOT/etc/systemd/system/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable coredump-config.service
+sudo cp $IMAGE_CONFIGS/coredump/coredump-config.sh $FILESYSTEM_ROOT/usr/bin/
+
+## Enable persistent journal to store coredump history
+sudo mkdir -p  $FILESYSTEM_ROOT/etc/systemd/journald.conf.d/
+sudo cp files/image_config/journald/journald.conf.d/00-sonic-journald.conf $FILESYSTEM_ROOT/etc/systemd/journald.conf.d/
+
+## Shortcut to access core files
+sudo ln -sf /var/lib/systemd/coredump $FILESYSTEM_ROOT/var/core
+
 # Copy process/docker cpu/memory utilization data export daemon
 sudo cp $IMAGE_CONFIGS/procdockerstatsd/procdockerstatsd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "procdockerstatsd.service" | sudo tee -a $GENERATED_SERVICE_FILE
