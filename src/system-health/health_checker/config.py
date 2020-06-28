@@ -14,6 +14,8 @@ class Config(object):
     }
     GET_PLATFORM_CMD = 'sonic-cfggen -d -v DEVICE_METADATA.localhost.platform'
     CONFIG_FILE = 'system_health_monitoring_config.json'
+    MONIT_CONFIG_FILE = '/etc/monit/monitrc'
+    MONIT_START_DELAY_CONFIG = 'with start delay'
 
     def __init__(self):
         mi = get_machine_info()
@@ -65,15 +67,30 @@ class Config(object):
         return self.DEFAULT_LED_CONFIG[status]
 
     def get_bootup_timeout(self):
-        if self.config_data and 'boot_timeout' in self.config_data:
-            try:
-                timeout = int(self.config_data['boot_timeout'])
-                if timeout <= 0:
-                    timeout = self.DEFAULT_BOOTUP_TIMEOUT
-                return timeout
-            except ValueError:
-                pass
-        return self.DEFAULT_BOOTUP_TIMEOUT
+        if not os.path.exists(Config.MONIT_CONFIG_FILE):
+            return self.DEFAULT_BOOTUP_TIMEOUT
+
+        try:
+            with open(Config.MONIT_CONFIG_FILE) as f:
+                lines = f.readlines()
+                for line in lines:
+                    if not line:
+                        continue
+
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    pos = line.find('#')
+                    if pos == 0:
+                        continue
+
+                    line = line[:pos]
+                    pos = line.find(Config.MONIT_START_DELAY_CONFIG)
+                    if pos != -1:
+                        return int(line[pos+len(Config.MONIT_START_DELAY_CONFIG):].strip())
+        except Exception:
+            return self.DEFAULT_BOOTUP_TIMEOUT
 
     def _get_platform_name(self):
         from .utils import run_command

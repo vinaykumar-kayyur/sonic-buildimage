@@ -63,8 +63,6 @@ class HealthDaemon(DaemonBase):
             state, stat = manager.check()
             if state == HealthCheckerManager.STATE_RUNNING:
                 self._process_stat(chassis, manager.config, stat)
-            else:
-                self._set_system_led(chassis, manager.config, 'booting')
 
             if self.stop_event.wait(manager.config.interval):
                 break
@@ -74,26 +72,13 @@ class HealthDaemon(DaemonBase):
     def _process_stat(self, chassis, config, stat):
         from health_checker.health_checker import HealthChecker
         self._clear_system_health_table()
-        status = True
         for category, info in stat.items():
             for obj_name, obj_data in info.items():
                 if obj_data[HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK:
-                    status = False
                     self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, obj_name,
                                  obj_data[HealthChecker.INFO_FIELD_OBJECT_MSG])
 
-        summary = 'OK' if status else 'Not OK'
-        self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, 'summary', summary)
-        led_status = 'normal' if status else 'fault'
-        self._set_system_led(chassis, config, led_status)
-
-    def _set_system_led(self, chassis, config, status):
-        try:
-            chassis.set_status_led(config.get_led_color(status))
-        except NotImplementedError:
-            logger.log_info('chassis.set_status_led is not implemented')
-        except Exception as e:
-            logger.log_error('Failed to set system led due to - {}'.format(repr(e)))
+        self._db.set(self._db.STATE_DB, HealthDaemon.SYSTEM_HEALTH_TABLE_NAME, 'summary', HealthChecker.summary)
 
 
 #

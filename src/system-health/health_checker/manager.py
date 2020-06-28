@@ -1,6 +1,7 @@
 class HealthCheckerManager(object):
     STATE_BOOTING = 'booting'
     STATE_RUNNING = 'running'
+    boot_timeout = None
 
     def __init__(self):
         self._checkers = []
@@ -16,12 +17,15 @@ class HealthCheckerManager(object):
         self._checkers.append(ServiceChecker())
         self._checkers.append(HardwareChecker())
 
-    def check(self):
+    def check(self, chassis):
+        from .health_checker import HealthChecker
+        HealthChecker.summary = HealthChecker.STATUS_OK
         stats = {}
         self.config.load_config()
         # check state first to avoid user change boot timeout in configuration file
         # after finishing system boot
         if self._state == self.STATE_BOOTING and self._is_system_booting():
+            self._set_system_led(chassis, self.config, 'booting')
             return self._state, stats
 
         for checker in self._checkers:
@@ -32,6 +36,10 @@ class HealthCheckerManager(object):
             for external_checker in self.config.external_checkers:
                 checker = ExternalChecker(external_checker)
                 self._do_check(checker, stats)
+
+        led_status = 'normal' if HealthChecker.summary == HealthChecker.STATUS_OK else 'fault'
+        self._set_system_led(chassis, self.config, led_status)
+
         return self._state, stats
 
     def _do_check(self, checker, stats):
@@ -58,8 +66,17 @@ class HealthCheckerManager(object):
     def _is_system_booting(self):
         from .utils import get_uptime
         uptime = get_uptime()
-        timeout = self.config.get_bootup_timeout()
-        booting = uptime < timeout
+        if not self.boot_timeout:
+            self.boot_timeout = self.config.get_bootup_timeout()
+        booting = uptime < self.boot_timeout
         if not booting:
             self._state = self.STATE_RUNNING
         return booting
+
+    def _set_system_led(self, chassis, config, status):
+        try:
+            chassis.set_status_led(config.get_led_color(status))
+        except NotImplementedError:
+            print('chassis.set_status_led is not implemented')
+        except Exception as e:
+            print('Failed to set system led due to - {}'.format(repr(e)))
