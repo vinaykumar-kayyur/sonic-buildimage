@@ -36,7 +36,7 @@ class HealthChecker(object):
         self.add_info(object_name, self.INFO_FIELD_OBJECT_TYPE, object_type)
         self.add_info(object_name, self.INFO_FIELD_OBJECT_MSG, message)
         self.add_info(object_name, self.INFO_FIELD_OBJECT_STATUS, self.STATUS_NOT_OK)
-        self.summary = STATUS_NOT_OK
+        self.summary = HealthChecker.STATUS_NOT_OK
 
     def set_object_ok(self, object_type, object_name):
         self.add_info(object_name, self.INFO_FIELD_OBJECT_TYPE, object_type)
