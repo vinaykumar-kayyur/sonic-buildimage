@@ -4,6 +4,7 @@ from functools import partial
 import jinja2
 import netaddr
 
+from .log import log_err
 
 class TemplateFabric(object):
     """ Fabric for rendering jinja2 templates """
@@ -97,12 +98,11 @@ class TemplateFabric(object):
             intf, ip_address = key
             if '/' not in ip_address:
                 if TemplateFabric.is_ipv4(ip_address):
-                    new_ip_address = "%s/32" % ip_address
+                    table[(intf, "%s/32" % ip_address)] = val
                 elif TemplateFabric.is_ipv6(ip_address):
-                    new_ip_address = "%s/128" % ip_address
+                    table[(intf, "%s/128" % ip_address)] = val
                 else:
-                    raise ValueError("'%s' is invalid ip address" % ip_address)
-                table[(intf, new_ip_address)] = val
+                    log_err("'%s' is invalid ip address" % ip_address)
             else:
                 table[key] = val
         return table

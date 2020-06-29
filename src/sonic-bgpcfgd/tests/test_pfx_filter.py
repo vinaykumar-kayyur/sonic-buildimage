@@ -1,5 +1,7 @@
 from app.template import TemplateFabric
 from collections import OrderedDict
+import pytest
+
 
 def test_pfx_filter_none():
     res = TemplateFabric.pfx_filter(None)
@@ -126,12 +128,12 @@ def test_pfx_filter_pfx_comprehensive():
     res = TemplateFabric.pfx_filter(src)
     assert res == expected
 
-def test_pfx_filter_pfx_exception():
+@pytest.fixture
+def test_pfx_filter_wrong_ip(caplog):
     src = {
-        ('Loopback0', '23asef45'): {},
+        ('Loopback0', 'wrong_ip'): {},
     }
-    try:
-        res = TemplateFabric.pfx_filter(src)
-        assert False, "Exception wasn't raised"
-    except ValueError as e:
-        assert str(e) == "'23asef45' is invalid ip address"
+    res = TemplateFabric.pfx_filter(src)
+    assert "'wrong_ip' is invalid ip address" in caplog.text
+    assert isinstance(res, OrderedDict) and len(res) == 0
+
