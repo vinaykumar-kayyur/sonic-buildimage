@@ -11,7 +11,7 @@ supervisorctl start rsyslogd
 
 mkdir -p /etc/sai.d/
 
-# Create/Copy the sai.profile to /etc/sai.d/sai.profile
+# Create/Copy the pai.profile to /etc/sai.d/pai.profile
 if [ -f $HWSKU_DIR/pai.profile.j2 ]; then
     sonic-cfggen -d -t $HWSKU_DIR/pai.profile.j2 > /etc/sai.d/pai.profile
 else
@@ -20,7 +20,7 @@ else
     fi
 fi
 
-# Create/Copy the gearbox configs to /etc/sai.d/sai.profile
+# Create/Copy the gearbox configs to /etc/sai.d
 if [[ x"$sonic_asic_platform" == x"broadcom" ]]; then
     if [ -d $HWSKU_DIR/gearbox ]; then
         cp $HWSKU_DIR/gearbox/*.bcm /etc/sai.d/.
