@@ -400,14 +400,15 @@ set /files/etc/sysctl.conf/vm.panic_on_oom 2
 set /files/etc/sysctl.conf/fs.suid_dumpable 2
 " -r $FILESYSTEM_ROOT
 
+sysctl_net_cmd_string=""
 while read line; do
   [[ "$line" =~ ^#.*$ ]] && continue
   sysctl_net_conf_key=`echo $line | awk -F '=' '{print $1}'`
   sysctl_net_conf_value=`echo $line | awk -F '=' '{print $2}'`
-  sudo augtool --autosave "
-  set /files/etc/sysctl.conf/$sysctl_net_conf_key $sysctl_net_conf_value
-  " -r $FILESYSTEM_ROOT
-done<files/image_config/sysctl/sysctl-net.conf
+  sysctl_net_cmd_string=$sysctl_net_cmd_string"set /files/etc/sysctl.conf/$sysctl_net_conf_key $sysctl_net_conf_value"$'\n'
+done < files/image_config/sysctl/sysctl-net.conf
+
+sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
 ## docker Python API package is needed by Ansible docker module
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'docker==4.1.0'
