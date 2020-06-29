@@ -124,6 +124,18 @@ class YangModelTesting:
             'INCORRECT_VLAN_NAME': {
                 'desc': 'INCORRECT VLAN_NAME FIELD IN VLAN TABLE.',
                 'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'ACL_TABLE_MANDATORY_TYPE': {
+                'desc': 'ACL_TABLE MANDATORY TYPE FIELD.',
+                'eStr': self.defaultYANGFailure['Mandatory'] + ['type'] + ['ACL_TABLE']
+            },
+            'ACL_TABLE_DEFAULT_VALUE_STAGE': {
+                'desc': 'ACL_TABLE DEFAULT VALUE FOR STAGE FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': "/sonic-acl:sonic-acl/ACL_TABLE/ACL_TABLE_LIST[ACL_TABLE_NAME='NO-NSW-PACL-V4']/stage",
+                    'key': 'sonic-acl:stage',
+                    'value': 'INGRESS'
+                }
             }
         }
 
@@ -216,12 +228,34 @@ class YangModelTesting:
 
     """
         Load Config Data and return Exception as String
+
+        Parameters:
+            jInput (dict): input config to load.
+            verify (dict): contains xpath, key and value. This is used to verify,
+            that node tree at xpath contains correct key and value.
+            Example:
+            'verify': {'xpath': "/sonic-acl:sonic-acl/ACL_TABLE/ACL_TABLE_LIST\
+                        [ACL_TABLE_NAME='NO-NSW-PACL-V4']/stage",
+                        'key': 'sonic-acl:stage',
+                        'value': 'INGRESS'
+            }
     """
-    def loadConfigData(self, jInput):
+    def loadConfigData(self, jInput, verify=None):
         s = ""
         try:
             node = self.ctx.parse_data_mem(jInput, ly.LYD_JSON, \
             ly.LYD_OPT_CONFIG | ly.LYD_OPT_STRICT)
+            # verify the data tree if asked
+            if verify is not None:
+                xpath = verify['xpath']
+                set = node.find_path(xpath)
+                for dnode in set.data():
+                    if (xpath == dnode.path()):
+                        data = dnode.print_mem(ly.LYD_JSON, ly.LYP_WITHSIBLINGS \
+                            | ly.LYP_FORMAT | ly.LYP_WD_ALL)
+                        data = json.loads(data)
+                        assert (data[verify['key']] == verify['value'])
+                        s = 'verified'
         except Exception as e:
             s = str(e)
             log.debug(s)
@@ -236,7 +270,7 @@ class YangModelTesting:
             self.logStartTest(desc)
             jInput = self.readJsonInput(test)
             # load the data, expect a exception with must condition failure
-            s = self.loadConfigData(jInput)
+            s = self.loadConfigData(jInput, self.ExceptionTests[test].get('verify'))
             eStr = self.ExceptionTests[test]['eStr']
             log.debug(eStr)
             if len(eStr) == 0 and s != "":
