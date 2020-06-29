@@ -359,7 +359,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable pcie-check.timer
 # Copy pcie-check service files
 sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "pcie-check.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/pcie-check.sh $FILESYSTEM_ROOT/usr/bin/
+sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy systemd timer configuration
 # It implements delayed start of services
