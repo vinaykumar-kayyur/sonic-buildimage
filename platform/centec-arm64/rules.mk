@@ -5,6 +5,7 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/docker-ptf-centec.mk
 include $(PLATFORM_PATH)/linux-kernel-arm64.mk
+include $(PLATFORM_PATH)/tsingma-bsp.mk
 include $(PLATFORM_PATH)/platform-modules-centec-e530.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \

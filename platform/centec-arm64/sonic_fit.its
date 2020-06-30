@@ -12,7 +12,7 @@
 	images {
 		kernel_ctc {
 			description = "ARM64 Kernel";			
-			data = /incbin/("./vmlinuz-4.19.0-6-arm64");
+			data = /incbin/("./vmlinuz-4.19.0-6-2-arm64");
 			type = "kernel";			
 			arch = "arm64";			
 			os = "linux";			
@@ -25,11 +25,11 @@
 		};
 		initramfs {
 			description = "initramfs";
-			data = /incbin/("./initramfs.lzma");
+			data = /incbin/("./initrd.img-4.19.0-6-2-arm64");
 			type = "ramdisk";
 			arch = "arm64";
 			os = "linux";
-			compression = "lzma";
+			compression = "gzip";
 			load = <0x85000000>;
 			entry = <0x85000000>;
 			hash {				
