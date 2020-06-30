@@ -376,11 +376,11 @@ class ControlPlaneAclManager(object):
                     for ip_protocol in ip_protocols:
                         for dst_port in dst_ports:
                             rule_cmd = "ip6tables" if table_ip_version == 6 else "iptables"
-                            if ip_protocol != "any":
-                                rule_cmd += " -A INPUT -p {}".format(ip_protocol)
-                            else:
-                                rule_cmd += " -A INPUT "
 
+                            rule_cmd += " -A INPUT"
+                            if ip_protocol != "any":
+                                rule_cmd += " -p {}".format(ip_protocol)
+ 
                             if "SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IPV6"])
                             elif "SRC_IP" in rule_props and rule_props["SRC_IP"]:
