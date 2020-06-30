@@ -156,6 +156,34 @@ class Fan(FanBase):
 
     #     return False
 
+    def get_status_led(self):
+        """
+        Gets the state of the fan status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+
+        Note:
+            STATUS_LED_COLOR_GREEN = "green"
+            STATUS_LED_COLOR_AMBER = "amber"
+            STATUS_LED_COLOR_RED = "red"
+            STATUS_LED_COLOR_OFF = "off"
+        """
+
+        status_led = self.STATUS_LED_COLOR_OFF
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+
+        if self.is_psu_fan:
+            # Not support
+            return self.STATUS_LED_COLOR_OFF
+        elif self.get_presence():
+            if config.get('oper_type') == Common.OPER_IMPI:
+                full_cmd = config['template'].format(config['command'][self.fan_index])
+                status, result = self._api_common.run_command(full_cmd)
+                status_led = eval(config['formula'].format(result))
+
+        return status_led
+
     # def set_status_led(self, color):
     #     """
     #     Sets the state of the fan module status LED
