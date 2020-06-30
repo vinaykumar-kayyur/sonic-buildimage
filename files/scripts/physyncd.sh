@@ -90,41 +90,6 @@ start() {
         rm -f /host/warmboot/warm-starting
     fi
 
-    # platform specific tasks
-
-    # start mellanox drivers regardless of
-    # boot type
-    if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
-        BOOT_TYPE=`getBootType`
-        if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
-            export FAST_BOOT=1
-        fi
-
-        if [[ x"$WARM_BOOT" != x"true" ]]; then
-            if [[ x"$(/bin/systemctl is-active pmon)" == x"active" ]]; then
-                /bin/systemctl stop pmon
-                /usr/bin/hw-management.sh chipdown
-                /bin/systemctl restart pmon
-            else
-                /usr/bin/hw-management.sh chipdown
-            fi
-        fi
-
-        if [[ x"$BOOT_TYPE" == x"fast" ]]; then
-            /usr/bin/hw-management.sh chipupdis
-        fi
-
-        /usr/bin/mst start
-        /usr/bin/mlnx-fw-upgrade.sh
-        /etc/init.d/sxdkernel start
-    fi
-
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
-        if [ x$sonic_asic_platform == x'cavium' ]; then
-            /etc/init.d/xpnet.sh start
-        fi
-    fi
-
     # start service docker
     /usr/bin/${SERVICE}.sh start
     debug "Started ${SERVICE} service..."
@@ -149,7 +114,7 @@ stop() {
         TYPE=cold
     fi
 
-    if [[ x$sonic_asic_platform != x"mellanox" ]] || [[ x$TYPE != x"cold" ]]; then
+    if [[ x$TYPE != x"cold" ]]; then
         debug "${TYPE} shutdown physyncd process ..."
         /usr/bin/docker exec -i physyncd /usr/bin/syncd_request_shutdown --${TYPE}
 
@@ -164,18 +129,6 @@ stop() {
 
     /usr/bin/${SERVICE}.sh stop
     debug "Stopped ${SERVICE} service..."
-
-    # platform specific tasks
-
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
-        if [ x$sonic_asic_platform == x'mellanox' ]; then
-            /etc/init.d/sxdkernel stop
-            /usr/bin/mst stop
-        elif [ x$sonic_asic_platform == x'cavium' ]; then
-            /etc/init.d/xpnet.sh stop
-            /etc/init.d/xpnet.sh start
-        fi
-    fi
 
     unlock_service_state_change
 }
