@@ -1,13 +1,14 @@
-From a481a4192aefa72467dfffa36caf85fbd3a30ab1 Mon Sep 17 00:00:00 2001
+From c10de63067eb977253370616deedcfcdf480c0d9 Mon Sep 17 00:00:00 2001
 From: Venkatesan Mahalingam <venkatesan_mahalinga@dell.com>
-Date: Sat, 2 May 2020 14:21:24 -0700
-Subject: [PATCH] Add support for source ip address
+Date: Mon, 29 Jun 2020 23:40:09 -0700
+Subject: [PATCH] Addressed the review comments.
 
+Signed-off-by: Venkatesan Mahalingam <venkatesan_mahalinga@dell.com>
 ---
  pam_tacplus.c |  8 ++++----
- support.c     | 31 +++++++++++++++++++++++++++++++
+ support.c     | 30 ++++++++++++++++++++++++++++++
  support.h     |  1 +
- 3 files changed, 36 insertions(+), 4 deletions(-)
+ 3 files changed, 35 insertions(+), 4 deletions(-)
 
 diff --git a/pam_tacplus.c b/pam_tacplus.c
 index 38e2a70..ec8ea27 100644
@@ -50,7 +51,7 @@ index 38e2a70..ec8ea27 100644
              _pam_log(LOG_ERR, "connection failed srv %d: %m", srv_i);
              continue;
 diff --git a/support.c b/support.c
-index 7c00618..96c24c3 100644
+index 7c00618..55ff6e3 100644
 --- a/support.c
 +++ b/support.c
 @@ -37,6 +37,8 @@ char tac_service[64];
@@ -62,7 +63,19 @@ index 7c00618..96c24c3 100644
  
  void _pam_log(int err, const char *format,...) {
      char msg[256];
-@@ -274,6 +276,10 @@ int _pam_parse (int argc, const char **argv) {
+@@ -184,6 +186,11 @@ int _pam_parse (int argc, const char **argv) {
+     tac_prompt[0] = 0;
+     tac_login[0] = 0;
+ 
++    if (tac_source_addr != NULL) {
++        freeaddrinfo(tac_source_addr);
++        tac_source_addr = NULL;            
++    }
++
+     for (ctrl = 0; argc-- > 0; ++argv) {
+         if (!strcmp (*argv, "debug")) { /* all */
+             ctrl |= PAM_TAC_DEBUG;
+@@ -274,6 +281,10 @@ int _pam_parse (int argc, const char **argv) {
              }
          } else if(!strncmp(*argv, "vrf=", 4)) {
              __vrfname = strdup(*argv + 4);
@@ -73,7 +86,7 @@ index 7c00618..96c24c3 100644
          } else {
              _pam_log (LOG_WARNING, "unrecognized option: %s", *argv);
          }
-@@ -292,8 +298,33 @@ int _pam_parse (int argc, const char **argv) {
+@@ -292,8 +303,27 @@ int _pam_parse (int argc, const char **argv) {
          _pam_log(LOG_DEBUG, "tac_protocol='%s'", tac_protocol);
          _pam_log(LOG_DEBUG, "tac_prompt='%s'", tac_prompt);
          _pam_log(LOG_DEBUG, "tac_login='%s'", tac_login);
@@ -85,26 +98,20 @@ index 7c00618..96c24c3 100644
  
 +/* set source ip address for the outgoing tacacs packets */
 +void set_source_ip(const char *tac_source_ip,
-+    struct addrinfo **source_address) {
++                   struct addrinfo **source_address) {
 +
 +    struct addrinfo hints;
 +    int rv;
 +
-+    /* check if source address is configured */
-+    if (*tac_source_ip == 0)
-+        return;
-+
 +    /* set the source ip address for the tacacs packets */
-+    if (tac_source_ip != NULL) {
-+        memset(&hints, 0, sizeof(hints));
-+        hints.ai_family = AF_UNSPEC;
-+        hints.ai_socktype = SOCK_STREAM;
-+        if ((rv = getaddrinfo(tac_source_ip, NULL, &hints,
-+             source_address)) != 0) {
-+            _pam_log(LOG_ERR, "error setting the source ip information");
-+        } else {
-+            _pam_log(LOG_DEBUG, "source ip is set");
-+        }
++    memset(&hints, 0, sizeof(hints));
++    hints.ai_family = AF_UNSPEC;
++    hints.ai_socktype = SOCK_STREAM;
++    if ((rv = getaddrinfo(tac_source_ip, NULL, &hints,
++                          source_address)) != 0) {
++        _pam_log(LOG_ERR, "error setting the source ip information");
++    } else {
++        _pam_log(LOG_DEBUG, "source ip is set");
 +    }
 +}
 diff --git a/support.h b/support.h
