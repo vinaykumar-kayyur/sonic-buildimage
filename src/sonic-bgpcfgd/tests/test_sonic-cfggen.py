@@ -10,8 +10,19 @@ TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 DATA_PATH = "tests/data/sonic-cfggen/"
 CONSTANTS_PATH = os.path.abspath('../../files/image_config/constants/constants.yml')
 
+def run_cmd(cmd):
+    p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.returncode == 0, "cmd '%s' returned %d code. stderr='%s'" % (" ".join(cmd), p.returncode, stderr)
+    return stdout
+
+def remove_python_jinja2():
+    out = run_cmd(["dpkg", "-l"])
+    if 'python-jinja2' in out:
+        out = run_cmd(["dpkg", "-P", "python-jinja2"])
 
 def run_test(name, template_path, json_path, match_path):
+    remove_python_jinja2()
     template_path = os.path.join(TEMPLATE_PATH, template_path)
     json_path = os.path.join(DATA_PATH, json_path)
     cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
