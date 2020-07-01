@@ -18,6 +18,8 @@ remove_python_api_package() {
 
 
 if [[ "$1" == "init" ]]; then
+
+    pericom="/sys/bus/pci/devices/0000:08:00.0/"
     modprobe i2c-dev
     modprobe i2c-mux-pca954x force_deselect_on_exit=1
     modprobe dell_ich
@@ -26,17 +28,9 @@ if [[ "$1" == "init" ]]; then
     modprobe nvram
     systemctl start s6100-reboot-cause.service
 
-    # Disable Xilinx/pericom chipset
-    bios_version=$(dmidecode -s system-version | cut -d "-" -f2)
-
-    if [[ $bios_version -gt 5 ]] ; then
-        # Pericom is disabled in BIOS. Disable only Xilinx
-        echo 1 > /sys/bus/pci/devices/0000:02:00.0/remove
-    else
-        # Disable pericom/xilinx
-        echo 1 > /sys/bus/pci/devices/0000:02:00.0/remove
-        echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
-    fi
+    # Disable pericom/xilinx
+    echo 1 > /sys/bus/pci/devices/0000:02:00.0/remove
+    [ -d $pericom ] &&  echo 1 > /sys/bus/pci/devices/0000:08:00.0/remove
 
     # Disable Watchdog Timer
     if [[ -e /usr/local/bin/platform_watchdog_disable.sh ]]; then
