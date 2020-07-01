@@ -12,6 +12,7 @@ from mmap import *
 
 CONFIG_PATH = '/usr/share/sonic/device/{}/sonic_platform_config'
 
+
 class Common:
 
     NULL_VAL = 'N/A'
@@ -21,6 +22,7 @@ class Common:
     OPER_FIXED = 'fixed'
 
     def __init__(self):
+
         (self.platform, self.hwsku) = DaemonBase().get_platform_and_hwsku()
 
     def get_config_path(self):
@@ -35,18 +37,55 @@ class Common:
         return json_data
 
     def run_command(self, cmd):
-        status = True
+        status = False
         result = ""
         try:
             p = subprocess.Popen(
                 cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             raw_data, err = p.communicate()
             if err == '':
-                result = raw_data.strip()
+                status, result = True, raw_data.strip()
         except Exception as e:
             print(e)
             status = False
         return status, result
+
+    def get_val(self, index, config, default_val):
+        ret_val = default_val
+
+        if config.get('oper_type') == Common.OPER_IMPI:
+            status, result = self.ipmi_get(index, config)
+            ret_val = result if status else ret_val
+        elif config.get('oper_type') == Common.OPER_FIXED:
+            ret_val = config["value"]
+        elif config.get('oper_type') == Common.OPER_FIXED_LIST:
+            ret_val = config["value"][index]
+
+        return ret_val
+
+    def set_val(self, index, input, config):
+        ret_val = False
+        if config.get('oper_type') == Common.OPER_IMPI:
+            transformed_input = eval(config['input_transform'].format(input))
+            ret_val, result = self.ipmi_set(index, transformed_input, config)
+        return ret_val
+
+    def ipmi_get(self, index, config):
+        cmd = config['command'][index]
+        full_cmd = config['command_template'].format(config['command'][index])
+        status, result = self.run_command(full_cmd)
+        if config.get('output_transform'):
+            ret_val = config['output_transform'].get(
+                result, config['default_output'])
+        else:
+            ret_val = eval(config['formula'].format(result))
+        return status, ret_val
+
+    def ipmi_set(self, index, input, config):
+        cmd = config['command'][index].format(input)
+        full_cmd = config['command_template'].format(cmd)
+        status, ret_val = self.run_command(full_cmd)
+        return status, ret_val
 
     # def is_host(self):
     #     return os.system(HOST_CHK_CMD) == 0
@@ -63,8 +102,6 @@ class Common:
     #     except:
     #         status = False
     #     return status, result
-
-
 
     # def run_interactive_command(self, cmd):
     #     try:

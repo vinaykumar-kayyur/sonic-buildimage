@@ -16,7 +16,7 @@
         },
         "get_presence": {
                 "oper_type": "ipmi",
-                "template": "ipmitool raw 0x3a 0x03 0x03 {}",
+                "command_template": "ipmitool raw 0x3a 0x03 0x03 {}",
                 "command": [
                         "0x00",
                         "0x00",
@@ -31,7 +31,7 @@
         },
         "get_model": {
                 "oper_type": "ipmi",
-                "template": "ipmitool fru list {} | grep 'Board Part Number'",
+                "command_template": "ipmitool fru list {} | grep 'Board Part Number'",
                 "command": [
                         "5",
                         "5",
@@ -46,7 +46,7 @@
         },
         "get_serial": {
                 "oper_type": "ipmi",
-                "template": "ipmitool fru list {} | grep 'Board Serial'",
+                "command_template": "ipmitool fru list {} | grep 'Board Serial'",
                 "command": [
                         "5",
                         "5",
@@ -62,7 +62,7 @@
         "get_status": {},
         "get_direction": {
                 "oper_type": "ipmi",
-                "template": "ipmitool fru list {} | grep 'F2B\\|B2F'",
+                "command_template": "ipmitool fru list {} | grep 'F2B\\|B2F'",
                 "command": [
                         "5",
                         "5",
@@ -77,7 +77,7 @@
         },
         "get_speed": {
                 "oper_type": "ipmi",
-                "template": "ipmitool raw 0x04 0x2d {}",
+                "command_template": "ipmitool raw 0x04 0x2d {}",
                 "command": [
                         "0x81",
                         "0x80",
@@ -102,24 +102,57 @@
         },
         "set_speed": {
                 "oper_type": "ipmi",
-                "template": "ipmitool 0x04 {}",
+                "input_transform": "hex(int({} * 255 / 100.0))",
+                "command_template": "ipmitool raw 0x3a 0x0c 0x00 0x03 {}",
                 "command": [
-                        "0x5 0x2 {}",
-                        "0x6 0x2 {}",
-                        "0x6 0x6 {}",
-                        "0x6 0x5 {}"
+                        "0x40 {}",
+                        "0x40 {}",
+                        "0x44 {}",
+                        "0x44 {}",
+                        "0x4c {}",
+                        "0x4c {}",
+                        "0x50 {}",
+                        "0x50 {}"
+                ]
+        },
+        "set_status_led": {
+                "oper_type": "ipmi",
+                "avaliable_input": [
+                        "off",
+                        "amber",
+                        "green"
                 ],
-                "formula": "{}/100*255"
+                "input_transform": "'0x1' if '{0}' == 'amber' else '0x2' if '{0}' == 'green' else '0x0'",
+                "command_template": "ipmitool raw 0x3a 0x0a {}",
+                "command": [
+                        "0x4 {}",
+                        "0x4 {}",
+                        "0x5 {}",
+                        "0x5 {}",
+                        "0x6 {}",
+                        "0x6 {}",
+                        "0x7 {}",
+                        "0x7 {}"
+                ]
         },
         "get_status_led": {
                 "oper_type": "ipmi",
-                "template": "ipmitool 0x04 {}",
+                "command_template": "ipmitool raw 0x3a 0x0b {}",
                 "command": [
-                        "0x5 0x2",
-                        "0x6 0x2",
-                        "0x6 0x6",
-                        "0x6 0x5"
+                        "0x4",
+                        "0x4",
+                        "0x5",
+                        "0x5",
+                        "0x6",
+                        "0x6",
+                        "0x7",
+                        "0x7"
                 ],
-                "formula": "'red' if {} == '0x00' else 'green'"
+                "output_transform": {
+                        "00": "off",
+                        "01": "amber",
+                        "02": "green"
+                },
+                "default_output": "off"
         }
 }

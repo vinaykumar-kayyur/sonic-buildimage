@@ -34,8 +34,8 @@ class Fan(FanBase):
         self._name = self.get_name()
         self._is_psu_fan = is_psu_fan
 
-        # self.is_psu_fan = is_psu_fan
-        # if self.is_psu_fan:
+        # self._is_psu_fan = is_psu_fan
+        # if self._is_psu_fan:
         #     self.psu_index = psu_index
         #     self.psu_i2c_num = PSU_I2C_MAPPING[self.psu_index]["num"]
         #     self.psu_i2c_addr = PSU_I2C_MAPPING[self.psu_index]["addr"]
@@ -49,19 +49,10 @@ class Fan(FanBase):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
-        direction = self.FAN_DIRECTION_NOT_APPLICABLE
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            cmd = config['command'][self.fan_index]
-            full_cmd = config['template'].format(
-                config['command'][self.fan_index])
-            status, result = self._api_common.run_command(full_cmd)
-            direction = eval(config['formula'].format(
-                result)) if status else direction
-
-        return direction
+        default = self.FAN_DIRECTION_NOT_APPLICABLE
+        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
 
     def get_speed(self):
         """
@@ -73,24 +64,21 @@ class Fan(FanBase):
         Note:
             speed = pwm_in/255*100
         """
-        speed = 0
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
+        ret_val = 0
 
         if self._is_psu_fan:
-            pass
-        elif self.get_presence():
-            if config.get('oper_type') == Common.OPER_IMPI:
-                max_rpm = config['max_rear'] if 'R' in self._name else config['max_front']
-                cmd = config['command'][self.fan_index]
-                full_cmd = config['template'].format(
-                    config['command'][self.fan_index])
-                status, result = self._api_common.run_command(full_cmd)
-                speed_raw = eval(config['formula'].format(
-                    result)) if status else speed
-                speed = float(speed_raw) / max_rpm * 100.0
+            return ret_val
 
-        return int(speed)
+        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
+            status, result = self._api_common.ipmi_get(self.fan_index, config)
+            raw_val = result if status else ret_val
+
+            max_rpm = config['max_rear'] if 'R' in self._name else config['max_front']
+            ret_val = float(raw_val) / max_rpm * 100.0
+
+        return int(ret_val)
 
     def get_target_speed(self):
         """
@@ -103,14 +91,11 @@ class Fan(FanBase):
             0   : when PWM mode is not in use
             pwm : when pwm mode is not use
         """
-        target_speed = Common.NULL_VAL
+        default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        if config.get('oper_type') == Common.OPER_FIXED:
-            target_speed = config["value"]
-
-        return target_speed
+        return self._api_common.get_val(self.fan_index, config, default)
 
     def get_speed_tolerance(self):
         """
@@ -119,42 +104,63 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        speed_tolerance = Common.NULL_VAL
+        default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        if config.get('oper_type') == Common.OPER_FIXED:
-            speed_tolerance = config["value"]
+        return self._api_common.get_val(self.fan_index, config, default)
 
-        return speed_tolerance
+    def set_speed(self, speed):
+        """
+        Sets the fan speed
+        Args:
+            speed: An integer, the percentage of full fan speed to set fan to,
+                   in the range 0 (off) to 100 (full speed)
+        Returns:
+            A boolean, True if speed is set successfully, False if not
 
-    # def set_speed(self, speed):
-    #     """
-    #     Sets the fan speed
-    #     Args:
-    #         speed: An integer, the percentage of full fan speed to set fan to,
-    #                in the range 0 (off) to 100 (full speed)
-    #     Returns:
-    #         A boolean, True if speed is set successfully, False if not
+        Note:
+            Depends on pwm or target mode is selected:
+            1) pwm = speed_pc * 255             <-- Currently use this mode.
+            2) target_pwm = speed_pc * 100 / 255
+             2.1) set pwm{}_enable to 3
 
-    #     Note:
-    #         Depends on pwm or target mode is selected:
-    #         1) pwm = speed_pc * 255             <-- Currently use this mode.
-    #         2) target_pwm = speed_pc * 100 / 255
-    #          2.1) set pwm{}_enable to 3
+        ipmitool raw 0x3a 0x0e 0x00 > enable auto fcs
+        ipmitool raw 0x3a 0x0e 0x01 > disable auto fcs
+        """
+        default = False
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
 
-    #     """
-    #     pwm = speed * 255 / 100
-    #     if not self.is_psu_fan and self.get_presence():
-    #         chip = self.emc2305_chip_mapping[self.fan_index]
-    #         device = chip['device']
-    #         fan_index = chip['index_map']
-    #         sysfs_path = "%s%s/%s" % (
-    #             EMC2305_PATH, device, EMC2305_FAN_PWM)
-    #         sysfs_path = sysfs_path.format(fan_index[self.drawer_index])
-    #         return self.__write_txt_file(sysfs_path, int(pwm))
+        if speed not in range(1, 101) or self._is_psu_fan:
+            return False
 
-    #     return False
+        return self._api_common.set_val(self.fan_index, speed, config) if self.get_presence() else default
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the fan module status LED
+        Args:
+            color: A string representing the color with which to set the
+                   fan module status LED
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+
+
+        Note: Required Manual Control LED mode ('ipmitool raw 0x3a 0x0f 0x2 0x0')
+        """
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+
+        default = False
+        avaliable_input = config.get('avaliable_input')
+        if avaliable_input and color not in avaliable_input:
+            return False
+
+        if self._is_psu_fan:
+            return default
+
+        return self._api_common.set_val(self.fan_index, color, config) if self.get_presence() else default
 
     def get_status_led(self):
         """
@@ -169,57 +175,14 @@ class Fan(FanBase):
             STATUS_LED_COLOR_OFF = "off"
         """
 
-        status_led = self.STATUS_LED_COLOR_OFF
+        default = self.STATUS_LED_COLOR_OFF
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        if self.is_psu_fan:
-            # Not support
-            return self.STATUS_LED_COLOR_OFF
-        elif self.get_presence():
-            if config.get('oper_type') == Common.OPER_IMPI:
-                full_cmd = config['template'].format(config['command'][self.fan_index])
-                status, result = self._api_common.run_command(full_cmd)
-                status_led = eval(config['formula'].format(result))
+        if self._is_psu_fan:
+            return default
 
-        return status_led
-
-    # def set_status_led(self, color):
-    #     """
-    #     Sets the state of the fan module status LED
-    #     Args:
-    #         color: A string representing the color with which to set the
-    #                fan module status LED
-    #     Returns:
-    #         bool: True if status LED state is set successfully, False if not
-    #     """
-    #     set_status_led = False
-    #     if not self.is_psu_fan:
-    #         s1, s2 = False, False
-    #         try:
-    #             if color == self.STATUS_LED_COLOR_GREEN:
-    #                 s1 = self.__set_gpio_value(
-    #                     self.dx010_fan_gpio[self.drawer_index+1]['color']['red'], 1)
-    #                 s2 = self.__set_gpio_value(
-    #                     self.dx010_fan_gpio[self.drawer_index+1]['color']['green'], 0)
-
-    #             elif color == self.STATUS_LED_COLOR_RED:
-    #                 s1 = self.__set_gpio_value(
-    #                     self.dx010_fan_gpio[self.drawer_index+1]['color']['red'], 0)
-    #                 s2 = self.__set_gpio_value(
-    #                     self.dx010_fan_gpio[self.drawer_index+1]['color']['green'], 1)
-
-    #             elif color == self.STATUS_LED_COLOR_OFF:
-    #                 s1 = self.__set_gpio_value(
-    #                     self.dx010_fan_gpio[self.drawer_index+1]['color']['red'], 1)
-    #                 s2 = self.__set_gpio_value(
-    #                     self.dx010_fan_gpio[self.drawer_index+1]['color']['green'], 1)
-    #             set_status_led = s1 and s2
-    #             return set_status_led
-    #         except IOError:
-    #             return False
-
-    #     return set_status_led
+        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
 
     def get_name(self):
         """
@@ -227,14 +190,11 @@ class Fan(FanBase):
             Returns:
             string: The name of the device
         """
-        name = Common.NULL_VAL
+        default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        if config.get('oper_type') == Common.OPER_FIXED_LIST:
-            name = config["value"][self.fan_index]
-
-        return name
+        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
 
     def get_presence(self):
         """
@@ -242,19 +202,15 @@ class Fan(FanBase):
         Returns:
             bool: True if FAN is present, False if not
         """
-        present = False
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
+        ret_val = False
 
         if config.get('oper_type') == Common.OPER_IMPI:
-            cmd = config['command'][self.fan_index]
-            full_cmd = config['template'].format(
-                config['command'][self.fan_index])
-            status, result = self._api_common.run_command(full_cmd)
-            present = eval(config['formula'].format(
-                result)) if status else present
+            status, result = self._api_common.ipmi_get(self.fan_index, config)
+            ret_val = result if status else ret_val
 
-        return present
+        return ret_val
 
     def get_model(self):
         """
@@ -262,19 +218,14 @@ class Fan(FanBase):
         Returns:
             string: Model/part number of device
         """
+        default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        model = Common.NULL_VAL
 
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            cmd = config['command'][self.fan_index]
-            full_cmd = config['template'].format(
-                config['command'][self.fan_index])
-            status, result = self._api_common.run_command(full_cmd)
-            model = eval(config['formula'].format(
-                result)) if status else model
+        if self._is_psu_fan:
+            return default
 
-        return model
+        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
 
     def get_serial(self):
         """
@@ -282,22 +233,14 @@ class Fan(FanBase):
         Returns:
             string: Serial number of device
         """
-        # if self.is_psu_fan:
-        #     return NULL_VAL
-
+        default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        serial = Common.NULL_VAL
 
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            cmd = config['command'][self.fan_index]
-            full_cmd = config['template'].format(
-                config['command'][self.fan_index])
-            status, result = self._api_common.run_command(full_cmd)
-            serial = eval(config['formula'].format(
-                result)) if status else serial
+        if self._is_psu_fan:
+            return default
 
-        return serial
+        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
 
     def get_status(self):
         """
