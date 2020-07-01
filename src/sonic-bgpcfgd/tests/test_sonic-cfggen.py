@@ -15,9 +15,8 @@ def run_test(name, template_path, json_path, match_path):
     template_path = os.path.join(TEMPLATE_PATH, template_path)
     json_path = os.path.join(DATA_PATH, json_path)
     cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
-    #"/usr/bin/env", "python",
     command = [cfggen, "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
-    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
+    p = subprocess.Popen(" ".join(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.returncode == 0, "sonic-cfggen for %s test returned %d code. stderr='%s'" % (name, p.returncode, stderr)
     raw_generated_result = stdout
