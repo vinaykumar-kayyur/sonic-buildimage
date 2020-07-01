@@ -8,21 +8,13 @@
 ! TSA configuration
 !
 ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
-{% if multi_npu()  == true %}
-  ip prefix-list PL_LoopbackV4 permit {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32
-{% endif %}
 !
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") != 'None' %}
 ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | replace('/128', '/64') | ip_network }}/64
 {% endif %}
-{% if multi_npu() == true %}
-{% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") != 'None' %}
-  ipv6 prefix-list PL_LoopbackV6 permit {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | replace('/128', '/64') | ip_network }}/64
-{% endif %}
-{% endif %}
 !
 !
-{% if multi_npu() == true %}
+{% if multi_npu() %}
 route-map HIDE_INTERNAL permit 10
   set community local-AS
 !
@@ -45,7 +37,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endif %}
 !
 {# set router-id #}
-{% if multi_npu()  == true %}
+{% if multi_npu() %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}
 {% else %}
   bgp router-id {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}
@@ -53,7 +45,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 !
 {# advertise loopback #}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/32
-{% if multi_npu() == true  %}
+{% if multi_npu()  %}
   network {{ get_ipv4_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/32 route-map HIDE_INTERNAL
 {% endif %}
 !
@@ -62,7 +54,7 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
     network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback0") | ip }}/64
   exit-address-family
 {% endif %}
-{% if multi_npu() == true %}
+{% if multi_npu() %}
 {% if get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") != 'None' %}
   address-family ipv6
     network {{ get_ipv6_loopback_address(LOOPBACK_INTERFACE, "Loopback4096") | ip }}/64 route-map HIDE_INTERNAL
