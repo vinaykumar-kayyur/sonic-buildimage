@@ -17,15 +17,6 @@ See usage string for detail description for arguments.
 
 from __future__ import print_function
 
-import os
-later = []
-new = []
-for d in os.environ["PYTHONPATH"].split(":"):
-    if d.startswith("/usr") and 'local' not in d:
-        later.append(d)
-    else:
-        new.append(d)
-os.environ["PYTHONPATH"] = ":".join(new + later)
 
 
 # monkey patch re.compile to do lazy regular expression compilation.
@@ -36,6 +27,9 @@ os.environ["PYTHONPATH"] = ":".join(new + later)
 # without lazy regular expression compilation affect boot up time.
 # FIXME: remove this once sonic-cfggen and templates dependencies are replaced with a faster approach
 import lazy_re
+
+import pkg_resources
+pkg_resources.require("jinja2>=2.10")
 
 import sys
 import os.path
