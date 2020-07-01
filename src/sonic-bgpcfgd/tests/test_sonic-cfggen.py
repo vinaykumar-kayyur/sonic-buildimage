@@ -19,7 +19,7 @@ def run_cmd(cmd):
 def remove_python_jinja2():
     out = run_cmd(["dpkg", "-l"])
     if 'python-jinja2' in out:
-        out = run_cmd(["dpkg", "-P", "python-jinja2"])
+        out = run_cmd(["sudo", "dpkg", "-P", "python-jinja2"])
 
 def run_test(name, template_path, json_path, match_path):
     remove_python_jinja2()
