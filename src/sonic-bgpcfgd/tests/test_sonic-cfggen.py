@@ -31,6 +31,8 @@ def run_test(name, template_path, json_path, match_path):
 
 
 def test_bgpd_main_conf_base():
+    import jinja2
+    assert False, jinja2.__version__
     run_test("Base bgpd.main.conf.j2",
              "bgpd/bgpd.main.conf.j2",
              "bgpd.main.conf.j2/base.json",

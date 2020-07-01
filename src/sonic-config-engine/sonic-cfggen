@@ -333,7 +333,6 @@ def main():
         for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
             env.filters[attr] = partial(prefix_attr, attr)
         template = env.get_template(template_file)
-        assert False, jinja2.__version__
         print(template.render(sort_data(data)))
 
     if args.var != None:
