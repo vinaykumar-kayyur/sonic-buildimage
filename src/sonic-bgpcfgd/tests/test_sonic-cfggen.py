@@ -16,7 +16,7 @@ def run_test(name, template_path, json_path, match_path):
     json_path = os.path.join(DATA_PATH, json_path)
     cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
     command = [cfggen, "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
-    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
     stdout, stderr = p.communicate()
     assert p.returncode == 0, "sonic-cfggen for %s test returned %d code. stderr='%s'" % (name, p.returncode, stderr)
     raw_generated_result = stdout
@@ -31,8 +31,6 @@ def run_test(name, template_path, json_path, match_path):
 
 
 def test_bgpd_main_conf_base():
-    import jinja2
-    assert False, jinja2.__version__
     run_test("Base bgpd.main.conf.j2",
              "bgpd/bgpd.main.conf.j2",
              "bgpd.main.conf.j2/base.json",
