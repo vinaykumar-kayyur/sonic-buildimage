@@ -27,6 +27,7 @@ from __future__ import print_function
 import lazy_re
 
 import sys
+import os
 import os.path
 import argparse
 import yaml
@@ -333,7 +334,6 @@ def main():
         for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
             env.filters[attr] = partial(prefix_attr, attr)
         template = env.get_template(template_file)
-        import os
         assert False, os.environ["PYTHONPATH"]
         print(template.render(sort_data(data)))
 
