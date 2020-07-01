@@ -37,7 +37,7 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian stretch main contrib non
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -t stretch-backports -y \
         apt-utils \
         default-jre-headless \
         openssh-server \
@@ -339,7 +339,6 @@ RUN pip install \
 
 # For sonic config engine testing
 RUN pip install pyangbind==0.6.0
-RUN pip install Jinja2==2.11.2
 
 # For templating
 RUN pip install j2cli==0.3.10
