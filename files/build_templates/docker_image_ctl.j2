@@ -74,7 +74,7 @@ function postStartAction()
 {
 {%- if docker_container_name == "database" %}
     if [ "$DEV" ]; then
-        docker exec -i database$DEV sysctl -p -e
+        docker exec -i database$DEV sysctl --system -e
         link_namespace $DEV
     fi
 
