@@ -31,6 +31,10 @@ def run_test(name, template_path, json_path, match_path):
 
 
 def test_bgpd_main_conf_base():
+    import jinja2
+    ver = jinja2.__version__
+    splitted_ver = ver.split('.')
+    assert int(splitted_ver[0]) >= 2 and int(splitted_ver[1]) >= 10
     run_test("Base bgpd.main.conf.j2",
              "bgpd/bgpd.main.conf.j2",
              "bgpd.main.conf.j2/base.json",
