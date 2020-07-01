@@ -327,7 +327,7 @@ def main():
         for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
             env.filters[attr] = partial(prefix_attr, attr)
         # Pass the is_multi_npu function as global
-        env.globals['multi_npu'] = is_multi_npu
+        env.globals['multi_asic'] = is_multi_npu
         template = env.get_template(template_file)
         print(template.render(sort_data(data)))
 
