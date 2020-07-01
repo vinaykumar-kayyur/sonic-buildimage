@@ -15,6 +15,7 @@ def run_test(name, template_path, json_path, match_path):
     template_path = os.path.join(TEMPLATE_PATH, template_path)
     json_path = os.path.join(DATA_PATH, json_path)
     cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
+    #"/usr/bin/env", "python",
     command = [cfggen, "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
     p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
     stdout, stderr = p.communicate()
@@ -31,6 +32,7 @@ def run_test(name, template_path, json_path, match_path):
 
 
 def test_bgpd_main_conf_base():
+    assert False, os.environ["PYTHONPATH"]
     run_test("Base bgpd.main.conf.j2",
              "bgpd/bgpd.main.conf.j2",
              "bgpd.main.conf.j2/base.json",
