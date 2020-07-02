@@ -7,8 +7,6 @@
 #
 #############################################################################
 
-import json
-import math
 import os.path
 
 try:
@@ -83,12 +81,10 @@ class PsuFan(FanBase):
 
         return self.FAN_DIRECTION_EXHAUST
 
-class Psu(PsuBase):
+class Alpha_Psu(PsuBase):
     """Platform-specific PSU class"""
-    psuled = None
     def __init__(self, psu_index):
         PsuBase.__init__(self)
-        self.psuled = None
         fan = PsuFan(psu_index)
         self._fan_list.append(fan)
         self.index = psu_index + 1
@@ -249,7 +245,7 @@ class Psu(PsuBase):
                 vout = int(v_out.read())
         except IOError:
             return 0
-        return float(vout / 1000)
+        return float(vout) / 1000
 
     def get_current(self):
         """
@@ -265,7 +261,7 @@ class Psu(PsuBase):
                 iout = int(i_out.read())
         except IOError:
             return 0
-        return float(iout / 1000)
+        return float(iout) / 1000
 
     def get_powergood_status(self):
         """
@@ -307,7 +303,9 @@ class Psu(PsuBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        return self.psuled.update_status()
+        from .platform import Chassis
+        psuled = Chassis.get_psuled()
+        return psuled.update_status()
 
     def get_status_led(self):
         """
@@ -316,4 +314,6 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        return self.psuled.get_status()
+        from .chassis import Chassis
+        psuled = Chassis.get_psuled()
+        return psuled.get_status()

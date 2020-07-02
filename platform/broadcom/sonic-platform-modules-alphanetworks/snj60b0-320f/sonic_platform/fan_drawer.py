@@ -11,7 +11,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
-class FanDrawer(FanDrawerBase):
+class Alpha_FanDrawer(FanDrawerBase):
     """
     Abstract base class for interfacing with a fan drawer
     """

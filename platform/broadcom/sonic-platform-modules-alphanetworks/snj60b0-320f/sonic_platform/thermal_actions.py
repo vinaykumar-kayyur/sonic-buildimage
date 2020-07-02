@@ -10,7 +10,7 @@ class SetFanSpeedAction(ThermalPolicyActionBase):
     """
     @classmethod
     def set_all_fan_speed(cls, thermal_info_dict, speed):
-        from sonic_platform.thermal_infos import FanInfo
+        from .thermal_infos import FanInfo
         if FanInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[FanInfo.INFO_NAME], FanInfo):
             fan_info_obj = thermal_info_dict[FanInfo.INFO_NAME]
             for fan in fan_info_obj.get_presence_fans():
@@ -59,7 +59,7 @@ class ThermalRecoverAction(SetFanSpeedAction):
         """
         default_speed = 50
         max_speed = 100
-        from sonic_platform.thermal_infos import ThermalInfo
+        from .thermal_infos import ThermalInfo
         if ThermalInfo.INFO_NAME in thermal_info_dict and isinstance(thermal_info_dict[ThermalInfo.INFO_NAME], ThermalInfo):
             thermal_info_obj = thermal_info_dict[ThermalInfo.INFO_NAME]
             if thermal_info_obj.is_warm_up_and_over_high_threshold():

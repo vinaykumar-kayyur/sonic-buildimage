@@ -8,20 +8,18 @@
 #############################################################################
 
 import sys
-import re
-import os
-import subprocess
 import json
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.fan_drawer import FanDrawer
-    from sonic_platform.fan import Fan
-    from sonic_platform.psu import Psu
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.component import Component
-    from sonic_platform.led import *
+    from .fan import Alpha_Fan as Fan
+    from .psu import Alpha_Psu as Psu
+    from .sfp import Alpha_Sfp as Sfp
+    from .thermal import Alpha_Thermal as Thermal
+    from .component import Alpha_Component as Component
+    from .fan_drawer import Alpha_FanDrawer as FanDrawer
+    from .led import Alpha_FanLed as FanLed
+    from .led import Alpha_PsuLed as PsuLed
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -32,6 +30,7 @@ SFP_STATUS_REMOVED = '0'
 NUM_THERMAL = 3
 NUM_FANDRAWER = 6
 NUM_FANSPERDRAWER = 2
+NUM_FAN = NUM_FANDRAWER * NUM_FANSPERDRAWER
 NUM_PSU = 2
 NUM_SFP = 34
 NUM_COMPONENT = 3
@@ -44,38 +43,49 @@ class Chassis(ChassisBase):
     # available on the chassis
     _sfp_list = None
 
+    # Leds
+    PSULED = None
+    FANLED = None
+
     def __init__(self):
         self._sfp_list = []
 
         ChassisBase.__init__(self)
+        # initialize thermals
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-        self.fanled = FanLed()
+
+        # initialize fans, fanled
+        Chassis.FANLED = FanLed()
         for index in range(0, NUM_FANDRAWER):
             fan_drawer = FanDrawer(index)
             for i in range(0, NUM_FANSPERDRAWER):
                 fan_index = NUM_FANSPERDRAWER * index + i
                 fan = Fan(fan_index)
-                fan.fanled = self.fanled
+                Chassis.FANLED.add_fan(fan)
                 fan_drawer._fan_list.append(fan)
                 self._fan_list.append(fan)
-                self.fanled._fan_list.append(fan)
             self._fan_drawer_list.append(fan_drawer)
-        self.fanled.update_status()
-        self.psuled = PsuLed()
+        Chassis.FANLED.update_status()
+
+        # initialize psus, psuled
+        Chassis.PSULED = PsuLed()
         for index in range(0, NUM_PSU):
             psu = Psu(index)
-            psu.psuled = self.psuled
             self._psu_list.append(psu)
-            self.psuled._psu_list.append(psu)
-        self.psuled.update_status()
+            Chassis.PSULED.add_psu(psu)
+        Chassis.PSULED.update_status()
+
+        # initialize sfps
         for index in range(0, NUM_SFP):
             if (index < 32):
                 sfp = Sfp(index, 'QSFP')
             else:
                 sfp = Sfp(index, 'SFP')
             self._sfp_list.append(sfp)
+
+        # initialize component
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
@@ -197,5 +207,13 @@ class Chassis(ChassisBase):
         return True, port_dict
 
     def get_thermal_manager(self):
-        from sonic_platform.thermal_manager import ThermalManager
+        from .thermal_manager import ThermalManager
         return ThermalManager
+
+    @classmethod
+    def get_psuled(cls):
+        return cls.PSULED
+
+    @classmethod
+    def get_fanled(cls):
+        return cls.FANLED

@@ -7,16 +7,12 @@
 #
 #############################################################################
 
-import json
-import math
-import os.path
-
 try:
     from sonic_platform_base.fan_base import FanBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-class Fan(FanBase):
+class Alpha_Fan(FanBase):
     """Platform-specific Fan class"""
 
     FAN_MOD_NAME = 'snj60b0_320f_fpga'
@@ -27,12 +23,10 @@ class Fan(FanBase):
     FANS_PERTRAY = 2
     BASE_VAL_PATH = '/sys/bus/i2c/devices/0-005e/{0}'
     FAN_DUTY_PATH = '/sys/bus/i2c/devices/0-005e/fan_pwm'
-    fanled = None
 
     def __init__(self, fan_index):
         self.index = fan_index + 1
         FanBase.__init__(self)
-        self.fanled = None
         
         self.fantray_index = (fan_index)/self.FANS_PERTRAY + 1
         self.fan_index_intray = self.index - ((self.fantray_index-1)*self.FANS_PERTRAY)
@@ -214,7 +208,9 @@ class Fan(FanBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        return self.fanled.update_status()
+        from .chassis import Chassis
+        fanled = Chassis.get_fanled()
+        return fanled.update_status()
 
     def get_status_led(self):
         """
@@ -223,4 +219,6 @@ class Fan(FanBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        return self.fanled.get_status()
+        from .chassis import Chassis
+        fanled = Chassis.get_fanled()
+        return fanled.get_status()

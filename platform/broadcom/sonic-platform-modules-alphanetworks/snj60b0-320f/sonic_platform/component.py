@@ -8,8 +8,6 @@
 #############################################################################
 
 try:
-    import sys, os
-    import subprocess
     from sonic_platform_base.component_base import ComponentBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -17,7 +15,7 @@ except ImportError as e:
 COMPONENT_NAME_LIST = ["CPLD1", "CPLD2", "CPLD3"]
 COMPONENT_DES_LIST = ["Main board cpld 1 (0x60)", "Main board cpld 2 (0x62)", "Main board cpld 3 (0x64)"]
 
-class Component(ComponentBase):
+class Alpha_Component(ComponentBase):
     """Platform-specific Component class"""
 
 

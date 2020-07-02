@@ -7,8 +7,6 @@
 #
 #############################################################################
 
-import json
-import math
 import glob
 import os.path
 
@@ -17,7 +15,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-class Thermal(ThermalBase):
+class Alpha_Thermal(ThermalBase):
     """Platform-specific Thermal class"""
 
     temp_node_map = {
@@ -40,13 +38,13 @@ class Thermal(ThermalBase):
         self.index = temp_index + 1
 
         if os.path.exists("/sys/bus/i2c/devices/3-004d/hwmon/") == False:
-            temp_node_map = {
+            self.temp_node_map = {
                 1: "/sys/bus/i2c/devices/0-004f/hwmon/",
                 2: "/sys/bus/i2c/devices/18-004d/hwmon/",
                 3: "/sys/bus/i2c/devices/19-004c/hwmon/"
             }
 
-            temp_name_map = {
+            self.temp_name_map = {
                 1: "lm75-i2c-0-004f",
                 2: "lm75-i2c-18-004d",
                 3: "lm75-i2c-19-004c"

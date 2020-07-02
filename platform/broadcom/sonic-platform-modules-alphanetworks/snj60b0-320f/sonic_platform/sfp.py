@@ -10,8 +10,6 @@
 try:
     import os.path
     import time
-    import syslog
-    from ctypes import create_string_buffer
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -42,7 +40,7 @@ XCVR_EXT_RATE_SEL_OFFSET = 13
 XCVR_EXT_RATE_SEL_WIDTH = 1
 XCVR_CABLE_LENGTH_OFFSET = 14
 XCVR_CABLE_LENGTH_WIDTH_QSFP = 5
-XCVR_CABLE_LENGTH_WIDTH_SFP = 6
+# XCVR_CABLE_LENGTH_WIDTH_SFP = 6
 XCVR_VENDOR_NAME_OFFSET = 20
 XCVR_VENDOR_NAME_WIDTH = 16
 XCVR_VENDOR_OUI_OFFSET = 37
@@ -140,7 +138,7 @@ SFP_PATH = "/sys/bus/i2c/devices/{0}-005f"
 SFPPLUS_PATH = "/sys/bus/i2c/devices/{0}-005e"
 SFPPLUS_EEPROM_PATH = "/sys/bus/i2c/devices/{0}-0050"
 
-class Sfp(SfpBase):
+class Alpha_Sfp(SfpBase):
     """Platform-specific Sfp class"""
     _port_start = 0
     _port_end = 34
@@ -189,7 +187,7 @@ class Sfp(SfpBase):
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
+        except Exception as e:
             pass
         finally:
             if sysfsfile_eeprom:
@@ -334,7 +332,7 @@ class Sfp(SfpBase):
             vendor_name_offset = OSFP_VENDOR_NAME_OFFSET
             vendor_pn_offset = OSFP_VENDOR_PN_OFFSET
             vendor_sn_offset = OSFP_VENDOR_SN_OFFSET
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
+            # cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
             sfp_type = 'OSFP'
 
@@ -347,7 +345,7 @@ class Sfp(SfpBase):
             vendor_name_offset = XCVR_VENDOR_NAME_OFFSET
             vendor_pn_offset = XCVR_VENDOR_PN_OFFSET
             vendor_sn_offset = XCVR_VENDOR_SN_OFFSET
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
+            # cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
             sfp_type = 'QSFP'
         else:
@@ -359,7 +357,7 @@ class Sfp(SfpBase):
             vendor_name_offset = XCVR_VENDOR_NAME_OFFSET
             vendor_pn_offset = XCVR_VENDOR_PN_OFFSET
             vendor_sn_offset = XCVR_VENDOR_SN_OFFSET
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
+            # cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
             sfp_type = 'SFP'
 
