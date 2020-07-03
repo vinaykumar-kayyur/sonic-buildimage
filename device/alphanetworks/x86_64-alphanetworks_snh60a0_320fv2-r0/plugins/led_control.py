@@ -13,6 +13,7 @@
 
 import time
 
+
 class LedControlBase(object):
 #    __metaclass__ = abc.ABCMeta
 
@@ -21,7 +22,7 @@ class LedControlBase(object):
         """
         Called when port link state changes. Update port link state LED here.
 
-        :param port: A string, SONiC port name (e.shg., "Ethernet0")
+        :param port: A string, SONiC port name (e.g., "Ethernet0")
         :param state: A string, the port link state (either "up" or "down")
         """
         return
@@ -240,6 +241,7 @@ class LedControl(LedControlBase):
             f.write("1")
         with open("/sys/bus/i2c/devices/9-005f/fan6_led", "w") as f:
             f.write("1")
+
         sysled_task()	
 
         # Initialize: Turn all front panel QSFP LEDs off

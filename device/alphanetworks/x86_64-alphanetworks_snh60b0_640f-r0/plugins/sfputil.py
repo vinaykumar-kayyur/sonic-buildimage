@@ -12,6 +12,7 @@ except ImportError, e:
 SFP_STATUS_INSERTED = '1'
 SFP_STATUS_REMOVED = '0'
 
+CPLD_PORT_NUM = 16
 class SfpUtil(SfpUtilBase):
     """Platform specific SfpUtill class"""
 
@@ -72,8 +73,8 @@ class SfpUtil(SfpUtilBase):
         port = self.port_start
 
         while (port >= self.port_start) and (port <= self.port_end):
-            i2c_index = (port / 16) + 1
-            index = (port % 16) + 1
+            i2c_index = (port / CPLD_PORT_NUM) + 1
+            index = (port % CPLD_PORT_NUM) + 1
             if i2c_index == 5:
                 path = self.present_path_1
             else:
@@ -140,8 +141,8 @@ class SfpUtil(SfpUtilBase):
             self.port_to_i2cbus_mapping = self.port_to_i2cbus_0
 
         for x in range(self.first_port, self.last_port + 1):
-            cpld_index = (x / 16) + 1
-            index = (x % 16) + 1
+            cpld_index = (x / CPLD_PORT_NUM) + 1
+            index = (x % CPLD_PORT_NUM) + 1
             if cpld_index == 5:
                 path = self.eeprom_path_1
             else:
@@ -154,8 +155,8 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.first_port or port_num > self.last_port:
             return False
 
-        cpld_index = (port_num / 16) + 1
-        index = (port_num % 16) + 1
+        cpld_index = (port_num / CPLD_PORT_NUM) + 1
+        index = (port_num % CPLD_PORT_NUM) + 1
         if cpld_index == 5:
             path = self.port_reset_path_1
         else:
@@ -184,8 +185,8 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.first_port or port_num > self.last_port:
             return False
 
-        cpld_index = (port_num / 16) + 1
-        index = (port_num % 16) + 1
+        cpld_index = (port_num / CPLD_PORT_NUM) + 1
+        index = (port_num % CPLD_PORT_NUM) + 1
         if cpld_index == 5:
             raise NotImplementedError
         else:
@@ -212,8 +213,8 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.first_port or port_num > self.last_port:
             return False
 
-        cpld_index = (port_num / 16) + 1
-        index = (port_num % 16) + 1
+        cpld_index = (port_num / CPLD_PORT_NUM) + 1
+        index = (port_num % CPLD_PORT_NUM) + 1
         if cpld_index == 5:
             return False
         else:
@@ -241,8 +242,8 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        cpld_index = (port_num / 16) + 1
-        index = (port_num % 16) + 1
+        cpld_index = (port_num / CPLD_PORT_NUM) + 1
+        index = (port_num % CPLD_PORT_NUM) + 1
         if cpld_index == 5:
             path = self.present_path_1
         else:
