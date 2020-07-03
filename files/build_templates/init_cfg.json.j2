@@ -29,9 +29,9 @@
                       "snmp", "swss", "syncd", "teamd", "telemetry"] %}
         "{{container}}": {
             {% if container == "database" %}
-                "auto_restart": "disabled",
+            "auto_restart": "disabled",
             {% else %}
-                "auto_restart": "enabled",
+            "auto_restart": "enabled",
             {% endif -%}
             "high_mem_alert": "disabled"
         }{% if not loop.last %},{% endif -%}
