@@ -5,7 +5,7 @@ VERBOSE="no"
 RESULTS="PCIe Device Checking All Test"
 PCIE_CHK_CMD=`sudo pcieutil pcie-check |grep "$RESULTS"`
 EXPECTED="PCIe Device Checking All Test ----------->>> PASSED"
-MAX_RESCAN=15
+MAX_WAIT_TIMEOUT=15
 
 function debug()
 {
@@ -23,18 +23,35 @@ function check_and_rescan_pcie_devices()
         exit
     fi
 
-    for i in $(seq 1 1 $MAX_RESCAN)
+    begin=$SECONDS
+    end=`expr $begin + $MAX_WAIT_TIMEOUT`
+    rescan_time=$((MAX_WAIT_TIMEOUT/2))
+    rescan_time=`expr $begin + $rescan_time`
+
+    while true
     do
+	now=$SECONDS
+	if [[ $now -gt $end ]]; then
+            break
+	fi
+
         if [ "$PCIE_CHK_CMD" = "$EXPECTED" ]; then
             redis-cli -n 6 SET "PCIE_STATUS|PCIE_DEVICES" "PASSED"
             debug "PCIe check passed"
             exit
         else
+            debug "sleep 0.1 seconds"
+            sleep 0.1
+        fi
+
+        if [ $now -gt $rescan_time ]; then
             debug "PCIe check failed, try pci bus rescan"
             echo 1 > /sys/bus/pci/rescan
-         fi
-         sleep 1
+            rescan_time=$end
+        fi
+
      done
+     debug "PCIe check failed"
      redis-cli -n 6 SET "PCIE_STATUS|PCIE_DEVICES" "FAILED"
 }
 
