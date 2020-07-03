@@ -28,7 +28,7 @@
 {%- for container in ["bgp", "database", "dhcp_relay", "lldp", "nat", "pmon", "radv", "restapi", "sflow",
                       "snmp", "swss", "syncd", "teamd", "telemetry"] %}
         "{{container}}": {
-            {% if container == "database" %}
+            {%- if container == "database" %}
             "auto_restart": "disabled",
             {% else %}
             "auto_restart": "enabled",
