@@ -11,8 +11,25 @@
 #
 # By default this script does nothing.
 
-SONIC_VERSION=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version)
+# read SONiC immutable variables
+[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
+SONIC_VERSION=${SONIC_VERSION:-`sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version`}
 FIRST_BOOT_FILE="/host/image-${SONIC_VERSION}/platform/firsttime"
+
+# SONIC_PLATFORM=$(sonic-cfggen -H -v 'DEVICE_METADATA.localhost.platform')
+# PLATFORM_HWSKU=$(sonic-cfggen -d -v 'DEVICE_METADATA.localhost.hwsku')
+# 
+# # Generate immutable SONiC configuration file that export those configs as envvar
+# sudo touch /etc/profile.d/sonic_config.sh
+# sudo tee /etc/profile.d/sonic_config.sh > /dev/null <<EOF
+# #!/bin/bash
+# 
+# export SONIC_VERSION=${SONIC_VERSION}
+# export SONIC_PLATFORM=${SONIC_PLATFORM}
+# export PLATFORM_HWSKU=${PLATFORM_HWSKU}
+# EOF
+# sudo chmod +x /etc/profile.d/sonic_config.sh
 
 # In case the unit is migrating from another NOS, save the logs
 log_migration() {

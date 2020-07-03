@@ -110,21 +110,32 @@ class DaemonBase(object):
     # Returns platform and hwsku
     def get_platform_and_hwsku(self):
         try:
-            proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
-                                    stdout=subprocess.PIPE,
-                                    shell=False,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            platform = stdout.rstrip('\n')
+            platform = hwsku =None
+            if os.path.exists("/etc/sonic/sonic-environment"):
+                with open("/etc/sonic/sonic-environment", "r") as env_file:
+                    for line in env_file:
+                        if "PLATFORM" in line:
+                            platform = line.split('=')[1]
+                        if "HWSKU" in line:
+                            hwsku = line.split('=')[1]
 
-            proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
-                                    stdout=subprocess.PIPE,
-                                    shell=False,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            hwsku = stdout.rstrip('\n')
+            if not platform: 
+                proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
+                                        stdout=subprocess.PIPE,
+                                        shell=False,
+                                        stderr=subprocess.STDOUT)
+                stdout = proc.communicate()[0]
+                proc.wait()
+                platform = stdout.rstrip('\n')
+
+            if not hwsku:
+                proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
+                                        stdout=subprocess.PIPE,
+                                        shell=False,
+                                        stderr=subprocess.STDOUT)
+                stdout = proc.communicate()[0]
+                proc.wait()
+                hwsku = stdout.rstrip('\n')
         except OSError, e:
             raise OSError("Failed to detect platform: %s" % (str(e)))
 

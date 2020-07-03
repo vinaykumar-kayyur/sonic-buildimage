@@ -164,9 +164,11 @@ fi
 
 ## Add sonic envirnment to the global profile.d dir
 sonic_config_dir=${rootmnt}/host/${image_dir}/sonic-config
-sonic_env_file=${sonic_config_dir}/sonic-environment.sh
-echo "about to move file ${sonic_env_file} to ${rootmnt}/etc/profile.d" 1>&2
-if [ -d ${sonic_config_dir} -a -f ${sonic_env_file} ]; then
-    echo "moving file ${sonic_env_file} to ${rootmnt}/etc/profile.d" 1>&2
-    mv ${sonic_env_file} ${rootmnt}/etc/profile.d
+sonic_env_file_sh=${sonic_config_dir}/sonic-environment.sh
+sonic_env_file=${sonic_config_dir}/sonic-environment
+echo "about to move file ${sonic_env_file_sh} to ${rootmnt}/etc/profile.d" 1>&2
+if [ -d ${sonic_config_dir} -a -f ${sonic_env_file_sh} ]; then
+    echo "moving file ${sonic_env_file_sh} to ${rootmnt}/etc/profile.d" 1>&2
+    mv ${sonic_env_file_sh} ${rootmnt}/etc/profile.d
+    mv ${sonic_env_file} ${rootmnt}/etc/sonic
 fi

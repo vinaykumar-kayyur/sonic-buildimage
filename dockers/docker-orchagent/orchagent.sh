@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
+# read SONiC immutable variables
+[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
 # Export platform information. Required to be able to write
 # vendor specific code.
-export platform=`sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type`
+export platform=${ASIC_TYPE:-`sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type`}
 
 MAC_ADDRESS=$(sonic-cfggen -d -v 'DEVICE_METADATA.localhost.mac')
 if [ "$MAC_ADDRESS" == "None" ] || [ -z "$MAC_ADDRESS" ]; then
