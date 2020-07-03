@@ -2,6 +2,13 @@ from sonic_platform_base.sonic_thermal_control.thermal_action_base import Therma
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 from sonic_daemon_base.daemon_base import Logger
 
+__all__ = [
+"SetAllFanSpeedMaxAction",
+"SetAllFanSpeedDefaultAction",
+"ThermalRecoverAction",
+"SwitchPolicyAction",
+]
+
 logger = Logger('alpha')
 
 class SetFanSpeedAction(ThermalPolicyActionBase):

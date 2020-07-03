@@ -1,6 +1,11 @@
 from sonic_platform_base.sonic_thermal_control.thermal_info_base import ThermalPolicyInfoBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 
+__all__ = [
+"FanInfo",
+"ThermalInfo",
+"ChassisInfo",
+]
 
 @thermal_json_object('fan_info')
 class FanInfo(ThermalPolicyInfoBase):

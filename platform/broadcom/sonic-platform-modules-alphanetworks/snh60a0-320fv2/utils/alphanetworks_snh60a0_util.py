@@ -40,13 +40,10 @@ command:
     clean       : uninstall drivers and remove related sysfs nodes
 """
 
-import os
 import commands
 import sys, getopt
 import logging
-import re
 import time
-from collections import namedtuple
 
 
 
@@ -59,6 +56,8 @@ DEBUG = False
 args = []
 FORCE = 0
 
+devMaxPort = 32
+cpldPortNum = 8
 
 if DEBUG == True:
     print sys.argv[0]
@@ -144,6 +143,9 @@ kos = [
 def driver_install():
     global FORCE
     status, output = log_os_system("depmod", 1)
+    if status:
+        if FORCE == 0:
+            return status
     for i in range(0,len(kos)):
         if kos[i].find('pca954') != -1:
             status, output = log_os_system(kos[i]+ " force_deselect_on_exit=1", 1)
@@ -207,28 +209,22 @@ def i2c_order_check():
     status, output = log_os_system("i2cdetect -l | grep I801 | grep i2c-0", 0)
     if  not output:
         order = 1
+        tmp = "sed -i 's/0-/1-/g' /usr/share/sonic/device/"+device_path+"/plugins/led_control.py"
     else:
         order = 0
-
-    if not device_exist():
-        #order = 1
-        tmp = "sed -i 's/0-/1-/g' /usr/share/sonic/device/"+device_path+"/fancontrol"
-        status, output = log_os_system(tmp, 0)
-        tmp = "sed -i 's/0-/1-/g' /usr/share/sonic/device/"+device_path+"/plugins/led_control.py"
-        status, output = log_os_system(tmp, 0)
-    else:
-        #order = 0
-        tmp = "sed -i 's/1-/0-/g' /usr/share/sonic/device/"+device_path+"/fancontrol"
-        status, output = log_os_system(tmp, 0)
         tmp = "sed -i 's/1-/0-/g' /usr/share/sonic/device/"+device_path+"/plugins/led_control.py"
-        status, output = log_os_system(tmp, 0)
-
-
+    status, output = log_os_system(tmp, 0)
+    if status:
+        print output
+        if FORCE == 0:
+            return status
     return order
                      
 def device_install():
     global FORCE
-    
+    global devMaxPort
+    global cpldPortNum
+
     order = i2c_order_check()
                 
     # if 0x76 is not exist @i2c-0, use reversed bus order    
@@ -267,9 +263,9 @@ def device_install():
         if FORCE == 0:
             return status
 
-    for i in range(0, 32):
-        index = i / 8
-        port = i % 8
+    for i in range(0, devMaxPort):
+        index = i / cpldPortNum
+        port = i % cpldPortNum
         reg_sfp = 0
         if port == 0:
             reg_sfp = 1
@@ -298,9 +294,9 @@ def device_uninstall():
     else:
         I2C_ORDER=0                    
 
-    for i in range(0, 32):
-        index = i / 8
-        port = i % 8
+    for i in range(0, devMaxPort):
+        index = i / cpldPortNum
+        port = i % cpldPortNum
         reg_sfp = 0
         if port == 0:
             reg_sfp = 1
@@ -345,16 +341,12 @@ def system_ready():
     return True
                
 def do_install():
-    tmp = "find /var/lib/docker/overlay2 -iname fancontrol | grep usr/sbin/fancontrol | xargs cat | sed '492d' | sed '491a if \[ $? -ne 1 \]' | sed '488d' | sed '487a return' > /tmp/tmp_fancontrol"
-    status, output = log_os_system(tmp, 1)
-    tmp = "fancontrol_tmp=`find /var/lib/docker/overlay2 -iname fancontrol | grep usr/sbin/fancontrol` ; cp /tmp/tmp_fancontrol $fancontrol_tmp"
-    status, output = log_os_system(tmp, 1)
     print "Checking system...."
     if driver_check() == False:
         print "No driver, installing...."    
         status = driver_install()
         if status:
-            if FORCE == 0:        
+            if FORCE == 0:
                 return  status
     else:
         print PROJECT_NAME.upper()+" drivers detected...."                      
@@ -362,7 +354,7 @@ def do_install():
         print "No device, installing...."     
         status = device_install() 
         if status:
-            if FORCE == 0:        
+            if FORCE == 0:
                 return  status        
     else:
         print PROJECT_NAME.upper()+" devices detected...."           
@@ -376,7 +368,7 @@ def do_uninstall():
         print "Removing device...."     
         status = device_uninstall() 
         if status:
-            if FORCE == 0:            
+            if FORCE == 0:
                 return  status  
                 
     if driver_check()== False :
@@ -385,7 +377,7 @@ def do_uninstall():
         print "Removing installed driver...."
         status = driver_uninstall()
         if status:
-            if FORCE == 0:        
+            if FORCE == 0:
                 return  status                          
                     
     return       

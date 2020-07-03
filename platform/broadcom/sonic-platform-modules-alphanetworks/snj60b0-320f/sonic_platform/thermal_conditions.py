@@ -1,6 +1,15 @@
 from sonic_platform_base.sonic_thermal_control.thermal_condition_base import ThermalPolicyConditionBase
 from sonic_platform_base.sonic_thermal_control.thermal_json_object import thermal_json_object
 
+__all__ = [
+"AnyFanAbsenceCondition",
+"AllFanAbsenceCondition",
+"AllFanPresenceCondition",
+"AnyFanFaultCondition",
+"AllFanGoodCondition",
+"AnyFanPresenceChangeCondition",
+"ThermalOverHighCriticalCondition",
+]
 
 class FanCondition(ThermalPolicyConditionBase):
     def get_fan_info(self, thermal_info_dict):
