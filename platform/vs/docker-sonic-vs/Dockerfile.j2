@@ -13,6 +13,7 @@ RUN echo "deb http://packages.microsoft.com/repos/sonic-dev/ jessie main" >> /et
 RUN apt-get update
 
 RUN apt-get install -y net-tools \
+                       redis-server=5:5.0.3-3~bpo9+2 \
                        arping \
                        ndisc6 \
                        ethtool \
@@ -32,7 +33,6 @@ RUN apt-get install -y net-tools \
                        libc-ares2 \
                        iproute \
                        grub2-common \
-                       python-click-default-group \
                        python-click \
                        python-natsort \
                        python-tabulate \
@@ -45,13 +45,17 @@ RUN apt-get install -y net-tools \
                        tcpdump \
                        python-scapy \
                        conntrack \
-                       iptables
+                       iptables \
+                       python3-pip
 
 RUN pip install setuptools
 RUN pip install py2_ipaddress
 RUN pip install six
 RUN pip install pyroute2==0.5.3 netifaces==0.10.7
 RUN pip install monotonic==1.5
+RUN pip install urllib3
+RUN pip install requests
+RUN pip install crontab
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -76,6 +80,23 @@ COPY python-debs/{{ deb }} /debs/
 RUN dpkg_apt() { [ -f $1 ] && { dpkg -i $1 || apt-get -y install -f; } || return 1; }; dpkg_apt /debs/{{ deb }}
 {%- endfor %}
 {%- endif %}
+
+{% if docker_sonic_vs_whls.strip() %}
+# copy all whl PKGs first,
+{% for whl in docker_sonic_vs_whls.split(' ') -%}
+COPY python-wheels/{{ whl }}  python-wheels/
+{% endfor %}
+
+# install PKGs after copying all PKGs to avoid dependency failure
+# use py3 to find python3 package, which is forced by wheel as of now
+{%- for whl in docker_sonic_vs_whls.split(' ') %}
+{%- if 'py3' in whl %}
+RUN pip3 install python-wheels/{{ whl }}
+{% else -%}
+RUN pip install python-wheels/{{ whl }}
+{%- endif %}
+{%- endfor %}
+{% endif %}
 
 # Clean up
 RUN apt-get clean -y

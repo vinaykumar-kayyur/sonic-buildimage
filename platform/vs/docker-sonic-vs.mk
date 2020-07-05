@@ -4,14 +4,15 @@ DOCKER_SONIC_VS = docker-sonic-vs.gz
 $(DOCKER_SONIC_VS)_PATH = $(PLATFORM_PATH)/docker-sonic-vs
 $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS) \
                               $(SYNCD_VS) \
-                              $(REDIS_TOOLS) \
-                              $(REDIS_SERVER) \
                               $(PYTHON_SWSSCOMMON) \
-                              $(LIBTEAMDCT) \
+                              $(LIBTEAMDCTL) \
                               $(LIBTEAM_UTILS) \
                               $(SONIC_DEVICE_DATA)
 
 $(DOCKER_SONIC_VS)_PYTHON_DEBS += $(SONIC_UTILS)
+
+$(DOCKER_SONIC_VS)_PYTHON_WHEELS += $(SONIC_YANG_MODELS_PY3)
+$(DOCKER_SONIC_VS)_PYTHON_WHEELS += $(SONIC_YANG_MGMT_PY)
 
 ifeq ($(INSTALL_DEBUG_TOOLS), y)
 $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS_DBG) \
