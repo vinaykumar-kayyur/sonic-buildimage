@@ -27,7 +27,7 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
                exit 0
                ;;
             n) DEV=${OPTARG}
-              [ $DEV -lt $NUM_ASIC -a  $DEV -ge 0 ] || help
+               [ $DEV -lt $NUM_ASIC -a  $DEV -ge 0 ] || help
                ;;
         esac
     done
