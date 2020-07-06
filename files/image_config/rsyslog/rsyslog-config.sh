@@ -20,7 +20,7 @@ fi
 
 sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog.conf.j2 -a "{\"udp_server_ip\": \"$udp_server_ip\"}"  >/etc/rsyslog.conf
 
-#render the logrotate config files for rsyslog as well.
+#Render the logrotate config files for rsyslog as well.
 sonic-cfggen -d -t /usr/share/sonic/templates/logrotate-rsyslog.j2 -a "{\"namespaces\": $NUM_ASIC}" > /etc/logrotate.d/rsyslog
 
 systemctl restart rsyslog
