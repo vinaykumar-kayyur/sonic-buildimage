@@ -147,7 +147,7 @@ class HardwareChecker(HealthChecker):
 
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'temperature'):
                 temperature = data_dict.get('temp', None)
-                temperature_threshold = data_dict.get('temp_th', None)
+                temperature_threshold = data_dict.get('temp_threshold', None)
                 if temperature is None:
                     self.set_object_not_ok('PSU', name, 'Failed to get temperature data for {}'.format(name))
                     continue
@@ -173,8 +173,8 @@ class HardwareChecker(HealthChecker):
 
             if not self._ignore_check(config.ignore_devices, 'psu', name, 'voltage'):
                 voltage = data_dict.get('voltage', None)
-                voltage_min_th = data_dict.get('voltage_min_th', None)
-                voltage_max_th = data_dict.get('voltage_max_th', None)
+                voltage_min_th = data_dict.get('voltage_min_threshold', None)
+                voltage_max_th = data_dict.get('voltage_max_threshold', None)
                 if voltage is None:
                     self.set_object_not_ok('PSU', name, 'Failed to get voltage data for {}'.format(name))
                     continue
