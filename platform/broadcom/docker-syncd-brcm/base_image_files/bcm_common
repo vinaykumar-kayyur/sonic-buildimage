@@ -1,8 +1,8 @@
 #!/bin/bash
 
-function help() 
+function help()
 {
-  echo "Usage: $0 -n [0 to $(($NUM_ASIC-1))]" 1>&2; exit 1;
+    echo "Usage: $0 -n [0 to $(($NUM_ASIC-1))]" 1>&2; exit 1;
 }
 
 
@@ -19,23 +19,22 @@ fi
 
 
 if [[ ($NUM_ASIC -gt 1) ]]; then
-  OPTIND=1
+    OPTIND=1
 
-  while getopts ":n:h:" opt; do
-      case "${opt}" in
-          h) help
-            exit 0
-            ;;
-          n) DEV=${OPTARG}
-             echo $DEV
-             [ $DEV -lt $NUM_ASIC -a  $DEV -ge 0 ] || help
-            ;;
-    esac
-   done
-  shift "$((OPTIND-1))"
+    while getopts ":n:h:" opt; do
+        case "${opt}" in
+            h) help
+               exit 0
+               ;;
+            n) DEV=${OPTARG}
+              [ $DEV -lt $NUM_ASIC -a  $DEV -ge 0 ] || help
+               ;;
+        esac
+    done
+    shift "$((OPTIND-1))"
 
-  if [ -z "${DEV}" ]; then
-    help
-  fi
+    if [ -z "${DEV}" ]; then
+        help
+    fi
 fi
 
