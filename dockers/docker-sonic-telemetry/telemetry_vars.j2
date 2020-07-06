@@ -1,0 +1,5 @@
+{
+    "x509" : "{% if DEVICE_METADATA['x509'] is defined %}{{ DEVICE_METADATA['x509'] }}{% endif %}",
+    "gnmi" : "{% if DEVICE_METADATA['gnmi'] is defined %}{{ DEVICE_METADATA['gnmi'] }}{% endif %}",
+    "certs": "{% if DEVICE_METADATA['certs'] is defined %}{{ DEVICE_METADATA['certs'] }}{% endif %}"
+}
