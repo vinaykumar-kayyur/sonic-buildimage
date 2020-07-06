@@ -6,8 +6,6 @@
 
 try:
     import struct
-    import sys
-    import getopt
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
     from os import *
@@ -15,7 +13,6 @@ try:
     import io
     from sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_sfp.sff8436 import sff8436Dom
-    from sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_sfp.sff8472 import sff8472Dom
 
 except ImportError as e:
@@ -202,7 +199,7 @@ class SfpUtil(SfpUtilBase):
             reg_value = reg_value & ~mask
 
         # Convert our register value back to a hex string and write back
-	status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+	self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
         return True
 
@@ -229,7 +226,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = reg_value & ~mask
 
 	# Convert our register value back to a hex string and write back
-	status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+	self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
         # Sleep 1 second to allow it to settle
         time.sleep(1)
@@ -237,7 +234,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = reg_value | mask
 
 	# Convert our register value back to a hex string and write back
-	status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+	self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
         return True
 

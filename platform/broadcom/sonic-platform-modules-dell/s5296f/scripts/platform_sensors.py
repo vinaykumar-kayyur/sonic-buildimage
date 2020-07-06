@@ -11,10 +11,8 @@
 #   * PSU
 
 
-import os
 import sys
 import logging
-import subprocess
 import commands
 
 S5296F_MAX_FAN_TRAYS = 4
@@ -36,7 +34,6 @@ ipmi_sdr_list = ""
 
 def ipmi_sensor_dump():
 
-    status = 1
     global ipmi_sdr_list
     ipmi_cmd = IPMI_SENSOR_DATA
     status, ipmi_sdr_list = commands.getstatusoutput(ipmi_cmd)
@@ -95,7 +92,6 @@ print_temperature_sensors()
 def print_fan_tray(tray):
 
     Fan_Status = [' Normal', ' Abnormal']
-    Airflow_Direction = ['B2F', 'F2B']
 
     print '  Fan Tray ' + str(tray) + ':'
 
@@ -153,7 +149,6 @@ for tray in range(1, S5296F_MAX_FAN_TRAYS + 1):
         :return: Boolean, True if PSU is plugged, False if not
         """
         status = 0
-        ret_status = 1
 
         if index == 1:
            status, ipmi_cmd_ret = commands.getstatusoutput(IPMI_PSU1_DATA_DOCKER)
@@ -175,16 +170,6 @@ for tray in range(1, S5296F_MAX_FAN_TRAYS + 1):
 
 # Print the information for PSU1, PSU2
 def print_psu(psu):
-    Psu_Type = ['Normal', 'Mismatch']
-    Psu_Input_Type = ['AC', 'DC']
-    PSU_STATUS_TYPE_BIT = 4
-    PSU_STATUS_INPUT_TYPE_BIT = 1
-    PSU_FAN_PRESENT_BIT = 2
-    PSU_FAN_STATUS_BIT = 1
-    PSU_FAN_AIR_FLOW_BIT = 0
-    Psu_Fan_Presence = ['Present', 'Absent']
-    Psu_Fan_Status = ['Normal', 'Abnormal']
-    Psu_Fan_Airflow = ['B2F', 'F2B']
 
     # print '    Input:          ', Psu_Input_Type[psu_input_type]
     # print '    Type:           ', Psu_Type[psu_type]

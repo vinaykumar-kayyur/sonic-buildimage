@@ -4,7 +4,6 @@
 #
 
 
-import os.path
 import logging
 import commands
 import sys
@@ -41,9 +40,7 @@ class PsuUtil(PsuBase):
     # Fetch a BMC register
     def get_pmc_register(self, reg_name):
 
-        status = 1
         global ipmi_sdr_list
-        ipmi_dev_node = "/dev/pmi0"
         ipmi_cmd = IPMI_PSU_DATA
         dockerenv = self.isDockerEnv()
         if dockerenv == True:
