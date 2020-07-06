@@ -43,10 +43,11 @@ fi
 
 # If no configuration entry exists for TELEMETRY, create one default port
 if [ -z "$GNMI" ]; then
-    sonic-db-cli CONFIG_DB hset "TELEMETRY|gnmi" port 8080
+    PORT=8080
+    sonic-db-cli CONFIG_DB hset "TELEMETRY|gnmi" port $PORT
+else
+    PORT=$(echo $GNMI | jq -r '.port')
 fi
-
-PORT=$(echo $GNMI | jq -r '.port')
 TELEMETRY_ARGS+=" --port $PORT"
 
 CLIENT_AUTH=$(echo $GNMI | jq -r '.client_auth')
