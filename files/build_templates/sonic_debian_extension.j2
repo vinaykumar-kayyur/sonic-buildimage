@@ -252,7 +252,7 @@ sudo cp $IMAGE_CONFIGS/syslog/host_umount.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy logrotate.d configuration files
 sudo cp -f $IMAGE_CONFIGS/logrotate/logrotate.d/* $FILESYSTEM_ROOT/etc/logrotate.d/
-
+sudo cp $IMAGE_CONFIGS/logrotate/logrotate-rsyslog.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 # Copy systemd-journald configuration files
 sudo cp -f $IMAGE_CONFIGS/systemd/journald.conf $FILESYSTEM_ROOT/etc/systemd/
 
