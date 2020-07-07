@@ -1,5 +1,5 @@
 [Unit]
-Description=Start the pcie-check.service in 10 seconds after boot
+Description=Start the pcie-check.service 10 seconds after boot
 
 [Timer]
 OnBootSec=10sec

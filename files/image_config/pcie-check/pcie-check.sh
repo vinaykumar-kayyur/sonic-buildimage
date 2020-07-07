@@ -30,7 +30,7 @@ function check_and_rescan_pcie_devices()
 
     while true
     do
-	now=$SECONDS
+        now=$SECONDS
         if [[ $now -gt $end ]]; then
             break
         fi
