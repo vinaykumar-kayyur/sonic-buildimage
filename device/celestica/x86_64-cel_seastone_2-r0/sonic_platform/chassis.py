@@ -21,6 +21,7 @@ class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
     FAN_CONFIG = 'fan.json'
+    PSU_CONFIG = 'psu.json'
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -28,6 +29,7 @@ class Chassis(ChassisBase):
         self._api_config = self._api_common.get_config_path()
 
         self.__initialize_fan()
+        self.__initialize_psu()
 
         # self.is_host = self._api_common.is_host()
 
@@ -59,11 +61,18 @@ class Chassis(ChassisBase):
     #         self._sfp_list.append(sfp)
     #     self.sfp_module_initialized = True
 
-    # def __initialize_psu(self):
-    #     from sonic_platform.psu import Psu
-    #     for index in range(0, NUM_PSU):
-    #         psu = Psu(index)
-    #         self._psu_list.append(psu)
+    def __initialize_psu(self):
+        from sonic_platform.psu import Psu
+
+        psu_config_path = os.path.join(self._api_config, self.PSU_CONFIG)
+        psu_config = self._api_common.load_json_file(psu_config_path)
+        
+        if psu_config:
+            psu_index = 0
+            for index in range(0, psu_config['psu_num']):
+                psu = Psu(psu_index, conf=psu_config)
+                psu_index += 1
+                self._psu_list.append(psu)
 
     # def __initialize_thermals(self):
     #     from sonic_platform.thermal import Thermal

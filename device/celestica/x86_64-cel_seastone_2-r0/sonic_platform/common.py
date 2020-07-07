@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import json
 import struct
 import subprocess
@@ -77,6 +78,8 @@ class Common:
         if config.get('output_transform'):
             ret_val = config['output_transform'].get(
                 result, config['default_output'])
+        elif config.get('output_formula'):
+            ret_val = eval(config['output_formula'][index].format(result))
         else:
             ret_val = eval(config['formula'].format(result))
         return status, ret_val
