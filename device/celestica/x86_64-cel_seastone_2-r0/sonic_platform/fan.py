@@ -52,7 +52,7 @@ class Fan(FanBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = self.FAN_DIRECTION_NOT_APPLICABLE
-        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
 
     def get_speed(self):
         """
@@ -66,19 +66,15 @@ class Fan(FanBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
+        default = 0
 
         if self._is_psu_fan:
-            return ret_val
+            return default
 
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.fan_index, config)
-            raw_val = result if status else ret_val
+        max_rpm = config['max_rear'] if 'R' in self._name else config['max_front']
+        raw_speed = self._api_common.get_output(self.fan_index, config, default)
 
-            max_rpm = config['max_rear'] if 'R' in self._name else config['max_front']
-            ret_val = float(raw_val) / max_rpm * 100.0
-
-        return int(ret_val)
+        return int(float(raw_speed) / max_rpm * 100.0)
 
     def get_target_speed(self):
         """
@@ -95,7 +91,7 @@ class Fan(FanBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        return self._api_common.get_val(self.fan_index, config, default)
+        return self._api_common.get_output(self.fan_index, config, default)
 
     def get_speed_tolerance(self):
         """
@@ -108,7 +104,7 @@ class Fan(FanBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        return self._api_common.get_val(self.fan_index, config, default)
+        return self._api_common.get_output(self.fan_index, config, default)
 
     def set_speed(self, speed):
         """
@@ -135,7 +131,7 @@ class Fan(FanBase):
         if speed not in range(1, 101) or self._is_psu_fan:
             return False
 
-        return self._api_common.set_val(self.fan_index, speed, config) if self.get_presence() else default
+        return self._api_common.set_output(self.fan_index, speed, config) if self.get_presence() else default
 
     def set_status_led(self, color):
         """
@@ -160,7 +156,7 @@ class Fan(FanBase):
         if self._is_psu_fan:
             return default
 
-        return self._api_common.set_val(self.fan_index, color, config) if self.get_presence() else default
+        return self._api_common.set_output(self.fan_index, color, config) if self.get_presence() else default
 
     def get_status_led(self):
         """
@@ -182,7 +178,7 @@ class Fan(FanBase):
         if self._is_psu_fan:
             return default
 
-        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
 
     def get_name(self):
         """
@@ -194,7 +190,7 @@ class Fan(FanBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
 
-        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
 
     def get_presence(self):
         """
@@ -204,13 +200,13 @@ class Fan(FanBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = False
+        output = False
 
         if config.get('oper_type') == Common.OPER_IMPI:
             status, result = self._api_common.ipmi_get(self.fan_index, config)
-            ret_val = result if status else ret_val
+            output = result if status else output
 
-        return ret_val
+        return output
 
     def get_model(self):
         """
@@ -225,7 +221,7 @@ class Fan(FanBase):
         if self._is_psu_fan:
             return default
 
-        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
 
     def get_serial(self):
         """
@@ -240,7 +236,7 @@ class Fan(FanBase):
         if self._is_psu_fan:
             return default
 
-        return self._api_common.get_val(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
 
     def get_status(self):
         """

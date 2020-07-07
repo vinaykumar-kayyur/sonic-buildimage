@@ -2,8 +2,8 @@
         "fan_num_per_drawer": 2,
         "drawer_num": 4,
         "get_name": {
-                "oper_type": "fixed_list",
-                "value": [
+                "output_source": "value_list",
+                "value_list": [
                         "Fan1-F",
                         "Fan1-R",
                         "Fan2-F",
@@ -15,9 +15,9 @@
                 ]
         },
         "get_presence": {
-                "oper_type": "ipmi",
-                "command_template": "ipmitool raw 0x3a 0x03 0x03 {}",
-                "command": [
+                "output_source": "ipmitool",
+                "command": "ipmitool raw 0x3a 0x03 0x03 {}",
+                "argument": [
                         "0x00",
                         "0x00",
                         "0x01",
@@ -27,12 +27,12 @@
                         "0x03",
                         "0x03"
                 ],
-                "formula": "True if '00' in '{}' else False"
+                "output_translator": "True if '00' in '{}' else False"
         },
         "get_model": {
-                "oper_type": "ipmi",
-                "command_template": "ipmitool fru list {} | grep 'Board Part Number'",
-                "command": [
+                "output_source": "ipmitool",
+                "command": "ipmitool fru list {} | grep 'Board Part Number'",
+                "argument": [
                         "5",
                         "5",
                         "6",
@@ -42,12 +42,12 @@
                         "8",
                         "8"
                 ],
-                "formula": "'{}'.split()[-1]"
+                "output_translator": "'{}'.split()[-1]"
         },
         "get_serial": {
-                "oper_type": "ipmi",
-                "command_template": "ipmitool fru list {} | grep 'Board Serial'",
-                "command": [
+                "output_source": "ipmitool",
+                "command": "ipmitool fru list {} | grep 'Board Serial'",
+                "argument": [
                         "5",
                         "5",
                         "6",
@@ -57,13 +57,12 @@
                         "8",
                         "8"
                 ],
-                "formula": "'{}'.split()[-1]"
+                "output_translator": "'{}'.split()[-1]"
         },
-        "get_status": {},
         "get_direction": {
-                "oper_type": "ipmi",
-                "command_template": "ipmitool fru list {} | grep 'F2B\\|B2F'",
-                "command": [
+                "output_source": "ipmitool",
+                "command": "ipmitool fru list {} | grep 'F2B\\|B2F'",
+                "argument": [
                         "5",
                         "5",
                         "6",
@@ -73,12 +72,12 @@
                         "8",
                         "8"
                 ],
-                "formula": "'intake' if 'B2F' in '{}' else 'exhaust'"
+                "output_translator": "'intake' if 'B2F' in '{}' else 'exhaust'"
         },
         "get_speed": {
-                "oper_type": "ipmi",
-                "command_template": "ipmitool raw 0x04 0x2d {}",
-                "command": [
+                "output_source": "ipmitool",
+                "command": "ipmitool raw 0x04 0x2d {}",
+                "argument": [
                         "0x81",
                         "0x80",
                         "0x83",
@@ -88,23 +87,23 @@
                         "0x87",
                         "0x86"
                 ],
-                "formula": "int('{}'.split()[0],16)*150",
+                "output_translator": "int('{}'.split()[0],16)*150",
                 "max_front": 23000,
                 "max_rear": 20500
         },
         "get_target_speed": {
-                "oper_type": "fixed",
+                "output_source": "value",
                 "value": "N/A"
         },
         "get_speed_tolerance": {
-                "oper_type": "fixed",
+                "output_source": "value",
                 "value": 10
         },
         "set_speed": {
-                "oper_type": "ipmi",
-                "input_transform": "hex(int({} * 255 / 100.0))",
-                "command_template": "ipmitool raw 0x3a 0x0c 0x00 0x03 {}",
-                "command": [
+                "set_method": "ipmitool",
+                "input_translator": "hex(int({} * 255 / 100.0))",
+                "command": "ipmitool raw 0x3a 0x0c 0x00 0x03 {}",
+                "argument": [
                         "0x40 {}",
                         "0x40 {}",
                         "0x44 {}",
@@ -116,15 +115,15 @@
                 ]
         },
         "set_status_led": {
-                "oper_type": "ipmi",
+                "set_method": "ipmitool",
                 "avaliable_input": [
                         "off",
                         "amber",
                         "green"
                 ],
-                "input_transform": "'0x1' if '{0}' == 'amber' else '0x2' if '{0}' == 'green' else '0x0'",
-                "command_template": "ipmitool raw 0x3a 0x0a {}",
-                "command": [
+                "input_translator": "{'amber': '0x1','green': '0x2'}.get('{}', '0x0')",
+                "command": "ipmitool raw 0x3a 0x0a {}",
+                "argument": [
                         "0x4 {}",
                         "0x4 {}",
                         "0x5 {}",
@@ -136,9 +135,9 @@
                 ]
         },
         "get_status_led": {
-                "oper_type": "ipmi",
-                "command_template": "ipmitool raw 0x3a 0x0b {}",
-                "command": [
+                "output_source": "ipmitool",
+                "command": "ipmitool raw 0x3a 0x0b {}",
+                "argument": [
                         "0x4",
                         "0x4",
                         "0x5",
@@ -148,11 +147,6 @@
                         "0x7",
                         "0x7"
                 ],
-                "output_transform": {
-                        "00": "off",
-                        "01": "amber",
-                        "02": "green"
-                },
-                "default_output": "off"
+                "output_translator": "{'01': 'amber','02': 'green'}.get('{}', 'off')"
         }
 }
