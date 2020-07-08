@@ -36,7 +36,7 @@ function disable_watchdog()
     # Obtain boot type from kernel arguments
     BOOT_TYPE=`getBootType`
     if [[ -x ${WATCHDOG_UTIL} ]]; then
-        debug "Disabling Watchdog during bootup after $getBootType"
+        debug "Disabling Watchdog during bootup after $BOOT_TYPE"
         ${WATCHDOG_UTIL} disarm
     fi
 }
