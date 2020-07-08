@@ -20,13 +20,9 @@ except ImportError as e:
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
-    FAN_CONFIG = 'fan.json'
-    PSU_CONFIG = 'psu.json'
-
     def __init__(self):
         ChassisBase.__init__(self)
         self._api_common = Common()
-        self._api_config = self._api_common.get_config_path()
 
         self.__initialize_fan()
         self.__initialize_psu()
@@ -43,7 +39,7 @@ class Chassis(ChassisBase):
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
 
-        fan_config_path = os.path.join(self._api_config, self.FAN_CONFIG)
+        fan_config_path = self._api_common.get_config_path(Fan.FAN_CONFIG)
         fan_config = self._api_common.load_json_file(fan_config_path)
 
         if fan_config:
@@ -64,7 +60,7 @@ class Chassis(ChassisBase):
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
 
-        psu_config_path = os.path.join(self._api_config, self.PSU_CONFIG)
+        psu_config_path = self._api_common.get_config_path(Psu.PSU_CONFIG)
         psu_config = self._api_common.load_json_file(psu_config_path)
         
         if psu_config:

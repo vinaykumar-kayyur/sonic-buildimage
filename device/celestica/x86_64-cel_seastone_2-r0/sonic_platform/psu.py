@@ -4,10 +4,11 @@
 # Celestica
 #
 # Module contains an implementation of SONiC Platform Base API and
-# provides the fan status which are available in the platform
+# provides the psu status which are available in the platform
 #
 #############################################################################
 
+import re
 import json
 import math
 import os.path
@@ -24,70 +25,29 @@ except ImportError as e:
 class Psu(PsuBase):
     """Platform-specific Fan class"""
 
-    def __init__(self, index, psu_index=0, conf=None):
+    PSU_CONFIG = 'psu.json'
+
+    def __init__(self, index, conf=None):
         PsuBase.__init__(self)
 
         self.psu_index = index
 
         self._config = conf
         self._api_common = Common()
+        self._initialize_fan()
+
         self._name = self.get_name()
-        self._fan_list = self.get_all_fans()
 
-    def get_num_fans(self):
-        """
-        Retrieves the number of fan modules available on this PSU
+    def _initialize_fan(self):
+        from sonic_platform.fan import Fan
 
-        Returns:
-            An integer, the number of fan modules available on this PSU
-        """
-        default = Common.NULL_VAL
-        config = self._config.get("get_name")
+        fan_config_path = self._api_common.get_config_path(Fan.FAN_CONFIG)
+        fan_config = self._api_common.load_json_file(fan_config_path)
 
-        psu_attr = self._api_common.get_val(self.psu_index, config, default)
-        
-        __fan_list = psu_attr['fan_name']
-
-        return len(__fan_list) if self.get_presence() else default
-
-    def get_all_fans(self):
-        """
-        Retrieves all fan modules available on this PSU
-
-        Returns:
-            A list of objects derived from FanBase representing all fan
-            modules available on this PSU
-        """
-        default = Common.NULL_VAL
-        config = self._config.get("get_name")
-
-        psu_attr = self._api_common.get_val(self.psu_index, config, default)
-        
-        __fan_list = psu_attr['fan_name']
-
-        return __fan_list if self.get_presence() else default
-
-    def get_fan(self, index):
-        """
-        Retrieves fan module represented by (0-based) index <index>
-
-        Args:
-            index: An integer, the index (0-based) of the fan module to
-            retrieve
-
-        Returns:
-            An object dervied from FanBase representing the specified fan
-            module
-        """
-        fan = None
-
-        try:
-            fan = self._fan_list[index]
-        except IndexError:
-            sys.stderr.write("Fan index {} out of range (0-{})\n".format(
-                             index, len(self._fan_list)-1))
-
-        return fan
+        num_fan = fan_config['psu_fan'][self.psu_index]["num_of_fan"]
+        for fan_index in range(0, num_fan):
+            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.psu_index, conf=fan_config)
+            self._fan_list.append(fan)
 
     def get_voltage(self):
         """
@@ -99,13 +59,8 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_current(self):
         """
@@ -116,13 +71,8 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_power(self):
         """
@@ -131,16 +81,11 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        
+
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_powergood_status(self):
         """
@@ -152,13 +97,8 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = False
-
-        if config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            ret_val = result if status else ret_val
-
-        return ret_val 
+        default = False
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def set_status_led(self, color):
         """
@@ -176,13 +116,8 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-
         default = False
-        avaliable_input = config.get('avaliable_input')
-        if avaliable_input and color not in avaliable_input:
-            return False
-
-        return self._api_common.set_val(self.psu_index, color, config) if self.get_presence() else default
+        return self._api_common.set_output(self.psu_index, color, config) if self.get_presence() else default
 
     def get_status_led(self):
         """
@@ -194,12 +129,8 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = "off" 
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, led_color = self._api_common.ipmi_get(self.psu_index, config)
-
-        return led_color if status else ret_val
+        default = "off"
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_temperature(self):
         """
@@ -211,18 +142,15 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        output = self._api_common.get_output(
+            self.psu_index, config, default) if self.get_presence() else default
+        return float(output)
 
     def get_temperature_high_threshold(self):
         """
         Retrieves the high threshold temperature of PSU
-        
+
         Example output
         PSUL_Temp2  | 35.000 | degrees C|ok| na | na | na | na | na | na
         The thresholds listed are, in order: lnr, lcr, lnc, unc, ucr, unr
@@ -242,13 +170,10 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        output = self._api_common.get_output(
+            self.psu_index, config, default) if self.get_presence() else default
+        return float(output)
 
     def get_voltage_high_threshold(self):
         """
@@ -261,13 +186,10 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        output = self._api_common.get_output(
+            self.psu_index, config, default) if self.get_presence() else default
+        return float(output)
 
     def get_voltage_low_threshold(self):
         """
@@ -280,13 +202,10 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = 0
-
-        if self.get_presence() and config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            raw_val = result if status else ret_val
-
-        return float(raw_val)
+        default = 0
+        output = self._api_common.get_output(
+            self.psu_index, config, default) if self.get_presence() else default
+        return float(output)
 
     def get_name(self):
         """
@@ -297,12 +216,7 @@ class Psu(PsuBase):
         default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-
-        psu_attr = self._api_common.get_val(self.psu_index, config, default)
-        
-        psu_name = psu_attr['psu_name']
-
-        return psu_name if self.get_presence() else default
+        return self._api_common.get_output(self.psu_index, config, default)
 
     def get_presence(self):
         """
@@ -312,10 +226,38 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        ret_val = False
+        default = False
 
-        if config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.psu_index, config)
-            ret_val = result if status else ret_val
+        return self._api_common.get_output(self.psu_index, config, default)
 
-        return ret_val
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        default = Common.NULL_VAL
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        default = Common.NULL_VAL
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+
+        return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return self.get_powergood_status()

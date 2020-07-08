@@ -11,7 +11,6 @@ class Common:
     CONFIG_DIR = 'sonic_platform_config'
 
     OUTPUT_SOURCE_IPMI = 'ipmitool'
-    # OUTPUT_SOURCE_IPMI_RAW = 'ipmitool_raw'
     OUTPUT_SOURCE_GIVEN_LIST = 'value_list'
     OUTPUT_SOURCE_GIVEN_VALUE = 'value'
 
@@ -23,49 +22,55 @@ class Common:
 
     def _run_command(self, command):
         status = False
-        result = ""
+        output = ""
         try:
-            proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            output = proc.communicate()[0]
-            proc.wait()
-            if not proc.returncode:
-                status = True
-                result = output.rstrip('\n')
+            p = subprocess.Popen(
+                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            raw_data, err = p.communicate()
+            if err == '':
+                status, output = True, raw_data.strip()
         except:
             pass
-        return status, result
+        return status, output
 
     def _clean_input(self, input, config):
         cleaned_input = input
 
         ai = config.get('avaliable_input')
         if ai and input not in ai:
-            raise ValueError("Invalid input")
+            return None
 
         input_translator = config.get('input_translator')
-        return eval(input_translator.format(input)) if input_translator else input
+        if type(input_translator) is dict:
+            input = input_translator.get(input)
 
-    def _clean_output(self, output, config):
+        elif type(input_translator) is unicode:
+            input = eval(input_translator.format(input))
+
+        return input
+
+    def _clean_output(self, index, output, config):
         output_translator = config.get('output_translator')
-        return eval(output_translator.format(output)) if output_translator else output
+
+        if type(output_translator) is dict:
+            output = output_translator.get(output)
+        elif type(output_translator) is unicode:
+            output = eval(output_translator.format(output))
+        elif type(output_translator) is list:
+            output = eval(output_translator[index].format(output))
+
+        return output
 
     def _ipmi_get(self, index, config):
-        status, output = self._run_command(
-            config['command'].format(config['argument'][index]))
-        return output if status else NULL_VAL
+        argument = config.get('argument')
+        cmd = config['command'].format(
+            config['argument'][index]) if argument else config['command']
+        status, output = self._run_command(cmd)
+        return output if status else None
 
     def _ipmi_set(self, index, config, input):
         arg = config['argument'][index].format(input)
-        return self.run_command(config['command'].format(arg))
-
-    # def get_ipmitool_raw_output(self, command):
-    #     """
-    #     Returns a list the elements of which are the individual bytes of
-    #     ipmitool raw <cmd> command output.
-    #     """
-    #     status, result = self._run_command(command)
-    #     return [int(i, 16) for i in result.split()] if status else None
+        return self._run_command(config['command'].format(arg))
 
     def load_json_file(self, path):
         """
@@ -89,7 +94,7 @@ class Common:
         Returns:
             A string containing the path to json file
         """
-        return os.path.join(DEVICE_PATH, self.platform, CONFIG_DIR, config_name)
+        return os.path.join(self.DEVICE_PATH, self.platform, self.CONFIG_DIR, config_name)
 
     def get_output(self, index, config, default):
         """
@@ -103,13 +108,21 @@ class Common:
         Returns:
             A string containing the output of specified function in config
         """
-        output = {
-            self.OUTPUT_SOURCE_IPMI_GET: self._ipmi_get(index, config),
-            self.OUTPUT_SOURCE_GIVEN_VALUE: config["value"],
-            self.OUTPUT_SOURCE_GIVEN_LIST: config["value_list"][index]
-        }.get(config.get('output_source'), default)
+        output_source = config.get('output_source')
 
-        return self._clean_output(output)
+        if output_source == self.OUTPUT_SOURCE_IPMI:
+            output = self._ipmi_get(index, config)
+
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_VALUE:
+            output = config["value"]
+
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_LIST:
+            output = config["value_list"][index]
+
+        else:
+            output = default
+
+        return self._clean_output(index, output, config) or default
 
     def set_output(self, index, input, config):
         """
@@ -123,7 +136,14 @@ class Common:
         Returns:
             bool: True if set function is successfully, False if not
         """
-        cleaned_input = self._clean_input(input)
-        return {
-            self.SET_METHOD_IPMI: self._ipmi_set(index, config, cleaned_input)[0]
-        }.get(config.get('set_method'), False)
+        cleaned_input = self._clean_input(input, config)
+        if not cleaned_input:
+            return False
+
+        set_method = config.get('set_method')
+        if set_method == self.SET_METHOD_IPMI:
+            output = self._ipmi_set(index, config, cleaned_input)[0]
+        else:
+            output = False
+
+        return output

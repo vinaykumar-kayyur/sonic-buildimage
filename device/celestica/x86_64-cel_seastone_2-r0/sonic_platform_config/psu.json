@@ -2,126 +2,135 @@
     "psu_num": 2,
     "fan_per_psu_num": 1,
     "get_name": {
-        "oper_type": "fixed_list",
-        "value": [{
-                "psu_name": "PSU-R",
-                "fan_name": [
-                    "PSU-R-Fan"
-                ]
-            },
-            {
-                "psu_name": "PSU-L",
-                "fan_name": [
-                    "PSU-L-Fan"
-                ]
-            }
+        "output_source": "value_list",
+        "value_list": [
+            "PSU-R",
+            "PSU-L"
         ]
     },
     "get_power": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sdr | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sdr | grep {}",
+        "argument": [
             "PSUR_POut",
             "PSUL_POut"
         ],
-        "formula": "float('{}'.split()[2])"
+        "output_translator": "float('{}'.split()[2])"
     },
     "get_current": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sdr | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sdr | grep {}",
+        "argument": [
             "PSUR_COut",
             "PSUL_COut"
         ],
-        "formula": "float('{}'.split()[2])"
+        "output_translator": "float('{}'.split()[2])"
     },
     "get_voltage": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sdr | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sdr | grep {}",
+        "argument": [
             "PSUR_VOut",
             "PSUL_VOut"
         ],
-        "formula": "float('{}'.split()[2])"
+        "output_translator": "float('{}'.split()[2])"
     },
     "get_voltage_high_threshold": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sensor list | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sensor list | grep {}",
+        "argument": [
             "PSUR_Temp2",
             "PSUL_Temp2"
         ],
-        "formula": "float(0 if '{0}'.split()[-3]=='na' else '{0}'.split()[-3])"
+        "output_translator": "float(0 if '{0}'.split()[-3]=='na' else '{0}'.split()[-3])"
     },
     "get_voltage_low_threshold": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sensor list | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sensor list | grep {}",
+        "argument": [
             "PSUR_Temp2",
             "PSUL_Temp2"
         ],
-        "formula": "float(0 if '{0}'.split()[-9]=='na' else '{0}'.split()[-9])"
+        "output_translator": "float(0 if '{0}'.split()[-9]=='na' else '{0}'.split()[-9])"
     },
     "get_presence": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool raw 0x3a 0x0c 0x00 0x2 0x60",
-        "command": ["0", "0"],
-        "output_formula": [
-            "True if bin(0x{})[2:][::-1][4]=='0' else False",
-            "True if bin(0x{})[2:][::-1][5]=='0' else False"
+        "output_source": "ipmitool",
+        "command": "ipmitool raw 0x3a 0x0c 0x00 0x2 0x60",
+        "output_translator": [
+            "True if (int('{}', 16) >> 4 & 1) == 0 else False",
+            "True if (int('{}', 16) >> 5 & 1) == 0 else False"
         ],
         "default_output": "off"
-
+    },
+    "get_model": {
+        "output_source": "ipmitool",
+        "command": "ipmitool fru list {} | grep 'Product Part Number'",
+        "argument": [
+            "4",
+            "3"
+        ],
+        "output_translator": "'{}'.split()[-1]"
+    },
+    "get_serial": {
+        "output_source": "ipmitool",
+        "command": "ipmitool fru list {} | grep 'Product Serial'",
+        "argument": [
+            "4",
+            "3"
+        ],
+        "output_translator": "'{}'.split()[-1]"
     },
     "get_powergood_status": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool raw 0x04 0x2d {}",
-        "command": ["0x73", "0x72"],
-        "formula": "False if( ((int(  (re.search('^.+ ([0-9a-f]{{2}}) .+$', '{0}').group(1) ), 16) >> 1) & 1)  or ((int(  (re.search('^.+ ([0-9a-f]{{2}}) .+$', '{0}').group(1) ), 16) >> 3) & 1) )else True"
+        "output_source": "ipmitool",
+        "command": "ipmitool raw 0x3a 0x0c 0x0 0x2 0x60",
+        "output_translator": [
+            "True if (int('{}', 16) >> 2 & 1) == 0 else False",
+            "True if (int('{}', 16) >> 3 & 1) == 0 else False"
+        ]
     },
     "set_status_led": {
-        "oper_type": "ipmi",
+        "set_method": "ipmitool",
         "avaliable_input": [
-            "green",
             "amber"
         ],
-        "input_transform": "'0x1' if '{0}' == 'amber' else '0x0'",
-        "command_template": "ipmitool raw 0x3a 0x0a {}",
-        "command": [
+        "input_translator": {
+            "amber": "0x1"
+        },
+        "command": "ipmitool raw 0x3a 0x0a {}",
+        "argument": [
             "0x3 {}",
             "0x2 {}"
         ]
     },
     "get_status_led": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool raw 0x3a 0x0b {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool raw 0x3a 0x0b {}",
+        "argument": [
             "0x3",
             "0x2"
         ],
-        "output_transform": {
+        "output_translator": {
             "00": "green",
             "01": "amber"
         },
         "default_output": "off"
-
     },
     "get_temperature": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sdr | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sdr | grep {}",
+        "argument": [
             "PSUR_Temp2",
             "PSUL_Temp2"
         ],
-        "formula": "float('{}'.split()[2])"
+        "output_translator": "float('{}'.split()[2])"
     },
     "get_temperature_high_threshold": {
-        "oper_type": "ipmi",
-        "command_template": "ipmitool sensor list | grep {}",
-        "command": [
+        "output_source": "ipmitool",
+        "command": "ipmitool sensor list | grep {}",
+        "argument": [
             "PSUR_Temp2",
             "PSUL_Temp2"
         ],
-        "formula": "float(0 if '{0}'.split()[-3]=='na' else '{0}'.split()[-3])"
+        "output_translator": "float(0 if '{0}'.split()[-3]=='na' else '{0}'.split()[-3])"
     }
 }

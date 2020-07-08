@@ -23,6 +23,8 @@ except ImportError as e:
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
+    FAN_CONFIG = 'fan.json'
+
     def __init__(self, index, drawer_index, is_psu_fan=False, psu_index=0, conf=None):
         FanBase.__init__(self)
 
@@ -31,16 +33,16 @@ class Fan(FanBase):
 
         self._config = conf
         self._api_common = Common()
-        self._name = self.get_name()
-        self._is_psu_fan = is_psu_fan
 
-        # self._is_psu_fan = is_psu_fan
-        # if self._is_psu_fan:
-        #     self.psu_index = psu_index
-        #     self.psu_i2c_num = PSU_I2C_MAPPING[self.psu_index]["num"]
-        #     self.psu_i2c_addr = PSU_I2C_MAPPING[self.psu_index]["addr"]
-        #     self.psu_hwmon_path = PSU_HWMON_PATH.format(
-        #         self.psu_i2c_num, self.psu_i2c_addr)
+        self._is_psu_fan = is_psu_fan
+        if self._is_psu_fan:
+            self._initialize_psu_fan(psu_index)
+
+        self._name = self.get_name()
+
+    def _initialize_psu_fan(self, psu_index):
+        self._psu_index = psu_index
+        self._psu_fan_config = self._config['psu_fan'][self._psu_index]
 
     def get_direction(self):
         """
@@ -65,14 +67,12 @@ class Fan(FanBase):
             speed = pwm_in/255*100
         """
         f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
+        config = self._config.get(f_name) if not self._is_psu_fan else self._psu_fan_config[f_name]
         default = 0
 
-        if self._is_psu_fan:
-            return default
-
         max_rpm = config['max_rear'] if 'R' in self._name else config['max_front']
-        raw_speed = self._api_common.get_output(self.fan_index, config, default)
+        raw_speed = self._api_common.get_output(
+            self.fan_index, config, default)
 
         return int(float(raw_speed) / max_rpm * 100.0)
 
@@ -186,11 +186,9 @@ class Fan(FanBase):
             Returns:
             string: The name of the device
         """
-        default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-
-        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
+        config = self._config.get(f_name) if not self._is_psu_fan else self._psu_fan_config[f_name]
+        return self._api_common.get_output(self.fan_index, config, Common.NULL_VAL)
 
     def get_presence(self):
         """
@@ -200,13 +198,7 @@ class Fan(FanBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        output = False
-
-        if config.get('oper_type') == Common.OPER_IMPI:
-            status, result = self._api_common.ipmi_get(self.fan_index, config)
-            output = result if status else output
-
-        return output
+        return self._api_common.get_output(self.fan_index, config, False)
 
     def get_model(self):
         """
