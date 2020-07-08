@@ -155,8 +155,11 @@ RUN export VERSION=1.14.2 \
  && mkdir /etc/go \
  && export GOPATH=/etc/go \
  && rm go$VERSION.linux-*.tar.gz \
- && go get github.com/jipanyang/gnxi/gnmi_get \
- && ls -l /etc/go/bin
+ && cd /etc/go \
+ && git clone https://github.com/google/gnxi.git \
+ && cd /etc/go/gnxi \
+ && wget https://github.com/lguohan/gnxi/blob/master/gnmi_cli_py/py_gnmicli.py \
+ && ls -l
 
 EXPOSE 22 8009
 
