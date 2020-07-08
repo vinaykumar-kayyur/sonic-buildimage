@@ -3,7 +3,6 @@
 
 VERBOSE="no"
 RESULTS="PCIe Device Checking All Test"
-PCIE_CHK_CMD=`sudo pcieutil pcie-check |grep "$RESULTS"`
 EXPECTED="PCIe Device Checking All Test ----------->>> PASSED"
 MAX_WAIT_SECONDS=15
 
@@ -17,16 +16,18 @@ function debug()
 
 function check_and_rescan_pcie_devices()
 {
-    PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+    PCIE_CHK_CMD=$(sudo pcieutil pcie-check |grep "$RESULTS")
+    PLATFORM=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+
     if [ ! -f /usr/share/sonic/device/$PLATFORM/plugins/pcie.yaml ]; then
         debug "pcie.yaml does not exist! can't check pcie status!"
         exit
     fi
 
     begin=$SECONDS
-    end=`expr $begin + $MAX_WAIT_SECONDS`
+    end=$((begin + MAX_WAIT_SECONDS))
     rescan_time=$((MAX_WAIT_SECONDS/2))
-    rescan_time=`expr $begin + $rescan_time`
+    rescan_time=$((begin + rescan_time))
 
     while true
     do
