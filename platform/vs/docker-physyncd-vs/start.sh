@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 
-PLATFORM_DIR=/usr/share/sonic/platform
 HWSKU_DIR=/usr/share/sonic/hwsku
-
-
-# Remove stale files if they exist
-rm -f /var/run/rsyslogd.pid
-
-supervisorctl start rsyslogd
 
 mkdir -p /etc/sai.d/
 
@@ -26,6 +19,3 @@ if [[ x"$sonic_asic_platform" == x"broadcom" ]]; then
         cp $HWSKU_DIR/gearbox/*.bcm /etc/sai.d/.
     fi
 fi
-
-supervisorctl start physyncd
-
