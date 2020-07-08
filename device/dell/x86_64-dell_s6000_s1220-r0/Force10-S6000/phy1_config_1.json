@@ -9,7 +9,7 @@
       "line_tx_lanemap": 0,
       "line_rx_lanemap": 0,
       "line_to_system_lanemap": 0,
-      "mdio_addr": "0x0200"   
+      "mdio_addr": "0x0200"
     },
     {
       "index": 201,
