@@ -2,9 +2,10 @@
 
 # Export platform information. Required to be able to write
 # vendor specific code.
-export platform=`sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type`
+SWSS_VARS=$(sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t /usr/share/sonic/templates/swss.j2)
+export platform=$(echo $SWSS_VARS | jq -r '.asic_type')
 
-MAC_ADDRESS=$(sonic-cfggen -d -v 'DEVICE_METADATA.localhost.mac')
+MAC_ADDRESS=$(echo $SWSS_VARS | jq -r '.mac')
 if [ "$MAC_ADDRESS" == "None" ] || [ -z "$MAC_ADDRESS" ]; then
     MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
     logger "Mac address not found in Device Metadata, Falling back to eth0"
@@ -27,7 +28,7 @@ ORCHAGENT_ARGS+="-b 8192 "
 # ID field could be integers just to denote the asic instance like 0,1,2...
 # OR could be PCI device ID's which will be strings like "03:00.0"
 # depending on what the SAI/SDK expects.
-asic_id=`sonic-cfggen -d -v DEVICE_METADATA.localhost.asic_id`
+asic_id=$(echo $SWSS_VARS | jq -r '.asic_id')
 if [ -n "$asic_id" ]
 then
     ORCHAGENT_ARGS+="-i $asic_id "
@@ -51,7 +52,7 @@ elif [ "$platform" == "mellanox" ]; then
 elif [ "$platform" == "innovium" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 else
-    MAC_ADDRESS=`sonic-cfggen -d -v 'DEVICE_METADATA.localhost.mac'`
+    # Should we use the fallback MAC in case it is not found in Device.Metadata
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 fi
 
