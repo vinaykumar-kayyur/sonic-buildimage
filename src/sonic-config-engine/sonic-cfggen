@@ -210,9 +210,8 @@ def smart_open(filename=None, mode=None):
     """
     Provide contextual file descriptor of filename if it is not a file descriptor
     """
-    smart_file = None
+    smart_file = open(filename, mode) if not isinstance(filename, file) else filename
     try:
-        smart_file = open(filename, mode) if not isinstance(filename, file) else filename
         yield smart_file
     finally:
         if not isinstance(filename, file):
@@ -345,11 +344,13 @@ def main():
         deep_update(data, hardware_data)
 
     paths = ['/', '/usr/share/sonic/templates']
-    if args.template != None:
-        args.batch.append((args.template, sys.stdout))
-        paths.append(os.path.dirname(args.template))
-        if args.template_dir is not None:
-            paths.append(os.path.abspath(args.template_dir))
+    if args.template:
+        template_file = os.path.abspath(args.template)
+        args.batch.append((template_file, sys.stdout))
+        paths.append(os.path.dirname(template_file))
+
+    if args.template_dir:
+        paths.append(os.path.abspath(args.template_dir))
 
     if args.batch:
         loader = jinja2.FileSystemLoader(paths)

@@ -109,7 +109,7 @@ class TestCfgGen(TestCase):
 
     def test_template_batch_mode(self):
         argument = '-y ' + os.path.join(self.test_dir, 'test.yml')
-        argument = '-a \'{"key1":"value"}\''
+        argument += ' -a \'{"key1":"value"}\''
         argument += ' -b ' + os.path.join(self.test_dir, 'test.j2') + ',' + os.path.join(self.test_dir, 'test.txt')
         argument += ' -b ' + os.path.join(self.test_dir, 'test2.j2') + ',' + os.path.join(self.test_dir, 'test2.txt')
         output = self.run_script(argument)
