@@ -244,7 +244,7 @@ def main():
     group.add_argument("--preset", help="generate sample configuration from a preset template", choices=get_available_config())
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-K", "--key", help="Lookup for a specific key")
-    group.add_argument("-b", "--batch", help="Render and dump template data ino a file (batch mode)", action="append", default=[],
+    group.add_argument("-b", "--batch", help="Render and dump template data into a file (batch mode)", action="append", default=[],
                        type=lambda opt_value: tuple(opt_value.split(',')))
     args = parser.parse_args()
 
