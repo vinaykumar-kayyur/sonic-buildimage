@@ -348,6 +348,8 @@ def main():
     if args.template != None:
         args.batch.append((args.template, sys.stdout))
         paths.append(os.path.dirname(args.template))
+        if args.template_dir is not None:
+            paths.append(os.path.abspath(args.template_dir))
 
     if args.batch:
         loader = jinja2.FileSystemLoader(paths)
