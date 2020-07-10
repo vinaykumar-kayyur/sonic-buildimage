@@ -35,6 +35,7 @@ import yaml
 import jinja2
 import netaddr
 import json
+import contextlib
 from functools import partial
 from minigraph import minigraph_encoder
 from minigraph import parse_xml
@@ -204,6 +205,19 @@ def sort_data(data):
             data[table] = OrderedDict(natsorted(data[table].items()))
     return data
 
+@contextlib.contextmanager
+def smart_open(filename=None, mode=None):
+    """
+    Provide contextual file descriptor of filename if it is not a file descriptor
+    """
+    smart_file = None
+    try:
+        smart_file = open(filename, mode) if not isinstance(filename, file) else filename
+        yield smart_file
+    finally:
+        if not isinstance(filename, file):
+            smart_file.close()
+
 
 def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
@@ -230,6 +244,8 @@ def main():
     group.add_argument("--preset", help="generate sample configuration from a preset template", choices=get_available_config())
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-K", "--key", help="Lookup for a specific key")
+    group.add_argument("-b", "--batch", help="Render and dump template data ino a file (batch mode)", action="append", default=[],
+                       type=lambda opt_value: tuple(opt_value.split(',')))
     args = parser.parse_args()
 
     platform = get_platform()
@@ -328,14 +344,13 @@ def main():
             hardware_data['DEVICE_METADATA']['localhost'].update(asic_id=asic_id)
         deep_update(data, hardware_data)
 
-    if args.template is not None:
-        template_file = os.path.abspath(args.template)
-        paths  = ['/', '/usr/share/sonic/templates', os.path.dirname(template_file)]
-        if args.template_dir is not None:
-            template_dir = os.path.abspath(args.template_dir)
-            paths.append(template_dir)
-        loader = jinja2.FileSystemLoader(paths)
+    paths = ['/', '/usr/share/sonic/templates']
+    if args.template != None:
+        args.batch.append((args.template, sys.stdout))
+        paths.append(os.path.dirname(args.template))
 
+    if args.batch:
+        loader = jinja2.FileSystemLoader(paths)
         redis_bcc = RedisBytecodeCache(SonicV2Connector(host='127.0.0.1'))
         env = jinja2.Environment(loader=loader, trim_blocks=True, bytecode_cache=redis_bcc)
         env.filters['sort_by_port_index'] = sort_by_port_index
@@ -346,10 +361,11 @@ def main():
         env.filters['ip_network'] = ip_network
         for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
             env.filters[attr] = partial(prefix_attr, attr)
-        # Pass the is_multi_npu function as global
-        env.globals['multi_asic'] = is_multi_npu
-        template = env.get_template(template_file)
-        print(template.render(sort_data(data)))
+        sorted_data = sort_data(data)
+        for template_file, dest_file in args.batch:
+            template = env.get_template(template_file)
+            with smart_open(dest_file, 'w') as df:
+                print(template.render(sorted_data), file=df)
 
     if args.var != None:
         template = jinja2.Template('{{' + args.var + '}}')
