@@ -83,6 +83,75 @@ def parse_device(device):
             deployment_id = node.text
     return (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id)
 
+def formulate_ecmp_entry(dpg_ecmp_content, port_device_map):
+    banks_enumerated = {}
+    lcm_array = []
+    LCM = 0
+    FG_NHG_MEMBER = [{}, {}]
+    FG_NHG_PREFIX = [{}, {}]
+    FG_NHG = [{}, {}]
+    FG_NEIGH = [{}, {}]
+    COMP_FG_NHG_MEMBER = {}
+    COMP_FG_NHG_PREFIX = {}
+    COMP_FG_NHG = {}
+    COMP_FG_NEIGH = {}
+    neigh_key_ipv4 = []
+    neigh_key_ipv6 = []
+    ipv4_tag = "fgnhg_v4"
+    ipv6_tag = "fgnhg_v6"
+
+    port_nhipv4_map = dpg_ecmp_content[0]
+    port_nhipv6_map = dpg_ecmp_content[1]
+    nhgaddr = dpg_ecmp_content[2]
+    nhgvlan = dpg_ecmp_content[3]
+    nhipv4_device_map = {port_nhipv4_map[x]: port_device_map[x] for x in port_device_map
+                         if x in port_nhipv4_map}
+    nhipv6_device_map = {port_nhipv6_map[x]: port_device_map[x] for x in port_device_map
+                         if x in port_nhipv6_map}
+    nhdevices = sorted(list(set(nhipv4_device_map.values())))
+    nhdevices_bank_map = {device: bank for bank, device in enumerate(nhdevices)}
+    nhipv4_bank_map = {ip: nhdevices_bank_map[device] for ip, device in nhipv4_device_map.items()}
+    nhipv6_bank_map = {ip: nhdevices_bank_map[device] for ip, device in nhipv6_device_map.items()}
+    for value in nhdevices_bank_map.values():
+        for key in nhipv4_bank_map.keys():
+            if nhipv4_bank_map[key] == value:
+                if value not in banks_enumerated:
+                    banks_enumerated[value] = 1
+                else:
+                    banks_enumerated[value] = banks_enumerated[value] + 1
+    for bank_enumeration in banks_enumerated.values():
+        lcm_list = range(1, bank_enumeration)
+        lcm_comp = lcm_list[0]
+        for i in lcm_list[1:]:
+            lcm_comp = lcm_comp * i / gcd(lcm_comp, i)
+        lcm_array.append(lcm_comp)
+    LCM = sum(lcm_array)
+    FG_NHG_MEMBER[0] = {ip: {"FG_NHG": ipv4_tag, "Bank": bank} for ip, bank in nhipv4_bank_map.items()}
+    FG_NHG_PREFIX[0] = {nhgaddr[0]: {"FG_NHG": ipv4_tag}}
+    FG_NHG[0] = {ipv4_tag: {"hash_bucket_size": LCM}}
+    for ip in nhipv4_bank_map:
+        neigh_key_ipv4.append(str(nhgvlan + "|" + ip))
+    FG_NEIGH[0] = {neigh_key: {"family": "IPV4"} for neigh_key in neigh_key_ipv4}
+    FG_NHG_MEMBER[1] = {ip: {"FG_NHG": ipv6_tag, "Bank": bank} for ip, bank in nhipv6_bank_map.items()}
+    FG_NHG_PREFIX[1] = {nhgaddr[1]: {"FG_NHG": ipv6_tag}}
+    FG_NHG[1] = {ipv6_tag: {"hash_bucket_size": LCM}}
+    for ip in nhipv6_bank_map:
+        neigh_key_ipv6.append(str(nhgvlan + "|" + ip))
+    FG_NEIGH[1] = {neigh_key: {"family": "IPV6"} for neigh_key in neigh_key_ipv6}
+    COMP_FG_NHG_MEMBER.update(FG_NHG_MEMBER[0])
+    COMP_FG_NHG_MEMBER.update(FG_NHG_MEMBER[1])
+    COMP_FG_NHG_PREFIX.update(FG_NHG_PREFIX[0])
+    COMP_FG_NHG_PREFIX.update(FG_NHG_PREFIX[1])
+    COMP_FG_NHG.update(FG_NHG[0])
+    COMP_FG_NHG.update(FG_NHG[1])
+    COMP_FG_NEIGH.update(FG_NEIGH[0])
+    COMP_FG_NEIGH.update(FG_NEIGH[1])
+    print (COMP_FG_NHG_MEMBER)
+    print (COMP_FG_NHG_PREFIX)
+    print (COMP_FG_NHG)
+    print (COMP_FG_NEIGH)
+    png_ecmp_content = [COMP_FG_NHG_MEMBER, COMP_FG_NHG_PREFIX, COMP_FG_NHG, COMP_FG_NEIGH]
+    return png_ecmp_content
 
 def parse_png(png, hname, dpg_ecmp_content):
     neighbors = {}
@@ -173,74 +242,9 @@ def parse_png(png, hname, dpg_ecmp_content):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-        banks_enumerated = {}
-        lcm_array = []
-        LCM = 0
         png_ecmp_content = []
-        FG_NHG_MEMBER = [{}, {}]
-        FG_NHG_PREFIX = [{}, {}]
-        FG_NHG = [{}, {}]
-        FG_NEIGH = [{}, {}]
-        COMP_FG_NHG_MEMBER = {}
-        COMP_FG_NHG_PREFIX = {}
-        COMP_FG_NHG = {}
-        COMP_FG_NEIGH = {}
-        neigh_key_ipv4 = []
-        neigh_key_ipv6 = []
-        ipv4_tag = "fgnhg_v4"
-        ipv6_tag = "fgnhg_v6"
         if (len(dpg_ecmp_content)):
-            port_nhipv4_map = dpg_ecmp_content[0]
-            port_nhipv6_map = dpg_ecmp_content[1]
-            nhgaddr = dpg_ecmp_content[2]
-            nhgvlan = dpg_ecmp_content[3]
-            nhipv4_device_map = {port_nhipv4_map[x]: port_device_map[x] for x in port_device_map
-                                 if x in port_nhipv4_map}
-            nhipv6_device_map = {port_nhipv6_map[x]: port_device_map[x] for x in port_device_map
-                                 if x in port_nhipv6_map}
-            nhdevices = sorted(list(set(nhipv4_device_map.values())))
-            nhdevices_bank_map = {device: bank for bank, device in enumerate(nhdevices)}
-            nhipv4_bank_map = {ip: nhdevices_bank_map[device] for ip, device in nhipv4_device_map.items()}
-            nhipv6_bank_map = {ip: nhdevices_bank_map[device] for ip, device in nhipv6_device_map.items()}
-            for value in nhdevices_bank_map.values():
-                for key in nhipv4_bank_map.keys():
-                    if nhipv4_bank_map[key] == value:
-                        if value not in banks_enumerated:
-                            banks_enumerated[value] = 1
-                        else:
-                            banks_enumerated[value] = banks_enumerated[value] + 1
-            for bank_enumeration in banks_enumerated.values():
-                lcm_list = range(1, bank_enumeration)
-                lcm_comp = lcm_list[0]
-                for i in lcm_list[1:]:
-                    lcm_comp = lcm_comp * i / gcd(lcm_comp, i)
-                lcm_array.append(lcm_comp)
-            LCM = sum(lcm_array)
-            FG_NHG_MEMBER[0] = {ip: {"FG_NHG": ipv4_tag, "Bank": bank} for ip, bank in nhipv4_bank_map.items()}
-            FG_NHG_PREFIX[0] = {nhgaddr[0]: {"FG_NHG": ipv4_tag}}
-            FG_NHG[0] = {ipv4_tag: {"hash_bucket_size": LCM}}
-            for ip in nhipv4_bank_map:
-                neigh_key_ipv4.append(str(nhgvlan + "|" + ip))
-            FG_NEIGH[0] = {neigh_key: {"family": "IPV4"} for neigh_key in neigh_key_ipv4}
-            FG_NHG_MEMBER[1] = {ip: {"FG_NHG": ipv6_tag, "Bank": bank} for ip, bank in nhipv6_bank_map.items()}
-            FG_NHG_PREFIX[1] = {nhgaddr[1]: {"FG_NHG": ipv6_tag}}
-            FG_NHG[1] = {ipv6_tag: {"hash_bucket_size": LCM}}
-            for ip in nhipv6_bank_map:
-                neigh_key_ipv6.append(str(nhgvlan + "|" + ip))
-            FG_NEIGH[1] = {neigh_key: {"family": "IPV6"} for neigh_key in neigh_key_ipv6}
-            COMP_FG_NHG_MEMBER.update(FG_NHG_MEMBER[0])
-            COMP_FG_NHG_MEMBER.update(FG_NHG_MEMBER[1])
-            COMP_FG_NHG_PREFIX.update(FG_NHG_PREFIX[0])
-            COMP_FG_NHG_PREFIX.update(FG_NHG_PREFIX[1])
-            COMP_FG_NHG.update(FG_NHG[0])
-            COMP_FG_NHG.update(FG_NHG[1])
-            COMP_FG_NEIGH.update(FG_NEIGH[0])
-            COMP_FG_NEIGH.update(FG_NEIGH[1])
-            print (COMP_FG_NHG_MEMBER)
-            print (COMP_FG_NHG_PREFIX)
-            print (COMP_FG_NHG)
-            print (COMP_FG_NEIGH)
-            png_ecmp_content = [COMP_FG_NHG_MEMBER, COMP_FG_NHG_PREFIX, COMP_FG_NHG, COMP_FG_NEIGH]
+            png_ecmp_content = formulate_ecmp_entry(dpg_ecmp_content, port_device_map)
 
     return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, png_ecmp_content)
 
@@ -300,7 +304,6 @@ def parse_asic_internal_link(link, asic_name, hostname):
 
     return neighbors, port_speeds
 
-
 def parse_asic_png(png, asic_name, hostname, dpg_ecmp_content):
     neighbors = {}
     devices = {}
@@ -336,74 +339,9 @@ def parse_asic_png(png, asic_name, hostname, dpg_ecmp_content):
                     device_data['deployment_id'] = deployment_id
                 devices[name] = device_data
 
-        banks_enumerated = {}
-        lcm_array = []
-        LCM = 0
         png_ecmp_content = []
-        FG_NHG_MEMBER = [{}, {}]
-        FG_NHG_PREFIX = [{}, {}]
-        FG_NHG = [{}, {}]
-        FG_NEIGH = [{}, {}]
-        COMP_FG_NHG_MEMBER = {}
-        COMP_FG_NHG_PREFIX = {}
-        COMP_FG_NHG = {}
-        COMP_FG_NEIGH = {}
-        neigh_key_ipv4 = []
-        neigh_key_ipv6 = []
-        ipv4_tag = "fgnhg_v4"
-        ipv6_tag = "fgnhg_v6"
         if (len(dpg_ecmp_content)):
-            port_nhipv4_map = dpg_ecmp_content[0]
-            port_nhipv6_map = dpg_ecmp_content[1]
-            nhgaddr = dpg_ecmp_content[2]
-            nhgvlan = dpg_ecmp_content[3]
-            nhipv4_device_map = {port_nhipv4_map[x]: port_device_map[x] for x in port_device_map
-                                 if x in port_nhipv4_map}
-            nhipv6_device_map = {port_nhipv6_map[x]: port_device_map[x] for x in port_device_map
-                                 if x in port_nhipv6_map}
-            nhdevices = sorted(list(set(nhipv4_device_map.values())))
-            nhdevices_bank_map = {device: bank for bank, device in enumerate(nhdevices)}
-            nhipv4_bank_map = {ip: nhdevices_bank_map[device] for ip, device in nhipv4_device_map.items()}
-            nhipv6_bank_map = {ip: nhdevices_bank_map[device] for ip, device in nhipv6_device_map.items()}
-            for value in nhdevices_bank_map.values():
-                for key in nhipv4_bank_map.keys():
-                    if nhipv4_bank_map[key] == value:
-                        if value not in banks_enumerated:
-                            banks_enumerated[value] = 1
-                        else:
-                            banks_enumerated[value] = banks_enumerated[value] + 1
-            for bank_enumeration in banks_enumerated.values():
-                lcm_list = range(1, bank_enumeration)
-                lcm_comp = lcm_list[0]
-                for i in lcm_list[1:]:
-                    lcm_comp = lcm_comp * i / gcd(lcm_comp, i)
-                lcm_array.append(lcm_comp)
-            LCM = sum(lcm_array)
-            FG_NHG_MEMBER[0] = {ip: {"FG_NHG": ipv4_tag, "Bank": bank} for ip, bank in nhipv4_bank_map.items()}
-            FG_NHG_PREFIX[0] = {nhgaddr[0]: {"FG_NHG": ipv4_tag}}
-            FG_NHG[0] = {ipv4_tag: {"hash_bucket_size": LCM}}
-            for ip in nhipv4_bank_map:
-                neigh_key_ipv4.append(str(nhgvlan + "|" + ip))
-            FG_NEIGH[0] = {neigh_key: {"family": "IPV4"} for neigh_key in neigh_key_ipv4}
-            FG_NHG_MEMBER[1] = {ip: {"FG_NHG": ipv6_tag, "Bank": bank} for ip, bank in nhipv6_bank_map.items()}
-            FG_NHG_PREFIX[1] = {nhgaddr[1]: {"FG_NHG": ipv6_tag}}
-            FG_NHG[1] = {ipv6_tag: {"hash_bucket_size": LCM}}
-            for ip in nhipv6_bank_map:
-                neigh_key_ipv6.append(str(nhgvlan + "|" + ip))
-            FG_NEIGH[1] = {neigh_key: {"family": "IPV6"} for neigh_key in neigh_key_ipv6}
-            COMP_FG_NHG_MEMBER.update(FG_NHG_MEMBER[0])
-            COMP_FG_NHG_MEMBER.update(FG_NHG_MEMBER[1])
-            COMP_FG_NHG_PREFIX.update(FG_NHG_PREFIX[0])
-            COMP_FG_NHG_PREFIX.update(FG_NHG_PREFIX[1])
-            COMP_FG_NHG.update(FG_NHG[0])
-            COMP_FG_NHG.update(FG_NHG[1])
-            COMP_FG_NEIGH.update(FG_NEIGH[0])
-            COMP_FG_NEIGH.update(FG_NEIGH[1])
-            print (COMP_FG_NHG_MEMBER)
-            print (COMP_FG_NHG_PREFIX)
-            print (COMP_FG_NHG)
-            print (COMP_FG_NEIGH)
-            png_ecmp_content = [COMP_FG_NHG_MEMBER, COMP_FG_NHG_PREFIX, COMP_FG_NHG, COMP_FG_NEIGH]
+            png_ecmp_content = formulate_ecmp_entry(dpg_ecmp_content, port_device_map)
 
     return (neighbors, devices, port_speeds, png_ecmp_content)
 
@@ -1429,4 +1367,3 @@ port_alias_asic_map = {}
 def print_parse_xml(filename):
     results = parse_xml(filename)
     print(json.dumps(results, indent=3, cls=minigraph_encoder))
-
