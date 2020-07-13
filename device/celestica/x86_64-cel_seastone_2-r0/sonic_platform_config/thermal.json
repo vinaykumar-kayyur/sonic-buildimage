@@ -14,6 +14,18 @@
             "Switch_U33_Temp" 
         ]
     },
+    "get_model": {
+        "output_source": "value",
+        "value": "N/A"
+    },
+    "get_serial": {
+        "output_source": "value",
+        "value": "N/A"
+    },
+    "get_status":{
+        "output_source": "value",
+        "value":"True"
+    },
     "get_temperature":{
         "output_source": "ipmitool",
         "command": "ipmitool raw 0x04 0x2D {}",

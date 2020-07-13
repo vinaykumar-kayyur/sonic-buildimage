@@ -197,7 +197,10 @@ class Thermal(ThermalBase):
         Returns:
             string: Model/part number of device
         """
-        return "N/A"
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+        default = 0
+        return self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
     
     def get_serial(self):
         """
@@ -206,7 +209,10 @@ class Thermal(ThermalBase):
         Returns:
             string: Serial number of device
         """
-        return "N/A"
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+        default = 0
+        return self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
     
     def get_status(self):
         """
@@ -215,4 +221,9 @@ class Thermal(ThermalBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        return True
+        f_name = inspect.stack()[0][3]
+        config = self._config.get(f_name)
+        default = False
+        output = self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
+        output = json.loads(output.lower())
+        return output
