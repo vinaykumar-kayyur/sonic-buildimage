@@ -530,10 +530,6 @@ class SfpUtil(SfpUtilBase):
                     value = str(current_sfp_values[port])
                     if (value):
                          offset = 128
-                         vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
-                         interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
-                         sfp_type = 'QSFP'
-
                          sfpi_obj = sff8436InterfaceId()
                          if sfpi_obj is None:
                              return None
