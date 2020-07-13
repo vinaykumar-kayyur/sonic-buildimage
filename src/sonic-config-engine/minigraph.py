@@ -153,7 +153,7 @@ def formulate_ecmp_entry(dpg_ecmp_content, port_device_map):
     png_ecmp_content = [COMP_FG_NHG_MEMBER, COMP_FG_NHG_PREFIX, COMP_FG_NHG, COMP_FG_NEIGH]
     return png_ecmp_content
 
-def parse_png(png, hname, dpg_ecmp_content):
+def parse_png(png, hname, dpg_ecmp_content=None):
     neighbors = {}
     devices = {}
     console_dev = ''
@@ -1029,7 +1029,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png,
                  console_ports, png_ecmp_content) = parse_png(child, hostname, dpg_ecmp_content)
             elif child.tag == str(QName(ns, "UngDec")):
-                (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
+                (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
                 (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id,
                  region, cloudtype) = parse_meta(child, hostname)
