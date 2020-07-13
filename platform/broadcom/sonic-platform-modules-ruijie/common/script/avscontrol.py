@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import sys
 import click
-import os
-import commands
 import time
 from  ruijieutil import * 
 import syslog
-from monitor import status
 import traceback
 try:
     from rest.rest import BMCMessage
-except:
+except ImportError:
     pass
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -55,7 +51,6 @@ def doAvsCtrol():
         if STARTMODULE.has_key("avscontrol_restful") and STARTMODULE['avscontrol_restful'] == 1:
             try:
                 #for alibmc rest.py has define get_macrov_value function
-                macrov_value = -1
                 get_macrov_value = getattr(BMCMessage(), "get_macrov_value", None)
                 if callable(get_macrov_value):
                     macrov_value = int(get_macrov_value())

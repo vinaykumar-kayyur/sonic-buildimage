@@ -238,7 +238,6 @@ class BoardInfoArea(BaseArea):
                 d_print("decode boardextra%d:%s" % (i, tmpval))
             else:
                 break
-        pass
 
     def recalcute(self):
         d_print("boardInfoArea version:%x" % ord(self.boardversion))
@@ -627,7 +626,7 @@ class MultiRecordArea(BaseArea):
     pass
 
 
-class Field():
+class Field(object):
 
     def __init__(self, fieldType="ASCII", fieldData=""):
         self.fieldData = fieldData

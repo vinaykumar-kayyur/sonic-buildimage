@@ -5,11 +5,9 @@
 * FAN trays
 * PSU
 """
-import os
 import time
 import datetime
 from monitor import status
-import platform
 
 def doWork():
     a=[];

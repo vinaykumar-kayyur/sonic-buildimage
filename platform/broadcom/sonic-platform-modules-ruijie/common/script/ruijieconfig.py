@@ -11,14 +11,8 @@
 #-------------------------------------------------------------------------------
 import sys
 import os
-import commands
-import time
 from rjutil.baseutil import get_machine_info
 from rjutil.baseutil import get_platform_info
-import binascii
-import termios
-import multiprocessing
-
 
 def getdeviceplatform():
     x = get_platform_info(get_machine_info())

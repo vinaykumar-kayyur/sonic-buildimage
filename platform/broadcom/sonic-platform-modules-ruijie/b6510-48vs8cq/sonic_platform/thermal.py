@@ -10,8 +10,6 @@
 
 
 try:
-    import os
-    import glob
     from sonic_platform_base.thermal_base import ThermalBase
     from sonic_platform.regutil import Reg
     from sonic_platform.logger import logger

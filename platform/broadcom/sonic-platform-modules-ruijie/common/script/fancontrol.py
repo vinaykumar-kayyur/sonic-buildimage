@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import sys
 import click
 import os
-import commands
 import time
 from  ruijieutil import * 
 import syslog
@@ -66,7 +64,6 @@ class FanControl():
         self._outtemp = -100
         self._boardtemp = -100
         self._cputemp = -1000
-        pass
 
     @property
     def fanOKNum(self):
@@ -527,7 +524,6 @@ class FanControl():
             elif self.intemp >=  MONITOR_CONST.TEMP_MIN and (self.preIntemp - self.intemp) > MONITOR_CONST.MONITOR_FALL_TEMP:
                 fanwarningdebuglog(DEBUG_FANCONTROL,"%%policy:温度下降%d度以上" % MONITOR_CONST.MONITOR_FALL_TEMP)
                 self.policySpeed(self.intemp)
-                pass
             else:
                 speed = self.getCurrentSpeed()# 读取当前转速进行设置，防止风扇狗叫
                 if speed is not None:
@@ -575,7 +571,6 @@ class FanControl():
                     self.fanSpeedSet(MONITOR_CONST.MAC_ERROR_SPEED)
                 else:
                     self.fanSpeedSetMax()
-                    pass
             else:
                 pass
         except Exception as e:

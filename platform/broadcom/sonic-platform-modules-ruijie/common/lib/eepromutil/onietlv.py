@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import binascii
-import sys
-
 
 class OnietlvException(Exception):
     def __init__(self,  message='onietlverror', code=-100):
@@ -11,7 +9,7 @@ class OnietlvException(Exception):
         self.code = code
         self.message = message
 
-class onie_tlv():
+class onie_tlv(object):
     TLV_INFO_ID_STRING = "TlvInfo\x00"
     TLV_INFO_INIA_ID = "\x00\x00\x13\x11"
     TLV_INFO_VERSION = 0x01
@@ -49,7 +47,6 @@ class onie_tlv():
     TLV_CODE_PROJECT_ID = 0x48
     TLV_CODE_SETMAC_VERSION = 0x49
     TLV_CODE_EEPROM_TYPE = 0x4A
-
 
     @property
     def dstatus(self):

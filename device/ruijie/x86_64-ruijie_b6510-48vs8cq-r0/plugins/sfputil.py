@@ -5,10 +5,7 @@
 
 try:
     import time
-    import commands
-    import re
     import os
-    import threading
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -70,7 +67,7 @@ class SfpUtil(SfpUtilBase):
             try:
                 file_path.seek(offset)
                 read_buf = file_path.read(num_bytes)
-            except:
+            except BaseException:
                 attempts += 1
                 time.sleep(0.05)
             else:
@@ -107,8 +104,6 @@ class SfpUtil(SfpUtilBase):
         if port_num in self.port_to_eeprom_mapping.keys():
             sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[port_num]
         else:
-            sysfs_i2c_adapter_base_path = "/sys/class/i2c-adapter"
-
             i2c_adapter_id = self._get_port_i2c_adapter_id(port_num)
             if i2c_adapter_id is None:
                 print "Error getting i2c bus num"
@@ -130,7 +125,7 @@ class SfpUtil(SfpUtilBase):
             # If sfp device is not present on bus, Add it
             if not os.path.exists(sysfs_sfp_i2c_client_path):
                 if port_num in self.qsfp_ports:
-                    ret = self._add_new_sfp_device(
+                    self._add_new_sfp_device(
                             sysfs_sfp_i2c_adapter_path, devid, self.QSFP_DEVICE_TYPE)
                 else:
                     ret = self._add_new_sfp_device(
@@ -155,7 +150,7 @@ class SfpUtil(SfpUtilBase):
         try:
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
+        except BaseException:
             return None
 
         return eeprom_raw
@@ -241,7 +236,6 @@ class SfpUtil(SfpUtilBase):
         else:
             # SFP doesn't support this feature
             return False
-        return False
 
     def get_low_power_mode(self, port_num):
         """
@@ -318,7 +312,6 @@ class SfpUtil(SfpUtilBase):
         else:
             # SFP doesn't support this feature
             return False
-        return False
 
     def get_transceiver_change_event(self, timeout=0):
 

@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import sys
 import click
 import os
 import commands
 import time
-import mmap
 from  ruijieconfig import *
 from  ruijieutil   import rjpciwr
 
@@ -34,7 +32,6 @@ def log_os_system(cmd):
 
 def write_sysfs_value(reg_name, value):
     u'''写sysfs文件'''
-    retval = 'ERR'
     mb_reg_file = "/sys/bus/i2c/devices/" + reg_name
     if (not os.path.isfile(mb_reg_file)):
         print mb_reg_file,  'not found !'
@@ -76,7 +73,6 @@ def startAvscontrol():
     rets = getPid("avscontrol.py")
     if len(rets) == 0:
         os.system(cmd)
-    pass
 
 def startFanctrol():
     if STARTMODULE['fancontrol'] == 1:
@@ -228,11 +224,11 @@ def removedriver(name, delay):
 
 def removedrivers():
     u'''卸载所有驱动'''
-    if GLOBALCONFIG == None:
+    if GLOBALCONFIG is None:
         click.echo("%%DEVICE_I2C-INIT: load global config failed.")
         return
     drivers = GLOBALCONFIG.get("DRIVERLISTS", None)
-    if drivers == None:
+    if drivers is None:
         click.echo("%%DEVICE_I2C-INIT: load driver list failed.")
         return 
     for index in range(len(drivers)-1, -1, -1 ):
@@ -247,11 +243,11 @@ def removedrivers():
 
 def adddrivers():
     u'''添加驱动'''
-    if GLOBALCONFIG == None:
+    if GLOBALCONFIG is None:
         click.echo("%%DEVICE_I2C-INIT: load global config failed.")
         return
     drivers = GLOBALCONFIG.get("DRIVERLISTS", None)
-    if drivers == None:
+    if drivers is None:
         click.echo("%%DEVICE_I2C-INIT: load driver list failed.")
         return 
     for index in range(0 ,len(drivers)):
@@ -308,7 +304,7 @@ def MacLedSet(data):
     bar = MAC_LED_RESET.get("bar")
     offset = MAC_LED_RESET.get("offset")
     val = MAC_LED_RESET.get(data, None)
-    if val == None:
+    if val is None:
         click.echo("%%DEVICE_I2C-INIT: MacLedSet wrong input")
         return
     rjpciwr(pcibus, slot, fn, bar, offset, val)
