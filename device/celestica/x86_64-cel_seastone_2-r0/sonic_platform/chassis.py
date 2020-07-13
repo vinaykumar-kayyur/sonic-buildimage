@@ -26,6 +26,7 @@ class Chassis(ChassisBase):
 
         self.__initialize_fan()
         self.__initialize_psu()
+        self.__initialize_thermals()
 
         # self.is_host = self._api_common.is_host()
 
@@ -70,11 +71,17 @@ class Chassis(ChassisBase):
                 psu_index += 1
                 self._psu_list.append(psu)
 
-    # def __initialize_thermals(self):
-    #     from sonic_platform.thermal import Thermal
-    #     for index in range(0, NUM_THERMAL):
-    #         thermal = Thermal(index)
-    #         self._thermal_list.append(thermal)
+    def __initialize_thermals(self):
+        from sonic_platform.thermal import Thermal
+
+        thermal_config_path = self._api_common.get_config_path(Thermal.THERMAL_CONFIG)
+        thermal_config = self._api_common.load_json_file(thermal_config_path)
+        
+        thermal_index = 0
+        for index in range(0, thermal_config['thermal_num']):
+            thermal = Thermal(thermal_index, conf=thermal_config)
+            thermal_index += 1
+            self._thermal_list.append(thermal)
 
     # def __initialize_eeprom(self):
     #     from sonic_platform.eeprom import Tlv
