@@ -70,17 +70,18 @@ class Thermal(ThermalBase):
         """
         Retrieves the high threshold temperature of thermal
         
-        Example output
-        Temp  | 35.000 | degrees C|ok      | na | na | na | na | na | na
-        The thresholds listed are, in order: lnr, lcr, lnc, unc, ucr, unr
+        For AMI BMC device :
+            Example output
+            Temp  | 35.000 | degrees C|ok      | na | na | na | na | na | na
+            The thresholds listed are, in order: lnr, lcr, lnc, unc, ucr, unr
 
-        These are acronyms for:
-        Lower Non-Recoverable
-        Lower Critical
-        Lower Non-Critical
-        Upper Non-Critical
-        Upper Critical
-        Upper Non-Recoverable
+            These are acronyms for:
+            Lower Non-Recoverable
+            Lower Critical
+            Lower Non-Critical
+            Upper Non-Critical
+            Upper Critical
+            Upper Non-Recoverable
 
         Returns:
             unc as float number and return 0 if the BMC output is na.
@@ -112,10 +113,10 @@ class Thermal(ThermalBase):
         """
         Sets the high threshold temperature of thermal
 
-        use ipmitool command
-        ipmitool sensor thresh [sensor name] unc [0>= temp_value <=62]
-
-        if the current value of unc is 'na' ipmitool can't be set the value
+        For AMI BMC device :
+            use ipmitool command
+            ipmitool sensor thresh [sensor name] unc [0>= temp_value <=62]
+            if the current value of unc is 'na' ipmitool can't be set the value
 
         Args : 
             temperature: A float number up to nearest thousandth of one degree Celsius, 
@@ -134,10 +135,10 @@ class Thermal(ThermalBase):
         """
         Sets the low threshold temperature of thermal
 
-        use ipmitool command
-        ipmitool sensor thresh [sensor name] lnc temp_value
-
-        if the current value of lnc is 'na' ipmitool can't be set the value
+        For AMI BMC device :
+            use ipmitool command
+            ipmitool sensor thresh [sensor name] lnc [temp_value]
+            if the current value of lnc is 'na' ipmitool can't be set the value
 
         Args : 
             temperature: A float number up to nearest thousandth of one degree Celsius,
