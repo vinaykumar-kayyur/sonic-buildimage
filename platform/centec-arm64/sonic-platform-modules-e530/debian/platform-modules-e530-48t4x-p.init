@@ -18,10 +18,14 @@ function load_kernel_modules()
     depmod -a
     modprobe centec_e530_48t4x_p_platform
     modprobe dal
+    modprobe tun
+    modprobe tap
 }
 
 function remove_kernel_modules()
 {
+    modprobe -r tap
+    modprobe -r tun
     modprobe -r dal
     modprobe -r centec_e530_48t4x_p_platform
 }

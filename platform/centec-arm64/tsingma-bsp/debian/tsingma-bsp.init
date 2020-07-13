@@ -19,6 +19,8 @@ function config_tsingma_soc()
     if [ "$hwaddr" != "" ]; then
         ifconfig eth0 hw ether $hwaddr
     fi
+    modprobe tun
+    modprobe tap
 }
 
 case "$1" in
