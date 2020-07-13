@@ -100,7 +100,7 @@ class Chassis(ChassisBase):
 
     def _init_by_hal(self, hal_interface):
         self.hal_interface = hal_interface
-        fans = self.hal_interface.get_fans()
+        self.hal_interface.get_fans()
 
     def get_name(self):
         """
@@ -251,10 +251,6 @@ class Chassis(ChassisBase):
             return True, change_event_dict
 
         return False, {}
-        """
-        print("ERROR: Platform did not implement get_reboot_cause()")
-        raise NotImplementedError
-        """
 
     def get_transceiver_change_event(self, timeout=0):
 

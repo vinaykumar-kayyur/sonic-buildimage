@@ -1,11 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import collections
-from bitarray import bitarray
-from datetime import datetime, timedelta
-import sys
-
-
 class FantlvException(Exception):
     def __init__(self,  message='fantlverror', code=-100):
         err = 'errcode: {0} message:{1}'.format(code, message)
@@ -13,7 +7,7 @@ class FantlvException(Exception):
         self.code = code
         self.message = message
 
-class fan_tlv():
+class fan_tlv(object):
     HEAD_INFO = "\x01\x7e\x01\xf1"
     VERSION = 0x01                       # E2PROM文件定义的版本号，初始版本为0x01
     FLAG = 0x7E                       # 新版本E2PROM标识为0x7E
@@ -71,8 +65,9 @@ class fan_tlv():
 
     def strtoarr(self, str):
         s = []
-        for index in str:
-            s.append(index)
+        if str is not None:
+            for index in str:
+                s.append(index)
         return s
 
     def str_to_hex(self,rest_v):
@@ -136,10 +131,6 @@ class fan_tlv():
         # printvalue(bin_buffer)
         return bin_buffer
 
-    def encode(self):
-        e = []
-        # 添加头部
-
     def decode(self, e2):
         if e2[0:4] != self.HEAD_INFO:
             raise FantlvException("Fan tlv head info error,not fan tlv type", -10)
@@ -168,8 +159,6 @@ class fan_tlv():
                 e2[tlv_index:tlv_index + 2 + ord(e2[tlv_index + 1])])
             tlv_index += ord(e2[tlv_index + 1]) + 2
             ret.append(s)
-        # 计算校验和
-        sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
 
         return ret
 

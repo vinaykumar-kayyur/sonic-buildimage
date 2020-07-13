@@ -23,8 +23,8 @@ import click
 import mmap
 from ruijieconfig import *
 #from fruutil import fru
-from tabulate import tabulate
-import readline
+#from tabulate import tabulate
+#import readline
 try:
     from eepromutil.fru import *
 except:
@@ -426,8 +426,9 @@ class fan_tlv():
 
     def strtoarr(self, str):
         s = []
-        for index in str:
-            s.append(index)
+        if str is not None :
+            for index in str:
+                s.append(index)
         return s
 
     def generate_fan_value(self):
@@ -476,10 +477,6 @@ class fan_tlv():
         # printvalue(bin_buffer)
         return bin_buffer
 
-    def encode(self):
-        e = []
-        # 添加头部
-
     def decode(self, e2):
         ret = []
         self.VERSION = ord(e2[0])
@@ -508,8 +505,6 @@ class fan_tlv():
                 e2[tlv_index:tlv_index + 2 + ord(e2[tlv_index + 1])])
             tlv_index += ord(e2[tlv_index + 1]) + 2
             ret.append(s)
-        # 计算校验和
-        sumcrc = fan_tlv.fancrc(e2[0:self._FAN_TLV_HDR_LEN + self.TLV_LEN])
 
         return ret
 
@@ -560,7 +555,6 @@ class fan_tlv():
 class AVSUTIL():
     @staticmethod
     def mac_avs_chip(bus, devno, loc, open, close, loop, protectaddr, level, loopaddr):
-        ret = -1
         # 关闭保护
         rji2cset(bus, devno, protectaddr, open)
         rji2cset(bus, devno, loopaddr, loop)
@@ -598,7 +592,6 @@ class AVSUTIL():
     @staticmethod
     def mac_adj():
         macavs = 0
-        cpldavs = 0
         name = MAC_DEFAULT_PARAM["sdkreg"]
         ret, status = getSdkReg(name)
         if ret == False:
@@ -698,7 +691,6 @@ def get_sysfs_value(location):
 
 
 def write_sysfs_value(reg_name, value):
-    retval = 'ERR'
     fileLoc = MAILBOX_DIR + reg_name
     try:
         if not os.path.isfile(fileLoc):
@@ -763,7 +755,7 @@ def getMacTemp():
     result = {}
     #waitForDocker()
     # 连续执行两次，取第二次
-    ret, log = rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
+    rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
     ret, log = rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
     if ret:
         return False, result
@@ -944,7 +936,7 @@ def getsyseeprombyId(id):  # 根据ID获取系统系统
 
 def fac_init_cardidcheck():
     rest = getsyseeprombyId(TLV_CODE_RJ_CARID)  # 判断cardId是否相同
-    if rest == None:
+    if rest is None:
         print "需要烧写bin文件"
         return False
     else:
@@ -984,8 +976,6 @@ def util_setmac(eth, mac):
     ret, status = rj_os_system(ifconfigcmd)
     if ret:
         raise SETMACException("软件设置网卡MAC出错")
-    if ret:
-        return False
     index = 0
     for item in macs:
         cmd = "ethtool -E %s magic %s offset %d value 0x%s" % (
@@ -995,7 +985,6 @@ def util_setmac(eth, mac):
         ret, log = rj_os_system(cmd)
         if ret != 0:
             raise SETMACException("设置硬件网卡MAC出错")
-            return False
     # 取设置后的返回值
     cmd_t = "ethtool -e eth0 offset 0 length 6"
     ret, log = rj_os_system(cmd_t)
@@ -1012,7 +1001,6 @@ def util_setmac(eth, mac):
 
 
 def getInputCheck(tips):
-    err = 0
     str = raw_input(tips)
     if astrcmp(str, "y") or astrcmp(str, "ye") or astrcmp(str, "yes") or astrcmp(str, ""):
         return True
@@ -1067,7 +1055,6 @@ def changeTypeValue(_value, type1, tips, example):
     if type1 == TLV_CODE_MAC_BASE:
         if len(name) != 12:
             raise SETMACException("MAC地址长度不对,请认真核对")
-            return False
         release_mac = ""
         for i in range(len(name) / 2):
             if i == 0:
@@ -1078,7 +1065,6 @@ def changeTypeValue(_value, type1, tips, example):
             _value[type1] = release_mac
         else:
             raise SETMACException("MAC地址非法,请认真核对")
-            return False
     elif type1 == TLV_CODE_DEVICE_VERSION:
         if name.isdigit():
             _value[type1] = int(name)
@@ -1381,13 +1367,9 @@ def fac_fans_setmac():
     return False
 
 def fac_fan_setmac(item):
-
     I2CUTIL.openFanE2Protect()
     I2CUTIL.writeToFanE2(item.fanbus, item.fanloc, item.generate_fan_value())
     I2CUTIL.closeFanE2Protect()
-
-    pass
-
 
 def writeToEEprom(rst_arr):
     dealtype = E2_PROTECT.get('gettype',None)
@@ -1766,10 +1748,10 @@ def getsysmeminfo():
     # 先获取总数
     result = []
     ret1, log1 = rj_os_system(cmd)
-    if ret == 0 and len(log1):
+    if ret1 == 0 and len(log1):
         log1 = log1.lstrip()
         arr = log1.split("\n")
-        total = len(arr)  # 总共的插槽数
+        #total = len(arr)  # 总共的插槽数
         for i in range(len(arr)):
             val = re.sub("\D", "", arr[i])
             if val == "":
@@ -1792,7 +1774,7 @@ def getsysmeminfo_detail():
     cmd = log + " -t 17 | grep  -A21 \"Memory Device\""  # 17
     # 先获取总数
     ret1, log1 = rj_os_system(cmd)
-    if ret != 0 or len(log1) <= 0:
+    if ret1 != 0 or len(log1) <= 0:
         return False, "命令执行出错[%s]" % cmd
     result_t = log1.split("--")
     mem_rets = []
@@ -1819,7 +1801,7 @@ def getDmiSysByType(type_t):
     cmd = log + " -t %s" % type_t
     # 先获取总数
     ret1, log1 = rj_os_system(cmd)
-    if ret != 0 or len(log1) <= 0:
+    if ret1 != 0 or len(log1) <= 0:
         return False, "命令执行出错[%s]" % cmd
     its = log1.replace("\t", "").strip().split("\n")
     ret = {}
@@ -1904,7 +1886,7 @@ def get_cpu_info():
     return True, mem_rets
 #  读取文件内容
 def get_version_config_info(attr_key, file_name=None):
-    if file_name == None:
+    if file_name is None:
         version_conf_filename = "/root/version.json"
     else:
         version_conf_filename = file_name
@@ -1940,7 +1922,6 @@ def io_rd(reg_addr, len =1):
         return None
     finally:
         os.close(fd)
-    return None
     
 
 def io_wr(reg_addr, reg_data):
@@ -1959,7 +1940,7 @@ def io_wr(reg_addr, reg_data):
         devfile = "/dev/port"
         fd = os.open(devfile, os.O_RDWR|os.O_CREAT)
         os.lseek(fd, regaddr, os.SEEK_SET)
-        ret = os.write(fd, chr(regdata))
+        os.write(fd, chr(regdata))
         return True
     except ValueError as e:
         print e
@@ -1969,5 +1950,4 @@ def io_wr(reg_addr, reg_data):
         return False
     finally:
         os.close(fd)
-    return False
     

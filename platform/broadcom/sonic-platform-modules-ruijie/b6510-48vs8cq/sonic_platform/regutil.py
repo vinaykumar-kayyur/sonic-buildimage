@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 from glob import glob
 from plat_hal.osutil import osutil
 
@@ -89,8 +88,6 @@ class Reg(object):
             return True
         except Exception as e:
             raise e
-
-        return False
 
     def _format_val(self, val):
         try:
@@ -223,9 +220,9 @@ class Reg(object):
             sta, ret = osutil.getmactemp()
             if sta == True:
                 mac_aver = float(ret.get("average", self.__error_ret))
-                mac_max = float(ret.get("maximum", self.__error_ret))
+                #mac_max = float(ret.get("maximum", self.__error_ret))
                 mac_aver = mac_aver * 1000
-                mac_max = mac_max * 1000
+                #mac_max = mac_max * 1000
             else:
                 return False, ret
         except AttributeError as e:

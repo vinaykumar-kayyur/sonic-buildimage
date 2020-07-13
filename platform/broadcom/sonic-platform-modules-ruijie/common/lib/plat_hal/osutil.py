@@ -205,7 +205,7 @@ class osutil(object):
             result = {}
             #waitForDocker()
             #need to exec twice
-            ret, log = osutil.rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
+            osutil.rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
             ret, log = osutil.rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
             if ret:
                 return False, result

@@ -10,9 +10,6 @@
 ########################################################################
 
 try:
-    import os
-    import struct
-    import ctypes
     from sonic_platform_base.watchdog_base import WatchdogBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
