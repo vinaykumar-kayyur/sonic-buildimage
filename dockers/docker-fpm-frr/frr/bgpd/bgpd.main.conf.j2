@@ -97,5 +97,53 @@ router bgp {{ DEVICE_METADATA['localhost']['bgp_asn'] }}
 {% endblock maximum_paths %}
 {% endif %}
 !
+{% if BGP_ROUTEMAPS %}
+{% for name, routemap in BGP_ROUTEMAPS.iteritems() %}
+route-map {{ name[0] }} {{ routemap['opttype'] }} {{ routemap['seqnumber'] }}
+{% if routemap.has_key('matchcommunity') %}
+ match community {{ routemap['matchcommunity'] }}
+{% endif %}
+{% if routemap.has_key('prefix_name') %}
+ match ip address prefix-list {{ routemap['prefix_name'] }}
+{% endif %}
+{% if routemap.has_key('comm_range') %}
+ set community {{ routemap['comm_range'] }}
+{% endif %}
+{% if routemap.has_key('applycost') %}
+ set metric {{ routemap['applycost'] }}
+{% endif %}
+!
+{% endfor %}
+{% endif %}
+!
+{% block bgp_peers_with_range %}
+{% if BGP_PEER_RANGE %}
+{% for bgp_peer in BGP_PEER_RANGE.values() %}
+ neighbor {{ bgp_peer['name'] }} peer-group
+{% if bgp_peer.has_key('remote_as') %}
+ neighbor {{ bgp_peer['name'] }} remote-as {{ bgp_peer['remote_as'] }}
+{% endif %}
+{% if bgp_peer.has_key('password') %}
+ neighbor {{ bgp_peer['name'] }} password simple {{ bgp_peer['password'] }}
+{% endif %}
+{% if bgp_peer.has_key('description') %}
+ neighbor {{ bgp_peer['name'] }} description {{ bgp_peer['description'] }}
+{% endif %}
+{% if bgp_peer.has_key('source') %}
+ neighbor {{ bgp_peer['name'] }} update-source {{ bgp_peer['source'] }}
+{% endif %}
+{% endfor %}
+{% for bgp_peer in BGP_PEER_RANGE.values() %}
+{% if bgp_peer.has_key('ip_range') %}
+{% for iplist in bgp_peer['ip_range'] %}
+{% if iplist %}
+ neighbor {{ iplist }} peer-group {{ bgp_peer['name'] }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endblock bgp_peers_with_range %}
+!
 ! end of template: bgpd/bgpd.main.conf.j2
 !
