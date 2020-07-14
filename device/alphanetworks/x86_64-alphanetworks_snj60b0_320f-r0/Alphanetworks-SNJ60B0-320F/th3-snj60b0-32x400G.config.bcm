@@ -1,0 +1,298 @@
+# This property file is for JUNGFRAU 1x400Gx32 mode only.
+# JUNGFRAU uses Tomahawk3 BCM56980 as its mac. Besides, it is phyless.
+
+os=linux
+led_fw_path="/usr/share/sonic/platform/"
+bcm_stat_interval.0=1000000
+bcm_linkscan_interval.0=250000
+
+mdio_output_delay.0=0xf
+mem_cache_enable=0
+
+parity_enable=0
+core_clock_frequency=1325
+
+dpr_clock_frequency=1000
+
+# Blackhawk Core - 32 front ports
+# BlackhawkCore[0 - 3] must map to device port[1-18], PIPE-0.
+portmap_1=1:400
+portmap_5=9:400
+portmap_9=17:400
+portmap_13=25:400
+
+# BlackhawkCore[4 - 7] must map to device port[20-37], PIPE-1.
+portmap_20=33:400
+portmap_24=41:400
+portmap_28=49:400
+portmap_32=57:400
+
+# BlackhawkCore[8 - 11] must map to logical port[40-57], PIPE-2.
+portmap_40=65:400
+portmap_44=73:400
+portmap_48=81:400
+portmap_52=89:400
+
+# BlackhawkCore[12 - 15] must map to logical port[60-77], PIPE-3.
+portmap_60=97:400
+portmap_64=105:400
+portmap_68=113:400
+portmap_72=121:400
+
+# BlackhawkCore[16 - 19] must map to logical port[80-97], PIPE-4.
+portmap_80=129:400
+portmap_84=137:400
+portmap_88=145:400
+portmap_92=153:400
+
+# BlackhawkCore[20 - 23] must map to logical port[100-117], PIPE-5.
+portmap_100=161:400
+portmap_104=169:400
+portmap_108=177:400
+portmap_112=185:400
+
+# BlackhawkCore[24 - 27] must map to logical port[120-137], PIPE-6.
+portmap_120=193:400
+portmap_124=201:400
+portmap_128=209:400
+portmap_132=217:400
+
+# BlackhawkCore[28 - 31] must map to logical port[140-157], PIPE-7.
+portmap_140=225:400
+portmap_144=233:400
+portmap_148=241:400
+portmap_152=249:400
+
+# Merlin Core - 2 management ports
+portmap_38=257:10
+portmap_118=258:10
+
+# Configure all front port as XE and CD ports.
+pbmp_xport_xe=0x0FFFF0FFFF4FFFF0FFFF0FFFF0FFFF4FFFF1FFFE
+pbmp_oversubscribe=0x0FFFF0FFFF4FFFF0FFFF0FFFF0FFFF4FFFF1FFFE
+
+# lane map and polarity
+# BlackhawkCore0
+phy_chain_rx_lane_map_physical{1.0}=0x42735061
+serdes_core_rx_polarity_flip_physical{1}=0xe6
+phy_chain_tx_lane_map_physical{1.0}=0x71056243
+serdes_core_tx_polarity_flip_physical{1}=0xa1
+
+# BlackhawkCore1
+phy_chain_rx_lane_map_physical{9.0}=0x27150634
+serdes_core_rx_polarity_flip_physical{9}=0xd8
+phy_chain_tx_lane_map_physical{9.0}=0x63520714
+serdes_core_tx_polarity_flip_physical{9}=0x2c
+
+# BlackhawkCore2
+phy_chain_rx_lane_map_physical{17.0}=0x43025176
+serdes_core_rx_polarity_flip_physical{17}=0xcb
+phy_chain_tx_lane_map_physical{17.0}=0x21034765
+serdes_core_tx_polarity_flip_physical{17}=0x4f
+
+# BlackhawkCore3
+phy_chain_rx_lane_map_physical{25.0}=0x67352014
+serdes_core_rx_polarity_flip_physical{25}=0x72
+phy_chain_tx_lane_map_physical{25.0}=0x62730415
+serdes_core_tx_polarity_flip_physical{25}=0x69
+
+# BlackhawkCore4
+phy_chain_rx_lane_map_physical{33.0}=0x13026754
+serdes_core_rx_polarity_flip_physical{33}=0xc3
+phy_chain_tx_lane_map_physical{33.0}=0x35274061
+serdes_core_tx_polarity_flip_physical{33}=0x8e
+
+# BlackhawkCore5
+phy_chain_rx_lane_map_physical{41.0}=0x35270146
+serdes_core_rx_polarity_flip_physical{41}=0x78
+phy_chain_tx_lane_map_physical{41.0}=0x73526014
+serdes_core_tx_polarity_flip_physical{41}=0xa4
+
+# BlackhawkCore6
+phy_chain_rx_lane_map_physical{49.0}=0x13025647
+serdes_core_rx_polarity_flip_physical{49}=0xcc
+phy_chain_tx_lane_map_physical{49.0}=0x37054162
+serdes_core_tx_polarity_flip_physical{49}=0x9b
+
+# BlackhawkCore7
+phy_chain_rx_lane_map_physical{57.0}=0x35270416
+serdes_core_rx_polarity_flip_physical{57}=0x78
+phy_chain_tx_lane_map_physical{57.0}=0x63720415
+serdes_core_tx_polarity_flip_physical{57}=0xb9
+
+# BlackhawkCore8
+phy_chain_rx_lane_map_physical{65.0}=0x13024756
+serdes_core_rx_polarity_flip_physical{65}=0xc3
+phy_chain_tx_lane_map_physical{65.0}=0x37054162
+serdes_core_tx_polarity_flip_physical{65}=0xab
+
+# BlackhawkCore9
+phy_chain_rx_lane_map_physical{73.0}=0x35270146
+serdes_core_rx_polarity_flip_physical{73}=0x78
+phy_chain_tx_lane_map_physical{73.0}=0x63720514
+serdes_core_tx_polarity_flip_physical{73}=0x3c
+
+# BlackhawkCore10
+phy_chain_rx_lane_map_physical{81.0}=0x13024756
+serdes_core_rx_polarity_flip_physical{81}=0xc3
+phy_chain_tx_lane_map_physical{81.0}=0x35204761
+serdes_core_tx_polarity_flip_physical{81}=0x9e
+
+# BlackhawkCore11
+phy_chain_rx_lane_map_physical{89.0}=0x35270416
+serdes_core_rx_polarity_flip_physical{89}=0x78
+phy_chain_tx_lane_map_physical{89.0}=0x73620514
+serdes_core_tx_polarity_flip_physical{89}=0x8c
+
+# BlackhawkCore12
+phy_chain_rx_lane_map_physical{97.0}=0x13024756
+serdes_core_rx_polarity_flip_physical{97}=0xc3
+phy_chain_tx_lane_map_physical{97.0}=0x37154062
+serdes_core_tx_polarity_flip_physical{97}=0xaf
+
+# BlackhawkCore13
+phy_chain_rx_lane_map_physical{105.0}=0x45671320
+serdes_core_rx_polarity_flip_physical{105}=0x53
+phy_chain_tx_lane_map_physical{105.0}=0x62730415
+serdes_core_tx_polarity_flip_physical{105}=0x69
+
+# BlackhawkCore14
+phy_chain_rx_lane_map_physical{113.0}=0x13026754
+serdes_core_rx_polarity_flip_physical{113}=0xc3
+phy_chain_tx_lane_map_physical{113.0}=0x17254063
+serdes_core_tx_polarity_flip_physical{113}=0x8e
+
+# BlackhawkCore15
+phy_chain_rx_lane_map_physical{121.0}=0x65471230
+serdes_core_rx_polarity_flip_physical{121}=0xaa
+phy_chain_tx_lane_map_physical{121.0}=0x27351406
+serdes_core_tx_polarity_flip_physical{121}=0x3d
+
+# BlackhawkCore16
+phy_chain_rx_lane_map_physical{129.0}=0x62735140
+serdes_core_rx_polarity_flip_physical{129}=0x63
+phy_chain_tx_lane_map_physical{129.0}=0x52736140
+serdes_core_tx_polarity_flip_physical{129}=0xf4
+
+# BlackhawkCore17
+phy_chain_rx_lane_map_physical{137.0}=0x35270416
+serdes_core_rx_polarity_flip_physical{137}=0x78
+phy_chain_tx_lane_map_physical{137.0}=0x52731604
+serdes_core_tx_polarity_flip_physical{137}=0xe2
+
+# BlackhawkCore18
+phy_chain_rx_lane_map_physical{145.0}=0x02135746
+serdes_core_rx_polarity_flip_physical{145}=0x39
+phy_chain_tx_lane_map_physical{145.0}=0x15274063
+serdes_core_tx_polarity_flip_physical{145}=0x8e
+
+# BlackhawkCore19
+phy_chain_rx_lane_map_physical{153.0}=0x05471263
+serdes_core_rx_polarity_flip_physical{153}=0x81
+phy_chain_tx_lane_map_physical{153.0}=0x43621705
+serdes_core_tx_polarity_flip_physical{153}=0x9f
+
+# BlackhawkCore20
+phy_chain_rx_lane_map_physical{161.0}=0x13620475
+serdes_core_rx_polarity_flip_physical{161}=0x66
+phy_chain_tx_lane_map_physical{161.0}=0x35274061
+serdes_core_tx_polarity_flip_physical{161}=0x2f
+
+# BlackhawkCore21
+phy_chain_rx_lane_map_physical{169.0}=0x15074263
+serdes_core_rx_polarity_flip_physical{169}=0x71
+phy_chain_tx_lane_map_physical{169.0}=0x52731604
+serdes_core_tx_polarity_flip_physical{169}=0x62
+
+# BlackhawkCore22
+phy_chain_rx_lane_map_physical{177.0}=0x13620475
+serdes_core_rx_polarity_flip_physical{177}=0xee
+phy_chain_tx_lane_map_physical{177.0}=0x37254061
+serdes_core_tx_polarity_flip_physical{177}=0x8e
+
+# BlackhawkCore23
+phy_chain_rx_lane_map_physical{185.0}=0x15074263
+serdes_core_rx_polarity_flip_physical{185}=0x71
+phy_chain_tx_lane_map_physical{185.0}=0x52730614
+serdes_core_tx_polarity_flip_physical{185}=0x68
+
+# BlackhawkCore24
+phy_chain_rx_lane_map_physical{193.0}=0x13620475
+serdes_core_rx_polarity_flip_physical{193}=0xee
+phy_chain_tx_lane_map_physical{193.0}=0x37254061
+serdes_core_tx_polarity_flip_physical{193}=0x8e
+
+# BlackhawkCore25
+phy_chain_rx_lane_map_physical{201.0}=0x15074263
+serdes_core_rx_polarity_flip_physical{201}=0x71
+phy_chain_tx_lane_map_physical{201.0}=0x53720614
+serdes_core_tx_polarity_flip_physical{201}=0x38
+
+# BlackhawkCore26
+phy_chain_rx_lane_map_physical{209.0}=0x13620745
+serdes_core_rx_polarity_flip_physical{209}=0xe8
+phy_chain_tx_lane_map_physical{209.0}=0x30156742
+serdes_core_tx_polarity_flip_physical{209}=0xa7
+
+# BlackhawkCore27
+phy_chain_rx_lane_map_physical{217.0}=0x15072364
+serdes_core_rx_polarity_flip_physical{217}=0x79
+phy_chain_tx_lane_map_physical{217.0}=0x52730614
+serdes_core_tx_polarity_flip_physical{217}=0x68
+
+# BlackhawkCore28
+phy_chain_rx_lane_map_physical{225.0}=0x03126574
+serdes_core_rx_polarity_flip_physical{225}=0x6c
+phy_chain_tx_lane_map_physical{225.0}=0x35274061
+serdes_core_tx_polarity_flip_physical{225}=0x8e
+
+# BlackhawkCore29
+phy_chain_rx_lane_map_physical{233.0}=0x35472160
+serdes_core_rx_polarity_flip_physical{233}=0x26
+phy_chain_tx_lane_map_physical{233.0}=0x52630714
+serdes_core_tx_polarity_flip_physical{233}=0xcc
+
+# BlackhawkCore30
+phy_chain_rx_lane_map_physical{241.0}=0x03126475
+serdes_core_rx_polarity_flip_physical{241}=0x66
+phy_chain_tx_lane_map_physical{241.0}=0x37254061
+serdes_core_tx_polarity_flip_physical{241}=0x8e
+
+# BlackhawkCore31
+phy_chain_rx_lane_map_physical{249.0}=0x45673120
+serdes_core_rx_polarity_flip_physical{249}=0xac
+phy_chain_tx_lane_map_physical{249.0}=0x37250416
+serdes_core_tx_polarity_flip_physical{249}=0x87
+
+serdes_tx_taps_cd0=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd1=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd2=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd3=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd4=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd5=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd6=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd7=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd8=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd9=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd10=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd11=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd12=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd13=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd14=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd15=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd16=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd17=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd18=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd19=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd20=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd21=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd22=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd23=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd24=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd25=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd26=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd27=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd28=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd29=pam4:-24:144:0:0:0:0
+serdes_tx_taps_cd30=pam4:-20:148:0:0:0:0
+serdes_tx_taps_cd31=pam4:-24:144:0:0:0:0
