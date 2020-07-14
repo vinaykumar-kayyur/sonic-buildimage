@@ -48,7 +48,7 @@ try:
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
-SYSLOG_IDENTIFIER = "xcvrd"
+SYSLOG_IDENTIFIER = "sfputil"
 
 # Global logger class instance
 logger = Logger(SYSLOG_IDENTIFIER)
