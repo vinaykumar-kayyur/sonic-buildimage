@@ -48,7 +48,7 @@ def
             {%- if DEVICE_NEIGHBOR_METADATA is defined and DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
                 {%- set neighbor = DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
                 {%- set neighbor_role = neighbor.type %}
-                {%- 'asic' == neighbor_role | lower %}
+                {%- if 'asic' == neighbor_role | lower %}
                          {%- set roles1 = 'internal' %}
                 {%- else %}
                          {%- set roles1 = switch_role + '_' + neighbor_role %}
