@@ -8,10 +8,6 @@
 #
 #############################################################################
 
-import json
-import math
-import os.path
-import sys
 
 try:
     from sonic_platform_base.fan_base import FanBase
@@ -64,7 +60,7 @@ class Fan(FanBase):
         try:
             with open(file_path, 'w') as fd:
                 fd.write(str(value))
-        except:
+        except Exception:
             return False
         return True
 
@@ -75,7 +71,7 @@ class Fan(FanBase):
             A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
             depending on fan direction
         """
-        direction = self.FAN_DIRECTION_EXHAUST
+        
 
         if not self.is_psu_fan:
             dir_str = "{}{}{}".format(CPLD_I2C_PATH, 'direction_', self.fan_tray_index)

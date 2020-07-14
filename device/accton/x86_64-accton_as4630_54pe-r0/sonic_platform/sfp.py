@@ -10,9 +10,7 @@
 
 import os
 import time
-import sys
-import subprocess
-import sonic_device_util
+
 from ctypes import create_string_buffer
 
 try:
@@ -214,7 +212,7 @@ class Sfp(SfpBase):
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
+        except Exception:
             pass
         finally:
             if sysfsfile_eeprom:
@@ -715,7 +713,7 @@ class Sfp(SfpBase):
         """
         if self.port_num < 53: 
             tx_disable = False
-            tx_fault = False
+            
             status_control_raw = self.__read_eeprom_specific_bytes(
                 SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
             if status_control_raw:
@@ -787,8 +785,7 @@ class Sfp(SfpBase):
             power_override=self.get_power_override()
             power_set=self.get_power_set()
             
-            dom_power_raw = self.__read_eeprom_specific_bytes(
-                93, 1)
+            
             
             if power_override is True and power_set is True:
                 return True
@@ -804,7 +801,7 @@ class Sfp(SfpBase):
         else:
             power_set = False
     
-            offset = 0
+            
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
@@ -829,7 +826,7 @@ class Sfp(SfpBase):
         else:
             power_override = False
     
-            offset = 0
+            
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
@@ -966,7 +963,7 @@ class Sfp(SfpBase):
                     # Write to eeprom
                     sysfsfile_eeprom.seek(SFP_STATUS_CONTROL_OFFSET)
                     sysfsfile_eeprom.write(buffer[0])
-                except:
+                except Exception:
                     return False
                 finally:
                     if sysfsfile_eeprom:

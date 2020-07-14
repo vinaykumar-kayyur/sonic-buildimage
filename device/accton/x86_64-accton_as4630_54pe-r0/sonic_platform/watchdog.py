@@ -6,13 +6,10 @@
 # Watchdog contains an implementation of SONiC Platform Base API
 #
 #############################################################################
-import ctypes
 import fcntl
 import os
-import subprocess
-import time
 import array
-import sys
+
 
 
 try:
