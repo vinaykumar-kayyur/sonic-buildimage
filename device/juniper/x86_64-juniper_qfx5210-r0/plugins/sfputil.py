@@ -12,7 +12,7 @@ try:
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")
 
-SYSLOG_IDENTIFIER = "xcvrd"
+SYSLOG_IDENTIFIER = "sfputil"
 logger = Logger(SYSLOG_IDENTIFIER)
 
 qfx5210_qsfp_cable_length_tup = ('Length(km)', 'Length OM3(2m)',
