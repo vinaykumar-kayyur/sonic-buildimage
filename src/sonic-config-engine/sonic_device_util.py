@@ -136,7 +136,7 @@ def get_all_namespaces():
 def get_port_config_from_all_asics(): 
     if not is_multi_npu():
         return get_port_config()
-    ns_list = get_namespaces()
+
     platform = get_platform()
     hwsku = get_hwsku()
     all_ports = {}
