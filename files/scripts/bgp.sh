@@ -1,8 +1,5 @@
 #!/bin/bash
 
-SERVICE="bgp"
-DEBUGLOG="/tmp/bgp_debug.log"
-
 function debug()
 {
     /usr/bin/logger $1
@@ -41,33 +38,33 @@ function check_fast_boot ()
 }
 
 start() {
-    debug "Starting ${SERVICE} service..."
+    debug "Starting ${SERVICE}$DEV service..."
 
     check_warm_boot
     validate_restore_count
 
     check_fast_boot
 
-    debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
-    debug "Fast boot flag: ${SERVICE} ${Fast_BOOT}."
+    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
 
     # start service docker
-    /usr/bin/${SERVICE}.sh start
-    debug "Started ${SERVICE} service..."
+    /usr/bin/${SERVICE}.sh start $DEV
+    debug "Started ${SERVICE}$DEV service..."
 
 }
 
-attach() {
-    /usr/bin/${SERVICE}.sh attach
+wait() {
+    /usr/bin/${SERVICE}.sh wait $DEV
 }
 
 stop() {
-    debug "Stopping ${SERVICE} service..."
+    debug "Stopping ${SERVICE}$DEV service..."
 
     check_warm_boot
     check_fast_boot
-    debug "Warm boot flag: ${SERVICE} ${WARM_BOOT}."
-    debug "Fast boot flag: ${SERVICE} ${FAST_BOOT}."
+    debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     # Kill bgpd to start the bgp graceful restart procedure
     if [[ x"$WARM_BOOT" == x"true" ]] || [[ x"$FAST_BOOT" == x"true" ]]; then
@@ -76,17 +73,30 @@ stop() {
         /usr/bin/docker exec -i bgp pkill -9 bgpd || [ $? == 1 ]
     fi
 
-    /usr/bin/${SERVICE}.sh stop
-    debug "Stopped ${SERVICE} service..."
+    /usr/bin/${SERVICE}.sh stop $DEV
+    debug "Stopped ${SERVICE}$DEV service..."
 
 }
 
+DEV=$2
+
+SERVICE="bgp"
+DEBUGLOG="/tmp/bgp-debug$DEV.log"
+NAMESPACE_PREFIX="asic"
+if [ "$DEV" ]; then
+    NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
+    SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
+else
+    NET_NS=""
+    SONIC_DB_CLI="sonic-db-cli"
+fi
+
 case "$1" in
-    start|attach|stop)
+    start|wait|stop)
         $1
         ;;
     *)
-        echo "Usage: $0 {start|attach|stop}"
+        echo "Usage: $0 {start|wait|stop}"
         exit 1
         ;;
 esac
