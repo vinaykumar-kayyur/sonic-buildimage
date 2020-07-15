@@ -6,6 +6,7 @@ import re
 from natsort import natsorted
 import glob
 from swsssdk import ConfigDBConnector, SonicDBConfig
+from portconfig import get_port_config
 
 DOCUMENTATION = '''
 ---
@@ -26,6 +27,13 @@ NAMESPACE_PATH_GLOB = '/run/netns/*'
 ASIC_CONF_FILENAME = 'asic.conf'
 FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
 BACKEND_ASIC_SUB_ROLE = 'BackEnd'
+EXTERNAL_PORT = 'E'
+INTERNAL_PORT = 'I'
+PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
+PORT_CFG_DB_TABLE = 'PORT'
+BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
+NEIGH_DEVICE_METADATA_CFG_DB_TABLE = "DEVICE_NEIGHBOR_METADATA"
+
 def get_machine_info():
     if not os.path.isfile('/host/machine.conf'):
         return None
@@ -124,6 +132,78 @@ def get_all_namespaces():
                 back_ns.append(namespace)
 
     return {'front_ns':front_ns, 'back_ns':back_ns}
+
+def get_port_config_from_all_asics(): 
+    if not is_multi_npu():
+        return get_port_config()
+    ns_list = get_namespaces()
+    platform = get_platform()
+    hwsku = get_hwsku()
+    all_ports = {}
+    ns_list  = get_namespaces()
+    
+    for ns in ns_list:
+        asic_id = get_npu_id_from_name(ns)
+        (ports, _, _) = get_port_config(hwsku=hwsku, platform=platform, asic=asic_id)
+        all_ports.update(ports)
+    
+    return all_ports
+    
+def get_port_role(port_name):
+    ports_config = get_port_config_from_all_asics()
+    if not ports_config[port_name].has_key('role'):
+        return EXTERNAL_PORT
+    
+    role = ports_config[port_name]['role']
+    return role
+
+def is_port_internal(port_name):
+    role = get_port_role(port_name)
+    if role is INTERNAL_PORT:
+        return True
+    return False
+
+def is_port_channel_internal(port_channel, namespace=None):
+    if not is_multi_npu():
+        return False
+    if namespace is None:
+        ns_list  = get_namespaces()
+    else:
+        ns_list = [namespace]
+        
+    for ns in ns_list:
+        config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=ns)
+        config_db.connect()
+        #import pdb; pdb.set_trace()
+        port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
+        if not port_channels.has_key(port_channel):
+            continue
+        members = port_channels[port_channel]['members']
+        for member in members:
+            if is_port_internal(member):
+                return True
+    return False
+
+def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
+    if not is_multi_npu():
+        return False
+    
+    if namespace is None:
+        ns_list  = get_namespaces()
+    else:
+        ns_list = [namespace]
+    
+    for ns in ns_list:
+        config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=ns)
+        config_db.connect()
+        bgp_sessions = config_db.get_table(BGP_NEIGH_CFG_DB_TABLE)
+        if not bgp_sessions.has_key(bgp_neigh_ip):
+            continue
+        bgp_neigh_name = bgp_sessions[bgp_neigh_ip]['name']
+        neighbor_metadata = config_db.get_table(NEIGH_DEVICE_METADATA_CFG_DB_TABLE)
+        if neighbor_metadata[bgp_neigh_name]['type'].lower() == 'asic':
+            return True
+    return False
 
 def get_platform_info(machine_info):
     if machine_info != None:
