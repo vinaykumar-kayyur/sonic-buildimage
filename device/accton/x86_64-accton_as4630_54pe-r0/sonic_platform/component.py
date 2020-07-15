@@ -30,7 +30,7 @@ class Component(ComponentBase):
 
     DEVICE_TYPE = "component"
 
-    def __init__(self, component_index):
+    def __init__(self, component_index=0):
         ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.get_name()

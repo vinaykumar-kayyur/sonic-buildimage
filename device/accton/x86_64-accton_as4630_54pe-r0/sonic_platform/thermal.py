@@ -24,7 +24,7 @@ class Thermal(ThermalBase):
     THERMAL_NAME_LIST = []
     SYSFS_PATH = "/sys/bus/i2c/devices"
 
-    def __init__(self, thermal_index):
+    def __init__(self, thermal_index=0):
         self.index = thermal_index
 
         # Add thermal name

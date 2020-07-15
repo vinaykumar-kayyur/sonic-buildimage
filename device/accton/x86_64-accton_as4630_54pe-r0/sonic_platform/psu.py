@@ -46,7 +46,7 @@ PSU_CPLD_I2C_MAPPING = {
 class Psu(PsuBase):
     """Platform-specific Psu class"""
 
-    def __init__(self, psu_index):
+    def __init__(self, psu_index=0):
         PsuBase.__init__(self)
         self.index = psu_index
        
