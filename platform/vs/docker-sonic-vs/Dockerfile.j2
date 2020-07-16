@@ -13,6 +13,7 @@ RUN echo "deb http://packages.microsoft.com/repos/sonic-dev/ jessie main" >> /et
 RUN apt-get update
 
 RUN apt-get install -y net-tools \
+                       redis-server=5:5.0.3-3~bpo9+2 \
                        arping \
                        ndisc6 \
                        ethtool \
@@ -52,6 +53,13 @@ RUN pip install py2_ipaddress
 RUN pip install six
 RUN pip install pyroute2==0.5.3 netifaces==0.10.7
 RUN pip install monotonic==1.5
+RUN pip install urllib3
+RUN pip install requests
+RUN pip install crontab
+
+# Install dependencies for Dynamic Port Breakout
+RUN pip install xmltodict==0.12.0
+RUN pip install jsondiff==1.2.0
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
