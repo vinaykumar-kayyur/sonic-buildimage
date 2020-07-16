@@ -202,6 +202,8 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
         neighbor_metadata = config_db.get_table(NEIGH_DEVICE_METADATA_CFG_DB_TABLE)
         if neighbor_metadata[bgp_neigh_name]['type'].lower() == 'asic':
             return True
+        else:
+            return False
     return False
 
 def get_platform_info(machine_info):
