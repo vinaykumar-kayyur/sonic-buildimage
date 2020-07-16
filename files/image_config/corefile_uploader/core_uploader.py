@@ -34,6 +34,7 @@ sharename = ""
 cwd = []
 
 HOURS_4 = (4 * 60 * 60)
+PAUSE_UPLOAD = (5 * 60)
 PAUSE_ON_FAIL = (60 * 60)
 WAIT_FILE_WRITE1 = (10 * 60)
 WAIT_FILE_WRITE2= (5 * 60)
@@ -300,7 +301,7 @@ Expect a min of two elements in path")
                 if (i >= 3):
                     # Retry 3 times, before failing
                     raise
-                time.sleep(PAUSE_ON_FAIL)
+                time.sleep(PAUSE_UPLOAD)
 
 
     @staticmethod
