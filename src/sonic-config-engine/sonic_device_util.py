@@ -179,8 +179,7 @@ def is_port_channel_internal(port_channel, namespace=None):
         if not port_channels.has_key(port_channel):
             continue
         members = port_channels[port_channel]['members']
-        for member in members:
-            if is_port_internal(member):
+        if is_port_internal(members[0]):
                 return True
     return False
 
