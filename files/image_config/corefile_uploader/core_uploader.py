@@ -78,10 +78,10 @@ def get_db_credential_files():
     db = ConfigDBConnector()
     db.connect()
 
-    acms = db.get_entry("ACMS", "credentials")
-    if 'path' not in acms or not acms['path']:
-        raise Exception("ACMS|credentials path field is missing or empty")
-    path = acms['path']
+    cred_store = db.get_entry("CREDENTIALS", "STORE")
+    if 'path' not in cred_store or not cred_store['path']:
+        raise Exception("CREDENTIALS|STORE path field is missing or empty")
+    path = cred_store['path']
 
     val = db.get_entry('CORE_UPLOADER', 'credentials')
     if (not 'acct_name_file' in val or

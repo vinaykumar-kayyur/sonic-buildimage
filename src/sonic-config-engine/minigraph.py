@@ -1137,8 +1137,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             'client_crt_cname': 'client.restapi.sonic'
         }
     }
-    results['ACMS'] = {
-        'credentials': {
+    results['CREDENTIALS'] = {
+        'STORE': {
             'path': '/etc/sonic/credentials'
         }
     }
