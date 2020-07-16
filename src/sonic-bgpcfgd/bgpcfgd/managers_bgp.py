@@ -84,17 +84,19 @@ class BGPPeerGroupMgr(object):
 
 class BGPPeerMgrBase(Manager):
     """ Manager of BGP peers """
-    def __init__(self, common_objs, db_name, table_name, peer_type, check_neig_meta):
+    def __init__(self, common_objs, db_name, table_name, peer_type, check_neig_meta, require_intf_in_config_db=True):
         """
         Initialize the object
         :param common_objs: common objects
         :param table_name: name of the table with peers
         :param peer_type: type of the peers. It is used to find right templates
+        :param require_intf_in_config_db: when True, an interface with the local address is required in CONFIG_DB before a peer is added to bgpd. Set it to False when an interface is not required in CONFIG_DB, such as for VoQ chassis internal peers
         """
         self.common_objs = common_objs
         self.constants = self.common_objs["constants"]
         self.fabric = common_objs['tf']
         self.peer_type = peer_type
+        self.require_intf_in_config_db = require_intf_in_config_db
 
         base_template = "bgpd/templates/" + self.constants["bgp"]["peers"][peer_type]["template_dir"] + "/"
         self.templates = {
@@ -170,6 +172,10 @@ class BGPPeerMgrBase(Manager):
         #
         if "local_addr" not in data:
             log_warn("Peer %s. Missing attribute 'local_addr'" % nbr)
+        elif not self.require_intf_in_config_db:
+            # This is the usual case for VoQ chassis peers, which will not
+            # have the local vlan interface in CONFIG_DB.
+            pass
         else:
             # The bgp session that belongs to a vnet cannot be advertised as the default BGP session.
             # So we need to check whether this bgp session belongs to a vnet.

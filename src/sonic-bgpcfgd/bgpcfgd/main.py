@@ -45,6 +45,7 @@ def do_work():
         BGPPeerMgrBase(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general", True),
         BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_MONITORS", "monitors", False),
         BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_PEER_RANGE", "dynamic", False),
+        BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_VOQ_CHASSIS_NEIGHBOR", "voq_chassis", False, require_intf_in_config_db=False),
         # AllowList Managers
         BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES"),
     ]
