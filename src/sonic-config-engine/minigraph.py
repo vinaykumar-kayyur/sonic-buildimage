@@ -1137,6 +1137,19 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             'client_crt_cname': 'client.restapi.sonic'
         }
     }
+    results['ACMS'] = {
+        'credentials': {
+            'path': '/etc/sonic/credentials'
+        }
+    }
+    results['CORE_UPLOADER'] = {
+        'credentials': {
+            'acct_name_file': 'corestorage_acctname',
+            'acct_key_file': 'corestorage_acctkey'
+        }
+    }
+
+
     # Do not configure the minigraph's mirror session, which is currently unused
     # mirror_sessions = {}
     # if erspan_dst:

@@ -10,9 +10,10 @@ import syslog
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from azure.storage.file import FileService
+from swsssdk import ConfigDBConnector
 
 global CORE_FILE_PATH, RC_FILE
-global hostname, sonicversion, asicname, acctname, acctkey, sharename, cwd
+global hostname, sonicversion, asicname, sharename, cwd
 global INIT_CWD
 global log_level
 global this_file
@@ -29,8 +30,6 @@ INIT_CWD = "/tmp"
 hostname = ""
 sonicversion = ""
 asicname = ""
-acctname = ""
-acctkey = ""
 sharename = ""
 cwd = []
 
@@ -75,6 +74,25 @@ def parse_a_json(data, prefix, val):
         else:
             val[prefix + (i,)] = data[i]
 
+def get_db_credential_files():
+    db = ConfigDBConnector()
+    db.connect()
+
+    acms = db.get_entry("ACMS", "credentials")
+    if 'path' not in acms or not acms['path']:
+        raise Exception("ACMS|credentials path field is missing or empty")
+    path = acms['path']
+
+    val = db.get_entry('CORE_UPLOADER', 'credentials')
+    if (not 'acct_name_file' in val or
+            not 'acct_key_file' in val or
+            not val['acct_name_file'] or
+            not val['acct_key_file']):
+        raise Exception("CORE_UPLOADER|credentials does not have file names")
+
+    return (os.path.join(path, val['acct_name_file']),
+            os.path.join(path, val['acct_key_file']))
+
 class config:
     parsed_data = {}
     cfg_data = {}
@@ -82,7 +100,7 @@ class config:
     def __init__(self):
         while not os.path.exists(RC_FILE):
             # Wait here until service restart
-            log_err("Unable to retrieve Azure storage credentials")
+            log_err("Unable to read core uploader config file")
             time.sleep (HOURS_4)
 
         with open(RC_FILE, 'r') as f:
@@ -137,7 +155,7 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def init():
-        global hostname, sonicversion, asicname, acctname, acctkey, sharename
+        global hostname, sonicversion, asicname, sharename
         global cwd, cfg
 
         cfg = config()
@@ -148,15 +166,7 @@ class Handler(FileSystemEventHandler):
         if not hostname:
             raise Exception("Failed to read hostname")
 
-        acctname = cfg.get_data(("azure_sonic_core_storage", "account_name"))
-        acctkey = cfg.get_data(("azure_sonic_core_storage", "account_key"))
         sharename = cfg.get_data(("azure_sonic_core_storage", "share_name"))
-
-        if not acctname or not acctkey or not sharename:
-            while True:
-                # Wait here until service restart
-                log_err("Unable to retrieve Azure storage credentials")
-                time.sleep (HOURS_4)
 
         with open("/etc/sonic/sonic_version.yml", 'r') as stream:
             l = yaml.safe_load(stream)
@@ -164,14 +174,20 @@ class Handler(FileSystemEventHandler):
             asicname = l['asic_type']
 
         if not sonicversion:
-            raise Exception("Failed to read build_version from /etc/sonic/sonic_version.yml")
+            raise Exception(
+                    "Failed to read build_version from \
+/etc/sonic/sonic_version.yml")
 
         if not asicname:
-            raise Exception("Failed to read asic_type from /etc/sonic/sonic_version.yml")
+            raise Exception(
+                    "Failed to read asic_type from \
+/etc/sonic/sonic_version.yml")
 
         cwd = cfg.get_data(("local_work", "core_upload")).split("/")
         if not len(cwd) > 2:
-            raise Exception("Invalid path for core_upload. Expect a min of two elements in path")
+            raise Exception(
+                    "Invalid path for core_upload. \
+Expect a min of two elements in path")
 
         os.chdir(INIT_CWD)
 
@@ -238,10 +254,24 @@ class Handler(FileSystemEventHandler):
     def upload_file(fname, fpath, coref):
         daemonname = fname.split(".")[0]
         i = 0
-        fail_msg = ""
         
         while True:
             try:
+                acctnamefile, acctkeyfile = get_db_credential_files()
+                if (not os.path.exists(acctnamefile) or
+                        not os.path.exists(acctkeyfile)):
+                    raise Exception(
+                            "Account credential files ({}, {}) do not exist".
+                            format(acctnamefile, acctkeyfile))
+
+                acctname = ""
+                with open(acctnamefile, 'r') as s:
+                    acctname = s.read().replace('\n', '')
+
+                acctkey = ""
+                with open(acctkeyfile, 'r') as s:
+                    acctkey = s.read().replace('\n', '')
+
                 svc = FileService(account_name=acctname, account_key=acctkey)
 
                 l = [sonicversion, asicname, daemonname, hostname]
@@ -253,8 +283,12 @@ class Handler(FileSystemEventHandler):
                 log_debug("Remote dir created: " + "/".join(e))
 
                 svc.create_file_from_path(sharename, "/".join(l), fname, fpath)
-                log_debug("Remote file created: name{} path{}".format(fname, fpath))
-                newcoref = os.path.dirname(coref) + "/" + UPLOAD_PREFIX + os.path.basename(coref)
+                log_debug(
+                        "Remote file created: name{} path{}".format(
+                            fname, fpath))
+                newcoref = (os.path.dirname(coref) +
+                        "/" + UPLOAD_PREFIX +
+                        os.path.basename(coref))
                 os.rename(coref, newcoref)
                 break
 
@@ -263,6 +297,9 @@ class Handler(FileSystemEventHandler):
                 if not os.path.exists(fpath):
                     break
                 i += 1
+                if (i >= 3):
+                    # Retry 3 times, before failing
+                    raise
                 time.sleep(PAUSE_ON_FAIL)
 
 
@@ -274,12 +311,17 @@ class Handler(FileSystemEventHandler):
                 Handler.handle_file(fl)
 
 
+def main():
+    while True:
+        try:
+            Handler.init()
+            w = Watcher()
+            Handler.scan()
+            w.run()
+        except Exception as e:
+            log_err("core uploader failed: " + str(e) + " Pause for {} before retry.".format(PAUSE_ON_FAIL))
+            time.sleep(PAUSE_ON_FAIL)
+        
 if __name__ == '__main__':
-    try:
-        Handler.init()
-        w = Watcher()
-        Handler.scan()
-        w.run()
-    except Exception as e:
-        log_err("core uploader failed: " + str(e) + " Exiting ...")
-    
+    main()
+
