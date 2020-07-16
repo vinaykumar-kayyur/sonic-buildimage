@@ -195,7 +195,7 @@ class Sfp(SfpBase):
             self.port_to_eeprom_mapping[p_num] = eeprom_path.format(
                 self.port_to_i2c_mapping[p_num])
 
-        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacture', 'model', 'connector', 'encoding', 'ext_identifier',
+        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
@@ -310,7 +310,7 @@ class Sfp(SfpBase):
         type                       |1*255VCHAR     |type of SFP
         hardware_rev               |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
-        manufacture                |1*255VCHAR     |SFP vendor name
+        manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
         connector                  |1*255VCHAR     |connector information
         encoding                   |1*255VCHAR     |encoding information
@@ -564,7 +564,7 @@ class Sfp(SfpBase):
         type                       |1*255VCHAR     |type of SFP
         hardware_rev               |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
-        manufacture                |1*255VCHAR     |SFP vendor name
+        manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
         connector                  |1*255VCHAR     |connector information
         encoding                   |1*255VCHAR     |encoding information

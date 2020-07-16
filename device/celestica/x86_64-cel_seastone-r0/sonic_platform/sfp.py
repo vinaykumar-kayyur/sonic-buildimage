@@ -191,7 +191,7 @@ class Sfp(SfpBase):
         type                       |1*255VCHAR     |type of SFP
         hardware_rev               |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
-        manufacture                |1*255VCHAR     |SFP vendor name
+        manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
         connector                  |1*255VCHAR     |connector information
         encoding                   |1*255VCHAR     |encoding information
