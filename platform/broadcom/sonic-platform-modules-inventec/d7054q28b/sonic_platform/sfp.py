@@ -557,7 +557,7 @@ class Sfp(SfpBase):
             end = start + XCVR_VENDOR_DATE_WIDTH
             sfp_vendor_date_data = sfpi_obj.parse_vendor_date(sfp_interface_bulk_raw[start : end], 0)
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
-            transceiver_info_dict['manufacture'] = sfp_vendor_name_data['data']['Vendor Name']['value']
+            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
             transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
             transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
