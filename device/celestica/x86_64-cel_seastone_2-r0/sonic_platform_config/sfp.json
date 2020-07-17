@@ -1,0 +1,95 @@
+{
+    "port_num": 32,
+    "qsfp_num": 32,
+    "sysfs_path":"/sys/devices/platform/switchboard/SFF/",
+    "eeprom_path":"/sys/bus/i2c/devices/i2c-{1}/{1}-0050/eeprom",
+    "port_i2c_mapping":[
+        "1,2","2,3","3,4","4,5","5,6","6,7","7,8",
+        "8,9","9,10","10,11","11,12","12,13","13,14","14,15",
+        "15,16","16,17","17,18","18,19","19,20","20,21","21,22",
+        "22,23","23,24","25,25","25,26","26,27","27,28","28,29",
+        "29,30","30,31","31,32","32,33"
+    ],
+    "get_name": {
+        "output_source": "value_list",
+        "value_list":[
+            "QSFP1","QSFP2","QSFP3","QSFP4","QSFP5","QSFP6","QSFP7",
+            "QSFP8","QSFP9","QSFP10","QSFP11","QSFP12","QSFP13","QSFP14",
+            "QSFP15","QSFP16","QSFP17","QSFP18","QSFP19","QSFP20","QSFP21",
+            "QSFP22","QSFP23","QSFP24","QSFP25","QSFP26","QSFP27","QSFP28",
+            "QSFP29","QSFP30","QSFP31","QSFP32"
+        ]
+    },
+    "__get_type": {
+        "output_source": "value_list",
+        "value_list":[
+            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
+            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
+            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
+            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
+            "QSFP","QSFP","QSFP","QSFP"
+        ]
+    },
+    "get_presence":{
+        "output_source": "sysfs_value",
+        "sysfs_path":"/sys/devices/platform/switchboard/SFF/{}/{}",
+        "argument":[
+            "QSFP1,qsfp_modprs","QSFP2,qsfp_modprs","QSFP3,qsfp_modprs","QSFP4,qsfp_modprs","QSFP5,qsfp_modprs","QSFP6,qsfp_modprs","QSFP7,qsfp_modprs",
+            "QSFP8,qsfp_modprs","QSFP9,qsfp_modprs","QSFP10,qsfp_modprs","QSFP11,qsfp_modprs","QSFP12,qsfp_modprs","QSFP13,qsfp_modprs","QSFP14,qsfp_modprs",
+            "QSFP15,qsfp_modprs","QSFP16,qsfp_modprs","QSFP17,qsfp_modprs","QSFP18,qsfp_modprs","QSFP19,qsfp_modprs","QSFP20,qsfp_modprs","QSFP21,qsfp_modprs",
+            "QSFP22,qsfp_modprs","QSFP23,qsfp_modprs","QSFP24,qsfp_modprs","QSFP25,qsfp_modprs","QSFP26,qsfp_modprs","QSFP27,qsfp_modprs","QSFP28,qsfp_modprs",
+            "QSFP29,qsfp_modprs","QSFP30,qsfp_modprs","QSFP31,qsfp_modprs","QSFP32,qsfp_modprs"
+        ]
+    },
+    "get_lpmode":{
+        "output_source": "sysfs_value",
+        "sysfs_path":"/sys/devices/platform/switchboard/SFF/{}/{}",
+        "argument":[
+            "QSFP1,qsfp_lpmode","QSFP2,qsfp_lpmode","QSFP3,qsfp_lpmode","QSFP4,qsfp_lpmode","QSFP5,qsfp_lpmode","QSFP6,qsfp_lpmode","QSFP7,qsfp_lpmode",
+            "QSFP8,qsfp_lpmode","QSFP9,qsfp_lpmode","QSFP10,qsfp_lpmode","QSFP11,qsfp_lpmode","QSFP12,qsfp_lpmode","QSFP13,qsfp_lpmode","QSFP14,qsfp_lpmode",
+            "QSFP15,qsfp_lpmode","QSFP16,qsfp_lpmode","QSFP17,qsfp_lpmode","QSFP18,qsfp_lpmode","QSFP19,qsfp_lpmode","QSFP20,qsfp_lpmode","QSFP21,qsfp_lpmode",
+            "QSFP22,qsfp_lpmode","QSFP23,qsfp_lpmode","QSFP24,qsfp_lpmode","QSFP25,qsfp_lpmode","QSFP26,qsfp_lpmode","QSFP27,qsfp_lpmode","QSFP28,qsfp_lpmode",
+            "QSFP29,qsfp_lpmode","QSFP30,qsfp_lpmode","QSFP31,qsfp_lpmode","QSFP32,qsfp_lpmode"
+        ]
+    },
+    "reset":{
+        "set_method": "sysfs_value",
+        "avaliable_input": [
+            "0",
+            "1"
+        ],
+        "input_translator": {
+            "0": "0x0",
+            "1": "0x1"
+        },
+        "write_offset": 0,
+        "sysfs_path":"/sys/devices/platform/switchboard/SFF/{}/{}",
+        "argument":[
+            "QSFP1,qsfp_reset","QSFP2,qsfp_reset","QSFP3,qsfp_reset","QSFP4,qsfp_reset","QSFP5,qsfp_reset","QSFP6,qsfp_reset","QSFP7,qsfp_reset",
+            "QSFP8,qsfp_reset","QSFP9,qsfp_reset","QSFP10,qsfp_reset","QSFP11,qsfp_reset","QSFP12,qsfp_reset","QSFP13,qsfp_reset","QSFP14,qsfp_reset",
+            "QSFP15,qsfp_reset","QSFP16,qsfp_reset","QSFP17,qsfp_reset","QSFP18,qsfp_reset","QSFP19,qsfp_reset","QSFP20,qsfp_reset","QSFP21,qsfp_reset",
+            "QSFP22,qsfp_reset","QSFP23,qsfp_reset","QSFP24,qsfp_reset","QSFP25,qsfp_reset","QSFP26,qsfp_reset","QSFP27,qsfp_reset","QSFP28,qsfp_reset",
+            "QSFP29,qsfp_reset","QSFP30,qsfp_reset","QSFP31,qsfp_reset","QSFP32,qsfp_reset"
+        ]
+    },
+    "set_lpmode":{
+        "set_method": "sysfs_value",
+        "avaliable_input": [
+            "True",
+            "False"
+        ],
+        "input_translator": {
+            "True": "0x0",
+            "False": "0x1"
+        },
+        "write_offset": 0,
+        "sysfs_path":"/sys/devices/platform/switchboard/SFF/{}/{}",
+        "argument":[
+            "QSFP1,qsfp_lpmode","QSFP2,qsfp_lpmode","QSFP3,qsfp_lpmode","QSFP4,qsfp_lpmode","QSFP5,qsfp_lpmode","QSFP6,qsfp_lpmode","QSFP7,qsfp_lpmode",
+            "QSFP8,qsfp_lpmode","QSFP9,qsfp_lpmode","QSFP10,qsfp_lpmode","QSFP11,qsfp_lpmode","QSFP12,qsfp_lpmode","QSFP13,qsfp_lpmode","QSFP14,qsfp_lpmode",
+            "QSFP15,qsfp_lpmode","QSFP16,qsfp_lpmode","QSFP17,qsfp_lpmode","QSFP18,qsfp_lpmode","QSFP19,qsfp_lpmode","QSFP20,qsfp_lpmode","QSFP21,qsfp_lpmode",
+            "QSFP22,qsfp_lpmode","QSFP23,qsfp_lpmode","QSFP24,qsfp_lpmode","QSFP25,qsfp_lpmode","QSFP26,qsfp_lpmode","QSFP27,qsfp_lpmode","QSFP28,qsfp_lpmode",
+            "QSFP29,qsfp_lpmode","QSFP30,qsfp_lpmode","QSFP31,qsfp_lpmode","QSFP32,qsfp_lpmode"
+        ]
+    }
+}
