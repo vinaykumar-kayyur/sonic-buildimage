@@ -90,9 +90,12 @@ class Logger(object):
 class DaemonBase(object):
     def __init__(self):
         # Register our signal handlers
-        signal.signal(signal.SIGHUP, self.signal_handler)
-        signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGTERM, self.signal_handler)
+        if not signal.getsignal(signal.SIGHUP):
+            signal.signal(signal.SIGHUP, self.signal_handler)
+        if not signal.getsignal(signal.SIGINT):
+            signal.signal(signal.SIGINT, self.signal_handler)
+        if not signal.getsignal(signal.SIGTERM):
+            signal.signal(signal.SIGTERM, self.signal_handler)
 
     # Signal handler
     def signal_handler(self, sig, frame):
