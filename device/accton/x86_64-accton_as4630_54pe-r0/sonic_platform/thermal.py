@@ -117,7 +117,8 @@ class Thermal(ThermalBase):
         """
         temp_file = "temp{}_input".format(self.ss_index)
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
-        return os.path.isfile(temp_file_path)
+        raw_txt = self.__read_txt_file(temp_file_path)
+        return raw_txt!=None
 
     def get_status(self):
         """
@@ -125,14 +126,13 @@ class Thermal(ThermalBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        if not self.get_presence():
+
+        file_str = "temp{}_input".format(self.ss_index)
+        file_path = os.path.join(self.hwmon_path, file_str)
+
+        raw_txt = self.__read_txt_file(file_path)
+        if raw_txt==None:
             return False
-
-        fault_file = "temp{}_fault".format(self.ss_index)
-        fault_file_path = os.path.join(self.hwmon_path, fault_file)
-        if not os.path.isfile(fault_file_path):
-            return True
-
-        raw_txt = self.__read_txt_file(fault_file_path)
-        return int(raw_txt) == 0
+        else:     
+            return int(raw_txt) != 0
 

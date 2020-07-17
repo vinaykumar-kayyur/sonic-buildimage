@@ -138,7 +138,7 @@ class Sfp(SfpBase):
            54: [23],
     }
 
-    def __init__(self, sfp_index):
+    def __init__(self, sfp_index=0):
         # Init index
         self.index = sfp_index
         self.port_num = self.index + 1

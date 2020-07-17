@@ -162,7 +162,7 @@ class Fan(FanBase):
         Returns:
             bool: True if PSU is present, False if not
         """
-        present_path = "{}{}{}".format(CPLD_I2C_PATH, 'present_', self.fan_tray_index+1)
+        present_path = "{}{}{}".format(CPLD_I2C_PATH, 'present_', self.fan_index+1)
         val=self.__read_txt_file(present_path)
         if not self.is_psu_fan:
             return int(val, 10)

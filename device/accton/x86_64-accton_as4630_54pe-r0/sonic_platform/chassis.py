@@ -22,10 +22,10 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-NUM_FAN_TRAY = 3
-NUM_FAN = 2
+NUM_FAN_TRAY = 2
+NUM_FAN = 3
 NUM_PSU = 2
-NUM_THERMAL = 2
+NUM_THERMAL = 3
 NUM_SFP = 6
 NUM_COMPONENT = 2
 RESET_REGISTER = "0x103"
@@ -113,7 +113,7 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         description = 'None'
-        
+
 
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE) if self.__is_host(
         ) else PMON_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE
