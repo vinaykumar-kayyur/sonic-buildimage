@@ -90,6 +90,19 @@ class Logger(object):
 class DaemonBase(object):
     def __init__(self):
         # Register our signal handlers
+        '''all daemons inherit from daemon_base class, and for
+        signal handling functionality they register the signal_handler() by
+        overriding the siganl_handler() in daemon_base by their own
+        implmentation.
+        But some sonic_platform instances also can invoke the daemon_base
+        constructor while trying to instantiate the common utilities
+        for example
+        platform_chassis = sonic_platform.platform.Platform().get_chassis()
+        This will cause the re registration of signal_handler which will
+        cause base class signal_handler() to be invoked when the daemon
+        gets a signal, whereas the derived class signal_handler shoudl have
+        been invoked. The if checks will not allow the re registration
+        of signal handler '''
         if not signal.getsignal(signal.SIGHUP):
             signal.signal(signal.SIGHUP, self.signal_handler)
         if not signal.getsignal(signal.SIGINT):
