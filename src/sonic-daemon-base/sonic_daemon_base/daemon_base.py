@@ -100,7 +100,7 @@ class DaemonBase(object):
         platform_chassis = sonic_platform.platform.Platform().get_chassis()
         This will cause the re registration of signal_handler which will
         cause base class signal_handler() to be invoked when the daemon
-        gets a signal, whereas the derived class signal_handler shoudl have
+        gets a signal, whereas the derived class signal_handler should have
         been invoked. The if checks will not allow the re registration
         of signal handler '''
         if not signal.getsignal(signal.SIGHUP):
