@@ -50,7 +50,7 @@ class DaemonBase(logger.Logger):
         else:
             log_warning("DaemonBase: Caught unhandled signal '{}'".format(sig))
 
-    # Loads platform specific psuutil module from source
+    # Loads platform specific platform module from source
     def load_platform_util(self, module_name, class_name):
         platform_util = None
 
