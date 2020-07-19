@@ -114,9 +114,6 @@ def get_asic_conf_file_path():
     """
     Retrieves the path to the ASIC conguration file on the device
 
-    Args:
-        platform: Platform string of the device
-
     Returns:
         A string containing the path to the ASIC conguration file on success,
         None on failure
