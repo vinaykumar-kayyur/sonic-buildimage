@@ -103,6 +103,8 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
         for attempt in range(self.RETRIES):
             if self.eeprom_init():
                 break
+            if attempt + 1 == self.RETRIES:
+                raise RuntimeError("eeprom.py: Initialization failed")
             time.sleep(1)
 
     def thrift_setup(self):
