@@ -1,7 +1,5 @@
 import imp
-import os
 import signal
-import subprocess
 import sys
 
 from . import device_info, logger

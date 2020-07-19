@@ -204,7 +204,6 @@ def get_sonic_version_info():
 #
 
 def get_num_npus():
-    platform = get_platform()
     asic_conf_file_path = get_asic_conf_file_path()
     if asic_conf_file_path is None:
         return 1
