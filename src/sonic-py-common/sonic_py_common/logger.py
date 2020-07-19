@@ -2,7 +2,7 @@ import os
 import syslog
 
 """
-    Logging functionality for SONiC Python applications
+Logging functionality for SONiC Python applications
 """
 
 FACILITY_USER = syslog.LOG_USER
@@ -10,7 +10,7 @@ FACILITY_DAEMON = syslog.LOG_DAEMON
 
 class Logger(object):
     """
-        Logger class for SONiC Python applications
+    Logger class for SONiC Python applications
     """
     def __init__(self, log_identifier=None, log_facility=FACILITY_USER):
         self.syslog = syslog
