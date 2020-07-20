@@ -19,6 +19,7 @@ PORT_CONFIG_FILE = "port_config.ini"
 PLATFORM_JSON_FILE = "platform.json"
 
 # Multi-NPU constants
+# TODO: Move Multi-ASIC-related functions and constants to a "multi_asic.py" module
 NPU_NAME_PREFIX = "asic"
 NAMESPACE_PATH_GLOB = "/run/netns/*"
 ASIC_CONF_FILENAME = "asic.conf"
