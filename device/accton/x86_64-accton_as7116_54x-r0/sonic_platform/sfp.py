@@ -18,7 +18,7 @@ try:
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
-    from sonic_daemon_base.daemon_base import Logger
+    from sonic_py_common.logger import Logger
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

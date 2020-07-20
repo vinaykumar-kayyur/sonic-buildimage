@@ -13,7 +13,7 @@ try:
     from sonic_platform_base.component_base import ComponentBase
     from sonic_device_util import get_machine_info
     from sonic_device_util import get_platform_info
-    from sonic_daemon_base.daemon_base import Logger
+    from sonic_py_common.logger import Logger
     from os import listdir
     from os.path import isfile, join
     import sys
