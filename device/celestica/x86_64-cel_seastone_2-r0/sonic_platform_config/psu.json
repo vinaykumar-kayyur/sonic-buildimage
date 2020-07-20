@@ -59,8 +59,7 @@
         "output_translator": [
             "True if (int('{}', 16) >> 4 & 1) == 0 else False",
             "True if (int('{}', 16) >> 5 & 1) == 0 else False"
-        ],
-        "default_output": "off"
+        ]
     },
     "get_model": {
         "output_source": "ipmitool",

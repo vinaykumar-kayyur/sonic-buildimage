@@ -54,6 +54,7 @@ class Fan(FanBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = self.FAN_DIRECTION_NOT_APPLICABLE
+
         return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
 
     def get_speed(self):
@@ -188,6 +189,7 @@ class Fan(FanBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name) if not self._is_psu_fan else self._psu_fan_config[f_name]
+
         return self._api_common.get_output(self.fan_index, config, Common.NULL_VAL)
 
     def get_presence(self):
@@ -198,6 +200,7 @@ class Fan(FanBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
+        
         return self._api_common.get_output(self.fan_index, config, False)
 
     def get_model(self):

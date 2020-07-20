@@ -60,6 +60,7 @@ class Psu(PsuBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = 0
+        
         return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_current(self):
@@ -72,6 +73,7 @@ class Psu(PsuBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = 0
+
         return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_power(self):
@@ -85,6 +87,7 @@ class Psu(PsuBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = 0
+
         return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_powergood_status(self):
@@ -98,6 +101,7 @@ class Psu(PsuBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = False
+
         return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def set_status_led(self, color):
@@ -117,6 +121,7 @@ class Psu(PsuBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = False
+
         return self._api_common.set_output(self.psu_index, color, config) if self.get_presence() else default
 
     def get_status_led(self):
@@ -130,6 +135,7 @@ class Psu(PsuBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = "off"
+
         return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 
     def get_temperature(self):
@@ -145,6 +151,7 @@ class Psu(PsuBase):
         default = 0
         output = self._api_common.get_output(
             self.psu_index, config, default) if self.get_presence() else default
+
         return float(output)
 
     def get_temperature_high_threshold(self):
@@ -173,6 +180,7 @@ class Psu(PsuBase):
         default = 0
         output = self._api_common.get_output(
             self.psu_index, config, default) if self.get_presence() else default
+
         return float(output)
 
     def get_voltage_high_threshold(self):
@@ -189,6 +197,7 @@ class Psu(PsuBase):
         default = 0
         output = self._api_common.get_output(
             self.psu_index, config, default) if self.get_presence() else default
+
         return float(output)
 
     def get_voltage_low_threshold(self):
@@ -205,6 +214,7 @@ class Psu(PsuBase):
         default = 0
         output = self._api_common.get_output(
             self.psu_index, config, default) if self.get_presence() else default
+
         return float(output)
 
     def get_name(self):
@@ -216,6 +226,7 @@ class Psu(PsuBase):
         default = Common.NULL_VAL
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
+
         return self._api_common.get_output(self.psu_index, config, default)
 
     def get_presence(self):
