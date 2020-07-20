@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 #-------------------------------------------------------------------------
-# Name:        锐捷 python通用模块
-# Purpose:      供其他模块调用
+# Name:        ruijieutil
+# Purpose:     common configuration and api
 #
 # Author:      tjm
 #
@@ -22,12 +22,9 @@ import threading
 import click
 import mmap
 from ruijieconfig import *
-#from fruutil import fru
-#from tabulate import tabulate
-#import readline
 try:
     from eepromutil.fru import *
-except:
+except Exception or SystemExit:
     pass
 
 import logging.handlers
@@ -46,7 +43,7 @@ GOQUIT = "quit"
 
 file_name = "/etc/init.d/opennsl-modules-3.16.0-5-amd64"
 ##########################################################################
-# 错误日志等级
+# ERROR LOG LEVEL
 ##########################################################################
 CRITICAL = 50
 FATAL = CRITICAL
@@ -79,7 +76,7 @@ TLV_INFO_LENGTH = 0x00
 TLV_INFO_LENGTH_VALUE = 0xba
 
 ##########################################################################
-# eeprom信息索引定义
+# eeprom info
 ##########################################################################
 TLV_CODE_PRODUCT_NAME = 0x21
 TLV_CODE_PART_NUMBER = 0x22
@@ -108,7 +105,6 @@ SYSLOG_IDENTIFIER = "UTILTOOL"
 # ========================== Syslog wrappers ==========================
 
 def log_info(msg, also_print_to_console=False):
-    #msg = msg.decode('utf-8').encode('gb2312')
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_INFO, msg)
     syslog.closelog()
@@ -119,7 +115,6 @@ def log_info(msg, also_print_to_console=False):
 
 def log_debug(msg, also_print_to_console=False):
     try:
-        #msg = msg.decode('utf-8').encode('gb2312')
         syslog.openlog(SYSLOG_IDENTIFIER)
         syslog.syslog(syslog.LOG_DEBUG, msg)
         syslog.closelog()
@@ -131,7 +126,6 @@ def log_debug(msg, also_print_to_console=False):
 
 
 def log_warning(msg, also_print_to_console=False):
-    #msg = msg.decode('utf-8').encode('gb2312')
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_WARNING, msg)
     syslog.closelog()
@@ -141,7 +135,6 @@ def log_warning(msg, also_print_to_console=False):
 
 
 def log_error(msg, also_print_to_console=False):
-    #msg = msg.decode('utf-8').encode('gb2312')
     syslog.openlog(SYSLOG_IDENTIFIER)
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
@@ -149,7 +142,6 @@ def log_error(msg, also_print_to_console=False):
     if also_print_to_console:
         click.echo(msg)
 
-#bmc-console.log bmc_feed_watchdog.log日志压缩
 class CompressedRotatingFileHandler(logging.handlers.RotatingFileHandler):
     def doRollover(self):
         """
@@ -178,203 +170,53 @@ class CompressedRotatingFileHandler(logging.handlers.RotatingFileHandler):
 
 
 class SETMACException(Exception):
-    def __init__(self, param='错误', errno="-1"):
-        err = "setmac出错[%s]: %s" % (errno, param)
+    def __init__(self, param='ERROR', errno="-1"):
+        err = "Setmac fail[%s]: %s" % (errno, param)
         Exception.__init__(self, err)
         self.param = param
         self.errno = errno
 
 def checkinput(b):
     if b.isdigit() == False:
-        raise Exception("非法数字")
+        raise Exception("Ivalid Number")
     if int(b) > 0xff or int(b) < 0:
-        raise Exception("不在区间内")
+        raise Exception("Out of area")
 
 def checkinputproduct(b):
     if b.isalnum() ==False:
-        raise Exception("非法字符串")
+        raise Exception("Invalid string")
 
 def getInputSetmac(val):
     bia = val.boardInfoArea
     pia = val.productInfoArea
     if bia != None:
-        a = raw_input("[板卡区]产品序列号:")
+        a = raw_input("[Board Card]Product Serial Number:")
         if len(a) != 13:
-            raise Exception("序列号长度不对")
+            raise Exception("Invalid Serial Number length")
         checkinputproduct(a)
         bia.boardSerialNumber = a
-        b = raw_input("[板卡区]产品版本号:(从1-255)")
+        b = raw_input("[Board Card]Product Version:(from 1-255)")
         checkinput(b)
         b = "%0x" % int(b)
         bia.boardextra1 = b.upper()
     if pia != None:
-        a = raw_input("[产品区]产品序列号:")
+        a = raw_input("[Product Area]Product Serial Number:")
         if len(a) != 13:
-            raise Exception("序列号长度不对")
+            raise Exception("Invalid Serial Number")
         checkinputproduct(a)
         pia.productSerialNumber = a
-        b = raw_input("[产品区]产品版本号:(从1-255)")
+        b = raw_input("[Product Area]Product Version:(from 1-255)")
         checkinput(b)
         b = "%0x" % int(b)
         pia.productVersion = b.upper()
     return val
 
-'''
-class FruUtil():
-    def test(self):
-        ret = fru.E2Util.decodeBinName("/sys/bus/i2c/devices/4-0051/eeprom")
-        bia = ret.boardInfoArea
-        pia = ret.productInfoArea
-        print bia
-        print pia
-    
-    def setmac_InputBoardArea(self, bia):
-        if bia != None:
-            a = raw_input("[板卡区]产品序列号:")
-            bia.boardSerialNumber = a
-            b = raw_input("[板卡区]产品版本号:(从1-255)")
-            bia.boardextra1 = b.upper()
-        return bia
-    
-    def getInputSetmac(self, val):
-        bia = val.boardInfoArea
-        pia = val.productInfoArea
-        if bia != None:
-            a = raw_input("[板卡区]产品序列号:")
-            bia.boardSerialNumber = a
-            b = raw_input("[板卡区]产品版本号:(从1-255)")
-            bia.boardextra1 = b.upper()
-        if pia != None:
-            a = raw_input("[产品区]产品序列号:")
-            pia.productSerialNumber = a
-            b = raw_input("[产品区]产品版本号:(从1-255)")
-            pia.productVersion = b.upper()
-            if pia.productExtra2 != None:
-                b = raw_input("[产品区]MAC地址:")
-                pia.productExtra2 = fru.E2Util.encodeMac(b.upper())
-
-            if pia.productExtra3 != None:
-                b = raw_input("[产品区]MAC数量:")
-                pia.productExtra3 = fru.E2Util.encodeMacLen(b)
-        result = fru.E2Util.generateBinBySetMac(bia, pia)
-        return result
-    
-    def globalsetmac(self, type1):
-        msg  = type1[0]
-        fruMsg = self.getfruMsg(msg['bus'], msg['loc'])
-        result = self.getInputSetmac(fruMsg)
-        I2CUTIL.writeToE2(msg['bus'], msg['loc'], result.bindata)
-    
-    def dumpValueByI2c(self, bus, loc):
-        str = ""
-        for i in range(256):
-            ret,val = rji2cget(bus, loc, i)
-            str += chr(strtoint(val))
-        return str
-    
-    def fansetmac(self, vals):
-        x = sorted(vals,lambda x,y: cmp(x["name"], y["name"]))
-        for item in x:
-            fruMsg = self.getfruMsg(item['bus'], item['loc'])
-            print "%s:"% item['name']
-            result = self.getInputSetmac(fruMsg)
-            I2CUTIL.writeToE2(item['bus'], item['loc'], result.bindata)
-        pass
-    
-    def getsyseepromDict(self):
-        ret = get_sys_eeprom()
-        ret_t = {}
-        for item in ret:
-            ret_t[item['code']] = item['value']
-        return ret_t
-    
-    def cpufrusetmac(self, vals):
-        msg  = vals[0]
-        fruMsg = self.getfruMsg(msg['bus'], msg['loc'])
-        bia = fruMsg.boardInfoArea
-        pia = fruMsg.productInfoArea
-        
-        bia = self.setmac_InputBoardArea(bia)
-        sysee = self.getsyseepromDict()
-        pia.productName = sysee[33]
-        pia.productPartModelName = sysee[34]
-        pia.productVersion = sysee[38]
-        pia.productSerialNumber = sysee[35]
-        pia.productExtra2 = fru.E2Util.encodeMac(sysee[36].replace(":",""))
-        pia.productExtra3 = fru.E2Util.encodeMacLen(sysee[42])
-        result = fru.E2Util.generateBinBySetMac(bia, pia)
-        I2CUTIL.writeToE2(msg['bus'], msg['loc'], result.bindata)
-        pass 
-        
-    def slotmac(self, vals):
-        x = sorted(vals,lambda x,y: cmp(x["name"], y["name"]))
-        for item in x:
-            fruMsg = self.getfruMsg(item['bus'], item['loc'])
-            print "%s:"% item['name']
-            result = self.getInputSetmac(fruMsg)
-            I2CUTIL.writeToE2(item['bus'], item['loc'], result.bindata)
-        pass
-
-    def showmac(self, type):
-        vals = [ elem  for elem in FRULISTS if type == elem["E2TYPE"]]
-        val_ts = sorted(vals,lambda x,y: cmp(x["name"], y["name"]))
-        for val in val_ts:
-            print "####################%s####################" % val["name"]
-            filename = I2CUTIL.getE2File(val['bus'], val['loc'])
-            ret = FruUtil.fru_decode_eeprom(filename)
-            head = ["key","value"]
-            if ret.boardInfoArea!= None:
-                print "=================board================="
-                print tabulate(ret.boardInfoArea.todict().items(), head, tablefmt="simple")
-             
-            if ret.productInfoArea!= None:
-                print"=================product================="
-                print tabulate(ret.productInfoArea.todict().items(), head, tablefmt="simple")
-
-    def setmac(self, type1):
-        vals = [ elem  for elem in FRULISTS if (type1 == elem["E2TYPE"] and elem["CANRESET"] == '1' )]
-        if len(vals) <= 0:
-            return None
-        if type1 == "8" or type1 == "A":
-            I2CUTIL.openFanE2Protect()
-            self.fansetmac(vals)
-            I2CUTIL.closeFanE2Protect()
-            return
-        elif type1 == "6":
-            return  self.slotmac(vals)
-        elif type1 == "4":
-            return self.cpufrusetmac(vals)
-        else:
-            return self.globalsetmac(vals)
-
-    def getfruMsg(self, bus, loc):
-        filename = I2CUTIL.getE2File(bus, loc)
-        ret = FruUtil.fru_decode_eeprom(filename)
-        return ret
-        
-    def getfruMsgByI2C(self, bus,loc):
-        retval = self.dumpValueByI2c(bus,loc)
-        return FruUtil.fru_decode_eepromByValue(retval)
-        
-    @staticmethod
-    def fru_getdefault_eeprom(product, type1):
-        return fru.E2Util.defaultBinByConfig(product,type1)
-    
-    @staticmethod
-    def fru_decode_eeprom(filename):
-        return fru.E2Util.decodeBinName(filename)
-    
-    @staticmethod
-    def fru_decode_eepromByValue(val):
-        return fru.E2Util.decodeBinByValue(val)
-'''
-
 class fan_tlv():
-    VERSION = 0x01                       # E2PROM文件定义的版本号，初始版本为0x01
-    FLAG = 0x7E                       # 新版本E2PROM标识为0x7E
-    HW_VER = 0X01                       # 由主版本号与修正版本两部份构成
-    TYPE = 0xf1                       # 硬件类型定义信息
-    TLV_LEN = 00                        # 有效数据长度（16bit）
+    VERSION = 0x01                    # E2PROM Version，start from 0x01
+    FLAG = 0x7E                       # New E2PROM version flag is 0x7E
+    HW_VER = 0X01                     # compose by master version and fixed version
+    TYPE = 0xf1                       # hw type defination 
+    TLV_LEN = 00                      # data length (16bit)
     _FAN_TLV_HDR_LEN = 6
     _FAN_TLV_CRC_LEN = 2
 
@@ -426,9 +268,11 @@ class fan_tlv():
 
     def strtoarr(self, str):
         s = []
-        if str is not None :
+        if str is None:
+            return s
+        else:
             for index in str:
-                s.append(index)
+                s.extend(index)
         return s
 
     def generate_fan_value(self):
@@ -438,7 +282,7 @@ class fan_tlv():
         bin_buffer[2] = chr(self.HW_VER)
         bin_buffer[3] = chr(self.TYPE)
 
-        temp_t = "%08x" % self.typedevtype  # 把devtype先处理下
+        temp_t = "%08x" % self.typedevtype  # handle devtype first
         typedevtype_t = hex_to_str(temp_t)
         total_len = len(self.typename) + len(self.typesn) + \
             len(self.typehwinfo) + len(typedevtype_t) + 8
@@ -471,10 +315,9 @@ class fan_tlv():
                    len(typedevtype_t)] = self.strtoarr(typedevtype_t)
         index_start = index_start + 2 + len(typedevtype_t)
 
-        crcs = fan_tlv.fancrc(''.join(bin_buffer[0:index_start]))  # 2个字节检验
+        crcs = fan_tlv.fancrc(''.join(bin_buffer[0:index_start]))  # check 2bytes
         bin_buffer[index_start] = chr(crcs >> 8)
         bin_buffer[index_start + 1] = chr(crcs & 0x00ff)
-        # printvalue(bin_buffer)
         return bin_buffer
 
     def decode(self, e2):
@@ -488,7 +331,7 @@ class fan_tlv():
         tlv_index = self._FAN_TLV_HDR_LEN
         tlv_end = self._FAN_TLV_HDR_LEN + self.TLV_LEN
 
-        # 判断校验和
+        # check checksum
         if len(e2) < self._FAN_TLV_HDR_LEN + self.TLV_LEN + 2:
             self._dstatus = -2
             return ret
@@ -555,14 +398,14 @@ class fan_tlv():
 class AVSUTIL():
     @staticmethod
     def mac_avs_chip(bus, devno, loc, open, close, loop, protectaddr, level, loopaddr):
-        # 关闭保护
+        # disable protection
         rji2cset(bus, devno, protectaddr, open)
         rji2cset(bus, devno, loopaddr, loop)
         rji2csetWord(bus, devno, loc, level)
         ret, value = rji2cgetWord(bus, devno, loc)
         if strtoint(value) == level:
             ret = 0
-        # 打开保护
+        # enable protection
         rji2cset(bus, devno, protectaddr, close)
         if ret == 0:
             return True
@@ -570,7 +413,7 @@ class AVSUTIL():
 
     @staticmethod
     def macPressure_adj(macavs, avs_param, mac_def_param):
-        # 判断是否在范围内
+        # check whether it within range
         max_adj = max(avs_param.keys())
         min_adj = min(avs_param.keys())
         type = mac_def_param["type"]
@@ -597,7 +440,7 @@ class AVSUTIL():
         if ret == False:
             return False
         status = strtoint(status)
-        # 移位操作
+        # shift operation
         if MAC_DEFAULT_PARAM["sdktype"] != 0:
             status = (
                 status >> MAC_DEFAULT_PARAM["macregloc"]) & MAC_DEFAULT_PARAM["mask"]
@@ -657,7 +500,7 @@ class BMC():
                     Singleton._instance = object.__new__(cls)
         return Singleton._instance
 
-# 内部接口
+#  Internal interface 
 
 
 def getSdkReg(reg):
@@ -708,14 +551,14 @@ def RJPRINTERR(str):
     print("\033[0;31m%s\033[0m" % str)
 
 
-def strtoint(str):  # 16进制字符串转int 如"4040"/"0x4040"/"0X4040" = 16448
+def strtoint(str):  # convert Hex string to int such as "4040"/"0x4040"/"0X4040" = 16448
     value = 0
     rest_v = str.replace("0X", "").replace("0x", "")
     for index in range(len(rest_v)):
         value |= int(rest_v[index], 16) << ((len(rest_v) - index - 1) * 4)
     return value
 
-def inttostr(vl,len): # 将int 转为字符串 如 0x3030 = 00
+def inttostr(vl,len): # convert int to string such as 0x3030 = 00
     if type(vl) != int:
         raise Exception(" type error")
     index = 0
@@ -738,7 +581,7 @@ def hex_to_str(s):
     if len_t % 2 != 0:
         return 0
     ret = ""
-    for t in range(0, len_t / 2):
+    for t in range(0, int(len_t / 2)):
         ret += chr(int(s[2 * t:2 * t + 2], 16))
     return ret
 
@@ -754,13 +597,13 @@ def bin_to_str(s):
 def getMacTemp():
     result = {}
     #waitForDocker()
-    # 连续执行两次，取第二次
+    # exec twice, get the second result
     rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
     ret, log = rj_os_system("bcmcmd -t 1 \"show temp\" < /dev/null")
     if ret:
         return False, result
     else:
-        # 解析读取出来的信息
+        # decode obtained info
         logs = log.splitlines()
         for line in logs:
             if "average" in line:
@@ -777,7 +620,7 @@ def getMacTemp_sysfs(mactempconf):
         temp_list = []
         mac_temp_loc = mactempconf.get("loc", [])
         mac_temp_flag = mactempconf.get("flag",None)
-        if mac_temp_flag is not None: # 判断mac温度有效标志
+        if mac_temp_flag is not None: # check mac temperature vaild flag
             gettype = mac_temp_flag.get('gettype')
             okbit = mac_temp_flag.get('okbit')
             okval = mac_temp_flag.get('okval')
@@ -859,7 +702,7 @@ def waitForSdk(sdk_fpath ,timeout):
 
 def waitForDocker(need_restart=False,timeout=180):
     sdkcheck_params = STARTMODULE.get("sdkcheck",{})
-    if sdkcheck_params.get("checktype") == "file": # 通过文件判断
+    if sdkcheck_params.get("checktype") == "file": # pass file check 
         sdk_fpath = sdkcheck_params.get("sdk_fpath")
         return waitForSdk(sdk_fpath,timeout)
     return waitForDhcp(timeout)
@@ -886,7 +729,7 @@ def getTLV_BODY(type, productname):
 
 
 def _crc32(v):
-    return '0x%08x' % (binascii.crc32(v) & 0xffffffff)  # 取crc32的八位数据 %x返回16进制
+    return '0x%08x' % (binascii.crc32(v) & 0xffffffff)  # get 8 bytes of crc32 %x return hex
 
 
 def printvalue(b):
@@ -926,7 +769,7 @@ def generate_value(_t):
     return (ret, True)
 
 
-def getsyseeprombyId(id):  # 根据ID获取系统系统
+def getsyseeprombyId(id):  
     ret = get_sys_eeprom()
     for item in ret:
         if item["code"] == id:
@@ -935,17 +778,17 @@ def getsyseeprombyId(id):  # 根据ID获取系统系统
 
 
 def fac_init_cardidcheck():
-    rest = getsyseeprombyId(TLV_CODE_RJ_CARID)  # 判断cardId是否相同
+    rest = getsyseeprombyId(TLV_CODE_RJ_CARID)  # check cardId same or not
     if rest is None:
-        print "需要烧写bin文件"
+        print "need to program write bin file"
         return False
     else:
         rest_v = rest['value']
         value = strtoint(rest_v)
         if value == RUIJIE_CARDID:
-            log_debug("板卡ID检测通过")
+            log_debug("check card ID pass")
         else:
-            log_debug("板卡ID有误")
+            log_debug("check card ID error")
             return False
     return True
 
@@ -955,13 +798,13 @@ def isValidMac(mac):
         return True
     return False
 
-# 网卡setmac
+#  Internet cardsetmac
 
 
 def util_setmac(eth, mac):
     rulefile = "/etc/udev/rules.d/70-persistent-net.rules"
     if isValidMac(mac) == False:
-        return False, "MAC非法"
+        return False, "MAC invaild"
     cmd = "ethtool -e %s | grep 0x0010 | awk '{print \"0x\"$13$12$15$14}'" % eth
     ret, log = rj_os_system(cmd)
     log_debug(log)
@@ -970,12 +813,12 @@ def util_setmac(eth, mac):
         magic = log
     macs = mac.upper().split(":")
 
-    # 暂时把本地的ETH0改为setmac后的值
+    # chage ETH0 to value after setmac
     ifconfigcmd = "ifconfig eth0 hw ether %s" % mac
     log_debug(ifconfigcmd)
     ret, status = rj_os_system(ifconfigcmd)
     if ret:
-        raise SETMACException("软件设置网卡MAC出错")
+        raise SETMACException("software set  Internet cardMAC error")
     index = 0
     for item in macs:
         cmd = "ethtool -E %s magic %s offset %d value 0x%s" % (
@@ -984,8 +827,8 @@ def util_setmac(eth, mac):
         index += 1
         ret, log = rj_os_system(cmd)
         if ret != 0:
-            raise SETMACException("设置硬件网卡MAC出错")
-    # 取设置后的返回值
+            raise SETMACException(" set hardware Internet card MAC error")
+    # get value after setting 
     cmd_t = "ethtool -e eth0 offset 0 length 6"
     ret, log = rj_os_system(cmd_t)
     m = re.split(':', log)[-1].strip().upper()
@@ -993,10 +836,10 @@ def util_setmac(eth, mac):
 
     for ind, s in enumerate(macs):
         if s != mac_result[ind]:
-            RJPRINTERR("MAC比较出错")
+            RJPRINTERR("MAC comparison error")
     if os.path.exists(rulefile):
-        os.remove(rulefile)  # 删除文件
-    print "MGMT MAC【%s】" % mac
+        os.remove(rulefile)  
+    print "MGMT MAC[%s]" % mac
     return True
 
 
@@ -1037,24 +880,24 @@ def upper_input(tips):
 def changeTypeValue(_value, type1, tips, example):
     if type1 == TLV_CODE_PRODUCT_NAME:
         while True:
-            print "请确认 (1)前后进风/(2)后前进风:",
+            print "please check  (1)air from forward to backward/(2)air from backward to forward:",
             option = raw_input()
             if option == "1":
                 _value[type1] = example + "-F-RJ"
-                print "确认该产品为前后进风设备,产品名称:%s"%_value[type1]
+                print "check Product is air from forward to backward device,Product Name:%s"%_value[type1]
                 break
             elif option == "2":
                 _value[type1] = example + "-R-RJ"
-                print "确认该产品为后前进风设备,产品名称:%s"%_value[type1]
+                print "check Product is air from backward to forward device,Product Name:%s"%_value[type1]
                 break
             else:
-                print "输入错误,请认真核对"
+                print "input incorrect, check please"
         return True
-    print "请输入【%s】如(%s):" % (tips, example),
+    print "Please input[%s]such as(%s):" % (tips, example),
     name = upper_input("")
     if type1 == TLV_CODE_MAC_BASE:
         if len(name) != 12:
-            raise SETMACException("MAC地址长度不对,请认真核对")
+            raise SETMACException("MAC address length incorrect, check please")
         release_mac = ""
         for i in range(len(name) / 2):
             if i == 0:
@@ -1064,22 +907,22 @@ def changeTypeValue(_value, type1, tips, example):
         if isValidMac(release_mac) == True:
             _value[type1] = release_mac
         else:
-            raise SETMACException("MAC地址非法,请认真核对")
+            raise SETMACException("MAC address invaild, check please")
     elif type1 == TLV_CODE_DEVICE_VERSION:
         if name.isdigit():
             _value[type1] = int(name)
         else:
-            raise SETMACException("版本号非数字,请认真核对")
+            raise SETMACException("Version is not number, check please")
     elif type1 == TLV_CODE_MAC_SIZE:
         if name.isdigit():
             _value[type1] = int(name, 16)
         else:
-            raise SETMACException("版本号非数字,请认真核对")
+            raise SETMACException("Version is not number, check please")
     elif type1 == TLV_CODE_SERIAL_NUMBER:
         if name.isalnum() == False:
-            raise SETMACException("序列号非法字符串,请认真核对")
+            raise SETMACException("Serial Number invaild string, check please")
         elif len(name) != 13:
-            raise SETMACException("序列号长度不对,请认真核对")
+            raise SETMACException("Serial Number length incorrect, check please")
         else:
             _value[type1] = name
     elif type1 == TLV_CODE_VENDOR_EXT:
@@ -1087,7 +930,6 @@ def changeTypeValue(_value, type1, tips, example):
     else:
         _value[type1] = name
     return True
-# 不论大小比较字符串
 
 
 def astrcmp(str1, str2):
@@ -1194,37 +1036,37 @@ def fan_setmac():
 
 def checkfansninput(fan_sn, fansntemp):
     if fan_sn in fansntemp:
-        RJPRINTERR("存在相同序列号，请重新输入！")
+        RJPRINTERR("exist same Serial Number，please input again")
         return False
     if(len(fan_sn) != 13):
-        RJPRINTERR("序列号长度错误，请重新输入！")
+        RJPRINTERR("Serial Number length incorrect，please input again")
         return False
     return True
 
-# 判断输入的硬件版本号
+# check 输入的hardware version
 
 
 def checkfanhwinput(hw):
     if len(hw) != 4:
-        RJPRINTERR("硬件版本号长度不正确,请重新输入！")
+        RJPRINTERR("hardware version length incorrect, please input again")
         return False
     if hw.find(".") != 1:
-        RJPRINTERR("硬件版本号不正确,请重新输入！")
+        RJPRINTERR("hardware version incorrect, please input again")
         return False
     return True
 
 
 def util_show_fanse2(fans):
     formatstr = "%-8s  %-20s  %-20s  %-20s %-20s"
-    print formatstr % ("id", "名称", "硬件版本号", "序列号", "时间")
+    print formatstr % ("id", "Name", "hardware version", "Serial Number", "Time")
     print formatstr % ("------", "---------------", "---------------", "---------------", "----")
     for fan in fans:
         # print fan.dstatus
         if fan.dstatus < 0:
-            print "%-8s" % ("风扇%d" % (fans.index(fan) + 1)),
-            RJPRINTERR("  解析e2出错")
+            print "%-8s" % ("FAN%d" % (fans.index(fan) + 1)),
+            RJPRINTERR("  decode e2 error")
         else:
-            print formatstr % ("风扇%d" % (fans.index(fan) + 1), fan.typename.replace(chr(0x00), ""),
+            print formatstr % ("FAN%d" % (fans.index(fan) + 1), fan.typename.replace(chr(0x00), ""),
                                fan.typehwinfo.replace(chr(0x00), ""), fan.typesn.replace(chr(0x00), ""), fan.fandecodetime)
 
 
@@ -1279,9 +1121,9 @@ def fac_fans_setmac_tlv(ret):
         fane2.fanloc = item["loc"]
         log_debug("decode eeprom success")
 
-        print "风扇【%d】-【%s】setmac" % ((index + 1), FANS_DEF[fane2.typedevtype])
+        print "Fan[%d]-[%s]setmac" % ((index + 1), FANS_DEF[fane2.typedevtype])
         while True:
-            print "请输入[%s]:" % "序列号",
+            print "Please input[%s]:" % "Serial Number",
             fan_sn = raw_input()
             if checkfansninput(fan_sn, fansntemp) == False:
                 continue
@@ -1290,7 +1132,7 @@ def fac_fans_setmac_tlv(ret):
             fane2.typesn = fan_sn + chr(0x00)
             break
         while True:
-            print "请输入[%s]:" % "硬件版本号",
+            print "Please input[%s]:" % "hardware version",
             hwinfo = raw_input()
             if checkfanhwinput(hwinfo) == False:
                 continue
@@ -1304,12 +1146,12 @@ def fac_fans_setmac_tlv(ret):
     print "\n*******************************\n"
 
     util_show_fanse2(fans)
-    if getInputCheck("确认是否输入正确（Yes/No):") == True:
+    if getInputCheck("check input correctly or not（Yes/No):") == True:
         for fan in fans:
             log_debug("ouput fan")
             fac_fan_setmac(fan)
     else:
-        print "setmac退出"
+        print "setmac quit"
         return False
 
 
@@ -1388,7 +1230,7 @@ def writeToEEprom(rst_arr):
                  E2_PROTECT["addr"], E2_PROTECT["close"])
     elif dealtype == "io":
         io_wr(E2_PROTECT["io_addr"], E2_PROTECT["close"])
-    # 最后处理系统驱动
+    # deal last drivers
     os.system("rmmod at24 ")
     os.system("modprobe at24 ")
     os.system("rm -f /var/cache/sonic/decode-syseeprom/syseeprom_cache")
@@ -1421,8 +1263,8 @@ def createbmcMac(cpumac , num = 2):
 
 def fac_board_setmac():
     _value = {}
-    # 默认赋值
-    _value[TLV_CODE_VENDOR_EXT] = generate_ext(RUIJIE_CARDID)  # 生成锐捷特有的id
+    # default value
+    _value[TLV_CODE_VENDOR_EXT] = generate_ext(RUIJIE_CARDID)  # generate id
     _value[TLV_CODE_PRODUCT_NAME] = RUIJIE_PRODUCTNAME
     _value[TLV_CODE_PART_NUMBER]    = RUIJIE_PART_NUMBER
     _value[TLV_CODE_LABEL_REVISION] = RUIJIE_LABEL_REVISION
@@ -1439,24 +1281,24 @@ def fac_board_setmac():
             _value[TLV_CODE_PRODUCT_NAME] = RUIJIE_PRODUCTNAME + "-RJ"
         elif 0x00004051 == RUIJIE_CARDID or 0x00004050 == RUIJIE_CARDID:
             changeTypeValue(_value, TLV_CODE_PRODUCT_NAME,
-                        "产品名称",RUIJIE_PRODUCTNAME)
+                        "Product name",RUIJIE_PRODUCTNAME)
 
         changeTypeValue(_value, TLV_CODE_SERIAL_NUMBER,
-                        "SN", "0000000000000")  # 添加序列号
+                        "SN", "0000000000000")  # add serial number
         changeTypeValue(_value, TLV_CODE_DEVICE_VERSION,
-                        "硬件版本号", "101")  # 硬件版本号
+                        "hardware version", "101")  # hardware version
         changeTypeValue(_value, TLV_CODE_MAC_BASE,
-                        "MAC地址", "58696cfb2108")  # MAC地址
+                        "MAC address", "58696cfb2108")  # MAC address
         _value[TLV_CODE_MANUF_DATE] = time.strftime(
-            '%m/%d/%Y %H:%M:%S', time.localtime())  # 自动添加setmac时间
+            '%m/%d/%Y %H:%M:%S', time.localtime())  # add setmac time
         rst, ret = generate_value(_value)
-        if util_setmac("eth0", _value[TLV_CODE_MAC_BASE]) == True:  # 设置网卡IP
-            writeToEEprom(rst)  # 写值到e2中
-            #设置BMC MAC
+        if util_setmac("eth0", _value[TLV_CODE_MAC_BASE]) == True:  #  set  Internet cardIP
+            writeToEEprom(rst)  # write to e2
+            # set BMC MAC
             if FACTESTMODULE.has_key("bmcsetmac") and FACTESTMODULE['bmcsetmac'] == 1:
                 bmcmac = createbmcMac(_value[TLV_CODE_MAC_BASE])
                 if ipmi_set_mac(bmcmac) == True:
-                    print("BMC  MAC【%s】"%bmcmac)
+                    print("BMC  MAC[%s]"%bmcmac)
                 else:
                     print("SET BMC MAC FAILED")
                     return False
@@ -1486,7 +1328,7 @@ def ipmi_set_mac(mac):
 
 
 def getInputValue(title, tips):
-    print "请输入【%s】如(%s):" % (title, tips),
+    print "Please input[%s]such as(%s):" % (title, tips),
     name = raw_input()
 
     return name
@@ -1494,10 +1336,10 @@ def getInputValue(title, tips):
 
 def bmc_setmac():
     tips = "BMC MAC"
-    print "请输入你要改的值[%s]:" % tips,
+    print "Please input value you want to change[%s]:" % tips,
     name = raw_input()
     if len(name) != 12:
-        RJPRINTERR("\nMAC地址非法,请重新输入\n")
+        RJPRINTERR("\nMAC address invaild, try again\n")
         return False
     release_mac = ""
     for i in range(len(name) / 2):
@@ -1509,26 +1351,26 @@ def bmc_setmac():
         if ipmi_set_mac(release_mac) == True:
             return True
     else:
-        RJPRINTERR("\nMAC地址非法,请重新输入\n")
+        RJPRINTERR("\nMAC address invaild, try again\n")
     return False
 
 
 def closeProtocol():
-    # 关闭LLDP
-    log_info("关闭LLDP")
+    # disable LLDP
+    log_info("disable LLDP")
     sys.stdout.write(".")
     sys.stdout.flush()
     rj_os_system("systemctl stop lldp.service")
-    log_info("关闭网关边界服务")
+    log_info("disable lldp service")
     sys.stdout.write(".")
     sys.stdout.flush()
     rj_os_system("systemctl stop bgp.service")
-    log_info("关闭生成树")
+    log_info("disable bgp service")
     sys.stdout.write(".")
     sys.stdout.flush()
     #ret, status = rj_os_system('bcmcmd "port ce,xe stp=disable"')
 
-# 检测SDK内存 必须为256M
+# check SDK memory must be 256M
 
 
 def checkSdkMem():
@@ -1544,12 +1386,12 @@ def checkSdkMem():
         return
     with open(file_name, "w") as f:
         f.write(file_data)
-    print "修订SDK内存为256，需要重启生效"
+    print "change SDK memory to 256, reboot required"
     rj_os_system("sync")
     rj_os_system("reboot")
 
 ##########################################################################
-# 窗口接收一个字符设置
+# receives a character setting
 ##########################################################################
 
 
@@ -1606,7 +1448,7 @@ def getsysvalue(location):
     #log_debug(retval)
     return retval
 
-# 获取文件值
+# get file value
 
 
 def get_pmc_register(reg_name):
@@ -1615,7 +1457,7 @@ def get_pmc_register(reg_name):
     filepath = glob.glob(mb_reg_file)
     if(len(filepath) == 0):
         return "%s %s  notfound"% (retval , mb_reg_file)
-    mb_reg_file = filepath[0]        #如果找到多个匹配的路径，默认取第一个匹配的路径。
+    mb_reg_file = filepath[0]       
     if (not os.path.isfile(mb_reg_file)):
         return "%s %s  notfound"% (retval , mb_reg_file)
     try:
@@ -1627,7 +1469,7 @@ def get_pmc_register(reg_name):
     retval = retval.lstrip(" ")
     return retval
 
-# 按锐捷规则解析EEPROM
+# decode EEPROM
 
 
 def decoder(s, t):
@@ -1721,7 +1563,7 @@ def get_sys_eeprom():
     eeprom = get_sysfs_value(rg_eeprom)
     return decode_eeprom(eeprom)
 
-# 获取板卡ID
+# get card ID
 def getCardId():
     ret = get_sys_eeprom()
     for item in ret:
@@ -1730,14 +1572,14 @@ def getCardId():
     return None
 
 # ====================================
-# 执行shell命令
+# execute shell command
 # ====================================
 def rj_os_system(cmd):
     status, output = commands.getstatusoutput(cmd)
     return status, output
 
 ###########################################
-# 通过DMI命令获取系统的内存插槽和内存数
+# get memory slot and number via DMI command
 ###########################################
 def getsysmeminfo():
     ret, log = rj_os_system("which dmidecode ")
@@ -1745,13 +1587,13 @@ def getsysmeminfo():
         error = "cmd find dmidecode"
         return False, error
     cmd = log + "|grep -P -A5 \"Memory\s+Device\"|grep Size|grep -v Range"
-    # 先获取总数
+    # get total number first
     result = []
     ret1, log1 = rj_os_system(cmd)
     if ret1 == 0 and len(log1):
         log1 = log1.lstrip()
         arr = log1.split("\n")
-        #total = len(arr)  # 总共的插槽数
+        #total = len(arr)  # total slot number
         for i in range(len(arr)):
             val = re.sub("\D", "", arr[i])
             if val == "":
@@ -1763,8 +1605,8 @@ def getsysmeminfo():
     return False, "error"
 
 ###########################################
-# 通过DMI命令获取系统的内存插槽和内存数
-# 返回值包含多个数组
+# get memory slot and number via DMI command
+# return various arrays
 ###########################################
 def getsysmeminfo_detail():
     ret, log = rj_os_system("which dmidecode ")
@@ -1772,10 +1614,10 @@ def getsysmeminfo_detail():
         error = "cmd find dmidecode"
         return False, error
     cmd = log + " -t 17 | grep  -A21 \"Memory Device\""  # 17
-    # 先获取总数
+    # get total number
     ret1, log1 = rj_os_system(cmd)
     if ret1 != 0 or len(log1) <= 0:
-        return False, "命令执行出错[%s]" % cmd
+        return False, "command execution error[%s]" % cmd
     result_t = log1.split("--")
     mem_rets = []
     for item in result_t:
@@ -1791,7 +1633,7 @@ def getsysmeminfo_detail():
 
 
 ###########################################
-# 通过DMI命令获取系统的BIOS信息
+# get BIOS info via DMI command
 ###########################################
 def getDmiSysByType(type_t):
     ret, log = rj_os_system("which dmidecode ")
@@ -1799,10 +1641,10 @@ def getDmiSysByType(type_t):
         error = "cmd find dmidecode"
         return False, error
     cmd = log + " -t %s" % type_t
-    # 先获取总数
+    # get total number
     ret1, log1 = rj_os_system(cmd)
     if ret1 != 0 or len(log1) <= 0:
-        return False, "命令执行出错[%s]" % cmd
+        return False, "command execution error[%s]" % cmd
     its = log1.replace("\t", "").strip().split("\n")
     ret = {}
     for it in its:
@@ -1817,7 +1659,7 @@ def gethwsys():
     return getDmiSysByType(1)
 
 ###########################################
-# 通过DMI命令获取系统的BIOS信息
+# get BIOS info via DMI command
 
 
 def getsysbios():
@@ -1846,15 +1688,15 @@ def getUsbLocation():
     for item in result:
         with open(os.path.join(item, "removable"), 'r') as fd:
             value = fd.read()
-            if value.strip() == "1":  # 表示找到U盘
+            if value.strip() == "1":  # U-Disk found
                 usbpath = item
                 break
-    if usbpath == "":  # 没找到U盘
+    if usbpath == "":  # no U-Disk found
         log_debug("no usb found")
         return False, usbpath
     return True, usbpath
 
-# 判断USB文件 查找
+# judge USB file
 def getusbinfo():
     ret, path = getUsbLocation()
     if ret == False:
@@ -1871,7 +1713,7 @@ def get_cpu_info():
 
     ret, log1 = rj_os_system(cmd)
     if ret != 0 or len(log1) <= 0:
-        return False, "命令执行出错[%s]" % cmd
+        return False, "command execution error[%s]" % cmd
     result_t = log1.split("--")
     mem_rets = []
     for item in result_t:
@@ -1884,7 +1726,7 @@ def get_cpu_info():
                 ret[key] = value
         mem_rets.append(ret)
     return True, mem_rets
-#  读取文件内容
+#  read file
 def get_version_config_info(attr_key, file_name=None):
     if file_name is None:
         version_conf_filename = "/root/version.json"
@@ -1903,7 +1745,7 @@ def get_version_config_info(attr_key, file_name=None):
 
 
 def io_rd(reg_addr, len =1):
-    u'''io读'''
+    u'''io read'''
     try: 
         regaddr = 0
         if type(reg_addr) == int:
@@ -1925,7 +1767,7 @@ def io_rd(reg_addr, len =1):
     
 
 def io_wr(reg_addr, reg_data):
-    u'''io写'''
+    u'''io write'''
     try:
         regdata  = 0
         regaddr  = 0

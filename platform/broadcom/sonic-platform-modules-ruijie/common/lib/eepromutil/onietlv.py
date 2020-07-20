@@ -161,7 +161,7 @@ class onie_tlv(object):
         self._dstatus = 0
 
     def oniecrc32(self,v):
-        return '0x%08x' % (binascii.crc32(v) & 0xffffffff)  # 取crc32的八位数据 %x返回16进制
+        return '0x%08x' % (binascii.crc32(v) & 0xffffffff)  # get 8 bytes from crc32 %x return in hex
 
     def getTLV_BODY(self,type, value):
         x = []

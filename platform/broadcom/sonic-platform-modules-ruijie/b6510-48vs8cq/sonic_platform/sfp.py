@@ -401,7 +401,7 @@ class Sfp(SfpBase):
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
+        except IOError:
             pass
         finally:
             if sysfsfile_eeprom:
@@ -1318,11 +1318,11 @@ class Sfp(SfpBase):
                 data.seek(0)
                 sres = hex(result)[2:]
                 data.write(sres)
+                data.close()
             except IOError as e:
                 print("Error: unable to open file: %s" % str(e))
                 return False
-            finally:
-                data.close()
+
             return True
         return False
 
@@ -1466,14 +1466,15 @@ class Sfp(SfpBase):
                 data.seek(0)
                 sres = hex(result)[2:]
                 data.write(sres)
+                data.close()
             except IOError as e:
                 print("Error: unable to open file: %s" % str(e))
                 return False
-            finally:
-                data.close()
+
             return True
         elif self.sfp_type == SFP_TYPE:
             # SFP doesn't support this feature
             return False
         return False
+
 

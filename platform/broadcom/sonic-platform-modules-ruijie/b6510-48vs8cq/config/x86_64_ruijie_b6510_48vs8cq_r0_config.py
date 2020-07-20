@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-from  ruijiecommon import *
+from ruijiecommon import *
 PCA9548START  = -1
 PCA9548BUSEND = -2
 
@@ -63,34 +63,34 @@ DEV_MONITOR_PARAM = {
 }
 
 fanlevel = {
-    "tips":["低","中","高"],
+    "tips":["low","medium","high"],
     "level":[51,150,255],
     "low_speed":[500,7500,17000],
     "high_speed":[11000,22500,28500]
 }
 
-fanloc =[ {"name":"风扇1/风扇2/风扇3/风扇4", "location":"0-0032/fan_speed_set" ,
-          "childfans":[{"name":"风扇1", "location":"2-0037/hwmon/hwmon4/fan1_input"},
-          {"name":"风扇2", "location":"2-0037/hwmon/hwmon4/fan2_input"},
-          {"name":"风扇3", "location":"2-0037/hwmon/hwmon4/fan3_input"},
-          {"name":"风扇4", "location":"2-0037/hwmon/hwmon4/fan4_input"} ]},
+fanloc =[ {"name":"FAN1/FAN2/FAN3/FAN4", "location":"0-0032/fan_speed_set" ,
+          "childfans":[{"name":"FAN1", "location":"2-0037/hwmon/hwmon4/fan1_input"},
+          {"name":"FAN2", "location":"2-0037/hwmon/hwmon4/fan2_input"},
+          {"name":"FAN3", "location":"2-0037/hwmon/hwmon4/fan3_input"},
+          {"name":"FAN4", "location":"2-0037/hwmon/hwmon4/fan4_input"} ]},
          ]
 
 
-#################风扇调速参数##############################
-MONITOR_TEMP_MIN           = 38    # 调速开始温度
-MONITOR_K                  = 11    # 调速策略
-MONITOR_MAC_IN             = 35    # mac与芯片的温差
-MONITOR_DEFAULT_SPEED      = 0x60  # 默认转速
-MONITOR_MAX_SPEED          = 0xFF  # 最大转速(全转)
-MONITOR_MIN_SPEED          = 0x33  # 最小转速
-MONITOR_MAC_ERROR_SPEED    = 0XBB  # MAC异常转速
-MONITOR_FAN_TOTAL_NUM      = 4     # 3+1 冗余设计,有一个故障后报syslog
-MONITOR_MAC_UP_TEMP        = 50    # MAC 与入温口比较 上
-MONITOR_MAC_LOWER_TEMP     = -50   # MAC 与入入温口比较  下
+#################FAN-Speed-Adjustment-Parameters##############################
+MONITOR_TEMP_MIN           = 38    # temperature before speed-adjsutment
+MONITOR_K                  = 11    # speed-adjustment algorithm
+MONITOR_MAC_IN             = 35    # temperature difference between mac and chip
+MONITOR_DEFAULT_SPEED      = 0x60  # default speed
+MONITOR_MAX_SPEED          = 0xFF  # maximum speed
+MONITOR_MIN_SPEED          = 0x33  # minimum speed
+MONITOR_MAC_ERROR_SPEED    = 0XBB  # MAC abnormal speed
+MONITOR_FAN_TOTAL_NUM      = 4     # 3+1 redundancy design, report to syslog if there exists a error
+MONITOR_MAC_UP_TEMP        = 50    # MAC compared with temperature inlet up
+MONITOR_MAC_LOWER_TEMP     = -50   # MAC compared with temperature outlet down
 MONITOR_MAC_MAX_TEMP       = 100   # 
 
-MONITOR_FALL_TEMP = 4               # 调速下降温度
+MONITOR_FALL_TEMP = 4               # speed-adjustment reduced temperature
 MONITOR_MAC_WARNING_THRESHOLD =  100 #100
 MONITOR_OUTTEMP_WARNING_THRESHOLD = 85
 MONITOR_BOARDTEMP_WARNING_THRESHOLD = 85
@@ -102,8 +102,8 @@ MONITOR_OUTTEMP_CRITICAL_THRESHOLD = 90 #90
 MONITOR_BOARDTEMP_CRITICAL_THRESHOLD = 90 #90
 MONITOR_CPUTEMP_CRITICAL_THRESHOLD = 100 #100
 MONITOR_INTEMP_CRITICAL_THRESHOLD = 80  # 80 
-MONITOR_CRITICAL_NUM              = 3 #重启次数
-MONITOR_SHAKE_TIME                = 20 #防抖间隔
+MONITOR_CRITICAL_NUM              = 3 #retry times
+MONITOR_SHAKE_TIME                = 20 #anti-shake intervals
 MONITOR_INTERVAL                   = 60
 
 MONITOR_SYS_LED = [
@@ -121,10 +121,10 @@ MONITOR_FANS_LED = [
 
 
 CPLDVERSIONS = [ 
-        {"bus":2, "devno":0x33, "name":"MAC板CPLD-A"},
-        {"bus":2, "devno":0x35, "name":"MAC板CPLD-B"},
-        {"bus":2, "devno":0x37, "name":"CONNECT板CPLD-A"},
-        {"bus":0, "devno":0x0d, "name":"CPU板CPLD"},
+        {"bus":2, "devno":0x33, "name":"MAC board CPLD-A"},
+        {"bus":2, "devno":0x35, "name":"MAC board CPLD-B"},
+        {"bus":2, "devno":0x37, "name":"CONNECT board CPLD-A"},
+        {"bus":0, "devno":0x0d, "name":"CPU board CPLD"},
 ]
 
 MONITOR_SYS_PSU_LED =[
@@ -204,7 +204,7 @@ MONITOR_DEV_STATUS_DECODE = {
 ###################################################################
 
 
-#####################MAC调压参数(B6510)####################################
+#####################MAC-Voltage-Adjustment-Parameters(B6510)####################################
 MAC_AVS_PARAM ={
     0x72:0x0384,
     0x73:0x037e,
@@ -232,26 +232,26 @@ MAC_AVS_PARAM ={
     0x89:0x02f5,
     0x8A:0x02ee
 }
-# 6510模板配置
+# 6510 Default Configuration
 MAC_DEFAULT_PARAM = {
-  "type": 1,                       # type 1表示 不在范围内用默认 / 0表示不在范围内不调
-  "default":0x74,                  # 配合type使用
-  "loopaddr":0x00,                 # AVS loop地址
-  "loop":0x00,                     # AVS loop值
-  "open":0x00,                     # 关闭写保护值
-  "close":0x40,                    # 打开写保护值
-  "bus":2,                         # AVSI2C总线地址
-  "devno":0x60,                    # AVS地址
-  "addr":0x21,                     # AVS调压地址
-  "protectaddr":0x10,              # AVS写保护地址
-  "sdkreg":"TOP_AVS_SEL_REG",      # SDK寄存器名称
-  "sdktype": 0,                    # type 0表示 不需要移位 / 1 表示需要移位
-  "macregloc":24 ,                 # 移位操作
-  "mask": 0xff                     # 移位后掩码
+  "type": 1,                       # type 1 represents default if out of range / 0 represents no voltage-adjustment if out of range
+  "default":0x74,                  # should be used with type
+  "loopaddr":0x00,                 # AVS loop address
+  "loop":0x00,                     # AVS loop value
+  "open":0x00,                     # diasble write-protection value
+  "close":0x40,                    # enable write-protection value
+  "bus":2,                         # AVSI2C bus address
+  "devno":0x60,                    # AVS address
+  "addr":0x21,                     # AVS voltage-adjustment address
+  "protectaddr":0x10,              # AVS write-protection address
+  "sdkreg":"TOP_AVS_SEL_REG",      # SDK register name
+  "sdktype": 0,                    # type 0 represents no shift operation / 1 represents shift operation
+  "macregloc":24 ,                 # shift operation
+  "mask": 0xff                     # mask after shift
 }
-#####################MAC调压参数####################################
+#####################MAC-Voltage-Adjustment-Parameters####################################
 
-## 驱动列表
+## Drivers List
 ## 
 DRIVERLISTS = [
         {"name":"i2c_dev", "delay":0},
@@ -284,7 +284,7 @@ DRIVERLISTS = [
 ]
 
 DEVICE = [
-        {"name":"pca9641","bus":0 ,"loc":0x10 },
+        {"name":"pca9541","bus":0 ,"loc":0x10 },
         {"name":"pca9548","bus":2 ,"loc":0x70 },
         {"name":"lm75","bus": 2,   "loc":0x48 },
         {"name":"lm75","bus": 2,   "loc":0x49 },

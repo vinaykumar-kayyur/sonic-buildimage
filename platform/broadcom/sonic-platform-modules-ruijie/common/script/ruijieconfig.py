@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #-------------------------------------------------------------------------------
 # Name:         ruijieconfig.py 
-# Purpose:      为其他模块屏蔽由于产品型号/onie版本出现的差异
+# Purpose:      block the difference between various product/onie version for other module
 #
 # Author:      tjm
 #
@@ -14,6 +14,16 @@ import os
 from rjutil.baseutil import get_machine_info
 from rjutil.baseutil import get_platform_info
 
+__all__ = ["getdeviceplatform", "get_rjconfig_info", "MONITOR_CONST", "MAILBOX_DIR", "DEVICE",
+           "GLOBALCONFIG", "GLOBALINITPARAM", "GLOBALINITCOMMAND", "MAC_LED_RESET", "STARTMODULE",
+           "GLOBALCONFIG", "fanloc", "RUIJIE_CARDID", "RUIJIE_PRODUCTNAME", "RUIJIE_PART_NUMBER",
+           "RUIJIE_LABEL_REVISION", "RUIJIE_MAC_SIZE", "RUIJIE_MANUF_NAME", "RUIJIE_MANUF_COUNTRY",
+           "RUIJIE_VENDOR_NAME", "RUIJIE_DIAG_VERSION", "RUIJIE_SERVICE_TAG", "E2_PROTECT", 
+           "E2_LOC", "FAN_PROTECT", "FANS_DEF", "MONITOR_FANS_LED", "MONITOR_SYS_FAN_LED",
+           "MONITOR_SYS_PSU_LED", "MONITOR_FAN_STATUS", "MONITOR_PSU_STATUS", "MONITOR_DEV_STATUS",
+           "MONITOR_DEV_STATUS_DECODE", "DEV_LEDS", "MAC_AVS_PARAM", "MAC_DEFAULT_PARAM",
+           "FRULISTS", "rg_eeprom", "i2ccheck_params", "FANCTROLDEBUG", "DEVMONITORDEBUG"]
+
 def getdeviceplatform():
     x = get_platform_info(get_machine_info())
     if x != None:
@@ -21,13 +31,13 @@ def getdeviceplatform():
     return filepath
 
 
-platform = get_platform_info(get_machine_info())  #         platform         获取平台信息             x86_64-ruijie_b6520-64cq-r0
-platformpath = getdeviceplatform()             #         platformpath     获取可映射docker目录    /usr/share/sonic/device/x86_64-ruijie_b6520-64cq-r0
-MAILBOX_DIR = "/sys/bus/i2c/devices/"        # sysfs 顶层目录
+platform = get_platform_info(get_machine_info())  #         platform         get platform info             x86_64-ruijie_b6520-64cq-r0
+platformpath = getdeviceplatform()             #         platformpath     get mappable docker contents    /usr/share/sonic/device/x86_64-ruijie_b6520-64cq-r0
+MAILBOX_DIR = "/sys/bus/i2c/devices/"        # sysfs top contents
 grtd_productfile = (platform + "_config").replace("-","_")
 common_productfile = "ruijiecommon"
-configfile_pre   =  "/usr/local/bin/"   # py放的目录， 暂时用/usr/local/bin 后续修订
-import sys
+configfile_pre   =  "/usr/local/bin/"   # py's contents， use /usr/local/bin temporarily
+
 sys.path.append(platformpath)
 sys.path.append(configfile_pre)
 
@@ -44,29 +54,29 @@ def get_rjconfig_info(attr_key):
                 return tokens[1].strip()
     return None
 
-#####BMC密码###
+#####BMC-Password###
 OPENBMC_PASSWORD = get_rjconfig_info("OPENBMC_PASSWORD")
 OPENBMC_PASSWORD = OPENBMC_PASSWORD if(OPENBMC_PASSWORD != None) else "0penBmc"
 
 ############################################################################################
-##  当不存在个性化文件时，使用通用文件
-global  module_product
+##  if there is no specific file, use common file
+module_product = None
 if os.path.exists(configfile_pre + grtd_productfile + ".py"):
     module_product  = __import__(grtd_productfile, globals(), locals(), [], -1)
 elif os.path.exists(configfile_pre + common_productfile + ".py"):
     module_product  = __import__(common_productfile, globals(), locals(), [], -1)
 else:
-    print "不存在配置文件，退出"
+    print "No Configuration existed, quit"
     exit(-1)
 ############################################################################################
 
 DEVICE  = module_product.DEVICE
 
-##########驱动加载需要变量
-#获取差异平台配置
+##########Driver loading needs parameters
+#get different product configuration
 RUIJIE_GLOBALCONFIG ={
     "DRIVERLISTS":module_product.DRIVERLISTS,
-    "QSFP": {"startbus":module_product.PCA9548START, "endbus":module_product.PCA9548BUSEND},#顽固分子单独处理
+    "QSFP": {"startbus":module_product.PCA9548START, "endbus":module_product.PCA9548BUSEND},
     "DEVS": DEVICE
 }
 GLOBALCONFIG = RUIJIE_GLOBALCONFIG
@@ -76,12 +86,12 @@ GLOBALINITCOMMAND = module_product.INIT_COMMAND
 fancontrol_loc        = module_product.fancontrol_loc
 fancontrol_config_loc = module_product.fancontrol_config_loc
 MAC_LED_RESET          = module_product.MAC_LED_RESET
-###########启机模块变量
+###########Stat-up module parameters
 STARTMODULE = module_product.STARTMODULE
 FIRMWARE_TOOLS = module_product.FIRMWARE_TOOLS
 
 
-##########生测需要变量
+##########Manufacturing-Test need parameters
 FACTESTMODULE = module_product.FACTESTMODULE
 TESTCASE      = module_product.TESTCASE
 menuList      = module_product.menuList
@@ -89,7 +99,7 @@ alltest       = module_product.alltest
 diagtestall   = module_product.diagtestall
 looptest      = module_product.looptest
 fanloc        = module_product.fanloc
-fanlevel      = module_product.fanlevel        # 风扇调数等级
+fanlevel      = module_product.fanlevel        # fan adjustment level
 TEMPIDCHANGE  = module_product.TEMPIDCHANGE
 CPLDVERSIONS  = module_product.CPLDVERSIONS
 RUIJIE_CARDID      = module_product.RUIJIE_CARDID
@@ -171,8 +181,8 @@ class MONITOR_CONST:
     MONITOR_MAC_SOURCE_SYSFS = module_product.MONITOR_MAC_SOURCE_SYSFS
     MONITOR_MAC_SOURCE_PATH = module_product.MONITOR_MAC_SOURCE_PATH
 
-FANCTROLDEBUG = 0 # 1为打开
-DEVMONITORDEBUG = 0 # 1为打开
+FANCTROLDEBUG = 0 # 1 means enable
+DEVMONITORDEBUG = 0 # 1 means enable
 
 
 

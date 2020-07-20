@@ -5,6 +5,9 @@ from bitarray import bitarray
 from datetime import datetime, timedelta
 import sys
 
+__all__ = ["FruException", "FruUtil", "BaseArea", "BoardInfoArea", "ProductInfoArea",
+           "MultiRecordArea", "Field", "ipmifru"]
+
 __DEBUG__ = "N"
 
 

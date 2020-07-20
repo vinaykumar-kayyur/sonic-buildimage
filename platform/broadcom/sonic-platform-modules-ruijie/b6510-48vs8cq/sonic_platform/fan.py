@@ -51,6 +51,7 @@ class Fan(FanBase):
             target = val
         else:
             raise ValueError
+        return target
 
     @property
     def reg_sn(self):

@@ -219,10 +219,4 @@ pbmp_gport_stack
 reglist_enable
 scache_filename
 
-help_cli_enable
-ifp_inports_support_enable
-memlist_enable
-pbmp_gport_stack
-port_flex_enable
-reglist_enable
 cancun_dir

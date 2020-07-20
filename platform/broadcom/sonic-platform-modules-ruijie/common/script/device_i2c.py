@@ -24,14 +24,14 @@ class AliasedGroup(click.Group):
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
    
 def log_os_system(cmd):
-    u'''执行shell命令'''
+    u'''execute shell command'''
     status, output = commands.getstatusoutput(cmd)
     if status:
         print output
     return  status, output
 
 def write_sysfs_value(reg_name, value):
-    u'''写sysfs文件'''
+    u'''write sysfs file'''
     mb_reg_file = "/sys/bus/i2c/devices/" + reg_name
     if (not os.path.isfile(mb_reg_file)):
         print mb_reg_file,  'not found !'
@@ -44,9 +44,9 @@ def write_sysfs_value(reg_name, value):
     return True
 
 def check_driver():
-    u'''判断是否存在rg开头的驱动'''
+    u'''whether there is driver start with rg'''
     status, output = log_os_system("lsmod | grep rg | wc -l")
-    #系统执行错误
+    #System execution error
     if status: 
         return False
     if output.isdigit() and int(output) > 0:
@@ -54,7 +54,7 @@ def check_driver():
     else:
         return False
 
-def getPid(name):
+def i2c_getPid(name):
     ret = []
     for dirname in os.listdir('/proc'):
         if dirname == 'curproc':
@@ -70,49 +70,49 @@ def getPid(name):
 
 def startAvscontrol():
     cmd = "nohup avscontrol.py start >/dev/null 2>&1 &"
-    rets = getPid("avscontrol.py")
+    rets = i2c_getPid("avscontrol.py")
     if len(rets) == 0:
         os.system(cmd)
 
 def startFanctrol():
     if STARTMODULE['fancontrol'] == 1:
         cmd = "nohup fancontrol.py start >/dev/null 2>&1 &"
-        rets = getPid("fancontrol.py")
+        rets = i2c_getPid("fancontrol.py")
         if len(rets) == 0:
             os.system(cmd)
 
 def starthal_fanctrl():
     if STARTMODULE.get('hal_fanctrl',0) == 1:
         cmd = "nohup hal_fanctrl.py start >/dev/null 2>&1 &"
-        rets = getPid("hal_fanctrl.py")
+        rets = i2c_getPid("hal_fanctrl.py")
         if len(rets) == 0:
             os.system(cmd)
 
 def starthal_ledctrl():
     if STARTMODULE.get('hal_ledctrl',0) == 1:
         cmd = "nohup hal_ledctrl.py start >/dev/null 2>&1 &"
-        rets = getPid("hal_ledctrl.py")
+        rets = i2c_getPid("hal_ledctrl.py")
         if len(rets) == 0:
             os.system(cmd)
 
 def startDevmonitor():
     if STARTMODULE.get('dev_monitor',0) == 1:
         cmd = "nohup dev_monitor.py start >/dev/null 2>&1 &"
-        rets = getPid("dev_monitor.py")
+        rets = i2c_getPid("dev_monitor.py")
         if len(rets) == 0:
             os.system(cmd)
 
 def startSlotmonitor():
     if STARTMODULE.get('slot_monitor',0) == 1:
         cmd = "nohup slot_monitor.py start >/dev/null 2>&1 &"
-        rets = getPid("slot_monitor.py")
+        rets = i2c_getPid("slot_monitor.py")
         if len(rets) == 0:
             os.system(cmd)
 
 def stopFanctrol():
-    u'''关闭风扇定时服务'''
+    u'''disable fan timer service'''
     if STARTMODULE['fancontrol'] == 1:
-        rets = getPid("fancontrol.py")  #
+        rets = i2c_getPid("fancontrol.py")  #
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
@@ -120,7 +120,7 @@ def stopFanctrol():
 
 def stophal_fanctrl():
     if STARTMODULE.get('hal_fanctrl',0) == 1:
-        rets = getPid("hal_fanctrl.py")
+        rets = i2c_getPid("hal_fanctrl.py")
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
@@ -128,7 +128,7 @@ def stophal_fanctrl():
 
 def stophal_ledctrl():
     if STARTMODULE.get('hal_ledctrl',0) == 1:
-        rets = getPid("hal_ledctrl.py")
+        rets = i2c_getPid("hal_ledctrl.py")
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
@@ -136,18 +136,18 @@ def stophal_ledctrl():
 
 
 def stopDevmonitor():
-    u'''关闭风扇定时服务'''
+    u'''disable the fan timer service'''
     if STARTMODULE.get('dev_monitor',0) == 1:
-        rets = getPid("dev_monitor.py")  #
+        rets = i2c_getPid("dev_monitor.py")  #
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
         return True
 
 def stopSlotmonitor():
-    u'''关闭slot定时服务'''
+    u'''disable slot timer service'''
     if STARTMODULE.get('slot_monitor',0) == 1:
-        rets = getPid("slot_monitor.py")  #
+        rets = i2c_getPid("slot_monitor.py")  #
         for ret in rets:
             cmd = "kill "+ ret
             os.system(cmd)
@@ -163,7 +163,7 @@ def addDev(name, bus, loc):
     if name == "lm75":
         time.sleep(0.1)
     pdevpath = "/sys/bus/i2c/devices/i2c-%d/" % (bus)
-    for i in range(1, 100):#等待母bus生成，最多等待10s
+    for i in range(1, 100):#wait for mother-bus generation，maximum wait time is 10s
         if os.path.exists(pdevpath) == True: 
             break
         time.sleep(0.1)
@@ -176,7 +176,7 @@ def addDev(name, bus, loc):
         os.system(cmd)
     
 def removeQSFP():
-    u'''根据全部配置添加SFP'''
+    u'''add SFP according to configuration'''
     qsfpconfig = GLOBALCONFIG["QSFP"]
     for bus in range(qsfpconfig["endbus"], qsfpconfig["startbus"] - 1, -1):
         removeDev(bus , 0x50)
@@ -201,7 +201,7 @@ def adddevs():
 def checksignaldriver(name):
     modisexistcmd = "lsmod | grep %s | wc -l" % name
     status, output = log_os_system(modisexistcmd)
-    #系统执行错误
+    #System execution error
     if status: 
         return False
     if output.isdigit() and int(output) > 0:
@@ -223,7 +223,7 @@ def removedriver(name, delay):
         log_os_system(cmd)
 
 def removedrivers():
-    u'''卸载所有驱动'''
+    u'''remove all drivers'''
     if GLOBALCONFIG is None:
         click.echo("%%DEVICE_I2C-INIT: load global config failed.")
         return
@@ -242,7 +242,7 @@ def removedrivers():
         removedriver(name, delay)
 
 def adddrivers():
-    u'''添加驱动'''
+    u'''add drivers'''
     if GLOBALCONFIG is None:
         click.echo("%%DEVICE_I2C-INIT: load global config failed.")
         return
@@ -268,17 +268,17 @@ def otherinit():
         log_os_system(index)
     
 def unload_driver():
-    u'''卸载设备和驱动'''
-    stopDevmonitor() # 停止可拔插设备驱动监控
-    stopFanctrol()  # 停止风扇控制服务
-    removeQSFP()    # 卸载光模块
-    removedevs()    # 卸载其他设备
-    removedrivers() # 卸载驱动
+    u'''remove devices and drivers'''
+    stopDevmonitor() # disable removable device driver monitors
+    stopFanctrol()  # disable fan-control service
+    removeQSFP()    # remove QSFP
+    removedevs()    # remove other devices
+    removedrivers() # remove drivers
 
 def reload_driver():
-    u'''重新加载设备和驱动'''
-    removedevs()    # 卸载其他设备
-    removedrivers() # 卸载驱动
+    u'''reload devices and drivers'''
+    removedevs()    # remove other devices
+    removedrivers() # remove drivers
     time.sleep(1)
     adddrivers()
     adddevs()
@@ -310,22 +310,22 @@ def MacLedSet(data):
     rjpciwr(pcibus, slot, fn, bar, offset, val)
 
 def load_driver():
-    u'''加载设备和驱动'''
+    u'''load devices and drivers'''
     adddrivers();
     adddevs();
     if STARTMODULE.get("i2ccheck",0) == 1: #i2c HA
         busend = i2ccheck_params.get("busend")
         retrytime = i2ccheck_params.get("retrytime")
         i2c_check(busend,retrytime)
-    addQSFP()       # 添加光模块eeprom
-    startFanctrol() # 打开风扇
-    starthal_fanctrl() # 打开风扇控制
-    starthal_ledctrl() # 打开LED控制
+    addQSFP()       # add QSFP eeprom
+    startFanctrol() # enable fan
+    starthal_fanctrl() # enable fan control
+    starthal_ledctrl() # enable LED control
     if STARTMODULE['avscontrol'] == 1:
-        startAvscontrol() # avs调压
-    startDevmonitor() # 可插拔设备驱动监控
-    startSlotmonitor() # 线卡插拔初始化监控
-    otherinit();    # 其他初始化 光模块初始化
+        startAvscontrol() # avs voltage-adjustment
+    startDevmonitor() # enable removable device driver monitors
+    startSlotmonitor() # slot insertion and removal initialization monitor
+    otherinit();    # other initialization, QSFP initialization
     if STARTMODULE.get("macledreset",0) == 1:
         MacLedSet("reset")
     
