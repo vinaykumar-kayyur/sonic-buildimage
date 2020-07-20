@@ -34,6 +34,7 @@ class Chassis(ChassisBase):
         self.__initialize_thermals()
         self.__initialize_sfp()
         self.__initialize_eeprom()
+        self.__initialize_components()
 
         # self.is_host = self._api_common.is_host()
 
@@ -66,7 +67,7 @@ class Chassis(ChassisBase):
 
         sfp_index = 0
         for index in range(0, sfp_config['port_num']):
-            sfp = Sfp(sfp_index,conf=sfp_config)
+            sfp = Sfp(sfp_index, conf=sfp_config)
             self._sfp_list.append(sfp)
             sfp_index += 1
         self.sfp_module_initialized = True
@@ -101,11 +102,17 @@ class Chassis(ChassisBase):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv(self._config)
 
-    # def __initialize_components(self):
-    #     from sonic_platform.component import Component
-    #     for index in range(0, NUM_COMPONENT):
-    #         component = Component(index)
-    #         self._component_list.append(component)
+    def __initialize_components(self):
+        from component import Component
+
+        component_config_path = self._api_common.get_config_path(
+            Component.COMPONENT_CONFIG)
+        component_config = self._api_common.load_json_file(
+            component_config_path)
+
+        for index in range(0, component_config['component_num']):
+            component = Component(index, conf=component_config)
+            self._component_list.append(component)
 
     def get_base_mac(self):
         """

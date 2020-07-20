@@ -1,5 +1,5 @@
 import os
-import json
+import yaml
 import subprocess
 
 from sonic_daemon_base.daemon_base import DaemonBase
@@ -14,11 +14,16 @@ class Common:
     OUTPUT_SOURCE_GIVEN_LIST = 'value_list'
     OUTPUT_SOURCE_GIVEN_VALUE = 'value'
     OUTPUT_SOURCE_SYSFS = 'sysfs_value'
+    OUTPUT_SOURCE_FUNC = 'function'
+    OUTPUT_SOURCE_GIVEN_TXT_FILE = 'txt_file'
+    OUTPUT_SOURCE_GIVEN_VER_HEX_FILE = 'hex_version_file'
+    OUTPUT_SOURCE_GIVEN_VER_HEX_ADDR = 'hex_version_getreg'
 
     SET_METHOD_IPMI = 'ipmitool'
     NULL_VAL = 'N/A'
 
-    def __init__(self):
+    def __init__(self, conf=None):
+        self._main_conf = conf
         (self.platform, self.hwsku) = DaemonBase().get_platform_and_hwsku()
 
     def _run_command(self, command):
@@ -45,7 +50,7 @@ class Common:
         if type(input_translator) is dict:
             input = input_translator.get(input)
 
-        elif type(input_translator) is unicode:
+        elif type(input_translator) is str:
             input = eval(input_translator.format(input))
 
         return input
@@ -55,7 +60,7 @@ class Common:
 
         if type(output_translator) is dict:
             output = output_translator.get(output)
-        elif type(output_translator) is unicode:
+        elif type(output_translator) is str:
             output = eval(output_translator.format(output))
         elif type(output_translator) is list:
             output = eval(output_translator[index].format(output))
@@ -69,10 +74,10 @@ class Common:
         status, output = self._run_command(cmd)
         return output if status else None
 
-    def _sysfs_read(self,index,config):
+    def _sysfs_read(self, index, config):
         sysfs_path = config.get('sysfs_path')
 
-        #### Remaining Design Warning : Check argument type
+        # Remaining Design Warning : Check argument type
         argument = config['argument'][index].split(',')
         sysfs_path = sysfs_path.format(*argument)
         content = ""
@@ -82,30 +87,51 @@ class Common:
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
             return False
-        
+
         return content
-    
-    def _sysfs_write(self,index,config,input):
+
+    def _sysfs_write(self, index, config, input):
         sysfs_path = config.get('sysfs_path')
-        #### Remaining Design Warning : Check argument type
+        # Remaining Design Warning : Check argument type
         argument = config['argument'][index].split(',')
         sysfs_path = sysfs_path.format(*argument)
-        #### Remaining Design Warning : Validate write_offset
+        # Remaining Design Warning : Validate write_offset
         write_offset = int(config.get('write_offset'))
         output = ""
         try:
-            open_file = open(sysfs_path,"r+")
+            open_file = open(sysfs_path, "r+")
             open_file.seek(write_offset)
             open_file.write(input)
             open_file.close()
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
-            return False , output
-        return True , output
+            return False, output
+        return True, output
 
     def _ipmi_set(self, index, config, input):
         arg = config['argument'][index].format(input)
         return self._run_command(config['command'].format(arg))
+
+    def _txt_get(self, path):
+        with open(path, 'r') as f:
+            output = f.readline()
+        return output.strip('\n')
+
+    def _hex_ver_decode(self, hver, num_of_bits, num_of_points):
+        ver_list = []
+        c_bit = 0
+        bin_val = bin(int(hver, 16))[2:].zfill(num_of_bits)
+        bit_split = num_of_bits / (num_of_points + 1)
+        for x in range(0, num_of_points+1):
+            split_bin = bin_val[c_bit:c_bit+bit_split]
+            ver_list.append(str(int(split_bin, 2)))
+            c_bit += bit_split
+        return '.'.join(ver_list)
+
+    def _get_reg(self, path, reg_addr):
+        cmd = "echo {1} > {0}; cat {0}".format(path, reg_addr)
+        status, output = self._run_command(cmd)
+        return output if status else None
 
     def load_json_file(self, path):
         """
@@ -115,7 +141,7 @@ class Common:
             A json object
         """
         with open(path, 'r') as f:
-            json_data = json.load(f)
+            json_data = yaml.safe_load(f)
 
         return json_data
 
@@ -155,7 +181,28 @@ class Common:
             output = config["value_list"][index]
 
         elif output_source == self.OUTPUT_SOURCE_SYSFS:
-            output = self._sysfs_read(index,config)
+            output = self._sysfs_read(index, config)
+
+        elif output_source == self.OUTPUT_SOURCE_FUNC:
+            func_conf = self._main_conf[config['function'][index]]
+            output = self.get_output(index, func_conf, default)
+
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_TXT_FILE:
+            path = config.get('path')
+            output = self._txt_get(path)
+
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_VER_HEX_FILE:
+            path = config.get('path')
+            hex_ver = self._txt_get(path)
+            output = self._hex_ver_decode(
+                hex_ver, config['num_of_bits'], config['num_of_points'])
+
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_VER_HEX_ADDR:
+            path = config.get('path')
+            addr = config.get('reg_addr')
+            hex_ver = self._get_reg(path, addr)
+            output = self._hex_ver_decode(
+                hex_ver, config['num_of_bits'], config['num_of_points'])
 
         else:
             output = default
@@ -182,7 +229,7 @@ class Common:
         if set_method == self.SET_METHOD_IPMI:
             output = self._ipmi_set(index, config, cleaned_input)[0]
         elif set_method == self.OUTPUT_SOURCE_SYSFS:
-            output = self._sysfs_write(index,config,cleaned_input)[0]
+            output = self._sysfs_write(index, config, cleaned_input)[0]
         else:
             output = False
 
