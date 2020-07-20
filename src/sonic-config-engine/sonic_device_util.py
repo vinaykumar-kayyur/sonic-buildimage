@@ -7,6 +7,7 @@ from natsort import natsorted
 import glob
 from swsssdk import ConfigDBConnector, SonicDBConfig
 from portconfig import get_port_config
+from portconfig import get_port_config_file_name
 
 DOCUMENTATION = '''
 ---
@@ -144,7 +145,8 @@ def get_port_config_from_all_asics():
     
     for ns in ns_list:
         asic_id = get_npu_id_from_name(ns)
-        (ports, _, _) = get_port_config(hwsku=hwsku, platform=platform, asic=asic_id)
+        port_config = get_port_config_file_name(hwsku, platform, asic_id)
+        (ports, _, _) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config, asic=asic_id)
         all_ports.update(ports)
     
     return all_ports
