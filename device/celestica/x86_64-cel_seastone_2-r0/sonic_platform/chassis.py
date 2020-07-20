@@ -32,6 +32,7 @@ class Chassis(ChassisBase):
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
+        self.__initialize_sfp()
         self.__initialize_eeprom()
 
         # self.is_host = self._api_common.is_host()
@@ -57,12 +58,18 @@ class Chassis(ChassisBase):
                     fan_index += 1
                     self._fan_list.append(fan)
 
-    # def __initialize_sfp(self):
-    #     from sonic_platform.sfp import Sfp
-    #     for index in range(0, NUM_SFP):
-    #         sfp = Sfp(index)
-    #         self._sfp_list.append(sfp)
-    #     self.sfp_module_initialized = True
+    def __initialize_sfp(self):
+        from sonic_platform.sfp import Sfp
+
+        sfp_config_path = self._api_common.get_config_path(Sfp.SFP_CONFIG)
+        sfp_config = self._api_common.load_json_file(sfp_config_path)
+
+        sfp_index = 0
+        for index in range(0, sfp_config['port_num']):
+            sfp = Sfp(sfp_index,conf=sfp_config)
+            self._sfp_list.append(sfp)
+            sfp_index += 1
+        self.sfp_module_initialized = True
 
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
@@ -162,51 +169,51 @@ class Chassis(ChassisBase):
     # ######################## SFP methods #########################
     # ##############################################################
 
-    # def get_num_sfps(self):
-    #     """
-    #     Retrieves the number of sfps available on this chassis
-    #     Returns:
-    #         An integer, the number of sfps available on this chassis
-    #     """
-    #     if not self.sfp_module_initialized:
-    #         self.__initialize_sfp()
+    def get_num_sfps(self):
+        """
+        Retrieves the number of sfps available on this chassis
+        Returns:
+            An integer, the number of sfps available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
 
-    #     return len(self._sfp_list)
+        return len(self._sfp_list)
 
-    # def get_all_sfps(self):
-    #     """
-    #     Retrieves all sfps available on this chassis
-    #     Returns:
-    #         A list of objects derived from SfpBase representing all sfps
-    #         available on this chassis
-    #     """
-    #     if not self.sfp_module_initialized:
-    #         self.__initialize_sfp()
+    def get_all_sfps(self):
+        """
+        Retrieves all sfps available on this chassis
+        Returns:
+            A list of objects derived from SfpBase representing all sfps
+            available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
 
-    #     return self._sfp_list
+        return self._sfp_list
 
-    # def get_sfp(self, index):
-    #     """
-    #     Retrieves sfp represented by (1-based) index <index>
-    #     Args:
-    #         index: An integer, the index (1-based) of the sfp to retrieve.
-    #         The index should be the sequence of a physical port in a chassis,
-    #         starting from 1.
-    #         For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
-    #     Returns:
-    #         An object dervied from SfpBase representing the specified sfp
-    #     """
-    #     sfp = None
-    #     if not self.sfp_module_initialized:
-    #         self.__initialize_sfp()
+    def get_sfp(self, index):
+        """
+        Retrieves sfp represented by (1-based) index <index>
+        Args:
+            index: An integer, the index (1-based) of the sfp to retrieve.
+            The index should be the sequence of a physical port in a chassis,
+            starting from 1.
+            For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
+        Returns:
+            An object dervied from SfpBase representing the specified sfp
+        """
+        sfp = None
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
 
-    #     try:
-    #         # The index will start from 1
-    #         sfp = self._sfp_list[index-1]
-    #     except IndexError:
-    #         sys.stderr.write("SFP index {} out of range (1-{})\n".format(
-    #                          index, len(self._sfp_list)))
-    #     return sfp
+        try:
+            # The index will start from 1
+            sfp = self._sfp_list[index-1]
+        except IndexError:
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
+                             index, len(self._sfp_list)))
+        return sfp
 
     # ##############################################################
     # ####################### Other methods ########################

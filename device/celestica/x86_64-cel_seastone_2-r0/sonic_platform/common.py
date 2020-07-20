@@ -13,6 +13,7 @@ class Common:
     OUTPUT_SOURCE_IPMI = 'ipmitool'
     OUTPUT_SOURCE_GIVEN_LIST = 'value_list'
     OUTPUT_SOURCE_GIVEN_VALUE = 'value'
+    OUTPUT_SOURCE_SYSFS = 'sysfs_value'
 
     SET_METHOD_IPMI = 'ipmitool'
     NULL_VAL = 'N/A'
@@ -68,6 +69,40 @@ class Common:
         status, output = self._run_command(cmd)
         return output if status else None
 
+    def _sysfs_read(self,index,config):
+        sysfs_path = config.get('sysfs_path')
+
+        #### Remaining Design Warning : Check argument type
+        argument = config['argument'][index].split(',')
+        sysfs_path = sysfs_path.format(*argument)
+        content = ""
+        try:
+            content = open(sysfs_path)
+            content = content.readline().rstrip()
+        except IOError as e:
+            print("Error: unable to open file: %s" % str(e))
+            return False
+        
+        return content
+    
+    def _sysfs_write(self,index,config,input):
+        sysfs_path = config.get('sysfs_path')
+        #### Remaining Design Warning : Check argument type
+        argument = config['argument'][index].split(',')
+        sysfs_path = sysfs_path.format(*argument)
+        #### Remaining Design Warning : Validate write_offset
+        write_offset = int(config.get('write_offset'))
+        output = ""
+        try:
+            open_file = open(sysfs_path,"r+")
+            open_file.seek(write_offset)
+            open_file.write(input)
+            open_file.close()
+        except IOError as e:
+            print("Error: unable to open file: %s" % str(e))
+            return False , output
+        return True , output
+
     def _ipmi_set(self, index, config, input):
         arg = config['argument'][index].format(input)
         return self._run_command(config['command'].format(arg))
@@ -119,6 +154,9 @@ class Common:
         elif output_source == self.OUTPUT_SOURCE_GIVEN_LIST:
             output = config["value_list"][index]
 
+        elif output_source == self.OUTPUT_SOURCE_SYSFS:
+            output = self._sysfs_read(index,config)
+
         else:
             output = default
 
@@ -143,6 +181,8 @@ class Common:
         set_method = config.get('set_method')
         if set_method == self.SET_METHOD_IPMI:
             output = self._ipmi_set(index, config, cleaned_input)[0]
+        elif set_method == self.OUTPUT_SOURCE_SYSFS:
+            output = self._sysfs_write(index,config,cleaned_input)[0]
         else:
             output = False
 
