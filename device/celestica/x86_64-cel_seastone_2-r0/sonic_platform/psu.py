@@ -46,7 +46,7 @@ class Psu(PsuBase):
 
         num_fan = fan_config['psu_fan'][self.psu_index]["num_of_fan"]
         for fan_index in range(0, num_fan):
-            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.psu_index, conf=fan_config)
+            fan = Fan(fan_index, is_psu_fan=True, psu_index=self.psu_index, conf=fan_config)
             self._fan_list.append(fan)
 
     def get_voltage(self):

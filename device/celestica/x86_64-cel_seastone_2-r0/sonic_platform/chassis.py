@@ -58,7 +58,7 @@ class Chassis(ChassisBase):
             for drawer_index in range(0, fan_config['drawer_num']):
                 drawer_fan_list = []
                 for index in range(0, fan_config['fan_num_per_drawer']):
-                    fan = Fan(fan_index, drawer_index, conf=fan_config)
+                    fan = Fan(fan_index, conf=fan_config)
                     fan_index += 1
                     self._fan_list.append(fan)
                     drawer_fan_list.append(fan)
