@@ -268,11 +268,9 @@ class fan_tlv():
 
     def strtoarr(self, str):
         s = []
-        if str is None:
-            return s
-        else:
-            for index in str:
-                s.extend(index)
+        if str is not None:
+            for index in range(len(str)):
+                s.append(str[index])
         return s
 
     def generate_fan_value(self):

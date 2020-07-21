@@ -65,9 +65,9 @@ class fan_tlv(object):
 
     def strtoarr(self, str):
         s = []
-        if str is not None :
-            for index in str:
-                s.extend(index)
+        if str is not None:
+            for index in range(len(str)):
+                s.append(str[index])
         return s
 
     def str_to_hex(self,rest_v):
