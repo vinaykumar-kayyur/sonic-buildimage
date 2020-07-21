@@ -11,7 +11,10 @@
 #
 # By default this script does nothing.
 
-SONIC_VERSION=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version)
+# read SONiC immutable variables
+[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
+SONIC_VERSION=${SONIC_VERSION:-`sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version`}
 FIRST_BOOT_FILE="/host/image-${SONIC_VERSION}/platform/firsttime"
 
 # In case the unit is migrating from another NOS, save the logs
