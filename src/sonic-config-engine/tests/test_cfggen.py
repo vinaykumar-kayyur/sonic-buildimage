@@ -1,4 +1,5 @@
 from unittest import TestCase
+import json
 import subprocess
 import os
 
@@ -119,6 +120,17 @@ class TestCfgGen(TestCase):
             self.assertEqual(tf.read().strip(), 'value1\nvalue2')
         with open(os.path.join(self.test_dir, 'test2.txt')) as tf:
             self.assertEqual(tf.read().strip(), 'value')
+
+    def test_template_json_batch_mode(self):
+        data = {"key1_1":"value1_1", "key1_2":"value1_2", "key2_1":"value2_1", "key2_2":"value2_2"}
+        argument = " -a '{0}'".format(repr(data).replace('\'', '"'))
+        argument += ' -J ' + os.path.join(self.test_dir, 'sample-template-1.json.j2')
+        argument += ' -J ' + os.path.join(self.test_dir, 'sample-template-2.json.j2')
+        argument += ' --print-data'
+        output = self.run_script(argument)
+        output_data = json.loads(output)
+        for key, value in data.items():
+            self.assertEqual(output_data[key.replace("key", "jk")], value)
 
     # FIXME: This test depends heavily on the ordering of the interfaces and
     # it is not at all intuitive what that ordering should be. Could make it
