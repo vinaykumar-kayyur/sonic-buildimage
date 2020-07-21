@@ -46,7 +46,6 @@ class Thermal(ThermalBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        
         return self._api_common.get_output(self.thermal_index, config, Common.NULL_VAL)
 
     def get_temperature(self):
@@ -62,8 +61,9 @@ class Thermal(ThermalBase):
 
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        
-        return self._api_common.get_output(self.thermal_index, config, Common.NULL_VAL)
+        default = Common.NULL_VAL
+        output = self._api_common.get_output(self.thermal_index, config, default)
+        return float(output) if output != default else output
         
 
     def get_high_threshold(self):
@@ -90,9 +90,9 @@ class Thermal(ThermalBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        default = 0
-        output = self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
-        return float(output)
+        default = Common.NULL_VAL
+        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
+        return float(output) if output != default else output
 
     def get_low_threshold(self):
         """
@@ -105,9 +105,9 @@ class Thermal(ThermalBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        default = 0
-        output = self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
-        return float(output)
+        default = Common.NULL_VAL
+        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
+        return float(output) if output != default else output
 
     def set_high_threshold(self, temperature):
         """
@@ -128,8 +128,8 @@ class Thermal(ThermalBase):
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
         default = 0
-        output = self._api_common.set_output(self.thermal_index, temperature ,config) if self.get_presence() else default
-        return output
+        #output = self._api_common.set_output(self.thermal_index, temperature ,config) #if self.get_presence() else default
+        return self._api_common.set_output(self.thermal_index, temperature ,config)
 
     def set_low_threshold(self, temperature):
         """
@@ -149,9 +149,9 @@ class Thermal(ThermalBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        default = 0
-        output = self._api_common.set_output(self.thermal_index, temperature ,config) if self.get_presence() else default
-        return output
+        default = False
+        #output = self._api_common.set_output(self.thermal_index, temperature ,config) #if self.get_presence() else default
+        return self._api_common.set_output(self.thermal_index, temperature ,config)
 
     def get_high_critical_threshold(self):
         """
@@ -164,9 +164,9 @@ class Thermal(ThermalBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        default = 0
-        output = self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
-        return float(output)
+        default = Common.NULL_VAL
+        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
+        return float(output) if output != default else output
 
     def get_low_critical_threshold(self):
         """
@@ -179,9 +179,9 @@ class Thermal(ThermalBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        default = 0
-        output = self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
-        return float(output)
+        default = Common.NULL_VAL
+        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
+        return float(output) if output != default else output
 
     def get_presence(self):
         """
@@ -189,7 +189,7 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if device is present, False if not
         """
-        return True if self.get_temperature() > 0 else False
+        return True #if self.get_temperature() > 0 else False
 
     def get_model(self):
         """
@@ -198,10 +198,7 @@ class Thermal(ThermalBase):
         Returns:
             string: Model/part number of device
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = 0
-        return self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
+        return Common.NULL_VAL
     
     def get_serial(self):
         """
@@ -210,10 +207,7 @@ class Thermal(ThermalBase):
         Returns:
             string: Serial number of device
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = 0
-        return self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
+        return Common.NULL_VAL
     
     def get_status(self):
         """
@@ -222,9 +216,4 @@ class Thermal(ThermalBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = False
-        output = self._api_common.get_output(self.thermal_index, config, default) if self.get_presence() else default
-        output = json.loads(output.lower())
-        return output
+        return True

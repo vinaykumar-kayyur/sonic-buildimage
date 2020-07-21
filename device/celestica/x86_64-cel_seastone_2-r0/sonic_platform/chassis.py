@@ -29,24 +29,26 @@ class Chassis(ChassisBase):
         config_path = self._api_common.get_config_path(self.CHASSIS_CONFIG)
         self._config = self._api_common.load_json_file(config_path)
 
-        self.__initialize_fan()
-        self.__initialize_psu()
-        self.__initialize_thermals()
-        self.__initialize_sfp()
+        self.sfp_module_initialized = False
         self.__initialize_eeprom()
-        self.__initialize_components()
 
-        # self.is_host = self._api_common.is_host()
+        # self.__initialize_fan()
+        # self.__initialize_psu()
+        # self.__initialize_thermals()
+        # self.__initialize_sfp()
+        # self.__initialize_eeprom()
+        # self.__initialize_components()
 
-        # if not self.is_host:
-        #     self.__initialize_fan()
-        #     self.__initialize_psu()
-        #     self.__initialize_thermals()
-        # else:
-        #     self.__initialize_components()
+        if not self._api_common.is_host():
+            self.__initialize_fan()
+            self.__initialize_psu()
+            self.__initialize_thermals()
+        else:
+            self.__initialize_components()
 
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
+        from sonic_platform.fan_drawer import FanDrawer
 
         fan_config_path = self._api_common.get_config_path(Fan.FAN_CONFIG)
         fan_config = self._api_common.load_json_file(fan_config_path)
@@ -54,10 +56,15 @@ class Chassis(ChassisBase):
         if fan_config:
             fan_index = 0
             for drawer_index in range(0, fan_config['drawer_num']):
+                drawer_fan_list = []
                 for index in range(0, fan_config['fan_num_per_drawer']):
                     fan = Fan(fan_index, drawer_index, conf=fan_config)
                     fan_index += 1
                     self._fan_list.append(fan)
+                    drawer_fan_list.append(fan)
+                fan_drawer = FanDrawer(drawer_index, drawer_fan_list)
+                self._fan_drawer_list.append(fan_drawer)
+
 
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp

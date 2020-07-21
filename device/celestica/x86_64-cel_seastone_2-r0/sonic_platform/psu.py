@@ -134,7 +134,7 @@ class Psu(PsuBase):
         """
         f_name = inspect.stack()[0][3]
         config = self._config.get(f_name)
-        default = "off"
+        default = "N/A"
 
         return self._api_common.get_output(self.psu_index, config, default) if self.get_presence() else default
 

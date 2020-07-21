@@ -98,9 +98,9 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         decode_output = sys.stdout.getvalue()
         sys.stdout = original_stdout
 
-        (is_valid, valid_crc) = self.is_checksum_valid(e)
-        if not is_valid:
-            return False
+        # (is_valid, valid_crc) = self.is_checksum_valid(e)
+        # if not is_valid:
+        #     return False
 
         return self._parse_output(decode_output)
 

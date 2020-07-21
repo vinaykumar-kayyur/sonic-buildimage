@@ -8,6 +8,7 @@ from sonic_daemon_base.daemon_base import DaemonBase
 class Common:
 
     DEVICE_PATH = '/usr/share/sonic/device/'
+    PMON_PLATFORM_PATH = '/usr/share/sonic/platform/'
     CONFIG_DIR = 'sonic_platform_config'
 
     OUTPUT_SOURCE_IPMI = 'ipmitool'
@@ -21,6 +22,7 @@ class Common:
 
     SET_METHOD_IPMI = 'ipmitool'
     NULL_VAL = 'N/A'
+    HOST_CHK_CMD = "docker > /dev/null 2>&1"
 
     def __init__(self, conf=None):
         self._main_conf = conf
@@ -133,6 +135,9 @@ class Common:
         status, output = self._run_command(cmd)
         return output if status else None
 
+    def is_host(self):
+        return os.system(self.HOST_CHK_CMD) == 0
+
     def load_json_file(self, path):
         """
         Retrieves the json object from json file path
@@ -155,7 +160,7 @@ class Common:
         Returns:
             A string containing the path to json file
         """
-        return os.path.join(self.DEVICE_PATH, self.platform, self.CONFIG_DIR, config_name)
+        return os.path.join(self.DEVICE_PATH, self.platform, self.CONFIG_DIR, config_name) if self.is_host() else os.path.join(self.PMON_PLATFORM_PATH, self.CONFIG_DIR, config_name)
 
     def get_output(self, index, config, default):
         """

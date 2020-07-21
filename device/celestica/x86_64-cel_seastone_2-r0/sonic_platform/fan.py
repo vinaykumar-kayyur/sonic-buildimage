@@ -55,7 +55,7 @@ class Fan(FanBase):
         config = self._config.get(f_name)
         default = self.FAN_DIRECTION_NOT_APPLICABLE
 
-        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default)
 
     def get_speed(self):
         """
@@ -132,7 +132,7 @@ class Fan(FanBase):
         if speed not in range(1, 101) or self._is_psu_fan:
             return False
 
-        return self._api_common.set_output(self.fan_index, speed, config) if self.get_presence() else default
+        return self._api_common.set_output(self.fan_index, speed, config)
 
     def set_status_led(self, color):
         """
@@ -157,7 +157,7 @@ class Fan(FanBase):
         if self._is_psu_fan:
             return default
 
-        return self._api_common.set_output(self.fan_index, color, config) if self.get_presence() else default
+        return self._api_common.set_output(self.fan_index, color, config)
 
     def get_status_led(self):
         """
@@ -179,7 +179,7 @@ class Fan(FanBase):
         if self._is_psu_fan:
             return default
 
-        return self._api_common.get_output(self.fan_index, config, default) if self.get_presence() else default
+        return self._api_common.get_output(self.fan_index, config, default)
 
     def get_name(self):
         """
