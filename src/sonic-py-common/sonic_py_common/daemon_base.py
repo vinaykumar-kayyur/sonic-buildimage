@@ -26,7 +26,7 @@ def db_connect(db_name):
 
 class DaemonBase(logger.Logger):
     def __init__(self, log_identifier):
-        super(DaemonBase, self).__init__(log_identifier, logger.FACILITY_DAEMON)
+        super(DaemonBase, self).__init__(log_identifier, logger.Logger.FACILITY_DAEMON)
 
         # Register our default signal handlers, unless the signal already has a
         # handler registered, most likely from a subclass implementation
