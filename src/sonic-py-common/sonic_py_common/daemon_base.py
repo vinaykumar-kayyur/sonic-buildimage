@@ -2,7 +2,8 @@ import imp
 import signal
 import sys
 
-from . import device_info, logger
+from . import device_info
+from .logger import Logger
 
 #
 # Constants ====================================================================
@@ -24,9 +25,9 @@ def db_connect(db_name):
 # DaemonBase ===================================================================
 #
 
-class DaemonBase(logger.Logger):
+class DaemonBase(Logger):
     def __init__(self, log_identifier):
-        super(DaemonBase, self).__init__(log_identifier, logger.Logger.FACILITY_DAEMON)
+        super(DaemonBase, self).__init__(log_identifier, Logger.FACILITY_DAEMON)
 
         # Register our default signal handlers, unless the signal already has a
         # handler registered, most likely from a subclass implementation
