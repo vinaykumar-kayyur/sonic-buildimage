@@ -52,6 +52,12 @@ THERMAL_ZONE_NORMAL_TEMPERATURE = "temp_trip_norm"
 
 MODULE_TEMPERATURE_FAULT_PATH = "/var/run/hw-management/thermal/module{}_temp_fault"
 
+thermal_api_handler_asic = {
+    THERMAL_API_GET_TEMPERATURE: 'asic',
+    THERMAL_API_GET_HIGH_THRESHOLD: 'mlxsw/temp_trip_hot',
+    THERMAL_API_GET_HIGH_CRITICAL_THRESHOLD: 'mlxsw/temp_trip_crit'
+}
+
 thermal_api_handler_cpu_core = {
     THERMAL_API_GET_TEMPERATURE:"cpu_core{}",
     THERMAL_API_GET_HIGH_THRESHOLD:"cpu_core{}_max",
@@ -78,14 +84,14 @@ thermal_api_handler_gearbox = {
     THERMAL_API_GET_HIGH_CRITICAL_THRESHOLD:None
 }
 thermal_ambient_apis = {
-    THERMAL_DEV_ASIC_AMBIENT : "asic",
+    THERMAL_DEV_ASIC_AMBIENT : thermal_api_handler_asic,
     THERMAL_DEV_PORT_AMBIENT : "port_amb",
     THERMAL_DEV_FAN_AMBIENT : "fan_amb",
     THERMAL_DEV_COMEX_AMBIENT : "comex_amb",
     THERMAL_DEV_BOARD_AMBIENT : "board_amb"
 }
 thermal_ambient_name = {
-    THERMAL_DEV_ASIC_AMBIENT : "Ambient ASIC Temp",
+    THERMAL_DEV_ASIC_AMBIENT : 'ASIC',
     THERMAL_DEV_PORT_AMBIENT : "Ambient Port Side Temp",
     THERMAL_DEV_FAN_AMBIENT : "Ambient Fan Side Temp",
     THERMAL_DEV_COMEX_AMBIENT : "Ambient COMEX Temp",
@@ -124,7 +130,7 @@ thermal_api_names = [
     THERMAL_API_GET_HIGH_THRESHOLD
 ]
 
-hwsku_dict_thermal = {'ACS-MSN2700': 0, 'LS-SN2700':0, 'ACS-MSN2740': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 4, 'ACS-MSN3700': 5, 'ACS-MSN3700C': 6, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'ACS-MSN3800': 7, 'Mellanox-SN3800-D112C8': 7, 'ACS-MSN4700': 8, 'ACS-MSN3420': 9, 'ACS-MSN4600C': 10}
+platform_dict_thermal = {'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700-r0':0, 'x86_64-mlnx_msn2740-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2010-r0': 4, 'x86_64-mlnx_msn3420-r0':9, 'x86_64-mlnx_msn3700-r0': 5, 'x86_64-mlnx_msn3700c-r0': 6, 'x86_64-mlnx_msn3800-r0': 7, 'x86_64-mlnx_msn4600c-r0':9, 'x86_64-mlnx_msn4700-r0': 8}
 thermal_profile_list = [
     # 2700
     {
@@ -300,9 +306,9 @@ thermal_profile_list = [
 ]
 
 
-def initialize_thermals(sku, thermal_list, psu_list):
+def initialize_thermals(platform, thermal_list, psu_list):
     # create thermal objects for all categories of sensors
-    tp_index = hwsku_dict_thermal[sku]
+    tp_index = platform_dict_thermal[platform]
     thermal_profile = thermal_profile_list[tp_index]
     Thermal.thermal_profile = thermal_profile
     for category in thermal_device_categories_all:
@@ -383,8 +389,14 @@ class Thermal(ThermalBase):
 
     def _get_file_from_api(self, api_name):
         if self.category == THERMAL_DEV_CATEGORY_AMBIENT:
-            if api_name == THERMAL_API_GET_TEMPERATURE:
-                filename = thermal_ambient_apis[self.index]
+            handler = thermal_ambient_apis[self.index]
+            if isinstance(handler, str):
+                if api_name == THERMAL_API_GET_TEMPERATURE:
+                    filename = thermal_ambient_apis[self.index]
+                else:
+                    return None
+            elif isinstance(handler, dict):
+                filename = handler[api_name]
             else:
                 return None
         else:

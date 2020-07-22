@@ -251,6 +251,15 @@ def parse_asic_png(png, asic_name, hostname):
                 devices[name] = device_data
     return (neighbors, devices, port_speeds)
 
+def parse_loopback_intf(child):
+    lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
+    lo_intfs = {}
+    for lointf in lointfs.findall(str(QName(ns1, "LoopbackIPInterface"))):
+        intfname = lointf.find(str(QName(ns, "AttachTo"))).text
+        ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
+        lo_intfs[(intfname, ipprefix)] = {}
+    return lo_intfs
+
 def parse_dpg(dpg, hname):
     aclintfs = None
     mgmtintfs = None
@@ -269,7 +278,6 @@ def parse_dpg(dpg, hname):
         """
         if mgmtintfs is None and child.find(str(QName(ns, "ManagementIPInterfaces"))) is not None:
             mgmtintfs = child.find(str(QName(ns, "ManagementIPInterfaces")))
-        
         hostname = child.find(str(QName(ns, "Hostname")))
         if hostname.text.lower() != hname.lower():
             continue
@@ -290,12 +298,7 @@ def parse_dpg(dpg, hname):
             ipprefix = ipintf.find(str(QName(ns, "Prefix"))).text
             intfs[(intfname, ipprefix)] = {}
 
-        lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
-        lo_intfs = {}
-        for lointf in lointfs.findall(str(QName(ns1, "LoopbackIPInterface"))):
-            intfname = lointf.find(str(QName(ns, "AttachTo"))).text
-            ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
-            lo_intfs[(intfname, ipprefix)] = {}
+        lo_intfs =  parse_loopback_intf(child)
 
         mvrfConfigs = child.find(str(QName(ns, "MgmtVrfConfigs")))
         mvrf = {}
@@ -336,15 +339,22 @@ def parse_dpg(dpg, hname):
         vlan_intfs = []
         vlans = {}
         vlan_members = {}
+        vlantype_name = ""
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
+            vlantype = vintf.find(str(QName(ns, "Type")))
+            if vlantype != None:
+                vlantype_name = vintf.find(str(QName(ns, "Type"))).text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
-                vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
+                if vlantype_name == "Tagged":
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
+                else:
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid}
 
@@ -445,6 +455,13 @@ def parse_dpg(dpg, hname):
         return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
     return None, None, None, None, None, None, None, None, None, None
 
+def parse_host_loopback(dpg, hname):
+    for child in dpg:
+        hostname = child.find(str(QName(ns, "Hostname")))
+        if hostname.text.lower() != hname.lower():
+            continue
+        lo_intfs = parse_loopback_intf(child)
+        return lo_intfs
 
 def parse_cpg(cpg, hname):
     bgp_sessions = {}
@@ -772,7 +789,7 @@ def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
 # Main functions
 #
 ###############################################################################
-def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
+def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hwsku_config_file=None):
     """ Parse minigraph xml file.
 
     Keyword arguments:
@@ -782,6 +799,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     asic_name -- asic name; to parse multi-asic device minigraph to 
     generate asic specific configuration.
      """
+
     root = ET.parse(filename).getroot()
 
     u_neighbors = None
@@ -818,6 +836,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     cloudtype = None
     hostname = None
     linkmetas = {}
+    host_lo_intfs = None
 
     # hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
@@ -836,7 +855,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
 
@@ -859,6 +878,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         else:
             if child.tag == str(QName(ns, "DpgDec")):
                 (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
+                host_lo_intfs = parse_host_loopback(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
                 enable_internal_bgp_session(bgp_sessions, filename, asic_name)
@@ -922,6 +942,12 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     for lo_intf in lo_intfs:
         results['LOOPBACK_INTERFACE'][lo_intf] = lo_intfs[lo_intf]
         results['LOOPBACK_INTERFACE'][lo_intf[0]] = {}
+
+    if host_lo_intfs is not None:
+        for host_lo_intf in host_lo_intfs:
+            results['LOOPBACK_INTERFACE'][host_lo_intf] = host_lo_intfs[host_lo_intf]
+            results['LOOPBACK_INTERFACE'][host_lo_intf[0]] = {}
+
     results['MGMT_VRF_CONFIG'] = mvrf
 
     phyport_intfs = {}
@@ -966,10 +992,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
 
     for port_name, port in ports.items():
         # get port alias from port_config.ini
-        if port_config_file:
-            alias = port.get('alias')
-        else:
-            alias = port_name
+        alias = port.get('alias', port_name)
         # generate default 100G FEC
         # Note: FECDisabled only be effective on 100G port right now
         if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':

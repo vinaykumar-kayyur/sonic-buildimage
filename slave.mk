@@ -230,6 +230,8 @@ $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
 $(info "ENABLE_NAT"                      : "$(ENABLE_NAT)")
+$(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
+$(info )
 
 include Makefile.cache
 
@@ -477,13 +479,34 @@ SONIC_INSTALL_TARGETS = $(addsuffix -install,$(addprefix $(DEBS_PATH)/, \
 			$(SONIC_PYTHON_STDEB_DEBS) \
 			$(SONIC_DERIVED_DEBS) \
 			$(SONIC_EXTRA_DEBS)))
-$(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) $(DEBS_PATH)/$$*
+$(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) $(DEBS_PATH)/$$* $$(addsuffix -uninstall,$$(addprefix $(DEBS_PATH)/,$$($$*_CONFLICTS)))
 	$(HEADER)
 	[ -f $(DEBS_PATH)/$* ] || { echo $(DEBS_PATH)/$* does not exist $(LOG) && false $(LOG) }
 	# put a lock here because dpkg does not allow installing packages in parallel
 	while true; do
 	if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
 	{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && exit 1 ; }
+	fi
+	done
+	$(FOOTER)
+
+# Targets for installing debian packages prior to build one that depends on them
+SONIC_UNINSTALL_TARGETS = $(addsuffix -uninstall,$(addprefix $(DEBS_PATH)/, \
+			$(SONIC_ONLINE_DEBS) \
+			$(SONIC_COPY_DEBS) \
+			$(SONIC_MAKE_DEBS) \
+			$(SONIC_DPKG_DEBS) \
+			$(SONIC_PYTHON_STDEB_DEBS) \
+			$(SONIC_DERIVED_DEBS) \
+			$(SONIC_EXTRA_DEBS)))
+
+$(SONIC_UNINSTALL_TARGETS) : $(DEBS_PATH)/%-uninstall : .platform
+	$(HEADER)
+	[ -f $(DEBS_PATH)/$* ] || { echo $(DEBS_PATH)/$* does not exist $(LOG) && false $(LOG) }
+	# put a lock here because dpkg does not allow installing packages in parallel
+	while true; do
+	if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
+	{ sudo DEBIAN_FRONTEND=noninteractive dpkg -P $(firstword $(subst _, ,$(basename $*))) $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && exit 1 ; }
 	fi
 	done
 	$(FOOTER)
@@ -499,6 +522,7 @@ $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -inst
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_PYTHON_STDEB_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PATH)/% : .platform \
+		$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEBS_DEPENDS))) \
 		$$(addsuffix -install,$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*_DEPENDS))) \
 		$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS))) \
 		$(call dpkg_depend,$(PYTHON_DEBS_PATH)/%.dep)
@@ -894,6 +918,11 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	PASSWORD="$(PASSWORD)" \
 	TARGET_MACHINE=$($*_MACHINE) \
 	IMAGE_TYPE=$($*_IMAGE_TYPE) \
+	SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
+	SIGNING_KEY="$(SIGNING_KEY)" \
+	SIGNING_CERT="$(SIGNING_CERT)" \
+	CA_CERT="$(CA_CERT)" \
+	TARGET_PATH="$(TARGET_PATH)" \
 		./build_image.sh $(LOG)
 
 	$(foreach docker, $($*_DOCKERS), \

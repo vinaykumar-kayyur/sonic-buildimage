@@ -37,7 +37,7 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 else
     DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
 fi
-LINUX_KERNEL_VERSION=4.19.0-6
+LINUX_KERNEL_VERSION=4.19.0-9-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -222,6 +222,14 @@ then
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    if [[ $KUBERNETES_VERSION == 1.18.0 ]]; then 
+        # kubeadm 1.18.0 package auto install has some dependency error so install
+        # those package explicitly.
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=0.7.5-00
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=1.18.3-00
+        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=1.18.3-00
+    fi
+    # else kubeadm package auto install kubelet & kubectl
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
     # kubeadm package auto install kubelet & kubectl
 else
@@ -381,61 +389,26 @@ rm /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments
 set /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments/1 -n
 "
 
-## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
+
+# Config sysctl
 sudo augtool --autosave "
 set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p'
-
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
 set /files/etc/sysctl.conf/fs.suid_dumpable 2
-
-set /files/etc/sysctl.conf/net.ipv4.conf.default.forwarding 1
-set /files/etc/sysctl.conf/net.ipv4.conf.all.forwarding 1
-set /files/etc/sysctl.conf/net.ipv4.conf.eth0.forwarding 0
-
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_accept 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_announce 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_filter 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_notify 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_ignore 0
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_accept 0
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_announce 1
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_filter 0
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_notify 1
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_ignore 2
-
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.base_reachable_time_ms 1800000
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.base_reachable_time_ms 1800000
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh1 1024
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh1 1024
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh2 2048
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh2 2048
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh3 4096
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh3 4096
-
-set /files/etc/sysctl.conf/net.ipv6.conf.default.forwarding 1
-set /files/etc/sysctl.conf/net.ipv6.conf.all.forwarding 1
-set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
-
-set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
-set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
-set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_dad 0
-
-set /files/etc/sysctl.conf/net.ipv6.conf.default.keep_addr_on_down 1
-set /files/etc/sysctl.conf/net.ipv6.conf.all.keep_addr_on_down 1
-set /files/etc/sysctl.conf/net.ipv6.conf.eth0.keep_addr_on_down 1
-
-set /files/etc/sysctl.conf/net.ipv4.tcp_l3mdev_accept 1
-set /files/etc/sysctl.conf/net.ipv4.udp_l3mdev_accept 1
-
-set /files/etc/sysctl.conf/net.core.rmem_max 2097152
-set /files/etc/sysctl.conf/net.core.wmem_max 2097152
-
-set /files/etc/sysctl.conf/net.core.somaxconn 512
-
 " -r $FILESYSTEM_ROOT
+
+sysctl_net_cmd_string=""
+while read line; do
+  [[ "$line" =~ ^#.*$ ]] && continue
+  sysctl_net_conf_key=`echo $line | awk -F '=' '{print $1}'`
+  sysctl_net_conf_value=`echo $line | awk -F '=' '{print $2}'`
+  sysctl_net_cmd_string=$sysctl_net_cmd_string"set /files/etc/sysctl.conf/$sysctl_net_conf_key $sysctl_net_conf_value"$'\n'
+done < files/image_config/sysctl/sysctl-net.conf
+
+sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
 ## docker Python API package is needed by Ansible docker module
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'docker==4.1.0'
@@ -597,4 +570,4 @@ pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERF
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
 pushd $FILESYSTEM_ROOT && sudo zip $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ $PLATFORM_DIR/; popd
-sudo zip -g $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
+sudo zip -g -n .squashfs:.gz $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS

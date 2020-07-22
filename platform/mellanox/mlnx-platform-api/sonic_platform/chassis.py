@@ -48,19 +48,23 @@ REBOOT_CAUSE_FILE_LENGTH = 1
 # Global logger class instance
 logger = Logger()
 
-# magic code defnition for port number, qsfp port position of each hwsku
+# magic code defnition for port number, qsfp port position of each Platform
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-hwsku_dict_port = {'ACS-MSN2010': 3, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2700': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0, 'LS-SN2700':0, 'ACS-MSN2740': 0, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'ACS-MSN3800': 4, 'Mellanox-SN3800-D112C8': 4, 'ACS-MSN4700': 0, 'ACS-MSN3420': 5, 'ACS-MSN4600C': 4}
+platform_dict_port = {'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700':0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn3420-r0':5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700C-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c-r0':4, 'x86_64-mlnx_msn4700-r0': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1), (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1)]
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
+    # System status LED
+    _led = None
+
     def __init__(self):
         super(Chassis, self).__init__()
 
-        # Initialize SKU name
+        # Initialize SKU name and Platform name
         self.sku_name = self._get_sku_name()
+        self.platform_name = self._get_platform_name()
 
         mi = get_machine_info()
         if mi is not None:
@@ -119,7 +123,7 @@ class Chassis(ChassisBase):
         self.sfp_module = SFP
 
         # Initialize SFP list
-        port_position_tuple = self._get_port_position_tuple_by_sku_name()
+        port_position_tuple = self._get_port_position_tuple_by_platform_name()
         self.PORT_START = port_position_tuple[0]
         self.QSFP_PORT_START = port_position_tuple[1]
         self.PORT_END = port_position_tuple[2]
@@ -138,7 +142,7 @@ class Chassis(ChassisBase):
     def initialize_thermals(self):
         from sonic_platform.thermal import initialize_thermals
         # Initialize thermals
-        initialize_thermals(self.sku_name, self._thermal_list, self._psu_list)
+        initialize_thermals(self.platform_name, self._thermal_list, self._psu_list)
 
 
     def initialize_eeprom(self):
@@ -149,9 +153,15 @@ class Chassis(ChassisBase):
 
     def initialize_components(self):
         # Initialize component list
-        from sonic_platform.component import ComponentBIOS, ComponentCPLD
+        from sonic_platform.component import ComponentONIE, ComponentSSD, ComponentBIOS, ComponentCPLD
+        self._component_list.append(ComponentONIE())
+        self._component_list.append(ComponentSSD())
         self._component_list.append(ComponentBIOS())
         self._component_list.extend(ComponentCPLD.get_component_list())
+
+    def initizalize_system_led(self):
+        from .led import SystemLed
+        Chassis._led = SystemLed()
 
 
     def get_name(self):
@@ -194,13 +204,13 @@ class Chassis(ChassisBase):
 
     def get_sfp(self, index):
         """
-        Retrieves sfp represented by (0-based) index <index>
+        Retrieves sfp represented by (1-based) index <index>
 
         Args:
-            index: An integer, the index (0-based) of the sfp to retrieve.
+            index: An integer, the index (1-based) of the sfp to retrieve.
                    The index should be the sequence of a physical port in a chassis,
-                   starting from 0.
-                   For example, 0 for Ethernet0, 1 for Ethernet4 and so on.
+                   starting from 1.
+                   For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
 
         Returns:
             An object dervied from SfpBase representing the specified sfp
@@ -209,7 +219,7 @@ class Chassis(ChassisBase):
             self.initialize_sfp()
 
         sfp = None
-
+        index -= 1
         try:
             sfp = self._sfp_list[index]
         except IndexError:
@@ -247,9 +257,8 @@ class Chassis(ChassisBase):
         out, err = p.communicate()
         return out.rstrip('\n')
 
-
-    def _get_port_position_tuple_by_sku_name(self):
-        position_tuple = port_position_tuple_list[hwsku_dict_port[self.sku_name]]
+    def _get_port_position_tuple_by_platform_name(self):
+        position_tuple = port_position_tuple_list[platform_dict_port[self.platform_name]]
         return position_tuple
 
 
@@ -465,3 +474,25 @@ class Chassis(ChassisBase):
         from .thermal_manager import ThermalManager
         return ThermalManager
 
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        return False if not Chassis._led else Chassis._led.set_status(color)
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        return None if not Chassis._led else Chassis._led.get_status()
