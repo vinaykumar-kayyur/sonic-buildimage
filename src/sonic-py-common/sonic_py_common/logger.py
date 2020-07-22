@@ -19,7 +19,6 @@ class Logger(object):
     PRIORITY_INFO = syslog.LOG_INFO
     PRIORITY_DEBUG = syslog.LOG_DEBUG
 
-
     def __init__(self, log_identifier=None, log_facility=FACILITY_USER):
         self.syslog = syslog
 
@@ -36,6 +35,9 @@ class Logger(object):
     def __del__(self):
         self.syslog.closelog()
 
+    #
+    # Methods for setting minimum log priority
+    #
 
     def set_min_log_priority(self, priority):
         """
@@ -77,6 +79,9 @@ class Logger(object):
         """
         self.set_min_log_priority(self.PRIORITY_DEBUG)
 
+    #
+    # Methods for logging messages
+    #
 
     def log(self, priority, msg, also_print_to_console=False):
         self.syslog.syslog(priority, msg)
