@@ -35,7 +35,7 @@ class Logger(object):
     def __del__(self):
         self.syslog.closelog()
 
-    def set_min_log_priority(priority):
+    def set_min_log_priority(self, priority):
         self.syslog.setlogmask(self.syslog.LOG_UPTO(priority))
 
     def log_error(self, msg, also_print_to_console=False):
