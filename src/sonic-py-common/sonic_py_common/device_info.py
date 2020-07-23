@@ -337,7 +337,7 @@ def get_system_routing_stack():
         stdout = proc.communicate()[0]
         proc.wait()
         result = stdout.rstrip('\n')
-    except OSError, e:
+    except OSError as e:
         raise OSError("Cannot detect routing stack")
 
     return result
