@@ -72,77 +72,77 @@ class TestBreakoutCli(object):
         expected = self.read_Json(dvs)
         assert expected
 
-        print "**** Breakout Cli test Starts ****"
+        print("**** Breakout Cli test Starts ****")
         output_dict = self.breakout(dvs, 'Ethernet0', '2x50G')
         expected_dict = expected["Ethernet0_2x50G"]
         assert output_dict == expected_dict
-        print "**** 1X100G --> 2x50G passed ****"
+        print("**** 1X100G --> 2x50G passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '1x100G[40G]')
         expected_dict = expected["Ethernet0_1x100G"]
         assert output_dict == expected_dict
-        print "**** 2x50G --> 1x100G[40G] passed ****"
+        print("**** 2x50G --> 1x100G[40G] passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '4x25G[10G]')
         expected_dict = expected["Ethernet0_4x25G"]
         assert output_dict == expected_dict
-        print "**** 1X100G --> 4x25G[10G] passed ****"
+        print("**** 1X100G --> 4x25G[10G] passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '1x100G[40G]')
         expected_dict = expected["Ethernet0_1x100G"]
         assert output_dict == expected_dict
-        print "**** 4x25G[10G] --> 1x100G[40G] passed ****"
+        print("**** 4x25G[10G] --> 1x100G[40G] passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet4', '2x50G')
-        print "**** 1X100G --> 2x50G mode change ****"
+        print("**** 1X100G --> 2x50G mode change ****")
 
         output_dict = self.breakout(dvs, 'Ethernet4', '4x25G[10G]')
         expected_dict = expected["Ethernet4_4x25G"]
         assert output_dict == expected_dict
-        print "**** 2X50G --> 4x25G[10G] passed ****"
+        print("**** 2X50G --> 4x25G[10G] passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet4', '2x50G')
         expected_dict = expected["Ethernet4_2x50G"]
         assert output_dict == expected_dict
-        print "**** 4x25G[10G] --> 2X50G passed ****"
+        print("**** 4x25G[10G] --> 2X50G passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet4', '1x100G[40G]')
-        print "**** 2x50G  -- > 1X100G mode change ****"
+        print("**** 2x50G  -- > 1X100G mode change ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '2x25G(2)+1x50G(2)')
         expected_dict = expected["Ethernet0_2x25G_1x50G"]
         assert output_dict == expected_dict
-        print "**** 1x100G[40G] --> 2x25G(2)+1x50G(2) passed ****"
+        print("**** 1x100G[40G] --> 2x25G(2)+1x50G(2) passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '1x100G[40G]')
         expected_dict = expected["Ethernet0_1x100G"]
         assert output_dict == expected_dict
-        print "**** 2x25G(2)+1x50G(2) --> 1x100G[40G] passed ****"
+        print("**** 2x25G(2)+1x50G(2) --> 1x100G[40G] passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '1x50G(2)+2x25G(2)')
         expected_dict = expected["Ethernet0_1x50G_2x25G"]
         assert output_dict == expected_dict
-        print "**** 1x100G[40G] --> 1x50G(2)+2x25G(2)  passed ****"
+        print("**** 1x100G[40G] --> 1x50G(2)+2x25G(2)  passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet0', '1x100G[40G]')
         expected_dict = expected["Ethernet0_1x100G"]
         assert output_dict == expected_dict
-        print "**** 1x50G(2)+2x25G(2) --> 1x100G[40G] passed ****"
+        print("**** 1x50G(2)+2x25G(2) --> 1x100G[40G] passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet8', '2x50G')
-        print "**** 1x100G[40G] --> 2x50G  mode change ****"
+        print("**** 1x100G[40G] --> 2x50G  mode change ****")
 
         output_dict = self.breakout(dvs, 'Ethernet8', '1x50G(2)+2x25G(2)')
         expected_dict = expected["Ethernet8_1x50G_2x25G"]
         assert output_dict == expected_dict
-        print "**** 2x50G --> 2x25G(2)+1x50G(2)  passed ****"
+        print("**** 2x50G --> 2x25G(2)+1x50G(2)  passed ****)"
 
         output_dict = self.breakout(dvs, 'Ethernet8', '2x25G(2)+1x50G(2)')
         expected_dict = expected["Ethernet8_2x25G_1x50G"]
         assert output_dict == expected_dict
-        print "**** 1x50G(2)+2x25G(2) --> 2x25G(2)+1x50G(2)  passed ****"
+        print("**** 1x50G(2)+2x25G(2) --> 2x25G(2)+1x50G(2)  passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet8', '1x100G[40G]')
         expected_dict = expected["Ethernet8_1x100G"]
         assert output_dict == expected_dict
-        print "**** 2x25G(2)+1x50G(2)  --> 1x100G[40G]  passed ****"
+        print("**** 2x25G(2)+1x50G(2)  --> 1x100G[40G]  passed ****")
