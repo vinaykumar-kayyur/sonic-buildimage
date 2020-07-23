@@ -1,6 +1,7 @@
 from setuptools import setup
 
 dependencies = [
+    'natsort',
     'swsssdk>=2.0.1',
 ]
 
