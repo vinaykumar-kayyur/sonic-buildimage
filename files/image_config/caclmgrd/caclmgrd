@@ -194,18 +194,19 @@ class ControlPlaneAclManager(object):
                         log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         return block_ip2me_cmds
+
     def generate_allow_internal_docker_ip_traffic_commands(self, namespace):
         allow_internal_docker_ip_cmds = []
         
-        # For namespace docker all tcp/udp traffic from host docker bridge to its eth0 management ip
         if namespace:
+            # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format\
                                                  (self.docker_bridge_ip, self.namespace_docker_mgmt_ip[namespace]))
 
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format\
                                                  (self.docker_bridge_ip, self.namespace_docker_mgmt_ip[namespace]))
         else:
-            # In host allow all tcp/udp traffic from namespace docker eth0 management to host docker bridge
+            # In host allow all tcp/udp traffic from namespace docker eth0 management ip to host docker bridge
             for docker_mgmt_ip in self.namespace_docker_mgmt_ip.values():
                allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format\
                                                     (docker_mgmt_ip, self.docker_bridge_ip))
