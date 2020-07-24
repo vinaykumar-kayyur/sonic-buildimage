@@ -55,40 +55,46 @@ mp_tool_reboot() {
         DEVICE=$(dmesg | grep "Attached SCSI disk" |  sed -n \$p | 
 	    grep -o -P '(sd[a-z])')
         cd /mnt/ramdisk/SSD
-        chmod +x mp_64
         ./mp_64 -d /dev/${DEVICE} -c 1 -u -k -r
     fi
 }
 
-reboot() {
-    cd /tmp
-    unzip -q SSD.zip
+hdparm-upgrade() {
     if [[ -x "$(command -v hdparm)" ]];then
         hdparm --fwdownload /tmp/SSD/SYS_S.bin --yes-i-know-what-i-am-doing \
 	    --please-destroy-my-drive /dev/sda
     fi
 }
 
-platform=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
-version_type=$(dmesg | grep "mSATA")
+platform_check() {
+    platform=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+    version_type=$(dmesg | grep "mSATA")
+    md5sum_value=$(md5sum /tmp/SSD.zip | cut -d ' ' -f1)
+    if [[ "$md5sum_value" != "$CHECKSUM_VALUE" || "$platform" != *"s6100"* || 
+        "$version_type" != *"3IE3"* || "$version_type" != *"S16425c1"*  ]];then
+        exit 1
+    fi
+}
 
 if [[ ! -f /tmp/SSD.zip ]];then
     exit 1
 fi
-md5sum_value=$(md5sum /tmp/SSD.zip | cut -d ' ' -f1)
-if [[ "$md5sum_value" != "$CHECKSUM_VALUE" || "$platform" != *"s6100"* || 
-    "$version_type" != *"3IE3"* || "$version_type" != *"S16425c1"*  ]];then
-    exit 1
-fi
+
 case "$1" in
     fast-reboot|warm-reboot)
+        platform_check
         mp_tool_reboot
         ;;
     reboot)
+        platform_check
+        cd /tmp
+        unzip -q SSD.zip
+        ;;
+    hdparm-upgrade)
         $1
         ;;
     *)
-        echo "Usage: $0 {fast-reboot|warm-reboot|reboot}" >&2
+        echo "Usage: $0 {fast-reboot|warm-reboot|reboot|hdparm-upgrade}" >&2
         exit 2
         ;;
 esac
