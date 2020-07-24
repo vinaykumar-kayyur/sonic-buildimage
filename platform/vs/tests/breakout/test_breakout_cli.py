@@ -135,7 +135,7 @@ class TestBreakoutCli(object):
         output_dict = self.breakout(dvs, 'Ethernet8', '1x50G(2)+2x25G(2)')
         expected_dict = expected["Ethernet8_1x50G_2x25G"]
         assert output_dict == expected_dict
-        print("**** 2x50G --> 2x25G(2)+1x50G(2)  passed ****)"
+        print("**** 2x50G --> 2x25G(2)+1x50G(2)  passed ****")
 
         output_dict = self.breakout(dvs, 'Ethernet8', '2x25G(2)+1x50G(2)')
         expected_dict = expected["Ethernet8_2x25G_1x50G"]
