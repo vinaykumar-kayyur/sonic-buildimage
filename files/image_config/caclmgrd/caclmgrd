@@ -96,11 +96,26 @@ class ControlPlaneAclManager(object):
         self.config_db_map[''] = ConfigDBConnector(use_unix_socket_path=True, namespace='')
         self.config_db_map[''].connect()
         self.iptables_cmd_ns_prefix[''] = ""
+        self.docker_bridge_ip = self.get_docker_ip_address(self.iptables_cmd_ns_prefix[''], '')
+        self.namespace_docker_mgmt_ip = {}
         namespaces = sonic_device_util.get_all_namespaces()
         for front_asic_namespaces in namespaces['front_ns']:
             self.config_db_map[front_asic_namespaces] = ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespaces)
             self.config_db_map[front_asic_namespaces].connect()
             self.iptables_cmd_ns_prefix[front_asic_namespaces] = "ip netns exec " + front_asic_namespaces + " "
+            self.namespace_docker_mgmt_ip[front_asic_namespaces] =  self.get_docker_ip_address(self.iptables_cmd_ns_prefix[front_asic_namespaces],
+                                                                                               front_asic_namespaces)
+
+        for back_asic_namespaces in namespaces['back_ns']:
+            self.iptables_cmd_ns_prefix[back_asic_namespaces] = "ip netns exec " + back_asic_namespaces + " "
+            self.namespace_docker_mgmt_ip[back_asic_namespaces] = self.get_docker_ip_address(self.iptables_cmd_ns_prefix[back_asic_namespaces],
+                                                                                             back_asic_namespaces)
+    def get_docker_ip_address(self, iptable_ns_cmd_prefix, namespace):
+        
+        ip_address_get_command = iptable_ns_cmd_prefix + "ip -4 -o addr show " + ("eth0" if namespace else "docker0") +\
+                                 " | awk '{print $4}' | cut -d'/' -f1 | head -1"
+
+        return self.run_commands([ip_address_get_command])
 
     def run_commands(self, commands):
         """
@@ -110,12 +125,14 @@ class ControlPlaneAclManager(object):
             commands: List of strings, each string is a shell command
         """
         for cmd in commands:
-            proc = subprocess.Popen(cmd, shell=True)
+            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 
             (stdout, stderr) = proc.communicate()
 
             if proc.returncode != 0:
                 log_error("Error running command '{}'".format(cmd))
+            elif stdout:
+                return stdout.rstrip('\n')
 
     def parse_int_to_tcp_flags(self, hex_value):
         tcp_flags_str = ""
@@ -170,13 +187,32 @@ class ControlPlaneAclManager(object):
                     ip_addr = next(ip_ntwrk.hosts()) if iface_table_name == "VLAN_INTERFACE" else ip_ntwrk.network_address
 
                     if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen)))
+                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen))
                     elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen)))
+                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen))
                     else:
                         log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         return block_ip2me_cmds
+    def generate_allow_internal_docker_ip_traffic_commands(self, namespace):
+        allow_internal_docker_ip_cmds = []
+        
+        # For namespace docker all tcp/udp traffic from host docker bridge to its eth0 management ip
+        if namespace:
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format\
+                                                 (self.docker_bridge_ip, self.namespace_docker_mgmt_ip[namespace]))
+
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format\
+                                                 (self.docker_bridge_ip, self.namespace_docker_mgmt_ip[namespace]))
+        else:
+            # In host allow all tcp/udp traffic from namespace docker eth0 management to host docker bridge
+            for docker_mgmt_ip in self.namespace_docker_mgmt_ip.values():
+               allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format\
+                                                    (docker_mgmt_ip, self.docker_bridge_ip))
+
+               allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format\
+                                                    (docker_mgmt_ip, self.docker_bridge_ip))
+        return allow_internal_docker_ip_cmds
 
     def is_rule_ipv4(self, rule_props):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
@@ -227,6 +263,9 @@ class ControlPlaneAclManager(object):
         # Add iptables/ip6tables commands to allow all traffic from localhost
         iptables_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -s 127.0.0.1 -i lo -j ACCEPT")
         iptables_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -s ::1 -i lo -j ACCEPT")
+
+        # Add iptables commands to allow internal docker traffic
+        iptables_cmds += self.generate_allow_internal_docker_ip_traffic_commands(namespace)
 
         # Add iptables/ip6tables commands to allow all incoming packets from established
         # connections or new connections which are related to established connections
