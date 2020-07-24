@@ -123,7 +123,9 @@ def get_all_namespaces():
             elif metadata['localhost']['sub_role'] == BACKEND_ASIC_SUB_ROLE:
                 back_ns.append(namespace)
 
-    return {'front_ns':front_ns, 'back_ns':back_ns}
+        return {'front_ns':front_ns, 'back_ns':back_ns}
+
+    return None
 
 def get_platform_info(machine_info):
     if machine_info != None:
