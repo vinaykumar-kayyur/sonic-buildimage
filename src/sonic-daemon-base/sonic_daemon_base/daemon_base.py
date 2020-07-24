@@ -142,18 +142,20 @@ class DaemonBase(object):
                 proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
                                         stdout=subprocess.PIPE,
                                         shell=False,
-                                        stderr=subprocess.STDOUT)
-                stdout = proc.communicate()[0]
-                proc.wait()
+                                        stdout=subprocess.STDOUT,
+                                        stderr=subprocess.STDERR)
+                stdout, stderr = proc.communicate()
+                assert not stderr and not proc.returncode, "Failed to detect platform: %s, rc: %s" % (stderr, proc.returncode)
                 platform = stdout.rstrip('\n')
 
             if not hwsku:
                 proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
                                         stdout=subprocess.PIPE,
                                         shell=False,
-                                        stderr=subprocess.STDOUT)
-                stdout = proc.communicate()[0]
-                proc.wait()
+                                        stdout=subprocess.STDOUT,
+                                        stderr=subprocess.STDERR)
+                stdout, stderr = proc.communicate()
+                assert not stderr and not proc.returncode, "Failed to detect hwsku: %s, rc: %s" % (stderr, proc.returncode)
                 hwsku = stdout.rstrip('\n')
         except OSError, e:
             raise OSError("Failed to detect platform: %s" % (str(e)))
