@@ -217,7 +217,7 @@ def smart_open(filename=None, mode=None):
         if not isinstance(filename, file):
             smart_file.close()
 
-def __process_json(args, data):
+def _process_json(args, data):
     """
     Process JSON file and update switch configuration data
     """
@@ -225,7 +225,7 @@ def __process_json(args, data):
         with open(json_file, 'r') as stream:
             deep_update(data, FormatConverter.to_deserialized(json.load(stream)))
 
-def __getJinja2Env(paths):
+def _get_jinja2_env(paths):
     """
     Retreive Jinj2 env used to render configuration templates
     """
@@ -311,7 +311,7 @@ def main():
         if  brkout_table is not None:
             deep_update(data, {'BREAKOUT_CFG': brkout_table})
 
-    __process_json(args, data)
+    _process_json(args, data)
 
     if args.minigraph != None:
         minigraph = args.minigraph
@@ -380,7 +380,7 @@ def main():
     if args.batch:
         for template_file, _ in args.batch:
             paths.append(os.path.dirname(os.path.abspath(template_file)))
-        env = __getJinja2Env(paths)
+        env = _get_jinja2_env(paths)
         sorted_data = sort_data(data)
         for template_file, dest_file in args.batch:
             template = env.get_template(template_file)
@@ -390,7 +390,7 @@ def main():
     if args.process_json:
         for template_file in args.process_json:
             paths.append(os.path.dirname(os.path.abspath(template_file)))
-        env = __getJinja2Env(paths)
+        env = _get_jinja2_env(paths)
         sorted_data = sort_data(data)
         for template_file in args.process_json:
             template = env.get_template(template_file)
