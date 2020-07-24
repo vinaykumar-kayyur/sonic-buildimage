@@ -25,7 +25,6 @@ CONFIG_PATH = "/var/run/hw-management/config"
 FAN_DIR = "/var/run/hw-management/system/fan_dir"
 COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
 
-
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
@@ -289,8 +288,8 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        # The tolerance value is fixed as 20% for all the Mellanox platform
-        return 20
+        # The tolerance value is fixed as 50% for all the Mellanox platform
+        return 50
 
     @classmethod
     def set_cooling_level(cls, level, cur_state):

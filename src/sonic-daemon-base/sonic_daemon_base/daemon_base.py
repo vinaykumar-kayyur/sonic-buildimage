@@ -13,10 +13,6 @@ except ImportError, e:
 #
 # Constants ====================================================================
 #
-
-# Redis DB information
-REDIS_HOSTNAME = 'localhost'
-REDIS_PORT = 6379
 REDIS_TIMEOUT_MSECS = 0
 
 # Platform root directory inside docker
@@ -27,7 +23,7 @@ PLATFORM_KEY = 'DEVICE_METADATA.localhost.platform'
 
 # Port config information
 PORT_CONFIG = 'port_config.ini'
-PORTMAP = 'portmap.ini'
+PLATFORM_JSON = 'platform.json'
 
 EEPROM_MODULE_NAME = 'eeprom'
 EEPROM_CLASS_NAME = 'board'
@@ -36,12 +32,11 @@ EEPROM_CLASS_NAME = 'board'
 # Helper functions =============================================================
 #
 
-def db_connect(db):
+def db_connect(db_name):
     from swsscommon import swsscommon
-    return swsscommon.DBConnector(db,
-                                  REDIS_HOSTNAME,
-                                  REDIS_PORT,
-                                  REDIS_TIMEOUT_MSECS)
+    return swsscommon.DBConnector(db_name,
+                                  REDIS_TIMEOUT_MSECS,
+                                  True)
 
 #
 # Helper classes ===============================================================
@@ -95,9 +90,25 @@ class Logger(object):
 class DaemonBase(object):
     def __init__(self):
         # Register our signal handlers
-        signal.signal(signal.SIGHUP, self.signal_handler)
-        signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGTERM, self.signal_handler)
+        '''all daemons inherit from daemon_base class, and for
+        signal handling functionality they register the signal_handler() by
+        overriding the siganl_handler() in daemon_base by their own
+        implmentation.
+        But some sonic_platform instances also can invoke the daemon_base
+        constructor while trying to instantiate the common utilities
+        for example
+        platform_chassis = sonic_platform.platform.Platform().get_chassis()
+        This will cause the re registration of signal_handler which will
+        cause base class signal_handler() to be invoked when the daemon
+        gets a signal, whereas the derived class signal_handler should have
+        been invoked. The if checks will not allow the re registration
+        of signal handler '''
+        if not signal.getsignal(signal.SIGHUP):
+            signal.signal(signal.SIGHUP, self.signal_handler)
+        if not signal.getsignal(signal.SIGINT):
+            signal.signal(signal.SIGINT, self.signal_handler)
+        if not signal.getsignal(signal.SIGTERM):
+            signal.signal(signal.SIGTERM, self.signal_handler)
 
     # Signal handler
     def signal_handler(self, sig, frame):
@@ -151,11 +162,12 @@ class DaemonBase(object):
         # Get platform and hwsku path
         (platform_path, hwsku_path) = self.get_path_to_platform_and_hwsku()
 
-        # First check for the presence of the new 'port_config.ini' file
-        port_config_file_path = "/".join([hwsku_path, PORT_CONFIG])
+        # First check for the presence of the new 'platform.json' file
+        port_config_file_path = "/".join([platform_path, PLATFORM_JSON])
         if not os.path.isfile(port_config_file_path):
-            # port_config.ini doesn't exist. Try loading the legacy 'portmap.ini' file
-            port_config_file_path = "/".join([hwsku_path, PORTMAP])
+
+            # platform.json doesn't exist. Try loading the legacy 'port_config.ini' file
+            port_config_file_path = "/".join([hwsku_path, PORT_CONFIG])
             if not os.path.isfile(port_config_file_path):
                 raise IOError("Failed to detect port config file: %s" % (port_config_file_path))
 

@@ -295,10 +295,14 @@ RUN apt-get update && apt-get install -y \
         libnetfilter-conntrack-dev \
         libnftnl-dev \
 # For SAI3.7
+        protobuf-compiler \
         libprotobuf-dev \
+        xxd \
 # For DHCP Monitor tool
         libexplain-dev \
-        libevent-dev
+        libevent-dev \
+# For SWI Tools
+        python-m2crypto
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
@@ -346,7 +350,7 @@ RUN pip install j2cli==0.3.10
 # Remove python-click 6.6
 RUN apt-get purge -y python-click
 # For sonic utilities testing
-RUN pip install click-default-group click natsort tabulate netifaces==0.10.7 fastentrypoints
+RUN pip install click natsort tabulate netifaces==0.10.7 fastentrypoints
 
 # For sonic snmpagent mock testing
 RUN pip3 install mockredispy==2.9.3
@@ -366,6 +370,9 @@ RUN pip install pexpect==4.6.0
 RUN pip install mockredispy==2.9.3
 RUN pip install pytest-runner==4.4
 RUN pip install setuptools==40.8.0
+
+# For sonic-swss-common testing
+RUN pip install Pympler==0.8
 
 # For sonic_yang_mgmt build
 RUN pip install ijson==2.6.1
@@ -432,3 +439,6 @@ RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-stretch docker-ce-cli=5:18
 RUN apt-get install -y docker-ce=18.06.3~ce~3-0~debian
 {%- endif %}
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+
+# Install swi tools
+RUN python -m pip install git+https://github.com/aristanetworks/swi-tools.git@d51761ec0bb93c73039233f3c01ed48235ffad00
