@@ -141,9 +141,8 @@ class DaemonBase(object):
             if not platform: 
                 proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
                                         stdout=subprocess.PIPE,
-                                        shell=False,
-                                        stdout=subprocess.STDOUT,
-                                        stderr=subprocess.STDERR)
+                                        stderr=subprocess.PIPE,
+                                        shell=False)
                 stdout, stderr = proc.communicate()
                 assert not stderr and not proc.returncode, "Failed to detect platform: %s, rc: %s" % (stderr, proc.returncode)
                 platform = stdout.rstrip('\n')
@@ -151,9 +150,8 @@ class DaemonBase(object):
             if not hwsku:
                 proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
                                         stdout=subprocess.PIPE,
-                                        shell=False,
-                                        stdout=subprocess.STDOUT,
-                                        stderr=subprocess.STDERR)
+                                        stderr=subprocess.PIPE,
+                                        shell=False)
                 stdout, stderr = proc.communicate()
                 assert not stderr and not proc.returncode, "Failed to detect hwsku: %s, rc: %s" % (stderr, proc.returncode)
                 hwsku = stdout.rstrip('\n')
