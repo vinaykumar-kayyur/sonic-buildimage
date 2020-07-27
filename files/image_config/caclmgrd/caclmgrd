@@ -17,7 +17,7 @@ try:
     import sys
     import syslog
 
-    import sonic_device_util
+    from sonic_py_common import device_info
     from swsscommon import swsscommon
     from swsssdk import SonicDBConfig, ConfigDBConnector
 except ImportError as err:
@@ -100,7 +100,7 @@ class ControlPlaneAclManager(object):
         self.iptables_cmd_ns_prefix[''] = ""
         self.docker_bridge_ip = self.get_docker_ip_address(self.iptables_cmd_ns_prefix[''], '')
         self.namespace_docker_mgmt_ip = {}
-        namespaces = sonic_device_util.get_all_namespaces()
+        namespaces = device_info.get_all_namespaces()
         for front_asic_namespaces in namespaces['front_ns']:
             self.config_db_map[front_asic_namespaces] = ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespaces)
             self.config_db_map[front_asic_namespaces].connect()
@@ -448,7 +448,7 @@ class ControlPlaneAclManager(object):
         SELECT_TIMEOUT_MS = 1000 * 10
 
         # Initlaize Global config that loads all database*.json
-        if sonic_device_util.is_multi_npu():
+        if device_info.is_multi_npu():
             swsscommon.SonicDBConfig.initializeGlobalConfig()
         # Create the Select object
         sel = swsscommon.Select()
