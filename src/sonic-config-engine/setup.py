@@ -22,7 +22,7 @@ setup(name='sonic-config-engine',
           'ipaddr',
           'jinja2>=2.10',
           'lxml',
-          'netaddr'
+          'netaddr',
           'pyyaml',
           'pyangbind==0.6.0',
           'sonic-py-common'
