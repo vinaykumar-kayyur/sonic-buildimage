@@ -58,13 +58,16 @@ def get_platform():
         A string containing the device's platform identifier
     """
     # First, attempt to retrieve the platform string from Config DB
-    config_db = ConfigDBConnector()
-    config_db.connect()
+    try:
+        config_db = ConfigDBConnector()
+        config_db.connect()
 
-    metadata = config_db.get_table('DEVICE_METADATA')
+        metadata = config_db.get_table('DEVICE_METADATA')
 
-    if 'localhost' in metadata and 'platform' in metadata['localhost']:
-        return metadata['localhost']['platform']
+        if 'localhost' in metadata and 'platform' in metadata['localhost']:
+            return metadata['localhost']['platform']
+    except Exception:
+        pass
 
     # If we were unable to retrieve the platform string from Config DB, attempt
     # to retrieve it from the machine configuration file
