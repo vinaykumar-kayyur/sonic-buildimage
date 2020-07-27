@@ -157,7 +157,8 @@ class BGPConfigManager(object):
                     self.lo_ipv6 = ip_addr
                     txt = self.zebra_set_src_template.render(rm_name="RM_SET_SRC6", lo_ip=ip_addr, ip_proto="v6")
                 else:
-                    syslog.syslog(syslog.LOG_ERR, "Got ambigous ip addres '%s'" % ip_addr)
+                    syslog.syslog(syslog.LOG_ERR, "Got ambiguous ip address '%s'" % ip_addr)
+                    return
             except:
                 syslog.syslog(syslog.LOG_ERR, "Error while rendering set src template '%s'" % ip_addr)
             else:
