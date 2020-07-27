@@ -446,8 +446,10 @@ class ControlPlaneAclManager(object):
     def run(self):
         # Select Time-out for 10 Seconds
         SELECT_TIMEOUT_MS = 1000 * 10
+
         # Initlaize Global config that loads all database*.json
-        swsscommon.SonicDBConfig.initializeGlobalConfig()
+        if sonic_device_util.is_multi_npu():
+            swsscommon.SonicDBConfig.initializeGlobalConfig()
         # Create the Select object
         sel = swsscommon.Select()
         # Map of Namespace <--> susbcriber table's object
