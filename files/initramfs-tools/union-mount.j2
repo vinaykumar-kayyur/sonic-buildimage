@@ -161,11 +161,3 @@ fi
 if [ -f /tmp/fsck.log.gz ]; then
     mv /tmp/fsck.log.gz ${rootmnt}/var/log
 fi
-
-## Move sonic-environment to /etc/sonic
-sonic_config_dir=${rootmnt}/host/${image_dir}/sonic-config
-sonic_env_file=${sonic_config_dir}/sonic-environment
-if [ -d ${sonic_config_dir} -a -f ${sonic_env_file} ]; then
-    echo "moving file ${sonic_env_file} to ${rootmnt}/etc/sonic" 1>&2
-    mv ${sonic_env_file} ${rootmnt}/etc/sonic
-fi

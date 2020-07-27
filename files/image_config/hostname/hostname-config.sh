@@ -1,10 +1,7 @@
 #!/bin/bash -e
 
-# read SONiC immutable variables
-[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
-
 CURRENT_HOSTNAME=`hostname`
-HOSTNAME=${SONIC_HOSTNAME:-`sonic-cfggen -d -v DEVICE_METADATA[\'localhost\'][\'hostname\']`}
+HOSTNAME=`sonic-cfggen -d -v DEVICE_METADATA[\'localhost\'][\'hostname\']`
 
 echo $HOSTNAME > /etc/hostname
 hostname -F /etc/hostname
