@@ -19,10 +19,10 @@ setup(name='sonic-config-engine',
       py_modules=['portconfig', 'minigraph', 'openconfig_acl', 'sonic_device_util', 'config_samples', 'redis_bcc', 'lazy_re'],
       scripts=['sonic-cfggen'],
       install_requires=[
-          'lxml',
-          'jinja2>=2.10'
-          'netaddr'
           'ipaddr',
+          'jinja2>=2.10',
+          'lxml',
+          'netaddr'
           'pyyaml',
           'pyangbind==0.6.0',
           'sonic-py-common'
