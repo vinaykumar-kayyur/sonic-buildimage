@@ -24,8 +24,6 @@ import sys, getopt
 import logging
 import re
 import time
-from collections import namedtuple
-
 PROJECT_NAME = 'esc601_32q'
 version = '0.1.0'
 verbose = False

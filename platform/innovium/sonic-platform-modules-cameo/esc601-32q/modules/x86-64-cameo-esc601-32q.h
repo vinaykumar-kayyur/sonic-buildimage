@@ -12,7 +12,7 @@
 #include <linux/uaccess.h>
 #include <linux/string.h>
 
-#define DRIVER_VERSION  "2.3"
+#define DRIVER_VERSION  "2.8"
 
 #define TURN_OFF        0
 #define TURN_ON         1
@@ -59,12 +59,12 @@ void free_adapters(struct i2c_adap *adapters);
 #define LED_CTRL_WANTED
 #define USB_CTRL_WANTED
 #define ASPEED_BMC_WANTED
+#define PSU_STAT_WANTED
 //#define WDT_CTRL_WANTED
 //#define EEPROM_WP_WANTED
 //#define I2C_SWITCH_WANTED
 //#define EEPROM_WANTED
 //#define THEMAL_WANTED
-//#define PSU_STAT_WANTED
 //#define QSFP_WANTED
 //#define FAN_CTRL_WANTED
 //#define FAN_DUTY_CTRL_WANTED
@@ -99,13 +99,6 @@ static struct i2c_client *Cameo_Sensor_client; //0x4c themal sensor
 static struct i2c_client *Cameo_MAC_Sensor_client; //0x68 MCP3425
 static struct i2c_client *Cameo_Sensor_fan_client; //0x2e themal sensor
 #endif
-#ifdef PSU_STAT_WANTED
-static struct i2c_client *Cameo_PSU_1_client; //0x5B PSU
-static struct i2c_client *Cameo_PSU_2_client; //0x59 PSU
-static struct i2c_client *Cameo_DC_Chip_1_client; //0x6C DC_Chip_1
-static struct i2c_client *Cameo_DC_Chip_2_client; //0x6E DC_Chip_2
-static struct i2c_client *Cameo_DC_Chip_3_client; //0x70 DC_Chip_3
-#endif
 #ifdef ASPEED_BMC_WANTED
 static struct i2c_client *Cameo_BMC_client; //0x14 ASPEED BMC
 #endif
@@ -118,12 +111,8 @@ static ssize_t tlv_status_get(struct device *dev, struct device_attribute *da, c
 #endif
 static ssize_t psu_status_get(struct device *dev, struct device_attribute *da, char *buf);
 #ifdef PSU_STAT_WANTED
-static ssize_t psu_Pin_get(struct device *dev, struct device_attribute *da, char *buf);
-static ssize_t psu_Pout_get(struct device *dev, struct device_attribute *da, char *buf);
-static ssize_t psu_Vin_get(struct device *dev, struct device_attribute *da, char *buf);
-static ssize_t psu_Vout_get(struct device *dev, struct device_attribute *da, char *buf);
-static ssize_t psu_Iin_get(struct device *dev, struct device_attribute *da, char *buf);
-static ssize_t psu_Iout_get(struct device *dev, struct device_attribute *da, char *buf);
+static ssize_t psu_module_get(struct device *dev, struct device_attribute *da, char *buf);
+static ssize_t dc_chip_switch_get(struct device *dev, struct device_attribute *da, char *buf);
 #endif
 #ifdef USB_CTRL_WANTED
 static ssize_t usb_power_get(struct device *dev, struct device_attribute *da, char *buf);
@@ -397,12 +386,9 @@ enum Cameo_i2c_sysfs_attributes
     PSU_PRESENT,
     PSU_STATUS,
 #ifdef PSU_STAT_WANTED
-    PSU_PIN,
-    PSU_POUT,
-    PSU_VIN,
-    PSU_VOUT,
-    PSU_IIN,
-    PSU_IOUT,
+    PSU_MODULE_1,
+    PSU_MODULE_2,
+    DC_CHIP_SWITCH,
 #endif
 #ifdef USB_CTRL_WANTED
     USB_POWER,
@@ -478,12 +464,9 @@ static SENSOR_DEVICE_ATTR(tlv_status        , S_IRUGO           , tlv_status_get
 static SENSOR_DEVICE_ATTR(psu_present       , S_IRUGO           , psu_status_get    , NULL              , PSU_PRESENT);
 static SENSOR_DEVICE_ATTR(psu_status        , S_IRUGO           , psu_status_get    , NULL              , PSU_STATUS);
 #ifdef PSU_STAT_WANTED
-static SENSOR_DEVICE_ATTR(psu_Pin           , S_IRUGO           , psu_Pin_get       , NULL              , PSU_PIN);
-static SENSOR_DEVICE_ATTR(psu_Pout          , S_IRUGO           , psu_Pout_get      , NULL              , PSU_POUT);
-static SENSOR_DEVICE_ATTR(psu_Vin           , S_IRUGO           , psu_Vin_get       , NULL              , PSU_VIN);
-static SENSOR_DEVICE_ATTR(psu_Vout          , S_IRUGO           , psu_Vout_get      , NULL              , PSU_VOUT);
-static SENSOR_DEVICE_ATTR(psu_Iin           , S_IRUGO           , psu_Iin_get       , NULL              , PSU_IIN);
-static SENSOR_DEVICE_ATTR(psu_Iout          , S_IRUGO           , psu_Iout_get      , NULL              , PSU_IOUT);
+static SENSOR_DEVICE_ATTR(psu_module_1      , S_IRUGO           , psu_module_get    , NULL              , PSU_MODULE_1);
+static SENSOR_DEVICE_ATTR(psu_module_2      , S_IRUGO           , psu_module_get    , NULL              , PSU_MODULE_2);
+static SENSOR_DEVICE_ATTR(dc_chip_switch    , S_IRUGO           , dc_chip_switch_get , NULL             , DC_CHIP_SWITCH);
 #endif
 #ifdef USB_CTRL_WANTED
 static SENSOR_DEVICE_ATTR(usb_power         , S_IRUGO | S_IWUSR , usb_power_get     , usb_power_set     , USB_POWER);
@@ -612,12 +595,9 @@ static struct attribute *ESC601_PSU_attributes[] =
     &sensor_dev_attr_psu_present.dev_attr.attr,
     &sensor_dev_attr_psu_status.dev_attr.attr,
 #ifdef PSU_STAT_WANTED
-    &sensor_dev_attr_psu_Pin.dev_attr.attr,
-    &sensor_dev_attr_psu_Pout.dev_attr.attr,
-    &sensor_dev_attr_psu_Vin.dev_attr.attr,
-    &sensor_dev_attr_psu_Vout.dev_attr.attr,
-    &sensor_dev_attr_psu_Iin.dev_attr.attr,
-    &sensor_dev_attr_psu_Iout.dev_attr.attr,
+    &sensor_dev_attr_psu_module_1.dev_attr.attr,
+    &sensor_dev_attr_psu_module_2.dev_attr.attr,
+    &sensor_dev_attr_dc_chip_switch.dev_attr.attr,
 #endif
     NULL
 };

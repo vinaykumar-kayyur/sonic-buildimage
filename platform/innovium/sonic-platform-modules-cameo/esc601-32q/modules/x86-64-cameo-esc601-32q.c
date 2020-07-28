@@ -224,857 +224,130 @@ static long read_reg_vid_13mv(s32 data)
 #endif
 
 #ifdef PSU_STAT_WANTED
-/********************************************************************************/
-/*    Function Name      : psu_pin_get                                    */
-/*    Description        : This is the function to get switch button status     */
-/*                         0x33 0xa1                                            */
-/*    Input(s)           : None.                                                */
-/*    Output(s)          : None.                                                */
-/*    Returns            : String.                                              */
-/********************************************************************************/
-static ssize_t psu_Pin_get(struct device *dev, struct device_attribute *da, char *buf)
+static int two_complement_to_int(u16 data, u8 valid_bit, int mask)
 {
-    s32 status = -EPERM;
-    u8 channel_status = -EPERM;
-    long val = 0;
-    long total = 0;
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct Cameo_i2c_data *Switch_1_data = i2c_get_clientdata(Cameo_Switch_1_client); //0x73
-    struct Cameo_i2c_data *Switch_2_data = i2c_get_clientdata(Cameo_Switch_2_client); //0x77
-    
-    if (attr->index == PSU_PIN)
+    u16  valid_data  = data & mask;
+    bool is_negative = valid_data >> (valid_bit - 1);
+
+    return is_negative ? (-(((~valid_data) & mask) + 1)) : valid_data;
+}
+
+static ssize_t psu_module_get(struct device *dev, struct device_attribute *da, char *buf)
+{
+    u8 bmc_present = -EPERM;
+    u8 module_num = 0;
+    u8 psu_table [3][11] = 
     {
-        sprintf(buf, "\n");
-        mutex_lock(&Switch_1_data->update_lock);
-        mutex_lock(&Switch_2_data->update_lock);
-
-        debug_print((KERN_DEBUG "DEBUG : psu_Pin_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x08);
-        if(channel_status < 0)
+        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+        {0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a},
+        {0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a}
+    };
+    u32 psu_status [11] = {0}; 
+    u8 mask = 0x1;
+    u8 i = 0;
+    u16 u16_val = 0;
+    int exponent = 0, mantissa = 0;
+    int multiplier = 1000;  // lm-sensor uint: mV, mA, mC
+    
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    sprintf(buf, "\n");
+    
+    bmc_present = i2c_smbus_read_byte_data(ESC_601_i2c_client, 0xa5);
+    if (bmc_present & mask)
+    {
+        switch(attr->index)
         {
-            printk(KERN_ALERT "ERROR: psu_Pin_get 0x73 set channel 3 FAILED\n");
+            case PSU_MODULE_1:
+                module_num = 1;
+                break;
+            case PSU_MODULE_2:
+                module_num = 2;
+                break;
         }
 
-        debug_print((KERN_DEBUG "DEBUG : psu_Pin_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x10);
-        if(channel_status < 0)
+        for(i = 0; i < 10; i ++)
         {
-            printk(KERN_ALERT "ERROR: psu_Pin_get 0x77 set channel 4 FAILED\n");
+            u16_val = i2c_smbus_read_word_data(Cameo_BMC_client, psu_table[module_num][i]);
+            /* word data with linear format */
+            if (i != 2 && i != 8) {
+                multiplier = 1000;
+                if (i == 6 || i == 7) /* pin, pout */
+                    multiplier = 1000000;   // lm-sensor unit: uW
+                if ( i == 5 ) /* fan_speed */
+                    multiplier = 1;
+                
+                exponent = two_complement_to_int(u16_val >> 11, 5, 0x1f);
+                mantissa = two_complement_to_int(u16_val & 0x7ff, 11, 0x7ff);
+                psu_status[i] = (exponent >= 0) ? ((mantissa << exponent)*multiplier) : \
+                                                  (mantissa*multiplier / (1 << -exponent));
+            }
         }
+        /* vout mode */
+        multiplier = 1000;
+        u16_val = i2c_smbus_read_byte_data(Cameo_BMC_client, psu_table[module_num][10]);
+        psu_status[10] = u16_val;   
+        exponent = two_complement_to_int(u16_val & 0x1f, 5, 0x1f);
+        /* vout */
+        u16_val = i2c_smbus_read_word_data(Cameo_BMC_client, psu_table[module_num][2]);
+        psu_status[2] = (exponent >= 0) ? ((u16_val << exponent)*multiplier) : \
+                                          (u16_val*multiplier / (1 << -exponent));
         
-        status = i2c_smbus_read_word_data(Cameo_PSU_1_client, 0x97); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_1 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 1 P_in GET FAILED\n",buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 1 P_in is %d mW\n", buf, (int)val);
-        }
-        
-        total += val;
-        
-        status = i2c_smbus_read_word_data(Cameo_PSU_2_client, 0x97); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_2 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 2 P_in GET FAILED\n",buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 2 P_in is %d mW\n", buf, (int)val);
-        }
-        
-        total += val;
-        /* DC CHIP doen't have PSU Pin value 
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_1_client, 0x97); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_1 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pin_get get DC_Chip_1 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 1 P_in is %d W\n", buf, (int)val);
-        }
-        
-        total += val;
-        
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_2_client, 0x97); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_2 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pin_get get DC_Chip_2 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 2 P_in is %d W\n", buf, (int)val);
-        }
-        
-        total += val;
-        
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x97); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pin_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 3 P_in is %d W\n", buf, (int)val);
-        }
-        
-        total += val;
-        */
-        sprintf(buf, "%sTotal P_in is %d mW\n", buf, (int)total);
-        
-        /*Reset Channel*/
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pin_get 0x77 reset channel FAILED\n");
-        }
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pin_get 0x73 reset channel FAILED\n");
-        }
-        mutex_unlock(&Switch_2_data->update_lock);
-        mutex_unlock(&Switch_1_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Pin_get mutex_unlock\n"));
+        sprintf(buf, "%sPSU %d VIN          is %u\n", buf, module_num, psu_status[0]);
+        sprintf(buf, "%sPSU %d IIN          is %u\n", buf, module_num, psu_status[1]);
+        sprintf(buf, "%sPSU %d VOUT         is %u\n", buf, module_num, psu_status[2]);
+        sprintf(buf, "%sPSU %d IOUT         is %u\n", buf, module_num, psu_status[3]);
+        sprintf(buf, "%sPSU %d TEMP_1       is %u\n", buf, module_num, psu_status[4]);
+        sprintf(buf, "%sPSU %d FAN_SPEED    is %u\n", buf, module_num, psu_status[5]);
+        sprintf(buf, "%sPSU %d POUT         is %u\n", buf, module_num, psu_status[6]);
+        sprintf(buf, "%sPSU %d PIN          is %u\n", buf, module_num, psu_status[7]);
+        sprintf(buf, "%sPSU %d MFR_MODEL    is 0x%x\n", buf, module_num, psu_status[8]);
+        sprintf(buf, "%sPSU %d MFR_IOUT_MAX is %u\n", buf, module_num, psu_status[9]);
+        sprintf(buf, "%sPSU %d VMODE        is %u\n", buf, module_num, psu_status[10]);
+    }
+    else
+    {
+        sprintf(buf, "%sBMC Module is not present\n", buf);
     }
     return sprintf(buf, "%s\n", buf);
 }
 
-/********************************************************************************/
-/*    Function Name      : psu_pout_get                                    */
-/*    Description        : This is the function to get switch button status     */
-/*                         0x33 0xa1                                            */
-/*    Input(s)           : None.                                                */
-/*    Output(s)          : None.                                                */
-/*    Returns            : String.                                              */
-/********************************************************************************/
-static ssize_t psu_Pout_get(struct device *dev, struct device_attribute *da, char *buf)
+static ssize_t dc_chip_switch_get(struct device *dev, struct device_attribute *da, char *buf)
 {
-    s32 status = -EPERM;
-    u8 channel_status = -EPERM;
-    long val = 0;
+    u8 bmc_present = -EPERM;
+    u8 dc_table [10] = {0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x9a};
+    u16 dc_status [10] = {0}; 
+    u8 mask = 0x1;
+    u8 i = 0;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct Cameo_i2c_data *Switch_1_data = i2c_get_clientdata(Cameo_Switch_1_client); //0x73
-    struct Cameo_i2c_data *Switch_2_data = i2c_get_clientdata(Cameo_Switch_2_client); //0x77
-    struct Cameo_i2c_data *Cameo_DC_Chip_3_data = i2c_get_clientdata(Cameo_DC_Chip_3_client); //0x70
-    
-    if (attr->index == PSU_POUT)
+    sprintf(buf, "\n");
+    if (attr->index == DC_CHIP_SWITCH)
     {
-        sprintf(buf, "\n");
-        mutex_lock(&Switch_1_data->update_lock);
-        mutex_lock(&Switch_2_data->update_lock);
-        mutex_lock(&Cameo_DC_Chip_3_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Pout_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x08);
-        if(channel_status < 0)
+        bmc_present = i2c_smbus_read_byte_data(ESC_601_i2c_client, 0xa5); //to get 0x31 0xa3
+        if (bmc_present & mask)
         {
-            printk(KERN_ALERT "ERROR: psu_Pout_get 0x73 set channel 3 FAILED\n");
-        }
-        debug_print((KERN_DEBUG "DEBUG : psu_Pout_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x10);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get 0x77 set channel 4 FAILED\n");
-        }
-        
-        status = i2c_smbus_read_word_data(Cameo_PSU_1_client, 0x96); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_1 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 1 P_out GET FAILED\n", buf);
+            for(i = 0; i < 9; i ++)
+            {
+                dc_status[i] = i2c_smbus_read_word_data(Cameo_BMC_client, dc_table[i]);
+            }
+            sprintf(buf, "%sTPS53681 0x6c 0xd4  is 0x%x\n", buf, dc_status[0]);
+            sprintf(buf, "%sTPS53681 0x6c 0x8c  is 0x%x\n", buf, dc_status[1]);
+            sprintf(buf, "%sTPS53681 0x6c 0x96  is 0x%x\n", buf, dc_status[2]);
+            sprintf(buf, "%sTPS53681 0x6e 0xd4  is 0x%x\n", buf, dc_status[3]);
+            sprintf(buf, "%sTPS53681 0x6e 0x8c  is 0x%x\n", buf, dc_status[4]);
+            sprintf(buf, "%sTPS53681 0x6e 0x96  is 0x%x\n", buf, dc_status[5]);
+            sprintf(buf, "%sTPS53681 0x70 0xd4  is 0x%x\n", buf, dc_status[6]);
+            sprintf(buf, "%sTPS53681 0x70 0x8c  is 0x%x\n", buf, dc_status[7]);
+            sprintf(buf, "%sTPS53681 0x70 0x96  is 0x%x\n", buf, dc_status[8]);
+            sprintf(buf, "%sTPS53681 0x70 0x96  is 0x%x\n", buf, dc_status[9]);
         }
         else
         {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 1 P_out is %d mW\n", buf, (int)val);
+            sprintf(buf, "%sBMC Module is not present\n", buf);
         }
-
-        status = i2c_smbus_read_word_data(Cameo_PSU_2_client, 0x96); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_2 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 2 P_out GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 2 P_out is %d mW\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_1_client, 0x96); //to get psu register 0x96
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_1 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get get DC_Chip_1 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sDC Chip 1 P_out is %d mW\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_2_client, 0x96); //to get psu register 0x96
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_2 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get get DC_Chip_2 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sDC Chip 2 P_out is %d mW\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x96); //to get psu register 0x96
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sDC Chip 3 Page 0 P_out is %d mW\n", buf, (int)val);
-        }
-        
-        /*Set DC Chip 3 to page 1*/
-        channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x0, 0x1);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get 0x73 reset channel FAILED\n");
-        }
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x96); //to get psu register 0x96
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sDC Chip 3 Page 1 P_out is %d mW\n", buf, (int)val);
-        }
-        /*Restore DC Chip 3 to page 0*/
-        channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x0, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get 0x73 reset channel FAILED\n");
-        }
-        /*Reset Channel*/
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get 0x77 reset channel FAILED\n");
-        }
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Pout_get 0x73 reset channel FAILED\n");
-        }
-        mutex_unlock(&Switch_2_data->update_lock);
-        mutex_unlock(&Switch_1_data->update_lock);
-        mutex_unlock(&Cameo_DC_Chip_3_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Pout_get mutex_unlock\n"));
-    }
-    return sprintf(buf, "%s\n", buf);
-}
-/********************************************************************************/
-/*    Function Name      : psu_Vin_get                                    */
-/*    Description        : This is the function to get switch button status     */
-/*                         0x33 0xa1                                            */
-/*    Input(s)           : None.                                                */
-/*    Output(s)          : None.                                                */
-/*    Returns            : String.                                              */
-/********************************************************************************/
-static ssize_t psu_Vin_get(struct device *dev, struct device_attribute *da, char *buf)
-{
-    s32 status = -EPERM;
-    u8 channel_status = -EPERM;
-    long val = 0;
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct Cameo_i2c_data *Switch_1_data = i2c_get_clientdata(Cameo_Switch_1_client); //0x73
-    struct Cameo_i2c_data *Switch_2_data = i2c_get_clientdata(Cameo_Switch_2_client); //0x77
-    
-    if (attr->index == PSU_VIN)
-    {
-        sprintf(buf, "\n");
-        mutex_lock(&Switch_1_data->update_lock);
-        mutex_lock(&Switch_2_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Vin_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x08);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get 0x73 set channel 3 FAILED\n");
-        }
-        debug_print((KERN_DEBUG "DEBUG : psu_Vin_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x10);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get 0x77 set channel 4 FAILED\n");
-        }
-        
-        status = i2c_smbus_read_word_data(Cameo_PSU_1_client, 0x88); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_1 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 1 V_in GET FAILED\n",buf);
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sPSU 1 V_in is %d V\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_PSU_2_client, 0x88); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_2 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 2 V_in GET FAILED\n",buf);
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sPSU 2 V_in is %d V\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_1_client, 0x88); //to get psu register 0x88
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_1 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get get DC_Chip_1 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 1 V_in is %d V\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_2_client, 0x88); //to get psu register 0x88
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_2 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get get DC_Chip_2 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 2 V_in is %d V\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x88); //to get psu register 0x88
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 3 V_in is %d V\n", buf, (int)val);
-        }
-
-        /*Reset Channel*/
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get 0x77 reset channel FAILED\n");
-        }
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vin_get 0x73 reset channel FAILED\n");
-        }
-        mutex_unlock(&Switch_2_data->update_lock);
-        mutex_unlock(&Switch_1_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Vin_get mutex_unlock\n"));
     }
     return sprintf(buf, "%s\n", buf);
 }
 
-/********************************************************************************/
-/*    Function Name      : psu_Vout_get                                    */
-/*    Description        : This is the function to get switch button status     */
-/*                         0x33 0xa1                                            */
-/*    Input(s)           : None.                                                */
-/*    Output(s)          : None.                                                */
-/*    Returns            : String.                                              */
-/********************************************************************************/
-static ssize_t psu_Vout_get(struct device *dev, struct device_attribute *da, char *buf)
-{
-    s32 status = -EPERM;
-    u8 channel_status = -EPERM;
-    u8 vout_mode = 0x0;
-    long val = 0;
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct Cameo_i2c_data *Switch_1_data = i2c_get_clientdata(Cameo_Switch_1_client); //0x73
-    struct Cameo_i2c_data *Switch_2_data = i2c_get_clientdata(Cameo_Switch_2_client); //0x77
-    struct Cameo_i2c_data *Cameo_DC_Chip_3_data = i2c_get_clientdata(Cameo_DC_Chip_3_client); //0x70
-    
-    if (attr->index == PSU_VOUT)
-    {
-        sprintf(buf, "\n");
-        mutex_lock(&Switch_1_data->update_lock);
-        mutex_lock(&Switch_2_data->update_lock);
-        mutex_lock(&Cameo_DC_Chip_3_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Vout_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x08);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get 0x73 set channel 3 FAILED\n");
-        }
-        debug_print((KERN_DEBUG "DEBUG : psu_Vout_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x10);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get 0x77 set channel 4 FAILED\n");
-        }
-        
-        vout_mode = i2c_smbus_read_byte_data(Cameo_PSU_1_client, 0x20); //to get psu register 0x20
-        status = i2c_smbus_read_word_data(Cameo_PSU_1_client, 0x8B); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_1 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 1 V_out GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_auto(((s8)vout_mode), ((u16)status));
-            sprintf(buf, "%sPSU 1 V_out is %d mV\n", buf, (int)val);
-        }
-        
-        vout_mode = i2c_smbus_read_byte_data(Cameo_PSU_2_client, 0x20); //to get psu register 0x20
-        status = i2c_smbus_read_word_data(Cameo_PSU_2_client, 0x8B); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_2 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 2 V_out GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_auto(((s8)vout_mode), ((u16)status));
-            sprintf(buf, "%sPSU 2 V_out is %d mv\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_byte_data(Cameo_DC_Chip_1_client, 0x8b); //to get psu register 0x8b
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_1 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get get DC_Chip_1 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_vid_13mv(status);
-            sprintf(buf, "%sDC Chip 1 V_out is %d mV\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_byte_data(Cameo_DC_Chip_2_client, 0x8b); //to get psu register 0x8b
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_2 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get get DC_Chip_2 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_vid(status);
-            sprintf(buf, "%sDC Chip 2 V_out is %d mV\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_byte_data(Cameo_DC_Chip_3_client, 0x8b); //to get psu register 0x8b
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_vid(status);
-            sprintf(buf, "%sDC Chip 3 page 0 V_out is %d mV\n", buf, (int)val);
-        }
-        
-        /*Set DC Chip 3 to page 1*/
-        channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x0, 0x1);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get 0x73 reset channel FAILED\n");
-        }
-        status = i2c_smbus_read_byte_data(Cameo_DC_Chip_3_client, 0x8b); //to get psu register 0x8b
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_vid(status);
-            sprintf(buf, "%sDC Chip 3 page 1 V_out is %d mV\n", buf, (int)val);
-        }
-        /*Restore DC Chip 3 to page 0*/
-        channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x0, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get 0x73 reset channel FAILED\n");
-        }
-        
-        /*Reset Channel*/
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get 0x77 reset channel FAILED\n");
-        }
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Vout_get 0x73 reset channel FAILED\n");
-        }
-        mutex_unlock(&Switch_2_data->update_lock);
-        mutex_unlock(&Switch_1_data->update_lock);
-        mutex_unlock(&Cameo_DC_Chip_3_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Vout_get mutex_unlock\n"));
-    }
-    return sprintf(buf, "%s\n", buf);
-}
-
-/********************************************************************************/
-/*    Function Name      : psu_Iin_get                                    */
-/*    Description        : This is the function to get switch button status     */
-/*                         0x33 0xa1                                            */
-/*    Input(s)           : None.                                                */
-/*    Output(s)          : None.                                                */
-/*    Returns            : String.                                              */
-/********************************************************************************/
-static ssize_t psu_Iin_get(struct device *dev, struct device_attribute *da, char *buf)
-{
-    s32 status = -EPERM;
-    u8 channel_status = -EPERM;
-    long val = 0;
-    long total = 0;
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct Cameo_i2c_data *Switch_1_data = i2c_get_clientdata(Cameo_Switch_1_client); //0x73
-    struct Cameo_i2c_data *Switch_2_data = i2c_get_clientdata(Cameo_Switch_2_client); //0x77
-    
-    if (attr->index == PSU_IIN)
-    {
-        sprintf(buf, "\n");
-        mutex_lock(&Switch_1_data->update_lock);
-        mutex_lock(&Switch_2_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Iin_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x08);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get 0x73 set channel 3 FAILED\n");
-        }
-        debug_print((KERN_DEBUG "DEBUG : psu_Iin_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x10);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get 0x77 set channel 4 FAILED\n");
-        }
-        
-        status = i2c_smbus_read_word_data(Cameo_PSU_1_client, 0x89); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_1 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 1 I_in GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 1 I_in is %d mA\n", buf, (int)val);
-        }
-        
-        total += val;
-
-        status = i2c_smbus_read_word_data(Cameo_PSU_2_client, 0x89); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_2 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 2 I_in GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 2 I_in is %d mA\n", buf, (int)val);
-        }
-
-        total += val;
-        /* DC CHIP doen't have PSU Pin value 
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_1_client, 0x89); //to get psu register 0x89
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_1 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get get DC_Chip_1 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 1 I_in is %d A\n", buf, (int)val);
-        }
-        
-        total += val;
-        
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_2_client, 0x89); //to get psu register 0x89
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_2 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get get DC_Chip_2 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 2 I_in is %d A\n", buf, (int)val);
-        }
-        
-        total += val;
-        
-        status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x89); //to get psu register 0x89
-        debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-        if (status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get get DC_Chip_3 FAILED\n");
-        }
-        else
-        {
-            val = read_reg_linear(status);
-            sprintf(buf, "%sDC Chip 3 I_in is %d A\n", buf, (int)val);
-        }
-        
-        total += val;
-        */
-        sprintf(buf, "%sTotal I_in is %d mA\n", buf, (int)total);
-        
-        /*Reset Channel*/
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get 0x77 reset channel FAILED\n");
-        }
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iin_get 0x73 reset channel FAILED\n");
-        }
-        mutex_unlock(&Switch_2_data->update_lock);
-        mutex_unlock(&Switch_1_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Iin_get mutex_unlock\n"));
-    }
-    return sprintf(buf, "%s\n", buf);
-}
-
-/********************************************************************************/
-/*    Function Name      : psu_Iout_get                                    */
-/*    Description        : This is the function to get switch button status     */
-/*                         0x33 0xa1                                            */
-/*    Input(s)           : None.                                                */
-/*    Output(s)          : None.                                                */
-/*    Returns            : String.                                              */
-/********************************************************************************/
-static ssize_t psu_Iout_get(struct device *dev, struct device_attribute *da, char *buf)
-{
-    s32 status = -EPERM;
-    u8 channel_status = -EPERM;
-    u8 phase = 0x0;
-    u8 i = 1;
-    long val = 0;
-    long dc_1_sum = 0;
-    long dc_2_sum = 0;
-    long dc_3_pg_0_sum = 0;
-    long dc_3_pg_1_sum = 0;
-    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct Cameo_i2c_data *Switch_1_data = i2c_get_clientdata(Cameo_Switch_1_client); //0x73
-    struct Cameo_i2c_data *Switch_2_data = i2c_get_clientdata(Cameo_Switch_2_client); //0x77
-    struct Cameo_i2c_data *Cameo_DC_Chip_1_data = i2c_get_clientdata(Cameo_DC_Chip_1_client); //0x6c
-    struct Cameo_i2c_data *Cameo_DC_Chip_2_data = i2c_get_clientdata(Cameo_DC_Chip_2_client); //0x6e
-    struct Cameo_i2c_data *Cameo_DC_Chip_3_data = i2c_get_clientdata(Cameo_DC_Chip_3_client); //0x70
-    
-    if (attr->index == PSU_IOUT)
-    {
-        sprintf(buf, "\n");
-        mutex_lock(&Switch_1_data->update_lock);
-        mutex_lock(&Switch_2_data->update_lock);
-        mutex_lock(&Cameo_DC_Chip_1_data->update_lock);
-        mutex_lock(&Cameo_DC_Chip_2_data->update_lock);
-        mutex_lock(&Cameo_DC_Chip_3_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Iout_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x08);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iout_get 0x73 set channel 3 FAILED\n");
-        }
-        debug_print((KERN_DEBUG "DEBUG : psu_Iout_get mutex_lock\n"));
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x10);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iout_get 0x77 set channel 4 FAILED\n");
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_PSU_1_client, 0x8c); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_1 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 1 I_out GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 1 I_out is %d mA\n", buf, (int)val);
-        }
-
-        status = i2c_smbus_read_word_data(Cameo_PSU_2_client, 0x8c); //to get psu register 0x97
-        debug_print((KERN_DEBUG "DEBUG : Cameo_PSU_2 status = %x\n",status));
-        if (status < 0)
-        {
-            sprintf(buf, "%sPSU 2 I_out GET FAILED\n", buf);
-        }
-        else
-        {
-            val = read_reg_linear_1000(status);
-            sprintf(buf, "%sPSU 2 I_out is %d mA\n", buf, (int)val);
-        }
-        
-        /*Get DC Chip 1 Iout phase 0~3*/
-        for(i = 1; i <= 4; i++)
-        {
-            
-            channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_1_client, 0x04, phase);
-            phase = phase << i; 
-            if(channel_status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get Cameo_DC_Chip_1_client FAILED\n");
-            }
-            
-            status = i2c_smbus_read_word_data(Cameo_DC_Chip_1_client, 0x8c); //to get psu register 0x8c
-            debug_print((KERN_DEBUG "DEBUG : DC_Chip_1 status = %x\n",status));
-            if (status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get get DC_Chip_1 FAILED\n");
-            }
-            else
-            {
-                dc_1_sum += read_reg_linear_1000(status);
-            }
-        }
-        sprintf(buf, "%sDC Chip 1 I_out is %d mA\n", buf, (int)dc_1_sum);
-        phase = 0x0;
-        
-        /*Get DC Chip 2 Iout phase 0~3*/
-        for(i = 1; i <= 4; i++)
-        {
-            
-            channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_2_client, 0x04, phase);
-            phase = phase << i; 
-            if(channel_status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get Cameo_DC_Chip_2_client FAILED\n");
-            }
-            
-            status = i2c_smbus_read_word_data(Cameo_DC_Chip_2_client, 0x8c); //to get psu register 0x8c
-            debug_print((KERN_DEBUG "DEBUG : DC_Chip_2 status = %x\n",status));
-            if (status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get get DC_Chip_2 FAILED\n");
-            }
-            else
-            {
-                dc_2_sum += read_reg_linear_1000(status);
-            }
-        }
-        sprintf(buf, "%sDC Chip 2 I_out is %d mA\n", buf, (int)dc_2_sum);
-        phase = 0x0;
-        
-        /*Get DC Chip 3 page 0 Iout phase 0~5*/
-        for(i = 1; i <= 6; i++)
-        {
-            
-            channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x04, phase);
-            phase = phase << i; 
-            if(channel_status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get Cameo_DC_Chip_3_client FAILED\n");
-            }
-            
-            status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x8c); //to get psu register 0x8c
-            debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-            if (status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get get DC_Chip_3 FAILED\n");
-            }
-            else
-            {
-                dc_3_pg_0_sum += read_reg_linear_1000(status);
-            }
-        }
-        sprintf(buf, "%sDC Chip 3 page 0 I_out is %d mA\n", buf, (int)dc_3_pg_0_sum);
-        phase = 0x0;
-        
-        /*Set DC Chip 3 to page 1*/
-        channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x0, 0x1);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iout_get 0x73 reset channel FAILED\n");
-        }
-        /*Get DC Chip 3 page 1 Iout phase 0~1*/
-        for(i = 1; i <= 2; i++)
-        {
-            
-            channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x04, phase);
-            phase = phase << i; 
-            if(channel_status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get Cameo_DC_Chip_3_client FAILED\n");
-            }
-            
-            status = i2c_smbus_read_word_data(Cameo_DC_Chip_3_client, 0x8c); //to get psu register 0x8c
-            debug_print((KERN_DEBUG "DEBUG : DC_Chip_3 status = %x\n",status));
-            if (status < 0)
-            {
-                printk(KERN_ALERT "ERROR: psu_Iout_get get DC_Chip_3 FAILED\n");
-            }
-            else
-            {
-                dc_3_pg_1_sum += read_reg_linear_1000(status);
-            }
-        }
-        sprintf(buf, "%sDC Chip 3 page 1 I_out is %d mA\n", buf, (int)dc_3_pg_1_sum);
-        phase = 0x0;
-        /*Restore DC Chip 3 to page 0*/
-        channel_status = i2c_smbus_write_byte_data(Cameo_DC_Chip_3_client, 0x0, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iout_get 0x73 reset channel FAILED\n");
-        }
-        
-        /*Reset Channel*/
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_2_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iout_get 0x77 reset channel FAILED\n");
-        }
-        channel_status = i2c_smbus_write_byte(Cameo_Switch_1_client, 0x0);
-        if(channel_status < 0)
-        {
-            printk(KERN_ALERT "ERROR: psu_Iout_get 0x73 reset channel FAILED\n");
-        }
-        mutex_unlock(&Switch_2_data->update_lock);
-        mutex_unlock(&Switch_1_data->update_lock);
-        mutex_unlock(&Cameo_DC_Chip_1_data->update_lock);
-        mutex_unlock(&Cameo_DC_Chip_2_data->update_lock);
-        mutex_unlock(&Cameo_DC_Chip_3_data->update_lock);
-        debug_print((KERN_DEBUG "DEBUG : psu_Iout_get mutex_unlock\n"));
-    }
-    return sprintf(buf, "%s\n", buf);
-}
 #endif
 
 #ifdef USB_CTRL_WANTED
@@ -4239,13 +3512,7 @@ static int Cameo_i2c_probe(struct i2c_client *client, const struct i2c_device_id
 #ifdef EEPROM_WANTED
     struct Cameo_i2c_data *EEPROM_data;
 #endif
-#ifdef PSU_STAT_WANTED
-    struct Cameo_i2c_data *Cameo_PSU_1_data;
-    struct Cameo_i2c_data *Cameo_PSU_2_data;
-    struct Cameo_i2c_data *Cameo_DC_Chip_1_data;
-    struct Cameo_i2c_data *Cameo_DC_Chip_2_data;
-    struct Cameo_i2c_data *Cameo_DC_Chip_3_data;
-#endif
+
 #ifdef ASPEED_BMC_WANTED
     struct Cameo_i2c_data *Cameo_BMC_data;
 #endif
@@ -4347,43 +3614,7 @@ static int Cameo_i2c_probe(struct i2c_client *client, const struct i2c_device_id
         goto exit;
     }
 #endif
-#ifdef PSU_STAT_WANTED
-    Cameo_PSU_1_data = kzalloc(sizeof(struct Cameo_i2c_data), GFP_KERNEL);
-    if (!Cameo_PSU_1_data)
-    {
-        printk(KERN_ALERT "kzalloc fail\n");
-        status = -ENOMEM;
-        goto exit;
-    }
-    Cameo_PSU_2_data = kzalloc(sizeof(struct Cameo_i2c_data), GFP_KERNEL);
-    if (!Cameo_PSU_2_data)
-    {
-        printk(KERN_ALERT "kzalloc fail\n");
-        status = -ENOMEM;
-        goto exit;
-    }
-    Cameo_DC_Chip_1_data = kzalloc(sizeof(struct Cameo_i2c_data), GFP_KERNEL);
-    if (!Cameo_DC_Chip_1_data)
-    {
-        printk(KERN_ALERT "kzalloc fail\n");
-        status = -ENOMEM;
-        goto exit;
-    }
-    Cameo_DC_Chip_2_data = kzalloc(sizeof(struct Cameo_i2c_data), GFP_KERNEL);
-    if (!Cameo_DC_Chip_2_data)
-    {
-        printk(KERN_ALERT "kzalloc fail\n");
-        status = -ENOMEM;
-        goto exit;
-    }
-    Cameo_DC_Chip_3_data = kzalloc(sizeof(struct Cameo_i2c_data), GFP_KERNEL);
-    if (!Cameo_DC_Chip_3_data)
-    {
-        printk(KERN_ALERT "kzalloc fail\n");
-        status = -ENOMEM;
-        goto exit;
-    }
-#endif
+
 #ifdef ASPEED_BMC_WANTED
     Cameo_BMC_data = kzalloc(sizeof(struct Cameo_i2c_data), GFP_KERNEL);
     if (!Cameo_BMC_data)
@@ -4413,13 +3644,6 @@ static int Cameo_i2c_probe(struct i2c_client *client, const struct i2c_device_id
 #ifdef EEPROM_WANTED
     i2c_set_clientdata(Cameo_EEPROM_client, EEPROM_data);
 #endif
-#ifdef PSU_STAT_WANTED
-    i2c_set_clientdata(Cameo_PSU_1_client, Cameo_PSU_1_data);
-    i2c_set_clientdata(Cameo_PSU_2_client, Cameo_PSU_2_data);
-    i2c_set_clientdata(Cameo_DC_Chip_1_client, Cameo_DC_Chip_1_data);
-    i2c_set_clientdata(Cameo_DC_Chip_2_client, Cameo_DC_Chip_2_data);
-    i2c_set_clientdata(Cameo_DC_Chip_3_client, Cameo_DC_Chip_3_data);
-#endif
     mutex_init(&CPLD_2_data->update_lock);
     mutex_init(&CPLD_3_data->update_lock);
     mutex_init(&CPLD_4_data->update_lock);
@@ -4438,13 +3662,6 @@ static int Cameo_i2c_probe(struct i2c_client *client, const struct i2c_device_id
 #endif
 #ifdef EEPROM_WANTED
     mutex_init(&EEPROM_data->update_lock);
-#endif
-#ifdef PSU_STAT_WANTED
-    mutex_init(&Cameo_PSU_1_data->update_lock);
-    mutex_init(&Cameo_PSU_2_data->update_lock);
-    mutex_init(&Cameo_DC_Chip_1_data->update_lock);
-    mutex_init(&Cameo_DC_Chip_2_data->update_lock);
-    mutex_init(&Cameo_DC_Chip_3_data->update_lock);
 #endif
 #ifdef ASPEED_BMC_WANTED
     mutex_init(&Cameo_BMC_data->update_lock);
@@ -4713,53 +3930,7 @@ static struct i2c_board_info Cameo_EEPROM_info[] __initdata =
     },
 };
 #endif
-#ifdef PSU_STAT_WANTED
-/*0x58*/
-static struct i2c_board_info Cameo_PSU_1_info[] __initdata =
-{
-    {
-        I2C_BOARD_INFO("Cameo_PSU_1", 0x58),
-        .platform_data = NULL,
-    },
-};
 
-/*0x59*/
-static struct i2c_board_info Cameo_PSU_2_info[] __initdata =
-{
-    {
-        I2C_BOARD_INFO("Cameo_PSU_2", 0x59),
-        .platform_data = NULL,
-    },
-};
-
-
-/*0x6c*/
-static struct i2c_board_info Cameo_DC_Chip_1_info[] __initdata =
-{
-    {
-        I2C_BOARD_INFO("Cameo_DC_Chip_1", 0x6c),
-        .platform_data = NULL,
-    },
-};
-
-/*0x6e*/
-static struct i2c_board_info Cameo_DC_Chip_2_info[] __initdata =
-{
-    {
-        I2C_BOARD_INFO("Cameo_DC_Chip_2", 0x6e),
-        .platform_data = NULL,
-    },
-};
-
-/*0x70*/
-static struct i2c_board_info Cameo_DC_Chip_3_info[] __initdata =
-{
-    {
-        I2C_BOARD_INFO("Cameo_DC_Chip_3", 0x70),
-        .platform_data = NULL,
-    },
-};
-#endif
 #ifdef ASPEED_BMC_WANTED
 static struct i2c_board_info Cameo_BMC_info[] __initdata =
 {
@@ -4834,13 +4005,7 @@ static int __init Cameo_i2c_init(void)
 #ifdef EEPROM_WANTED
     Cameo_EEPROM_client = i2c_new_device(i2c_adap, &Cameo_EEPROM_info[0]);
 #endif
-#ifdef PSU_STAT_WANTED
-    Cameo_PSU_1_client = i2c_new_device(i2c_adap, &Cameo_PSU_1_info[0]);
-    Cameo_PSU_2_client = i2c_new_device(i2c_adap, &Cameo_PSU_2_info[0]);
-    Cameo_DC_Chip_1_client = i2c_new_device(i2c_adap, &Cameo_DC_Chip_1_info[0]);
-    Cameo_DC_Chip_2_client = i2c_new_device(i2c_adap, &Cameo_DC_Chip_2_info[0]);
-    Cameo_DC_Chip_3_client = i2c_new_device(i2c_adap, &Cameo_DC_Chip_3_info[0]);
-#endif
+
 #ifdef ASPEED_BMC_WANTED
     Cameo_BMC_client = i2c_new_device(i2c_adap, &Cameo_BMC_info[0]);
 #endif
@@ -4878,14 +4043,7 @@ static int __init Cameo_i2c_init(void)
         return -1;
     }
 #endif
-#ifdef PSU_STAT_WANTED
-    if (Cameo_PSU_1_info == NULL || Cameo_PSU_2_info == NULL || Cameo_DC_Chip_1_info == NULL \
-    || Cameo_DC_Chip_2_info == NULL || Cameo_DC_Chip_3_info == NULL )
-    {
-        printk("ERROR: i2c_new_device FAILED!\n");
-        return -1;
-    }
-#endif
+
 #ifdef ASPEED_BMC_WANTED
     if (Cameo_BMC_info == NULL )
     {
@@ -4922,13 +4080,7 @@ static void __exit Cameo_i2c_exit(void)
 #ifdef EEPROM_WANTED
     i2c_unregister_device(Cameo_EEPROM_client);
 #endif
-#ifdef PSU_STAT_WANTED
-    i2c_unregister_device(Cameo_PSU_1_client);
-    i2c_unregister_device(Cameo_PSU_2_client);
-    i2c_unregister_device(Cameo_DC_Chip_1_client);
-    i2c_unregister_device(Cameo_DC_Chip_2_client);
-    i2c_unregister_device(Cameo_DC_Chip_3_client);
-#endif
+
 #ifdef ASPEED_BMC_WANTED
     i2c_unregister_device(Cameo_BMC_client);
 #endif

@@ -47,7 +47,7 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
         return True
 
-    def set_low_power_mode(self, port_nuM, lpmode):
+    def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
