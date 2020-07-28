@@ -125,6 +125,10 @@ class Test_yang_models:
                 'desc': 'Loopback Ip-prefix port-name must condition failure.',
                 'eStr': self.defaultYANGFailure['Must']
             },
+            'CRM_BRK_CFG_FLEX_TABLE': {
+                'desc': 'CRM BREAKOUT CFG FLEX COUNTER TABLE.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'INCORRECT_VLAN_NAME': {
                 'desc': 'INCORRECT VLAN_NAME FIELD IN VLAN TABLE.',
                 'eStr': self.defaultYANGFailure['Pattern'] + ["Vlan"]
