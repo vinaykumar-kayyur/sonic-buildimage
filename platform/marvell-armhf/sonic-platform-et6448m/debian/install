@@ -1,1 +1,2 @@
 et6448m_plt_setup.sh usr/sbin
+et6448m/sonic_platform-1.0-py2-none-any.whl usr/share/sonic/device/armhf-marvell_et6448m_52x-r0
