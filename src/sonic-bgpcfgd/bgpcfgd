@@ -796,14 +796,14 @@ class ZebraSetSrc(Manager):
                         self.lo_ipv4 = ip_addr
                         txt = self.zebra_set_src_template.render(rm_name="RM_SET_SRC", lo_ip=ip_addr, ip_proto="")
                     else:
-                        log_warn("Update command is not supported for set src templates. lo_ip='%s'" % ip_addr_w_mask)
+                        log_warn("Update command is not supported for set src templates. current ip='%s'. new ip='%s'" % (self.lo_ipv4, ip_addr))
                         return True
                 elif TemplateFabric.is_ipv6(ip_addr):
                     if self.lo_ipv6 is None:
                         self.lo_ipv6 = ip_addr
                         txt = self.zebra_set_src_template.render(rm_name="RM_SET_SRC6", lo_ip=ip_addr, ip_proto="v6")
                     else:
-                        log_warn("Update command is not supported for set src templates. lo_ip='%s'" % ip_addr_w_mask)
+                        log_warn("Update command is not supported for set src templates. current ip='%s'. new ip='%s'" % (self.lo_ipv6, ip_addr))
                         return True
                 else:
                     log_err("Got ambiguous ip address '%s'" % ip_addr)
