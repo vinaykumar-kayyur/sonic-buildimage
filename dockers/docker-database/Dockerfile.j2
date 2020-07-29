@@ -10,6 +10,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update apt's cache of available packages
 RUN apt-get update
 
+# install redis-server
+RUN apt-get install -y redis-server=5:6.0.6-1~bpo10+1
+
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies
 {{ copy_files("debs/", docker_database_debs.split(' '), "/debs/") }}
@@ -37,6 +40,7 @@ COPY ["docker-database-init.sh", "/usr/local/bin/"]
 COPY ["database_config.json.j2", "/usr/share/sonic/templates/"]
 COPY ["database_global.json.j2", "/usr/share/sonic/templates/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
+COPY ["files/sysctl-net.conf", "/etc/sysctl.d/"]
 COPY ["critical_processes", "/etc/supervisor"]
 
 ENTRYPOINT ["/usr/local/bin/docker-database-init.sh"]
