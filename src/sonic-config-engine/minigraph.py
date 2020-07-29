@@ -1033,6 +1033,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if port:
             port['admin_status'] = 'up'
 
+    for port in ports.keys():
+        if 'admin_status' not in ports[port].keys():
+            # bring up FPGA ports
+            ports[port]['admin_status'] = 'up'
+
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
 
