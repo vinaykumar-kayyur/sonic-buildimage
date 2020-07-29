@@ -20,15 +20,9 @@
             "QSFP29","QSFP30","QSFP31","QSFP32"
         ]
     },
-    "__get_type": {
-        "output_source": "value_list",
-        "value_list":[
-            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
-            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
-            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
-            "QSFP","QSFP","QSFP","QSFP","QSFP","QSFP","QSFP",
-            "QSFP","QSFP","QSFP","QSFP"
-        ]
+    "_get_type": {
+        "output_source": "value",
+        "value":"QSFP"
     },
     "get_presence":{
         "output_source": "sysfs_value",
