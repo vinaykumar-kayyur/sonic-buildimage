@@ -121,12 +121,6 @@ sudo cp {{sonic_py_common_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY2
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_PY_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY2_WHEEL_NAME
 
-# Install sonic-py-common Python 3 package
-SONIC_PY_COMMON_PY3_WHEEL_NAME=$(basename {{sonic_py_common_py3_wheel_path}})
-sudo cp {{sonic_py_common_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY3_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_PY_COMMON_PY3_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY3_WHEEL_NAME
-
 # Install SONiC config engine Python package
 CONFIG_ENGINE_WHEEL_NAME=$(basename {{config_engine_wheel_path}})
 sudo cp {{config_engine_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_WHEEL_NAME
