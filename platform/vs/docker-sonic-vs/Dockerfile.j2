@@ -1,4 +1,4 @@
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -13,7 +13,7 @@ RUN echo "deb http://packages.microsoft.com/repos/sonic-dev/ jessie main" >> /et
 RUN apt-get update
 
 RUN apt-get install -y net-tools \
-                       redis-server=5:5.0.3-3~bpo9+2 \
+                       redis-server=5:6.0.6-1~bpo10+1 \
                        arping \
                        ndisc6 \
                        ethtool \
@@ -23,15 +23,15 @@ RUN apt-get install -y net-tools \
                        python-ply \
                        libqt5core5a \
                        libqt5network5 \
-                       libboost-program-options1.62.0 \
-                       libboost-system1.62.0 \
-                       libboost-thread1.62.0 \
+                       libboost-program-options1.71.0 \
+                       libboost-system1.71.0 \
+                       libboost-thread1.71.0 \
                        libgmp10 \
                        libjudydebian1 \
                        openssh-client \
                        openssh-server \
                        libc-ares2 \
-                       iproute \
+                       iproute2 \
                        grub2-common \
                        python-click \
                        python-natsort \
@@ -60,6 +60,7 @@ RUN pip install crontab
 # Install dependencies for Dynamic Port Breakout
 RUN pip install xmltodict==0.12.0
 RUN pip install jsondiff==1.2.0
+RUN pip install ijson==2.6.1
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -119,13 +120,16 @@ RUN sed -ri 's/^(save .*$)/# \1/g;                                              
             ' /etc/redis/redis.conf
 
 COPY ["50-default.conf", "/etc/rsyslog.d/"]
-COPY ["start.sh", "orchagent.sh", "/usr/bin/"]
+COPY ["start.sh", "orchagent.sh", "files/remove_chassisdb_config", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin/"]
 COPY ["files/buffers_config.j2", "files/qos_config.j2", "/usr/share/sonic/templates/"]
 COPY ["files/sonic_version.yml", "/etc/sonic/"]
 COPY ["database_config.json", "/etc/default/sonic-db/"]
+COPY ["hostname.j2", "/usr/share/sonic/templates/"]
+COPY ["default_chassis_cfg.json", "/etc/default/sonic-db/"]
+COPY ["chassis_db.py", "/usr/bin/"]
 
 # Workaround the tcpdump issue
 RUN mv /usr/sbin/tcpdump /usr/bin/tcpdump
