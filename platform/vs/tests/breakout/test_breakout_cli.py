@@ -78,6 +78,23 @@ class TestBreakoutCli(object):
         assert output_dict == expected_dict
         print("**** 1X100G --> 2x50G passed ****")
 
+        output_dict = self.breakout(dvs, 'Ethernet4', '4x25G[10G]')
+        expected_dict = expected["Ethernet4_4x25G"]
+        assert output_dict == expected_dict
+        print("**** 1X100G --> 4x25G[10G] passed ****")
+
+        output_dict = self.breakout(dvs, 'Ethernet8', '2x25G(2)+1x50G(2)')
+        expected_dict = expected["Ethernet8_2x25G_1x50G"]
+        assert output_dict == expected_dict
+        print("**** 1X100G --> 2x25G(2)+1x50G(2) passed ****")
+
+        output_dict = self.breakout(dvs, 'Ethernet12', '1x50G(2)+2x25G(2)')
+        expected_dict = expected["Ethernet12_1x50G_2x25G"]
+        assert output_dict == expected_dict
+        print("**** 1X100G --> 1x50G(2)+2x25G(2) passed ****")
+
+        #TODOFIX: remove comments once #4442 PR got merged.
+        """
         output_dict = self.breakout(dvs, 'Ethernet0', '1x100G[40G]')
         expected_dict = expected["Ethernet0_1x100G"]
         assert output_dict == expected_dict
@@ -146,3 +163,4 @@ class TestBreakoutCli(object):
         expected_dict = expected["Ethernet8_1x100G"]
         assert output_dict == expected_dict
         print("**** 2x25G(2)+1x50G(2)  --> 1x100G[40G]  passed ****")
+        """
