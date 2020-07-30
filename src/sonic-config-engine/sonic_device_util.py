@@ -109,6 +109,32 @@ def is_multi_npu():
     num_npus = get_num_npus()
     return (num_npus > 1)
 
+
+def get_all_namespaces():
+    """
+    In case of MultiAsic platform, Each ASIC will have a linux network namespace created.
+    So we loop through the databases in different namespaces and depending on the sub_role
+    decide whether this is a front end ASIC/namespace or a back end one.
+    """
+    front_ns = []
+    back_ns = []
+    num_npus = get_num_npus()
+    SonicDBConfig.load_sonic_global_db_config()
+    
+    if is_multi_npu():
+        for npu in range(num_npus):
+            namespace = "{}{}".format(NPU_NAME_PREFIX, npu)
+            config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
+            config_db.connect()
+
+            metadata = config_db.get_table('DEVICE_METADATA')
+            if metadata['localhost']['sub_role'] == FRONTEND_ASIC_SUB_ROLE:
+                front_ns.append(namespace)
+            elif metadata['localhost']['sub_role'] == BACKEND_ASIC_SUB_ROLE:
+                back_ns.append(namespace)
+
+    return {'front_ns':front_ns, 'back_ns':back_ns}
+    
 def get_platform_info(machine_info):
     if machine_info != None:
         if machine_info.has_key('onie_platform'):
