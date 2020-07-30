@@ -23,6 +23,7 @@ class Common:
     SET_METHOD_IPMI = 'ipmitool'
     NULL_VAL = 'N/A'
     HOST_CHK_CMD = "docker > /dev/null 2>&1"
+    REF_KEY = '$ref:'
 
     def __init__(self, conf=None):
         self._main_conf = conf
@@ -78,10 +79,14 @@ class Common:
 
     def _sysfs_read(self, index, config):
         sysfs_path = config.get('sysfs_path')
+        argument = config.get('argument', '')
 
-        # Remaining Design Warning : Check argument type
-        argument = config['argument'][index].split(',')
-        sysfs_path = sysfs_path.format(*argument)
+        if self.REF_KEY in argument:
+            argument = self._main_conf[argument.split(":")[1]]
+
+        if type(argument) is list:
+            sysfs_path = sysfs_path.format(argument[index])
+
         content = ""
         try:
             content = open(sysfs_path)
@@ -94,11 +99,15 @@ class Common:
 
     def _sysfs_write(self, index, config, input):
         sysfs_path = config.get('sysfs_path')
-        # Remaining Design Warning : Check argument type
-        argument = config['argument'][index].split(',')
-        sysfs_path = sysfs_path.format(*argument)
-        # Remaining Design Warning : Validate write_offset
-        write_offset = int(config.get('write_offset'))
+        argument = config.get('argument', '')
+
+        if self.REF_KEY in argument:
+            argument = self._main_conf[argument.split(":")[1]]
+
+        if type(argument) is list:
+            sysfs_path = sysfs_path.format(argument[index])
+
+        write_offset = int(config.get('write_offset', 0))
         output = ""
         try:
             open_file = open(sysfs_path, "r+")
