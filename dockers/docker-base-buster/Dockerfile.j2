@@ -53,7 +53,7 @@ RUN apt-get update &&        \
         python-pkg-resources \
         python-meld3         \
 # Install redis-tools
-        redis-tools=5:6.0.5-1~bpo10+1     \
+        redis-tools=5:6.0.6-1~bpo10+1     \
 # common dependencies
         libpython2.7         \
         libdaemon0           \
@@ -64,7 +64,9 @@ RUN apt-get update &&        \
         net-tools            \
 # for arm arch: Installing j2cli dependency package MarkupSafe from source relies on weeksetuptools and wheel
         python-setuptools    \
-        python-wheel
+        python-wheel         \
+# for processing/handling json files in bash environment
+        jq
 
 # For templating
 RUN pip install j2cli
