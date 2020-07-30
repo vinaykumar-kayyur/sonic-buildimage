@@ -33,7 +33,7 @@
         },
         "OP": "SET"
     },
-{% if DEVICE_METADATA['localhost']['type'] == "ToRRouter" %}
+{% if DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] == "ToRRouter" %}
     {
         "COPP_TABLE:trap.group.lldp.dhcp.dhcpv6.udld": {
             "trap_ids": "lldp,dhcp,dhcpv6,udld",
@@ -43,10 +43,20 @@
         },
         "OP": "SET"
     },
-{% else %}
+{% elif DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined %}
     {
         "COPP_TABLE:trap.group.lldp.udld": {
             "trap_ids": "lldp,udld",
+            "trap_action":"trap",
+            "trap_priority":"4",
+            "queue": "4"
+        },
+        "OP": "SET"
+    },
+{% else %}
+    {
+        "COPP_TABLE:trap.group.lldp.dhcp.dhcpv6.udld": {
+            "trap_ids": "lldp,dhcp,dhcpv6,udld",
             "trap_action":"trap",
             "trap_priority":"4",
             "queue": "4"
