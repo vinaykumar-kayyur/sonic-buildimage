@@ -11,7 +11,7 @@
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.component_base import ComponentBase
-    from sonic_py_common.device_info import get_machine_info, get_platform
+    from sonic_py_common import device_info
     from sonic_py_common.logger import Logger
     from os import listdir
     from os.path import isfile, join
@@ -65,10 +65,10 @@ class Chassis(ChassisBase):
         self.sku_name = self._get_sku_name()
         self.platform_name = self._get_platform_name()
 
-        mi = get_machine_info()
+        mi = device_info.get_machine_info()
         if mi is not None:
             self.name = mi['onie_platform']
-            self.platform_name = get_platform()
+            self.platform_name = device_info.get_platform()
         else:
             self.name = self.sku_name
             self.platform_name = self._get_platform_name()
