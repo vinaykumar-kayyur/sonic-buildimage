@@ -234,17 +234,14 @@ QSFP_DD_TYPE = "QSFP_DD"
 class Sfp(SfpBase):
     """Platform-specific Sfp class"""
 
-    SFP_CONFIG = 'sfp.json'
-
     def __init__(self, sfp_index=0, conf=None):
         SfpBase.__init__(self)
-        self.sfp_index = sfp_index
+
+        self._sfp_index = sfp_index
         self._config = conf
         self._api_common = Common(self._config)
 
         self._read_porttab_mappings()
-        self._name = self.get_name()
-
         self._dom_capability_detect()
 
     def _read_porttab_mappings(self):
@@ -326,7 +323,7 @@ class Sfp(SfpBase):
         eeprom_path = self._config['eeprom_path']
         port_to_i2c_mapping = self._config['port_i2c_mapping']
         port_eeprom_path = eeprom_path.format(
-            port_to_i2c_mapping[self.sfp_index])
+            port_to_i2c_mapping[self._sfp_index])
 
         return port_eeprom_path
 
@@ -482,7 +479,7 @@ class Sfp(SfpBase):
         :return: String,
             A string representing the name of the sfp. 
         """
-        return self._sfputil_helper.logical[self.sfp_index] or "Unknown"
+        return self._sfputil_helper.logical[self._sfp_index] or "Unknown"
 
     def get_presence(self):
         """
@@ -490,7 +487,7 @@ class Sfp(SfpBase):
         Returns:
             bool: True if device is present, False if not
         """
-        return self._api_common.get_output(self.sfp_index, self._config['get_presence'], False)
+        return self._api_common.get_output(self._sfp_index, self._config['get_presence'], False)
 
     def get_model(self):
         """
@@ -1278,7 +1275,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if reset enabled, False if disabled
         """
-        return self._api_common.get_output(self.sfp_index, self._config['get_reset_status'], False)
+        return self._api_common.get_output(self._sfp_index, self._config['get_reset_status'], False)
 
     def get_rx_los(self):
         """
@@ -1494,7 +1491,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        return self._api_common.get_output(self.sfp_index, self._config['get_lpmode'], False)
+        return self._api_common.get_output(self._sfp_index, self._config['get_lpmode'], False)
 
     def get_power_override(self):
         """
@@ -1931,12 +1928,12 @@ class Sfp(SfpBase):
         """
         config = self._config['reset']
         # Convert our register value back to a hex string and write back
-        output1 = self._api_common.set_output(self.sfp_index, "0x0", config)
+        output1 = self._api_common.set_output(self._sfp_index, "0x0", config)
 
         # Sleep 1 second to allow it to settle
         time.sleep(1)
         # Flip the bit back high and write back to the register to take port out of reset
-        output2 = self._api_common.set_output(self.sfp_index, "0x1", config)
+        output2 = self._api_common.set_output(self._sfp_index, "0x1", config)
 
         return True if (output1 and output2) else False
 
@@ -2023,7 +2020,7 @@ class Sfp(SfpBase):
         Returns:
             A boolean, True if lpmode is set successfully, False if not
         """
-        return self._api_common.set_output(self.sfp_index, str(lpmode), self._config['set_lpmode'])
+        return self._api_common.set_output(self._sfp_index, str(lpmode), self._config['set_lpmode'])
 
     def set_power_override(self, power_override, power_set):
         """

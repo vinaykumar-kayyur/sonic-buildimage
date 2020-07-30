@@ -18,14 +18,12 @@ except ImportError as e:
 class Component(ComponentBase):
     """Platform-specific Component class"""
 
-    COMPONENT_CONFIG = 'component.json'
-
     def __init__(self, component_index, conf):
         ComponentBase.__init__(self)
 
         self._index = component_index
         self._config = conf
-        self._api_common = Common(conf=self._config)
+        self._api_common = Common(self._config)
 
     def get_name(self):
         """

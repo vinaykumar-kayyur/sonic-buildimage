@@ -11,7 +11,6 @@
 try:
     import sys
     import os
-    import inspect
     from sonic_platform_base.chassis_base import ChassisBase
     from common import Common
 except ImportError as e:
@@ -22,6 +21,11 @@ class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
     CHASSIS_CONFIG = 'chassis.json'
+    THERMAL_CONFIG = 'thermal.json'
+    SFP_CONFIG = 'sfp.json'
+    PSU_CONFIG = 'psu.json'
+    FAN_CONFIG = 'fan.json'
+    COMPONENT_CONFIG = 'component.json'
 
     def __init__(self):
         ChassisBase.__init__(self)
@@ -31,13 +35,6 @@ class Chassis(ChassisBase):
 
         self.sfp_module_initialized = False
         self.__initialize_eeprom()
-
-        # self.__initialize_fan()
-        # self.__initialize_psu()
-        # self.__initialize_thermals()
-        # self.__initialize_sfp()
-        # self.__initialize_eeprom()
-        # self.__initialize_components()
 
         if not self._api_common.is_host():
             self.__initialize_fan()
@@ -50,26 +47,25 @@ class Chassis(ChassisBase):
         from sonic_platform.fan import Fan
         from sonic_platform.fan_drawer import FanDrawer
 
-        fan_config_path = self._api_common.get_config_path(Fan.FAN_CONFIG)
-        fan_config = self._api_common.load_json_file(fan_config_path)
+        fan_config_path = self._api_common.get_config_path(self.FAN_CONFIG)
+        self._fan_config = self._api_common.load_json_file(fan_config_path)
 
-        if fan_config:
+        if self._fan_config:
             fan_index = 0
-            for drawer_index in range(0, fan_config['drawer_num']):
+            for drawer_index in range(0, self._fan_config['drawer_num']):
                 drawer_fan_list = []
-                for index in range(0, fan_config['fan_num_per_drawer']):
-                    fan = Fan(fan_index, conf=fan_config)
+                for index in range(0, self._fan_config['fan_num_per_drawer']):
+                    fan = Fan(fan_index, conf=self._fan_config)
                     fan_index += 1
                     self._fan_list.append(fan)
                     drawer_fan_list.append(fan)
                 fan_drawer = FanDrawer(drawer_index, drawer_fan_list)
                 self._fan_drawer_list.append(fan_drawer)
 
-
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
 
-        sfp_config_path = self._api_common.get_config_path(Sfp.SFP_CONFIG)
+        sfp_config_path = self._api_common.get_config_path(self.SFP_CONFIG)
         sfp_config = self._api_common.load_json_file(sfp_config_path)
 
         sfp_index = 0
@@ -82,13 +78,13 @@ class Chassis(ChassisBase):
     def __initialize_psu(self):
         from sonic_platform.psu import Psu
 
-        psu_config_path = self._api_common.get_config_path(Psu.PSU_CONFIG)
+        psu_config_path = self._api_common.get_config_path(self.PSU_CONFIG)
         psu_config = self._api_common.load_json_file(psu_config_path)
 
         if psu_config:
             psu_index = 0
             for index in range(0, psu_config['psu_num']):
-                psu = Psu(psu_index, conf=psu_config)
+                psu = Psu(psu_index, conf=psu_config, fan_conf=self._fan_config)
                 psu_index += 1
                 self._psu_list.append(psu)
 
@@ -96,7 +92,7 @@ class Chassis(ChassisBase):
         from sonic_platform.thermal import Thermal
 
         thermal_config_path = self._api_common.get_config_path(
-            Thermal.THERMAL_CONFIG)
+            self.THERMAL_CONFIG)
         thermal_config = self._api_common.load_json_file(thermal_config_path)
 
         thermal_index = 0
@@ -113,7 +109,7 @@ class Chassis(ChassisBase):
         from component import Component
 
         component_config_path = self._api_common.get_config_path(
-            Component.COMPONENT_CONFIG)
+            self.COMPONENT_CONFIG)
         component_config = self._api_common.load_json_file(
             component_config_path)
 
@@ -169,13 +165,10 @@ class Chassis(ChassisBase):
             REBOOT_CAUSE_NON_HARDWARE = "Non-Hardware"
 
         """
-        f_name = inspect.stack()[0][3]
-        default = self.REBOOT_CAUSE_HARDWARE_OTHER
-
         reboot_cause = self._api_common.get_output(
-            0, self._config[f_name], default)
+            0, self._config['get_reboot_cause'],  self.REBOOT_CAUSE_HARDWARE_OTHER)
         description = self._api_common.get_output(
-            0, self._config['get_reboot_description'], default)
+            0, self._config['get_reboot_description'], 'Unknown')
 
         return (reboot_cause, description)
 

@@ -8,11 +8,6 @@
 #
 #############################################################################
 
-import json
-import math
-import os.path
-import inspect
-
 try:
     from sonic_platform_base.thermal_base import ThermalBase
     from common import Common
@@ -23,17 +18,12 @@ except ImportError as e:
 class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
 
-    THERMAL_CONFIG = 'thermal.json'
-
-    def __init__(self, index, thermal_index=0 ,conf=None):
+    def __init__(self, index, _thermal_index=0, conf=None):
         ThermalBase.__init__(self)
 
-        self.thermal_index = index
-
+        self._thermal_index = index
         self._config = conf
-        self._api_common = Common()
-
-        self._name = self.get_name()
+        self._api_common = Common(self._config)
 
     def get_name(self):
         """
@@ -44,9 +34,7 @@ class Thermal(ThermalBase):
         :return: String,
             A string representing the name of the thermal sensor. 
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        return self._api_common.get_output(self.thermal_index, config, Common.NULL_VAL)
+        return self._api_common.get_output(self._thermal_index, self._config['get_name'], Common.NULL_VAL)
 
     def get_temperature(self):
         """
@@ -58,41 +46,20 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125 
         """
-
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = Common.NULL_VAL
-        output = self._api_common.get_output(self.thermal_index, config, default)
-        return float(output) if output != default else output
-        
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['get_temperature'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def get_high_threshold(self):
         """
         Retrieves the high threshold temperature of thermal
-        
-        For AMI BMC device :
-            Example output
-            Temp  | 35.000 | degrees C|ok      | na | na | na | na | na | na
-            The thresholds listed are, in order: lnr, lcr, lnc, unc, ucr, unr
-
-            These are acronyms for:
-            Lower Non-Recoverable
-            Lower Critical
-            Lower Non-Critical
-            Upper Non-Critical
-            Upper Critical
-            Upper Non-Recoverable
-
         Returns:
-            unc as float number and return 0 if the BMC output is na.
             A float number, the high threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = Common.NULL_VAL
-        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
-        return float(output) if output != default else output
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['get_high_threshold'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def get_low_threshold(self):
         """
@@ -103,11 +70,9 @@ class Thermal(ThermalBase):
             A float number, the low threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = Common.NULL_VAL
-        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
-        return float(output) if output != default else output
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['get_low_threshold'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def set_high_threshold(self, temperature):
         """
@@ -125,11 +90,9 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = 0
-        #output = self._api_common.set_output(self.thermal_index, temperature ,config) #if self.get_presence() else default
-        return self._api_common.set_output(self.thermal_index, temperature ,config)
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['set_high_threshold'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def set_low_threshold(self, temperature):
         """
@@ -147,11 +110,9 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = False
-        #output = self._api_common.set_output(self.thermal_index, temperature ,config) #if self.get_presence() else default
-        return self._api_common.set_output(self.thermal_index, temperature ,config)
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['set_low_threshold'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def get_high_critical_threshold(self):
         """
@@ -162,11 +123,9 @@ class Thermal(ThermalBase):
             A float number, the high critical threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = Common.NULL_VAL
-        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
-        return float(output) if output != default else output
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['get_high_critical_threshold'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def get_low_critical_threshold(self):
         """
@@ -177,11 +136,9 @@ class Thermal(ThermalBase):
             A float number, the low critical threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        f_name = inspect.stack()[0][3]
-        config = self._config.get(f_name)
-        default = Common.NULL_VAL
-        output = self._api_common.get_output(self.thermal_index, config, default) #if self.get_presence() else default
-        return float(output) if output != default else output
+        output = self._api_common.get_output(
+            self._thermal_index, self._config['get_low_critical_threshold'], Common.NULL_VAL)
+        return float(output) if output != Common.NULL_VAL else output
 
     def get_presence(self):
         """
@@ -189,7 +146,7 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if device is present, False if not
         """
-        return True #if self.get_temperature() > 0 else False
+        return True
 
     def get_model(self):
         """
@@ -199,7 +156,7 @@ class Thermal(ThermalBase):
             string: Model/part number of device
         """
         return Common.NULL_VAL
-    
+
     def get_serial(self):
         """
         Retrieves the serial number of the device
@@ -208,7 +165,7 @@ class Thermal(ThermalBase):
             string: Serial number of device
         """
         return Common.NULL_VAL
-    
+
     def get_status(self):
         """
         Retrieves the operational status of the device

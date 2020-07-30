@@ -8,11 +8,6 @@
 #
 #############################################################################
 
-import json
-import math
-import os.path
-import inspect
-
 try:
     from sonic_platform_base.fan_base import FanBase
     from common import Common
@@ -23,16 +18,14 @@ except ImportError as e:
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
-    FAN_CONFIG = 'fan.json'
-
     def __init__(self, index, is_psu_fan=False, psu_index=0, conf=None):
         FanBase.__init__(self)
 
         self._fan_index = index
         self._config = conf
         self._api_common = Common()
-        self._is_psu_fan = is_psu_fan
 
+        self._is_psu_fan = is_psu_fan
         if self._is_psu_fan:
             self._initialize_psu_fan(psu_index)
 

@@ -9,7 +9,6 @@
 #############################################################################
 
 try:
-    import os
     from sonic_platform_base.fan_drawer_base import FanDrawerBase
     from sonic_platform_base.fan_base import FanBase
 except ImportError as e:
