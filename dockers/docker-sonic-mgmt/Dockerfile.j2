@@ -49,12 +49,12 @@ RUN pip install cffi==1.10.0 \
                 prettytable \
                 psutil \
                 pyasn1==0.1.9 \
-                pycryptodome \
                 pyfiglet \
                 pylint==1.8.1 \
                 pyro4 \
                 pysnmp==4.2.5 \
                 pytest-repeat \
+                pytest-html \
                 pytest-xdist==1.28.0 \
                 pytest==4.6.5 \
                 redis \
@@ -168,3 +168,7 @@ RUN ~/lib/azure-cli/bin/python -m pip install azure-keyvault==0.3.7 -U
 # Install Virtual Environment
 RUN python -m virtualenv --system-site-packages env-201811
 RUN env-201811/bin/pip install ansible==2.0.0.2
+
+# NOTE: There is an ordering dependency for pycryptodome. Leaving this at
+#       the end until we figure that out.
+RUN pip install pycryptodome==3.9.8

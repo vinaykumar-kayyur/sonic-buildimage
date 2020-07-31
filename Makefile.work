@@ -32,6 +32,9 @@
 #  *                 Default: yes
 #  *                 Values:  yes, no
 #  * KERNEL_PROCURE_METHOD: Specifying method of obtaining kernel Debian package: download or build
+#  * TELEMETRY_WRITABLE: Enable write/config operations via the gNMI interface.
+#  *                 Default: unset
+#  *                 Values: y
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
 #  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #  * BUILD_LOG_TIMESTAMP: Set timestamp in the build log (simple/none)
@@ -105,7 +108,7 @@ ifeq ($(DOCKER_BUILDER_WORKDIR),)
 override DOCKER_BUILDER_WORKDIR := "/sonic"
 endif
 
-DOCKER_RUN := docker run --rm=true --privileged \
+DOCKER_RUN := docker run --rm=true --privileged --init \
     -v $(DOCKER_BUILDER_MOUNT) \
     -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
@@ -182,6 +185,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            INSTALL_KUBERNETES=$(INSTALL_KUBERNETES) \
                            KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
+                           KUBERNETES_CNI_VERSION=$(KUBERNETES_CNI_VERSION) \
                            K8s_GCR_IO_PAUSE_VERSION=$(K8s_GCR_IO_PAUSE_VERSION) \
                            K8s_CNI_FLANNEL_VERSION=$(K8s_CNI_FLANNEL_VERSION) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
@@ -200,6 +204,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            HTTPS_PROXY=$(https_proxy) \
                            SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
                            SONIC_ENABLE_RESTAPI=$(ENABLE_RESTAPI) \
+                           TELEMETRY_WRITABLE=$(TELEMETRY_WRITABLE) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
