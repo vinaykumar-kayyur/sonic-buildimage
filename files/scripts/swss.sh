@@ -201,6 +201,9 @@ stop() {
     if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         /usr/bin/${SERVICE}.sh stop $DEV
         debug "Stopped ${SERVICE}$DEV service..."
+    else
+        debug "Killing Docker swss..."
+        /usr/bin/docker kill swss &> /dev/null || debug "Docker swss is not running ($?) ..."
     fi
 
     # Flush FAST_REBOOT table when swss needs to stop. The only
