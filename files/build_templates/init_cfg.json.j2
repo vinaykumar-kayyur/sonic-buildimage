@@ -18,7 +18,7 @@
         }
     },
     "FEATURE": {
-{%- for feature, status, autorestart in [("bgp", "enabled", "enabled"),
+{%- for feature, state, autorestart in [("bgp", "enabled", "enabled"),
                             ("dhcp_relay", "enabled", "enabled"),
                             {% if include_iccpd == "y" %}("iccpd", "disabled", "enabled"),{% endif %}
                             ("lldp", "enabled", "enabled"),
@@ -35,7 +35,7 @@
                             {% if include_system_telemetry == "y" %}("telemetry", "enabled", "enabled"),{% endif %}
                             ("database", "enabled", "disabled")] %}
         "{{feature}}": {
-            "status": "{{status}}",
+            "state": "{{state}}",
             "auto_restart": "{{autorestart}}",
             "high_mem_alert": "disabled"
         }{% if not loop.last %},{% endif -%}
