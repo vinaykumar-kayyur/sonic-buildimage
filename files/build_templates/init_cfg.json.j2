@@ -18,7 +18,8 @@
         }
     },
     "FEATURE": {
-{%- for feature, state, autorestart in [("bgp", "enabled", "enabled"),
+{%- for feature, state, autorestart in [
+                            ("bgp", "enabled", "enabled"),
                             ("dhcp_relay", "enabled", "enabled"),
                             {% if include_iccpd == "y" %}("iccpd", "disabled", "enabled"),{% endif %}
                             ("lldp", "enabled", "enabled"),
