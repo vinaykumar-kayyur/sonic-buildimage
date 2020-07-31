@@ -51,12 +51,12 @@ class Common:
 
         input_translator = config.get('input_translator')
         if type(input_translator) is dict:
-            input = input_translator.get(input)
+            cleaned_input = input_translator.get(input)
 
         elif type(input_translator) is str:
-            input = eval(input_translator.format(input))
+            cleaned_input = eval(input_translator.format(input))
 
-        return input
+        return cleaned_input
 
     def _clean_output(self, index, output, config):
         output_translator = config.get('output_translator')

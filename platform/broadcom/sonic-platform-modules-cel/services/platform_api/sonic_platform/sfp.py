@@ -13,7 +13,6 @@ from ctypes import create_string_buffer
 
 try:
     from sonic_platform_base.sfp_base import SfpBase
-    from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
@@ -206,7 +205,7 @@ qsfp_cable_length_tup = ('Length(km)', 'Length OM3(2m)',
 
 dom_info_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'lp_mode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
                       'rx1power', 'rx2power', 'rx3power', 'rx4power', 'rx5power', 'rx6power', 'rx7power', 'rx8power',
-                      'tx1bias', 'tx2bias', 'tx3bias', 'tx4bias', 'tx5bias', 'tx6bias', 'tx7bias', 'tx8bias'
+                      'tx1bias', 'tx2bias', 'tx3bias', 'tx4bias', 'tx5bias', 'tx6bias', 'tx7bias', 'tx8bias',
                       'tx1power', 'tx2power', 'tx3power', 'tx4power', 'tx5power', 'tx6power', 'tx7power', 'tx8power']
 
 threshold_dict_keys = ['temphighalarm', 'temphighwarning', 'templowalarm', 'templowwarning', 'vcchighalarm', 'vcchighwarning',
@@ -546,7 +545,7 @@ class Sfp(SfpBase):
 
         transceiver_info_dict = {}
         compliance_code_dict = {}
-        transceiver_dom_info_dict = dict.fromkeys(
+        transceiver_info_dict = dict.fromkeys(
             info_dict_keys, Common.NULL_VAL)
 
         # ToDo: OSFP tranceiver info parsing not fully supported.
@@ -608,9 +607,7 @@ class Sfp(SfpBase):
         elif self.sfp_type == QSFP_TYPE:
             offset = 128
             vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
-            sfp_type = 'QSFP'
 
             sfpi_obj = sff8436InterfaceId()
             if sfpi_obj is None:
@@ -771,9 +768,7 @@ class Sfp(SfpBase):
         else:
             offset = 0
             vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
-            sfp_type = 'SFP'
 
             sfpi_obj = sff8472InterfaceId()
             if sfpi_obj is None:
@@ -1340,38 +1335,6 @@ class Sfp(SfpBase):
             return None
 
         tx_fault_list = []
-        if self.sfp_type == QSFP_TYPE:
-            offset = 0
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes(
-                (offset + QSFP_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_CHANNL_TX_FAULT_STATUS_WIDTH)
-            if dom_channel_monitor_raw is not None:
-                tx_fault_data = int(dom_channel_monitor_raw[0], 16)
-                tx_fault_list.append(tx_fault_data & 0x01 != 0)
-                tx_fault_list.append(tx_fault_data & 0x02 != 0)
-                tx_fault_list.append(tx_fault_data & 0x04 != 0)
-                tx_fault_list.append(tx_fault_data & 0x08 != 0)
-        else:
-            offset = 256
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes(
-                (offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
-            if dom_channel_monitor_raw is not None:
-                tx_fault_data = int(dom_channel_monitor_raw[0], 16)
-                tx_fault_list.append(tx_fault_data & 0x04 != 0)
-            else:
-                return None
-        return tx_fault_list
-
-    def get_tx_fault(self):
-        """
-        Retrieves the TX fault status of SFP
-        Returns:
-            A Boolean, True if SFP has TX fault, False if not
-            Note : TX fault status is lached until a call to get_tx_fault or a reset.
-        """
-        if not self.dom_supported:
-            return None
-
-        tx_fault_list = []
         if self.sfp_type == OSFP_TYPE:
             return None
         elif self.sfp_type == QSFP_TYPE:
@@ -1386,7 +1349,6 @@ class Sfp(SfpBase):
                 tx_fault_list.append(tx_fault_data & 0x08 != 0)
 
         elif self.sfp_type == QSFP_DD_TYPE:
-            return None
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
                 offset = 128
@@ -1524,7 +1486,6 @@ class Sfp(SfpBase):
             return None
         if self.sfp_type == QSFP_TYPE:
             offset = 0
-            offset_xcvr = 128
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -1590,7 +1551,6 @@ class Sfp(SfpBase):
             return None
         if self.sfp_type == QSFP_TYPE:
             offset = 0
-            offset_xcvr = 128
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -1657,7 +1617,6 @@ class Sfp(SfpBase):
         tx_bias_list = []
         if self.sfp_type == QSFP_TYPE:
             offset = 0
-            offset_xcvr = 128
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -1746,7 +1705,6 @@ class Sfp(SfpBase):
 
         elif self.sfp_type == QSFP_TYPE:
             offset = 0
-            offset_xcvr = 128
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -1840,7 +1798,6 @@ class Sfp(SfpBase):
 
         elif self.sfp_type == QSFP_TYPE:
             offset = 0
-            offset_xcvr = 128
 
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
@@ -1866,7 +1823,6 @@ class Sfp(SfpBase):
                 return None
 
         elif self.sfp_type == QSFP_DD_TYPE:
-            return None
             # page 11
             if self.dom_rx_tx_power_bias_supported:
                 offset = 128

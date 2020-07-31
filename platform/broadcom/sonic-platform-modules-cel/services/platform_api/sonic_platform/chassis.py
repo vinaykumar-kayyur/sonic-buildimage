@@ -10,7 +10,6 @@
 
 try:
     import sys
-    import os
     from sonic_platform_base.chassis_base import ChassisBase
     from common import Common
 except ImportError as e:
@@ -84,7 +83,8 @@ class Chassis(ChassisBase):
         if psu_config:
             psu_index = 0
             for index in range(0, psu_config['psu_num']):
-                psu = Psu(psu_index, conf=psu_config, fan_conf=self._fan_config)
+                psu = Psu(psu_index, conf=psu_config,
+                          fan_conf=self._fan_config)
                 psu_index += 1
                 self._psu_list.append(psu)
 
@@ -221,23 +221,6 @@ class Chassis(ChassisBase):
             sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
         return sfp
-
-    # ##############################################################
-    # ####################### Other methods ########################
-    # ##############################################################
-
-    # def get_watchdog(self):
-    #     """
-    #     Retreives hardware watchdog device on this chassis
-    #     Returns:
-    #         An object derived from WatchdogBase representing the hardware
-    #         watchdog device
-    #     """
-    #     if self._watchdog is None:
-    #         from sonic_platform.watchdog import Watchdog
-    #         self._watchdog = Watchdog()
-
-    #     return self._watchdog
 
     # ##############################################################
     # ###################### Device methods ########################

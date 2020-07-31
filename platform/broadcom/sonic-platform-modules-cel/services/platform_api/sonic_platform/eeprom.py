@@ -10,14 +10,10 @@
 #############################################################################
 
 try:
-    import glob
     import os
     import sys
-    import imp
     import re
-    from array import array
     from cStringIO import StringIO
-    from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError, e:
     raise ImportError(str(e) + "- required module not found")
