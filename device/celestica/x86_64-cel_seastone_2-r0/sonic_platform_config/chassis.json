@@ -1,5 +1,5 @@
 {
-    "eeprom": "/sys/class/i2c-adapter/i2c-12/12-0050/eeprom",
+    "eeprom": "/sys/class/i2c-adapter/i2c-0/0-0056/eeprom",
     "get_reboot_cause": {
         "output_source": "ipmitool",
         "command": "ipmitool raw 0x3a 0x0c 0x0 0x2 0x06",
