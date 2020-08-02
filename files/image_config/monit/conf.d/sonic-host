@@ -22,5 +22,5 @@ check process rsyslog with pidfile /var/run/rsyslogd.pid
     if totalmem > 800 MB for 10 times within 20 cycles then restart
 
 check program routeCheck with path "/usr/bin/route_check.py"
-    every "*/5 * * * *"
+    every 5 cycles
     if status != 0 then alert
