@@ -1,0 +1,24 @@
+[Unit]
+Description=physyncd service
+Requires=database.service updategraph.service
+{% if sonic_asic_platform == 'broadcom' %}
+Requires=opennsl-modules.service
+ConditionPathExists=!/usr/share/sonic/hwsku/gearbox_config.json
+{% endif %}
+After=database.service updategraph.service
+After=interfaces-config.service
+{% if sonic_asic_platform == 'broadcom' %}
+After=opennsl-modules.service
+{% endif %}
+After=swss.service
+Before=ntp-config.service
+
+[Service]
+User=root
+Environment=sonic_asic_platform={{ sonic_asic_platform }}
+ExecStartPre=/usr/local/bin/physyncd.sh start
+ExecStart=/usr/local/bin/physyncd.sh wait
+ExecStop=/usr/local/bin/physyncd.sh stop
+
+[Install]
+WantedBy=multi-user.target
