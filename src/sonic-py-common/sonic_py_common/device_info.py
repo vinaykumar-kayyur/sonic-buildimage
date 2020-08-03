@@ -69,13 +69,16 @@ def get_platform():
         elif 'aboot_platform' in machine_info:
             return machine_info['aboot_platform']
     else:
-        config_db = ConfigDBConnector()
-        config_db.connect()
+        try:
+            config_db = ConfigDBConnector()
+            config_db.connect()
 
-        metadata = config_db.get_table('DEVICE_METADATA')
+            metadata = config_db.get_table('DEVICE_METADATA')
 
-        if 'localhost' in metadata and 'platform' in metadata['localhost']:
-            return metadata['localhost']['platform']
+            if 'localhost' in metadata and 'platform' in metadata['localhost']:
+                return metadata['localhost']['platform']
+        except ConnectionError:
+            pass
 
     return None
 
