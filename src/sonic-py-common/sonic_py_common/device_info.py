@@ -77,7 +77,7 @@ def get_platform():
 
             if 'localhost' in metadata and 'platform' in metadata['localhost']:
                 return metadata['localhost']['platform']
-        except ConnectionError:
+        except Exception:
             pass
 
     return None
