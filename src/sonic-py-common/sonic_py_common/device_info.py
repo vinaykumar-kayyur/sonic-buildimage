@@ -58,12 +58,24 @@ def get_platform():
     Returns:
         A string containing the device's platform identifier
     """
+
+    # First, we try reading directly from machine.conf
+    # However, if we are running in a container, we won't have access
+    # to machine.conf, so we fall back to reading from Config DB
     machine_info = get_machine_info()
     if machine_info:
         if 'onie_platform' in machine_info:
             return machine_info['onie_platform']
         elif 'aboot_platform' in machine_info:
             return machine_info['aboot_platform']
+    else:
+        config_db = ConfigDBConnector()
+        config_db.connect()
+
+        metadata = config_db.get_table('DEVICE_METADATA')
+
+        if 'localhost' in metadata and 'platform' in metadata['localhost']:
+            return metadata['localhost']['platform']
 
     return None
 
