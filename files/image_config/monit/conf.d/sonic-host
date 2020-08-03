@@ -24,6 +24,8 @@ check process rsyslog with pidfile /var/run/rsyslogd.pid
 # route_check.py Verify routes between APPL-DB & ASIC-DB are in sync.
 # For any discrepancy, details are logged and a non-zero code is returned
 # which would trigger a monit alert.
+# Hence for any discrepancy, there will be log messages for "ERR" level
+# from both route_check.py & monit.
 #
 check program routeCheck with path "/usr/bin/route_check.py"
     every 5 cycles
