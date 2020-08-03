@@ -7,8 +7,8 @@
 
 import signal
 import threading
-from sonic_daemon_base.daemon_base import Logger
-from sonic_daemon_base.daemon_base import DaemonBase
+from sonic_py_common.logger import Logger
+from sonic_py_common.daemon_base import DaemonBase
 from swsssdk import SonicV2Connector
 from health_checker.manager import HealthCheckerManager
 

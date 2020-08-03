@@ -4,21 +4,11 @@ from .mock_connector import MockConnector
 import swsssdk
 swsssdk.SonicV2Connector = MockConnector
 from mock import Mock, MagicMock, patch
-#from sonic_daemon_base import daemon_base
-
-
-#daemon_base.db_connect = MagicMock()
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
-#lib_path = os.path.join(modules_path, "health_checker")
 sys.path.insert(0, modules_path)
 from health_checker.manager import HealthCheckerManager
-
-#from imp import load_source
-
-#load_source('thermalctld', scripts_path + '/thermalctld')
-#from thermalctld import *
 
 
 def test_external_checker():

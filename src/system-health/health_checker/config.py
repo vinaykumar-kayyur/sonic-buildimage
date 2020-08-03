@@ -1,7 +1,6 @@
 import os
 import json
-from sonic_device_util import get_machine_info
-from sonic_device_util import get_platform_info
+from sonic_py_common import device_info
 
 
 class Config(object):
@@ -18,11 +17,7 @@ class Config(object):
     MONIT_START_DELAY_CONFIG = 'with start delay'
 
     def __init__(self):
-        mi = get_machine_info()
-        if mi is not None:
-            self.platform_name = get_platform_info(mi)
-        else:
-            self.platform_name = self._get_platform_name()
+        self.platform_name = device_info.get_platform()
         self._config_file = os.path.join('/usr/share/sonic/device/', self.platform_name, Config.CONFIG_FILE) 
         self._last_mtime = None
         self.config_data = None
@@ -91,11 +86,6 @@ class Config(object):
                         return int(line[pos+len(Config.MONIT_START_DELAY_CONFIG):].strip())
         except Exception:
             return self.DEFAULT_BOOTUP_TIMEOUT
-
-    def _get_platform_name(self):
-        from .utils import run_command
-        output = run_command(Config.GET_PLATFORM_CMD)
-        return output.strip()
 
     def _get_list_data(self, key):
         if key in self.config_data:
