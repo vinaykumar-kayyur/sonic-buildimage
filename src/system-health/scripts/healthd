@@ -23,7 +23,7 @@ class HealthDaemon(DaemonBase):
         """
         Constructor of HealthDaemon
         """
-        DaemonBase.__init__(self)
+        DaemonBase.__init__(self, SYSLOG_IDENTIFIER)
         self._db = SonicV2Connector(host="127.0.0.1")
         self._db.connect(self._db.STATE_DB)
         self.stop_event = threading.Event()
