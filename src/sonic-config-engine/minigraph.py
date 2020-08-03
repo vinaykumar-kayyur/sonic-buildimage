@@ -1035,7 +1035,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     for port in neighbors.keys():
         if port in ports.keys():
-            # bring up FPGA ports
+            # make all neighbors connected ports to 'admin_up'
             ports[port]['admin_status'] = 'up'
 
     results['PORT'] = ports
