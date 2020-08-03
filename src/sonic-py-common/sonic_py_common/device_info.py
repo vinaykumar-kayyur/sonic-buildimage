@@ -29,6 +29,19 @@ FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
 
 
+def in_docker_container():
+    """
+    Returns:
+        True if running in a Docker container, else False
+    """
+    with open("/proc/1/cgroup", "r") as f:
+        contents = f.read()
+        if "docker" in contents or "kubepods" in contents:
+            return True
+
+    return False
+
+
 def get_machine_info():
     """
     Retreives data from the machine configuration file
@@ -59,16 +72,10 @@ def get_platform():
         A string containing the device's platform identifier
     """
 
-    # First, we try reading directly from machine.conf
-    # However, if we are running in a container, we won't have access
-    # to machine.conf, so we fall back to reading from Config DB
-    machine_info = get_machine_info()
-    if machine_info:
-        if 'onie_platform' in machine_info:
-            return machine_info['onie_platform']
-        elif 'aboot_platform' in machine_info:
-            return machine_info['aboot_platform']
-    else:
+    # If we are running in a container, we won't have access
+    # to machine.conf, so instead we try reading the platform
+    # identifier from Config DB
+    if in_docker_container():
         try:
             config_db = ConfigDBConnector()
             config_db.connect()
@@ -79,6 +86,13 @@ def get_platform():
                 return metadata['localhost']['platform']
         except Exception:
             pass
+    else:
+        machine_info = get_machine_info()
+        if machine_info:
+            if 'onie_platform' in machine_info:
+                return machine_info['onie_platform']
+            elif 'aboot_platform' in machine_info:
+                return machine_info['aboot_platform']
 
     return None
 
