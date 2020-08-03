@@ -12,5 +12,6 @@ src/ehci-ctc/ehci-ctc.ko /lib/modules/4.19.0-9-2-arm64/kernel/extra
 src/rtc-sd2405/rtc-sd2405.ko /lib/modules/4.19.0-9-2-arm64/kernel/extra
 src/sdhci-ctc5236/sdhci-ctc5236.ko /lib/modules/4.19.0-9-2-arm64/kernel/extra
 src/spi-ctc-qspi/spi-ctc-qspi.ko /lib/modules/4.19.0-9-2-arm64/kernel/extra
+src/ctc-dts/e530-ctc5236.dtb /boot/
 src/config/fw_env.config /etc/
 src/config/tsingma-bsp.service /lib/systemd/system

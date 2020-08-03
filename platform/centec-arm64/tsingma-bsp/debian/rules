@@ -16,6 +16,7 @@ KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_SRC_DIR:= $(shell pwd)
 MODULE_DIRS:= ctc5236-mc ctc5236_switch ctcmac ctc_wdt ehci-ctc gpio-ctc i2c-ctc pinctrl-ctc pwm-ctc rtc-sd2405 sdhci-ctc5236 spi-ctc-qspi
+DTS_DIR := ctc-dts
 MODULE_DIR := src
 UTILS_DIR := utils
 SERVICE_DIR := service
@@ -34,6 +35,7 @@ build:
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$(MODULE_DIR)/$${mod}; \
 	done)
+	make -C $(MOD_SRC_DIR)/$(MODULE_DIR)/$(DTS_DIR)
 
 binary: binary-arch binary-indep
 	# Nothing to do
