@@ -9,6 +9,8 @@ test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 from health_checker.manager import HealthCheckerManager
+from sonic_py_common import device_info
+device_info.get_platform = MagicMock(return_value='unittest')
 
 
 def test_external_checker():
