@@ -147,6 +147,6 @@ RUN mkdir -p /var/warmboot/teamd
 
 # Set an environment variable which applications can use to
 # determine that the environment is virtualized
-ENV SONIC_VIRTUAL_SWITCH=1
+ENV SONIC_DOCKER_VIRTUAL_SWITCH=1
 
 ENTRYPOINT ["/usr/bin/supervisord"]
