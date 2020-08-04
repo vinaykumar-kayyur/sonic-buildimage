@@ -145,4 +145,8 @@ RUN rm /etc/frr/frr.conf
 # Create /var/warmboot/teamd folder for teammgrd
 RUN mkdir -p /var/warmboot/teamd
 
+# Set an environment variable which applications can use to
+# determine that the environment is virtualized
+ENV SONIC_DOCKER_VIRTUAL_SWITCH=1
+
 ENTRYPOINT ["/usr/bin/supervisord"]

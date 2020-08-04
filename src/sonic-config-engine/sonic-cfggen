@@ -41,7 +41,7 @@ from minigraph import parse_xml
 from minigraph import parse_device_desc_xml
 from minigraph import parse_asic_sub_role
 from portconfig import get_port_config, get_port_config_file_name, get_breakout_mode
-from sonic_py_common.device_info import get_machine_info, get_system_mac
+from sonic_py_common.device_info import get_platform, get_system_mac
 from sonic_py_common.device_info import get_npu_id_from_name, is_multi_npu
 from config_samples import generate_sample_config
 from config_samples import get_available_config
@@ -232,14 +232,7 @@ def main():
     group.add_argument("-K", "--key", help="Lookup for a specific key")
     args = parser.parse_args()
 
-    # Get the platform identifier from machine.conf
-    platform = None
-    machine_info = get_machine_info()
-    if machine_info:
-        if 'onie_platform' in machine_info:
-            platform = machine_info['onie_platform']
-        elif 'aboot_platform' in machine_info:
-            platform = machine_info['aboot_platform']
+    platform = get_platform()
 
     db_kwargs = {}
     if args.redis_unix_sock_file != None:
