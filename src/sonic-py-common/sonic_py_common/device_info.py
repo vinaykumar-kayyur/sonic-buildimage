@@ -40,7 +40,7 @@ def in_docker_container():
     with open("/proc/1/cgroup", "r") as f:
         contents = f.read()
         if "docker" in contents or "kubepods" in contents:
-            if os.getenv("SONIC_VIRTUAL_SWITCH", "0") == "1":
+            if os.getenv("SONIC_VIRTUAL_SWITCH", "0") == "0":
                 return True
 
     return False
