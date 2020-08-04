@@ -32,12 +32,16 @@ BACKEND_ASIC_SUB_ROLE = "BackEnd"
 def in_docker_container():
     """
     Returns:
-        True if running in a Docker container, else False
+        True if running in a Docker container on a SONiC device, else False
+        Note that we also check if we are running in a SONiC virtual switch,
+        which itself is in a Docker container. In this case, we are technically
+        in the 'host OS', even though it is containerized.
     """
     with open("/proc/1/cgroup", "r") as f:
         contents = f.read()
         if "docker" in contents or "kubepods" in contents:
-            return True
+            if os.getenv("SONIC_VIRTUAL_SWITCH", "0") == "1":
+                return True
 
     return False
 
