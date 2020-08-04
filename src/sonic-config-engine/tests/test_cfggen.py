@@ -237,7 +237,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'lanes': '33,34,35,36', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '100000', 'description': 'Interface description'}")
 
-    def test_minigraph_fpga_interfaces(self):
+    def test_minigraph_neighbor_interfaces(self):
         argument = '-m "' + self.sample_graph_simple_case + '" -p "' + self.port_config + '" -v "PORT"'
         output = self.run_script(argument)
 
