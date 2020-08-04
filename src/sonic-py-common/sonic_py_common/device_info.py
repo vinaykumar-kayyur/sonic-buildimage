@@ -29,23 +29,6 @@ FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
 
 
-def in_docker_container():
-    """
-    Returns:
-        True if running in a Docker container on a SONiC device, else False
-        Note that we also check if we are running in a SONiC virtual switch,
-        which itself is in a Docker container. In this case, we are technically
-        in the 'host OS', even though it is containerized.
-    """
-    with open("/proc/1/cgroup", "r") as f:
-        contents = f.read()
-        if "docker" in contents or "kubepods" in contents:
-            if os.getenv("SONIC_DOCKER_VIRTUAL_SWITCH", "0") == "0":
-                return True
-
-    return False
-
-
 def get_machine_info():
     """
     Retreives data from the machine configuration file
@@ -76,27 +59,37 @@ def get_platform():
         A string containing the device's platform identifier
     """
 
-    # If we are running in a container, we won't have access
-    # to machine.conf, so instead we try reading the platform
-    # identifier from Config DB
-    if in_docker_container():
-        try:
-            config_db = ConfigDBConnector()
-            config_db.connect()
+    # If we are running in a virtual switch Docker container, the environment
+    # variable 'PLATFORM' will be defined and will contain the platform
+    # identifier.
+    platform_env = os.getenv("PLATFORM")
+    if platform_env:
+        return platform_env
 
-            metadata = config_db.get_table('DEVICE_METADATA')
+    # If 'PLATFORM' env variable is not defined, we try to read the platform
+    # identifier from machine.conf. This is critical for sonic-config-engine,
+    # because it is responsible for populating this value in Config DB.
+    machine_info = get_machine_info()
+    if machine_info:
+        if 'onie_platform' in machine_info:
+            return machine_info['onie_platform']
+        elif 'aboot_platform' in machine_info:
+            return machine_info['aboot_platform']
 
-            if 'localhost' in metadata and 'platform' in metadata['localhost']:
-                return metadata['localhost']['platform']
-        except Exception:
-            pass
-    else:
-        machine_info = get_machine_info()
-        if machine_info:
-            if 'onie_platform' in machine_info:
-                return machine_info['onie_platform']
-            elif 'aboot_platform' in machine_info:
-                return machine_info['aboot_platform']
+    # If we fail to read from machine.conf, we may be running inside a Docker
+    # container in SONiC, where the /host directory is not mounted. In this
+    # case the value should already be populated in Config DB so we finally
+    # try reading it from there.
+    try:
+        config_db = ConfigDBConnector()
+        config_db.connect()
+
+        metadata = config_db.get_table('DEVICE_METADATA')
+
+        if 'localhost' in metadata and 'platform' in metadata['localhost']:
+            return metadata['localhost']['platform']
+    except Exception:
+        pass
 
     return None
 
@@ -108,15 +101,18 @@ def get_hwsku():
     Returns:
         A string containing the device's hardware SKU identifier
     """
-    config_db = ConfigDBConnector()
-    config_db.connect()
+    try:
+        config_db = ConfigDBConnector()
+        config_db.connect()
 
-    metadata = config_db.get_table('DEVICE_METADATA')
+        metadata = config_db.get_table('DEVICE_METADATA')
 
-    if 'localhost' in metadata and 'hwsku' in metadata['localhost']:
-        return metadata['localhost']['hwsku']
+        if 'localhost' in metadata and 'hwsku' in metadata['localhost']:
+            return metadata['localhost']['hwsku']
+    except Exception:
+        pass
 
-    return ""
+    return None
 
 
 def get_platform_and_hwsku():
