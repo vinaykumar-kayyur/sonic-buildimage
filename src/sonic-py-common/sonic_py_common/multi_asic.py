@@ -5,12 +5,13 @@ import sys
 
 from natsort import natsorted
 
+from swsssdk import ConfigDBConnector
+from swsssdk import SonicDBConfig
+from swsssdk import SonicV2Connector
+
 from .device_info import CONTAINER_PLATFORM_PATH
 from .device_info import HOST_DEVICE_PATH
 from .device_info import get_platform
-from swsssdk import ConfigDBConnector, SonicDBConfig
-from swsssdk import SonicV2Connector
-
 
 ASIC_NAME_PREFIX = "asic"
 NAMESPACE_PATH_GLOB = "/run/netns/*"
