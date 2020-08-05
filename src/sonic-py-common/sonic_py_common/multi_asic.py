@@ -1,14 +1,13 @@
 import glob
 import importlib
 import os
-from os import name
 import sys
 
 from natsort import natsorted
 
-from sonic_py_common.device_info import CONTAINER_PLATFORM_PATH
-from sonic_py_common.device_info import HOST_DEVICE_PATH
-from sonic_py_common.device_info import get_platform
+from .device_info import CONTAINER_PLATFORM_PATH
+from .device_info import HOST_DEVICE_PATH
+from .device_info import get_platform
 from swsssdk import ConfigDBConnector, SonicDBConfig
 from swsssdk import SonicV2Connector
 
