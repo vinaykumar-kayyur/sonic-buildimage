@@ -10,8 +10,10 @@ SONIC_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY2)
 SONIC_PLATFORM_COMMON_PY3 = sonic_platform_common-1.0-py3-none-any.whl
 $(SONIC_PLATFORM_COMMON_PY3)_SRC_PATH = $(SRC_PATH)/sonic-platform-common
 $(SONIC_PLATFORM_COMMON_PY3)_PYTHON_VERSION = 3
-$(SONIC_PLATFORM_COMMON_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3)
+$(SONIC_PLATFORM_COMMON_PY3)_DEPENDS += $(SONIC_PY_COMMON_PY3) $(SONIC_CONFIG_ENGINE)
 # Synthetic dependency just to avoid race condition
 $(SONIC_PLATFORM_COMMON_PY3)_DEPENDS += $(SONIC_PLATFORM_COMMON_PY2)
 $(SONIC_PLATFORM_COMMON_PY3)_TEST = n
-SONIC_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY3)
+# Disable building Python 3 package for now, becuase it currently depends on sonic-config-engine,
+# and we're not yet building a Python 3 package for sonic-config-engine
+#SONIC_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY3)
