@@ -8,6 +8,7 @@ import syslog
 import copy
 import jinja2
 import ipaddr as ipaddress
+import netaddr
 from swsssdk import ConfigDBConnector
 
 # FILE
@@ -257,6 +258,474 @@ class AaaCfg(object):
         with open(NSS_TACPLUS_CONF, 'w') as f:
             f.write(nss_tacplus_conf)
 
+#Management interface and Management VRF config handling
+
+MGMT_INTF_ADMIN_STATUS_DEFAULT = "up"
+CFG_MGMT_PORT_TABLE = "MGMT_PORT"
+CFG_MGMT_INTF_TABLE = "MGMT_INTERFACE"
+APP_MGMT_PORT_TABLE = "MGMT_PORT_TABLE"
+APP_MGMT_INTF_TABLE = "MGMT_INTF_TABLE"
+CFG_MGMT_VRF      = "MGMT_VRF_CONFIG"
+CFG_MGMT_VRF_KEY  = "vrf_global"
+MGMT_VRF_TABLE_ID = 5000
+
+class MgmtVrfCfg:
+    def __init__(self, config_db):
+        syslog.syslog(syslog.LOG_INFO, 'Initializing MGMT VRF handler')
+        self.config_db = config_db
+        self.mgmt_vrf_table_created = False
+
+    def create_mgmt_vrf_table(self):
+        if self.mgmt_vrf_table_created == False:
+            syslog.syslog(syslog.LOG_INFO, "Create MGMT VRF table:")
+            cmd = 'ip link add name mgmt type vrf table {}'.format(MGMT_VRF_TABLE_ID)
+            if run_command(cmd) == True:
+                self.mgmt_vrf_table_created = True
+
+    def delete_mgmt_vrf_table(self):
+        if self.mgmt_vrf_table_created == True:
+            syslog.syslog(syslog.LOG_INFO, "Delete MGMT VRF table:")
+            cmd = 'ip link delete mgmt'
+            if run_command(cmd) == True:
+                self.mgmt_vrf_table_created = False
+
+    def configure_mgmt_vrf(self):
+        self.create_mgmt_vrf_table()
+
+        cmd = 'ip link set dev mgmt up'
+        if run_command(cmd) == False:
+            return
+
+        cmd = 'ip link add lo-m type dummy'
+        if run_command(cmd) == False:
+            return
+
+        cmd = 'ip addr add 127.0.0.1/8 dev lo-m'
+        if run_command(cmd) == False:
+            return
+
+        cmd = 'ip link set lo-m up'
+        if run_command(cmd) == False:
+            return
+
+        cmd = 'ip link set dev lo-m master mgmt'
+        if run_command(cmd) == False:
+            return
+
+        self.bind_mgmt_intf()
+
+    def bind_mgmt_intf(self):
+        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+
+        mgmt_intf_bound = False
+        for it in keys:
+            if type(it) is unicode:
+                mgmt_intf_name = it
+
+                cmd = 'ip link set dev {} master mgmt'.format(mgmt_intf_name)
+                if run_command(cmd) == False:
+                    return
+
+                mgmt_intf_bound = True
+                break
+        return mgmt_intf_bound
+
+    def mgmt_vrf_add_default_routes(self):
+        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        for it in keys:
+            if type(it) is unicode:
+                continue
+
+            key = it[0] + "|" + it[1]
+
+            entry = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, key)
+            if 'gwaddr' in entry:
+                mgmt_intf_gwaddr = entry['gwaddr']
+                self.handle_mgmt_intf_gwaddr_cfg("ADD", it[0], mgmt_intf_gwaddr)
+
+    def unconfigure_mgmt_vrf(self):
+        cmd = 'ip link delete lo-m'
+        if run_command(cmd) == True:
+            self.delete_mgmt_vrf_table()
+
+        return
+
+    def handle_mgmt_intf_gwaddr_cfg(self, op, ifname, gwaddr):
+        rc = False
+        keys = self.config_db.get_keys(CFG_MGMT_VRF)
+        if keys:
+            cmd = 'ip route del table {} 0.0.0.0/0'.format(MGMT_VRF_TABLE_ID)
+            run_command(cmd)
+            
+            if op == "ADD":
+                cmd = 'ip route add table {} 0.0.0.0/0 via {}'.format(MGMT_VRF_TABLE_ID, gwaddr)
+                run_command(cmd)
+            rc = True
+
+        return rc
+
+    def handle_mgmt_intf_creation(self, mgmt_intf_key):
+        keys = self.config_db.get_keys(CFG_MGMT_VRF)
+        if keys:
+            if self.bind_mgmt_intf() == True:
+                self.mgmt_vrf_add_default_routes()
+
+    def handle_mgmt_vrf_cfg(self, key, data):
+        try:
+            if data:
+                if data['mgmtVrfEnabled'] == 'true':
+                    self.configure_mgmt_vrf()
+                else:
+                    self.unconfigure_mgmt_vrf()
+            else:
+                self.unconfigure_mgmt_vrf()
+        except Exception as inst:
+            syslog.syslog(syslog.LOG_ERR, "{} MGMT VRF Configuration failed.".format(key))
+
+    def mgmt_vrf_table_get(self):
+        vrf_table = 'default'
+        entry = self.config_db.get_entry(CFG_MGMT_VRF, CFG_MGMT_VRF_KEY)
+        if entry:
+            if (('mgmtVrfEnabled' in entry) and (entry['mgmtVrfEnabled'] == 'true')):
+                vrf_table = '5000'
+
+        return vrf_table
+
+def run_command(cmd):
+    syslog.syslog(syslog.LOG_INFO, "Config cmd - {}".format(cmd))
+    try:
+        subprocess.check_call(cmd, shell=True)
+    except subprocess.CalledProcessError as err:
+        syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                .format(err.cmd, err.returncode, err.output))
+        return False
+
+    return True
+
+def cfg_attr_set (cmd, attr = None, value = None, appIntf = None):
+    rc = run_command(cmd)
+    if appIntf != None:
+        appIntf[attr] = value
+
+    return rc
+
+def is_attr_cfg_required (attr, cfg_data, app_data, cfgAllAttr = True):
+    rc = False
+
+    if ((cfgAllAttr == True) or (attr not in app_data) or (cfg_data[attr] != app_data[attr])):
+        rc = True
+
+    return rc
+
+class MgmtIntfCfg:
+    def __init__(self, cfg_db, mgmt_vrf_cfg):
+        self.app_db = ConfigDBConnector()
+        self.app_db.db_connect('APPL_DB', wait_for_init=False, retry_on=True)
+        self.config_db = cfg_db
+        self.mgmt_vrf_cfg = mgmt_vrf_cfg
+        self.mgmt_cfg_appdb_cleanup()
+        self.mgmt_intf_handle_default_cfg("eth0")
+
+    def mgmt_intf_handle_default_cfg (self, ifname):
+        mgmt_intf = self.config_db.get_entry(CFG_MGMT_PORT_TABLE, ifname)
+        if mgmt_intf == {}:
+            mgmt_intf['mtu'] = "1500"
+            mgmt_intf['speed'] = "1000"
+            mgmt_intf['admin_status'] = MGMT_INTF_ADMIN_STATUS_DEFAULT
+            mgmt_intf['autoneg'] = "true"
+            mgmt_intf['description'] = "Management0"
+            syslog.syslog(syslog.LOG_INFO, "Default config populated for {}".format(ifname))
+            self.config_db.set_entry(CFG_MGMT_PORT_TABLE, ifname, mgmt_intf)
+
+        self.handle_mgmt_port_cfg(ifname, mgmt_intf)
+
+        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        if len(keys) == 0:
+            mgmt_intf = {}
+            mgmt_intf['ipv4_dhcp_client'] = "true"
+            mgmt_intf['ipv6_dhcp_client'] = "true"
+            self.config_db.set_entry(CFG_MGMT_INTF_TABLE, ifname, mgmt_intf)
+            self.app_db.set_entry(APP_MGMT_INTF_TABLE, ifname, mgmt_intf)
+        else:
+            for it in keys:
+                if type(it) is unicode:
+                    key = it
+                else:
+                    key = it[0] + "|" + it[1]
+                data = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, key)
+                self.handle_mgmt_intf_cfg(key, data)
+
+    def mgmt_cfg_appdb_cleanup (self):
+        tbl_list = [APP_MGMT_PORT_TABLE, APP_MGMT_INTF_TABLE]
+        for tbl in tbl_list:
+            keys = self.app_db.get_keys(tbl)
+            for key in keys:
+                self.app_db.delete_entry(tbl, key)
+
+    def mgmt_intf_mtu_set (self, ifname, mtu, appIntf):
+        cmd = 'ifconfig {} mtu {}'.format(ifname, mtu)
+        cfg_attr_set(cmd, 'mtu', mtu, appIntf)
+
+    def mgmt_intf_admin_status_set (self, ifname, admin_status, appIntf):
+        if (admin_status != "up"):
+            self.handle_admin_status_change(ifname, "DEL")
+
+        cmd = 'ip link set {} {}'.format(ifname, admin_status)
+        cfg_attr_set(cmd, 'admin_status', admin_status, appIntf)
+
+        if (admin_status == "up"):
+            self.handle_admin_status_change(ifname, "ADD")
+
+    def mgmt_intf_description_set (self, ifname, description, appIntf):
+        appIntf['description'] = description
+
+    def mgmt_intf_speed_set (self, ifname, speed, autoneg, appIntf):
+        duplex = "full"
+        cmd = 'ifdown --force {}; ethtool -s {} speed {} duplex {} autoneg {}; ifup --force {}'.format(ifname, ifname, speed, duplex, autoneg, ifname)
+        cfg_attr_set(cmd, 'speed', speed, appIntf)
+
+    def mgmt_intf_autoneg_set (self, ifname, autoneg, appIntf):
+        an = "on"
+        if autoneg == "true":
+            an = "on"
+        elif autoneg == "false":
+            an = "off"
+
+        cmd = "ethtool -s {} autoneg {}".format(ifname, an)
+        cfg_attr_set(cmd, 'autoneg', autoneg, appIntf)
+
+    def handle_admin_status_change(self, ifname, oper):
+        keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        for it in keys:
+            if type(it) is unicode:
+                continue
+
+            if it[0] == ifname:
+                data = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, it)
+                self.mgmt_intf_ip_prefix_set(ifname, it[1], oper)
+                if ('gwaddr' in data):
+                    self.mgmt_intf_gwaddr_set(ifname, it[1], data['gwaddr'], oper)
+
+                if ('forced_mgmt_routes' in data):
+                    forced_routes = data['forced_mgmt_routes']
+                    self.mgmt_intf_forced_mgmt_routes_set(ifname, it[1], forced_routes, oper)
+
+
+
+    def mgmt_intf_gwaddr_set(self, ifname, ip_prefix, gwaddr, op):
+        vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
+        ip_conf = netaddr.IPNetwork(ip_prefix)
+        ver = "-4"
+        ext = ""
+        if ip_conf.version == 6:
+            ver = "-6"
+        if op.lower() == "add":
+            ext = "metric 201"
+
+        cmd = "ip {} route {} default via {} dev {} table {} {}".format(ver, op.lower(), gwaddr, ifname, vrf_table, ext)
+        cfg_attr_set(cmd)
+
+    def mgmt_intf_dhclient_set (self, ifname, attr, enable):
+        version  = ""
+        file_ext = ""
+        cmd_opt  = ""
+
+        if attr == "ipv6_dhcp_client":
+            version = "-6"
+            file_ext = "6"
+            cmd_opt = "-D LL"
+
+        if enable == True:
+            path = "/var/run/dhclient{}.{}.pid".format(file_ext, ifname)
+            if os.path.exists(path):
+                cmd = "[ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(file_ext, ifname, file_ext, ifname, file_ext, ifname)
+                run_command(cmd)
+
+        if enable == True:
+            cmd = 'sysctl net.ipv6.conf.eth0.accept_ra=1'
+            run_command(cmd)
+            cmd = "/sbin/dhclient {} -pf /run/dhclient{}.{}.pid -lf /var/lib/dhcp/dhclient{}.{}.leases {} -nw {} ".format(version, file_ext, ifname, file_ext, ifname, ifname, cmd_opt)
+            run_command(cmd)
+        else:
+            cmd = "/sbin/dhclient {} -r {} && [ -f /var/run/dhclient{}.{}.pid ] && kill `cat /var/run/dhclient{}.{}.pid` && rm -f /var/run/dhclient{}.{}.pid".format(version, ifname, file_ext, ifname, file_ext, ifname, file_ext, ifname)
+            run_command(cmd)
+            cmd = 'sysctl net.ipv6.conf.eth0.accept_ra=0'
+            run_command(cmd)
+
+    def mgmt_intf_ip_prefix_set (self, ifname, ip_prefix, op):
+        vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
+        ver = "-4"
+        plen = "32"
+        mgmt_conf = netaddr.IPNetwork(ip_prefix)
+        if mgmt_conf.version == 6:
+            ver = "-6"
+            plen = "128"
+
+        cmd = "ip {} addr {} {} dev {}".format(ver, op.lower(), ip_prefix, ifname)
+        cfg_attr_set(cmd)
+
+        cmd = "ip {} route {} {}/{} dev {} table {}".format(ver, op.lower(), str(mgmt_conf.network), mgmt_conf.prefixlen, ifname, vrf_table)
+        cfg_attr_set(cmd)
+
+        cmd = "ip {} rule {} from {}/{} table {}".format(ver, op.lower(), str(mgmt_conf.ip), plen, vrf_table)
+        cfg_attr_set(cmd)
+
+    def mgmt_intf_forced_mgmt_routes_set (self, ifname, ip_prefix, forced_routes, op, app_forced_routes = []):
+        vrf_table = self.mgmt_vrf_cfg.mgmt_vrf_table_get()
+        if op == "UPDATE":
+            routes_add = []
+            routes_del = []
+            for cfg_route in forced_routes:
+                if cfg_route not in app_forced_routes:
+                    routes_add.append(cfg_route)
+
+            for cfg_route in app_forced_routes:
+                if cfg_route not in forced_routes:
+                    routes_del.append(cfg_route)
+
+            self.mgmt_intf_forced_mgmt_routes_set(ifname, ip_prefix, routes_del, "DEL")
+            self.mgmt_intf_forced_mgmt_routes_set(ifname, ip_prefix, routes_add, "ADD")
+            return routes_add
+        else:
+            for route in forced_routes:
+                cmd = "ip rule {} to {} table {}".format(op.lower(), route, vrf_table)
+                cfg_attr_set(cmd)
+                return forced_routes
+
+    def handle_mgmt_port_cfg(self, key, data):
+        mgmt_intf =  self.app_db.get_entry(APP_MGMT_PORT_TABLE, key)
+        cfgAllAttr = False
+        if mgmt_intf == {}:
+            cfgAllAttr = True
+
+        attr_func_map = {
+                'mtu'         : self.mgmt_intf_mtu_set,
+                'description' : self.mgmt_intf_description_set,
+                'admin_status': self.mgmt_intf_admin_status_set,
+                'autoneg'     : self.mgmt_intf_autoneg_set,
+                'speed'       : self.mgmt_intf_speed_set,
+                }
+        for attr in data:
+            if (is_attr_cfg_required(attr, data, mgmt_intf, cfgAllAttr) == True):
+                if attr == 'speed':
+                    autoneg = "on"
+                    if 'autoneg' in data:
+                        if data['autoneg'] == "false":
+                            autoneg = "off"
+                    attr_func_map[attr](key, data[attr], autoneg, mgmt_intf)
+                else:
+                    attr_func_map[attr](key, data[attr], mgmt_intf)
+
+        self.app_db.set_entry(APP_MGMT_PORT_TABLE, key, mgmt_intf)
+
+    def handle_mgmt_intf_cfg(self, key, data):
+        cur_appdb_key = key.replace('|', ':')
+        intf_keys = key.split("|")
+        db_key = key
+        if (len(intf_keys) > 1):
+            db_key = tuple(intf_keys)
+
+        cfgdb_entry = self.config_db.get_entry(CFG_MGMT_INTF_TABLE, key)
+        appdb_entry = self.app_db.get_entry(APP_MGMT_INTF_TABLE, cur_appdb_key)
+        cfg_keys = self.config_db.get_keys(CFG_MGMT_INTF_TABLE)
+        app_keys = self.app_db.get_keys(APP_MGMT_INTF_TABLE)
+        op = "DELETE"
+        if ((db_key in cfg_keys) or (key in cfg_keys)):
+            if ((db_key in app_keys) or (cur_appdb_key in app_keys)):
+                op = "UPDATE"
+            else:
+                op = "CREATE"
+
+        if (len(intf_keys) < 2):
+            if op == "DELETE":
+                cfgdb_entry['ipv4_dhcp_client'] = "true"
+                cfgdb_entry['ipv6_dhcp_client'] = "true"
+                self.config_db.set_entry(CFG_MGMT_INTF_TABLE, key, cfgdb_entry)
+
+            for attr in cfgdb_entry:
+                if is_attr_cfg_required(attr, cfgdb_entry, appdb_entry, False):
+                    self.mgmt_intf_dhclient_set(intf_keys[0], attr, cfgdb_entry[attr] == "true")
+                    appdb_entry[attr] = cfgdb_entry[attr]
+            self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
+
+        else:
+            if op == "CREATE":
+                self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "ADD")
+                if ('gwaddr' in data):
+                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], data['gwaddr'], "ADD")
+                    appdb_entry['gwaddr'] = data['gwaddr']
+
+                if ('forced_mgmt_routes' in data):
+                    forced_routes = data['forced_mgmt_routes']
+                    self.mgmt_intf_forced_mgmt_routes_set(intf_keys[0], intf_keys[1], forced_routes, "ADD")
+                    appdb_entry['forced_mgmt_routes'] = data['forced_mgmt_routes']
+
+                if appdb_entry == {}:
+                    appdb_entry["NULL"] = "NULL"
+
+                self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
+            elif op == "UPDATE":
+                '''
+                Case 1: gwaddr attribute delete case, gwaddr present in appdb entry
+                        and not in config db entry
+                Case 2: gwaddr attribute add case, gwaddr is present in config db
+                        entry but not in appdb entry
+                case 3: gwaddr attribute modify case, gwaddr present in both config
+                        and app db entry but they are different
+                '''
+                if ('gwaddr' not in cfgdb_entry):
+                    if ('gwaddr' in appdb_entry):
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DEL")
+                        del appdb_entry['gwaddr']
+                else:
+                    if ('gwaddr' not in appdb_entry):
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], cfgdb_entry['gwaddr'], "ADD")
+                    elif (cfgdb_entry['gwaddr'] != appdb_entry['gwaddr']):
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'],"DEL")
+                        self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], cfgdb_entry['gwaddr'], "ADD")
+
+                    appdb_entry['gwaddr'] = cfgdb_entry['gwaddr']
+
+                '''
+                Handle forced routes config UPDATE operation
+                '''
+                cfg_forced_routes = []
+                app_forced_routes = []
+                if ('forced_mgmt_routes' in cfgdb_entry):
+                    cfg_forced_routes = cfgdb_entry['forced_mgmt_routes']
+                if ('forced_mgmt_routes' in appdb_entry):
+                    app_forced_routes = appdb_entry['forced_mgmt_routes']
+
+                '''
+                check is forced_mgmt_routes present in config db or app db entry
+                handle update case.
+                '''
+                if (len(cfg_forced_routes) > 0 or len(app_forced_routes) > 0):
+                    cfg_forced_routes = self.mgmt_intf_forced_mgmt_routes_set(intf_keys[0], intf_keys[1],
+                                                    cfg_forced_routes, op, app_forced_routes)
+                
+                    if len(cfg_forced_routes) == 0:
+                        del appdb_entry['forced_mgmt_routes']
+                    else:
+                        appdb_entry['forced_mgmt_routes'] = cfgdb_entry['forced_mgmt_routes']
+
+                if appdb_entry == {}:
+                    appdb_entry["NULL"] = "NULL"
+
+                self.app_db.set_entry(APP_MGMT_INTF_TABLE, cur_appdb_key, appdb_entry)
+
+            else:
+                self.mgmt_intf_ip_prefix_set(intf_keys[0], intf_keys[1], "DEL")
+                if ('gwaddr' in appdb_entry):
+                    self.mgmt_intf_gwaddr_set(intf_keys[0], intf_keys[1], appdb_entry['gwaddr'], "DEL")
+
+                if ('forced_mgmt_routes' in appdb_entry):
+                    forced_routes = appdb_entry['forced_mgmt_routes']
+                    self.mgmt_intf_forced_mgmt_routes_set(intf_keys[0], intf_keys[1], forced_routes, "DEL")
+
+                self.app_db.delete_entry(APP_MGMT_INTF_TABLE, cur_appdb_key)
+
+
 
 class HostConfigDaemon:
     def __init__(self):
@@ -268,6 +737,8 @@ class HostConfigDaemon:
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
         self.aaacfg = AaaCfg()
         self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+        self.mgmtvrfcfg = MgmtVrfCfg(self.config_db)
+        self.mgmtcfg = MgmtIntfCfg(self.config_db, self.mgmtvrfcfg)
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
@@ -314,6 +785,15 @@ class HostConfigDaemon:
 
         self.iptables.iptables_handler(key, data, add)
 
+    def mgmt_vrf_handler(self, key, data):
+        self.mgmtvrfcfg.handle_mgmt_vrf_cfg(key, data)
+
+    def mgmt_port_handler(self, key, data):
+        self.mgmtcfg.handle_mgmt_port_cfg(key, data)
+
+    def mgmt_intf_handler(self, key, data):
+        self.mgmtcfg.handle_mgmt_intf_cfg(key, data)
+
     def feature_status_handler(self, key, data):
         feature_name = key
         feature_table = self.config_db.get_table('FEATURE')
@@ -337,6 +817,9 @@ class HostConfigDaemon:
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
         self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_status_handler(key, data))
+        self.config_db.subscribe(CFG_MGMT_VRF, lambda table, key, data: self.mgmt_vrf_handler(key, data))
+        self.config_db.subscribe(CFG_MGMT_PORT_TABLE, lambda table, key, data: self.mgmt_port_handler(key, data))
+        self.config_db.subscribe(CFG_MGMT_INTF_TABLE, lambda table, key, data: self.mgmt_intf_handler(key, data))
         self.config_db.listen()
 
 

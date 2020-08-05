@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ifdown --force eth0
-
 # Check if ZTP DHCP policy has been installed
 if [ -e /etc/network/ifupdown2/policy.d/ztp_dhcp.json ]; then
     # Obtain port operational state information
@@ -20,9 +18,6 @@ fi
 
 # Create /e/n/i file for existing and active interfaces
 sonic-cfggen -d -j /tmp/ztp_input.json -t /usr/share/sonic/templates/interfaces.j2 > /etc/network/interfaces
-
-[ -f /var/run/dhclient.eth0.pid ] && kill `cat /var/run/dhclient.eth0.pid` && rm -f /var/run/dhclient.eth0.pid
-[ -f /var/run/dhclient6.eth0.pid ] && kill `cat /var/run/dhclient6.eth0.pid` && rm -f /var/run/dhclient6.eth0.pid
 
 for intf_pid in $(ls -1 /var/run/dhclient*.Ethernet*.pid 2> /dev/null); do
     [ -f ${intf_pid} ] && kill `cat ${intf_pid}` && rm -f ${intf_pid}
