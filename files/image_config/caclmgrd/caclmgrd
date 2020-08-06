@@ -259,6 +259,9 @@ class ControlPlaneAclManager(object):
         iptables_cmds.append("ip6tables -A INPUT -p tcp --dport 179 -j ACCEPT")
         iptables_cmds.append("ip6tables -A INPUT -p tcp --sport 179 -j ACCEPT")
 
+        # Add iptables/ip6tables commands to allow all restapi/http/https requests
+        iptables_cmds.append("iptables -A INPUT -p tcp --dport 8081 -j ACCEPT")
+        iptables_cmds.append("iptables -A INPUT -p tcp --dport 8090 -j ACCEPT")
 
         # Get current ACL tables and rules from Config DB
         self._tables_db_info = self.config_db.get_table(self.ACL_TABLE)
