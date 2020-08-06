@@ -15,7 +15,7 @@ from lxml.etree import QName
 
 from portconfig import get_port_config
 from sonic_py_common.multi_asic import get_asic_id_from_name
-from sonic_py_common import sonic_interface
+from sonic_py_common import interface
 
 """minigraph.py
 version_added: "1.9"
@@ -729,7 +729,7 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
     # architecture
     for port_channel_intf in port_channels:
         backend_port_channel = any(lag_member in port_alias_asic_map \
-                                   and lag_member.startswith(sonic_interface.sonic_bp_interface_prefix()) \
+                                   and lag_member.startswith(interface.bp_interface_prefix()) \
                                    for lag_member in port_channels[port_channel_intf]['members'])
         if not backend_port_channel:
             front_port_channel_intf.append(port_channel_intf)
@@ -751,7 +751,7 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         # This will be applicable in Multi-NPU Platforms.
         front_panel_ports = []
         for port in group_params.get('ports', []):
-            if port in port_alias_asic_map and port.startswith(sonic_interface.sonic_bp_interface_prefix()):
+            if port in port_alias_asic_map and port.startswith(interface.bp_interface_prefix()):
                 continue
             if port in port_channels and port not in front_port_channel_intf:
                 continue

@@ -1,5 +1,3 @@
-import sys
-
 """
  Dictionary of SONIC interface name prefixes. Each entry in the format
  "Human readable interface string":"Sonic interface prefix"
