@@ -5,7 +5,7 @@ import subprocess
 import yaml
 
 # TODD: Replace with swsscommon
-from swsssdk import ConfigDBConnector, SonicDBConfig
+from swsssdk import ConfigDBConnector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"

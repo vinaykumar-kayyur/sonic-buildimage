@@ -1,7 +1,5 @@
 import glob
-import importlib
 import os
-import sys
 
 from natsort import natsorted
 
@@ -177,6 +175,7 @@ def get_all_namespaces():
 def get_namespace_list(namespace=None):
     if not is_multi_asic():
         ns_list = [DEFAULT_NAMESPACE]
+        return ns_list
 
     if namespace is None:
         namespaces = get_all_namespaces()

@@ -6,8 +6,7 @@ import re
 from natsort import natsorted
 import glob
 from swsssdk import ConfigDBConnector, SonicDBConfig
-from portconfig import get_port_config
-from portconfig import get_port_config_file_name
+
 
 DOCUMENTATION = '''
 ---
