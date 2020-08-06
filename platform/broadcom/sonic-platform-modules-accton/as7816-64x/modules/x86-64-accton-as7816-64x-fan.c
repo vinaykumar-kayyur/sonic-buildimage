@@ -219,7 +219,7 @@ static u8 duty_cycle_to_reg_val(u8 duty_cycle)
 
 static u32 reg_val_to_speed_rpm(u8 reg_val)
 {
-    if (reg_val == 0 || reg_val == 255){
+    if (reg_val == 0 || reg_val == 255) {
         return 0;
     } else {
         u64 f, dv;
