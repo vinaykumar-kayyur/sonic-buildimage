@@ -16,13 +16,14 @@ NAMESPACE_PATH_GLOB = "/run/netns/*"
 ASIC_CONF_FILENAME = "asic.conf"
 FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
-EXTERNAL_PORT = 'E'
-INTERNAL_PORT = 'I'
+EXTERNAL_PORT = 'Ext'
+INTERNAL_PORT = 'Int'
 PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
 NEIGH_DEVICE_METADATA_CFG_DB_TABLE = "DEVICE_NEIGHBOR_METADATA"
 DEFAULT_NAMESPACE = ''
+PORT_ROLE = 'role'
 
 
 def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
@@ -130,12 +131,14 @@ def get_asic_id_from_name(asic_name):
         return None
 
 
-def get_namespaces():
+def get_namespaces_from_linux():
     """
     In a multi asic platform, each ASIC is in a Linux Namespace.
     This method returns list of all the Namespace present on the device
 
-    Note: This function can be used only when the config_db is not available
+    Note: It is preferable to use this function can be used only 
+    when the config_db is not available. 
+    When configdb is available use get_all_namespaces()
 
     Returns:
         List of the namespaces present in the system
@@ -229,10 +232,13 @@ def get_namespace_for_port(port_name):
 def get_port_role(port_name, namespace=None):
 
     ports_config = get_port_table(namespace)
-    if not ports_config[port_name].has_key('role'):
+    if port_name not in ports_config:
+        raise ValueError('Unknown port name {}'.format(port_name))
+
+    if PORT_ROLE not in ports_config[port_name]:
         return EXTERNAL_PORT
 
-    role = ports_config[port_name]['role']
+    role = ports_config[port_name][PORT_ROLE]
     return role
 
 
@@ -240,7 +246,7 @@ def is_port_internal(port_name, namespace=None):
 
     role = get_port_role(port_name, namespace)
 
-    if role is INTERNAL_PORT:
+    if role == INTERNAL_PORT:
         return True
 
     return False
@@ -258,9 +264,10 @@ def is_port_channel_internal(port_channel, namespace=None):
         port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
 
         if port_channel in port_channels:
-            members = port_channels[port_channel]['members']
-            if is_port_internal(members[0], namespace):
-                return True
+            if 'members' in port_channel:
+                members = port_channels[port_channel]['members']
+                if is_port_internal(members[0], namespace):
+                    return True
 
     return False
 
@@ -283,7 +290,9 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
         neighbor_metadata = config_db.get_table(
             NEIGH_DEVICE_METADATA_CFG_DB_TABLE)
 
-        if neighbor_metadata[bgp_neigh_name]['type'].lower() == 'asic':
+        if ((neighbor_metadata) and
+            (neighbor_metadata[bgp_neigh_name]['type'].lower() ==
+             ASIC_NAME_PREFIX)):
             return True
         else:
             return False
