@@ -38,8 +38,7 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
       handle to the config_db for a namespace
     '''
     SonicDBConfig.load_sonic_global_db_config()
-    config_db = ConfigDBConnector(
-        use_unix_socket_path=True, namespace=namespace)
+    config_db = ConfigDBConnector(namespace=namespace)
     config_db.connect()
     return config_db
 
@@ -58,7 +57,7 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
         handle to all the dbs for a namespaces
     '''
     SonicDBConfig.load_sonic_global_db_config()
-    db = SonicV2Connector(use_unix_socket_path=True, namespace=namespace)
+    db = SonicV2Connector(namespace=namespace)
     for db_id in db.get_db_list():
         db.connect(db_id)
     return db
