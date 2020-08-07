@@ -525,7 +525,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
 
-# Copy swss and syncd service script
+# Copy service scripts (swss, syncd, bgp, radv)
 sudo LANG=C cp $SCRIPTS_DIR/swss.sh $FILESYSTEM_ROOT/usr/local/bin/swss.sh
 sudo LANG=C cp $SCRIPTS_DIR/syncd.sh $FILESYSTEM_ROOT/usr/local/bin/syncd.sh
 sudo LANG=C cp $SCRIPTS_DIR/bgp.sh $FILESYSTEM_ROOT/usr/local/bin/bgp.sh

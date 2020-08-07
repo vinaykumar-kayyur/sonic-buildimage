@@ -20,9 +20,9 @@ function check_warm_boot()
 function check_fast_boot ()
 {
     if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
-        FAST_BOOT = "true"
+        FAST_BOOT="true"
     else
-        FAST_BOOT = "false"
+        FAST_BOOT="false"
     fi
 }
 
@@ -32,7 +32,7 @@ start() {
     check_warm_boot
     check_fast_boot
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
-    debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
+    debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     # start service docker
     /usr/bin/${SERVICE}.sh start $DEV
