@@ -30,7 +30,7 @@ except ImportError as e:
 
 # definitions of the offset and width for values in XCVR info eeprom
 XCVR_INTFACE_BULK_OFFSET = 0
-XCVR_INTFACE_BULK_WIDTH_QSFP = 65
+XCVR_INTFACE_BULK_WIDTH_QSFP = 20
 XCVR_INTFACE_BULK_WIDTH_SFP = 21
 XCVR_TYPE_OFFSET = 0
 XCVR_TYPE_WIDTH = 1
