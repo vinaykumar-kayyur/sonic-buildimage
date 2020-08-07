@@ -502,7 +502,7 @@ int do_one_neigh_request(struct nlmsghdr *n)
 {
     struct ndmsg *ndm = NLMSG_DATA(n);
     int len = n->nlmsg_len;
-    struct rtattr *tb[NDA_MAX + 1] = {{0}};
+    struct rtattr *tb[NDA_MAX + 1] = {NULL};
 
     if (n->nlmsg_type == NLMSG_DONE)
     {
