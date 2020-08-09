@@ -923,7 +923,7 @@ class PddfSfp(SfpBase):
         if self.is_osfp_port:
             pass
         elif self.is_qsfp_port:
-            offset = 0
+            #offset = 0
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False

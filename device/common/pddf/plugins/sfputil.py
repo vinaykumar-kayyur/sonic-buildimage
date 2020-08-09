@@ -41,7 +41,7 @@ class SfpUtil(SfpUtilBase):
             self._port_to_eeprom_mapping[port_num] = port_eeprom_path
             port_type = pddf_obj.get_device_type(device)
             self._port_to_type_mapping[port_num] = port_type
-            ret = self.populate_port_type(port_num)
+            self.populate_port_type(port_num)
 
     def get_num_ports(self):
         return int(self.platform['num_ports'])
@@ -56,13 +56,12 @@ class SfpUtil(SfpUtilBase):
         if port_num < self._port_start or port_num > self._port_end:
             return False
 
-        status = 0
         device = "PORT" + "%d"%(port_num+1)
         output = pddf_obj.get_attr_name_output(device, 'xcvr_present')
         if not output:
             return False
 
-        mode = output['mode']
+        #mode = output['mode']
         modpres = output['status'].rstrip()
         if 'XCVR' in plugin_data:
             if 'xcvr_present' in plugin_data['XCVR']:
@@ -133,16 +132,12 @@ class SfpUtil(SfpUtilBase):
         if port_num < self._port_start or port_num > self._port_end:
             return False
 
-        device = "PORT" + "%d"%(port_num+1)
-        port_ps = pddf_obj.get_path(device,"xcvr_lpmode")
-        if port_ps is None:
+        if not self.get_presence(port_num):
             return False
-        #print "port_ps value is : %s"%port_ps
-        try:
-            reg_file = open(port_ps, 'w')
-        except IOError as e:
-            if not self.get_presence(port_num):
-                return False
+
+        device = "PORT" + "%d"%(port_num+1)
+        output = pddf_obj.get_attr_name_output(device, 'xcvr_lpmode')
+        if not output:
             if port_num not in self.qsfp_ports:
                 return False # Read from eeprom only for QSFP ports
             try:
@@ -170,24 +165,28 @@ class SfpUtil(SfpUtilBase):
                 if eeprom is not None:
                     eeprom.close()
                     time.sleep(0.01)
-        #raise NotImplementedError
+        else:
+            #mode = output['mode']
+            status = int(output['status'].rstrip())
+
+            if status == 1:
+                return True
+            else:
+                return False
 
     def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
             return False
 
+        if not self.get_presence(port_num):
+            return False # Port is not present, unable to set the eeprom
+
         device = "PORT" + "%d"%(port_num+1)
         port_ps = pddf_obj.get_path(device,"xcvr_lpmode")
         if port_ps is None:
-            return False
-        try:
-            reg_file = open(port_ps, 'w')
-        except IOError as e:
-            if not self.get_presence(port_num):
-                return False # Port is not present, unable to set the eeprom
             if port_num not in self.qsfp_ports:
-                return False # Read from eeprom only for QSFP ports
+                return False # Write to eeprom only for QSFP ports
             try:
                 eeprom = None
                 eeprom = open(self.port_to_eeprom_mapping[port_num], "r+b")
@@ -213,7 +212,17 @@ class SfpUtil(SfpUtilBase):
                 if eeprom is not None:
                     eeprom.close()
                     time.sleep(0.01)
-        #raise NotImplementedError
+        else:
+            try:
+                f = open(port_ps, 'w')
+                if lpmode:
+                    f.write('1')
+                else:
+                    f.write('0')
+                f.close()
+                return True
+            except IOError as e:
+                return False
 
     def get_transceiver_change_event(self):
         """

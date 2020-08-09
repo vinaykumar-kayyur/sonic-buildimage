@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 import os.path
-import sys, traceback
+import sys
 import json
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse
-import argparse
 
 class ThermalUtil:
     def __init__(self):
@@ -71,6 +70,5 @@ class ThermalUtil:
             print "temp1\t %+.1f C (high = %+.1f C, hyst = %+.1f C)" % (temp['temp1_input'], temp['temp1_max'], temp['temp1_max_hyst'])
 
 
-        def dump_sysfs(self):
-            return pddf_obj.cli_dump_dsysfs('temp-sensors')
-
+    def dump_sysfs(self):
+        return pddf_obj.cli_dump_dsysfs('temp-sensors')

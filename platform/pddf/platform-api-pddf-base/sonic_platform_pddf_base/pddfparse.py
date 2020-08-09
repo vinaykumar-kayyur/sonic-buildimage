@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import json
 import re
-import argparse
 import subprocess
 import glob
 import os, time, unicodedata
@@ -1241,7 +1240,7 @@ class PddfParse():
 
     def validate_pddf_devices(self, *args):
         self.populate_pddf_sysfsobj() 
-        alist = [item for item in args]
+        #alist = [item for item in args]
         #devtype = alist[0]
         v_ops = { 'cmd': 'validate', 'target':'all', 'attr':'all' }
         #dev_parse(self.data, self.data[devtype], v_ops )

@@ -60,8 +60,8 @@ class SYSStatusUtil():
         device = "SYSSTATUS"
         for i in range(1,8):
            node = pddf_obj.get_path(device,"system_reset"+str(i))
-            if node is None:
-                return False
+           if node is None:
+               return False
            try:
              with open(node, 'r') as f:
                status = f.read()
