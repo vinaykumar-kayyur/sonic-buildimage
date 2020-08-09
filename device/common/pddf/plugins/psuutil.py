@@ -16,7 +16,7 @@
 #
 
 import os.path
-import sys, traceback
+import sys
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse
 import json
@@ -259,7 +259,7 @@ class PsuUtil(PsuBase):
         if not output:
             return 0
 
-        mode = output['mode']
+        #mode = output['mode']
         output['status'] = output['status'].rstrip()
         if output['status'].isalpha():
             return 0

@@ -2,12 +2,6 @@
 
 
 try:
-    import os.path
-    import sys, traceback
-    import json
-    #sys.path.append('/usr/share/sonic/platform/sonic_platform')
-    import pddfparse
-    import argparse
     from sonic_platform_base.thermal_base import ThermalBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -19,12 +13,13 @@ class PddfThermal(ThermalBase):
     pddf_obj = {}
     plugin_data = {}
 
-    def __init__(self, index):
-        #with open(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/../../../platform/pddf/pd-plugin.json')) as pd:
-        with open('/usr/share/sonic/platform/pddf/pd-plugin.json') as pd:
-            self.plugin_data = json.load(pd)
+    def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
+        if not pddf_data or not pddf_plugin_data:
+            raise ValueError('PDDF JSON data error')
 
-        self.pddf_obj = pddfparse.PddfParse()
+        self.pddf_obj = pddf_data
+        self.plugin_data = pddf_plugin_data
+
         self.platform = self.pddf_obj.get_platform()
 
         self.thermal_index = index + 1

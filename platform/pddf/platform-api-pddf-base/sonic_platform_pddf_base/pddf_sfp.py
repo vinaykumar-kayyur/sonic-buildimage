@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
 try:
-    import os.path
-    import sys, traceback
-    #sys.path.append('/usr/share/sonic/platform/sonic_platform')
-    import pddfparse
-    import json
     import time
     from ctypes import create_string_buffer
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -159,20 +153,21 @@ class PddfSfp(SfpBase):
             raw = sysfsfile_eeprom.read(num_bytes)
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
-        except:
-            pass
+        except Exception as e:
+            print "Error: Unable to open eeprom_path: %s"%(str(e))
         finally:
             if sysfsfile_eeprom:
                 sysfsfile_eeprom.close()
 
         return eeprom_raw
 
-    def __init__(self, index):
-        #with open(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/../../../platform/pddf/pd-plugin.json')) as pd:
-        with open('/usr/share/sonic/platform/pddf/pd-plugin.json') as pd:
-            self.plugin_data = json.load(pd)
+    def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
+        if not pddf_data or not pddf_plugin_data:
+            raise ValueError('PDDF JSON data error')
 
-        self.pddf_obj = pddfparse.PddfParse()
+        self.pddf_obj = pddf_data
+        self.plugin_data = pddf_plugin_data
+
         self.platform = self.pddf_obj.get_platform()
 
         # index is 0-based
@@ -238,7 +233,7 @@ class PddfSfp(SfpBase):
             vendor_name_offset = OSFP_VENDOR_NAME_OFFSET
             vendor_pn_offset = OSFP_VENDOR_PN_OFFSET
             vendor_sn_offset = OSFP_VENDOR_SN_OFFSET
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
+            #cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
             sfp_type = 'OSFP'
 
@@ -251,7 +246,7 @@ class PddfSfp(SfpBase):
             vendor_name_offset = XCVR_VENDOR_NAME_OFFSET
             vendor_pn_offset = XCVR_VENDOR_PN_OFFSET
             vendor_sn_offset = XCVR_VENDOR_SN_OFFSET
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
+            #cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
             sfp_type = 'QSFP'
         else:
@@ -263,7 +258,7 @@ class PddfSfp(SfpBase):
             vendor_name_offset = XCVR_VENDOR_NAME_OFFSET
             vendor_pn_offset = XCVR_VENDOR_PN_OFFSET
             vendor_sn_offset = XCVR_VENDOR_SN_OFFSET
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
+            #cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
             sfp_type = 'SFP'
 
@@ -666,7 +661,7 @@ class PddfSfp(SfpBase):
         if not output:
             return False
 
-        mode = output['mode']
+        #mode = output['mode']
         status = int(output['status'].rstrip())
 
         if status==1:
@@ -714,7 +709,7 @@ class PddfSfp(SfpBase):
                     rx_los = (sffbase().test_bit(data, 1) != 0)
 
         else:
-            mode = output['mode']
+            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status==1:
@@ -761,7 +756,7 @@ class PddfSfp(SfpBase):
                     data = int(status_control_raw[0], 16)
                     tx_fault = (sffbase().test_bit(data, 2) != 0)
         else:
-            mode = output['mode']
+            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status==1:
@@ -822,7 +817,7 @@ class PddfSfp(SfpBase):
 
                 return tx_disable
         else:
-            mode = output['mode']
+            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status==1:
@@ -904,7 +899,7 @@ class PddfSfp(SfpBase):
                 # SFP
                 pass
         else:
-            mode = output['mode']
+            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status == 1:
@@ -1114,11 +1109,11 @@ class PddfSfp(SfpBase):
                     try:
                         eeprom_f = open(self.eeprom_path, mode="r+b", buffering=0)
                         buf = create_string_buffer(1)
-                        buf[0] = chr(tx_disable_ctl)
+                        buf[0] = chr(txdisable_ctl)
                         # Write to eeprom
                         eeprom_f.seek(SFP_STATUS_CONTROL_OFFSET)
                         eeprom_f.write(buf[0])
-                    except:
+                    except Exception as e:
                         print("Error: unable to open file: %s" % str(e))
                         return False
                     finally:
@@ -1230,7 +1225,6 @@ class PddfSfp(SfpBase):
                     if eeprom_f is not None:
                         eeprom_f.close()
                         time.sleep(0.01)
-                    status = True
             else:
                 pass
 

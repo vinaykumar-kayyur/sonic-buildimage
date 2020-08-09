@@ -1,26 +1,20 @@
 #!/usr/bin/env python
 
 #############################################################################
-#
+# PDDF
 # Module contains an implementation of SONiC Platform Base API and
 # provides the platform information
 #
 #############################################################################
 
 try:
-    import os
     import sys
-    import subprocess
-    import glob
-    import sonic_device_util
-    from sonic_platform_base.platform_base import PlatformBase
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.psu import Psu
     from sonic_platform.fan import Fan
     from sonic_platform.thermal import Thermal
     from sonic_platform.eeprom import Eeprom
-    import json
     #sys.path.append('/usr/share/sonic/platform/sonic_platform')
     import pddfparse
 except ImportError as e:
@@ -31,70 +25,49 @@ class PddfChassis(ChassisBase):
     PDDF Generic Chassis class
     """
     pddf_obj = {}
+    plugin_data = {}
 
-    def __init__(self):
+    def __init__(self, pddf_data=None, pddf_plugin_data=None):
 
         ChassisBase.__init__(self)
 
-        self.pddf_obj = pddfparse.PddfParse()
+        self.pddf_obj = pddf_data if pddf_data else None
+        self.plugin_data = pddf_plugin_data if pddf_plugin_data else None
+        if not self.pddf_obj or not self.plugin_data:
+            try:
+                import pddfparse
+                import json
+                self.pddf_obj = pddfparse.PddfParse()
+                with open('/usr/share/sonic/platform/pddf/pd-plugin.json') as pd:
+                    self.plugin_data = json.load(pd)
+            except Exception as e:
+                raise Exception("Error: Unable to load PDDF JSON data - %s" % str(e))
+
         self.platform_inventory = self.pddf_obj.get_platform()
 
         # Initialize EEPROM
-        self.sys_eeprom = Eeprom()
+        self.sys_eeprom = Eeprom(self.pddf_obj, self.plugin_data)
 
         # FANs
         for i in range(self.platform_inventory['num_fantrays']):
             for j in range(self.platform_inventory['num_fans_pertray']):
-                fan = Fan(i, j)
+                fan = Fan(i, j, self.pddf_obj, self.plugin_data)
                 self._fan_list.append(fan)
-                #color=""
-                #fan.get_status_led(color)
-                #print "%s"%color
-                #fan.set_status_led("STATUS_LED_COLOR_GREEN")
-                #fan.get_status_led(color)
-                #print "%s"%color
 
         # PSUs
         for i in range(self.platform_inventory['num_psus']):
-            psu = Psu(i)
+            psu = Psu(i, self.pddf_obj, self.plugin_data)
             self._psu_list.append(psu)
-            # for testing, remove the below lines later on 
-            #print "%s"%psu.get_name()
-            #print "Status: %d"%psu.get_status()
-            #print "Model: %s"%psu.get_model()
-            #print "FanName: %s"%psu._fan_list[0].get_name()
-            #print "FanSpeed: %d%%"%psu._fan_list[0].get_speed()
-            #color=""
-            #psu.get_status_led(color)
-            #print "%s"%color
-            #psu.set_status_led("STATUS_LED_COLOR_GREEN")
-            #psu.get_status_led(color)
-            #print "%s"%color
 
         # OPTICs
         for index in range(self.platform_inventory['num_ports']):
-            sfp = Sfp(index)
+            sfp = Sfp(index, self.pddf_obj, self.plugin_data)
             self._sfp_list.append(sfp)
 
         # THERMALs
         for i in range(self.platform_inventory['num_temps']):
-            thermal = Thermal(i)
+            thermal = Thermal(i, self.pddf_obj, self.plugin_data)
             self._thermal_list.append(thermal)
-	    # Thermal Test Cases
-            #temp=thermal.get_temperature()
-            #high=thermal.get_high_threshold()
-            #hyst=thermal.get_low_threshold()
-            #value="TEMP%d\t %+.1f C (high = %+.1f C, hyst = %+.1f C)" % (i, temp, high, hyst)
-            #print value
-            #thermal.set_high_threshold(80.0)
-            #thermal.set_low_threshold(75.0)
-            #value="TEMP%d\t %+.1f C (high = %+.1f C, hyst = %+.1f C)" % (i, thermal.get_temperature(), thermal.get_high_threshold(), thermal.get_low_threshold())
-            #print value
-            #thermal.set_high_threshold(high)
-            #thermal.set_low_threshold(hyst)
-            #value="TEMP%d\t %+.1f C (high = %+.1f C, hyst = %+.1f C)" % (i, thermal.get_temperature(), thermal.get_high_threshold(), thermal.get_low_threshold())
-            #print value
-
 
 	# SYSTEM LED Test Cases 
 	"""
@@ -118,6 +91,8 @@ class PddfChassis(ChassisBase):
 	color=self.get_system_led("LOC_LED")
 	print "Set off: " + color
 	"""
+
+
 
     def get_name(self):
         """
@@ -464,41 +439,24 @@ class PddfChassis(ChassisBase):
     ##############################################
     # System LED  methods
     ##############################################
-    color_map = {
-         "STATUS_LED_COLOR_GREEN" : "on",
-         "STATUS_LED_COLOR_RED" : "faulty",
-         "STATUS_LED_COLOR_OFF" : "off"
-    }
-
     def set_system_led(self, led_device_name, color):
-        color_state="SOLID"
-        if (not led_device_name in self.pddf_obj.data.keys()):
-                print  led_device_name + " is not configured"
-                return (False)
-
-
-        if (not color in self.color_map.keys()):
-                print "ERROR: Invalid color"
-                return (False)
-
-
-        if(not self.pddf_obj.is_led_device_configured(led_device_name, self.color_map[color])):
-                print "ERROR :" + led_device_name + ' ' + color + " is not supported in the platform"
+        result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
+        if result == False:
+                print msg
                 return (False)
 
         index=self.pddf_obj.data[led_device_name]['dev_attr']['index']
         device_name=self.pddf_obj.data[led_device_name]['dev_info']['device_name']
         self.pddf_obj.create_attr('device_name', device_name,  self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('index', index, self.pddf_obj.get_led_path())
-        self.pddf_obj.create_attr('color', self.color_map[color], self.pddf_obj.get_led_cur_state_path())
-        self.pddf_obj.create_attr('color_state', color_state, self.pddf_obj.get_led_cur_state_path())
+        self.pddf_obj.create_attr('color', color, self.pddf_obj.get_led_cur_state_path())
         self.pddf_obj.create_attr('dev_ops', 'set_status',  self.pddf_obj.get_led_path())
         return (True)
 
 
     def get_system_led(self, led_device_name):
         if (not led_device_name in self.pddf_obj.data.keys()):
-                status= led_device_name + " is not configured"
+                status= "[FAILED] " + led_device_name + " is not configured"
                 return (status)
 
         index=self.pddf_obj.data[led_device_name]['dev_attr']['index']

@@ -17,11 +17,6 @@
 
 
 try:
-    import os.path
-    import sys, traceback
-    #sys.path.append('/usr/share/sonic/platform/sonic_platform')
-    import pddfparse
-    import json
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.fan import Fan
 except ImportError as e:
@@ -31,29 +26,24 @@ except ImportError as e:
 class PddfPsu(PsuBase):
     """PDDF generic PSU class"""
 
-    color_map = {
-         "STATUS_LED_COLOR_GREEN" : "on",
-         "STATUS_LED_COLOR_RED" : "faulty",
-         "STATUS_LED_COLOR_OFF" : "off"
-    }
-
     pddf_obj = {}
     plugin_data = {}
 
-    def __init__(self, index):
-        PsuBase.__init__(self)
-        #with open(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/../../../platform/pddf/pd-plugin.json')) as pd:
-        with open('/usr/share/sonic/platform/pddf/pd-plugin.json') as pd:
-            self.plugin_data = json.load(pd)
 
-        self.pddf_obj = pddfparse.PddfParse()
+    def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
+        PsuBase.__init__(self)
+        if not pddf_data or not pddf_plugin_data:
+            raise ValueError('PDDF JSON data error')
+
+        self.pddf_obj = pddf_data
+        self.plugin_data = pddf_plugin_data
         self.platform = self.pddf_obj.get_platform()
         self.psu_index = index + 1
         
         self._fan_list = []     # _fan_list under PsuBase class is a global variable, hence we need to use _fan_list per class instatiation
         self.num_psu_fans = int(self.pddf_obj.get_num_psu_fans('PSU{}'.format(index+1)))
         for psu_fan_idx in range(self.num_psu_fans):
-            psu_fan = Fan(0, psu_fan_idx, True, self.psu_index)
+            psu_fan = Fan(0, psu_fan_idx, pddf_data, pddf_plugin_data, True, self.psu_index)
             self._fan_list.append(psu_fan)
 
     def get_num_fans(self):
@@ -240,36 +230,25 @@ class PddfPsu(PsuBase):
 
     def set_status_led(self, color):
         index = str(self.psu_index-1)
-        color_state="SOLID"
         led_device_name = "PSU{}".format(self.psu_index) + "_LED"
 
-        if (not led_device_name in self.pddf_obj.data.keys()):
-                print "ERROR: " + led_device_name + " is not configured"
+        result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
+        if result == False:
+                print msg
                 return (False)
 
-        if (not color in self.color_map.keys()):
-                print "ERROR: Invalid color"
-                return (False)
-
-
-        if(not self.pddf_obj.is_led_device_configured(led_device_name, self.color_map[color])):
-                print "ERROR :" + led_device_name + ' ' + color + " :  is not supported in the platform"
-                return (False)
-        
         device_name=self.pddf_obj.data[led_device_name]['dev_info']['device_name']
         self.pddf_obj.create_attr('device_name', device_name,  self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('index', index, self.pddf_obj.get_led_path())
-        self.pddf_obj.create_attr('color', self.color_map[color], self.pddf_obj.get_led_cur_state_path())
-        self.pddf_obj.create_attr('color_state', color_state, self.pddf_obj.get_led_cur_state_path())
+        self.pddf_obj.create_attr('color', color, self.pddf_obj.get_led_cur_state_path())
         self.pddf_obj.create_attr('dev_ops', 'set_status',  self.pddf_obj.get_led_path())
         return (True)
-
 
     def get_status_led(self):
         index = str(self.psu_index-1)
         psu_led_device = "PSU{}_LED".format(self.psu_index)
         if (not psu_led_device in self.pddf_obj.data.keys()):
-            status= psu_led_device + " is not configured"
+            #status= psu_led_device + " is not configured"
             # Implement a generic status_led color scheme
             if self.get_powergood_status():
                 return self.STATUS_LED_COLOR_GREEN

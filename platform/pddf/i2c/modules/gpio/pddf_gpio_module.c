@@ -65,11 +65,17 @@ struct i2c_board_info *i2c_get_gpio_board_info(GPIO_DATA* mdata, NEW_DEV_ATTR *d
 
     gpio_platform_data = (struct pca953x_platform_data *)kzalloc(sizeof (struct pca953x_platform_data), GFP_KERNEL);
 
-    if (strncmp(device_data->dev_type, "pca9554", strlen("pca9554")) == 0)
+    if (strncmp(device_data->dev_type, "pca9554", strlen("pca9554")) == 0 ||
+            strncmp(device_data->dev_type, "pca9534", strlen("pca9534")) == 0 ||
+            strncmp(device_data->dev_type, "pca9538", strlen("pca9538")) == 0)
         def_num_gpios = 0x8;
-    else if (strncmp(device_data->dev_type, "pca9555", strlen("pca9555")) == 0)
+    else if (strncmp(device_data->dev_type, "pca9555", strlen("pca9555")) == 0 ||
+            strncmp(device_data->dev_type, "pca9535", strlen("pca9535")) == 0 ||
+            strncmp(device_data->dev_type, "pca9539", strlen("pca9539")) == 0 ||
+            strncmp(device_data->dev_type, "pca9575", strlen("pca9575")) == 0)
         def_num_gpios = 0x10;
-    else if (strncmp(device_data->dev_type, "pca9698", strlen("pca9698")) == 0)
+    else if (strncmp(device_data->dev_type, "pca9698", strlen("pca9698")) == 0 ||
+            strncmp(device_data->dev_type, "pca9505", strlen("pca9505")) == 0)
         def_num_gpios = 0x28;
     else
     {

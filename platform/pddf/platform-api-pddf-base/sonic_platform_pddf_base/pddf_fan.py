@@ -8,17 +8,13 @@
 #- fan<idx>_input
 #- fan<idx>_pwm
 #- fan<idx>_fault
-# where idx is in the range [1-6]
+# where idx is in the range [1-32]
 #
 
 
 
 try:
-    import os.path
-    import sys, traceback, time
-    #sys.path.append('/usr/share/sonic/platform/sonic_platform')
-    import pddfparse
-    import json
+    import math
     from sonic_platform_base.fan_base import FanBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -26,23 +22,19 @@ except ImportError as e:
 
 class PddfFan(FanBase):
     """PDDF generic Fan class"""
-    color_map = {
-         "STATUS_LED_COLOR_GREEN" : "on",
-         "STATUS_LED_COLOR_RED" : "faulty",
-         "STATUS_LED_COLOR_OFF" : "off"
-    }
 
     pddf_obj = {}
     plugin_data = {}
 
-    def __init__(self, tray_idx, fan_idx=0, is_psu_fan=False, psu_index=0):
+    def __init__(self, tray_idx, fan_idx=0, pddf_data=None, pddf_plugin_data=None, is_psu_fan=False, psu_index=0):
         # idx is 0-based 
-        #with open(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/../../../platform/pddf/pd-plugin.json')) as pd:
-        with open('/usr/share/sonic/platform/pddf/pd-plugin.json') as pd:
-            self.plugin_data = json.load(pd)
+        if not pddf_data or not pddf_plugin_data:
+            raise ValueError('PDDF JSON data error')
 
-        self.pddf_obj = pddfparse.PddfParse()
+        self.pddf_obj = pddf_data
+        self.plugin_data = pddf_plugin_data
         self.platform = self.pddf_obj.get_platform()
+
         if tray_idx<0 or tray_idx>=self.platform['num_fantrays']:
             print "Invalid fantray index %d\n"%tray_idx
             return
@@ -80,7 +72,6 @@ class PddfFan(FanBase):
         else:
             idx = (self.fantray_index-1)*self.platform['num_fans_pertray'] + self.fan_index
             attr_name = "fan" + str(idx) + "_present"
-            #sysfs_path = self.pddf_obj.get_path("FAN-CTRL", attr_name)
             output = self.pddf_obj.get_attr_name_output("FAN-CTRL", attr_name)
             if not output:
                 return False
@@ -129,7 +120,6 @@ class PddfFan(FanBase):
             depending on fan direction
         """
         if self.is_psu_fan:
-            attr = "psu_fan_dir"
             device = "PSU{}".format(self.fans_psu_index)
             output = self.pddf_obj.get_attr_name_output(device, "psu_fan_dir")
             if not output:
@@ -180,7 +170,7 @@ class PddfFan(FanBase):
             if not output:
                 return 0
 
-            mode = output['mode']
+            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -199,7 +189,7 @@ class PddfFan(FanBase):
             if not output:
                 return 0
             
-            mode = output['mode']
+            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -226,7 +216,7 @@ class PddfFan(FanBase):
             if not output:
                 return 0
             
-            mode = output['mode']
+            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -243,7 +233,7 @@ class PddfFan(FanBase):
             if output is None:
                 return 0
 
-            mode = output['mode']
+            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -272,7 +262,7 @@ class PddfFan(FanBase):
             if not output:
                 return 0
             
-            mode = output['mode']
+            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -332,7 +322,7 @@ class PddfFan(FanBase):
                 if not output:
                     return False
                 
-                mode = output['mode']
+                #mode = output['mode']
                 status = output['status']
 
                 #print "Done changing the speed of all the fans ... Reading the speed to crossscheck\n"
@@ -340,27 +330,18 @@ class PddfFan(FanBase):
 
     def set_status_led(self, color):
         index = str(self.fantray_index-1)
-        color_state="SOLID"
         led_device_name = "FANTRAY{}".format(self.fantray_index) + "_LED"
 
-        if (not led_device_name in self.pddf_obj.data.keys()):
-                print "ERROR: " + led_device_name + " is not configured"
+        result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
+        if result == False:
+                print msg
                 return (False)
 
-        if (not color in self.color_map.keys()):
-                print "ERROR: Invalid color"
-                return (False)
-
-
-        if(not self.pddf_obj.is_led_device_configured(led_device_name, self.color_map[color])):
-                print "ERROR :" + led_device_name + ' ' + color + " is not supported in the platform"
-                return (False)
 
         device_name=self.pddf_obj.data[led_device_name]['dev_info']['device_name']
         self.pddf_obj.create_attr('device_name', device_name,  self.pddf_obj.get_led_path())
         self.pddf_obj.create_attr('index', index, self.pddf_obj.get_led_path())
-        self.pddf_obj.create_attr('color', self.color_map[color], self.pddf_obj.get_led_cur_state_path())
-        self.pddf_obj.create_attr('color_state', color_state, self.pddf_obj.get_led_cur_state_path())
+        self.pddf_obj.create_attr('color', color, self.pddf_obj.get_led_cur_state_path())
         self.pddf_obj.create_attr('dev_ops', 'set_status',  self.pddf_obj.get_led_path())
         return (True)
 
@@ -370,7 +351,7 @@ class PddfFan(FanBase):
         fan_led_device = "FANTRAY{}".format(self.fantray_index) + "_LED"
 
         if (not fan_led_device in self.pddf_obj.data.keys()):
-            status = fan_led_device + " is not configured"
+            #status = fan_led_device + " is not configured"
             # Implement a generic status_led color scheme
             if self.get_status():
                 return self.STATUS_LED_COLOR_GREEN

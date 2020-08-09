@@ -25,10 +25,7 @@
 struct kobject *platform_kobj=NULL;
 struct kobject *led_kobj=NULL;
 
-struct kobject *blink_kobj=NULL;
-struct kobject *on_kobj=NULL;
-struct kobject *off_kobj=NULL;
-struct kobject *faulty_kobj=NULL;
+struct kobject *state_attr_kobj=NULL;
 struct kobject *cur_state_kobj=NULL;
 
 /*****************************************
@@ -37,12 +34,31 @@ struct kobject *cur_state_kobj=NULL;
  *****************************************/
 #define NAME_SIZE 32
 typedef enum {
-	ON,
-	OFF,
-	FAULTY,
-	BLINK,
-        MAX_LED_STATUS		
+    STATUS_LED_COLOR_GREEN,
+    STATUS_LED_COLOR_GREEN_BLINK,
+    STATUS_LED_COLOR_RED,
+    STATUS_LED_COLOR_RED_BLINK,
+    STATUS_LED_COLOR_AMBER,
+    STATUS_LED_COLOR_AMBER_BLINK,
+    STATUS_LED_COLOR_BLUE,
+    STATUS_LED_COLOR_BLUE_BLINK,
+    STATUS_LED_COLOR_OFF,
+    MAX_LED_STATUS
 }LED_STATUS;
+
+char*  LED_STATUS_STR[] = {
+    "STATUS_LED_COLOR_GREEN",
+    "STATUS_LED_COLOR_GREEN_BLINK",
+    "STATUS_LED_COLOR_RED",
+    "STATUS_LED_COLOR_RED_BLINK",
+    "STATUS_LED_COLOR_AMBER",
+    "STATUS_LED_COLOR_AMBER_BLINK",
+    "STATUS_LED_COLOR_BLUE",
+    "STATUS_LED_COLOR_BLUE_BLINK",
+    "STATUS_LED_COLOR_OFF"
+};
+
+
 typedef struct 
 {
     char bits[NAME_SIZE]; 
@@ -54,7 +70,6 @@ typedef struct
 {
     int	swpld_addr;
     int swpld_addr_offset;
-    char color[NAME_SIZE];
     MASK_BITS bits;
     unsigned short	value;
 } LED_DATA;
@@ -63,7 +78,6 @@ typedef struct
 {
     int state;
     char color[NAME_SIZE]; 
-    char color_state[NAME_SIZE]; //BLINK or SOLID
 } CUR_STATE_DATA;
 
 typedef struct
@@ -72,7 +86,6 @@ typedef struct
     char device_name[NAME_SIZE];
     int index;
     LED_DATA data[MAX_LED_STATUS];
-    bool blink;
     int	swpld_addr;
     int swpld_addr_offset;
 } LED_OPS_DATA; 

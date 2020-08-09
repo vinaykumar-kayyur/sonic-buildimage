@@ -1,20 +1,12 @@
 #!/usr/bin/env python
 
 #############################################################################
-# DellEmc Z9100
+# PDDF
 #
-# Platform and model specific eeprom subclass, inherits from the base class,
-# and provides the followings:
-# - the eeprom format definition
-# - specific encoder/decoder if there is special need
+# PDDF syseeprom base class inherited from the base class
 #############################################################################
 
 try:
-    import os
-    import sys
-    import json
-    #sys.path.append('/usr/share/sonic/platform/sonic_platform')
-    import pddfparse
     from sonic_eeprom import eeprom_tlvinfo
     import binascii
 except ImportError, e:
@@ -24,9 +16,15 @@ except ImportError, e:
 class PddfEeprom(eeprom_tlvinfo.TlvInfoDecoder):
     _TLV_INFO_MAX_LEN = 256
     pddf_obj = {}
+    plugin_data = {}
 
-    def __init__(self):
-        self.pddf_obj = pddfparse.PddfParse()
+    def __init__(self, pddf_data=None, pddf_plugin_data=None):
+        if not pddf_data or not pddf_plugin_data:
+            raise ValueError('PDDF JSON data error')
+
+        self.pddf_obj = pddf_data
+        self.plugin_data = pddf_plugin_data
+
         # system EEPROM always has device name EEPROM1
         self.eeprom_path = self.pddf_obj.get_path("EEPROM1", "eeprom")
         if self.eeprom_path is None:

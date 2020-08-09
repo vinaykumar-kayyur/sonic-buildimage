@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os.path
-import sys, traceback
+import sys
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse
 import json
@@ -151,7 +151,7 @@ class SfpUtil(SfpUtilBase):
                 # check for valid connector type
                 eeprom.seek(2)
                 ctype = eeprom.read(1)
-                if ctype in ['21','23']
+                if ctype in ['21','23']:
                     return False
 
                 eeprom.seek(93)
@@ -194,7 +194,7 @@ class SfpUtil(SfpUtilBase):
                 # check for valid connector type
                 eeprom.seek(2)
                 ctype = eeprom.read(1)
-                if ctype in ['21','23']
+                if ctype in ['21','23']:
                     return False
 
                 # Fill in write buffer

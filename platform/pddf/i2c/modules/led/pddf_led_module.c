@@ -52,6 +52,20 @@ extern int board_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 extern ssize_t show_pddf_data(struct device *dev, struct device_attribute *da, char *buf);
 extern ssize_t store_pddf_data(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
 
+static LED_STATUS find_state_index(const char* state_str) {
+     int index;
+     char *ptr = (char *)state_str; 
+     while (*ptr && *ptr!= '\n' && *ptr !='\0') ptr++;
+     *ptr='\0';
+     for ( index = 0; index < MAX_LED_STATUS; index++) {
+         /*int rc = strcmp(state_str, LED_STATUS_STR[index]) ;*/
+         if (strcmp(state_str, LED_STATUS_STR[index]) == 0 ) {
+                 return index;
+          }
+     }
+     return MAX_LED_STATUS;
+}
+
 static LED_TYPE get_dev_type(char* name)
 {
         LED_TYPE ret = LED_TYPE_MAX;
@@ -117,36 +131,22 @@ static LED_OPS_DATA* find_led_ops_data(struct device_attribute *da)
         return (dev_list[led_type]+ptr->index);
 }
 
-static void print_led_data(LED_OPS_DATA *ptr)
+static void print_led_data(LED_OPS_DATA *ptr, LED_STATUS state)
 {
+    int i = 0;
 	if(!ptr) return ;
 	pddf_dbg(LED, KERN_INFO "Print %s index:%d num_psus:%d num_fantrays:%d ADDR=%p\n", 
 					ptr->device_name, ptr->index, num_psus, num_fantrays, ptr);
 	pddf_dbg(LED, KERN_INFO "\tindex: %d\n", ptr->index); 
-	pddf_dbg(LED, KERN_INFO  "\tcur_state: %d; %s; %s\n", ptr->cur_state.state, ptr->cur_state.color, ptr->cur_state.color_state); 
-	if(ptr->data[ON].swpld_addr) {
-		pddf_dbg(LED, KERN_INFO "\t\t[ON]: addr/offset:0x%x;0x%x color:%s; value:%x; mask_bits: 0x%x; pos:%d\n", 
-		ptr->data[ON].swpld_addr, ptr->data[ON].swpld_addr_offset,
-		ptr->data[ON].color, ptr->data[ON].value, ptr->data[ON].bits.mask_bits, ptr->data[ON].bits.pos); 
-	}
-
-	if(ptr->data[OFF].swpld_addr) {
-		pddf_dbg(LED, KERN_INFO  "\t\t[OFF]: addr/offset:0x%x;0x%x  color:%s; value:%x; mask_bits: 0x%x; pos:%d\n", 
-		ptr->data[OFF].swpld_addr, ptr->data[OFF].swpld_addr_offset,
-		ptr->data[OFF].color, ptr->data[OFF].value, ptr->data[OFF].bits.mask_bits, ptr->data[OFF].bits.pos); 
-	}
-
-	if(ptr->data[FAULTY].swpld_addr) {
-		pddf_dbg(LED, KERN_INFO "\t\t[FAULTY]: addr/offset:0x%x;0x%x  color:%s; value:%x; mask_bits: 0x%x; pos:%d\n", 
-		ptr->data[FAULTY].swpld_addr, ptr->data[FAULTY].swpld_addr_offset,
-		ptr->data[FAULTY].color, ptr->data[FAULTY].value, ptr->data[FAULTY].bits.mask_bits, ptr->data[FAULTY].bits.pos); 
-	}
-
-	if(ptr->data[BLINK].swpld_addr) {
-		pddf_dbg(LED, KERN_INFO "\t\t[BLINK]: addr/offset:0x%x;0x%x  color:%s; value:%x; mask_bits: 0x%x; pos:%d\n", 
-		ptr->data[BLINK].swpld_addr, ptr->data[BLINK].swpld_addr_offset,
-		ptr->data[BLINK].color, ptr->data[BLINK].value, ptr->data[BLINK].bits.mask_bits, ptr->data[BLINK].bits.pos); 
-	}
+	pddf_dbg(LED, KERN_INFO  "\tcur_state: %d; %s \n", ptr->cur_state.state, ptr->cur_state.color); 
+        for (i = 0; i< MAX_LED_STATUS; i++) {
+	    if(ptr->data[i].swpld_addr && (i == state || state == -1)) {
+		pddf_dbg(LED, KERN_INFO "\t\t[%s]: addr/offset:0x%x;0x%x color:%s; value:%x; mask_bits: 0x%x; pos:%d\n", 
+                LED_STATUS_STR[i],
+		ptr->data[i].swpld_addr, ptr->data[i].swpld_addr_offset,
+		LED_STATUS_STR[i], ptr->data[i].value, ptr->data[i].bits.mask_bits, ptr->data[i].bits.pos); 
+            }
+        }
 }
 	
 ssize_t get_status_led(struct device_attribute *da)
@@ -170,28 +170,18 @@ ssize_t get_status_led(struct device_attribute *da)
 	if (sys_val < 0)
 		return sys_val;
 
-	strcpy(temp_data.cur_state.color_state, "None"); 
 	strcpy(temp_data.cur_state.color, "None"); 
 	for (state=0; state<MAX_LED_STATUS; state++) {
         	color_val = (sys_val & ~ops_ptr->data[state].bits.mask_bits);
 		if ((color_val ^ (ops_ptr->data[state].value<<ops_ptr->data[state].bits.pos))==0) {
-			if(state == BLINK)
-				strcpy(temp_data.cur_state.color_state,"Blink"); 
-			else {
-				strcpy(temp_data.cur_state.color, ops_ptr->data[state].color);
-        			if(strcasecmp(ops_ptr->data[state].color, "off")==0) {
-					strcpy(temp_data.cur_state.color_state, ""); 
-				} else {
-					strcpy(temp_data.cur_state.color_state, "Solid"); 
-				}
-			}
+		      strcpy(temp_data.cur_state.color, LED_STATUS_STR[state]);
 		}
 	}
-#if DEBUG
-        pddf_dbg(LED, KERN_ERR "Get : %s:%d addr/offset:0x%x; 0x%x value=0x%x [%s:%s]\n",
+#if DEBUG > 1
+        pddf_dbg(LED, KERN_ERR "Get : %s:%d addr/offset:0x%x; 0x%x value=0x%x [%s]\n",
 		ops_ptr->device_name, ops_ptr->index, 
                 ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, sys_val, 
-		temp_data.cur_state.color, temp_data.cur_state.color_state);
+		temp_data.cur_state.color);
 #endif
 
 	return(ret);	
@@ -201,12 +191,11 @@ ssize_t set_status_led(struct device_attribute *da)
 {
 	int ret=0;
 	uint32_t sys_val=0, new_val=0;
-	int cur_state = 0;
+	LED_STATUS cur_state = MAX_LED_STATUS;
 	struct pddf_data_attribute *_ptr = (struct pddf_data_attribute *)da;
 	LED_OPS_DATA* temp_data_ptr=(LED_OPS_DATA*)_ptr->addr;
 	LED_OPS_DATA* ops_ptr=find_led_ops_data(da);
 	char* _buf=temp_data_ptr->cur_state.color;
-	int blink=0;
 
 	if (!ops_ptr) { 
 		pddf_dbg(LED, KERN_ERR "PDDF_LED ERROR %s: Cannot find LED Ptr", __func__);
@@ -217,19 +206,16 @@ ssize_t set_status_led(struct device_attribute *da)
 			__func__, ops_ptr->device_name, ops_ptr->index);
 		return (-1);
 	}
-	pddf_dbg(LED, KERN_ERR "%s: Set [%s;%d] color[%s;%s]\n", __func__,
+	pddf_dbg(LED, KERN_ERR "%s: Set [%s;%d] color[%s]\n", __func__,
 		temp_data_ptr->device_name, temp_data_ptr->index,
-		temp_data_ptr->cur_state.color, temp_data_ptr->cur_state.color_state);
-        if(strcasecmp(_buf, "on")==0) {
-                cur_state = ON;
-        } else if(strcasecmp(_buf, "off")==0) {
-                cur_state=OFF;
-        } else if(strcasecmp(_buf, "faulty")==0) {
-                cur_state=FAULTY;
-        } else {
+		temp_data_ptr->cur_state.color);
+        cur_state = find_state_index(_buf);
+
+        if (cur_state == MAX_LED_STATUS) {
                 pddf_dbg(LED, KERN_ERR "ERROR %s: not supported: %s\n", _buf, __func__);
                 return (-1);
         }
+
 	if(ops_ptr->data[cur_state].swpld_addr != 0x0) {
         	sys_val = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
 			if (sys_val < 0)
@@ -238,17 +224,6 @@ ssize_t set_status_led(struct device_attribute *da)
         	new_val = (sys_val & ops_ptr->data[cur_state].bits.mask_bits) |
                                 (ops_ptr->data[cur_state].value << ops_ptr->data[cur_state].bits.pos);
 
-        		if(strcasecmp(temp_data_ptr->cur_state.color_state, "blink")==0) {
-				if (ops_ptr->data[BLINK].swpld_addr != 0x0) {
-        				new_val = (new_val & ops_ptr->data[BLINK].bits.mask_bits) |
-                                		(ops_ptr->data[BLINK].value << ops_ptr->data[BLINK].bits.pos);
-					blink=1;
-				} else {
-					pddf_dbg(LED, KERN_ERR "ERROR %s: %s %d BLINK is not supported\n",__func__,
-						ops_ptr->device_name, ops_ptr->index);
-					return (-1);
-				}
-			}
 	} else {
 		pddf_dbg(LED, KERN_ERR "ERROR %s: %s %d state %d; %s not configured\n",__func__, 
 			ops_ptr->device_name, ops_ptr->index, cur_state, _buf);
@@ -256,8 +231,8 @@ ssize_t set_status_led(struct device_attribute *da)
 	}
 
         board_i2c_cpld_write(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, new_val);
-        pddf_dbg(LED, KERN_INFO "Set state:%s;%s;%s 0x%x:0x%x sys_val:0x%x new_val:0x%x read:0x%x\n",
-		LED_TYPE_STR[cur_state], ops_ptr->data[cur_state].color, blink? "Blink":"Solid",
+        pddf_dbg(LED, KERN_INFO "Set color:%s; 0x%x:0x%x sys_val:0x%x new_val:0x%x read:0x%x\n",
+		LED_STATUS_STR[cur_state],
                 ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset,
                 sys_val, new_val,
 		ret = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset));
@@ -370,9 +345,9 @@ static int load_led_ops_data(struct device_attribute *da, LED_STATUS state)
 	}
 	if(ptr->device_name)
     {
-        pddf_dbg(LED, KERN_INFO "SYSTEM_LED: load_led_ops_data: name:%s; index=%d ADDR=%p\n", ptr->device_name, ptr->index, ptr);
+        pddf_dbg(LED, KERN_INFO "[%s]: load_led_ops_data: index=%d addr=0x%x;0x%x valu=0x%x\n", 
+				ptr->device_name, ptr->index, ptr->swpld_addr, ptr->swpld_addr_offset, ptr->data[0].value);
     }
-
 	if((led_type=get_dev_type(ptr->device_name))==LED_TYPE_MAX) {
 		pddf_dbg(LED, KERN_ERR "PDDF_LED ERROR *%s Unsupported Led Type\n", __func__);
 		return(-1);
@@ -385,13 +360,13 @@ static int load_led_ops_data(struct device_attribute *da, LED_STATUS state)
 
 	memcpy(ops_ptr->device_name, ptr->device_name, sizeof(ops_ptr->device_name));
 	ops_ptr->index = ptr->index;
-	memcpy(&ops_ptr->data[state], &ptr->data[state], sizeof(LED_DATA));
+	memcpy(&ops_ptr->data[state], &ptr->data[0], sizeof(LED_DATA));
 	ops_ptr->data[state].swpld_addr = ptr->swpld_addr;
 	ops_ptr->data[state].swpld_addr_offset = ptr->swpld_addr_offset;
 	ops_ptr->swpld_addr = ptr->swpld_addr;
 	ops_ptr->swpld_addr_offset = ptr->swpld_addr_offset;
 
-	print_led_data(dev_list[led_type]+ptr->index);
+	print_led_data(dev_list[led_type]+ptr->index, state);
 
 	memset(ptr, 0, sizeof(LED_OPS_DATA));
 	return (0);
@@ -400,7 +375,7 @@ static int load_led_ops_data(struct device_attribute *da, LED_STATUS state)
 static int show_led_ops_data(struct device_attribute *da)
 {
         LED_OPS_DATA* ops_ptr=find_led_ops_data(da);
-        print_led_data(ops_ptr);
+        print_led_data(ops_ptr, -1);
 	return(0);
 }
 
@@ -414,28 +389,24 @@ static int verify_led_ops_data(struct device_attribute *da)
 		memcpy(ptr, ops_ptr, sizeof(LED_OPS_DATA));
 	else
     {
-        pddf_dbg(LED, "SYSTEM_LED: verify_led_ops_data: Failed to find ops_ptr name:%s; index=%d\n", ptr->device_name, ptr->index);
+		pddf_dbg(LED, "SYSTEM_LED: verify_led_ops_data: Failed to find ops_ptr name:%s; index=%d\n", ptr->device_name, ptr->index);
     }
-
 	return (0);
 }
+
 
 ssize_t dev_operation(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
 #if DEBUG
 	pddf_dbg(LED, KERN_INFO "dev_operation [%s]\n", buf);
 #endif
-	if(strncmp(buf, "create_on", strlen("create_on"))==0 ) {
-		load_led_ops_data(da, ON);
-	}
-	else if(strncmp(buf, "create_off", strlen("create_off"))==0 ) {
-		load_led_ops_data(da, OFF);
-	}
-	else if(strncmp(buf, "create_faulty", strlen("create_faulty"))==0 ) {
-		load_led_ops_data(da, FAULTY);
-	}
-	else if(strncmp(buf, "create_blink", strlen("create_blink"))==0 ) {
-		load_led_ops_data(da, BLINK);
+	if(strstr(buf, "STATUS_LED_COLOR")!= NULL) {
+                LED_STATUS index = find_state_index(buf);
+                if (index < MAX_LED_STATUS ) {
+		    load_led_ops_data(da, index);
+                } else {
+		    printk(KERN_ERR "PDDF_ERROR %s: Invalid state for dev_ops %s", __FUNCTION__, buf);
+                }
 	}
 	else if(strncmp(buf, "show", strlen("show"))==0 ) {
 		show_led_ops_data(da);
@@ -500,7 +471,7 @@ ssize_t store_config_data(struct device *dev, struct device_attribute *da, const
 
 ssize_t store_bits_data(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
-	int len = 0, num1 = 0, num2 = 0, ret = 0;
+	int len = 0, num1 = 0, num2 = 0, i=0, rc1=0, rc2=0;
 	char mask=0xFF;
 	char *pptr=NULL;
 	char bits[NAME_SIZE];
@@ -509,22 +480,26 @@ ssize_t store_bits_data(struct device *dev, struct device_attribute *da, const c
 	strncpy(bits_ptr->bits, buf, strlen(buf)-1); // to discard newline char form buf
 	bits_ptr->bits[strlen(buf)-1] = '\0';
 	if((pptr=strstr(buf,":")) != NULL) {
-		len=pptr-buf;
-		sprintf(bits, buf);
-		bits[len]='\0'; 	
-		ret = kstrtoint(bits,16,&num1);
-        if (ret == 0)
-            mask = mask & ~(1 << num1);
-		sprintf(bits, ++pptr);
-		ret = kstrtoint(bits,16,&num2);
-        if (ret == 0)
+        len=pptr-buf;
+        sprintf(bits, buf);
+        bits[len]='\0';
+        rc1=kstrtoint(bits,16,&num1);
+        if (rc1==0)
         {
-            bits_ptr->mask_bits = mask & ~(1 << num2);
-            bits_ptr->pos = num2;
+            sprintf(bits, ++pptr);
+            rc2=kstrtoint(bits,16,&num2);
+            if (rc2==0)
+            {
+                for (i=num2; i<=num1; i++) {
+                   mask &=  ~(1 << i);
+                }
+                bits_ptr->mask_bits = mask;
+                bits_ptr->pos = num2;
+            }
         }
 	} else {
-        ret = kstrtoint(buf,16,&num1);
-        if (ret == 0)
+		rc1=kstrtoint(buf,16,&num1);
+        if (rc1==0)
         {
             bits_ptr->mask_bits = mask & ~(1 << num1);
             bits_ptr->pos = num1;
@@ -581,18 +556,15 @@ struct attribute_group attr_group_dev={
 }; 
 
 /**************************************************************************
- * on/, off/, faulty/, blink/ attributes 
+ * state_attr/ attributes 
  **************************************************************************/
 #define LED_DEV_STATE_ATTR_GROUP(name, func) \
 	PDDF_LED_DATA_ATTR(name, bits, S_IWUSR|S_IRUGO, show_pddf_data, \
 		store_bits_data, PDDF_CHAR, NAME_SIZE, func.bits.bits); \
-	PDDF_LED_DATA_ATTR(name, color, S_IWUSR|S_IRUGO, show_pddf_data, \
-                store_pddf_data, PDDF_CHAR, NAME_SIZE, func.color); \
 	PDDF_LED_DATA_ATTR(name, value, S_IWUSR|S_IRUGO, show_pddf_data, \
                 store_pddf_data, PDDF_USHORT, sizeof(unsigned short), func.value); \
 	struct attribute* attrs_##name[]={ \
 		&pddf_dev_##name##_attr_bits.dev_attr.attr, \
-        	&pddf_dev_##name##_attr_color.dev_attr.attr, \
         	&pddf_dev_##name##_attr_value.dev_attr.attr, \
         	NULL, \
 	}; \
@@ -601,22 +573,16 @@ struct attribute_group attr_group_dev={
 	}; \
 
 
-LED_DEV_STATE_ATTR_GROUP(on, (void*)&temp_data.data[ON])
-LED_DEV_STATE_ATTR_GROUP(off, (void*)&temp_data.data[OFF])
-LED_DEV_STATE_ATTR_GROUP(faulty, (void*)&temp_data.data[FAULTY])
-LED_DEV_STATE_ATTR_GROUP(blink, (void*)&temp_data.data[BLINK])
+LED_DEV_STATE_ATTR_GROUP(state_attr, (void*)&temp_data.data[0])
 
 /**************************************************************************
  * cur_state/ attributes 
  **************************************************************************/
 PDDF_LED_DATA_ATTR(cur_state, color, S_IWUSR|S_IRUGO, show_pddf_data, 
                 store_pddf_data, PDDF_CHAR, NAME_SIZE, (void*)&temp_data.cur_state.color); 
-PDDF_LED_DATA_ATTR(cur_state, color_state, S_IWUSR|S_IRUGO, show_pddf_data, 
-                store_pddf_data, PDDF_CHAR, NAME_SIZE, (void*)&temp_data.cur_state.color_state); 
 
 struct attribute* attrs_cur_state[]={
                 &pddf_dev_cur_state_attr_color.dev_attr.attr,
-                &pddf_dev_cur_state_attr_color_state.dev_attr.attr,
                 NULL,
 };
 struct attribute_group attr_group_cur_state={
@@ -630,10 +596,7 @@ struct attribute_group attr_group_cur_state={
 void free_kobjs(void)
 {
         KOBJ_FREE(cur_state_kobj)
-        KOBJ_FREE(faulty_kobj)
-        KOBJ_FREE(blink_kobj)
-        KOBJ_FREE(off_kobj)
-        KOBJ_FREE(on_kobj)
+        KOBJ_FREE(state_attr_kobj)
         KOBJ_FREE(led_kobj)
         KOBJ_FREE(platform_kobj)
 }
@@ -654,7 +617,7 @@ int LED_DEV_ATTR_CREATE(struct kobject *kobj, const struct attribute_group *attr
 {
 	int status = sysfs_create_group(kobj, attr);  
     if(status) { 
-                pddf_dbg(LED, KERN_ERR "Driver ERROR: sysfs_create %s failed rc=%d\n", name, status); 
+        pddf_dbg(LED, KERN_ERR "Driver ERROR: sysfs_create %s failed rc=%d\n", name, status); 
 	}
     return (status);
 }
@@ -670,18 +633,12 @@ static int __init led_init(void) {
 
 	KBOJ_CREATE("platform", device_kobj, &platform_kobj);
 	KBOJ_CREATE("led", device_kobj, &led_kobj);
-	KBOJ_CREATE("on", led_kobj, &on_kobj);
-	KBOJ_CREATE("off", led_kobj, &off_kobj);
-	KBOJ_CREATE("blink", led_kobj, &blink_kobj);
-	KBOJ_CREATE("faulty", led_kobj, &faulty_kobj);
+	KBOJ_CREATE("state_attr", led_kobj, &state_attr_kobj);
 	KBOJ_CREATE("cur_state", led_kobj, &cur_state_kobj);
 
         LED_DEV_ATTR_CREATE(platform_kobj, &attr_group_platform, "attr_group_platform");
         LED_DEV_ATTR_CREATE(led_kobj, &attr_group_dev, "attr_group_dev");
-        LED_DEV_ATTR_CREATE(on_kobj, &attr_group_on, "attr_group_on");
-        LED_DEV_ATTR_CREATE(off_kobj, &attr_group_off, "attr_group_off");
-        LED_DEV_ATTR_CREATE(faulty_kobj, &attr_group_faulty, "attr_group_faulty");
-        LED_DEV_ATTR_CREATE(blink_kobj, &attr_group_blink, "attr_group_blink");
+        LED_DEV_ATTR_CREATE(state_attr_kobj, &attr_group_state_attr, "attr_group_state_attr");
         LED_DEV_ATTR_CREATE(cur_state_kobj, &attr_group_cur_state, "attr_group_cur_state");
 	return (0);
 }

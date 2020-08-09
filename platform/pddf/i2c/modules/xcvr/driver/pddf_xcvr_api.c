@@ -247,34 +247,53 @@ int sonic_i2c_get_mod_txfault(struct i2c_client *client, XCVR_ATTR *info, struct
 int sonic_i2c_set_mod_reset(struct i2c_client *client, XCVR_ATTR *info, struct xcvr_data *data)
 {
     int status = 0;
-    unsigned int val_mask = 0;
-    uint8_t reg;
+    unsigned int val_mask = 0, dnd_value = 0;
+    uint32_t reg;
+    struct i2c_client *client_ptr=NULL;
 
     if (strcmp(info->devtype, "cpld") == 0)
     {
-        
-        if(data->reset == 1) { 
-            if(info->cmpval == 0)
-                val_mask = ~(BIT_INDEX(info->mask));
-            else
-                val_mask = BIT_INDEX(info->mask);
-        }
-        else if (data->reset == 0) {
-            if(info->cmpval == 0)
-                val_mask = BIT_INDEX(info->mask);
-            else
-                val_mask = ~(BIT_INDEX(info->mask));
-        }
-        else 
-            return -EINVAL;
+        val_mask = BIT_INDEX(info->mask);
+        /* Get the I2C client for the CPLD */
+        client_ptr = (struct i2c_client *)get_device_table(info->devname);
 
-        status = xcvr_i2c_cpld_read(info);
+        if (client_ptr)
+        {
+            if (info->len == 1)
+                status = board_i2c_cpld_read(info->devaddr , info->offset);
+            else if (info->len == 2)
+                status = i2c_smbus_read_word_data(client_ptr, info->offset);
+            else
+            {
+                printk(KERN_ERR "PDDF_XCVR: Doesn't support block CPLD read yet");
+                status = -1;
+            }
+        }
+        else
+        {
+            printk(KERN_ERR "Unable to get the client handle for %s\n", info->devname);
+            status = -1;
+        }
+        /*printk(KERN_ERR "sonic_i2c_set_mod_reset:client_ptr=0x%x, status=0x%x, offset=0x%x, len=%d\n", client_ptr, status, info->offset, info->len);*/
+
         if (status < 0)
             return status;
         else
         {
-            reg = status & val_mask;
-            status = board_i2c_cpld_write(info->devaddr, info->offset, reg);
+            dnd_value = status & ~val_mask;
+            if (((data->reset == 1) && (info->cmpval != 0)) || ((data->reset == 0) && (info->cmpval == 0)))
+                reg = dnd_value | val_mask;
+            else
+                reg = dnd_value;
+            if (info->len == 1)
+                status = board_i2c_cpld_write(info->devaddr, info->offset, (uint8_t)reg);
+            else if (info->len == 2)
+                status = i2c_smbus_write_word_swapped(client_ptr, info->offset, (uint16_t)reg);
+            else
+            {
+                printk(KERN_ERR "PDDF_XCVR: Doesn't support block CPLD write yet");
+                status = -1;
+            }
         }
     }
 
@@ -284,31 +303,52 @@ int sonic_i2c_set_mod_reset(struct i2c_client *client, XCVR_ATTR *info, struct x
 int sonic_i2c_set_mod_lpmode(struct i2c_client *client, XCVR_ATTR *info, struct xcvr_data *data)
 {
     int status = 0;
-    unsigned int val_mask = 0;
-    uint8_t reg;
+    unsigned int val_mask = 0, dnd_value = 0;
+    uint32_t reg;
+    struct i2c_client *client_ptr=NULL;
 
     if (strcmp(info->devtype, "cpld") == 0)
     {
-        if(data->lpmode == 1) { 
-            if(info->cmpval == 0)
-                val_mask = ~(BIT_INDEX(info->mask));
+        val_mask = BIT_INDEX(info->mask);
+        /* Get the I2C client for the CPLD */
+        client_ptr = (struct i2c_client *)get_device_table(info->devname);
+
+        if (client_ptr)
+        {
+            if (info->len == 1)
+                status = board_i2c_cpld_read(info->devaddr , info->offset);
+            else if (info->len == 2)
+                status = i2c_smbus_read_word_data(client_ptr, info->offset);
             else
-                val_mask = BIT_INDEX(info->mask);
+            {
+                printk(KERN_ERR "PDDF_XCVR: Doesn't support block CPLD read yet");
+                status = -1;
+            }
         }
-        else {
-            if(info->cmpval == 0)
-                val_mask = BIT_INDEX(info->mask);
-            else
-                val_mask = ~(BIT_INDEX(info->mask));
+        else
+        {
+            printk(KERN_ERR "Unable to get the client handle for %s\n", info->devname);
+            status = -1;
         }
 
-        status = board_i2c_cpld_read(info->devaddr , info->offset);
         if (status < 0)
             return status;
         else
         {
-            reg = status & val_mask;
-            status = board_i2c_cpld_write(info->devaddr, info->offset, reg);
+            dnd_value = status & ~val_mask;
+            if (((data->lpmode == 1) && (info->cmpval != 0)) || ((data->lpmode == 0) && (info->cmpval == 0)))
+                reg = dnd_value | val_mask;
+            else
+                reg = dnd_value;
+            if (info->len == 1)
+                status = board_i2c_cpld_write(info->devaddr, info->offset, (uint8_t)reg);
+            else if (info->len == 2)
+                status = i2c_smbus_write_word_swapped(client_ptr, info->offset, (uint16_t)reg);
+            else
+            {
+                printk(KERN_ERR "PDDF_XCVR: Doesn't support block CPLD write yet");
+                status = -1;
+            }
         }
     }
 
@@ -318,31 +358,52 @@ int sonic_i2c_set_mod_lpmode(struct i2c_client *client, XCVR_ATTR *info, struct 
 int sonic_i2c_set_mod_txdisable(struct i2c_client *client, XCVR_ATTR *info, struct xcvr_data *data)
 {
     int status = 0;
-    unsigned int val_mask = 0;
-    uint8_t reg;
+    unsigned int val_mask = 0, dnd_value = 0;
+    uint32_t reg;
+    struct i2c_client *client_ptr=NULL;
 
     if (strcmp(info->devtype, "cpld") == 0)
     {
-        if(data->txdisable == 1) { 
-            if(info->cmpval == 0)
-                val_mask = ~(BIT_INDEX(info->mask));
+        val_mask = BIT_INDEX(info->mask);
+        /* Get the I2C client for the CPLD */
+        client_ptr = (struct i2c_client *)get_device_table(info->devname);
+
+        if (client_ptr)
+        {
+            if (info->len == 1)
+                status = board_i2c_cpld_read(info->devaddr , info->offset);
+            else if (info->len == 2)
+                status = i2c_smbus_read_word_data(client_ptr, info->offset);
             else
-                val_mask = BIT_INDEX(info->mask);
+            {
+                printk(KERN_ERR "PDDF_XCVR: Doesn't support block CPLD read yet");
+                status = -1;
+            }
         }
-        else {
-            if(info->cmpval == 0)
-                val_mask = BIT_INDEX(info->mask);
-            else
-                val_mask = ~(BIT_INDEX(info->mask));
+        else
+        {
+            printk(KERN_ERR "Unable to get the client handle for %s\n", info->devname);
+            status = -1;
         }
 
-        status = board_i2c_cpld_read(info->devaddr , info->offset);
         if (status < 0)
             return status;
         else
         {
-            reg = status & val_mask;
-            status = board_i2c_cpld_write(info->devaddr, info->offset, reg);
+            dnd_value = status & ~val_mask;
+            if (((data->txdisable == 1) && (info->cmpval != 0)) || ((data->txdisable == 0) && (info->cmpval == 0)))
+                reg = dnd_value | val_mask;
+            else
+                reg = dnd_value;
+            if (info->len == 1)
+                status = board_i2c_cpld_write(info->devaddr, info->offset, (uint8_t)reg);
+            else if (info->len == 2)
+                status = i2c_smbus_write_word_swapped(client_ptr, info->offset, (uint16_t)reg);
+            else
+            {
+                printk(KERN_ERR "PDDF_XCVR: Doesn't support block CPLD write yet");
+                status = -1;
+            }
         }
     }
 
@@ -363,8 +424,6 @@ ssize_t get_module_presence(struct device *dev, struct device_attribute *da,
     for (i=0; i<pdata->len; i++)
     {
         attr_data = &pdata->xcvr_attrs[i];
-        /*printk(KERN_ERR "\n attr_data->devaddr: 0x%x, attr_data->mask:0x%x, attr_data->offset:0x%x\n", */
-        /*attr_data->devaddr, attr_data->mask, attr_data->offset);*/
         if (strcmp(attr_data->aname, attr->dev_attr.attr.name) == 0)
         {
             attr_ops = &xcvr_ops[attr->index];
@@ -461,8 +520,10 @@ ssize_t set_module_reset(struct device *dev, struct device_attribute *da, const 
         if (strcmp(attr_data->aname, attr->dev_attr.attr.name) == 0)
         {
             attr_ops = &xcvr_ops[attr->index];
-                if(kstrtoint(buf, 10, &set_value))
-                    return -EINVAL;
+            if(kstrtoint(buf, 10, &set_value))
+                return -EINVAL;
+            if ((set_value != 1) && (set_value != 0))
+                return -EINVAL;
 
             data->reset = set_value;
 
@@ -625,8 +686,10 @@ ssize_t set_module_lpmode(struct device *dev, struct device_attribute *da, const
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
-            if(kstrtoint(buf, 10, &set_value))
-                return -EINVAL;
+        if(kstrtoint(buf, 10, &set_value))
+            return -EINVAL;
+        if ((set_value != 1) && (set_value != 0))
+            return -EINVAL;
 
         data->lpmode = set_value;
 
@@ -767,8 +830,10 @@ ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, co
     if (attr_data!=NULL)
     {
         attr_ops = &xcvr_ops[attr->index];
-            if(kstrtoint(buf, 10, &set_value))
-                return -EINVAL;
+        if(kstrtoint(buf, 10, &set_value))
+            return -EINVAL;
+        if ((set_value != 1) && (set_value != 0))
+            return -EINVAL;
 
         data->txdisable = set_value;
 
@@ -778,20 +843,20 @@ ssize_t set_module_txdisable(struct device *dev, struct device_attribute *da, co
         {
             status = (attr_ops->pre_set)(client, attr_data, data);
             if (status!=0)
-                printk(KERN_ERR "%s: pre_get function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
+                printk(KERN_ERR "%s: pre_set function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
             }
         if (attr_ops->do_set != NULL)
         {
             status = (attr_ops->do_set)(client, attr_data, data);
             if (status!=0)
-                printk(KERN_ERR "%s: do_get function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
+                printk(KERN_ERR "%s: do_set function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
 
         }
         if (attr_ops->post_set != NULL)
         {
             status = (attr_ops->post_set)(client, attr_data, data);
             if (status!=0)
-                printk(KERN_ERR "%s: post_get function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
+                printk(KERN_ERR "%s: post_set function fails for %s attribute\n", __FUNCTION__, attr_data->aname);
         } 
         mutex_unlock(&data->update_lock);
     }

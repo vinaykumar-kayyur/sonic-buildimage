@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import json
 import re
 import argparse
@@ -16,7 +15,17 @@ PLATFORM_KEY = 'DEVICE_METADATA.localhost.platform'
 
 dirname=os.path.dirname(os.path.realpath(__file__))
 
-
+color_map = {
+         "STATUS_LED_COLOR_GREEN" : "green",
+         "STATUS_LED_COLOR_RED" : "red",
+         "STATUS_LED_COLOR_AMBER" : "amber",
+         "STATUS_LED_COLOR_BLUE" : "blue",
+         "STATUS_LED_COLOR_GREEN_BLINK" : "blinking green",
+         "STATUS_LED_COLOR_RED_BLINK" : "blinking red",
+         "STATUS_LED_COLOR_AMBER_BLINK" : "blinking amber",
+         "STATUS_LED_COLOR_BLUE_BLINK" : "blinking blue",
+         "STATUS_LED_COLOR_OFF" : "off"
+}
 
 
 class PddfParse():
@@ -138,415 +147,7 @@ class PddfParse():
         except IOError:
                     return ("Error")
 
-	return (color)
-
-    #################################################################################################################################
-    #   CREATE DEFS
-    #################################################################################################################################
-    def create_device(self, attr, path, ops):
-        ret = 0
-        for key in attr.keys():
-            cmd="echo '%s' > /sys/kernel/%s/%s"%(attr[key], path, key)
-            ret=self.runcmd(cmd)
-            if ret!=0:
-                return ret
-        return ret
-
-
-    def create_psu_i2c_device(self, dev, ops):
-        create_ret = 0
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PSU']:
-            create_ret = self.create_device(dev['i2c']['topo_info'], "pddf/devices/psu/i2c", ops)
-            if create_ret!=0:
-                return create_ret
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/psu/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            cmd= "echo '%s'  > /sys/kernel/pddf/devices/psu/i2c/psu_idx"%( self.get_dev_idx(dev, ops))
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            for attr in dev['i2c']['attr_list']:
-                    create_ret = self.create_device(attr, "pddf/devices/psu/i2c", ops)
-                    if create_ret!=0:
-                        return create_ret
-                    cmd= "echo 'add' > /sys/kernel/pddf/devices/psu/i2c/attr_ops"
-                    create_ret = self.runcmd(cmd)
-                    #print ""
-                    if create_ret!=0:
-                        return create_ret
-
-            cmd = "echo 'add' > /sys/kernel/pddf/devices/psu/i2c/dev_ops"
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-        else:
-            cmd = "echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-
-        ##os.system("sleep 1")
-        return create_ret
-
-
-
-    def create_psu_bmc_device(self, dev, ops):
-            print ""
-
-
-    def create_psu_device(self, dev, ops):
-        #if 'i2c' in dev:
-            return self.create_psu_i2c_device(dev, ops )
-
-        #if 'bmc' in dev:
-                #self.create_psu_bmc_device(dev)
-                    
-    def create_fan_device(self, dev, ops):
-        create_ret = 0
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['FAN']:
-            create_ret = self.create_device(dev['i2c']['topo_info'], "pddf/devices/fan/i2c", ops)
-            if create_ret!=0:
-                return create_ret
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/fan/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            create_ret = self.create_device(dev['i2c']['dev_attr'], "pddf/devices/fan/i2c", ops)
-            if create_ret!=0:
-                return create_ret
-            for attr in dev['i2c']['attr_list']:
-                create_ret = self.create_device(attr, "pddf/devices/fan/i2c", ops)
-                if create_ret!=0:
-                    return create_ret
-                cmd= "echo 'add' > /sys/kernel/pddf/devices/fan/i2c/attr_ops"
-                create_ret = self.runcmd(cmd)
-                #print ""
-                if create_ret!=0:
-                    return create_ret
-
-            cmd= "echo 'add' > /sys/kernel/pddf/devices/fan/i2c/dev_ops"
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-        else:
-            cmd= "echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-        #os.system("sleep 1")
-        return create_ret
-
-    def create_temp_sensor_device(self, dev, ops):
-            create_ret = 0
-        # NO PDDF driver for temp_sensors device
-        #if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['TEMP_SENSOR']:
-            #create_device(dev['i2c']['topo_info'], "pddf/devices/fan/i2c", ops)
-            #create_device(dev['i2c']['dev_attr'], "pddf/devices/fan/i2c", ops)
-            #for attr in dev['i2c']['attr_list']:
-                #create_device(attr, "pddf/devices/fan/i2c", ops)
-                #print "echo 'add' > /sys/kernel/pddf/devices/fan/i2c/attr_ops\n"
-
-            #print "echo 'add' > /sys/kernel/pddf/devices/fan/i2c/dev_ops\n"
-        #else:
-            cmd= "echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            return create_ret
-
-
-            #os.system("sleep 1")
-
-
-    def create_cpld_device(self, dev, ops):
-        create_ret = 0
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['CPLD']:
-            create_ret = self.create_device(dev['i2c']['topo_info'], "pddf/devices/cpld", ops)
-            if create_ret!=0:
-                return create_ret
-
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/cpld/i2c_name"%(dev['dev_info']['device_name'])
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            #create_device(dev['i2c']['dev_attr'], "pddf/devices/cpld", ops)
-            # TODO: If attributes are provided then, use 'self.create_device' for them too
-            cmd= "echo 'add' > /sys/kernel/pddf/devices/cpld/dev_ops"
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-        else:
-            cmd= "echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-        #os.system("sleep 1")
-        return create_ret
-
-    def create_gpio_device(self, dev, ops):
-        create_ret = 0
-        create_ret = self.create_device(dev['i2c']['topo_info'], "pddf/devices/gpio", ops)
-        if create_ret!=0:
-            return create_ret
-        cmd= "echo '%s' > /sys/kernel/pddf/devices/gpio/i2c_name"%(dev['dev_info']['device_name'])
-        create_ret = self.runcmd(cmd)
-        if create_ret!=0:
-            return create_ret
-        create_ret = self.create_device(dev['i2c']['dev_attr'], "pddf/devices/gpio", ops)
-        if create_ret!=0:
-            return create_ret
-        cmd= "echo 'add' > /sys/kernel/pddf/devices/gpio/dev_ops"
-        create_ret = self.runcmd(cmd)
-        if create_ret!=0:
-            return create_ret
-        
-        time.sleep(2)
-        base = dev['i2c']['dev_attr']['gpio_base']
-        for inst in dev['i2c']['ports']:
-            if inst['port_num']!="":
-                port_no = int(base, 16) + int(inst['port_num'])
-                cmd= "echo %d > /sys/class/gpio/export"%port_no
-                create_ret = self.runcmd(cmd)
-                if create_ret!=0:
-                    return create_ret
-                if inst['direction']!="":
-                    cmd= "echo %s >/sys/class/gpio/gpio%d/direction"%(inst['direction'], port_no)
-                    create_ret = self.runcmd(cmd)
-                    if create_ret!=0:
-                        return create_ret
-                    if inst['value']!="":
-                        for i in inst['value'].split(','):
-                            cmd= "echo %s >/sys/class/gpio/gpio%d/value"%(i.rstrip(), port_no)
-                            create_ret = self.runcmd(cmd)
-                            if create_ret!=0:
-                                return create_ret
-
-        return create_ret
-
-    def create_mux_device(self, dev, ops):
-        create_ret = 0
-        create_ret = self.create_device(dev['i2c']['topo_info'], "pddf/devices/mux", ops)
-        if create_ret!=0:
-            return create_ret
-        cmd= "echo '%s' > /sys/kernel/pddf/devices/mux/i2c_name"%(dev['dev_info']['device_name'])
-        create_ret = self.runcmd(cmd)
-        if create_ret!=0:
-            return create_ret
-        self.create_device(dev['i2c']['dev_attr'], "pddf/devices/mux", ops)
-        cmd= "echo 'add' > /sys/kernel/pddf/devices/mux/dev_ops"
-        create_ret = self.runcmd(cmd)
-        #print "\n"
-        #os.system("sleep 1")
-        if create_ret!=0:
-            return create_ret
-
-
-    def create_xcvr_i2c_device(self, dev, ops):
-        create_ret = 0
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PORT_MODULE']:
-            self.create_device(dev['i2c']['topo_info'], "pddf/devices/xcvr/i2c", ops)
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/xcvr/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            #create_device(dev['i2c']['dev_attr'], "pddf/devices/psu/i2c")
-            cmd="echo '%s'  > /sys/kernel/pddf/devices/xcvr/i2c/dev_idx"%( self.get_dev_idx(dev, ops))
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            for attr in dev['i2c']['attr_list']:
-                self.create_device(attr, "pddf/devices/xcvr/i2c", ops)
-                cmd="echo 'add' > /sys/kernel/pddf/devices/xcvr/i2c/attr_ops"
-                create_ret = self.runcmd(cmd)
-                #print ""
-                if create_ret!=0:
-                    return create_ret
-
-            cmd="echo 'add' > /sys/kernel/pddf/devices/xcvr/i2c/dev_ops"
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-        else:
-            cmd="echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-        #os.system("sleep 1")
-        return create_ret
-
-    def create_xcvr_bmc_device(self, dev, ops):
-            print ""
-
-    def create_xcvr_device(self, dev, ops):
-            #if 'i2c' in dev:
-            return self.create_xcvr_i2c_device(dev, ops )
-            #if 'bmc' in dev:
-            #self.create_psu_bmc_device(dev)
-
-    def create_sysstatus_device(self, dev, ops):
-        create_ret = 0
-        for attr in dev['attr_list']:
-            self.create_device(attr, "pddf/devices/sysstatus", ops)
-            cmd= "echo 'add' > /sys/kernel/pddf/devices/sysstatus/attr_ops"
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-    def create_eeprom_device(self, dev, ops):
-        create_ret = 0
-        if "EEPROM" in self.data['PLATFORM']['pddf_dev_types'] and dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['EEPROM']:
-            self.create_device(dev['i2c']['topo_info'], "pddf/devices/eeprom/i2c", ops)
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/eeprom/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            create_ret = self.runcmd(cmd)
-            if create_ret!=0:
-                return create_ret
-            self.create_device(dev['i2c']['dev_attr'], "pddf/devices/eeprom/i2c", ops)
-            cmd = "echo 'add' > /sys/kernel/pddf/devices/eeprom/i2c/dev_ops"
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-        else:
-            cmd= "echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            create_ret = self.runcmd(cmd)
-            #print "\n"
-            if create_ret!=0:
-                return create_ret
-
-        #os.system("sleep 1")
-        return create_ret
-
-    #################################################################################################################################
-    #   DELETE DEFS
-    #################################################################################################################################
-    def delete_eeprom_device(self, dev, ops):
-        if "EEPROM" in self.data['PLATFORM']['pddf_dev_types'] and dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['EEPROM']:
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/eeprom/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd = "echo 'delete' > /sys/kernel/pddf/devices/eeprom/i2c/dev_ops"
-            self.runcmd(cmd)
-            #print "\n"
-        else:
-            cmd= "echo 0x%x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            self.runcmd(cmd)
-            #print "\n"
-        #os.system("sleep 1")
-
-    def delete_sysstatus_device(self, dev, ops):
-        # NOT A PHYSICAL DEVICE.... rmmod on module would remove all the artifacts
-        pass
-
-        #for attr in dev['attr_list']:
-            #cmd= "echo '%s' > /sys/kernel/pddf/devices/sysstatus/i2c_name"%(dev['dev_info']['device_name'])
-            #self.runcmd(cmd)
-            #cmd= "echo 'delete' > /sys/kernel/pddf/devices/sysstatus/attr_ops"
-            #self.runcmd(cmd)
-
-    def delete_xcvr_i2c_device(self, dev, ops):
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PORT_MODULE']:
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/xcvr/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd="echo 'delete' > /sys/kernel/pddf/devices/xcvr/i2c/dev_ops"
-            self.runcmd(cmd)
-            #print "\n"
-        else:
-            cmd="echo 0x%x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            self.runcmd(cmd)
-            #print "\n"
-        #os.system("sleep 1")
-
-    def delete_xcvr_device(self, dev, ops):
-        self.delete_xcvr_i2c_device(dev, ops)
-        return
-
-    def delete_gpio_device(self, dev, ops):
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/gpio/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd= "echo 'delete' > /sys/kernel/pddf/devices/gpio/dev_ops"
-            self.runcmd(cmd)
-
-    def delete_mux_device(self, dev, ops):
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/mux/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd= "echo 'delete' > /sys/kernel/pddf/devices/mux/dev_ops"
-            self.runcmd(cmd)
-            #print "\n"
-            #os.system("sleep 1")
-
-    def delete_cpld_device(self, dev, ops):
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['CPLD']:
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/cpld/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd= "echo 'delete' > /sys/kernel/pddf/devices/cpld/dev_ops"
-            self.runcmd(cmd)
-            #print "\n"
-        else:
-            cmd= "echo 0x%x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            self.runcmd(cmd)
-            #print "\n"
-        #os.system("sleep 1")
-
-    def delete_temp_sensor_device(self, dev, ops):
-        # NO PDDF driver for temp_sensors device
-        #if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['TEMP_SENSOR']:
-            #cmd= "echo '%s' > /sys/kernel/pddf/devices/temp_sensor/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            #self.runcmd(cmd)
-            #cmd= "echo 'add' > /sys/kernel/pddf/devices/temp_sensor/i2c/dev_ops"
-            #self.runcmd(cmd)
-        #else:
-            cmd= "echo 0x%x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            self.runcmd(cmd)
-            #print "\n"
-
-            #os.system("sleep 1")
-
-    def delete_fan_device(self, dev, ops):
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['FAN']:
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/fan/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd= "echo 'delete' > /sys/kernel/pddf/devices/fan/i2c/dev_ops"
-            self.runcmd(cmd)
-            #print "\n"
-        else:
-            cmd= "echo 0x%x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            self.runcmd(cmd)
-            #print "\n"
-        #os.system("sleep 1")
-
-
-    def delete_psu_i2c_device(self, dev, ops):
-        if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PSU']:
-            cmd= "echo '%s' > /sys/kernel/pddf/devices/psu/i2c/i2c_name"%(dev['dev_info']['device_name'])
-            self.runcmd(cmd)
-            cmd = "echo 'delete' > /sys/kernel/pddf/devices/psu/i2c/dev_ops"
-            self.runcmd(cmd)
-            #print "\n"
-        else:
-            cmd = "echo 0x%x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
-            self.runcmd(cmd)
-            #print "\n"
-        #os.system("sleep 1")
-
-    def delete_psu_device(self, dev, ops):
-            #if 'i2c' in dev:
-            self.delete_psu_i2c_device(dev, ops )
-            return
-
+	return (color_map[color])
 
     #################################################################################################################################
     #   SHOW ATTRIBIUTES DEFS
@@ -611,6 +212,13 @@ class PddfParse():
 
         return ret
 
+    def get_gpio_attr_path(self, dev, offset):
+        base = int(dev['i2c']['dev_attr']['gpio_base'], 16)
+        port_num = base + int(offset, 16)
+        gpio_name = 'gpio'+str(port_num)
+        path = '/sys/class/gpio/'+gpio_name+'/value'
+        return path
+
     def show_attr_psu_i2c_device(self, dev, ops):
         target=ops['target']
         attr_name=ops['attr']
@@ -627,11 +235,7 @@ class PddfParse():
                 if attr_name == attr['attr_name'] or attr_name == 'all' :
                     if 'attr_devtype' in attr.keys() and attr['attr_devtype'] == "gpio":
                         # Check and enable the gpio from class
-                        gpio_dev = self.data[attr['attr_devname']]
-                        base = int(gpio_dev['i2c']['dev_attr']['gpio_base'], 16)
-                        port_num = base + int(attr['attr_offset'], 16)
-                        gpio_name = 'gpio'+str(port_num)
-                        attr_path = '/sys/class/gpio/'+gpio_name+'/value'
+                        attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], attr['attr_offset'])
                         if (os.path.exists(attr_path)):
                             if not attr_path in self.data_sysfs_obj[KEY]:
                                 self.data_sysfs_obj[KEY].append(attr_path)
@@ -655,7 +259,7 @@ class PddfParse():
 
 
     def show_attr_fan_device(self, dev, ops):
-        str = ""
+        ret = ""
         attr_name=ops['attr']
         attr_list=dev['i2c']['attr_list']
         KEY="fan"
@@ -667,17 +271,25 @@ class PddfParse():
 
         for attr in attr_list:
             if attr_name == attr['attr_name'] or attr_name == 'all':
-                #print self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%attr['attr_name']
-                if 'drv_attr_name' in attr.keys():
-                    real_name = attr['drv_attr_name']
+                if 'attr_devtype' in attr.keys() and attr['attr_devtype'] == "gpio":
+                    # Check and enable the gpio from class
+                    attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], attr['attr_offset'])
+                    if (os.path.exists(attr_path)):
+                        if not attr_path in self.data_sysfs_obj[KEY]:
+                            self.data_sysfs_obj[KEY].append(attr_path)
+                        ret += attr_path + '\n'
                 else:
-                    real_name = attr['attr_name']
+                    #print self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%attr['attr_name']
+                    if 'drv_attr_name' in attr.keys():
+                        real_name = attr['drv_attr_name']
+                    else:
+                        real_name = attr['attr_name']
 
-                dsysfs_path= self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
-                if not dsysfs_path in self.data_sysfs_obj[KEY]:
-                    self.data_sysfs_obj[KEY].append(dsysfs_path)
-                str += dsysfs_path+"\n"
-        return str
+                    dsysfs_path= self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
+                    if not dsysfs_path in self.data_sysfs_obj[KEY]:
+                        self.data_sysfs_obj[KEY].append(dsysfs_path)
+                    ret += dsysfs_path+"\n"
+        return ret
 
     # This is only valid for LM75
     def show_attr_temp_sensor_device(self, dev, ops):
@@ -745,11 +357,7 @@ class PddfParse():
                 if attr_name == attr['attr_name'] or attr_name == 'all' :
                     if 'attr_devtype' in attr.keys() and attr['attr_devtype'] == "gpio":
                         # Check and enable the gpio from class
-                        gpio_dev = self.data[attr['attr_devname']]
-                        base = int(gpio_dev['i2c']['dev_attr']['gpio_base'], 16)
-                        port_num = base + int(attr['attr_offset'], 16)
-                        gpio_name = 'gpio'+str(port_num)
-                        attr_path = '/sys/class/gpio/'+gpio_name+'/value'
+                        attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], attr['attr_offset'])
                         if (os.path.exists(attr_path)):
                             if not attr_path in self.data_sysfs_obj[KEY]:
                                 self.data_sysfs_obj[KEY].append(attr_path)
@@ -991,7 +599,7 @@ class PddfParse():
 
     def validate_xcvr_device(self, dev, ops):
         devtype_list = ['optoe1', 'optoe2']
-        dev_addr_list = ['0x50', '0x51', '0x53']
+        #dev_addr_list = ['0x50', '0x51', '0x53']
         dev_attribs = ['xcvr_present', 'xcvr_reset', 'xcvr_intr_status', 'xcvr_lpmode']
         ret_val = "xcvr validation failed"
 
@@ -1071,13 +679,13 @@ class PddfParse():
         print ret_val
 
     def validate_fan_device(self, dev, ops):
-        devtype_list = ['fan_ctrl']
-        dev_attribs = ['none']
+        #devtype_list = ['fan_ctrl']
+        #dev_attribs = ['none']
         ret_val = "fan failed"
 
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['FAN']:
             if dev['i2c']['dev_attr']['num_fan'] is not None:
-                numfans = dev['i2c']['dev_attr']['num_fan']
+                #numfans = dev['i2c']['dev_attr']['num_fan']
                 #for fn in range(0, numfans):
                 #    cmd = "fan"+fn+"_present"
                 #    if attr.get("attr_name") == cmd:
@@ -1086,7 +694,7 @@ class PddfParse():
         print ret_val
 
     def validate_psu_device(self, dev, ops):
-        devtype_list = ['psu_pmbus']
+        #devtype_list = ['psu_pmbus']
         dev_attribs = ['psu_present', 'psu_model_name', 'psu_power_good', 'psu_mfr_id', 'psu_serial_num',
                         'psu_fan_dir', 'psu_v_out', 'psu_i_out', 'psu_p_out', 'psu_fan1_speed_rpm'
                       ]
@@ -1245,7 +853,7 @@ class PddfParse():
            kos.extend(self.data['PLATFORM']['pddf_kos'])
 
            if 'custom_kos' in self.data['PLATFORM']:
-               custom_kos = self.data['PLATFORM']['custom_kos']
+               #custom_kos = self.data['PLATFORM']['custom_kos']
                kos.extend(self.data['PLATFORM']['custom_kos'])
 
         for mod in kos:
@@ -1253,7 +861,7 @@ class PddfParse():
                supported_type=True
                cmd = "lsmod | grep " + mod
                try:
-                  o_list = subprocess.check_output(cmd, shell=True)
+                  subprocess.check_output(cmd, shell=True)
                except Exception as e:
                   module_validation_status.append(mod)
         if supported_type:
@@ -1545,6 +1153,14 @@ class PddfParse():
             if attr['device_type'] == 'SYSSTAT':
                     return self.sysstatus_parse(dev,ops)
 
+    def is_supported_sysled_state(self, sysled_name, sysled_state):
+            if not sysled_name in self.data.keys():
+                return False, "[FAILED] " + sysled_name + " is not configured"
+            for attr in self.data[sysled_name]['i2c']['attr_list']:
+                if attr['attr_name'] == sysled_state:
+                    return True, "supported"
+            return False,  "[FAILED]: Invalid color"
+
     def create_attr(self, key, value, path):
             cmd = "echo '%s' > /sys/kernel/%s/%s"%(value,  path, key)
             self.runcmd(cmd)
@@ -1558,19 +1174,18 @@ class PddfParse():
     def create_led_device(self, key, ops):
             if ops['attr']=='all' or ops['attr']==self.data[key]['dev_info']['device_name']:
                     path="pddf/devices/led"
-                    ops_state=""
+                    #ops_state=""
                     for attr in self.data[key]['i2c']['attr_list']:
                             self.create_attr('device_name', self.data[key]['dev_info']['device_name'], path)
                             self.create_device(self.data[key]['dev_attr'], path, ops)
                             for attr_key in attr.keys():
                                     if (attr_key == 'swpld_addr_offset' or attr_key == 'swpld_addr'):
                                             self.create_attr(attr_key, attr[attr_key], path)
-                                    elif (attr_key != 'attr_name'):
-                                            state_path=path+'/'+attr['attr_name']
+                                    elif (attr_key != 'attr_name' and attr_key != 'descr'):
+                                            state_path=path+'/state_attr'
                                             self.create_attr(attr_key, attr[attr_key],state_path)
-                            cmd="echo '" + ops['cmd'] + '_' + attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"
+                            cmd="echo '" +  attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"
                             self.runcmd(cmd)
-
 
 
     def led_parse(self, ops):
@@ -1627,7 +1242,7 @@ class PddfParse():
     def validate_pddf_devices(self, *args):
         self.populate_pddf_sysfsobj() 
         alist = [item for item in args]
-        devtype = alist[0]
+        #devtype = alist[0]
         v_ops = { 'cmd': 'validate', 'target':'all', 'attr':'all' }
         #dev_parse(self.data, self.data[devtype], v_ops )
         self.dev_parse(self.data['SYSTEM'], v_ops )
@@ -1637,8 +1252,6 @@ class PddfParse():
     #################################################################################################################################
     def populate_bmc_cache_db(self, bmc_attr):
         bmc_cmd = str(bmc_attr['bmc_cmd']).strip()
-        field_name = str(bmc_attr['field_name']).strip()
-        field_pos= int(bmc_attr['field_pos'])-1
 
         o_list = subprocess.check_output(bmc_cmd, shell=True).strip().split('\n')
         bmc_cache[bmc_cmd]={}
@@ -1752,13 +1365,17 @@ class PddfParse():
                 for attr in attr_list:
                     if attr['attr_name'].strip() == attr_name.strip():
                         return attr
-	return {} 
+                # Required attr_name is not supported in BMC object
+                return {}
+	return None
 
     def get_attr_name_output(self, device_name, attr_name):
 	bmc_attr = self.check_bmc_based_attr(device_name, attr_name)
         output={"mode":"", "status":""}	
 	   
-        if bmc_attr:
+        if bmc_attr is not None:
+           if bmc_attr=={}:
+               return {}
            output['mode']="bmc"
            output['status']=self.bmc_get_cmd(bmc_attr)
         else:
@@ -1777,7 +1394,9 @@ class PddfParse():
 	bmc_attr = self.check_bmc_based_attr(device_name, attr_name)
         output={"mode":"", "status":""}	
 	   
-        if bmc_attr:
+        if bmc_attr is not None:
+            if bmc_attr=={}:
+               return {}
             output['mode']="bmc"
             #output['status']=self.bmc_set_cmd(bmc_attr, val)
             output['status']=False  # No set operation allowed for BMC attributes as they are handled by BMC itself
@@ -1796,80 +1415,3 @@ class PddfParse():
 
         return output
 
-    #################################################################################################################################
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--create", action='store_true', help="create the I2C topology")
-    parser.add_argument("--sysfs", action='store', nargs="+",  help="show access-attributes sysfs for the I2C topology")
-    parser.add_argument("--dsysfs", action='store', nargs="+",  help="show data-attributes sysfs for the I2C topology")
-    parser.add_argument("--delete", action='store_true', help="Remove all the created I2C clients from topology")
-    parser.add_argument("--validate", action='store', help="Validate the device specific attribute data elements")
-    parser.add_argument("--schema", action='store', nargs="+",  help="Schema Validation")
-    parser.add_argument("--modules", action='store', nargs="+", help="Loaded modules validation")
-    args = parser.parse_args()
-    #print args
-    pddf_obj = PddfParse()
-
-    str = ""
-    if args.create:
-        pddf_obj.create_pddf_devices()
-
-    if args.sysfs:
-        if args.sysfs[0] == 'all':
-		pddf_obj.populate_pddf_sysfsobj()
-        if args.sysfs[0] == 'print':
-		pddf_obj.populate_pddf_sysfsobj()
-		pddf_obj.dump_sysfs_obj(pddf_obj.sysfs_obj, args.sysfs[1])
-        if args.sysfs[0] == 'validate':
-		pddf_obj.populate_pddf_sysfsobj()
-		pddf_obj.validate_sysfs_creation(pddf_obj.sysfs_obj, args.sysfs[1])
-        if args.sysfs[0] == 'verify':
-		pddf_obj.verify_sysfs_data(args.sysfs[1])
-
-
-    if args.dsysfs:
-	if args.dsysfs[0] == 'validate':
-            pddf_obj.dev_parse(pddf_obj.data['SYSTEM'], { "cmd": "show_attr", "target":"all", "attr":"all" } )
-            if 'SYSSTATUS' in pddf_obj.data:
-                pddf_obj.dev_parse(pddf_obj.data['SYSSTATUS'], { "cmd": "show_attr", "target":"all", "attr":"all" } )
-            pddf_obj.validate_dsysfs_creation(pddf_obj.data_sysfs_obj, args.dsysfs[1])
-
-        elif args.dsysfs[0] == 'print':
-            pddf_obj.dev_parse(pddf_obj.data['SYSTEM'], { "cmd": "show_attr", "target":"all", "attr":"all" } )
-            if 'SYSSTATUS' in pddf_obj.data:
-                pddf_obj.dev_parse(pddf_obj.data['SYSSTATUS'], { "cmd": "show_attr", "target":"all", "attr":"all" } )
-            pddf_obj.dump_sysfs_obj(pddf_obj.data_sysfs_obj, args.dsysfs[1])
-
-        elif args.dsysfs[0] == 'all':
-            ret = pddf_obj.dev_parse(pddf_obj.data['SYSTEM'], { "cmd": "show_attr", "target":"all", "attr":"all" } )
-            if 'SYSSTATUS' in pddf_obj.data:
-                ret += pddf_obj.dev_parse(pddf_obj.data['SYSSTATUS'], { "cmd": "show_attr", "target":"all", "attr":"all" } )
-            pddf_obj.dump_sysfs_obj(pddf_obj.data_sysfs_obj, 'all')
-            #if not ret is None:
-                #ret = ret.rstrip('\n')
-                #print ret
-        else:
-            ret = pddf_obj.dev_parse(pddf_obj.data[args.dsysfs[0]], { "cmd": "show_attr", "target":args.dsysfs[0], "attr":args.dsysfs[1] })
-            #if not ret is None:
-                #ret = ret.rstrip('\n')
-                #print ret
-
-    if args.delete:
-        pddf_obj.delete_pddf_devices()
-
-    if args.validate:
-        if args.validate[0] == 'all':
-            pddf_obj.validate_pddf_devices(args.validate[1:])
-        else:
-            pass
-
-    if args.schema:
-        pddf_obj.schema_validation(args.schema[0])
-
-    if args.modules:
-        pddf_obj.modules_validation(args.modules[0])
-
-
-if __name__ == "__main__" :
-        main()

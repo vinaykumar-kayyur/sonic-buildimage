@@ -13,7 +13,7 @@
 
 
 import os.path
-import sys, traceback, time
+import sys
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse
 import json
@@ -48,7 +48,7 @@ class FanUtil(FanBase):
             return False
 
         attr_name = "fan"+ str(idx) +"_present"
-        output = self.pddf_obj.get_attr_name_output("FAN-CTRL", attr_name)
+        output = pddf_obj.get_attr_name_output("FAN-CTRL", attr_name)
         if not output:
             return False
 
@@ -131,13 +131,13 @@ class FanUtil(FanBase):
         if not output:
             return 0
 
-        mode = output['mode']
+        #mode = output['mode']
         val = output['status'].rstrip()
 
-        if output['status'].isalpha():
+        if val.isalpha():
             return 0
         else:
-            rpm_speed = int(float(output['status']))
+            rpm_speed = int(float(val))
 
         return rpm_speed
 
@@ -151,7 +151,7 @@ class FanUtil(FanBase):
             if not output:
                 return ""
 
-            mode = output['mode']
+            #mode = output['mode']
             val = output['status'].rstrip()
 
             if val.isalpha():
@@ -177,7 +177,6 @@ class FanUtil(FanBase):
             pwm = duty_cycle_to_pwm(val)
             print "New Speed: %d%% - PWM value to be set is %d\n"%(val,pwm)
 
-            status = 0
             for i in range(1, num_fan+1):
                 attr = "fan" + str(i) + "_pwm"
                 node = pddf_obj.get_path("FAN-CTRL", attr)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os.path
-import sys, traceback
+import sys
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse
 import json
@@ -45,8 +45,8 @@ class SYSStatusUtil():
     def get_power_module_status(self):
        device = "SYSSTATUS"
        node = pddf_obj.get_path(device,"power_module_status")
-        if node is None:
-            return False
+       if node is None:
+           return False
        try:
            with open(node, 'r') as f:
              status = f.read()

@@ -16,6 +16,18 @@ PLATFORM_KEY = 'DEVICE_METADATA.localhost.platform'
 
 dirname=os.path.dirname(os.path.realpath(__file__))
 
+color_map = {
+         "STATUS_LED_COLOR_GREEN" : "green",
+         "STATUS_LED_COLOR_RED" : "red",
+         "STATUS_LED_COLOR_AMBER" : "amber",
+         "STATUS_LED_COLOR_BLUE" : "blue",
+         "STATUS_LED_COLOR_GREEN_BLINK" : "blinking green",
+         "STATUS_LED_COLOR_RED_BLINK" : "blinking red",
+         "STATUS_LED_COLOR_AMBER_BLINK" : "blinking amber",
+         "STATUS_LED_COLOR_BLUE_BLINK" : "blinking blue",
+         "STATUS_LED_COLOR_OFF" : "off"
+}
+
 
 
 
@@ -139,7 +151,7 @@ class PddfParse():
         except IOError:
                     return ("Error")
 
-	return (color)
+	return (color_map[color])
 
     #################################################################################################################################
     #   CREATE DEFS
@@ -612,7 +624,7 @@ class PddfParse():
 
     # This is alid for 'at24' type of EEPROM devices. Only one attribtue 'eeprom' 
     def show_attr_eeprom_device(self, dev, ops):
-        ret_str = "" 
+        str = ""
         attr_name=ops['attr']
         attr_list=dev['i2c']['attr_list']
         KEY="eeprom"
@@ -632,8 +644,8 @@ class PddfParse():
                 dsysfs_path = self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
                 if not dsysfs_path in self.data_sysfs_obj[KEY]:
                     self.data_sysfs_obj[KEY].append(dsysfs_path)
-                ret_str += dsysfs_path+"\n"
-        return ret_str
+                str += dsysfs_path+"\n"
+        return str
 
     def show_attr_gpio_device(self, dev, ops):
         ret = ""
@@ -1033,14 +1045,13 @@ class PddfParse():
                             sysfs_path="/sys/kernel/pddf/devices/led/dev_ops"
                             if not sysfs_path in self.sysfs_obj[KEY]:
                                     self.sysfs_obj[KEY].append(sysfs_path)
-                            list=['/sys/kernel/pddf/devices/led/cur_state/color',
-                                    '/sys/kernel/pddf/devices/led/cur_state/color_state']
+                            list=['/sys/kernel/pddf/devices/led/cur_state/color']
                             self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
 
 
     def validate_xcvr_device(self, dev, ops):
         devtype_list = ['optoe1', 'optoe2']
-        dev_addr_list = ['0x50', '0x51', '0x53']
+        #dev_addr_list = ['0x50', '0x51', '0x53']
         dev_attribs = ['xcvr_present', 'xcvr_reset', 'xcvr_intr_status', 'xcvr_lpmode']
         ret_val = "xcvr validation failed"
 
@@ -1120,13 +1131,13 @@ class PddfParse():
         print ret_val
 
     def validate_fan_device(self, dev, ops):
-        devtype_list = ['fan_ctrl']
-        dev_attribs = ['none']
+        #devtype_list = ['fan_ctrl']
+        #dev_attribs = ['none']
         ret_val = "fan failed"
 
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['FAN']:
             if dev['i2c']['dev_attr']['num_fan'] is not None:
-                numfans = dev['i2c']['dev_attr']['num_fan']
+                #numfans = dev['i2c']['dev_attr']['num_fan']
                 #for fn in range(0, numfans):
                 #    cmd = "fan"+fn+"_present"
                 #    if attr.get("attr_name") == cmd:
@@ -1135,7 +1146,7 @@ class PddfParse():
         print ret_val
 
     def validate_psu_device(self, dev, ops):
-        devtype_list = ['psu_pmbus']
+        #devtype_list = ['psu_pmbus']
         dev_attribs = ['psu_present', 'psu_model_name', 'psu_power_good', 'psu_mfr_id', 'psu_serial_num',
                         'psu_fan_dir', 'psu_v_out', 'psu_i_out', 'psu_p_out', 'psu_fan1_speed_rpm'
                       ]
@@ -1292,7 +1303,7 @@ class PddfParse():
            kos.extend(self.data['PLATFORM']['pddf_kos'])
 
            if 'custom_kos' in self.data['PLATFORM']:
-               custom_kos = self.data['PLATFORM']['custom_kos']
+               #custom_kos = self.data['PLATFORM']['custom_kos']
                kos.extend(self.data['PLATFORM']['custom_kos'])
 
         for mod in kos:
@@ -1300,7 +1311,7 @@ class PddfParse():
                supported_type=True
                cmd = "lsmod | grep " + mod
                try:
-                  o_list = subprocess.check_output(cmd, shell=True)
+                  subprocess.check_output(cmd, shell=True)
                except Exception as e:
                   module_validation_status.append(mod)
         if supported_type:
@@ -1656,6 +1667,15 @@ class PddfParse():
             if attr['device_type'] == 'SYSSTAT':
                     return self.sysstatus_parse(dev,ops)
 
+    def is_supported_sysled_state(self, sysled_name, sysled_state):
+            if not sysled_name in self.data.keys():
+                return False, "[FAILED] " + sysled_name + " is not configured"
+            for attr in self.data[sysled_name]['i2c']['attr_list']:
+                if attr['attr_name'] == sysled_state:
+                    return True, "[PASS] supported"  
+            return False,  "[FAILED]: Invalid color"
+
+
     def create_attr(self, key, value, path):
             cmd = "echo '%s' > /sys/kernel/%s/%s"%(value,  path, key)
             self.runcmd(cmd)
@@ -1669,17 +1689,17 @@ class PddfParse():
     def create_led_device(self, key, ops):
             if ops['attr']=='all' or ops['attr']==self.data[key]['dev_info']['device_name']:
                     path="pddf/devices/led"
-                    ops_state=""
+                    #ops_state=""
                     for attr in self.data[key]['i2c']['attr_list']:
                             self.create_attr('device_name', self.data[key]['dev_info']['device_name'], path)
                             self.create_device(self.data[key]['dev_attr'], path, ops)
                             for attr_key in attr.keys():
                                     if (attr_key == 'swpld_addr_offset' or attr_key == 'swpld_addr'):
                                             self.create_attr(attr_key, attr[attr_key], path)
-                                    elif (attr_key != 'attr_name'):
-                                            state_path=path+'/'+attr['attr_name']
+                                    elif (attr_key != 'attr_name' and attr_key != 'descr'):
+                                            state_path=path+'/state_attr'
                                             self.create_attr(attr_key, attr[attr_key],state_path)
-                            cmd="echo '" + ops['cmd'] + '_' + attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"
+                            cmd="echo '"  + attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"
                             self.runcmd(cmd)
 
 
@@ -1738,7 +1758,7 @@ class PddfParse():
     def validate_pddf_devices(self, *args):
         self.populate_pddf_sysfsobj() 
         alist = [item for item in args]
-        devtype = alist[0]
+        #devtype = alist[0]
         v_ops = { 'cmd': 'validate', 'target':'all', 'attr':'all' }
         #dev_parse(self.data, self.data[devtype], v_ops )
         self.dev_parse(self.data['SYSTEM'], v_ops )
@@ -1748,8 +1768,6 @@ class PddfParse():
     #################################################################################################################################
     def populate_bmc_cache_db(self, bmc_attr):
         bmc_cmd = str(bmc_attr['bmc_cmd']).strip()
-        field_name = str(bmc_attr['field_name']).strip()
-        field_pos= int(bmc_attr['field_pos'])-1
         
         if 'delimiter' in bmc_attr.keys():
             delim = str(bmc_attr['delimiter']).strip()
@@ -1874,13 +1892,17 @@ class PddfParse():
                 for attr in attr_list:
                     if attr['attr_name'].strip() == attr_name.strip():
                         return attr
-	return {} 
+                # Required attr_name is not supported in BMC object
+                return {}
+	return None
 
     def get_attr_name_output(self, device_name, attr_name):
 	bmc_attr = self.check_bmc_based_attr(device_name, attr_name)
         output={"mode":"", "status":""}	
 	   
-        if bmc_attr:
+        if bmc_attr is not None:
+           if bmc_attr=={}:
+               return {}
            output['mode']="bmc"
            output['status']=self.bmc_get_cmd(bmc_attr)
         else:
@@ -1899,7 +1921,9 @@ class PddfParse():
 	bmc_attr = self.check_bmc_based_attr(device_name, attr_name)
         output={"mode":"", "status":""}	
 	   
-        if bmc_attr:
+        if bmc_attr is not None:
+            if bmc_attr=={}:
+               return {}
             output['mode']="bmc"
             #output['status']=self.bmc_set_cmd(bmc_attr, val)
             output['status']=False  # No set operation allowed for BMC attributes as they are handled by BMC itself
@@ -1978,7 +2002,7 @@ def main():
                 #ret = ret.rstrip('\n')
                 #print ret
         else:
-            ret = pddf_obj.dev_parse(pddf_obj.data[args.dsysfs[0]], { "cmd": "show_attr", "target":args.dsysfs[0], "attr":args.dsysfs[1] })
+            pddf_obj.dev_parse(pddf_obj.data[args.dsysfs[0]], { "cmd": "show_attr", "target":args.dsysfs[0], "attr":args.dsysfs[1] })
             #if not ret is None:
                 #ret = ret.rstrip('\n')
                 #print ret

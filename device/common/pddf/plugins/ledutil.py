@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
-import os.path
-import sys, traceback
+import sys
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse
-import json
-import argparse
 
 class LedUtil:
     color_map = {
