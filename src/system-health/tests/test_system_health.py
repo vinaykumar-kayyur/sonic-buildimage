@@ -1,5 +1,6 @@
 import os
 import sys
+
 from .mock_connector import MockConnector
 import swsssdk
 swsssdk.SonicV2Connector = MockConnector

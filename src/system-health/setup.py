@@ -1,5 +1,11 @@
 from setuptools import setup
 
+dependencies = [
+    'natsort',
+    'sonic_py_common',
+    'swsssdk>=2.0.1',
+]
+
 setup(
     name='system-health',
     version='1.0',
@@ -10,6 +16,7 @@ setup(
     url='https://github.com/Azure/sonic-buildimage',
     maintainer='Junchao Chen',
     maintainer_email='junchaow@mellanox.com',
+    install_requires=dependencies,
     packages=[
         'health_checker',
         'tests'
