@@ -304,7 +304,7 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
     def lpbk_handler(self, key, data):
-        key = ConfigDBConnector.deserialize_key(key)
+        key = self.config_db.deserialize_key(key)
         # Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('LOOPBACK_INTERFACE')
         if key in keys:
