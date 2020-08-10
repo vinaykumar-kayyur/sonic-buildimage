@@ -71,8 +71,8 @@ class SYSStatusUtil():
         device = "SYSSTATUS"
         for i in range(1,3):
            node = pddf_obj.get_path(device,"misc"+str(i))
-           if node  is None:
-               retun False
+           if node is None:
+               return False
            try:
                with open(node, 'r') as f:
                    status = f.read()
