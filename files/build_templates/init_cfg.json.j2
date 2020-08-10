@@ -1,0 +1,45 @@
+{
+    "DEVICE_METADATA": {
+        "localhost": {
+            "default_bgp_status": {% if shutdown_bgp_on_start == "y" %}"down"{% else %}"up"{% endif %},
+            "default_pfcwd_status": {% if enable_pfcwd_on_start == "y" %}"enable"{% else %}"disable"{% endif %}
+        }
+    },
+    "CRM": {
+        "Config": {
+            "polling_interval": "300",
+{%- for crm_res in ["ipv4_route", "ipv6_route", "ipv4_nexthop", "ipv6_nexthop", "ipv4_neighbor",
+                    "ipv6_neighbor", "nexthop_group_member", "nexthop_group", "acl_table",
+                    "acl_group", "acl_entry", "acl_counter", "fdb_entry"] %}
+            "{{crm_res}}_threshold_type": "percentage",
+            "{{crm_res}}_low_threshold": "70",
+            "{{crm_res}}_high_threshold": "85"{% if not loop.last %},{% endif -%}
+{% endfor %}
+        }
+    },
+{%- set features = [("bgp", "enabled", "enabled"),
+                   ("database", "enabled", "disabled"),
+                   ("dhcp_relay", "enabled", "enabled"),
+                   ("lldp", "enabled", "enabled"),
+                   ("pmon", "enabled", "enabled"),
+                   ("radv", "enabled", "enabled"),
+                   ("snmp", "enabled", "enabled"),
+                   ("swss", "enabled", "enabled"),
+                   ("syncd", "enabled", "enabled"),
+                   ("teamd", "enabled", "enabled")] %}
+{%- if include_iccpd == "y" %}{% do features.append(("iccpd", "disabled", "enabled")) %}{% endif %}
+{%- if include_mgmt_framework == "y" %}{% do features.append(("mgmt-framework", "enabled", "enabled")) %}{% endif %}
+{%- if include_nat == "y" %}{% do features.append(("nat", "disabled", "enabled")) %}{% endif %}
+{%- if include_restapi == "y" %}{% do features.append(("restapi", "disabled", "enabled")) %}{% endif %}
+{%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", "enabled")) %}{% endif %}
+{%- if include_system_telemetry == "y" %}{% do features.append(("telemetry", "enabled", "enabled")) %}{% endif %}
+    "FEATURE": {
+{%- for feature, state, autorestart in features %}
+        "{{feature}}": {
+            "state": "{{state}}",
+            "auto_restart": "{{autorestart}}",
+            "high_mem_alert": "disabled"
+        }{% if not loop.last %},{% endif -%}
+{% endfor %}
+    }
+}

@@ -252,7 +252,7 @@ class SfpUtil(SfpUtilBase):
         if (reg_value == "" ):
             return False
 
-        # Mask off 4th bit for presence
+        # Mask off 6th bit for lpmode
         mask = (1 << 6)
 		
 	# LPMode is active high; set or clear the bit accordingly
@@ -283,7 +283,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         # Mask off 4th bit for presence
-        mask = (1 << 6)
+        mask = (1 << 4)
 
         # ResetL is active low
         reg_value = reg_value & ~mask
@@ -319,7 +319,7 @@ class SfpUtil(SfpUtilBase):
 
             time.sleep(0.5)
     
-     def get_transceiver_dom_info_dict(self, port_num):
+    def get_transceiver_dom_info_dict(self, port_num):
         transceiver_dom_info_dict = {}
 
         dom_info_dict_keys = ['temperature', 'voltage',  'rx1power',
