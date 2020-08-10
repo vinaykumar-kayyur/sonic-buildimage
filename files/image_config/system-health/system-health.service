@@ -1,5 +1,5 @@
 [Unit]
-Description=Monitor system health
+Description=SONiC system health monitor
 Requires=database.service updategraph.service
 After=database.service updategraph.service
 
