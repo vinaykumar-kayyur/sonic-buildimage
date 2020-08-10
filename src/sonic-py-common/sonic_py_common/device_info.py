@@ -243,17 +243,6 @@ def get_npu_device_id(npu_id):
                 return device_id
 
 
-def get_asic_conf_file_path(platform):
-    asic_conf_path_candidates = []
-    asic_conf_path_candidates.append(os.path.join('/usr/share/sonic/platform', ASIC_CONF_FILENAME))
-    if platform is not None:
-        asic_conf_path_candidates.append(os.path.join(SONIC_DEVICE_PATH, platform, ASIC_CONF_FILENAME))
-    for asic_conf_file_path in asic_conf_path_candidates:
-        if os.path.isfile(asic_conf_file_path):
-            return asic_conf_file_path
-    return None
-
-
 def get_namespaces():
     """
     In a multi NPU platform, each NPU is in a Linux Namespace.
