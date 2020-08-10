@@ -17,7 +17,6 @@ class SYSStatusUtil():
         pddf_obj = pddfparse.PddfParse()
 
     def get_board_info(self):
-
         device = "SYSSTATUS"
         node = pddf_obj.get_path(device,"board_info")
         if node is None:
@@ -30,7 +29,6 @@ class SYSStatusUtil():
             return False
 
     def get_cpld_versio(self):
-
         device = "SYSSTATUS"
         node = pddf_obj.get_path(device,"cpld1_version")
         if node is None:
@@ -49,25 +47,24 @@ class SYSStatusUtil():
            return False
        try:
            with open(node, 'r') as f:
-             status = f.read()
-             print "power_module_status : %s" %status
+               status = f.read()
+               print "power_module_status : %s" %status
        except IOError:
            return False
 
 
     def get_system_reset_status(self):
-
         device = "SYSSTATUS"
         for i in range(1,8):
            node = pddf_obj.get_path(device,"system_reset"+str(i))
            if node is None:
                return False
            try:
-             with open(node, 'r') as f:
-               status = f.read()
-               print "system_reset%s : %s" %(i, status)
+               with open(node, 'r') as f:
+                   status = f.read()
+                   print "system_reset%s : %s" %(i, status)
            except IOError:
-             print "system_reset%s not supported" %i
+               print "system_reset%s not supported" %i
 
 
     def get_misc_status(self):
@@ -77,11 +74,11 @@ class SYSStatusUtil():
            if node  is None:
                retun False
            try:
-             with open(node, 'r') as f:
-               status = f.read()
-               print "misc%s : %s" %(i, status)
+               with open(node, 'r') as f:
+                   status = f.read()
+                   print "misc%s : %s" %(i, status)
            except IOError:
-             print "system_reset%s not supported" %i
+               print "system_reset%s not supported" %i
 
 
     def dump_sysfs(self):
