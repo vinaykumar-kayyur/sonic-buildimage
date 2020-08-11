@@ -122,8 +122,8 @@ ifeq ($(SONIC_INCLUDE_RESTAPI),y)
 INCLUDE_RESTAPI = y
 endif
 
-ifeq ($(SONIC_ENABLE_ACMS),y)
-ENABLE_ACMS = y
+ifeq ($(SONIC_INCLUDE_ACMS),y)
+INCLUDE_ACMS = y
 endif
 
 ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
@@ -243,7 +243,7 @@ $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
 $(info "ENABLE_ZTP"                      : "$(ENABLE_ZTP)")
-$(info "ENABLE_ACMS"                     : "$(ENABLE_ACMS)")
+$(info "INCLUDE_ACMS"                    : "$(INCLUDE_ACMS)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
@@ -905,7 +905,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export include_iccpd="$(INCLUDE_ICCPD)"
 	export pddf_support="$(PDDF_SUPPORT)"
-	export enable_acms="$(ENABLE_ACMS)"
+	export include_acms="$(INCLUDE_ACMS)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
 	export default_buffer_model="$(SONIC_BUFFER_MODEL)"
 	export include_kubernetes="$(INCLUDE_KUBERNETES)"
