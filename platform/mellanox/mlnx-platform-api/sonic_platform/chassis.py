@@ -11,9 +11,8 @@
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.component_base import ComponentBase
-    from sonic_device_util import get_machine_info
-    from sonic_device_util import get_platform_info
-    from sonic_daemon_base.daemon_base import Logger
+    from sonic_py_common import device_info
+    from sonic_py_common.logger import Logger
     from os import listdir
     from os.path import isfile, join
     import sys
@@ -50,11 +49,14 @@ logger = Logger()
 
 # magic code defnition for port number, qsfp port position of each Platform
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-platform_dict_port = {'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700':0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn3420-r0':5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700C-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c-r0':4, 'x86_64-mlnx_msn4700-r0': 0}
+platform_dict_port = {'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700':0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn3420-r0':5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c-r0':4, 'x86_64-mlnx_msn4700-r0': 0}
 port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1), (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1)]
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
+
+    # System status LED
+    _led = None
 
     def __init__(self):
         super(Chassis, self).__init__()
@@ -63,10 +65,10 @@ class Chassis(ChassisBase):
         self.sku_name = self._get_sku_name()
         self.platform_name = self._get_platform_name()
 
-        mi = get_machine_info()
+        mi = device_info.get_machine_info()
         if mi is not None:
             self.name = mi['onie_platform']
-            self.platform_name = get_platform_info(mi)
+            self.platform_name = device_info.get_platform()
         else:
             self.name = self.sku_name
             self.platform_name = self._get_platform_name()
@@ -155,6 +157,10 @@ class Chassis(ChassisBase):
         self._component_list.append(ComponentSSD())
         self._component_list.append(ComponentBIOS())
         self._component_list.extend(ComponentCPLD.get_component_list())
+
+    def initizalize_system_led(self):
+        from .led import SystemLed
+        Chassis._led = SystemLed()
 
 
     def get_name(self):
@@ -467,3 +473,25 @@ class Chassis(ChassisBase):
         from .thermal_manager import ThermalManager
         return ThermalManager
 
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        return False if not Chassis._led else Chassis._led.set_status(color)
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        return None if not Chassis._led else Chassis._led.get_status()
