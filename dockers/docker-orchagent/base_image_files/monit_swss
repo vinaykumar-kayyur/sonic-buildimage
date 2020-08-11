@@ -12,32 +12,32 @@
 ##  nbrmgrd
 ##  vxlanmgrd
 ###############################################################################
-check process orchagent matching "/usr/bin/orchagent -d /var/log/swss"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_orchagent with path "/usr/bin/process_checker swss orchagent /usr/bin/orchagent -d /var/log/swss"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process portsyncd matching "/usr/bin/portsyncd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_portsyncd with path "/usr/bin/process_checker swss portsyncd /usr/bin/portsyncd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process neighsyncd matching "/usr/bin/neighsyncd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_neighsyncd with path "/usr/bin/process_checker swss neighsyncd /usr/bin/neighsyncd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process vrfmgrd matching "/usr/bin/vrfmgrd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_vrfmgrd with path "/usr/bin/process_checker swss vrfmgrd /usr/bin/vrfmgrd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process vlanmgrd matching "/usr/bin/vlanmgrd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_vlanmgrd with path "/usr/bin/process_checker swss vlanmgrd /usr/bin/vlanmgrd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process intfmgrd matching "/usr/bin/intfmgrd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_intfmgrd with path "/usr/bin/process_checker swss intfmgrd /usr/bin/intfmgrd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process portmgrd matching "/usr/bin/portmgrd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_portmgrd with path "/usr/bin/process_checker swss portmgrd /usr/bin/portmgrd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process buffermgrd matching "/usr/bin/buffermgrd -l"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_buffermgrd with path "/usr/bin/process_checker swss buffermgrd /usr/bin/buffermgrd -l"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process nbrmgrd matching "/usr/bin/nbrmgrd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_nbrmgrd with path "/usr/bin/process_checker swss nbrmgrd /usr/bin/nbrmgrd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process vxlanmgrd matching "/usr/bin/vxlanmgrd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_vxlanmgrd with path "/usr/bin/process_checker swss vxlanmgrd /usr/bin/vxlanmgrd"
+    if status != 0 for 5 times within 5 cycles then alert

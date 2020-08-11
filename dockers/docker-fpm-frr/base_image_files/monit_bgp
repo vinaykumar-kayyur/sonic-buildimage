@@ -7,17 +7,17 @@
 ##  staticd
 ##  bgpcfgd
 ###############################################################################
-check process zebra matching "/usr/lib/frr/zebra"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_zebra with path "/usr/bin/process_checker bgp zebra /usr/lib/frr/zebra"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process fpmsyncd matching "fpmsyncd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_fpmsyncd with path "/usr/bin/process_checker bgp fpmsyncd fpmsyncd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process bgpd matching "/usr/lib/frr/bgpd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_bgpd with path "/usr/bin/process_checker bgp bgpd /usr/lib/frr/bgpd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process staticd matching "/usr/lib/frr/staticd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_staticd with path "/usr/bin/process_checker bgp staticd /usr/lib/frr/staticd"
+    if status != 0 for 5 times within 5 cycles then alert
 
-check process bgpcfgd matching "python /usr/local/bin/bgpcfgd"
-    if does not exist for 5 times within 5 cycles then alert
+check program container_process_bgpcfgd with path "/usr/bin/process_checker bgp bgpcfgd python /usr/local/bin/bgpcfgd"
+    if status != 0 for 5 times within 5 cycles then alert
