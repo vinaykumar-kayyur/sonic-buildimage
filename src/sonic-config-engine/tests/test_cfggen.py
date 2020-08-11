@@ -111,8 +111,8 @@ class TestCfgGen(TestCase):
     def test_template_batch_mode(self):
         argument = '-y ' + os.path.join(self.test_dir, 'test.yml')
         argument += ' -a \'{"key1":"value"}\''
-        argument += ' -b ' + os.path.join(self.test_dir, 'test.j2') + ',' + os.path.join(self.test_dir, 'test.txt')
-        argument += ' -b ' + os.path.join(self.test_dir, 'test2.j2') + ',' + os.path.join(self.test_dir, 'test2.txt')
+        argument += ' -t ' + os.path.join(self.test_dir, 'test.j2') + ',' + os.path.join(self.test_dir, 'test.txt')
+        argument += ' -t ' + os.path.join(self.test_dir, 'test2.j2') + ',' + os.path.join(self.test_dir, 'test2.txt')
         output = self.run_script(argument)
         assert(os.path.exists(os.path.join(self.test_dir, 'test.txt')))
         assert(os.path.exists(os.path.join(self.test_dir, 'test2.txt')))
@@ -124,8 +124,8 @@ class TestCfgGen(TestCase):
     def test_template_json_batch_mode(self):
         data = {"key1_1":"value1_1", "key1_2":"value1_2", "key2_1":"value2_1", "key2_2":"value2_2"}
         argument = " -a '{0}'".format(repr(data).replace('\'', '"'))
-        argument += ' -J ' + os.path.join(self.test_dir, 'sample-template-1.json.j2')
-        argument += ' -J ' + os.path.join(self.test_dir, 'sample-template-2.json.j2')
+        argument += ' -t ' + os.path.join(self.test_dir, 'sample-template-1.json.j2') + ",config-db"
+        argument += ' -t ' + os.path.join(self.test_dir, 'sample-template-2.json.j2') + ",config-db"
         argument += ' --print-data'
         output = self.run_script(argument)
         output_data = json.loads(output)

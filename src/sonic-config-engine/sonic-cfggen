@@ -261,19 +261,16 @@ def main():
     parser.add_argument("-H", "--platform-info", help="read platform and hardware info", action='store_true')
     parser.add_argument("-s", "--redis-unix-sock-file", help="unix sock file for redis connection")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-t", "--template", help="render the data with the template file")
+    group.add_argument("-t", "--template", help="render the data with the template file", action="append", default=[],
+                       type=lambda opt_value: tuple(opt_value.split(',')) if ',' in opt_value else (opt_value, sys.stdout))
     parser.add_argument("-T", "--template_dir", help="search base for the template files", action='store')
     group.add_argument("-v", "--var", help="print the value of a variable, support jinja2 expression")
     group.add_argument("--var-json", help="print the value of a variable, in json format")
     group.add_argument("-w", "--write-to-db", help="write config into configdb", action='store_true')
-    group.add_argument("--print-data", help="print all data", action='store_true')
     group.add_argument("--preset", help="generate sample configuration from a preset template", choices=get_available_config())
     group = parser.add_mutually_exclusive_group()
+    group.add_argument("--print-data", help="print all data", action='store_true')
     group.add_argument("-K", "--key", help="Lookup for a specific key")
-    group.add_argument("-b", "--batch", help="Render and dump template data into a file (batch mode)", action="append", default=[],
-                       type=lambda opt_value: tuple(opt_value.split(',')))
-    group.add_argument("-J", "--process-json", help="render json file from a template and update internal switch config data",
-                       action="append", default=[])
     args = parser.parse_args()
 
     platform = get_platform()
@@ -371,31 +368,22 @@ def main():
         deep_update(data, hardware_data)
 
     paths = ['/', '/usr/share/sonic/templates']
-    if args.template:
-        args.batch.append((os.path.abspath(args.template), sys.stdout))
-
     if args.template_dir:
         paths.append(os.path.abspath(args.template_dir))
 
-    if args.batch:
-        for template_file, _ in args.batch:
+    if args.template:
+        for template_file, _ in args.template:
             paths.append(os.path.dirname(os.path.abspath(template_file)))
         env = _get_jinja2_env(paths)
         sorted_data = sort_data(data)
-        for template_file, dest_file in args.batch:
-            template = env.get_template(template_file)
-            with smart_open(dest_file, 'w') as df:
-                print(template.render(sorted_data), file=df)
-
-    if args.process_json:
-        for template_file in args.process_json:
-            paths.append(os.path.dirname(os.path.abspath(template_file)))
-        env = _get_jinja2_env(paths)
-        sorted_data = sort_data(data)
-        for template_file in args.process_json:
-            template = env.get_template(template_file)
+        for template_file, dest_file in args.template:
+            template = env.get_template(os.path.basename(template_file))
             template_data = template.render(sorted_data)
-            deep_update(data, FormatConverter.to_deserialized(json.loads(template_data)))
+            if dest_file == "config-db":
+                deep_update(data, FormatConverter.to_deserialized(json.loads(template_data)))
+            else:
+                with smart_open(dest_file, 'w') as df:
+                    print(template_data, file=df)
 
     if args.var != None:
         template = jinja2.Template('{{' + args.var + '}}')
