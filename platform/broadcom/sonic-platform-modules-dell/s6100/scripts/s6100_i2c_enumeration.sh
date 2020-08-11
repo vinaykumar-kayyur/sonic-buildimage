@@ -223,7 +223,6 @@ if [[ "$1" == "init" ]]; then
     cpu_board_mux "new_device"
     switch_board_mux "new_device"
     sys_eeprom "new_device"
-    switch_board_eeprom "new_device"
     switch_board_cpld "new_device"
     /usr/local/bin/s6100_bitbang_reset.sh
     switch_board_qsfp_mux "new_device"
@@ -235,7 +234,6 @@ elif [[ "$1" == "deinit" ]]; then
     xcvr_presence_interrupts "disable"
     switch_board_sfp "delete_device"
     switch_board_cpld "delete_device"
-    switch_board_eeprom "delete_device"
     switch_board_mux "delete_device"
     sys_eeprom "delete_device"
     switch_board_qsfp "delete_device"
