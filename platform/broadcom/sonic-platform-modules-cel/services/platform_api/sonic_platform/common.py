@@ -38,7 +38,7 @@ class Common:
             raw_data, err = p.communicate()
             if err == '':
                 status, output = True, raw_data.strip()
-        except:
+        except Exception:
             pass
         return status, output
 
