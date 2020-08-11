@@ -2,7 +2,6 @@
 
 mr_reboot() {
 
-    #echo "mr_reboot"
     sudo rmmod x86-64-cameo-esc601-32q
     sudo i2cset -y 0 0x30 0xa4 0  
 
@@ -10,8 +9,7 @@ mr_reboot() {
 
 if [ $# -eq 0 ] || [ $@ = "-p" ] || [ $@ = "--reboot" ] || [ $@ = "--poweroff" ] || [ $@ = "-f" ] || [ $@ = "--force" ];  then
     mr_reboot
-elif [ $@ = "--halt" ]; then
-    #echo "halt" 
+elif [ $@ = "--halt" ]; then 
     sudo halt
 else
     echo "unsupported option"

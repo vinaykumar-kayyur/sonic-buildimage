@@ -32,9 +32,6 @@ args = []
 ALL_DEVICE = {}
 DEVICE_NO = {'led': 5, 'fan': 1, 'thermal': 3, 'psu': 2, 'sfp': 54}
 FORCE = 0
-# logging.basicConfig(filename= PROJECT_NAME+'.log', filemode='w',level=logging.DEBUG)
-# logging.basicConfig(level=logging.INFO)
-
 
 if DEBUG == True:
     print sys.argv[0]
