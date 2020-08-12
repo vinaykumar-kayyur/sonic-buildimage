@@ -179,8 +179,10 @@ def get_namespace_list(namespace=None):
         return ns_list
 
     if namespace is None:
-        namespaces = get_all_namespaces()
-        ns_list = namespaces['front_ns'] + namespaces['back_ns']
+        # there are few commands that needs to work even if the
+        # config db is not present. So get the namespaces
+        # list from linux
+        ns_list = get_namespaces_from_linux()
     else:
         ns_list = [namespace]
 
