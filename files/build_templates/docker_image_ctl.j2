@@ -146,6 +146,10 @@ function postStartAction()
             docker cp $PSENSOR pmon:/usr/bin/
         fi
     fi
+
+    # Write contents of system EEPROM as JSON file
+    sudo /usr/bin/decode-syseeprom | /usr/bin/syseeprom-to-json | sudo tee /var/platform/syseeprom > /dev/null
+
 {%- else %}
     : # nothing
 {%- endif %}
