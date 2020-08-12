@@ -29,6 +29,7 @@ setup(
         'sonic-cfggen',
     ],
     install_requires = [
+        'future',
         'ipaddr',
         'jinja2>=2.10',
         'lxml',
