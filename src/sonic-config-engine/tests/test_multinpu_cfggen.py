@@ -162,8 +162,7 @@ class TestMultiNpuCfgGen(TestCase):
         argument = "-m {} -p {} -n asic0 --var-json \"PORT\"".format(self.sample_graph, self.port_config[0])
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, \
-           {
-            "Ethernet0": { "admin_status": "up",  "alias": "Ethernet1/1",  "asic_port_name": "Eth0-ASIC0",  "description": "01T2:Ethernet1",  "index": "0",  "lanes": "33,34,35,36",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
+           {"Ethernet0": { "admin_status": "up",  "alias": "Ethernet1/1",  "asic_port_name": "Eth0-ASIC0",  "description": "01T2:Ethernet1",  "index": "0",  "lanes": "33,34,35,36",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
             "Ethernet4": { "admin_status": "up",  "alias": "Ethernet1/2",  "asic_port_name": "Eth1-ASIC0",  "description": "01T2:Ethernet2",  "index": "1",  "lanes": "29,30,31,32",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
             "Ethernet8": { "alias": "Ethernet1/3",  "asic_port_name": "Eth2-ASIC0",  "description": "Ethernet1/3",  "index": "2",  "lanes": "41,42,43,44",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
             "Ethernet12": { "alias": "Ethernet1/4",  "asic_port_name": "Eth3-ASIC0",  "description": "Ethernet1/4",  "index": "3",  "lanes": "37,38,39,40",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 

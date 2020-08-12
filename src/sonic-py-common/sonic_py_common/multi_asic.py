@@ -1,6 +1,5 @@
 import glob
 import os
-
 from natsort import natsorted
 
 from swsssdk import ConfigDBConnector
@@ -11,17 +10,17 @@ from .device_info import CONTAINER_PLATFORM_PATH
 from .device_info import HOST_DEVICE_PATH
 from .device_info import get_platform
 
-ASIC_NAME_PREFIX = "asic"
-NAMESPACE_PATH_GLOB = "/run/netns/*"
-ASIC_CONF_FILENAME = "asic.conf"
-FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
-BACKEND_ASIC_SUB_ROLE = "BackEnd"
+ASIC_NAME_PREFIX = 'asic'
+NAMESPACE_PATH_GLOB = '/run/netns/*'
+ASIC_CONF_FILENAME = 'asic.conf'
+FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
+BACKEND_ASIC_SUB_ROLE = 'BackEnd'
 EXTERNAL_PORT = 'Ext'
 INTERNAL_PORT = 'Int'
 PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
-NEIGH_DEVICE_METADATA_CFG_DB_TABLE = "DEVICE_NEIGHBOR_METADATA"
+NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
 
