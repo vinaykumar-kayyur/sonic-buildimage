@@ -18,7 +18,8 @@ class ServiceChecker(HealthChecker):
     EXPECT_STATUS_DICT = {
         'System': 'Running',
         'Process': 'Running',
-        'Filesystem': 'Accessible'
+        'Filesystem': 'Accessible',
+        'Program': 'Status ok'
     }
 
     def __init__(self):
@@ -61,6 +62,8 @@ class ServiceChecker(HealthChecker):
                 continue
             status = line[status_begin:type_begin].strip()
             service_type = line[type_begin:].strip()
+            if service_type not in ServiceChecker.EXPECT_STATUS_DICT:
+                continue
             expect_status = ServiceChecker.EXPECT_STATUS_DICT[service_type]
             if expect_status != status:
                 self.set_object_not_ok(service_type, name, '{} is not {}'.format(name, expect_status))
