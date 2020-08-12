@@ -43,7 +43,7 @@ RUN apt-get update &&   \
 
 # Install locally-built Python wheel dependencies
 {{ install_python_wheels(docker_platform_monitor_whls.split(' ')) }}
-{%- endif %}
+{% endif %}
 
 # Clean up
 RUN apt-get purge -y           \
