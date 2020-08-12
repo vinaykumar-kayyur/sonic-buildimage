@@ -415,7 +415,7 @@ def parse_dpg(dpg, hname):
                     # ports. Non-active ports will be removed from this list
                     # later after the rest of the minigraph has been parsed.
                     acl_intfs = pc_intfs[:]
-                    for panel_port in list(port_alias_map.values()):
+                    for panel_port in port_alias_map.values():
                         # because of port_alias_asic_map we can have duplicate in port_alias_map
                         # so check if already present do not add
                         if panel_port not in intfs_inpc and panel_port not in acl_intfs:
@@ -761,7 +761,7 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         # Filters out inactive front-panel ports from the binding list for mirror
         # ACL tables. We define an "active" port as one that is a member of a
         # front pannel port channel or one that is connected to a neighboring device via front panel port.
-        active_ports = [port for port in front_panel_ports if port in list(neighbors.keys()) or port in front_port_channel_intf]
+        active_ports = [port for port in front_panel_ports if port in neighbors.keys() or port in front_port_channel_intf]
         
         if not active_ports:
             print('Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table), file=sys.stderr)
@@ -778,7 +778,7 @@ def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
     '''
     local_sub_role = parse_asic_sub_role(filename, asic_name)
 
-    for peer_ip in list(bgp_sessions.keys()):
+    for peer_ip in bgp_sessions.keys():
         peer_name = bgp_sessions[peer_ip]['name']
         peer_sub_role = parse_asic_sub_role(filename, peer_name)
         if ((local_sub_role == FRONTEND_ASIC_SUB_ROLE and peer_sub_role == BACKEND_ASIC_SUB_ROLE) or
@@ -954,7 +954,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     phyport_intfs = {}
     vlan_intfs = {}
     pc_intfs = {}
-    vlan_invert_mapping = { v['alias']:k for k,v in list(vlans.items()) if 'alias' in v }
+    vlan_invert_mapping = { v['alias']:k for k,v in vlans.items() if 'alias' in v }
     vlan_sub_intfs = {}
 
     for intf in intfs:
@@ -1007,7 +1007,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
-    for port_name, port in list(ports.items()):
+    for port_name, port in ports.items():
         if not port.get('description'):
             if port_name in neighbors:
                 # for the ports w/o description set it to neighbor name:port
@@ -1034,8 +1034,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if port:
             port['admin_status'] = 'up'
 
-    for port in list(neighbors.keys()):
-        if port in list(ports.keys()):
+    for port in neighbors.keys():
+        if port in ports.keys():
             # make all neighbors connected ports to 'admin_up'
             ports[port]['admin_status'] = 'up'
 
@@ -1044,7 +1044,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if port_config_file:
         port_set = set(ports.keys())
-        for (pc_name, mbr_map) in list(pcs.items()):
+        for (pc_name, mbr_map) in pcs.items():
             # remove portchannels that contain ports not existing in port_config.ini
             # when port_config.ini exists
             if not set(mbr_map['members']).issubset(port_set):
@@ -1059,7 +1059,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
 
-    for pc_intf in list(pc_intfs.keys()):
+    for pc_intf in pc_intfs.keys():
         # remove portchannels not in PORTCHANNEL dictionary
         if isinstance(pc_intf, tuple) and pc_intf[0] not in pcs:
             print("Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0]), file=sys.stderr)
@@ -1072,7 +1072,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
 
-        for intf in list(phyport_intfs.keys()):
+        for intf in phyport_intfs.keys():
             if isinstance(intf, tuple):
                 intf_info = list(intf)
                 intf_info[0] = intf_info[0] + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
@@ -1082,7 +1082,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 sub_intf = intf + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
                 vlan_sub_intfs[sub_intf] = {"admin_status" : "up"}
 
-        for pc_intf in list(pc_intfs.keys()):
+        for pc_intf in pc_intfs.keys():
             if isinstance(pc_intf, tuple):
                 pc_intf_info = list(pc_intf)
                 pc_intf_info[0] = pc_intf_info[0] + VLAN_SUB_INTERFACE_SEPARATOR + VLAN_SUB_INTERFACE_VLAN_ID
@@ -1097,7 +1097,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
-    for nghbr in list(neighbors.keys()):
+    for nghbr in neighbors.keys():
         # remove port not in port_config.ini
         if nghbr not in ports:
             if port_config_file is not None:
@@ -1107,7 +1107,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if asic_name is None:
         results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key.lower() != hostname.lower() }
     else:
-        results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key in {device['name'] for device in list(neighbors.values())} }
+        results['DEVICE_NEIGHBOR_METADATA'] = { key:devices[key] for key in devices if key in {device['name'] for device in neighbors.values()} }
     results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)

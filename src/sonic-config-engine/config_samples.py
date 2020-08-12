@@ -13,7 +13,7 @@ def generate_t1_sample_config(data):
     data['INTERFACE'] = {}
     port_count = 0
     total_port_amount = len(data['PORT'])
-    for port in natsorted(list(data['PORT'].keys())):
+    for port in natsorted(data['PORT']):
         data['PORT'][port]['admin_status'] = 'up'
         data['PORT'][port]['mtu'] = '9100'
         local_addr = '10.0.{}.{}'.format(2 * port_count / 256, 2 * port_count % 256)
@@ -50,7 +50,7 @@ def generate_l2_config(data):
     vp = natsorted(list(data['PORT'].keys()))
     data['VLAN']['Vlan1000'].setdefault('members', vp)
     data['VLAN_MEMBER'] = {}
-    for port in natsorted(list(data['PORT'].keys())):
+    for port in natsorted(data['PORT']):
         data['PORT'][port].setdefault('admin_status', 'up')
         data['VLAN_MEMBER']['Vlan1000|{}'.format(port)] = {'tagging_mode': 'untagged'}
     return data

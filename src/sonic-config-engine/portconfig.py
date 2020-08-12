@@ -114,7 +114,7 @@ def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_conf
             ports = ast.literal_eval(json.dumps(port_data))
             port_alias_map = {}
             port_alias_asic_map = {}
-            for intf_name in list(ports.keys()):
+            for intf_name in ports.keys():
                 port_alias_map[ports[intf_name]["alias"]] = intf_name
             return (ports, port_alias_map, port_alias_asic_map)
 
@@ -282,7 +282,7 @@ def parse_platform_json_file(hwsku_json_file, platform_json_file):
     if not ports:
         raise Exception("Ports dictionary is empty")
 
-    for i in list(ports.keys()):
+    for i in ports.keys():
         port_alias_map[ports[i]["alias"]]= i
     return (ports, port_alias_map, port_alias_asic_map)
 
