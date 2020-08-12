@@ -1,8 +1,19 @@
+"""
+    Unit test cases for system health checker. The current test case contains:
+        1. test_user_define_checker mocks the output of a user define checker and verify class UserDefineChecker
+        2. test_service_checker mocks the output of monit service and verify class ServiceChecker
+        3. test_hardware_checker mocks the hardware status data in db and verify class HardwareChecker
+    And there are class that are not covered by unit test. These class will be covered by sonic-mgmt regression test.
+        1. HealthDaemon
+        2. HealthCheckerManager
+        3. Config
+"""
 import os
 import sys
 
 from .mock_connector import MockConnector
 import swsssdk
+
 swsssdk.SonicV2Connector = MockConnector
 from mock import Mock, MagicMock, patch
 
@@ -11,26 +22,27 @@ modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 from health_checker.manager import HealthCheckerManager
 from sonic_py_common import device_info
+
 device_info.get_platform = MagicMock(return_value='unittest')
 
 
-def test_external_checker():
+def test_user_define_checker():
     from health_checker import utils
     utils.run_command = MagicMock(return_value='')
 
-    from health_checker.external_checker import ExternalChecker
+    from health_checker.user_define_checker import UserDefineChecker
     from health_checker.health_checker import HealthChecker
-    checker = ExternalChecker('')
+    checker = UserDefineChecker('')
     checker.check(None)
     assert checker._info[str(checker)][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
-    
+
     checker.reset()
     assert len(checker._info) == 0
 
     utils.run_command = MagicMock(return_value='\n\n\n')
     checker.check(None)
     assert checker._info[str(checker)][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
-    
+
     valid_output = 'MyCategory\nDevice1:OK\nDevice2:Device2 is broken\n'
     utils.run_command = MagicMock(return_value=valid_output)
     checker.check(None)
@@ -46,6 +58,7 @@ def test_service_checker():
     from health_checker.health_checker import HealthChecker
     from health_checker.service_checker import ServiceChecker
     return_value = ''
+
     def mock_run_command(cmd):
         if cmd == ServiceChecker.CHECK_MONIT_SERVICE_CMD:
             return 'active'
@@ -53,16 +66,16 @@ def test_service_checker():
             return return_value
 
     utils.run_command = mock_run_command
-    return_value = 'Monit 5.20.0 uptime: 3h 54m\n'                                              \
-                   'Service Name                     Status                      Type\n'        \
-                   'sonic                            Running                     System\n'      \
-                   'sonic1                           Not running                 System\n'      \
-                   'telemetry                        Does not exist              Process\n'     \
-                   'orchagent                        Running                     Process\n'     \
-                   'root-overlay                     Accessible                  Filesystem\n'  \
-                   'var-log                          Is not accessible           Filesystem\n'  \
-
-    checker = ServiceChecker()
+    return_value = 'Monit 5.20.0 uptime: 3h 54m\n' \
+                   'Service Name                     Status                      Type\n' \
+                   'sonic                            Running                     System\n' \
+                   'sonic1                           Not running                 System\n' \
+                   'telemetry                        Does not exist              Process\n' \
+                   'orchagent                        Running                     Process\n' \
+                   'root-overlay                     Accessible                  Filesystem\n' \
+                   'var-log                          Is not accessible           Filesystem\n' \
+ \
+            checker = ServiceChecker()
     config = Config()
     checker.check(config)
     assert 'sonic' in checker._info

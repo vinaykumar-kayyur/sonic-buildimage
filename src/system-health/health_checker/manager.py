@@ -1,4 +1,7 @@
 class HealthCheckerManager(object):
+    """
+    Manage all system health checkers and system health configuration.
+    """
     STATE_BOOTING = 'booting'
     STATE_RUNNING = 'running'
     boot_timeout = None
@@ -12,12 +15,22 @@ class HealthCheckerManager(object):
         self.initialize()
 
     def initialize(self):
+        """
+        Initialize the manager. Create service checker and hardware checker by default.
+        :return: 
+        """
         from .service_checker import ServiceChecker
         from .hardware_checker import HardwareChecker
         self._checkers.append(ServiceChecker())
         self._checkers.append(HardwareChecker())
 
     def check(self, chassis):
+        """
+        Load new configuration if any and perform the system health check for all existing checkers. 
+        :param chassis: A chassis object.
+        :return: A tuple. The first element indicate the status of the checker; the second element is a dictionary that
+        contains the status for all objects that was checked.
+        """
         from .health_checker import HealthChecker
         HealthChecker.summary = HealthChecker.STATUS_OK
         stats = {}
@@ -31,10 +44,10 @@ class HealthCheckerManager(object):
         for checker in self._checkers:
             self._do_check(checker, stats)
 
-        if self.config.external_checkers:
-            from .external_checker import ExternalChecker
-            for external_checker in self.config.external_checkers:
-                checker = ExternalChecker(external_checker)
+        if self.config.user_define_checkers:
+            from .user_define_checker import UserDefineChecker
+            for udc in self.config.user_define_checkers:
+                checker = UserDefineChecker(udc)
                 self._do_check(checker, stats)
 
         led_status = 'normal' if HealthChecker.summary == HealthChecker.STATUS_OK else 'fault'
@@ -43,6 +56,12 @@ class HealthCheckerManager(object):
         return self._state, stats
 
     def _do_check(self, checker, stats):
+        """
+        Do check for a particular checker and collect the check statistic.
+        :param checker: A checker object.
+        :param stats: Check statistic.
+        :return: 
+        """
         try:
             checker.check(self.config)
             category = checker.get_category()

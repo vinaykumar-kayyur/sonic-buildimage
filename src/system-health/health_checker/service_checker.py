@@ -3,9 +3,18 @@ from . import utils
 
 
 class ServiceChecker(HealthChecker):
+    """
+    Checker that checks critical system service status via monit service.
+    """
+
+    # Command to query the status of monit service.
     CHECK_MONIT_SERVICE_CMD = 'systemctl is-active monit.service'
+
+    # Command to get summary of critical system service.
     CHECK_CMD = 'monit summary -B'
     MIN_CHECK_CMD_LINES = 3
+
+    # Expect status for different system service category.
     EXPECT_STATUS_DICT = {
         'System': 'Running',
         'Process': 'Running',
@@ -22,6 +31,12 @@ class ServiceChecker(HealthChecker):
         return 'Services'
 
     def check(self, config):
+        """
+        Check critical system service status. Get and analyze the output of $CHECK_CMD, collect status for system, 
+        process and file system.
+        :param config: Health checker configuration.
+        :return:
+        """
         self.reset()
         output = utils.run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD).strip()
         if output != 'active':

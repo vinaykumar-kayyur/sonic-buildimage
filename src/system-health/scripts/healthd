@@ -17,11 +17,15 @@ logger = Logger(SYSLOG_IDENTIFIER)
 
 
 class HealthDaemon(DaemonBase):
+    """
+    A daemon that run as a service to perform system health checker with a configurable interval. Also set system LED 
+    according to the check result and store the check result to redis.
+    """
     SYSTEM_HEALTH_TABLE_NAME = 'SYSTEM_HEALTH_INFO'
 
     def __init__(self):
         """
-        Constructor of HealthDaemon
+        Constructor of HealthDaemon.
         """
         DaemonBase.__init__(self, SYSLOG_IDENTIFIER)
         self._db = SonicV2Connector(host="127.0.0.1")
@@ -29,6 +33,10 @@ class HealthDaemon(DaemonBase):
         self.stop_event = threading.Event()
 
     def deinit(self):
+        """
+        Destructor. Remove all entries in $SYSTEM_HEALTH_TABLE_NAME table.
+        :return: 
+        """
         self._clear_system_health_table()
 
     def _clear_system_health_table(self):
@@ -54,6 +62,10 @@ class HealthDaemon(DaemonBase):
             logger.log_warning("Caught unhandled signal '" + sig + "'")
 
     def run(self):
+        """
+        Check system health in an infinite loop.
+        :return: 
+        """
         logger.log_info("Starting up...")
 
         import sonic_platform.platform

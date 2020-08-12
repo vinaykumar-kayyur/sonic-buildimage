@@ -4,6 +4,9 @@ from .health_checker import HealthChecker
 
 
 class HardwareChecker(HealthChecker):
+    """
+    Check system hardware status. For now, it checks ASIC, PSU and fan status.
+    """
     ASIC_TEMPERATURE_KEY = 'TEMPERATURE_INFO|ASIC'
     FAN_TABLE_NAME = 'FAN_INFO'
     PSU_TABLE_NAME = 'PSU_INFO'
@@ -23,6 +26,11 @@ class HardwareChecker(HealthChecker):
         self._check_psu_status(config)
 
     def _check_asic_status(self, config):
+        """
+        Check if ASIC temperature is in valid range.
+        :param config: Health checker configuration
+        :return:
+        """
         if config.ignore_devices and 'asic' in config.ignore_devices:
             return
 
@@ -49,6 +57,14 @@ class HardwareChecker(HealthChecker):
                                                                                                             temperature_threshold))
 
     def _check_fan_status(self, config):
+        """
+        Check fan status including:
+            1. Check all fans are present
+            2. Check all fans are in good state
+            3. Check fan speed is in valid range
+        :param config: Health checker configuration
+        :return:
+        """
         if config.ignore_devices and 'fan' in config.ignore_devices:
             return
 
@@ -116,6 +132,15 @@ class HardwareChecker(HealthChecker):
             self.set_object_ok('Fan', name)
 
     def _check_psu_status(self, config):
+        """
+        Check PSU status including:
+            1. Check all PSUs are present
+            2. Check all PSUs are power on
+            3. Check PSU temperature is in valid range
+            4. Check PSU voltage is in valid range
+        :param config: Health checker configuration
+        :return:
+        """
         if config.ignore_devices and 'psu' in config.ignore_devices:
             return
 
