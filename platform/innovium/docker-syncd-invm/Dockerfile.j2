@@ -25,6 +25,7 @@ debs/{{ deb }}{{' '}}
 {%- endfor %}
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["syncd_init_common.sh, "/usr/bin/"]
 
 ## Clean up
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
