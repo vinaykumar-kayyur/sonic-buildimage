@@ -25,7 +25,7 @@
  */
 
 #ifndef TEST_MODE
-#define MOD_VERSION "2.1.4"
+#define MOD_VERSION "2.2.0"
 #else
 #define MOD_VERSION "TEST"
 #endif
@@ -944,6 +944,106 @@ static ssize_t qsfp_reset_store(struct device *dev,
 }
 DEVICE_ATTR_RW(qsfp_reset);
 
+static ssize_t qsfp_isr_flags_show(struct device *dev,
+                                   struct device_attribute *attr, char *buf)
+{
+    u8 data;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_STATUS_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_INT_N) | BIT(INTR_PRESENT);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    data = (u8) ioread32(fpga_dev.data_base_addr + REGISTER);
+    mutex_unlock(&fpga_data->fpga_lock);
+
+    /*
+     * Unify the return pattern to 2-bit
+     *  [1] : module interrupt
+     *  [0] : presence
+     */
+    data = data & valid_bits;
+    data = data >> 4;
+
+    return sprintf(buf, "0x%2.2x\n", data);
+}
+
+static ssize_t qsfp_isr_flags_store(struct device *dev,
+                                    struct device_attribute *attr,
+                                    const char *buf, size_t count)
+{
+    ssize_t status;
+    u32 value;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_STATUS_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_INT_N) | BIT(INTR_PRESENT);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    status = kstrtou32(buf, 0, &value);
+    if (status == 0) {
+        value = value << 4;
+        value = value & valid_bits;
+        iowrite32(value, fpga_dev.data_base_addr + REGISTER);
+        status = count;
+    }
+    mutex_unlock(&fpga_data->fpga_lock);
+    return status;
+}
+DEVICE_ATTR_RW(qsfp_isr_flags);
+
+static ssize_t qsfp_isr_mask_show(struct device *dev,
+                                  struct device_attribute *attr, char *buf)
+{
+    u32 data;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_MASK_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_INT_N) | BIT(INTR_PRESENT);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    data = ioread32(fpga_dev.data_base_addr + REGISTER);
+    mutex_unlock(&fpga_data->fpga_lock);
+
+    /*
+     * Unify the return pattern to 2-bit
+     *  [1] : module interrupt
+     *  [0] : presence
+     */
+    data = data & valid_bits;
+    data = data >> 4;
+
+    return sprintf(buf, "0x%2.2x\n", data);
+}
+
+static ssize_t qsfp_isr_mask_store(struct device *dev,
+                                   struct device_attribute *attr,
+                                   const char *buf, size_t count)
+{
+    ssize_t status;
+    u32 value;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_MASK_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_INT_N) | BIT(INTR_PRESENT);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    status = kstrtou32(buf, 0, &value);
+    if (status == 0) {
+        value = value << 4;
+        value = value & valid_bits;
+        iowrite32(value, fpga_dev.data_base_addr + REGISTER);
+        status = count;
+    }
+    mutex_unlock(&fpga_data->fpga_lock);
+    return status;
+}
+DEVICE_ATTR_RW(qsfp_isr_mask);
+
 static ssize_t sfp_txdisable_show(struct device *dev,
                                   struct device_attribute *attr, char *buf)
 {
@@ -985,15 +1085,105 @@ static ssize_t sfp_txdisable_store(struct device *dev,
 }
 DEVICE_ATTR_RW(sfp_txdisable);
 
+static ssize_t sfp_isr_flags_show(struct device *dev,
+                                  struct device_attribute *attr, char *buf)
+{
+    u8 data;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_STATUS_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_RXLOS) | BIT(INTR_MODABS);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    data = (u8) ioread32(fpga_dev.data_base_addr + REGISTER);
+    mutex_unlock(&fpga_data->fpga_lock);
+
+    data = data & valid_bits;
+
+    return sprintf(buf, "0x%2.2x\n", data);
+}
+
+static ssize_t sfp_isr_flags_store(struct device *dev,
+                                   struct device_attribute *attr,
+                                   const char *buf, size_t count)
+{
+    ssize_t status;
+    u32 value;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_STATUS_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_INT_N) | BIT(INTR_PRESENT);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    status = kstrtou32(buf, 0, &value);
+    if (status == 0) {
+        value = value & valid_bits;
+        iowrite32(value, fpga_dev.data_base_addr + REGISTER);
+        status = count;
+    }
+    mutex_unlock(&fpga_data->fpga_lock);
+    return status;
+}
+DEVICE_ATTR_RW(sfp_isr_flags);
+
+static ssize_t sfp_isr_mask_show(struct device *dev,
+                                 struct device_attribute *attr, char *buf)
+{
+    u32 data;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_MASK_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_RXLOS) | BIT(INTR_MODABS);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    data = ioread32(fpga_dev.data_base_addr + REGISTER);
+    mutex_unlock(&fpga_data->fpga_lock);
+
+    data = data & valid_bits;
+
+    return sprintf(buf, "0x%2.2x\n", data);
+}
+
+static ssize_t sfp_isr_mask_store(struct device *dev,
+                                  struct device_attribute *attr,
+                                  const char *buf, size_t count)
+{
+    ssize_t status;
+    u32 value;
+    u8 valid_bits;
+    struct sff_device_data *dev_data = dev_get_drvdata(dev);
+    unsigned int portid = dev_data->portid;
+    unsigned int REGISTER = SFF_PORT_INT_MASK_BASE + (portid - 1) * 0x10;
+    valid_bits = BIT(INTR_RXLOS) | BIT(INTR_MODABS);
+
+    mutex_lock(&fpga_data->fpga_lock);
+    status = kstrtou32(buf, 0, &value);
+    if (status == 0) {
+        value = value & valid_bits;
+        iowrite32(value, fpga_dev.data_base_addr + REGISTER);
+        status = count;
+    }
+    mutex_unlock(&fpga_data->fpga_lock);
+    return status;
+}
+DEVICE_ATTR_RW(sfp_isr_mask);
+
 static struct attribute *sff_attrs[] = {
     &dev_attr_qsfp_modirq.attr,
     &dev_attr_qsfp_modprs.attr,
     &dev_attr_qsfp_lpmode.attr,
     &dev_attr_qsfp_reset.attr,
+    &dev_attr_qsfp_isr_flags.attr,
+    &dev_attr_qsfp_isr_mask.attr,
     &dev_attr_sfp_txfault.attr,
     &dev_attr_sfp_rxlos.attr,
     &dev_attr_sfp_modabs.attr,
     &dev_attr_sfp_txdisable.attr,
+    &dev_attr_sfp_isr_flags.attr,
+    &dev_attr_sfp_isr_mask.attr,
     NULL,
 };
 
