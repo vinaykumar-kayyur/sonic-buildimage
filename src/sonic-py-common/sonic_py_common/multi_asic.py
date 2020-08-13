@@ -26,7 +26,7 @@ PORT_ROLE = 'role'
 
 
 def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
-    '''
+    """
     The function connects to the config DB for a given namespace and
     returns the handle
     If no namespace is provided, it will connect to the db in the
@@ -36,7 +36,7 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
 
     Returns:
       handle to the config_db for a namespace
-    '''
+    """
     SonicDBConfig.load_sonic_global_db_config()
     config_db = ConfigDBConnector(namespace=namespace)
     config_db.connect()
@@ -44,7 +44,7 @@ def connect_config_db_for_ns(namespace=DEFAULT_NAMESPACE):
 
 
 def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
-    '''
+    """
     The function connects to the DBs for a given namespace and
     returns the handle
     If no namespace is provided, it will connect to the db in the
@@ -55,7 +55,7 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
 
     Returns:
         handle to all the dbs for a namespaces
-    '''
+    """
     SonicDBConfig.load_sonic_global_db_config()
     db = SonicV2Connector(namespace=namespace)
     for db_id in db.get_db_list():
