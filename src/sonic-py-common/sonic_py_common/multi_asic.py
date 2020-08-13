@@ -1,7 +1,7 @@
 import glob
 import os
-from natsort import natsorted
 
+from natsort import natsorted
 from swsssdk import ConfigDBConnector
 from swsssdk import SonicDBConfig
 from swsssdk import SonicV2Connector
