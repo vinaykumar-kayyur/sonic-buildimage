@@ -1,6 +1,6 @@
 """
     Unit test cases for system health checker. The current test case contains:
-        1. test_user_define_checker mocks the output of a user define checker and verify class UserDefineChecker
+        1. test_user_defined_checker mocks the output of a user defined checker and verify class UserDefinedChecker
         2. test_service_checker mocks the output of monit service and verify class ServiceChecker
         3. test_hardware_checker mocks the hardware status data in db and verify class HardwareChecker
     And there are class that are not covered by unit test. These class will be covered by sonic-mgmt regression test.
@@ -26,13 +26,13 @@ from sonic_py_common import device_info
 device_info.get_platform = MagicMock(return_value='unittest')
 
 
-def test_user_define_checker():
+def test_user_defined_checker():
     from health_checker import utils
     utils.run_command = MagicMock(return_value='')
 
-    from health_checker.user_define_checker import UserDefineChecker
+    from health_checker.user_define_checker import UserDefinedChecker
     from health_checker.health_checker import HealthChecker
-    checker = UserDefineChecker('')
+    checker = UserDefinedChecker('')
     checker.check(None)
     assert checker._info[str(checker)][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 

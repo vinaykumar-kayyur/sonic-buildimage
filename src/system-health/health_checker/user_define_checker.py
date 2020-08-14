@@ -2,11 +2,11 @@ from .health_checker import HealthChecker
 from . import utils
 
 
-class UserDefineChecker(HealthChecker):
+class UserDefinedChecker(HealthChecker):
     """
     User could implement a script or program to perform customize check for particular system. In order to enable a
-    user define checker:
-        1. Add an element to "user_define_checkers" in the configuration file. The element must be an command string
+    user defined checker:
+        1. Add an element to "user_defined_checkers" in the configuration file. The element must be an command string
         that can be executed by shell. For example: "python my_checker.py".
         2. The command output must match the following pattern:
         ${UserDefineCategory}
@@ -22,7 +22,7 @@ class UserDefineChecker(HealthChecker):
     def __init__(self, cmd):
         """
         Constructor.
-        :param cmd: Command string of the user define checker.
+        :param cmd: Command string of the user defined checker.
         """
         HealthChecker.__init__(self)
         self._cmd = cmd
@@ -37,7 +37,7 @@ class UserDefineChecker(HealthChecker):
 
     def check(self, config):
         """
-        Execute the user define command and parse the output.
+        Execute the user defined command and parse the output.
         :param config: Health checker configuration.
         :return:
         """
@@ -85,4 +85,4 @@ class UserDefineChecker(HealthChecker):
         return
 
     def __str__(self):
-        return 'UserDefineChecker - {}'.format(self._cmd)
+        return 'UserDefinedChecker - {}'.format(self._cmd)

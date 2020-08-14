@@ -42,7 +42,7 @@ class Config(object):
         self.interval = Config.DEFAULT_INTERVAL
         self.ignore_services = None
         self.ignore_devices = None
-        self.user_define_checkers = None
+        self.user_defined_checkers = None
 
     def load_config(self):
         """
@@ -67,7 +67,7 @@ class Config(object):
                 self.interval = self.config_data.get('polling_interval', Config.DEFAULT_INTERVAL)
                 self.ignore_services = self._get_list_data('services_to_ignore')
                 self.ignore_devices = self._get_list_data('devices_to_ignore')
-                self.user_define_checkers = self._get_list_data('user_define_checkers')
+                self.user_defined_checkers = self._get_list_data('user_defined_checkers')
             except Exception as e:
                 self._reset()
 
@@ -81,7 +81,7 @@ class Config(object):
         self.interval = Config.DEFAULT_INTERVAL
         self.ignore_services = None
         self.ignore_devices = None
-        self.user_define_checkers = None
+        self.user_defined_checkers = None
 
     def get_led_color(self, status):
         """

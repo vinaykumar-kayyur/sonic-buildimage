@@ -44,10 +44,10 @@ class HealthCheckerManager(object):
         for checker in self._checkers:
             self._do_check(checker, stats)
 
-        if self.config.user_define_checkers:
-            from .user_define_checker import UserDefineChecker
-            for udc in self.config.user_define_checkers:
-                checker = UserDefineChecker(udc)
+        if self.config.user_defined_checkers:
+            from .user_define_checker import UserDefinedChecker
+            for udc in self.config.user_defined_checkers:
+                checker = UserDefinedChecker(udc)
                 self._do_check(checker, stats)
 
         led_status = 'normal' if HealthChecker.summary == HealthChecker.STATUS_OK else 'fault'
