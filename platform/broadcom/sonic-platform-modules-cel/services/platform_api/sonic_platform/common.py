@@ -1,8 +1,9 @@
 import os
+import imp
 import yaml
 import subprocess
 
-from sonic_daemon_base.daemon_base import DaemonBase
+from sonic_py_common import device_info
 
 
 class Common:
@@ -14,6 +15,7 @@ class Common:
     OUTPUT_SOURCE_IPMI = 'ipmitool'
     OUTPUT_SOURCE_GIVEN_LIST = 'value_list'
     OUTPUT_SOURCE_GIVEN_VALUE = 'value'
+    OUTPUT_SOURCE_GIVEN_CLASS = 'class'
     OUTPUT_SOURCE_SYSFS = 'sysfs_value'
     OUTPUT_SOURCE_FUNC = 'function'
     OUTPUT_SOURCE_GIVEN_TXT_FILE = 'txt_file'
@@ -27,7 +29,7 @@ class Common:
 
     def __init__(self, conf=None):
         self._main_conf = conf
-        (self.platform, self.hwsku) = DaemonBase().get_platform_and_hwsku()
+        (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
     def _run_command(self, command):
         status = False
@@ -139,10 +141,28 @@ class Common:
             c_bit += bit_split
         return '.'.join(ver_list)
 
-    def _get_reg(self, path, reg_addr):
+    def _get_class(self, config):
+        """
+        Retreives value of expected attribute
+        Returns:
+            A value of the attribute of object
+        """
+        module = imp.load_source(config['class'], config['path'])
+        class_ = getattr(module, config['class'])
+        return class_()
+
+    def get_reg(self, path, reg_addr):
         cmd = "echo {1} > {0}; cat {0}".format(path, reg_addr)
         status, output = self._run_command(cmd)
         return output if status else None
+
+    def write_txt_file(self, file_path, value):
+        try:
+            with open(file_path, 'w') as fd:
+                fd.write(str(value))
+        except:
+            return False
+        return True
 
     def is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
@@ -191,6 +211,9 @@ class Common:
         elif output_source == self.OUTPUT_SOURCE_GIVEN_VALUE:
             output = config["value"]
 
+        elif output_source == self.OUTPUT_SOURCE_GIVEN_CLASS:
+            output = self._get_class(config)
+
         elif output_source == self.OUTPUT_SOURCE_GIVEN_LIST:
             output = config["value_list"][index]
 
@@ -214,7 +237,7 @@ class Common:
         elif output_source == self.OUTPUT_SOURCE_GIVEN_VER_HEX_ADDR:
             path = config.get('path')
             addr = config.get('reg_addr')
-            hex_ver = self._get_reg(path, addr)
+            hex_ver = self.get_reg(path, addr)
             output = self._hex_ver_decode(
                 hex_ver, config['num_of_bits'], config['num_of_points'])
 
