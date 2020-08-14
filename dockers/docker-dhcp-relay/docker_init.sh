@@ -3,10 +3,10 @@
 # Generate supervisord config file
 mkdir -p /etc/supervisor/conf.d/
 
-# Generate scripts that:
-# 1. dhcp-relay supervisord configuration, 
-# 2. waits for all interfaces to come up, and
-# 3. port alias map
+# Generate the following files from templates:
+# 1. supervisord configuration 
+# 2. wait_for_intf.sh, which waits for all interfaces to come up
+# 3. port-to-alias name map
 CFGGEN_PARAMS=" \
     -d \
     -t /usr/share/sonic/templates/docker-dhcp-relay.supervisord.conf.j2,/etc/supervisor/conf.d/docker-dhcp-relay.supervisord.conf \
