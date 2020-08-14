@@ -45,7 +45,7 @@ class HealthCheckerManager(object):
             self._do_check(checker, stats)
 
         if self.config.user_defined_checkers:
-            from .user_define_checker import UserDefinedChecker
+            from .user_defined_checker import UserDefinedChecker
             for udc in self.config.user_defined_checkers:
                 checker = UserDefinedChecker(udc)
                 self._do_check(checker, stats)

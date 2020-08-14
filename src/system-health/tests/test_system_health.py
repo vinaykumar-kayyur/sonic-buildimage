@@ -30,7 +30,7 @@ def test_user_defined_checker():
     from health_checker import utils
     utils.run_command = MagicMock(return_value='')
 
-    from health_checker.user_define_checker import UserDefinedChecker
+    from health_checker.user_defined_checker import UserDefinedChecker
     from health_checker.health_checker import HealthChecker
     checker = UserDefinedChecker('')
     checker.check(None)
