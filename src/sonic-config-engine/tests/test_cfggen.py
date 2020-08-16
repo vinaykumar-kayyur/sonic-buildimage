@@ -63,6 +63,11 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'Public')
 
+    def test_minigraph_subrole(self):
+        argument = '-v "DEVICE_METADATA[\'localhost\'][\'sub_role\']" -m "' + self.sample_graph_metadata + '"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), 'sub_role_1')
+
     def test_print_data(self):
         argument = '-m "' + self.sample_graph + '" --print-data'
         output = self.run_script(argument)
