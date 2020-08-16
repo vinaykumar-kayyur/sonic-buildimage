@@ -5,11 +5,11 @@
 """
 
 SONIC_INTERFACE_PREFIXES = {
-  "Ethernet-FrontPanel":"Ethernet",
-  "PortChannel":"PortChannel",
-  "Vlan":"Vlan",
-  "Loopback":"Loopback",
-  "Ethernet-Backplane":"Ethernet-BP"
+    "Ethernet-FrontPanel": "Ethernet",
+    "PortChannel": "PortChannel",
+    "Vlan": "Vlan",
+    "Loopback": "Loopback",
+    "Ethernet-Backplane": "Ethernet-BP"
 }
 
 def front_panel_prefix():
