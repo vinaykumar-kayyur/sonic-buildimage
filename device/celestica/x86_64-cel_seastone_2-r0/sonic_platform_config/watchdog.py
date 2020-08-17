@@ -6,12 +6,8 @@
 # Watchdog contains an implementation of SONiC Platform Base API
 #
 #############################################################################
-import ctypes
-import fcntl
 import os
-import subprocess
 import time
-import array
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
@@ -95,12 +91,12 @@ class Watchdog(WatchdogBase):
         set_m_val = '{} {}'.format(WDT_TIMER_M_BIT_REG, m)
         set_l_val = '{} {}'.format(WDT_TIMER_L_BIT_REG, l)
 
-        set_h_bit = self._api_common.write_txt_file(
-            self.setreg_path, set_h_val)
-        set_m_bit = self._api_common.write_txt_file(
-            self.setreg_path, set_m_val)
-        set_l_bit = self._api_common.write_txt_file(
-            self.setreg_path, set_l_val)
+        self._api_common.write_txt_file(
+            self.setreg_path, set_h_val)  # set high bit
+        self._api_common.write_txt_file(
+            self.setreg_path, set_m_val)  # set med bit
+        self._api_common.write_txt_file(
+            self.setreg_path, set_l_val)  # set low bit
 
         return seconds
 
