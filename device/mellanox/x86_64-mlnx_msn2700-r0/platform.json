@@ -5,12 +5,12 @@
         "model": "FIXME",
         "serial": "FIXME",
         "status": "true",
-        "reboot_cause": [
-            "Watchdog",
-            "cold_reboot",
-            "warm_reboot",
-            "fast_reboot"
-        ],
+        "reboot_cause": {
+            "Watchdog" :"true",
+            "cold_reboot" : "true",
+            "warm_reboot" : "true",
+            "fast_reboot" : "true"
+	},
         "components": [],
         "modules": [],
         "fans": [
@@ -677,93 +677,323 @@
                 "model": "FIXME",
                 "serial": "FIXME",
                 "status": "true",
-                "sfp_info": {
-                    "type": "FIXME",
-                    "hardware_rev": "FIXME",
-                    "serial": "FIXME",
-                    "manufacturer": "FIXME",
-                    "model": "FIXME",
-                    "connector": "FIXME",
-                    "encoding": "FIXME",
-                    "ext_identifier": "FIXME",
-                    "ext_rateselect_compliance": "FIXME",
-                    "cable_length": "FIXME",
-                    "nominal_bit_rate": "FIXME",
-                    "specification_compliance": "FIXME",
-                    "vendor_date": "FIXME",
-                    "vendor_oui": "FIXME"
-                },
-                "bulk_status_info": {
-                    "temperature": "FIXME",
-                    "voltage": "FIXME",
-                    "rx1power": "FIXME",
-                    "tx1bias": "FIXME",
-                    "tx1power": "FIXME"
-                },
-                "sfp_threshold_info": {
-                    "txpowerlowwarning": "0.0",
-                    "temphighwarning": "0.0",
-                    "temphighalarm": "0.0",
-                    "txbiashighalarm": "0.0",
-                    "vcchighalarm": "0.0",
-                    "txbiaslowalarm": "0.0",
-                    "rxpowerhighwarning": "0.0",
-                    "vcclowwarning": "0.0",
-                    "txbiaslowwarning": "0.0",
-                    "rxpowerlowalarm": "0.0",
-                    "vcchighwarning": "0.0",
-                    "txpowerhighwarning": "0.0",
-                    "rxpowerlowwarning": "0.0",
-                    "txbiashighwarning": "0.0",
-                    "vcclowalarm": "0.0",
-                    "txpowerhighalarm": "0.0",
-                    "templowalarm": "0.0",
-                    "rxpowerhighalarm": "0.0",
-                    "templowwarning": "0.0",
-                    "txpowerlowalarm": "0.0"
-                },
-                "rx_los": [
-                    "true",
-                    "true",
-                    "true",
-                    "true"
-                ],
-                "tx_fault": [
-                    "true",
-                    "true",
-                    "true",
-                    "true"
-                ],
-                "tx_disable": [
-                    "true",
-                    "true",
-                    "true",
-                    "true"
-                ],
-                "tx_bias": [
-                    12.1,
-                    12.1,
-                    12.1,
-                    12.1
-                ],
-                "tx_power": [
-                    2,
-                    2,
-                    2,
-                    2
-                ],
-                "rx_power": [
-                    2,
-                    2,
-                    2,
-                    2
-                ],
-                "tx_disable_channel": "67",
-                "lp_mode": "true",
-                "power_override": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 2",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 3",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 4",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 5",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 6",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 7",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 8",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 9",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 10",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 11",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 12",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 13",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 14",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 15",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 16",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 17",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 18",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 19",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 20",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 21",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 22",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 23",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 24",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 25",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 26",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 27",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 28",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 29",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 30",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 31",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
+                "temperature": 30.125,
+                "voltage": 13.1
+            },
+            {
+                "name": "sfp 32",
+                "presence": "true",
+                "model": "FIXME",
+                "serial": "FIXME",
+                "status": "true",
+                "lp_mode": "false",
                 "temperature": 30.125,
                 "voltage": 13.1
             }
         ]
+    },
+    "interfaces": {
+	    "TODO" : "add all the interfaces for this platform"
     }
 }
