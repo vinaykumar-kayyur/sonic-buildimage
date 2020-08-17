@@ -674,322 +674,162 @@
             {
                 "name": "sfp 1",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 2",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 3",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 4",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 5",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 6",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 7",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 8",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 9",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 10",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 11",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 12",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 13",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 14",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 15",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 16",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 17",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 18",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 19",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 20",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 21",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 22",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 23",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 24",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 25",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 26",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 27",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 28",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 29",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 30",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 31",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             },
             {
                 "name": "sfp 32",
                 "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "lp_mode": "false",
-                "temperature": 30.125,
-                "voltage": 13.1
+                "status": "true"
             }
         ]
     },
