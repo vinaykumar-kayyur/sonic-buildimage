@@ -51,6 +51,7 @@ from redis_bcc import RedisBytecodeCache
 from collections import OrderedDict
 from natsort import natsorted
 
+#TODO: Remove STR_TYPE once SONiC moves to Python 3.x
 PY3x = sys.version_info >= (3, 0)
 STR_TYPE = str if PY3x else unicode
 
