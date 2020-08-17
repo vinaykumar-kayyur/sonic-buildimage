@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 from sonic_py_common import device_info
 
 
