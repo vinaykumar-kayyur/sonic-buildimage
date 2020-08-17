@@ -223,6 +223,23 @@ class Chassis(ChassisBase):
         return sfp
 
     # ##############################################################
+    # ###################### Other methods ########################
+    # ##############################################################
+
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        if self._watchdog is None:
+            self._watchdog = self._api_common.get_output(
+                0, self._config['get_watchdog'], None)
+
+        return self._watchdog
+
+    # ##############################################################
     # ###################### Device methods ########################
     # ##############################################################
 
