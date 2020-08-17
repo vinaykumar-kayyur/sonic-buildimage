@@ -918,7 +918,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if sub_role is not None:
         current_device['sub_role'] = sub_role
         results['DEVICE_METADATA']['localhost']['sub_role'] =  sub_role
+    if asic_name is not None:
         results['DEVICE_METADATA']['localhost']['asic_name'] =  asic_name
+
     results['BGP_NEIGHBOR'] = bgp_sessions
     results['BGP_MONITORS'] = bgp_monitors
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
