@@ -185,9 +185,15 @@
                 "led_status": "green"
             }
         ],
-        "thermal_mgr": [],
-        "watchdog": [],
-        "eeprom": [],
+        "thermal_mgr": [
+		"FIXME:need input from Mellanox for required static data"
+	],
+        "watchdog": [
+		"FIXME:need input from Mellanox for required static data"
+	],
+        "eeprom": [
+		"FIXME:need input from Mellanox for required static data"
+	],
         "thermals": [
             {
                 "name": "thermal 1",
