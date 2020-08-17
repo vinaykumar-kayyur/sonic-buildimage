@@ -27,7 +27,7 @@ from health_checker.hardware_checker import HardwareChecker
 from health_checker.health_checker import HealthChecker
 from health_checker.manager import HealthCheckerManager
 from health_checker.service_checker import ServiceChecker
-from health_checker.user_define_checker import UserDefineChecker
+from health_checker.user_defined_checker import UserDefinedChecker
 
 device_info.get_platform = MagicMock(return_value='unittest')
 
