@@ -7,9 +7,11 @@
 
 import signal
 import threading
-from sonic_py_common.logger import Logger
+
 from sonic_py_common.daemon_base import DaemonBase
+from sonic_py_common.logger import Logger
 from swsssdk import SonicV2Connector
+
 from health_checker.manager import HealthCheckerManager
 
 SYSLOG_IDENTIFIER = 'healthd'
