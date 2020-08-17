@@ -10,28 +10,31 @@
 """
 import os
 import sys
-
-from .mock_connector import MockConnector
 import swsssdk
 
-swsssdk.SonicV2Connector = MockConnector
 from mock import Mock, MagicMock, patch
+from sonic_py_common import device_info
+
+from .mock_connector import MockConnector
+swsssdk.SonicV2Connector = MockConnector
 
 test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
+from health_checker import utils
+from health_checker.config import Config
+from health_checker.hardware_checker import HardwareChecker
+from health_checker.health_checker import HealthChecker
 from health_checker.manager import HealthCheckerManager
-from sonic_py_common import device_info
+from health_checker.service_checker import ServiceChecker
+from health_checker.user_define_checker import UserDefineChecker
 
 device_info.get_platform = MagicMock(return_value='unittest')
 
 
 def test_user_defined_checker():
-    from health_checker import utils
     utils.run_command = MagicMock(return_value='')
 
-    from health_checker.user_defined_checker import UserDefinedChecker
-    from health_checker.health_checker import HealthChecker
     checker = UserDefinedChecker('')
     checker.check(None)
     assert checker._info[str(checker)][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
@@ -53,10 +56,6 @@ def test_user_defined_checker():
 
 
 def test_service_checker():
-    from health_checker import utils
-    from health_checker.config import Config
-    from health_checker.health_checker import HealthChecker
-    from health_checker.service_checker import ServiceChecker
     return_value = ''
 
     def mock_run_command(cmd):
@@ -98,11 +97,6 @@ def test_service_checker():
 
 
 def test_hardware_checker():
-    from health_checker import utils
-    from health_checker.config import Config
-    from health_checker.health_checker import HealthChecker
-    from health_checker.hardware_checker import HardwareChecker
-
     MockConnector.data.update({
         'TEMPERATURE_INFO|ASIC': {
             'temperature': '20',
