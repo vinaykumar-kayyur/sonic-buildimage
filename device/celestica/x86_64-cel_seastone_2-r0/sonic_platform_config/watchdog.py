@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Celestica
+# Celestica Seastone2
 #
 # Watchdog contains an implementation of SONiC Platform Base API
 #

@@ -125,11 +125,6 @@ class Common:
         arg = config['argument'][index].format(input)
         return self._run_command(config['command'].format(arg))
 
-    def _txt_get(self, path):
-        with open(path, 'r') as f:
-            output = f.readline()
-        return output.strip('\n')
-
     def _hex_ver_decode(self, hver, num_of_bits, num_of_points):
         ver_list = []
         c_bit = 0
@@ -147,14 +142,20 @@ class Common:
         Returns:
             A value of the attribute of object
         """
-        module = imp.load_source(config['class'], config['path'])
+        path = config['host_path'] if self.is_host() else config['pmon_path']
+        module = imp.load_source(config['class'], path)
         class_ = getattr(module, config['class'])
-        return class_()
+        return class_
 
     def get_reg(self, path, reg_addr):
         cmd = "echo {1} > {0}; cat {0}".format(path, reg_addr)
         status, output = self._run_command(cmd)
         return output if status else None
+
+    def read_txt_file(self, path):
+        with open(path, 'r') as f:
+            output = f.readline()
+        return output.strip('\n')
 
     def write_txt_file(self, file_path, value):
         try:
@@ -226,11 +227,11 @@ class Common:
 
         elif output_source == self.OUTPUT_SOURCE_GIVEN_TXT_FILE:
             path = config.get('path')
-            output = self._txt_get(path)
+            output = self.read_txt_file(path)
 
         elif output_source == self.OUTPUT_SOURCE_GIVEN_VER_HEX_FILE:
             path = config.get('path')
-            hex_ver = self._txt_get(path)
+            hex_ver = self.read_txt_file(path)
             output = self._hex_ver_decode(
                 hex_ver, config['num_of_bits'], config['num_of_points'])
 
@@ -271,3 +272,12 @@ class Common:
             output = False
 
         return output
+
+    def get_event(self, timeout, config, sfp_list):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+
+        """
+        event_class = self._get_class(config)
+        return event_class(sfp_list).get_event(timeout)

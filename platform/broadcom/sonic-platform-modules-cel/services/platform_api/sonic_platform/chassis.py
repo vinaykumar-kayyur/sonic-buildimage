@@ -222,6 +222,46 @@ class Chassis(ChassisBase):
                              index, len(self._sfp_list)))
         return sfp
 
+    ##############################################################
+    ###################### Event methods #########################
+    ##############################################################
+
+    def get_change_event(self, timeout=0):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+        Args:
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
+        Returns:
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'},
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
+                  Specifically for SFP event, besides SFP plug in and plug out,
+                  there are some other error event could be raised from SFP, when
+                  these error happened, SFP eeprom will not be avalaible, XCVRD shall
+                  stop to read eeprom before SFP recovered from error status.
+                      status='2' I2C bus stuck,
+                      status='3' Bad eeprom,
+                      status='4' Unsupported cable,
+                      status='5' High Temperature,
+                      status='6' Bad cable.
+        """
+
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        return self._api_common.get_event(timeout, self._config['get_change_event'], self._sfp_list)
+
     # ##############################################################
     # ###################### Other methods ########################
     # ##############################################################
@@ -234,8 +274,9 @@ class Chassis(ChassisBase):
             watchdog device
         """
         if self._watchdog is None:
-            self._watchdog = self._api_common.get_output(
+            wdt = self._api_common.get_output(
                 0, self._config['get_watchdog'], None)
+            self._watchdog = wdt()
 
         return self._watchdog
 

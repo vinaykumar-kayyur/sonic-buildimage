@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Celestica Seastone-DX010
+# Celestica
 #
 # Platform and model specific eeprom subclass, inherits from the base class,
 # and provides the followings:
