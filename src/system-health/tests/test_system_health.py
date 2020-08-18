@@ -16,6 +16,7 @@ from mock import Mock, MagicMock, patch
 from sonic_py_common import device_info
 
 from .mock_connector import MockConnector
+
 swsssdk.SonicV2Connector = MockConnector
 
 test_path = os.path.dirname(os.path.abspath(__file__))
