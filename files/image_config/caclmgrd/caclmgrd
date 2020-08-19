@@ -98,22 +98,22 @@ class ControlPlaneAclManager(object):
         self.config_db_map[''] = ConfigDBConnector(use_unix_socket_path=True, namespace='')
         self.config_db_map[''].connect()
         self.iptables_cmd_ns_prefix[''] = ""
-        self.docker_bridge_ip = self.get_docker_ip_address(self.iptables_cmd_ns_prefix[''], '')
+        self.namespace_mgmt_ip = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[''], '')
         self.namespace_docker_mgmt_ip = {}
         namespaces = device_info.get_all_namespaces()
-        for front_asic_namespaces in namespaces['front_ns']:
-            self.config_db_map[front_asic_namespaces] = ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespaces)
-            self.config_db_map[front_asic_namespaces].connect()
-            self.iptables_cmd_ns_prefix[front_asic_namespaces] = "ip netns exec " + front_asic_namespaces + " "
-            self.namespace_docker_mgmt_ip[front_asic_namespaces] = self.get_docker_ip_address(self.iptables_cmd_ns_prefix[front_asic_namespaces],
-                                                                                              front_asic_namespaces)
+        for front_asic_namespace in namespaces['front_ns']:
+            self.config_db_map[front_asic_namespace] = ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespace)
+            self.config_db_map[front_asic_namespace].connect()
+            self.iptables_cmd_ns_prefix[front_asic_namespace] = "ip netns exec " + front_asic_namespace + " "
+            self.namespace_docker_mgmt_ip[front_asic_namespace] = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[front_asic_namespace],
+                                                                                              front_asic_namespace)
 
-        for back_asic_namespaces in namespaces['back_ns']:
-            self.iptables_cmd_ns_prefix[back_asic_namespaces] = "ip netns exec " + back_asic_namespaces + " "
-            self.namespace_docker_mgmt_ip[back_asic_namespaces] = self.get_docker_ip_address(self.iptables_cmd_ns_prefix[back_asic_namespaces],
-                                                                                             back_asic_namespaces)
+        for back_asic_namespace in namespaces['back_ns']:
+            self.iptables_cmd_ns_prefix[back_asic_namespace] = "ip netns exec " + back_asic_namespace + " "
+            self.namespace_docker_mgmt_ip[back_asic_namespace] = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[back_asic_namespace],
+                                                                                             back_asic_namespace)
 
-    def get_docker_ip_address(self, iptable_ns_cmd_prefix, namespace):
+    def get_namespace_mgmt_ip(self, iptable_ns_cmd_prefix, namespace):
         ip_address_get_command = iptable_ns_cmd_prefix + "ip -4 -o addr show " + ("eth0" if namespace else "docker0") +\
                                  " | awk '{print $4}' | cut -d'/' -f1 | head -1"
 
@@ -202,18 +202,18 @@ class ControlPlaneAclManager(object):
         if namespace:
             # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
-                                                 (self.docker_bridge_ip, self.namespace_docker_mgmt_ip[namespace]))
+                                                 (self.namespace_mgmt_ip, self.namespace_docker_mgmt_ip[namespace]))
 
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
-                                                 (self.docker_bridge_ip, self.namespace_docker_mgmt_ip[namespace]))
+                                                 (self.namespace_mgmt_ip, self.namespace_docker_mgmt_ip[namespace]))
         else:
             # In host allow all tcp/udp traffic from namespace docker eth0 management ip to host docker bridge
             for docker_mgmt_ip in self.namespace_docker_mgmt_ip.values():
                 allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
-                                                     (docker_mgmt_ip, self.docker_bridge_ip))
+                                                     (docker_mgmt_ip, self.namespace_mgmt_ip))
 
                 allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
-                                                     (docker_mgmt_ip, self.docker_bridge_ip))
+                                                     (docker_mgmt_ip, self.namespace_mgmt_ip))
         return allow_internal_docker_ip_cmds
 
     def is_rule_ipv4(self, rule_props):
