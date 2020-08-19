@@ -42,12 +42,11 @@ def obfuscate(data):
 
 
 def update_feature_state(feature_name, state):
-    feature_suffix = "timer" if feature_name in ["snmp", "telemetry"] else "service"
     if state == "enabled":
         start_cmds = []
-        start_cmds.append("sudo systemctl unmask {}.{}".format(feature_name, feature_suffix))
-        start_cmds.append("sudo systemctl enable {}.{}".format(feature_name, feature_suffix))
-        start_cmds.append("sudo systemctl start {}.{}".format(feature_name, feature_suffix))
+        start_cmds.append("sudo systemctl unmask {}".format(feature_name))
+        start_cmds.append("sudo systemctl enable {}".format(feature_name))
+        start_cmds.append("sudo systemctl start {}".format(feature_name))
         for cmd in start_cmds:
             syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
             try:
@@ -56,12 +55,12 @@ def update_feature_state(feature_name, state):
                 syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
                               .format(err.cmd, err.returncode, err.output))
                 continue
-        syslog.syslog(syslog.LOG_INFO, "Feature '{}.{}' is enabled and started".format(feature_name, feature_suffix))
+        syslog.syslog(syslog.LOG_INFO, "Feature '{}' is enabled and started".format(feature_name))
     elif state == "disabled":
         stop_cmds = []
-        stop_cmds.append("sudo systemctl stop {}.{}".format(feature_name, feature_suffix))
-        stop_cmds.append("sudo systemctl disable {}.{}".format(feature_name, feature_suffix))
-        stop_cmds.append("sudo systemctl mask {}.{}".format(feature_name, feature_suffix))
+        stop_cmds.append("sudo systemctl stop {}".format(feature_name))
+        stop_cmds.append("sudo systemctl disable {}".format(feature_name))
+        stop_cmds.append("sudo systemctl mask {}".format(feature_name))
         for cmd in stop_cmds:
             syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
             try:
@@ -72,8 +71,8 @@ def update_feature_state(feature_name, state):
                 continue
         syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(feature_name))
     else:
-        syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}.{}'"
-                      .format(state, feature_name, feature_suffix))
+        syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
+                      .format(state, feature_name))
 
 
 class Iptables(object):
