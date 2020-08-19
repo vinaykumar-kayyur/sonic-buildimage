@@ -450,10 +450,12 @@ class ControlPlaneAclManager(object):
         # Initlaize Global config that loads all database*.json
         if device_info.is_multi_npu():
             swsscommon.SonicDBConfig.initializeGlobalConfig()
+        
         # Create the Select object
         sel = swsscommon.Select()
         # Map of Namespace <--> susbcriber table's object
         config_db_subscriber_table_map = {}
+        
         # Loop through all asic namespaces (if present) and host (namespace='')
         for namespace in self.config_db_map.keys():
             # Unconditionally update control plane ACLs once at start on given namespace
@@ -471,6 +473,7 @@ class ControlPlaneAclManager(object):
             config_db_subscriber_table_map[namespace] = []
             config_db_subscriber_table_map[namespace].append(subscribe_acl_table)
             config_db_subscriber_table_map[namespace].append(subscribe_acl_rule_table)
+        
         # Loop on select to see if any event happen on config db of any namespace
         while True:
             (state, c) = sel.select(SELECT_TIMEOUT_MS)

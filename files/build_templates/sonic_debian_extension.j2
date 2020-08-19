@@ -214,6 +214,7 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo DEBIAN_FRONTEND=noninteractive dpkg --root=$FILESYSTEM_ROOT -i $debs_path/kdump-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends --force-no install
 fi
+
 # Install python-swss-common package and all its dependent packages
 {% if python_swss_debs.strip() -%}
 {% for deb in python_swss_debs.strip().split(' ') -%}
