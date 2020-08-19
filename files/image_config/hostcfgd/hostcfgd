@@ -41,8 +41,8 @@ def obfuscate(data):
         return data
 
 
-def update_feature_state(feature_name, state, delay_start=False):
-    feature_suffix = "timer" if delay_start else "service"
+def update_feature_state(feature_name, state, has_timer=False):
+    feature_suffix = "timer" if has_timer else "service"
     if state == "enabled":
         start_cmds = []
         start_cmds.append("sudo systemctl unmask {}.{}".format(feature_name, feature_suffix))
@@ -286,7 +286,7 @@ class HostConfigDaemon:
                 syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
                 continue
 
-            update_feature_state(feature_name, state, feature_table[feature_name]['delay_start'])
+            update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -328,7 +328,7 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
 
-        update_feature_state(feature_name, state, feature_table[feature_name]['delay_start'])
+        update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
 
     def start(self):
         # Update all feature states once upon starting

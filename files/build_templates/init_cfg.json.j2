@@ -34,10 +34,11 @@
 {%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", false, "enabled")) %}{% endif %}
 {%- if include_system_telemetry == "y" %}{% do features.append(("telemetry", "enabled", true, "enabled")) %}{% endif %}
     "FEATURE": {
-{%- for feature, state, delay_start, autorestart in features %}
+{# has_timer field if set, will start the feature systemd .timer unit instead of .service unit #}
+{%- for feature, state, has_timer, autorestart in features %}
         "{{feature}}": {
             "state": "{{state}}",
-            "delay_start" : {{delay_start | lower()}},
+            "has_timer" : {{has_timer | lower()}},
             "auto_restart": "{{autorestart}}",
             "high_mem_alert": "disabled"
         }{% if not loop.last %},{% endif -%}
