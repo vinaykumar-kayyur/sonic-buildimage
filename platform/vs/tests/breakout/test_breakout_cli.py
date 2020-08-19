@@ -14,9 +14,8 @@ class TestBreakoutCli(object):
     def read_Json(self, dvs):
         test_dir = os.path.dirname(os.path.realpath(__file__))
         sample_output_file = os.path.join(test_dir, 'sample_output', 'sample_new_port_config.json')
-        fh = open(sample_output_file, 'rb')
-        fh_data = json.load(fh)
-        fh.close()
+        with open(sample_output_file, 'rb') as fh:
+            fh_data = json.load(fh)
 
         if not fh_data:
             return False
@@ -47,7 +46,7 @@ class TestBreakoutCli(object):
 
         for key in brkout_entries:
             (status, fvs) = brkoutTbl.get(key)
-            assert(status == True)
+            assert status
 
             brkout_mode = fvs[0][1]
             output_dict[key] = brkout_mode
@@ -93,7 +92,10 @@ class TestBreakoutCli(object):
         assert output_dict == expected_dict
         print("**** 1X100G --> 1x50G(2)+2x25G(2) passed ****")
 
-        #TODOFIX: remove comments once #4442 PR got merged.
+        # TODOFIX: remove comments once #4442 PR got merged and
+        # yang model for DEVICE_METADATA becomes available.
+        # As below test cases are dependent on DEVICE_METADATA to go
+        # from a non-default breakout mode to a different breakout mode.
         """
         output_dict = self.breakout(dvs, 'Ethernet0', '1x100G[40G]')
         expected_dict = expected["Ethernet0_1x100G"]
