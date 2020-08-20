@@ -298,3 +298,33 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
         else:
             return False
     return False
+
+def get_front_end_namespaces():
+    """
+    Get the namespaces in the platform. For multi-asic devices we get the namespaces
+    mapped to asic which have front-panel interfaces. For single ASIC device it is the
+    EMPTY_NAMESPACE which maps to the linux host.
+
+    Returns:
+        a list of namespaces
+    """
+    namespaces = [EMPTY_NAMESPACE]
+    if is_multi_asic():
+        ns_list = get_all_namespaces()
+        namespaces = ns_list['front_ns']
+
+    return namespaces
+
+def get_asic_index_from_namespace(namespace):
+    """
+    Get asic index from the namespace name.
+    With single ASIC platform, namespace is EMPTY_NAMESPACE, return asic_index 0
+
+    Returns:
+        asic_index as an integer.
+    """
+    asic_id_string = get_asic_id_from_name(namespace)
+    if asic_id_string is not None:
+        return int(asic_id_string)
+
+    return 0
