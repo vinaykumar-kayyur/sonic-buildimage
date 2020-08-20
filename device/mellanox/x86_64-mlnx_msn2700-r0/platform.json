@@ -1,112 +1,56 @@
 {
     "chassis": {
         "name": "Mellanox-SN2700",
-        "presence": "true",
         "model": "FIXME",
         "serial": "FIXME",
-        "status": "true",
-        "reboot_cause": {
-            "Watchdog" :"true",
-            "cold_reboot" : "true",
-            "warm_reboot" : "true",
-            "fast_reboot" : "true"
-	},
         "components": [],
         "modules": [],
         "fans": [
             {
                 "name": "Fan 1",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 2",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 3",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 4",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 5",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 6",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 7",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             },
             {
                 "name": "Fan 8",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "speed": 30,
                 "direction": "intake",
-                "target_speed": 35,
                 "tolerance": 20,
                 "led_status": "green"
             }
@@ -114,37 +58,21 @@
         "fan_drawers": [
             {
                 "name": "Fan drawer 1",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
                 "num_fans": 2,
                 "led_status": "green"
             },
             {
                 "name": "Fan drawer 2",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
                 "num_fans": 2,
                 "led_status": "green"
             },
             {
                 "name": "Fan drawer 3",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
                 "num_fans": 2,
                 "led_status": "green"
             },
             {
                 "name": "Fan drawer 4",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
                 "num_fans": 2,
                 "led_status": "green"
             }
@@ -152,16 +80,8 @@
         "psus": [
             {
                 "name": "psu 1",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
                 "num_fans": 2,
-                "volatge": 2.1,
-                "power": 302.6,
-                "current": 150.6,
                 "powergood_status": "true",
-                "temperature": 30.125,
                 "temperature_high_threshold": 100,
                 "voltage_high_threshold": 12.1,
                 "voltage_low_threshold": 2,
@@ -169,16 +89,8 @@
             },
             {
                 "name": "psu 2",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
                 "num_fans": 2,
-                "volatge": 2.1,
-                "power": 302.6,
-                "current": 150.6,
                 "powergood_status": "true",
-                "temperature": 30.125,
                 "temperature_high_threshold": 100,
                 "voltage_high_threshold": 12.1,
                 "voltage_low_threshold": 2,
@@ -186,22 +98,23 @@
             }
         ],
         "thermal_mgr": [
-		"FIXME:need input from Mellanox for required static data"
+		{
+		"FIXME":"need input from Mellanox for required static data"
+		}
 	],
         "watchdog": [
-		"FIXME:need input from Mellanox for required static data"
+		{
+		"FIXME":"need input from Mellanox for required static data"
+		}
 	],
         "eeprom": [
-		"FIXME:need input from Mellanox for required static data"
+		{
+		"FIXME":"need input from Mellanox for required static data"
+		}
 	],
         "thermals": [
             {
                 "name": "thermal 1",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -209,11 +122,6 @@
             },
             {
                 "name": "thermal 2",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -221,11 +129,6 @@
             },
             {
                 "name": "thermal 3",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -233,11 +136,6 @@
             },
             {
                 "name": "thermal 4",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -245,11 +143,6 @@
             },
             {
                 "name": "thermal 5",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -257,11 +150,6 @@
             },
             {
                 "name": "thermal 6",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -269,11 +157,6 @@
             },
             {
                 "name": "thermal 7",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -281,11 +164,6 @@
             },
             {
                 "name": "thermal 8",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -293,11 +171,6 @@
             },
             {
                 "name": "thermal 9",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -305,11 +178,6 @@
             },
             {
                 "name": "thermal 10",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -317,11 +185,6 @@
             },
             {
                 "name": "thermal 11",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -329,11 +192,6 @@
             },
             {
                 "name": "thermal 12",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -341,11 +199,6 @@
             },
             {
                 "name": "thermal 13",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -353,11 +206,6 @@
             },
             {
                 "name": "thermal 14",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -365,11 +213,6 @@
             },
             {
                 "name": "thermal 15",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -377,11 +220,6 @@
             },
             {
                 "name": "thermal 16",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -389,11 +227,6 @@
             },
             {
                 "name": "thermal 17",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -401,11 +234,6 @@
             },
             {
                 "name": "thermal 18",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -413,11 +241,6 @@
             },
             {
                 "name": "thermal 19",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -425,11 +248,6 @@
             },
             {
                 "name": "thermal 20",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -437,11 +255,6 @@
             },
             {
                 "name": "thermal 21",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -449,11 +262,6 @@
             },
             {
                 "name": "thermal 22",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -461,11 +269,6 @@
             },
             {
                 "name": "thermal 23",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -473,11 +276,6 @@
             },
             {
                 "name": "thermal 24",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -485,11 +283,6 @@
             },
             {
                 "name": "thermal 25",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -497,11 +290,6 @@
             },
             {
                 "name": "thermal 26",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -509,11 +297,6 @@
             },
             {
                 "name": "thermal 27",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -521,11 +304,6 @@
             },
             {
                 "name": "thermal 28",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -533,11 +311,6 @@
             },
             {
                 "name": "thermal 29",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -545,11 +318,6 @@
             },
             {
                 "name": "thermal 30",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -557,11 +325,6 @@
             },
             {
                 "name": "thermal 31",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -569,11 +332,6 @@
             },
             {
                 "name": "thermal 32",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -581,11 +339,6 @@
             },
             {
                 "name": "thermal 33",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -593,11 +346,6 @@
             },
             {
                 "name": "thermal 34",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -605,11 +353,6 @@
             },
             {
                 "name": "thermal 35",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -617,11 +360,6 @@
             },
             {
                 "name": "thermal 36",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -629,11 +367,6 @@
             },
             {
                 "name": "thermal 37",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -641,11 +374,6 @@
             },
             {
                 "name": "thermal 38",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -653,11 +381,6 @@
             },
             {
                 "name": "thermal 39",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -665,11 +388,6 @@
             },
             {
                 "name": "thermal 40",
-                "presence": "true",
-                "model": "FIXME",
-                "serial": "FIXME",
-                "status": "true",
-                "temperature": 30.125,
                 "high_threshold": 100,
                 "high_critical_threshold": 100,
                 "low_threshold": 10,
@@ -678,164 +396,100 @@
         ],
         "sfps": [
             {
-                "name": "sfp 1",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 1"
             },
             {
-                "name": "sfp 2",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 2"
             },
             {
-                "name": "sfp 3",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 3"
             },
             {
-                "name": "sfp 4",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 4"
             },
             {
-                "name": "sfp 5",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 5"
             },
             {
-                "name": "sfp 6",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 6"
             },
             {
-                "name": "sfp 7",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 7"
             },
             {
-                "name": "sfp 8",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 8"
             },
             {
-                "name": "sfp 9",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 9"
             },
             {
-                "name": "sfp 10",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 10"
             },
             {
-                "name": "sfp 11",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 11"
             },
             {
-                "name": "sfp 12",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 12"
             },
             {
-                "name": "sfp 13",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 13"
             },
             {
-                "name": "sfp 14",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 14"
             },
             {
-                "name": "sfp 15",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 15"
             },
             {
-                "name": "sfp 16",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 16"
             },
             {
-                "name": "sfp 17",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 17"
             },
             {
-                "name": "sfp 18",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 18"
             },
             {
-                "name": "sfp 19",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 19"
             },
             {
-                "name": "sfp 20",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 20"
             },
             {
-                "name": "sfp 21",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 21"
             },
             {
-                "name": "sfp 22",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 22"
             },
             {
-                "name": "sfp 23",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 23"
             },
             {
-                "name": "sfp 24",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 24"
             },
             {
-                "name": "sfp 25",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 25"
             },
             {
-                "name": "sfp 26",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 26"
             },
             {
-                "name": "sfp 27",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 27"
             },
             {
-                "name": "sfp 28",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 28"
             },
             {
-                "name": "sfp 29",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 29"
             },
             {
-                "name": "sfp 30",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 30"
             },
             {
-                "name": "sfp 31",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 31"
             },
             {
-                "name": "sfp 32",
-                "presence": "true",
-                "status": "true"
+                "name": "sfp 32"
             }
         ]
     },
