@@ -303,12 +303,12 @@ def get_front_end_namespaces():
     """
     Get the namespaces in the platform. For multi-asic devices we get the namespaces
     mapped to asic which have front-panel interfaces. For single ASIC device it is the
-    EMPTY_NAMESPACE which maps to the linux host.
+    DEFAULT_NAMESPACE which maps to the linux host.
 
     Returns:
         a list of namespaces
     """
-    namespaces = [EMPTY_NAMESPACE]
+    namespaces = [DEFAULT_NAMESPACE]
     if is_multi_asic():
         ns_list = get_all_namespaces()
         namespaces = ns_list['front_ns']
@@ -318,13 +318,16 @@ def get_front_end_namespaces():
 def get_asic_index_from_namespace(namespace):
     """
     Get asic index from the namespace name.
-    With single ASIC platform, namespace is EMPTY_NAMESPACE, return asic_index 0
+    With single ASIC platform, return asic_index 0, which is mapped to the only asic present.
 
     Returns:
         asic_index as an integer.
+        None, if namespace given as input is not mapped to any asic in multi-asic platform.
     """
-    asic_id_string = get_asic_id_from_name(namespace)
-    if asic_id_string is not None:
-        return int(asic_id_string)
+    if is_multi_asic():
+        asic_id_string = get_asic_id_from_name(namespace)
+        if asic_id_string is not None:
+            return int(asic_id_string)
+        return None
 
     return 0
