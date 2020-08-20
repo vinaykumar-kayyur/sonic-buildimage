@@ -259,7 +259,7 @@ def get_external_ports(port_names, namespace=None):
     for port in port_names:
         if port in ports_config:
             if (PORT_ROLE not in ports_config[port] or
-                ports_config[port][PORT_ROLE] == EXTERNAL_PORT):
+                    ports_config[port][PORT_ROLE] == EXTERNAL_PORT):
                 external_ports.add(port)
     return external_ports
 
