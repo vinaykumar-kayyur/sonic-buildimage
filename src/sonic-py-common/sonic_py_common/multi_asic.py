@@ -123,11 +123,16 @@ def is_multi_asic():
 
 
 def get_asic_id_from_name(asic_name):
+    """
+    Get the asic id from the asic name for multi-asic platforms
 
+    Returns:
+        asic id.
+    """
     if asic_name.startswith(ASIC_NAME_PREFIX):
         return asic_name[len(ASIC_NAME_PREFIX):]
     else:
-        return None
+        raise ValueError('Unknown asic namespace name {}'.format(asic_name))
 
 
 def get_namespaces_from_linux():
@@ -315,6 +320,7 @@ def get_front_end_namespaces():
 
     return namespaces
 
+
 def get_asic_index_from_namespace(namespace):
     """
     Get asic index from the namespace name.
@@ -322,12 +328,8 @@ def get_asic_index_from_namespace(namespace):
 
     Returns:
         asic_index as an integer.
-        None, if namespace given as input is not mapped to any asic in multi-asic platform.
     """
     if is_multi_asic():
-        asic_id_string = get_asic_id_from_name(namespace)
-        if asic_id_string is not None:
-            return int(asic_id_string)
-        return None
+        return int(get_asic_id_from_name(namespace))
 
     return 0
