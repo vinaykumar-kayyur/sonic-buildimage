@@ -187,6 +187,10 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/uboot-utils
     cat files/initramfs-tools/modules.arm | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
 fi
+# Update initramfs for load platform specific modules
+if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
+    cat platform/$CONFIGURED_PLATFORM/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
+fi
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -212,7 +216,7 @@ fi
 
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
-if [ "$INSTALL_KUBERNETES" == "y" ]
+if [ "$INCLUDE_KUBERNETES" == "y" ]
 then
     ## Install Kubernetes
     echo '[INFO] Install kubernetes'
@@ -222,14 +226,9 @@ then
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    if [[ $KUBERNETES_VERSION == 1.18.0 ]]; then 
-        # kubeadm 1.18.0 package auto install has some dependency error so install
-        # those package explicitly.
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=0.7.5-00
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=1.18.3-00
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=1.18.3-00
-    fi
-    # else kubeadm package auto install kubelet & kubectl
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}-00
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${KUBERNETES_VERSION}-00
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
     # kubeadm package auto install kubelet & kubectl
 else
@@ -275,6 +274,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     openssh-server          \
     python                  \
     python-setuptools       \
+    python3-setuptools      \
     python-apt              \
     traceroute              \
     iputils-ping            \
