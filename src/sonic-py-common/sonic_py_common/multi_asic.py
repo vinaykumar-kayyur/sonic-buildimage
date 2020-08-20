@@ -135,9 +135,8 @@ def get_namespaces_from_linux():
     In a multi asic platform, each ASIC is in a Linux Namespace.
     This method returns list of all the Namespace present on the device
 
-    Note: It is preferable to use this function can be used only
-    when the config_db is not available.
-    When configdb is available use get_all_namespaces()
+    Note: It is preferable to use this function only when config_db is not
+    available. When configdb is available use get_all_namespaces()
 
     Returns:
         List of the namespaces present in the system
