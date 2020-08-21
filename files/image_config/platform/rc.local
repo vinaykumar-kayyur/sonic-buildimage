@@ -148,6 +148,7 @@ if [ ! -e /host/machine.conf ]; then
     fi
 
     # Extract the previous NOS's partition that contains the migration artifacts
+    . /usr/share/sonic/device/$platform/installer.conf
     set -- $(cat /proc/cmdline)
     for x in "$@"; do
         case "$x" in
