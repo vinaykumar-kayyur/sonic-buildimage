@@ -31,7 +31,6 @@ if [ "$SYNC_MODE" == "enable" ]; then
     ORCHAGENT_ARGS+="-s "
 fi
 
-
 # Check if there is an "asic_id field" in the DEVICE_METADATA in configDB.
 #"DEVICE_METADATA": {
 #    "localhost": {
