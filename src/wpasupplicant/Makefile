@@ -11,7 +11,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Clone wpa repo
 	# git clone https://salsa.debian.org/debian/wpa.git
-	git clone https://github.com/Pterosaur/wpa-debian.git
+	git clone https://github.com/Pterosaur/wpa-debian.git wpa
 	pushd ./wpa
 
 	# Reset HEAD to the commit of the proper tag
@@ -19,7 +19,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# which stg doesn't like, so we use this method instead
 	# NOTE: For some reason, tags in the Debian monit repo are prefixed with "1%"
 	# git reset --hard debian/2\%$(WPASUPPLICANT_VERSION)
-	git reset --hard dev/sonic_macsec
+	git checkout dev/sonic_macsec
 
 	# Build source and Debian packages
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
