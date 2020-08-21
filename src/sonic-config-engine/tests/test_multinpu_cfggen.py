@@ -24,7 +24,7 @@ class TestMultiNpuCfgGen(TestCase):
             self.port_config.append(os.path.join(self.test_data_dir, "sample_port_config-{}.ini".format(asic)))
 
     def run_script(self, argument, check_stderr=False):
-        print '\n    Running sonic-cfggen ' + argument
+        print('\n    Running sonic-cfggen ' + argument)
         if check_stderr:
             output = subprocess.check_output(self.script_file + ' ' + argument, stderr=subprocess.STDOUT, shell=True)
         else:
@@ -32,9 +32,9 @@ class TestMultiNpuCfgGen(TestCase):
 
         linecount = output.strip().count('\n')
         if linecount <= 0:
-            print '    Output: ' + output.strip()
+            print('    Output: ' + output.strip())
         else:
-            print '    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output))
+            print('    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output)))
         return output
 
     def run_diff(self, file1, file2):
@@ -108,7 +108,7 @@ class TestMultiNpuCfgGen(TestCase):
         #NTP data is present only in the host config
         for asic in range(NUM_ASIC):
             output = json.loads(self.run_script_for_asic(argument, asic, self.port_config[asic]))
-            print "Log:asic{} sku {}".format(asic,output)
+            print("Log:asic{} sku {}".format(asic,output))
             self.assertDictEqual(output, {})
 
     def test_mgmt_port(self):
@@ -137,27 +137,40 @@ class TestMultiNpuCfgGen(TestCase):
     def test_frontend_asic_portchannel_mem(self):
         argument = "-m {} -p {} -n asic0 --var-json \"PORTCHANNEL_MEMBER\"".format(self.sample_graph, self.port_config[0])
         output = json.loads(self.run_script(argument))
-        self.assertListEqual(output.keys(), \
+        self.assertListEqual(list(output.keys()), \
             ['PortChannel4002|Ethernet-BP8', 'PortChannel0002|Ethernet0', 'PortChannel0002|Ethernet4', 'PortChannel4002|Ethernet-BP12', 'PortChannel4001|Ethernet-BP0', 'PortChannel4001|Ethernet-BP4'])
 
     def test_backend_asic_portchannels_mem(self):
         argument = "-m {} -p {} -n asic3 --var-json \"PORTCHANNEL_MEMBER\"".format(self.sample_graph, self.port_config[3])
         output = json.loads(self.run_script(argument))
-        self.assertListEqual(output.keys(), \
+        self.assertListEqual(list(output.keys()), \
            ['PortChannel4013|Ethernet-BP384', 'PortChannel4014|Ethernet-BP392', 'PortChannel4014|Ethernet-BP396', 'PortChannel4013|Ethernet-BP388'])
 
     def test_frontend_asic_portchannel_intf(self):
         argument = "-m {} -p {} -n asic0 --var-json \"PORTCHANNEL_INTERFACE\"".format(self.sample_graph, self.port_config[0])
         output = json.loads(self.run_script(argument))
-        self.assertListEqual(output.keys(), \
+        self.assertListEqual(list(output.keys()), \
             ['PortChannel4001|10.1.0.1/31', 'PortChannel0002|FC00::1/126', 'PortChannel4002|10.1.0.3/31', 'PortChannel0002', 'PortChannel0002|10.0.0.0/31', 'PortChannel4001', 'PortChannel4002'])
 
     def test_backend_asic_portchannel_intf(self):
         argument = "-m {} -p {} -n asic3 --var-json \"PORTCHANNEL_INTERFACE\"".format(self.sample_graph, self.port_config[3])
         output = json.loads(self.run_script(argument))
-        self.assertListEqual(output.keys(), \
+        self.assertListEqual(list(output.keys()), \
             ['PortChannel4013', 'PortChannel4013|10.1.0.2/31', 'PortChannel4014', 'PortChannel4014|10.1.0.6/31'])
 
+    def test_frontend_asic_ports(self):
+        argument = "-m {} -p {} -n asic0 --var-json \"PORT\"".format(self.sample_graph, self.port_config[0])
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, \
+           {"Ethernet0": { "admin_status": "up",  "alias": "Ethernet1/1",  "asic_port_name": "Eth0-ASIC0",  "description": "01T2:Ethernet1",  "index": "0",  "lanes": "33,34,35,36",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
+            "Ethernet4": { "admin_status": "up",  "alias": "Ethernet1/2",  "asic_port_name": "Eth1-ASIC0",  "description": "01T2:Ethernet2",  "index": "1",  "lanes": "29,30,31,32",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
+            "Ethernet8": { "alias": "Ethernet1/3",  "asic_port_name": "Eth2-ASIC0",  "description": "Ethernet1/3",  "index": "2",  "lanes": "41,42,43,44",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
+            "Ethernet12": { "alias": "Ethernet1/4",  "asic_port_name": "Eth3-ASIC0",  "description": "Ethernet1/4",  "index": "3",  "lanes": "37,38,39,40",  "mtu": "9100",  "pfc_asym": "off",  "role": "Ext",  "speed": "40000" }, 
+            "Ethernet-BP0": { "admin_status": "up",  "alias": "Ethernet-BP0",  "asic_port_name": "Eth4-ASIC0",  "description": "ASIC2:Eth0-ASIC2",  "index": "0",  "lanes": "13,14,15,16",  "mtu": "9100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" }, 
+            "Ethernet-BP4": { "admin_status": "up",  "alias": "Ethernet-BP4",  "asic_port_name": "Eth5-ASIC0",  "description": "ASIC2:Eth1-ASIC2",  "index": "1",  "lanes": "17,18,19,20",  "mtu": "9100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" }, 
+            "Ethernet-BP8": { "admin_status": "up",  "alias": "Ethernet-BP8",  "asic_port_name": "Eth6-ASIC0",  "description": "ASIC3:Eth0-ASIC3",  "index": "2",  "lanes": "21,22,23,24",  "mtu": "9100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" }, 
+            "Ethernet-BP12": { "admin_status": "up",  "alias": "Ethernet-BP12",  "asic_port_name": "Eth7-ASIC0",  "description": "ASIC3:Eth1-ASIC3",  "index": "3",  "lanes": "25,26,27,28",  "mtu": "9100",  "pfc_asym": "off",  "role": "Int",  "speed": "40000" }})
+    
     def test_frontend_asic_device_neigh(self):
         argument = "-m {} -p {} -n asic0 --var-json \"DEVICE_NEIGHBOR\"".format(self.sample_graph, self.port_config[0])
         output = json.loads(self.run_script(argument))

@@ -2,6 +2,7 @@
 
 export INSTALL_MOD_DIR:=extra
 
+PLATFORM = x86_64-accton_as9516bf_32d-r0
 PACKAGE_NAME := sonic-platform-modules-bfn-newport
 KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
@@ -10,6 +11,7 @@ SCRIPT_SRC := $(shell pwd)/scripts
 CONFIGS_SRC := $(shell pwd)/configs
 BUILD_DIR := $(shell pwd)/build
 WHEEL_BUILD_DIR := $(BUILD_DIR)/wheel
+PLUGINS_DIR := $(shell pwd)/plugins
 
 %:
 	dh $@
@@ -27,8 +29,10 @@ override_dh_auto_install:
 	cp -r $(SCRIPT_SRC)/* debian/$(PACKAGE_NAME)/usr/local/bin
 	dh_installdirs -p$(PACKAGE_NAME) etc/network/interfaces.d/
 	cp -r $(CONFIGS_SRC)/network/interfaces.d/* debian/$(PACKAGE_NAME)/etc/network/interfaces.d/
-	dh_installdirs -p$(PACKAGE_NAME) usr/share/sonic/platform/
-	cp -r $(WHEEL_BUILD_DIR)/*  debian/$(PACKAGE_NAME)/usr/share/sonic/platform/
+	dh_installdirs -p$(PACKAGE_NAME) usr/share/sonic/device/${PLATFORM}/
+	cp -r $(WHEEL_BUILD_DIR)/*  debian/$(PACKAGE_NAME)/usr/share/sonic/device/${PLATFORM}/
+	dh_installdirs -p$(PACKAGE_NAME) usr/share/sonic/device/${PLATFORM}/plugins
+	cp -r $(PLUGINS_DIR)/*  debian/$(PACKAGE_NAME)/usr/share/sonic/device/${PLATFORM}/plugins/
 
 override_dh_usrlocal:
 

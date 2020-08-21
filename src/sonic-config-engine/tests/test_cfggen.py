@@ -1,4 +1,5 @@
 from unittest import TestCase
+import json
 import subprocess
 import os
 
@@ -19,9 +20,18 @@ class TestCfgGen(TestCase):
         self.sample_graph_bgp_speaker = os.path.join(self.test_dir, 't0-sample-bgp-speaker.xml')
         self.sample_device_desc = os.path.join(self.test_dir, 'device.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.output_file = os.path.join(self.test_dir, 'output')
+        self.output2_file = os.path.join(self.test_dir, 'output2')
+
+    def tearDown(self):
+        try:
+            os.remove(self.output_file)
+            os.remove(self.output2_file)
+        except OSError:
+            pass
 
     def run_script(self, argument, check_stderr=False):
-        print '\n    Running sonic-cfggen ' + argument
+        print('\n    Running sonic-cfggen ' + argument)
         if check_stderr:
             output = subprocess.check_output(self.script_file + ' ' + argument, stderr=subprocess.STDOUT, shell=True)
         else:
@@ -29,9 +39,9 @@ class TestCfgGen(TestCase):
 
         linecount = output.strip().count('\n')
         if linecount <= 0:
-            print '    Output: ' + output.strip()
+            print('    Output: ' + output.strip())
         else:
-            print '    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output))
+            print('    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output)))
         return output
 
     def test_dummy_run(self):
@@ -106,6 +116,30 @@ class TestCfgGen(TestCase):
         argument = '-y ' + os.path.join(self.test_dir, 'test.yml') + ' -t ' + os.path.join(self.test_dir, 'test.j2')
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'value1\nvalue2')
+
+    def test_template_batch_mode(self):
+        argument = '-y ' + os.path.join(self.test_dir, 'test.yml')
+        argument += ' -a \'{"key1":"value"}\''
+        argument += ' -t ' + os.path.join(self.test_dir, 'test.j2') + ',' + self.output_file
+        argument += ' -t ' + os.path.join(self.test_dir, 'test2.j2') + ',' + self.output2_file
+        output = self.run_script(argument)
+        assert(os.path.exists(self.output_file))
+        assert(os.path.exists(self.output2_file))
+        with open(self.output_file) as tf:
+            self.assertEqual(tf.read().strip(), 'value1\nvalue2')
+        with open(self.output2_file) as tf:
+            self.assertEqual(tf.read().strip(), 'value')
+
+    def test_template_json_batch_mode(self):
+        data = {"key1_1":"value1_1", "key1_2":"value1_2", "key2_1":"value2_1", "key2_2":"value2_2"}
+        argument = " -a '{0}'".format(repr(data).replace('\'', '"'))
+        argument += ' -t ' + os.path.join(self.test_dir, 'sample-template-1.json.j2') + ",config-db"
+        argument += ' -t ' + os.path.join(self.test_dir, 'sample-template-2.json.j2') + ",config-db"
+        argument += ' --print-data'
+        output = self.run_script(argument)
+        output_data = json.loads(output)
+        for key, value in data.items():
+            self.assertEqual(output_data[key.replace("key", "jk")], value)
 
     # FIXME: This test depends heavily on the ordering of the interfaces and
     # it is not at all intuitive what that ordering should be. Could make it
@@ -346,7 +380,7 @@ class TestCfgGen(TestCase):
 
     def test_minigraph_sub_port_interfaces(self, check_stderr=True):
         try:
-            print '\n    Change device type to %s' % (BACKEND_TOR_ROUTER)
+            print('\n    Change device type to %s' % (BACKEND_TOR_ROUTER))
             if check_stderr:
                 output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (TOR_ROUTER, BACKEND_TOR_ROUTER, self.sample_graph_simple), stderr=subprocess.STDOUT, shell=True)
             else:
@@ -379,7 +413,7 @@ class TestCfgGen(TestCase):
             # VLAN_SUB_INTERFACE
             argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v VLAN_SUB_INTERFACE'
             output = self.run_script(argument)
-            print output.strip()
+            print(output.strip())
             self.assertEqual(output.strip(), \
                     "{('PortChannel01.10', '10.0.0.56/31'): {}, "
                     "'Ethernet0.10': {'admin_status': 'up'}, "
@@ -389,7 +423,7 @@ class TestCfgGen(TestCase):
                     "('Ethernet0.10', 'FC00::75/126'): {}}")
 
         finally:
-            print '\n    Change device type back to %s' % (TOR_ROUTER)
+            print('\n    Change device type back to %s' % (TOR_ROUTER))
             if check_stderr:
                 output = subprocess.check_output("sed -i \'s/%s/%s/g\' %s" % (BACKEND_TOR_ROUTER, TOR_ROUTER, self.sample_graph_simple), stderr=subprocess.STDOUT, shell=True)
             else:
