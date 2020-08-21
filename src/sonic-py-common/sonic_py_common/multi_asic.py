@@ -125,6 +125,7 @@ def is_multi_asic():
 def get_asic_id_from_name(asic_name):
     """
     Get the asic id from the asic name for multi-asic platforms
+    In single ASIC platforms, it would fail and throw an exception.
 
     Returns:
         asic id.
