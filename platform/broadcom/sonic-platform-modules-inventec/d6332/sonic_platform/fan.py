@@ -18,7 +18,6 @@ MAX_SPEED_OF_FAN_FRONT = 23500
 MAX_SPEED_OF_FAN_BACK  = 19900
 MAX_SPEED_OF_FAN_PSU   = 26000
 MAX_PWM_OF_FAN         = 255
-INFO_I2C_ADDR          = "0-0077"
 
 class Fan(FanBase):
 
@@ -30,13 +29,13 @@ class Fan(FanBase):
 
         if self.__index >= self.__start_of_psu_fans:
             psu_id=self.__index- self.__start_of_psu_fans
-            self.__presence_attr  = "{}/{}/psu{}".format(Common.I2C_PREFIX, INFO_I2C_ADDR,psu_id+1)
+            self.__presence_attr  = "{}/i2c-inv_cpld/psu{}".format(Common.I2C_PREFIX,psu_id+1)
             self.__rpm1_attr      = "{}/psu{}/fan1_input".format(Common.INFO_PREFIX, psu_id+1)
         else:
-            self.__fan_type       = "{}/{}/fanmodule{}_type".format(Common.I2C_PREFIX, INFO_I2C_ADDR, self.__index + 1)
-            self.__rpm1_attr      = "{}/{}/fan{}_input".format(Common.I2C_PREFIX, INFO_I2C_ADDR, 2*self.__index + 1)
-            self.__rpm2_attr      = "{}/{}/fan{}_input".format(Common.I2C_PREFIX, INFO_I2C_ADDR, 2*self.__index + 2)
-            self.__pwm_attr       = "{}/{}/pwm{}".format(Common.I2C_PREFIX, INFO_I2C_ADDR, self.__index + 1)
+            self.__fan_type       = "{}/i2c-inv_cpld/fanmodule{}_type".format(Common.I2C_PREFIX, self.__index + 1)
+            self.__rpm1_attr      = "{}/i2c-inv_cpld/fan{}_input".format(Common.I2C_PREFIX, 2*self.__index + 1)
+            self.__rpm2_attr      = "{}/i2c-inv_cpld/fan{}_input".format(Common.I2C_PREFIX, 2*self.__index + 2)
+            self.__pwm_attr       = "{}/i2c-inv_cpld/pwm{}".format(Common.I2C_PREFIX, self.__index + 1)
 
     def __get_attr_value(self, attr_path):
 

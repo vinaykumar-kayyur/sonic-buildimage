@@ -133,13 +133,13 @@ def link_dir(prefix,dst):
         syslog.syslog(syslog.LOG_ERR,"Path %s is not a dir" % prefix)
 
 _path_prefix_list=[
-    "/sys/bus/i2c/devices/2-005a/hwmon/",
-    "/sys/bus/i2c/devices/2-005b/hwmon/",
+    "/sys/bus/i2c/devices/i2c-pmbus-1/hwmon/",
+    "/sys/bus/i2c/devices/i2c-pmbus-2/hwmon/",
     "/sys/devices/platform/coretemp.0/hwmon/",
-    "/sys/bus/i2c/devices/3-0048/hwmon/",
-    "/sys/bus/i2c/devices/3-004a/hwmon/",
-    "/sys/bus/i2c/devices/3-004d/hwmon/",
-    "/sys/bus/i2c/devices/3-004e/hwmon/"
+    "/sys/bus/i2c/devices/i2c-tmp75-1/hwmon/",
+    "/sys/bus/i2c/devices/i2c-tmp75-2/hwmon/",
+    "/sys/bus/i2c/devices/i2c-tmp75-3/hwmon/",
+    "/sys/bus/i2c/devices/i2c-tmp75-4/hwmon/"
 ]
 
 _path_dst_list=[

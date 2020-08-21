@@ -16,7 +16,7 @@ class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
     """CPLD address"""
-    PSU_DIR = "/sys/bus/i2c/devices/0-0077/"
+    PSU_DIR = "/sys/bus/i2c/devices/i2c-inv_cpld/"
 
     def __init__(self):
         PsuBase.__init__(self)

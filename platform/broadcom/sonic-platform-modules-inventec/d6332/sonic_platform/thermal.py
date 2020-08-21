@@ -15,7 +15,6 @@ except ImportError as e:
 
 PSU1_THERMAL_START=9
 PSU2_THERMAL_START=12
-INFO_I2C_ADDR = "0-0077"
 
 class Thermal(ThermalBase):
 
@@ -127,13 +126,13 @@ class Thermal(ThermalBase):
             attr_path = self.__thermal_temp_attr
             presence=os.path.isfile(attr_path)
         elif(self.__index < PSU2_THERMAL_START):
-            path="{}/{}/psu1".format(Common.I2C_PREFIX, INFO_I2C_ADDR)
+            path="{}/i2c-inv_cpld/psu1".format(Common.I2C_PREFIX)
             psu_state=self.__get_attr_value(path)
             if (psu_state != 'ERR'):
                 if (psu_state == PsuConst.PSU_TYPE_LIST[0] or psu_state == PsuConst.PSU_TYPE_LIST[1]):
                     presence = True
         else:
-            path="{}/{}/psu2".format(Common.I2C_PREFIX, INFO_I2C_ADDR)
+            path="{}/i2c-inv_cpld/psu2".format(Common.I2C_PREFIX)
             psu_state=self.__get_attr_value(path)
             if (psu_state != 'ERR'):
                 if (psu_state == PsuConst.PSU_TYPE_LIST[0] or psu_state == PsuConst.PSU_TYPE_LIST[1]):

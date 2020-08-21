@@ -16,7 +16,6 @@ except ImportError as e:
 
 VOLTAGE_UPPER_LIMIT = 14
 VOLTAGE_LOWER_LIMIT = 10
-INFO_I2C_ADDR          = "0-0077"
 
 class Psu(PsuBase):
 
@@ -27,7 +26,7 @@ class Psu(PsuBase):
         self.__index = index
         psu_id = self.__index + 1
 
-        self.__psu_presence_attr    = "{}/{}/psu{}".format(Common.I2C_PREFIX,INFO_I2C_ADDR,psu_id)
+        self.__psu_presence_attr    = "{}/i2c-inv_cpld/psu{}".format(Common.I2C_PREFIX,psu_id)
         self.__psu_voltage_out_attr = "{}/psu{}/in2_input".format(Common.INFO_PREFIX, psu_id)
         self.__psu_current_out_attr = "{}/psu{}/curr2_input".format(Common.INFO_PREFIX, psu_id)
         self.__psu_power_out_attr   = "{}/psu{}/power2_input".format(Common.INFO_PREFIX, psu_id)
