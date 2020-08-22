@@ -1,7 +1,22 @@
 import os
+import sys
 
-import mock
+# TODO: Remove this if/else block once we no longer support Python 2
+if sys.version_info.major == 3:
+    from unittest import mock
+else:
+    # Expect the 'mock' package for python 2
+    # https://pypi.python.org/pypi/mock
+    import mock
+
 from sonic_py_common import device_info
+
+
+# TODO: Remove this if/else block once we no longer support Python 2
+if sys.version_info.major == 3:
+    BUILTINS = "builtins"
+else:
+    BUILTINS = "__builtin__"
 
 MACHINE_CONF_CONTENTS = """\
 onie_version=2016.11-5.1.0008-9600
@@ -44,7 +59,7 @@ class TestDeviceInfo(object):
         with mock.patch('os.path.isfile') as mock_isfile:
             mock_isfile.return_value = True
             mocked_open = mock.mock_open(read_data=MACHINE_CONF_CONTENTS)
-            with mock.patch('__builtin__.open', mocked_open):
+            with mock.patch('{}.open'.format(BUILTINS), mocked_open):
                 result = device_info.get_machine_info()
                 assert result == EXPECTED_GET_MACHINE_INFO_RESULT
                 mocked_open.assert_called_once_with('/host/machine.conf')

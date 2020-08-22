@@ -2,7 +2,6 @@ from setuptools import setup
 
 dependencies = [
     'natsort',
-    'pyyaml',
     'swsssdk>=2.0.1',
 ]
 
@@ -28,6 +27,10 @@ setup(
         'sonic_py_common',
     ],
     test_suite = 'setup.get_test_suite',
+    tests_require=[
+        'pytest',
+        'mock>=2.0.0'
+    ],
     classifiers=[
         'Intended Audience :: Developers',
         'Operating System :: Linux',
