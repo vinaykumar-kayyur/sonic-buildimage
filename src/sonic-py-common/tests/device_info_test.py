@@ -58,19 +58,18 @@ class TestDeviceInfo(object):
     def test_get_machine_info(self):
         with mock.patch('os.path.isfile') as mock_isfile:
             mock_isfile.return_value = True
-            mocked_open = mock.mock_open(read_data=MACHINE_CONF_CONTENTS)
-            with mock.patch('{}.open'.format(BUILTINS), mocked_open):
+            open_mocked = mock.mock_open(read_data=MACHINE_CONF_CONTENTS)
+            with mock.patch('{}.open'.format(BUILTINS), open_mocked):
                 result = device_info.get_machine_info()
                 assert result == EXPECTED_GET_MACHINE_INFO_RESULT
-                mocked_open.assert_called_once_with('/host/machine.conf')
+                open_mocked.assert_called_once_with('/host/machine.conf')
 
     def test_get_platform(self):
-        with mock.patch('sonic_py_common.device_info.get_machine_info') as mock_get_machine_info:
-            mock_get_machine_info.return_value = EXPECTED_GET_MACHINE_INFO_RESULT
+        with mock.patch('sonic_py_common.device_info.get_machine_info') as get_machine_info_mocked:
+            get_machine_info_mocked.return_value = EXPECTED_GET_MACHINE_INFO_RESULT
             result = device_info.get_platform()
             assert result == 'x86_64-mlnx_msn2700-r0'
 
     @classmethod
     def teardown_class(cls):
         print("TEARDOWN")
-        os.environ["PATH"] = os.pathsep.join(os.environ["PATH"].split(os.pathsep)[:-1])
