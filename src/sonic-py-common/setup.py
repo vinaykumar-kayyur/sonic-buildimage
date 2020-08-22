@@ -26,7 +26,9 @@ setup(
     packages=[
         'sonic_py_common',
     ],
-    test_suite = 'setup.get_test_suite',
+    setup_requires= [
+        'pytest-runner'
+    ],
     tests_require=[
         'pytest',
         'mock>=2.0.0'
@@ -39,5 +41,6 @@ setup(
         'Programming Language :: Python',
     ],
     keywords='SONiC sonic PYTHON python COMMON common',
+    test_suite = 'setup.get_test_suite'
 )
 
