@@ -31,7 +31,7 @@ setup(
     ],
     tests_require=[
         'pytest',
-        'mock>=2.0.0'
+        'mock==3.0.5' # For python 2. Version >=4.0.0 drops support for py2
     ],
     classifiers=[
         'Intended Audience :: Developers',

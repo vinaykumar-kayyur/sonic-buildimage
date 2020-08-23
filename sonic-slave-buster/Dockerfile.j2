@@ -351,6 +351,11 @@ RUN pip3 install pytest-runner==5.2
 RUN pip install mockredispy==2.9.3
 RUN pip3 install mockredispy==2.9.3
 
+# For Python 2 unit tests, we need 'mock'. The last version of 'mock'
+# which supports Python 2 is 3.0.5. In Python 3, 'mock' is part of 'unittest'
+# in the standard library
+RUN pip install mock==3.0.5
+
 # For p4 build
 RUN pip install \
         ctypesgen==1.0.2 \
@@ -375,7 +380,7 @@ RUN pip3 install "PyYAML>=5.1"
 RUN pip3 install redis
 
 # For supervisor build
-RUN pip install meld3 mock
+RUN pip install meld3
 
 # For vs image build
 RUN pip install pexpect==4.6.0
