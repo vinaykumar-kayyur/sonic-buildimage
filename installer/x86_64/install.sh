@@ -412,7 +412,7 @@ demo_install_uefi_grub()
     efibootmgr --quiet --create \
         --label "$demo_volume_label" \
         --disk $blk_dev --part $uefi_part \
-        --loader "/EFI/$demo_volume_label/grubx64.efi" || {
+        --loader "/EFI/$demo_volume_label/shimx64.efi" || {
         echo "ERROR: efibootmgr failed to create new boot variable on: $blk_dev"
         exit 1
     }
