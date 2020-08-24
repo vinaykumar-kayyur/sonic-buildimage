@@ -1,5 +1,5 @@
 [Unit]
-Description=physyncd service
+Description=gbsyncd service
 Requires=database.service updategraph.service
 {% if sonic_asic_platform == 'broadcom' %}
 Requires=opennsl-modules.service
@@ -16,9 +16,9 @@ Before=ntp-config.service
 [Service]
 User=root
 Environment=sonic_asic_platform={{ sonic_asic_platform }}
-ExecStartPre=/usr/local/bin/physyncd.sh start
-ExecStart=/usr/local/bin/physyncd.sh wait
-ExecStop=/usr/local/bin/physyncd.sh stop
+ExecStartPre=/usr/local/bin/gbsyncd.sh start
+ExecStart=/usr/local/bin/gbsyncd.sh wait
+ExecStop=/usr/local/bin/gbsyncd.sh stop
 
 [Install]
 WantedBy=multi-user.target

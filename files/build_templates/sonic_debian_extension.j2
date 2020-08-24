@@ -1,6 +1,6 @@
 #!/bin/bash
 ## This script is to automate loading of vendor specific docker images
-## and instalation of configuration files and vendor specific packages
+## and installation of configuration files and vendor specific packages
 ## to debian file system.
 ##
 ## USAGE:
@@ -525,10 +525,10 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
 
-# Copy swss syncd, and physyncd service scripts
+# Copy swss syncd, and gbsyncd service scripts
 sudo LANG=C cp $SCRIPTS_DIR/swss.sh $FILESYSTEM_ROOT/usr/local/bin/swss.sh
 sudo LANG=C cp $SCRIPTS_DIR/syncd.sh $FILESYSTEM_ROOT/usr/local/bin/syncd.sh
-sudo LANG=C cp $SCRIPTS_DIR/physyncd.sh $FILESYSTEM_ROOT/usr/local/bin/physyncd.sh
+sudo LANG=C cp $SCRIPTS_DIR/gbsyncd.sh $FILESYSTEM_ROOT/usr/local/bin/gbsyncd.sh
 sudo LANG=C cp $SCRIPTS_DIR/bgp.sh $FILESYSTEM_ROOT/usr/local/bin/bgp.sh
 
 # Copy sonic-netns-exec script

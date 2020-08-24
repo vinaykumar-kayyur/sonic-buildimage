@@ -1,9 +1,9 @@
 #!/bin/bash
 
-SERVICE="physyncd"
+SERVICE="gbsyncd"
 PEER="swss"
-DEBUGLOG="/tmp/swss-physyncd-debug.log"
-LOCKFILE="/tmp/swss-physyncd-lock"
+DEBUGLOG="/tmp/swss-gbsyncd-debug.log"
+LOCKFILE="/tmp/swss-gbsyncd-lock"
 
 function debug()
 {
@@ -115,16 +115,16 @@ stop() {
     fi
 
     if [[ x$TYPE != x"cold" ]]; then
-        debug "${TYPE} shutdown physyncd process ..."
-        /usr/bin/docker exec -i physyncd /usr/bin/syncd_request_shutdown --${TYPE}
+        debug "${TYPE} shutdown gbsyncd process ..."
+        /usr/bin/docker exec -i gbsyncd /usr/bin/syncd_request_shutdown --${TYPE}
 
         # wait until syncd quits gracefully
-        while docker top physyncd | grep -q /usr/bin/physyncd; do
+        while docker top gbsyncd | grep -q /usr/bin/gbsyncd; do
             sleep 0.1
         done
 
-        /usr/bin/docker exec -i physyncd /bin/sync
-        debug "Finished ${TYPE} shutdown physyncd process ..."
+        /usr/bin/docker exec -i gbsyncd /bin/sync
+        debug "Finished ${TYPE} shutdown gbsyncd process ..."
     fi
 
     /usr/bin/${SERVICE}.sh stop
