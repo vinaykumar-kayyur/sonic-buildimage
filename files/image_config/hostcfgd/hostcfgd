@@ -1,6 +1,7 @@
 #!/usr/bin/python -u
 # -*- coding: utf-8 -*-
 
+import ast
 import os
 import sys
 import subprocess
@@ -41,8 +42,8 @@ def obfuscate(data):
         return data
 
 
-def update_feature_state(feature_name, state, has_timer=False):
-    feature_suffixes = ["service"] + (["timer"] if has_timer else [])
+def update_feature_state(feature_name, state, has_timer):
+    feature_suffixes = ["service"] + (["timer"] if ast.literal_eval(has_timer) else [])
     if state == "enabled":
         start_cmds = []
         for suffix in feature_suffixes:
