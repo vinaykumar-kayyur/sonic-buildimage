@@ -13,7 +13,6 @@ The format of default_sku is a single line:
 
 | hw_key | Device |
 | ------ | ------ |
-
 | Force10-S6000 | Dell Force10 S6000|
 | brcm_gearbox_vs | Similar to Force10-S6000, but implements a virtual BRCM81724 Gearbox Phy |
 
