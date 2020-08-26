@@ -167,17 +167,20 @@ def get_paths_to_platform_and_hwsku_dirs():
     # Get platform and hwsku
     (platform, hwsku) = get_platform_and_hwsku()
 
+    platform_path_host = None
+    platform_path = None
+    hwsku_path = None
     # Determine whether we're running in a container or on the host
-    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
+    if platform:
+        platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
 
     if os.path.isdir(CONTAINER_PLATFORM_PATH):
         platform_path = CONTAINER_PLATFORM_PATH
-    elif os.path.isdir(platform_path_host):
+    elif platform_path_host and os.path.isdir(platform_path_host):
         platform_path = platform_path_host
-    else:
-        raise OSError("Failed to locate platform directory")
 
-    hwsku_path = os.path.join(platform_path, hwsku)
+    if platform_path and hwsku:
+        hwsku_path = os.path.join(platform_path, hwsku)
 
     return (platform_path, hwsku_path)
 
@@ -193,14 +196,18 @@ def get_path_to_port_config_file():
     (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
 
     # First check for the presence of the new 'platform.json' file
-    port_config_file_path = os.path.join(platform_path, PLATFORM_JSON_FILE)
-    if not os.path.isfile(port_config_file_path):
-        # platform.json doesn't exist. Try loading the legacy 'port_config.ini' file
-        port_config_file_path = os.path.join(hwsku_path, PORT_CONFIG_FILE)
-        if not os.path.isfile(port_config_file_path):
-            raise OSError("Failed to detect port config file: {}".format(port_config_file_path))
+    if platform_path:
+        port_config_file_path = os.path.join(platform_path, PLATFORM_JSON_FILE)
+        if os.path.isfile(port_config_file_path):
+            return port_config_file_path
 
-    return port_config_file_path
+    # platform.json doesn't exist. Try loading the legacy 'port_config.ini' file
+    if hwsku_path:
+        port_config_file_path = os.path.join(hwsku_path, PORT_CONFIG_FILE)
+        if os.path.isfile(port_config_file_path):
+            return port_config_file_path
+
+    return None
 
 
 def get_sonic_version_info():

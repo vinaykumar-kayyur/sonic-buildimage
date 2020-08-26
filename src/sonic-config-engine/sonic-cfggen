@@ -41,7 +41,8 @@ from minigraph import minigraph_encoder
 from minigraph import parse_xml
 from minigraph import parse_device_desc_xml
 from minigraph import parse_asic_sub_role
-from portconfig import get_port_config, get_port_config_file_name, get_breakout_mode
+from portconfig import get_port_config, get_breakout_mode
+from sonic_py_common import device_info
 from sonic_py_common.device_info import get_platform, get_system_mac
 from sonic_py_common.multi_asic import get_asic_id_from_name, is_multi_asic
 from config_samples import generate_sample_config
@@ -297,7 +298,7 @@ def main():
             }}}
         deep_update(data, hardware_data)
         if args.port_config is None:
-            args.port_config = get_port_config_file_name(hwsku, platform)
+            args.port_config = device_info.get_path_to_port_config_file()
         (ports, _, _) = get_port_config(hwsku, platform, args.port_config, asic_id)
         if not ports:
             print('Failed to get port config', file=sys.stderr)
