@@ -80,7 +80,7 @@ stop() {
 		docker kill teamd &> /dev/null || debug "Docker teamd is not running ($?) ..."
 		systemctl stop teamd
 		debug "Stopped teamd ..."
-	else
+    else
 		/usr/bin/${SERVICE}.sh stop $DEV
 		debug "Stopped ${SERVICE}$DEV service..."
     fi
