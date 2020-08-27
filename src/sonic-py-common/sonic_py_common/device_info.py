@@ -29,6 +29,10 @@ FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
 
 
+def get_hostname():
+    return os.uname()[1]
+
+
 def get_machine_info():
     """
     Retreives data from the machine configuration file
