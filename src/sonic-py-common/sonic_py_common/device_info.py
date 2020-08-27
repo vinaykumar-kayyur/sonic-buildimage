@@ -193,18 +193,21 @@ def get_path_to_port_config_file(asic=None):
     # check 'platform.json' file presence
     port_config_candidates_json = []
     port_config_candidates_json.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, PLATFORM_JSON))
-    port_config_candidates_json.append(os.path.join(PLATFORM_ROOT_PATH, platform, PLATFORM_JSON))
+    if platform:
+        port_config_candidates_Json.append(os.path.join(PLATFORM_ROOT_PATH, platform, PLATFORM_JSON))
 
     # check 'portconfig.ini' file presence
     port_config_candidates = []
     port_config_candidates.append(os.path.join(HWSKU_ROOT_PATH, PORT_CONFIG_INI))
-    if asic:
-        port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, asic, PORT_CONFIG_INI))
-    port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, PORT_CONFIG_INI))
-    port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, hwsku, PORT_CONFIG_INI))
-    port_config_candidates.append(os.path.join(SONIC_ROOT_PATH, hwsku, PORT_CONFIG_INI))
+    if hwsku:
+        if platform:
+            if asic:
+                port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, asic, PORT_CONFIG_INI))
+            port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, PORT_CONFIG_INI))
+        port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, hwsku, PORT_CONFIG_INI))
+        port_config_candidates.append(os.path.join(SONIC_ROOT_PATH, hwsku, PORT_CONFIG_INI))
 
-    if platform and not hwsku:
+    elif platform and not hwsku:
         port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, PORT_CONFIG_INI))
 
     for candidate in port_config_candidates_json + port_config_candidates:
