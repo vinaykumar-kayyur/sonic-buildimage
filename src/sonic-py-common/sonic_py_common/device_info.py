@@ -181,27 +181,36 @@ def get_paths_to_platform_and_hwsku_dirs():
 
     return (platform_path, hwsku_path)
 
-
-def get_path_to_port_config_file():
+def get_path_to_port_config_file(asic=None):
     """
     Retrieves the path to the device's port configuration file
 
     Returns:
         A string containing the path the the device's port configuration file
     """
-    # Get platform and hwsku path
-    (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+    (platform, hwsku) = get_platform_and_hwsku()
 
-    # First check for the presence of the new 'platform.json' file
-    port_config_file_path = os.path.join(platform_path, PLATFORM_JSON_FILE)
-    if not os.path.isfile(port_config_file_path):
-        # platform.json doesn't exist. Try loading the legacy 'port_config.ini' file
-        port_config_file_path = os.path.join(hwsku_path, PORT_CONFIG_FILE)
-        if not os.path.isfile(port_config_file_path):
-            raise OSError("Failed to detect port config file: {}".format(port_config_file_path))
+    # check 'platform.json' file presence
+    port_config_candidates_json = []
+    port_config_candidates_json.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, PLATFORM_JSON))
+    port_config_candidates_json.append(os.path.join(PLATFORM_ROOT_PATH, platform, PLATFORM_JSON))
 
-    return port_config_file_path
+    # check 'portconfig.ini' file presence
+    port_config_candidates = []
+    port_config_candidates.append(os.path.join(HWSKU_ROOT_PATH, PORT_CONFIG_INI))
+    if asic:
+        port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, asic, PORT_CONFIG_INI))
+    port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, PORT_CONFIG_INI))
+    port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, hwsku, PORT_CONFIG_INI))
+    port_config_candidates.append(os.path.join(SONIC_ROOT_PATH, hwsku, PORT_CONFIG_INI))
 
+    if platform and not hwsku:
+        port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, PORT_CONFIG_INI))
+
+    for candidate in port_config_candidates_json + port_config_candidates:
+        if os.path.isfile(candidate):
+            return candidate
+    return None
 
 def get_sonic_version_info():
     if not os.path.isfile(SONIC_VERSION_YAML_PATH):
