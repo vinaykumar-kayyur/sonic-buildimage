@@ -188,31 +188,24 @@ def get_path_to_port_config_file(asic=None):
     Returns:
         A string containing the path the the device's port configuration file
     """
-    (platform, hwsku) = get_platform_and_hwsku()
+    (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
 
-    # check 'platform.json' file presence
-    port_config_candidates_json = []
-    port_config_candidates_json.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, PLATFORM_JSON))
-    if platform:
-        port_config_candidates_Json.append(os.path.join(PLATFORM_ROOT_PATH, platform, PLATFORM_JSON))
-
-    # check 'portconfig.ini' file presence
     port_config_candidates = []
-    port_config_candidates.append(os.path.join(HWSKU_ROOT_PATH, PORT_CONFIG_INI))
-    if hwsku:
-        if platform:
-            if asic:
-                port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, asic, PORT_CONFIG_INI))
-            port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, hwsku, PORT_CONFIG_INI))
-        port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH_DOCKER, hwsku, PORT_CONFIG_INI))
-        port_config_candidates.append(os.path.join(SONIC_ROOT_PATH, hwsku, PORT_CONFIG_INI))
 
-    elif platform and not hwsku:
-        port_config_candidates.append(os.path.join(PLATFORM_ROOT_PATH, platform, PORT_CONFIG_INI))
+    # Check for 'platform.json' file presence first
+    port_config_candidates_json.append(os.path.join(platform_path, PLATFORM_JSON))
 
-    for candidate in port_config_candidates_json + port_config_candidates:
+    # Check for 'portconfig.ini' file presence in a few locations
+    port_config_candidates.append(os.path.join(hwsku_path, PORT_CONFIG_INI))
+    if asic:
+        port_config_candidates.append(os.path.join(hwsku_path, asic, PORT_CONFIG_INI))
+    port_config_candidates.append(os.path.join(hwsku_path, PORT_CONFIG_INI))
+    port_config_candidates.append(os.path.join(platform_path, PORT_CONFIG_INI))
+
+    for candidate in port_config_candidates:
         if os.path.isfile(candidate):
             return candidate
+
     return None
 
 def get_sonic_version_info():
