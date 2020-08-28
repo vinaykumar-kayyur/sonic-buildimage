@@ -167,21 +167,17 @@ def get_paths_to_platform_and_hwsku_dirs():
     # Get platform and hwsku
     (platform, hwsku) = get_platform_and_hwsku()
 
-    platform_path = None
-    hwsku_path = None
     # Determine whether we're running in a container or on the host
-    if platform:
-        platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
+    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
 
-    if  os.path.isdir(CONTAINER_PLATFORM_PATH):
+    if os.path.isdir(CONTAINER_PLATFORM_PATH):
         platform_path = CONTAINER_PLATFORM_PATH
-    elif platform_path_host and os.path.isdir(platform_path_host):
+    elif os.path.isdir(platform_path_host):
         platform_path = platform_path_host
     else:
         raise OSError("Failed to locate platform directory")
 
-    if hwsku:
-        hwsku_path = os.path.join(platform_path, hwsku)
+    hwsku_path = os.path.join(platform_path, hwsku)
 
     return (platform_path, hwsku_path)
 
@@ -197,7 +193,7 @@ def get_path_to_port_config_file(asic=None):
     port_config_candidates = []
 
     # Check for 'platform.json' file presence first
-    port_config_candidates_json.append(os.path.join(platform_path, PLATFORM_JSON))
+    port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON))
 
     # Check for 'port_config.ini' file presence in a few locations
     port_config_candidates.append(os.path.join(hwsku_path, PORT_CONFIG_INI))
