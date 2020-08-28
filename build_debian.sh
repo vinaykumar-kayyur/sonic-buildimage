@@ -147,6 +147,8 @@ sudo openssl req -new -x509 -newkey rsa:2048 -subj "/CN=db/" -keyout kernel_db.k
 sudo openssl x509 -in kernel_db.crt -outform der -out kernel_db.der
 sudo sbsign --key kernel_db.key --cert kernel_db.crt --output fsroot/boot/vmlinuz-4.19.0-9-2-amd64 fsroot/boot/vmlinuz-4.19.0-9-2-amd64
 
+sudo apt-get -y install mokutil
+
 ## Update initramfs for booting with squashfs+overlay
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
 
