@@ -147,6 +147,10 @@ if [ ! -e /host/machine.conf ]; then
         done
     fi
 
+    # Set nos_val for cold reboot process
+    . /usr/share/sonic/device/$platform/installer.conf
+    nos_val="$nos_config_part"
+
     # Extract the previous NOS's partition that contains the migration artifacts
     set -- $(cat /proc/cmdline)
     for x in "$@"; do
