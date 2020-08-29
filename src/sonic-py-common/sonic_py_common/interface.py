@@ -16,6 +16,8 @@ SONIC_INTERFACE_PREFIXES = {
     "Ethernet-Backplane": "Ethernet-BP"
 }
 
+VLAN_SUB_INTERFACE_SEPARATOR = '.'
+
 def front_panel_prefix():
     """
     Retrieves the SONIC front panel interface name prefix.
