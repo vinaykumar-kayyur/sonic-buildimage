@@ -1,22 +1,7 @@
 import os
 import sys
 
-# TODO: Remove this if/else block once we no longer support Python 2
-if sys.version_info.major == 3:
-    from unittest import mock
-else:
-    # Expect the 'mock' package for python 2
-    # https://pypi.python.org/pypi/mock
-    import mock
-
 from sonic_py_common import interface
-
-
-# TODO: Remove this if/else block once we no longer support Python 2
-if sys.version_info.major == 3:
-    BUILTINS = "builtins"
-else:
-    BUILTINS = "__builtin__"
 
 class TestInterface(object):
     @classmethod
