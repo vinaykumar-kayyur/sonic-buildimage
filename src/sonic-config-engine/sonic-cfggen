@@ -42,7 +42,6 @@ from minigraph import parse_xml
 from minigraph import parse_device_desc_xml
 from minigraph import parse_asic_sub_role
 from portconfig import get_port_config, get_breakout_mode
-from sonic_py_common.device_info import get_platform, get_system_mac
 from sonic_py_common.multi_asic import get_asic_id_from_name, is_multi_asic
 from sonic_py_common import device_info
 from config_samples import generate_sample_config
@@ -278,7 +277,7 @@ def main():
     group.add_argument("-K", "--key", help="Lookup for a specific key")
     args = parser.parse_args()
 
-    platform = get_platform()
+    platform = device_info.get_platform()
 
     db_kwargs = {}
     if args.redis_unix_sock_file != None:
@@ -357,11 +356,11 @@ def main():
                 asic_role = parse_asic_sub_role(args.minigraph, asic_name)
 
             if asic_role is not None and asic_role.lower() == "backend":
-                mac = get_system_mac(namespace=asic_name)
+                mac = device_info.get_system_mac(namespace=asic_name)
             else:
-                mac = get_system_mac()
+                mac = device_info.get_system_mac()
         else:
-            mac = get_system_mac()
+            mac = device_info.get_system_mac()
 
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'platform': platform,
