@@ -113,7 +113,7 @@ class Psu(PsuBase):
 
         # initialize thermal for PSU
         from .thermal import initialize_psu_thermals
-        initialize_psu_thermals(platform, self._thermal_list, self.index, self.get_powergood_status)
+        initialize_psu_thermals(platform, self._thermal_list, self.index, self.get_power_available_status)
 
 
     def get_name(self):

@@ -502,7 +502,7 @@ class Chassis(ChassisBase):
         Returns:
             integer: The 1-based relative physical position in parent device
         """
-        return 1
+        return -1
 
     def is_replaceable(self):
         """
