@@ -314,7 +314,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     cron                    \
     haveged                 
 
-## Secure boot signed shim grub 
+## Install signed shim and grub for secure boot 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     grub-efi-amd64-signed           \
     shim-signed         
