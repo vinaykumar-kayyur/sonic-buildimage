@@ -86,7 +86,7 @@ installer_image_path="$image_path/$installer_image"
 
 boot_config="$target_path/boot-config"
 
-cmdline_allowlist="crashkernel"
+cmdline_allowlist="crashkernel hwaddr_ma1"
 
 # for backward compatibility with the sonic_upgrade= behavior
 install="${install:-${sonic_upgrade:-}}"
@@ -789,8 +789,8 @@ secureboot_boot() {
 
 regular_boot() {
     # boot uses the image installed on the flash
-    run_hooks pre-kexec
     write_regular_configs "$image_path"
+    run_hooks pre-kexec
     update_next_boot
     run_kexec
 }
