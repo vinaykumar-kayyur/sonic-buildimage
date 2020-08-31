@@ -312,12 +312,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-pip              \
     python3-pip             \
     cron                    \
-    haveged
+    haveged                 
 
-## Secure boot signed shim and grub
+## Secure boot signed shim grub and signing tool    
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
     grub-efi-amd64-signed           \
-    shim-signed
+    shim-signed         \
+    efitools
     
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
