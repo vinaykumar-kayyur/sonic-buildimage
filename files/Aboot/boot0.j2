@@ -86,7 +86,7 @@ installer_image_path="$image_path/$installer_image"
 
 boot_config="$target_path/boot-config"
 
-cmdline_allowlist="crashkernel"
+cmdline_allowlist="crashkernel hwaddr_ma1"
 
 # for backward compatibility with the sonic_upgrade= behavior
 install="${install:-${sonic_upgrade:-}}"
@@ -653,14 +653,9 @@ write_default_cmdline() {
 
 write_cmdline() {
     # use extra parameters from kernel-params hook if the file exists
-    if [ -f "$target_path/$kernel_params" ]; then
-        if $secureboot && $debug; then
-            warn "Unsafe: Loading extra kernel parameters from $kernel_params"
-            cat "$target_path/$kernel_params" | cmdline_append
-        elif ! $secureboot; then
-            info "Loading extra kernel parameters from $kernel_params"
-            cat "$target_path/$kernel_params" | cmdline_append
-        fi
+    if [ -f "$target_path/$kernel_params" ] && ! $secureboot; then
+        info "Loading extra kernel parameters from $kernel_params"
+        cat "$target_path/$kernel_params" | cmdline_append
     fi
 
     # FIXME: sonic sometimes adds extra kernel parameters from user space
@@ -766,8 +761,8 @@ secureboot_boot() {
 
 regular_boot() {
     # boot uses the image installed on the flash
-    run_hooks pre-kexec
     write_regular_configs "$image_path"
+    run_hooks pre-kexec
     update_next_boot
     run_kexec
 }

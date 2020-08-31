@@ -90,7 +90,7 @@ mkdir -p "$rw_dir"
 mkdir -p "$work_dir"
 
 ## Remove the files not in allowlist in the rw folder
-if $secureboot && ! $in_kdump; then
+if [ "$secureboot" = true ] && [ "$in_kdump" = false ]; then
     if [ "$bootloader" = "aboot" ]; then
         swi_path="${rootmnt}/host/$(sed -E 's/.*loop=([^ ]+).*/\1/' /proc/cmdline)"
         unzip -q "$swi_path" allowlist_paths.conf -d /tmp
@@ -124,8 +124,8 @@ case "${ROOT}" in
 esac
 
 mkdir -p ${rootmnt}/var/lib/docker
-if ! $in_kdump; then
-    if $secureboot; then
+if [ "$in_kdump" = false ]; then
+    if [ "$secureboot" = true ]; then
         mount -t tmpfs -o rw,nodev,size={{ DOCKER_RAMFS_SIZE }} tmpfs ${rootmnt}/var/lib/docker
         if [ "$bootloader" = "aboot" ]; then
             unzip -qp "$swi_path" dockerfs.tar.gz | tar xz --numeric-owner -C ${rootmnt}/var/lib/docker

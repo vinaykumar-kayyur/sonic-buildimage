@@ -152,10 +152,10 @@ done
 [ -z "$aboot_flag" ] && exit 0
 
 # Check kdump
-$in_kdump && exit 0
+[ "$in_kdump" = true ] && exit 0
 
 # Skip this script for warm-reboot/fast-reboot from sonic
-$sonic_fast_reboot && [ "$prev_os" != eos ] && exit 0
+[ "$sonic_fast_reboot" = true ] && [ "$prev_os" != eos ] && exit 0
 
 # Get flash dev name
 if [ -z "$block_flash" ]; then
