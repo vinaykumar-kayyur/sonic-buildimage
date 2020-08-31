@@ -246,7 +246,7 @@ sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/syst
 sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
 
 ## Create default user
-## Note: user should be in the group with the same name, and also in sudo/docker/redis group
+## Note: user should be in the group with the same name, and also in sudo/docker/redis groups
 sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker,redis $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
