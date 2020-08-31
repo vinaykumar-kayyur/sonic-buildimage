@@ -310,7 +310,10 @@ RUN apt-get update && apt-get install -y \
 # For SWI Tools
         python-m2crypto \
 # For build dtb
-	device-tree-compiler
+	device-tree-compiler \
+# For secure boot key signing and import
+	efitools \
+	mokutil
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
