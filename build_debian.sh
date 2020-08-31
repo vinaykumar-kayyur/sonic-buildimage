@@ -145,7 +145,7 @@ fi
 sudo apt-get -y install efitools
 sudo openssl req -new -x509 -newkey rsa:2048 -subj "/CN=db/" -keyout kernel_db.key -out kernel_db.crt -days 365 -nodes -sha256
 sudo openssl x509 -in kernel_db.crt -outform der -out kernel_db.der
-sudo sbsign --key kernel_db.key --cert kernel_db.crt --output fsroot/boot/vmlinuz-4.19.0-9-2-amd64 fsroot/boot/vmlinuz-4.19.0-9-2-amd64
+sudo sbsign --key kernel_db.key --cert kernel_db.crt --output fsroot/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64 fsroot/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64
 
 sudo apt-get -y install mokutil
 
