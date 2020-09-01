@@ -113,9 +113,10 @@ thermal_name = {
 }
 
 thermal_device_categories_all = [
-    THERMAL_DEV_CATEGORY_CPU_CORE,
+    THERMAL_DEV_CATEGORY_AMBIENT,
     THERMAL_DEV_CATEGORY_CPU_PACK,
-    THERMAL_DEV_CATEGORY_AMBIENT
+    THERMAL_DEV_CATEGORY_CPU_CORE,
+    THERMAL_DEV_CATEGORY_GEARBOX,
 ]
 
 thermal_device_categories_singleton = [
@@ -314,14 +315,6 @@ def initialize_psu_thermals(platform, thermal_list, psu_index, dependency):
 
 def initialize_sfp_thermals(platform, thermal_list, sfp_index):
     thermal = Thermal(THERMAL_DEV_CATEGORY_MODULE, sfp_index, True, 1)
-    thermal_list.append(thermal)
-
-    tp_index = platform_dict_thermal[platform]
-    thermal_profile = thermal_profile_list[tp_index]
-    _, count = thermal_profile[THERMAL_DEV_CATEGORY_GEARBOX]
-    if count == 0:
-        return
-    thermal = Thermal(THERMAL_DEV_CATEGORY_GEARBOX, sfp_index, True, 2)
     thermal_list.append(thermal)
 
     
