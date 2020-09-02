@@ -96,6 +96,8 @@ static const struct i2c_device_id as4630_54pe_cpld_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, as4630_54pe_cpld_id);
 
+#define TRANSCEIVER_RESET_ATTR_ID(index)   	MODULE_RESET_##index
+#define TRANSCEIVER_LPMODE_ATTR_ID(index)   	MODULE_LPMODE_##index
 #define TRANSCEIVER_PRESENT_ATTR_ID(index)   	MODULE_PRESENT_##index
 #define TRANSCEIVER_TXDISABLE_ATTR_ID(index)   	MODULE_TXDISABLE_##index
 #define TRANSCEIVER_RXLOS_ATTR_ID(index)   		MODULE_RXLOS_##index
@@ -123,6 +125,10 @@ enum as4630_54pe_cpld_sysfs_attributes {
 	TRANSCEIVER_PRESENT_ATTR_ID(52),
 	TRANSCEIVER_PRESENT_ATTR_ID(53),
 	TRANSCEIVER_PRESENT_ATTR_ID(54),
+	TRANSCEIVER_RESET_ATTR_ID(53),
+	TRANSCEIVER_RESET_ATTR_ID(54),
+	TRANSCEIVER_LPMODE_ATTR_ID(53),
+	TRANSCEIVER_LPMODE_ATTR_ID(54),
 	TRANSCEIVER_TXDISABLE_ATTR_ID(49),
 	TRANSCEIVER_TXDISABLE_ATTR_ID(50),
 	TRANSCEIVER_TXDISABLE_ATTR_ID(51),
@@ -148,6 +154,8 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
              char *buf);
 static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
+static ssize_t set_qsfp(struct device *dev, struct device_attribute *da,
+                        const char *buf, size_t count);
 static ssize_t access(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
 static ssize_t show_version(struct device *dev, struct device_attribute *da,
@@ -178,11 +186,15 @@ static ssize_t get_sys_temp(struct device *dev, struct device_attribute *da, cha
 	&sensor_dev_attr_module_tx_disable_##index.dev_attr.attr, \
 	&sensor_dev_attr_module_rx_los_##index.dev_attr.attr,     \
 	&sensor_dev_attr_module_tx_fault_##index.dev_attr.attr
-	
+
 #define DECLARE_QSFP_TRANSCEIVER_SENSOR_DEVICE_ATTR(index) \
+    static SENSOR_DEVICE_ATTR(module_lpmode_##index, S_IRUGO | S_IWUSR, show_status, set_qsfp, MODULE_LPMODE_##index); \
+    static SENSOR_DEVICE_ATTR(module_reset_##index, S_IRUGO | S_IWUSR, show_status, set_qsfp, MODULE_RESET_##index); \
     static SENSOR_DEVICE_ATTR(module_present_##index, S_IRUGO, show_status, NULL, MODULE_PRESENT_##index);
 
 #define DECLARE_QSFP_TRANSCEIVER_ATTR(index)  \
+    &sensor_dev_attr_module_lpmode_##index.dev_attr.attr, \
+    &sensor_dev_attr_module_reset_##index.dev_attr.attr, \
     &sensor_dev_attr_module_present_##index.dev_attr.attr
 
 
@@ -296,6 +308,16 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
             reg=0x21;
             mask=0x1 << (attr->index==MODULE_PRESENT_53?0:4);
             break;
+        case MODULE_RESET_53 ... MODULE_RESET_54:
+            reg=0x21;
+            mask=0x1 << (attr->index==MODULE_RESET_53?3:7);
+            revert = 1;
+            break;
+        case MODULE_LPMODE_53 ... MODULE_LPMODE_54:
+            reg = 0x21;
+            mask = 0x1 << (attr->index==MODULE_LPMODE_53?2:6);
+            revert = 0;
+            break;
 	    default:
 		    return 0;
     }
@@ -317,6 +339,61 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 exit:
 	mutex_unlock(&data->update_lock);
 	return status;
+}
+
+static ssize_t set_qsfp(struct device *dev, struct device_attribute *da,
+                        const char *buf, size_t count)
+{
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    struct i2c_client *client = to_i2c_client(dev);
+    struct as4630_54pe_cpld_data *data = i2c_get_clientdata(client);
+    long disable;
+    int status;
+    u8 reg = 0, mask = 0, revert = 0;
+
+    status = kstrtol(buf, 10, &disable);
+    if (status) {
+        return status;
+    }
+    reg  = 0x21;
+    switch (attr->index)
+    {
+    case MODULE_RESET_53 ... MODULE_RESET_54:
+        mask=0x1 << (attr->index==MODULE_RESET_53?3:7);
+        revert = 1;
+        break;
+    case MODULE_LPMODE_53 ... MODULE_LPMODE_54:
+        mask=0x1 << (attr->index==MODULE_LPMODE_53?2:6);
+        revert = 0;
+        break;
+    default:
+        return 0;
+    }
+
+    disable = revert ? disable : !disable;
+    /* Read current status */
+    mutex_lock(&data->update_lock);
+    status = as4630_54pe_cpld_read_internal(client, reg);
+    if (unlikely(status < 0)) {
+        goto exit;
+    }
+    if (disable) {
+        status &= ~mask;
+    }
+    else {
+        status |= mask;
+    }
+    status = as4630_54pe_cpld_write_internal(client, reg, status);
+    if (unlikely(status < 0)) {
+        goto exit;
+    }
+
+    mutex_unlock(&data->update_lock);
+    return count;
+
+exit:
+    mutex_unlock(&data->update_lock);
+    return status;
 }
 
 static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
