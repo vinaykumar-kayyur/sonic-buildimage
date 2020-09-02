@@ -67,7 +67,7 @@ class switch(object):
 
 
 
-# Read fanN_direction=1: The air flow of Fan6 is ?œAFI-Back to Front??#                     0: The air flow of Fan6 is ?œAFO-Front to back??#
+# Read fanN_direction=1: The air flow of Fan6 is ?ÂœAFI-Back to Front??#                     0: The air flow of Fan6 is ?ÂœAFO-Front to back??#
 # Thermal policy:
 # a.Defaut fan duty_cycle=100%
 # b.One fan fail, set to fan duty_cycle=100%
@@ -411,8 +411,8 @@ class device_monitor(object):
         
             if max_to_mid==thermal.THERMAL_NUM_MAX and  fan_policy_state==LEVEL_FAN_MAX:
                 if fan_fail==0:
-                current_state=LEVEL_FAN_MID
-                logging.debug("current_state=LEVEL_FAN_MID")
+                    current_state=LEVEL_FAN_MID
+                    logging.debug("current_state=LEVEL_FAN_MID")
         else: #AFO
             psu_full_load=check_psu_loading()
             for i in range (0, thermal.THERMAL_NUM_MAX):
