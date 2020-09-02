@@ -401,9 +401,6 @@ boot_config()
             fi
         fi
     fi
-
-    # Set default synchronous mode as disabled 
-    sonic-sync-mode disable
 }
 
 # read SONiC immutable variables
