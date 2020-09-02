@@ -206,13 +206,13 @@ def get_path_to_port_config_file(asic=None):
     port_config_candidates = []
 
     # Check for 'platform.json' file presence first
-    port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON))
+    port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
 
     # Check for 'port_config.ini' file presence in a few locations
-    port_config_candidates.append(os.path.join(hwsku_path, PORT_CONFIG_INI))
+    port_config_candidates.append(os.path.join(hwsku_path, PORT_CONFIG_FILE))
     if asic:
-        port_config_candidates.append(os.path.join(hwsku_path, asic, PORT_CONFIG_INI))
-    port_config_candidates.append(os.path.join(platform_path, PORT_CONFIG_INI))
+        port_config_candidates.append(os.path.join(hwsku_path, asic, PORT_CONFIG_FILE))
+    port_config_candidates.append(os.path.join(platform_path, PORT_CONFIG_FILE))
 
     for candidate in port_config_candidates:
         if os.path.isfile(candidate):
