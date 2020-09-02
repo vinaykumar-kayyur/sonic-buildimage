@@ -189,13 +189,12 @@ def get_path_to_port_config_file(asic=None):
         A string containing the path the the device's port configuration file
     """
 
-    '''
+    """
     This platform check is performed to make sure we return a None
     in case of unit-tests within sonic-cfggen where platform is not expected to be
     present because tests are not run on actual Hardware/Container.
-    This check should however be ommitted once Sonic-cfggen does not use
-    port_config file for unit-tests.
-    '''
+    TODO: refactor sonic-cfggen such that we can remove this check
+    """
 
     platform = get_platform()
     if not platform:
