@@ -67,7 +67,8 @@ class switch(object):
 
 
 
-# Read fanN_direction=1: The air flow of Fan6 is ?AFI-Back to Front??#                     0: The air flow of Fan6 is ?AFO-Front to back??#
+# Read fanN_direction=1: The air flow of Fan6 is AFI-Back to Front
+#                     0: The air flow of Fan6 is AFO-Front to Back
 # Thermal policy:
 # a.Defaut fan duty_cycle=100%
 # b.One fan fail, set to fan duty_cycle=100%
