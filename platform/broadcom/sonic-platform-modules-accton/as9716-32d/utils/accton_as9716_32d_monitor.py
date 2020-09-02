@@ -23,15 +23,10 @@ try:
     import os
     import commands
     import sys, getopt
-    import subprocess
-    import click
-    import imp
     import logging
     import logging.config
     import logging.handlers
-    import types
     import time  # this is only being used as part of the example
-    import traceback    
     from tabulate import tabulate
     from as9716_32d.fanutil import FanUtil
     from as9716_32d.thermalutil import ThermalUtil
@@ -295,7 +290,7 @@ class device_monitor(object):
             console.setFormatter(formatter)
             logging.getLogger('').addHandler(console)
 
-        sys_handler = handler = logging.handlers.SysLogHandler(address = '/dev/log')
+        sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
         sys_handler.setLevel(logging.WARNING)       
         logging.getLogger('').addHandler(sys_handler)
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
@@ -319,8 +314,7 @@ class device_monitor(object):
         LEVEL_FAN_INIT=0
         LEVEL_FAN_MIN=1
         LEVEL_FAN_MID=2       
-        LEVEL_FAN_MAX=3
-        LEVEL_FAN_DEF=LEVEL_FAN_MAX
+        LEVEL_FAN_MAX=3 #LEVEL_FAN_DEF
         LEVEL_FAN_YELLOW_ALARM=4
         LEVEL_FAN_RED_ALARM=5
         LEVEL_FAN_SHUTDOWN=6
@@ -366,7 +360,6 @@ class device_monitor(object):
             count_check=0
         
         thermal = ThermalUtil()
-        fan_dir=1
         fan_dir=fan.get_fan_dir(1)
        
         if fan_dir==1: # AFI
