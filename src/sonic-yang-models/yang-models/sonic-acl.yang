@@ -273,6 +273,11 @@ module sonic-acl {
 						}
 					}
 				}
+
+				leaf-list services {
+					type string;
+				}
+
 			}
 			/* end of ACL_TABLE_LIST */
 		}
