@@ -94,6 +94,9 @@ update_mgmt_interface_macaddr() {
 
 migrate_nos_configuration()
 {
+    rm -rf /host/migration
+    mkdir -p /host/migration
+
     # Extract the previous NOS's partition that contains the migration artifacts
     set -- $(cat /proc/cmdline)
     for x in "$@"; do
@@ -190,8 +193,6 @@ logger "SONiC version ${SONIC_VERSION} starting up..."
 # If the machine.conf is absent, it indicates that the unit booted
 # into SONiC from another NOS. Extract the machine.conf from ONIE.
 if [ ! -e /host/machine.conf ]; then
-    mkdir -p /host/migration
-
     onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
     mkdir -p /mnt/onie-boot
     mount $onie_dev /mnt/onie-boot
