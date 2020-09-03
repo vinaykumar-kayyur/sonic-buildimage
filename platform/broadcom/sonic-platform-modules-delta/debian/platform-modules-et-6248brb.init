@@ -22,35 +22,26 @@ start)
     modprobe i2c-ismt
     modprobe i2c-mux-pca954x
     modprobe i2c-mux-gpio
+    modprobe at24
+    modprobe optoe
     modprobe dni_gpio
     modprobe delta_et-6248brb_platform
 
-    if [ `uname -a | awk '{print $3}'` = "4.9.0-11-2-amd64" ]; then
-        echo "453" > "/sys/class/gpio/export"
-        echo "454" > "/sys/class/gpio/export"
-        echo "455" > "/sys/class/gpio/export"
-        echo "485" > "/sys/class/gpio/export"
-        echo "489" > "/sys/class/gpio/export"
-        echo "494" > "/sys/class/gpio/export"
-        echo "out" > "/sys/class/gpio/gpio453/direction"
-        echo "out" > "/sys/class/gpio/gpio454/direction"
-        echo "out" > "/sys/class/gpio/gpio455/direction"
-        echo "out" > "/sys/class/gpio/gpio485/direction"
-        echo "out" > "/sys/class/gpio/gpio489/direction"
-        echo "out" > "/sys/class/gpio/gpio494/direction"
+    if [ `uname -r | awk -F'.' '{print $1}'` -ge "4" ] && [ `uname -r | awk -F'.' '{print $2}'` -ge "9" ]; then
+            echo "453" > "/sys/class/gpio/export"
+            echo "454" > "/sys/class/gpio/export"
+            echo "455" > "/sys/class/gpio/export"
+            echo "485" > "/sys/class/gpio/export"
+            echo "489" > "/sys/class/gpio/export"
+            echo "494" > "/sys/class/gpio/export"
+            echo "out" > "/sys/class/gpio/gpio453/direction"
+            echo "out" > "/sys/class/gpio/gpio454/direction"
+            echo "out" > "/sys/class/gpio/gpio455/direction"
+            echo "out" > "/sys/class/gpio/gpio485/direction"
+            echo "out" > "/sys/class/gpio/gpio489/direction"
+            echo "out" > "/sys/class/gpio/gpio494/direction"
     else
-        echo "197" > "/sys/class/gpio/export"
-        echo "198" > "/sys/class/gpio/export"
-        echo "199" > "/sys/class/gpio/export"
-        echo "229" > "/sys/class/gpio/export"
-        echo "233" > "/sys/class/gpio/export"
-        echo "238" > "/sys/class/gpio/export"
-        echo "out" > "/sys/class/gpio/gpio197/direction"
-        echo "out" > "/sys/class/gpio/gpio198/direction"
-        echo "out" > "/sys/class/gpio/gpio199/direction"
-        echo "out" > "/sys/class/gpio/gpio229/direction"
-        echo "out" > "/sys/class/gpio/gpio233/direction"
-        echo "out" > "/sys/class/gpio/gpio238/direction"
+        echo "This kernel version can't support this gpio setting."
     fi
 
     /usr/local/bin/et-6248brb_platform_init.sh

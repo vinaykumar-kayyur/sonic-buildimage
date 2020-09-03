@@ -2,7 +2,9 @@
 # Vlan set and port enable
 clear c
 port ge en=1
-port hg en=1
+port ge0-47 an=on
+port ge48 en=0
+port hg en=0
 
 # led0 port order remap
 m CMIC_LEDUP0_PORT_ORDER_REMAP_0_3 REMAP_PORT_0=0 REMAP_PORT_1=1 REMAP_PORT_2=2 REMAP_PORT_3=3
