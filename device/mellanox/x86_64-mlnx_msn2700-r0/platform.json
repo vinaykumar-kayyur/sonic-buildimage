@@ -9,92 +9,78 @@
             {
                 "name": "Fan 1",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 2",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 3",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 4",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 5",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 6",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 7",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             },
             {
                 "name": "Fan 8",
                 "direction": "intake",
-                "tolerance": 20,
-                "led_status": "green"
+                "tolerance": 20
             }
         ],
         "fan_drawers": [
             {
                 "name": "Fan drawer 1",
-                "num_fans": 2,
-                "led_status": "green"
+                "num_fans": 2
             },
             {
                 "name": "Fan drawer 2",
-                "num_fans": 2,
-                "led_status": "green"
+                "num_fans": 2
             },
             {
                 "name": "Fan drawer 3",
-                "num_fans": 2,
-                "led_status": "green"
+                "num_fans": 2
             },
             {
                 "name": "Fan drawer 4",
-                "num_fans": 2,
-                "led_status": "green"
+                "num_fans": 2
             }
         ],
         "psus": [
             {
-                "name": "psu 1",
-                "num_fans": 2,
+                "name": "PSU 1",
+                "num_fans": 1,
                 "powergood_status": "true",
                 "temperature_high_threshold": 100,
                 "voltage_high_threshold": 12.1,
-                "voltage_low_threshold": 2,
-                "led_status": "green"
+                "voltage_low_threshold": 2
             },
             {
-                "name": "psu 2",
-                "num_fans": 2,
+                "name": "PSU 2",
+                "num_fans": 1,
                 "powergood_status": "true",
                 "temperature_high_threshold": 100,
                 "voltage_high_threshold": 12.1,
-                "voltage_low_threshold": 2,
-                "led_status": "green"
+                "voltage_low_threshold": 2
             }
         ],
         "thermal_mgr": [
