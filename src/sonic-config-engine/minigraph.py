@@ -547,7 +547,6 @@ def parse_meta(meta, hname):
     deployment_id = None
     region = None
     cloudtype = None
-    synchronous_mode = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -574,9 +573,7 @@ def parse_meta(meta, hname):
                     region = value
                 elif name == "CloudType":
                     cloudtype = value
-                elif name == "SynchronousMode":
-                    synchronous_mode = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, synchronous_mode
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype
 
 
 def parse_linkmeta(meta, hname):
@@ -841,7 +838,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     hostname = None
     linkmetas = {}
     host_lo_intfs = None
-    synchronous_mode = None
 
     # hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
@@ -875,7 +871,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, synchronous_mode) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -915,9 +911,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'type': device_type
         }
     }
-    # if synchronous_mode is defined, add it to device_metadata
-    if synchronous_mode is not None:
-        results['DEVICE_METADATA']['localhost']['synchronous_mode'] = synchronous_mode
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
