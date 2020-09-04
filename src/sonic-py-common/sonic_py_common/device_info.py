@@ -219,10 +219,11 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
     """
     Retrieves the path to the device's port configuration file
 
-    the hwsku argument is allowed to be passed in args because when loading the
-    initial configuration on the device, the HwSKU is not yet present in ConfigDB.
-    asic argument should be passed on multi-ASIC devices only,
-    it should be omitted on single-ASIC platforms.
+    Args:
+        hwsku: a string, it is allowed to be passed in args because when loading the
+              initial configuration on the device, the HwSKU is not yet present in ConfigDB.
+        asic: a string , asic argument should be passed on multi-ASIC devices only,
+              it should be omitted on single-ASIC platforms.
 
     Returns:
         A string containing the path the the device's port configuration file
