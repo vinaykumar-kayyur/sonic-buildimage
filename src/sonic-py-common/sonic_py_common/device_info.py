@@ -176,30 +176,6 @@ def get_path_to_platform_dir():
 
     return platform_path
 
-def get_path_to_hwsku_dir():
-    """
-    Retreives the path to the device's hardware SKU data directory
-
-    Returns:
-        A string, containing the path to the hardware SKU directory of the device
-    """
-    # Get hwsku
-    hwsku = get_hwsku()
-
-    # Determine whether we're running in a container or on the host
-    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
-
-    if os.path.isdir(CONTAINER_PLATFORM_PATH):
-        platform_path = CONTAINER_PLATFORM_PATH
-    elif os.path.isdir(platform_path_host):
-        platform_path = platform_path_host
-    else:
-        raise OSError("Failed to locate platform directory")
-
-    hwsku_path = os.path.join(platform_path, hwsku)
-
-    return hwsku_path
-
 def get_paths_to_platform_and_hwsku_dirs():
     """
     Retreives the paths to the device's platform and hardware SKU data
