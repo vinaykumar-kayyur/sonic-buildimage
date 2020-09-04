@@ -520,7 +520,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
     def check_and_update_control_plane_acls(self, namespace, num_changes):
         """
-        This function is intended to be spawned in a separate thread with a delay.
+        This function is intended to be spawned in a separate thread.
         Its purpose is to prevent unnecessary iptables updates if we receive
         multiple rapid ACL table update notifications. It will refrain from
         updating iptables if any newer updates were detected within the delay window
@@ -643,9 +643,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     # the ACL table update event, spawn one now
                     if not self.update_thread[namespace]:
                         log_info("Spawning ACL update thread for namepsace '{}' ...".format(namespace))
-                        self.update_thread[namespace] = threading.Timer(self.UPDATE_DELAY_SECS,
-                                                                        self.check_and_update_control_plane_acls,
-                                                                        [namespace, self.num_changes[namespace]])
+                        self.update_thread[namespace] = threading.Thread(target=self.check_and_update_control_plane_acls,
+                                                                         args=(namespace, self.num_changes[namespace]))
                         self.update_thread[namespace].start()
 
 # ============================= Functions =============================
