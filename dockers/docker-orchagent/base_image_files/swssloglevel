@@ -9,7 +9,7 @@ fi
 
 function help()
 {
-    echo -e "\n Usage: $0 -n [0 to $(($NUM_ASIC-1))], where n is the namespace instance \n" 1>&2; exit 1;
+    echo -e "Usage: $0 -n [0 to $(($NUM_ASIC-1))], where n is the namespace instance" 1>&2; exit 1;
 }
 
 DEV=""
