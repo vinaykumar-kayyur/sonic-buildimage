@@ -183,18 +183,12 @@ def get_path_to_hwsku_dir():
     Returns:
         A string, containing the path to the hardware SKU directory of the device
     """
-    # Get platform and hwsku
-    (platform, hwsku) = get_platform_and_hwsku()
 
-    # Determine whether we're running in a container or on the host
-    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
+    # Get Platform path first
+    platform_path = get_path_to_platform_dir()
 
-    if os.path.isdir(CONTAINER_PLATFORM_PATH):
-        platform_path = CONTAINER_PLATFORM_PATH
-    elif os.path.isdir(platform_path_host):
-        platform_path = platform_path_host
-    else:
-        raise OSError("Failed to locate platform directory")
+    # Get hwsku
+    hwsku = get_hwsku()
 
     hwsku_path = os.path.join(platform_path, hwsku)
 
@@ -210,18 +204,12 @@ def get_paths_to_platform_and_hwsku_dirs():
         directory of the device, the second containing the path to the hardware
         SKU directory of the device
     """
-    # Get platform and hwsku
-    (platform, hwsku) = get_platform_and_hwsku()
 
-    # Determine whether we're running in a container or on the host
-    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
+    # Get Platform path first
+    platform_path = get_path_to_platform_dir()
 
-    if os.path.isdir(CONTAINER_PLATFORM_PATH):
-        platform_path = CONTAINER_PLATFORM_PATH
-    elif os.path.isdir(platform_path_host):
-        platform_path = platform_path_host
-    else:
-        raise OSError("Failed to locate platform directory")
+    # Get hwsku
+    hwsku = get_hwsku()
 
     hwsku_path = os.path.join(platform_path, hwsku)
 
@@ -230,6 +218,11 @@ def get_paths_to_platform_and_hwsku_dirs():
 def get_path_to_port_config_file(hwsku=None, asic=None):
     """
     Retrieves the path to the device's port configuration file
+
+    the hwsku argument is allowed to be passed in args because when loading the
+    initial configuration on the device, the HwSKU is not yet present in ConfigDB.
+    asic argument should be passed on multi-ASIC devices only,
+    it should be omitted on single-ASIC platforms.
 
     Returns:
         A string containing the path the the device's port configuration file
