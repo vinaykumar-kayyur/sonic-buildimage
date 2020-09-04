@@ -94,6 +94,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '127.0.0.1       localhos
 ## Config basic fstab
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "proc /proc proc defaults 0 0" >> /etc/fstab'
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "sysfs /sys sysfs defaults 0 0" >> /etc/fstab'
+sudo mkdir -p $FILESYSTEM_ROOT/boot/efi
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "/dev/vda1 /boot/efi       vfat    defaults,rw,errors=remount-ro   0     2" >> /etc/fstab'
 
 ## Setup proxy
 [ -n "$http_proxy" ] && sudo /bin/bash -c "echo 'Acquire::http::Proxy \"$http_proxy\";' > $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy"
