@@ -598,7 +598,10 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         # Loop on select to see if any event happen on config db of any namespace
         while True:
             ctrl_plane_acl_notification = set()
-            # update threads will get stuck
+
+            # A brief sleep appears necessary in this loop or any spawned
+            # update threads will get stuck. Appears to be due to the sel.select() call.
+            # TODO: Eliminate the need for this sleep.
             time.sleep(0.1)
 
             (state, selectableObj) = sel.select(SELECT_TIMEOUT_MS)
