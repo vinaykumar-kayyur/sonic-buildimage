@@ -361,78 +361,7 @@ demo_install_grub()
 
         # restore immutable flag on the core.img file as discussed
         # above.
-        
-                tmp_config=$(mktemp)
-        cat << EOF >> $tmp_config
-        configfile $prefix/grub.cfg
-        EOF
-
-        GRUB_MODULES="
-            all_video
-            boot
-            btrfs
-            cat
-            chain
-            configfile
-            echo
-            efifwsetup
-            efinet
-            ext2
-            fat
-            font
-            gettext
-            gfxmenu
-            gfxterm
-            gfxterm_background
-            gzio
-            halt
-            hfsplus
-            iso9660
-            jpeg
-            keystatus
-            loadenv
-            loopback
-            linux
-            linuxefi
-            lsefi
-            lsefimmap
-            lsefisystab
-            lssal
-            lvm
-            mdraid09
-            mdraid1x
-            memdisk
-            minicmd
-            normal
-            part_apple
-            part_msdos
-            part_gpt
-            password_pbkdf2
-            png
-            raid5rec
-            raid6rec
-            reboot
-            search
-            search_fs_uuid
-            search_fs_file
-            search_label
-            serial
-            sleep
-            squash4
-            terminal
-            terminfo
-            test
-            true
-            video
-            zfs
-            zfscrypt
-            zfsinfo
-        "
-        /usr/bin/grub-mkimage --format="x86_64-efi" --directory="/usr/lib/grub/x86_64-efi" \
-            --prefix="(hd0,gpt3)/grub" --config="$tmp_config" --output="/boot/efi/EFI/SONiC-OS/grubx64.efi" \
-               $GRUB_MODULES
-        
-        rm -f $tmp_config
+      
         [ -f "$core_img" ] && chattr +i $core_img
 
     fi
@@ -709,6 +638,78 @@ else
     cp $grub_cfg $onie_initrd_tmp/$demo_mnt/grub/grub.cfg
 fi
 
+ tmp_config=$(mktemp)
+cat << EOF >> $tmp_config
+configfile $prefix/grub.cfg
+EOF
+
+GRUB_MODULES="
+    all_video
+    boot
+    btrfs
+    cat
+    chain
+    configfile
+    echo
+    efifwsetup
+    efinet
+    ext2
+    fat
+    font
+    gettext
+    gfxmenu
+    gfxterm
+    gfxterm_background
+    gzio
+    halt
+    hfsplus
+    iso9660
+    jpeg
+    keystatus
+    loadenv
+    loopback
+    linux
+    linuxefi
+    lsefi
+    lsefimmap
+    lsefisystab
+    lssal
+    lvm
+    mdraid09
+    mdraid1x
+    memdisk
+    minicmd
+    normal
+    part_apple
+    part_msdos
+    part_gpt
+    password_pbkdf2
+    png
+    raid5rec
+    raid6rec
+    reboot
+    search
+    search_fs_uuid
+    search_fs_file
+    search_label
+    serial
+    sleep
+    squash4
+    terminal
+    terminfo
+    test
+    true
+    video
+    zfs
+    zfscrypt
+    zfsinfo
+"
+/usr/bin/grub-mkimage --format="x86_64-efi" --directory="/usr/lib/grub/x86_64-efi" \
+    --prefix="(hd0,gpt3)/grub" --config="$tmp_config" --output="/boot/efi/EFI/SONiC-OS/grubx64.efi" \
+       $GRUB_MODULES
+
+rm -f $tmp_config
+        
 cd /
 
 echo "Installed SONiC base image $demo_volume_label successfully"
