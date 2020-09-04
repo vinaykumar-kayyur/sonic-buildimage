@@ -637,10 +637,12 @@ else
     cp $grub_cfg $onie_initrd_tmp/$demo_mnt/grub/grub.cfg
 fi
 
+## create a temp grub.cfg that points to the right location of grub.cfg
 tmp_config=$(mktemp)
 cat << EOF >> $tmp_config
 configfile $prefix/grub.cfg
 EOF
+
 GRUB_MODULES="
     all_video
     boot
@@ -702,6 +704,8 @@ GRUB_MODULES="
     zfscrypt
     zfsinfo
 "
+
+# embed the temp grub.cfg in grubx64.efi
 /usr/bin/grub-mkimage --format="x86_64-efi" --directory="/usr/lib/grub/x86_64-efi" \
     --prefix="(hd0,gpt3)/grub" --config="$tmp_config" --output="/boot/efi/EFI/SONiC-OS/grubx64.efi" \
        $GRUB_MODULES
