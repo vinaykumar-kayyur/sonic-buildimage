@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+"""
+This utility get the power mode of a given module.
+"""
 
-import sys, errno
-import os
-from python_sdk_api.sxd_api import *
+import sys
+import errno
 from python_sdk_api.sx_api import *
-import python_sdk_api.sx_api as sx_api
 
 def mgmt_phy_mod_pwr_attr_get(handle, module_id, power_attr_type):
     sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
@@ -22,14 +23,14 @@ def mgmt_phy_mod_pwr_attr_get(handle, module_id, power_attr_type):
 
 # Check if SFP port number is provided
 if len(sys.argv) < 2:
-    print "SFP module number is missed."
-    print "Usage: sfplpmget.py <SFP module>"
+    print("SFP module number is missed.")
+    print("Usage: sfplpmget.py <SFP module>")
     sys.exit(errno.EINVAL)
 
 # Init SDK API
 rc, handle = sx_api_open(None)
 if (rc != SX_STATUS_SUCCESS):
-    print "Failed to open api handle.\nPlease check that SDK is running."
+    print("Failed to open api handle.\nPlease check that SDK is running.")
     sys.exit(errno.EACCES)
 
 # Get SFP module number
@@ -37,7 +38,6 @@ sfp_module = int(sys.argv[1]) - 1
 
 admin_pwr_mode, oper_pwr_mode = mgmt_phy_mod_pwr_attr_get(handle, sfp_module, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E)
 
-#pwr_mode_enum_dict = get_enum_string_dict('SX_MGMT_PHY_MOD_PWR_MODE')
 lpm_status = None
 if oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_HIGH_E:
     lpm_status = False

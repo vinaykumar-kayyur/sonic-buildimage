@@ -1,15 +1,12 @@
 #!/usr/bin/env python
-'''
-This utility set the power mode a given module.
-'''
+"""
+This utility set the power mode of a given module.
+"""
+
 import sys
 import errno
 from python_sdk_api.sx_api import *
-import python_sdk_api.sx_api as sx_api
 
-######################################################
-#  power mode set utility functions.
-######################################################
 
 DEVICE_ID = 1
 SWITCH_ID = 0
@@ -51,15 +48,15 @@ def get_log_ports(handle, sfp_module):
     port_cnt_p = new_uint32_t_p()
     uint32_t_p_assign(port_cnt_p, SX_PORT_ATTR_ARR_SIZE)
 
-    rc = sx_api_port_device_get(handle, DEVICE_ID , SWITCH_ID, port_attributes_list,  port_cnt_p)
+    rc = sx_api_port_device_get(handle, DEVICE_ID, SWITCH_ID, port_attributes_list,  port_cnt_p)
     assert rc == SX_STATUS_SUCCESS, "sx_api_port_device_get failed, rc = %d" % rc
 
     port_cnt = uint32_t_p_value(port_cnt_p)
     log_port_list = []
     for i in range(0, port_cnt):
         port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list, i)
-        if is_nve(int(port_attributes.log_port)) == False \
-           and is_cpu(int(port_attributes.log_port)) == False \
+        if not is_nve(int(port_attributes.log_port)) \
+           and not is_cpu(int(port_attributes.log_port)) \
            and port_attributes.port_mapping.module_port == sfp_module \
            and is_port_admin_status_up(port_attributes.log_port):
             log_port_list.append(port_attributes.log_port)
@@ -96,35 +93,39 @@ def mgmt_phy_mod_pwr_attr_get(handle, module_id, power_attr_type):
 
 
 def pwr_attr_set(handle, module_id, ports, attr_type, power_mode):
-    # bring the port down
-    for port in ports:
-        set_port_admin_status_by_log_port(handle, port, SX_PORT_ADMIN_STATUS_DOWN)
-    # set the desired power mode
-    mgmt_phy_mod_pwr_attr_set(handle, module_id, attr_type, power_mode)
-    # get the current port power mode and make sure that it is as per the mode set.
+    # Check if the module already works in the same mode
     admin_pwr_mode, oper_pwr_mode = mgmt_phy_mod_pwr_attr_get(handle, module_id, attr_type)
-    assert power_mode == admin_pwr_mode, "power mode mismatch"
-    # bring the port up
-    for port in ports:
-        set_port_admin_status_by_log_port(handle, port, SX_PORT_ADMIN_STATUS_UP)
+    if (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E and oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E) \
+       or (power_mode == SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E and admin_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E):
+        return
+    try:
+        # Bring the port down
+        for port in ports:
+            set_port_admin_status_by_log_port(handle, port, SX_PORT_ADMIN_STATUS_DOWN)
+        # Set the desired power mode
+        mgmt_phy_mod_pwr_attr_set(handle, module_id, attr_type, power_mode)
+        # Bring the port up
+    finally:
+        for port in ports:
+            set_port_admin_status_by_log_port(handle, port, SX_PORT_ADMIN_STATUS_UP)
 
 def set_lpmode(handle, cmd, module_id):
-    # construct the port module map.
+    # Construct the port module map.
     log_port_list = get_log_ports(handle, module_id)
 
     if cmd == "enable":
         pwr_attr_set(handle, module_id, log_port_list, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, SX_MGMT_PHY_MOD_PWR_MODE_LOW_E)
-        print "Enabled low power mode for module [%d]" % (module_id)
+        print("Enabled low power mode for module [%d]" % module_id)
     elif cmd == "disable":
         pwr_attr_set(handle, module_id, log_port_list, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E)
-        print "Disabled low power mode for module [%d]" % (module_id)
+        print("Disabled low power mode for module [%d]" % module_id)
     else:
         print("Error: Invalid command")
         sys.exit(0)
 
 if len(sys.argv) < 3:
-    print "SFP module number or LPM is missed."
-    print "Usage: sfplpmset.py <SFP module> <on|off>"
+    print("SFP module number or LPM is missed.")
+    print("Usage: sfplpmset.py <SFP module> <on|off>")
     sys.exit(errno.EINVAL)
 
 cmd = None
@@ -136,7 +137,7 @@ elif sys.argv[2] == 'off':
     lpm_enable = False
     cmd = 'disable'
 else:
-    print "Unrecognized LPM parameter. Please use <on> or <off> values"
+    print("Unrecognized LPM parameter. Please use <on> or <off> values")
     sys.exit(errno.EINVAL)
 
 # Get SFP module
@@ -144,13 +145,12 @@ sfp_module = int(sys.argv[1]) - 1
 
 print "[+] opening sdk"
 rc, handle = sx_api_open(None)
-print ("sx_api_open handle:0x%x , rc %d " % (handle, rc))
 
 if (rc != SX_STATUS_SUCCESS):
-    print "Failed to open api handle.\nPlease check that SDK is running."
+    print("Failed to open api handle.\nPlease check that SDK is running.")
     sys.exit(errno.EACCES)
 
-# Set low power mode 
+# Set low power mode
 set_lpmode(handle, cmd, sfp_module)
 
 sx_api_close(handle)
