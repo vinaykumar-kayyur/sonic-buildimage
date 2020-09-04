@@ -22,23 +22,22 @@ if [ -f "$ASIC_CONF" ]; then
 fi
 
 if [[ ($NUM_ASIC -gt 1) ]]; then
-    OPTIND=1
-
     while getopts ":n:h:" opt; do
         case "${opt}" in
             h) help
-               exit 0
                ;;
             n) DEV=${OPTARG}
                [ $DEV -lt $NUM_ASIC -a  $DEV -ge 0 ] || help
                ;;
         esac
     done
-    shift "$((OPTIND-1))"
 
     if [ -z "${DEV}" ]; then
         help
     fi
+
+    # Skip the arguments -n <inst> while passing to docker command
+    shift 2
 fi
 
 docker exec -$DOCKER_EXEC_FLAGS swss$DEV swssloglevel "$@"
