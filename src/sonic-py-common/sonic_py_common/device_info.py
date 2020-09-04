@@ -227,7 +227,7 @@ def get_paths_to_platform_and_hwsku_dirs():
 
     return (platform_path, hwsku_path)
 
-def get_path_to_port_config_file(asic=None, hwsku=None):
+def get_path_to_port_config_file(hwsku=None, asic=None):
     """
     Retrieves the path to the device's port configuration file
 

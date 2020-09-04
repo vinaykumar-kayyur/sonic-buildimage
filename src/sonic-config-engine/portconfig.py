@@ -93,7 +93,7 @@ def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_conf
             return (ports, port_alias_map, port_alias_asic_map)
 
     if not port_config_file:
-        port_config_file = device_info.get_path_to_port_config_file(asic, hwsku)
+        port_config_file = device_info.get_path_to_port_config_file(hwsku, asic)
         if not port_config_file:
             return ({}, {}, {})
 
