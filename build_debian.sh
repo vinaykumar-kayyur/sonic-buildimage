@@ -94,6 +94,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '127.0.0.1       localhos
 ## Config basic fstab
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "proc /proc proc defaults 0 0" >> /etc/fstab'
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "sysfs /sys sysfs defaults 0 0" >> /etc/fstab'
+sudo mkdir -p $FILESYSTEM_ROOT/boot/efi
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "/dev/vda1 /boot/efi       vfat    defaults,rw,errors=remount-ro   0     2" >> /etc/fstab'
 
 ## Setup proxy
 [ -n "$http_proxy" ] && sudo /bin/bash -c "echo 'Acquire::http::Proxy \"$http_proxy\";' > $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy"
@@ -142,6 +144,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode hdparm
 fi
+sudo apt-get -y install efitools
+sudo openssl req -new -x509 -newkey rsa:2048 -subj "/CN=db/" -keyout kernel_db.key -out kernel_db.crt -days 365 -nodes -sha256
+sudo openssl x509 -in kernel_db.crt -outform der -out kernel_db.der
+sudo sbsign --key kernel_db.key --cert kernel_db.crt --output fsroot/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64 fsroot/boot/vmlinuz-${LINUX_KERNEL_VERSION}-amd64
+
+sudo apt-get -y install mokutil
 
 ## Update initramfs for booting with squashfs+overlay
 cat files/initramfs-tools/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
@@ -317,6 +325,10 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     cron                    \
     haveged
 
+## Secure boot signed shim and grub
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+    grub-efi-amd64-signed           \
+    shim-signed
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
