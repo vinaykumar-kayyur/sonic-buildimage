@@ -34,6 +34,13 @@ typedef enum
     DHCP_MON_STATUS_INDETERMINATE,  /** DHCP relay health could not be determined */
 } dhcp_mon_status_t;
 
+/** dhcp check type */
+typedef enum
+{
+    DHCP_MON_CHECK_NEGATIVE,    /** Presence of relayed DHCP packets activity is flagged as unhealthy state */
+    DHCP_MON_CHECK_POSITIVE,    /** Validate that received DORA packets are relayed */
+} dhcp_mon_check_t;
+
 /** DHCP device (interface) health counters */
 typedef struct
 {
@@ -55,7 +62,7 @@ typedef struct
     uint8_t *buffer;                /** buffer used to read socket data */
     size_t snaplen;                 /** snap length or buffer size */
     dhcp_device_counters_t counters[DHCP_DIR_COUNT];
-                                    /** current coutners of DORA packets */
+                                    /** current counters of DORA packets */
     dhcp_device_counters_t counters_snapshot[DHCP_DIR_COUNT];
                                     /** counter snapshot */
 } dhcp_device_context_t;
@@ -71,6 +78,15 @@ typedef struct
  * @return 0 on success, otherwise for failure
  */
 int dhcp_device_get_ip(dhcp_device_context_t *context, in_addr_t *ip);
+
+/**
+ * @code dhcp_device_get_aggregate_context();
+ *
+ * @brief Accessor method
+ *
+ * @return pointer to aggregate device (interface) context
+ */
+dhcp_device_context_t* dhcp_device_get_aggregate_context();
 
 /**
  * @code dhcp_device_init(context, intf, is_uplink);
@@ -116,21 +132,33 @@ int dhcp_device_start_capture(dhcp_device_context_t *context,
 void dhcp_device_shutdown(dhcp_device_context_t *context);
 
 /**
- * @code dhcp_device_get_status(context);
+ * @code dhcp_device_get_status(check_type, context);
  *
  * @brief collects DHCP relay status info for a given interface. If context is null, it will report aggregate
  *        status
  *
- * @param context   Device (interface) context
+ * @param check_type        Type of validation
+ * @param context           Device (interface) context
  *
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
-dhcp_mon_status_t dhcp_device_get_status(dhcp_device_context_t *context);
+dhcp_mon_status_t dhcp_device_get_status(dhcp_mon_check_t check_type, dhcp_device_context_t *context);
 
 /**
- * @code dhcp_device_print_status();
+ * @code dhcp_device_update_snapshot(context);
+ *
+ * @param context   Device (interface) context
+ *
+ * @brief Update device/interface counters snapshot
+ */
+void dhcp_device_update_snapshot(dhcp_device_context_t *context);
+
+/**
+ * @code dhcp_device_print_status(context);
  *
  * @brief prints status counters to syslog. If context is null, it will print aggregate status
+ *
+ * @param context   Device (interface) context
  *
  * @return none
  */
