@@ -154,6 +154,52 @@ def get_asic_conf_file_path():
     return None
 
 
+def get_path_to_platform_dir():
+    """
+    Retreives the paths to the device's platform directory
+
+    Returns:
+        A string containing the path to the platform directory of the device
+    """
+    # Get platform
+    platform = get_platform()
+
+    # Determine whether we're running in a container or on the host
+    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
+
+    if os.path.isdir(CONTAINER_PLATFORM_PATH):
+        platform_path = CONTAINER_PLATFORM_PATH
+    elif os.path.isdir(platform_path_host):
+        platform_path = platform_path_host
+    else:
+        raise OSError("Failed to locate platform directory")
+
+    return platform_path
+
+def get_path_to_hwsku_dir():
+    """
+    Retreives the path to the device's hardware SKU data directory
+
+    Returns:
+        A string, containing the path to the hardware SKU directory of the device
+    """
+    # Get hwsku
+    hwsku = get_hwsku()
+
+    # Determine whether we're running in a container or on the host
+    platform_path_host = os.path.join(HOST_DEVICE_PATH, platform)
+
+    if os.path.isdir(CONTAINER_PLATFORM_PATH):
+        platform_path = CONTAINER_PLATFORM_PATH
+    elif os.path.isdir(platform_path_host):
+        platform_path = platform_path_host
+    else:
+        raise OSError("Failed to locate platform directory")
+
+    hwsku_path = os.path.join(platform_path, hwsku)
+
+    return hwsku_path
+
 def get_paths_to_platform_and_hwsku_dirs():
     """
     Retreives the paths to the device's platform and hardware SKU data
@@ -181,7 +227,7 @@ def get_paths_to_platform_and_hwsku_dirs():
 
     return (platform_path, hwsku_path)
 
-def get_path_to_port_config_file(asic=None):
+def get_path_to_port_config_file(asic=None, hwsku=None):
     """
     Retrieves the path to the device's port configuration file
 
@@ -200,7 +246,11 @@ def get_path_to_port_config_file(asic=None):
     if not platform:
         return None
 
-    (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+    if hwsku:
+        platform_path = get_path_to_platform_dir()
+        hwsku_path = hwsku
+    else:
+        (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
 
     port_config_candidates = []
 

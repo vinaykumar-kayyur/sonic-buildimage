@@ -93,7 +93,7 @@ def get_port_config(hwsku=None, platform=None, port_config_file=None, hwsku_conf
             return (ports, port_alias_map, port_alias_asic_map)
 
     if not port_config_file:
-        port_config_file = device_info.get_path_to_port_config_file(asic)
+        port_config_file = device_info.get_path_to_port_config_file(asic, hwsku)
         if not port_config_file:
             return ({}, {}, {})
 
@@ -263,7 +263,7 @@ def parse_platform_json_file(hwsku_json_file, platform_json_file):
 
 def get_breakout_mode(hwsku=None, platform=None, port_config_file=None):
     if not port_config_file:
-        port_config_file = device_info.get_path_to_port_config_file()
+        port_config_file = device_info.get_path_to_port_config_file(hwsku)
         if not port_config_file:
             return None
     if port_config_file.endswith('.json'):
