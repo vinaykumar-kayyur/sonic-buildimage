@@ -246,11 +246,9 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
     if not platform:
         return None
 
-    if hwsku:
-        platform_path = get_path_to_platform_dir()
-        hwsku_path = hwsku
-    else:
-        (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+    platform_path = get_path_to_platform_dir()
+
+    hwsku_path = os.path.join(platform_path, hwsku) if hwsku else get_path_to_hwsku_dir()
 
     port_config_candidates = []
 
