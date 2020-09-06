@@ -71,27 +71,10 @@ static dhcp_mon_state_t state_data[] = {
 static void signal_callback(evutil_socket_t fd, short event, void *arg)
 {
     syslog(LOG_ALERT, "Received signal: '%s'\n", strsignal(fd));
-    dhcp_devman_print_status(dhcp_devman_get_agg_dev());
-    dhcp_devman_print_status(dhcp_devman_get_mgmt_dev());
-    dhcp_mon_stop();
-}
-
-/**
- * @code sigusr1_callback(fd, event, arg);
- *
- * @brief signal handler for dhcpmon. It will print internal counters when signal is caught
- *
- * @param fd        libevent socket
- * @param event     event triggered
- * @param arg       pointer to user provided context (libevent base)
- *
- * @return none
- */
-static void sigusr1_callback(evutil_socket_t fd, short event, void *arg)
-{
-    syslog(LOG_ALERT, "Received signal: '%s'\n", strsignal(fd));
-    dhcp_devman_print_status(dhcp_devman_get_agg_dev());
-    dhcp_devman_print_status(dhcp_devman_get_mgmt_dev());
+    dhcp_devman_print_status(NULL);
+    if ((fd == SIGTERM) || (fd == SIGINT)) {
+        dhcp_mon_stop();
+    }
 }
 
 /**
@@ -185,7 +168,7 @@ int dhcp_mon_init(int window_sec, int max_count)
             break;
         }
 
-        ev_sigusr1 = evsignal_new(base, SIGUSR1, sigusr1_callback, base);
+        ev_sigusr1 = evsignal_new(base, SIGUSR1, signal_callback, base);
         if (ev_sigusr1 == NULL) {
             syslog(LOG_ERR, "Could not create SIGUSER1 libevent signal!\n");
             break;

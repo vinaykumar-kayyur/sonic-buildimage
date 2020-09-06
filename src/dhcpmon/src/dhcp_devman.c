@@ -12,6 +12,9 @@
 
 #include "dhcp_devman.h"
 
+/** Prefix appended to Aggregation device */
+#define AGG_DEV_PREFIX  "Agg-"
+
 /** struct for interface information */
 struct intf
 {
@@ -131,7 +134,8 @@ int dhcp_devman_add_intf(const char *name, char intf_type)
 
             dhcp_device_context_t *agg_dev = dhcp_device_get_aggregate_context();
 
-            strncpy(agg_dev->intf, name, sizeof(agg_dev->intf) - 1);
+            strncpy(agg_dev->intf, AGG_DEV_PREFIX, sizeof(AGG_DEV_PREFIX));
+            strncpy(agg_dev->intf + sizeof(AGG_DEV_PREFIX) - 1, name, sizeof(agg_dev->intf) - sizeof(AGG_DEV_PREFIX));
             agg_dev->intf[sizeof(agg_dev->intf) - 1] = '\0';
         }
 
@@ -200,9 +204,19 @@ void dhcp_devman_update_snapshot(dhcp_device_context_t *context)
 /**
  * @code dhcp_devman_print_status(context);
  *
- * @brief prints status counters to syslog
+ * @brief prints status counters to syslog, if context is null, it prints status counters for all interfaces
  */
 void dhcp_devman_print_status(dhcp_device_context_t *context)
 {
-    dhcp_device_print_status(context);
+    if (context == NULL) {
+        struct intf *int_ptr;
+
+        LIST_FOREACH(int_ptr, &intfs, entry) {
+            dhcp_device_print_status(int_ptr->dev_context);
+        }
+
+        dhcp_device_print_status(dhcp_devman_get_agg_dev());
+    } else {
+        dhcp_device_print_status(context);
+    }
 }

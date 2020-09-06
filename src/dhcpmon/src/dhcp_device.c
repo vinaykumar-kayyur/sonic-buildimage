@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <net/ethernet.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
@@ -23,6 +24,9 @@
 
 #include "dhcp_device.h"
 
+/** Counter printer width */
+#define DHCP_COUNTER_WIDTH  10
+
 /** Start of Ether header of a captured frame */
 #define ETHER_START_OFFSET  0
 /** Start of IP header of a captured frame */
@@ -35,21 +39,6 @@
 #define DHCP_OPTIONS_HEADER_SIZE 240
 /** Offset of DHCP GIADDR */
 #define DHCP_GIADDR_OFFSET 24
-
-/**
- * DHCP message types
- **/
-typedef enum
-{
-    DHCP_MESSAGE_TYPE_DISCOVER = 1,
-    DHCP_MESSAGE_TYPE_OFFER    = 2,
-    DHCP_MESSAGE_TYPE_REQUEST  = 3,
-    DHCP_MESSAGE_TYPE_DECLINE  = 4,
-    DHCP_MESSAGE_TYPE_ACK      = 5,
-    DHCP_MESSAGE_TYPE_NAK      = 6,
-    DHCP_MESSAGE_TYPE_RELEASE  = 7,
-    DHCP_MESSAGE_TYPE_INFORM   = 8
-} dhcp_message_type;
 
 #define OP_LDHA     (BPF_LD  | BPF_H   | BPF_ABS)   /** bpf ldh Abs */
 #define OP_LDHI     (BPF_LD  | BPF_H   | BPF_IND)   /** bpf ldh Ind */
@@ -100,6 +89,17 @@ static struct sock_fprog dhcp_sock_bfp = {
  */
 static dhcp_device_context_t aggregate_dev = {0};
 
+/** Monitored DHCP message type */
+static dhcp_message_type_t monitored_msgs[] = {
+    DHCP_MESSAGE_TYPE_DISCOVER,
+    DHCP_MESSAGE_TYPE_OFFER,
+    DHCP_MESSAGE_TYPE_REQUEST,
+    DHCP_MESSAGE_TYPE_ACK
+};
+
+/** Number of monitored DHCP message type */
+static uint8_t monitored_msg_sz = sizeof(monitored_msgs) / sizeof(*monitored_msgs);
+
 /**
  * @code handle_dhcp_option_53(context, dhcp_option, dir, iphdr, dhcphdr);
  *
@@ -122,42 +122,29 @@ static void handle_dhcp_option_53(dhcp_device_context_t *context,
     in_addr_t giaddr;
     switch (dhcp_option[2])
     {
+    // DHCP messages send by client
     case DHCP_MESSAGE_TYPE_DISCOVER:
-        giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
-                       dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
-        if ((context->vlan_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
-            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
-            context->counters[dir].discover++;
-            aggregate_dev.counters[dir].discover++;
-        }
-        break;
-    case DHCP_MESSAGE_TYPE_OFFER:
-        if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
-            (!context->is_uplink && dir == DHCP_TX)) {
-            context->counters[dir].offer++;
-            aggregate_dev.counters[dir].offer++;
-        }
-        break;
     case DHCP_MESSAGE_TYPE_REQUEST:
-        giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
-                       dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
-        if ((context->vlan_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
-            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
-            context->counters[dir].request++;
-            aggregate_dev.counters[dir].request++;
-        }
-        break;
-    case DHCP_MESSAGE_TYPE_ACK:
-        if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
-            (!context->is_uplink && dir == DHCP_TX)) {
-            context->counters[dir].ack++;
-            aggregate_dev.counters[dir].ack++;
-        }
-        break;
     case DHCP_MESSAGE_TYPE_DECLINE:
-    case DHCP_MESSAGE_TYPE_NAK:
     case DHCP_MESSAGE_TYPE_RELEASE:
     case DHCP_MESSAGE_TYPE_INFORM:
+        giaddr = ntohl(dhcphdr[DHCP_GIADDR_OFFSET] << 24 | dhcphdr[DHCP_GIADDR_OFFSET + 1] << 16 |
+                       dhcphdr[DHCP_GIADDR_OFFSET + 2] << 8 | dhcphdr[DHCP_GIADDR_OFFSET + 3]);
+        if ((context->vlan_ip == giaddr && context->is_uplink && dir == DHCP_TX) ||
+            (!context->is_uplink && dir == DHCP_RX && iphdr->ip_dst.s_addr == INADDR_BROADCAST)) {
+            context->counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+            aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+        }
+        break;
+    // DHCP messages send by server
+    case DHCP_MESSAGE_TYPE_OFFER:
+    case DHCP_MESSAGE_TYPE_ACK:
+    case DHCP_MESSAGE_TYPE_NAK:
+        if ((context->vlan_ip == iphdr->ip_dst.s_addr && context->is_uplink && dir == DHCP_RX) ||
+            (!context->is_uplink && dir == DHCP_TX)) {
+            context->counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+            aggregate_dev.counters[DHCP_COUNTERS_CURRENT][dir][dhcp_option[2]]++;
+        }
         break;
     default:
         syslog(LOG_WARNING, "handle_dhcp_option_53(%s): Unknown DHCP option 53 type %d", context->intf, dhcp_option[2]);
@@ -235,24 +222,43 @@ static void read_callback(int fd, short event, void *arg)
 }
 
 /**
- * @code dhcp_device_is_dhcp_inactive();
+ * @code dhcp_device_is_dhcp_inactive(counters);
  *
  * @brief Check if there were no DHCP activity
  *
- * @return 0 if there were no DHCP activity, -1 otherwise
+ * @param counters  current/snapshot counter
+ *
+ * @return true if there were no DHCP activity, false otherwise
  */
-static int dhcp_device_is_dhcp_inactive()
+static bool dhcp_device_is_dhcp_inactive(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
 {
-    int rv = -1;
+    uint64_t *rx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_RX];
+    uint64_t *rx_coutner_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX];
 
-    if ((aggregate_dev.counters[DHCP_RX].discover == aggregate_dev.counters_snapshot[DHCP_RX].discover) &&
-        (aggregate_dev.counters[DHCP_RX].offer    == aggregate_dev.counters_snapshot[DHCP_RX].offer   ) &&
-        (aggregate_dev.counters[DHCP_RX].request  == aggregate_dev.counters_snapshot[DHCP_RX].request ) &&
-        (aggregate_dev.counters[DHCP_RX].ack      == aggregate_dev.counters_snapshot[DHCP_RX].ack     )    ) {
-        rv = 0;
+    bool rv = true;
+    for (uint8_t i = 0; (i < monitored_msg_sz) && rv; i++) {
+        rv = rx_counters[monitored_msgs[i]] == rx_coutner_snapshot[monitored_msgs[i]];
     }
 
     return rv;
+}
+
+/**
+ * @code dhcp_device_is_dhcp_msg_unhealthy(type, counters);
+ *
+ * @brief Check if there were no DHCP activity
+ *
+ * @param type      DHCP message type
+ * @param counters  current/snapshot counter
+ *
+ * @return true if DHCP message 'type' is transmitted,false otherwise
+ */
+static bool dhcp_device_is_dhcp_msg_unhealthy(dhcp_message_type_t type,
+                                              uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
+{
+    // check if DHCP message 'type' is being relayed
+    return ((counters[DHCP_COUNTERS_CURRENT][DHCP_RX][type] >  counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX][type]) &&
+            (counters[DHCP_COUNTERS_CURRENT][DHCP_TX][type] <= counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX][type])    );
 }
 
 /**
@@ -260,25 +266,21 @@ static int dhcp_device_is_dhcp_inactive()
  *
  * @brief validate current interface counters by comparing aggregate counters with snapshot counters.
  *
- * @param counters              recent interface counter
- * @param counters_snapshot     snapshot counters
+ * @param counters  current/snapshot counter
  *
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
-static dhcp_mon_status_t dhcp_device_check_positive_health(dhcp_device_counters_t *counters,
-                                                           dhcp_device_counters_t *counters_snapshot)
+static dhcp_mon_status_t dhcp_device_check_positive_health(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
+    bool is_dhcp_unhealthy = false;
+    for (uint8_t i = 0; (i < monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
+        is_dhcp_unhealthy = dhcp_device_is_dhcp_msg_unhealthy(monitored_msgs[i], counters);
+    }
+
     // if we have rx DORA then we should have corresponding tx DORA (DORA being relayed)
-    if (((counters[DHCP_RX].discover >  counters_snapshot[DHCP_RX].discover) &&
-         (counters[DHCP_TX].discover <= counters_snapshot[DHCP_TX].discover)    ) ||
-        ((counters[DHCP_RX].offer    >  counters_snapshot[DHCP_RX].offer   ) &&
-         (counters[DHCP_TX].offer    <= counters_snapshot[DHCP_TX].offer   )    ) ||
-        ((counters[DHCP_RX].request  >  counters_snapshot[DHCP_RX].request ) &&
-         (counters[DHCP_TX].request  <= counters_snapshot[DHCP_TX].request )    ) ||
-        ((counters[DHCP_RX].ack      >  counters_snapshot[DHCP_RX].ack     ) &&
-         (counters[DHCP_TX].ack      <= counters_snapshot[DHCP_TX].ack     )    )    ) {
+    if (is_dhcp_unhealthy) {
         rv = DHCP_MON_STATUS_UNHEALTHY;
     }
 
@@ -286,7 +288,7 @@ static dhcp_mon_status_t dhcp_device_check_positive_health(dhcp_device_counters_
 }
 
 /**
- * @code dhcp_device_check_negative_health(counters, counters_snapshot);
+ * @code dhcp_device_check_negative_health(counters);
  *
  * @brief validate current interface counters by comparing aggregate counters with snapshot counters.
  *
@@ -295,17 +297,21 @@ static dhcp_mon_status_t dhcp_device_check_positive_health(dhcp_device_counters_
  *
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
-static dhcp_mon_status_t dhcp_device_check_negative_health(dhcp_device_counters_t *counters,
-                                                           dhcp_device_counters_t *counters_snapshot)
+static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
+    uint64_t *tx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_TX];
+    uint64_t *tx_coutner_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX];
+
+    bool is_dhcp_unhealthy = false;
+    for (uint8_t i = 0; (i < monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
+        is_dhcp_unhealthy = tx_counters[monitored_msgs[i]] > tx_coutner_snapshot[monitored_msgs[i]];
+    }
+
     // for negative validation, return unhealthy if DHCP packet are being
     // transmitted out of the device/interface
-    if ((counters[DHCP_TX].discover > counters_snapshot[DHCP_TX].discover) ||
-        (counters[DHCP_TX].offer    > counters_snapshot[DHCP_TX].offer   ) ||
-        (counters[DHCP_TX].request  > counters_snapshot[DHCP_TX].request ) ||
-        (counters[DHCP_TX].ack      > counters_snapshot[DHCP_TX].ack     )    ) {
+    if (is_dhcp_unhealthy) {
         rv = DHCP_MON_STATUS_UNHEALTHY;
     }
 
@@ -317,24 +323,22 @@ static dhcp_mon_status_t dhcp_device_check_negative_health(dhcp_device_counters_
  *
  * @brief validate current interface counters by comparing aggregate counter with snapshot counters.
  *
- * @param check_type            type of health check
- * @param counters              recent interface counter
- * @param counters_snapshot     snapshot counters
+ * @param check_type    type of health check
+ * @param counters      current/snapshot counter
  *
  * @return DHCP_MON_STATUS_HEALTHY, DHCP_MON_STATUS_UNHEALTHY, or DHCP_MON_STATUS_INDETERMINATE
  */
 static dhcp_mon_status_t dhcp_device_check_health(dhcp_mon_check_t check_type,
-                                                  dhcp_device_counters_t *counters,
-                                                  dhcp_device_counters_t *counters_snapshot)
+                                                  uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
 {
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
-    if (dhcp_device_is_dhcp_inactive() == 0) {
+    if (dhcp_device_is_dhcp_inactive(aggregate_dev.counters)) {
         rv = DHCP_MON_STATUS_INDETERMINATE;
     } else if (check_type == DHCP_MON_CHECK_POSITIVE) {
-        rv = dhcp_device_check_positive_health(counters, counters_snapshot);
+        rv = dhcp_device_check_positive_health(counters);
     } else if (check_type == DHCP_MON_CHECK_NEGATIVE) {
-        rv = dhcp_device_check_negative_health(counters, counters_snapshot);
+        rv = dhcp_device_check_negative_health(counters);
     }
 
     return rv;
@@ -347,14 +351,23 @@ static dhcp_mon_status_t dhcp_device_check_health(dhcp_mon_check_t check_type,
  *
  * @param counters  interface counter
  */
-static void dhcp_print_counters(const char *vlan_intf, dhcp_device_counters_t *counters)
+static void dhcp_print_counters(const char *vlan_intf, uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
 {
-    syslog(LOG_NOTICE, "[%s] DHCP Discover rx: %lu, tx:%lu, Offer rx: %lu, tx:%lu, Request rx: %lu, tx:%lu, ACK rx: %lu, tx:%lu\n",
-           vlan_intf,
-           counters[DHCP_RX].discover, counters[DHCP_TX].discover,
-           counters[DHCP_RX].offer, counters[DHCP_TX].offer,
-           counters[DHCP_RX].request, counters[DHCP_TX].request,
-           counters[DHCP_RX].ack, counters[DHCP_TX].ack);
+    uint64_t *rx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_RX];
+    uint64_t *tx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_TX];
+
+    syslog(LOG_NOTICE,
+           "[%*s] DHCP Discover rx/tx: %*lu/%*lu, Offer rx/tx: %*lu/%*lu, "
+           "Request rx/tx: %*lu/%*lu, ACK rx/tx: %*lu/%*lu\n",
+           IF_NAMESIZE, vlan_intf,
+           DHCP_COUNTER_WIDTH, rx_counters[DHCP_MESSAGE_TYPE_DISCOVER],
+           DHCP_COUNTER_WIDTH, tx_counters[DHCP_MESSAGE_TYPE_DISCOVER],
+           DHCP_COUNTER_WIDTH, rx_counters[DHCP_MESSAGE_TYPE_OFFER],
+           DHCP_COUNTER_WIDTH, tx_counters[DHCP_MESSAGE_TYPE_OFFER],
+           DHCP_COUNTER_WIDTH, rx_counters[DHCP_MESSAGE_TYPE_REQUEST],
+           DHCP_COUNTER_WIDTH, tx_counters[DHCP_MESSAGE_TYPE_REQUEST],
+           DHCP_COUNTER_WIDTH, rx_counters[DHCP_MESSAGE_TYPE_ACK],
+           DHCP_COUNTER_WIDTH, tx_counters[DHCP_MESSAGE_TYPE_ACK]);
 }
 
 /**
@@ -497,8 +510,7 @@ int dhcp_device_init(dhcp_device_context_t **context, const char *intf, uint8_t 
 
                 dev_context->is_uplink = is_uplink;
 
-                memset(&dev_context->counters, 0, sizeof(dev_context->counters));
-                memset(&dev_context->counters_snapshot, 0, sizeof(dev_context->counters_snapshot));
+                memset(dev_context->counters, 0, sizeof(dev_context->counters));
 
                 *context = dev_context;
                 rv = 0;
@@ -583,7 +595,7 @@ dhcp_mon_status_t dhcp_device_get_status(dhcp_mon_check_t check_type, dhcp_devic
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
     if (context != NULL) {
-        rv = dhcp_device_check_health(check_type, context->counters, context->counters_snapshot);
+        rv = dhcp_device_check_health(check_type, context->counters);
     }
 
     return rv;
@@ -597,7 +609,9 @@ dhcp_mon_status_t dhcp_device_get_status(dhcp_mon_check_t check_type, dhcp_devic
 void dhcp_device_update_snapshot(dhcp_device_context_t *context)
 {
     if (context != NULL) {
-        memcpy(context->counters_snapshot, context->counters, sizeof(context->counters_snapshot));
+        memcpy(context->counters[DHCP_COUNTERS_SNAPSHOT],
+               context->counters[DHCP_COUNTERS_CURRENT],
+               sizeof(context->counters[DHCP_COUNTERS_SNAPSHOT]));
     }
 }
 

@@ -17,6 +17,23 @@
 #include <event2/buffer.h>
 
 
+/**
+ * DHCP message types
+ **/
+typedef enum
+{
+    DHCP_MESSAGE_TYPE_DISCOVER = 1,
+    DHCP_MESSAGE_TYPE_OFFER    = 2,
+    DHCP_MESSAGE_TYPE_REQUEST  = 3,
+    DHCP_MESSAGE_TYPE_DECLINE  = 4,
+    DHCP_MESSAGE_TYPE_ACK      = 5,
+    DHCP_MESSAGE_TYPE_NAK      = 6,
+    DHCP_MESSAGE_TYPE_RELEASE  = 7,
+    DHCP_MESSAGE_TYPE_INFORM   = 8,
+
+    DHCP_MESSAGE_TYPE_COUNT
+} dhcp_message_type_t;
+
 /** packet direction */
 typedef enum
 {
@@ -25,6 +42,15 @@ typedef enum
 
     DHCP_DIR_COUNT
 } dhcp_packet_direction_t;
+
+/** counters type */
+typedef enum
+{
+    DHCP_COUNTERS_CURRENT,      /** DHCP current counters */
+    DHCP_COUNTERS_SNAPSHOT,     /** DHCP snapshot counters */
+
+    DHCP_COUNTERS_COUNT
+} dhcp_counters_type_t;
 
 /** dhcp health status */
 typedef enum
@@ -41,15 +67,6 @@ typedef enum
     DHCP_MON_CHECK_POSITIVE,    /** Validate that received DORA packets are relayed */
 } dhcp_mon_check_t;
 
-/** DHCP device (interface) health counters */
-typedef struct
-{
-    uint64_t discover;      /** DHCP discover packets */
-    uint64_t offer;         /** DHCP offer packets */
-    uint64_t request;       /** DHCP request packets */
-    uint64_t ack;           /** DHCP ack packets */
-} dhcp_device_counters_t;
-
 /** DHCP device (interface) context */
 typedef struct
 {
@@ -61,10 +78,8 @@ typedef struct
     char intf[IF_NAMESIZE];         /** device (interface) name */
     uint8_t *buffer;                /** buffer used to read socket data */
     size_t snaplen;                 /** snap length or buffer size */
-    dhcp_device_counters_t counters[DHCP_DIR_COUNT];
-                                    /** current counters of DORA packets */
-    dhcp_device_counters_t counters_snapshot[DHCP_DIR_COUNT];
-                                    /** counter snapshot */
+    uint64_t counters[DHCP_COUNTERS_COUNT][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT];
+                                    /** current/snapshot counters of DHCP packets */
 } dhcp_device_context_t;
 
 /**
