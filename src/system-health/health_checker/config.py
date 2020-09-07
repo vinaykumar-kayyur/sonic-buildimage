@@ -45,6 +45,9 @@ class Config(object):
         self.ignore_devices = None
         self.user_defined_checkers = None
 
+    def config_file_exists(self):
+        return os.path.exists(self._config_file)
+
     def load_config(self):
         """
         Load the configuration file from disk.
@@ -53,7 +56,7 @@ class Config(object):
             3. If there is any format issues in configuration file, current config entries will reset to default value
         :return:
         """
-        if not os.path.exists(self._config_file):
+        if not self.config_file_exists():
             if self._last_mtime is not None:
                 self._reset()
             return
