@@ -52,8 +52,6 @@ RUN apt-get update &&        \
 # Install dependencies of supervisor
         python-pkg-resources \
         python-meld3         \
-# Install redis-tools
-        redis-tools=5:6.0.6-1~bpo10+1     \
 # common dependencies
         libpython2.7         \
         libdaemon0           \
@@ -67,6 +65,11 @@ RUN apt-get update &&        \
         python-wheel         \
 # for processing/handling json files in bash environment
         jq
+
+# Install redis-tools
+RUN wget -O redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
+RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f
+RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb
 
 # For templating
 RUN pip install j2cli
