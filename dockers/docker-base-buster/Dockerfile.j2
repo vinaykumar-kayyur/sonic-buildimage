@@ -40,6 +40,7 @@ COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
 # pre-install fundamental packages
 RUN apt-get update &&        \
     apt-get -y install       \
+        curl                 \
         less                 \
         perl                 \
         procps               \
@@ -67,7 +68,7 @@ RUN apt-get update &&        \
         jq
 
 # Install redis-tools
-RUN wget -O redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
+RUN curl -o redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
 RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f
 RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb
 
