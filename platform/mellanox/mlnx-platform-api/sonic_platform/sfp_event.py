@@ -9,7 +9,7 @@ import os
 import time
 import select
 from python_sdk_api.sx_api import *
-from sonic_daemon_base.daemon_base import Logger
+from sonic_py_common.logger import Logger
 
 # SFP status from PMAOS register
 # 0x1 plug in
@@ -259,7 +259,7 @@ class sfp_event:
 
                 for port in port_list:
                     logger.log_info("SFP on port {} state {}".format(port, sfp_state))
-                    port_change[port] = sfp_state
+                    port_change[port+1] = sfp_state
                     found += 1
 
         return found != 0
