@@ -24,7 +24,7 @@
 
 #include "dhcp_device.h"
 
-/** Counter printer width */
+/** Counter print width */
 #define DHCP_COUNTER_WIDTH  10
 
 /** Start of Ether header of a captured frame */
@@ -233,11 +233,11 @@ static void read_callback(int fd, short event, void *arg)
 static bool dhcp_device_is_dhcp_inactive(uint64_t counters[][DHCP_DIR_COUNT][DHCP_MESSAGE_TYPE_COUNT])
 {
     uint64_t *rx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_RX];
-    uint64_t *rx_coutner_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX];
+    uint64_t *rx_counter_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_RX];
 
     bool rv = true;
     for (uint8_t i = 0; (i < monitored_msg_sz) && rv; i++) {
-        rv = rx_counters[monitored_msgs[i]] == rx_coutner_snapshot[monitored_msgs[i]];
+        rv = rx_counters[monitored_msgs[i]] == rx_counter_snapshot[monitored_msgs[i]];
     }
 
     return rv;
@@ -302,11 +302,11 @@ static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t counters[][D
     dhcp_mon_status_t rv = DHCP_MON_STATUS_HEALTHY;
 
     uint64_t *tx_counters = counters[DHCP_COUNTERS_CURRENT][DHCP_TX];
-    uint64_t *tx_coutner_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX];
+    uint64_t *tx_counter_snapshot = counters[DHCP_COUNTERS_SNAPSHOT][DHCP_TX];
 
     bool is_dhcp_unhealthy = false;
     for (uint8_t i = 0; (i < monitored_msg_sz) && !is_dhcp_unhealthy; i++) {
-        is_dhcp_unhealthy = tx_counters[monitored_msgs[i]] > tx_coutner_snapshot[monitored_msgs[i]];
+        is_dhcp_unhealthy = tx_counters[monitored_msgs[i]] > tx_counter_snapshot[monitored_msgs[i]];
     }
 
     // for negative validation, return unhealthy if DHCP packet are being

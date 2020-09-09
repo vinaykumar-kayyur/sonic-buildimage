@@ -40,7 +40,7 @@ static struct event *ev_sigterm;
 /** libevent SIGUSR1 signal event struct */
 static struct event *ev_sigusr1;
 
-/** DHCP monintor state data for aggregate device for mgmt device */
+/** DHCP monitor state data for aggregate device for mgmt device */
 static dhcp_mon_state_t state_data[] = {
     [0] = {
         .check_type = DHCP_MON_CHECK_POSITIVE,
@@ -82,7 +82,7 @@ static void signal_callback(evutil_socket_t fd, short event, void *arg)
  *
  * @brief check DHCP relay overall health
  *
- * @param state_data        pointer to dhcp mon state data
+ * @param state_data        pointer to dhcpmon state data
  *
  * @return none
  */
