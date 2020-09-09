@@ -246,7 +246,8 @@ static bool dhcp_device_is_dhcp_inactive(uint64_t counters[][DHCP_DIR_COUNT][DHC
 /**
  * @code dhcp_device_is_dhcp_msg_unhealthy(type, counters);
  *
- * @brief Check if there were no DHCP activity
+ * @brief Check if DHCP relay is functioning properly for message of type 'type'.
+ *        For every rx of message 'type', there should be increment of the same message type.
  *
  * @param type      DHCP message type
  * @param counters  current/snapshot counter
@@ -264,7 +265,8 @@ static bool dhcp_device_is_dhcp_msg_unhealthy(dhcp_message_type_t type,
 /**
  * @code dhcp_device_check_positive_health(counters, counters_snapshot);
  *
- * @brief validate current interface counters by comparing aggregate counters with snapshot counters.
+ * @brief Check if DHCP relay is functioning properly for monitored messages (Discover, Offer, Request, ACK.)
+ *        For every rx of monitored messages, there should be increment of the same message type.
  *
  * @param counters  current/snapshot counter
  *
@@ -290,7 +292,9 @@ static dhcp_mon_status_t dhcp_device_check_positive_health(uint64_t counters[][D
 /**
  * @code dhcp_device_check_negative_health(counters);
  *
- * @brief validate current interface counters by comparing aggregate counters with snapshot counters.
+ * @brief Check that DHCP relayed messages are not being transmitted out of this interface/dev
+ *        using its counters. The interface is negatively healthy if there are not DHCP message
+ *        travelling through it.
  *
  * @param counters              recent interface counter
  * @param counters_snapshot     snapshot counters
@@ -321,7 +325,11 @@ static dhcp_mon_status_t dhcp_device_check_negative_health(uint64_t counters[][D
 /**
  * @code dhcp_device_check_health(check_type, counters, counters_snapshot);
  *
- * @brief validate current interface counters by comparing aggregate counter with snapshot counters.
+ * @brief Check that DHCP relay is functioning properly given a check type. Positive check
+ *        indicates for every rx of DHCP message of type 'type', there would increment of
+ *        the corresponding TX of the same message type. While negative check indicates the
+ *        device should not be actively transmitting any DHCP messages. If it does, it is
+ *        considered unhealthy.
  *
  * @param check_type    type of health check
  * @param counters      current/snapshot counter
