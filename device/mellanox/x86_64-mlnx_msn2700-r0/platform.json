@@ -2,66 +2,65 @@
     "chassis": {
         "name": "Mellanox-SN2700",
         "model": "FIXME",
-        "serial": "FIXME",
         "components": [],
         "modules": [],
         "fans": [
             {
-                "name": "Fan 1",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan1",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 2",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan2",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 3",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan3",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 4",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan4",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 5",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan5",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 6",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan6",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 7",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan7",
+                "direction": "N/A",
+                "tolerance": 50
             },
             {
-                "name": "Fan 8",
-                "direction": "intake",
-                "tolerance": 20
+                "name": "fan8",
+                "direction": "N/A",
+                "tolerance": 50
             }
         ],
         "fan_drawers": [
             {
-                "name": "Fan drawer 1",
+                "name": "drawer1",
                 "num_fans": 2
             },
             {
-                "name": "Fan drawer 2",
+                "name": "drawer2",
                 "num_fans": 2
             },
             {
-                "name": "Fan drawer 3",
+                "name": "drawer3",
                 "num_fans": 2
             },
             {
-                "name": "Fan drawer 4",
+                "name": "drawer4",
                 "num_fans": 2
             }
         ],
@@ -83,399 +82,391 @@
                 "voltage_low_threshold": 2
             }
         ],
-        "thermal_mgr": [
-		{
-		"FIXME":"need input from Mellanox for required static data"
-		}
-	],
-        "watchdog": [
-		{
-		"FIXME":"need input from Mellanox for required static data"
-		}
-	],
-        "eeprom": [
-		{
-		"FIXME":"need input from Mellanox for required static data"
-		}
-	],
         "thermals": [
             {
-                "name": "thermal 1",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "ASIC",
+                "high_threshold": 105,
+                "high_critical_threshold": 110,
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 2",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "Ambient Fan Side Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 3",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "Ambient Port Side Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 4",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "CPU Core 0 Temp",
+                "high_threshold": "87",
+                "high_critical_threshold": "105",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 5",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "CPU Core 1 Temp",
+                "high_threshold": "87",
+                "high_critical_threshold": "105",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 6",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "CPU Pack Temp",
+                "high_threshold": "87",
+                "high_critical_threshold": "105",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 7",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "PSU-1 Temp",
+                "high_threshold": "100",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 8",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "PSU-2 Temp",
+                "high_threshold": "100",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 9",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 1 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 10",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 1 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 11",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 2 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 12",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 3 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 13",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 4 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 14",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 5 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 15",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 6 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 16",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 7 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 17",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 8 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 18",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 9 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 19",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 10 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 20",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 11 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 21",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 12 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 22",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 13 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 23",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 14 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 24",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 15 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 25",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 16 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 26",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 17 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 27",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 18 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 28",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 19 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 29",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 20 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 30",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 21 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 31",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 22 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 32",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 23 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 33",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 24 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 34",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 25 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 35",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 26 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 36",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 27 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 37",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 28 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 38",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 29 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 39",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 30 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             },
             {
-                "name": "thermal 40",
-                "high_threshold": 100,
-                "high_critical_threshold": 100,
-                "low_threshold": 10,
-                "low_critical_threshold": 0
+                "name": "xSFP module 31 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
+            },
+            {
+                "name": "xSFP module 32 Temp",
+                "high_threshold": "N/A",
+                "high_critical_threshold": "N/A",
+                "low_threshold": "N/A",
+                "low_critical_threshold": "N/A"
             }
         ],
         "sfps": [
             {
-                "name": "sfp 1"
+                "name": "sfp1"
             },
             {
-                "name": "sfp 2"
+                "name": "sfp2"
             },
             {
-                "name": "sfp 3"
+                "name": "sfp3"
             },
             {
-                "name": "sfp 4"
+                "name": "sfp4"
             },
             {
-                "name": "sfp 5"
+                "name": "sfp5"
             },
             {
-                "name": "sfp 6"
+                "name": "sfp6"
             },
             {
-                "name": "sfp 7"
+                "name": "sfp7"
             },
             {
-                "name": "sfp 8"
+                "name": "sfp8"
             },
             {
-                "name": "sfp 9"
+                "name": "sfp9"
             },
             {
-                "name": "sfp 10"
+                "name": "sfp10"
             },
             {
-                "name": "sfp 11"
+                "name": "sfp11"
             },
             {
-                "name": "sfp 12"
+                "name": "sfp12"
             },
             {
-                "name": "sfp 13"
+                "name": "sfp13"
             },
             {
-                "name": "sfp 14"
+                "name": "sfp14"
             },
             {
-                "name": "sfp 15"
+                "name": "sfp15"
             },
             {
-                "name": "sfp 16"
+                "name": "sfp16"
             },
             {
-                "name": "sfp 17"
+                "name": "sfp17"
             },
             {
-                "name": "sfp 18"
+                "name": "sfp18"
             },
             {
-                "name": "sfp 19"
+                "name": "sfp19"
             },
             {
-                "name": "sfp 20"
+                "name": "sfp20"
             },
             {
-                "name": "sfp 21"
+                "name": "sfp21"
             },
             {
-                "name": "sfp 22"
+                "name": "sfp22"
             },
             {
-                "name": "sfp 23"
+                "name": "sfp23"
             },
             {
-                "name": "sfp 24"
+                "name": "sfp24"
             },
             {
-                "name": "sfp 25"
+                "name": "sfp25"
             },
             {
-                "name": "sfp 26"
+                "name": "sfp26"
             },
             {
-                "name": "sfp 27"
+                "name": "sfp27"
             },
             {
-                "name": "sfp 28"
+                "name": "sfp28"
             },
             {
-                "name": "sfp 29"
+                "name": "sfp29"
             },
             {
-                "name": "sfp 30"
+                "name": "sfp30"
             },
             {
-                "name": "sfp 31"
+                "name": "sfp31"
             },
             {
-                "name": "sfp 32"
+                "name": "sfp32"
             }
         ]
     },
