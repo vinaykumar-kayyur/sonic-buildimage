@@ -431,7 +431,8 @@ class BGPAllowListMgr(Manager):
                             'community': community_name,
                         }
                     else:
-                        log_warn("BGPAllowListMgr::Found incomplete route-map '%s' entry. seq_no=%d" % (route_map_name, route_map_seq_number))
+                        if route_map_seq_number != 65535:
+                            log_warn("BGPAllowListMgr::Found incomplete route-map '%s' entry. seq_no=%d" % (route_map_name, route_map_seq_number))
                     inside_route_map = False
                     pl_allow_list_name = None
                     community_name = self.EMPTY_COMMUNITY
