@@ -849,7 +849,7 @@ def wait_for_daemons(daemons, seconds):
 def read_constants():
     """ Read file with constants values from /etc/sonic/constants.yml """
     with open('/etc/sonic/constants.yml') as fp:
-        content = yaml.load(fp, Loader=yaml.FullLoader)
+        content = yaml.load(fp) # FIXME: , Loader=yaml.FullLoader)
         if "constants" not in content:
             log_crit("/etc/sonic/constants.yml doesn't have 'constants' key")
             raise Exception("/etc/sonic/constants.yml doesn't have 'constants' key")
