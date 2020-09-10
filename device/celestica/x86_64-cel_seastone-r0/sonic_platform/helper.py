@@ -73,7 +73,7 @@ class APIHelper():
         try:
             with open(file_path, 'w') as fd:
                 fd.write(str(value))
-        except:
+        except Exception:
             return False
         return True
 
