@@ -91,9 +91,7 @@ class TestJ2Files(TestCase):
     def test_l2switch_template(self):
         argument = '-k Mellanox-SN2700 -t ' + os.path.join(self.test_dir, '../data/l2switch.j2') + ' -p ' + self.t0_port_config + ' > ' + self.output_file
         self.run_script(argument)
-
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 'l2switch.json')
-
         self.assertTrue(filecmp.cmp(sample_output_file, self.output_file))
 
     def test_qos_arista7050_render_template(self):
@@ -157,9 +155,70 @@ class TestJ2Files(TestCase):
         ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
         argument = '-m ' + self.multi_asic_minigraph + ' -p ' + self.multi_asic_port_config + ' -t ' + ipinip_file  +  ' -n asic0 '  + ' > ' + self.output_file
         print(argument)
-        self.run_script(argument) 
+        self.run_script(argument)
         sample_output_file = os.path.join(self.test_dir, 'multi_npu_data',  'ipinip.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_swss_switch_render_template(self):
+        switch_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent',
+            'switch.json.j2'
+        )
+        constants_yml = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'image_config',
+            'constants', 'constants.yml'
+        )
+        test_list = {
+            "t1": {
+                "graph": self.t1_mlnx_minigraph,
+                "output": "t1-switch.json"
+            },
+            "t0": {
+                "graph": self.t0_minigraph,
+                "output": "t0-switch.json"
+            },
+        }
+        for _, v in test_list.items():
+            argument = " -m {} -y {} -t {} > {}".format(
+                v["graph"], constants_yml, switch_template, self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'sample_output', v["output"]
+            )
+            self.run_script(argument)
+            assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_swss_switch_render_template_multi_asic(self):
+        # verify the ECMP hash seed changes per namespace
+        switch_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent',
+            'switch.json.j2'
+        )
+        constants_yml = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'image_config',
+            'constants', 'constants.yml'
+        )
+        test_list = {
+            "0": {
+                "namespace_id": "1",
+                "output": "t0-switch-masic1.json"
+            },
+            "1": {
+                "namespace_id": "3",
+                "output": "t0-switch-masic3.json"
+            },
+        }
+        for _, v in test_list.items():
+            os.environ["NAMESPACE_ID"] = v["namespace_id"]
+            argument = " -m {} -y {} -t {} > {}".format(
+                self.t1_mlnx_minigraph, constants_yml, switch_template,
+                self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'sample_output', v["output"]
+            )
+            self.run_script(argument)
+            assert filecmp.cmp(sample_output_file, self.output_file)
 
     def tearDown(self):
         try:

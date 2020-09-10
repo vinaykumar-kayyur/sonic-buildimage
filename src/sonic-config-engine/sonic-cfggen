@@ -291,11 +291,12 @@ def main():
         asic_id = get_asic_id_from_name(asic_name)
     # get the namespace ID
     namespace_id = os.getenv("NAMESPACE_ID")
-    deep_update(data, {
-                        'DEVICE_METADATA': {
-                            'localhost': {'namespace_id': namespace_id}
-                         }
-                      })
+    if namespace_id:
+        deep_update(data, {
+                            'DEVICE_METADATA': {
+                                'localhost': {'namespace_id': namespace_id}
+                             }
+                          })
     # Load the database config for the namespace from global database json
     if args.namespace is not None:
         SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
