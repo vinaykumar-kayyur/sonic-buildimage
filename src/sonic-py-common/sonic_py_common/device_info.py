@@ -423,10 +423,10 @@ def get_system_routing_stack():
     return result
 
 def get_sonic_generated_services():
-    if not os.path.isfile(SONIC_GENERATED_SERVICE_PATH):
-        return None, None
     generated_services_list = []
     generated_multi_instance_services = []
+    if not os.path.isfile(SONIC_GENERATED_SERVICE_PATH):
+        return generated_services_list, generated_multi_instance_services
     with open(SONIC_GENERATED_SERVICE_PATH) as generated_service_file:
         for line in generated_service_file:
             if '@' in line:
