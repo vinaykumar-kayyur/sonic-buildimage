@@ -20,6 +20,7 @@ SONIC_VERSION_YAML_PATH = "/etc/sonic/sonic_version.yml"
 PORT_CONFIG_FILE = "port_config.ini"
 PLATFORM_JSON_FILE = "platform.json"
 
+SONIC_GENERATED_SERVICE_PATH = '/etc/sonic/generated_services.conf'
 # Multi-NPU constants
 # TODO: Move Multi-ASIC-related functions and constants to a "multi_asic.py" module
 NPU_NAME_PREFIX = "asic"
@@ -420,3 +421,20 @@ def get_system_routing_stack():
         raise OSError("Cannot detect routing stack")
 
     return result
+
+def get_sonic_generated_services():
+    if not os.path.isfile(SONIC_GENERATED_SERVICE_PATH):
+        return None
+    generated_services_list = []
+    generated_multi_instance_services = []
+    with open(SONIC_GENERATED_SERVICE_PATH) as generated_service_file:
+        for line in generated_service_file:
+            if '@' in line:
+                line = line.replace('@', '')
+                if is_multi_npu():
+                    generated_multi_instance_services.append(line.rstrip('\n'))
+                else:
+                    generated_services_list.append(line.rstrip('\n'))
+            else:
+                generated_services_list.append(line.rstrip('\n'))
+    return generated_services_list, generated_multi_instance_services
