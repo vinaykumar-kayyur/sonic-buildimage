@@ -219,6 +219,7 @@ class TestJ2Files(TestCase):
             )
             self.run_script(argument)
             assert filecmp.cmp(sample_output_file, self.output_file)
+        os.environ["NAMESPACE_ID"] = ""
 
     def tearDown(self):
         try:
