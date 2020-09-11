@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# read SONiC immutable variables
+[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
+function help()
+{
+    echo -e "Usage: $0 -n [0 to $(($NUM_ASIC-1))] [OPTION]... " 1>&2; exit 1;
+}
+
 DOCKER_EXEC_FLAGS="i"
 
 # Determine whether stdout is on a terminal
@@ -7,19 +15,12 @@ if [ -t 1 ] ; then
     DOCKER_EXEC_FLAGS+="t"
 fi
 
-function help()
-{
-    echo -e "Usage: $0 -n [0 to $(($NUM_ASIC-1))] [OPTION]... " 1>&2; exit 1;
-}
-
 DEV=""
-PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+PLATFORM=${PLATFORM:-`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`}
 
 # Parse the device specific asic conf file, if it exists
 ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
-if [ -f "$ASIC_CONF" ]; then
-    source $ASIC_CONF
-fi
+[ -f $ASIC_CONF ] && . $ASIC_CONF
 
 if [[ ($NUM_ASIC -gt 1) ]]; then
     while getopts ":n:h:" opt; do
