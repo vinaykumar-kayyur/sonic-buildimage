@@ -16,10 +16,8 @@
 
 try:
     import os
-    import signal
     import subprocess
     import sys
-    import syslog
 
     from sonic_py_common import daemon_base
     from swsscommon import swsscommon
