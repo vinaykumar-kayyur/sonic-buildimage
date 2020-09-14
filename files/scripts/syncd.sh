@@ -145,6 +145,8 @@ stop() {
 
     if [[ x"$WARM_BOOT" == x"true" ]]; then
         TYPE=warm
+    elif [[ $(redis-cli -n 6 GET "FAST_REBOOT|system") == "1" ]]; then
+        TYPE=fast
     else
         TYPE=cold
     fi
