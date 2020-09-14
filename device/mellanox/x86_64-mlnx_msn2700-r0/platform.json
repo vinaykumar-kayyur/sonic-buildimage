@@ -1,7 +1,6 @@
 {
     "chassis": {
-        "name": "Mellanox-SN2700",
-        "model": "FIXME",
+        "name": "MSN2700",
         "components": [],
         "modules": [],
         "fans": [
