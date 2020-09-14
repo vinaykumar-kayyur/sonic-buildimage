@@ -83,7 +83,7 @@ function restore_counters_folder()
     modules=("portstat-0" "dropstat" "pfcstat-0" "queuestat-0" "intfstat-0")
     for module in ${modules[@]}
     do
-        statfile="/host/$module"
+        statfile="/host/counters/$module"
         if [[ -d $statfile ]]; then
             mv $statfile /tmp/
         fi
