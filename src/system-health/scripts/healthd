@@ -102,8 +102,8 @@ class HealthDaemon(DaemonBase):
 # Main =========================================================================
 #
 def main():
-    thermal_control = HealthDaemon()
-    thermal_control.run()
+    health_monitor = HealthDaemon()
+    health_monitor.run()
 
 
 if __name__ == '__main__':
