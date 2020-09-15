@@ -120,7 +120,11 @@ dependent_startup_wait_for=start:exited
 command=/usr/local/bin/thermalctld
 priority=9
 autostart=false
+{% if not always_restart_thermalctld %}
 autorestart=unexpected
+{% else %}
+autorestart=true
+{% endif %}
 stdout_logfile=syslog
 stderr_logfile=syslog
 startsecs=10
