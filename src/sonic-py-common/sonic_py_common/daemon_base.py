@@ -13,13 +13,16 @@ REDIS_TIMEOUT_MSECS = 0
 EEPROM_MODULE_NAME = 'eeprom'
 EEPROM_CLASS_NAME = 'board'
 
+# The empty namespace refers to linux host namespace.
+EMPTY_NAMESPACE = ''
+
 #
 # Helper functions =============================================================
 #
 
-def db_connect(db_name):
+def db_connect(db_name, namespace=EMPTY_NAMESPACE):
     from swsscommon import swsscommon
-    return swsscommon.DBConnector(db_name, REDIS_TIMEOUT_MSECS, True)
+    return swsscommon.DBConnector(db_name, REDIS_TIMEOUT_MSECS, True, namespace)
 
 #
 # DaemonBase ===================================================================
@@ -56,7 +59,7 @@ class DaemonBase(Logger):
         platform_util = None
 
         # Get path to platform and hwsku
-        (platform_path, hwsku_path) = device_info.get_path_to_platform_and_hwsku()
+        (platform_path, hwsku_path) = device_info.get_paths_to_platform_and_hwsku_dirs()
 
         try:
             module_file = "/".join([platform_path, "plugins", module_name + ".py"])

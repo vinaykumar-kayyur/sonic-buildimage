@@ -187,6 +187,10 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/uboot-utils
     cat files/initramfs-tools/modules.arm | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
 fi
+# Update initramfs for load platform specific modules
+if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
+    cat platform/$CONFIGURED_PLATFORM/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
+fi
 
 ## Install docker
 echo '[INFO] Install docker'
@@ -212,7 +216,7 @@ fi
 
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
-if [ "$INSTALL_KUBERNETES" == "y" ]
+if [ "$INCLUDE_KUBERNETES" == "y" ]
 then
     ## Install Kubernetes
     echo '[INFO] Install kubernetes'
@@ -238,9 +242,12 @@ sudo cp files/docker/docker.service.conf $_
 ## Fix systemd race between docker and containerd
 sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
+## Create redis group
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
+
 ## Create default user
-## Note: user should be in the group with the same name, and also in sudo/docker group
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
+## Note: user should be in the group with the same name, and also in sudo/docker/redis groups
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker,redis $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
@@ -389,7 +396,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/core
 
 # Config sysctl
 sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p'
+set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p %P'
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
@@ -479,7 +486,7 @@ fi
 sudo cp -f files/image_config/ebtables/ebtables.default $FILESYSTEM_ROOT/etc/default/ebtables
 sudo cp -f files/image_config/ebtables/ebtables.init $FILESYSTEM_ROOT/etc/init.d/ebtables
 sudo cp -f files/image_config/ebtables/ebtables.service $FILESYSTEM_ROOT/lib/systemd/system/ebtables.service
-sudo cp files/image_config/ebtables/ebtables.filter ${FILESYSTEM_ROOT}/etc
+sudo cp files/image_config/ebtables/ebtables.filter.cfg ${FILESYSTEM_ROOT}/etc
 sudo LANG=C chroot $FILESYSTEM_ROOT update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ebtables.service
 
