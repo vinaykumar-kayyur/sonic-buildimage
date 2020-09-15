@@ -94,6 +94,7 @@ list :
 ###############################################################################
 
 include $(RULES_PATH)/config
+-include $(RULES_PATH)/config.user
 
 ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
@@ -189,6 +190,7 @@ export FRR_USER_GID
 ## Dumping key config attributes associated to current building exercise
 ###############################################################################
 
+ifndef SONIC_BUILD_QUIETER
 $(info SONiC Build System)
 $(info )
 $(info Build Configuration)
@@ -224,12 +226,16 @@ $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "INCLUDE_MGMT_FRAMEWORK"          : "$(INCLUDE_MGMT_FRAMEWORK)")
 $(info "INCLUDE_ICCPD"                   : "$(INCLUDE_ICCPD)")
 $(info "INCLUDE_SYSTEM_TELEMETRY"        : "$(INCLUDE_SYSTEM_TELEMETRY)")
+$(info "INCLUDE_HOST_SERVICE"            : "$(INCLUDE_HOST_SERVICE)")
 $(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
 $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info )
+else
+$(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
+endif
 
 include Makefile.cache
 
@@ -790,10 +796,12 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(KDUMP_TOOLS) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS) \
-                $(MONIT)) \
+                $(MONIT) \
+                $(PYTHON_SWSSCOMMON)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
-	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
+        $(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
+        $(if $(findstring y,$(INCLUDE_HOST_SERVICE)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_HOST_SERVICE))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3)) \
@@ -820,6 +828,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_ztp="$(ENABLE_ZTP)"
 	export include_system_telemetry="$(INCLUDE_SYSTEM_TELEMETRY)"
 	export include_restapi="$(INCLUDE_RESTAPI)"
+	export include_host_service="$(INCLUDE_HOST_SERVICE)"
 	export include_nat="$(INCLUDE_NAT)"
 	export include_sflow="$(INCLUDE_SFLOW)"
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
@@ -842,6 +851,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export sonic_yang_models_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3))"
 	export sonic_yang_mgmt_py_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY))"
 	export multi_instance="false"
+	export python_swss_debs="$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$($(LIBSWSSCOMMON)_RDEPENDS))" 
+	export python_swss_debs+=" $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(LIBSWSSCOMMON)) $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(PYTHON_SWSSCOMMON))"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
