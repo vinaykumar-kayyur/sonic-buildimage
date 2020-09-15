@@ -9,13 +9,11 @@ import signal
 import threading
 
 from sonic_py_common.daemon_base import DaemonBase
-from sonic_py_common.logger import Logger
 from swsssdk import SonicV2Connector
 
 from health_checker.manager import HealthCheckerManager
 
 SYSLOG_IDENTIFIER = 'healthd'
-logger = Logger(SYSLOG_IDENTIFIER)
 
 
 class HealthDaemon(DaemonBase):
@@ -53,28 +51,28 @@ class HealthDaemon(DaemonBase):
         :return:
         """
         if sig == signal.SIGHUP:
-            logger.log_info("Caught SIGHUP - ignoring...")
+            self.log_info("Caught SIGHUP - ignoring...")
         elif sig == signal.SIGINT:
-            logger.log_info("Caught SIGINT - exiting...")
+            self.log_info("Caught SIGINT - exiting...")
             self.stop_event.set()
         elif sig == signal.SIGTERM:
-            logger.log_info("Caught SIGTERM - exiting...")
+            self.log_info("Caught SIGTERM - exiting...")
             self.stop_event.set()
         else:
-            logger.log_warning("Caught unhandled signal '" + sig + "'")
+            self.log_warning("Caught unhandled signal '" + sig + "'")
 
     def run(self):
         """
         Check system health in an infinite loop.
         :return: 
         """
-        logger.log_info("Starting up...")
+        self.log_info("Starting up...")
 
         import sonic_platform.platform
         chassis = sonic_platform.platform.Platform().get_chassis()
         manager = HealthCheckerManager()
         if not manager.config.config_file_exists():
-            logger.log_warning("System health configuration file not found, exit...")
+            self.log_warning("System health configuration file not found, exit...")
             return
         while 1:
             state, stat = manager.check(chassis)
