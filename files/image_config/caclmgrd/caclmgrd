@@ -433,7 +433,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         if not os.geteuid() == 0:
             self.log_error("Must be root to run this daemon")
-            print("Error: Must be root to run this daemon", file=sys.stderr)
+            print("Error: Must be root to run this daemon")
             sys.exit(1)
 
         # Initlaize Global config that loads all database*.json
