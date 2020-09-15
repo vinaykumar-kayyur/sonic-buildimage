@@ -51,12 +51,12 @@ class HealthDaemon(DaemonBase):
         :return:
         """
         if sig == signal.SIGHUP:
-            self.log_info("Caught SIGHUP - ignoring...")
+            self.log_notice("Caught SIGHUP - ignoring...")
         elif sig == signal.SIGINT:
-            self.log_info("Caught SIGINT - exiting...")
+            self.log_notice("Caught SIGINT - exiting...")
             self.stop_event.set()
         elif sig == signal.SIGTERM:
-            self.log_info("Caught SIGTERM - exiting...")
+            self.log_notice("Caught SIGTERM - exiting...")
             self.stop_event.set()
         else:
             self.log_warning("Caught unhandled signal '" + sig + "'")
@@ -66,7 +66,7 @@ class HealthDaemon(DaemonBase):
         Check system health in an infinite loop.
         :return: 
         """
-        self.log_info("Starting up...")
+        self.log_notice("Starting up...")
 
         import sonic_platform.platform
         chassis = sonic_platform.platform.Platform().get_chassis()
