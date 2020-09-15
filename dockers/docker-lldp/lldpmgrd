@@ -201,6 +201,10 @@ class LldpManager(object):
         # Set select timeout to 10 seconds
         SELECT_TIMEOUT_MS = 1000 * 10
 
+        # Daemon is paused on the configuration file to avoid lldp packets with wrong information
+        # until all interfaces are well configured on lldpd
+        start_daemon = False
+
         sel = swsscommon.Select()
 
         # Subscribe to PORT table notifications in the Config DB
@@ -238,9 +242,19 @@ class LldpManager(object):
                                 self.generate_pending_lldp_config_cmd_for_port(key)
                             else:
                                 self.pending_cmds.pop(key, None)
+                elif (key == "PortInitDone") or (key == "PortConfigDone"):
+                    start_daemon = True
 
             # Process all pending commands
             self.process_pending_cmds()
+
+            # Start the daemon since all interfaces data updated and configured to the lldpd so no miss leading packets will be sent
+            if start_daemon:
+                cmd = "lldpcli resume"
+                proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (stdout, stderr) = proc.communicate()
+                if proc.returncode != 0:
+                    log_error("Failed to resume lldpd with command: '{}': {}".format(cmd, stderr))
 
 
 # ============================= Functions =============================
