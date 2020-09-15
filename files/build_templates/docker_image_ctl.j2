@@ -184,8 +184,12 @@ start() {
     # If it does not exist, remove the current docker so that the file is created.
     # This is mainly to ensure that database_global.json file is created when converting
     # single asic VS to multi-asic VS.
-    if [[ ($NUM_ASIC -gt 1) && (-z $DEV) && (! -f "/var/run/redis/sonic-db/database_global.json") ]]; then
-        docker rm -f {{docker_container_name}}$DEV
+    SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
+    if [[ ($NUM_ASIC -gt 1) && (-z $DEV) && (! -f $SONIC_DB_GLOBAL_JSON) ]]; then
+       DOCKERCHECK=`docker inspect --type container {{docker_container_name}}$DEV 2>/dev/null`
+       if [ "$?" -eq "0" ]; then
+           docker rm -f {{docker_container_name}}$DEV
+       fi
     fi
     {%- endif %}
     DOCKERCHECK=`docker inspect --type container {{docker_container_name}}$DEV 2>/dev/null`
@@ -233,7 +237,6 @@ start() {
     # In Multi ASIC platforms the global database config file database_global.json will exist.
     # Parse the file and get the include path for the database_config.json files used in
     # various namesapces. The database_config paths are relative to the DIR of SONIC_DB_GLOBAL_JSON.
-    SONIC_DB_GLOBAL_JSON="/var/run/redis/sonic-db/database_global.json"
     if [ -f "$SONIC_DB_GLOBAL_JSON" ]; then
         # TODO Create a separate python script with the below logic and invoke it here.
         redis_dir_list=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
