@@ -44,7 +44,7 @@ def check_process_existence(container_name, process_name, process_cmdline):
                 print("'{}' is not running.".format(process_name))
                 sys.exit(1)
     else:
-        syslog.syslog(syslog.LOG_ERR, "contianer '{}' is not included in SONiC image or the given container name is invalid!"
+        syslog.syslog(syslog.LOG_ERR, "container '{}' is not included in SONiC image or the given container name is invalid!"
                       .format(container_name))
 
 
