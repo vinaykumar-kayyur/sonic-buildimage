@@ -22,6 +22,7 @@ try:
     from sonic_platform.thermal import Thermal
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Tlv
+    from common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -65,6 +66,7 @@ class Chassis(ChassisBase):
         ) else PMON_REBOOT_CAUSE_PATH
 
         self._eeprom = Tlv()
+        self._api_common = Common()
 
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
@@ -147,3 +149,47 @@ class Chassis(ChassisBase):
             self._watchdog = Watchdog()
 
         return self._watchdog
+
+    ##############################################################
+    ###################### Device methods ########################
+    ##############################################################
+
+    def get_name(self):
+        """
+        Retrieves the name of the device
+            Returns:
+            string: The name of the device
+        """
+        return self._api_common.hwsku
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the PSU
+        Returns:
+            bool: True if PSU is present, False if not
+        """
+        return True
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return self._eeprom.get_serial()
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return self.get_serial_number()
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
