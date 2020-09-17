@@ -184,6 +184,14 @@ sudo cp {{sonic_utilities_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2
 sudo LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_UTILITIES_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2_WHEEL_NAME
 
+# Install sonic-utilities data files (and any dependencies via 'apt-get -y install -f')
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-utilities-data_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
+# sonic-utilities-data installs bash-completion as a dependency. However, it is disabled by default
+# in bash.bashrc, so we copy a version of the file with it enabled here.
+sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
+
 {% if enable_ztp == "y" %}
 # Install ZTP (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-ztp_*.deb || \
@@ -195,10 +203,6 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-ztp_*.deb || \
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-host-service_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 {% endif %}
-
-# SONiC utilities installs bash-completion as a dependency. However, it is disabled by default
-# in bash.bashrc, so we copy a version of the file with it enabled here.
-sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 
 # Install SONiC Device Data  (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-device-data_*.deb || \

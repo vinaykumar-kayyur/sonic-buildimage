@@ -802,7 +802,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS) \
                 $(MONIT) \
-                $(PYTHON_SWSSCOMMON)) \
+                $(PYTHON_SWSSCOMMON) \
+                $(SONIC_UTILITIES_DATA)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
         $(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
