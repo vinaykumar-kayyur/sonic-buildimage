@@ -107,6 +107,10 @@ mknod =[
 'echo 24c02 0x57 > /sys/bus/i2c/devices/i2c-1/new_device',
 ]
 
+mknod2 = mknod[1:]
+mknod2.insert(0, \
+	'echo pca9548 0x77 > /sys/bus/i2c/devices/i2c-0/new_device')
+
 # Disable CPLD debug mode
 cpld_set =[
 'i2cset -y -f 3 0x60 0x2a 0xff',
@@ -206,7 +210,7 @@ def log_os_system(cmd, show):
     status = 1
     output = ""
     status, output = commands.getstatusoutput(cmd)
-    my_log (cmd +"with result:" + str(status))
+    my_log (cmd +" with result:" + str(status))
     my_log ("cmd:" + cmd)
     my_log ("      output:"+output)
     if status:
@@ -269,15 +273,33 @@ def driver_uninstall():
                 return status
     return 0
 
+def i2c_order_check():
+    # i2c bus 0 and 1 might be installed in different order.
+    # Here check if 0x77 is exist @ i2c-1
+    tmp = "echo pca9548 0x77 > /sys/bus/i2c/devices/i2c-1/new_device"
+    status, output = log_os_system(tmp, 0)
+    if not device_exist():
+        order = 1
+    else:
+        order = 0
+    tmp = "echo 0x77 > /sys/bus/i2c/devices/i2c-1/delete_device"
+    status, output = log_os_system(tmp, 0)
+    return order
+
 def device_install():
     global FORCE
-
-    for i in range(0,len(mknod)):
+    order = i2c_order_check()
+    # if 0x77 is not exist @i2c-1, use reversed bus order
+    if order:
+        mknodL = mknod2
+    else:
+        mknodL = mknod
+    for i in range(0,len(mknodL)):
         #for pca954x need times to built new i2c buses
-        if mknod[i].find('pca954') != -1:
+        if mknodL[i].find('pca954') != -1:
             time.sleep(2)
         
-        status, output = log_os_system(mknod[i], 1)        
+        status, output = log_os_system(mknodL[i], 1)
         if status:
             print output
             if FORCE == 0:
@@ -305,11 +327,6 @@ def device_install():
 def device_uninstall():
     global FORCE
 
-    status, output =log_os_system("ls /sys/bus/i2c/devices/0-0070", 0)
-    if status==0:
-        I2C_ORDER=1
-    else:
-    	I2C_ORDER=0
 
     for i in range(0,len(sfp_map)):
         target = "/sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/delete_device"
@@ -318,12 +335,15 @@ def device_uninstall():
             print output
             if FORCE == 0:
                 return status
-                
-    nodelist = mknod
 
-    for i in range(len(nodelist)):
-        target = nodelist[-(i+1)]
-        temp = target.split()
+    status, output =log_os_system("ls /sys/bus/i2c/devices/1-0077", 0)
+    if status == 0:
+        nodelist = mknod
+    else:
+        nodelist = mknod2
+
+    for t in reversed(nodelist):
+        temp = t.split()
         del temp[1]
         temp[-1] = temp[-1].replace('new_device', 'delete_device')
         status, output = log_os_system(" ".join(temp), 1)
