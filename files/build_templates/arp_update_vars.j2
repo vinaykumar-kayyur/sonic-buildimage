@@ -1,0 +1,14 @@
+{
+    "interface": "{% if PORT -%}
+                      {%- set d = namespace(pc=[]) -%}
+                      {%- for (port, intf) in PORTCHANNEL_MEMBER -%}
+                          {%- set d.pc = d.pc + [intf] -%}
+                      {%- endfor -%}
+                      {%- set pc = d.pc | join(',') -%}
+                      {%- for port in PORT.keys() -%}
+                          {%- if port not in pc -%}{{ port }} {% endif %}
+                      {%- endfor -%}
+                  {%- endif -%}",
+    "pc_interface" : "{% if PORTCHANNEL %}{{ PORTCHANNEL.keys() | join(' ') }}{% endif %}",
+    "vlan" : "{% if VLAN %}{{ VLAN.keys() | join(' ') }}{% endif %}"
+}
