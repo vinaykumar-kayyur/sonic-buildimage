@@ -163,8 +163,8 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 RUN python -m virtualenv --system-site-packages env-201811
 RUN env-201811/bin/pip install ansible==2.0.0.2
 
-RUN python3 -m venv test-reporting-env0
-RUN test-reporting-env/bin/pip3 install azure-kusto-data azure-kusto-ingest defusedxml pytest
+RUN python3 -m venv env-python3
+RUN env-python3/bin/pip3 install azure-kusto-data azure-kusto-ingest defusedxml pytest
 
 # NOTE: There is an ordering dependency for pycryptodome. Leaving this at
 #       the end until we figure that out.
