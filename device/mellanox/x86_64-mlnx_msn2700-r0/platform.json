@@ -2,47 +2,30 @@
     "chassis": {
         "name": "MSN2700",
         "components": [],
-        "modules": [],
         "fans": [
             {
-                "name": "fan1",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan1"
             },
             {
-                "name": "fan2",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan2"
             },
             {
-                "name": "fan3",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan3"
             },
             {
-                "name": "fan4",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan4"
             },
             {
-                "name": "fan5",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan5"
             },
             {
-                "name": "fan6",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan6"
             },
             {
-                "name": "fan7",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan7"
             },
             {
-                "name": "fan8",
-                "direction": "N/A",
-                "tolerance": 50
+                "name": "fan8"
             }
         ],
         "fan_drawers": [
@@ -75,46 +58,22 @@
         ],
         "thermals": [
             {
-                "name": "ASIC",
-                "high_threshold": 105,
-                "high_critical_threshold": 110,
-                "low_threshold": "N/A",
-                "low_critical_threshold": "N/A"
+                "name": "ASIC"
             },
             {
-                "name": "Ambient Fan Side Temp",
-                "high_threshold": "N/A",
-                "high_critical_threshold": "N/A",
-                "low_threshold": "N/A",
-                "low_critical_threshold": "N/A"
+                "name": "Ambient Fan Side Temp"
             },
             {
-                "name": "Ambient Port Side Temp",
-                "high_threshold": "N/A",
-                "high_critical_threshold": "N/A",
-                "low_threshold": "N/A",
-                "low_critical_threshold": "N/A"
+                "name": "Ambient Port Side Temp"
             },
             {
-                "name": "CPU Core 0 Temp",
-                "high_threshold": "87",
-                "high_critical_threshold": "105",
-                "low_threshold": "N/A",
-                "low_critical_threshold": "N/A"
+                "name": "CPU Core 0 Temp"
             },
             {
-                "name": "CPU Core 1 Temp",
-                "high_threshold": "87",
-                "high_critical_threshold": "105",
-                "low_threshold": "N/A",
-                "low_critical_threshold": "N/A"
+                "name": "CPU Core 1 Temp"
             },
             {
-                "name": "CPU Pack Temp",
-                "high_threshold": "87",
-                "high_critical_threshold": "105",
-                "low_threshold": "N/A",
-                "low_critical_threshold": "N/A"
+                "name": "CPU Pack Temp"
             },
             {
                 "name": "PSU-1 Temp"
