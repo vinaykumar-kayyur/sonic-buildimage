@@ -12,32 +12,32 @@
 ##  nbrmgrd
 ##  vxlanmgrd
 ##############################################################################
-check program swss|orchagent with path "/usr/bin/process_checker swss orchagent /usr/bin/orchagent -d /var/log/swss"
+check program swss|orchagent with path "/usr/bin/process_checker swss /usr/bin/orchagent -d /var/log/swss"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|portsyncd with path "/usr/bin/process_checker swss portsyncd /usr/bin/portsyncd"
+check program swss|portsyncd with path "/usr/bin/process_checker swss /usr/bin/portsyncd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|neighsyncd with path "/usr/bin/process_checker swss neighsyncd /usr/bin/neighsyncd"
+check program swss|neighsyncd with path "/usr/bin/process_checker swss /usr/bin/neighsyncd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|vrfmgrd with path "/usr/bin/process_checker swss vrfmgrd /usr/bin/vrfmgrd"
+check program swss|vrfmgrd with path "/usr/bin/process_checker swss /usr/bin/vrfmgrd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|vlanmgrd with path "/usr/bin/process_checker swss vlanmgrd /usr/bin/vlanmgrd"
+check program swss|vlanmgrd with path "/usr/bin/process_checker swss /usr/bin/vlanmgrd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|intfmgrd with path "/usr/bin/process_checker swss intfmgrd /usr/bin/intfmgrd"
+check program swss|intfmgrd with path "/usr/bin/process_checker swss /usr/bin/intfmgrd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|portmgrd with path "/usr/bin/process_checker swss portmgrd /usr/bin/portmgrd"
+check program swss|portmgrd with path "/usr/bin/process_checker swss /usr/bin/portmgrd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|buffermgrd with path "/usr/bin/process_checker swss buffermgrd /usr/bin/buffermgrd -l"
+check program swss|buffermgrd with path "/usr/bin/process_checker swss /usr/bin/buffermgrd -l"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|nbrmgrd with path "/usr/bin/process_checker swss nbrmgrd /usr/bin/nbrmgrd"
+check program swss|nbrmgrd with path "/usr/bin/process_checker swss /usr/bin/nbrmgrd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program swss|vxlanmgrd with path "/usr/bin/process_checker swss vxlanmgrd /usr/bin/vxlanmgrd"
+check program swss|vxlanmgrd with path "/usr/bin/process_checker swss /usr/bin/vxlanmgrd"
     if status != 0 for 5 times within 5 cycles then alert
