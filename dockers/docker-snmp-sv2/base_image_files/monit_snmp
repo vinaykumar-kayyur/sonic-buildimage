@@ -4,8 +4,8 @@
 ##  snmpd
 ##  snmpd_subagent
 ###############################################################################
-check program snmp|snmpd with path "/usr/bin/process_checker snmp snmpd /usr/sbin/snmpd"
+check program snmp|snmpd with path "/usr/bin/process_checker snmp /usr/sbin/snmpd"
     if status != 0 for 5 times within 5 cycles then alert
 
-check program snmp|snmp_subagent with path "/usr/bin/process_checker snmp snmp_subagent python3.6 -m sonic_ax_impl"
+check program snmp|snmp_subagent with path "/usr/bin/process_checker snmp python3.6 -m sonic_ax_impl"
     if status != 0 for 5 times within 5 cycles then alert
