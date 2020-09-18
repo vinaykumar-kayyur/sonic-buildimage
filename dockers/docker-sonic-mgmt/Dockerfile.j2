@@ -97,6 +97,9 @@ RUN apt-get update                  \
     && apt-get update                                                                                              \
     && apt-get install -y docker-ce-cli
 
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
 # Install Microsoft Azure Kusto Library for Python
 RUN pip install azure-kusto-data==0.0.13 \
                 azure-kusto-ingest==0.0.13
@@ -155,9 +158,7 @@ RUN echo "$user ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers
 
 USER $user
 
-# Install Azure CLI
 WORKDIR /var/$user
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 # Install Virtual Environments
 RUN python -m virtualenv --system-site-packages env-201811
