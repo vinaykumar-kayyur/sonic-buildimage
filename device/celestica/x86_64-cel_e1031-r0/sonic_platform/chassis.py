@@ -131,8 +131,12 @@ class Chassis(ChassisBase):
             reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
         elif hw_reboot_cause == "0x33":
             reboot_cause = self.REBOOT_CAUSE_WATCHDOG
+        elif hw_reboot_cause == "0x88":
+            reboot_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU
+        elif hw_reboot_cause == "0x99":
+            reboot_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
         else:
-            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
             description = 'Unknown reason'
 
         return (reboot_cause, description)
