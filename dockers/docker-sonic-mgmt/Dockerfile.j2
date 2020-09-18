@@ -157,8 +157,10 @@ RUN chmod go= /var/$user/.ssh -R
 RUN echo "$user ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers
 
 USER $user
-
 WORKDIR /var/$user
+
+# Add az symlink for backwards compatibility
+RUN mkdir bin && ln -s /usr/bin/az bin/az
 
 # Install Virtual Environments
 RUN python -m virtualenv --system-site-packages env-201811
