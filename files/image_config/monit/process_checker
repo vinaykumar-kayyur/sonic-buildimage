@@ -35,7 +35,7 @@ def check_process_existence(container_name, process_name, process_cmdline):
                 if process.name() == "process_checker":
                     continue
 
-                if ((process_name == process.name() or process_cmdline in ' '.join(process.cmdline()))
+                if ((process_name == process.name() or (' '.join(process.cmdline())).startswith(process_cmdline))
                         and process.status() in ["running", "sleeping"]):
                     is_running = True
                     break
