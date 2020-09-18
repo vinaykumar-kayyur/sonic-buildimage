@@ -28,15 +28,7 @@ def check_process_existence(container_name, process_name, process_cmdline):
             # state, then it will be marked as 'running'.
             is_running = False
             for process in psutil.process_iter(["name", "cmdline", "status"]):
-                # The script process_checker has the command line format '/usr/bin/process_checker <container_name>
-                # <process_name> <process_cmdline>' such as '/usr/bin/process_checker bgp fpmsyncd fpmsyncd'. So
-                # when using psutil to search process 'fpmsyncd', we should skip the process which ran process_checker
-                # since it is not 'fpmsyncd' process although 'fpmsyncd' is a sustring of its cmdline.
-                if process.name() == "process_checker":
-                    continue
-
-                if ((process_name == process.name() or (' '.join(process.cmdline())).startswith(process_cmdline))
-                        and process.status() in ["running", "sleeping"]):
+                if ((' '.join(process.cmdline())).startswith(process_cmdline) and process.status() in ["running", "sleeping"]):
                     is_running = True
                     break
 
@@ -51,13 +43,12 @@ def check_process_existence(container_name, process_name, process_cmdline):
 def main():
     parser = argparse.ArgumentParser(description="Check whether the process in the specified \
              container is running and an alerting message will be written into syslog if it \
-             failed to run.", usage="/usr/bin/process_checker <container_name> <process_name> <process_cmdline>")
+             failed to run.", usage="/usr/bin/process_checker <container_name> <process_cmdline>")
     parser.add_argument("container_name", help="container name")
-    parser.add_argument("process_name", help="process name")
     parser.add_argument("process_cmdline", nargs=argparse.REMAINDER, help="process name")
     args = parser.parse_args()
 
-    check_process_existence(args.container_name, args.process_name, ' '.join(args.process_cmdline))
+    check_process_existence(args.container_name, ' '.join(args.process_cmdline))
 
 
 if __name__ == '__main__':
