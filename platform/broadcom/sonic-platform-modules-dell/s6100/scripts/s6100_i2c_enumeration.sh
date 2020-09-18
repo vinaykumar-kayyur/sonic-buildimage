@@ -240,7 +240,7 @@ check_iom_status()
                 echo "IOM is taking longer than expected to power up.Aborting.
                       iom_status- $iom_status cpu_iom_sta1- $cpu_iom1_sta cpu_iom_sta2- $cpu_iom2_sta
                       cpu_iom_sta3- $cpu_iom3_sta cpu_iom_sta4- $cpu_iom4_sta "
-		iom_sta=1
+                iom_sta=1
                 break
             fi
             cpu_iom1_sta=$(cat $SMF_DIR/cpu_iom1_control)
