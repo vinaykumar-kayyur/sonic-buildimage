@@ -36,9 +36,7 @@ KMODULE = $(LIBDIR)/$(THIS_MOD_NAME).ko
 build: $(MODULE) $(KMODULE)
 endif
 
-ifeq ($(BUILD_PSAMPLE),1)
-KBUILD_EXTRA_SYMBOLS += ${BLDDIR}/../psample/kernel_module/Module.symvers
-endif
+KBUILD_EXTRA_SYMBOLS := ${BLDDIR}/../bcm-knet/kernel_module/Module.symvers
 
 # BCM Network Device
 
