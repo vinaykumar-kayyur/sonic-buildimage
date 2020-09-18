@@ -233,7 +233,7 @@ check_iom_status()
         cpu_iom3_sta=$(cat $SMF_DIR/cpu_iom3_control)
         cpu_iom4_sta=$(cat $SMF_DIR/cpu_iom4_control)
         cpu_iom_sta=$(( cpu_iom1_sta|cpu_iom2_sta|cpu_iom3_sta|cpu_iom4_sta ))
-	echo "Started polling IOM status"
+        echo "Started polling IOM status"
         while [ "$iom_status" != "f0" -o "$cpu_iom_sta" != "0" ];
         do
             if [ "$count" -gt "$MAX_IOM_STARTUP_DELAY" ];then
