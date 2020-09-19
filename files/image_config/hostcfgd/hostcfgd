@@ -241,6 +241,7 @@ class HostConfigDaemon:
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
+        self.is_multi_npu = device_info.is_multi_npu()
 
     def update_feature_state(self, feature_name, state, feature_table):
         has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
@@ -248,9 +249,9 @@ class HostConfigDaemon:
         has_per_asic_scope = ast.literal_eval(feature_table[feature_name].get('has_per_asic_scope', 'False'))
 
         # Create feature name suffix depending feature is running in host or namespace or in both 
-        feature_name_suffix_list = (([feature_name] if has_global_scope or not device_info.is_multi_npu() else []) +
+        feature_name_suffix_list = (([feature_name] if has_global_scope or not self.is_multi_npu else []) +
                                    ([(feature_name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
-                                    if has_per_asic_scope and device_info.is_multi_npu()]))
+                                    if has_per_asic_scope and self.is_multi_npu]))
 
         if not feature_name_suffix_list:
             syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
