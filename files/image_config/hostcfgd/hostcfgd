@@ -241,42 +241,22 @@ class HostConfigDaemon:
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
-        self.host_feature_list = []
-        self.namespace_feature_list = []
 
-    def update_all_feature_states(self):
-        feature_table = self.config_db.get_table('FEATURE')
-        generated_services_list, generated_multi_instance_services_list = device_info.get_sonic_generated_services()
-        for feature_name in feature_table.keys():
-            if not feature_name:
-                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
-                continue
+    def update_feature_state(self, feature_name, state, feature_table):
+        has_timer = ast.literal_eval(feature_table[feature_name]['has_timer'])
+        has_global_scope = ast.literal_eval(feature_table[feature_name]['has_global_scope'])
+        has_per_asic_scope = ast.literal_eval(feature_table[feature_name]['has_per_asic_scope'])
 
-            state = feature_table[feature_name]['state']
-            if not state:
-                syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
-                continue
-
-            if feature_name + '.service' in generated_services_list:
-                self.host_feature_list.append(feature_name)
-
-            if feature_name + '.service' in generated_multi_instance_services_list:
-                self.namespace_feature_list.append(feature_name)
-
-        for feature_name in feature_table.keys():
-            self.update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
-
-    def update_feature_state(self, feature_name, state, has_timer):
-        # Create feature name suffix depending feature is running in host or namespace or in both
-        feature_name_suffix_list = (([feature_name] if feature_name in self.host_feature_list else []) +
+        # Create feature name suffix depending feature is running in host or namespace or in both 
+        feature_name_suffix_list = (([feature_name] if has_global_scope or not device_info.is_multi_npu() else []) +
                                    ([(feature_name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
-                                   if feature_name in self.namespace_feature_list]))
+                                    if has_per_asic_scope and device_info.is_multi_npu()]))
 
         if not feature_name_suffix_list:
             syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
                           .format(feature_name))
 
-        feature_suffixes = ["service"] + (["timer"] if ast.literal_eval(has_timer) else [])
+        feature_suffixes = ["service"] + (["timer"] if has_timer else [])
 
         if state == "enabled":
             start_cmds = []
@@ -321,6 +301,20 @@ class HostConfigDaemon:
                           .format(state, feature_name))
 
 
+    def update_all_feature_states(self):
+        feature_table = self.config_db.get_table('FEATURE')
+        for feature_name in feature_table.keys():
+            if not feature_name:
+                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
+                continue
+
+            state = feature_table[feature_name]['state']
+            if not state:
+                syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
+                continue
+
+            self.update_feature_state(feature_name, state, feature_table)
+
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
 
@@ -361,7 +355,7 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
 
-        self.update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
+        self.update_feature_state(feature_name, state, feature_table)
 
     def start(self):
         # Update all feature states once upon starting
