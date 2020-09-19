@@ -22,3 +22,47 @@ These include "t1", "l2", and "empty". See the file
 sonic-buildimage/src/sonic-config-engine/config_samples.py for details on how 
 each default_preset value is interpreted.
 
+# Device Specific Documentation
+
+For general info on building, see https://github.com/Azure/sonic-buildimage/blob/master/README.md
+
+# Force-10-S6000
+
+This is the default VS for SONiC. To enable, set contents of default_sku to:
+
+```
+Force10-S6000 t1
+```
+
+To build:
+
+```
+make clean
+make target/sonic-vs.gz
+```
+
+# brcm_gearbox_vs
+
+This sku simulates a device with a Broadcom BRCM81724 gearbox PHY. To enable,
+set default_sku to:
+ 
+
+```
+brcm_gearbox_vs t1
+```
+
+To build (same as Force-10-S6000):
+
+```
+make clean
+make target/sonic-vs.gz
+```
+
+To verify, install and bring up SONiC. There will be a new gbsyncd docker 
+which is designed to respond to configuration directed towards the gearbox phy
+"switch". swss will create that gearbox switch on startup after detecting the
+gearbox is present (this is done by a short lived gearsyncd that runs in the
+swss docker). 
+
+The commands "show gearbox interfaces status" and "show gearbox phys" can be 
+used to verify the virtual gearbox phy has been created. See https://github.com/Azure/sonic-utilities/blob/master/doc/Command-Reference.md#gearbox for details.
