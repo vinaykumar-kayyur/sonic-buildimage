@@ -37,8 +37,9 @@ Force10-S6000 t1
 To build:
 
 ```
-make clean
-make target/sonic-vs.gz
+make init
+make configure PLATFORM=vs
+make target/sonic-vs.img.gz
 ```
 
 # brcm_gearbox_vs
@@ -54,8 +55,9 @@ brcm_gearbox_vs t1
 To build (same as Force-10-S6000):
 
 ```
-make clean
-make target/sonic-vs.gz
+make init
+make configure PLATFORM=vs
+make target/sonic-vs.img.gz
 ```
 
 To verify, install and bring up SONiC. There will be a new gbsyncd docker 
