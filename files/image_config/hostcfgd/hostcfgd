@@ -243,9 +243,9 @@ class HostConfigDaemon:
         self.iptables.load(lpbk_table)
 
     def update_feature_state(self, feature_name, state, feature_table):
-        has_timer = ast.literal_eval(feature_table[feature_name]['has_timer'])
-        has_global_scope = ast.literal_eval(feature_table[feature_name]['has_global_scope'])
-        has_per_asic_scope = ast.literal_eval(feature_table[feature_name]['has_per_asic_scope'])
+        has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
+        has_global_scope = ast.literal_eval(feature_table[feature_name].get('has_global_scope', 'True'))
+        has_per_asic_scope = ast.literal_eval(feature_table[feature_name]('has_per_asic_scope', 'False'))
 
         # Create feature name suffix depending feature is running in host or namespace or in both 
         feature_name_suffix_list = (([feature_name] if has_global_scope or not device_info.is_multi_npu() else []) +
