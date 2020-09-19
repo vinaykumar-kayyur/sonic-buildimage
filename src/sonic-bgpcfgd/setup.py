@@ -9,7 +9,12 @@ setuptools.setup(name='sonic-bgpcfgd',
       author_email='pavelsh@microsoft.com',
       url='https://github.com/Azure/sonic-buildimage',
       packages=setuptools.find_packages(),
-      scripts=['bgpcfgd','bgpmon.py'],
+      scripts=['bgpcfgd'],
+      entry_points={
+          'console_scripts': [
+              'bgpmon = bgpmon:main',
+          ]
+      },
       install_requires=['jinja2>=2.10', 'netaddr', 'pyyaml'],
       setup_requires=['pytest-runner', 'pytest'],
 )
