@@ -104,11 +104,7 @@ COPY python-wheels/{{ whl }}  python-wheels/
 # install PKGs after copying all PKGs to avoid dependency failure
 # use py3 to find python3 package, which is forced by wheel as of now
 {%- for whl in docker_sonic_vs_whls.split(' ') %}
-{%- if 'py3' in whl %}
-RUN pip3 install python-wheels/{{ whl }}
-{% else -%}
-RUN pip install python-wheels/{{ whl }}
-{%- endif %}
+RUN pip{% if 'py3' in whl %}3{% endif %} install python-wheels/{{ whl }}
 {%- endfor %}
 {% endif %}
 
