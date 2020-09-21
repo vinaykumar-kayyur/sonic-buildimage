@@ -92,6 +92,8 @@ function postStartAction()
 {%- if docker_container_name == "database" %}
     if [ "$DEV" ]; then
         docker exec -i database$DEV sysctl --system -e
+        # Enable the forwarding on eth0 interface in namespace.
+        docker exec -i database$DEV sysctl net.ipv4.conf.eth0.forwarding=1 net.ipv6.conf.eth0.forwarding=1
         link_namespace $DEV
     fi
 
