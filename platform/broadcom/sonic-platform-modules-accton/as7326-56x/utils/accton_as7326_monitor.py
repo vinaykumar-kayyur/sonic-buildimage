@@ -214,7 +214,7 @@ class device_monitor(object):
                     logging.debug('fan_policy_state=%d',fan_policy_state)
                     logging.warning('fan_policy_state is LEVEL_FAN_MAX')
                 fan.set_fan_duty_cycle(new_perc)
-                    break
+                break
             else:
                 fan_fail=0        
        
