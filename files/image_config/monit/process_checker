@@ -7,7 +7,7 @@ import psutil
 import swsssdk
 
 
-def check_process_existence(container_name, process_name, process_cmdline):
+def check_process_existence(container_name, process_cmdline):
     """
     @summary: Check whether the process in the specified container is running or not and
               an alerting message will written into syslog if it failed to run.
@@ -27,13 +27,13 @@ def check_process_existence(container_name, process_name, process_cmdline):
             # If the process entity is found in process tree and it is also in the 'running' or 'sleeping'
             # state, then it will be marked as 'running'.
             is_running = False
-            for process in psutil.process_iter(["name", "cmdline", "status"]):
+            for process in psutil.process_iter(["cmdline", "status"]):
                 if ((' '.join(process.cmdline())).startswith(process_cmdline) and process.status() in ["running", "sleeping"]):
                     is_running = True
                     break
 
             if not is_running:
-                print("'{}' is not running.".format(process_name))
+                print("'{}' is not running.".format(process_cmdline))
                 sys.exit(1)
     else:
         syslog.syslog(syslog.LOG_ERR, "container '{}' is not included in SONiC image or the given container name is invalid!"
@@ -45,7 +45,7 @@ def main():
              container is running and an alerting message will be written into syslog if it \
              failed to run.", usage="/usr/bin/process_checker <container_name> <process_cmdline>")
     parser.add_argument("container_name", help="container name")
-    parser.add_argument("process_cmdline", nargs=argparse.REMAINDER, help="process name")
+    parser.add_argument("process_cmdline", nargs=argparse.REMAINDER, help="process command line")
     args = parser.parse_args()
 
     check_process_existence(args.container_name, ' '.join(args.process_cmdline))
