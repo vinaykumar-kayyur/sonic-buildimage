@@ -183,7 +183,7 @@ class device_monitor(object):
         if temp2==0:
             temp_get=50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75% 
             logging.debug('lm75_49 detect fail, so set temp_get=50000, let fan to 75%')
-        elif temp2==0:        
+        elif temp4==0:        
             temp_get=50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75% 
             logging.debug('lm75_4b detect fail, so set temp_get=50000, let fan to 75%')
         else:    
