@@ -48,10 +48,10 @@
                 "name": "drawer3",
                 "fans": [
                     {
-                        "name": "fan3"
+                        "name": "fan5"
                     },
                     {
-                        "name": "fan4"
+                        "name": "fan6"
                     }
                 ]
             },
