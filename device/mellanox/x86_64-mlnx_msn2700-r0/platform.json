@@ -21,6 +21,7 @@
                 "name": "CPLD3"
             }
         ],
+        "fans": [],
         "fan_drawers": [
             {
                 "name": "drawer1",
