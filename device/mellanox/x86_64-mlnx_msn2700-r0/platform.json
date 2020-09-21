@@ -1,59 +1,88 @@
 {
     "chassis": {
         "name": "MSN2700",
-        "components": [],
-        "fans": [
+        "components": [
             {
-                "name": "fan1"
+                "name": "ONIE"
             },
             {
-                "name": "fan2"
+                "name": "SSD"
             },
             {
-                "name": "fan3"
+                "name": "BIOS"
             },
             {
-                "name": "fan4"
+                "name": "CPLD1"
             },
             {
-                "name": "fan5"
+                "name": "CPLD2"
             },
             {
-                "name": "fan6"
-            },
-            {
-                "name": "fan7"
-            },
-            {
-                "name": "fan8"
+                "name": "CPLD3"
             }
         ],
         "fan_drawers": [
             {
                 "name": "drawer1",
-                "num_fans": 2
+                "fans": [
+                    {
+                        "name": "fan1"
+                    },
+                    {
+                        "name": "fan2"
+                    }
+                ]
             },
             {
                 "name": "drawer2",
-                "num_fans": 2
+                "fans": [
+                    {
+                        "name": "fan3"
+                    },
+                    {
+                        "name": "fan4"
+                    }
+                ]
             },
             {
                 "name": "drawer3",
-                "num_fans": 2
+                "fans": [
+                    {
+                        "name": "fan3"
+                    },
+                    {
+                        "name": "fan4"
+                    }
+                ]
             },
             {
                 "name": "drawer4",
-                "num_fans": 2
+                "fans": [
+                    {
+                        "name": "fan7"
+                    },
+                    {
+                        "name": "fan8"
+                    }
+                ]
             }
         ],
         "psus": [
             {
                 "name": "PSU 1",
-                "num_fans": 1
+                "fans": [
+                    {
+                        "name": "psu_1_fan_1"
+                    }
+                ]
             },
             {
                 "name": "PSU 2",
-                "num_fans": 1
+                "fans": [
+                    {
+                        "name": "psu_2_fan_1"
+                    }
+                ]
             }
         ],
         "thermals": [
@@ -80,9 +109,6 @@
             },
             {
                 "name": "PSU-2 Temp"
-            },
-            {
-                "name": "xSFP module 1 Temp"
             },
             {
                 "name": "xSFP module 1 Temp"
@@ -280,6 +306,5 @@
             }
         ]
     },
-    "interfaces": {
-    }
+    "interfaces": {}
 }
