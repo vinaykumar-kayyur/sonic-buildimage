@@ -108,7 +108,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         return self.run_commands([ip_address_get_command])
 
     def get_namespace_mgmt_ipv6(self, iptable_ns_cmd_prefix, namespace):
-        ipv6_address_get_command = iptable_ns_cmd_prefix + "ip -6 -o addr show " + ("eth0" if namespace else "docker0") +\
+        ipv6_address_get_command = iptable_ns_cmd_prefix + "ip -6 -o addr show scope global " + ("eth0" if namespace else "docker0") +\
                                  " | awk '{print $4}' | cut -d'/' -f1 | head -1"
         return self.run_commands([ipv6_address_get_command])
 
@@ -213,35 +213,35 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                                                      (docker_mgmt_ip, self.namespace_mgmt_ip))
         return allow_internal_docker_ip_cmds
 
-    def generate_translate_front_panel_snmp_traffic_commands(self, namespace):
+    def generate_fwd_snmp_traffic_from_namespace_to_host_commands(self, namespace):
         """
         The below SNAT and DNAT rules are added in asic namespace in multi-ASIC platforms. It helps to forward the SNMP request coming
         in through the front panel interfaces present in namespace to the SNMP Agent running in the linux host. The external IP address are
         NATed to the internal docker IP address for the SNMP agent running in linux host to respond.
         """
-        translate_front_panel_snmp_cmds = []
+        fwd_snmp_traffic_from_namespace_to_host_cmds = []
 
         if namespace:
             # IPv4 rules
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -X")
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -F")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -X")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -F")
 
             # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
                  "iptables -t nat -A PREROUTING -p udp --dport 161  -j DNAT --to-destination {}".format(self.namespace_mgmt_ip))
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
                  "iptables -t nat -A POSTROUTING -p udp --dport 161 -j SNAT --to-source {}".format(self.namespace_docker_mgmt_ip[namespace]))
 
             # IPv6 rules
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -X")
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -F")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -X")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -F")
 
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
                  "ip6tables -t nat -A PREROUTING -p udp --dport 161  -j DNAT --to-destination {}".format(self.namespace_mgmt_ipv6))
-            translate_front_panel_snmp_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
                  "ip6tables -t nat -A POSTROUTING -p udp --dport 161 -j SNAT --to-source {}".format(self.namespace_docker_mgmt_ipv6[namespace]))
 
-        return translate_front_panel_snmp_cmds
+        return fwd_snmp_traffic_from_namespace_to_host_cmds
 
     def is_rule_ipv4(self, rule_props):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
@@ -476,7 +476,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         snmp traffic coming on the front panel interface
         """
         # Add iptables commands to allow front panel snmp traffic
-        iptables_cmds = self.generate_translate_front_panel_snmp_traffic_commands(namespace)
+        iptables_cmds = self.generate_fwd_snmp_traffic_from_namespace_to_host_commands(namespace)
         log_info("Issuing the following iptables commands:")
         for cmd in iptables_cmds:
             log_info("  " + cmd)
