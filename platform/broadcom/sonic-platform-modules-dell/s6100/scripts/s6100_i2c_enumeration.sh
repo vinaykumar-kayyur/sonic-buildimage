@@ -290,8 +290,8 @@ if [[ "$1" == "init" ]]; then
     switch_board_sfp "new_device"
     switch_board_qsfp "new_device"
     switch_board_qsfp_lpmode "disable"
-    xcvr_presence_interrupts "enable"
     /usr/local/bin/s6100_bitbang_reset.sh
+    xcvr_presence_interrupts "enable"
 elif [[ "$1" == "deinit" ]]; then
     xcvr_presence_interrupts "disable"
     switch_board_sfp "delete_device"
