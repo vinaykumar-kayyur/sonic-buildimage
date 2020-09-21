@@ -38,7 +38,7 @@ except ImportError as e:
 
 # Deafults
 VERSION = '1.0'
-FUNCTION_NAME = '/usr/local/bin/accton_as7326_54x_monitor'
+FUNCTION_NAME = '/usr/local/bin/accton_as7326_56x_monitor'
 
 global log_file
 global log_level
@@ -208,7 +208,7 @@ class device_monitor(object):
                 new_perc=100
                 logging.debug('fan_%d fail, set new_perc to 100',i)
                 #if test_temp==0:# When test no-fan DUT. Need to use this. 
-                    fan_fail=1
+                fan_fail=1
                 if ori_state < LEVEL_FAN_MAX:
                     fan_policy_state=new_state=LEVEL_FAN_MAX
                     logging.debug('fan_policy_state=%d',fan_policy_state)
