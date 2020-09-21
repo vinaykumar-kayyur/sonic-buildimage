@@ -194,7 +194,7 @@ start() {
             echo "Starting existing {{docker_container_name}}$DEV container with HWSKU $HWSKU"
             {%- endif %}
             preStartAction
-            docker start {{docker_container_name}}$DEV
+            /usr/bin/container_action start {{docker_container_name}}$DEV
             postStartAction
             exit $?
         fi
@@ -282,6 +282,7 @@ start() {
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
 {%- endif %}
     docker create {{docker_image_run_opt}} \
+        -e OWNER=local \
         --net=$NET \
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
 {%- if install_debug_image == "y" %}
@@ -334,16 +335,16 @@ start() {
     }
 
     preStartAction
-    docker start {{docker_container_name}}$DEV
+    /usr/bin/container_action start {{docker_container_name}}$DEV
     postStartAction
 }
 
 wait() {
-    docker wait {{docker_container_name}}$DEV
+    /usr/bin/container_action wait {{docker_container_name}}$DEV
 }
 
 stop() {
-    docker stop {{docker_container_name}}$DEV
+    /usr/bin/container_action stop {{docker_container_name}}$DEV
 {%- if docker_container_name == "database" %}
     if [ "$DEV" ]; then
         ip netns delete "$NET_NS"

@@ -140,7 +140,7 @@ INCLUDE_NAT = y
 # TELEMETRY_WRITABLE = y
 # INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
 # run as worker node in kubernetes cluster.
-INCLUDE_KUBERNETES = n
+INCLUDE_KUBERNETES = y
 
 # KUBERNETES_VERSION - Set to the required version.
 # K8s_GCR_IO_PAUSE_VERSION - Version of k8s universal pause container image

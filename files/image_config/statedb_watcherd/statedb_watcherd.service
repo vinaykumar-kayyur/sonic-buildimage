@@ -1,0 +1,11 @@
+[Unit]
+Description=StateDB watcher daemon
+Requires=updategraph.service
+After=updategraph.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/statedb_watcherd
+
+[Install]
+WantedBy=multi-user.target

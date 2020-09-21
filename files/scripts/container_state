@@ -1,0 +1,219 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import syslog
+import inspect
+import datetime
+import time
+import argparse
+import subprocess
+from swsssdk import ConfigDBConnector
+
+global state_db, set_owner, state_data
+state_db = None
+set_owner = "local"
+state_data = {}
+
+# DB field names
+SET_OWNER = "set_owner"
+
+CURRENT_OWNER = "current_owner"
+UPD_TIMESTAMP = "update_time"
+DOCKER_ID = "container_id"
+REMOTE_STATE = "remote_state"
+VERSION = "container_version"
+SYSTEM_STATE = "system_state"
+
+
+def debug_msg(m):
+    msg = "{}: {}".format(inspect.stack()[1][3], m)
+    # print(msg)
+    syslog.syslog(syslog.LOG_DEBUG, msg)
+
+
+def read_data(feature):
+    global state_db, set_owner, state_data
+
+    db = ConfigDBConnector()
+    db.connect(wait_for_init=True, retry_on=True)
+    tbl = db.get_table('FEATURE')
+
+    if ((feature in tbl) and (SET_OWNER in tbl[feature])):
+        set_owner = tbl[feature][SET_OWNER]
+    db = None
+
+    state_db = ConfigDBConnector()
+    state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
+    tbl = state_db.get_table('FEATURE')
+    if feature in tbl:
+        state_data = tbl[feature]
+
+
+def read_field(feature, field, default):
+    tbl = state_db.get_table('FEATURE')
+    if (feature in tbl) and (field in tbl[feature]):
+        return tbl[feature][field]
+    else:
+        return default
+
+
+def get_docker_id():
+    cmd = 'cat /proc/self/cgroup | grep -e ":memory:" | rev | cut -f1 -d\'/\' | rev'
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    output = proc.communicate()[0].decode("utf-8")
+    return output.strip()
+
+
+def update_field(feature, field, val):
+    debug_msg("{}: {{ {}: {} }}".format(feature, field, val))
+    state_db.mod_entry("FEATURE", feature, { field: val}) 
+
+    
+def instance_lower(feature, version):
+    ct_version = state_data[VERSION] if VERSION in state_data else "0.0.0"
+    ct = ct_version.split('.')
+    nxt = version.split('.') if version else "0.0.0".split('.')
+    ret = False
+    for i in nxt:
+        if nxt[i] < ct[i]:
+            ret = True
+            break
+
+    debug_msg("compare versiob: new:{} current:{} res={}".format(
+        version, ct_version, ret))
+    return ret
+
+
+def is_active(feature):
+    if ((SYSTEM_STATE in state_data) and
+            (state_data[SYSTEM_STATE] == "up")):
+        return True
+    else:
+        syslog.syslog(syslog.LOG_ERR, "Found inactive for {}".format(feature))
+        return False
+
+
+def update_state(args, is_up):
+    data = {
+            CURRENT_OWNER: args.owner if is_up else "none",
+            DOCKER_ID: get_docker_id() if is_up else "",
+            UPD_TIMESTAMP: str(datetime.datetime.now())
+            }
+    if is_up:
+        data[VERSION] = args.version
+
+        if (args.owner != "local"):
+            data[REMOTE_STATE] = "running"
+
+    elif state_data[CURRENT_OWNER] != "local":
+        state = state_data[REMOTE_STATE]
+        if state != "pending":
+            if state != "running":
+                syslog.syslog(syslog.LOG_ERR,
+                        "{} kube down state: {} != running", args.feature, state)
+            else:
+                data[REMOTE_STATE] = "stopped"
+
+    debug_msg("{} up= {} data:{}".format(args.feature, is_up, str(data)))
+    state_db.mod_entry("FEATURE", args.feature, data) 
+
+
+def do_exit(feat, m):
+    syslog.syslog(syslog.ERR, "Exiting .... feat:{} docker_id:{} msg:{}".format(
+        feat, get_docker_id(), m))
+    sys.exit(-1)
+
+def container_up(args):
+    debug_msg("BEGIN")
+    read_data(args.feature)
+
+    debug_msg("args={} set_owner={} state_data={}".format(
+        args, set_owner, state_data))
+
+    if args.owner == "local":
+        update_state(args, True)
+    else:
+        if (set_owner == "local"):
+            do_exit(feat, "bail out as set_owner is local")
+
+        if not is_active(args.feature):
+            do_exit(feat, "bail out as system state not active")
+
+        if instance_lower(args.feature, args.version):
+            # Remove label <feature_name>_<version>_enabled
+            cmd = "/usr/bin/kube_label -n {}_{}_enabled".format(
+                    args.feature, args.version)
+
+            proc = subprocess.Popen(cmd)
+            proc.wait()
+            do_exit(feat, "bail out as current deploy id is lower")
+
+        update_field(args.feature, VERSION, args.version)
+
+        mode = state_data[REMOTE_STATE] if REMOTE_STATE in state_data else "none"
+        if mode in ("none", "running", "stopped"):
+            update_field(args.feature, REMOTE_STATE, "pending")
+            mode = "pending"
+        else:
+            debug_msg("{}: Skip remote_state({}) update".format(args.feature, mode))
+
+        
+        i = 0
+        while (mode != "ready"):
+            if i == 0:
+                debug_msg("{}: remote_state={}. Waiting to go ready".format(args.feature, mode))
+                i = 1
+            elif i == 9:
+                i = 0
+            else:
+                i += 1
+
+            time.sleep(2)
+            mode = read_field(args.feature, REMOTE_STATE, "none")
+
+        update_state(args, True)
+
+    debug_msg("END")
+
+
+def container_down(args):
+    debug_msg("BEGIN")
+    read_data(args.feature)
+
+    debug_msg("args={} set_owner={} state_data={}".format(
+        args, set_owner, state_data))
+
+    ct_docker_id = state_data[DOCKER_ID] if DOCKER_ID in state_data else ""
+    caller_docker_id = get_docker_id()
+    if caller_docker_id != ct_docker_id:
+        syslog.syslog(syslog.LOG_ERR, "{} down mismatch docker-id. caller_docker_id={} current:{}".
+                format(args.feature, caller_docker_id, ct_docker_id))
+    else:
+        update_state(args, False)
+    debug_msg("END")
+
+
+
+# e.g. container_state <feature> up/down local/kube <docker id>
+def main():
+    parser = argparse.ArgumentParser(description="state up/down <feature> kube/local [<docker id> <instance id>]")
+    subparsers = parser.add_subparsers(title='actions')
+
+    parser_up = subparsers.add_parser('up')
+    parser_up.add_argument("-f", "--feature", required=True)
+    parser_up.add_argument("-o", "--owner", choices=["local", "kube"], required=True)
+    parser_up.add_argument("-v", "--version", default="")
+    parser_up.set_defaults(func=container_up)
+    
+    parser_down = subparsers.add_parser('down')
+    parser_down.add_argument("-f", "--feature", required=True)
+    parser_down.set_defaults(func=container_down)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
+

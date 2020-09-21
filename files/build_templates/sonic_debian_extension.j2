@@ -302,6 +302,11 @@ echo "hostcfgd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
+# Copy statedb_watcherd files
+sudo cp $IMAGE_CONFIGS/statedb_watcherd/statedb_watcherd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "statedb_watcherd.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/statedb_watcherd/statedb_watcherd $FILESYSTEM_ROOT/usr/bin/
+
 # copy core file uploader files
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable core_uploader.service
@@ -334,6 +339,11 @@ sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy miscellaneous scripts
 sudo cp $IMAGE_CONFIGS/misc/docker-wait-any $FILESYSTEM_ROOT/usr/bin/
+
+# copy remote docker support scripts
+sudo cp ${SCRIPTS_DIR}/container_action  $FILESYSTEM_ROOT/usr/bin/
+sudo cp ${SCRIPTS_DIR}/container_state  $FILESYSTEM_ROOT/usr/bin/
+sudo cp ${SCRIPTS_DIR}/kube_label  $FILESYSTEM_ROOT/usr/bin/
 
 # Copy internal topology configuration scripts
 {%- if sonic_asic_platform == "vs" %}

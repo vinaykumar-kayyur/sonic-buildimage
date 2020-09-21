@@ -1,0 +1,242 @@
+#!/usr/bin/python -u
+# -*- coding: utf-8 -*-
+
+import os
+import socket 
+import subprocess
+import syslog
+import inspect
+from swsssdk import ConfigDBConnector
+
+KUBESERVER_PORT = 6443
+
+# DB field names
+SERVER_KEY = "server"
+SERVER_IP = "server_ip"
+SERVER_CONNECTED = "connected"
+SERVER_UPDATE_TS = "last_update_ts"
+
+SET_OWNER = "set_owner"
+NO_FALLBACK = "no_fallback_to_local"
+
+CURRENT_OWNER = "current_owner"
+UPD_TIMESTAMP = "update_time"
+DOCKER_ID = "docker_id"
+REMOTE_STATE = "remote_state"
+VERSION = "version"
+DEPLOY_ID = "rolling_deploy_id"
+SYSTEM_STATE = "system_state"
+
+global server_state, state_reachable, state_db, cfg_db
+state_reachable = False
+server_state = {}
+state_db = None
+cfg_db = None
+
+
+def debug_msg(m):
+    msg = "{}: {}".format(inspect.stack()[1][3], m)
+    # print(msg)
+    syslog.syslog(syslog.LOG_DEBUG, msg)
+    
+
+
+def port_check(ip_port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1) #Timeout in case of port not open
+    r = s.connect_ex(ip_port)
+    s.close()
+    return r == 0
+
+
+def checkout_reachable():
+    global state_reachable, server_state, state_db
+
+    if ((SERVER_IP in server_state) and (SERVER_CONNECTED in server_state) and
+            server_state[SERVER_IP] and server_state[SERVER_CONNECTED]):
+        state_reachable = port_check((server_state[SERVER_IP], KUBESERVER_PORT))
+        if not state_reachable:
+            threading.Timer(10, state_reachable).start()
+        else:
+            t = str(datetime.datetime.now())
+            debug_msg("server {} marked reachable".format(server_state[SERVER_IP]))
+            state_db.mod_entry("KUBERNETES_MASTER", "SERVER", { SERVER_UPDATE_TS: t  })
+    else:
+        state_reachable = False
+
+    return state_reachable 
+
+
+class feature_manager:
+    def __init__(self):
+        global state_db, cfg_db
+
+        self.state_data = state_db.get_table('FEATURE')
+
+        cfg_table = cfg_db.get_table('FEATURE')
+        for feat in cfg_table:
+            self.handle_state_on_load(feat)
+
+
+    def handle_state_on_load(self, feat):
+        debug_msg("handle_state_on_load")
+        self.process(feat)
+
+
+    def on_update(self, feat, data):
+        # Handle only remote_state == pending
+        #
+        debug_msg("handle_state_on_update old:{} new:{}".format(
+            self.state_data[feat] if feat in self.state_data else {}, data))
+
+        _, old_state = self.read_state(feat)
+        self.state_data[feat] = data
+        self.process(feat, old_state)
+
+
+    def process(self, feat, old_state = "none"):
+        if not self.validate_state(feat):
+            return
+
+        set_owner, _ = self.read_config(feat)
+        current_owner, remote_state = self.read_state(feat)
+
+        debug_msg("{} state(old: {} new:{}) owner=(set:{} current:{})".format(
+            feat, old_state, remote_state, set_owner, current_owner))
+
+        if ((set_owner == "kube") and (current_owner != "none") and
+                (old_state != remote_state) and (remote_state == "pending")):
+            # Kube is pending, call restart to stop current, so new can take over.
+            self.restart_service(feat, set_owner)
+
+
+    def on_server_update(self, key, data):
+        # Not used for now
+        # TODO: ENsure config & state are in sync w.r.t set_owner & current_owner
+        # Restart in local mode, with remote_state cleared to none on disconnect
+        # 
+        return
+
+
+    # Helper methods
+    #
+    def validate_state(self, feat):
+        status = os.system('systemctl is-active --quiet {}'.format(feat))
+        if status != 0:
+            debug_msg("{} systemctl not active for {}".format(inspect.stack()[1][3], feat))
+        return status == 0
+
+
+    def read_config(self, feat):
+        global cfg_db
+
+        cfg_data = cfg_db.get_table('FEATURE')
+        cfg = cfg_data[feat] if feat in cfg_data else {}
+        set_owner = cfg[SET_OWNER] if SET_OWNER in cfg else "local"
+        fallback = not(cfg[NO_FALLBACK] if NO_FALLBACK in cfg else False)
+        return(set_owner, fallback)
+
+    def read_state(self, feat):
+        stat = self.state_data[feat] if feat in self.state_data else {}
+        current_owner = stat[CURRENT_OWNER] if CURRENT_OWNER in stat else "none"
+        mode = stat[REMOTE_STATE] if REMOTE_STATE in stat else "none"
+        return (current_owner, mode)
+
+
+    def restart_service(self, feat, owner):
+        debug_msg("Restart service {} to owner:{}".format(feat, owner))
+        status = os.system("systemctl restart {}".format(feat))
+        if status != 0:
+            syslog.syslog(syslog.LOG_ERR,
+                    "Failed to restart {} to switch to {}".format(feat, owner))
+        else:
+            syslog.syslog(syslog.LOG_INFO,
+                    "Restarted {} to switch to {}".format(feat, owner))
+
+
+class label_manager:
+    # Watch for pending labels ("KUBE_LABELS|PENDING") and try reachability
+    # Any time reachable call, kube_label.py to update pending labels.
+    #
+    def __init__(self):
+        global state_db, server_state
+
+        master = state_db.get_table('KUBERNETES_MASTER')
+        server_state = master[SERVER_KEY] if SERVER_KEY in master else {}
+        self.check_pending()
+
+
+    def check_pending(self):
+        pending = state_db.get_entry("KUBE_LABELS", "PENDING")
+        if pending:
+            reachable = checkout_reachable()
+            if reachable:
+                proc = subprocess.Popen("/usr/bin/kube_label.py", shell=True)
+                proc.wait()
+
+
+    def on_update(self, key, data):
+        if key == "PENDING":
+            self.check_pending()
+
+
+    def on_server_update(self, key, data):
+        global state_db, server_state
+
+        if (key != "server") or (server_state == data):
+            return
+
+        last_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
+
+        server_state = data
+        connected = server_state[SERVER_CONNECTED] if SERVER_CONNECTED in server_state else False
+        ct_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
+
+        if connected and (last_ts != ct_ts):
+            check_pending()
+
+
+class StateDBDeamon:
+    def __init__(self):
+        global state_db, cfg_db
+
+        cfg_db = ConfigDBConnector()
+        cfg_db.connect(wait_for_init=True, retry_on=True)
+        syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
+
+        state_db = ConfigDBConnector()
+        state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
+        syslog.syslog(syslog.LOG_INFO, 'StateDB connect success')
+
+        self.feature_handler = feature_manager()
+        self.label_handler = label_manager()
+
+    def feature_update(self, key, data):
+        self.feature_handler.on_update(key, data)
+
+    def label_update(self, key, data):
+        self.label_handler.on_update(key, data)
+
+    def server_update(self, key, data):
+        self.label_handler.on_server_update(key, data)
+        self.feature_handler.on_server_update(key, data)
+
+
+    def start(self):
+        global state_db
+
+        # Update all feature states once upon starting
+
+        state_db.subscribe('FEATURE', lambda table, key, data: self.feature_update(key, data))
+        state_db.subscribe('KUBE_LABELS', lambda table, key, data: self.label_update(key, data))
+        state_db.subscribe('KUBERNETES_MASTER', lambda table, key, data: self.server_update(key, data))
+        state_db.listen()
+
+
+def main():
+    daemon = StateDBDeamon()
+    daemon.start()
+
+
+if __name__ == "__main__":
+    main()

@@ -157,3 +157,14 @@ dependent_startup_wait_for=isc-dhcp-relay-{{ vlan_name }}:running
 
 {% endif %}
 {% endif %}
+
+[program:container_monitor]
+command=/usr/bin/container_monitor.py snmp
+priority=5
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=start:exited
+

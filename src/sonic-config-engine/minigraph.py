@@ -1115,7 +1115,23 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, sub_role)
     results['FEATURE'] = {
         'telemetry': {
-            'status': 'enabled'
+            'status': 'enabled',
+            'set_owner': 'kube'
+        },
+        'snmp': {
+            'set_owner': 'kube'
+        },
+        'pmon': {
+            'set_owner': 'kube'
+        },
+        'lldp': {
+            'set_owner': 'kube'
+        },
+        'radv': {
+            'set_owner': 'kube'
+        },
+        'dhcp_relay': {
+            'set_owner': 'kube'
         }
     }
     results['TELEMETRY'] = {
