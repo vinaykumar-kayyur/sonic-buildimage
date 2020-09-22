@@ -6,6 +6,7 @@
 ##  bgpd
 ##  staticd
 ##  bgpcfgd
+##  bgpmon
 ###############################################################################
 check program bgp|zebra with path "/usr/bin/process_checker bgp /usr/lib/frr/zebra"
     if status != 0 for 5 times within 5 cycles then alert
@@ -20,4 +21,7 @@ check program bgp|staticd with path "/usr/bin/process_checker bgp /usr/lib/frr/s
     if status != 0 for 5 times within 5 cycles then alert
 
 check program bgp|bgpcfgd with path "/usr/bin/process_checker bgp /usr/bin/python /usr/local/bin/bgpcfgd"
+    if status != 0 for 5 times within 5 cycles then alert
+
+check program bgp|bgpmon with path "/usr/bin/process_checker bgp python /usr/local/bin/bgpmon"
     if status != 0 for 5 times within 5 cycles then alert
