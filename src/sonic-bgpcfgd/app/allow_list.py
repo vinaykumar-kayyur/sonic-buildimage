@@ -15,6 +15,10 @@ class BGPAllowListMgr(Manager):
     PL_NAME_TMPL = "PL_ALLOW_LIST_DEPLOYMENT_ID_%d_COMMUNITY_%s_V%s"
     COMMUNITY_NAME_TMPL = "COMMUNITY_ALLOW_LIST_DEPLOYMENT_ID_%d_COMMUNITY_%s"
     RM_NAME_TMPL = "ALLOW_LIST_DEPLOYMENT_ID_%d_V%s"
+    ROUTE_MAP_ENTRY_WITH_COMMUNITY_START = 10
+    ROUTE_MAP_ENTRY_WITH_COMMUNITY_END = 29990
+    ROUTE_MAP_ENTRY_WITHOUT_COMMUNITY_START = 30000
+    ROUTE_MAP_ENTRY_WITHOUT_COMMUNITY_END = 65530
 
     V4 = "v4"  # constant for af enum: V4
     V6 = "v6"  # constant for af enum: V6
@@ -454,12 +458,12 @@ class BGPAllowListMgr(Manager):
         """
         used_sequence_numbers = set(seq_numbers)
         sequence_number = None
-        if has_community:  # put entries without communities after 32768
-            start_seq = 10
-            end_seq = 29990
+        if has_community:  # put entries without communities after 29999
+            start_seq = BGPAllowListMgr.ROUTE_MAP_ENTRY_WITH_COMMUNITY_START
+            end_seq = BGPAllowListMgr.ROUTE_MAP_ENTRY_WITH_COMMUNITY_END
         else:
-            start_seq = 30000
-            end_seq = 65530
+            start_seq = BGPAllowListMgr.ROUTE_MAP_ENTRY_WITHOUT_COMMUNITY_START
+            end_seq = BGPAllowListMgr.ROUTE_MAP_ENTRY_WITHOUT_COMMUNITY_END
         for i in range(start_seq, end_seq, 10):
             if i not in used_sequence_numbers:
                 sequence_number = i
