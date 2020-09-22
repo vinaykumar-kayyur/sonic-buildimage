@@ -20,7 +20,6 @@ UPD_TIMESTAMP = "update_time"
 DOCKER_ID = "docker_id"
 REMOTE_STATE = "remote_state"
 VERSION = "version"
-DEPLOY_ID = "rolling_deploy_id"
 SYSTEM_STATE = "system_state"
 
 def debug_msg(m):
