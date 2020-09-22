@@ -27,6 +27,7 @@ RUN apt-get clean -y        && \
     apt-get autoremove -y   && \
     rm -rf /debs
 
+COPY ["start.sh", "/usr/bin/"]
 COPY ["docker-init.sh", "/usr/bin/"]
 COPY ["radvd.conf.j2", "wait_for_link.sh.j2", "docker-router-advertiser.supervisord.conf.j2", "/usr/share/sonic/templates/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
