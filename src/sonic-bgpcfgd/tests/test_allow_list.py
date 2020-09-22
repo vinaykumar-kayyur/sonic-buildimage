@@ -231,7 +231,6 @@ def test_set_handler_no_community_data_is_already_presented():
         ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4',
         'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 30000',
         ' match ipv6 address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6',
-        'exit',
         ""
     ]
     common_objs = {
