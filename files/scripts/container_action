@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import os
-import sys
 import syslog
 import subprocess
 import argparse
@@ -11,7 +9,6 @@ from swsssdk import ConfigDBConnector
 
 local_only = ("database", "syncd", "swss")
 
-global state_db
 state_db = None
 
 # DB field names
@@ -43,7 +40,7 @@ def init():
 
 
 def read_data(is_config, feature, fields, defaults):
-    ret = ()
+    ret = []
 
     db = cfg_db if is_config else state_db
 
@@ -54,12 +51,12 @@ def read_data(is_config, feature, fields, defaults):
     for field in fields:
         val = data[field] if field in data else defaults[i]
         i += 1
-        ret += (val, )
+        ret += [val]
 
     debug_msg("config:{} feature:{} fields:{} val:{}".format(
         is_config, feature, str(fields), str(ret)))
 
-    return ret
+    return tuple(ret)
 
 
 def read_config(feature):
@@ -117,7 +114,6 @@ def container_start(feature):
     if set_owner == "local":
         if remote_state.lower() != "none":
             update_field(feature, REMOTE_STATE, "none")
-            remote_state = "none"
         ret = docker_action("start", feature)
 
     else:
@@ -131,7 +127,6 @@ def container_start(feature):
 
 
 def container_stop(feature):
-    ret = 0
     debug_msg("BEGIN")
     set_owner, _ = read_config(feature)
     current_owner, remote_state, docker_id = read_state(feature)
@@ -150,13 +145,12 @@ def container_stop(feature):
         set_label(feature, False)
 
     if docker_id:
-        ret = docker_action("stop", docker_id)
+        docker_action("stop", docker_id)
 
     debug_msg("END")
 
 
 def container_kill(feature):
-    ret = 0
     debug_msg("BEGIN")
     set_owner, _ = read_config(feature)
     current_owner, remote_state, docker_id = read_state(feature)
@@ -175,7 +169,7 @@ def container_kill(feature):
         set_label(feature, False)
 
     if docker_id:
-        ret = docker_action("kill", docker_id)
+        docker_action("kill", docker_id)
 
     proc = subprocess.Popen("container_state.py down -f {}".format(feature))
     proc.wait()
@@ -184,7 +178,6 @@ def container_kill(feature):
 
 
 def container_wait(feature):
-    ret = 0
     debug_msg("BEGIN")
 
     set_owner, _ = read_config(feature)
@@ -210,7 +203,7 @@ def container_wait(feature):
 
 
     debug_msg("END -- transitioning to docker wait")
-    return docker_action("wait", docker_id)
+    docker_action("wait", docker_id)
 
 
 def container_id(feature):
@@ -219,7 +212,6 @@ def container_id(feature):
             (set_owner == "local") or (current_owner == "local"))):
         docker_id = feature
     print(docker_id)
-    return docker_id
 
 
 def main():

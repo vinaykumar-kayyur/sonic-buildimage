@@ -27,7 +27,6 @@ VERSION = "version"
 DEPLOY_ID = "rolling_deploy_id"
 SYSTEM_STATE = "system_state"
 
-global server_state, state_reachable, state_db, cfg_db
 state_reachable = False
 server_state = {}
 state_db = None

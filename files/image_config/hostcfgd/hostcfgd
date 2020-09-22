@@ -389,7 +389,6 @@ class feature_handler:
     def restart_service(self, feat):
         status = os.system("systemctl restart {}".format(feat))
         debug_msg("calling restart service for feat:{}".format(feat))
-        status = 0
         if status != 0:
             syslog.syslog(syslog.LOG_ERR,
                     "Failed to restart {} to switch to local".format(feat))

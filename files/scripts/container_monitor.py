@@ -5,8 +5,6 @@ import subprocess
 import syslog
 import sys
 
-global name
-
 name = None
 
 def mark_end():

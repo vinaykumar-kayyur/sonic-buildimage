@@ -1,7 +1,6 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/env python3 -u
 # -*- coding: utf-8 -*-
 
-import os
 import socket 
 import subprocess
 import syslog
@@ -89,7 +88,7 @@ def write_label(name, val):
             if SERVER_CONNECTED  in server_data else "false")
 
     if server_ip:
-        connect_status = port_check()
+        connect_status = port_check(server_ip)
         if server_connected != connect_status:
             ts = datetime.datetime.now()
             state_db.set_entry("KUBERNETES_MASTER", "SERVER", 
