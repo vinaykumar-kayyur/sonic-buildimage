@@ -89,7 +89,7 @@ dependent_startup=true
 dependent_startup_wait_for=lldp-syncd:running
 
 [program:container_monitor]
-command=/usr/bin/container_monitor.py snmp
+command=/usr/bin/container_monitor.py lldp
 priority=6
 autostart=false
 autorestart=false

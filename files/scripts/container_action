@@ -7,7 +7,7 @@ import inspect
 import time
 from swsssdk import ConfigDBConnector
 
-local_only = ("database", "syncd", "swss")
+remote_features = ("snmp", "telemetry", "pmon", "lldp", "radv", "dhcp-relay")
 
 state_db = None
 
@@ -75,7 +75,7 @@ def read_state(feature):
 
 def docker_action(action, feature):
     cmd = ["docker", action, feature]
-    proc = subprocess.Popen(cmd)
+    proc = subprocess.Popen(cmd, shell=True)
     proc.wait()
     debug_msg("docker cmd: {}".format(" ".join(cmd)))
     return proc.returncode
@@ -182,7 +182,6 @@ def container_wait(feature):
 
     set_owner, _ = read_config(feature)
     current_owner, remote_state, docker_id = read_state(feature)
-    is_local = False
 
     if ((not docker_id) and (
         (set_owner == "local") or (current_owner == "local"))):
@@ -223,7 +222,7 @@ def main():
 
     init()
 
-    if args.name in local_only:
+    if args.name not in remote_features:
         docker_action(args.action, args.name)
 
     elif args.action == "start":

@@ -5,10 +5,10 @@
 IMAGE_VERSION = "1.0.0"
 
 if [ "${RUNTIME_OWNER}" == "" ]; then
-    RUNTIME_OWNER="local"
+    RUNTIME_OWNER="kube"
 fi
 
-/usr/bin/container_state up -f snmp -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
+/usr/bin/container_state up -f dhcp_relay -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
 
 # If our supervisor config has entries in the "isc-dhcp-relay" group...
 if [ $(supervisorctl status | grep -c "^isc-dhcp-relay:") -gt 0 ]; then

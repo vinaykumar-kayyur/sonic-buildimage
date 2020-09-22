@@ -6,7 +6,7 @@
 IMAGE_VERSION = "1.0.0"
 
 if [ "${RUNTIME_OWNER}" == "" ]; then
-    RUNTIME_OWNER="local"
+    RUNTIME_OWNER="kube"
 fi
 
 /usr/bin/container_state up -f snmp -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}

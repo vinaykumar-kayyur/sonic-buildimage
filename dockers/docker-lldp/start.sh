@@ -5,10 +5,10 @@
 IMAGE_VERSION = "1.0.0"
 
 if [ "${RUNTIME_OWNER}" == "" ]; then
-    RUNTIME_OWNER="local"
+    RUNTIME_OWNER="kube"
 fi
 
-/usr/bin/container_state up -f snmp -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
+/usr/bin/container_state up -f lldp -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
 
 sonic-cfggen -d -t /usr/share/sonic/templates/lldpd.conf.j2 > /etc/lldpd.conf
 
