@@ -9,7 +9,7 @@ if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"
 fi
 
-/usr/bin/container_state up -f snmp -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
+/usr/share/sonic/scripts/container_state up -f snmp -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
 
 mkdir -p /etc/ssw /etc/snmp
 

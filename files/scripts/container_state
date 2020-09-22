@@ -139,7 +139,7 @@ def container_up(args):
 
         if instance_lower(args.feature, args.version):
             # Remove label <feature_name>_<version>_enabled
-            cmd = "/usr/bin/kube_label -n {}_{}_enabled".format(
+            cmd = "/usr/share/sonic/scripts/kube_label -n {}_{}_enabled".format(
                     args.feature, args.version)
 
             proc = subprocess.Popen(cmd)

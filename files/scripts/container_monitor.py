@@ -8,7 +8,7 @@ import sys
 name = None
 
 def mark_end():
-    cmd = ["/usr/bin/container_state.py", "down", "-f", name]
+    cmd = ["/usr/share/sonic/scripts/container_state.py", "down", "-f", name]
     syslog.syslog(syslog.LOG_INFO, "Marking end of docker {}".format(name))
 
     try:
