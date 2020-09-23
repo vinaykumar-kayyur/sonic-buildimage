@@ -33,6 +33,8 @@ def check_process_existence(container_name, process_cmdline):
                     break
 
             if not is_running:
+                # If this script is run by Monit, then the following output will be appneded to
+                # Monit's syslog message.
                 print("'{}' is not running.".format(process_cmdline))
                 sys.exit(1)
     else:
