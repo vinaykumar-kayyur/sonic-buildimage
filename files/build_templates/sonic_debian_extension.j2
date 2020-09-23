@@ -78,7 +78,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic/
 sudo mkdir -p $FILESYSTEM_ROOT/etc/modprobe.d/
 sudo mkdir -p $FILESYSTEM_ROOT/var/cache/sonic/
 sudo mkdir -p $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
-# This is needed for Stretch and might not be needed for Buster where Linux create this directory by default. 
+# This is needed for Stretch and might not be needed for Buster where Linux create this directory by default.
 # Keeping it generic. It should not harm anyways.
 sudo mkdir -p $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 
@@ -169,26 +169,28 @@ sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 
+# Install Debian packages and their dependencies which are needed by sonic-utilities
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f python-m2crypto
+
 # Install built Python Click package (and its dependencies via 'apt-get -y install -f')
 # Do this before installing sonic-utilities so that it doesn't attempt to install
 # an older version as part of its dependencies
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python-click*_all.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 
-# Install python pexpect used by sonic-utilities consutil
-# using pip install instead to get a more recent version than is available through debian
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install pexpect
+# Install SONiC Utilities Python 2 package
+SONIC_UTILITIES_PY2_WHEEL_NAME=$(basename {{sonic_utilities_py2_wheel_path}})
+sudo cp {{sonic_utilities_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2_WHEEL_NAME
+sudo LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_UTILITIES_PY2_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2_WHEEL_NAME
 
-# Install tabulate >= 0.8.1 via pip in order to support multi-line row output for sonic-utilities
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install tabulate==0.8.2
-
-# Install packages to support Dynamic Port Breakout config command for sonic-utilities
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install xmltodict==0.12.0
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install jsondiff==1.2.0
-
-# Install SONiC Utilities (and its dependencies via 'apt-get -y install -f')
-sudo dpkg --root=$FILESYSTEM_ROOT -i $python_debs_path/python-sonic-utilities_*.deb || \
+# Install sonic-utilities data files (and any dependencies via 'apt-get -y install -f')
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-utilities-data_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+
+# sonic-utilities-data installs bash-completion as a dependency. However, it is disabled by default
+# in bash.bashrc, so we copy a version of the file with it enabled here.
+sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 
 {% if enable_ztp == "y" %}
 # Install ZTP (and its dependencies via 'apt-get -y install -f')
@@ -196,9 +198,11 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-ztp_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 {% endif %}
 
-# SONiC utilities installs bash-completion as a dependency. However, it is disabled by default
-# in bash.bashrc, so we copy a version of the file with it enabled here.
-sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
+{% if include_host_service == "y" %}
+# Install SONiC Host Service (and its dependencies via 'apt-get -y install -f')
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-host-service_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+{% endif %}
 
 # Install SONiC Device Data  (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-device-data_*.deb || \
@@ -220,6 +224,13 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo DEBIAN_FRONTEND=noninteractive dpkg --root=$FILESYSTEM_ROOT -i $debs_path/kdump-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends --force-no install
 fi
+
+# Install python-swss-common package and all its dependent packages
+{% if python_swss_debs.strip() -%}
+{% for deb in python_swss_debs.strip().split(' ') -%}
+sudo dpkg --root=$FILESYSTEM_ROOT -i {{deb}} || sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+{% endfor %}
+{% endif %}
 
 # Install custom-built monit package and SONiC configuration files
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/monit_*.deb || \
@@ -467,10 +478,10 @@ sudo chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS info
 {% set imagefilename = image.split('/')|last -%}
 {% set imagename = imagefilename.split('.')|first -%}
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS load -i {{image}}
-sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagename}}:$(sonic_get_version)
+sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagename}}:"${SONIC_IMAGE_VERSION}"
 {% if imagename.endswith('-dbg') %}
 {% set imagebasename = imagename.replace('-dbg', '') -%}
-sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagebasename}}:$(sonic_get_version)
+sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagebasename}}:"${SONIC_IMAGE_VERSION}"
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagebasename}}:latest
 {% endif %}
 {% endfor %}
@@ -529,9 +540,15 @@ sudo LANG=C cp $SCRIPTS_DIR/sonic-netns-exec $FILESYSTEM_ROOT/usr/bin/sonic-netn
 # It implements delayed start of services
 sudo cp $BUILD_TEMPLATES/snmp.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "snmp.timer" | sudo tee -a $GENERATED_SERVICE_FILE
+
 {% if include_system_telemetry == 'y' %}
 sudo cp $BUILD_TEMPLATES/telemetry.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "telemetry.timer" | sudo tee -a $GENERATED_SERVICE_FILE
+{% endif %}
+
+{% if include_mgmt_framework == 'y' %}
+sudo cp $BUILD_TEMPLATES/mgmt-framework.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "mgmt-framework.timer" | sudo tee -a $GENERATED_SERVICE_FILE
 {% endif %}
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-dev
