@@ -223,10 +223,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         if namespace:
             # IPv4 rules
-            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -X")
-            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -F")
-
-            # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
                                                "iptables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
                                                (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ip))
@@ -235,9 +231,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                                                (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ip[namespace]))
 
             # IPv6 rules
-            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -X")
-            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -F")
-
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
                                                "ip6tables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
                                                (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ipv6))
