@@ -85,11 +85,7 @@ class ControlPlaneAclManager(object):
             "ip_protocols": ["tcp"],
             "dst_ports": ["22"]
         },
-        "IP_ANY": {
-            "ip_protocols": ["any"],
-            "dst_ports": ["0"]
-        },
-        "IPV6_ANY": {
+        "ANY": {
             "ip_protocols": ["any"],
             "dst_ports": ["0"]
         }
