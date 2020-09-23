@@ -11,5 +11,6 @@ setuptools.setup(name='sonic-bgpcfgd',
       packages=setuptools.find_packages(),
       scripts=['bgpcfgd'],
       install_requires=['jinja2>=2.10', 'netaddr', 'pyyaml'],
-      setup_requires=['pytest-runner', 'pytest'],
+      setup_requires=['pytest-runner'],
+      test_requires=['pytest', 'pytest-cov'],
 )
