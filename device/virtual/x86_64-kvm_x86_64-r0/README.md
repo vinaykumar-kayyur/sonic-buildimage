@@ -1,7 +1,7 @@
 # Changing the virtual device
 
 You can control the hw sku and default factory configuration for the VS image 
-by modifying the content of the file default_sku. 
+by modifying the content of the file default_sku in this directory. 
 
 The format of default_sku is a single line:
 
@@ -22,11 +22,29 @@ These include "t1", "l2", and "empty". See the file
 sonic-buildimage/src/sonic-config-engine/config_samples.py for details on how 
 each default_preset value is interpreted.
 
+# Changing the hwsku of an existing VS switch
+
+To change the default hwsku for a VS image that has already been built and installed, follow these steps:
+
+- Edit /usr/share/sonic/device/x86_64-kvm_x86_64-r0/default_sku. For details, see the section below (Device Specific Documentation)
+- Edit /etc/sonic/config_db.json, and change the "hwsku" key in DEVICE_METADATA:localhost to match the hw_key used in default_sku. Example:
+
+  "DEVICE_METADATA": {
+    "localhost": {
+        ...
+        "hwsku": "brcm_gearbox_vs",
+        ...
+    }
+  },
+  ...
+- Reboot the switch
+- Use "show platform summary" to verify, and follow any steps specific to the platform, as needed, such as those described below for the brcm_gearbox_vs hwsku.
+
 # Device Specific Documentation
 
 For general info on building, see https://github.com/Azure/sonic-buildimage/blob/master/README.md
 
-# Force-10-S6000
+## Force-10-S6000
 
 This is the default VS for SONiC. To enable, set contents of default_sku to:
 
@@ -42,7 +60,7 @@ make configure PLATFORM=vs
 make target/sonic-vs.img.gz
 ```
 
-# brcm_gearbox_vs
+## brcm_gearbox_vs
 
 This sku simulates a device with a Broadcom BRCM81724 gearbox PHY. To enable,
 set default_sku to:
