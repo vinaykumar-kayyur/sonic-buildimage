@@ -474,15 +474,108 @@ class BGPAllowListMgr(Manager):
         log_debug("BGPAllowListMgr::__find_next_seq_number '%d' has_community='%s'" % info)
         return sequence_number
 
-    @staticmethod
-    def __restart_peers(deployment_id):
+    def __extract_peer_group_names(self):
         """
-        Restart peers with deployment_id
+        Extract names of all peer-groups defined in the config
+        :return: list of peer-group names
+        """
+        # Find all peer-groups entries
+        re_peer_group = re.compile(r'^\s*neighbor (\S+) peer-group$')
+        peer_groups = []
+        for line in self.cfg_mgr.get_text():
+            result = re_peer_group.match(line)
+            if result:
+                peer_groups.append(result.group(1))
+        return peer_groups
+
+    def __get_peer_group_to_route_map(self, peer_groups):
+        """
+        Extract names of route-maps which is connected to peer-groups defines as peer_groups
+        :peer_groups: a list of peer-group names
+        :return: dictionary where key is a peer-group, value is a route-map name which is defined as route-map in
+                 for the peer_group.
+        """
+        pg_2_rm = {}
+        for pg in peer_groups:
+            re_peer_group_rm = re.compile(r'^\s*neighbor %s route-map (\S+) in$' % pg)
+            for line in self.cfg_mgr.get_text():
+                result = re_peer_group_rm.match(line)
+                if result:
+                    pg_2_rm[pg] = result.group(1)
+                    break
+        return pg_2_rm
+
+    def __get_route_map_calls(self, rms):
+        """
+        Find mapping between route-maps and route-map call names, defined for the route-maps
+        :rms: a set with route-map names
+        :return: a dictionary: key - name of a route-map, value - name of a route-map call defined for the route-map
+        """
+        rm_2_call = {}
+        re_rm = re.compile(r'^route-map (\S+) permit \d+$')
+        re_call = re.compile(r'^\s*call (\S+)$')
+        inside_name = None
+        for line in self.cfg_mgr.get_text():
+            if inside_name:
+                inside_result = re_call.match(line)
+                if inside_result:
+                    rm_2_call[inside_name] = inside_result.group(1)
+                    inside_name = None
+                    continue
+            result = re_rm.match(line)
+            if not result:
+                continue
+            inside_name = None
+            if result.group(1) not in rms:
+                continue
+            inside_name = result.group(1)
+        return rm_2_call
+
+    def __get_peer_group_to_restart(self, deployment_id, pg_2_rm, rm_2_call):
+        """
+        Get peer_groups which are assigned to deployment_id
+        :deployment_id: deployment_id number
+        :pg_2_rm: a dictionary where key is a peer-group, value is a route-map name which is defined as route-map in
+                  for the peer_group.
+        :rm_2_call: a dictionary: key - name of a route-map, value - name of a route-map call defined for the route-map
+        """
+        ret = set()
+        target_allow_list_prefix = 'ALLOW_LIST_DEPLOYMENT_ID_%d_V' % deployment_id
+        for peer_group, route_map in pg_2_rm.items():
+            if route_map in rm_2_call:
+                if rm_2_call[route_map].startswith(target_allow_list_prefix):
+                    ret.add(peer_group)
+        return list(ret)
+
+    def __find_peer_group_by_deployment_id(self, deployment_id):
+        """
+        Deduce peer-group names which are connected to devices with requested deployment_id
+        :param deployment_id: deployment_id number
+        :return: a list of peer-groups which a used by devices with requested deployment_id number
+        """
+        self.cfg_mgr.update()
+        peer_groups = self.__extract_peer_group_names()
+        pg_2_rm = self.__get_peer_group_to_route_map(peer_groups)
+        rm_2_call = self.__get_route_map_calls(set(pg_2_rm.values()))
+        ret = self.__get_peer_group_to_restart(deployment_id, pg_2_rm, rm_2_call)
+        return list(ret)
+
+    def __restart_peers(self, deployment_id):
+        """
+        Restart peer-groups with requested deployment_id
         :param deployment_id: deployment_id number
         """
         log_info("BGPAllowListMgr::Restart peers with deployment_id=%d" % deployment_id)
-        no_error, _, _ = run_command(["vtysh", "-c", "clear bgp * soft in"])
-        return no_error
+        peer_groups = self.__find_peer_group_by_deployment_id(deployment_id)
+        rv = True
+        if peer_groups:
+            for peer_group in peer_groups:
+                no_error, _, _ = run_command(["vtysh", "-c", "clear bgp peer-group %s soft in" % peer_group])
+                rv = no_error == 0 and rv
+        else:
+            no_error, _, _ = run_command(["vtysh", "-c", "clear bgp * soft in"])
+            rv = no_error == 0
+        return rv
 
     def __get_enabled(self):
         """
