@@ -228,18 +228,22 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
             # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                 "iptables -t nat -A PREROUTING -p udp --dport 161  -j DNAT --to-destination {}".format(self.namespace_mgmt_ip))
+                                               "iptables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ip))
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                 "iptables -t nat -A POSTROUTING -p udp --dport 161 -j SNAT --to-source {}".format(self.namespace_docker_mgmt_ip[namespace]))
+                                               "iptables -t nat -A POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ip[namespace]))
 
             # IPv6 rules
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -X")
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -F")
 
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                 "ip6tables -t nat -A PREROUTING -p udp --dport 161  -j DNAT --to-destination {}".format(self.namespace_mgmt_ipv6))
+                                               "ip6tables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ipv6))
             fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                 "ip6tables -t nat -A POSTROUTING -p udp --dport 161 -j SNAT --to-source {}".format(self.namespace_docker_mgmt_ipv6[namespace]))
+                                               "ip6tables -t nat -A POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ipv6[namespace]))
 
         return fwd_snmp_traffic_from_namespace_to_host_cmds
 
