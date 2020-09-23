@@ -216,8 +216,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     def generate_fwd_snmp_traffic_from_namespace_to_host_commands(self, namespace):
         """
         The below SNAT and DNAT rules are added in asic namespace in multi-ASIC platforms. It helps to forward the SNMP request coming
-        in through the front panel interfaces present in namespace to the SNMP Agent running in the linux host. The external IP address are
-        NATed to the internal docker IP address for the SNMP agent running in linux host to respond.
+        in through the front panel interfaces created/present in the asic namespace to the SNMP Agent running in SNMP container in
+        linux host network namespace. The external IP addresses are NATed to the internal docker IP addresses for the SNMP Agent to respond.
         """
         fwd_snmp_traffic_from_namespace_to_host_cmds = []
 
