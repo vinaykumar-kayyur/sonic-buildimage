@@ -56,3 +56,12 @@ fi
 
 # Automatically log out console ttyS* sessions after 15 minutes of inactivity
 tty | grep ttyS >/dev/null && TMOUT=900
+
+# if SSH_TARGET_CONSOLE_LINE was set, attach to console line interactive cli directly
+if [ ! -z "$SSH_TARGET_CONSOLE_LINE" ]; then
+    # enter the interactive cli
+    sudo connect $SSH_TARGET_CONSOLE_LINE
+
+    # exit after console session ended
+    exit
+fi
