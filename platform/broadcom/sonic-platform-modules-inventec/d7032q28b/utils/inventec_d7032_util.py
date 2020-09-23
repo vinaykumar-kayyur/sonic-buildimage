@@ -136,7 +136,8 @@ def system_install():
     status, output = exec_cmd("rmmod i2c_ismt ", 1)
     status, output = exec_cmd("rmmod i2c-i801 ", 1)
     status, output = exec_cmd("rmmod gpio_ich",1)
-    status, output = exec_cmd("insmod /lib/modules/3.16.0-5-amd64/extra/gpio-ich.ko gpiobase=0",1)
+    status, output = exec_cmd("insmod /lib/modules/4.9.0-8-amd64/kernel/drivers/gpio/gpio-ich.ko gpiobase=0",1)
+    #status, output = exec_cmd("insmod /lib/modules/3.16.0-5-amd64/extra/gpio-ich.ko gpiobase=0",1)
 
     #install drivers
     for i in range(0,len(drivers)):
@@ -156,25 +157,25 @@ def system_install():
 	      return status   
     
     for i in range(22,30):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-4/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-4/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status   
     for i in range(30,38):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-5/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-5/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status     
     for i in range(6,14):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-2/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-2/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
                 return status     
     for i in range(14,22):
-        status, output =exec_cmd("echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-3/i2c-"+str(i)+"/new_device", 1)
+        status, output =exec_cmd("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/i2c-3/i2c-"+str(i)+"/new_device", 1)
         if status:
             print output
             if FORCE == 0:            
@@ -199,6 +200,7 @@ def install():
     return
 
 def uninstall():
+#    pass
     global FORCE
     exec_cmd("rmmod gpio_ich",1)
     #uninstall drivers

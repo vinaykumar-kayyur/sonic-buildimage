@@ -18,6 +18,7 @@
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
 
+#define INV_PTHREAD_KERNEL_MODULE
 
 #define SHOW_ATTR_WARNING       ("N/A")
 #define SHOW_ATTR_NOTPRINT      ("Not Available")
@@ -70,8 +71,6 @@ int status_led_check_diag_mode(void);
 #define SYSFS_LOG(fmt, args...) printk(KERN_WARNING "[p_thread] " fmt, ##args)
 #endif
 
-#define INV_PTHREAD_KERNEL_MODULE (1)
-#define SWITCH_HEALTH_LED_CHANGE_VIA_GPIO (1)
 
 /* inventec_class *********************************/
 static struct kobject *status_kobj;
@@ -260,7 +259,7 @@ int sysfs_detect_hwmon_index(void)
 	inventec_show_attr(hwmon_buf, hwmon_path);
 	if (strncmp(hwmon_buf, "inv_psoc", 8) == 0) {
 	    hwm_psoc = hwid;
-	} 
+	}
 	else
 	if (strncmp(hwmon_buf, "inv_bmc", 7) == 0) {
 	    hwm_psoc = hwid;
@@ -490,12 +489,12 @@ int fans_control(void)
     if (ret == FAN_TBL_TOTAL) {
         status_led_red("3"); //4Hz
         if (cd_shutdown == 0) {
-            kobject_uevent(status_kobj, KOBJ_REMOVE);
+            //kobject_uevent(status_kobj, KOBJ_REMOVE);
         }
         else if (cd_shutdown > 0)
         {
             printk(KERN_ERR "[p_thread] All fans failed.\n");
-            printk(KERN_ERR "[p_thread] System shutdown immediately in %d seconds.\n", cd_shutdown);
+            printk(KERN_ERR "[p_thread] System is going to shutdown immediately in %d seconds.\n", cd_shutdown);
         }
         cd_shutdown -= 1;
     }
@@ -1003,17 +1002,13 @@ status_led_red(const char *freq)
     ssize_t ret;
 
     ret = inventec_store_attr("0", 1, &status_led_grn_path[0]);
-
     if (ret < 0) {
         return ret;
     }
-
     ret = inventec_store_attr(freq, strlen(freq), &status_led_red_path[0]);
-
     if (ret < 0) {
         return ret;
     }
-
     if ((ret = status_led_diag_mode_enable()) <= 0) {
         return ret;
     }
@@ -1118,32 +1113,16 @@ static int thread_data;
 #ifdef SWITCH_HEALTH_LED_CHANGE_VIA_GPIO
 void led_set_gpio_to_change_status_led(void)
 {
-    ssize_t ret = inventec_store_attr("253", 3, "/sys/class/gpio/export");
+    ssize_t ret = inventec_store_attr("57", 2, "/sys/class/gpio/export");
     if (ret < 0) {
-	SYSFS_LOG("[p_thread] Write 253 to /sys/class/gpio/export failed\n");
+	SYSFS_LOG("[p_thread] Write 57 to /sys/class/gpio/export failed\n");
 	return;
     }
-
-    printk("[p_thread] Write 253 to /sys/class/gpio/export\n");
-
-    ret = inventec_store_attr("out", 3, "/sys/class/gpio/gpio253/direction");
+    ret = inventec_store_attr("low", 3, "/sys/class/gpio/gpio57/direction");
     if (ret < 0) {
-	SYSFS_LOG("[p_thread] Write low to /sys/class/gpio/gpio253/direction failed\n");
+	SYSFS_LOG("[p_thread] Write low to /sys/class/gpio/gpio57/direction failed\n");
 	return;
     }
-
-    //pull high and then low
-    ret = inventec_store_attr("1", 1, "sys/class/gpio/gpio253/value");
-    if (ret < 0) {
-        SYSFS_LOG("[p_thread] Write 1 to sys/class/gpio/gpio253/value failed\n");
-    }
-
-    //pull low
-    ret = inventec_store_attr("0", 1, "sys/class/gpio/gpio253/value");
-    if (ret < 0) {
-        SYSFS_LOG("[p_thread] Write 0 to sys/class/gpio/gpio253/value failed\n");
-    }
-
     SYSFS_LOG("[p_thread] Set gpio to support status led change successfully\n");
 }
 #endif
@@ -1184,7 +1163,7 @@ static int thread_fn(void *unused)
             continue;
 	}
 
-	// switch_temp_update();
+	//switch_temp_update();
 
 	if (fans_control() > 0) {
 	    psus_control(1);
