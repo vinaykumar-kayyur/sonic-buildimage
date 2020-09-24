@@ -84,5 +84,5 @@ which is designed to respond to configuration directed towards the gearbox phy
 gearbox is present (this is done by a short lived gearsyncd that runs in the
 swss docker). 
 
-The commands "show gearbox interfaces status" and "show gearbox phys" can be 
+The commands "show gearbox interfaces status" and "show gearbox phys status" can be 
 used to verify the virtual gearbox phy has been created. See https://github.com/Azure/sonic-utilities/blob/master/doc/Command-Reference.md#gearbox for details.
