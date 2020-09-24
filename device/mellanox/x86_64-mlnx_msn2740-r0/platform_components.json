@@ -1,0 +1,13 @@
+{
+    "chassis": {
+        "x86_64-mlnx_msn2740-r0": {
+            "component": {
+                "ONIE": { },
+                "SSD": { },
+                "BIOS": { },
+                "CPLD1": { },
+                "CPLD2": { }
+            }
+        }
+    }
+}
