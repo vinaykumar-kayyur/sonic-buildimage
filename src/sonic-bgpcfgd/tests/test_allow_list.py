@@ -320,6 +320,14 @@ def test___set_handler_validate():
     assert not mgr._BGPAllowListMgr__set_handler_validate("DEPLOYMENT_ID|5|1010:2020", None)
     assert not mgr._BGPAllowListMgr__set_handler_validate("DEPLOYMENT_ID1|5|1010:2020", data)
     assert not mgr._BGPAllowListMgr__set_handler_validate("DEPLOYMENT_ID|z|1010:2020", data)
+    assert not mgr._BGPAllowListMgr__set_handler_validate("DEPLOYMENT_ID|5|1010:2020", {
+        "prefixes_v4": "20.20.30.0/24,40.50.0.0/16",
+        "prefixes_v6": "20.20.30.0/24,40.50.0.0/16",
+    })
+    assert not mgr._BGPAllowListMgr__set_handler_validate("DEPLOYMENT_ID|5|1010:2020", {
+        "prefixes_v4": "fc01:20::/64,fc01:30::/64",
+        "prefixes_v6": "fc01:20::/64,fc01:30::/64",
+    })
 
 def test___find_peer_group_by_deployment_id():
     cfg_mgr = MagicMock()
