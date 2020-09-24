@@ -221,27 +221,28 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         """
         fwd_snmp_traffic_from_namespace_to_host_cmds = []
 
-        # The action set for iptables where D is DELETE, A is APPEND
-        rule_action_list = ['D', 'A']
-
         if namespace:
-            # Delete only the rules we created earlier before addiing them again, useful in case of caclmgrd restart.
-            for action in rule_action_list:
-                # IPv4 rules
-                fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                   "iptables -t nat -{} PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
-                                                   (action, self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ip))
-                fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                   "iptables -t nat -{} POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
-                                                   (action, self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ip[namespace]))
+            # IPv4 rules
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -X")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -F")
 
-                # IPv6 rules
-                fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                   "ip6tables -t nat -{} PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
-                                                   (action, self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ipv6))
-                fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                   "ip6tables -t nat -{} POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
-                                                   (action, self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ipv6[namespace]))
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "iptables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ip))
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "iptables -t nat -A POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ip[namespace]))
+
+            # IPv6 rules
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -X")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -F")
+
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "ip6tables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ipv6))
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "ip6tables -t nat -A POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ipv6[namespace]))
 
         return fwd_snmp_traffic_from_namespace_to_host_cmds
 
