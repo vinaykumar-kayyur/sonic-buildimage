@@ -94,8 +94,8 @@ def is_active(feature):
 def update_state(args, is_up):
     data = {
             CURRENT_OWNER: args.owner if is_up else "none",
-            DOCKER_ID: get_docker_id() if is_up else "",
-            UPD_TIMESTAMP: str(datetime.datetime.now())
+            DOCKER_ID: get_docker_id()[:12] if is_up else "",
+            UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             }
     if is_up:
         data[VERSION] = args.version
@@ -139,11 +139,17 @@ def container_up(args):
 
         if instance_lower(args.feature, args.version):
             # Remove label <feature_name>_<version>_enabled
-            cmd = "/usr/share/sonic/scripts/kube_label -n {}_{}_enabled".format(
-                    args.feature, args.version)
+            # cmd = "/usr/share/sonic/scripts/kube_label -n {}_{}_enabled".format(
+                    # args.feature, args.version)
 
-            proc = subprocess.Popen(cmd, shell=True)
-            proc.wait()
+            # proc = subprocess.Popen(cmd, shell=True)
+            # proc.wait()
+
+            # kubelet will continue to re-deploy every 5 mins, until
+            # master removes the lable to un-deploy.
+            # master will verify the helath of new deployment, before
+            # removing label for old.
+            #
             do_exit(feat, "bail out as current deploy id is lower")
 
         update_field(args.feature, VERSION, args.version)
