@@ -48,7 +48,7 @@ DEFAULT_PASSWORD = YourPaSsWoRd
 # If not set (default behavior) the default minigraph built into the image will be used.
 # ENABLE_DHCP_GRAPH_SERVICE = y
 
-# ENABLE_PDE - Enable platform development enviroment
+# ENABLE_PDE - Enable platform development environment
 # If set to y the PDE docker and associated tools and applications will be built as part of the
 # SONiC image and present on the system after installation.
 # ENABLE_PDE = y
