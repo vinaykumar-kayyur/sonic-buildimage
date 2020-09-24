@@ -8,11 +8,11 @@ import sys
 name = None
 
 def mark_end():
-    cmd = ["/usr/share/sonic/scripts/container_state.py", "down", "-f", name]
+    cmd = ["/usr/share/sonic/scripts/container_state", "down", "-f", name]
     syslog.syslog(syslog.LOG_INFO, "Marking end of docker {}".format(name))
 
     try:
-        subprocess.check_call(cmd, shell=True)
+        subprocess.check_call(cmd)
     except subprocess.CalledProcessError as err:
         syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
                 .format(err.cmd, err.returncode, err.output))

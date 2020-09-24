@@ -73,10 +73,10 @@ def read_state(feature):
 
 
 def docker_action(action, feature):
-    cmd = ["docker", action, feature]
+    cmd = "docker {} {}".format(action, feature)
     proc = subprocess.Popen(cmd, shell=True)
     proc.wait()
-    debug_msg("docker cmd: {}".format(" ".join(cmd)))
+    debug_msg("docker cmd: {}".format(cmd))
     return proc.returncode
 
 
@@ -137,8 +137,7 @@ def container_stop(feature):
     update_field(feature, SYSTEM_STATE, "down")
 
     if not docker_id:
-        if current_owner == "local":
-            docker_id = feature
+        docker_id = feature
 
     if remove_label:
         set_label(feature, False)
@@ -161,8 +160,7 @@ def container_kill(feature):
     update_field(feature, SYSTEM_STATE, "down")
 
     if not docker_id:
-        if current_owner == "local":
-            docker_id = feature
+        docker_id = feature
 
     if remove_label:
         set_label(feature, False)

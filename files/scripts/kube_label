@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -u
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import socket 
@@ -19,6 +19,7 @@ KUBESERVER_PORT = 6443
 SERVER_KEY = "server"
 SERVER_IP = "server_ip"
 SERVER_CONNECTED = "connected"
+SERVER_CONNECT_STATUS = "connect_status"
 SERVER_UPDATE_TS = "last_update_ts"
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
@@ -86,25 +87,30 @@ def write_label(name, val):
     server_ip = server_data[SERVER_IP] if SERVER_IP in server_data else ""
     server_connected = (server_data[SERVER_CONNECTED].lower()
             if SERVER_CONNECTED  in server_data else "false")
+    server_connect_status = ((server_data[SERVER_CONNECT_STATUS].lower()
+            if SERVER_CONNECT_STATUS  in server_data else "down")).lower() == "up"
 
-    if server_ip:
-        connect_status = port_check(server_ip)
-        if server_connected != connect_status:
-            ts = datetime.datetime.now()
-            state_db.set_entry("KUBERNETES_MASTER", "SERVER", 
-                    { SERVER_CONNECTED: connect_status, SERVER_UPDATE_TS: ts })
-            server_connected = connect_status
+    if not server_ip or not server_connected:
+        return 0
+
+    connect_status = port_check(server_ip)
+    if server_connect_status != connect_status:
+        ts = datetime.datetime.now()
+        state_db.set_entry("KUBERNETES_MASTER", "SERVER",
+                { SERVER_CONNECT_STATUS: "up" if connect_status else "down",
+                    SERVER_UPDATE_TS: ts })
 
     pending = state_db.get_entry("KUBE_LABELS", "PENDING")
 
     if name:
         pending[name] = val if val else ""
 
-    if pending and server_connected:
+    if pending and connect_status:
         ret = drain_pending(pending)
-        state_db.mod_entry("KUBE_LABELS", "PENDING", None if ret == 0 else {name: val})
+        if (ret == 0):
+            state_db.mod_entry("KUBE_LABELS", "PENDING", None if ret == 0 else {name: val})
 
-    return ret
+    return 0
 
 
 def main():

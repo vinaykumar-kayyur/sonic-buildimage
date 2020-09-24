@@ -142,7 +142,7 @@ def container_up(args):
             cmd = "/usr/share/sonic/scripts/kube_label -n {}_{}_enabled".format(
                     args.feature, args.version)
 
-            proc = subprocess.Popen(cmd)
+            proc = subprocess.Popen(cmd, shell=True)
             proc.wait()
             do_exit(feat, "bail out as current deploy id is lower")
 

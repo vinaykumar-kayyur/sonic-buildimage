@@ -3,7 +3,7 @@
 
 # This version is per docker. To be updated upon updates.
 # Hence this could be different from version of other features
-IMAGE_VERSION = "1.0.0"
+IMAGE_VERSION="1.0.0"
 
 if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"

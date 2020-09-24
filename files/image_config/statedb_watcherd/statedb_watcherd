@@ -14,6 +14,7 @@ KUBESERVER_PORT = 6443
 SERVER_KEY = "server"
 SERVER_IP = "server_ip"
 SERVER_CONNECTED = "connected"
+SERVER_REACHABILITY = "server_reachability"
 SERVER_UPDATE_TS = "last_update_ts"
 
 SET_OWNER = "set_owner"
@@ -40,10 +41,28 @@ def debug_msg(m):
     
 
 
-def port_check(ip_port):
+def check_bool(name):
+    global server_state
+
+    return True if ((name in server_state) and
+            server_state[name].lower() == "true") else False
+
+def is_server_connected():
+    return check_bool(SERVER_CONNECTED)
+
+
+def is_server_reachable():
+    return check_bool(SERVER_REACHABILITY)
+
+
+def get_server_ip():
+    return server_state[SERVER_IP] if SERVER_IP in server_state else None
+
+
+def port_check(ip):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1) #Timeout in case of port not open
-    r = s.connect_ex(ip_port)
+    r = s.connect_ex((ip, KUBESERVER_PORT))
     s.close()
     return r == 0
 
@@ -51,17 +70,23 @@ def port_check(ip_port):
 def checkout_reachable():
     global state_reachable, server_state, state_db
 
-    if ((SERVER_IP in server_state) and (SERVER_CONNECTED in server_state) and
-            server_state[SERVER_IP] and server_state[SERVER_CONNECTED]):
-        state_reachable = port_check((server_state[SERVER_IP], KUBESERVER_PORT))
-        if not state_reachable:
-            threading.Timer(10, state_reachable).start()
-        else:
-            t = str(datetime.datetime.now())
-            debug_msg("server {} marked reachable".format(server_state[SERVER_IP]))
-            state_db.mod_entry("KUBERNETES_MASTER", "SERVER", { SERVER_UPDATE_TS: t  })
-    else:
-        state_reachable = False
+    server_ip = get_server_ip()
+    connected = is_server_connected()
+
+    if not server_ip or not connected:
+        return False
+
+    state_reachable = port_check(server_ip)
+    if not state_reachable:
+        # Fire timer to check again
+        threading.Timer(10, state_reachable).start()
+
+    if is_server_reachable() != state_reachable:
+        t = str(datetime.datetime.now())
+        debug_msg("server {} marked reachable={}".format(server_ip, state_reachable))
+        state_db.mod_entry("KUBERNETES_MASTER", "SERVER", {
+            SERVER_UPDATE_TS: t,
+            SERVER_REACHABILITY = "true" if state_reachable else "False" })
 
     return state_reachable 
 
@@ -157,21 +182,16 @@ class label_manager:
     # Watch for pending labels ("KUBE_LABELS|PENDING") and try reachability
     # Any time reachable call, kube_label.py to update pending labels.
     #
-    def __init__(self):
-        global state_db, server_state
 
-        master = state_db.get_table('KUBERNETES_MASTER')
-        server_state = master[SERVER_KEY] if SERVER_KEY in master else {}
+    def __init__(self):
         self.check_pending()
 
 
     def check_pending(self):
         pending = state_db.get_entry("KUBE_LABELS", "PENDING")
-        if pending:
-            reachable = checkout_reachable()
-            if reachable:
-                proc = subprocess.Popen("/usr/bin/kube_label.py", shell=True)
-                proc.wait()
+        if pending and checkout_reachable():
+            proc = subprocess.Popen("/usr/bin/kube_label.py", shell=True)
+            proc.wait()
 
 
     def on_update(self, key, data):
@@ -188,16 +208,15 @@ class label_manager:
         last_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
 
         server_state = data
-        connected = server_state[SERVER_CONNECTED] if SERVER_CONNECTED in server_state else False
         ct_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
 
-        if connected and (last_ts != ct_ts):
+        if (last_ts != ct_ts):
             check_pending()
 
 
 class StateDBDeamon:
     def __init__(self):
-        global state_db, cfg_db
+        global state_db, cfg_db, server_state
 
         cfg_db = ConfigDBConnector()
         cfg_db.connect(wait_for_init=True, retry_on=True)
@@ -206,6 +225,9 @@ class StateDBDeamon:
         state_db = ConfigDBConnector()
         state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'StateDB connect success')
+
+        master = state_db.get_table('KUBERNETES_MASTER')
+        server_state = master[SERVER_KEY] if SERVER_KEY in master else {}
 
         self.feature_handler = feature_manager()
         self.label_handler = label_manager()

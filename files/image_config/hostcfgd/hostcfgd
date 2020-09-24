@@ -273,10 +273,11 @@ class AaaCfg(object):
             f.write(nss_tacplus_conf)
 
 
-class feature_handler:
+class remote_feature_handler:
     # DB field names
     SET_OWNER = "set_owner"
     NO_FALLBACK = "no_fallback_to_local"
+    remote_features = [ "snmp" ]
 
     CURRENT_OWNER = "current_owner"
     REMOTE_STATE = "remote_state"
@@ -285,11 +286,11 @@ class feature_handler:
         self.cfg_data = cfg_table 
         self.state_db = state_db
 
-        for feat in cfg_table:
-            self.handle_state_on_load(feat)
 
+    def handle_on_load(self, feat):
+        if not feat in self.remote_features:
+            return 
 
-    def handle_state_on_load(self, feat):
         if not self.validate_state(feat):
             return
 
@@ -301,7 +302,7 @@ class feature_handler:
         if set_owner == "local":
             # Ensure label is removed.
             self.handle_label(feat, None)
-            if current_owner != "local":
+            if current_owner == "kube":
                 self.restart_service(feat)
         else:
             if (current_owner == "local"):
@@ -322,6 +323,9 @@ class feature_handler:
 
 
     def on_update(self, feat, data):
+        if not feat in self.remote_features:
+            return 
+
         # Handle owner change
         #
         old_set_owner, old_fallback = self.read_config(feat)
@@ -416,7 +420,7 @@ class HostConfigDaemon:
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
 
-        self.feature_handler = feature_handler(
+        self.remote_feature_handler = remote_feature_handler(
                 self.config_db.get_table('FEATURE'), self.state_db)
 
 
@@ -430,9 +434,9 @@ class HostConfigDaemon:
             state = feature_table[feature_name]['state'] if 'state' in feature_table[feature_name] else None
             if not state:
                 syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-                continue
-
-            update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
+            else:
+                update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
+            self.remote_feature_handler.handle_on_load(feature_name)
 
 
     def aaa_handler(self, key, data):
@@ -474,15 +478,14 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "Feature '{}' not in FEATURE table".format(feature_name))
             return
 
-        # Feature transition between local & remote could be triggered through set_owner
-        self.feature_handler.on_update(key, data)
-
         state = feature_table[feature_name]['state'] if 'state' in feature_table[feature_name] else None
         if not state:
             syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-            return
+        else:
+            update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
 
-        update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
+        # Feature transition between local & remote could be triggered through set_owner
+        self.remote_feature_handler.on_update(key, data)
 
 
     def start(self):
