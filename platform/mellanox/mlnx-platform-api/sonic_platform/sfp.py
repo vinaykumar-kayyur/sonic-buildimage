@@ -294,7 +294,7 @@ def initialize_sdk_handle():
     return sdk_handle
 
 def deinitialize_sdk_handle(sdk_handle):
-    if sdk_handle != None:
+    if sdk_handle is not None:
         rc = sx_api_close(sdk_handle)
         if (rc != SX_STATUS_SUCCESS):
             logger.log_warning("Failed to close api handle.")
