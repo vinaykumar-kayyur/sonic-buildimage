@@ -480,9 +480,9 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         """
         # Add iptables commands to allow front panel snmp traffic
         iptables_cmds = self.generate_fwd_snmp_traffic_from_namespace_to_host_commands(namespace)
-        log_info("Issuing the following iptables commands:")
+        self.log_info("Issuing the following iptables commands:")
         for cmd in iptables_cmds:
-            log_info("  " + cmd)
+            self.log_info("  " + cmd)
 
         self.run_commands(iptables_cmds)
 
