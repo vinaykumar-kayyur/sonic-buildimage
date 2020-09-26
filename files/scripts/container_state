@@ -59,7 +59,7 @@ def get_docker_id():
     cmd = 'cat /proc/self/cgroup | grep -e ":memory:" | rev | cut -f1 -d\'/\' | rev'
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     output = proc.communicate()[0].decode("utf-8")
-    return output.strip()
+    return output.strip()[:12]
 
 
 def update_field(feature, field, val):
@@ -69,15 +69,17 @@ def update_field(feature, field, val):
     
 def instance_lower(feature, version):
     ct_version = state_data[VERSION] if VERSION in state_data else "0.0.0"
+    if not ct_version:
+        ct_version = "0.0.0"
     ct = ct_version.split('.')
     nxt = version.split('.') if version else "0.0.0".split('.')
     ret = False
-    for i in nxt:
+    for i in range(3):
         if nxt[i] < ct[i]:
             ret = True
             break
 
-    debug_msg("compare versiob: new:{} current:{} res={}".format(
+    debug_msg("compare version: new:{} current:{} res={}".format(
         version, ct_version, ret))
     return ret
 
@@ -94,7 +96,7 @@ def is_active(feature):
 def update_state(args, is_up):
     data = {
             CURRENT_OWNER: args.owner if is_up else "none",
-            DOCKER_ID: get_docker_id()[:12] if is_up else "",
+            DOCKER_ID: get_docker_id() if is_up else "",
             UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             }
     if is_up:

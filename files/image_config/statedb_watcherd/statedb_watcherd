@@ -86,7 +86,7 @@ def checkout_reachable():
         debug_msg("server {} marked reachable={}".format(server_ip, state_reachable))
         state_db.mod_entry("KUBERNETES_MASTER", "SERVER", {
             SERVER_UPDATE_TS: t,
-            SERVER_REACHABILITY = "true" if state_reachable else "False" })
+            SERVER_REACHABILITY: "true" if state_reachable else "False" })
 
     return state_reachable 
 

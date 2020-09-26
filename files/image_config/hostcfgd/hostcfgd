@@ -277,109 +277,181 @@ class remote_feature_handler:
     # DB field names
     SET_OWNER = "set_owner"
     NO_FALLBACK = "no_fallback_to_local"
-    remote_features = [ "snmp" ]
+    STATE = "state"
+    HAS_TIMER = "has_timer"
 
     CURRENT_OWNER = "current_owner"
     REMOTE_STATE = "remote_state"
+
+    remote_features = [ "snmp" ]
 
     def __init__(self, cfg_table, state_db):
         self.cfg_data = cfg_table 
         self.state_db = state_db
 
+        for feat in cfg_table.keys():
+            self.handle_on_load(feat)
+        
 
     def handle_on_load(self, feat):
-        if not feat in self.remote_features:
-            return 
 
-        if not self.validate_state(feat):
+        systemd_up = self.is_systemd_active(feat)
+        cfg_data = self.read_config(feat)
+        state_data = self.read_state(feat)
+
+        state = cfg_data[self.STATE]
+        if not state:
+            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
 
-        set_owner, fallback = self.read_config(feat)
-        current_owner, remote_state = self.read_state(feat)
+        state_up = state.lower() == "enabled"
+        update_state = systemd_up != state_up
+        owner_restart = False
+        label_add = False
+        debug_msg("update_state:{} systemd_up:{} state={}".format(update_state, systemd_up, state))
 
-        debug_msg("feat={}".format(feat))
+        if systemd_up and (feat in self.remote_features):
+            set_owner = cfg_data[self.SET_OWNER]
+            fallback = cfg_data[self.NO_FALLBACK].lower() != "true"
+            current_owner = state_data[self.CURRENT_OWNER]
+            remote_state = state_data[self.REMOTE_STATE]
+            if not remote_state:
+                remote_state = "none"
 
-        if set_owner == "local":
-            # Ensure label is removed.
-            self.handle_label(feat, None)
-            if current_owner == "kube":
-                self.restart_service(feat)
-        else:
-            if (current_owner == "local"):
-                if (not fallback or remote_state != "none"):
-                    self.restart_service(feat)
+            debug_msg("set_owner={} fallback={} current_owner={} remote_state={}".format(set_owner, fallback, current_owner, remote_state))
+            if set_owner == "local":
+                # Ensure label is removed.
+                self.handle_label(feat, None)
+                if current_owner == "kube":
+                    owner_restart = True
+            else:
+                if (current_owner == "local"):
+                    if (not fallback or remote_state != "none"):
+                        owner_restart = True
 
-                # add label to enable deploy
-                self.handle_label(feat, "true")
+                    # add label to enable deploy
+                    label_add = True
 
-            elif (current_owner == "kube"):
-                if remote_state == "pending":
-                    self.restart_service(feat)
+                elif (current_owner == "kube"):
+                    if remote_state == "pending":
+                        owner_restart = True
+                    # else:
+                        # No action required
                 # else:
-                    # No action required
-            # else:
-                # systemctl would be waiting for deploy
+                    # systemctl would be waiting for deploy
 
+        debug_msg("owner_restart={} label_add={}".format(owner_restart, label_add))
+        if update_state:
+            update_feature_state(feat, state, cfg_data[self.HAS_TIMER])
+        elif owner_restart:
+            self.restart_service(feat)
 
+        if label_add:
+            self.handle_label(feat, "true")
 
     def on_update(self, feat, data):
-        if not feat in self.remote_features:
-            return 
-
-        # Handle owner change
-        #
-        old_set_owner, old_fallback = self.read_config(feat)
+        systemd_up = self.is_systemd_active(feat)
+        cfg_data_old = self.read_config(feat)
         self.cfg_data[feat] = data
+        cfg_data = self.read_config(feat)
 
-        if not self.validate_state(feat):
+        state_data = self.read_state(feat)
+
+        state = cfg_data[self.STATE]
+        if not state:
+            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
 
-        debug_msg("feat={} data={}".format(feat, str(data)))
-        set_owner, fallback = self.read_config(feat)
-        current_owner, remote_state = self.read_state(feat)
+        update_state = cfg_data_old[self.STATE] != state
+        owner_restart = False
+        label_op = None
 
-        if (set_owner == old_set_owner):
-            # No change in ownership
-            debug_msg("set_owner {} == {}".format(set_owner, old_set_owner))
-            return
+        debug_msg("update_state:{} systemd_up:{} state={}".format(update_state, systemd_up, state))
+        if systemd_up and (feat in self.remote_features):
 
-        if set_owner == "local":
-            # remove label
-            if current_owner != "local":
-                self.restart_service(feat)
+            # Handle owner change
+            #
+            old_set_owner = cfg_data_old[self.SET_OWNER]
+            old_fallback = cfg_data_old[self.NO_FALLBACK].lower() != "true"
+
+            set_owner = cfg_data[self.SET_OWNER]
+            fallback = cfg_data[self.NO_FALLBACK].lower() != "true"
+
+            current_owner = state_data[self.CURRENT_OWNER]
+            remote_state = state_data[self.REMOTE_STATE]
+            if not remote_state:
+                remote_state = "none"
+
+            debug_msg("set_owner={} fallback={} current_owner={} remote_state={}".format(set_owner, fallback, current_owner, remote_state))
+
+            if (set_owner == old_set_owner):
+                # No change in ownership
+                debug_msg("set_owner {} == {}".format(set_owner, old_set_owner))
+
+            elif set_owner == "local":
+                # remove label
+                if current_owner != "local":
+                    owner_restart = True
+                else:
+                    label_op = "drop"
+
             else:
-                self.handle_label(feat, None)
+                if (not fallback) and (current_owner == "local"):
+                    owner_restart = True
+                elif remote_state != "none":
+                    owner_restart = True
+                else:
+                    # Add label to enable deploy
+                    label_op = "add"
 
-        else:
-            if (not fallback) and (current_owner == "local"):
-                self.restart_service(feat)
-            elif remote_state != "none":
-                self.restart_service(feat)
-            else:
-                # Add label to enable deploy
-                self.handle_label(feat, "true")
+        debug_msg("owner_restart={} label_op={}".format(owner_restart, label_op))
+
+        if update_state:
+            update_feature_state(feat, state, cfg_data[self.HAS_TIMER])
+        elif owner_restart:
+            self.restart_service(feat)
+
+        if label_op:
+            self.handle_label(feat, "true" if label_op == "add" else None)
+
 
     # Helper methods
     #
-    def validate_state(self, feat):
+    def is_systemd_active(self, feat):
         status = os.system('systemctl is-active --quiet {}'.format(feat))
         debug_msg("system status for {}: {}".format(feat, str(status)))
         return status == 0
 
     def read_config(self, feat):
+        def_data = {
+                "auto_restart": None,
+                "has_timer": None,
+                "high_mem_alert": None,
+                "no_fallback_to_local": "false",
+                "set_owner": "local",
+                "state": None
+                }
+                
         cfg = self.cfg_data[feat] if feat in self.cfg_data else {}
-        set_owner = cfg[self.SET_OWNER] if self.SET_OWNER in cfg else "local"
-        fallback = not(cfg[self.NO_FALLBACK] if self.NO_FALLBACK in cfg else False)
-        debug_msg("feat:{} set_owner:{} fallback:{}".format(feat, set_owner, fallback))
-        return(set_owner, fallback)
+        data = dict(def_data)
+        data.update(cfg)
+
+        debug_msg("config: feat:{} {}".format(feat, str(data)))
+        return data
 
     def read_state(self, feat):
+        def_data = {
+                "current_owner": "",
+                "system_state": "",
+                "remote_state": "none"
+                }
+
+        data = dict(def_data)
         state_data = self.state_db.get_table('FEATURE')
         stat = state_data[feat] if feat in state_data else {}
-        current_owner = stat[self.CURRENT_OWNER] if self.CURRENT_OWNER in stat else "none"
-        remote_state = stat[self.REMOTE_STATE] if self.REMOTE_STATE in stat else "none"
-        debug_msg("feat:{} current_owner:{} remote_state:{}".format(feat, current_owner, remote_state))
-        return (current_owner, remote_state)
+        data.update(stat)
+        debug_msg("state: feat:{} {}".format(feat, str(data)))
+        return data
 
 
     def handle_label(self, feat, val):
@@ -424,21 +496,6 @@ class HostConfigDaemon:
                 self.config_db.get_table('FEATURE'), self.state_db)
 
 
-    def update_all_feature_states(self):
-        feature_table = self.config_db.get_table('FEATURE')
-        for feature_name in feature_table.keys():
-            if not feature_name:
-                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
-                continue
-
-            state = feature_table[feature_name]['state'] if 'state' in feature_table[feature_name] else None
-            if not state:
-                syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-            else:
-                update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
-            self.remote_feature_handler.handle_on_load(feature_name)
-
-
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
 
@@ -478,20 +535,11 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "Feature '{}' not in FEATURE table".format(feature_name))
             return
 
-        state = feature_table[feature_name]['state'] if 'state' in feature_table[feature_name] else None
-        if not state:
-            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-        else:
-            update_feature_state(feature_name, state, feature_table[feature_name]['has_timer'])
-
         # Feature transition between local & remote could be triggered through set_owner
         self.remote_feature_handler.on_update(key, data)
 
 
     def start(self):
-        # Update all feature states once upon starting
-        self.update_all_feature_states()
-
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))

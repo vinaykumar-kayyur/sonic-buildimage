@@ -17,7 +17,7 @@ NO_FALLBACK = "no_fallback_to_local"
 
 CURRENT_OWNER = "current_owner"
 UPD_TIMESTAMP = "update_time"
-DOCKER_ID = "docker_id"
+DOCKER_ID = "container_id"
 REMOTE_STATE = "remote_state"
 VERSION = "version"
 SYSTEM_STATE = "system_state"
