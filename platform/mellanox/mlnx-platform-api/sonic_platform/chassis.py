@@ -18,7 +18,6 @@ try:
     import sys
     import io
     import re
-    import subprocess
     import syslog
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -26,8 +25,6 @@ except ImportError as e:
 MAX_SELECT_DELAY = 3600
 
 MLNX_NUM_PSU = 2
-
-GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
 
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
