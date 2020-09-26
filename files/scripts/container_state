@@ -78,6 +78,8 @@ def instance_lower(feature, version):
         if nxt[i] < ct[i]:
             ret = True
             break
+        elif nxt[i] > ct[i]:
+            break
 
     debug_msg("compare version: new:{} current:{} res={}".format(
         version, ct_version, ret))
@@ -119,7 +121,7 @@ def update_state(args, is_up):
 
 
 def do_exit(feat, m):
-    syslog.syslog(syslog.ERR, "Exiting .... feat:{} docker_id:{} msg:{}".format(
+    syslog.syslog(syslog.LOG_ERR, "Exiting .... feat:{} docker_id:{} msg:{}".format(
         feat, get_docker_id(), m))
     sys.exit(-1)
 
@@ -134,10 +136,10 @@ def container_up(args):
         update_state(args, True)
     else:
         if (set_owner == "local"):
-            do_exit(feat, "bail out as set_owner is local")
+            do_exit(args.feature, "bail out as set_owner is local")
 
         if not is_active(args.feature):
-            do_exit(feat, "bail out as system state not active")
+            do_exit(args.feature, "bail out as system state not active")
 
         if instance_lower(args.feature, args.version):
             # Remove label <feature_name>_<version>_enabled
@@ -152,7 +154,7 @@ def container_up(args):
             # master will verify the helath of new deployment, before
             # removing label for old.
             #
-            do_exit(feat, "bail out as current deploy id is lower")
+            do_exit(args.feature, "bail out as current deploy id is lower")
 
         update_field(args.feature, VERSION, args.version)
 

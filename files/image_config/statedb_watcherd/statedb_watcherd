@@ -11,7 +11,8 @@ from swsssdk import ConfigDBConnector
 KUBESERVER_PORT = 6443
 
 # DB field names
-SERVER_KEY = "server"
+SERVER_TABLE = "KUBERNETES_MASTER"
+SERVER_KEY = "SERVER"
 SERVER_IP = "server_ip"
 SERVER_CONNECTED = "connected"
 SERVER_REACHABILITY = "server_reachability"
@@ -84,7 +85,7 @@ def checkout_reachable():
     if is_server_reachable() != state_reachable:
         t = str(datetime.datetime.now())
         debug_msg("server {} marked reachable={}".format(server_ip, state_reachable))
-        state_db.mod_entry("KUBERNETES_MASTER", "SERVER", {
+        state_db.mod_entry(SERVER_TABLE, SERVER_KEY, {
             SERVER_UPDATE_TS: t,
             SERVER_REACHABILITY: "true" if state_reachable else "False" })
 
@@ -180,7 +181,7 @@ class feature_manager:
 
 class label_manager:
     # Watch for pending labels ("KUBE_LABELS|PENDING") and try reachability
-    # Any time reachable call, kube_label.py to update pending labels.
+    # Any time reachable call, kube_label to update pending labels.
     #
 
     def __init__(self):
@@ -190,7 +191,7 @@ class label_manager:
     def check_pending(self):
         pending = state_db.get_entry("KUBE_LABELS", "PENDING")
         if pending and checkout_reachable():
-            proc = subprocess.Popen("/usr/bin/kube_label.py", shell=True)
+            proc = subprocess.Popen("/usr/bin/kube_label", shell=True)
             proc.wait()
 
 
@@ -202,7 +203,7 @@ class label_manager:
     def on_server_update(self, key, data):
         global state_db, server_state
 
-        if (key != "server") or (server_state == data):
+        if (key != SERVER_KEY) or (server_state == data):
             return
 
         last_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
@@ -211,7 +212,7 @@ class label_manager:
         ct_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
 
         if (last_ts != ct_ts):
-            check_pending()
+            self.check_pending()
 
 
 class StateDBDeamon:
@@ -226,7 +227,7 @@ class StateDBDeamon:
         state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'StateDB connect success')
 
-        master = state_db.get_table('KUBERNETES_MASTER')
+        master = state_db.get_table(SERVER_TABLE)
         server_state = master[SERVER_KEY] if SERVER_KEY in master else {}
 
         self.feature_handler = feature_manager()
@@ -250,7 +251,7 @@ class StateDBDeamon:
 
         state_db.subscribe('FEATURE', lambda table, key, data: self.feature_update(key, data))
         state_db.subscribe('KUBE_LABELS', lambda table, key, data: self.label_update(key, data))
-        state_db.subscribe('KUBERNETES_MASTER', lambda table, key, data: self.server_update(key, data))
+        state_db.subscribe(SERVER_TABLE, lambda table, key, data: self.server_update(key, data))
         state_db.listen()
 
 
