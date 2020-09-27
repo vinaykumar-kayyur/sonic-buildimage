@@ -103,7 +103,7 @@ class Psu(PsuBase):
 
         # unplugable PSU has no FAN
         if self.psu_data['hot_swappable']:
-            fan = Fan(psu_index, None, 1, True)
+            fan = Fan(psu_index, None, 1, True, self)
             self._fan_list.append(fan)
 
         if self.psu_data['led_num'] == 1:

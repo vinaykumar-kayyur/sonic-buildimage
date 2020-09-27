@@ -36,7 +36,7 @@ class Fan(FanBase):
     PSU_FAN_SPEED = ['0x3c', '0x3c', '0x3c', '0x3c', '0x3c',
                      '0x3c', '0x3c', '0x46', '0x50', '0x5a', '0x64']
 
-    def __init__(self, fan_index, fan_drawer, position, psu_fan = False):
+    def __init__(self, fan_index, fan_drawer, position, psu_fan = False, psu=None):
         super(Fan, self).__init__()
     
         # API index is starting from 0, Mellanox platform index is starting from 1
@@ -45,6 +45,7 @@ class Fan(FanBase):
         self.position = position
 
         self.is_psu_fan = psu_fan
+        self.psu = psu
         if self.fan_drawer:
             self.led = ComponentFaultyIndicator(self.fan_drawer.get_led())
         elif self.is_psu_fan:
@@ -128,11 +129,7 @@ class Fan(FanBase):
         """
         status = 0
         if self.is_psu_fan:
-            if os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path)):
-                status = 1
-            else:
-                status = 0
-            return status == 1
+            return self.psu.get_presence() and self.psu.get_powergood_status() and os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path))
         else:
             return self.fan_drawer.get_presence()
 
