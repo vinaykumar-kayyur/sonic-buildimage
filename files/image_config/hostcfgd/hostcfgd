@@ -391,7 +391,6 @@ class feature_handler:
             # Handle owner change
             #
             old_set_owner = cfg_data_old[self.SET_OWNER]
-            old_fallback = cfg_data_old[self.NO_FALLBACK].lower() != "true"
 
             set_owner = cfg_data[self.SET_OWNER]
             fallback = cfg_data[self.NO_FALLBACK].lower() != "true"
