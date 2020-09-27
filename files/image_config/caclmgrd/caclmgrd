@@ -15,9 +15,8 @@ try:
     import os
     import subprocess
     import sys
-    import syslog
 
-    from sonic_py_common import device_info
+    from sonic_py_common import daemon_base, device_info
     from swsscommon import swsscommon
     from swsssdk import SonicDBConfig, ConfigDBConnector
 except ImportError as err:
@@ -27,25 +26,6 @@ VERSION = "1.0"
 
 SYSLOG_IDENTIFIER = "caclmgrd"
 
-
-# ========================== Syslog wrappers ==========================
-
-def log_info(msg):
-    syslog.openlog(SYSLOG_IDENTIFIER)
-    syslog.syslog(syslog.LOG_INFO, msg)
-    syslog.closelog()
-
-
-def log_warning(msg):
-    syslog.openlog(SYSLOG_IDENTIFIER)
-    syslog.syslog(syslog.LOG_WARNING, msg)
-    syslog.closelog()
-
-
-def log_error(msg):
-    syslog.openlog(SYSLOG_IDENTIFIER)
-    syslog.syslog(syslog.LOG_ERR, msg)
-    syslog.closelog()
 
 # ========================== Helper Functions =========================
 
@@ -61,7 +41,7 @@ def _ip_prefix_in_key(key):
 # ============================== Classes ==============================
 
 
-class ControlPlaneAclManager(object):
+class ControlPlaneAclManager(daemon_base.DaemonBase):
     """
     Class which reads control plane ACL tables and rules from Config DB,
     translates them into equivalent iptables commands and runs those
@@ -88,10 +68,16 @@ class ControlPlaneAclManager(object):
         "SSH": {
             "ip_protocols": ["tcp"],
             "dst_ports": ["22"]
+        },
+        "ANY": {
+            "ip_protocols": ["any"],
+            "dst_ports": ["0"]
         }
     }
 
-    def __init__(self):
+    def __init__(self, log_identifier):
+        super(ControlPlaneAclManager, self).__init__(log_identifier)
+
         SonicDBConfig.load_sonic_global_db_config()
         self.config_db_map = {}
         self.iptables_cmd_ns_prefix = {}
@@ -99,7 +85,9 @@ class ControlPlaneAclManager(object):
         self.config_db_map[''].connect()
         self.iptables_cmd_ns_prefix[''] = ""
         self.namespace_mgmt_ip = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[''], '')
+        self.namespace_mgmt_ipv6 = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[''], '')
         self.namespace_docker_mgmt_ip = {}
+        self.namespace_docker_mgmt_ipv6 = {}
         namespaces = device_info.get_all_namespaces()
         for front_asic_namespace in namespaces['front_ns']:
             self.config_db_map[front_asic_namespace] = ConfigDBConnector(use_unix_socket_path=True, namespace=front_asic_namespace)
@@ -107,10 +95,14 @@ class ControlPlaneAclManager(object):
             self.iptables_cmd_ns_prefix[front_asic_namespace] = "ip netns exec " + front_asic_namespace + " "
             self.namespace_docker_mgmt_ip[front_asic_namespace] = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[front_asic_namespace],
                                                                                               front_asic_namespace)
+            self.namespace_docker_mgmt_ipv6[front_asic_namespace] = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[front_asic_namespace],
+                                                                                              front_asic_namespace)
 
         for back_asic_namespace in namespaces['back_ns']:
             self.iptables_cmd_ns_prefix[back_asic_namespace] = "ip netns exec " + back_asic_namespace + " "
             self.namespace_docker_mgmt_ip[back_asic_namespace] = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[back_asic_namespace],
+                                                                                             back_asic_namespace)
+            self.namespace_docker_mgmt_ipv6[back_asic_namespace] = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[back_asic_namespace],
                                                                                              back_asic_namespace)
 
     def get_namespace_mgmt_ip(self, iptable_ns_cmd_prefix, namespace):
@@ -118,6 +110,11 @@ class ControlPlaneAclManager(object):
                                  " | awk '{print $4}' | cut -d'/' -f1 | head -1"
 
         return self.run_commands([ip_address_get_command])
+
+    def get_namespace_mgmt_ipv6(self, iptable_ns_cmd_prefix, namespace):
+        ipv6_address_get_command = iptable_ns_cmd_prefix + "ip -6 -o addr show scope global " + ("eth0" if namespace else "docker0") +\
+                                 " | awk '{print $4}' | cut -d'/' -f1 | head -1"
+        return self.run_commands([ipv6_address_get_command])
 
     def run_commands(self, commands):
         """
@@ -131,7 +128,7 @@ class ControlPlaneAclManager(object):
             (stdout, stderr) = proc.communicate()
 
             if proc.returncode != 0:
-                log_error("Error running command '{}'".format(cmd))
+                self.log_error("Error running command '{}'".format(cmd))
             elif stdout:
                 return stdout.rstrip('\n')
 
@@ -192,7 +189,7 @@ class ControlPlaneAclManager(object):
                     elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
                         block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen))
                     else:
-                        log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
+                        self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         return block_ip2me_cmds
 
@@ -200,6 +197,10 @@ class ControlPlaneAclManager(object):
         allow_internal_docker_ip_cmds = []
 
         if namespace:
+            # For namespace docker allow local communication on docker management ip for all proto
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -s {} -d {} -j ACCEPT".format
+                                                (self.namespace_docker_mgmt_ip[namespace], self.namespace_docker_mgmt_ip[namespace]))
+
             # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
                                                  (self.namespace_mgmt_ip, self.namespace_docker_mgmt_ip[namespace]))
@@ -215,6 +216,39 @@ class ControlPlaneAclManager(object):
                 allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
                                                      (docker_mgmt_ip, self.namespace_mgmt_ip))
         return allow_internal_docker_ip_cmds
+
+    def generate_fwd_snmp_traffic_from_namespace_to_host_commands(self, namespace):
+        """
+        The below SNAT and DNAT rules are added in asic namespace in multi-ASIC platforms. It helps to forward the SNMP request coming
+        in through the front panel interfaces created/present in the asic namespace to the SNMP Agent running in SNMP container in
+        linux host network namespace. The external IP addresses are NATed to the internal docker IP addresses for the SNMP Agent to respond.
+        """
+        fwd_snmp_traffic_from_namespace_to_host_cmds = []
+
+        if namespace:
+            # IPv4 rules
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -X")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -t nat -F")
+
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "iptables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ip))
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "iptables -t nat -A POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ip[namespace]))
+
+            # IPv6 rules
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -X")
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -t nat -F")
+
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "ip6tables -t nat -A PREROUTING -p udp --dport {}  -j DNAT --to-destination {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_mgmt_ipv6))
+            fwd_snmp_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                               "ip6tables -t nat -A POSTROUTING -p udp --dport {} -j SNAT --to-source {}".format
+                                               (self.ACL_SERVICES['SNMP']['dst_ports'][0], self.namespace_docker_mgmt_ipv6[namespace]))
+
+        return fwd_snmp_traffic_from_namespace_to_host_cmds
 
     def is_rule_ipv4(self, rule_props):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
@@ -327,12 +361,12 @@ class ControlPlaneAclManager(object):
 
             for acl_service in acl_services:
                 if acl_service not in self.ACL_SERVICES:
-                    log_warning("Ignoring control plane ACL '{}' with unrecognized service '{}'"
-                                .format(table_name, acl_service))
+                    self.log_warning("Ignoring control plane ACL '{}' with unrecognized service '{}'"
+                                     .format(table_name, acl_service))
                     continue
 
-                log_info("Translating ACL rules for control plane ACL '{}' (service: '{}')"
-                         .format(table_name, acl_service))
+                self.log_info("Translating ACL rules for control plane ACL '{}' (service: '{}')"
+                              .format(table_name, acl_service))
 
                 # Obtain default IP protocol(s) and destination port(s) for this service
                 ip_protocols = self.ACL_SERVICES[acl_service]["ip_protocols"]
@@ -343,13 +377,13 @@ class ControlPlaneAclManager(object):
                 for ((rule_table_name, rule_id), rule_props) in self._rules_db_info.iteritems():
                     if rule_table_name == table_name:
                         if not rule_props:
-                            log_warning("rule_props for rule_id {} empty or null!".format(rule_id))
+                            self.log_warning("rule_props for rule_id {} empty or null!".format(rule_id))
                             continue
 
                         try:
                             acl_rules[rule_props["PRIORITY"]] = rule_props
                         except KeyError:
-                            log_error("rule_props for rule_id {} does not have key 'PRIORITY'!".format(rule_id))
+                            self.log_error("rule_props for rule_id {} does not have key 'PRIORITY'!".format(rule_id))
                             continue
 
                         # If we haven't determined the IP version for this ACL table yet,
@@ -362,19 +396,19 @@ class ControlPlaneAclManager(object):
                                 table_ip_version = 4
 
                         if (self.is_rule_ipv6(rule_props) and (table_ip_version == 4)):
-                            log_error("CtrlPlane ACL table {} is a IPv4 based table and rule {} is a IPV6 rule! Ignoring rule."
-                                      .format(table_name, rule_id))
+                            self.log_error("CtrlPlane ACL table {} is a IPv4 based table and rule {} is a IPV6 rule! Ignoring rule."
+                                           .format(table_name, rule_id))
                             acl_rules.pop(rule_props["PRIORITY"])
                         elif (self.is_rule_ipv4(rule_props) and (table_ip_version == 6)):
-                            log_error("CtrlPlane ACL table {} is a IPv6 based table and rule {} is a IPV4 rule! Ignroing rule."
-                                      .format(table_name, rule_id))
+                            self.log_error("CtrlPlane ACL table {} is a IPv6 based table and rule {} is a IPV4 rule! Ignroing rule."
+                                           .format(table_name, rule_id))
                             acl_rules.pop(rule_props["PRIORITY"])
 
                 # If we were unable to determine whether this ACL table contains
                 # IPv4 or IPv6 rules, log a message and skip processing this table.
                 if not table_ip_version:
-                    log_warning("Unable to determine if ACL table '{}' contains IPv4 or IPv6 rules. Skipping table..."
-                                .format(table_name))
+                    self.log_warning("Unable to determine if ACL table '{}' contains IPv4 or IPv6 rules. Skipping table..."
+                                     .format(table_name))
                     continue
 
                 # For each ACL rule in this table (in descending order of priority)
@@ -382,21 +416,26 @@ class ControlPlaneAclManager(object):
                     rule_props = acl_rules[priority]
 
                     if "PACKET_ACTION" not in rule_props:
-                        log_error("ACL rule does not contain PACKET_ACTION property")
+                        self.log_error("ACL rule does not contain PACKET_ACTION property")
                         continue
 
                     # Apply the rule to the default protocol(s) for this ACL service
                     for ip_protocol in ip_protocols:
                         for dst_port in dst_ports:
                             rule_cmd = "ip6tables" if table_ip_version == 6 else "iptables"
-                            rule_cmd += " -A INPUT -p {}".format(ip_protocol)
 
+                            rule_cmd += " -A INPUT"
+                            if ip_protocol != "any":
+                                rule_cmd += " -p {}".format(ip_protocol)
+ 
                             if "SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IPV6"])
                             elif "SRC_IP" in rule_props and rule_props["SRC_IP"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IP"])
 
-                            rule_cmd += " --dport {}".format(dst_port)
+                            # Destination port 0 is reserved/unused port, so, using it to apply the rule to all ports.
+                            if dst_port != "0":
+                                rule_cmd += " --dport {}".format(dst_port)
 
                             # If there are TCP flags present and ip protocol is TCP, append them
                             if ip_protocol == "tcp" and "TCP_FLAGS" in rule_props and rule_props["TCP_FLAGS"]:
@@ -437,15 +476,35 @@ class ControlPlaneAclManager(object):
         commands and runs them.
         """
         iptables_cmds = self.get_acl_rules_and_translate_to_iptables_commands(namespace)
-        log_info("Issuing the following iptables commands:")
+        self.log_info("Issuing the following iptables commands:")
         for cmd in iptables_cmds:
-            log_info("  " + cmd)
+            self.log_info("  " + cmd)
+
+        self.run_commands(iptables_cmds)
+
+    def update_control_plane_nat_acls(self, namespace):
+        """
+        Convenience wrapper which programs the NAT rules for allowing the
+        snmp traffic coming on the front panel interface
+        """
+        # Add iptables commands to allow front panel snmp traffic
+        iptables_cmds = self.generate_fwd_snmp_traffic_from_namespace_to_host_commands(namespace)
+        self.log_info("Issuing the following iptables commands:")
+        for cmd in iptables_cmds:
+            self.log_info("  " + cmd)
 
         self.run_commands(iptables_cmds)
 
     def run(self):
         # Select Time-out for 10 Seconds
         SELECT_TIMEOUT_MS = 1000 * 10
+
+        self.log_info("Starting up ...")
+
+        if not os.geteuid() == 0:
+            self.log_error("Must be root to run this daemon")
+            print("Error: Must be root to run this daemon")
+            sys.exit(1)
 
         # Initlaize Global config that loads all database*.json
         if device_info.is_multi_npu():
@@ -460,6 +519,7 @@ class ControlPlaneAclManager(object):
         for namespace in self.config_db_map.keys():
             # Unconditionally update control plane ACLs once at start on given namespace
             self.update_control_plane_acls(namespace)
+            self.update_control_plane_nat_acls(namespace)
             # Connect to Config DB of given namespace
             acl_db_connector = swsscommon.DBConnector("CONFIG_DB", 0, False, namespace)
             # Subscribe to notifications when ACL tables changes
@@ -494,15 +554,12 @@ class ControlPlaneAclManager(object):
 
 
 def main():
-    log_info("Starting up...")
-
-    if not os.geteuid() == 0:
-        log_error("Must be root to run this daemon")
-        print "Error: Must be root to run this daemon"
-        sys.exit(1)
-
     # Instantiate a ControlPlaneAclManager object
-    caclmgr = ControlPlaneAclManager()
+    caclmgr = ControlPlaneAclManager(SYSLOG_IDENTIFIER)
+
+    # Log all messages from INFO level and higher
+    caclmgr.set_min_log_priority_info()
+
     caclmgr.run()
 
 
