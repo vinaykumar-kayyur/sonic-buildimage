@@ -9,6 +9,7 @@ import syslog
 import copy
 import inspect
 import jinja2
+import datetime
 import ipaddr as ipaddress
 from swsssdk import ConfigDBConnector
 from sonic_py_common import device_info
@@ -246,9 +247,10 @@ class feature_handler:
 
     remote_features = [ "snmp" ]
 
-    def __init__(self, cfg_table, state_db):
-        self.cfg_data = cfg_table 
+    def __init__(self, cfg_table, state_db, is_multi_npu):
+        self.cfg_table = cfg_table 
         self.state_db = state_db
+        self.is_multi_npu = is_multi_npu
 
         for feat in cfg_table.keys():
             self.handle_on_load(feat)
@@ -361,7 +363,7 @@ class feature_handler:
 
         debug_msg("owner_restart={} label_add={}".format(owner_restart, label_add))
         if update_state:
-            self.update_feature_state(feat, state, cfg_data[self.HAS_TIMER])
+            self.update_feature_state(feat, state, self.cfg_table)
         elif owner_restart:
             self.restart_service(feat)
 
@@ -371,7 +373,7 @@ class feature_handler:
     def on_update(self, feat, data):
         systemd_up = self.is_systemd_active(feat)
         cfg_data_old = self.read_config(feat)
-        self.cfg_data[feat] = data
+        self.cfg_table[feat] = data
         cfg_data = self.read_config(feat)
 
         state_data = self.read_state(feat)
@@ -425,7 +427,7 @@ class feature_handler:
         debug_msg("owner_restart={} label_op={}".format(owner_restart, label_op))
 
         if update_state:
-            self.update_feature_state(feat, state, cfg_data[self.HAS_TIMER])
+            self.update_feature_state(feat, state, self.cfg_table)
         elif owner_restart:
             self.restart_service(feat)
 
@@ -450,7 +452,7 @@ class feature_handler:
                 "state": None
                 }
                 
-        cfg = self.cfg_data[feat] if feat in self.cfg_data else {}
+        cfg = self.cfg_table[feat] if feat in self.cfg_table else {}
         data = dict(def_data)
         data.update(cfg)
 
@@ -513,7 +515,7 @@ class HostConfigDaemon:
 
 
         self.feature_handler = feature_handler(
-                self.config_db.get_table('FEATURE'), self.state_db)
+                self.config_db.get_table('FEATURE'), self.state_db, self.is_multi_npu)
 
 
     def aaa_handler(self, key, data):
