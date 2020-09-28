@@ -3,10 +3,10 @@ Implementation of "allow-list" feature
 """
 import re
 
-from bgpcfgd.log import log_debug, log_info, log_err, log_warn
-from bgpcfgd.template import TemplateFabric
-from bgpcfgd.manager import Manager
-from bgpcfgd.utils import run_command
+from .log import log_debug, log_info, log_err, log_warn
+from .template import TemplateFabric
+from .manager import Manager
+from .utils import run_command
 
 class BGPAllowListMgr(Manager):
     """ This class initialize "AllowList" settings """

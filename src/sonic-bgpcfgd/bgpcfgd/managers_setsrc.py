@@ -1,8 +1,8 @@
 import jinja2
 
-from bgpcfgd.log import log_err, log_warn, log_info
-from bgpcfgd.manager import Manager
-from bgpcfgd.template import TemplateFabric
+from .log import log_err, log_warn, log_info
+from .manager import Manager
+from .template import TemplateFabric
 
 
 class ZebraSetSrc(Manager):

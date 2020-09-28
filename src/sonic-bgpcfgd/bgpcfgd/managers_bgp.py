@@ -4,10 +4,10 @@ from swsscommon import swsscommon
 import jinja2
 import netaddr
 
-from bgpcfgd.log import log_warn, log_err, log_info, log_debug, log_crit
-from bgpcfgd.manager import Manager
-from bgpcfgd.template import TemplateFabric
-from bgpcfgd.utils import run_command
+from .log import log_warn, log_err, log_info, log_debug, log_crit
+from .manager import Manager
+from .template import TemplateFabric
+from .utils import run_command
 
 
 class BGPPeerGroupMgr(object):
