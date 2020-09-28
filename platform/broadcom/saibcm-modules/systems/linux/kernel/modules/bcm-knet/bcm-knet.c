@@ -166,7 +166,11 @@ MODULE_PARM_DESC(basedev_suspend,
 /*
  * Force to add one layer of VLAN tag to untagged packets on Dune devices
  */
+#if defined(SAI_FIXUP) && defined(BCM_DNX_SUPPORT) /* SONIC-16195 CS9129167 - Change the default to NOT add tag */
+static int force_tagged = 0;
+#else
 static int force_tagged = 1;
+#endif
 LKM_MOD_PARAM(force_tagged, "i", int, 0);
 MODULE_PARM_DESC(force_tagged,
 "Always tagged with VLAN tag with spceified VID or VSI(default 1)");
@@ -965,6 +969,8 @@ static knet_hw_tstamp_tx_meta_get_cb_f knet_hw_tstamp_tx_meta_get_cb = NULL;
 static knet_hw_tstamp_ptp_clock_index_cb_f knet_hw_tstamp_ptp_clock_index_cb = NULL;
 static knet_hw_tstamp_rx_time_upscale_cb_f knet_hw_tstamp_rx_time_upscale_cb = NULL;
 static knet_hw_tstamp_ioctl_cmd_cb_f knet_hw_tstamp_ioctl_cmd_cb = NULL;
+static knet_netif_cb_f knet_netif_create_cb = NULL;
+static knet_netif_cb_f knet_netif_destroy_cb = NULL;
 
 /*
  * Thread management
@@ -7814,14 +7820,21 @@ bkn_knet_netif_create(kcom_msg_netif_create_t *kmsg, int len)
         }
     }
 
-    spin_unlock_irqrestore(&sinfo->lock, flags);
-
     DBG_VERB(("Assigned ID %d to Ethernet device %s\n",
               priv->id, dev->name));
 
     kmsg->netif.id = priv->id;
     memcpy(kmsg->netif.macaddr, dev->dev_addr, 6);
     memcpy(kmsg->netif.name, dev->name, KCOM_NETIF_NAME_MAX - 1);
+
+    if (knet_netif_create_cb != NULL) {
+        int retv = knet_netif_create_cb(kmsg->hdr.unit, &(kmsg->netif), dev);
+        if (retv) {
+            gprintk("Warning: knet_netif_create_cb() returned %d for netif '%s'\n", retv, dev->name);
+        }
+    }
+
+    spin_unlock_irqrestore(&sinfo->lock, flags);
 
     if (device_is_sand(sinfo)) {
         int idx = 0;
@@ -7868,6 +7881,12 @@ bkn_knet_netif_destroy(kcom_msg_netif_destroy_t *kmsg, int len)
         return sizeof(kcom_msg_hdr_t);
     }
 
+    if (knet_netif_destroy_cb != NULL) {
+        kcom_netif_t netif;
+        memset(&netif, 0, sizeof(kcom_netif_t));
+        netif.id = priv->id;
+        knet_netif_destroy_cb(kmsg->hdr.unit, &netif, priv->dev);
+    }
     list_del(&priv->list);
 
     if (priv->id < sinfo->ndev_max) {
@@ -8771,6 +8790,68 @@ gmodule_get(void)
 }
 
 /*
+ * Get DCB type and other HW info
+ */
+int
+bkn_hw_info_get(int unit, knet_hw_info_t *hw_info)
+{
+    bkn_switch_info_t *sinfo;
+    sinfo = bkn_sinfo_from_unit(unit);
+    if (sinfo == NULL) {
+        gprintk("Warning: unknown unit: %d\n", unit);
+        return (-1);
+    }
+
+    hw_info->cmic_type = sinfo->cmic_type;
+    hw_info->dcb_type = sinfo->dcb_type;
+    hw_info->dcb_size = WORDS2BYTES(sinfo->dcb_wsize);
+    hw_info->pkt_hdr_size = sinfo->pkt_hdr_size;
+    hw_info->cdma_channels = sinfo->cdma_channels;
+
+    return (0);
+}
+
+int
+bkn_netif_create_cb_register(knet_netif_cb_f netif_cb)
+{
+    if (knet_netif_create_cb != NULL) {
+        return -1;
+    }
+    knet_netif_create_cb = netif_cb;
+    return 0;
+}
+
+int
+bkn_netif_create_cb_unregister(knet_netif_cb_f netif_cb)
+{
+    if (netif_cb != NULL && knet_netif_create_cb != netif_cb) {
+        return -1;
+    }
+    knet_netif_create_cb = NULL;
+    return 0;
+}
+
+int
+bkn_netif_destroy_cb_register(knet_netif_cb_f netif_cb)
+{
+    if (knet_netif_destroy_cb != NULL) {
+        return -1;
+    }
+    knet_netif_destroy_cb = netif_cb;
+    return 0;
+}
+
+int
+bkn_netif_destroy_cb_unregister(knet_netif_cb_f netif_cb)
+{
+    if (netif_cb != NULL && knet_netif_destroy_cb != netif_cb) {
+        return -1;
+    }
+    knet_netif_destroy_cb = NULL;
+    return 0;
+}
+
+/*
  * Call-back interfaces for other Linux kernel drivers.
  *
  * The Rx call-back allows an external module to modify SKB contents
@@ -9012,3 +9093,8 @@ LKM_EXPORT_SYM(bkn_hw_tstamp_rx_time_upscale_cb_register);
 LKM_EXPORT_SYM(bkn_hw_tstamp_rx_time_upscale_cb_unregister);
 LKM_EXPORT_SYM(bkn_hw_tstamp_ioctl_cmd_cb_register);
 LKM_EXPORT_SYM(bkn_hw_tstamp_ioctl_cmd_cb_unregister);
+LKM_EXPORT_SYM(bkn_hw_info_get);
+LKM_EXPORT_SYM(bkn_netif_create_cb_register);
+LKM_EXPORT_SYM(bkn_netif_create_cb_unregister);
+LKM_EXPORT_SYM(bkn_netif_destroy_cb_register);
+LKM_EXPORT_SYM(bkn_netif_destroy_cb_unregister);

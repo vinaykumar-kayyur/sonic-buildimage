@@ -64,9 +64,23 @@ extern int debug;
 #define SOC_HIGIG_SRCPORT(x)  ((x[1] >> 16) & 0x1f)
 #define SOC_HIGIG2_SOP        (0xfb) //0xfc - TODO: how can we differentiate between Higig and higig2?
 #define SOC_HIGIG2_START(x)   ((x[0] >> 24) & 0xff)
+#define SOC_HIGIG2_IS_MC(x)   ((x[0] >> 20) &  0x1)
 #define SOC_HIGIG2_DSTPORT(x) ((x[0] >>  0) & 0xff)
 #define SOC_HIGIG2_SRCPORT(x) ((x[1] >> 16) & 0xff)
 #define SOC_DCB32_HG_OFFSET   (6)
+
+/* sFlow v5 datagram dst ifindex field type
+ * dst ifindex encoding bits [31:30]
+ */
+#define DSTPORT_TYPE_DISCARD 1
+#define DSTPORT_TYPE_MC      2
+
+#define DSTPORT_TYPE_OFFSET  30
+#define DSTPORT_TYPE_MASK    0x3
+#define DSTPORT_TYPE_CLR(_dst) (_dst &= ~(DSTPORT_TYPE_MASK << DSTPORT_TYPE_OFFSET))
+#define DSTPORT_TYPE_SET(_dst,_type) (_dst |= ((_type & DSTPORT_TYPE_MASK) << DSTPORT_TYPE_OFFSET))
+#define DSTPORT_TYPE_GET(_dst) ((_dst >> DSTPORT_TYPE_OFFSET) & DSTPORT_TYPE_MASK)
+#define DSTPORT_GET(_dst)      (_dst & ~(DSTPORT_TYPE_MASK << DSTPORT_TYPE_OFFSET))
 
 #define FCS_SZ 4
 #define PSAMPLE_NLA_PADDING 4
@@ -84,6 +98,7 @@ static struct proc_dir_entry *psample_proc_root = NULL;
 /* psample general info */
 typedef struct {
     struct list_head netif_list;
+    int netif_count;
     knet_hw_info_t hw;
     struct net *netns;
     spinlock_t lock;
@@ -96,6 +111,7 @@ typedef struct psample_stats_s {
     unsigned long pkts_f_psample_mod;
     unsigned long pkts_f_handled;
     unsigned long pkts_f_pass_through;
+    unsigned long pkts_f_dst_mc;
     unsigned long pkts_d_no_group;
     unsigned long pkts_d_sampling_disabled;
     unsigned long pkts_d_no_skb;
@@ -213,7 +229,15 @@ psample_meta_dstport_get(uint8_t *pkt, void *pkt_meta)
     
     if (SOC_HIGIG2_START(metadata) == SOC_HIGIG2_SOP) 
     {
-        dstport = SOC_HIGIG2_DSTPORT(metadata);
+        if (SOC_HIGIG2_IS_MC(metadata))
+        {
+            DSTPORT_TYPE_CLR(dstport);
+            DSTPORT_TYPE_SET(dstport, DSTPORT_TYPE_MC);
+        }
+        else
+        {
+            dstport = SOC_HIGIG2_DSTPORT(metadata);
+        }
     } 
     else if (SOC_HIGIG_START(metadata) == SOC_HIGIG_SOP) 
     {
@@ -273,7 +297,7 @@ psample_meta_sample_reason(uint8_t *pkt, void *pkt_meta)
 static int
 psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_meta)
 {
-    int srcport, dstport;
+    int srcport, dstport, dstport_type;
     int src_ifindex = 0;
     int dst_ifindex = 0;
     int sample_rate = PSAMPLE_RATE_DFLT;
@@ -313,8 +337,16 @@ psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_m
         }
     }
 
-    /* find dst port netif (no need to lookup CPU port) */
-    if (dstport != 0) {
+    dstport_type = DSTPORT_TYPE_GET(dstport);
+    dstport = DSTPORT_GET(dstport);
+
+    /* set sFlow dst type for MC pkts */
+    if (dstport_type == DSTPORT_TYPE_MC) {
+        DSTPORT_TYPE_SET(dst_ifindex, DSTPORT_TYPE_MC);
+        g_psample_stats.pkts_f_dst_mc++;
+
+    /* find dst port netif for UC pkts (no need to lookup CPU port) */
+    } else if (dstport != 0) {
         if ((psample_netif = psample_netif_lookup_by_port(unit, dstport))) {
             dst_ifindex = psample_netif->dev->ifindex;
         } else {
@@ -323,8 +355,9 @@ psample_meta_get(int unit, uint8_t *pkt, void *pkt_meta, psample_meta_t *sflow_m
         }
     }
 
-    PSAMPLE_CB_DBG_PRINT("%s: srcport %d, dstport %d, src_ifindex %d, dst_ifindex %d, trunc_size %d, sample_rate %d\n", 
-            __func__, srcport, dstport, src_ifindex, dst_ifindex, sample_size, sample_rate);
+   PSAMPLE_CB_DBG_PRINT("%s: srcport %d, dstport %d, src_ifindex 0x%x, dst_ifindex 0x%x, "
+                        "trunc_size %d, sample_rate %d\n", 
+                        __func__, srcport, dstport, src_ifindex, dst_ifindex, sample_size, sample_rate);
 
     sflow_meta->src_ifindex = src_ifindex;
     sflow_meta->dst_ifindex = dst_ifindex;
@@ -386,7 +419,7 @@ psample_filter_cb(uint8_t * pkt, int size, int dev_no, void *pkt_meta,
         meta.trunc_size = size - PSAMPLE_NLA_PADDING;
     }
 
-    PSAMPLE_CB_DBG_PRINT("%s: group 0x%x, trunc_size %d, src_ifdx %d, dst_ifdx %d, sample_rate %d\n",
+    PSAMPLE_CB_DBG_PRINT("%s: group 0x%x, trunc_size %d, src_ifdx 0x%x, dst_ifdx 0x%x, sample_rate %d\n",
             __func__, group->group_num, meta.trunc_size, meta.src_ifindex, meta.dst_ifindex, meta.sample_rate);
 
     /* drop if configured sample rate is 0 */
@@ -427,7 +460,7 @@ psample_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
     psample_netif_t *psample_netif, *lpsample_netif;
     unsigned long flags;
 
-    if ((psample_netif = kmalloc(sizeof(psample_netif_t), GFP_KERNEL)) == NULL) {
+    if ((psample_netif = kmalloc(sizeof(psample_netif_t), GFP_ATOMIC)) == NULL) {
         gprintk("%s: failed to alloc psample mem for netif '%s'\n", 
                 __func__, dev->name);
         return (-1);
@@ -449,6 +482,7 @@ psample_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
         lpsample_netif = (psample_netif_t*)list;
         if (netif->id < lpsample_netif->id) {
             found = 1;
+            g_psample_info.netif_count++;
             break;
         }
     }
@@ -489,6 +523,7 @@ psample_netif_destroy_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
             list_del(&psample_netif->list);
             PSAMPLE_CB_DBG_PRINT("%s: removing psample netif '%s'\n", __func__, dev->name);
             kfree(psample_netif);
+            g_psample_info.netif_count--;
             break;
         }
     }
@@ -703,6 +738,47 @@ struct file_operations psample_proc_size_file_ops = {
 };
 
 /*
+ * psample map Proc Read Entry
+ */
+static int
+psample_proc_map_show(struct seq_file *m, void *v)
+{
+    struct list_head *list;
+    psample_netif_t *psample_netif;
+    unsigned long flags;
+
+    seq_printf(m, "  Interface      logical port   ifindex\n");
+    seq_printf(m, "-------------    ------------   -------\n");
+    spin_lock_irqsave(&g_psample_info.lock, flags);
+    
+    list_for_each(list, &g_psample_info.netif_list) {
+        psample_netif = (psample_netif_t*)list;
+        seq_printf(m, "  %-14s %-14d %d\n",
+                psample_netif->dev->name,
+                psample_netif->port,
+                psample_netif->dev->ifindex);
+    }
+
+    spin_unlock_irqrestore(&g_psample_info.lock, flags);
+    return 0;
+}
+
+static int
+psample_proc_map_open(struct inode * inode, struct file * file)
+{
+    return single_open(file, psample_proc_map_show, NULL);
+}
+
+struct file_operations psample_proc_map_file_ops = {
+    owner:      THIS_MODULE,
+    open:       psample_proc_map_open,
+    read:       seq_read,
+    llseek:     seq_lseek,
+    write:      NULL,
+    release:    single_release,
+};
+
+/*
  * psample debug Proc Read Entry
  */
 static int
@@ -715,6 +791,7 @@ psample_proc_debug_show(struct seq_file *m, void *v)
     seq_printf(m, "  dcb_size:        %d\n",   g_psample_info.hw.dcb_size);
     seq_printf(m, "  pkt_hdr_size:    %d\n",   g_psample_info.hw.pkt_hdr_size);
     seq_printf(m, "  cdma_channels:   %d\n",   g_psample_info.hw.cdma_channels);
+    seq_printf(m, "  netif_count:     %d\n",   g_psample_info.netif_count);
 
     return 0;
 }
@@ -779,6 +856,7 @@ psample_proc_stats_show(struct seq_file *m, void *v)
     seq_printf(m, "  pkts sent to psample module    %10lu\n", g_psample_stats.pkts_f_psample_mod);
     seq_printf(m, "  pkts handled by psample        %10lu\n", g_psample_stats.pkts_f_handled);
     seq_printf(m, "  pkts pass through              %10lu\n", g_psample_stats.pkts_f_pass_through);
+    seq_printf(m, "  pkts with mc destination       %10lu\n", g_psample_stats.pkts_f_dst_mc);
     seq_printf(m, "  pkts drop no psample group     %10lu\n", g_psample_stats.pkts_d_no_group);
     seq_printf(m, "  pkts drop sampling disabled    %10lu\n", g_psample_stats.pkts_d_sampling_disabled);
     seq_printf(m, "  pkts drop no skb               %10lu\n", g_psample_stats.pkts_d_no_skb);
@@ -796,12 +874,26 @@ psample_proc_stats_open(struct inode * inode, struct file * file)
     return single_open(file, psample_proc_stats_show, NULL);
 }
 
+/*
+ * psample stats Proc Write Entry
+ *
+ *   Syntax:
+ *   write any value to clear stats 
+ */
+static ssize_t
+psample_proc_stats_write(struct file *file, const char *buf,
+                    size_t count, loff_t *loff)
+{
+    memset(&g_psample_stats, 0, sizeof(psample_stats_t));
+    return count;
+}
+
 struct file_operations psample_proc_stats_file_ops = {
     owner:      THIS_MODULE,
     open:       psample_proc_stats_open,
     read:       seq_read,
     llseek:     seq_lseek,
-    write:      NULL,
+    write:      psample_proc_stats_write,
     release:    single_release,
 };
 
@@ -847,6 +939,13 @@ int psample_init(void)
         return -1;
     }
 
+    /* create procfs for getting netdev mapping */
+    PROC_CREATE(entry, "map", 0666, psample_proc_root, &psample_proc_map_file_ops);
+    if (entry == NULL) {
+        gprintk("%s: Unable to create procfs entry '/procfs/%s/map'\n", __func__, psample_procfs_path);
+        return -1;
+    }
+  
     /* create procfs for debug log */
     PROC_CREATE(entry, "debug", 0666, psample_proc_root, &psample_proc_debug_file_ops);
     if (entry == NULL) {
