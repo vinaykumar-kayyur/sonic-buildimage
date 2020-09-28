@@ -3,7 +3,7 @@ from swsscommon import swsscommon
 
 from bgpcfgd import g_run
 
-from app.log import log_debug
+from bgpcfgd.log import log_debug
 
 
 class Runner(object):

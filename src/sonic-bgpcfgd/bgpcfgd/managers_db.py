@@ -1,4 +1,4 @@
-from app.manager import Manager
+from bgpcfgd.manager import Manager
 
 
 class BGPDataBaseMgr(Manager):
