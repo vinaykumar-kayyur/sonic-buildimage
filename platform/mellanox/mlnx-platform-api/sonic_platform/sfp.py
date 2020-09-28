@@ -9,7 +9,6 @@
 #############################################################################
 
 try:
-    import os
     import subprocess
     import time
     from sonic_platform_base.sfp_base import SfpBase
