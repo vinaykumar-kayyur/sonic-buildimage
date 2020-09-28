@@ -6,7 +6,7 @@ import re
 from app.log import log_debug, log_info, log_err, log_warn
 from app.template import TemplateFabric
 from app.manager import Manager
-from app.util import run_command
+from app.utils import run_command
 
 class BGPAllowListMgr(Manager):
     """ This class initialize "AllowList" settings """
