@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
 import sys
-import datetime
-import time
 import syslog
 import signal
 import traceback
 import os
 
-import yaml
 from swsscommon import swsscommon
 
 from app.directory import Directory
@@ -17,43 +14,14 @@ from app.managers_bgp import BGPPeerMgrBase
 from app.managers_intf import InterfaceMgr
 from app.managers_db import BGPDataBaseMgr
 from app.runner import Runner
+from app.utils import wait_for_daemons, read_constants
 from app.vars import g_debug
-from app.log import log_notice, log_info, log_warn, log_crit
+from app.log import log_notice, log_crit
 from app.template import TemplateFabric
 from app.config import ConfigMgr
 from app.managers_allow_list import BGPAllowListMgr
-from app.util import run_command
 
 g_run = True
-
-
-def wait_for_daemons(daemons, seconds):
-    """
-    Wait until FRR daemons are ready for requests
-    :param daemons: list of FRR daemons to wait
-    :param seconds: number of seconds to wait, until raise an error
-    """
-    stop_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
-    log_info("Start waiting for FRR daemons: %s" % str(datetime.datetime.now()))
-    while datetime.datetime.now() < stop_time:
-        ret_code, out, err = run_command(["vtysh", "-c", "show daemons"], hide_errors=True)
-        if ret_code == 0 and all(daemon in out for daemon in daemons):
-            log_info("All required daemons have connected to vtysh: %s" % str(datetime.datetime.now()))
-            return
-        else:
-            log_warn("Can't read daemon status from FRR: %s" % str(err))
-        time.sleep(0.1)  # sleep 100 ms
-    raise RuntimeError("FRR daemons hasn't been started in %d seconds" % seconds)
-
-
-def read_constants():
-    """ Read file with constants values from /etc/sonic/constants.yml """
-    with open('/etc/sonic/constants.yml') as fp:
-        content = yaml.load(fp) # FIXME: , Loader=yaml.FullLoader)
-        if "constants" not in content:
-            log_crit("/etc/sonic/constants.yml doesn't have 'constants' key")
-            raise Exception("/etc/sonic/constants.yml doesn't have 'constants' key")
-        return content["constants"]
 
 
 def main():
