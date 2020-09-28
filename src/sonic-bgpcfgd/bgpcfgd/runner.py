@@ -1,9 +1,8 @@
 from collections import defaultdict
 from swsscommon import swsscommon
 
-from bgpcfgd import g_run
-
-from bgpcfgd.log import log_debug
+from .vars import g_run
+from .log import log_debug
 
 
 class Runner(object):

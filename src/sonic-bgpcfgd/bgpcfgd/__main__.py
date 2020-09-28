@@ -8,8 +8,6 @@ from .main import main
 from .vars import g_debug
 from .log import log_notice, log_crit
 
-g_run = True
-
 
 def signal_handler(_, __):  # signal_handler(signum, frame)
     """ signal handler """
