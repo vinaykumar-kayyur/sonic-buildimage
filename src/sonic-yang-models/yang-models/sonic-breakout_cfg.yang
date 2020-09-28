@@ -42,14 +42,14 @@ module sonic-breakout_cfg {
                         /* should be not allow any pattern here, since this is
                          * auto populated by cli.
                          */
-                        /* pattern "1x100G[40G]|2x50G|4x25G[10G]"; */
+                        /* pattern "1x100G[40G]|2x50G|4x25G[10G]|2x25G(2)+1x50G(2)|1x50G(2)+2x25G(2)"; */
                     }
                 }
             }
             /* end of list BREAKOUT_CFG_LIST */
         }
         /* end of container BREAKOUT_CFG */
-	}
-	/* end of top level container */
+    }
+    /* end of top level container */
 }
 /* end of module sonic-breakout_cfg */
