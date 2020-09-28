@@ -1,7 +1,7 @@
 import netaddr
 
-from app.log import log_warn
-from app.manager import Manager
+from bgpcfgd.log import log_warn
+from bgpcfgd.manager import Manager
 
 
 class InterfaceMgr(Manager):

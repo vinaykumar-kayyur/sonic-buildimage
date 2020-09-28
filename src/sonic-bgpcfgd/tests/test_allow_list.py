@@ -1,7 +1,8 @@
-from app.directory import Directory
-from app.template import TemplateFabric
-import app
+from bgpcfgd.directory import Directory
+from bgpcfgd.template import TemplateFabric
+import bgpcfgd
 from mock import MagicMock, patch
+
 
 swsscommon_module_mock = MagicMock()
 
@@ -29,7 +30,7 @@ def set_del_test(op, args, currect_config, expected_config):
         assert args == expected_config
         return True
     #
-    app.managers_allow_list.run_command = lambda cmd: (0, "", "")
+    bgpcfgd.managers_allow_list.run_command = lambda cmd: (0, "", "")
     #
     cfg_mgr = MagicMock()
     cfg_mgr.update.return_value = None
@@ -454,7 +455,7 @@ def test___restart_peers_found_deployment_id():
     mocked = MagicMock(name='_BGPAllowListMgr__find_peer_group_by_deployment_id')
     mocked.return_value = ["BGP_TEST_PEER_GROUP_1", "BGP_TEST_PEER_GROUP_2"]
     mgr._BGPAllowListMgr__find_peer_group_by_deployment_id = mocked
-    app.managers_allow_list.run_command = run_command
+    bgpcfgd.managers_allow_list.run_command = run_command
     rc = mgr._BGPAllowListMgr__restart_peers(5)
     assert rc
 
@@ -475,7 +476,7 @@ def test___restart_peers_not_found_deployment_id():
     mocked = MagicMock(name='_BGPAllowListMgr__find_peer_group_by_deployment_id')
     mocked.return_value = []
     mgr._BGPAllowListMgr__find_peer_group_by_deployment_id = mocked
-    app.managers_allow_list.run_command = run_command
+    bgpcfgd.managers_allow_list.run_command = run_command
     rc = mgr._BGPAllowListMgr__restart_peers(5)
     assert rc
 

@@ -1,15 +1,15 @@
 from swsscommon import swsscommon
 
-from app.config import ConfigMgr
-from app.directory import Directory
-from app.managers_allow_list import BGPAllowListMgr
-from app.managers_bgp import BGPPeerMgrBase
-from app.managers_db import BGPDataBaseMgr
-from app.managers_intf import InterfaceMgr
-from app.managers_setsrc import ZebraSetSrc
-from app.runner import Runner
-from app.template import TemplateFabric
-from app.utils import wait_for_daemons, read_constants
+from bgpcfgd.config import ConfigMgr
+from bgpcfgd.directory import Directory
+from bgpcfgd.managers_allow_list import BGPAllowListMgr
+from bgpcfgd.managers_bgp import BGPPeerMgrBase
+from bgpcfgd.managers_db import BGPDataBaseMgr
+from bgpcfgd.managers_intf import InterfaceMgr
+from bgpcfgd.managers_setsrc import ZebraSetSrc
+from bgpcfgd.runner import Runner
+from bgpcfgd.template import TemplateFabric
+from bgpcfgd.utils import wait_for_daemons, read_constants
 
 
 def main():
