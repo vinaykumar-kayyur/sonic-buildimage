@@ -13,10 +13,14 @@ KUBESERVER_PORT = 6443
 # DB field names
 SERVER_TABLE = "KUBERNETES_MASTER"
 SERVER_KEY = "SERVER"
+CONFIG_IP = "ip"
+CONFIG_DISABLE = "disable"
+
 SERVER_IP = "server_ip"
 SERVER_CONNECTED = "connected"
 SERVER_REACHABILITY = "server_reachability"
 SERVER_UPDATE_TS = "last_update_ts"
+SERVER_CONFIG_UPDATE_TS = "config_update_ts"
 
 SET_OWNER = "set_owner"
 NO_FALLBACK = "no_fallback_to_local"
@@ -29,8 +33,14 @@ VERSION = "version"
 DEPLOY_ID = "rolling_deploy_id"
 SYSTEM_STATE = "system_state"
 
-state_reachable = False
-server_state = {}
+kube_server_state = {
+        SERVER_IP: "",
+        SERVER_CONNECTED: "false",
+        SERVER_REACHABILITY: "false",
+        SERVER_UPDATE_TS: "",
+        SERVER_CONFIG_UPDATE_TS: ""
+        }
+
 state_db = None
 cfg_db = None
 
@@ -41,25 +51,6 @@ def debug_msg(m):
     syslog.syslog(syslog.LOG_DEBUG, msg)
     
 
-
-def check_bool(name):
-    global server_state
-
-    return True if ((name in server_state) and
-            server_state[name].lower() == "true") else False
-
-def is_server_connected():
-    return check_bool(SERVER_CONNECTED)
-
-
-def is_server_reachable():
-    return check_bool(SERVER_REACHABILITY)
-
-
-def get_server_ip():
-    return server_state[SERVER_IP] if SERVER_IP in server_state else None
-
-
 def port_check(ip):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1) #Timeout in case of port not open
@@ -69,10 +60,11 @@ def port_check(ip):
 
 
 def checkout_reachable():
-    global state_reachable, server_state, state_db
+    global kube_server_state, state_db
 
-    server_ip = get_server_ip()
-    connected = is_server_connected()
+    server_ip = kube_server_state[SERVER_IP]
+    connected = kube_server_state[SERVER_CONNECTED].lower() == "true"
+    server_reachable = kube_server_state[SERVER_REACHABILITY].lower() == "true"
 
     if not server_ip or not connected:
         return False
@@ -82,12 +74,11 @@ def checkout_reachable():
         # Fire timer to check again
         threading.Timer(10, state_reachable).start()
 
-    if is_server_reachable() != state_reachable:
-        t = str(datetime.datetime.now())
+    if server_reachable != state_reachable:
         debug_msg("server {} marked reachable={}".format(server_ip, state_reachable))
         state_db.mod_entry(SERVER_TABLE, SERVER_KEY, {
-            SERVER_UPDATE_TS: t,
-            SERVER_REACHABILITY: "true" if state_reachable else "False" })
+            SERVER_UPDATE_TS: str(datetime.datetime.now()),
+            SERVER_REACHABILITY: "true" if state_reachable else "false" })
 
     return state_reachable 
 
@@ -135,7 +126,7 @@ class feature_manager:
             self.restart_service(feat, set_owner)
 
 
-    def on_server_update(self, key, data):
+    def on_server_update(self, old_data, ct_data):
         # Not used for now
         # TODO: ENsure config & state are in sync w.r.t set_owner & current_owner
         # Restart in local mode, with remote_state cleared to none on disconnect
@@ -200,24 +191,32 @@ class label_manager:
             self.check_pending()
 
 
-    def on_server_update(self, key, data):
-        global state_db, server_state
-
-        if (key != SERVER_KEY) or (server_state == data):
-            return
-
-        last_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
-
-        server_state = data
-        ct_ts = server_state[SERVER_UPDATE_TS] if SERVER_UPDATE_TS in server_state else ""
-
-        if (last_ts != ct_ts):
+    def on_server_update(self, old_data, ct_data):
+        if (old_data[SERVER_UPDATE_TS] != ct_data[SERVER_UPDATE_TS]):
             self.check_pending()
+
+
+def check_server_connection():
+    global state_db, cfg_db, kube_server_state
+
+    tbl = cfg_db.get_table(SERVER_TABLE)
+    cfg_data = tbl[SERVER_KEY]
+
+    cfg_ip = cfg_data[CONFIG_IP] if CONFIG_IP in cfg_data else ""
+    cfg_disable = ((cfg_data[CONFIG_DISABLE] if CONFIG_DISABLE in cfg_data else "false").
+            lower() == "true")
+
+    if cfg_disable or not cfg_ip:
+        debug_msg("cfg_disable:{} cfg_ip:{} call kube_reset".format(cfg_disable, cfg_ip))
+        # kube_reset()
+    else:
+        debug_msg("cfg_disable:{} cfg_ip:{} call kube_join".format(cfg_disable, cfg_ip))
+        # kube_join()
 
 
 class StateDBDeamon:
     def __init__(self):
-        global state_db, cfg_db, server_state
+        global state_db, cfg_db, kube_server_state
 
         cfg_db = ConfigDBConnector()
         cfg_db.connect(wait_for_init=True, retry_on=True)
@@ -228,10 +227,14 @@ class StateDBDeamon:
         syslog.syslog(syslog.LOG_INFO, 'StateDB connect success')
 
         master = state_db.get_table(SERVER_TABLE)
-        server_state = master[SERVER_KEY] if SERVER_KEY in master else {}
+        if SERVER_KEY in master:
+            kube_server_state.update(master[SERVER_KEY])
 
         self.feature_handler = feature_manager()
         self.label_handler = label_manager()
+
+        check_server_connection()
+
 
     def feature_update(self, key, data):
         self.feature_handler.on_update(key, data)
@@ -240,9 +243,12 @@ class StateDBDeamon:
         self.label_handler.on_update(key, data)
 
     def server_update(self, key, data):
-        self.label_handler.on_server_update(key, data)
-        self.feature_handler.on_server_update(key, data)
-
+        if key == SERVER_KEY:
+            old_state = dict(kube_server_state)
+            kube_server_state.update(data)
+            self.label_handler.on_server_update(old_state, kube_server_state)
+            self.feature_handler.on_server_update(old_state, kube_server_state)
+            check_server_connection()
 
     def start(self):
         global state_db

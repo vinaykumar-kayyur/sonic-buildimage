@@ -559,12 +559,41 @@ class HostConfigDaemon:
         self.feature_handler.on_update(key, data)
 
 
+    def kube_server_update(self, key, data):
+        tbl = self.config_db.get_table("KUBERNETES_MASTER")
+        cfg_svr = tbl["SERVER"] if "SERVER" in tbl else {}
+
+        tbl = self.state_db.get_table("KUBERNETES_MASTER")
+        state_svr = tbl["SERVER"] if "SERVER" in tbl else {}
+
+        cfg_ip = cfg_svr["ip"] if "ip" in cfg_svr else ""
+        state_ip = state_svr["server_ip"] if "server_ip" in state_svr else ""
+
+        differ = cfg_ip == state_ip
+
+        if not differ:
+            disable = ((cfg_svr["disable"] if "disable" in cfg_svr else "false").
+                    lower() == "true")
+            connected = ((state_svr["connected"] if "connected" in state_svr else "false").
+                    lower() == "true")
+            differ = disable == connected
+         
+        if differ:
+            # Alert statedb-watcher about config update, which may require
+            # join/reset.
+            #
+            self.state_db.mod_entry("KUBERNETES_MASTER", "SERVER",
+                    { "config_update_ts": str(datetime.datetime.now()) })
+
+
     def start(self):
+        self.kube_server_update(None, None)
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
         self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_update(key, data))
+        self.config_db.subscribe('KUBERNETES_MASTER', lambda table, key, data: self.kube_server_update(key, data))
         self.config_db.listen()
 
 

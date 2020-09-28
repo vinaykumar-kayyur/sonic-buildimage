@@ -72,7 +72,7 @@ def drain_pending(pending):
     labels = ""
     for name in pending.keys():
         val = pending[name]
-        labels += "{}={} ".format(name, val) if val else "{}-".format(name)
+        labels += "{}={} ".format(name, val) if val else "{}- ".format(name)
 
     return write_labels(labels.strip())
 
