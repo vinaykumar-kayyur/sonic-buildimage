@@ -277,13 +277,13 @@ def i2c_order_check():
     # i2c bus 0 and 1 might be installed in different order.
     # Here check if 0x77 is exist @ i2c-1
     tmp = "echo pca9548 0x77 > /sys/bus/i2c/devices/i2c-1/new_device"
-    status, output = log_os_system(tmp, 0)
+    log_os_system(tmp, 0)
     if not device_exist():
         order = 1
     else:
         order = 0
     tmp = "echo 0x77 > /sys/bus/i2c/devices/i2c-1/delete_device"
-    status, output = log_os_system(tmp, 0)
+    log_os_system(tmp, 0)
     return order
 
 def device_install():
