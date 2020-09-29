@@ -1,6 +1,7 @@
 {
     "DEVICE_METADATA": {
         "localhost": {
+            {% if default_buffer_model == "dynamic" %}"buffer_model": "dynamic",{% endif %}
             "default_bgp_status": {% if shutdown_bgp_on_start == "y" %}"down"{% else %}"up"{% endif %},
             "default_pfcwd_status": {% if enable_pfcwd_on_start == "y" %}"enable"{% else %}"disable"{% endif %}
         }

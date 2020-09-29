@@ -637,4 +637,16 @@
             "profile" : "[BUFFER_PROFILE|egress_lossy_profile]"
         }
     }
+,
+    "DEFAULT_LOSSLESS_BUFFER_PARAMETER": {
+        "AZURE": {
+            "default_dynamic_th": "0"
+        }
+    },
+    "LOSSLESS_TRAFFIC_PATTERN": {
+        "AZURE": {
+            "mtu": "1500",
+            "small_packet_percentage": "100"
+        }
+    }
 }
