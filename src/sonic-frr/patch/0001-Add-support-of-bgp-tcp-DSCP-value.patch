@@ -1,6 +1,6 @@
-From 95ec18aae5e0274bd792ffb31edb609c64cd26a9 Mon Sep 17 00:00:00 2001
+From a4fadbd8ca2f65c65939416ca36ec0e563c7a0ce Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
-Date: Mon, 28 Sep 2020 15:56:48 -0700
+Date: Tue, 29 Sep 2020 11:12:00 -0700
 Subject: [PATCH 1/1] Add support of bgp tcp DSCP value
 
 ---
@@ -111,10 +111,10 @@ index 7f00ff3fb..c671b46d3 100644
  	install_element(BGP_NODE, &bgp_router_id_cmd);
  	install_element(BGP_NODE, &no_bgp_router_id_cmd);
 diff --git a/bgpd/bgpd.c b/bgpd/bgpd.c
-index cf6335d37..8ddc9dd9e 100644
+index 41d4c0e41..a12c4c906 100644
 --- a/bgpd/bgpd.c
 +++ b/bgpd/bgpd.c
-@@ -3054,7 +3054,7 @@ static struct bgp *bgp_create(as_t *as, const char *name,
+@@ -3070,7 +3070,7 @@ static struct bgp *bgp_create(as_t *as, const char *name,
  
  	bgp->evpn_info = XCALLOC(MTYPE_BGP_EVPN_INFO,
  				 sizeof(struct bgp_evpn_info));

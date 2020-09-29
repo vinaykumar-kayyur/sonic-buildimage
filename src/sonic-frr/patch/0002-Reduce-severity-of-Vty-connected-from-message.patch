@@ -1,6 +1,6 @@
-From 9d063acf9e6f532fbdd6e9ba425b37e79a534925 Mon Sep 17 00:00:00 2001
+From 3617b5efcd3b990e4645a3480f8c540845f12367 Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
-Date: Mon, 28 Sep 2020 15:57:56 -0700
+Date: Tue, 29 Sep 2020 11:12:37 -0700
 Subject: [PATCH 1/1] Reduce severity of 'Vty connected from' message
 
 ---

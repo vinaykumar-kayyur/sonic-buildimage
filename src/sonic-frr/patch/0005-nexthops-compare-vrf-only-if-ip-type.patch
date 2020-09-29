@@ -1,6 +1,6 @@
-From 5335adbc909aebc4f82d8b02e556d9fb52e50569 Mon Sep 17 00:00:00 2001
+From 7cf212a946a0b1789b0174d01d90c6e423e26784 Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
-Date: Tue, 29 Sep 2020 09:21:41 -0700
+Date: Tue, 29 Sep 2020 11:20:13 -0700
 Subject: [PATCH] nexthops compare vrf only if ip type
 
 ---
