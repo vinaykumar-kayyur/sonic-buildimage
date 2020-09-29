@@ -1,6 +1,6 @@
-From 2f0b5aef66316b47d2cc8ac18453600621a6a317 Mon Sep 17 00:00:00 2001
-From: Tyler Li <tyler.li@mediatek.com>
-Date: Thu, 14 Nov 2019 23:46:52 -0800
+From 5335adbc909aebc4f82d8b02e556d9fb52e50569 Mon Sep 17 00:00:00 2001
+From: Pavel Shirshov <pavelsh@microsoft.com>
+Date: Tue, 29 Sep 2020 09:21:41 -0700
 Subject: [PATCH] nexthops compare vrf only if ip type
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH] nexthops compare vrf only if ip type
  2 files changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/lib/nexthop.c b/lib/nexthop.c
-index cf5bed3d6..7d9f646c9 100644
+index 0d239e091..761a16dea 100644
 --- a/lib/nexthop.c
 +++ b/lib/nexthop.c
 @@ -105,12 +105,6 @@ static int _nexthop_cmp_no_labels(const struct nexthop *next1,
@@ -25,7 +25,7 @@ index cf5bed3d6..7d9f646c9 100644
  	if (next1->type < next2->type)
  		return -1;
  
-@@ -120,6 +114,12 @@ static int _nexthop_cmp_no_labels(const struct nexthop *next1,
+@@ -126,6 +120,12 @@ static int _nexthop_cmp_no_labels(const struct nexthop *next1,
  	switch (next1->type) {
  	case NEXTHOP_TYPE_IPV4:
  	case NEXTHOP_TYPE_IPV6:
@@ -39,10 +39,10 @@ index cf5bed3d6..7d9f646c9 100644
  		if (ret != 0)
  			return ret;
 diff --git a/lib/zclient.c b/lib/zclient.c
-index c739af043..0d37c46d1 100644
+index be2c4e54a..3cd97ddf5 100644
 --- a/lib/zclient.c
 +++ b/lib/zclient.c
-@@ -783,12 +783,6 @@ static int zapi_nexthop_cmp_no_labels(const struct zapi_nexthop *next1,
+@@ -807,12 +807,6 @@ static int zapi_nexthop_cmp_no_labels(const struct zapi_nexthop *next1,
  {
  	int ret = 0;
  
@@ -55,7 +55,7 @@ index c739af043..0d37c46d1 100644
  	if (next1->type < next2->type)
  		return -1;
  
-@@ -798,6 +792,12 @@ static int zapi_nexthop_cmp_no_labels(const struct zapi_nexthop *next1,
+@@ -828,6 +822,12 @@ static int zapi_nexthop_cmp_no_labels(const struct zapi_nexthop *next1,
  	switch (next1->type) {
  	case NEXTHOP_TYPE_IPV4:
  	case NEXTHOP_TYPE_IPV6:
@@ -69,5 +69,5 @@ index c739af043..0d37c46d1 100644
  					 &next2->gate);
  		if (ret != 0)
 -- 
-2.11.0
+2.17.1.windows.2
 

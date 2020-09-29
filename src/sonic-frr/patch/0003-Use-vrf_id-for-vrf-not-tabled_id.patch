@@ -1,6 +1,6 @@
-From 9e7f1de3b79ca6ada8a3124f4cdc35530284832e Mon Sep 17 00:00:00 2001
+From e207554b334716e1c94267184fcb61257c62536a Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
-Date: Tue, 5 Nov 2019 06:16:51 -0800
+Date: Mon, 28 Sep 2020 15:58:57 -0700
 Subject: [PATCH 1/1] Use vrf_id for vrf, not tabled_id
 
 ---
@@ -8,10 +8,10 @@ Subject: [PATCH 1/1] Use vrf_id for vrf, not tabled_id
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
-index f347d3955..74aab8228 100644
+index 00909df1d..9def90cee 100644
 --- a/zebra/zebra_fpm_netlink.c
 +++ b/zebra/zebra_fpm_netlink.c
-@@ -284,7 +284,6 @@ static int netlink_route_info_fill(netlink_route_info_t *ri, int cmd,
+@@ -279,7 +279,6 @@ static int netlink_route_info_fill(netlink_route_info_t *ri, int cmd,
  				   rib_dest_t *dest, struct route_entry *re)
  {
  	struct nexthop *nexthop;
@@ -19,7 +19,7 @@ index f347d3955..74aab8228 100644
  
  	memset(ri, 0, sizeof(*ri));
  
-@@ -292,9 +291,7 @@ static int netlink_route_info_fill(netlink_route_info_t *ri, int cmd,
+@@ -287,9 +286,7 @@ static int netlink_route_info_fill(netlink_route_info_t *ri, int cmd,
  	ri->af = rib_dest_af(dest);
  
  	ri->nlmsg_type = cmd;
