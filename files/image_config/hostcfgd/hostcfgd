@@ -562,22 +562,24 @@ class HostConfigDaemon:
 
 
     def kube_server_update(self, key, data):
+        tbl = self.state_db.get_table("KUBERNETES_MASTER")
+        if not "SERVER" in tbl:
+            # Yet to be initialized. Bail out.
+            debug_msg("STATE-DB for KUBERNETES_MASTER is not initialized yet. No config-ts update")
+            return
+        state_svr = tbl["SERVER"]
+
         tbl = self.config_db.get_table("KUBERNETES_MASTER")
         cfg_svr = tbl["SERVER"] if "SERVER" in tbl else {}
 
-        tbl = self.state_db.get_table("KUBERNETES_MASTER")
-        state_svr = tbl["SERVER"] if "SERVER" in tbl else {}
-
-        cfg_ip = cfg_svr["ip"] if "ip" in cfg_svr else ""
-        state_ip = state_svr["server_ip"] if "server_ip" in state_svr else ""
+        cfg_ip = cfg_svr.get("ip", "")
+        state_ip = state_svr.get("server_ip", "")
 
         differ = cfg_ip == state_ip
 
         if not differ:
-            disable = ((cfg_svr["disable"] if "disable" in cfg_svr else "false").
-                    lower() == "true")
-            connected = ((state_svr["connected"] if "connected" in state_svr else "false").
-                    lower() == "true")
+            disable = cfg_svr.get("disable", "false").lower() == "true"
+            connected = state_svr.get("connected", "false").lower() == "true"
             differ = disable == connected
          
         if differ:
@@ -586,6 +588,11 @@ class HostConfigDaemon:
             #
             self.state_db.mod_entry("KUBERNETES_MASTER", "SERVER",
                     { "config_update_ts": str(datetime.datetime.now()) })
+            debug_msg("config ts updated")
+        else:
+            debug_msg("cfg_ip={} state_ip={} disable={} connected={}".format(
+                cfg_ip, state_ip, cfg_svr.get("disable", "false"),
+                state_svr.get("connected", "false")))
 
 
     def start(self):

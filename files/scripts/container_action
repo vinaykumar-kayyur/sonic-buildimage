@@ -111,6 +111,8 @@ def container_start(feature):
     update_field(feature, SYSTEM_STATE, "up")
 
     if set_owner == "local":
+        # Ensure label is not there.
+        set_label(feature, False)
         if remote_state.lower() != "none":
             update_field(feature, REMOTE_STATE, "none")
         ret = docker_action("start", feature)
@@ -119,8 +121,8 @@ def container_start(feature):
         if fallback and (remote_state == "none"):
             # Start local as fallback enabled & no transition occuring.
             ret = docker_action("start", feature)
-
         set_label(feature, True)
+
     debug_msg("END")
     return ret
 

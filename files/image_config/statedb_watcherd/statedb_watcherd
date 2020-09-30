@@ -6,7 +6,10 @@ import socket
 import subprocess
 import syslog
 import inspect
+import threading
+import datetime
 from swsssdk import ConfigDBConnector
+from config.kube import kube_join, kube_reset
 
 KUBESERVER_PORT = 6443
 
@@ -22,8 +25,10 @@ SERVER_REACHABILITY = "server_reachability"
 SERVER_UPDATE_TS = "last_update_ts"
 SERVER_CONFIG_UPDATE_TS = "config_update_ts"
 
+FEATURE_TABLE = "FEATURE"
 SET_OWNER = "set_owner"
 NO_FALLBACK = "no_fallback_to_local"
+CONFIG_STATE = "state"
 
 CURRENT_OWNER = "current_owner"
 UPD_TIMESTAMP = "update_time"
@@ -33,21 +38,13 @@ VERSION = "version"
 DEPLOY_ID = "rolling_deploy_id"
 SYSTEM_STATE = "system_state"
 
-kube_server_state = {
-        SERVER_IP: "",
-        SERVER_CONNECTED: "false",
-        SERVER_REACHABILITY: "false",
-        SERVER_UPDATE_TS: "",
-        SERVER_CONFIG_UPDATE_TS: ""
-        }
-
-state_db = None
-cfg_db = None
+KUBE_LABEL_TABLE = "KUBE_LABELS"
+KUBE_PENDING_KEY = "PENDING"
 
 
 def debug_msg(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    # print(msg)
+    print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
     
 
@@ -59,62 +56,52 @@ def port_check(ip):
     return r == 0
 
 
-def checkout_reachable():
-    global kube_server_state, state_db
+def is_systemd_active(feat):
+    status = os.system('systemctl is-active --quiet {}'.format(feat))
+    if status != 0:
+        debug_msg("{} systemctl not active for {}".format(inspect.stack()[1][3], feat))
+    return status == 0
 
-    server_ip = kube_server_state[SERVER_IP]
-    connected = kube_server_state[SERVER_CONNECTED].lower() == "true"
-    server_reachable = kube_server_state[SERVER_REACHABILITY].lower() == "true"
 
-    if not server_ip or not connected:
-        return False
-
-    state_reachable = port_check(server_ip)
-    if not state_reachable:
-        # Fire timer to check again
-        threading.Timer(10, state_reachable).start()
-
-    if server_reachable != state_reachable:
-        debug_msg("server {} marked reachable={}".format(server_ip, state_reachable))
-        state_db.mod_entry(SERVER_TABLE, SERVER_KEY, {
-            SERVER_UPDATE_TS: str(datetime.datetime.now()),
-            SERVER_REACHABILITY: "true" if state_reachable else "false" })
-
-    return state_reachable 
+def restart_systemd_service(feat, owner):
+    debug_msg("Restart service {} to owner:{}".format(feat, owner))
+    status = os.system("systemctl restart {}".format(feat))
+    if status != 0:
+        syslog.syslog(syslog.LOG_ERR,
+                "Failed to restart {} to switch to {}".format(feat, owner))
+    else:
+        syslog.syslog(syslog.LOG_INFO,
+                "Restarted {} to switch to {}".format(feat, owner))
 
 
 class feature_manager:
-    def __init__(self):
-        global state_db, cfg_db
+    # Helps with service restart, when kube deployed container is pending to run.
+    #
+    def __init__(self, cfg_db, tbl):
+        self.cfg_db = cfg_db
+        self.state_table = tbl
 
-        self.state_data = state_db.get_table('FEATURE')
-
-        cfg_table = cfg_db.get_table('FEATURE')
+        cfg_table = self.cfg_db.get_table(FEATURE_TABLE)
         for feat in cfg_table:
-            self.handle_state_on_load(feat)
-
-
-    def handle_state_on_load(self, feat):
-        debug_msg("handle_state_on_load")
-        self.process(feat)
+            self.process(feat)
 
 
     def on_update(self, feat, data):
         # Handle only remote_state == pending
         #
         debug_msg("handle_state_on_update old:{} new:{}".format(
-            self.state_data[feat] if feat in self.state_data else {}, data))
+            str(self.state_table.get(feat, {})), str(data)))
 
         _, old_state = self.read_state(feat)
-        self.state_data[feat] = data
+        self.state_table[feat] = data
         self.process(feat, old_state)
 
 
     def process(self, feat, old_state = "none"):
-        if not self.validate_state(feat):
+        if not is_systemd_active(feat):
             return
 
-        set_owner, _ = self.read_config(feat)
+        set_owner = self.read_config(feat)
         current_owner, remote_state = self.read_state(feat)
 
         debug_msg("{} state(old: {} new:{}) owner=(set:{} current:{})".format(
@@ -123,7 +110,7 @@ class feature_manager:
         if ((set_owner == "kube") and (current_owner != "none") and
                 (old_state != remote_state) and (remote_state == "pending")):
             # Kube is pending, call restart to stop current, so new can take over.
-            self.restart_service(feat, set_owner)
+            restart_systemd_service(feat, set_owner)
 
 
     def on_server_update(self, old_data, ct_data):
@@ -136,38 +123,17 @@ class feature_manager:
 
     # Helper methods
     #
-    def validate_state(self, feat):
-        status = os.system('systemctl is-active --quiet {}'.format(feat))
-        if status != 0:
-            debug_msg("{} systemctl not active for {}".format(inspect.stack()[1][3], feat))
-        return status == 0
-
-
     def read_config(self, feat):
-        global cfg_db
-
-        cfg_data = cfg_db.get_table('FEATURE')
+        cfg_data = self.cfg_db.get_table(FEATURE_TABLE)
         cfg = cfg_data[feat] if feat in cfg_data else {}
-        set_owner = cfg[SET_OWNER] if SET_OWNER in cfg else "local"
-        fallback = not(cfg[NO_FALLBACK] if NO_FALLBACK in cfg else False)
-        return(set_owner, fallback)
+        set_owner = cfg.get(SET_OWNER, "local")
+        return set_owner
 
     def read_state(self, feat):
-        stat = self.state_data[feat] if feat in self.state_data else {}
-        current_owner = stat[CURRENT_OWNER] if CURRENT_OWNER in stat else "none"
-        mode = stat[REMOTE_STATE] if REMOTE_STATE in stat else "none"
+        stat = self.state_table[feat] if feat in self.state_table else {}
+        current_owner = stat.get(CURRENT_OWNER, "none")
+        mode = stat.get(REMOTE_STATE, "none")
         return (current_owner, mode)
-
-
-    def restart_service(self, feat, owner):
-        debug_msg("Restart service {} to owner:{}".format(feat, owner))
-        status = os.system("systemctl restart {}".format(feat))
-        if status != 0:
-            syslog.syslog(syslog.LOG_ERR,
-                    "Failed to restart {} to switch to {}".format(feat, owner))
-        else:
-            syslog.syslog(syslog.LOG_INFO,
-                    "Restarted {} to switch to {}".format(feat, owner))
 
 
 class label_manager:
@@ -175,65 +141,129 @@ class label_manager:
     # Any time reachable call, kube_label to update pending labels.
     #
 
-    def __init__(self):
+    def __init__(self, state_db, kube_server_state):
+        self.state_db = state_db
+        self.kube_server_state = kube_server_state
         self.check_pending()
 
 
+    def checkout_reachable(self):
+        server_ip = self.kube_server_state[SERVER_IP]
+        connected = self.kube_server_state[SERVER_CONNECTED].lower() == "true"
+        server_reachable = self.kube_server_state[SERVER_REACHABILITY].lower() == "true"
+
+        if not server_ip or not connected:
+            return False
+
+        state_reachable = port_check(server_ip)
+        if not state_reachable:
+            # Fire timer to check again
+            threading.Timer(10, self.checkout_reachable).start()
+
+        if server_reachable != state_reachable:
+            debug_msg("server {} marked reachable={}".format(server_ip, state_reachable))
+            self.state_db.mod_entry(SERVER_TABLE, SERVER_KEY, {
+                SERVER_UPDATE_TS: str(datetime.datetime.now()),
+                SERVER_REACHABILITY: "true" if state_reachable else "false" })
+            # Do not call check_pending as this call could be from timer thread.
+            # Update the timestamp, which will alert the main thread and it 
+            # would call check_pending.
+
+        return state_reachable 
+
     def check_pending(self):
-        pending = state_db.get_entry("KUBE_LABELS", "PENDING")
-        if pending and checkout_reachable():
+        pending = self.state_db.get_entry(KUBE_LABEL_TABLE, KUBE_PENDING_KEY)
+        if pending and self.checkout_reachable():
             proc = subprocess.Popen("/usr/bin/kube_label", shell=True)
             proc.wait()
 
 
     def on_update(self, key, data):
-        if key == "PENDING":
+        if key == KUBE_PENDING_KEY:
             self.check_pending()
 
 
     def on_server_update(self, old_data, ct_data):
+        self.kube_server_state = ct_data
         if (old_data[SERVER_UPDATE_TS] != ct_data[SERVER_UPDATE_TS]):
             self.check_pending()
 
 
-def check_server_connection():
-    global state_db, cfg_db, kube_server_state
+class kube_connection_handler:
+    # Whenever kube server config changes, hostcfgd updates config-timestamp
+    # in state-db KUBERNETES_MASTER|SERVER.
+    # If connection reset required, it gets initiated immediately
+    # Else, it may do additional checks before join
+    #   a)  Ensure kubelet service is running
+    #       kubelet service start is delayed with an associated timer service.
+    #
+    def __init__(self, cfg_db, state_db):
+        self.cfg_db = cfg_db
+        self.state_db = state_db
 
-    tbl = cfg_db.get_table(SERVER_TABLE)
-    cfg_data = tbl[SERVER_KEY]
-
-    cfg_ip = cfg_data[CONFIG_IP] if CONFIG_IP in cfg_data else ""
-    cfg_disable = ((cfg_data[CONFIG_DISABLE] if CONFIG_DISABLE in cfg_data else "false").
-            lower() == "true")
-
-    if cfg_disable or not cfg_ip:
-        debug_msg("cfg_disable:{} cfg_ip:{} call kube_reset".format(cfg_disable, cfg_ip))
-        # kube_reset()
-    else:
-        debug_msg("cfg_disable:{} cfg_ip:{} call kube_join".format(cfg_disable, cfg_ip))
-        # kube_join()
+        self.join_or_reset()
 
 
+    def check_kubelet_service(self, from_main_thread=False):
+        ret = is_systemd_active("kubelet.service")
+        debug_msg("kubelet service is{} running".format("" if ret else " not"))
+        if not ret:
+            debug_msg("Fire timer to check kubelet service")
+            threading.Timer(10, self.check_kubelet_service)
+        elif not from_main_thread:
+            # Called by a different thread, so just update DB, which would trigger
+            # main thread and call into on_server_update, which will do join/reset
+            #
+            self.state_db.mod_entry(SERVER_TABLE, SERVER_KEY,
+                    { SERVER_UPDATE_TS: str(datetime.datetime.now()) })
+
+        return ret
+
+
+    def join_or_reset(self):
+        # Join master or reset the connection with master per config.
+        if self.check_kubelet_service(from_main_thread=True):
+            tbl = self.cfg_db.get_table(SERVER_TABLE)
+            cfg_data = tbl.get(SERVER_KEY, {})
+            cfg_ip = cfg_data.get(CONFIG_IP, "")
+            cfg_disable = cfg_data.get(CONFIG_DISABLE, "").lower() == "true"
+
+            if cfg_disable or not cfg_ip:
+                debug_msg("cfg_disable:{} cfg_ip:{} call kube_reset".format(cfg_disable, cfg_ip))
+                kube_reset()
+            else:
+                debug_msg("cfg_disable:{} cfg_ip:{} call kube_join".format(cfg_disable, cfg_ip))
+                kube_join()
+
+
+    def on_server_update(self, old_date, ct_data):
+        self.join_or_reset()
+
+           
 class StateDBDeamon:
     def __init__(self):
-        global state_db, cfg_db, kube_server_state
-
-        cfg_db = ConfigDBConnector()
-        cfg_db.connect(wait_for_init=True, retry_on=True)
+        self.cfg_db = ConfigDBConnector()
+        self.cfg_db.connect(wait_for_init=True, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
 
-        state_db = ConfigDBConnector()
-        state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
+        self.state_db = ConfigDBConnector()
+        self.state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'StateDB connect success')
 
-        master = state_db.get_table(SERVER_TABLE)
+        self.kube_server_state = {
+                SERVER_IP: "",
+                SERVER_CONNECTED: "false",
+                SERVER_REACHABILITY: "false",
+                SERVER_UPDATE_TS: "",
+                SERVER_CONFIG_UPDATE_TS: ""
+                }
+        master = self.state_db.get_table(SERVER_TABLE)
         if SERVER_KEY in master:
-            kube_server_state.update(master[SERVER_KEY])
+            self.kube_server_state.update(master[SERVER_KEY])
 
-        self.feature_handler = feature_manager()
-        self.label_handler = label_manager()
-
-        check_server_connection()
+        self.feature_handler = feature_manager(self.cfg_db, self.state_db.get_table(FEATURE_TABLE))
+        self.label_handler = label_manager(self.state_db, self.kube_server_state)
+        self.kube_connection_handler = kube_connection_handler(self.cfg_db, self.state_db)
 
 
     def feature_update(self, key, data):
@@ -244,21 +274,23 @@ class StateDBDeamon:
 
     def server_update(self, key, data):
         if key == SERVER_KEY:
-            old_state = dict(kube_server_state)
-            kube_server_state.update(data)
-            self.label_handler.on_server_update(old_state, kube_server_state)
-            self.feature_handler.on_server_update(old_state, kube_server_state)
-            check_server_connection()
+            old_state = dict(self.kube_server_state)
+            self.kube_server_state.update(data)
+            self.label_handler.on_server_update(old_state, self.kube_server_state)
+            self.feature_handler.on_server_update(old_state, self.kube_server_state)
+            self.kube_connection_handler.on_server_update(old_state, self.kube_server_state)
+        else:
+            debug_msg("key={} is not {}".format(key, SERVER_KEY))
+        debug_msg("key={} data={} kube_server_state={}".format(key, str(data), str(self.kube_server_state)))
+
 
     def start(self):
-        global state_db
-
         # Update all feature states once upon starting
 
-        state_db.subscribe('FEATURE', lambda table, key, data: self.feature_update(key, data))
-        state_db.subscribe('KUBE_LABELS', lambda table, key, data: self.label_update(key, data))
-        state_db.subscribe(SERVER_TABLE, lambda table, key, data: self.server_update(key, data))
-        state_db.listen()
+        self.state_db.subscribe('FEATURE', lambda table, key, data: self.feature_update(key, data))
+        self.state_db.subscribe('KUBE_LABELS', lambda table, key, data: self.label_update(key, data))
+        self.state_db.subscribe(SERVER_TABLE, lambda table, key, data: self.server_update(key, data))
+        self.state_db.listen()
 
 
 def main():
