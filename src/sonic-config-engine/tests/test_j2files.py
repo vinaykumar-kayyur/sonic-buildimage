@@ -89,7 +89,7 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_l2switch_template(self):
-        argument = '-k Mellanox-SN2700 -t ' + os.path.join(self.test_dir, '../data/l2switch.j2') + ' -p ' + self.t0_port_config + ' > ' + self.output_file
+        argument = '-k Mellanox-SN2700 --preset l2 -p ' + self.t0_port_config + ' > ' + self.output_file
         self.run_script(argument)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 'l2switch.json')
