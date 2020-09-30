@@ -12,6 +12,7 @@ remote_features = ("snmp", "telemetry", "pmon", "lldp", "radv", "dhcp_relay")
 state_db = None
 
 # DB field names
+FEATURE_TABLE = "FEATURE"
 SET_OWNER = "set_owner"
 NO_FALLBACK = "no_fallback_to_local"
 
@@ -43,12 +44,12 @@ def read_data(is_config, feature, fields, defaults):
 
     db = cfg_db if is_config else state_db
 
-    tbl = db.get_table('FEATURE')
+    tbl = db.get_table(FEATURE_TABLE)
 
     data = tbl[feature] if feature in tbl else {}
     i = 0
     for field in fields:
-        val = data[field] if field in data else defaults[i]
+        val = data.get(field, defaults[i])
         i += 1
         ret += [val]
 
@@ -94,9 +95,9 @@ def set_label(feature, create):
         return -1
 
 
-def update_field(feature, field, val):
-    debug_msg("feature:{} field:{} val:{}".format(feature, field, val))
-    state_db.mod_entry('FEATURE', feature, { field: val })
+def update_data(feature, data):
+    debug_msg("feature:{} data:{}".format(feature, str(data)))
+    state_db.mod_entry(FEATURE_TABLE, feature, data)
 
 
 def container_start(feature):
@@ -108,13 +109,13 @@ def container_start(feature):
     debug_msg("{}: set_owner:{} fallback:{} remote_state:{}".format(
         feature, set_owner, fallback, remote_state))
 
-    update_field(feature, SYSTEM_STATE, "up")
+    update_data(feature, {SYSTEM_STATE: "up"})
 
     if set_owner == "local":
         # Ensure label is not there.
         set_label(feature, False)
         if remote_state.lower() != "none":
-            update_field(feature, REMOTE_STATE, "none")
+            update_data(feature, {REMOTE_STATE: "none"})
         ret = docker_action("start", feature)
 
     else:
@@ -136,7 +137,7 @@ def container_stop(feature):
     debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{}".format(
         feature, set_owner, current_owner, remote_state, docker_id))
 
-    update_field(feature, SYSTEM_STATE, "down")
+    update_data(feature, {SYSTEM_STATE: "down"})
 
     if not docker_id:
         docker_id = feature
@@ -146,6 +147,18 @@ def container_stop(feature):
 
     if docker_id:
         docker_action("stop", docker_id)
+
+    current_owner, remote_state, docker_id = read_state(feature)
+    if ((current_owner != "none") or docker_id):
+        # container did not clear data upon termination; Possibly killed
+        # This could also happen when kubelet forcefully terminate
+        # Forceful termination is possible when master connection is reset.
+        #
+        debug_msg("Force resetting feature:{} status to none".format(feature))
+        update_data(feature, {
+            CURRENT_OWNER: "none",
+            REMOTE_STATE: "none",
+            DOCKER_ID: ""})
 
     debug_msg("END")
 
@@ -159,7 +172,7 @@ def container_kill(feature):
     debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{}".format(
         feature, set_owner, current_owner, remote_state, docker_id))
 
-    update_field(feature, SYSTEM_STATE, "down")
+    update_data(feature, {SYSTEM_STATE: "down"})
 
     if not docker_id:
         docker_id = feature
@@ -197,7 +210,7 @@ def container_wait(feature):
         debug_msg("wait_loop: {} = {} {} {}".format(feature, current_owner, remote_state, docker_id))
 
         if (remote_state == "pending"):
-            update_field(feature, REMOTE_STATE, "ready")
+            update_data(feature, {REMOTE_STATE: "ready"})
 
 
     debug_msg("END -- transitioning to docker wait")

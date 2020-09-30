@@ -209,7 +209,7 @@ class kube_connection_handler:
         debug_msg("kubelet service is{} running".format("" if ret else " not"))
         if not ret:
             debug_msg("Fire timer to check kubelet service")
-            threading.Timer(10, self.check_kubelet_service)
+            threading.Timer(10, self.check_kubelet_service).start()
         elif not from_main_thread:
             # Called by a different thread, so just update DB, which would trigger
             # main thread and call into on_server_update, which will do join/reset
