@@ -1,4 +1,2 @@
 Revert changes in 
 1) rules/config
-2) rules/sonic-thermalctld.mk
-3) rules/docker-platform-monitor.mk
