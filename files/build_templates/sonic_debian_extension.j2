@@ -325,7 +325,19 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install watchdo
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures==3.3.0
 
 {% if include_kubernetes == "y" %}
-# Copy kubelet service files
+# Update kubelet service files by dropping install section
+SVC_FILE=$FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/kubelet.service
+SVC_FILE_UPD=$FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/kubelet.service.upd
+sudo grep -v -e "^\[Install\]" ${SVC_FILE} | grep -v -e "^WantedBy=" | sudo tee ${SVC_FILE_UPD}
+sudo mv ${SVC_FILE_UPD} ${SVC_FILE}
+
+#copy timer service
+sudo cp $BUILD_TEMPLATES/kubelet.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "kubelet.timer" | sudo tee -a $GENERATED_SERVICE_FILE
+
+# Copy CNI file required when flannel is not locally installed.
+sudo cp $BUILD_TEMPLATES/kube_cni.10-flannel.conflist.json $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+
 # Keep it disabled until join, else it continuously restart and as well spew too many
 # non-required log lines wasting syslog resources.
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
