@@ -42,8 +42,6 @@ def generate_empty_config(data):
 
 def generate_l2_config(data):
     data['VLAN'] = {'Vlan1000': {'vlanid': '1000'}}
-    vp = natsorted(list(data['PORT'].keys()))
-    data['VLAN']['Vlan1000'].setdefault('members', vp)
     data['VLAN_MEMBER'] = {}
     for port in natsorted(data['PORT']):
         data['PORT'][port].setdefault('admin_status', 'up')

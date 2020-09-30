@@ -104,7 +104,7 @@ class TestJ2Files(TestCase):
         with open(sample_output_file) as sample_output_fd:
             sample_output_json = json.load(sample_output_fd)
 
-        self.assertTrue(json.dumps(sample_output_json, sort_keys=True), json.dumps(output_json, sort_keys=True))
+        self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
 
     def test_qos_arista7050_render_template(self):
         arista_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'arista', 'x86_64-arista_7050_qx32s', 'Arista-7050-QX-32S')
