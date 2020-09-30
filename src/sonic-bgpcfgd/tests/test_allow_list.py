@@ -1,9 +1,9 @@
-from app.allow_list import BGPAllowListMgr
 from app.directory import Directory
 from app.template import TemplateFabric
 import app
-from mock import MagicMock
+from mock import MagicMock, patch
 
+swsscommon_module_mock = MagicMock()
 
 global_constants = {
     "bgp": {
@@ -20,7 +20,9 @@ global_constants = {
     }
 }
 
+@patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
 def set_del_test(op, args, currect_config, expected_config):
+    from app.allow_list import BGPAllowListMgr
     set_del_test.push_list_called = False
     def push_list(args):
         set_del_test.push_list_called = True
@@ -39,6 +41,7 @@ def set_del_test(op, args, currect_config, expected_config):
         'tf':        TemplateFabric(),
         'constants': global_constants,
     }
+
     mgr = BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES")
     if op == "SET":
         mgr.set_handler(*args)
@@ -183,7 +186,9 @@ def test_set_handler_with_community_data_is_already_presented():
         []
     )
 
+@patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
 def test_set_handler_no_community_data_is_already_presented():
+    from app.allow_list import BGPAllowListMgr
     cfg_mgr = MagicMock()
     cfg_mgr.update.return_value = None
     cfg_mgr.get_text.return_value = [
@@ -304,7 +309,9 @@ def test_set_handler_no_community_update_prefixes_add():
         ]
     )
 
+@patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
 def test___set_handler_validate():
+    from app.allow_list import BGPAllowListMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -329,7 +336,9 @@ def test___set_handler_validate():
         "prefixes_v6": "fc01:20::/64,fc01:30::/64",
     })
 
+@patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
 def test___find_peer_group_by_deployment_id():
+    from app.allow_list import BGPAllowListMgr
     cfg_mgr = MagicMock()
     cfg_mgr.update.return_value = None
     cfg_mgr.get_text.return_value = [
@@ -421,7 +430,9 @@ def test___find_peer_group_by_deployment_id():
     values = mgr._BGPAllowListMgr__find_peer_group_by_deployment_id(0)
     assert values == ['PEER_V4_INT', 'PEER_V6_INT', 'PEER_V6', 'PEER_V4']
 
+@patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
 def test___restart_peers_found_deployment_id():
+    from app.allow_list import BGPAllowListMgr
     test___restart_peers_found_deployment_id.run_command_counter = 0
     def run_command(cmd):
         output = [
@@ -447,7 +458,9 @@ def test___restart_peers_found_deployment_id():
     rc = mgr._BGPAllowListMgr__restart_peers(5)
     assert rc
 
+@patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
 def test___restart_peers_not_found_deployment_id():
+    from app.allow_list import BGPAllowListMgr
     def run_command(cmd):
         assert cmd == ['vtysh', '-c', 'clear bgp * soft in']
         return 0, "", ""
