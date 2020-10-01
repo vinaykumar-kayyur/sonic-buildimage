@@ -2,10 +2,12 @@
 Description=StateDB watcher daemon
 Requires=updategraph.service
 After=updategraph.service
+Conflicts=statedb_watcherd.timer
+
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/statedb_watcherd
+Restart=always
+RestartSec=30
 
-[Install]
-WantedBy=multi-user.target

@@ -204,36 +204,18 @@ class kube_connection_handler:
         self.join_or_reset()
 
 
-    def check_kubelet_service(self, from_main_thread=False):
-        ret = is_systemd_active("kubelet.service")
-        debug_msg("kubelet service is{} running".format("" if ret else " not"))
-        if not ret:
-            debug_msg("Fire timer to check kubelet service")
-            threading.Timer(10, self.check_kubelet_service).start()
-        elif not from_main_thread:
-            # Called by a different thread, so just update DB, which would trigger
-            # main thread and call into on_server_update, which will do join/reset
-            #
-            self.state_db.mod_entry(SERVER_TABLE, SERVER_KEY,
-                    { SERVER_UPDATE_TS: str(datetime.datetime.now()) })
-
-        return ret
-
-
     def join_or_reset(self):
-        # Join master or reset the connection with master per config.
-        if self.check_kubelet_service(from_main_thread=True):
-            tbl = self.cfg_db.get_table(SERVER_TABLE)
-            cfg_data = tbl.get(SERVER_KEY, {})
-            cfg_ip = cfg_data.get(CONFIG_IP, "")
-            cfg_disable = cfg_data.get(CONFIG_DISABLE, "").lower() == "true"
+        tbl = self.cfg_db.get_table(SERVER_TABLE)
+        cfg_data = tbl.get(SERVER_KEY, {})
+        cfg_ip = cfg_data.get(CONFIG_IP, "")
+        cfg_disable = cfg_data.get(CONFIG_DISABLE, "").lower() == "true"
 
-            if cfg_disable or not cfg_ip:
-                debug_msg("cfg_disable:{} cfg_ip:{} call kube_reset".format(cfg_disable, cfg_ip))
-                kube_reset()
-            else:
-                debug_msg("cfg_disable:{} cfg_ip:{} call kube_join".format(cfg_disable, cfg_ip))
-                kube_join()
+        if cfg_disable or not cfg_ip:
+            debug_msg("cfg_disable:{} cfg_ip:{} call kube_reset".format(cfg_disable, cfg_ip))
+            kube_reset()
+        else:
+            debug_msg("cfg_disable:{} cfg_ip:{} call kube_join".format(cfg_disable, cfg_ip))
+            kube_join()
 
 
     def on_server_update(self, old_date, ct_data):

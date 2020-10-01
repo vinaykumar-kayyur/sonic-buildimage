@@ -1,0 +1,11 @@
+[Unit]
+Description=Delays statedb container until SONiC  & kubelet service has started
+Conflicts=statedb_watcherd.service
+
+[Timer]
+OnUnitActiveSec=0 sec
+OnBootSec=12min 30 sec
+Unit=statedb_watcherd.service
+
+[Install]
+WantedBy=timers.target swss.service
