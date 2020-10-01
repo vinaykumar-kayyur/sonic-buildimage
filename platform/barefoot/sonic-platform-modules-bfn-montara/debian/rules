@@ -14,6 +14,7 @@ PLUGINS_DIR := $(shell pwd)/plugins
 override_dh_auto_build:
 	set -e
 	python2.7 setup.py bdist_wheel -d $(WHEEL_BUILD_DIR)
+	python3 setup.py bdist_wheel -d $(WHEEL_BUILD_DIR)
 	set +e
 
 override_dh_auto_install:
