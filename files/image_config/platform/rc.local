@@ -279,7 +279,7 @@ if [ -f $FIRST_BOOT_FILE ]; then
 
     # If the unit booted into SONiC from another NOS's grub,
     # we now install a grub for SONiC.
-    if [ -n "$onie_platform" ] && [ x"$grub_installation_needed" == x"TRUE" ]; then
+    if [ -n "$onie_platform" ] && [ -n  "$grub_installation_needed" ]; then
 
         grub_bin=$(ls /host/image-$SONIC_VERSION/platform/x86_64-grub/grub-pc-bin*.deb 2> /dev/null)
         if [ -z "$grub_bin" ]; then
