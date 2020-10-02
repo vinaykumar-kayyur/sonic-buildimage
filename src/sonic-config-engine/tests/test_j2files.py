@@ -171,14 +171,11 @@ class TestJ2Files(TestCase):
     def test_ndppd_conf(self):
         conf_template = os.path.join(self.test_dir, "ndppd.conf.j2")
         vlan_interfaces_json = os.path.join(self.test_dir, "data", "ndppd", "vlan_interfaces.json")
-        expected = os.path.join(self.test_dir, "sample_output", "ndppd.conf")
+        expected = os.path.join(self.test_dir, "sample_output", utils.PYvX_DIR, "ndppd.conf")
 
         argument = '-j {} -t {} > {}'.format(vlan_interfaces_json, conf_template, self.output_file)
         self.run_script(argument)
-        f = open(self.output_file)
-        contents = f.read()
-        f.close()
-        assert filecmp.cmp(expected, self.output_file), contents
+        assert filecmp.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
 
 
     def tearDown(self):
