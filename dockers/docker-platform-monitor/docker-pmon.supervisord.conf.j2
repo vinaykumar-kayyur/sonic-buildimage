@@ -38,6 +38,16 @@ startsecs=0
 dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
 
+[program:container_monitor]
+command=/usr/bin/container_monitor.py pmon
+priority=3
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=start:exited
+
 {% if not skip_sensors and HAVE_SENSORS_CONF == 1 %}
 [program:lm-sensors]
 command=/usr/bin/lm-sensors.sh
@@ -141,14 +151,4 @@ startsecs=10
 dependent_startup=true
 dependent_startup_wait_for=start:exited
 {% endif %}
-
-[program:container_monitor]
-command=/usr/bin/container_monitor.py pmon
-priority=11
-autostart=false
-autorestart=false
-stdout_logfile=syslog
-stderr_logfile=syslog
-dependent_startup=true
-dependent_startup_wait_for=start:exited
 
