@@ -8,6 +8,7 @@ try:
     sys.path.append(os.path.dirname(__file__))
 
     from .platform_thrift_client import ThriftClient
+    from .platform_thrift_client import thrift_try
 
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sfputilbase import SfpUtilBase
@@ -65,11 +66,13 @@ class SfpUtil(SfpUtilBase):
         SfpUtilBase.__init__(self)
 
     def update_port_info(self):
+        def action(client):
+            return client.pltfm_mgr.pltfm_mgr_qsfp_get_max_port();
+
         if self.QSFP_PORT_END == 0:
-            with ThriftClient() as client:
-                self.QSFP_PORT_END = client.pltfm_mgr.pltfm_mgr_qsfp_get_max_port();
-                self.PORT_END = self.QSFP_PORT_END
-                self.PORTS_IN_BLOCK = self.QSFP_PORT_END
+            self.QSFP_PORT_END = thrift_try(action)
+            self.PORT_END = self.QSFP_PORT_END
+            self.PORTS_IN_BLOCK = self.QSFP_PORT_END
 
     def get_presence(self, port_num):
         # Check for invalid port_num
@@ -78,9 +81,11 @@ class SfpUtil(SfpUtilBase):
 
         presence = False
 
+        def action(client):
+            return client.pltfm_mgr.pltfm_mgr_qsfp_presence_get(port_num)
+
         try:
-            with ThriftClient() as client:
-                presence = client.pltfm_mgr.pltfm_mgr_qsfp_presence_get(port_num)
+            presence = thrift_try(action)
         except Exception as e:
             print e.__doc__
             print e.message
@@ -92,8 +97,11 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        with ThriftClient() as client:
-            lpmode = client.pltfm_mgr.pltfm_mgr_qsfp_lpmode_get(port_num)
+        def action(client):
+            return client.pltfm_mgr.pltfm_mgr_qsfp_lpmode_get(port_num)
+
+        lpmode = thrift_try(action)
+
         return lpmode
 
     def set_low_power_mode(self, port_num, lpmode):
@@ -101,8 +109,11 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        with ThriftClient() as client:
-            status = client.pltfm_mgr.pltfm_mgr_qsfp_lpmode_set(port_num, lpmode)
+        def action(client):
+            return client.pltfm_mgr.pltfm_mgr_qsfp_lpmode_set(port_num, lpmode)
+
+        status = thrift_try(action)
+
         return (status == 0)
 
     def reset(self, port_num):
@@ -110,9 +121,12 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        with ThriftClient() as client:
+        def action(client):
             client.pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, True)
-            status = client.pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, False)
+            return client.pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, False)
+
+        status = thrift_try(action)
+
         return status
 
     def check_transceiver_change(self):
@@ -188,15 +202,16 @@ class SfpUtil(SfpUtilBase):
     def _get_port_eeprom_path(self, port_num, devid):
         eeprom_path = None
 
-        with ThriftClient() as client:
-            presence = client.pltfm_mgr.pltfm_mgr_qsfp_presence_get(port_num)
-            if presence == True:
-                eeprom_cache = open(SFP_EEPROM_CACHE, 'wb')
-                eeprom_hex = client.pltfm_mgr.pltfm_mgr_qsfp_info_get(port_num)
-                eeprom_raw = bytearray.fromhex(eeprom_hex)
-                eeprom_cache.write(eeprom_raw)
-                eeprom_cache.close()
-                eeprom_path = SFP_EEPROM_CACHE
+        def action(client):
+            return client.pltfm_mgr.pltfm_mgr_qsfp_info_get(port_num)
+
+        if self.get_presence(port_num):
+            eeprom_hex = thrift_try(action)
+            eeprom_cache = open(SFP_EEPROM_CACHE, 'wb')
+            eeprom_raw = bytearray.fromhex(eeprom_hex)
+            eeprom_cache.write(eeprom_raw)
+            eeprom_cache.close()
+            eeprom_path = SFP_EEPROM_CACHE
 
         return eeprom_path
 
