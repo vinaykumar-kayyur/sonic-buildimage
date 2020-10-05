@@ -47,9 +47,8 @@ RUN apt-get update &&        \
         python               \
         python-pip           \
         vim-tiny             \
-# Install dependencies of supervisor
-        python-pkg-resources \
-        python-meld3         \
+# Install redis-tools
+        redis-tools=5:5.0.3-3~bpo9+2     \
 # common dependencies
         libpython2.7         \
         libdaemon0           \
@@ -88,6 +87,12 @@ RUN apt-get -y -t stretch-backports install rsyslog
 # For templating
 RUN pip install j2cli
 
+# Install supervisor
+RUN pip install supervisor>=3.4.0
+
+# Add support for supervisord to handle startup dependencies
+RUN pip install supervisord-dependent-startup==1.4.0
+
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 
 RUN apt-get -y purge   \
@@ -103,9 +108,6 @@ RUN apt-get -y purge   \
 # Install built Debian packages and implicitly install their dependencies
 {{ install_debian_packages(docker_base_stretch_debs.split(' ')) }}
 {%- endif %}
-
-# Add support for supervisord to handle startup dependencies
-RUN pip install supervisord-dependent-startup==1.4.0
 
 # Clean up apt
 # Remove /var/lib/apt/lists/*, could be obsoleted for derived images
