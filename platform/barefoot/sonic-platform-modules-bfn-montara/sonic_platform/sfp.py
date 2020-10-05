@@ -66,11 +66,11 @@ class SfpUtil(SfpUtilBase):
         SfpUtilBase.__init__(self)
 
     def update_port_info(self):
-        def action(client):
+        def qsfp_max_port_get(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_get_max_port();
 
         if self.QSFP_PORT_END == 0:
-            self.QSFP_PORT_END = thrift_try(action)
+            self.QSFP_PORT_END = thrift_try(qsfp_max_port_get)
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
 
@@ -81,11 +81,11 @@ class SfpUtil(SfpUtilBase):
 
         presence = False
 
-        def action(client):
+        def qsfp_presence_get(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_presence_get(port_num)
 
         try:
-            presence = thrift_try(action)
+            presence = thrift_try(qsfp_presence_get)
         except Exception as e:
             print e.__doc__
             print e.message
@@ -97,10 +97,10 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        def action(client):
+        def qsfp_lpmode_get(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_lpmode_get(port_num)
 
-        lpmode = thrift_try(action)
+        lpmode = thrift_try(qsfp_lpmode_get)
 
         return lpmode
 
@@ -109,10 +109,10 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        def action(client):
+        def qsfp_lpmode_set(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_lpmode_set(port_num, lpmode)
 
-        status = thrift_try(action)
+        status = thrift_try(qsfp_lpmode_set)
 
         return (status == 0)
 
@@ -121,11 +121,11 @@ class SfpUtil(SfpUtilBase):
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
-        def action(client):
+        def qsfp_reset(client):
             client.pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, True)
             return client.pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, False)
 
-        status = thrift_try(action)
+        status = thrift_try(qsfp_reset)
 
         return status
 
@@ -202,11 +202,11 @@ class SfpUtil(SfpUtilBase):
     def _get_port_eeprom_path(self, port_num, devid):
         eeprom_path = None
 
-        def action(client):
+        def qsfp_info_get(client):
             return client.pltfm_mgr.pltfm_mgr_qsfp_info_get(port_num)
 
         if self.get_presence(port_num):
-            eeprom_hex = thrift_try(action)
+            eeprom_hex = thrift_try(qsfp_info_get)
             eeprom_cache = open(SFP_EEPROM_CACHE, 'wb')
             eeprom_raw = bytearray.fromhex(eeprom_hex)
             eeprom_cache.write(eeprom_raw)

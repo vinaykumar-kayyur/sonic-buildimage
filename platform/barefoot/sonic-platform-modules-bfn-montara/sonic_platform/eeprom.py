@@ -85,10 +85,10 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         self.eeprom_path = EEPROM_SYMLINK
         super(Eeprom, self).__init__(self.eeprom_path, 0, EEPROM_STATUS, True)
 
-        def action(client):
+        def sys_eeprom_get(client):
             return client.pltfm_mgr.pltfm_mgr_sys_eeprom_get()
         try:
-            self.eeprom = thrift_try(action)
+            self.eeprom = thrift_try(sys_eeprom_get)
         except Exception:
             raise RuntimeError("eeprom.py: Initialization failed")
 
