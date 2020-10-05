@@ -11,6 +11,7 @@ setuptools.setup(name='sonic-bgpcfgd',
       packages=setuptools.find_packages(),
       entry_points={
           'console_scripts': [
+              'bgpcfgd = bgpcfgd.main:main',
               'bgpmon = bgpmon.bgpmon:main',
           ]
       },

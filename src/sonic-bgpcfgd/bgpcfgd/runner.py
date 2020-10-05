@@ -1,8 +1,16 @@
 from collections import defaultdict
 from swsscommon import swsscommon
 
-from .vars import g_run
 from .log import log_debug
+
+
+g_run = True
+
+
+def signal_handler(_, __):  # signal_handler(signum, frame)
+    """ signal handler """
+    global g_run
+    g_run = False
 
 
 class Runner(object):
