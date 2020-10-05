@@ -27,7 +27,6 @@ def fantype_detect():
  
 def main():
     AFO_value = "1"
-    AFI_value = "0"
 
     fan_type = fantype_detect()
 
