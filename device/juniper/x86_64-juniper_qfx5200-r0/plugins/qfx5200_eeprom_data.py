@@ -65,7 +65,6 @@ def fantype_detect():
 
 def main():
     AFO_value = "1"
-    AFI_value = "0"
 
     eeprom_qfx5200 = Eeprom()
 
