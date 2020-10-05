@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import re
 import subprocess
@@ -256,7 +257,11 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
     # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
     # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
     if os.path.isfile(hwsku_json_file):
-        port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
+        if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
+            json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
+            platform_data = json.loads(open(json_file).read())
+            if len(platform_data.get("interfaces")) > 0:
+                port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
 
     # Check for 'port_config.ini' file presence in a few locations
     if asic:
