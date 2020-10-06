@@ -181,12 +181,6 @@ sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY3_WHEEL_NAME
 # Install Debian packages and their dependencies which are needed by sonic-utilities
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f python-m2crypto
 
-# Install built Python Click package (and its dependencies via 'apt-get -y install -f')
-# Do this before installing sonic-utilities so that it doesn't attempt to install
-# an older version as part of its dependencies
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python-click*_all.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-
 # Install SONiC Utilities Python 2 package
 SONIC_UTILITIES_PY2_WHEEL_NAME=$(basename {{sonic_utilities_py2_wheel_path}})
 sudo cp {{sonic_utilities_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2_WHEEL_NAME
