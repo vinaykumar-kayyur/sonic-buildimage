@@ -338,6 +338,10 @@ RUN export VERSION=1.14.2 \
 RUN pip install setuptools==40.8.0
 RUN pip3 install setuptools==49.6.00
 
+# For building sonic-utilities
+RUN pip install fastentrypoints
+RUN pip3 install fastentrypoints
+
 # For running Python unit tests
 RUN pip install pytest-runner==4.4
 RUN pip3 install pytest-runner==5.2
