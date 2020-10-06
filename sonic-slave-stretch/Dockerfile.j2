@@ -280,6 +280,8 @@ RUN apt-get update && apt-get install -y \
         texi2html \
 # For initramfs
         bash-completion \
+# For HAM
+        libdbus-c++-dev \
 {%- if CONFIGURED_ARCH == "amd64" %}
 # For sonic vs image build
         dosfstools \
@@ -345,7 +347,7 @@ RUN pip install \
         ctypesgen==0.r125 \
         crc16
 
-# Note: Stick with Jinja2 2.x branch as the 3.x dropped support for Python 2.7 
+# Note: Stick with Jinja2 2.x branch as the 3.x dropped support for Python 2.7
 RUN pip install --force-reinstall --upgrade "Jinja2<3.0.0"
 
 # For sonic config engine testing
