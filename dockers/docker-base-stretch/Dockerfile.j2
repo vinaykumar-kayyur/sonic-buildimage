@@ -57,9 +57,6 @@ RUN apt-get update &&        \
 # ip and ifconfig utility missing in docker for arm arch
         iproute2             \
         net-tools            \
-# for arm arch: Installing j2cli dependency package MarkupSafe from source relies on weeksetuptools and wheel
-        python-setuptools    \
-        python-wheel         \
 # for processing json files in bash environment
         jq                   \
 # for sairedis zmq rpc channel
@@ -83,6 +80,11 @@ RUN apt-get -y -t stretch-backports install rsyslog
     RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f -y
     RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb
 {% endif %}
+
+# Some Python packages require setuptools (or pkg_resources, which is supplied by setuptools)
+# and some require wheel
+RUN pip install setuptools==40.8.0
+RUN pip install wheel
 
 # For templating
 RUN pip install j2cli

@@ -52,6 +52,11 @@ COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
 COPY ["etc/rsyslog.d/*", "/etc/rsyslog.d/"]
 COPY ["root/.vimrc", "/root/.vimrc"]
 
+# Some Python packages require setuptools (or pkg_resources, which is supplied by setuptools)
+# and some require wheel
+RUN pip install setuptools==40.8.0
+RUN pip install wheel
+
 # Install supervisor
 RUN pip install supervisor>=3.4.0
 
