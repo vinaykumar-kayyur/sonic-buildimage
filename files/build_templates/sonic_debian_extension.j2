@@ -420,8 +420,13 @@ sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy systemd timer configuration
 # It implements delayed start of services
-sudo cp $BUILD_TEMPLATES/process-reboot-cause.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable process-reboot-cause.timer
+sudo cp $BUILD_TEMPLATES/post-process-reboot-cause.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable post-process-reboot-cause.timer
+
+# Copy post-process-reboot-cause service files
+sudo cp $IMAGE_CONFIGS/process-reboot-cause/post-process-reboot-cause.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "post-process-reboot-cause.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/process-reboot-cause/post-process-reboot-cause $FILESYSTEM_ROOT/usr/bin/
 
 # Copy process-reboot-cause service files
 sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM

@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+#
+# post-process-reboot-cause
+#
+# Program designed to run once, soon after system boot which will
+# determine the cause of the previous reboot and store it to the disk,
+#
+
+try:
+    import os
+    import pwd
+    import sys
+    import syslog
+    import re
+    import shutil
+
+    import swsssdk
+    from sonic_py_common import device_info
+except ImportError as err:
+    raise ImportError("%s - required module not found" % str(err))
+
+VERSION = "1.0"
+
+SYSLOG_IDENTIFIER = "post-process-reboot-cause"
+
+REBOOT_CAUSE_DIR = "/host/reboot-cause/"
+PREVIOUS_REBOOT_CAUSE_DIR = "/host/reboot-cause/previous_reboot-cause/"
+REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "reboot-cause.txt"
+PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
+FIRST_BOOT_PLATFORM_FILE = "/tmp/notify_firstboot_to_platform"
+REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
+
+REBOOT_CAUSE_TABLE_NAME = "REBOOT_CAUSE"
+state_db = None
+
+# ========================== Syslog wrappers ==========================
+
+def log_info(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_INFO, msg)
+    syslog.closelog()
+
+
+def log_warning(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_WARNING, msg)
+    syslog.closelog()
+
+
+def log_error(msg):
+    syslog.openlog(SYSLOG_IDENTIFIER)
+    syslog.syslog(syslog.LOG_ERR, msg)
+    syslog.closelog()
+
+
+# ============================= Functions =============================
+def set_reboot_cause_table_entry(key, cause, time, user, comment):
+    state_db.set(state_db.STATE_DB, key, 'cause', cause)
+    state_db.set(state_db.STATE_DB, key, 'time', time)
+    state_db.set(state_db.STATE_DB, key, 'user', user)
+    state_db.set(state_db.STATE_DB, key, 'comment', comment)
+
+
+def update_reboot_cause_file_and_state_db():
+    # Create REBOOT_CAUSE_DIR if it doesn't exist
+    if not os.path.exists(PREVIOUS_REBOOT_CAUSE_DIR):
+        os.makedirs(PREVIOUS_REBOOT_CAUSE_DIR)
+
+    # Sort the previous reboot cause files by creation time
+    FULL_REBOOT_FILE_LIST = [os.path.join(PREVIOUS_REBOOT_CAUSE_DIR,i) for i in os.listdir(PREVIOUS_REBOOT_CAUSE_DIR)]
+    TIME_SORTED_FULL_REBOOT_FILE_LIST = sorted(FULL_REBOOT_FILE_LIST, key=os.path.getmtime)
+
+    # Connect State DB
+    state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
+    state_db.connect("STATE_DB")
+
+    # Read each sorted previous reboot cause file and update the state db with previous reboot cause information
+    for i in range(10):
+        x = TIME_SORTED_FULL_REBOOT_FILE_LIST[i]
+        if os.path.isfile(x):
+            with open(x, "r") as cause_file:
+                data = json.load(cause_file)
+                _hash = '{}|{}'.format(REBOOT_CAUSE_TABLE_NAME, data['gen_time'])
+                set_reboot_cause_table_entry(_hash, data['cause'], data['time'], data['user'], data['comment'])
+
+
+def main():
+    log_info("Starting up...")
+
+    if not os.geteuid() == 0:
+        log_error("User {} does not have permission to execute".format(pwd.getpwuid(os.getuid()).pw_name))
+        sys.exit("This utility must be run as root")
+
+    # Create REBOOT_CAUSE_DIR if it doesn't exist
+    if not os.path.exists(REBOOT_CAUSE_DIR):
+        os.makedirs(REBOOT_CAUSE_DIR)
+
+    # Remove stale PREVIOUS_REBOOT_CAUSE_FILE if it exists
+    if os.path.exists(PREVIOUS_REBOOT_CAUSE_FILE):
+        os.remove(PREVIOUS_REBOOT_CAUSE_FILE)
+
+    # Set a default previous reboot cause
+    previous_reboot_cause = REBOOT_CAUSE_UNKNOWN
+
+    # Read the previous reboot cause from PREVIOUS_REBOOT_CAUSE_FILE
+    with open(PREVIOUS_REBOOT_CAUSE_FILE, "r") as prev_cause_file:
+        prev_cause_file.read(previous_reboot_cause)
+
+    # Also log the previous reboot cause to the syslog
+    log_info("Previous reboot cause: {}".format(previous_reboot_cause))
+
+    # Save the previous reboot cause as a file with time stamp and update the state db with the previous reboot cause up to 10 entry
+    update_reboot_cause_file_and_state_db():
+
+
+if __name__ == "__main__":
+    main()
