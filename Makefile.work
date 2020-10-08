@@ -283,7 +283,6 @@ showtag:
 
 init :
 	@git submodule update --init --recursive
-	@git submodule foreach --recursive git remote update &>/dev/null
 	@git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
 
 .ONESHELL : reset
@@ -302,6 +301,7 @@ reset :
 	        git reset --hard;
 	        git submodule foreach --recursive 'git clean -xfdf || true';
 	        git submodule foreach --recursive 'git reset --hard || true';
+	        git submodule foreach --recursive 'git remote update || true';
 	        git submodule update --init --recursive;
 	        echo "Reset complete!";
 	    else
