@@ -240,12 +240,6 @@ def main():
 
     create_prev_cause_his_file(previous_reboot_cause, additional_reboot_info)
     
-    # Create previous_reboot_cause_#time#.txt under previous_reboot_cause directory
-    COPY_FILE = 'previous-reboot-cause-' + str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) + '.txt'
-    COPY_PREVIOUS_REBOOT_CAUSE_FILE = PREVIOUS_REBOOT_CAUSE_DIR + COPY_FILE
-    if os.path.exists(PREVIOUS_REBOOT_CAUSE_FILE):
-        prev_cause_file.write(previous_reboot_cause)
-
     # Remove the old REBOOT_CAUSE_FILE
     if os.path.exists(REBOOT_CAUSE_FILE):
         os.remove(REBOOT_CAUSE_FILE)
