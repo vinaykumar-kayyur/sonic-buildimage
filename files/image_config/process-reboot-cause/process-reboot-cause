@@ -238,6 +238,7 @@ def main():
     with open(PREVIOUS_REBOOT_CAUSE_FILE, "w") as prev_cause_file:
         prev_cause_file.write(previous_reboot_cause)
 
+    # Save the previous cause info into its history file as json format
     create_prev_cause_history_file(previous_reboot_cause, additional_reboot_info)
     
     # Remove the old REBOOT_CAUSE_FILE
