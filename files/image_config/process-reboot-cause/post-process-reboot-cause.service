@@ -1,0 +1,8 @@
+[Unit]
+Description=Post reboot cause handling service
+Requires=database.service
+After=database.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/post-process-reboot-cause
