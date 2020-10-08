@@ -2,12 +2,11 @@
 #
 # process-reboot-cause
 #
-# Program designed to run once, soon after system boot which will
-# determine the cause of the previous reboot and store it to the disk,
+# Program designed to read the previous reboot-cause files, log the last previous reboot-cause.
+# And read the saved reboot-cause history files and save the reboot cause in the state-db.
 #
 
 try:
-    import datetime
     import json
     import os
     import pwd
@@ -16,7 +15,6 @@ try:
 
     import swsssdk
     from sonic_py_common import device_info, logger
-
 except ImportError as err:
     raise ImportError("%s - required module not found" % str(err))
 
@@ -26,233 +24,68 @@ SYSLOG_IDENTIFIER = "process-reboot-cause"
 
 REBOOT_CAUSE_DIR = "/host/reboot-cause/"
 PREVIOUS_REBOOT_CAUSE_DIR = "/host/reboot-cause/previous_reboot-cause/"
-REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "reboot-cause.txt"
 PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
-FIRST_BOOT_PLATFORM_FILE = "/tmp/notify_firstboot_to_platform"
-REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
-# The following SONIC_BOOT_TYPEs come from the warm/fast reboot script which is in sonic-utilities
-# Because the system can be rebooted from some old versions, we have to take all possible BOOT options into consideration.
-# On 201803, 201807 we have
-# BOOT_OPTIONS="$(echo $KERNEL_OPTIONS | sed -e 's/\s*linux\s*/BOOT_IMAGE=/') fast-reboot"
-# On 201811 and later we have
-# BOOT_OPTIONS="$(echo $KERNEL_OPTIONS | sed -e 's/\s*linux\s*/BOOT_IMAGE=/') SONIC_BOOT_TYPE=${BOOT_TYPE_ARG}" where BOOT_TYPE_ARG can be warm, fastfast or fast
-# To extract the commom part of them, we should have the following PATTERN
-REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
-REBOOT_TYPE_KEXEC_PATTERN_FAST = ".*SONIC_BOOT_TYPE=(fast|fast-reboot).*"
 
 REBOOT_CAUSE_UNKNOWN = "Unknown"
+REBOOT_CAUSE_TABLE_NAME = "REBOOT_CAUSE"
 
+REDIS_HOSTIP = "127.0.0.1"
+state_db = None
 
 # Global logger class instance
 sonic_logger = logger.Logger(SYSLOG_IDENTIFIER)
 
 
 # ============================= Functions =============================
-def parse_warmfast_reboot_from_proc_cmdline():
-    if os.path.isfile(REBOOT_TYPE_KEXEC_FILE):
-        with open(REBOOT_TYPE_KEXEC_FILE, "r") as cause_file:
-            cause_file_kexec = cause_file.readline()
-        m = re.search(REBOOT_TYPE_KEXEC_PATTERN_WARM, cause_file_kexec)
-        if m and m.group(1):
-            return 'warm-reboot'
-        m = re.search(REBOOT_TYPE_KEXEC_PATTERN_FAST, cause_file_kexec)
-        if m and m.group(1):
-            return 'fast-reboot'
-    return None
+def set_reboot_cause_table_entry(key, cause, time, user, comment):
+    # Connect State DB
+    state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
+    state_db.connect("STATE_DB")
+
+    state_db.set(state_db.STATE_DB, key, 'cause', cause)
+    state_db.set(state_db.STATE_DB, key, 'time', time)
+    state_db.set(state_db.STATE_DB, key, 'user', user)
+    state_db.set(state_db.STATE_DB, key, 'comment', comment)
 
 
-def find_software_reboot_cause():
-    software_reboot_cause = REBOOT_CAUSE_UNKNOWN
-
-    if os.path.isfile(REBOOT_CAUSE_FILE):
-        with open(REBOOT_CAUSE_FILE, "r") as cause_file:
-            software_reboot_cause = cause_file.readline().rstrip('\n')
-            sonic_logger.log_info("{} indicates the reboot cause: {}".format(REBOOT_CAUSE_FILE, software_reboot_cause))
-    else:
-        sonic_logger.log_info("Reboot cause file {} not found".format(REBOOT_CAUSE_FILE))
-
-    if os.path.isfile(FIRST_BOOT_PLATFORM_FILE):
-        if software_reboot_cause == REBOOT_CAUSE_UNKNOWN:
-            version_info = device_info.get_sonic_version_info()
-            build_version = version_info['build_version'] if version_info else "unknown"
-            software_reboot_cause += " (First boot of SONiC version {})".format(build_version)
-        os.remove(FIRST_BOOT_PLATFORM_FILE)
-
-    return software_reboot_cause
-
-
-def find_proc_cmdline_reboot_cause():
-    proc_cmdline_reboot_cause = parse_warmfast_reboot_from_proc_cmdline()
- 
-    if proc_cmdline_reboot_cause:
-        sonic_logger.log_info("/proc/cmdline indicates reboot type: {}".format(proc_cmdline_reboot_cause))
-    else:
-        sonic_logger.log_info("No reboot cause found from /proc/cmdline")
- 
-    return proc_cmdline_reboot_cause
- 
-
-def find_hardware_reboot_cause():
-    hardware_reboot_cause = None
-
-    # Until all platform vendors have provided sonic_platform packages,
-    # if there is no sonic_platform package installed, we only provide
-    # software-related reboot causes.
-    try:
-        import sonic_platform
-
-        platform = sonic_platform.platform.Platform()
-
-        chassis = platform.get_chassis()
-
-        hardware_reboot_cause_major, hardware_reboot_cause_minor = chassis.get_reboot_cause()
-
-        if hardware_reboot_cause_major == chassis.REBOOT_CAUSE_NON_HARDWARE:
-            # The reboot was not caused by hardware. If there is a REBOOT_CAUSE_FILE, it will
-            # contain any software-related reboot info. We will use it as the previous cause.
-            pass
-        elif hardware_reboot_cause_major == chassis.REBOOT_CAUSE_HARDWARE_OTHER:
-            hardware_reboot_cause = "{} ({})".format(hardware_reboot_cause_major, hardware_reboot_cause_minor)
-        else:
-            hardware_reboot_cause = hardware_reboot_cause_major
-    except ImportError as err:
-        sonic_logger.log_warning("sonic_platform package not installed. Unable to detect hardware reboot causes.")
-
-    if hardware_reboot_cause:
-        sonic_logger.log_info("Platform api indicates reboot cause {}".format(hardware_reboot_cause))
-    else:
-        sonic_logger.log_info("No reboot cause found from platform api")
-
-    return hardware_reboot_cause
-
-
-def find_platform_reboot_info():
-    additional_reboot_info = None
-
-    # Until all platform vendors have provided sonic_platform packages,
-    # if there is no sonic_platform package installed, we don't provide
-    # additional reboot info.
-    try:
-        import sonic_platform
-
-        platform = sonic_platform.platform.Platform()
-
-        chassis = platform.get_chassis()
-
-        additional_reboot_info = chassis.get_reboot_info()
-
-    except ImportError as err:
-        log_warning("sonic_platform package not installed. Unable to retrieve platform reboot info.")
-
-    if additional_reboot_info:
-        log_info("Platform api indicates additional reboot information {}".format(additional_reboot_info))
-    else:
-        log_info("No additional reboot info from platform api")
-
-    return additional_reboot_info
-
-
-def create_prev_cause_history_file(previous_reboot_cause, comment):
-    # Create previous_reboot_cause_#time#.txt under previous_reboot_cause directory
-    FILE_GEN_TIME = str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-    HIST_FILE = 'previous-reboot-cause-' + FILE_GEN_TIME + '.txt'
-    HIST_PREVIOUS_REBOOT_CAUSE_FILE = PREVIOUS_REBOOT_CAUSE_DIR + HIST_FILE
-
-    # resultant dictionary 
-    reboot_cause_dict = {} 
-    reboot_cause_dict['gen_time'] = FILE_GEN_TIME
-    if re.search(r'User issued', previous_reboot_cause):
-        # Match with "User issued 'reboot' command [User: arlakshm, Time: Thu Oct  1 20:11:50 UTC 2020]"
-        pattern = re.compile(r"""User issued\s*'(?P<cause>.*?)'\s*command\s*    # User issue reboot-cause
-                                 \[User\:\s*(?P<user>.*?),                      # Issued User
-                                 \s*Time\:\s*(?P<time>.*?)\]""", re.VERBOSE)       # Issue Time
-        match = pattern.match(previous_reboot_cause)
-
-        reboot_cause_dict['cause'] = match.group("cause")
-        reboot_cause_dict['user'] = match.group("user")
-        reboot_cause_dict['time'] = match.group("time")
-    else:
-        reboot_cause_dict['cause'] = previous_reboot_cause
-        reboot_cause_dict['user'] = "N/A"
-        reboot_cause_dict['time'] = "N/A"
-
-    reboot_cause_dict['comment'] = comment
-
-    # Create PREVIOUS_REBOOT_CAUSE_DIR if it doesn't exist
+def read_reboot_cause_files_and_save_state_db():
+    # Create REBOOT_CAUSE_DIR if it doesn't exist
     if not os.path.exists(PREVIOUS_REBOOT_CAUSE_DIR):
         os.makedirs(PREVIOUS_REBOOT_CAUSE_DIR)
 
-    # Write the previous reboot cause to HIST_PREVIOUS_REBOOT_CAUSE_FILE as a JSON format
-    with open(HIST_PREVIOUS_REBOOT_CAUSE_FILE, "w") as hist_prev_cause_file:
-        json.dump(reboot_cause_dict, hist_prev_cause_file)
+    # Sort the previous reboot cause files by creation time
+    FULL_REBOOT_FILE_LIST = [os.path.join(PREVIOUS_REBOOT_CAUSE_DIR,i) for i in os.listdir(PREVIOUS_REBOOT_CAUSE_DIR)]
+    TIME_SORTED_FULL_REBOOT_FILE_LIST = sorted(FULL_REBOOT_FILE_LIST, key=os.path.getmtime)
+
+    # Read each sorted previous reboot cause file and update the state db with previous reboot cause information
+    for i in range(min(10,len(TIME_SORTED_FULL_REBOOT_FILE_LIST))) :
+        x = TIME_SORTED_FULL_REBOOT_FILE_LIST[i]
+        if os.path.isfile(x):
+            with open(x, "r") as cause_file:
+                data = json.load(cause_file)
+                _hash = '{}|{}'.format(REBOOT_CAUSE_TABLE_NAME, data['gen_time'])
+                set_reboot_cause_table_entry(_hash, data['cause'], data['time'], data['user'], data['comment'])
 
 
 def main():
-    # Configure logger to log all messages INFO level and higher
-    sonic_logger.set_min_log_priority_info()
-
     sonic_logger.log_info("Starting up...")
 
     if not os.geteuid() == 0:
         sonic_logger.log_error("User {} does not have permission to execute".format(pwd.getpwuid(os.getuid()).pw_name))
         sys.exit("This utility must be run as root")
 
-    # Create REBOOT_CAUSE_DIR if it doesn't exist
-    if not os.path.exists(REBOOT_CAUSE_DIR):
-        os.makedirs(REBOOT_CAUSE_DIR)
-
-    # Remove stale PREVIOUS_REBOOT_CAUSE_FILE if it exists
-    if os.path.exists(PREVIOUS_REBOOT_CAUSE_FILE):
-        os.remove(PREVIOUS_REBOOT_CAUSE_FILE)
-
     # Set a default previous reboot cause
     previous_reboot_cause = REBOOT_CAUSE_UNKNOWN
 
-    # Set a default additional info
-    additional_reboot_info = ""
+    # Read the previous reboot cause from PREVIOUS_REBOOT_CAUSE_FILE
+    with open(PREVIOUS_REBOOT_CAUSE_FILE, "r") as prev_cause_file:
+        previous_reboot_cause = prev_cause_file.readline()
 
-    # 1. Check if the previous reboot was warm/fast reboot by testing whether there is "fast|fastfast|warm" in /proc/cmdline
-    proc_cmdline_reboot_cause = find_proc_cmdline_reboot_cause()
+    # Also log the previous reboot cause to the syslog
+    sonic_logger.log_info("Previous reboot cause: {}".format(previous_reboot_cause))
 
-    # 2. Check if the previous reboot was caused by hardware
-    #    If yes, the hardware reboot cause will be treated as the reboot cause
-    hardware_reboot_cause = find_hardware_reboot_cause()
-
-    # 3. If there is a REBOOT_CAUSE_FILE, it will contain any software-related
-    #    reboot info. We will use it as the previous cause.
-    software_reboot_cause = find_software_reboot_cause()
-
-    # 4. If there is any additional platform info to be stored for reboot cause analysis
-    #additional_reboot_info = find_platform_reboot_info()
-
-    # The main decision logic of the reboot cause:
-    # If there is a reboot cause indicated by /proc/cmdline, it should be warmreboot/fastreboot
-    #   the software_reboot_cause which is the content of /hosts/reboot-cause/reboot-cause.txt 
-    #   will be treated as the reboot cause
-    # Elif there is a reboot cause indicated by platform API,
-    #   the hardware_reboot_cause will be treated as the reboot cause
-    # Else the software_reboot_cause will be treated as the reboot cause
-    if proc_cmdline_reboot_cause is not None:
-        previous_reboot_cause = software_reboot_cause
-    elif hardware_reboot_cause is not None:
-        previous_reboot_cause = hardware_reboot_cause
-    else:
-        previous_reboot_cause = software_reboot_cause
-
-    # Write the previous reboot cause to PREVIOUS_REBOOT_CAUSE_FILE
-    with open(PREVIOUS_REBOOT_CAUSE_FILE, "w") as prev_cause_file:
-        prev_cause_file.write(previous_reboot_cause)
-
-    # Save the previous cause info into its history file as json format
-    create_prev_cause_history_file(previous_reboot_cause, additional_reboot_info)
-    
-    # Remove the old REBOOT_CAUSE_FILE
-    if os.path.exists(REBOOT_CAUSE_FILE):
-        os.remove(REBOOT_CAUSE_FILE)
-
-    # Write a new default reboot cause file for the next reboot
-    with open(REBOOT_CAUSE_FILE, "w") as cause_file:
-        cause_file.write(REBOOT_CAUSE_UNKNOWN)
+    # Read the previous reboot cause from saved reboot-cause files and save the previous reboot cause upto 10 entry to the state db
+    read_reboot_cause_files_and_save_state_db()
 
 
 if __name__ == "__main__":

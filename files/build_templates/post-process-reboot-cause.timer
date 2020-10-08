@@ -1,9 +1,0 @@
-[Unit]
-Description=Delays post-process-reboot-cause until network is stably connected
-
-[Timer]
-OnBootSec=1min 30 sec
-Unit=post-process-reboot-cause.service
-
-[Install]
-WantedBy=timers.target

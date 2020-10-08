@@ -1,6 +1,7 @@
 [Unit]
-Description=Reboot cause determination service
-After=rc-local.service
+Description=Previous reboot cause handling service
+Requires=database.service
+After=database.service
 
 [Service]
 Type=simple
