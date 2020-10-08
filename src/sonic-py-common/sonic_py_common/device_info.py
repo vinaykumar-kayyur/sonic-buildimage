@@ -256,6 +256,14 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
 
     # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
     # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
+
+    """
+    This length check for interfaces in platform.json is performed to make sure
+    the cfggen does not fail if port configuration information is not present
+    TODO: once platform.json has all the necessary port config information
+          remove this check
+    """
+
     if os.path.isfile(hwsku_json_file):
         if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
             json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
