@@ -813,6 +813,18 @@
 					{
 						"brkout_mode": "4x25G",
 						"port": "Ethernet4"
+					},
+					{
+						"brkout_mode": "1x400G",
+						"port": "Ethernet12"
+					},
+					{
+						"brkout_mode": "4x100G",
+						"port": "Ethernet16"
+					},
+					{
+						"brkout_mode": "2x200G",
+						"port": "Ethernet20"
 					}
 				]
 			}

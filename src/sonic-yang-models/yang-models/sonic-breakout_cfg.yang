@@ -30,6 +30,13 @@ module sonic-breakout_cfg {
 
                 ext:key-regex-yang-to-configdb "<port>";
 
+                /*
+                 * This is leaf instead of a leafref towards port, because this
+                 * table will contains Parent ports and their current breakout-mode,
+                 * irrespective of port is present in PORT table or not. Specially
+                 * during Dynamic Port Breakout, Parent Port may not be present in
+                 * PORT table.
+                 */
                 leaf port {
                     type string {
                         length 1..255;
@@ -39,10 +46,12 @@ module sonic-breakout_cfg {
                 leaf brkout_mode {
                     type string {
                         length 1..64;
-                        /* should be not allow any pattern here, since this is
-                         * auto populated by cli.
+                        /*
+                         * Below allowed patterns are based on most used Platforms,
+                         * Add any other breakout-mode to allow Dynamic Port
+                         * Breakout to that breakout-mode.
                          */
-                        /* pattern "1x100G[40G]|2x50G|4x25G[10G]|2x25G(2)+1x50G(2)|1x50G(2)+2x25G(2)"; */
+                        pattern "1x100G[40G]|2x50G|4x25G[10G]|2x25G(2)+1x50G(2)|1x50G(2)+2x25G(2)|1x400G|2x200G|4x100G|8x50G";
                     }
                 }
             }

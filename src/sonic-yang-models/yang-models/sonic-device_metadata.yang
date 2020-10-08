@@ -41,6 +41,8 @@ module sonic-device_metadata {
                         enum up;
                         enum down;
                     }
+                    /* TODO: Add a test to verify default value */
+                    default up;
                 }
 
                 leaf docker_routing_config_mode {
