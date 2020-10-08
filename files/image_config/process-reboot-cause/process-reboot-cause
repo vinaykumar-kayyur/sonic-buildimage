@@ -7,6 +7,7 @@
 #
 
 try:
+    import datetime
     import json
     import os
     import pwd
@@ -153,7 +154,7 @@ def find_platform_reboot_info():
 
 def create_prev_cause_history_file(previous_reboot_cause, comment):
     # Create previous_reboot_cause_#time#.txt under previous_reboot_cause directory
-    FILE_GEN_TIME = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+    FILE_GEN_TIME = str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
     HIST_FILE = 'previous-reboot-cause-' + FILE_GEN_TIME + '.txt'
     HIST_PREVIOUS_REBOOT_CAUSE_FILE = PREVIOUS_REBOOT_CAUSE_DIR + HIST_FILE
 
@@ -176,6 +177,10 @@ def create_prev_cause_history_file(previous_reboot_cause, comment):
         reboot_cause_dict['time'] = "N/A"
 
     reboot_cause_dict['comment'] = comment
+
+    # Create PREVIOUS_REBOOT_CAUSE_DIR if it doesn't exist
+    if not os.path.exists(PREVIOUS_REBOOT_CAUSE_DIR):
+        os.makedirs(PREVIOUS_REBOOT_CAUSE_DIR)
 
     # Write the previous reboot cause to HIST_PREVIOUS_REBOOT_CAUSE_FILE as a JSON format
     with open(HIST_PREVIOUS_REBOOT_CAUSE_FILE, "w") as hist_prev_cause_file:
@@ -218,7 +223,7 @@ def main():
     software_reboot_cause = find_software_reboot_cause()
 
     # 4. If there is any additional platform info to be stored for reboot cause analysis
-    additional_reboot_info = find_platform_reboot_info()
+    #additional_reboot_info = find_platform_reboot_info()
 
     # The main decision logic of the reboot cause:
     # If there is a reboot cause indicated by /proc/cmdline, it should be warmreboot/fastreboot
