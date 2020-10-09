@@ -16,7 +16,7 @@ module sonic-versions {
 
         container VERSIONS {
 
-            description "VERSIONS part of config_db.json";
+            description "DATABASE SCHEMA VERSIONS part of config_db.json";
 
             container DATABASE {
 
