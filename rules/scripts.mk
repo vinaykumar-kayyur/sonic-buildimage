@@ -23,6 +23,12 @@ $(SYSCTL_NET_CONFIG)_PATH = files/image_config/sysctl
 RM_CHASSISDB_CONFIG_SCRIPT = remove_chassisdb_config
 $(RM_CHASSISDB_CONFIG_SCRIPT)_PATH = files/scripts
 
+SYNCD_START = syncd_start.sh
+$(SYNCD_START)_PATH = files/scripts
+
+SYNCD_INIT_COMMON = syncd_init_common.sh
+$(SYNCD_INIT_COMMON)_PATH = files/scripts
+
 SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(ARP_UPDATE_SCRIPT) \
                     $(ARP_UPDATE_VARS_TEMPLATE) \
@@ -30,4 +36,6 @@ SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(QOS_CONFIG_TEMPLATE) \
                     $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT) \
                     $(SYSCTL_NET_CONFIG) \
-                    $(RM_CHASSISDB_CONFIG_SCRIPT)
+                    $(RM_CHASSISDB_CONFIG_SCRIPT) \
+                    $(SYNCD_START) \
+                    $(SYNCD_INIT_COMMON)
