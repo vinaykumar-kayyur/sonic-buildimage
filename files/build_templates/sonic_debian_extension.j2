@@ -424,14 +424,14 @@ sudo cp $BUILD_TEMPLATES/process-reboot-cause.timer $FILESYSTEM_ROOT_USR_LIB_SYS
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable process-reboot-cause.timer
 
 # Copy process-reboot-cause service files
-sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo cp $IMAGE_CONFIGS/reboot-cause/process-reboot-cause.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "process-reboot-cause.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/process-reboot-cause/process-reboot-cause $FILESYSTEM_ROOT/usr/bin/
+sudo cp $IMAGE_CONFIGS/reboot-cause/process-reboot-cause $FILESYSTEM_ROOT/usr/bin/
 
 # Copy determine-reboot-cause service files
-sudo cp $IMAGE_CONFIGS/process-reboot-cause/determine-reboot-cause.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo cp $IMAGE_CONFIGS/reboot-cause/determine-reboot-cause.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "determine-reboot-cause.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/process-reboot-cause/determine-reboot-cause $FILESYSTEM_ROOT/usr/bin/
+sudo cp $IMAGE_CONFIGS/reboot-cause/determine-reboot-cause $FILESYSTEM_ROOT/usr/bin/
 
 ## Install package without starting service
 ## ref: https://wiki.debian.org/chroot
