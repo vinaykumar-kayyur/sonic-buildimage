@@ -740,13 +740,61 @@
         }
     },
 
+    "CRM_WITH_WRONG_THRESHOLD": {
+        "sonic-crm:sonic-crm": {
+            "sonic-crm:CRM": {
+                "Config": {
+                    "acl_counter_high_threshold": 85,
+                    "acl_counter_low_threshold": 90,
+                    "acl_counter_threshold_type": "free"
+                }
+            }
+        }
+    },
+
     "CRM_WITH_CORRECT_USED_VALUE": {
         "sonic-crm:sonic-crm": {
             "sonic-crm:CRM": {
                 "Config": {
                     "acl_counter_high_threshold": 85,
-                    "acl_counter_low_threshold": 120,
+                    "acl_counter_low_threshold": 25,
                     "acl_counter_threshold_type": "used"
+                }
+            }
+        }
+    },
+
+    "DEVICE_METADATA_DEFAULT_BGP_STATUS": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                "docker_routing_config_mode": "separated",
+                "platform": "Stone-DX010",
+                "hostname": "DUT-ASW",
+                "bgp_asn": "65000"
+                }
+            }
+        }
+    },
+
+    "DEVICE_METADATA_DEFAULT_PFCWD_STATUS": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                "platform": "DX010",
+                "hostname": "DUT-CSW",
+                "bgp_asn": "65001"
+                }
+            }
+        }
+    },
+
+    "DEVICE_METADATA_TYPE_INCORRECT_PATTERN": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                "bgp_asn": "65002",
+                "type": "ToRrouter"
                 }
             }
         }
@@ -761,6 +809,17 @@
             }
         }
     },
+
+    "VERSIONS_WITH_INCORRECT_PATTERN2": {
+        "sonic-versions:sonic-versions": {
+            "sonic-versions:VERSIONS": {
+                "DATABASE": {
+                    "VERSION": "version_0_2_77"
+                }
+            }
+        }
+    },
+
     "FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE": {
         "sonic-flex_counter:sonic-flex_counter": {
             "sonic-flex_counter:FLEX_COUNTER_TABLE": {
@@ -807,11 +866,11 @@
 						"port": "Ethernet0"
 					},
 					{
-						"brkout_mode": "1x100G[40G]",
+						"brkout_mode": "4x25G[10G]",
 						"port": "Ethernet8"
 					},
 					{
-						"brkout_mode": "4x25G",
+						"brkout_mode": "2x25G(2)+1x50G(2)",
 						"port": "Ethernet4"
 					},
 					{
@@ -819,12 +878,16 @@
 						"port": "Ethernet12"
 					},
 					{
-						"brkout_mode": "4x100G",
+						"brkout_mode": "2x200G",
 						"port": "Ethernet16"
 					},
 					{
-						"brkout_mode": "2x200G",
+						"brkout_mode": "4x100G",
 						"port": "Ethernet20"
+					},
+					{
+						"brkout_mode": "8x50G",
+						"port": "Ethernet24"
 					}
 				]
 			}

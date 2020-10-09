@@ -41,7 +41,6 @@ module sonic-device_metadata {
                         enum up;
                         enum down;
                     }
-                    /* TODO: Add a test to verify default value */
                     default up;
                 }
 
@@ -49,6 +48,7 @@ module sonic-device_metadata {
                     type string {
                         pattern "unified|split|separated";
                     }
+                    default "unified";
                 }
 
                 leaf hostname {
@@ -72,6 +72,7 @@ module sonic-device_metadata {
                         enum disable;
                         enum enable;
                     }
+                    default disable;
                 }
 
                 leaf bgp_asn {
@@ -85,6 +86,7 @@ module sonic-device_metadata {
                 leaf type {
                     type string {
                         length 1..255;
+                        pattern "ToRRouter|LeafRouter|SpineChassisFrontendRouter|ChassisBackendRouter|ASIC";
                     }
                 }
             }

@@ -188,6 +188,30 @@ class Test_yang_models:
             'VERSIONS_WITH_INCORRECT_PATTERN': {
                 'desc': 'VERSIONS_WITH_INCORRECT_PATTERN pattern failure.',
                 'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'VERSIONS_WITH_INCORRECT_PATTERN2': {
+                'desc': 'VERSIONS_WITH_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'DEVICE_METADATA_DEFAULT_BGP_STATUS': {
+                'desc': 'DEVICE_METADATA DEFAULT VALUE FOR BGP_STATUS FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': '/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname',
+                    'key': 'sonic-device_metadata:default_bgp_status',
+                    'value': 'up'
+                }
+            },
+            'DEVICE_METADATA_DEFAULT_PFCWD_STATUS': {
+                'desc': 'DEVICE_METADATA DEFAULT VALUE FOR PFCWD FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': '/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname',
+                    'key': 'sonic-device_metadata:default_pfcwd_status',
+                    'value': 'disable'
+                }
+            },
+            'DEVICE_METADATA_TYPE_INCORRECT_PATTERN': {
+                'desc': 'DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
             }
         }
 
@@ -280,15 +304,15 @@ class Test_yang_models:
             # verify the data tree if asked
             if verify is not None:
                 xpath = verify['xpath']
-                log.debug("Verify xpath: {}".format(xpath))
+                log.info("Verify xpath: {}".format(xpath))
                 set = node.find_path(xpath)
                 for dnode in set.data():
                     if (xpath == dnode.path()):
-                        log.debug("Verify dnode: {}".format(dnode.path()))
+                        log.info("Verify dnode: {}".format(dnode.path()))
                         data = dnode.print_mem(ly.LYD_JSON, ly.LYP_WITHSIBLINGS \
                             | ly.LYP_FORMAT | ly.LYP_WD_ALL)
                         data = json.loads(data)
-                        log.debug("Verify data: {}".format(data))
+                        log.info("Verify data: {}".format(data))
                         assert (data[verify['key']] == verify['value'])
                         s = 'verified'
         except Exception as e:
