@@ -53,8 +53,8 @@ start)
         echo max6699 0x1a > /sys/bus/i2c/devices/i2c-11/new_device
 
         # Attach PSUs
-        echo dps200 0x5a > /sys/bus/i2c/devices/i2c-12/new_device
-        echo dps200 0x5b > /sys/bus/i2c/devices/i2c-13/new_device
+        # echo dps200 0x5a > /sys/bus/i2c/devices/i2c-12/new_device
+        # echo dps200 0x5b > /sys/bus/i2c/devices/i2c-13/new_device
 
         # Attach fans
         echo emc2305 0x4d > /sys/bus/i2c/devices/i2c-23/new_device
