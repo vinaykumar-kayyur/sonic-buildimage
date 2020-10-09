@@ -832,12 +832,6 @@
                 "PORT": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
-                "QUEUE": {
-                    "FLEX_COUNTER_STATUS": "enable"
-                },
-                "QUEUE_WATERMARK": {
-                    "FLEX_COUNTER_STATUS": "enable"
-                },
                 "PORT_RATES": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
@@ -851,6 +845,9 @@
                     "FLEX_COUNTER_STATUS": "enable"
                 },
                 "QUEUE_WATERMARK": {
+                    "FLEX_COUNTER_STATUS": "enable"
+                },
+                "DEBUG_COUNTER": {
                     "FLEX_COUNTER_STATUS": "enable"
                 }
             }
@@ -923,7 +920,10 @@
 				},
 				"PORT": {
 					"FLEX_COUNTER_STATUS": "enable"
-				}
+				},
+                "DEBUG_COUNTER": {
+                    "FLEX_COUNTER_STATUS": "enable"
+                }
 			}
 		}
 	},
@@ -1162,7 +1162,7 @@
 		},
 		"DEVICE_METADATA": {
 			"localhost": {
-				"type": "ToR",
+				"type": "ToRRouter",
 				"mac": "00:11:22:33:dd:5a",
 				"hostname": "asw.dc",
 				"bgp_asn": "64850",
@@ -1650,7 +1650,7 @@
                 "brkout_mode": "1x100G[40G]"
             },
             "Ethernet4": {
-                "brkout_mode": "4x25G"
+                "brkout_mode": "4x25G[10G]"
             },
             "Ethernet8": {
                 "brkout_mode": "1x100G[40G]"
@@ -1671,12 +1671,6 @@
             "PORT": {
                 "FLEX_COUNTER_STATUS": "enable"
             },
-            "QUEUE": {
-                "FLEX_COUNTER_STATUS": "enable"
-            },
-            "QUEUE_WATERMARK": {
-                "FLEX_COUNTER_STATUS": "enable"
-            },
             "PORT_RATES": {
                 "FLEX_COUNTER_STATUS": "enable"
             },
@@ -1690,6 +1684,9 @@
                 "FLEX_COUNTER_STATUS": "enable"
             },
             "QUEUE_WATERMARK": {
+                "FLEX_COUNTER_STATUS": "enable"
+            },
+            "DEBUG_COUNTER": {
                 "FLEX_COUNTER_STATUS": "enable"
             }
         },

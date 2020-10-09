@@ -62,6 +62,13 @@ module sonic-flex_counter {
                 }
             }
 
+            container PORT_RATES {
+                /* PORT_BUFFER_DROP_COUNTER_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+            }
+
             container PORT_BUFFER_DROP {
                 /* PORT_BUFFER_DROP_COUNTER_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
