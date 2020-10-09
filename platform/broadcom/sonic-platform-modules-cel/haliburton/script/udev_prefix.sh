@@ -8,7 +8,6 @@ FILENAME="udevprefix.conf"
 
 if [ "$1" = "clear" ]
 then
-##cleart
 	if [ -e $FILES/$FILENAME ]; then
 		rm $FILES/$FILENAME
 	fi
