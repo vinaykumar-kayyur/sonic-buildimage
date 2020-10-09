@@ -12,10 +12,3 @@ do
 	echo "port $1 disconnected" > ${list[$i]}
 done
 
-
-#string=['/dev/'+ x for x in list]
-#echo $str
-#echo "${list}"
-#echo $str
-# > /dev/pts/3
-#echo "Warm:port number disconnect">/dev/pts/3
