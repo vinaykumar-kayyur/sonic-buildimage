@@ -1,6 +1,6 @@
 [Unit]
 Description=Read Dell S6100 reboot cause
-Before=process-reboot-cause.service
+Before=determine-reboot-cause.service
 DefaultDependencies=no
 
 [Service]
