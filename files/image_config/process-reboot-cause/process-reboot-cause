@@ -23,7 +23,7 @@ VERSION = "1.0"
 SYSLOG_IDENTIFIER = "process-reboot-cause"
 
 REBOOT_CAUSE_DIR = "/host/reboot-cause/"
-PREVIOUS_REBOOT_CAUSE_DIR = "/host/reboot-cause/previous_reboot-cause/"
+PREVIOUS_REBOOT_CAUSE_DIR = "/host/reboot-cause/previous-reboot-cause/"
 PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
 
 REBOOT_CAUSE_UNKNOWN = "Unknown"
