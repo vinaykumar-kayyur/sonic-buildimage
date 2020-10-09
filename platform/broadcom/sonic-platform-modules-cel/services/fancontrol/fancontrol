@@ -520,14 +520,14 @@ function UpdateFanSpeeds
 		#check thermal overload
         CheckTempOver
 
-        read tval < ${tsens}
+        read -t 10 tval < ${tsens}
         if [ $? -ne 0 ]
         then
             echo "Error reading temperature from $DIR/$tsens"
             restorefans 1
         fi
 
-        read pwmpval < ${pwmo}
+        read -t 10 pwmpval < ${pwmo}
         if [ $? -ne 0 ]
         then
             echo "Error reading PWM value from $DIR/$pwmo"
@@ -542,7 +542,7 @@ function UpdateFanSpeeds
             # A given PWM output can control several fans
             for one_fan in $(echo $fan | sed -e 's/+/ /')
             do
-                read one_fanval < ${one_fan}
+                read -t 10 one_fanval < ${one_fan}
                 if [ $? -ne 0 ]
                 then
                     echo "Error reading Fan value from $DIR/$one_fan" >&2
