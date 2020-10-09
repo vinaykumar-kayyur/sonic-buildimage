@@ -40,7 +40,8 @@ sonic_logger = logger.Logger(SYSLOG_IDENTIFIER)
 def set_reboot_cause_table_entry(key, cause, time, user, comment):
     # Connect State DB
     state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
-    state_db.connect("STATE_DB")
+    state_db.connect(state_db.STATE_DB)
+
 
     state_db.set(state_db.STATE_DB, key, 'cause', cause)
     state_db.set(state_db.STATE_DB, key, 'time', time)
@@ -68,6 +69,9 @@ def read_reboot_cause_files_and_save_state_db():
 
 
 def main():
+    # Configure logger to log all messages INFO level and higher
+    sonic_logger.set_min_log_priority_info()
+
     sonic_logger.log_info("Starting up...")
 
     if not os.geteuid() == 0:
