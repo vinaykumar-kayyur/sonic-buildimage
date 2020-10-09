@@ -42,7 +42,6 @@ def set_reboot_cause_table_entry(key, cause, time, user, comment):
     state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
     state_db.connect(state_db.STATE_DB)
 
-
     state_db.set(state_db.STATE_DB, key, 'cause', cause)
     state_db.set(state_db.STATE_DB, key, 'time', time)
     state_db.set(state_db.STATE_DB, key, 'user', user)
