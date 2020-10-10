@@ -1,0 +1,119 @@
+From 8d02175c7f1a63c81e9a600688b40c5f70f15895 Mon Sep 17 00:00:00 2001
+From: Akhilesh Samineni <akhilesh.samineni@broadcom.com>
+Date: Sat, 10 Oct 2020 07:25:37 -0700
+Subject: [PATCH] Code changes to support IPv6 link local enchancements:
+
+File -> zebra/zebra_fpm_netlink.c
+Made changes to send ipv6 address as nexthop to fpmsyncd. File ->
+
+File -> staticd/static_zebra.c
+VRF interface lookup was still done in the default-vrf which was causing the interface lookup to fail. Due to this static-route pointing to link-local was not getting installed.
+
+Files -> bgpd_network.c and bgpd/bgp_zebra.c
+Link local scope was not set while binding socket with local address causing socket errors for bgp ipv6 link local neighbors.
+---
+ bgpd/bgp_network.c        |  4 ++++
+ bgpd/bgp_zebra.c          |  3 +++
+ staticd/static_zebra.c    |  6 +++---
+ zebra/zebra_fpm_netlink.c | 18 ++++++++++++++++++
+ 4 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/bgpd/bgp_network.c b/bgpd/bgp_network.c
+index 1394c60b2..6aae10b87 100644
+--- a/bgpd/bgp_network.c
++++ b/bgpd/bgp_network.c
+@@ -568,6 +568,10 @@ static int bgp_update_address(struct interface *ifp, const union sockunion *dst,
+ 		return 1;
+ 
+ 	prefix2sockunion(sel, addr);
++
++	if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6.sin6_addr)) {
++		addr->sin6.sin6_scope_id = ifp->ifindex;
++	}
+ 	return 0;
+ }
+ 
+diff --git a/bgpd/bgp_zebra.c b/bgpd/bgp_zebra.c
+index e561832e2..462676a06 100644
+--- a/bgpd/bgp_zebra.c
++++ b/bgpd/bgp_zebra.c
+@@ -800,6 +800,9 @@ bool bgp_zebra_nexthop_set(union sockunion *local, union sockunion *remote,
+ 								? peer->conf_if
+ 								: peer->ifname,
+ 							peer->bgp->vrf_id);
++			else if (peer->update_if)
++				ifp = if_lookup_by_name(peer->update_if,
++							peer->bgp->vrf_id);
+ 		} else if (peer->update_if)
+ 			ifp = if_lookup_by_name(peer->update_if,
+ 						peer->bgp->vrf_id);
+diff --git a/staticd/static_zebra.c b/staticd/static_zebra.c
+index 27605da63..42bfd468a 100644
+--- a/staticd/static_zebra.c
++++ b/staticd/static_zebra.c
+@@ -49,7 +49,7 @@ bool debug;
+ struct zclient *zclient;
+ static struct hash *static_nht_hash;
+ 
+-static struct interface *zebra_interface_if_lookup(struct stream *s)
++static struct interface *zebra_interface_if_lookup(struct stream *s, vrf_id_t vrf_id)
+ {
+ 	char ifname_tmp[INTERFACE_NAMSIZ];
+ 
+@@ -57,7 +57,7 @@ static struct interface *zebra_interface_if_lookup(struct stream *s)
+ 	stream_get(ifname_tmp, s, INTERFACE_NAMSIZ);
+ 
+ 	/* And look it up. */
+-	return if_lookup_by_name(ifname_tmp, VRF_DEFAULT);
++	return if_lookup_by_name(ifname_tmp, vrf_id);
+ }
+ 
+ /* Inteface addition message from zebra. */
+@@ -117,7 +117,7 @@ static int interface_state_up(ZAPI_CALLBACK_ARGS)
+ {
+ 	struct interface *ifp;
+ 
+-	ifp = zebra_interface_if_lookup(zclient->ibuf);
++	ifp = zebra_interface_if_lookup(zclient->ibuf, vrf_id);
+ 
+ 	if (ifp) {
+ 		if (if_is_vrf(ifp)) {
+diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
+index f347d3955..8543a0041 100644
+--- a/zebra/zebra_fpm_netlink.c
++++ b/zebra/zebra_fpm_netlink.c
+@@ -428,6 +428,15 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
+ 		nhi = &ri->nhs[0];
+ 
+ 		if (nhi->gateway) {
++			if (nhi->type == NEXTHOP_TYPE_IPV6
++					|| nhi->type == NEXTHOP_TYPE_IPV6_IFINDEX)
++			{
++				bytelen = af_addr_size(AF_INET6);
++			}
++			else
++			{
++				bytelen = af_addr_size(AF_INET);
++			}
+ 			addattr_l(&req->n, in_buf_len, RTA_GATEWAY,
+ 				  nhi->gateway, bytelen);
+ 		}
+@@ -480,6 +489,15 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
+ 		rta->rta_len += rtnh->rtnh_len;
+ 
+ 		if (nhi->gateway) {
++			if (nhi->type == NEXTHOP_TYPE_IPV6
++					|| nhi->type == NEXTHOP_TYPE_IPV6_IFINDEX)
++			{
++				bytelen = af_addr_size(AF_INET6);
++			}
++			else
++			{
++				bytelen = af_addr_size(AF_INET);
++			}
+ 			rta_addattr_l(rta, sizeof(buf), RTA_GATEWAY,
+ 				      nhi->gateway, bytelen);
+ 			rtnh->rtnh_len += sizeof(struct rtattr) + bytelen;
+-- 
+2.18.0
+
