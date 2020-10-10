@@ -28,7 +28,8 @@ setup(
         'sonic_py_common',
     ],
     setup_requires= [
-        'pytest-runner'
+        'pytest-runner',
+        'wheel'
     ],
     tests_require=[
         'pytest',
