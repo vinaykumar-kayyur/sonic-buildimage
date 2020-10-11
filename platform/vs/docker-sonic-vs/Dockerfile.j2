@@ -45,6 +45,8 @@ RUN apt-get install -y net-tools \
                        python3-pip \
                        jq \
                        libzmq5 \
+                       # For installing Python m2crypto package
+                       build-essential \
                        libssl-dev
 
 # install redis-server
@@ -108,6 +110,7 @@ RUN pip{% if 'py3' in whl %}3{% endif %} install python-wheels/{{ whl }}
 {% endif %}
 
 # Clean up
+RUN apt-get purge -y build-essential
 RUN apt-get clean -y
 RUN apt-get autoclean -y
 RUN apt-get autoremove -y
