@@ -7,9 +7,7 @@ import sys
 import subprocess
 import syslog
 import copy
-import inspect
 import jinja2
-import datetime
 import ipaddr as ipaddress
 from swsssdk import ConfigDBConnector
 from sonic_py_common import device_info
@@ -44,11 +42,6 @@ def obfuscate(data):
     else:
         return data
 
-
-def debug_msg(m):
-    msg = "{}: {}".format(inspect.stack()[1][3], m)
-    # print(msg)
-    syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
 class Iptables(object):
@@ -235,26 +228,20 @@ class AaaCfg(object):
             f.write(nss_tacplus_conf)
 
 
-class feature_handler:
-    # DB field names
-    SET_OWNER = "set_owner"
-    NO_FALLBACK = "no_fallback_to_local"
-    STATE = "state"
-    HAS_TIMER = "has_timer"
-
-    CURRENT_OWNER = "current_owner"
-    REMOTE_STATE = "remote_state"
-
-    remote_features = [ "snmp" ]
-
-    def __init__(self, cfg_table, state_db, is_multi_npu):
-        self.cfg_table = cfg_table 
-        self.state_db = state_db
-        self.is_multi_npu = is_multi_npu
-
-        for feat in cfg_table.keys():
-            self.handle_on_load(feat)
-        
+class HostConfigDaemon:
+    def __init__(self):
+        self.config_db = ConfigDBConnector()
+        self.config_db.connect(wait_for_init=True, retry_on=True)
+        syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
+        aaa = self.config_db.get_table('AAA')
+        tacacs_global = self.config_db.get_table('TACPLUS')
+        tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
+        self.aaacfg = AaaCfg()
+        self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
+        self.iptables = Iptables()
+        self.iptables.load(lpbk_table)
+        self.is_multi_npu = device_info.is_multi_npu()
 
     def update_feature_state(self, feature_name, state, feature_table):
         has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
@@ -314,213 +301,23 @@ class feature_handler:
             syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
                           .format(state, feature_name))
 
-    def handle_on_load(self, feat):
 
-        systemd_up = self.is_systemd_active(feat)
-        cfg_data = self.read_config(feat)
-        state_data = self.read_state(feat)
+    def update_all_feature_states(self):
+        feature_table = self.config_db.get_table('FEATURE')
+        for feature_name in feature_table.keys():
+            if not feature_name:
+                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
+                continue
 
-        state = cfg_data[self.STATE]
-        if not state:
-            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-            return
+            state = feature_table[feature_name]['state']
+            if not state:
+                syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
+                continue
 
-        state_up = state.lower() == "enabled"
-        update_state = systemd_up != state_up
-        owner_restart = False
-        label_add = False
-        debug_msg("update_state:{} systemd_up:{} state={}".format(update_state, systemd_up, state))
-
-        if systemd_up and (feat in self.remote_features):
-            set_owner = cfg_data[self.SET_OWNER]
-            fallback = cfg_data[self.NO_FALLBACK].lower() != "true"
-            current_owner = state_data[self.CURRENT_OWNER]
-            remote_state = state_data[self.REMOTE_STATE]
-            if not remote_state:
-                remote_state = "none"
-
-            debug_msg("set_owner={} fallback={} current_owner={} remote_state={}".format(set_owner, fallback, current_owner, remote_state))
-            if set_owner == "local":
-                # Ensure label is removed.
-                self.handle_label(feat, None)
-                if current_owner == "kube":
-                    owner_restart = True
-            else:
-                if (current_owner == "local"):
-                    if (not fallback or remote_state != "none"):
-                        owner_restart = True
-
-                    # add label to enable deploy
-                    label_add = True
-
-                elif (current_owner == "kube"):
-                    if remote_state == "pending":
-                        owner_restart = True
-                    # else:
-                        # No action required
-                # else:
-                    # systemctl would be waiting for deploy
-
-        debug_msg("owner_restart={} label_add={}".format(owner_restart, label_add))
-        if update_state:
-            self.update_feature_state(feat, state, self.cfg_table)
-        elif owner_restart:
-            self.restart_service(feat)
-
-        if label_add:
-            self.handle_label(feat, "true")
-
-    def on_update(self, feat, data):
-        systemd_up = self.is_systemd_active(feat)
-        cfg_data_old = self.read_config(feat)
-        self.cfg_table[feat] = data
-        cfg_data = self.read_config(feat)
-
-        state_data = self.read_state(feat)
-
-        state = cfg_data[self.STATE]
-        if not state:
-            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-            return
-
-        update_state = cfg_data_old[self.STATE] != state
-        owner_restart = False
-        label_op = None
-
-        debug_msg("update_state:{} systemd_up:{} state={}".format(update_state, systemd_up, state))
-        if systemd_up and (feat in self.remote_features):
-
-            # Handle owner change
-            #
-            old_set_owner = cfg_data_old[self.SET_OWNER]
-
-            set_owner = cfg_data[self.SET_OWNER]
-            fallback = cfg_data[self.NO_FALLBACK].lower() != "true"
-
-            current_owner = state_data[self.CURRENT_OWNER]
-            remote_state = state_data[self.REMOTE_STATE]
-            if not remote_state:
-                remote_state = "none"
-
-            debug_msg("set_owner={} fallback={} current_owner={} remote_state={}".format(set_owner, fallback, current_owner, remote_state))
-
-            if (set_owner == old_set_owner):
-                # No change in ownership
-                debug_msg("set_owner {} == {}".format(set_owner, old_set_owner))
-
-            elif set_owner == "local":
-                # remove label
-                if current_owner != "local":
-                    owner_restart = True
-                else:
-                    label_op = "drop"
-
-            else:
-                if (not fallback) and (current_owner == "local"):
-                    owner_restart = True
-                elif remote_state != "none":
-                    owner_restart = True
-                else:
-                    # Add label to enable deploy
-                    label_op = "add"
-
-        debug_msg("owner_restart={} label_op={}".format(owner_restart, label_op))
-
-        if update_state:
-            self.update_feature_state(feat, state, self.cfg_table)
-        elif owner_restart:
-            self.restart_service(feat)
-
-        if label_op:
-            self.handle_label(feat, "true" if label_op == "add" else None)
-
-
-    # Helper methods
-    #
-    def is_systemd_active(self, feat):
-        status = os.system('systemctl is-active --quiet {}'.format(feat))
-        debug_msg("system status for {}: {}".format(feat, str(status)))
-        return status == 0
-
-    def read_config(self, feat):
-        def_data = {
-                "auto_restart": None,
-                "has_timer": None,
-                "high_mem_alert": None,
-                "no_fallback_to_local": "false",
-                "set_owner": "local",
-                "state": None
-                }
-                
-        cfg = self.cfg_table[feat] if feat in self.cfg_table else {}
-        data = dict(def_data)
-        data.update(cfg)
-
-        debug_msg("config: feat:{} {}".format(feat, str(data)))
-        return data
-
-    def read_state(self, feat):
-        def_data = {
-                "current_owner": "",
-                "system_state": "",
-                "remote_state": "none"
-                }
-
-        data = dict(def_data)
-        state_data = self.state_db.get_table('FEATURE')
-        stat = state_data[feat] if feat in state_data else {}
-        data.update(stat)
-        debug_msg("state: feat:{} {}".format(feat, str(data)))
-        return data
-
-
-    def handle_label(self, feat, val):
-        cmd = "/usr/bin/kube_label -n {}_enabled".format(feat)
-        if val:
-            cmd += " -v {}".format(val)
-        proc = subprocess.Popen(cmd, shell=True)
-        proc.wait()
-
-
-    def restart_service(self, feat):
-        status = os.system("systemctl restart {}".format(feat))
-        debug_msg("calling restart service for feat:{}".format(feat))
-        if status != 0:
-            syslog.syslog(syslog.LOG_ERR,
-                    "Failed to restart {} to switch to local".format(feat))
-        else:
-            syslog.syslog(syslog.LOG_INFO,
-                    "Restarted {} to switch to local".format(feat))
-
-
-class HostConfigDaemon:
-    def __init__(self):
-        self.config_db = ConfigDBConnector()
-        self.config_db.connect(wait_for_init=True, retry_on=True)
-        syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
-
-        self.state_db = ConfigDBConnector()
-        self.state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
-        syslog.syslog(syslog.LOG_INFO, 'StateDB connect success')
-
-        aaa = self.config_db.get_table('AAA')
-        tacacs_global = self.config_db.get_table('TACPLUS')
-        tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
-        self.aaacfg = AaaCfg()
-        self.aaacfg.load(aaa, tacacs_global, tacacs_server)
-        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
-        self.iptables = Iptables()
-        self.iptables.load(lpbk_table)
-        self.is_multi_npu = device_info.is_multi_npu()
-
-
-        self.feature_handler = feature_handler(
-                self.config_db.get_table('FEATURE'), self.state_db, self.is_multi_npu)
-
+            self.update_feature_state(feature_name, state, feature_table)
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
-
 
     def tacacs_server_handler(self, key, data):
         self.aaacfg.tacacs_server_update(key, data)
@@ -529,14 +326,12 @@ class HostConfigDaemon:
             log_data['passkey'] = obfuscate(log_data['passkey'])
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
-
     def tacacs_global_handler(self, key, data):
         self.aaacfg.tacacs_global_update(key, data)
         log_data = copy.deepcopy(data)
         if 'passkey' in log_data:
             log_data['passkey'] = obfuscate(log_data['passkey'])
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
-
 
     def lpbk_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
@@ -549,60 +344,29 @@ class HostConfigDaemon:
 
         self.iptables.iptables_handler(key, data, add)
 
-
-    def feature_update(self, key, data):
+    def feature_state_handler(self, key, data):
         feature_name = key
         feature_table = self.config_db.get_table('FEATURE')
         if feature_name not in feature_table.keys():
             syslog.syslog(syslog.LOG_WARNING, "Feature '{}' not in FEATURE table".format(feature_name))
             return
 
-        # Feature transition between local & remote could be triggered through set_owner
-        self.feature_handler.on_update(key, data)
-
-
-    def kube_server_update(self, key, data):
-        tbl = self.state_db.get_table("KUBERNETES_MASTER")
-        if not "SERVER" in tbl:
-            # Yet to be initialized. Bail out.
-            debug_msg("STATE-DB for KUBERNETES_MASTER is not initialized yet. No config-ts update")
+        state = feature_table[feature_name]['state']
+        if not state:
+            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
-        state_svr = tbl["SERVER"]
 
-        tbl = self.config_db.get_table("KUBERNETES_MASTER")
-        cfg_svr = tbl["SERVER"] if "SERVER" in tbl else {}
-
-        cfg_ip = cfg_svr.get("ip", "")
-        state_ip = state_svr.get("server_ip", "")
-
-        differ = cfg_ip == state_ip
-
-        if not differ:
-            disable = cfg_svr.get("disable", "false").lower() == "true"
-            connected = state_svr.get("connected", "false").lower() == "true"
-            differ = disable == connected
-         
-        if differ:
-            # Alert statedb-watcher about config update, which may require
-            # join/reset.
-            #
-            self.state_db.mod_entry("KUBERNETES_MASTER", "SERVER",
-                    { "config_update_ts": str(datetime.datetime.now()) })
-            debug_msg("config ts updated")
-        else:
-            debug_msg("cfg_ip={} state_ip={} disable={} connected={}".format(
-                cfg_ip, state_ip, cfg_svr.get("disable", "false"),
-                state_svr.get("connected", "false")))
-
+        self.update_feature_state(feature_name, state, feature_table)
 
     def start(self):
-        self.kube_server_update(None, None)
+        # Update all feature states once upon starting
+        self.update_all_feature_states()
+
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
-        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_update(key, data))
-        self.config_db.subscribe('KUBERNETES_MASTER', lambda table, key, data: self.kube_server_update(key, data))
+        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_state_handler(key, data))
         self.config_db.listen()
 
 

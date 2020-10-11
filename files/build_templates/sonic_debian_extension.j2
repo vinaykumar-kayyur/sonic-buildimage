@@ -312,15 +312,6 @@ echo "hostcfgd.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
-# Copy statedb_watcherd files
-sudo cp $IMAGE_CONFIGS/statedb_watcherd/statedb_watcherd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-sudo cp $IMAGE_CONFIGS/statedb_watcherd/statedb_watcherd.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "statedb_watcherd.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable statedb_watcherd.timer
-
-sudo cp $IMAGE_CONFIGS/statedb_watcherd/statedb_watcherd $FILESYSTEM_ROOT/usr/bin/
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/statedb_watcherd
-
 # copy core file uploader files
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable core_uploader.service
@@ -335,18 +326,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures
 
 {% if include_kubernetes == "y" %}
 # Update kubelet service files by dropping install section
-SVC_FILE=$FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/kubelet.service
-SVC_FILE_UPD=$FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/kubelet.service.upd
-sudo grep -v -e "^\[Install\]" ${SVC_FILE} | grep -v -e "^WantedBy=" | sudo tee ${SVC_FILE_UPD}
-sudo mv ${SVC_FILE_UPD} ${SVC_FILE}
-
-#copy timer service
-sudo cp $BUILD_TEMPLATES/kubelet.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "kubelet.timer" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable kubelet.timer
-
-# Copy CNI file required when flannel is not locally installed.
-sudo cp $BUILD_TEMPLATES/kube_cni.10-flannel.conflist $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.serrvice
 
 {% endif %}
 
