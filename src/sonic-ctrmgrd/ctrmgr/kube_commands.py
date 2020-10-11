@@ -84,7 +84,7 @@ def kube_read_labels():
 
     labels = {}
     ret, out, _ = _run_command(KUBECTL_GET_CMD.format(
-        KUBE_ADMIN_CONF, device_info.get_hostname(), labels))
+        KUBE_ADMIN_CONF, device_info.get_hostname()))
 
     if ret == 0:
         lst = out.split(",")
@@ -383,6 +383,6 @@ def main():
 if __name__ == "__main__":
     if os.geteuid() != 0:
         exit("Please run as root. Exiting ...")
-    ret = main()
+    main()
     sys.exit(0)
 

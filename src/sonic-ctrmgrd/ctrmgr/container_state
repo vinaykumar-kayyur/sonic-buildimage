@@ -227,7 +227,7 @@ def container_up(args):
             do_exit(args.feature, "bail out as system state not active")
 
         if check_unset_labels(args.feature, args.version):
-            do_exit("This version is marked disabled. Exiting ...")
+            do_exit(args.feature, "This version is marked disabled. Exiting ...")
 
         if instance_lower(args.feature, args.version):
             # Remove label <feature_name>_<version>_enabled
