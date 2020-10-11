@@ -1,0 +1,9 @@
+.eggs/
+build/
+dist/
+*.egg-info/
+ctrmgrd/*.pyc
+tests/*.pyc
+tests/__pycache__/
+.idea
+.coverage

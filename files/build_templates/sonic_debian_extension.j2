@@ -326,9 +326,17 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures
 
 {% if include_kubernetes == "y" %}
 # Update kubelet service files by dropping install section
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.serrvice
-
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 {% endif %}
+
+# Copy remote container mangement files
+sudo mkdir -p ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}
+sudo cp ${files_path}/container_state ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
+sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_state
+sudo mkdir -p ${FILESYSTEM_ROOT_ETC_SONIC}
+sudo cp ${files_path}/kube.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
+sudo cp ${files_path}/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ctrmgrd.service
 
 # Copy the buffer configuration template
 sudo cp $BUILD_TEMPLATES/buffers_config.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
@@ -343,19 +351,6 @@ sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy miscellaneous scripts
 sudo cp $IMAGE_CONFIGS/misc/docker-wait-any $FILESYSTEM_ROOT/usr/bin/
-
-# copy remote docker support scripts
-sudo cp ${SCRIPTS_DIR}/container_action  $FILESYSTEM_ROOT/usr/bin/
-sudo cp ${SCRIPTS_DIR}/container_state  $FILESYSTEM_ROOT/usr/bin/
-sudo cp ${SCRIPTS_DIR}/kube_label  $FILESYSTEM_ROOT/usr/bin/
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/container_action
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/container_state
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/kube_label
-sudo mkdir -p ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}
-sudo cp ${SCRIPTS_DIR}/container_state  ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
-sudo cp ${SCRIPTS_DIR}/kube_label  ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
-sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_state
-sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/kube_label
 
 # Copy internal topology configuration scripts
 {%- if sonic_asic_platform == "vs" %}
