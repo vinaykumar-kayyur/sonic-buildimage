@@ -42,7 +42,8 @@ RUN apt-get install -y net-tools \
                        grub2-common \
                        bash-completion \
                        libelf1 \
-                       libmnl0
+                       libmnl0 \
+                       libssl-dev
 
 RUN pip install setuptools
 RUN pip install py2_ipaddress
