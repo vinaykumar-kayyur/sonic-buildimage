@@ -351,13 +351,13 @@ sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/container_action
 
 # Config file used by container mgmt scripts/service
 sudo mkdir -p ${FILESYSTEM_ROOT_ETC_SONIC}
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/kube.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
 
 # Remote container management service files
 sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/ctrmgrd.py $FILESYSTEM_ROOT/usr/local/bin/
 sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/ctrmgrd.py 
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/kube_commands.py $FILESYSTEM_ROOT/usr/local/bin/
-sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/kube_commands.py
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/remote_ctr_commands.py $FILESYSTEM_ROOT/usr/local/bin/
+sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/remote_ctr_commands.py
 sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ctrmgrd.service
 
