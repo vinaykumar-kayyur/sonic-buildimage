@@ -353,6 +353,8 @@ class RemoteServerHandler:
         # Called by timer / main thread.
         # Main thread calls only if timer is not running.
         #
+        if not self.cfg_server:
+            return
         log_debug("server: handle_update called")
         self.pending_join = False
         ip = self.cfg_server[CFG_SER_IP]
