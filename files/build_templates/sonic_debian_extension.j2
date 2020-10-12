@@ -180,7 +180,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $PLATF
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY3_WHEEL_NAME
 
 # Install prerequisites needed for installing the Python m2crypto package, used by sonic-utilities
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install build-essential libssl-dev
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install build-essential libssl-dev swig
 
 # Install SONiC Utilities Python 2 package
 SONIC_UTILITIES_PY2_WHEEL_NAME=$(basename {{sonic_utilities_py2_wheel_path}})
@@ -560,7 +560,7 @@ echo "mgmt-framework.timer" | sudo tee -a $GENERATED_SERVICE_FILE
 {% endif %}
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-dev python3-dev
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y build-essential
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y build-essential swig
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get clean -y
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get autoremove -y
 
