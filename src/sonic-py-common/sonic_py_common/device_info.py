@@ -269,9 +269,8 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
             json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
             platform_data = json.loads(open(json_file).read())
             interfaces = platform_data.get('interfaces', None)
-            if interfaces:
-                if len(interfaces) > 0:
-                    port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
+            if interfaces is not None and len(interfaces) > 0:
+                port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
 
     # Check for 'port_config.ini' file presence in a few locations
     if asic:
