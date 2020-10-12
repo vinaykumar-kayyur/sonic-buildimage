@@ -340,12 +340,25 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 {% endif %}
 
 # Copy remote container mangement files
+# File called from each container upon start/stop to record the state
 sudo mkdir -p ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}
-sudo cp ${files_path}/container_state ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/container_state ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
 sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_state
+
+# Replaces docker start/stop/wait/kill with this container_action.
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/container_action $FILESYSTEM_ROOT/usr/local/bin/
+sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/container_action
+
+# Config file used by container mgmt scripts/service
 sudo mkdir -p ${FILESYSTEM_ROOT_ETC_SONIC}
-sudo cp ${files_path}/kube.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
-sudo cp ${files_path}/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/kube.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
+
+# Remote container management service files
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/ctrmgrd.py $FILESYSTEM_ROOT/usr/local/bin/
+sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/ctrmgrd.py 
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/kube_commands.py $FILESYSTEM_ROOT/usr/local/bin/
+sudo chmod a+x $FILESYSTEM_ROOT/usr/local/bin/kube_commands.py
+sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ctrmgrd.service
 
 # Copy the buffer configuration template
