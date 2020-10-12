@@ -23,6 +23,19 @@ $(SYSCTL_NET_CONFIG)_PATH = files/image_config/sysctl
 RM_CHASSISDB_CONFIG_SCRIPT = remove_chassisdb_config
 $(RM_CHASSISDB_CONFIG_SCRIPT)_PATH = files/scripts
 
+SONIC_CTRMGRD_SRC_PATH = $(SRC_PATH)/sonic-ctrmgrd/ctrmgr
+SONIC_CTRMGRD_MONITOR_SCRIPT = container_monitor.py
+$(SONIC_CTRMGRD_MONITOR_SCRIPT)_PATH = $(SONIC_CTRMGRD_SRC_PATH)
+
+SONIC_CTRMGRD_STATE_SCRIPT = container_state
+$(SONIC_CTRMGRD_STATE_SCRIPT)_PATH = $(SONIC_CTRMGRD_SRC_PATH)
+
+SONIC_CTRMGRD_CFG_JSON = kube.config.json
+$(SONIC_CTRMGRD_CFG_JSON)_PATH = $(SONIC_CTRMGRD_SRC_PATH)
+
+SONIC_CTRMGRD_SERVICE = ctrmgrd.service
+$(SONIC_CTRMGRD_SERVICE)_PATH = $(SONIC_CTRMGRD_SRC_PATH)
+
 SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(ARP_UPDATE_SCRIPT) \
                     $(ARP_UPDATE_VARS_TEMPLATE) \
@@ -30,4 +43,8 @@ SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(QOS_CONFIG_TEMPLATE) \
                     $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT) \
                     $(SYSCTL_NET_CONFIG) \
-                    $(RM_CHASSISDB_CONFIG_SCRIPT)
+                    $(RM_CHASSISDB_CONFIG_SCRIPT) \
+                    $(SONIC_CTRMGRD_MONITOR_SCRIPT) \
+                    $(SONIC_CTRMGRD_STATE_SCRIPT) \
+                    $(SONIC_CTRMGRD_CFG_JSON) \
+                    $(SONIC_CTRMGRD_SERVICE)
