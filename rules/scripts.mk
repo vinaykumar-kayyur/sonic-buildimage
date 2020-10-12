@@ -24,8 +24,8 @@ RM_CHASSISDB_CONFIG_SCRIPT = remove_chassisdb_config
 $(RM_CHASSISDB_CONFIG_SCRIPT)_PATH = files/scripts
 
 SONIC_CTRMGRD_SRC_PATH = $(SRC_PATH)/sonic-ctrmgrd/ctrmgr
-SONIC_CTRMGRD_MONITOR_SCRIPT = container_monitor.py
-$(SONIC_CTRMGRD_MONITOR_SCRIPT)_PATH = $(SONIC_CTRMGRD_SRC_PATH)
+CONTAINER_MONITOR_SCRIPT = container_monitor.py
+$(CONTAINER_MONITOR_SCRIPT)_PATH = files/scripts
 
 SONIC_CTRMGRD_STATE_SCRIPT = container_state
 $(SONIC_CTRMGRD_STATE_SCRIPT)_PATH = $(SONIC_CTRMGRD_SRC_PATH)
@@ -44,7 +44,7 @@ SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT) \
                     $(SYSCTL_NET_CONFIG) \
                     $(RM_CHASSISDB_CONFIG_SCRIPT) \
-                    $(SONIC_CTRMGRD_MONITOR_SCRIPT) \
+                    $(CONTAINER_MONITOR_SCRIPT) \
                     $(SONIC_CTRMGRD_STATE_SCRIPT) \
                     $(SONIC_CTRMGRD_CFG_JSON) \
                     $(SONIC_CTRMGRD_SERVICE)
