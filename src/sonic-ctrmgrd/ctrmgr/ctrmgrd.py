@@ -1,6 +1,5 @@
 #!/usr/bin/python3 -u
 
-import sys
 import datetime
 import syslog
 import os
@@ -539,9 +538,9 @@ class LabelsPendingHandler:
 
 def main():
     server = MainServer()
-    remote_server_handler = RemoteServerHandler(server)
-    feature_handler = FeatureTransitionHandler(server)
-    labels_handler = LabelsPendingHandler(server)
+    RemoteServerHandler(server)
+    FeatureTransitionHandler(server)
+    LabelsPendingHandler(server)
     server.run()
 
 
