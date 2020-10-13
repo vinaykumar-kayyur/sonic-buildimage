@@ -438,7 +438,7 @@ class FeatureTransitionHandler:
                     label_add))
         # read labels and add/drop if different
         update_labels(self.server,
-                { "{}".format(feat): ("true" if label_add else "") })
+                { "{}_enabled".format(feat): ("true" if label_add else "") })
 
 
         # service_restart
