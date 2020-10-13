@@ -2,11 +2,14 @@
 
 try:
     import time
+    import json
     from sonic_sfp.sfputilbase import SfpUtilBase 
 except ImportError, e:
     raise ImportError (str(e) + "- required module not found")
 
 attr_path = '/sys/class/hwmon/hwmon2/device/'
+PLATFORM_INSTALL_INFO_FILE="/etc/sonic/platform_install.json"
+PLATFORM_SFP_GROUPS = ['SFP-G01','SFP-G02','SFP-G03','SFP-G04']
 
 class SfpUtil(SfpUtilBase):
     """Platform specific SfpUtill class"""
@@ -18,14 +21,24 @@ class SfpUtil(SfpUtilBase):
     _global_port_pres_dict = {}
 
     def __init__(self):
-        eeprom_path = "/sys/bus/i2c/devices/{0}-0050/eeprom"
+        eeprom_path = "{}/eeprom"
+        path_list = self.get_sfp_path()
         for x in range(self._port_start, self._port_end + 1):
-            port_eeprom_path = eeprom_path.format(x+9)
+            port_eeprom_path = eeprom_path.format(path_list[x])
             self._port_to_eeprom_mapping[x] = port_eeprom_path
 
         self.init_global_port_presence()        
         SfpUtilBase.__init__(self)
 
+    def get_sfp_path(self):
+        map = []
+        with open(PLATFORM_INSTALL_INFO_FILE) as fd:
+            install_info = json.load(fd)
+            for sfp_group_name in PLATFORM_SFP_GROUPS:
+                sfp_group = install_info[2][sfp_group_name]
+                map = map + sfp_group['paths']
+            return map
+            
     def reset(self, port_num):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:

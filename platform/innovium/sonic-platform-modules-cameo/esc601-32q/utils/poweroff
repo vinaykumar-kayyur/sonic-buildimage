@@ -9,7 +9,7 @@ mr_reboot() {
 
 if [ $# -eq 0 ] || [ $@ = "-p" ] || [ $@ = "--reboot" ] || [ $@ = "--poweroff" ] || [ $@ = "-f" ] || [ $@ = "--force" ];  then
     mr_reboot
-elif [ $@ = "--halt" ]; then 
+elif [ $@ = "--halt" ]; then
     sudo halt
 else
     echo "unsupported option"

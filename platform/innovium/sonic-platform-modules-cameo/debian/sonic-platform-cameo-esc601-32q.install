@@ -1,0 +1,3 @@
+esc601-32q/scripts/* usr/bin
+esc601-32q/utils/* usr/local/bin
+esc601-32q/service/*.service lib/systemd/system

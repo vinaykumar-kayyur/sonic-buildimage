@@ -1,0 +1,3 @@
+esqc610-56sq/scripts/* usr/bin
+esqc610-56sq/utils/* usr/local/bin
+esqc610-56sq/service/* lib/systemd/system

@@ -4,19 +4,45 @@ from __future__ import print_function
 import os
 import sys
 import logging
+import json
+
 
 FAN_NUM = 5
-fans_path = '/sys/class/hwmon/hwmon2/device/ESC601_FAN/'
-
-sensors_path = '/sys/class/hwmon/hwmon2/device/ESC601_BMC/'
-
-cameo_psu_path = '/sys/class/hwmon/hwmon2/device/ESC601_PSU/'
-
 MAX_PSU_NUM = 2
-psu_path = [ '/sys/class/hwmon/hwmon7/device/', #0x58
-             '/sys/class/hwmon/hwmon8/device/'] #0x59
+PSU_LIST = ['PSU1','PSU2'] #0x58, 0x59
 
+PLATFORM_INSTALL_INFO_FILE  = '/etc/sonic/platform_install.json'
+BMC_SYSFILE_PATH            = '/sys/class/hwmon/hwmon2/device/ESC601_BMC/'
+FAN_SYSFILE_PATH            = '/sys/class/hwmon/hwmon2/device/ESC601_FAN/'
+PSU_SYSFILE_PATH            = '/sys/class/hwmon/hwmon2/device/ESC601_PSU/'
 
+def get_mac_sensor_path():
+    mac_sensor_path = []
+    try:
+        with open(PLATFORM_INSTALL_INFO_FILE) as fd:
+            install_info = json.load(fd)
+            mac_sensor_path = install_info[1]['MCP3425']['path']
+    except Exception:
+        print("Fail to get mac sensor sysfsfile path")
+        
+    return mac_sensor_path
+            
+def get_psu_path():
+    """
+    get psu path when without BMC control
+    """
+    psu_path = []
+    try:
+        with open(PLATFORM_INSTALL_INFO_FILE) as fd:
+            install_info = json.load(fd)
+            for psu_name in PSU_LIST:
+                psu = install_info[1][psu_name]
+                psu_path.append(psu['path']+'/')
+            return psu_path
+    except Exception:
+        print("Fail to get psu sysfsfile path")
+    
+    return psu_path
 
 # Get sysfs attribute
 def get_attr_value(attr_path):
@@ -36,7 +62,7 @@ def get_attr_value(attr_path):
 
 def bmc_is_exist():
     value = ''
-    bmc_filePath = '/sys/class/hwmon/hwmon2/device/ESC601_BMC/bmc_present'
+    bmc_filePath = BMC_SYSFILE_PATH+'bmc_present'
     if os.path.exists(bmc_filePath):
        value = get_attr_value(bmc_filePath)
        if value.find('not') < 0:
@@ -46,20 +72,36 @@ def bmc_is_exist():
     else:
        return False
 
+def is_fan_speed_supported():
+    value = ''
+    filePath = '/sys/class/hwmon/hwmon2/device/ESC601_SYS/cpld4_version'
+    if os.path.exists(filePath):
+        value = get_attr_value(filePath)
+        if value == 'ERR':
+            return False
+        if int(value,16) >= 0x02:
+            return True
+    
+    return False
+
 def calc_mac_temp():
     value = ''
-    if bmc_is_exist():
-        value = get_attr_value('/sys/class/hwmon/hwmon2/device/ESC601_BMC/bmc_mac_sensor')
-        mac_sensor= int(value,16)/1000.0
-    else:
-        raw = get_attr_value('/sys/bus/i2c/devices/47-0068/iio:device0/in_voltage0_raw')
-        scale = get_attr_value('/sys/bus/i2c/devices/47-0068/iio:device0/in_voltage0_scale')
-        mac_sensor= int(raw,10)*float(scale)
-        
+    try:
+        if bmc_is_exist():
+            value = get_attr_value(BMC_SYSFILE_PATH+'bmc_mac_sensor')
+            mac_sensor= int(value,16)/1000.0
+        else:
+            path = get_mac_sensor_path()
+            raw = get_attr_value(path+'/iio:device0/in_voltage0_raw')
+            scale = get_attr_value(path+'/iio:device0/in_voltage0_scale')
+            mac_sensor= int(raw,10)*float(scale)
+    except Exception:
+        return 'N/A' 
+
     temp1 = -124.28 * mac_sensor * mac_sensor
     temp2 = -422.03 * mac_sensor
     temp_sensor = 384.62 + temp1 + temp2
-    return round(temp_sensor,2)
+    return "%.2f" %(round(temp_sensor,2))
 
 def print_attr_value_lines(sys_path):
     retval = 'ERR'
@@ -85,49 +127,51 @@ def get_fan_outer_rpm(number):
     return
 
 def sensors_status():
-    sys_path = sensors_path + 'bmc_sersor_1'  
+    if not bmc_is_exist():
+        return
+    sys_path = BMC_SYSFILE_PATH + 'bmc_sersor_1'  
     print_attr_value_lines(sys_path)
-    sys_path = sensors_path + 'bmc_sersor_2'
+    sys_path = BMC_SYSFILE_PATH + 'bmc_sersor_2'
     print_attr_value_lines(sys_path)
-    sys_path = sensors_path + 'bmc_sersor_3'
+    sys_path = BMC_SYSFILE_PATH + 'bmc_sersor_3'
     print_attr_value_lines(sys_path)
-    sys_path = sensors_path + 'bmc_sersor_4'
+    sys_path = BMC_SYSFILE_PATH + 'bmc_sersor_4'
     print_attr_value_lines(sys_path)
     return
 
-def sensors_temp():
-    print ('    MAC SENSORS TEMP:%.2f degrees (C)'% calc_mac_temp())
+def mac_sensors_temp():
+    print ('MAC SENSORS TEMP: %s degrees (C)\n'% calc_mac_temp())
     return
 
 def get_voltage():
     return
 
 def fan_status():
-    sys_path = fans_path + 'fan_status'
+    sys_path = FAN_SYSFILE_PATH + 'fan_status'
     print ('FAN STATUS:')
     print_attr_value_lines(sys_path)
     return
 
 def fan_present():
-    sys_path = fans_path + 'fan_present'
+    sys_path = FAN_SYSFILE_PATH + 'fan_present'
     print ('FAN PRESENT:')
     print_attr_value_lines(sys_path)
     return
 
 def fan_power():
-    sys_path = fans_path + 'fan_power'
+    sys_path = FAN_SYSFILE_PATH + 'fan_power'
     print ('FAN POWER:')
     print_attr_value_lines(sys_path)
     return
 
 def fan_speed():
-    sys_path = fans_path + 'fan_speed_rpm'
+    sys_path = FAN_SYSFILE_PATH + 'fan_speed_rpm'
     print ('FAN SPEED:')
     print_attr_value_lines(sys_path)
     return
 
 def is_psu_present(psu_number):
-    sys_path = cameo_psu_path + 'psu_present'
+    sys_path = PSU_SYSFILE_PATH + 'psu_present'
     search_str = "PSU {} is present".format(psu_number)
     if os.path.exists(sys_path):
        value = get_attr_value(sys_path)
@@ -138,8 +182,21 @@ def is_psu_present(psu_number):
     
     return False
 
-def show_psu_status_ex(path):
+def show_psu_status(path):
     # [model, vin, vout, fan_speed, temperature, pin, pout, iin, iout, max_iout]
+    output_format = [
+        ('    model: ', '{}', '\n'),
+        ('    Input Voltage:  ', '{:+3.2f} V' , '\n'),
+        ('    Output Voltage: ', '{:+3.2f} V' , '\n'),
+        ('    Fan Speed:      ', '{:3d} RPM'  , '\n'),
+        ('    Temperature     ', '{:+3.1f} C' , '\n'),
+        ('    Input Power:    ', '{:3.2f} W'  , '\n'),
+        ('    Output Power:   ', '{:3.2f} W'  , '\n'),
+        ('    Input Current:  ', '{:+3.2f} A' , '\n'),
+        ('    Output Current: ', '{:+3.2f} A' , '  '),
+        ('(max = '         , '{:+3.2f} A)', '\n')
+    ]
+
     result_list = [0]*10
     if bmc_is_exist():  
         try:
@@ -185,104 +242,44 @@ def show_psu_status_ex(path):
         result_list[7] = get_attr_value(path+"psu_iin")
         result_list[8] = get_attr_value(path+"psu_iout")
         result_list[9] = get_attr_value(path+"psu_iout_max")
-        if result_list[0] != 'ERR':
-            print ('    model: {}'.format(result_list[0]))
     
     if result_list[1] != 'ERR':
-        vin = int(result_list[1])/1000.0
-        print ('    Input Voltage:  {:+3.2f} V'.format(vin))
+        result_list[1] = int(result_list[1])/1000.0
         
     if result_list[2] != 'ERR':
-        vout = int(result_list[2])/1000.0
-        print ('    Output Voltage:  {:+3.2f} V'.format(vout))
+        result_list[2] = int(result_list[2])/1000.0
     
     if result_list[3] != 'ERR':
-        fan_speed = int(result_list[3])
-        print ('    Fan Speed:      {:3d} RPM'.format(fan_speed))   
+        result_list[3] = int(result_list[3]) 
     
     if result_list[4] != 'ERR':
-        temperature = int(result_list[4])/1000.0
-        print ('    Temperature:    {:+3.1f} C'.format(temperature))    
+        result_list[4] = int(result_list[4])/1000.0 
     
     if result_list[5] != 'ERR':
-        pin = int(result_list[5])/1000000.0
-        print ('    Input Power:    {:3.2f} W'.format(pin))    
+        result_list[5] = int(result_list[5])/1000000.0
     
     if result_list[6] != 'ERR':
-        pout = int(result_list[6])/1000000.0
-        print ('    Output Power:   {:3.2f} W'.format(pout))    
+        result_list[6] = int(result_list[6])/1000000.0
     
     if result_list[7] != 'ERR':
-        iin = int(result_list[7])/1000.0
-        print ('    Input Current:  {:+3.2f} A'.format(iin))    
+        result_list[7] = int(result_list[7])/1000.0
     
     if result_list[8] != 'ERR':
-        iout = int(result_list[8])/1000.0
-        print ('    Output Current: {:+3.2f} A'.format(iout),end='')    
+        result_list[8] = int(result_list[8])/1000.0
     
     if result_list[9] != 'ERR':
-        max_iout = int(result_list[9])/1000.0
-        print ('  (max = {:+3.2f} A)'.format(max_iout))
-        
+        result_list[9] = int(result_list[9])/1000.0
+    
+    for i in range(len(output_format)):
+        print(output_format[i][0], end='')
+        if result_list[i] != 'ERR':
+            print(output_format[i][1].format(result_list[i]), end=output_format[i][2])
+        else:
+            print('error')
+
     print('')
     return
         
-
-def show_psu_status(path):
-    model = get_attr_value(path+"psu_mfr_model")
-    if model != 'ERR':
-        print ('    model: {}'.format(model))
-    else:
-        return
-
-    temp = get_attr_value(path+"psu_vin")
-    if temp != 'ERR':
-        vin = int(temp)/1000.0
-        print ('    Input Voltage:  {:+3.2f} V'.format(vin))
-    
-    temp = get_attr_value(path+"psu_vout")    
-    if temp != 'ERR':
-        vout = int(temp)/1000.0
-        print ('    Output Voltage: {:+3.2f} V'.format(vout))
-    
-    temp = get_attr_value(path+"psu_fan_speed_1")
-    if temp != 'ERR':
-        psufan_speed = int(temp)
-        print ('    Fan Speed:      {:3d} RPM'.format(psufan_speed))
-
-    temp = get_attr_value(path+"psu_temp_1")
-    if temp != 'ERR':
-        temperature = int(temp)/1000.0
-        print ('    Temperature:    {:+3.1f} C'.format(temperature))
-
-    temp = get_attr_value(path+"psu_pin")
-    if temp != 'ERR':
-        pin = int(temp)/1000000.0
-        print ('    Input Power:    {:3.2f} W'.format(pin))
-
-    temp = get_attr_value(path+"psu_pout")
-    if temp != 'ERR':
-        pout = int(temp)/1000000.0
-        print ('    Output Power:   {:3.2f} W'.format(pout))
-
-    temp = get_attr_value(path+"psu_iin")
-    if temp != 'ERR':
-        iin = int(temp)/1000.0
-        print ('    Input Current:  {:+3.2f} A'.format(iin))
-
-    temp = get_attr_value(path+"psu_iout")
-    if temp != 'ERR':
-        iout = int(temp)/1000.0
-        print ('    Output Current: {:+3.2f} A'.format(iout),end='')
-    
-    temp = get_attr_value(path+"psu_iout_max")
-    if temp != 'ERR':
-        max_iout = int(temp)/1000.0
-        print ('  (max = {:+3.2f} A)'.format(max_iout))
-
-    print('')
-
-
 
 def psu_status():
 
@@ -290,8 +287,9 @@ def psu_status():
         if is_psu_present(x+1):
             print("PSU{} present".format(x+1))
             if bmc_is_exist():
-                show_psu_status_ex(cameo_psu_path + 'psu_module_{}'.format(x+1))
+                show_psu_status(PSU_SYSFILE_PATH + 'psu_module_{}'.format(x+1))
             else:
+                psu_path = get_psu_path()
                 show_psu_status(psu_path[x])
 
     return
@@ -313,11 +311,11 @@ def main():
             fan_status()
             fan_present()
             fan_power()
-            fan_speed()
+            if is_fan_speed_supported():
+                fan_speed()
         elif arg == 'sensor_status':
-            if bmc_is_exist():
-                sensors_status()
-                sensors_temp()
+            sensors_status()
+            mac_sensors_temp()
             psu_status()
 
         else:

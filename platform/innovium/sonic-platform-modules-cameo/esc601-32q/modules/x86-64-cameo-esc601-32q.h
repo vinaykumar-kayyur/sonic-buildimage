@@ -12,7 +12,7 @@
 #include <linux/uaccess.h>
 #include <linux/string.h>
 
-#define DRIVER_VERSION  "2.8"
+#define DRIVER_VERSION  "3.1"
 
 #define TURN_OFF        0
 #define TURN_ON         1
@@ -182,6 +182,7 @@ static ssize_t eeprom_wp_status_get(struct device *dev, struct device_attribute 
 static ssize_t eeprom_wp_status_set(struct device *dev, struct device_attribute *da, const char *buf, size_t count);
 #endif
 static ssize_t hw_version_get(struct device *dev, struct device_attribute *da, char *buf);
+static ssize_t cpld_version_get(struct device *dev, struct device_attribute *da, char *buf);
 /* end of Function Declaration */
 
 /* struct i2c_data */
@@ -452,6 +453,10 @@ enum Cameo_i2c_sysfs_attributes
     EEPROM_WP_CTRL,
 #endif
     HW_VER,
+    SWITCH_BORAD_CPLD1,
+    SWITCH_BORAD_CPLD2,
+    SWITCH_BORAD_CPLD3,
+    FAN_BORAD_CPLD
 };
 /* end of struct i2c_sysfs_attributes */
 
@@ -566,6 +571,10 @@ static SENSOR_DEVICE_ATTR(wdt_ctrl          , S_IRUGO | S_IWUSR , wdt_status_get
 static SENSOR_DEVICE_ATTR(eeprom_wp_ctrl    , S_IRUGO | S_IWUSR , eeprom_wp_status_get   , eeprom_wp_status_set   , EEPROM_WP_CTRL);
 #endif
 static SENSOR_DEVICE_ATTR(hw_version        , S_IRUGO           , hw_version_get         , NULL         , HW_VER);
+static SENSOR_DEVICE_ATTR(cpld1_version     , S_IRUGO           , cpld_version_get       , NULL         , SWITCH_BORAD_CPLD1);
+static SENSOR_DEVICE_ATTR(cpld2_version     , S_IRUGO           , cpld_version_get       , NULL         , SWITCH_BORAD_CPLD2);
+static SENSOR_DEVICE_ATTR(cpld3_version     , S_IRUGO           , cpld_version_get       , NULL         , SWITCH_BORAD_CPLD3);
+static SENSOR_DEVICE_ATTR(cpld4_version     , S_IRUGO           , cpld_version_get       , NULL         , FAN_BORAD_CPLD);
 /* end of sysfs attributes for SENSOR_DEVICE_ATTR */
 
 /* sysfs attributes for hwmon */
@@ -581,6 +590,10 @@ static struct attribute *ESC601_EEPROM_attributes[] =
 static struct attribute *ESC601_SYS_attributes[] =
 {
     &sensor_dev_attr_hw_version.dev_attr.attr,
+    &sensor_dev_attr_cpld1_version.dev_attr.attr,
+    &sensor_dev_attr_cpld2_version.dev_attr.attr,
+    &sensor_dev_attr_cpld3_version.dev_attr.attr,
+    &sensor_dev_attr_cpld4_version.dev_attr.attr,
 #ifdef WDT_CTRL_WANTED
     &sensor_dev_attr_wdt_ctrl.dev_attr.attr,
 #endif

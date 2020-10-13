@@ -6,8 +6,8 @@ Before=pmon.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/cameo_esc601_util.py install
-ExecStop=/usr/local/bin/cameo_esc601_util.py clean
+ExecStart=/usr/local/bin/cameo_esc601_startup start
+ExecStop=/usr/local/bin/cameo_esc601_startup stop
 RemainAfterExit=yes
 
 [Install]

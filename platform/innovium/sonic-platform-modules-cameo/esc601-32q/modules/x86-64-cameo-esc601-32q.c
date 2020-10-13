@@ -86,11 +86,24 @@ static ssize_t tlv_status_get(struct device *dev, struct device_attribute *da, c
 static ssize_t psu_status_get(struct device *dev, struct device_attribute *da, char *buf)
 {
     u8 status = -EPERM;
-    u8 res = 0x1;
+    u8 hw_ver = 0x10; // set 0x10 as default HW version
     int i;
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    // masks for hw_ver > 0x10
+    u8 PSU1_present_mask = 0x02;
+    u8 PSU2_present_mask = 0x01;
+    u8 PSU1_status_mask = 0x08;
+    u8 PSU2_status_mask = 0x04;
+    // get hw version
+    hw_ver = i2c_smbus_read_byte_data(ESC_601_i2c_client, 0x20);
 
-    res = 0x1;
+    if(hw_ver < 0x10)
+    {
+        PSU1_present_mask = 0x01;
+        PSU2_present_mask = 0x02;
+        PSU1_status_mask = 0x04;
+        PSU2_status_mask = 0x08;
+    }
     status = i2c_smbus_read_byte_data(ESC_601_i2c_client, 0xa0);
 
     debug_print((KERN_DEBUG "DEBUG : PSU_PRESENT status = %x\n",status));
@@ -98,40 +111,22 @@ static ssize_t psu_status_get(struct device *dev, struct device_attribute *da, c
     switch (attr->index)
     {
         case PSU_PRESENT:
-            for (i = 2; i >= 1; i--)
+            if(hw_ver < 0x10 && hw_ver != 0x0d)
             {
-                if (status & res)
-                {
-                    sprintf(buf, "%sPSU %d is present\n", buf, i);
-                }
-                else
-                {
-                    sprintf(buf, "%sPSU %d is not present\n", buf, i);
-                }
-                res = res << 1;
+                sprintf(buf, "%sPSU 2 is %s\n", buf, (status&PSU2_present_mask)?"not present":"present");
+                sprintf(buf, "%sPSU 1 is %s\n", buf, (status&PSU1_present_mask)?"not present":"present");
+            } 
+            else 
+            {
+                sprintf(buf, "%sPSU 2 is %s\n", buf, (status&PSU2_present_mask)?"present":"not present");
+                sprintf(buf, "%sPSU 1 is %s\n", buf, (status&PSU1_present_mask)?"present":"not present");
             }
+
             break;
         case PSU_STATUS:
-            res = 0x1;
-            res = res << 2;
-            if (status & res)
-            {
-                sprintf(buf, "%sPSU 2 is not power Good\n", buf);
-            }
-            else
-            {
-                sprintf(buf, "%sPSU 2 is power Good\n", buf);
-            }
-            res = 0x1;
-            res = res << 3;
-            if (status & res)
-            {
-                sprintf(buf, "%sPSU 1 is not power Good\n", buf);
-            }
-            else
-            {
-                sprintf(buf, "%sPSU 1 is power Good\n", buf);
-            }
+            sprintf(buf, "%sPSU 2 is %s\n", buf, (status&PSU2_status_mask)?"not power Good":"power Good");
+            sprintf(buf, "%sPSU 1 is %s\n", buf, (status&PSU1_status_mask)?"not power Good":"power Good");
+
             break;
     }
     return sprintf(buf, "%s\n", buf);
@@ -242,7 +237,7 @@ static ssize_t psu_module_get(struct device *dev, struct device_attribute *da, c
         {0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a},
         {0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a}
     };
-    u32 psu_status [11] = {0}; 
+    u32 psu_status [11] = {0};
     u8 mask = 0x1;
     u8 i = 0;
     u16 u16_val = 0;
@@ -1215,7 +1210,7 @@ static ssize_t low_power_all_set(struct device *dev, struct device_attribute *da
         debug_print((KERN_DEBUG "DEBUG : low_power_all_set mutex_lock\n"));
         if (i == TURN_ON)
         {
-            value = 0xf;
+            value = 0xff;
             debug_print((KERN_DEBUG "DEBUG : QSFP_LOW_POWER_ALL value = %x\n",value));
             result_1 = i2c_smbus_write_byte_data(Cameo_CPLD_2_client, 0x60, value);
             result_2 = i2c_smbus_write_byte_data(Cameo_CPLD_2_client, 0x61, value);
@@ -1349,7 +1344,7 @@ static ssize_t low_power_get(struct device *dev, struct device_attribute *da, ch
         debug_print((KERN_DEBUG "DEBUG : LOW_POWER_MODE_%d status = %x\n", i, status));
         for (j = 1; j <= 8; j++)
         {
-            if (j == (i-25))
+            if (j == (i-24))
             {
                 if (status & res)
                 {
@@ -3334,6 +3329,39 @@ static ssize_t hw_version_get(struct device *dev, struct device_attribute *da, c
         status = i2c_smbus_read_byte_data(ESC_601_i2c_client, 0x20);
     }
     sprintf(buf, "%sHW version is 0x%x\n", buf, status);
+    return sprintf(buf, "%s\n", buf);
+}
+
+static ssize_t cpld_version_get(struct device *dev, struct device_attribute *da, char *buf)
+{
+    u32 status = -EPERM;
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+
+    sprintf(buf, "");
+    
+    struct i2c_client *target_cpld_client;
+    
+    switch(attr->index)
+    {
+        case SWITCH_BORAD_CPLD1:
+            target_cpld_client = ESC_601_i2c_client;
+            break;
+        case SWITCH_BORAD_CPLD2:
+            target_cpld_client = Cameo_CPLD_2_client;
+            break;
+        case SWITCH_BORAD_CPLD3:
+            target_cpld_client = Cameo_CPLD_3_client;
+            break;
+        case FAN_BORAD_CPLD:
+            target_cpld_client = Cameo_CPLD_4_client;
+            break;
+        default:
+             return sprintf(buf, "ERR\n");
+    }
+
+    status = i2c_smbus_read_byte_data(target_cpld_client, 0x20);
+
+    sprintf(buf, "%s0x%x\n", buf, status);
     return sprintf(buf, "%s\n", buf);
 }
 
