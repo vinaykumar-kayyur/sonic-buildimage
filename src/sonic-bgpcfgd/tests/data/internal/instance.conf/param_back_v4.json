@@ -1,7 +1,7 @@
 {
     "CONFIG_DB__DEVICE_METADATA": {
         "localhost": {
-            "sub_role": "FrontEnd"
+            "sub_role": "BackEnd"
         }
     },
     "neighbor_addr": "10.10.10.10",
