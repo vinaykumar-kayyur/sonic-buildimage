@@ -128,7 +128,6 @@ def find_hardware_reboot_cause():
 
 def find_platform_reboot_info():
     additional_reboot_info = None
-
     # Until all platform vendors have provided sonic_platform packages,
     # if there is no sonic_platform package installed, we don't provide
     # additional reboot info.
@@ -183,6 +182,9 @@ def create_prev_cause_history_file(previous_reboot_cause, comment):
     # Write the previous reboot cause to HIST_PREVIOUS_REBOOT_CAUSE_FILE as a JSON format
     with open(HIST_PREVIOUS_REBOOT_CAUSE_FILE, "w") as hist_prev_cause_file:
         json.dump(reboot_cause_dict, hist_prev_cause_file)
+    
+    # Create a symbolic link to previous-reboot-cause.txt file
+    os.symlink(HIST_PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_FILE)
 
 
 def main():
@@ -236,10 +238,6 @@ def main():
         previous_reboot_cause = hardware_reboot_cause
     else:
         previous_reboot_cause = software_reboot_cause
-
-    # Write the previous reboot cause to PREVIOUS_REBOOT_CAUSE_FILE
-    with open(PREVIOUS_REBOOT_CAUSE_FILE, "w") as prev_cause_file:
-        prev_cause_file.write(previous_reboot_cause)
 
     # Save the previous cause info into its history file as json format
     create_prev_cause_history_file(previous_reboot_cause, additional_reboot_info)

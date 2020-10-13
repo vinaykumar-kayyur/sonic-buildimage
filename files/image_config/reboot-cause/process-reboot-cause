@@ -25,6 +25,7 @@ SYSLOG_IDENTIFIER = "process-reboot-cause"
 REBOOT_CAUSE_DIR = "/host/reboot-cause/"
 PREVIOUS_REBOOT_CAUSE_DIR = "/host/reboot-cause/previous-reboot-cause/"
 PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
+USER_ISSUE_REBOOT_CAUSE_REGEX ="User issued \'{}\' command [User: {}, Time: {}]"
 
 REBOOT_CAUSE_UNKNOWN = "Unknown"
 REBOOT_CAUSE_TABLE_NAME = "REBOOT_CAUSE"
@@ -49,14 +50,11 @@ def set_reboot_cause_table_entry(key, cause, time, user, comment):
 
 
 def read_reboot_cause_files_and_save_state_db():
-    # Create REBOOT_CAUSE_DIR if it doesn't exist
-    if not os.path.exists(PREVIOUS_REBOOT_CAUSE_DIR):
-        os.makedirs(PREVIOUS_REBOOT_CAUSE_DIR)
-
     # Sort the previous reboot cause files by creation time
     FULL_REBOOT_FILE_LIST = [os.path.join(PREVIOUS_REBOOT_CAUSE_DIR,i) for i in os.listdir(PREVIOUS_REBOOT_CAUSE_DIR)]
-    TIME_SORTED_FULL_REBOOT_FILE_LIST = sorted(FULL_REBOOT_FILE_LIST, key=os.path.getmtime)
+    TIME_SORTED_FULL_REBOOT_FILE_LIST = sorted(FULL_REBOOT_FILE_LIST, key=os.path.getmtime, reverse=True)
 
+    data = []
     # Read each sorted previous reboot cause file and update the state db with previous reboot cause information
     for i in range(min(10,len(TIME_SORTED_FULL_REBOOT_FILE_LIST))) :
         x = TIME_SORTED_FULL_REBOOT_FILE_LIST[i]
@@ -78,17 +76,23 @@ def main():
         sys.exit("This utility must be run as root")
 
     # Set a default previous reboot cause
-    previous_reboot_cause = REBOOT_CAUSE_UNKNOWN
+    last_reboot_cause = REBOOT_CAUSE_UNKNOWN
 
-    # Read the previous reboot cause from PREVIOUS_REBOOT_CAUSE_FILE
-    with open(PREVIOUS_REBOOT_CAUSE_FILE, "r") as prev_cause_file:
-        previous_reboot_cause = prev_cause_file.readline()
+    # Read the last previous reboot cause
+    if os.path.exists(PREVIOUS_REBOOT_CAUSE_FILE):
+        with open(PREVIOUS_REBOOT_CAUSE_FILE, "r") as last_cause_file:
+            data = json.load(last_cause_file)
+            if data['user']:
+                last_reboot_cause = USER_ISSUE_REBOOT_CAUSE_REGEX.format(data['cause'], data['user'], data['time'])
+            else:
+                last_reboot_cause = "{}".format(data['cause'])
 
-    # Also log the previous reboot cause to the syslog
-    sonic_logger.log_info("Previous reboot cause: {}".format(previous_reboot_cause))
+    # Log the last reboot cause to the syslog
+    sonic_logger.log_info("Previous reboot cause: {}".format(last_reboot_cause))
 
-    # Read the previous reboot cause from saved reboot-cause files and save the previous reboot cause upto 10 entry to the state db
-    read_reboot_cause_files_and_save_state_db()
+    if os.path.exists(PREVIOUS_REBOOT_CAUSE_DIR):
+        # Read the previous reboot cause from saved reboot-cause files and save the previous reboot cause upto 10 entry to the state db
+        read_reboot_cause_files_and_save_state_db()
 
 
 if __name__ == "__main__":
