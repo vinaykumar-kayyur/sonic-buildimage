@@ -8,9 +8,10 @@
 #
 #############################################################################
 
+from __future__ import division
+
 try:
-    import sys 
-    from __future__ import division
+    import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
@@ -46,7 +47,7 @@ class Chassis(ChassisBase):
         self.PORT_START = 1
         self.PORT_END = 34 
         self.PORTS_IN_BLOCK = (self.PORT_END + 1)
-        _sfp_port = range(33, self.PORT_END + 1)
+        _sfp_port = list(range(33, self.PORT_END + 1))
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
         for index in range(self.PORT_START, self.PORTS_IN_BLOCK):

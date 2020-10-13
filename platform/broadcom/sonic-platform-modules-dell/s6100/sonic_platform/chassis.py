@@ -10,7 +10,6 @@
 
 try:
     import os
-    from sonic_platform_base.platform_base import PlatformBase
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.psu import Psu
@@ -19,7 +18,7 @@ try:
     from sonic_platform.thermal import Thermal
     from sonic_platform.component import Component
     from sonic_platform.watchdog import Watchdog
-    from eeprom import Eeprom
+    from sonic_platform.eeprom import Eeprom
     import time
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
