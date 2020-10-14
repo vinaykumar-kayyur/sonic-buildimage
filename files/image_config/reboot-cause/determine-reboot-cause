@@ -222,6 +222,7 @@ def main():
     #    reboot info. We will use it as the previous cause.
     software_reboot_cause = find_software_reboot_cause()
 
+    # TODO : Once the platform api or plugin is available for additional platform reboot info.
     # 4. If there is any additional platform info to be stored for reboot cause analysis
     #additional_reboot_info = find_platform_reboot_info()
 
