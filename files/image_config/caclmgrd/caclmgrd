@@ -563,7 +563,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     # Check ACL Rule notification and make sure Rule point to ACL Table which is Controlplane
                     else:
                         acl_table = key.split(acl_rule_table_seprator)[0]
-                        if self.config_db_map[namespace].get_table(self.ACL_TABLE)[acl_table]["type"]  == self.ACL_TABLE_TYPE_CTRLPLANE:
+                        if self.config_db_map[namespace].get_table(self.ACL_TABLE)[acl_table]["type"] == self.ACL_TABLE_TYPE_CTRLPLANE:
                             ctrl_plane_acl_notification.add(namespace)
 
             # Update the Control Plane ACL of the namespace that got config db acl table event
