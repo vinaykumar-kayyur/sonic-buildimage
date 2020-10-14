@@ -14,39 +14,81 @@
     NOTE: This script is written against docker Python package 4.1.0. Newer
     versions of docker may have a different API.
 """
-
 import sys
+import time
+import argparse
 import threading
 from docker import APIClient
+from swsssdk import SonicV2Connector
 
 # Instantiate a global event to share among our threads
 g_thread_exit_event = threading.Event()
+g_service = []
+g_dep_services = []
 
+def check_warm_restart_state(container_name):
+    state_db = SonicV2Connector(host='127.0.0.1')
+    state_db.connect(state_db.STATE_DB, False)
 
-def usage():
-    print("Usage: {} <container_name> [<container_name> ...]".format(sys.argv[0]))
-    sys.exit(1)
+    # Get the system warm reboot enable state
+    TABLE_NAME_SEPARATOR = '|'
+    prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
+    _hash = '{}{}'.format(prefix, 'system')
+    wr_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    wr_enable_state = True if wr_system_state == "true" else False
 
+    # Get the container warm reboot enable state
+    prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
+    _hash = '{}{}'.format(prefix, container_name)
+    wr_container_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    wr_enable_state |= True if wr_container_state == "true" else False
+
+    state_db.close(state_db.STATE_DB)
+    return wr_enable_state
 
 def wait_for_container(docker_client, container_name):
-    docker_client.wait(container_name)
+    while True:
+        while docker_client.inspect_container(container_name)['State']['Status'] != "running":
+            time.sleep(1)
 
-    print("No longer waiting on container '{}'".format(container_name))
+        docker_client.wait(container_name)
+        print("No longer waiting on container '{}'".format(container_name))
 
-    # Signal the main thread to exit
-    g_thread_exit_event.set()
-
+        # If this is a dependent service and WR is enabled, DON'T signal main thread to exit
+        if container_name in g_dep_services and check_warm_restart_state(container_name):
+            continue
+        else:
+            # Signal the main thread to exit
+            g_thread_exit_event.set()
 
 def main():
     thread_list = []
 
     docker_client = APIClient(base_url='unix://var/run/docker.sock')
 
-    # Ensure we were passed at least one argument
-    if len(sys.argv) < 2:
-        usage()
+    parser  = argparse.ArgumentParser(description='Wait for dependent docker services',
+                                      version='1.0.0',
+                                      formatter_class=argparse.RawTextHelpFormatter,
+                                      epilog="""
+Examples:
+  docker-wait-any -s swss -d syncd teamd
+""")
 
-    container_names = sys.argv[1:]
+    parser.add_argument('-s','--service', nargs='+', default=None, help='The service which is waiting for dependent services')
+    parser.add_argument('-d','--dependent', nargs='*', default=None, help='The dependent services')
+
+    args = parser.parse_args()
+    global g_service
+    global g_dep_services
+    if args.service is not None:
+        g_service = args.service
+    if args.dependent is not None:
+        g_dep_services = args.dependent
+
+    container_names = g_service + g_dep_services
+
+    if container_names == []:
+        sys.exit(0)
 
     for container_name in container_names:
         t = threading.Thread(target=wait_for_container, args=[docker_client, container_name])

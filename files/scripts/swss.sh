@@ -179,10 +179,14 @@ wait() {
 
     # NOTE: This assumes Docker containers share the same names as their
     # corresponding services
+    for dep in ${MULTI_INST_DEPENDENT}; do
+        ALL_DEPS="$ALL_DEPS $dep$DEV"
+    done
+
     if [[ ! -z $DEV ]]; then
-        /usr/bin/docker-wait-any ${SERVICE}$DEV ${PEER}$DEV
+        /usr/bin/docker-wait-any -s ${SERVICE}$DEV -d ${PEER}$DEV ${ALL_DEPS}
     else
-        /usr/bin/docker-wait-any ${SERVICE} ${PEER}
+        /usr/bin/docker-wait-any -s ${SERVICE} -d ${PEER} ${ALL_DEPS}
     fi
 }
 
