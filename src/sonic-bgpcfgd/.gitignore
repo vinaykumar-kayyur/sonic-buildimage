@@ -2,7 +2,8 @@
 build/
 dist/
 *.egg-info/
-app/*.pyc
+bgpcfgd/*.pyc
 tests/*.pyc
 tests/__pycache__/
 .idea
+.coverage

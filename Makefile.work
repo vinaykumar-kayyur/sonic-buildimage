@@ -38,7 +38,6 @@
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
 #  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #  * BUILD_LOG_TIMESTAMP: Set timestamp in the build log (simple/none)
-#  * ENABLE_SYNCHRONOUS_MODE: Enable synchronous mode between orchagent and syncd
 #
 ###############################################################################
 
@@ -116,12 +115,17 @@ DOCKER_RUN := docker run --rm=true --privileged --init \
     -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
-    -i$(if $(TERM),t,)
+    -i$(if $(TERM),t,) \
+    $(SONIC_BUILDER_EXTRA_CMDLINE)
 
 include rules/config
 
 ifneq ($(DOCKER_BUILDER_USER_MOUNT),)
 	DOCKER_RUN += $(foreach mount,$(subst $(comma), ,$(DOCKER_BUILDER_USER_MOUNT)), $(addprefix -v , $(mount)))
+endif
+
+ifdef SONIC_BUILD_QUIETER
+	DOCKER_RUN += -e "SONIC_BUILD_QUIETER=$(SONIC_BUILD_QUIETER)"
 endif
 
 ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
@@ -186,6 +190,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
+                           SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_ZTP=$(ENABLE_ZTP) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
@@ -213,7 +218,6 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
-                           ENABLE_SYNCHRONOUS_MODE=$(ENABLE_SYNCHRONOUS_MODE) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -297,6 +301,7 @@ reset :
 	        git reset --hard;
 	        git submodule foreach --recursive 'git clean -xfdf || true';
 	        git submodule foreach --recursive 'git reset --hard || true';
+	        git submodule foreach --recursive 'git remote update || true';
 	        git submodule update --init --recursive;
 	        echo "Reset complete!";
 	    else
