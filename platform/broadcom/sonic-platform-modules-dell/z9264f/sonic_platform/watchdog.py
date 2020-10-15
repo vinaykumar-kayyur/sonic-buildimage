@@ -137,8 +137,6 @@ class Watchdog(WatchdogBase):
             self.timeout = seconds
             return seconds
 
-        return -1
-
     def disarm(self):
         """
         Disarm the hardware watchdog

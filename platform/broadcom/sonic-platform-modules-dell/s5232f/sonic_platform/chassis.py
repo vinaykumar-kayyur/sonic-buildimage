@@ -91,7 +91,7 @@ class Chassis(ChassisBase):
         change_dict['sfp'] = port_dict
         elapsed_time_ms = 0
         sleep_time_ms = 500
-        sleep_time = sleep_time_ms / 1000
+        sleep_time = float(sleep_time_ms / 1000)
 
         while True:
             for port_num in range(self.PORT_START, (self.PORT_END + 1)):
