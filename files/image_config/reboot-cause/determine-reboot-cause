@@ -154,7 +154,7 @@ def find_platform_reboot_info():
 def create_prev_cause_history_file(previous_reboot_cause, comment):
     # Create previous_reboot_cause_#time#.txt under previous_reboot_cause directory
     FILE_GEN_TIME = str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-    HIST_FILE = 'previous-reboot-cause-' + FILE_GEN_TIME + '.txt'
+    HIST_FILE = 'reboot-cause-' + FILE_GEN_TIME + '.txt'
     HIST_PREVIOUS_REBOOT_CAUSE_FILE = PREVIOUS_REBOOT_CAUSE_DIR + HIST_FILE
 
     # resultant dictionary 
