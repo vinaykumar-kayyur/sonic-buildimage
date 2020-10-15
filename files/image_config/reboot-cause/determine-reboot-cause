@@ -27,7 +27,7 @@ SYSLOG_IDENTIFIER = "determine-reboot-cause"
 REBOOT_CAUSE_DIR = "/host/reboot-cause/"
 PREVIOUS_REBOOT_CAUSE_DIR = "/host/reboot-cause/previous-reboot-cause/"
 REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "reboot-cause.txt"
-PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.txt"
+PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "last-reboot-cause.json"
 FIRST_BOOT_PLATFORM_FILE = "/tmp/notify_firstboot_to_platform"
 REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 # The following SONIC_BOOT_TYPEs come from the warm/fast reboot script which is in sonic-utilities
@@ -152,10 +152,10 @@ def find_platform_reboot_info():
 
 
 def create_prev_cause_history_file(previous_reboot_cause, comment):
-    # Create previous_reboot_cause_#time#.txt under previous_reboot_cause directory
+    # Create reboot_cause_#time#.json under previous_reboot_cause directory
     FILE_GEN_TIME = str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-    HIST_FILE = 'reboot-cause-' + FILE_GEN_TIME + '.txt'
-    HIST_PREVIOUS_REBOOT_CAUSE_FILE = PREVIOUS_REBOOT_CAUSE_DIR + HIST_FILE
+    REBOOT_CAUSE_TIME_FILE = 'reboot-cause-' + FILE_GEN_TIME + '.json'
+    PREVIOUS_REBOOT_CAUSE_TIME_FILE = PREVIOUS_REBOOT_CAUSE_DIR + REBOOT_CAUSE_TIME_FILE
 
     # resultant dictionary 
     reboot_cause_dict = {} 
@@ -179,12 +179,12 @@ def create_prev_cause_history_file(previous_reboot_cause, comment):
     if not os.path.exists(PREVIOUS_REBOOT_CAUSE_DIR):
         os.makedirs(PREVIOUS_REBOOT_CAUSE_DIR)
 
-    # Write the previous reboot cause to HIST_PREVIOUS_REBOOT_CAUSE_FILE as a JSON format
-    with open(HIST_PREVIOUS_REBOOT_CAUSE_FILE, "w") as hist_prev_cause_file:
-        json.dump(reboot_cause_dict, hist_prev_cause_file)
+    # Write the previous reboot cause to PREVIOUS_REBOOT_CAUSE_TIME_FILE as a JSON format
+    with open(PREVIOUS_REBOOT_CAUSE_TIME_FILE, "w") as reboot_cause_time_file:
+        json.dump(reboot_cause_dict, reboot_cause_time_file)
     
-    # Create a symbolic link to previous-reboot-cause.txt file
-    os.symlink(HIST_PREVIOUS_REBOOT_CAUSE_FILE, PREVIOUS_REBOOT_CAUSE_FILE)
+    # Create a symbolic link to previous-reboot-cause.json file
+    os.symlink(PREVIOUS_REBOOT_CAUSE_TIME_FILE, PREVIOUS_REBOOT_CAUSE_FILE)
 
 
 def main():
