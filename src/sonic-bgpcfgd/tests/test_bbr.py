@@ -5,6 +5,8 @@ from copy import deepcopy
 import swsscommon_test
 import bgpcfgd
 
+with patch.dict("sys.modules", swsscommon=swsscommon_test):
+    from bgpcfgd.managers_bbr import BBRMgr
 
 global_constants = {
     "bgp": {
@@ -21,12 +23,10 @@ global_constants = {
     }
 }
 
-@patch('bgpcfgd.managers_bbr.log_info')
-@patch('bgpcfgd.managers_bbr.log_err')
-@patch('bgpcfgd.managers_bbr.log_crit')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
-def test_constructor(m1, m2, m3):
-    from bgpcfgd.managers_bbr import BBRMgr
+#@patch('bgpcfgd.managers_bbr.log_info')
+#@patch('bgpcfgd.managers_bbr.log_err')
+#@patch('bgpcfgd.managers_bbr.log_crit')
+def test_constructor():#m1, m2, m3):
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -41,11 +41,9 @@ def test_constructor(m1, m2, m3):
 
 @patch('bgpcfgd.managers_bbr.log_info')
 @patch('bgpcfgd.managers_bbr.log_crit')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def set_handler_common(key, value,
                        is_enabled, is_valid, has_no_push_cmd_errors,
                        mocked_log_crit, mocked_log_info):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -93,9 +91,7 @@ def test_set_handler_4():
     set_handler_common("all", {"status": "enabled"}, True, True, False)
 
 @patch('bgpcfgd.managers_bbr.log_err')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def test_del_handler(mocked_log_err):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -109,11 +105,9 @@ def test_del_handler(mocked_log_err):
 
 @patch('bgpcfgd.managers_bbr.log_info')
 @patch('bgpcfgd.managers_bbr.log_err')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def __init_common(constants,
                   expected_log_info, expected_log_err, expected_bbr_enabled_pgs, expected_status,
                   mocked_log_err, mocked_log_info):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -171,9 +165,7 @@ def test___init_6():
     __init_common(constants, 'BBRMgr::Initialized and enabled', None, expected_bbr_entries, "enabled")
 
 @patch('bgpcfgd.managers_bbr.log_info')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def read_pgs_common(constants, expected_log_info, expected_bbr_enabled_pgs, mocked_log_info):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -209,9 +201,7 @@ def test___read_pgs_parse_configuration():
     read_pgs_common(constants, None, expected_bbr_entries)
 
 @patch('bgpcfgd.managers_bbr.log_err')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def __set_validation_common(key, data, expected_log_err, expected_result, mocked_log_err):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -240,9 +230,7 @@ def test___set_validation_4():
 def test___set_validation_5():
     __set_validation_common("all", {"status": "disabled"}, None, True)
 
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def __set_prepare_config_common(status, bbr_enabled_pgs, expected_cmds):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -288,12 +276,8 @@ def test___set_prepare_config_disabled():
         '  no neighbor PEER_V6 allowas-in 1',
     ])
 
-
-
 @patch('bgpcfgd.managers_bbr.log_crit')
-@patch.dict("sys.modules", swsscommon=swsscommon_test)
 def __restart_peers_common(run_command_results, run_command_expects, last_log_crit_message, mocked_log_crit):
-    from bgpcfgd.managers_bbr import BBRMgr
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
