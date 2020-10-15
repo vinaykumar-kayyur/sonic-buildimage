@@ -28,6 +28,8 @@ VERSION = "1.0"
 
 SYSLOG_IDENTIFIER = "caclmgrd"
 
+DEFAULT_NAMESPACE = ''
+
 
 # ========================== Helper Functions =========================
 
@@ -88,18 +90,18 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         self.num_changes = {}
 
         # Initialize update-thread-specific data for default namespace
-        self.update_thread[''] = None
-        self.lock[''] = threading.Lock()
-        self.num_changes[''] = 0
+        self.update_thread[DEFAULT_NAMESPACE] = None
+        self.lock[DEFAULT_NAMESPACE] = threading.Lock()
+        self.num_changes[DEFAULT_NAMESPACE] = 0
 
         SonicDBConfig.load_sonic_global_db_config()
         self.config_db_map = {}
         self.iptables_cmd_ns_prefix = {}
-        self.config_db_map[''] = ConfigDBConnector(use_unix_socket_path=True, namespace='')
-        self.config_db_map[''].connect()
-        self.iptables_cmd_ns_prefix[''] = ""
-        self.namespace_mgmt_ip = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[''], '')
-        self.namespace_mgmt_ipv6 = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[''], '')
+        self.config_db_map[DEFAULT_NAMESPACE] = ConfigDBConnector(use_unix_socket_path=True, namespace=DEFAULT_NAMESPACE)
+        self.config_db_map[DEFAULT_NAMESPACE].connect()
+        self.iptables_cmd_ns_prefix[DEFAULT_NAMESPACE] = ""
+        self.namespace_mgmt_ip = self.get_namespace_mgmt_ip(self.iptables_cmd_ns_prefix[DEFAULT_NAMESPACE], DEFAULT_NAMESPACE)
+        self.namespace_mgmt_ipv6 = self.get_namespace_mgmt_ipv6(self.iptables_cmd_ns_prefix[DEFAULT_NAMESPACE], DEFAULT_NAMESPACE)
         self.namespace_docker_mgmt_ip = {}
         self.namespace_docker_mgmt_ipv6 = {}
 
@@ -573,7 +575,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         # Map of Namespace <--> susbcriber table's object
         config_db_subscriber_table_map = {}
         
-        # Loop through all asic namespaces (if present) and host (namespace='')
+        # Loop through all asic namespaces (if present) and host namespace (DEFAULT_NAMESPACE)
         for namespace in self.config_db_map.keys():
             # Unconditionally update control plane ACLs once at start on given namespace
             self.update_control_plane_acls(namespace)
