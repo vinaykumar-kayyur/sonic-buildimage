@@ -239,7 +239,7 @@ class Chassis(ChassisBase):
         try:
             with open(self.REBOOT_CAUSE_PATH) as fd:
                 reboot_cause = int(fd.read(), 16)
-        except:
+        except EnvironmentError:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
         if reboot_cause & 0x1:

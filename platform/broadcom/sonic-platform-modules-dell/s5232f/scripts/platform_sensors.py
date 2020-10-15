@@ -125,7 +125,7 @@ def print_temperature_sensors():
     print '  CPU Temp:                       ',\
         (get_pmc_register('CPU_temp'))
 
-ret_status, ipmi_cmd_ret = commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
 ipmi_sensor_dump()
 
 print_temperature_sensors()
@@ -337,4 +337,4 @@ for psu in range(1, S5232F_MAX_PSUS + 1):
 print '\n    Total Power:                     ',\
     get_pmc_register('PSU_Total_watt')
 
-ret_status, ipmi_cmd_ret = commands.getstatusoutput('echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
+commands.getstatusoutput('echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
