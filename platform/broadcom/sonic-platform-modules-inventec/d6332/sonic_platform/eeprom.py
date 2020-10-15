@@ -7,7 +7,7 @@
 
 try:
     from sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ( ImportError, e ):
     raise ImportError(str(e) + "- required module not found")
 
 EEPROM_TOTAL_LEN_HIGH_OFFSET = 9

@@ -28,6 +28,12 @@ override_dh_auto_build:
 			python2 setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/utils; \
 			cd $(MOD_SRC_DIR); \
 		fi; \
+		if [ $$mod = "d6332" ]; then \
+			cd $(MOD_SRC_DIR)/$${mod}; \
+			python3 setup.py build; \
+			python3 setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/utils; \
+			cd $(MOD_SRC_DIR); \
+		fi \
 	done)
 
 override_dh_auto_install:
@@ -39,6 +45,11 @@ override_dh_auto_install:
     if [ $$mod = "d7054q28b" ] || [ $$mod = "d6356" ] || [ $$mod = "d6332" ]; then \
 			cd $(MOD_SRC_DIR)/$${mod}; \
 			python2 setup.py install --root=$(MOD_SRC_DIR)/debian/platform-modules-$${mod} --install-layout=deb; \
+			cd $(MOD_SRC_DIR); \
+		fi; \
+		if [ $$mod = "d6332" ]; then \
+			cd $(MOD_SRC_DIR)/$${mod}; \
+			python3 setup.py install --root=$(MOD_SRC_DIR)/debian/platform-modules-$${mod} --install-layout=deb; \
 			cd $(MOD_SRC_DIR); \
 		fi \
 	done)

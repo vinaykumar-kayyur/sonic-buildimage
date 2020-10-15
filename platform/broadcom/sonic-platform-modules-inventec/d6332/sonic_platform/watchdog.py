@@ -7,7 +7,7 @@ except ImportError as e:
 
 class Watchdog(WatchdogBase):
     def __init__(self):
-        print 'init Watchdog()'
+        print('init Watchdog()')
 
     def arm(self, seconds):
         """
