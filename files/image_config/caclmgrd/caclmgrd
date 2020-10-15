@@ -539,16 +539,16 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     # More ACL table changes occurred since this thread was spawned
                     # spawn a new thread with the current number of changes
                     new_changes = self.num_changes[namespace] - num_changes
-                    log_info("ACL config not stable for namespace '{}': {} changes detected in the past {} seconds. Skipping update ..."
+                    self.log_info("ACL config not stable for namespace '{}': {} changes detected in the past {} seconds. Skipping update ..."
                              .format(namespace, new_changes, self.UPDATE_DELAY_SECS))
                     num_changes = self.num_changes[namespace]
                 else:
                     if num_changes == self.num_changes[namespace] and num_changes > 0:
-                        log_info("ACL config for namespace '{}' has not changed for {} seconds. Applying updates ..."
+                        self.log_info("ACL config for namespace '{}' has not changed for {} seconds. Applying updates ..."
                                  .format(namespace, self.UPDATE_DELAY_SECS))
                         self.update_control_plane_acls(namespace)
                     else:
-                        log_error("Error updating ACLs for namespace '{}'".format(namespace))
+                        self.log_error("Error updating ACLs for namespace '{}'".format(namespace))
 
                     # Re-initialize
                     self.num_changes[namespace] = 0
@@ -639,7 +639,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             for namespace in ctrl_plane_acl_notification:
                 with self.lock[namespace]:
                     if self.num_changes[namespace] == 0:
-                        log_info("ACL change detected for namespace '{}'".format(namespace))
+                        self.log_info("ACL change detected for namespace '{}'".format(namespace))
 
                     # Increment the number of change events we've received for this namespace
                     self.num_changes[namespace] += 1
@@ -647,7 +647,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     # If an update thread is not already spawned for the namespace which we received
                     # the ACL table update event, spawn one now
                     if not self.update_thread[namespace]:
-                        log_info("Spawning ACL update thread for namepsace '{}' ...".format(namespace))
+                        self.log_info("Spawning ACL update thread for namepsace '{}' ...".format(namespace))
                         self.update_thread[namespace] = threading.Thread(target=self.check_and_update_control_plane_acls,
                                                                          args=(namespace, self.num_changes[namespace]))
                         self.update_thread[namespace].start()
