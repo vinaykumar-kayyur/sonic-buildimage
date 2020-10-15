@@ -46,7 +46,8 @@ $(DOCKER_SONIC_VS)_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                             $(BUFFERS_CONFIG_TEMPLATE) \
                             $(QOS_CONFIG_TEMPLATE) \
                             $(SONIC_VERSION) \
-                            $(UPDATE_CHASSISDB_CONFIG_SCRIPT)
+                            $(UPDATE_CHASSISDB_CONFIG_SCRIPT) \
+                            $(SYNCHRONOUS_MODE_TEMPLATE)
 
 $(DOCKER_SONIC_VS)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE_BUSTER)
 SONIC_DOCKER_IMAGES += $(DOCKER_SONIC_VS)

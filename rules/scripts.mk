@@ -23,6 +23,9 @@ $(SYSCTL_NET_CONFIG)_PATH = files/image_config/sysctl
 UPDATE_CHASSISDB_CONFIG_SCRIPT = update_chassisdb_config
 $(UPDATE_CHASSISDB_CONFIG_SCRIPT)_PATH = files/scripts
 
+SYNCHRONOUS_MODE_TEMPLATE = synchronous_mode.j2
+$(SYNCHRONOUS_MODE_TEMPLATE)_PATH = files/image_config/synchronous-mode
+
 SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(ARP_UPDATE_SCRIPT) \
                     $(ARP_UPDATE_VARS_TEMPLATE) \
@@ -30,4 +33,5 @@ SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(QOS_CONFIG_TEMPLATE) \
                     $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT) \
                     $(SYSCTL_NET_CONFIG) \
-                    $(UPDATE_CHASSISDB_CONFIG_SCRIPT)
+                    $(UPDATE_CHASSISDB_CONFIG_SCRIPT) \
+                    $(SYNCHRONOUS_MODE_TEMPLATE)

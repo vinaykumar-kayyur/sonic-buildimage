@@ -25,7 +25,8 @@ $(DOCKER_SONIC_P4)_DEPENDS += $(QUAGGA)
 
 $(DOCKER_SONIC_P4)_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                             $(ARP_UPDATE_SCRIPT) \
-                            $(ARP_UPDATE_VARS_TEMPLATE)
+                            $(ARP_UPDATE_VARS_TEMPLATE) \
+                            $(SYNCHRONOUS_MODE_TEMPLATE)
 
 $(DOCKER_SONIC_P4)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE)
 SONIC_DOCKER_IMAGES += $(DOCKER_SONIC_P4)
