@@ -162,8 +162,12 @@ class Fan(FanBase):
             int: percentage of the max fan speed
         """
         if self.is_psu_fan:
-            # Not like system fan, psu fan speed can not be modified, so target speed is N/A 
-            return self.get_speed()
+            try:
+                # Get PSU fan target speed according to current system cooling level
+                cooling_level = self.get_cooling_level()
+                return self.PSU_FAN_SPEED[cooling_level]
+            except Exception:
+                return self.get_speed()
 
         pwm = read_int_from_file(os.path.join(FAN_PATH, self.fan_speed_set_path))
         return int(round(pwm*100.0/PWM_MAX))
