@@ -184,6 +184,7 @@ class Chassis(ChassisBase):
                 self.oir_fd.close()
                 self.oir_fd = -1
                 self.epoll = -1
+            return False, change_dict
 
     def get_sfp(self, index):
         """
