@@ -15,11 +15,11 @@
 !
 {% if neighbor_addr | ipv4 %}
   address-family ipv4
-  neighbor {{ neighbor_addr }} peer-group PEER_V4
+    neighbor {{ neighbor_addr }} peer-group PEER_V4
 !
 {% elif neighbor_addr | ipv6 %}
   address-family ipv6
-  neighbor {{ neighbor_addr }} peer-group PEER_V6
+    neighbor {{ neighbor_addr }} peer-group PEER_V6
 !
 {% endif %}
 !

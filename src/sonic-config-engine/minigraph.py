@@ -554,9 +554,14 @@ def parse_cpg(cpg, hname, local_devices=[]):
                         bgp_session = bgp_sessions[peer]
                         if hostname.lower() == bgp_session['name'].lower():
                             bgp_session['asn'] = asn
+                    for peer in bgp_internal_sessions:
+                        bgp_internal_session = bgp_internal_sessions[peer]
+                        if hostname.lower() == bgp_internal_session['name'].lower():
+                            bgp_internal_session['asn'] = asn
 
     bgp_monitors = { key: bgp_sessions[key] for key in bgp_sessions if 'asn' in bgp_sessions[key] and bgp_sessions[key]['name'] == 'BGPMonitor' }
     bgp_sessions = { key: bgp_sessions[key] for key in bgp_sessions if 'asn' in bgp_sessions[key] and int(bgp_sessions[key]['asn']) != 0 }
+    bgp_internal_sessions = { key: bgp_internal_sessions[key] for key in bgp_internal_sessions if 'asn' in bgp_internal_sessions[key] and int(bgp_internal_sessions[key]['asn']) != 0 }
 
     return bgp_sessions, bgp_internal_sessions, myasn, bgp_peers_with_range, bgp_monitors
 
