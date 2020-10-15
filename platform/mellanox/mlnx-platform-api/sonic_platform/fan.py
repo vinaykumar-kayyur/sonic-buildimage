@@ -14,7 +14,7 @@ import subprocess
 try:
     from sonic_platform_base.fan_base import FanBase
     from .led import FanLed, ComponentFaultyIndicator
-    from .util import read_int_from_file, read_str_from_file, write_file
+    from .utils import read_int_from_file, read_str_from_file, write_file
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
