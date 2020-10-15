@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import sys
-    import struct
     import ctypes
     import subprocess
     from sonic_platform_base.watchdog_base import WatchdogBase

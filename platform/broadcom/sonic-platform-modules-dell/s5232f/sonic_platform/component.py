@@ -60,8 +60,7 @@ class Component(ComponentBase):
          ],
 
         ['BMC',
-         'Platform management controller for on-board temperature \ 
-          monitoring, in-chassis power, Fan and LED control',
+         'Platform management controller for on-board temperature,monitoring, in-chassis power, Fan and LED control',
          get_bmc_version
          ],
 

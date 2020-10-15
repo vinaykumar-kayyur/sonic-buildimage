@@ -10,7 +10,6 @@
 ########################################################################
 
 try:
-    import os
     import re
     from sonic_platform_base.component_base import ComponentBase
 

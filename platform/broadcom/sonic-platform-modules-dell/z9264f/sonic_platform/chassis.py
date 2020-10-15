@@ -105,7 +105,7 @@ class Chassis(ChassisBase):
         try:
             with os.fdopen(os.open(reg_file, os.O_RDONLY)) as fd:
                 retval = fd.read()
-        except:
+        except Exception as e:
             pass
         retval = retval.rstrip('\r\n')
         retval = retval.lstrip(" ")
@@ -175,7 +175,7 @@ class Chassis(ChassisBase):
                 if (retval != 0):
                     return False, change_dict
             return True, change_dict
-        except:
+        except Exception as e:
             return False, change_dict
         finally:
             if self.oir_fd != -1:
@@ -290,7 +290,7 @@ class Chassis(ChassisBase):
         try:
             with open(self.REBOOT_CAUSE_PATH) as fd:
                 reboot_cause = int(fd.read(), 16)
-        except:
+        except Exception as e:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
         if reboot_cause & 0x1:

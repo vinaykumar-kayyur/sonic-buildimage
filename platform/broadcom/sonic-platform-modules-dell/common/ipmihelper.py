@@ -54,7 +54,7 @@ class IpmiSensor(object):
             proc.wait()
             if not proc.returncode:
                 result = stdout.rstrip('\n')
-        except:
+        except Exception as e:
             pass
 
         for i in result.split():
@@ -180,7 +180,7 @@ class IpmiFru(object):
             proc.wait()
             if not proc.returncode:
                 result = stdout.rstrip('\n')
-        except:
+        except Exception as e:
             pass
 
         return result
@@ -254,7 +254,7 @@ class IpmiFru(object):
             proc.wait()
             if not proc.returncode:
                 result = stdout.rstrip('\n')
-        except:
+        except Exception as e:
             is_valid = False
 
         if (not result) or (not is_valid):
