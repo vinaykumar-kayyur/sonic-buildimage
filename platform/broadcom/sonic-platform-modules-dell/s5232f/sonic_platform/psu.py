@@ -39,7 +39,7 @@ class Psu(PsuBase):
         self.power_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index]["Power"])
         self.fru = IpmiFru(self.FRU_MAPPING[self.index])
 
-        self._fan_list.append(Fan(fan_index=self.index, psu_fan=True,
+        self._fan_list.append(Fan(fantray_index=1,fan_index=self.index, psu_fan=True,
             dependency=self))
 
     def get_name(self):
