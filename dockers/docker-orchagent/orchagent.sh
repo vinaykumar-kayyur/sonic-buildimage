@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 EXIT_SWSS_VARS_FILE_NOT_FOUND=1
-SWSS_VARS_FILE=/usr/share/sonic/templates/swss_vars.j2
-SYNC_MODE_FILE=/etc/sonic/synchronous_mode.j2
+SWSS_VARS_FILE=/etc/sonic/swss_syncd_vars.j2
 
 if [ ! -f "$SWSS_VARS_FILE" ]; then
     echo "SWSS vars template file not found"
@@ -10,7 +9,7 @@ if [ ! -f "$SWSS_VARS_FILE" ]; then
 fi
 
 # Retrieve SWSS vars from sonic-cfggen
-SWSS_VARS=$(sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t $SWSS_VARS_FILE -t $SYNC_MODE_FILE | jq -s add)
+SWSS_VARS=$(sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t $SWSS_VARS_FILE)
 export platform=$(echo $SWSS_VARS | jq -r '.asic_type')
 
 MAC_ADDRESS=$(echo $SWSS_VARS | jq -r '.mac')
