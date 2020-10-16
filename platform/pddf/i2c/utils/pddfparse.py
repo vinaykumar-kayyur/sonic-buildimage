@@ -971,25 +971,24 @@ class PddfParse():
             KEY='led'
             if not KEY in self.sysfs_obj:
                 self.sysfs_obj[KEY] = []
-                    path="pddf/devices/led"
-                    for attr in self.data[key]['i2c']['attr_list']:
-                        self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'], path, 
-                                self.sysfs_obj, KEY)
-                        self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'], path, 
-                                self.sysfs_obj, KEY)
-                        self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'], path, 
-                                self.sysfs_obj, KEY)
-                        self.sysfs_device(self.data[key]['dev_attr'], path, self.sysfs_obj, KEY)
-                        for attr_key in attr.keys():
-                                attr_path="pddf/devices/led/" + attr['attr_name']
-                                if (attr_key != 'attr_name' and attr_key != 'swpld_addr' and 
-                                        attr_key != 'swpld_addr_offset'):
-                                        self.sysfs_attr(attr_key, attr[attr_key], attr_path, self.sysfs_obj, KEY)
-                    sysfs_path="/sys/kernel/pddf/devices/led/dev_ops"
-                    if not sysfs_path in self.sysfs_obj[KEY]:
-                            self.sysfs_obj[KEY].append(sysfs_path)
-                    list=['/sys/kernel/pddf/devices/led/cur_state/color']
-                    self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
+                path="pddf/devices/led"
+                for attr in self.data[key]['i2c']['attr_list']:
+                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'], path, 
+                            self.sysfs_obj, KEY)
+                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'], path, 
+                            self.sysfs_obj, KEY)
+                    self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'], path, 
+                            self.sysfs_obj, KEY)
+                    self.sysfs_device(self.data[key]['dev_attr'], path, self.sysfs_obj, KEY)
+                    for attr_key in attr.keys():
+                        attr_path="pddf/devices/led/" + attr['attr_name']
+                        if (attr_key != 'attr_name' and attr_key != 'swpld_addr' and attr_key != 'swpld_addr_offset'):
+                            self.sysfs_attr(attr_key, attr[attr_key], attr_path, self.sysfs_obj, KEY)
+                sysfs_path="/sys/kernel/pddf/devices/led/dev_ops"
+                if not sysfs_path in self.sysfs_obj[KEY]:
+                    self.sysfs_obj[KEY].append(sysfs_path)
+                list=['/sys/kernel/pddf/devices/led/cur_state/color']
+                self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
 
 
     def validate_xcvr_device(self, dev, ops):
