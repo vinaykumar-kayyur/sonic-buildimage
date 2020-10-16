@@ -17,28 +17,36 @@
 import sys
 import time
 import argparse
+import subprocess
 import threading
 from docker import APIClient
 from swsssdk import SonicV2Connector
+from sonic_py_common import logger
+
+SYSLOG_IDENTIFIER = 'docker-wait-any'
+
+# Global logger instance
+log = logger.Logger(SYSLOG_IDENTIFIER)
 
 # Instantiate a global event to share among our threads
 g_thread_exit_event = threading.Event()
 g_service = []
 g_dep_services = []
 
-def check_warm_restart_state(container_name):
+# Check if System warm reboot, or Container warm restart is enabled.
+def is_warm_restart_enabled(container_name):
     state_db = SonicV2Connector(host='127.0.0.1')
     state_db.connect(state_db.STATE_DB, False)
 
-    # Get the system warm reboot enable state
     TABLE_NAME_SEPARATOR = '|'
     prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
+
+    # Get the system warm reboot enable state
     _hash = '{}{}'.format(prefix, 'system')
     wr_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
     wr_enable_state = True if wr_system_state == "true" else False
 
     # Get the container warm reboot enable state
-    prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
     _hash = '{}{}'.format(prefix, container_name)
     wr_container_state = state_db.get(state_db.STATE_DB, _hash, "enable")
     wr_enable_state |= True if wr_container_state == "true" else False
@@ -46,20 +54,35 @@ def check_warm_restart_state(container_name):
     state_db.close(state_db.STATE_DB)
     return wr_enable_state
 
+# Check if System fast reboot is enabled.
+def is_fast_reboot_enabled():
+    fb_system_state = 0
+    cmd='sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = proc.communicate()
+
+    if proc.returncode != 0:
+        log.log_error("Error running command '{}'".format(cmd))
+    elif stdout:
+        fb_system_state = stdout.rstrip('\n')
+
+    return fb_system_state
+
 def wait_for_container(docker_client, container_name):
     while True:
         while docker_client.inspect_container(container_name)['State']['Status'] != "running":
             time.sleep(1)
 
         docker_client.wait(container_name)
-        print("No longer waiting on container '{}'".format(container_name))
+
+        log.log_info("No longer waiting on container '{}'".format(container_name))
 
         # If this is a dependent service and WR is enabled, DON'T signal main thread to exit
-        if container_name in g_dep_services and check_warm_restart_state(container_name):
+        if container_name in g_dep_services and (is_warm_restart_enabled(container_name) or is_fast_reboot_enabled()):
             continue
-        else:
-            # Signal the main thread to exit
-            g_thread_exit_event.set()
+
+        # Signal the main thread to exit
+        g_thread_exit_event.set()
 
 def main():
     thread_list = []
@@ -74,12 +97,13 @@ Examples:
   docker-wait-any -s swss -d syncd teamd
 """)
 
-    parser.add_argument('-s','--service', nargs='+', default=None, help='The service which is waiting for dependent services')
-    parser.add_argument('-d','--dependent', nargs='*', default=None, help='The dependent services')
-
+    parser.add_argument('-s','--service', nargs='+', default=None, help='name of the service')
+    parser.add_argument('-d','--dependent', nargs='*', default=None, help='other dependent services')
     args = parser.parse_args()
+
     global g_service
     global g_dep_services
+
     if args.service is not None:
         g_service = args.service
     if args.dependent is not None:
@@ -87,6 +111,7 @@ Examples:
 
     container_names = g_service + g_dep_services
 
+    #If the service and dependents passed as args is empty, then exit
     if container_names == []:
         sys.exit(0)
 
