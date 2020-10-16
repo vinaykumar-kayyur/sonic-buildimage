@@ -127,7 +127,6 @@ class Fan(FanBase):
         Returns:
             bool: True if fan is present, False if not
         """
-        status = 0
         if self.is_psu_fan:
             return self.psu.get_presence() and self.psu.get_powergood_status() and os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path))
         else:
