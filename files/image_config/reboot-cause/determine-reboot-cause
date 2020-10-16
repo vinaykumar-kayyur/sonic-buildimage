@@ -151,7 +151,7 @@ def find_platform_reboot_info():
     return additional_reboot_info
 
 
-def create_prev_cause_history_file(previous_reboot_cause, comment):
+def create_prev_cause_history_file_and_symlink(previous_reboot_cause, comment):
     # Create reboot-cause-#time#.json under history directory
     FILE_GEN_TIME = str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
     REBOOT_CAUSE_HISTORY_FILE = os.path.join(REBOOT_CAUSE_HISTORY_DIR, "reboot-cause-{}.json".format(FILE_GEN_TIME))
@@ -240,7 +240,7 @@ def main():
         previous_reboot_cause = software_reboot_cause
 
     # Save the previous cause info into its history file as json format
-    create_prev_cause_history_file(previous_reboot_cause, additional_reboot_info)
+    create_prev_cause_history_file_and_symlink(previous_reboot_cause, additional_reboot_info)
     
     # Remove the old REBOOT_CAUSE_FILE
     if os.path.exists(REBOOT_CAUSE_FILE):
