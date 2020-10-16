@@ -35,9 +35,3 @@ class PddfPlatform(PlatformBase):
 
         PlatformBase.__init__(self)
         self._chassis = Chassis(self.pddf_data, self.pddf_plugin_data)
-
-
-
-# For testing, remove later on
-#if __name__=="__main__":
-    #obj = Platform()

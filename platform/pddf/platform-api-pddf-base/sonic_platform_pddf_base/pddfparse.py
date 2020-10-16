@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+import glob
 import json
+from jsonschema import validate
+import os
 import re
 import subprocess
-import glob
-import os, time, unicodedata
-from jsonschema import validate
+import time
+import unicodedata
 
 bmc_cache={}
 cache={}
@@ -37,7 +39,6 @@ class PddfParse():
             with open('/usr/share/sonic/platform/pddf/pddf-device.json') as f:
                   self.data = json.load(f)
         except IOError:
-            #print "Error - required JSON file not found"
             if os.path.exists('/usr/share/sonic/platform'):
                 os.unlink("/usr/share/sonic/platform")
 
@@ -69,11 +70,10 @@ class PddfParse():
 
         return (platform, hwsku)
 
-    #################################################################################################################################
+    #################################################################################################################
     #   GENERIC DEFS
-    #################################################################################################################################
+    #################################################################################################################
     def runcmd(self, cmd):
-        #print cmd
         rc = os.system(cmd)
         if rc!=0:
             print "%s -- command failed"%cmd
@@ -99,11 +99,9 @@ class PddfParse():
                 path = self.dev_parse(self.data[bb], { "cmd": "show_attr", "target":bb, "attr":attr })
                 if path != "":
                     string = path
-                #print "[%s]: %s"%(bb,string)
         else:
             if target in self.data.keys():
                 path = self.dev_parse(self.data[target], { "cmd": "show_attr", "target":target, "attr":attr })
-                #print "[test] str is %s" %str
                 if path != "":
                     string = path
 
@@ -148,9 +146,9 @@ class PddfParse():
 
 	return (color_map[color])
 
-    #################################################################################################################################
+    ###################################################################################################################
     #   SHOW ATTRIBIUTES DEFS
-    #################################################################################################################################
+    ###################################################################################################################
     def is_led_device_configured(self, device_name, attr_name):
         if device_name in self.data.keys():
             attr_list=self.data[device_name]['i2c']['attr_list']
@@ -162,7 +160,6 @@ class PddfParse():
 
     def show_device_sysfs(self, dev, ops):
         parent=dev['dev_info']['device_parent']
-        #print parent
         pdev=self.data[parent]
         if pdev['dev_info']['device_parent'] == 'SYSTEM':
             return "/sys/bus/i2c/devices/"+"i2c-%d"%int(pdev['i2c']['topo_info']['dev_addr'], 0)
@@ -182,13 +179,15 @@ class PddfParse():
 
         for attr in attr_list:
             if attr_name == attr['attr_name'] or attr_name == 'all':
-                #print self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%attr['attr_name']
                 if 'drv_attr_name' in attr.keys():
                     real_name = attr['drv_attr_name']
                 else:
                     real_name = attr['attr_name']
 
-                dsysfs_path = self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
+                dsysfs_path = self.show_device_sysfs(dev, ops) + \
+                        "/%d-00%x"%(int(dev['i2c']['topo_info']['parent_bus'], 0), 
+                                int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
+                                        "/%s"%real_name
                 if not dsysfs_path in self.data_sysfs_obj[KEY]:
                     self.data_sysfs_obj[KEY].append(dsysfs_path)
                 str += dsysfs_path+"\n"
@@ -240,13 +239,15 @@ class PddfParse():
                                 self.data_sysfs_obj[KEY].append(attr_path)
                             ret += attr_path + '\n'
                     else:
-                        #print self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%attr['attr_name']
                         if 'drv_attr_name' in attr.keys():
                             real_name = attr['drv_attr_name']
                         else:
                             real_name = attr['attr_name']
 
-                        dsysfs_path = self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
+                        dsysfs_path = self.show_device_sysfs(dev, ops) + \
+                                "/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
+                                        int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
+                                                "/%s"%real_name
                         if not dsysfs_path in self.data_sysfs_obj[KEY]:
                             self.data_sysfs_obj[KEY].append(dsysfs_path)
                             ret += dsysfs_path+"\n"
@@ -278,13 +279,15 @@ class PddfParse():
                             self.data_sysfs_obj[KEY].append(attr_path)
                         ret += attr_path + '\n'
                 else:
-                    #print self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%attr['attr_name']
                     if 'drv_attr_name' in attr.keys():
                         real_name = attr['drv_attr_name']
                     else:
                         real_name = attr['attr_name']
 
-                    dsysfs_path= self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
+                    dsysfs_path= self.show_device_sysfs(dev, ops) + \
+                            "/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
+                                    int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
+                                            "/%s"%real_name
                     if not dsysfs_path in self.data_sysfs_obj[KEY]:
                         self.data_sysfs_obj[KEY].append(dsysfs_path)
                     ret += dsysfs_path+"\n"
@@ -304,8 +307,8 @@ class PddfParse():
 
         for attr in attr_list:
             if attr_name == attr['attr_name'] or attr_name == 'all':
-                path = self.show_device_sysfs(dev, ops)+"/%d-00%x/" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))
-                #print  glob.glob(path+'hwmon/hwmon*/'+attr['attr_name'])
+                path = self.show_device_sysfs(dev, ops)+"/%d-00%x/" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
+                        int(dev['i2c']['topo_info']['dev_addr'], 0))
                 if 'drv_attr_name' in attr.keys():
                     real_name = attr['drv_attr_name']
                 else:
@@ -313,7 +316,6 @@ class PddfParse():
 
                 if (os.path.exists(path)):
                     full_path = glob.glob(path + 'hwmon/hwmon*/' + real_name)[0]
-                    #full_path = path + 'hwmon/hwmon/' + attr['attr_name']
                     dsysfs_path=full_path
                     if not dsysfs_path in self.data_sysfs_obj[KEY]:
                         self.data_sysfs_obj[KEY].append(dsysfs_path)
@@ -336,7 +338,6 @@ class PddfParse():
               dsysfs_path = "/sys/kernel/pddf/devices/sysstatus/sysstatus_data/" + attr['attr_name']
               if not dsysfs_path in self.data_sysfs_obj[KEY]:
                   self.data_sysfs_obj[KEY].append(dsysfs_path)
-              #print path
               ret += dsysfs_path+"\n"
         return ret
 
@@ -367,7 +368,10 @@ class PddfParse():
                         else:
                             real_name = attr['attr_name']
 
-                        dsysfs_path = self.show_device_sysfs(dev, ops)+"/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), int(dev['i2c']['topo_info']['dev_addr'], 0))+"/%s"%real_name
+                        dsysfs_path = self.show_device_sysfs(dev, ops) + \
+                                "/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
+                                        int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
+                                                "/%s"%real_name
                         if not dsysfs_path in self.data_sysfs_obj[KEY]:
                             self.data_sysfs_obj[KEY].append(dsysfs_path)
                             ret += dsysfs_path+"\n"
@@ -386,12 +390,14 @@ class PddfParse():
         return ret
 
 
-    #################################################################################################################################
+    ###################################################################################################################
     #   SHOW DEFS
-    #################################################################################################################################
+    ###################################################################################################################
     def check_led_cmds(self, key, ops):
             name = ops['target']+'_LED'
-            if (ops['target']=='config' or ops['attr']=='all') or (name==self.data[key]['dev_info']['device_name'] and ops['attr']==self.data[key]['dev_attr']['index']):
+            if (ops['target']=='config' or ops['attr']=='all') or \
+                    (name==self.data[key]['dev_info']['device_name'] and 
+                            ops['attr']==self.data[key]['dev_attr']['index']):
                 return (True)
             else:
                 return (False)
@@ -512,8 +518,6 @@ class PddfParse():
 
 
     def show_temp_sensor_device(self, dev, ops):
-            #path= "/sys/bus/i2c/devices/i2c-%d/new_device\n" % (int(dev['i2c']['topo_info']['parent_bus'], 0))
-            #print "temp: "+ path
             return
 
     def show_sysstatus_device(self, dev, ops):
@@ -565,40 +569,42 @@ class PddfParse():
                     self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
 
     def show_led_platform_device(self, key, ops):
-            if ops['attr']=='all' or ops['attr']=='PLATFORM':
-                    KEY='platform'
-                    if not KEY in self.sysfs_obj:
-                            self.sysfs_obj[KEY] = []
-                            path='pddf/devices/platform'
-                            self.sysfs_attr('num_psus', self.data['PLATFORM']['num_psus'], path, self.sysfs_obj, KEY)
-                            self.sysfs_attr('num_fantrays', self.data['PLATFORM']['num_fantrays'], path, self.sysfs_obj, KEY)
+        if ops['attr']=='all' or ops['attr']=='PLATFORM':
+            KEY='platform'
+            if not KEY in self.sysfs_obj:
+                self.sysfs_obj[KEY] = []
+                path='pddf/devices/platform'
+                self.sysfs_attr('num_psus', self.data['PLATFORM']['num_psus'], path, self.sysfs_obj, KEY)
+                self.sysfs_attr('num_fantrays', self.data['PLATFORM']['num_fantrays'], path, self.sysfs_obj, KEY)
 
     def show_led_device(self, key, ops):
-            if self.check_led_cmds(key, ops):
-                    KEY='led'
-                    if not KEY in self.sysfs_obj:
-                            self.sysfs_obj[KEY] = []
-                            path="pddf/devices/led"
-                            for attr in self.data[key]['i2c']['attr_list']:
-                                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'], path, self.sysfs_obj, KEY)
-                                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'], path, self.sysfs_obj, KEY)
-                                    self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'], path, self.sysfs_obj, KEY)
-                                    self.sysfs_device(self.data[key]['dev_attr'], path, self.sysfs_obj, KEY)
-                                    for attr_key in attr.keys():
-                                            attr_path="pddf/devices/led/" + attr['attr_name']
-                                            if (attr_key != 'attr_name' and attr_key != 'swpld_addr' and attr_key != 'swpld_addr_offset'):
-                                                    self.sysfs_attr(attr_key, attr[attr_key], attr_path, self.sysfs_obj, KEY)
-                            sysfs_path="/sys/kernel/pddf/devices/led/dev_ops"
-                            if not sysfs_path in self.sysfs_obj[KEY]:
-                                    self.sysfs_obj[KEY].append(sysfs_path)
-                            list=['/sys/kernel/pddf/devices/led/cur_state/color',
-                                    '/sys/kernel/pddf/devices/led/cur_state/color_state']
-                            self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
+        if self.check_led_cmds(key, ops):
+            KEY='led'
+            if not KEY in self.sysfs_obj:
+                self.sysfs_obj[KEY] = []
+                path="pddf/devices/led"
+                for attr in self.data[key]['i2c']['attr_list']:
+                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'], path, 
+                            self.sysfs_obj, KEY)
+                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'], path, 
+                            self.sysfs_obj, KEY)
+                    self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'], path, 
+                            self.sysfs_obj, KEY)
+                    self.sysfs_device(self.data[key]['dev_attr'], path, self.sysfs_obj, KEY)
+                    for attr_key in attr.keys():
+                        attr_path="pddf/devices/led/" + attr['attr_name']
+                        if (attr_key != 'attr_name' and attr_key != 'swpld_addr' and attr_key != 'swpld_addr_offset'):
+                            self.sysfs_attr(attr_key, attr[attr_key], attr_path, self.sysfs_obj, KEY)
+                sysfs_path="/sys/kernel/pddf/devices/led/dev_ops"
+                if not sysfs_path in self.sysfs_obj[KEY]:
+                    self.sysfs_obj[KEY].append(sysfs_path)
+                list=['/sys/kernel/pddf/devices/led/cur_state/color',
+                        '/sys/kernel/pddf/devices/led/cur_state/color_state']
+                self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
 
 
     def validate_xcvr_device(self, dev, ops):
         devtype_list = ['optoe1', 'optoe2']
-        #dev_addr_list = ['0x50', '0x51', '0x53']
         dev_attribs = ['xcvr_present', 'xcvr_reset', 'xcvr_intr_status', 'xcvr_lpmode']
         ret_val = "xcvr validation failed"
 
@@ -612,7 +618,6 @@ class PddfParse():
 
         elif dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PORT_MODULE']:
             for attr in dev['i2c']['attr_list']:
-                #if 'attr_name' in attr.keys() and 'xcvr_present' in attr.values():
                 if attr.get("attr_name") in dev_attribs:
                     ret_val = "Success"
                 else:
@@ -678,22 +683,15 @@ class PddfParse():
         print ret_val
 
     def validate_fan_device(self, dev, ops):
-        #devtype_list = ['fan_ctrl']
-        #dev_attribs = ['none']
         ret_val = "fan failed"
 
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['FAN']:
             if dev['i2c']['dev_attr']['num_fan'] is not None:
-                #numfans = dev['i2c']['dev_attr']['num_fan']
-                #for fn in range(0, numfans):
-                #    cmd = "fan"+fn+"_present"
-                #    if attr.get("attr_name") == cmd:
                 ret_val = "fan success"
 
         print ret_val
 
     def validate_psu_device(self, dev, ops):
-        #devtype_list = ['psu_pmbus']
         dev_attribs = ['psu_present', 'psu_model_name', 'psu_power_good', 'psu_mfr_id', 'psu_serial_num',
                         'psu_fan_dir', 'psu_v_out', 'psu_i_out', 'psu_p_out', 'psu_fan1_speed_rpm'
                       ]
@@ -712,9 +710,9 @@ class PddfParse():
 
         print ret_val
 
-    #################################################################################################################################
+    ###################################################################################################################
     #  SPYTEST 
-    #################################################################################################################################
+    ###################################################################################################################
     def verify_attr(self, key, attr, path):
             node="/sys/kernel/%s/%s"%(path, key)
             try:
@@ -738,7 +736,6 @@ class PddfParse():
         self.create_attr('index', self.data[device_name]['dev_attr']['index'], "pddf/devices/led")
         cmd="echo 'verify'  > /sys/kernel/pddf/devices/led/dev_ops"
         self.runcmd(cmd)
-        #print "\n"
 
     def validate_sysfs_creation(self, obj, validate_type):
             dir = '/sys/kernel/pddf/devices/'+validate_type
@@ -764,21 +761,21 @@ class PddfParse():
 
 
     def verify_sysfs_data(self, verify_type):
-            if (verify_type=='LED'):
-                    for key in self.data.keys():
-                            if key != 'PLATFORM':
-                                    attr=self.data[key]['dev_info']
-                                    if attr['device_type'] == 'LED':
-                                            self.get_led_device(key)
-                                            self.verify_attr('device_name', self.data[key]['dev_info'], "pddf/devices/led")
-                                            self.verify_attr('index', self.data[key]['dev_attr'], "pddf/devices/led")
-                                            for attr in self.data[key]['i2c']['attr_list']:
-                                                    path="pddf/devices/led/" + attr['attr_name']
-                                                    for entry in attr.keys():
-                                                            if (entry != 'attr_name' and entry != 'swpld_addr' and entry != 'swpld_addr_offset'):
-                                                                    self.verify_attr(entry, attr, path)
-                                                            if ( entry == 'swpld_addr' or entry == 'swpld_addr_offset'):
-                                                                    self.verify_attr(entry, attr, 'pddf/devices/led')
+        if (verify_type=='LED'):
+            for key in self.data.keys():
+                if key != 'PLATFORM':
+                    attr=self.data[key]['dev_info']
+                    if attr['device_type'] == 'LED':
+                        self.get_led_device(key)
+                        self.verify_attr('device_name', self.data[key]['dev_info'], "pddf/devices/led")
+                        self.verify_attr('index', self.data[key]['dev_attr'], "pddf/devices/led")
+                        for attr in self.data[key]['i2c']['attr_list']:
+                            path="pddf/devices/led/" + attr['attr_name']
+                            for entry in attr.keys():
+                                if (entry != 'attr_name' and entry != 'swpld_addr' and entry != 'swpld_addr_offset'):
+                                    self.verify_attr(entry, attr, path)
+                                if ( entry == 'swpld_addr' or entry == 'swpld_addr_offset'):
+                                    self.verify_attr(entry, attr, 'pddf/devices/led')
 
 
 
@@ -852,7 +849,6 @@ class PddfParse():
            kos.extend(self.data['PLATFORM']['pddf_kos'])
 
            if 'custom_kos' in self.data['PLATFORM']:
-               #custom_kos = self.data['PLATFORM']['custom_kos']
                kos.extend(self.data['PLATFORM']['custom_kos'])
 
         for mod in kos:
@@ -874,9 +870,9 @@ class PddfParse():
 
 
 
-    #################################################################################################################################
+    ###################################################################################################################
     #   PARSE DEFS
-    #################################################################################################################################
+    ###################################################################################################################
     def psu_parse(self, dev, ops):
         parse_str=""
         ret=""
@@ -898,7 +894,6 @@ class PddfParse():
     def fan_parse(self, dev, ops):
         parse_str=""
         ret=getattr(self, ops['cmd']+"_fan_device")(dev, ops )
-        #print "psu_parse -- %s"%str(ret)
         if not ret is None:
             if str(ret).isdigit():
                 if ret!=0:
@@ -916,7 +911,6 @@ class PddfParse():
     def temp_sensor_parse(self, dev, ops):
         parse_str=""
         ret=getattr(self, ops['cmd']+"_temp_sensor_device")(dev, ops )
-        #print "temp_sensor_parse -- %s"%str(ret)
         if not ret is None:
             if str(ret).isdigit() :
                 if ret!=0:
@@ -983,10 +977,6 @@ class PddfParse():
                 # in case of 'show_attr' functions
                 parse_str += ret
 
-        #for ch in dev['i2c']['channel']:
-            #ret = self.dev_parse(self.data[ch['dev']], ops)	
-            #if not ret is None:
-                #parse_str += ret
         return parse_str
 
 
@@ -1143,7 +1133,8 @@ class PddfParse():
             if attr['device_type'] == 'TEMP_SENSOR':
                     return self.temp_sensor_parse(dev, ops)
 
-            if attr['device_type'] == 'SFP' or attr['device_type'] == 'QSFP' or attr['device_type'] == 'SFP28' or attr['device_type'] == 'QSFP28':
+            if attr['device_type'] == 'SFP' or attr['device_type'] == 'SFP28' or \
+                    attr['device_type'] == 'QSFP' or attr['device_type'] == 'QSFP28':
                     return self.optic_parse(dev, ops)
 
             if attr['device_type'] == 'CPLD':
@@ -1173,7 +1164,6 @@ class PddfParse():
     def create_led_device(self, key, ops):
             if ops['attr']=='all' or ops['attr']==self.data[key]['dev_info']['device_name']:
                     path="pddf/devices/led"
-                    #ops_state=""
                     for attr in self.data[key]['i2c']['attr_list']:
                             self.create_attr('device_name', self.data[key]['dev_info']['device_name'], path)
                             self.create_device(self.data[key]['dev_attr'], path, ops)
@@ -1188,7 +1178,6 @@ class PddfParse():
 
 
     def led_parse(self, ops):
-            #print "led_parse cmd: " + ops['cmd']
             getattr(self, ops['cmd']+"_led_platform_device")("PLATFORM", ops)
             for key in self.data.keys():
                     if key != 'PLATFORM' and 'dev_info' in self.data[key]:
@@ -1240,15 +1229,12 @@ class PddfParse():
 
     def validate_pddf_devices(self, *args):
         self.populate_pddf_sysfsobj() 
-        #alist = [item for item in args]
-        #devtype = alist[0]
         v_ops = { 'cmd': 'validate', 'target':'all', 'attr':'all' }
-        #dev_parse(self.data, self.data[devtype], v_ops )
         self.dev_parse(self.data['SYSTEM'], v_ops )
 
-    #################################################################################################################################
+    ###################################################################################################################
     #   BMC APIs 
-    #################################################################################################################################
+    ###################################################################################################################
     def populate_bmc_cache_db(self, bmc_attr):
         bmc_cmd = str(bmc_attr['bmc_cmd']).strip()
 
@@ -1293,7 +1279,6 @@ class PddfParse():
             try:
                 value = subprocess.check_output(cmd, shell=True).strip()
             except Exception as e:
-                #print "Unable to run the ipmitool raw command: %s"%str(e)
                 pass
 
             if value != 'N/A':
@@ -1305,7 +1290,6 @@ class PddfParse():
             try:
                 value = subprocess.check_output(cmd, shell=True).strip()
             except Exception as e:
-                #print "Unable to run the ipmitool raw command: %s"%str(e)
                 pass
 
             if value != 'N/A':
@@ -1317,11 +1301,9 @@ class PddfParse():
             try:
                 value = subprocess.check_output(cmd, shell=True)
             except Exception as e:
-                #print "Unable to run the ipmitool raw command: %s"%str(e)
                 pass
 
             if value != 'N/A':
-                #value = value.decode("hex")
                 tmp = ''.join(chr(int(i, 16)) for i in value.split())
                 tmp = "".join(i for i in unicode(tmp) if unicodedata.category(i)[0]!="C")
                 value = str(tmp)
@@ -1354,7 +1336,6 @@ class PddfParse():
             value = self.non_raw_ipmi_set_request(bmc_attr, val)
 	return (value)
 
-    #
     # bmc-based attr: return attr obj
     # non-bmc-based attr: return empty obj
     def check_bmc_based_attr(self, device_name, attr_name):
@@ -1397,7 +1378,6 @@ class PddfParse():
             if bmc_attr=={}:
                return {}
             output['mode']="bmc"
-            #output['status']=self.bmc_set_cmd(bmc_attr, val)
             output['status']=False  # No set operation allowed for BMC attributes as they are handled by BMC itself
         else:
             output['mode']="i2c"

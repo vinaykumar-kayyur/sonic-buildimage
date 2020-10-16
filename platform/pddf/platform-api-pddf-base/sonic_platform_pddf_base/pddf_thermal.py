@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+# All the supported Temperature Sensor SysFS aattributes are 
+#- temp1_high_crit_threshold
+#- temp1_high_threshold
+#- temp1_input
+#- temp_low_threshold
+#- temp1_low_crit_threshold
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
@@ -157,7 +163,8 @@ class PddfThermal(ThermalBase):
             if self.thermal_obj_name in self.pddf_obj.data.keys():
                 dev= self.pddf_obj.data[self.thermal_obj_name]
                 topo_info = dev['i2c']['topo_info']
-                label="%s-i2c-%d-%x" % (topo_info['dev_type'], int(topo_info['parent_bus'], 0), int(topo_info['dev_addr'], 0))
+                label="%s-i2c-%d-%x" % (topo_info['dev_type'], int(topo_info['parent_bus'], 0), 
+                        int(topo_info['dev_addr'], 0))
 	        return (label)
             else:
                 return None

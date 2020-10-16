@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# Sample pddf_psuutil file 
-#
 # All the supported PSU SysFS aattributes are 
 #- psu_present
 #- psu_model_name
@@ -248,7 +246,6 @@ class PddfPsu(PsuBase):
         index = str(self.psu_index-1)
         psu_led_device = "PSU{}_LED".format(self.psu_index)
         if (not psu_led_device in self.pddf_obj.data.keys()):
-            #status= psu_led_device + " is not configured"
             # Implement a generic status_led color scheme
             if self.get_powergood_status():
                 return self.STATUS_LED_COLOR_GREEN

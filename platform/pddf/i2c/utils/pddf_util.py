@@ -15,13 +15,14 @@ command:
     switch-nonpddf  : switch to per platform, non-pddf mode
 """
 
-import os
 import commands
-import sys, getopt
 import logging
-import subprocess
+import getopt
+import os
 import shutil
-#import json
+import subprocess
+import sys
+
 import pddfparse
 
 PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
@@ -83,7 +84,6 @@ def main():
     if 'custom_kos' in pddf_obj.data['PLATFORM']:
         custom_kos = pddf_obj.data['PLATFORM']['custom_kos']
         kos.extend(['modprobe -f '+i for i in custom_kos])
-        # print kos
 
     for opt, arg in options:
         if opt in ('-h', '--help'):
@@ -168,7 +168,6 @@ def get_path_to_device():
 
     # Load platform module from source
     platform_path = "/".join([PLATFORM_ROOT_PATH, platform])
-    #hwsku_path = "/".join([platform_path, hwsku])
 
     return platform_path
 
@@ -248,12 +247,10 @@ def config_pddf_utils():
     # Take a backup of orig fancontrol
     if os.path.exists(device_path+"/fancontrol"):
         log_os_system("mv "+device_path+"/fancontrol"+" "+device_path+"/fancontrol.bak", 0)
-        #print "***Created fancontrol.bak"
     
     # Create a link to fancontrol of PDDF
     if os.path.exists(device_path+"/pddf/fancontrol") and not os.path.exists(device_path+"/fancontrol"):
         shutil.copy(device_path+"/pddf/fancontrol",device_path+"/fancontrol")
-        #print "*** Copied the pddf fancontrol file "
 
     # BMC support
     f_sensors="/usr/bin/sensors"
@@ -317,15 +314,13 @@ def cleanup_pddf_utils():
         else:
             # something seriously wrong. System is in PDDF mode but pddf whl pkg is not present
             print "Error: Fatal error as the system is in PDDF mode but the pddf .whl original is not present"
-    # ###################################################################################################################
+    # ################################################################################################################
 
     if os.path.exists(device_path+"/fancontrol"):
         os.remove(device_path+"/fancontrol")
-        #print "Removed the fancontrol"
 
     if os.path.exists(device_path+"/fancontrol.bak"):
         log_os_system("mv "+device_path+"/fancontrol.bak"+" "+device_path+"/fancontrol", 0)
-        #print "***Moved fancotnrol.bak to fancontrol"
 
     # BMC support
     f_sensors="/usr/bin/sensors"
@@ -512,7 +507,8 @@ def do_switch_pddf():
             if not status:
                 print "Successfully uninstalled the native sonic-platform whl pkg from pmon container"
             else:
-                print "Error: Unable to uninstall the sonic-platform whl pkg from pmon container. Do it manually before moving to nonpddf mode"
+                print "Error: Unable to uninstall the sonic-platform whl pkg from pmon container.\
+                        Do it manually before moving to nonpddf mode"
                 return status
         print "Stopping the pmon service ..."
         status, output = log_os_system("systemctl stop pmon.service", 1)
@@ -567,7 +563,8 @@ def do_switch_nonpddf():
             if not status:
                 print "Successfully uninstalled the sonic-platform whl pkg from pmon container"
             else:
-                print "Error: Unable to uninstall the sonic-platform whl pkg from pmon container. Do it manually before moving to nonpddf mode"
+                print "Error: Unable to uninstall the sonic-platform whl pkg from pmon container.\
+                        Do it manually before moving to nonpddf mode"
                 return status
         print "Stopping the pmon service ..."
         status, output = log_os_system("systemctl stop pmon.service", 1)
@@ -594,17 +591,6 @@ def do_switch_nonpddf():
         if not status:
             if FORCE==0:
                 return status
-
-        #print "Enabeling the 'skip_fand' from pmon startup script..."
-        #if os.path.exists('/usr/share/sonic/platform/pmon_daemon_control.json'):
-            #with open('/usr/share/sonic/platform/pmon_daemon_control.json','r') as fr:
-                #data = json.load(fr)
-            #if 'skip_fand' in data.keys():
-                #old_val = data['skip_fand']
-                #if not old_val:
-                    #data['skip_fand'] = True
-                    #with open('/usr/share/sonic/platform/pmon_daemon_control.json','w') as fw:
-                        #json.dump(data,fw)
 
         print "Restart the pmon service ..."
         status, output = log_os_system("systemctl start pmon.service", 1)

@@ -15,7 +15,6 @@ try:
     from sonic_platform.fan import Fan
     from sonic_platform.thermal import Thermal
     from sonic_platform.eeprom import Eeprom
-    #sys.path.append('/usr/share/sonic/platform/sonic_platform')
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

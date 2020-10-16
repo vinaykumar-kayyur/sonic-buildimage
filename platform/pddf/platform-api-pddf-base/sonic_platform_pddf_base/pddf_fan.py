@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-
-# Sample pddf_fanutil file 
 # All the supported FAN SysFS aattributes are
 #- fan<idx>_present
 #- fan<idx>_direction
@@ -10,8 +8,6 @@
 #- fan<idx>_fault
 # where idx is in the range [1-32]
 #
-
-
 
 try:
     from sonic_platform_base.fan_base import FanBase
@@ -48,10 +44,6 @@ class PddfFan(FanBase):
         if self.is_psu_fan:
             self.fans_psu_index = psu_index
 
-        #self.is_rear = is_rear #TODO: Should this be included in __init__ arguments
-
-
-
     def get_name(self):
         """
         Retrieves the fan name
@@ -86,24 +78,6 @@ class PddfFan(FanBase):
                 status = False
 
             return status
-
-    #def get_model(self):
-        #"""
-        #Retrieves the model number (or part number) of the device
-
-        #Returns:
-            #string: Model/part number of device
-        #"""
-        #raise NotImplementedError
-
-    #def get_serial(self):
-        #"""
-        #Retrieves the serial number of the device
-
-        #Returns:
-            #string: Serial number of device
-        #"""
-        #raise NotImplementedError
 
     def get_status(self):
         speed = self.get_speed()
@@ -169,7 +143,6 @@ class PddfFan(FanBase):
             if not output:
                 return 0
 
-            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -188,7 +161,6 @@ class PddfFan(FanBase):
             if not output:
                 return 0
             
-            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -197,7 +169,6 @@ class PddfFan(FanBase):
 
             pwm_to_dc = eval(self.plugin_data['FAN']['pwm_to_duty_cycle'])
             speed_percentage = int(round(pwm_to_dc(fpwm)))
-            #print "Speed: %d%%\n"%(speed_percentage)
 
             return speed_percentage
 
@@ -215,7 +186,6 @@ class PddfFan(FanBase):
             if not output:
                 return 0
             
-            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -232,7 +202,6 @@ class PddfFan(FanBase):
             if output is None:
                 return 0
 
-            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -261,7 +230,6 @@ class PddfFan(FanBase):
             if not output:
                 return 0
             
-            #mode = output['mode']
             output['status'] = output['status'].rstrip()
             if output['status'].isalpha():
                 return 0
@@ -312,7 +280,6 @@ class PddfFan(FanBase):
                 duty_cycle_to_pwm = eval(self.plugin_data['FAN']['duty_cycle_to_pwm'])
                 pwm = int(round(duty_cycle_to_pwm(speed)))
 
-                #print "New Speed: %d%% - PWM value to be set is %d\n"%(speed,pwm)
 
                 status = False
                 idx = (self.fantray_index-1)*self.platform['num_fans_pertray'] + self.fan_index
@@ -321,10 +288,8 @@ class PddfFan(FanBase):
                 if not output:
                     return False
                 
-                #mode = output['mode']
                 status = output['status']
 
-                #print "Done changing the speed of all the fans ... Reading the speed to crossscheck\n"
                 return status
 
     def set_status_led(self, color):
@@ -350,7 +315,6 @@ class PddfFan(FanBase):
         fan_led_device = "FANTRAY{}".format(self.fantray_index) + "_LED"
 
         if (not fan_led_device in self.pddf_obj.data.keys()):
-            #status = fan_led_device + " is not configured"
             # Implement a generic status_led color scheme
             if self.get_status():
                 return self.STATUS_LED_COLOR_GREEN

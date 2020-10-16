@@ -233,7 +233,6 @@ class PddfSfp(SfpBase):
             vendor_name_offset = OSFP_VENDOR_NAME_OFFSET
             vendor_pn_offset = OSFP_VENDOR_PN_OFFSET
             vendor_sn_offset = OSFP_VENDOR_SN_OFFSET
-            #cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
             sfp_type = 'OSFP'
 
@@ -246,7 +245,6 @@ class PddfSfp(SfpBase):
             vendor_name_offset = XCVR_VENDOR_NAME_OFFSET
             vendor_pn_offset = XCVR_VENDOR_PN_OFFSET
             vendor_sn_offset = XCVR_VENDOR_SN_OFFSET
-            #cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
             sfp_type = 'QSFP'
         else:
@@ -258,7 +256,6 @@ class PddfSfp(SfpBase):
             vendor_name_offset = XCVR_VENDOR_NAME_OFFSET
             vendor_pn_offset = XCVR_VENDOR_PN_OFFSET
             vendor_sn_offset = XCVR_VENDOR_SN_OFFSET
-            #cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
             sfp_type = 'SFP'
 
@@ -661,7 +658,6 @@ class PddfSfp(SfpBase):
         if not output:
             return False
 
-        #mode = output['mode']
         status = int(output['status'].rstrip())
 
         if status==1:
@@ -709,7 +705,6 @@ class PddfSfp(SfpBase):
                     rx_los = (sffbase().test_bit(data, 1) != 0)
 
         else:
-            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status==1:
@@ -756,7 +751,6 @@ class PddfSfp(SfpBase):
                     data = int(status_control_raw[0], 16)
                     tx_fault = (sffbase().test_bit(data, 2) != 0)
         else:
-            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status==1:
@@ -817,7 +811,6 @@ class PddfSfp(SfpBase):
 
                 return tx_disable
         else:
-            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status==1:
@@ -899,7 +892,6 @@ class PddfSfp(SfpBase):
                 # SFP
                 pass
         else:
-            #mode = output['mode']
             status = int(output['status'].rstrip())
 
             if status == 1:
@@ -923,7 +915,6 @@ class PddfSfp(SfpBase):
         if self.is_osfp_port:
             pass
         elif self.is_qsfp_port:
-            #offset = 0
             sfpd_obj = sff8436Dom()
             if sfpd_obj is None:
                 return False
