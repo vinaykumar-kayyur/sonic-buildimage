@@ -165,7 +165,7 @@ class Fan(FanBase):
             try:
                 # Get PSU fan target speed according to current system cooling level
                 cooling_level = self.get_cooling_level()
-                return self.PSU_FAN_SPEED[cooling_level]
+                return int(self.PSU_FAN_SPEED[cooling_level], 16)
             except Exception:
                 return self.get_speed()
 
