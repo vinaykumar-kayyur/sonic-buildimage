@@ -13,8 +13,8 @@ dependencies = [
     'sonic-py-common',
 ]
 
-# Python 3-only dependencies
 if sys.version_info.major == 3:
+    # Python 3-only dependencies
     dependencies += [
         # pyangbind v0.8.1 pull down enum43 which causes 're' package to malfunction.
         # Python3 has enum module and so pyangbind should be installed outside
@@ -23,7 +23,7 @@ if sys.version_info.major == 3:
         'Jinja2>=2.10'
     ]
 else:
-# Python 2-only dependencies
+    # Python 2-only dependencies
     dependencies += [
         # Jinja2 v3.0.0+ dropped support for Python 2.7 and causes setuptools to
         # malfunction on stretch slave docker.
