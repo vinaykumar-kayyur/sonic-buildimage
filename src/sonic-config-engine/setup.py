@@ -27,6 +27,7 @@ else:
     dependencies += [
         # Jinja2 v3.0.0+ dropped support for Python 2.7 and causes setuptools to
         # malfunction on stretch slave docker.
+        'future',
         'Jinja2<3.0.0',
         'pyangbind==0.6.0',
         'zipp==1.2.0', # importlib-resources needs zipp and seems to have a bug where it will try to install too new of a version for Python 2
