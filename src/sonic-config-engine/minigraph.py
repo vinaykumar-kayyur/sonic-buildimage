@@ -8,7 +8,7 @@ import socket
 import struct
 import json
 import copy
-import ipaddr as ipaddress
+import ipaddress
 from collections import defaultdict
 
 from lxml import etree as ET

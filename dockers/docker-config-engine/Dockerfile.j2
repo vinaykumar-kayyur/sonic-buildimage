@@ -6,11 +6,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 # Dependencies for sonic-cfggen
-RUN apt-get install -y python-lxml python-yaml python-bitarray python-pip python-dev
+RUN apt-get install -y python-pip python-dev python3-pip python3-dev
 
 RUN pip install --upgrade pip
-
-RUN pip install netaddr ipaddr jinja2 pyangbind==0.5.10
+RUN pip3 install --upgrade pip
 
 {% if docker_config_engine_debs.strip() %}
 COPY \
@@ -43,5 +42,5 @@ python-wheels/{{ whl }}{{' '}}
 {%- endif -%}
 
 ## Clean up
-RUN apt-get purge -y python-pip python-dev; apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN apt-get purge -y python-pip python-dev python3-pip python3-dev; apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs /python-wheels
