@@ -8,7 +8,7 @@ dependencies = [
     'bitarray==1.5.3',
     'ipaddress==1.0.23',
     'lxml==4.5.2',
-    'netaddr==0.8.0'
+    'netaddr==0.8.0',
     'pyyaml==5.3.1',
     'sonic-py-common',
 ]
