@@ -7,6 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update         && \
     apt-get install -y        \
         # Dependencies for sonic-cfggen
+        build-essential       \
         python-pip            \
         python-dev            \
         python-setuptools
@@ -31,6 +32,7 @@ RUN pip install --upgrade pip
 
 ## Clean up
 RUN apt-get purge -y               \
+        build-essential            \
         python-pip                 \
         python-dev              && \
     apt-get clean -y            && \
