@@ -8,15 +8,15 @@ RUN apt-get update         && \
     apt-get install -y        \
         # Dependencies for sonic-cfggen
         python-pip            \
+        python3-pip           \
         python-dev            \
+        python3-dev           \
         apt-utils             \
-        python-setuptools
+        python-setuptools     \
+        python3-setuptools
 
 RUN pip install --upgrade pip
-
-RUN pip install             \
-        jinja2              \
-        pyangbind==0.6.0
+RUN pip3 install --upgrade pip
 
 {% if docker_config_engine_buster_debs.strip() %}
 # Copy locally-built Debian package dependencies
@@ -37,7 +37,9 @@ RUN pip install             \
 ## Clean up
 RUN apt-get purge -y               \
         python-pip                 \
+        python3-pip                \
         python-dev              && \
+        python3-dev             && \
     apt-get clean -y            && \
     apt-get autoclean -y        && \
     apt-get autoremove -y       && \
