@@ -14,14 +14,15 @@
     NOTE: This script is written against docker Python package 4.1.0. Newer
     versions of docker may have a different API.
 """
-import sys
-import time
 import argparse
 import subprocess
+import sys
 import threading
+import time
+
 from docker import APIClient
-from swsssdk import SonicV2Connector
 from sonic_py_common import logger
+from swsssdk import SonicV2Connector
 
 SYSLOG_IDENTIFIER = 'docker-wait-any'
 
@@ -57,7 +58,7 @@ def is_warm_restart_enabled(container_name):
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
     fb_system_state = 0
-    cmd='sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
+    cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
 
@@ -77,7 +78,8 @@ def wait_for_container(docker_client, container_name):
 
         log.log_info("No longer waiting on container '{}'".format(container_name))
 
-        # If this is a dependent service and WR is enabled, DON'T signal main thread to exit
+        # If this is a dependent service and warm restart is enabled for the system/container,
+        # OR if the system is going through a fast-reboot, DON'T signal main thread to exit
         if container_name in g_dep_services and (is_warm_restart_enabled(container_name) or is_fast_reboot_enabled()):
             continue
 
@@ -111,7 +113,7 @@ Examples:
 
     container_names = g_service + g_dep_services
 
-    #If the service and dependents passed as args is empty, then exit
+    # If the service and dependents passed as args is empty, then exit
     if container_names == []:
         sys.exit(0)
 
