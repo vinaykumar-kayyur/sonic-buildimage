@@ -524,10 +524,10 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         """
         This function is intended to be spawned in a separate thread.
         Its purpose is to prevent unnecessary iptables updates if we receive
-        multiple rapid ACL table update notifications. It will refrain from
-        updating iptables if any newer updates were detected within the delay window
-        and spawn a new thread to check again. This process will repeat until there
-        have been no changes during the delay window, at which point it will update
+        multiple rapid ACL table update notifications. It sleeps for UPDATE_DELAY_SECS
+        then checks if any more ACL table updates were received in that window. If new
+        updates were received, it will sleep again and repeat the process until no
+        updates were received during the delay window, at which point it will update
         iptables using the current ACL rules.
         """
         while True:
