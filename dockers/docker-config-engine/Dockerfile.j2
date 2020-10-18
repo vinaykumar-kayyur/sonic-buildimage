@@ -11,6 +11,8 @@ RUN apt-get install -y build-essential python-pip python-dev python3-pip python3
 RUN pip install --upgrade pip
 RUN pip3 install --upgrade pip
 
+RUN apt-get purge -y python-pip python3-pip
+
 {% if docker_config_engine_debs.strip() %}
 COPY \
 {% for deb in docker_config_engine_debs.split(' ') -%}
@@ -42,5 +44,5 @@ python-wheels/{{ whl }}{{' '}}
 {%- endif -%}
 
 ## Clean up
-RUN apt-get purge -y build-essential python-pip python-dev python3-pip python3-dev; apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+RUN apt-get purge -y build-essential python-dev python3-dev; apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs /python-wheels
