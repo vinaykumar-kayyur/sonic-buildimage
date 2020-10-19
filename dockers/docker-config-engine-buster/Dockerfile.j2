@@ -16,8 +16,9 @@ RUN apt-get update         && \
         python-setuptools     \
         python3-setuptools
 
-RUN pip install --upgrade pip
+RUN pip2 install --upgrade pip
 RUN pip3 install --upgrade pip
+RUN apt-get purge -y python-pip python3-pip
 
 {% if docker_config_engine_buster_debs.strip() %}
 # Copy locally-built Debian package dependencies
@@ -37,8 +38,6 @@ RUN pip3 install --upgrade pip
 
 ## Clean up
 RUN apt-get purge -y               \
-        python-pip                 \
-        python3-pip                \
         python-dev                 \
         python3-dev                \
         build-essential         && \
