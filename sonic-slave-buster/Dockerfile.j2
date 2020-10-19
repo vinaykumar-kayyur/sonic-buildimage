@@ -370,7 +370,7 @@ RUN pip3 install "PyYAML>=5.1"
 RUN pip3 install redis
 
 # For supervisor build
-RUN pip install meld3
+RUN apt-get install python-meld3
 
 # For vs image build
 RUN pip install pexpect==4.6.0
