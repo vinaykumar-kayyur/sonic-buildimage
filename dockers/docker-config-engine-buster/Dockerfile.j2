@@ -7,6 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update         && \
     apt-get install -y        \
         # Dependencies for sonic-cfggen
+        build-essential       \
         python-pip            \
         python3-pip           \
         python-dev            \
@@ -38,8 +39,9 @@ RUN pip3 install --upgrade pip
 RUN apt-get purge -y               \
         python-pip                 \
         python3-pip                \
-        python-dev              && \
-        python3-dev             && \
+        python-dev                 \
+        python3-dev                \
+        build-essential         && \
     apt-get clean -y            && \
     apt-get autoclean -y        && \
     apt-get autoremove -y       && \
