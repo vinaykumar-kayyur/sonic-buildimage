@@ -33,7 +33,7 @@ KUBE_LABEL_UNSET_KEY = "UNSET"
 # If not, revert to local
 #
 SONIC_CTR_CONFIG = "/etc/sonic/remote_ctr.config.json"
-SONIC_CTR_CONFIG_PEND_SECS = "Revert_to_local_on_wait_seconds"
+SONIC_CTR_CONFIG_PEND_SECS = "revert_to_local_on_wait_seconds"
 DEFAULT_PEND_SECS = ( 5 * 60 )
 WAIT_POLL_SECS = 2
 

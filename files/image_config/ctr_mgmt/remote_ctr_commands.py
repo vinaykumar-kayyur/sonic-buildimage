@@ -61,8 +61,12 @@ def _run_command(cmd, timeout=5):
         (o, e) = proc.communicate(timeout)
         output = to_str(o)
         err = to_str(e)
-        ret = proc.returncode
+        if err:
+            ret = -1
+        else:
+            ret = proc.returncode
     except subprocess.TimeoutExpired as error:
+        print("kill here")
         proc.kill()
         output = ""
         err = str(error)
@@ -320,13 +324,10 @@ def kube_join_master(server, port, insecure, force=False):
         return
 
     systemd_service_action("start", "kubelet")
-    if not force:
-        if is_connected(server):
-            err = "Master {} is already connected. "
-            err += "Reset or join with force".format(server)
-            ret = -1
-
-    if ret == 0:
+    if ((not force) and is_connected(server)):
+        err = "Master {} is already connected. "
+        err += "Reset or join with force".format(server)
+    else:
         (ret, out, err) = _do_join(server, port, insecure)
 
     log_debug("join: ret={} out:{} err:{}".format(ret, out, err))
