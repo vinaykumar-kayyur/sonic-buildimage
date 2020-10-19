@@ -6,7 +6,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update         && \
     apt-get install -y        \
-        # Dependencies for sonic-cfggen
         build-essential       \
         python-pip            \
         python3-pip           \
@@ -19,6 +18,13 @@ RUN apt-get update         && \
 RUN pip2 install --upgrade pip
 RUN pip3 install --upgrade pip
 RUN apt-get purge -y python-pip python3-pip
+
+# For sonic-config-engine Python 3 package
+# Explicitly install pyangbind here, as pyangbind causes enum34 to be installed.
+# enum34 causes Python 're' package to not work properly as it redefines an incompatible enum.py module
+# https://github.com/robshakir/pyangbind/issues/232
+RUN pip3 install pyangbind==0.8.1
+RUN pip3 uninstall -y enum34
 
 {% if docker_config_engine_buster_debs.strip() %}
 # Copy locally-built Debian package dependencies
