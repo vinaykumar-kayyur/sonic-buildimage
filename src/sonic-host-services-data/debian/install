@@ -1,2 +1,1 @@
 systemd/*             /usr/lib/systemd/system/
-templates/*.j2        /usr/share/sonic/templates/
