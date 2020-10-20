@@ -1021,7 +1021,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     # If connected to a smart cable, get the connection position
     for port_name, port in ports.items():
-        port['mux_cable_connection'] = mux_cable_ports.get(port_name, "none")
+        if port_name in mux_cable_ports:
+            port['mux_cable_connection'] = mux_cable_ports[port_name]
 
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:

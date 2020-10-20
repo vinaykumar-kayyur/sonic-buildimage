@@ -169,4 +169,4 @@ class TestCfgGenCaseInsensitive(TestCase):
             if port_name in expected_mux_cable_ports:
                 self.assertEqual(port["mux_cable_connection"], expected_mux_cable_ports[port_name])
             else:
-                self.assertEqual(port["mux_cable_connection"], "none")
+                self.assertTrue("mux_cable_connection" not in port)
