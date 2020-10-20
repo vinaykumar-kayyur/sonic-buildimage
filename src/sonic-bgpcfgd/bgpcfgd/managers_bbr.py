@@ -45,7 +45,7 @@ class BBRMgr(Manager):
         log_err("The '%s' table shouldn't be removed from the db" % self.table_name)
 
     def __init(self):
-        """ Initialize BBRNgr. Extracted from constructor """
+        """ Initialize BBRMgr. Extracted from constructor """
         if not 'bgp' in self.constants:
             log_err("BBRMgr::Disabled: 'bgp' key is not found in constants")
             return
