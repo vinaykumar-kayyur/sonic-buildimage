@@ -103,15 +103,15 @@ class LldpManager(daemon_base.DaemonBase):
             if not port_alias:
                 self.log_info("Unable to retrieve port alias for port '{}'. Using port name instead.".format(port_name))
                 port_alias = port_name
-            
-            # Get the port description. If None or empty string, we'll skip this configuration 
-            port_desc = port_table_dict.get("description")
+            else:
+                # Set the port description to port alias, if it is available
+                port_desc = port_alias
 
         else:
             self.log_error("Port '{}' not found in {} table in Config DB. Using port name instead of port alias.".format(port_name, swsscommon.CFG_PORT_TABLE_NAME))
             port_alias = port_name
 
-        lldpcli_cmd = "lldpcli configure ports {0} lldp portidsubtype local {1}".format(port_name, port_alias)
+        lldpcli_cmd = "lldpcli configure ports {0} lldp portidsubtype local {1}".format(port_name, port_name)
 
         # if there is a description available, also configure that
         if port_desc:
