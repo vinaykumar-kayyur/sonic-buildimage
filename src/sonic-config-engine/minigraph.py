@@ -170,7 +170,7 @@ def parse_png(png, hname):
                     if intf_name in port_alias_map:
                         intf_name = port_alias_map[intf_name]
 
-                    connection_port = link.find(str(QName(ns, "StartPort"))).text.lower()
+                    connection_port = link.find(str(QName(ns, "StartPort"))).text
                     mux_cable_ports[intf_name] = connection_port
 
     return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports)
@@ -1022,7 +1022,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # If connected to a smart cable, get the connection position
     for port_name, port in ports.items():
         if port_name in mux_cable_ports:
-            port['mux_cable_connection'] = mux_cable_ports[port_name]
+            port['mux_cable'] = mux_cable_ports[port_name]
 
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:

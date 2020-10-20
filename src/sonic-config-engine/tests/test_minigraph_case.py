@@ -163,10 +163,10 @@ class TestCfgGenCaseInsensitive(TestCase):
     def test_mux_cable_parsing(self):
         result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         
-        expected_mux_cable_ports = {"Ethernet4":"l", "Ethernet8":"u"}
+        expected_mux_cable_ports = {"Ethernet4":"L", "Ethernet8":"U"}
         port_table = result['PORT']
         for port_name, port in port_table.items():
             if port_name in expected_mux_cable_ports:
-                self.assertEqual(port["mux_cable_connection"], expected_mux_cable_ports[port_name])
+                self.assertEqual(port["mux_cable"], expected_mux_cable_ports[port_name])
             else:
-                self.assertTrue("mux_cable_connection" not in port)
+                self.assertTrue("mux_cable" not in port)
