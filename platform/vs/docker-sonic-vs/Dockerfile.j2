@@ -32,9 +32,6 @@ RUN apt-get install -y net-tools \
                        libc-ares2 \
                        iproute2 \
                        grub2-common \
-                       python-click \
-                       python-natsort \
-                       python-tabulate \
                        bash-completion \
                        libelf1 \
                        libmnl0 \
@@ -46,7 +43,17 @@ RUN apt-get install -y net-tools \
                        conntrack \
                        iptables \
                        python3-pip \
-                       jq
+                       jq \
+                       libzmq5 \
+                       # For installing Python m2crypto package
+                       # (these can be uninstalled after installation)
+                       build-essential \
+                       python-dev \
+                       python3-dev \
+                       libssl-dev \
+                       swig \
+                       # For using Python m2crypto package
+                       openssl
 
 # install redis-server
 RUN curl -o redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
@@ -102,15 +109,13 @@ COPY python-wheels/{{ whl }}  python-wheels/
 # install PKGs after copying all PKGs to avoid dependency failure
 # use py3 to find python3 package, which is forced by wheel as of now
 {%- for whl in docker_sonic_vs_whls.split(' ') %}
-{%- if 'py3' in whl %}
-RUN pip3 install python-wheels/{{ whl }}
-{% else -%}
-RUN pip install python-wheels/{{ whl }}
-{%- endif %}
+RUN pip{% if 'py3' in whl %}3{% endif %} install python-wheels/{{ whl }}
 {%- endfor %}
 {% endif %}
 
 # Clean up
+RUN apt-get purge -y build-essential libssl-dev swig
+RUN apt-get purge -y python-dev python3-dev
 RUN apt-get clean -y
 RUN apt-get autoclean -y
 RUN apt-get autoremove -y
@@ -127,11 +132,11 @@ RUN sed -ri 's/^(save .*$)/# \1/g;                                              
             ' /etc/redis/redis.conf
 
 COPY ["50-default.conf", "/etc/rsyslog.d/"]
-COPY ["start.sh", "orchagent.sh", "files/remove_chassisdb_config", "/usr/bin/"]
+COPY ["start.sh", "orchagent.sh", "files/update_chassisdb_config", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin/"]
-COPY ["files/buffers_config.j2", "files/qos_config.j2", "/usr/share/sonic/templates/"]
+COPY ["files/buffers_config.j2", "files/qos_config.j2", "files/arp_update_vars.j2", "/usr/share/sonic/templates/"]
 COPY ["files/sonic_version.yml", "/etc/sonic/"]
 COPY ["database_config.json", "/etc/default/sonic-db/"]
 COPY ["hostname.j2", "/usr/share/sonic/templates/"]

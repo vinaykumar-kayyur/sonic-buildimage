@@ -1,5 +1,5 @@
-#!/usr/bin/env python
 from __future__ import print_function
+
 import calendar
 import math
 import os
@@ -547,6 +547,7 @@ def parse_meta(meta, hname):
     deployment_id = None
     region = None
     cloudtype = None
+    resource_type = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -573,7 +574,9 @@ def parse_meta(meta, hname):
                     region = value
                 elif name == "CloudType":
                     cloudtype = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype
+                elif name == "ResourceType":
+                    resource_type = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type
 
 
 def parse_linkmeta(meta, hname):
@@ -820,6 +823,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     neighbors = None
     devices = None
     sub_role = None
+    resource_type = None
     docker_routing_config_mode = "separated"
     port_speeds_default = {}
     port_speed_png = {}
@@ -871,7 +875,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -917,12 +921,16 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         current_device['sub_role'] = sub_role
         results['DEVICE_METADATA']['localhost']['sub_role'] =  sub_role
         results['DEVICE_METADATA']['localhost']['asic_name'] =  asic_name
+
+    if resource_type is not None:
+        results['DEVICE_METADATA']['localhost']['resource_type'] = resource_type
+
     results['BGP_NEIGHBOR'] = bgp_sessions
     results['BGP_MONITORS'] = bgp_monitors
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
     if mgmt_routes:
         # TODO: differentiate v4 and v6
-        iter(mgmt_intf.values()).next()['forced_mgmt_routes'] = mgmt_routes
+        next(iter(mgmt_intf.values()))['forced_mgmt_routes'] = mgmt_routes
     results['MGMT_PORT'] = {}
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
@@ -1044,7 +1052,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if port_config_file:
         port_set = set(ports.keys())
-        for (pc_name, mbr_map) in pcs.items():
+        for (pc_name, mbr_map) in list(pcs.items()):
             # remove portchannels that contain ports not existing in port_config.ini
             # when port_config.ini exists
             if not set(mbr_map['members']).issubset(port_set):
@@ -1059,7 +1067,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
 
-    for pc_intf in pc_intfs.keys():
+    for pc_intf in list(pc_intfs.keys()):
         # remove portchannels not in PORTCHANNEL dictionary
         if isinstance(pc_intf, tuple) and pc_intf[0] not in pcs:
             print("Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0]), file=sys.stderr)
@@ -1097,7 +1105,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
-    for nghbr in neighbors.keys():
+    for nghbr in list(neighbors.keys()):
         # remove port not in port_config.ini
         if nghbr not in ports:
             if port_config_file is not None:
@@ -1139,7 +1147,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'certs': {
             'server_crt': '/etc/sonic/credentials/restapiserver.crt',
             'server_key': '/etc/sonic/credentials/restapiserver.key',
-            'client_ca_crt': '/etc/sonic/credentials/restapiclient.crt',
+            'ca_crt': '/etc/sonic/credentials/restapica.crt',
             'client_crt_cname': 'client.restapi.sonic'
         }
     }

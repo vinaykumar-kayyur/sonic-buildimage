@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import re
 import subprocess
@@ -19,6 +20,9 @@ SONIC_VERSION_YAML_PATH = "/etc/sonic/sonic_version.yml"
 # Port configuration file names
 PORT_CONFIG_FILE = "port_config.ini"
 PLATFORM_JSON_FILE = "platform.json"
+
+# HwSKU configuration file name
+HWSKU_JSON_FILE = 'hwsku.json'
 
 # Multi-NPU constants
 # TODO: Move Multi-ASIC-related functions and constants to a "multi_asic.py" module
@@ -247,8 +251,26 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
 
     port_config_candidates = []
 
-    # Check for 'platform.json' file presence first
-    port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
+    # Check for 'hwsku.json' file presence first
+    hwsku_json_file = os.path.join(hwsku_path, HWSKU_JSON_FILE)
+
+    # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
+    # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
+
+    """
+    This length check for interfaces in platform.json is performed to make sure
+    the cfggen does not fail if port configuration information is not present
+    TODO: once platform.json has all the necessary port config information
+          remove this check
+    """
+
+    if os.path.isfile(hwsku_json_file):
+        if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
+            json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
+            platform_data = json.loads(open(json_file).read())
+            interfaces = platform_data.get('interfaces', None)
+            if interfaces is not None and len(interfaces) > 0:
+                port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
 
     # Check for 'port_config.ini' file presence in a few locations
     if asic:
