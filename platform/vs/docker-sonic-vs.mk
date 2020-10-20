@@ -12,7 +12,8 @@ $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS) \
                               $(LIBYANG) \
                               $(LIBYANG_CPP) \
                               $(LIBYANG_PY2) \
-                              $(SONIC_UTILITIES_DATA)
+                              $(SONIC_UTILITIES_DATA) \
+                              $(SONIC_HOST_SERVICES_DATA)
 
 # swsssdk is a dependency of sonic-py-common
 # TODO: sonic-py-common should depend on swsscommon instead
