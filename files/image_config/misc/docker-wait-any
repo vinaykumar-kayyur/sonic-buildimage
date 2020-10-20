@@ -21,8 +21,7 @@ import threading
 import time
 
 from docker import APIClient
-from sonic_py_common import logger
-from swsssdk import SonicV2Connector
+from sonic_py_common import logger, device_info
 
 SYSLOG_IDENTIFIER = 'docker-wait-any'
 
@@ -33,41 +32,6 @@ log = logger.Logger(SYSLOG_IDENTIFIER)
 g_thread_exit_event = threading.Event()
 g_service = []
 g_dep_services = []
-
-# Check if System warm reboot, or Container warm restart is enabled.
-def is_warm_restart_enabled(container_name):
-    state_db = SonicV2Connector(host='127.0.0.1')
-    state_db.connect(state_db.STATE_DB, False)
-
-    TABLE_NAME_SEPARATOR = '|'
-    prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
-
-    # Get the system warm reboot enable state
-    _hash = '{}{}'.format(prefix, 'system')
-    wr_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
-    wr_enable_state = True if wr_system_state == "true" else False
-
-    # Get the container warm reboot enable state
-    _hash = '{}{}'.format(prefix, container_name)
-    wr_container_state = state_db.get(state_db.STATE_DB, _hash, "enable")
-    wr_enable_state |= True if wr_container_state == "true" else False
-
-    state_db.close(state_db.STATE_DB)
-    return wr_enable_state
-
-# Check if System fast reboot is enabled.
-def is_fast_reboot_enabled():
-    fb_system_state = 0
-    cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    (stdout, stderr) = proc.communicate()
-
-    if proc.returncode != 0:
-        log.log_error("Error running command '{}'".format(cmd))
-    elif stdout:
-        fb_system_state = stdout.rstrip('\n')
-
-    return fb_system_state
 
 def wait_for_container(docker_client, container_name):
     while True:
@@ -80,7 +44,8 @@ def wait_for_container(docker_client, container_name):
 
         # If this is a dependent service and warm restart is enabled for the system/container,
         # OR if the system is going through a fast-reboot, DON'T signal main thread to exit
-        if container_name in g_dep_services and (is_warm_restart_enabled(container_name) or is_fast_reboot_enabled()):
+        if container_name in g_dep_services and
+           (device_info.is_warm_restart_enabled(container_name) or device_info.is_fast_reboot_enabled()):
             continue
 
         # Signal the main thread to exit
