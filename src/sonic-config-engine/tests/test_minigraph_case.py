@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import tests.common_utils as utils
+import minigraph
 
 from unittest import TestCase
 
@@ -159,3 +160,13 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{}")
 
+    def test_mux_cable_parsing(self):
+        result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
+        
+        expected_mux_cable_ports = {"Ethernet4":"l", "Ethernet8":"u"}
+        port_table = result['PORT']
+        for port_name, port in port_table.items():
+            if port_name in expected_mux_cable_ports:
+                self.assertEqual(port["mux_cable_connection"], expected_mux_cable_ports[port_name])
+            else:
+                self.assertEqual(port["mux_cable_connection"], "none")

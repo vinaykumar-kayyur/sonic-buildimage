@@ -90,6 +90,7 @@ def parse_png(png, hname):
     mgmt_port = ''
     port_speeds = {}
     console_ports = {}
+    mux_cable_ports = {}
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -162,7 +163,17 @@ def parse_png(png, hname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports)
+        if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
+            for link in child.findall(str(QName(ns, 'DeviceLinkBase'))):
+                if link.find(str(QName(ns, "ElementType"))).text == "LogicalLink":
+                    intf_name = link.find(str(QName(ns, "EndPort"))).text
+                    if intf_name in port_alias_map:
+                        intf_name = port_alias_map[intf_name]
+
+                    connection_port = link.find(str(QName(ns, "StartPort"))).text.lower()
+                    mux_cable_ports[intf_name] = connection_port
+
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports)
 
 def parse_asic_external_link(link, asic_name, hostname):
     neighbors = {}
@@ -829,6 +840,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     port_speed_png = {}
     port_descriptions = {}
     console_ports = {}
+    mux_cable_ports = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -871,7 +883,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
             elif child.tag == str(QName(ns, "PngDec")):
-                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname)
+                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
@@ -1006,6 +1018,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         # Note: FECDisabled only be effective on 100G port right now
         if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
             port['fec'] = 'rs'
+
+    # If connected to a smart cable, get the connection position
+    for port_name, port in ports.items():
+        port['mux_cable_connection'] = mux_cable_ports.get(port_name, "none")
 
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:
