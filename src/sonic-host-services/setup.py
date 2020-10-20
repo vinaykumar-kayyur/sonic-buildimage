@@ -1,27 +1,30 @@
 from setuptools import setup
 
 setup(
-    name='sonic-host-services',
-    version='1.0',
-    description='Python services which run in the SONiC host OS',
-    license='Apache 2.0',
-    author='SONiC Team',
-    author_email='linuxnetdev@microsoft.com',
-    url='https://github.com/Azure/sonic-buildimage',
-    maintainer='Joe LeVeque',
-    maintainer_email='jolevequ@microsoft.com',
-    scripts=[
+    name = 'sonic-host-services',
+    version = '1.0',
+    description = 'Python services which run in the SONiC host OS',
+    license = 'Apache 2.0',
+    author = 'SONiC Team',
+    author_email = 'linuxnetdev@microsoft.com',
+    url = 'https://github.com/Azure/sonic-buildimage',
+    maintainer = 'Joe LeVeque',
+    maintainer_email = 'jolevequ@microsoft.com',
+    scripts = [
         'scripts/procdockerstatsd',
     ],
-    install_requires=[
+    install_requires = [
         'sonic-py-common',
         'swsssdk>=2.0.1',
     ],
-    setup_requires= [
+    setup_requires = [
         'pytest-runner',
         'wheel'
     ],
-    classifiers=[
+    tests_require = [
+        'pytest',
+    ],
+    classifiers = [
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
@@ -33,5 +36,6 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: System',
     ],
-    keywords='sonic SONiC host services'
+    keywords = 'sonic SONiC host services',
+    test_suite = 'setup.get_test_suite'
 )
