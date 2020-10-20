@@ -44,8 +44,8 @@ def wait_for_container(docker_client, container_name):
 
         # If this is a dependent service and warm restart is enabled for the system/container,
         # OR if the system is going through a fast-reboot, DON'T signal main thread to exit
-        if container_name in g_dep_services and
-           (device_info.is_warm_restart_enabled(container_name) or device_info.is_fast_reboot_enabled()):
+        if (container_name in g_dep_services and
+            (device_info.is_warm_restart_enabled(container_name) or device_info.is_fast_reboot_enabled())):
             continue
 
         # Signal the main thread to exit
