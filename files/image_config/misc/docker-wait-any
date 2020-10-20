@@ -15,7 +15,6 @@
     versions of docker may have a different API.
 """
 import argparse
-import subprocess
 import sys
 import threading
 import time
