@@ -242,6 +242,8 @@ class HostConfigDaemon:
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
         self.is_multi_npu = device_info.is_multi_npu()
+        # Cache the values of 'state' field in 'FEATURE' table of each container
+        self.cached_feature_states = {}
 
     def update_feature_state(self, feature_name, state, feature_table):
         has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
@@ -314,6 +316,9 @@ class HostConfigDaemon:
                 syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
                 continue
 
+            # Store the initial value of 'state' field in 'FEATURE' table of each container
+            self.cached_feature_states[feature_name] = state
+
             self.update_feature_state(feature_name, state, feature_table)
 
     def aaa_handler(self, key, data):
@@ -356,7 +361,15 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
 
-        self.update_feature_state(feature_name, state, feature_table)
+        # Compare the current value of 'state' field with cached value, if they are not equal, the function
+        # 'update_feature_state(...)' will be invoked to enable/disable the corresponding container service.
+        # At the same time, the cached value will be updated with current value of 'state' field. The reason
+        # to cache the previous value of 'state' field and do the comparison at here is that if we issue the 
+        # 'config' command to update the value of 'AutoRestart' field in 'FEATURE' table, the function 
+        # 'update_feature_state(...)' will also be invoked and this behavior is not expected.
+        if self.cached_feature_states[feature_name] != state:
+            self.cached_feature_states = state
+            self.update_feature_state(feature_name, state, feature_table)
 
     def start(self):
         # Update all feature states once upon starting
