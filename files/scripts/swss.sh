@@ -170,7 +170,20 @@ wait() {
         else
             RUNNING=$(docker inspect -f '{{.State.Running}}' ${PEER})
         fi
-        if [[ x"$RUNNING" == x"true" ]]; then
+        ALL_DEPS_RUNNING=true
+        for dep in ${MULTI_INST_DEPENDENT}; do
+            if [[ ! -z $DEV ]]; then
+                DEP_RUNNING=$(docker inspect -f '{{.State.Running}}' ${dep}$DEV)
+            else
+                DEP_RUNNING=$(docker inspect -f '{{.State.Running}}' ${dep})
+            fi
+            if [[ x"$DEP_RUNNING" != x"true" ]]; then
+                ALL_DEPS_RUNNING=false
+                break
+            fi
+        done
+
+        if [[ x"$RUNNING" == x"true" && x"$ALL_DEPS_RUNNING" == x"true" ]]; then
             break
         else
             sleep 1
@@ -180,7 +193,11 @@ wait() {
     # NOTE: This assumes Docker containers share the same names as their
     # corresponding services
     for dep in ${MULTI_INST_DEPENDENT}; do
-        ALL_DEPS="$ALL_DEPS $dep$DEV"
+        if [[ ! -z $DEV ]]; then
+            ALL_DEPS="$ALL_DEPS ${dep}$DEV"
+        else
+            ALL_DEPS="$ALL_DEPS ${dep}"
+        fi
     done
 
     if [[ ! -z $DEV ]]; then
