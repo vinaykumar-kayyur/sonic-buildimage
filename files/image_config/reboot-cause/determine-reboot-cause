@@ -26,8 +26,8 @@ SYSLOG_IDENTIFIER = "determine-reboot-cause"
 
 REBOOT_CAUSE_DIR = "/host/reboot-cause/"
 REBOOT_CAUSE_HISTORY_DIR = "/host/reboot-cause/history/"
-REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "reboot-cause.txt"
-PREVIOUS_REBOOT_CAUSE_FILE = REBOOT_CAUSE_DIR + "previous-reboot-cause.json"
+REBOOT_CAUSE_FILE = os.path.join(REBOOT_CAUSE_DIR, "reboot-cause.txt")
+PREVIOUS_REBOOT_CAUSE_FILE = os.path.join(REBOOT_CAUSE_DIR,  "previous-reboot-cause.json")
 FIRST_BOOT_PLATFORM_FILE = "/tmp/notify_firstboot_to_platform"
 REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 # The following SONIC_BOOT_TYPEs come from the warm/fast reboot script which is in sonic-utilities
