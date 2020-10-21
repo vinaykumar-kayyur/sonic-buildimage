@@ -2,6 +2,9 @@
 Description=Management Framework container
 Requires=database.service
 After=database.service swss.service syncd.service
+BindsTo=sonic.target
+After=sonic.target
+Conflicts=mgmt-framework.timer
 Before=ntp-config.service
 
 [Service]
