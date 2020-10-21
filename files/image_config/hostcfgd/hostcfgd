@@ -316,7 +316,7 @@ class HostConfigDaemon:
                 syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
                 continue
 
-            # Store the initial value of 'state' field in 'FEATURE' table of each container
+            # Store the initial value of 'state' field in 'FEATURE' table of a specific container
             self.cached_feature_states[feature_name] = state
 
             self.update_feature_state(feature_name, state, feature_table)
@@ -365,10 +365,10 @@ class HostConfigDaemon:
         # 'update_feature_state(...)' will be invoked to enable/disable the corresponding container service.
         # At the same time, the cached value will be updated with current value of 'state' field. The reason
         # to cache the previous value of 'state' field and do the comparison at here is that if we issue the 
-        # 'config' command to update the value of 'AutoRestart' field in 'FEATURE' table, the function 
+        # 'config' command to update the value of 'auto_restart' field in 'FEATURE' table, the function 
         # 'update_feature_state(...)' will also be invoked and this behavior is not expected.
         if self.cached_feature_states[feature_name] != state:
-            self.cached_feature_states = state
+            self.cached_feature_states[feature_name] = state
             self.update_feature_state(feature_name, state, feature_table)
 
     def start(self):
