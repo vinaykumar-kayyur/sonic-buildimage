@@ -12,7 +12,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Create a new dir and copy all ONIE-platform-string-named dirs into it
 	mkdir ./device
-	cp -r -L ../../../device/*/* ./device/
+	for d in ../../../device/*; do
+		cp -r -L $$d/* ./device/
+	done
 
 	# Create hwsku for virtual switch
 	for d in `find -L ../../../device -maxdepth 3 -mindepth 3 -type d | grep -vE "(plugins|led-code)"`; do \
