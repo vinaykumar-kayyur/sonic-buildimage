@@ -179,8 +179,8 @@ def create_prev_cause_history_file_and_symlink(previous_reboot_cause, comment):
         os.makedirs(REBOOT_CAUSE_HISTORY_DIR)
 
     # Write the previous reboot cause to REBOOT_CAUSE_HISTORY_FILE as a JSON format
-    with open(REBOOT_CAUSE_HISTORY_FILE, "w") as reboot_cause_time_file:
-        json.dump(reboot_cause_dict, reboot_cause_time_file)
+    with open(REBOOT_CAUSE_HISTORY_FILE, "w") as reboot_cause_history_file:
+        json.dump(reboot_cause_dict, reboot_cause_history_file)
     
     # Create a symbolic link to previous-reboot-cause.json file
     os.symlink(REBOOT_CAUSE_HISTORY_FILE, PREVIOUS_REBOOT_CAUSE_FILE)
