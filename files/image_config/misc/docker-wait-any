@@ -3,14 +3,26 @@
 """
     docker-wait-any
     This script takes one or more Docker container names as arguments,
-    and it will block indefinitely while all of the specified containers
-    are running. If any of the specified containers stop, the script will
+    [-s] argument is for the service which invokes this script
+    [-d] argument is to list the dependent services for the above service.
+    It will block indefinitely while all of the specified containers
+    are running.If any of the specified containers stop, the script will
     exit.
+
     This script was created because the 'docker wait' command is lacking
     this functionality. It will block until ALL specified containers have
     stopped running. Here, we spawn multiple threads and wait on one
     container per thread. If any of the threads exit, the entire
-    application will exit.
+    application will exit, unless we are in a scenario where the following
+    conditions are met.
+    (i) the container is a dependent service
+    (ii)  warm restart is enabled at system level or for that container OR
+          fast reboot is enabled system level
+    In this scenario, the g_thread_exit_event won't be propogated to the parent,
+    instead the thread will continue to do docker_client.wait again.This help's
+    cases where we need the dependent container to be warm-restarted without
+    affecting other services (eg: warm restart of teamd service)
+
     NOTE: This script is written against docker Python package 4.1.0. Newer
     versions of docker may have a different API.
 """
