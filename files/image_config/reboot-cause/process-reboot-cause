@@ -76,19 +76,19 @@ def main():
         sys.exit("This utility must be run as root")
 
     # Set a default previous reboot cause
-    last_reboot_cause = REBOOT_CAUSE_UNKNOWN
+    previous_reboot_cause = REBOOT_CAUSE_UNKNOWN
 
     # Read the most recent reboot cause file and log data to syslog
     if os.path.exists(PREVIOUS_REBOOT_CAUSE_FILE):
         with open(PREVIOUS_REBOOT_CAUSE_FILE, "r") as last_cause_file:
             data = json.load(last_cause_file)
             if data['user']:
-                last_reboot_cause = USER_ISSUED_REBOOT_CAUSE_REGEX.format(data['cause'], data['user'], data['time'])
+                previous_reboot_cause = USER_ISSUED_REBOOT_CAUSE_REGEX.format(data['cause'], data['user'], data['time'])
             else:
-                last_reboot_cause = "{}".format(data['cause'])
+                previous_reboot_cause = "{}".format(data['cause'])
 
     # Log the last reboot cause to the syslog
-    sonic_logger.log_info("Previous reboot cause: {}".format(last_reboot_cause))
+    sonic_logger.log_info("Previous reboot cause: {}".format(previous_reboot_cause))
 
     if os.path.exists(REBOOT_CAUSE_HISTORY_DIR):
         # Read the previous reboot cause from saved reboot-cause files and save the previous reboot cause upto 10 entry to the state db
