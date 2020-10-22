@@ -3,7 +3,7 @@ Maintainer: Joe LeVeque <jolevequ@microsoft.com>
 Section: misc
 Priority: optional
 Standards-Version: 0.1
-Build-Depends: debhelper (>=10), dh-systemd (>= 1.5)
+Build-Depends: debhelper (>=11)
 
 Package: sonic-host-services-data
 Architecture: all

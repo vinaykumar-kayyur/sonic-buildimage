@@ -3,10 +3,7 @@
 build:
 
 %:
-	dh $@ --with=systemd
+	dh $@
 
-override_dh_installinit:
-	dh_installinit --name=procdockerstatsd
-
-override_dh_systemd_start:
-	dh_systemd_start --no-start
+override_dh_installsystemd:
+	dh_installsystemd --no-start --name=procdockerstatsd
