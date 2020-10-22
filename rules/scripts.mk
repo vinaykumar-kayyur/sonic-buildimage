@@ -23,6 +23,9 @@ $(SYSCTL_NET_CONFIG)_PATH = files/image_config/sysctl
 UPDATE_CHASSISDB_CONFIG_SCRIPT = update_chassisdb_config
 $(UPDATE_CHASSISDB_CONFIG_SCRIPT)_PATH = files/scripts
 
+COPP_CONFIG_TEMPLATE = copp_cfg.j2
+$(COPP_CONFIG_TEMPLATE)_PATH = files/image_config/copp
+
 SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(ARP_UPDATE_SCRIPT) \
                     $(ARP_UPDATE_VARS_TEMPLATE) \
@@ -30,4 +33,5 @@ SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(QOS_CONFIG_TEMPLATE) \
                     $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT) \
                     $(SYSCTL_NET_CONFIG) \
-                    $(UPDATE_CHASSISDB_CONFIG_SCRIPT)
+                    $(UPDATE_CHASSISDB_CONFIG_SCRIPT) \
+                    $(COPP_CONFIG_TEMPLATE)
