@@ -10,16 +10,17 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./wpa
 
 	# Clone wpa repo
-	# git clone https://salsa.debian.org/debian/wpa.git
-	git clone https://github.com/Pterosaur/wpa-debian.git wpa
+	git clone https://salsa.debian.org/debian/wpa.git
 	pushd ./wpa
 
 	# Reset HEAD to the commit of the proper tag
 	# NOTE: Using "git checkout <tag_name>" here detaches our HEAD,
 	# which stg doesn't like, so we use this method instead
 	# NOTE: For some reason, tags in the Debian monit repo are prefixed with "1%"
-	# git reset --hard debian/2\%$(WPASUPPLICANT_VERSION)
-	git checkout dev/sonic_macsec
+	git reset --hard debian/2\%$(WPASUPPLICANT_VERSION)
+
+	stg init
+	stg import -s ../patch/series
 
 	# Build source and Debian packages
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
