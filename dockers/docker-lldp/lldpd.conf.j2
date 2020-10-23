@@ -1,7 +1,7 @@
 {% set mgmt_if = {} %}
 {% if MGMT_INTERFACE %}
 {% for interface in MGMT_INTERFACE.keys()|list %}
-{% if not ':' in interface[1] %}
+{% if interface[1]|ipv4 %}
 {% if mgmt_if.update({'port_name' : interface[0]}) %} {% endif %}
 {% if mgmt_if.update({'ipv4' : interface[1].split('/')[0]}) %} {% endif %}
 {% endif %}
