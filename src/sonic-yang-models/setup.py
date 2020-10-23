@@ -39,7 +39,8 @@ setup(
         'pyang'
     ],
     setup_requires = [
-        'pytest-runner'
+        'pytest-runner',
+        'wheel'
     ],
     include_package_data=True,
     keywords='sonic_yang_models',

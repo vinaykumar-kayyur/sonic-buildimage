@@ -40,7 +40,8 @@ setup(
         'ijson==2.6.1'
     ],
     setup_requires = [
-        'pytest-runner'
+        'pytest-runner',
+        'wheel'
     ],
     include_package_data=True,
     keywords='sonic_yang_mgmt',
