@@ -1,5 +1,0 @@
-{
-    "join_latency_on_boot_seconds": 10,
-    "Revert_to_local_on_wait_seconds": 30
-}
-

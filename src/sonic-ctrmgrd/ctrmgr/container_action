@@ -32,8 +32,8 @@ KUBE_LABEL_UNSET_KEY = "UNSET"
 # Get seconds to wait for remote docker to start.
 # If not, revert to local
 #
-SONIC_KUBE_CONFIG = "/etc/sonic/kube.config.json"
-SONIC_KUBE_CONFIG_PEND_SECS = "Revert_to_local_on_wait_seconds"
+SONIC_CTR_CONFIG = "/etc/sonic/remote_ctr.config.json"
+SONIC_CTR_CONFIG_PEND_SECS = "revert_to_local_on_wait_seconds"
 DEFAULT_PEND_SECS = ( 5 * 60 )
 WAIT_POLL_SECS = 2
 
@@ -53,8 +53,8 @@ def init():
 
 def get_config_data(fld, dflt):
     """ Read entry from kube config file """
-    if os.path.exists(SONIC_KUBE_CONFIG):
-         with open(SONIC_KUBE_CONFIG, "r") as s:
+    if os.path.exists(SONIC_CTR_CONFIG):
+         with open(SONIC_CTR_CONFIG, "r") as s:
             d = json.load(s)
             if fld in d:
                 return d[fld]
@@ -228,7 +228,7 @@ def container_wait(feature):
             docker_id = feature
         elif fallback:
             pend_wait_secs = get_config_data(
-                    SONIC_KUBE_CONFIG_PEND_SECS, DEFAULT_PEND_SECS)
+                    SONIC_CTR_CONFIG_PEND_SECS, DEFAULT_PEND_SECS)
 
     debug_msg("{}: set_owner:{} ct_owner:{} state:{} id:{} pend={}".format(
         feature, set_owner, current_owner, remote_state, docker_id,

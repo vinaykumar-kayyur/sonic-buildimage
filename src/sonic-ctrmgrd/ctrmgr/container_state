@@ -148,9 +148,10 @@ def get_docker_id():
 
 
 def instance_lower(feature, version):
-    if state_data[CURRENT_OWNER] == "none":
+    if ((state_data[REMOTE_STATE] == "none") or
+            (state_data[REMOTE_STATE] == "stopped")):
         # No one running to compare version
-        return
+        return False
 
     ct_version = state_data[VERSION]
     ct = ct_version.split('.')
@@ -234,7 +235,6 @@ def container_up(args):
             # Else kubelet will continue to re-deploy every 5 mins, until
             # master removes the lable to un-deploy.
             #
-            drop_label(args.feature, args.version)
             do_exit(args.feature, "bail out as current deploy id is lower")
 
         update_data(args.feature, { VERSION: args.version })

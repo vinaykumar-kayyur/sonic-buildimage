@@ -13,8 +13,7 @@ from sonic_py_common import device_info
 import kube_commands
 
 # Kube config file
-SONIC_KUBE_CONFIG = "/etc/sonic/kube.config.json"
-SONIC_KUBE_CONFIG_JOIN_LATENCY = "join_latency_on_boot_seconds"
+SONIC_CTR_CONFIG = "/etc/sonic/remote_ctr.config.json"
 
 CONFIG_DB_NAME = "CONFIG_DB"
 STATE_DB_NAME = "STATE_DB"
@@ -49,15 +48,7 @@ KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 KUBE_LABEL_UNSET_KEY = "UNSET"
 
-def join_pending_interval_seconds():
-    ret = 5        # TODO change to 5 minutes (5 * 60)
-    if os.path.exists(SONIC_KUBE_CONFIG):
-        with open(SONIC_KUBE_CONFIG, "r") as s:
-            d = json.load(s)
-            if SONIC_KUBE_CONFIG_JOIN_LATENCY in d:
-                ret = d[SONIC_KUBE_CONFIG_JOIN_LATENCY]
-    return ret
-
+remote_connected = False
 
 dflt_cfg_ser = {
         CFG_SER_IP: "",
@@ -88,6 +79,15 @@ dflt_st_feat= {
         ST_FEAT_SYS_STATE: ""
         }
 
+JOIN_LATENCY = "join_latency_on_boot_seconds"
+JOIN_RETRY = "retry_join_interval_seconds"
+LABEL_RETRY = "retry_labels_update_seconds"
+
+remote_ctr_config = {
+    JOIN_LATENCY: 10,
+    JOIN_RETRY: 10,
+    LABEL_RETRY: 2
+    }
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
@@ -122,6 +122,13 @@ def restart_systemd_service(feat, owner):
     else:
         syslog.syslog(syslog.LOG_INFO,
                 "Restarted {} to switch to {}".format(feat, owner))
+
+
+def init():
+    if os.path.exists(SONIC_CTR_CONFIG):
+        with open(SONIC_CTR_CONFIG, "r") as s:
+            d = json.load(s)
+            remote_ctr_config.update(d)
 
 
 class MainServer:
@@ -318,7 +325,7 @@ class RemoteServerHandler:
         if not self.st_server[ST_FEAT_UPDATE_TS]:
             # This is upon system start. Sleep 10m before join
             self.start_time += datetime.timedelta(
-                    seconds=join_pending_interval_seconds())
+                    seconds=remote_ctr_config[JOIN_LATENCY])
             server.register_timer(self.start_time, self.handle_update)
             self.pending = True
         else:
@@ -340,7 +347,7 @@ class RemoteServerHandler:
         if self.pending:
             tnow = datetime.datetime.now()
             if tnow < self.start_time:
-                # Pausing for initial latency since reboot
+                # Pausing for initial latency since reboot or last retry
                 due_secs = (self.start_time - tnow).seconds
                 log_debug("Pending to start in {} seconds at {}".format(
                     due_secs, self.start_time))
@@ -353,8 +360,10 @@ class RemoteServerHandler:
         # Called by timer / main thread.
         # Main thread calls only if timer is not running.
         #
+        if not self.cfg_server:
+            return
         log_debug("server: handle_update called")
-        self.pending_join = False
+        self.pending = False
         ip = self.cfg_server[CFG_SER_IP]
         disable = self.cfg_server[CFG_SER_DISABLE] != "false"
         
@@ -373,22 +382,37 @@ class RemoteServerHandler:
 
 
     def do_reset(self):
+        global remote_connected
+
         log_debug("call kube_commands.kube_reset_master")
         kube_commands.kube_reset_master(True)
 
         self.st_server[ST_SER_CONNECTED] = "false"
         log_debug("kube_reset_master called")
 
+        remote_connected = False
 
     def do_join(self, ip, port, insecure):
-        kube_commands.kube_join_master(ip, port, insecure)
+        global remote_connected
+        (ret, out, err) = kube_commands.kube_join_master(
+                ip, port, insecure)
 
-        self.st_server[ST_SER_CONNECTED] = "true"
-        self.st_server[ST_SER_IP] = ip
-        self.st_server[ST_SER_PORT] = port
+        if ret == 0:
+            self.st_server[ST_SER_CONNECTED] = "true"
+            self.st_server[ST_SER_IP] = ip
+            self.st_server[ST_SER_PORT] = port
+            remote_connected = True
 
-        set_node_labels(self.server)
-        log_debug("kube_join_master called")
+            set_node_labels(self.server)
+            log_debug("kube_join_master succeeded")
+        else:
+            log_debug("kube_join_master failed")
+            # Join failed. Retry after an interval
+            self.start_time = datetime.datetime.now()
+            self.start_time += datetime.timedelta(
+                    seconds=remote_ctr_config[JOIN_RETRY])
+            self.server.register_timer(self.start_time, self.handle_update)
+            self.pending = True
 
 
 #
@@ -436,7 +460,7 @@ class FeatureTransitionHandler:
                     label_add))
         # read labels and add/drop if different
         update_labels(self.server,
-                { "{}".format(feat): ("true" if label_add else "") })
+                { "{}_enabled".format(feat): ("true" if label_add else "") })
 
 
         # service_restart
@@ -522,7 +546,7 @@ class LabelsPendingHandler:
             if self.unset_labels != data:
                 self.unset_labels = dict(data)
                 upd = True
-        if upd and not self.pending:
+        if remote_connected and upd and not self.pending:
             self.update_node_labels()
 
 
@@ -531,12 +555,14 @@ class LabelsPendingHandler:
         ret = kube_commands.kube_write_labels(self.set_labels, self.unset_labels)
         if (ret != 0):
             self.pending = True
-            ts += (datetime.datetime.now() + datetime.timedelta(seconds=2))
+            pause = remote_ctr_config[LABEL_RETRY]
+            ts += (datetime.datetime.now() + datetime.timedelta(seconds=pause))
             server.register_timer(ts, self.update_node_labels)
         return
 
 
 def main():
+    init()
     server = MainServer()
     RemoteServerHandler(server)
     FeatureTransitionHandler(server)

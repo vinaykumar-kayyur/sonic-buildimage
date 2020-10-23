@@ -23,9 +23,6 @@ $(SYSCTL_NET_CONFIG)_PATH = files/image_config/sysctl
 RM_CHASSISDB_CONFIG_SCRIPT = remove_chassisdb_config
 $(RM_CHASSISDB_CONFIG_SCRIPT)_PATH = files/scripts
 
-CONTAINER_MONITOR_SCRIPT = container_monitor.py
-$(CONTAINER_MONITOR_SCRIPT)_PATH = files/image_config/ctr_mgmt
-
 SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(ARP_UPDATE_SCRIPT) \
                     $(ARP_UPDATE_VARS_TEMPLATE) \
@@ -33,8 +30,4 @@ SONIC_COPY_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                     $(QOS_CONFIG_TEMPLATE) \
                     $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT) \
                     $(SYSCTL_NET_CONFIG) \
-                    $(RM_CHASSISDB_CONFIG_SCRIPT) \
-                    $(CONTAINER_MONITOR_SCRIPT) \
-                    $(SONIC_CTRMGRD_STATE_SCRIPT) \
-                    $(SONIC_CTRMGRD_CFG_JSON) \
-                    $(SONIC_CTRMGRD_SERVICE)
+                    $(RM_CHASSISDB_CONFIG_SCRIPT)

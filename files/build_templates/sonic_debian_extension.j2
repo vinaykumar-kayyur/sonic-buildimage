@@ -342,23 +342,22 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 # Copy remote container mangement files
 # File called from each container upon start/stop to record the state
 sudo mkdir -p ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/container_state ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
+sudo mkdir -p ${FILESYSTEM_ROOT_ETC_SONIC}
+
+# Install remote Container mgmt package
+SONIC_CTRMGMT_WHEEL_NAME=$(basename {{sonic_ctrmgmt_py3_wheel_path}})
+sudo cp {{sonic_ctrmgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_CTRMGMT_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_CTRMGMT_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_CTRMGMT_WHEEL_NAME
+
+sudo cp ${files_path}/container_state ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
 sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_state
 
-# Replaces docker start/stop/wait/kill with this container_action.
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/container_action $FILESYSTEM_ROOT/usr/bin/
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/container_action
-
 # Config file used by container mgmt scripts/service
-sudo mkdir -p ${FILESYSTEM_ROOT_ETC_SONIC}
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
+sudo cp ${files_path}/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
 
 # Remote container management service files
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/ctrmgrd.py $FILESYSTEM_ROOT/usr/bin/
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/ctrmgrd.py 
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/remote_ctr_commands.py $FILESYSTEM_ROOT/usr/bin/
-sudo chmod a+x $FILESYSTEM_ROOT/usr/bin/remote_ctr_commands.py
-sudo cp ${IMAGE_CONFIGS}/ctr_mgmt/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
+sudo cp ${files_path}/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ctrmgrd.service
 
 # Copy the buffer configuration template
