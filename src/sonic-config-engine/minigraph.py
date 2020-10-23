@@ -170,8 +170,7 @@ def parse_png(png, hname):
                     if intf_name in port_alias_map:
                         intf_name = port_alias_map[intf_name]
 
-                    connection_port = link.find(str(QName(ns, "StartPort"))).text
-                    mux_cable_ports[intf_name] = connection_port
+                    mux_cable_ports[intf_name] = "true"
 
     return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports)
 
