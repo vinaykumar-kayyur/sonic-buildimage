@@ -23,8 +23,8 @@ class Logger(object):
     LOG_PRIORITY_INFO = syslog.LOG_INFO
     LOG_PRIORITY_DEBUG = syslog.LOG_DEBUG
 
-    DEFAULT_LOG_FACILITY = syslog.LOG_USER
-    DEFAULT_LOG_OPTION = syslog.LOG_NDELAY
+    DEFAULT_LOG_FACILITY = LOG_FACILITY_USER
+    DEFAULT_LOG_OPTION = LOG_OPTION_NDELAY
 
     def __init__(self, log_identifier=None, log_facility=DEFAULT_LOG_FACILITY, log_option=DEFAULT_LOG_OPTION):
         self._syslog = syslog
