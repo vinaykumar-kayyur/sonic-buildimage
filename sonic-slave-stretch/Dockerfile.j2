@@ -291,7 +291,14 @@ RUN apt-get update && apt-get install -y \
 # For libyang
         swig \
 # For SWI Tools
-        python-m2crypto
+        python-m2crypto \
+# For sonic-mgmt-framework
+        autoconf \
+        m4 \
+        libxml2-utils \
+        xsltproc \
+        python-lxml \
+        libexpat1-dev
 
 ## Config dpkg
 ## install the configuration file if it’s currently missing
@@ -348,7 +355,12 @@ RUN pip2 install j2cli==0.3.10
 # For sonic snmpagent mock testing
 RUN pip3 install mockredispy==2.9.3
 
-RUN pip3 install "PyYAML>=5.1"
+# For sonic-mgmt-framework
+RUN pip2 install "PyYAML==5.3.1"
+RUN pip3 install "PyYAML==5.3.1"
+RUN pip2 install "lxml==4.6.1"
+RUN pip3 install "lxml==4.6.1"
+
 
 # For sonic-platform-common testing
 RUN pip3 install redis
