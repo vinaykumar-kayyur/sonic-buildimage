@@ -6,7 +6,7 @@ Description: bgpmon.py -- populating bgp related information in stateDB.
 
     Initial creation of this daemon is to assist SNMP agent in obtaining the 
     BGP related information for its MIB support. The MIB that this daemon is
-    assiting is for the CiscoBgp4MIB (Neighbor state only). If there are other
+    assisting is for the CiscoBgp4MIB (Neighbor state only). If there are other
     BGP related items that needs to be updated in a periodic manner in the 
     future, then more can be added into this process.
 
@@ -32,7 +32,7 @@ import time
 
 PIPE_BATCH_MAX_COUNT = 50
 
-class BgpStateGet():
+class BgpStateGet:
     def __init__(self):
         # list peer_l stores the Neighbor peer Ip address
         # dic peer_state stores the Neighbor peer state entries
@@ -80,7 +80,7 @@ class BgpStateGet():
             return
 
         peer_info = json.loads(output)
-        # cmd ran successfully, safe to Clean the "new" lists/dic for new sanpshot
+        # cmd ran successfully, safe to Clean the "new" lists/dic for new snapshot
         del self.new_peer_l[:]
         self.new_peer_state.clear()
         for key, value in peer_info.items():
@@ -136,7 +136,7 @@ class BgpStateGet():
                 self.flush_pipe(data)
         # Check for stale state entries to be cleaned up
         while len(self.peer_l) > 0:
-            # remove this from the stateDB and the current nighbor state entry
+            # remove this from the stateDB and the current neighbor state entry
             peer = self.peer_l.pop(0)
             del_key = "NEIGH_STATE_TABLE|%s" % peer
             data[del_key] = None
@@ -156,10 +156,10 @@ def main():
     try:
         bgp_state_get = BgpStateGet()
     except Exception as e:
-        syslog.syslog(syslog.LOG_ERR, "{}: error exit 1, reason {}".format(THIS_MODULE, str(e)))
+        syslog.syslog(syslog.LOG_ERR, "{}: error exit 1, reason {}".format("THIS_MODULE", str(e)))
         exit(1)
 
-    # periodically obtain the new neighbor infomraton and update if necessary
+    # periodically obtain the new neighbor information and update if necessary
     while True:
         time.sleep(15)
         if bgp_state_get.bgp_activity_detected():
