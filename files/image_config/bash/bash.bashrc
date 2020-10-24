@@ -58,9 +58,9 @@ fi
 tty | grep ttyS >/dev/null && TMOUT=900
 
 # if SSH_TARGET_CONSOLE_LINE was set, attach to console line interactive cli directly
-if [ ! -z "$SSH_TARGET_CONSOLE_LINE" ]; then
+if [ -n "$SSH_TARGET_CONSOLE_LINE" ]; then
     # enter the interactive cli
-    sudo connect $SSH_TARGET_CONSOLE_LINE
+    sudo connect line $SSH_TARGET_CONSOLE_LINE
 
     # exit after console session ended
     exit
