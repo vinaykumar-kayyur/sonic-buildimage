@@ -1,6 +1,6 @@
 # sonic-bgpcfgd package
 
-SONIC_BGPCFGD = sonic_bgpcfgd-1.0-py2-none-any.whl
+SONIC_BGPCFGD = sonic_bgpcfgd-1.0-py3-none-any.whl
 $(SONIC_BGPCFGD)_SRC_PATH = $(SRC_PATH)/sonic-bgpcfgd
 # These dependencies are only needed becuase they are dependencies
 # of sonic-config-engine and bgpcfgd explicitly calls sonic-cfggen
