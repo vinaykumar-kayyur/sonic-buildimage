@@ -1,0 +1,11 @@
+{
+    "CONFIG_DB__DEVICE_METADATA": {
+        "localhost": {
+            "type": "LeafRouter",
+            "sub_role": "BackEnd"
+        }
+    },
+    "CONFIG_DB__BGP_BBR": {
+        "status": "disabled"
+    }
+}

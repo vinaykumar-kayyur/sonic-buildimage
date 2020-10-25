@@ -12,8 +12,8 @@
 try:
     from sonic_eeprom import eeprom_tlvinfo
     import binascii
-except ImportError, e:
-    raise ImportError (str(e) + "- required module not found")
+except ImportError as e:
+    raise ImportError(str(e) + "- required module not found")
 
 
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
@@ -35,9 +35,13 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             else:
                 self.eeprom_data = self.read_eeprom()
         except:
-            self.eeprom_data = "N/A"
             if not self.is_module:
-                raise RuntimeError("Eeprom is not Programmed")
+                try:
+                    self.eeprom_data = self.read_eeprom()
+                except:
+                    raise RuntimeError("Eeprom is not Programmed")
+            else:
+                self.eeprom_data = "N/A"
         else:
             eeprom = self.eeprom_data
 

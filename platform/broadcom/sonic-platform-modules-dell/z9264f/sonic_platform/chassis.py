@@ -11,12 +11,23 @@
 try:
     import os
     import select
+    import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.eeprom import Eeprom
-
+    from sonic_platform.component import Component
+    from sonic_platform.psu import Psu
+    from sonic_platform.watchdog import Watchdog
+    from sonic_platform.fan import Fan
+    from sonic_platform.thermal import Thermal
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+MAX_Z9264F_FANTRAY =4
+MAX_Z9264F_FAN = 2
+MAX_Z9264F_COMPONENT = 8 # BIOS,BMC,FPGA,SYSTEM CPLD,4 SLAVE CPLDs
+MAX_Z9264F_PSU = 2
+MAX_Z9264F_THERMAL = 8
 
 
 class Chassis(ChassisBase):
@@ -24,6 +35,7 @@ class Chassis(ChassisBase):
     DELLEMC Platform-specific Chassis class
     """
 
+    REBOOT_CAUSE_PATH = "/host/reboot-cause/platform/reboot_reason"
     OIR_FD_PATH = "/sys/bus/pci/devices/0000:04:00.0/port_msi"
 
     oir_fd = -1
@@ -38,7 +50,7 @@ class Chassis(ChassisBase):
         self.PORT_START = 1
         self.PORT_END = 66
         PORTS_IN_BLOCK = (self.PORT_END + 1)
-        _sfp_port = range(65, self.PORT_END + 1)
+        _sfp_port = list(range(65, self.PORT_END + 1))
         eeprom_base = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
         for index in range(self.PORT_START, PORTS_IN_BLOCK):
@@ -52,6 +64,25 @@ class Chassis(ChassisBase):
 
         self._eeprom = Eeprom()
 
+        self._watchdog = Watchdog()
+        
+        for i in range(MAX_Z9264F_COMPONENT):
+            component = Component(i)
+            self._component_list.append(component)
+            
+        for i in range(MAX_Z9264F_PSU):
+            psu = Psu(i)
+            self._psu_list.append(psu)
+
+        for i in range(MAX_Z9264F_FANTRAY):
+            for j in range(MAX_Z9264F_FAN):
+                fan = Fan(i,j)
+                self._fan_list.append(fan)
+
+        for i in range(MAX_Z9264F_THERMAL):
+            thermal = Thermal(i)
+            self._thermal_list.append(thermal)
+        
         for port_num in range(self.PORT_START, (self.PORT_END + 1)):
             presence = self.get_sfp(port_num).get_presence()
             if presence:
@@ -68,7 +99,7 @@ class Chassis(ChassisBase):
     def _get_register(self, reg_file):
         retval = 'ERR'
         if (not os.path.isfile(reg_file)):
-            print reg_file,  'not found !'
+            print(reg_file,  'not found !')
             return retval
 
         try:
@@ -228,14 +259,6 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.base_mac_addr()
 
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-        Returns:
-            A string containing the hardware serial number for this chassis.
-        """
-        return self._eeprom.serial_number_str()
-
     def get_system_eeprom_info(self):
         """
         Retrieves the full content of system EEPROM information for the chassis
@@ -245,3 +268,40 @@ class Chassis(ChassisBase):
             values.
         """
         return self._eeprom.system_eeprom_info()
+
+    def get_reboot_cause(self):
+        """
+        Retrieves the cause of the previous reboot
+        Returns:
+            A tuple (string, string) where the first element is a string
+            containing the cause of the previous reboot. This string must be
+            one of the predefined strings in this class. If the first string
+            is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
+            to pass a description of the reboot cause.
+        """
+        try:
+            with open(self.REBOOT_CAUSE_PATH) as fd:
+                reboot_cause = int(fd.read(), 16)
+        except:
+            return (self.REBOOT_CAUSE_NON_HARDWARE, None)
+
+        if reboot_cause & 0x1:
+            return (self.REBOOT_CAUSE_POWER_LOSS, None)
+        elif reboot_cause & 0x2:
+            return (self.REBOOT_CAUSE_NON_HARDWARE, None)
+        elif reboot_cause & 0x4:
+            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "PSU Shutdown")
+        elif reboot_cause & 0x8:
+            return (self.REBOOT_CAUSE_THERMAL_OVERLOAD_CPU, None)
+        elif reboot_cause & 0x10:
+            return (self.REBOOT_CAUSE_WATCHDOG, None)
+        elif reboot_cause & 0x20:
+            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "BMC Shutdown")
+        elif reboot_cause & 0x40:
+            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Hot-Swap Shutdown")
+        elif reboot_cause & 0x80:
+            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Reset Button Shutdown")
+        elif reboot_cause & 0x100:
+            return (self.REBOOT_CAUSE_HARDWARE_OTHER, "Reset Button Cold Reboot")
+        else:
+            return (self.REBOOT_CAUSE_NON_HARDWARE, None)

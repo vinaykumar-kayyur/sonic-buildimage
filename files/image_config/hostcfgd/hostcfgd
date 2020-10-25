@@ -1,8 +1,8 @@
 #!/usr/bin/python -u
 # -*- coding: utf-8 -*-
 
+import ast
 import os
-import re
 import sys
 import subprocess
 import syslog
@@ -10,6 +10,7 @@ import copy
 import jinja2
 import ipaddr as ipaddress
 from swsssdk import ConfigDBConnector
+from sonic_py_common import device_info
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -22,13 +23,6 @@ NSS_CONF = "/etc/nsswitch.conf"
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
 TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
-
-
-def is_valid_hostname(hostname):
-    if hostname[-1] == "." or len(hostname) > 253:
-        return False
-    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in hostname.split("."))
 
 
 def is_true(val):
@@ -47,6 +41,8 @@ def obfuscate(data):
         return data[0] + '*****'
     else:
         return data
+
+
 
 class Iptables(object):
     def __init__(self):
@@ -122,7 +118,7 @@ class Iptables(object):
             try:
                 subprocess.check_call(cmd, shell=True)
             except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
                               .format(err.cmd, err.returncode, err.output))
 
 class AaaCfg(object):
@@ -186,6 +182,10 @@ class AaaCfg(object):
         auth.update(self.auth)
         tacplus_global = self.tacplus_global_default.copy()
         tacplus_global.update(self.tacplus_global)
+        if 'src_ip' in tacplus_global:
+            src_ip = tacplus_global['src_ip']
+        else:
+            src_ip = None
 
         servers_conf = []
         if self.tacplus_servers:
@@ -200,7 +200,7 @@ class AaaCfg(object):
         env = jinja2.Environment(loader=jinja2.FileSystemLoader('/'), trim_blocks=True)
         env.filters['sub'] = sub
         template = env.get_template(template_file)
-        pam_conf = template.render(auth=auth, servers=servers_conf)
+        pam_conf = template.render(auth=auth, src_ip=src_ip, servers=servers_conf)
         with open(PAM_AUTH_CONF, 'w') as f:
             f.write(pam_conf)
 
@@ -215,15 +215,15 @@ class AaaCfg(object):
         # Add tacplus in nsswitch.conf if TACACS+ enable
         if 'tacacs+' in auth['login']:
             if os.path.isfile(NSS_CONF):
-                self.modify_single_file(NSS_CONF, [ "'/tacplus/b'", "'/^passwd/s/compat/tacplus &/'"])
+                self.modify_single_file(NSS_CONF, [ "'/tacplus/b'", "'/^passwd/s/compat/tacplus &/'", "'/^passwd/s/files/tacplus &/'" ])
         else:
             if os.path.isfile(NSS_CONF):
-                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //'" ])
+                self.modify_single_file(NSS_CONF, [ "'/^passwd/s/tacplus //g'" ])
 
         # Set tacacs+ server in nss-tacplus conf
         template_file = os.path.abspath(NSS_TACPLUS_CONF_TEMPLATE)
         template = env.get_template(template_file)
-        nss_tacplus_conf = template.render(debug=self.debug, servers=servers_conf)
+        nss_tacplus_conf = template.render(debug=self.debug, src_ip=src_ip, servers=servers_conf)
         with open(NSS_TACPLUS_CONF, 'w') as f:
             f.write(nss_tacplus_conf)
 
@@ -238,10 +238,88 @@ class HostConfigDaemon:
         tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
         self.aaacfg = AaaCfg()
         self.aaacfg.load(aaa, tacacs_global, tacacs_server)
-        self.hostname_cache=""
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
         self.iptables.load(lpbk_table)
+        self.is_multi_npu = device_info.is_multi_npu()
+        # Cache the values of 'state' field in 'FEATURE' table of each container
+        self.cached_feature_states = {}
+
+    def update_feature_state(self, feature_name, state, feature_table):
+        has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
+        has_global_scope = ast.literal_eval(feature_table[feature_name].get('has_global_scope', 'True'))
+        has_per_asic_scope = ast.literal_eval(feature_table[feature_name].get('has_per_asic_scope', 'False'))
+
+        # Create feature name suffix depending feature is running in host or namespace or in both 
+        feature_name_suffix_list = (([feature_name] if has_global_scope or not self.is_multi_npu else []) +
+                                   ([(feature_name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
+                                    if has_per_asic_scope and self.is_multi_npu]))
+
+        if not feature_name_suffix_list:
+            syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
+                          .format(feature_name))
+
+        feature_suffixes = ["service"] + (["timer"] if has_timer else [])
+
+        if state == "enabled":
+            start_cmds = []
+            for feature_name_suffix in feature_name_suffix_list:
+                for suffix in feature_suffixes:
+                    start_cmds.append("sudo systemctl unmask {}.{}".format(feature_name_suffix, suffix))
+                # If feature has timer associated with it, start/enable corresponding systemd .timer unit
+                # otherwise, start/enable corresponding systemd .service unit
+                start_cmds.append("sudo systemctl enable {}.{}".format(feature_name_suffix, feature_suffixes[-1]))
+                start_cmds.append("sudo systemctl start {}.{}".format(feature_name_suffix, feature_suffixes[-1]))
+                for cmd in start_cmds:
+                    syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
+                    try:
+                        subprocess.check_call(cmd, shell=True)
+                    except subprocess.CalledProcessError as err:
+                        syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
+                                      .format(err.cmd, err.returncode, err.output))
+                        syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be  enabled and started"
+                                      .format(feature_name, feature_suffixes[-1]))
+                        return
+            syslog.syslog(syslog.LOG_INFO, "Feature '{}.{}' is enabled and started"
+                          .format(feature_name, feature_suffixes[-1]))
+        elif state == "disabled":
+            stop_cmds = []
+            for feature_name_suffix in feature_name_suffix_list:
+                for suffix in reversed(feature_suffixes):
+                    stop_cmds.append("sudo systemctl stop {}.{}".format(feature_name_suffix, suffix))
+                    stop_cmds.append("sudo systemctl disable {}.{}".format(feature_name_suffix, suffix))
+                    stop_cmds.append("sudo systemctl mask {}.{}".format(feature_name_suffix, suffix))
+                for cmd in stop_cmds:
+                    syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
+                    try:
+                        subprocess.check_call(cmd, shell=True)
+                    except subprocess.CalledProcessError as err:
+                        syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
+                                      .format(err.cmd, err.returncode, err.output))
+                        syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to be stopped and disabled".format(feature_name))
+                        return
+            syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(feature_name))
+        else:
+            syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
+                          .format(state, feature_name))
+
+
+    def update_all_feature_states(self):
+        feature_table = self.config_db.get_table('FEATURE')
+        for feature_name in feature_table.keys():
+            if not feature_name:
+                syslog.syslog(syslog.LOG_WARNING, "Feature is None")
+                continue
+
+            state = feature_table[feature_name]['state']
+            if not state:
+                syslog.syslog(syslog.LOG_WARNING, "Eanble state of feature '{}' is None".format(feature_name))
+                continue
+
+            # Store the initial value of 'state' field in 'FEATURE' table of a specific container
+            self.cached_feature_states[feature_name] = state
+
+            self.update_feature_state(feature_name, state, feature_table)
 
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
@@ -249,59 +327,20 @@ class HostConfigDaemon:
     def tacacs_server_handler(self, key, data):
         self.aaacfg.tacacs_server_update(key, data)
         log_data = copy.deepcopy(data)
-        if log_data.has_key('passkey'):
+        if 'passkey' in log_data:
             log_data['passkey'] = obfuscate(log_data['passkey'])
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
     def tacacs_global_handler(self, key, data):
         self.aaacfg.tacacs_global_update(key, data)
         log_data = copy.deepcopy(data)
-        if log_data.has_key('passkey'):
+        if 'passkey' in log_data:
             log_data['passkey'] = obfuscate(log_data['passkey'])
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
-    def hostname_handler(self, key, data):
-        if key != "localhost":
-            return
-
-        hostname = data.get("hostname")
-
-        if not hostname:
-            syslog.syslog(syslog.LOG_WARNING, "hostname key is missing")
-            return
-        if not is_valid_hostname(hostname):
-            syslog.syslog(syslog.LOG_WARNING, "hostname {} is invalid".format(hostname))
-            return
-        if hostname == self.hostname_cache:
-            return
-
-        syslog.syslog(syslog.LOG_INFO, "Get all running containers")
-        cmd = 'docker ps --format "{{.Names}}"'
-        try:
-            containers = subprocess.check_output(cmd, shell=True).split("\n")[:-1]
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                          .format(err.cmd, err.returncode, err.output))
-
-        for name in containers:
-            script = '/usr/bin/{}.sh'.format(name)
-            exists = os.path.isfile(script)
-            if not exists:
-                syslog.syslog(syslog.LOG_ERR, "Can't find control script for {}".format(name))
-                continue
-
-            cmd = "{} updateHostName {}".format(script, hostname)
-            try:
-                subprocess.check_call(cmd, shell=True)
-            except subprocess.CalledProcessError as err:
-                syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                              .format(err.cmd, err.returncode, err.output))
-
-        self.hostname_cache = hostname
-
     def lpbk_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
-        #Check if delete operation by fetch existing keys
+        # Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('LOOPBACK_INTERFACE')
         if key in keys:
             add = True
@@ -309,53 +348,33 @@ class HostConfigDaemon:
             add = False
 
         self.iptables.iptables_handler(key, data, add)
-        
-    def feature_status_handler(self, key, data):
-        status_data = self.config_db.get_table('FEATURE')
-        for key in status_data.keys():
-            if not key:
-                syslog.syslog(syslog.LOG_WARNING, "FEATURE key is missing")
-                return
-        status = status_data[key]['status']
-        if not status:
-            syslog.syslog(syslog.LOG_WARNING, "status is missing for {}".format(key))
+
+    def feature_state_handler(self, key, data):
+        feature_name = key
+        feature_table = self.config_db.get_table('FEATURE')
+        if feature_name not in feature_table.keys():
+            syslog.syslog(syslog.LOG_WARNING, "Feature '{}' not in FEATURE table".format(feature_name))
             return
-        if status == "enabled":
-            start_cmds=[]
-            start_cmds.append("sudo systemctl enable {}".format(key))
-            start_cmds.append("sudo systemctl start {}".format(key))
-            for cmd in start_cmds:
-                syslog.syslog(syslog.LOG_INFO, "Running cmd - {}".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                              .format(err.cmd, err.returncode, err.output))
-                    return
-            syslog.syslog(syslog.LOG_INFO, "Feature '{}' is enabled and started".format(key))
-        elif status == "disabled":
-            stop_cmds=[]
-            stop_cmds.append("sudo systemctl stop {}".format(key))
-            stop_cmds.append("sudo systemctl disable {}".format(key))
-            for cmd in stop_cmds:
-                syslog.syslog(syslog.LOG_INFO, "Running cmd - {}".format(cmd))
-                try:
-                    subprocess.check_call(cmd, shell=True)
-                except subprocess.CalledProcessError as err:
-                    syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                              .format(err.cmd, err.returncode, err.output))
-                    return
-            syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(key))
-        else:
-            syslog.syslog(syslog.LOG_ERR, "Unexpected status value '{}' for '{}'".format(status, key))
+
+        state = feature_table[feature_name]['state']
+        if not state:
+            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
+            return
+
+        # Enable/disable the container service if the feature state was changed from its previous state.
+        if self.cached_feature_states[feature_name] != state:
+            self.cached_feature_states[feature_name] = state
+            self.update_feature_state(feature_name, state, feature_table)
 
     def start(self):
+        # Update all feature states once upon starting
+        self.update_all_feature_states()
+
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
-        self.config_db.subscribe('DEVICE_METADATA', lambda table, key, data: self.hostname_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
-        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_status_handler(key, data))
+        self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_state_handler(key, data))
         self.config_db.listen()
 
 
