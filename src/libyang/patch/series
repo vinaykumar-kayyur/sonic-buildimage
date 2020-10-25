@@ -1,2 +1,3 @@
 libyang.patch
+libyang_mgmt_framework.patch
 swig.patch
