@@ -7,8 +7,8 @@ After=sonic.target
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/bin/ntp-config.sh
 
 [Install]
 WantedBy=sonic.target
-
