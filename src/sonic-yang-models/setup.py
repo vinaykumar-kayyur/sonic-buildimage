@@ -31,7 +31,6 @@ setup(
     license="GNU General Public License v3",
     long_description=readme + '\n\n',
     install_requires = [
-        'ijson==2.6.1'
     ],
     tests_require = [
         'pytest==3',
