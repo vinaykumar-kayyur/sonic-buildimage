@@ -1,6 +1,6 @@
 [Unit]
 Description=Delays telemetry container until SONiC has started
-Conflicts=telemetry.service
+PartOf=telemetry.service
 
 [Timer]
 OnUnitActiveSec=0 sec
@@ -9,4 +9,3 @@ Unit=telemetry.service
 
 [Install]
 WantedBy=timers.target sonic.target
-

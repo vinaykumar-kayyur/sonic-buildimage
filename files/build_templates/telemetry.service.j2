@@ -5,7 +5,6 @@ After=database.service swss.service syncd.service
 Before=ntp-config.service
 BindsTo=sonic.target
 After=sonic.target
-Conflicts=telemetry.timer
 StartLimitIntervalSec=1200
 StartLimitBurst=3
 
@@ -16,4 +15,3 @@ ExecStart=/usr/bin/{{docker_container_name}}.sh wait
 ExecStop=/usr/bin/{{docker_container_name}}.sh stop
 Restart=always
 RestartSec=30
-

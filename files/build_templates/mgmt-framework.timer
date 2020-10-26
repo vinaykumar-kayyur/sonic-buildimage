@@ -1,6 +1,6 @@
 [Unit]
 Description=Delays management framework container until SONiC has started
-Conflicts=mgmt-framework.service
+PartOf=mgmt-framework.service
 
 [Timer]
 OnUnitActiveSec=0 sec
@@ -9,4 +9,3 @@ Unit=mgmt-framework.service
 
 [Install]
 WantedBy=timers.target sonic.target
-
