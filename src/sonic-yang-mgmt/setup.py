@@ -4,7 +4,6 @@
 """The setup script."""
 
 from setuptools import setup, find_packages
-import pytest
 
 # read me
 with open('README.rst') as readme_file:
