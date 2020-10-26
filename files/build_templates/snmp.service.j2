@@ -6,7 +6,6 @@ After=updategraph.service swss.service syncd.service
 BindsTo=sonic.target
 After=sonic.target
 Before=ntp-config.service
-Conflicts=snmp.timer
 StartLimitIntervalSec=1200
 StartLimitBurst=3
 
