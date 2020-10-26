@@ -3,18 +3,17 @@ From: Abhishek Dosi <abdosi@microsoft.com>
 Date: Mon, 26 Oct 2020 11:40:02 -0700
 Subject: [PATCH] Patch on top of commit Patch is addressing these changes:-
 
-a) Enable repeat keyword for alert action . This was we can log
-syslog error message for continuous failure condition.
+a) Make sure error message is loggged if state is changed to fail first time based on fault tolerance condition
+or we have repeat clause enable for alert
 
-b) Make sure log and error message are different so that we do not rate
+b) Enable repeat keyword for alert action . Using this we can log
+syslog error message for persistent failures in repeat window.
+
+c) Make sure log and error message are different string so that we do not rate
 limit error message with log message
 
-c) Make sure error message is loggged is state change to fail first time
-or we have repeat clause for alert
-
 Signed-off-by: Abhishek Dosi <abdosi@microsoft.com>
 
-Signed-off-by: Abhishek Dosi <abdosi@microsoft.com>
 ---
  src/event.c | 6 +++++-
  src/p.y     | 8 +++++++-
@@ -33,7 +32,7 @@ index ed363ee..969568f 100644
 +                        else if ((E->state_changed) || (E->state == State_Failed && E->action->failed->repeat && E->count % E->action->failed->repeat == 0))
                                  LogError("'%s' %s\n", S->name, E->message);
 +                        else
-+                        /* Here we are making log message differnt so that we do not rate-limit Err and Info in same bucket*/ 
++                        /* Here we are making log message different so that we do not rate-limit Err and Info in same bucket*/ 
 +                                LogInfo("'%s' %s for information\n", S->name, E->message);
                  }
                  if (E->state == State_Init)
