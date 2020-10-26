@@ -12,7 +12,6 @@ RUN apt-get update         && \
         python-bitarray       \
         python-pip            \
         python-dev            \
-        python-natsort        \
         apt-utils             \
         python-setuptools
 
@@ -39,6 +38,9 @@ RUN pip install             \
 # Install locally-built Python wheel dependencies
 {{ install_python_wheels(docker_config_engine_buster_whls.split(' ')) }}
 {% endif %}
+
+# Copy files
+COPY ["files/swss_vars.j2", "/usr/share/sonic/templates/"]
 
 ## Clean up
 RUN apt-get purge -y               \
