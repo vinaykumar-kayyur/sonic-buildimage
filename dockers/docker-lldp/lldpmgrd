@@ -222,6 +222,9 @@ class LldpManager(daemon_base.DaemonBase):
             self.process_pending_cmds()
 
             # Resume the daemon since all interfaces data updated and configured to the lldpd so no miss leading packets will be sent
+            if not resume_lldp_sent:
+                if check_timeout(self, start_time):
+                    port_init_done = port_config_done = True
             if port_init_done and port_config_done:
                 port_init_done = port_config_done = False
                 rc, stderr = run_cmd(self, "lldpcli resume")
@@ -229,8 +232,6 @@ class LldpManager(daemon_base.DaemonBase):
                     self.log_error("Failed to resume lldpd with command: 'lldpcli resume': {}".format(stderr))
                     sys.exit(1)
                 resume_lldp_sent = True
-            if not resume_lldp_sent:
-                check_timeout(self, start_time)
 
 # ============================= Functions =============================
 
@@ -250,8 +251,9 @@ def run_cmd(self, cmd):
 
 def check_timeout(self, start_time):
     if time.time() - start_time > PORT_INIT_TIMEOUT:
-        self.log_error("Port init timeout reached ({} seconds), killing lldpmgrd...".format(PORT_INIT_TIMEOUT))
-        sys.exit(1)
+        self.log_error("Port init timeout reached ({} seconds), resuming lldpd...".format(PORT_INIT_TIMEOUT))
+        return True
+    return False
 
 if __name__ == "__main__":
     main()
