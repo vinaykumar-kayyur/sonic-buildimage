@@ -4,13 +4,13 @@ Date: Mon, 26 Oct 2020 11:40:02 -0700
 Subject: [PATCH] Patch on top of commit Patch is addressing these changes:-
 
 a) Make sure error message is loggged if state is changed to fail first time based on fault tolerance condition
-or we have repeat clause enable for alert
+or we have repeat clause enable for alert.
 
-b) Enable repeat keyword for alert action . Using this we can log
+b) Enable repeat keyword for alert action. Using this we can log
 syslog error message for persistent failures in repeat window.
 
 c) Make sure log and error message are different string so that we do not rate
-limit error message with log message
+limit error message with log message.
 
 Signed-off-by: Abhishek Dosi <abdosi@microsoft.com>
 
