@@ -88,7 +88,7 @@ stop() {
         /usr/bin/${SERVICE}.sh stop $DEV
     fi
 
-	debug "Stopped ${SERVICE}$DEV service..."
+    debug "Stopped ${SERVICE}$DEV service..."
 }
 
 DEV=$2
