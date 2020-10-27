@@ -31,9 +31,9 @@ function validate_restore_count()
 function check_fast_boot ()
 {
     if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
-        FAST_BOOT = "true"
+        FAST_BOOT="true"
     else
-        FAST_BOOT = "false"
+        FAST_BOOT="false"
     fi
 }
 
@@ -67,30 +67,28 @@ stop() {
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        debug "Stopping teamd ..."
         # Send USR1 signal to all teamd instances to stop them
         # It will prepare teamd for warm-reboot
         # Note: We must send USR1 signal before syncd, because it will send the last packet through CPU port
-        docker exec -i teamd pkill -USR1 teamd > /dev/null || [ $? == 1 ]
-        debug "Stopped  teamd ..."
+        docker exec -i ${SERVICE}$DEV pkill -USR1 ${SERVICE} > /dev/null || [ $? == 1 ]
+		
     elif [[ x"$FAST_BOOT" == x"true" ]]; then
         # Kill teamd processes inside of teamd container with SIGUSR2 to allow them to send last LACP frames
         # We call `docker kill teamd` to ensure the container stops as quickly as possible,
         # then immediately call `systemctl stop teamd` to prevent the service from
         # restarting the container automatically.
         # Note: teamd must be killed before syncd, because it will send the last packet through CPU port
-        debug "Stopping teamd ..."
-        docker exec -i teamd pkill -USR2 teamd || [ $? == 1 ]
-        while docker exec -i teamd pgrep teamd > /dev/null; do
+        docker exec -i ${SERVICE}$DEV pkill -USR2 ${SERVICE} || [ $? == 1 ]
+        while docker exec -i ${SERVICE}$DEV pgrep ${SERVICE} > /dev/null; do
             sleep 0.05
         done
-        docker kill teamd &> /dev/null || debug "Docker teamd is not running ($?) ..."
-        systemctl stop teamd
-        debug "Stopped teamd ..."
+        docker kill ${SERVICE}$DEV  &> /dev/null || debug "Docker ${SERVICE}$DEV is not running ($?) ..."
+        systemctl stop ${SERVICE}$DEV
     else
         /usr/bin/${SERVICE}.sh stop $DEV
-        debug "Stopped ${SERVICE}$DEV service..."
     fi
+
+	debug "Stopped ${SERVICE}$DEV service..."
 }
 
 DEV=$2
