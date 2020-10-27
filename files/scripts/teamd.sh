@@ -71,7 +71,6 @@ stop() {
         # It will prepare teamd for warm-reboot
         # Note: We must send USR1 signal before syncd, because it will send the last packet through CPU port
         docker exec -i ${SERVICE}$DEV pkill -USR1 ${SERVICE} > /dev/null || [ $? == 1 ]
-		
     elif [[ x"$FAST_BOOT" == x"true" ]]; then
         # Kill teamd processes inside of teamd container with SIGUSR2 to allow them to send last LACP frames
         # We call `docker kill teamd` to ensure the container stops as quickly as possible,
@@ -83,11 +82,9 @@ stop() {
             sleep 0.05
         done
         docker kill ${SERVICE}$DEV  &> /dev/null || debug "Docker ${SERVICE}$DEV is not running ($?) ..."
-        systemctl stop ${SERVICE}$DEV
-    else
-        /usr/bin/${SERVICE}.sh stop $DEV
     fi
 
+    /usr/bin/${SERVICE}.sh stop $DEV
     debug "Stopped ${SERVICE}$DEV service..."
 }
 
