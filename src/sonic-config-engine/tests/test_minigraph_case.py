@@ -79,9 +79,10 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertEqual(output.strip(), "[('Ethernet0', '10.0.0.58/31'), 'Ethernet0', ('Ethernet0', 'FC00::75/126')]")
 
     def test_minigraph_vlans(self):
-        vlan_table = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)["VLAN"]
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v VLAN'
+        output = self.run_script(argument)
         self.assertEqual(
-            vlan_table,
+            utils.to_dict(output.strip()),
             utils.to_dict("{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'mac': '00:aa:bb:cc:dd:ee' }}")
         )
 
