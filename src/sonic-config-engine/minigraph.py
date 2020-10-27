@@ -362,6 +362,7 @@ def parse_dpg(dpg, hname):
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
             vlantype = vintf.find(str(QName(ns, "Type")))
+            vlanmac = vintf.find(str(QName(ns, "MacAddress")))
             if vlantype != None:
                 vlantype_name = vintf.find(str(QName(ns, "Type"))).text
             vmbr_list = vintfmbr.split(';')
@@ -382,6 +383,9 @@ def parse_dpg(dpg, hname):
                 vintfdhcpservers = vintf_node.text
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
+
+            if vlanmac != None:
+                vlan_attributes['mac'] = vlanmac.text
 
             sonic_vlan_name = "Vlan%s" % vlanid
             if sonic_vlan_name != vintfname:
