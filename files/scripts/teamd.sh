@@ -74,8 +74,6 @@ stop() {
     elif [[ x"$FAST_BOOT" == x"true" ]]; then
         # Kill teamd processes inside of teamd container with SIGUSR2 to allow them to send last LACP frames
         # We call `docker kill teamd` to ensure the container stops as quickly as possible,
-        # then immediately call `systemctl stop teamd` to prevent the service from
-        # restarting the container automatically.
         # Note: teamd must be killed before syncd, because it will send the last packet through CPU port
         docker exec -i ${SERVICE}$DEV pkill -USR2 ${SERVICE} || [ $? == 1 ]
         while docker exec -i ${SERVICE}$DEV pgrep ${SERVICE} > /dev/null; do
