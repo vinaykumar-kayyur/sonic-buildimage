@@ -43,8 +43,8 @@ setup(
         'wheel'
     ],
     include_package_data=True,
-    keywords='sonic_yang_mgmt',
-    name='sonic_yang_mgmt',
+    keywords='sonic-yang-mgmt',
+    name='sonic-yang-mgmt',
     py_modules=['sonic_yang', 'sonic_yang_ext'],
     packages=find_packages(),
     version='1.0',

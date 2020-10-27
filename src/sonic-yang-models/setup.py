@@ -41,8 +41,8 @@ setup(
         'wheel'
     ],
     include_package_data=True,
-    keywords='sonic_yang_models',
-    name='sonic_yang_models',
+    keywords='sonic-yang-models',
+    name='sonic-yang-models',
     py_modules=[],
     packages=find_packages(),
     version='1.0',
