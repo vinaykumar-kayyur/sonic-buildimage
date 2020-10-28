@@ -34,7 +34,7 @@ setup(
     tests_require = [
         'pytest==3',
         'ijson==2.6.1',
-        'pyang'
+        'pyang==2.3.2'
     ],
     setup_requires = [
         'pytest-runner',
