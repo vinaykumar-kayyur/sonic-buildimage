@@ -321,6 +321,30 @@ def is_port_channel_internal(port_channel, namespace=None):
 
     return False
 
+# Allow user to get a set() of back-end interface and back-end LAG per namespace
+# default is getting it for all name spaces if no namespace is specified
+def get_back_end_interface_set(namespace=None):
+    bk_end_intf_list =[]
+    if not is_multi_asic():
+        return None
+
+    port_table = get_port_table(namespace)
+    for port, info in port_table.items():
+        if PORT_ROLE in info and info[PORT_ROLE] == INTERNAL_PORT:
+            bk_end_intf_list.append(port)
+
+        ns_list = get_namespace_list(namespace)
+        for ns in ns_list:
+            config_db = connect_config_db_for_ns(ns)
+            port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
+            for port_channel, lag_info in port_channels.items():
+                if 'members' in lag_info:
+                    members = lag_info['members']
+                    if members[0] in bk_end_intf_list:
+                        bk_end_intf_list.append(port_channel)
+    a = set()
+    a.update(bk_end_intf_list)
+    return a
 
 def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
 
