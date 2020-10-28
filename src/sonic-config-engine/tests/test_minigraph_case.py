@@ -170,3 +170,8 @@ class TestCfgGenCaseInsensitive(TestCase):
                 self.assertTrue(port["mux_cable"])
             else:
                 self.assertTrue("mux_cable" not in port)
+
+    def test_minigraph_storage_device(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'storage_device\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "true")

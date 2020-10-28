@@ -236,6 +236,7 @@
       <Device i:type="ToRRouter">
         <Hostname>switch-t0</Hostname>
         <HwSku>Force10-S6000</HwSku>
+        <ClusterName>AAA00PrdStr00</ClusterName>
       </Device>
       <Device i:type="LeafRouter">
         <Hostname>switch-01t1</Hostname>
@@ -371,6 +372,6 @@
       </ManagementInterfaces>
     </DeviceInfo>
   </DeviceInfos>
-  <Hostname>switch-T0</Hostname>
+  <Hostname>switch-t0</Hostname>
   <HwSku>Force10-S6000</HwSku>
 </DeviceMiniGraph>
