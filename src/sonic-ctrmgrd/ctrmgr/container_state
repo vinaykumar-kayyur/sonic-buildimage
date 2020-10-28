@@ -147,6 +147,14 @@ def get_docker_id():
     return output.strip()[:12]
 
 
+def to_int(s):
+    try:
+        return(int(s))
+    except ValueError as ex:
+        syslog.syslog(syslog.LOG_ERR, "Non convertible err={}".format(str(ex)))
+        return 0
+
+
 def instance_lower(feature, version):
     if ((state_data[REMOTE_STATE] == "none") or
             (state_data[REMOTE_STATE] == "stopped")):
@@ -154,14 +162,16 @@ def instance_lower(feature, version):
         return False
 
     ct_version = state_data[VERSION]
-    ct = ct_version.split('.')
+    ct = ct_version.split('.') if ct_version else "0.0.0".split('.')
     nxt = version.split('.') if version else "0.0.0".split('.')
     ret = False
-    for i in range(3):
-        if nxt[i] < ct[i]:
+    for cs, ns in zip(ct, nxt):
+        c = to_int(cs)
+        n = to_int(ns)
+        if n < c:
             ret = True
             break
-        elif nxt[i] > ct[i]:
+        elif n > c:
             break
 
     debug_msg("compare version: new:{} current:{} res={}".format(

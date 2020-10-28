@@ -3,7 +3,8 @@
 
 # This version is per docker. To be updated upon updates.
 # Hence this could be different from version of other features
-IMAGE_VERSION="1.0.0"
+# IMAGE_VERSION="1.0.0"
+IMAGE_VERSION=`sonic-cfggen -y /etc/sonic/sonic_version.yml -v 'build_version'`
 
 if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"

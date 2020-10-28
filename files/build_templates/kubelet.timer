@@ -1,9 +1,0 @@
-[Unit]
-Description=Delays start of kubelet service until SONiC has started ans stabilized
-
-[Timer]
-OnUnitActiveSec=0 sec
-OnBootSec=10min 30 sec
-
-[Install]
-WantedBy=timers.target
