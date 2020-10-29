@@ -10,7 +10,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./openssh-server
 	git clone https://salsa.debian.org/ssh-team/openssh.git openssh-server
 	pushd ./openssh-server
-	git checkout -b openssh-src -f 6d9ca74c48d9911342c6ca5aaac8a25974fa2619
+	git checkout -b openssh-src -f debian/1\%$(OPENSSH_VERSION)
 
 	# Apply patch series
 	stg init
