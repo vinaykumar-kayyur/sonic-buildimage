@@ -4,4 +4,4 @@ After=rc-local.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/determine-reboot-cause
+ExecStart=/usr/local/bin/determine-reboot-cause

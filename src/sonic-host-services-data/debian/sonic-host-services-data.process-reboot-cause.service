@@ -5,4 +5,4 @@ After=database.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/process-reboot-cause
+ExecStart=/usr/local/bin/process-reboot-cause
