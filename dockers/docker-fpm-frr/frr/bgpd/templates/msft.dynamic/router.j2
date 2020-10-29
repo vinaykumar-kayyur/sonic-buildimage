@@ -1,0 +1,12 @@
+{% macro dynamic_routing(template_name) %}
+{% set device_type = CONFIG_DB__DEVICE_METADATA['localhost']['type'] %}
+{% set resource_type = CONFIG_DB__DEVICE_METADATA['localhost']['resource_type'] %}
+{% set path_template = "bgpd/templates/msft.dynamic/%s/" + template_name + ".conf.j2" %}
+{% if device_type == 'ToRRouter' %}
+{%     if resource_type is defined and (resource_type == 'FPGASTP' or resource_type == 'SDNAPPLIANCE') %}
+{%         include path_template % "tor.rotterdam" %}
+{%     else %}
+{%         include path_template % "tor" %}
+{%     endif %}
+{% endif %}
+{% endmacro %}
