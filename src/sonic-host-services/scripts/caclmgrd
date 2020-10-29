@@ -148,7 +148,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             commands: List of strings, each string is a shell command
         """
         for cmd in commands:
-            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
 
             (stdout, stderr) = proc.communicate()
 
