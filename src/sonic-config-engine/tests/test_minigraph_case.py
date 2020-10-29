@@ -160,6 +160,20 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{}")
 
+    def test_minigraph_peer_switch(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "PEER_SWITCH"'
+        expected_table = {
+            'switch2-t0': {
+                'address_ipv4': "25.1.1.10"
+            }
+        }
+        
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_table
+        )
+
     def test_mux_cable_parsing(self):
         result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         

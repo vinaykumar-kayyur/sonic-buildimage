@@ -64,6 +64,18 @@ class minigraph_encoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
+def get_peer_switch_info(link_metadata, devices):
+    peer_switch_table = {}
+    for data in link_metadata.values():
+        if "PeerSwitch" in data:
+            peer_hostname = data["PeerSwitch"]
+            peer_lo_addr = devices[peer_hostname]["lo_addr"] 
+            peer_switch_table[peer_hostname] = {
+                'address_ipv4': peer_lo_addr
+            }
+
+    return peer_switch_table
+
 def parse_device(device):
     lo_prefix = None
     mgmt_prefix = None
@@ -647,16 +659,31 @@ def parse_linkmeta(meta, hname):
             # Cannot find a matching hname, something went wrong
             continue
 
+        has_peer_switch = False
+        upper_tor_hostname = ''
+        lower_tor_hostname = ''
+
         properties = linkmeta.find(str(QName(ns1, "Properties")))
         for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
             name = device_property.find(str(QName(ns1, "Name"))).text
             value = device_property.find(str(QName(ns1, "Value"))).text
             if name == "FECDisabled":
                 fec_disabled = value
+            if name == "GeminiPeeringLink":
+                has_peer_switch = True
+            if name == "UpperTOR":
+                upper_tor_hostname = value
+            if name == "LowerTOR":
+                lower_tor_hostname = value
 
         linkmetas[port] = {}
         if fec_disabled:
             linkmetas[port]["FECDisabled"] = fec_disabled
+        if has_peer_switch:
+            if upper_tor_hostname == hname:
+                linkmetas[port]["PeerSwitch"] = lower_tor_hostname
+            else:
+                linkmetas[port]["PeerSwitch"] = upper_tor_hostname
     return linkmetas
 
 
@@ -971,6 +998,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+
+    results['PEER_SWITCH'] = get_peer_switch_info(linkmetas, devices)
+
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
