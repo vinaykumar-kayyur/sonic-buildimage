@@ -121,7 +121,21 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'switch-01t1': {'lo_addr': '10.1.0.186/32', 'mgmt_addr': '10.7.0.196/26', 'hwsku': 'Force10-S6000', 'type': 'LeafRouter', 'deployment_id': '2'}}")
+            utils.to_dict("{" \
+                "'switch-01t1': {" \
+                    "'lo_addr': '10.1.0.186/32'," \
+                    "'mgmt_addr': '10.7.0.196/26'," \
+                    "'hwsku': 'Force10-S6000'," \
+                    "'type': 'LeafRouter'," \
+                    "'deployment_id': '2'" \
+                "}," \
+                "'switch2-t0': {" \
+                    "'hwsku': 'Force10-S6000'," \
+                    "'lo_addr': '25.1.1.10'," \
+                    "'mgmt_addr': '10.7.0.196/26'," \
+                    "'type': 'ToRRouter'" \
+                "}" \
+            "}")
         )
 
 #     everflow portion is not used
