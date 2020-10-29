@@ -1146,14 +1146,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
-    tunnels = {}
-    for type, tunnel_dict in tunnel_intfs.items():
-        if type == "IPInIP":
-            for tunnel_key, tunnel_attr in tunnel_dict.items():
-                tunnel_attr['dst_ip'] = devices[hostname]['lo_addr']
-                tunnels[tunnel_key] = tunnel_attr
-
-    results['TUNNEL_TABLE'] = tunnels
+    results['TUNNEL_TABLE'] = get_ipinip_tunnels(tunnel_intfs, devices, hostname)
 
     for nghbr in list(neighbors.keys()):
         # remove port not in port_config.ini
@@ -1221,6 +1214,15 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
 
     return results
+
+def get_ipinip_tunnels(tunnel_intfs, devices, hostname):
+    tunnels = {}
+    for type, tunnel_dict in tunnel_intfs.items():
+        if type == "IPInIP":
+            for tunnel_key, tunnel_attr in tunnel_dict.items():
+                tunnel_attr['dst_ip'] = devices[hostname]['lo_addr']
+                tunnels[tunnel_key] = tunnel_attr
+    return tunnels
 
 
 def parse_device_desc_xml(filename):
