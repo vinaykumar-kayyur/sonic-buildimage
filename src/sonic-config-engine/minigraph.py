@@ -1001,6 +1001,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     results['PEER_SWITCH'] = get_peer_switch_info(linkmetas, devices)
 
+    if bool(results['PEER_SWITCH']):
+        results['DEVICE_METADATA']['localhost']['subtype'] = 'DualToR'
+
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
