@@ -481,7 +481,7 @@ def parse_dpg(dpg, hname):
                 tunnelintfs[mg_tunnel.attrib["Type"]]["MUX_TUNNEL_{}".format(tunnel_num)] = {
                     "tunnel_type": mg_tunnel.attrib["Type"].upper(),
                     "encap_ecn_mode": mg_tunnel.attrib["EcnEncapsulationMode"],
-                    "decap_ecn_mode": mg_tunnel.attrib["EcnDecapsulationMode"],
+                    "ecn_mode": mg_tunnel.attrib["EcnDecapsulationMode"],
                     "dscp_mode": mg_tunnel.attrib["DifferentiatedServicesCodePointMode"],
                     "ttl_mode": mg_tunnel.attrib["TtlMode"]
                 }
@@ -1146,7 +1146,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
-    results['TUNNEL_TABLE'] = get_ipinip_tunnels(tunnel_intfs, devices, hostname)
+    results['TUNNEL'] = get_ipinip_tunnels(tunnel_intfs, devices, hostname)
 
     for nghbr in list(neighbors.keys()):
         # remove port not in port_config.ini
