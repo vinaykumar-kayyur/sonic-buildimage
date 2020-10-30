@@ -333,16 +333,17 @@ def get_back_end_interface_set(namespace=None):
         if PORT_ROLE in info and info[PORT_ROLE] == INTERNAL_PORT:
             bk_end_intf_list.append(port)
 
-    ns_list = get_namespace_list(namespace)
-    for ns in ns_list:
-        config_db = connect_config_db_for_ns(ns)
-        port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
-        # a back-end LAG must be configured with all of its member from back-end interfaces.
-        # mixing back-end and front-end interfaces is miss configuration and not allowed.
-        # To determine if a LAG is back-end LAG, just need to check its first member is back-end or not
-        # is sufficient. Note that a user defined LAG may have empty members so the list expansion logic
-        # need to ensure there are members before inspecting member[0].
-        bk_end_intf_list.extend([port_channel for port_channel, lag_info in port_channels.items()\
+    if len(bk_end_intf_list):
+        ns_list = get_namespace_list(namespace)
+        for ns in ns_list:
+            config_db = connect_config_db_for_ns(ns)
+            port_channels = config_db.get_table(PORT_CHANNEL_CFG_DB_TABLE)
+            # a back-end LAG must be configured with all of its member from back-end interfaces.
+            # mixing back-end and front-end interfaces is miss configuration and not allowed.
+            # To determine if a LAG is back-end LAG, just need to check its first member is back-end or not
+            # is sufficient. Note that a user defined LAG may have empty members so the list expansion logic
+            # need to ensure there are members before inspecting member[0].
+            bk_end_intf_list.extend([port_channel for port_channel, lag_info in port_channels.items()\
                                 if 'members' in lag_info and lag_info['members'][0] in bk_end_intf_list])
     a = set()
     a.update(bk_end_intf_list)
