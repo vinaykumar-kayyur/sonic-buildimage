@@ -239,6 +239,8 @@ class HostConfigDaemon:
         # Cache the values of 'state' field in 'FEATURE' table of each container
         self.cached_feature_states = {}
 
+        self.is_multi_npu = device_info.is_multi_npu()
+
 
     def load(self):
         aaa = self.config_db.get_table('AAA')
@@ -249,7 +251,6 @@ class HostConfigDaemon:
         lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables.load(lpbk_table)
 
-        self.is_multi_npu = device_info.is_multi_npu()
 
     def update_feature_state(self, feature_name, state, feature_table):
         has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
