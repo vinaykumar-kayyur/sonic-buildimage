@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import calendar
+from ipaddress import IPv4Address, ip_address
 import math
 import os
 import sys
@@ -476,15 +477,22 @@ def parse_dpg(dpg, hname):
 
         mg_tunnels = child.find(str(QName(ns, "TunnelInterfaces")))
         if mg_tunnels is not None:
+            table_key_to_mg_key_map = {"encap_ecn_mode": "EcnEncapsulationMode", 
+                                       "ecn_mode": "EcnDecapsulationMode", 
+                                       "dscp_mode": "DifferentiatedServicesCodePointMode", 
+                                       "ttl_mode": "TtlMode"}
             for mg_tunnel in mg_tunnels.findall(str(QName(ns, "TunnelInterface"))):
-                tunnel_num = "".join([x for x in mg_tunnel.attrib["Name"] if x.isdigit()])
-                tunnelintfs[mg_tunnel.attrib["Type"]]["MUX_TUNNEL_{}".format(tunnel_num)] = {
+                tunnel_type = mg_tunnel.attrib["Type"]
+                tunnel_name = mg_tunnel.attrib["Name"]
+                tunnelintfs[tunnel_type][tunnel_name] = {
                     "tunnel_type": mg_tunnel.attrib["Type"].upper(),
-                    "encap_ecn_mode": mg_tunnel.attrib["EcnEncapsulationMode"],
-                    "ecn_mode": mg_tunnel.attrib["EcnDecapsulationMode"],
-                    "dscp_mode": mg_tunnel.attrib["DifferentiatedServicesCodePointMode"],
-                    "ttl_mode": mg_tunnel.attrib["TtlMode"]
                 }
+
+                for table_key, mg_key in table_key_to_mg_key_map.items():
+                    # If the minigraph has the key, add the corresponding config DB key to the table
+                    if mg_key in mg_tunnel.attrib:
+                        tunnelintfs[tunnel_type][tunnel_name][table_key] = mg_tunnel.attrib[mg_key]
+
         return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni, tunnelintfs
     return None, None, None, None, None, None, None, None, None, None
 
@@ -1146,7 +1154,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
-    results['TUNNEL'] = get_ipinip_tunnels(tunnel_intfs, devices, hostname)
+    results['TUNNEL'] = get_tunnel_entries(tunnel_intfs, lo_intfs, hostname)
 
     for nghbr in list(neighbors.keys()):
         # remove port not in port_config.ini
@@ -1215,13 +1223,19 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     return results
 
-def get_ipinip_tunnels(tunnel_intfs, devices, hostname):
+def get_tunnel_entries(tunnel_intfs, lo_intfs, hostname):
+    lo_addr = ''
+    # Use the first IPv4 loopback as the tunnel destination IP
+    for addr in lo_intfs.keys():
+        if "." in addr[1]:
+            lo_addr = addr[1]
+            break
+
     tunnels = {}
     for type, tunnel_dict in tunnel_intfs.items():
-        if type == "IPInIP":
-            for tunnel_key, tunnel_attr in tunnel_dict.items():
-                tunnel_attr['dst_ip'] = devices[hostname]['lo_addr']
-                tunnels[tunnel_key] = tunnel_attr
+        for tunnel_key, tunnel_attr in tunnel_dict.items():
+            tunnel_attr['dst_ip'] = lo_addr
+            tunnels[tunnel_key] = tunnel_attr
     return tunnels
 
 
