@@ -3,6 +3,11 @@
 !
   neighbor {{ neighbor_addr }} remote-as {{ bgp_session['asn'] }}
   neighbor {{ neighbor_addr }} description {{ bgp_session['name'] }}
+{# set the bgp neighbor timers if they have not default values #}
+{% if     (bgp_session['keepalive'] is defined and bgp_session['keepalive'] | int != 60)
+      or  (bgp_session['holdtime'] is defined  and bgp_session['holdtime']  | int != 180) %}
+  neighbor {{ neighbor_addr }} timers {{ bgp_session['keepalive'] | default("60") }} {{ bgp_session['holdtime'] | default("180") }}
+{% endif %}
 !
 {% if neighbor_addr | ipv4 %}
   address-family ipv4
