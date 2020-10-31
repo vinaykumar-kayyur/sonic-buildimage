@@ -34,7 +34,7 @@ setup(
         'ijson==2.6.1'
     ],
     tests_require = [
-        'pytest==3',
+        'pytest>3',
         'xmltodict==0.12.0',
         'ijson==2.6.1'
     ],

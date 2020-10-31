@@ -32,7 +32,7 @@ setup(
     install_requires = [
     ],
     tests_require = [
-        'pytest==3',
+        'pytest>3',
         'ijson==2.6.1',
         'pyang==2.3.2'
     ],
