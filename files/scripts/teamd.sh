@@ -20,7 +20,7 @@ function check_warm_boot()
 function validate_restore_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
-        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_TABLE|teamd" restore_count`
+        RESTORE_COUNT=`$SONIC_DB_CLI STATE_DB hget "WARM_RESTART_TABLE|${SERVICE}" restore_count`
         # We have to make sure db data has not been flushed.
         if [[ -z "$RESTORE_COUNT" ]]; then
             WARM_BOOT="false"
@@ -51,7 +51,6 @@ start() {
     # start service docker
     /usr/bin/${SERVICE}.sh start $DEV
     debug "Started ${SERVICE}$DEV service..."
-
 }
 
 wait() {
@@ -95,7 +94,6 @@ if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
     SONIC_DB_CLI="sonic-db-cli -n $NET_NS"
 else
-    NET_NS=""
     SONIC_DB_CLI="sonic-db-cli"
 fi
 
