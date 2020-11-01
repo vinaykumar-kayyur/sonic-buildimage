@@ -30,3 +30,4 @@ check process rsyslog with pidfile /var/run/rsyslogd.pid
 check program routeCheck with path "/usr/bin/route_check.py"
     every 5 cycles
     if status != 0 for 3 cycle then alert repeat every 1 cycles
+
