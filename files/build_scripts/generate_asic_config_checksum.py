@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import syslog
-import os
 import hashlib
+import os
+import syslog
 
 SYSLOG_IDENTIFIER = 'asic_config_checksum'
 
