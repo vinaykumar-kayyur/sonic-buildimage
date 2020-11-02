@@ -186,12 +186,11 @@ class TestCfgGenCaseInsensitive(TestCase):
                 self.assertTrue("mux_cable" not in port)
 
     def test_minigraph_tunnel_table(self):
-        result = minigraph.parse_xml(self.sample_graph, self.port_config)
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TUNNEL"'
         expected_tunnel = {
             "MuxTunnel0": {
                 "tunnel_type": "IPINIP",
-                "dst_ip": "10.1.0.32/32",
+                "dst_ip": "10.1.0.32",
                 "dscp_mode": "uniform",
                 "encap_ecn_mode": "standard",
                 "ecn_mode": "copy_from_outer",

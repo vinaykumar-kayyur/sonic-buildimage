@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import calendar
-from ipaddress import IPv4Address, ip_address
+from ipaddress import IPv4Address, IPv4Network, ip_address, ip_network
 import math
 import os
 import sys
@@ -1227,8 +1227,9 @@ def get_tunnel_entries(tunnel_intfs, lo_intfs, hostname):
     lo_addr = ''
     # Use the first IPv4 loopback as the tunnel destination IP
     for addr in lo_intfs.keys():
-        if "." in addr[1]:
-            lo_addr = addr[1]
+        ip_addr = ip_network(UNICODE_TYPE(addr[1]))
+        if isinstance(ip_addr, IPv4Network):
+            lo_addr = str(ip_addr.network_address)
             break
 
     tunnels = {}
