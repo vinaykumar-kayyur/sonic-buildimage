@@ -1,0 +1,56 @@
+#!/bin/bash
+
+update_version=$SONIC_VERSION_CONTROL_COMPONENTS
+version_file=
+if [ -d /sonic ];then
+    version_file=/sonic/files/build/versions/versions-docker
+else
+    version_file=files/build/versions/versions-docker
+fi
+new_version_file=$version_file-latest
+log_file=$version_file.log
+/usr/local/bin/j2 $@
+result=$?
+sourcefile=$1
+echo `pwd`"##/usr/local/bin/j2 $@" >> $log_file
+while (( "$#" )); do
+    case $1 in
+        -o)
+            docker_file=$2
+            shift 2
+            ;;
+        *)
+            shift 1
+            ;;
+    esac
+done
+if [[ $docker_file == "" ]];then
+    docker_file=`echo $sourcefile | rev | cut -d'.' -f 2- | rev`
+fi
+
+echo "##target: $docker_file" >> $log_file
+image_tag=`grep "^FROM " $docker_file | awk '{print$2}'`
+if [[ $image_tag == "" ]];then
+    exit $result
+fi
+echo "##image_tag: $image_tag" >> $log_file
+hash_value_latest=`docker pull $image_tag | grep Digest | awk '{print$2}'`
+hash_value=`grep $image_tag $version_file | awk -F== '{print$2}'`
+oldstr=${image_tag//\//\\/}
+newstr=`echo $oldstr | awk -F: '{print$1}'`@$hash_value
+if [[ $update_version =~ .*docker.* ]] || [[ $update_version =~ .*all.* ]];then
+    echo "$image_tag==$hash_value" >> $new_version_file
+    sort -u $new_version_file -o $new_version_file &> /dev/null
+else
+    if [[ $hash_value == "" ]];then
+        if [ -f target/${image_tag}.gz ];then
+            echo "using localfile target/${image_tag}.gz" >> $log_file
+        else
+            echo "##Warning: version not record. $image_tag==$hash_value_latest" >> $log_file
+        fi
+    else
+        sed -i "s/$oldstr/$newstr/" $docker_file &> /dev/null
+        echo "sed -i \"s/$oldstr/$newstr/\" $docker_file &> /dev/null" >> $log_file
+    fi
+fi
+exit $result

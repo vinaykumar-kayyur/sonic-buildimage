@@ -38,6 +38,13 @@
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
 #  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #  * BUILD_LOG_TIMESTAMP: Set timestamp in the build log (simple/none)
+#  * SONIC_VERSION_CONTROL_COMPONENTS : In the process of SONiC build, there are some source code,
+#  *                               which are downloaded by third utils. ex: git,wget,pip,docker...
+#  *                    By default build will use version file in 'files/build/versions/' to control third utils version.
+#  *                    if we specify one component, build will use latest version and record it in a new file
+#  *                    ex: git's version file is files/build/versions/versions-git, if ${var} is "pip,git"
+#  *                        git clone will use the latest commit, and copy the commit ID to files/build/versions/versions-git-latest.
+#  *                        When build succeeded, you can replace versions-git by versions-git-latest, and commit the changes.
 #
 ###############################################################################
 
@@ -89,10 +96,10 @@ else
 SLAVE_DIR = sonic-slave-jessie
 endif
 
-SLAVE_BASE_TAG = $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile && sha1sum $(SLAVE_DIR)/Dockerfile | awk '{print substr($$1,0,11);}')
-SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
-SLAVE_BASE_IMAGE = $(SLAVE_DIR)
-SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER)
+SLAVE_BASE_TAG := $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) ./files/build/scripts/j2 $(SLAVE_DIR)/Dockerfile.j2 -o $(SLAVE_DIR)/Dockerfile && sha1sum $(SLAVE_DIR)/Dockerfile | awk '{print substr($$1,0,11);}')
+SLAVE_TAG := $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
+SLAVE_BASE_IMAGE := $(SLAVE_DIR)
+SLAVE_IMAGE := $(SLAVE_BASE_IMAGE)-$(USER)
 
 OVERLAY_MODULE_CHECK := \
     lsmod | grep -q "^overlay " &>/dev/null || \
@@ -115,6 +122,7 @@ DOCKER_RUN := docker run --rm=true --privileged --init \
     -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
+    -e "SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS)" \
     -i$(if $(TERM),t,) \
     $(SONIC_BUILDER_EXTRA_CMDLINE)
 
@@ -242,12 +250,12 @@ endif
 	    $(DOCKER_BUILD) ; }
 ifeq "$(KEEP_SLAVE_ON)" "yes"
     ifdef SOURCE_FOLDER
-		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/$(USER)/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
+		@$(DOCKER_RUN) -v $(SOURCE_FOLDER):/var/$(USER)/src $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "PATH=/sonic/files/build/scripts:$$PATH; $(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
     else
-		@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
+		@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "PATH=/sonic/files/build/scripts:$$PATH; $(SONIC_BUILD_INSTRUCTION) $@; /bin/bash"
     endif
 else
-	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) $(SONIC_BUILD_INSTRUCTION) $@
+	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "PATH=/sonic/files/build/scripts:$$PATH; $(SONIC_BUILD_INSTRUCTION) $@"
 endif
 
 sonic-slave-base-build :
