@@ -1,15 +1,17 @@
 #!/usr/bin/python3 -u
 
+import sys
 import syslog
-import subprocess
 import argparse
 import inspect
 import time
 import os
 import json
+import docker
 from swsscommon import swsscommon
 
-remote_features = ("snmp", "telemetry", "pmon", "lldp", "radv", "dhcp_relay")
+sys.path.append('/usr/share/sonic/scripts/')
+import container_state
 
 state_db = None
 
@@ -99,13 +101,29 @@ def read_state(feature):
 
 def docker_action(action, feature):
     """ Execute docker action """
-    cmd = "docker {} {}".format(action, feature)
-    proc = subprocess.Popen(cmd, shell=True)
-    proc.wait()
-    debug_msg("docker cmd: {}".format(cmd))
-    return proc.returncode
+    try:
+        client = docker.from_env()
+        container = client.containers.get(feature)
+        getattr(container, action)()
+        debug_msg("docker cmd: {} for {}".format(action, feature))
+        return 0
+
+    except (docker.errors.NotFound, docker.errors.APIError) as err:
+        syslog.syslog(syslog.LOG_ERR, "docker cmd: {} for {} failed with {}".
+                format(action, feature, str(err)))
+        return -1
 
 
+
+def _set_a_label_entry(tbl, key, tval):
+    # Set if not present
+    data = tbl.get(key)
+    for entry in data[1]:
+        if entry == tval:
+            return
+    tbl.set(key, [tval])
+
+    
 def set_label(feature, create):
     """ Set/drop label as required
         Update is done in state-db.
@@ -113,11 +131,17 @@ def set_label(feature, create):
     """
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
     fld = "{}_enabled".format(feature)
+
+    # redundant set (data already exist) can still raise subscriber
+    # notification. So check & set.
+    # Redundant delete (data doesn't exist) does not raise any 
+    # subscriber notification. So no need to pre-check for delete.
+    #
     if create:
-        tbl.set(KUBE_LABEL_SET_KEY, [ (fld, "true")])
+        _set_a_label_entry(tbl, KUBE_LABEL_SET_KEY, (fld, "true"))
         tbl.hdel(KUBE_LABEL_UNSET_KEY, fld)
     else:
-        tbl.set(KUBE_LABEL_UNSET_KEY, [ (fld, "")])
+        _set_a_label_entry(tbl, KUBE_LABEL_UNSET_KEY, (fld, ""))
         tbl.hdel(KUBE_LABEL_SET_KEY, fld)
         
 
@@ -210,8 +234,7 @@ def container_kill(feature):
     if docker_id:
         docker_action("kill", docker_id)
 
-    proc = subprocess.Popen("container_state.py down -f {}".format(feature))
-    proc.wait()
+    container_state.down(feature)
 
     debug_msg("END")
 
@@ -277,10 +300,7 @@ def main():
 
     init()
 
-    if args.name not in remote_features:
-        docker_action(args.action, args.name)
-
-    elif args.action == "start":
+    if args.action == "start":
         container_start(args.name)
 
     elif args.action == "stop":

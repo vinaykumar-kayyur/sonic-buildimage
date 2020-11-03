@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 import sys
 import syslog
@@ -7,8 +7,7 @@ import datetime
 import time
 import argparse
 import subprocess
-# from swsscommon import swsscommon
-from swsssdk import ConfigDBConnector
+from swsscommon import swsscommon
 
 # DB field names
 SET_OWNER = "set_owner"
@@ -46,8 +45,6 @@ def _get_version_key(feature, version):
     return "{}_{}_enabled".format(feature, version)
 
 
-"""
-Commented until swsscommon is available
 def read_data(feature):
     global state_db, set_owner, state_data
 
@@ -65,81 +62,40 @@ def read_data(feature):
 
 def read_field(feature, field, default):
     tbl = swsscommon.Table(state_db, 'FEATURE')
+
+    # tbl.get for non-existing feature would return
+    # [False, {} ]
+    #
     data = dict(tbl.get(feature)[1])
     return data[field] if field in data else default
 
 
 def check_unset_labels(feature, version):
-     check if this feature is in unset list or not 
+    # check if this feature is in unset list or not 
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
     labels = dict(tbl.get(KUBE_LABEL_UNSET_KEY)[1])
     return _get_version_key(feature, version) in labels
 
 
 def drop_label(feature, version):
-    Set/drop label as required
-        Update is done in state-db.
-        ctrmgrd sets it with kube API server as required
+    # Set/drop label as required
+    # Update is done in state-db.
+    # ctrmgrd sets it with kube API server as required
     
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
     name = _get_version_key(feature, version)
-    tbl.set(KUBE_LABEL_UNSET_KEY, [ (name, "")])
-    tbl.hdel(KUBE_LABEL_SET_KEY, name)
+    labels = dict(tbl.get(KUBE_LABEL_UNSET_KEY)[1])
+    if name not in labels:
+        tbl.set(KUBE_LABEL_UNSET_KEY, [ (name, "")])
+        tbl.hdel(KUBE_LABEL_SET_KEY, name)
         
 
 def update_data(feature, data):
-    debug_msg("{}: {{ {}: {} }}".format(feature, field, val))
+    debug_msg("{}: {}".format(feature, str(data)))
     tbl = swsscommon.Table(state_db, "FEATURE")
     tbl.set(feature, list(data.items()))
-"""
-
-def read_data(feature):
-    global state_db, set_owner, state_data
-
-    db = ConfigDBConnector()
-    db.connect(wait_for_init=True, retry_on=True)
-    tbl = db.get_table('FEATURE')
-
-    if ((feature in tbl) and (SET_OWNER in tbl[feature])):
-        set_owner = tbl[feature][SET_OWNER]
-
-    state_db = ConfigDBConnector()
-    state_db.db_connect("STATE_DB", wait_for_init=False, retry_on=True)
-    tbl = state_db.get_table('FEATURE')
-    if feature in tbl:
-        state_data.update(tbl[feature])
 
 
-def read_field(feature, field, default):
-    tbl = state_db.get_table('FEATURE')
-    if (feature in tbl) and (field in tbl[feature]):
-        return tbl[feature][field]
-    else:
-        return default
-
-def check_unset_labels(feature, version):
-    tbl = state_db.get_table(KUBE_LABEL_TABLE)
-    if KUBE_LABEL_UNSET_KEY in tbl:
-        labels = tbl[KUBE_LABEL_UNSET_KEY]
-    else:
-        labels = {}
-    return _get_version_key(feature, version) in labels
-
-
-def drop_label(feature, version):
-    """ Set/drop label as required
-        Update is done in state-db.
-        ctrmgrd sets it with kube API server as required
-    """
-    name = _get_version_key(feature, version)
-    state_db.mod_entry(KUBE_LABEL_TABLE, KUBE_LABEL_UNSET_KEY, { name: "" })
-
-
-def update_data(feature, data):
-    debug_msg("{}: {}".format(feature, str(data)))
-    state_db.mod_entry("FEATURE", feature, data) 
-
-    
 def get_docker_id():
     cmd = 'cat /proc/self/cgroup | grep -e ":memory:" | rev | cut -f1 -d\'/\' | rev'
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -147,13 +103,20 @@ def get_docker_id():
     return output.strip()[:12]
 
 
-def to_int(s):
-    try:
-        return(int(s))
-    except ValueError as ex:
-        syslog.syslog(syslog.LOG_ERR, "Non convertible err={}".format(str(ex)))
-        return 0
+def _strip_numeric_suffix(s):
+    i = len(s)
+    if not i:
+        return s
 
+    i -= 1
+
+    while (i > 0) and s[i].isdigit():
+        i -= 1
+
+    if not s[i].isdigit():
+        i += 1
+
+    return s[i:]
 
 def instance_lower(feature, version):
     if ((state_data[REMOTE_STATE] == "none") or
@@ -166,8 +129,8 @@ def instance_lower(feature, version):
     nxt = version.split('.') if version else "0.0.0".split('.')
     ret = False
     for cs, ns in zip(ct, nxt):
-        c = to_int(cs)
-        n = to_int(ns)
+        c = int(cs)
+        n = int(ns)
         if n < c:
             ret = True
             break
@@ -187,18 +150,18 @@ def is_active(feature):
         return False
 
 
-def update_state(args, is_up):
+def update_state(is_up, feature, owner=None, version=None):
     data = {
-            CURRENT_OWNER: args.owner if is_up else "none",
+            CURRENT_OWNER: owner if is_up else "none",
             DOCKER_ID: get_docker_id() if is_up else "",
             UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             }
     if is_up:
-        data[VERSION] = args.version
+        data[VERSION] = version
 
-        if (args.owner == "local"):
+        if (owner == "local"):
             # Disable deployment of this version as available locally
-            drop_label(args.feature, args.version)
+            drop_label(feature, version)
         else:
             data[REMOTE_STATE] = "running"
 
@@ -207,12 +170,12 @@ def update_state(args, is_up):
         if state != "pending":
             if state != "running":
                 syslog.syslog(syslog.LOG_ERR,
-                        "{} kube down state: {} != running", args.feature, state)
+                        "{} kube down state: {} != running", feature, state)
             else:
                 data[REMOTE_STATE] = "stopped"
 
-    debug_msg("{} up= {} data:{}".format(args.feature, is_up, str(data)))
-    update_data(args.feature,  data)
+    debug_msg("{} up= {} data:{}".format(feature, is_up, str(data)))
+    update_data(feature,  data)
     state_data.update(data)
 
 
@@ -221,46 +184,47 @@ def do_exit(feat, m):
         feat, get_docker_id(), m))
     sys.exit(-1)
 
-def container_up(args):
+def container_up(feature, owner, version):
     debug_msg("BEGIN")
-    read_data(args.feature)
+    read_data(feature)
 
-    debug_msg("args={} set_owner={} state_data={}".format(
-        args, set_owner, state_data))
+    version = _strip_numeric_suffix(version)
+    debug_msg("args: feature={}, owner={}, version={} DB: set_owner={} state_data={}".format(
+        feature, owner, version, set_owner, state_data))
 
-    if args.owner == "local":
-        update_state(args, True)
+    if owner == "local":
+        update_state(True, feature, owner, version)
     else:
         if (set_owner == "local"):
-            do_exit(args.feature, "bail out as set_owner is local")
+            do_exit(feature, "bail out as set_owner is local")
 
-        if not is_active(args.feature):
-            do_exit(args.feature, "bail out as system state not active")
+        if not is_active(feature):
+            do_exit(feature, "bail out as system state not active")
 
-        if check_unset_labels(args.feature, args.version):
-            do_exit(args.feature, "This version is marked disabled. Exiting ...")
+        if check_unset_labels(feature, version):
+            do_exit(feature, "This version is marked disabled. Exiting ...")
 
-        if instance_lower(args.feature, args.version):
+        if instance_lower(feature, version):
             # Remove label <feature_name>_<version>_enabled
             # Else kubelet will continue to re-deploy every 5 mins, until
             # master removes the lable to un-deploy.
             #
-            do_exit(args.feature, "bail out as current deploy id is lower")
+            do_exit(feature, "bail out as current deploy id is lower")
 
-        update_data(args.feature, { VERSION: args.version })
+        update_data(feature, { VERSION: version })
 
         mode = state_data[REMOTE_STATE]
         if mode in ("none", "running", "stopped"):
-            update_data(args.feature, { REMOTE_STATE: "pending" })
+            update_data(feature, { REMOTE_STATE: "pending" })
             mode = "pending"
         else:
-            debug_msg("{}: Skip remote_state({}) update".format(args.feature, mode))
+            debug_msg("{}: Skip remote_state({}) update".format(feature, mode))
 
         
         i = 0
         while (mode != "ready"):
             if i == 0:
-                debug_msg("{}: remote_state={}. Waiting to go ready".format(args.feature, mode))
+                debug_msg("{}: remote_state={}. Waiting to go ready".format(feature, mode))
                 i = 1
             elif i == 9:
                 i = 0
@@ -268,29 +232,37 @@ def container_up(args):
                 i += 1
 
             time.sleep(2)
-            mode = read_field(args.feature, REMOTE_STATE, "none")
+            mode = read_field(feature, REMOTE_STATE, "none")
 
-        update_state(args, True)
+        update_state(True, feature, owner, version)
 
     debug_msg("END")
 
 
-def container_down(args):
+def container_down(feature):
     debug_msg("BEGIN")
-    read_data(args.feature)
+    read_data(feature)
 
-    debug_msg("args={} set_owner={} state_data={}".format(
-        args, set_owner, state_data))
+    debug_msg("feature={} set_owner={} state_data={}".format(
+        feature, set_owner, state_data))
 
     ct_docker_id = state_data[DOCKER_ID]
     caller_docker_id = get_docker_id()
     if caller_docker_id != ct_docker_id:
         syslog.syslog(syslog.LOG_ERR, "{} down mismatch docker-id. caller_docker_id={} current:{}".
-                format(args.feature, caller_docker_id, ct_docker_id))
+                format(feature, caller_docker_id, ct_docker_id))
     else:
-        update_state(args, False)
+        update_state(False, feature)
     debug_msg("END")
 
+
+
+def parser_container_up(args):
+    container_up(feature=args.feature, owner=args.owner, version=args.version)
+
+
+def parser_container_down(args):
+    container_down(feature=args.feature)
 
 
 # e.g. container_state <feature> up/down local/kube <docker id>
@@ -302,11 +274,11 @@ def main():
     parser_up.add_argument("-f", "--feature", required=True)
     parser_up.add_argument("-o", "--owner", choices=["local", "kube"], required=True)
     parser_up.add_argument("-v", "--version", default="")
-    parser_up.set_defaults(func=container_up)
+    parser_up.set_defaults(func=parser_container_up)
     
     parser_down = subparsers.add_parser('down')
     parser_down.add_argument("-f", "--feature", required=True)
-    parser_down.set_defaults(func=container_down)
+    parser_down.set_defaults(func=parser_container_down)
 
     args = parser.parse_args()
     args.func(args)

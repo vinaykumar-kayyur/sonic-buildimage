@@ -349,8 +349,8 @@ sudo cp {{sonic_ctrmgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_CTRMGMT_WHEEL_N
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_CTRMGMT_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_CTRMGMT_WHEEL_NAME
 
-sudo cp ${files_path}/container_state ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
-sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_state
+sudo cp ${files_path}/container_state.py ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
+sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_state.py
 
 # Config file used by container mgmt scripts/service
 sudo cp ${files_path}/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/

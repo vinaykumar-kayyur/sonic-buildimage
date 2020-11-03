@@ -239,11 +239,11 @@ if join fails, check the following
 a.  Ensure both master & node run same or compatible k8s versions
 
 b.  Check if this node already exists in master
-    Use 'sudo kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes' to list nodes at master.
+    Use 'sudo kubectl --kubeconfig=${KUBE_ADMIN_CONF} get nodes' to list nodes at master.
 
     If yes, delete it, as the node is attempting a new join.
-    'kubectl --kubeconfig=/etc/kubernetes/admin.conf drain <node name> --ignore-daemonsets'
-    'kubectl --kubeconfig=/etc/kubernetes/admin.conf delete node <node name>'
+    'kubectl --kubeconfig=${KUBE_ADMIN_CONF} drain <node name> --ignore-daemonsets'
+    'kubectl --kubeconfig=${KUBE_ADMIN_CONF} delete node <node name>'
 
 c.  In Master check if all system pods are running good.
     'kubectl get pods --namespace kube-system'

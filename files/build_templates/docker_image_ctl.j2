@@ -207,7 +207,7 @@ start() {
             docker start ${DOCKERNAME}
             {%- else %}
             echo "Starting existing ${DOCKERNAME} container with HWSKU $HWSKU"
-            /usr/local/bin/container_action start ${DOCKERNAME}
+            /usr/local/bin/container start ${DOCKERNAME}
             {%- endif %}
             postStartAction
             exit $?
@@ -380,7 +380,7 @@ start() {
     {%- if docker_container_name == "database" %}
     docker start $DOCKERNAME
     {%- else %}
-    /usr/local/bin/container_action start ${DOCKERNAME}
+    /usr/local/bin/container start ${DOCKERNAME}
     {%- endif %}
     postStartAction
 }
@@ -389,7 +389,7 @@ wait() {
     {%- if docker_container_name == "database" %}
     docker wait $DOCKERNAME
     {%- else %}
-    /usr/local/bin/container_action wait $DOCKERNAME
+    /usr/local/bin/container wait $DOCKERNAME
     {%- endif %}
 }
 
@@ -400,7 +400,7 @@ stop() {
         ip netns delete "$NET_NS"
     fi
     {%- else %}
-    /usr/local/bin/container_action stop $DOCKERNAME
+    /usr/local/bin/container stop $DOCKERNAME
     {%- endif %}
 }
 

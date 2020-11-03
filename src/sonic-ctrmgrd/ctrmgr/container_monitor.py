@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 
 import signal
-import subprocess
 import syslog
 import sys
+
+sys.path.append('/usr/share/sonic/scripts/')
+import container_state
 
 name = None
 
 def mark_end():
-    cmd = ["/usr/share/sonic/scripts/container_state", "down", "-f", name]
+    container_state.down(name)
     syslog.syslog(syslog.LOG_INFO, "Marking end of docker {}".format(name))
 
-    try:
-        subprocess.check_call(cmd)
-    except subprocess.CalledProcessError as err:
-        syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
-                .format(err.cmd, err.returncode, err.output))
 
 def handler(signum, frame):
     syslog.syslog(syslog.LOG_ERR, "Received signal {}".format(signum))

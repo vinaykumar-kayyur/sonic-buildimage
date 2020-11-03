@@ -2,6 +2,7 @@
 FROM docker-config-engine-buster
 
 ARG docker_container_name
+ARG image_version
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 ## Make apt-get non-interactive
@@ -28,5 +29,8 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["files/container_monitor.py", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
+
+# ingrain version into start.sh
+RUN [ -f /usr/bin/start.sh ] && sed -ri "s/^IMAGE_VERSION.*$/IMAGE_VERSION=$image_version/;" /usr/bin/start.sh
 
 ENTRYPOINT ["/usr/bin/supervisord"]
