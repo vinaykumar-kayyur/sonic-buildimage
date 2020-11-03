@@ -120,6 +120,269 @@ class PackageManager:
         self.num_npus = device_info.get_num_npus()
         self.version_info = device_info.get_sonic_version_info() or {}
 
+    def install(self, expression: str, force=False):
+        """ Install a SONiC Package from the package reference
+        expression string. Can force the installation if force parameter
+        is True.
+
+        Args:
+            expression: SONiC Package reference expression
+            force: Force the installation.
+        Raises:
+            PackageInstallationError
+        """
+
+        package_reference = parse_reference_expression(expression)
+        name, reference = package_reference.name, package_reference.reference
+
+        with failure_ignore(force):
+            if self.is_installed(name):
+                raise PackageInstallationError(f'{name} is already installed')
+
+        package = self.get_package(name, reference)
+        base_os_version = self.get_base_os_version()
+        version_constraint = package.manifest['package']['base-os-constraint']
+
+        with failure_ignore(force):
+            if not version_constraint.allows_all(base_os_version):
+                raise PackageSonicRequirementError(package.name, version_constraint,
+                                                   base_os_version)
+
+        installed_packages = self.get_installed_packages_and(package)
+
+        with failure_ignore(force):
+            check_package_dependencies(installed_packages)
+
+        version = package.manifest['package']['version']
+        cleanup = []  # cleanup function list
+
+        def add_cleanup(func):
+            cleanup.append(func)
+
+        def exec_cleanup():
+            for cleanup_func in reversed(cleanup):
+                try:
+                    cleanup_func()
+                except Exception as cleanup_err:
+                    log.error(f'{cleanup_err}')
+
+        try:
+            self.docker.pull(package.repository, package.reference, version, ProgressManager())
+            add_cleanup(functools.partial(self.docker.rmi, package.repository, version))
+
+            self.docker.tag(package.repository, version, package.repository, 'latest')
+            add_cleanup(functools.partial(self.docker.rmi, package.repository, 'latest'))
+
+            self.service_creator.create(package)
+            add_cleanup(functools.partial(self.service_creator.remove, package))
+        except Exception as err:
+            exec_cleanup()
+            raise PackageInstallationError(f'Failed to install {package.name}: {err}')
+        except KeyboardInterrupt:
+            exec_cleanup()
+            raise
+
+        package_entry = package.entry
+        package_entry.installed = True
+        self.database.update_package(package_entry)
+        self.database.commit()
+
+    def uninstall(self, name: str, force=False):
+        """ Uninstall a SONiC Package referenced by name.
+        The uninstallation can be forced if force argument is
+        True.
+
+        Args:
+            name: SONiC Package name.
+            force: Force the installation.
+        Raises:
+            PackageUninstallationError
+        """
+
+        with failure_ignore(force):
+            if not self.is_installed(name):
+                raise PackageInstallationError(f'{name} is not installed')
+
+        with failure_ignore(force):
+            if self.feature_registry.is_feature_enabled(name):
+                raise PackageInstallationError(f'{name} is enabled. Disable the feature first')
+
+        package = self.get_package(name)
+
+        installed_packages = self.get_installed_packages_except(package)
+
+        with failure_ignore(force):
+            check_package_dependencies(installed_packages)
+
+        try:
+            self.service_creator.remove(package)
+            self.docker.rm(package.repository, package.reference)
+            self.docker.rm(package.repository, 'latest')
+            self.docker.rmi(package.repository, package.reference)
+            self.docker.rmi(package.repository, 'latest')
+        except Exception as err:
+            raise PackageUninstallationError(f'Failed to uninstall {package.name}: {err}')
+
+        package_entry = package.entry
+        package_entry.installed = False
+        package_entry.version = None
+        self.database.update_package(package_entry)
+        self.database.commit()
+
+    def upgrade(self, expression: str, force=False):
+        """ Upgrade a SONiC Package to a version the package reference
+        expression specifies. Can force the upgrade if force parameter
+        is True. Force can allow a package downgrade.
+
+        Args:
+            expression: SONiC Package reference expression
+            force: Force the installation.
+        Raises:
+            PackageInstallationError
+        """
+
+        package_reference = parse_reference_expression(expression)
+        name, reference = package_reference.name, package_reference.reference
+
+        with failure_ignore(force):
+            if not self.is_installed(name):
+                raise PackageInstallationError(f'{name} is not installed')
+
+        old_package = self.get_package(name)
+        new_package = self.get_package(name, reference)
+
+        old_feature = old_package.manifest['service']['name']
+        new_feature = new_package.manifest['service']['name']
+
+        with failure_ignore(force):
+            old_version = old_package.manifest['package']['version']
+            new_version = new_package.manifest['package']['version']
+
+            if old_version == new_version:
+                raise PackageManagerError(f'{new_version} is already installed')
+
+            if new_version < old_version:
+                raise PackageManagerError(f'Request to downgrade from {old_version} to {new_version}. '
+                                          f'Downgrade might be not supported by the package')
+
+        base_os_version = self.get_base_os_version()
+        version_constraint = new_package.manifest['package']['base-os-constraint']
+
+        with failure_ignore(force):
+            if not version_constraint.allows_all(base_os_version):
+                raise PackageSonicRequirementError(new_package.name, version_constraint,
+                                                   base_os_version)
+
+        # remove currently installed package from the list
+        installed_packages = self.get_installed_packages_except(old_package)
+        # add the package to upgrade to the list
+        installed_packages.append(new_package)
+
+        with failure_ignore(force):
+            check_package_dependencies(installed_packages)
+
+        version = new_package.manifest['package']['version']
+        cleanup = []  # cleanup function list
+
+        def add_cleanup(func):
+            cleanup.append(func)
+
+        def exec_cleanup():
+            for cleanup_func in reversed(cleanup):
+                try:
+                    cleanup_func()
+                except Exception as cleanup_err:
+                    log.error(f'{cleanup_err}')
+
+        try:
+            self.docker.pull(new_package.repository, new_package.reference, version, ProgressManager())
+            add_cleanup(functools.partial(self.docker.rmi, new_package.repository, version))
+
+            if self.feature_registry.is_feature_enabled(old_feature):
+                self.systemctl_action(old_package, 'stop')
+
+            self.service_creator.remove(old_package, deregister_feature=False)
+            self.docker.rm(old_package.repository, old_package.reference)
+            self.docker.rm(old_package.repository, 'latest')
+            self.docker.rmi(old_package.repository, old_package.reference)
+            self.docker.rmi(old_package.repository, 'latest')
+
+            self.docker.tag(new_package.repository, version, new_package.repository, 'latest')
+            add_cleanup(functools.partial(self.docker.rmi, old_package.repository, 'latest'))
+
+            self.service_creator.create(new_package, register_feature=False)
+            add_cleanup(functools.partial(self.service_creator.remove, new_package))
+
+            if self.feature_registry.is_feature_enabled(new_feature):
+                self.systemctl_action(new_package, 'start')
+        except Exception as err:
+            exec_cleanup()
+            raise PackageInstallationError(f'Failed to upgrade {new_package.name}: {err}')
+        except KeyboardInterrupt:
+            exec_cleanup()
+            raise
+
+        new_package_entry = new_package.entry
+        new_package_entry.installed = True
+        self.database.update_package(new_package_entry)
+        self.database.commit()
+
+    def migrate_packages(self, old_package_database: PackageDatabase):
+        """ Migrate packages from old database. This function can
+        do a comparison between current database and the database
+        passed in as argument.
+            If the package is missing in the current database it will be added.
+            If the package is installed in the passed database and in the current
+        it is not installed it will be installed with a passed database package version.
+            If the package is installed in the passed database and it is installed
+        in the current database but with older version the package will be upgraded to
+        the never version.
+            If the package is installed in the passed database and in the current
+        it is installed but with never version - no actions are taken.
+
+        Args:
+            old_package_database: SONiC Package Database to migrate packages from.
+        Raises:
+            PackageInstallationError
+        """
+
+        self.migrate_package_database(old_package_database)
+
+        # TODO: Toposort packages by their dependencies first.
+        for old_package in old_package_database:
+            if not old_package.installed or old_package.built_in:
+                continue
+
+            log.info(f'migrating package {old_package.name}')
+
+            new_package = self.database.get_package(old_package.name)
+            if new_package.installed or new_package.default_reference is not None:
+                pkg = self.get_package(new_package.name)
+                new_package_version = pkg.manifest['package']['version']
+            else:
+                # No default version and package is not installed.
+                # Set it to 0.0.0 so it will be
+                # always lower than old package version
+                # and the old version will be installed.
+                new_package_version = Version(0, 0, 0)
+
+            if old_package.version > new_package_version:
+                log.info(f'old package version is greater then default version in new image: '
+                         f'{old_package.version} > {new_package_version}')
+                if new_package.installed:
+                    log.info(f'upgrading {new_package.name} to {old_package.version}')
+                    self.upgrade(f'{new_package.name}=={old_package.version}')
+                else:
+                    log.info(f'installing {new_package.name} with version {old_package.version}')
+                    self.install(f'{new_package.name}=={old_package.version}')
+            else:
+                if not new_package.installed:
+                    self.install(f'{new_package.name}')
+                else:
+                    log.info(f'skipping {new_package.name} as installed version is newer')
+
+            self.database.commit()
+
     @staticmethod
     def get_manager() -> 'PackageManager':
         docker_api = DockerApi(docker.from_env())
@@ -218,218 +481,6 @@ class PackageManager:
         if multi_instance:
             for npu in range(self.num_npus):
                 run_command(f'systemctl {action} {name}@{npu}')
-
-    def install(self, expression: str, force=False):
-        package_reference = parse_reference_expression(expression)
-        name, reference = package_reference.name, package_reference.reference
-
-        with failure_ignore(force):
-            if self.is_installed(name):
-                raise PackageInstallationError(f'{name} is already installed')
-
-        package = self.get_package(name, reference)
-        base_os_version = self.get_base_os_version()
-        version_constraint = package.manifest['package']['base-os-constraint']
-
-        with failure_ignore(force):
-            if not version_constraint.allows_all(base_os_version):
-                raise PackageSonicRequirementError(package.name, version_constraint,
-                                                   base_os_version)
-
-        installed_packages = self.get_installed_packages_and(package)
-
-        with failure_ignore(force):
-            check_package_dependencies(installed_packages)
-
-        version = package.manifest['package']['version']
-        cleanup = []  # cleanup function list
-
-        def add_cleanup(func):
-            cleanup.append(func)
-
-        def exec_cleanup():
-            for cleanup_func in reversed(cleanup):
-                try:
-                    cleanup_func()
-                except Exception as cleanup_err:
-                    log.error(f'{cleanup_err}')
-
-        try:
-            self.docker.pull(package.repository, package.reference, version, ProgressManager())
-            add_cleanup(functools.partial(self.docker.rmi, package.repository, version))
-
-            self.docker.tag(package.repository, version, package.repository, 'latest')
-            add_cleanup(functools.partial(self.docker.rmi, package.repository, 'latest'))
-
-            self.service_creator.create(package)
-            add_cleanup(functools.partial(self.service_creator.remove, package))
-        except Exception as err:
-            exec_cleanup()
-            raise PackageInstallationError(f'Failed to install {package.name}: {err}')
-        except KeyboardInterrupt:
-            exec_cleanup()
-            raise
-
-        package_entry = package.entry
-        package_entry.installed = True
-        self.database.update_package(package_entry)
-        self.database.commit()
-
-    def uninstall(self, name: str, force=False):
-        with failure_ignore(force):
-            if not self.is_installed(name):
-                raise PackageInstallationError(f'{name} is not installed')
-
-        with failure_ignore(force):
-            if self.feature_registry.is_feature_enabled(name):
-                raise PackageInstallationError(f'{name} is enabled. Disable the feature first')
-
-        package = self.get_package(name)
-
-        installed_packages = self.get_installed_packages_except(package)
-
-        with failure_ignore(force):
-            check_package_dependencies(installed_packages)
-
-        try:
-            self.service_creator.remove(package)
-            self.docker.rm(package.repository, package.reference)
-            self.docker.rm(package.repository, 'latest')
-            self.docker.rmi(package.repository, package.reference)
-            self.docker.rmi(package.repository, 'latest')
-        except Exception as err:
-            raise PackageUninstallationError(f'Failed to uninstall {package.name}: {err}')
-
-        package_entry = package.entry
-        package_entry.installed = False
-        package_entry.version = None
-        self.database.update_package(package_entry)
-        self.database.commit()
-
-    def upgrade(self, expression: str, force=False):
-        package_reference = parse_reference_expression(expression)
-        name, reference = package_reference.name, package_reference.reference
-
-        with failure_ignore(force):
-            if not self.is_installed(name):
-                raise PackageInstallationError(f'{name} is not installed')
-
-        old_package = self.get_package(name)
-        new_package = self.get_package(name, reference)
-
-        old_feature = old_package.manifest['service']['name']
-        new_feature = new_package.manifest['service']['name']
-
-        with failure_ignore(force):
-            old_version = old_package.manifest['package']['version']
-            new_version = new_package.manifest['package']['version']
-
-            if old_version == new_version:
-                raise PackageManagerError(f'{new_version} is already installed')
-
-            if new_version < old_version:
-                raise PackageManagerError(f'Request to downgrade from {old_version} to {new_version}. '
-                                          f'Downgrade might be not supported by the package')
-
-        base_os_version = self.get_base_os_version()
-        version_constraint = new_package.manifest['package']['base-os-constraint']
-
-        with failure_ignore(force):
-            if not version_constraint.allows_all(base_os_version):
-                raise PackageSonicRequirementError(new_package.name, version_constraint,
-                                                   base_os_version)
-
-        # remove currently installed package from the list
-        installed_packages = self.get_installed_packages_except(old_package)
-        # add the package to upgrade to the list
-        installed_packages.append(new_package)
-
-        with failure_ignore(force):
-            check_package_dependencies(installed_packages)
-
-        version = new_package.manifest['package']['version']
-        cleanup = []  # cleanup function list
-
-        def add_cleanup(func):
-            cleanup.append(func)
-
-        def exec_cleanup():
-            for cleanup_func in reversed(cleanup):
-                try:
-                    cleanup_func()
-                except Exception as cleanup_err:
-                    log.error(f'{cleanup_err}')
-
-        try:
-            self.docker.pull(new_package.repository, new_package.reference, version, ProgressManager())
-            add_cleanup(functools.partial(self.docker.rmi, new_package.repository, version))
-
-            if self.feature_registry.is_feature_enabled(old_feature):
-                self.systemctl_action(old_package, 'stop')
-
-            self.service_creator.remove(old_package, deregister_feature=False)
-            self.docker.rm(old_package.repository, old_package.reference)
-            self.docker.rm(old_package.repository, 'latest')
-            self.docker.rmi(old_package.repository, old_package.reference)
-            self.docker.rmi(old_package.repository, 'latest')
-
-            self.docker.tag(new_package.repository, version, new_package.repository, 'latest')
-            add_cleanup(functools.partial(self.docker.rmi, old_package.repository, 'latest'))
-
-            self.service_creator.create(new_package, register_feature=False)
-            add_cleanup(functools.partial(self.service_creator.remove, new_package))
-
-            if self.feature_registry.is_feature_enabled(new_feature):
-                self.systemctl_action(new_package, 'start')
-        except Exception as err:
-            exec_cleanup()
-            raise PackageInstallationError(f'Failed to upgrade {new_package.name}: {err}')
-        except KeyboardInterrupt:
-            exec_cleanup()
-            raise
-
-        new_package_entry = new_package.entry
-        new_package_entry.installed = True
-        self.database.update_package(new_package_entry)
-        self.database.commit()
-
-    def migrate_packages(self, old_package_database: PackageDatabase):
-        self.migrate_package_database(old_package_database)
-
-        # TODO: Toposort packages by their dependencies first.
-        for old_package in old_package_database:
-            if not old_package.installed or old_package.built_in:
-                continue
-
-            log.info(f'migrating package {old_package.name}')
-
-            new_package = self.database.get_package(old_package.name)
-            if new_package.installed or new_package.default_reference is not None:
-                pkg = self.get_package(new_package.name)
-                new_package_version = pkg.manifest['package']['version']
-            else:
-                # No default version and package is not installed.
-                # Set it to 0.0.0 so it will be
-                # always lower than old package version
-                # and the old version will be installed.
-                new_package_version = Version(0, 0, 0)
-
-            if old_package.version > new_package_version:
-                log.info(f'old package version is greater then default version in new image: '
-                         f'{old_package.version} > {new_package_version}')
-                if new_package.installed:
-                    log.info(f'upgrading {new_package.name} to {old_package.version}')
-                    self.upgrade(f'{new_package.name}=={old_package.version}')
-                else:
-                    log.info(f'installing {new_package.name} with version {old_package.version}')
-                    self.install(f'{new_package.name}=={old_package.version}')
-            else:
-                if not new_package.installed:
-                    self.install(f'{new_package.name}')
-                else:
-                    log.info(f'skipping {new_package.name} as installed version is newer')
-
-            self.database.commit()
 
     def migrate_package_database(self, old_package_database: PackageDatabase):
         for package in old_package_database:
