@@ -3,7 +3,7 @@ Description=Delays process-reboot-cause until network is stably connected
 
 [Timer]
 OnBootSec=1min 30 sec
-Unit=sonic-host-services-data.process-reboot-cause.service
+Unit=process-reboot-cause.service
 
 [Install]
 WantedBy=timers.target

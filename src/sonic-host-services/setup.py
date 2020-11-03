@@ -12,6 +12,8 @@ setup(
     maintainer_email = 'jolevequ@microsoft.com',
     scripts = [
         'scripts/procdockerstatsd',
+        'scripts/determine-reboot-cause',
+        'scripts/process-reboot-cause',
     ],
     install_requires = [
         'sonic-py-common',
