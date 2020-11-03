@@ -41,9 +41,9 @@ def failure_ignore(ignore: bool):
             raise
 
 
-def get_installation_target(expression):
+def parse_reference_expression(expression):
     try:
-        return get_installation_target_from_constraint(PackageConstraint.parse(expression))
+        return get_package_reference_from_constraint(PackageConstraint.parse(expression))
     except ValueError:
         # if we failed to parse the expression as constraint expression
         # we will try to parse it as reference
@@ -87,7 +87,7 @@ def check_package_dependencies(packages: Iterable[Package]):
                 raise PackageConflictError(pkg.name, conflict, installed_version)
 
 
-def get_installation_target_from_constraint(constraint: PackageConstraint) -> PackageReference:
+def get_package_reference_from_constraint(constraint: PackageConstraint) -> PackageReference:
     package_name, version_constraint = constraint.name, constraint.constraint
     # Allow only specific version for now.
     # Later we can improve package manager to support
@@ -220,7 +220,7 @@ class PackageManager:
                 run_command(f'systemctl {action} {name}@{npu}')
 
     def install(self, expression: str, force=False):
-        package_reference = get_installation_target(expression)
+        package_reference = parse_reference_expression(expression)
         name, reference = package_reference.name, package_reference.reference
 
         with failure_ignore(force):
@@ -307,7 +307,7 @@ class PackageManager:
         self.database.commit()
 
     def upgrade(self, expression: str, force=False):
-        package_reference = get_installation_target(expression)
+        package_reference = parse_reference_expression(expression)
         name, reference = package_reference.name, package_reference.reference
 
         with failure_ignore(force):

@@ -14,7 +14,7 @@ from natsort import natsorted
 from sonic_package_manager.database import PackageEntry, PackageDatabase
 from sonic_package_manager.errors import PackageManagerError
 from sonic_package_manager.logger import log
-from sonic_package_manager.manager import PackageManager
+from sonic_package_manager.manager import PackageManager, parse_reference_expression
 
 BULLET_UC = '\u2022'
 
@@ -118,17 +118,20 @@ def list(ctx):
 
 
 @show.command()
-@click.argument('name')
+@click.argument('expression')
 @click.pass_context
-def manifest(ctx, name):
+def manifest(ctx, expression):
     """ Print the manifest content. """
 
+    manager: PackageManager = ctx.obj
+
     try:
-        manager: PackageManager = ctx.obj
-        package = manager.get_package(name)
+        package_reference = parse_reference_expression(expression)
+        package = manager.get_package(package_reference.name,
+                                      package_reference.reference)
         click.echo(json.dumps(package.manifest.unmarshal(), indent=4))
     except Exception as err:
-        exit_cli(f'Failed to describe package {name}: {err}', fg='red')
+        exit_cli(f'Failed to describe {expression}: {err}', fg='red')
 
 
 @show.command()
@@ -151,9 +154,9 @@ def versions(ctx, name, all, plain):
 
 
 @show.command()
-@click.argument('name')
+@click.argument('expression')
 @click.pass_context
-def changelog(ctx, name):
+def changelog(ctx, expression):
     """ Print the package changelog. """
 
     pass
@@ -217,23 +220,23 @@ def remove(ctx, name):
 @click.option('--manifest',
               help="manifest file used to override package manifest",
               type=click.Path())
-@click.argument('pattern')
+@click.argument('expression')
 @click.pass_context
 @click_log.simple_verbosity_option(log)
 @root_privileged_required
-def install(ctx, pattern, force, yes, manifest):
+def install(ctx, expression, force, yes, manifest):
     """ Install a package. """
 
     manager: PackageManager = ctx.obj
 
     if not yes and not force:
-        click.confirm(f'Package {pattern} is going to be installed, '
+        click.confirm(f'Package {expression} is going to be installed, '
                       f'continue?', abort=True, show_default=True)
 
     try:
-        manager.install(pattern, force)
+        manager.install(expression, force)
     except Exception as err:
-        exit_cli(f'Failed to install package {pattern}: {err}', fg='red')
+        exit_cli(f'Failed to install package {expression}: {err}', fg='red')
     except KeyboardInterrupt:
         exit_cli(f'Operation canceled by user', fg='red')
 
@@ -244,23 +247,23 @@ def install(ctx, pattern, force, yes, manifest):
 @click.option('--manifest',
               help="manifest file used to override package manifest",
               type=click.Path())
-@click.argument('pattern')
+@click.argument('expression')
 @click.pass_context
 @click_log.simple_verbosity_option(log)
 @root_privileged_required
-def upgrade(ctx, pattern, force, yes, manifest):
+def upgrade(ctx, expression, force, yes, manifest):
     """ Install a package. """
 
     manager: PackageManager = ctx.obj
 
     if not yes and not force:
-        click.confirm(f'Package is going to be upgraded to {pattern}, '
+        click.confirm(f'Package is going to be upgraded to {expression}, '
                       f'continue?', abort=True, show_default=True)
 
     try:
-        manager.upgrade(pattern, force)
+        manager.upgrade(expression, force)
     except Exception as err:
-        exit_cli(f'Failed to upgrade package {pattern}: {err}', fg='red')
+        exit_cli(f'Failed to upgrade package {expression}: {err}', fg='red')
     except KeyboardInterrupt:
         exit_cli(f'Operation canceled by user', fg='red')
 
@@ -308,7 +311,6 @@ def migrate(ctx, database, force, yes):
         exit_cli(f'Failed to migrate packages {err}', fg='red')
     except KeyboardInterrupt:
         exit_cli(f'Operation canceled by user', fg='red')
-
 
 
 if __name__ == "__main__":
