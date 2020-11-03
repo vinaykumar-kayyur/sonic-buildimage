@@ -3,7 +3,6 @@
 import json
 import os
 import socket
-import syslog
 import tarfile
 import time
 
