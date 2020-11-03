@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 """ This module implements new feature registration/de-registration in SONiC system. """
+
 import contextlib
 import json
+import os
 from typing import Dict
 
 import swsssdk
@@ -73,11 +75,13 @@ class FileDbTable:
 
 
 class FeatureRegistry:
-    def __init__(self, persistent, initial, running=None):
-        self._persistent = persistent
+    def __init__(self, initial, persistent=None, running=None):
         self._initial = initial
+        self._persistent = persistent
         self._running = running
-        self._tables = [self._persistent, self._initial]
+        self._tables = [self._initial]
+        if self._persistent:
+            self._tables.append(self._persistent)
         if self._running:
             self._tables.append(self._running)
 
@@ -90,7 +94,9 @@ class FeatureRegistry:
             table = swsscommon.Table(db, FEATURE)
             tables['running'] = table
 
-        tables['persistent'] = FileDbTable(CONFIG_DB_JSON, FEATURE)
+        if os.path.exists(CONFIG_DB_JSON):  # this is also fine
+            tables['persistent'] = FileDbTable(CONFIG_DB_JSON, FEATURE)
+
         tables['initial'] = FileDbTable(INIT_CFG_JSON, FEATURE)
 
         return FeatureRegistry(**tables)
@@ -133,11 +139,12 @@ class FeatureRegistry:
 
     def get_multi_instance_features(self):
         res = []
-        for feature in self._persistent.keys():
-            exists, cfg = self._persistent.get(feature)
+        for feature in self._initial.keys():
+            exists, cfg = self._initial.get(feature)
             assert exists
             cfg = dict(cfg)
-            if cfg.get('has_per_asic_scope', 'False').lower() == 'true':
+            asic_flag = str(cfg.get('has_per_asic_scope', 'False'))
+            if asic_flag.lower() == 'true':
                 res.append(feature)
         return res
 
