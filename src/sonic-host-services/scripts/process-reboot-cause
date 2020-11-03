@@ -10,11 +10,10 @@ try:
     import json
     import os
     import pwd
-    import re
     import sys
 
     import swsssdk
-    from sonic_py_common import device_info, logger
+    from sonic_py_common import logger
 except ImportError as err:
     raise ImportError("%s - required module not found" % str(err))
 
