@@ -1,25 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import os
-import time
-import tarfile
-import socket
-import yaml
 import json
+import os
+import socket
 import syslog
+import tarfile
+import time
+import yaml
+
+from azure.storage.file import FileService
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from azure.storage.file import FileService
-
-global CORE_FILE_PATH, RC_FILE
-global hostname, sonicversion, asicname, acctname, acctkey, sharename, cwd
-global INIT_CWD
-global log_level
-global this_file
 
 this_file = os.path.basename(__file__)
 
-global cfg
 cfg = ""
 
 CORE_FILE_PATH = "/var/core/"
@@ -90,7 +84,7 @@ class config:
             parse_a_json(self.parsed_data, (), self.cfg_data)
 
     def get_data(self, k):
-        return self.cfg_data[k] if self.cfg_data.has_key(k) else ""
+        return self.cfg_data[k] if k in self.cfg_data else ""
 
     def get_dict(self):
         return self.parsed_data
