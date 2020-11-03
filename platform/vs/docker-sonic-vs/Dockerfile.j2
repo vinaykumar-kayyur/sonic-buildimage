@@ -32,9 +32,6 @@ RUN apt-get install -y net-tools \
                        libc-ares2 \
                        iproute2 \
                        grub2-common \
-                       python-click \
-                       python-natsort \
-                       python-tabulate \
                        bash-completion \
                        libelf1 \
                        libmnl0 \
@@ -47,8 +44,16 @@ RUN apt-get install -y net-tools \
                        iptables \
                        python3-pip \
                        jq \
-                       python-m2crypto \
-                       libzmq5
+                       libzmq5 \
+                       # For installing Python m2crypto package
+                       # (these can be uninstalled after installation)
+                       build-essential \
+                       python-dev \
+                       python3-dev \
+                       libssl-dev \
+                       swig \
+                       # For using Python m2crypto package
+                       openssl
 
 # install redis-server
 RUN curl -o redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
@@ -56,22 +61,20 @@ RUN curl -o redis-server_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.co
 RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f
 RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb
 
-RUN pip install setuptools
+RUN pip2 install setuptools
 RUN pip3 install setuptools
-RUN pip install wheel
-RUN pip3 install wheel
-RUN pip install py2_ipaddress
-RUN pip install six
-RUN pip install pyroute2==0.5.3 netifaces==0.10.7
-RUN pip install monotonic==1.5
-RUN pip install urllib3
-RUN pip install requests
-RUN pip install crontab
+RUN pip2 install py2_ipaddress
+RUN pip2 install six
+RUN pip2 install pyroute2==0.5.3 netifaces==0.10.7
+RUN pip2 install monotonic==1.5
+RUN pip2 install urllib3
+RUN pip2 install requests
+RUN pip2 install crontab
 
 # Install dependencies for Dynamic Port Breakout
-RUN pip install xmltodict==0.12.0
-RUN pip install jsondiff==1.2.0
-RUN pip install ijson==2.6.1
+RUN pip2 install xmltodict==0.12.0
+RUN pip2 install jsondiff==1.2.0
+RUN pip2 install ijson==2.6.1
 
 {% if docker_sonic_vs_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -106,11 +109,13 @@ COPY python-wheels/{{ whl }}  python-wheels/
 # install PKGs after copying all PKGs to avoid dependency failure
 # use py3 to find python3 package, which is forced by wheel as of now
 {%- for whl in docker_sonic_vs_whls.split(' ') %}
-RUN pip{% if 'py3' in whl %}3{% endif %} install python-wheels/{{ whl }}
+RUN pip{% if 'py3' in whl %}3{% else %}2{% endif %} install python-wheels/{{ whl }}
 {%- endfor %}
 {% endif %}
 
 # Clean up
+RUN apt-get purge -y build-essential libssl-dev swig
+RUN apt-get purge -y python-dev python3-dev
 RUN apt-get clean -y
 RUN apt-get autoclean -y
 RUN apt-get autoremove -y
@@ -127,7 +132,7 @@ RUN sed -ri 's/^(save .*$)/# \1/g;                                              
             ' /etc/redis/redis.conf
 
 COPY ["50-default.conf", "/etc/rsyslog.d/"]
-COPY ["start.sh", "orchagent.sh", "files/remove_chassisdb_config", "/usr/bin/"]
+COPY ["start.sh", "orchagent.sh", "files/update_chassisdb_config", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/configdb-load.sh", "/usr/bin/"]
 COPY ["files/arp_update", "/usr/bin/"]
