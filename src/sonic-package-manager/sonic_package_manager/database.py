@@ -8,7 +8,6 @@ from typing import Optional, Dict, Callable
 from sonic_package_manager.errors import PackageManagerError, PackageNotFoundError, PackageAlreadyExistsError
 from sonic_package_manager.version import Version
 
-
 DB_FILE_PATH = '/var/lib/sonic-package-manager/packages.json'
 
 

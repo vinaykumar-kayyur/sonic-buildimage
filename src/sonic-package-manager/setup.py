@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import glob
 
 from setuptools import setup
 
@@ -27,6 +26,7 @@ setup(
         'toposort',
         'sonic-py-common',
         'swsssdk',
+        'requests',
     ],
     setup_requires=[
         'pytest-runner',
@@ -39,7 +39,7 @@ setup(
         'pytest-cov',
     ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
-    classifiers = [
+    classifiers=[
         'Intended Audience :: Developers',
         'Natural Language :: English',
         "Programming Language :: Python :: 2",

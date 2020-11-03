@@ -20,6 +20,7 @@ class ManifestError(Exception):
 
     pass
 
+
 @dataclass
 class PackageNotFoundError(PackageManagerError):
     """ Repository not found in repository database exception """

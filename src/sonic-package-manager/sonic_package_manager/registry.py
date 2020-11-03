@@ -4,9 +4,8 @@ import time
 from dataclasses import dataclass
 from typing import List, Dict
 
-from docker_image import reference
-
 import requests
+from docker_image import reference
 
 from sonic_package_manager.errors import PackageManagerError
 from sonic_package_manager.logger import log
