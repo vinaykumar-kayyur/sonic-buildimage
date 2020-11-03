@@ -85,12 +85,10 @@ class FeatureRegistry:
     def create() -> 'FeatureRegistry':
         tables = {}
 
-        if is_db_alive() or not in_chroot():  # this is Ok if database is not running
+        if is_db_alive() and not in_chroot():  # this is Ok if database is not running
             db = swsscommon.DBConnector(CONFIG_DB, 0)
             table = swsscommon.Table(db, FEATURE)
             tables['running'] = table
-        else:
-            log.warning(f'database is not running')
 
         tables['persistent'] = FileDbTable(CONFIG_DB_JSON, FEATURE)
         tables['initial'] = FileDbTable(INIT_CFG_JSON, FEATURE)
