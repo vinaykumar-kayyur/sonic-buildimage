@@ -135,14 +135,6 @@ def fake_db(mock_docker_api, mock_registry_resolver):
     yield FakePackageDatabase(content)
 
 
-# @pytest.fixture()
-# def mock_package_library_fs(fs, mock_package_library):
-#     database, library = mock_package_library
-#     fs.create_file('/var/lib/sonic-package-manager/packages.json', content=json.dumps(database))
-#     for package, manifest in library.items():
-#         fs.create_file(f'/var/lib/sonic-package-manager/{package}/manifest.json', content=json.dumps(manifest))
-
-
 @pytest.fixture
 def anything():
     """ Fixture that returns Any object that can be used in

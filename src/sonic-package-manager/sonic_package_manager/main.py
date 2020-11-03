@@ -159,26 +159,8 @@ def versions(ctx, name, all, plain):
 def changelog(ctx, expression):
     """ Print the package changelog. """
 
+    # TODO: implement changelog
     pass
-    # try:
-    #     db = PackageDatabase()
-    #     repo = db.get_package(name)
-    #     if not repo.is_installed():
-    #         raise PackageManagerError(f'{name} is not installed')
-    #     pkg = repo.get_package()
-    #     changelog = pkg.get_changelog()
-    #
-    #     if changelog is None:
-    #         raise errors.PackageManagerError(f'No changelog for package {name}')
-    #
-    #     for version in sorted(changelog):
-    #         click.secho(f'{version}:', fg='green', bold=True)
-    #         for line in changelog[version]:
-    #             click.secho(f'    {BULLET_UC} {line}', bold=True)
-    #         click.secho('')
-    #
-    # except errors.PackageManagerError as err:
-    #     exit_cli(f'Failed to print package changelog: {err}', fg='red')
 
 
 @repository.command()
