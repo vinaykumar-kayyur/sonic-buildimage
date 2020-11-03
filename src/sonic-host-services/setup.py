@@ -13,6 +13,8 @@ setup(
     scripts = [
         'scripts/caclmgrd',
         'scripts/procdockerstatsd',
+        'scripts/determine-reboot-cause',
+        'scripts/process-reboot-cause',
     ],
     install_requires = [
         'sonic-py-common',
