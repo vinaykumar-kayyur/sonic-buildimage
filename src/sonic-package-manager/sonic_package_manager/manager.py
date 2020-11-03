@@ -4,7 +4,6 @@ import functools
 from typing import Optional, Union, Iterable, List
 
 import docker
-
 from sonic_py_common import device_info
 
 from sonic_package_manager.constraint import PackageConstraint
@@ -26,6 +25,7 @@ from sonic_package_manager.reference import PackageReference
 from sonic_package_manager.registry import RegistryResolver
 from sonic_package_manager.service_creator.creator import ServiceCreator, run_command
 from sonic_package_manager.service_creator.feature import FeatureRegistry
+from sonic_package_manager.service_creator.sonic_db import SonicDB
 from sonic_package_manager.version import Version, VersionRange
 
 
@@ -128,7 +128,7 @@ class PackageManager:
                               registry_resolver,
                               PackageDatabase.from_file(),
                               ManifestResolver(docker_api, registry_resolver),
-                              ServiceCreator(FeatureRegistry.create()))
+                              ServiceCreator(FeatureRegistry(SonicDB)))
 
     def get_database(self):
         return self.database
