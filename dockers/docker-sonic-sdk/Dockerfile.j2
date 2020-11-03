@@ -1,0 +1,79 @@
+{% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
+FROM docker-config-engine-buster
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update &&       \
+    apt-get install -f -y   \
+        ifupdown            \
+        arping              \
+        libdbus-1-3         \
+        libdaemon0          \
+        libjansson4         \
+        libpython2.7        \
+        iproute2            \
+        ndisc6              \
+        tcpdump             \
+        libatomic1          \
+        libjemalloc1        \
+        liblua5.1-0         \
+        lua-bitop           \
+        lua-cjson           \
+        libelf1             \
+        libmnl0             \
+        bridge-utils
+
+
+## Build tools
+RUN apt-get update &&       \
+    apt-get install -f -y   \
+        autoconf            \
+        automake            \
+        libtool             \
+        curl                \
+        make                \
+        g++                 \
+        gcc                 \
+        vim                 \
+        git                 \
+        unzip
+
+{% if ( CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" ) %}
+## Fix for gcc/python not found in arm docker
+RUN apt-get install -f -y python2.7 python2.7-dev
+RUN apt-get install -y gcc-6
+{% endif %}
+{% if CONFIGURED_ARCH == "armhf" %}
+RUN ln -s -f /usr/bin/gcc-6 /usr/bin/arm-linux-gnueabihf-gcc
+{% endif %}
+{% if CONFIGURED_ARCH == "arm64" %}
+RUN ln -s -f /usr/bin/gcc-6 /usr/bin/aarch64-linux-gnu-gcc
+{% endif %}
+
+#RUN pip install \
+#        scapy==2.4.2 \
+#        setuptools \
+#        pyroute2==0.5.3
+#RUN pip install \
+#        netifaces==0.10.7 \
+#        monotonic==1.5
+
+{% if ( CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" ) %}
+# Remove installed gcc
+RUN apt-get remove -y gcc-6
+{% endif %}
+
+{% if docker_sonic_sdk_debs.strip() -%}
+# Copy locally-built Debian package dependencies
+{{ copy_files("debs/", docker_sonic_sdk_debs.split(' '), "/debs/") }}
+
+# Install locally-built Debian packages and implicitly install their dependencies
+{{ install_debian_packages(docker_sonic_sdk_debs.split(' ')) }}
+{%- endif %}
+
+## Clean up
+RUN apt-get clean -y        && \
+    apt-get autoclean -y    && \
+    apt-get autoremove -y   && \
+    rm -rf /debs
