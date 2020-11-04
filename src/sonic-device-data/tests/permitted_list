@@ -217,6 +217,7 @@ num_queues_pci
 num_queues_uc0
 num_queues_uc1
 flow_init_mode
+sai_eapp_config_file
 flowtracker_enable
 flowtracker_max_flows
 flowtracker_drop_monitor_enable
