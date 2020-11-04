@@ -1,5 +1,5 @@
 [Unit]
-Description=Containere Manager watcher daemon
+Description=Container Manager watcher daemon
 Requires=updategraph.service
 After=updategraph.service
 
