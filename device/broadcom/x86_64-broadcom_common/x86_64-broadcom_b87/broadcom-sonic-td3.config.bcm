@@ -1,0 +1,26 @@
+mem_cache_enable=0
+ifp_inports_support_enable=1
+ipv6_lpm_128b_enable=0x1
+l3_max_ecmp_mode=1
+lpm_scaling_enable=0
+bcm_num_cos=10
+default_cpu_tx_queue=9
+mmu_lossless=0
+
+# Drop monitor and IFA configuration
+#flowtracker_enable=2
+#flowtracker_max_flows=48000
+#flowtracker_drop_monitor_enable=1
+#flowtracker_export_interval_usecs=1000000
+#flowtracker_max_export_pkt_length=9000
+#flowtracker_fsp_reinject_max_length=128
+#flow_init_mode=1
+#host_as_route_disable=1
+#num_queues_pci=46
+#num_queues_uc0=1
+#num_queues_uc1=1
+#sai_eapp_config_file=/etc/broadcom/eapps_cfg.json
+#ifa_enable=1
+#sai_load_hw_config=/usr/lib/cancun/
+#sai_fast_convergence_support=1
+#ifa_truncation_enable=1
