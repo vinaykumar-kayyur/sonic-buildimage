@@ -1,16 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import signal
 import sys
-import syslog
 import traceback
-from ctypes import CDLL
-from ctypes.util import find_library
+from sonic_py_common.logger import Logger
+from socket import if_nametoindex
 from swsssdk import SonicV2Connector, port_util
 from swsscommon import swsscommon
 
 SYSLOG_IDENTIFIER = 'port_index_mapper'
 
+# Global logger instance
+logger = Logger(SYSLOG_IDENTIFIER)
+logger.set_min_log_priority_info()
 
 class PortIndexMapper(object):
 
@@ -23,21 +25,16 @@ class PortIndexMapper(object):
                                               REDIS_TIMEOUT_MS,
                                               True)
 
-        self.state_db = SonicV2Connector(host='127.0.0.1')
+        self.state_db = SonicV2Connector(host='127.0.0.1', decode_responses=True)
         self.state_db.connect(self.state_db.STATE_DB, False)
         self.sel = swsscommon.Select()
         self.tlbs = [swsscommon.SubscriberStateTable(self.appl_db, t)
                      for t in tbl_lst]
 
         self.cur_interfaces = {}
-        self.libc = CDLL(find_library('c'))
 
         for t in self.tlbs:
             self.sel.addSelectable(t)
-
-    def ifname_to_index(self, ifname):
-        ret = self.libc.if_nametoindex(ifname)
-        return ret if ret else None
 
     def set_port_index_table_entry(self, key, index, ifindex):
         self.state_db.set(self.state_db.STATE_DB, key, 'index', index)
@@ -47,13 +44,12 @@ class PortIndexMapper(object):
         index = port_util.get_index_from_str(ifname)
         if op == 'SET' and index is None:
             return
-        ifindex = self.ifname_to_index(ifname)
+        ifindex = if_nametoindex(ifname)
         if op == 'SET' and ifindex is None:
             return
 
         # Check if ifname already exist or if index/ifindex changed due to
         # syncd restart
-
         if (ifname in self.cur_interfaces and
                 self.cur_interfaces[ifname] == (index, ifindex)):
             return
@@ -81,7 +77,7 @@ class PortIndexMapper(object):
                             key not in self.cur_interfaces):
                         self.update_db(key, op)
             elif state == swsscomm.Select.ERROR:
-                syslog.syslog(syslog.LOG_ERR, "Receieved error from select()")
+                logger.log_error("Receieved error from select()")
                 break
 
     def populate(self):
@@ -99,7 +95,7 @@ class PortIndexMapper(object):
 
 
 def signal_handler(signum, frame):
-    syslog.syslog(syslog.LOG_NOTICE, "got signal %d" % signum)
+    logger.log_notice("got signal {}".format(signum))
     sys.exit(0)
 
 
@@ -111,15 +107,13 @@ def main():
 if __name__ == '__main__':
     rc = 0
     try:
-        syslog.openlog(SYSLOG_IDENTIFIER)
         signal.signal(signal.SIGTERM, signal_handler)
         signal.signal(signal.SIGINT, signal_handler)
         main()
-    except Exception, e:
+    except Exception as e:
         tb = sys.exc_info()[2]
         traceback.print_tb(tb)
-        syslog.syslog(syslog.LOG_CRIT, "%s" % str(e))
+        logger.log_error("%s" % str(e))
         rc = -1
     finally:
-        syslog.closelog()
         sys.exit(rc)
