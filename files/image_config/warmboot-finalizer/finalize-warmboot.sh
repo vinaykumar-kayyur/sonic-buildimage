@@ -3,10 +3,10 @@
 VERBOSE=no
 
 # Check components
-COMP_LIST="orchagent neighsyncd bgp"
+COMP_LIST="orchagent neighsyncd bgp natsyncd"
 EXP_STATE="reconciled"
 
-ASSISTANT_SCRIPT="/usr/bin/neighbor_advertiser"
+ASSISTANT_SCRIPT="/usr/local/bin/neighbor_advertiser"
 
 
 function debug()
@@ -20,7 +20,7 @@ function debug()
 
 function check_warm_boot()
 {
-    WARM_BOOT=`/usr/bin/redis-cli -n 6 hget "WARM_RESTART_ENABLE_TABLE|system" enable`
+    WARM_BOOT=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
 }
 
 
@@ -29,12 +29,12 @@ function wait_for_database_service()
     debug "Wait for database to become ready..."
 
     # Wait for redis server start before database clean
-    until [[ $(/usr/bin/docker exec database redis-cli ping | grep -c PONG) -gt 0 ]];
-        do sleep 1;
+    until [[ $(sonic-db-cli PING | grep -c PONG) -gt 0 ]]; do
+      sleep 1;
     done
 
     # Wait for configDB initialization
-    until [[ $(/usr/bin/docker exec database redis-cli -n 4 GET "CONFIG_DB_INITIALIZED") ]];
+    until [[ $(sonic-db-cli CONFIG_DB GET "CONFIG_DB_INITIALIZED") ]];
         do sleep 1;
     done
 
@@ -44,7 +44,7 @@ function wait_for_database_service()
 
 function get_component_state()
 {
-    /usr/bin/redis-cli -n 6 hget "WARM_RESTART_TABLE|$1" state
+    sonic-db-cli STATE_DB hget "WARM_RESTART_TABLE|$1" state
 }
 
 
@@ -68,6 +68,14 @@ function finalize_warm_boot()
     sudo config warm_restart disable
 }
 
+function stop_control_plane_assistant()
+{
+    if [[ -x ${ASSISTANT_SCRIPT} ]]; then
+        debug "Tearing down control plane assistant ..."
+        ${ASSISTANT_SCRIPT} -m reset
+    fi
+}
+
 
 wait_for_database_service
 
@@ -88,6 +96,12 @@ for i in `seq 60`; do
     fi
     sleep 5
 done
+
+stop_control_plane_assistant
+
+# Save DB after stopped control plane assistant to avoid extra entries
+debug "Save in-memory database after warm reboot ..."
+config save -y
 
 if [[ -n "${list}" ]]; then
     debug "Some components didn't finish reconcile: ${list} ..."
