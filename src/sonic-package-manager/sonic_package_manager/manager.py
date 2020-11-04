@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import contextlib
 import functools
+import os
 from typing import Optional, Union, Iterable, List
 
 import docker
 from sonic_py_common import device_info
 
+from sonic_package_manager import utils
 from sonic_package_manager.constraint import PackageConstraint
 from sonic_package_manager.database import PackageDatabase, PackageEntry
 from sonic_package_manager.dockerapi import DockerApi
@@ -102,6 +104,10 @@ def get_package_reference_from_constraint(constraint: PackageConstraint) -> Pack
 
 
 class PackageManager:
+    """ SONiC Package Manager. """
+
+    HOST_PLUGIN_PATH = '/usr/local/lib/python2.7/dist-packages/{}/plugins/{}'
+
     def __init__(self,
                  docker: DockerApi,
                  registry_resolver: RegistryResolver,
@@ -175,6 +181,9 @@ class PackageManager:
 
             self.service_creator.create(package)
             add_cleanup(functools.partial(self.service_creator.remove, package))
+
+            self.install_cli_plugins(package)
+            add_cleanup(functools.partial(self.uninstall_cli_plugins, package))
         except Exception as err:
             exec_cleanup()
             raise PackageInstallationError(f'Failed to install {package.name}: {err}')
@@ -215,6 +224,7 @@ class PackageManager:
             check_package_dependencies(installed_packages)
 
         try:
+            self.uninstall_cli_plugins(package)
             self.service_creator.remove(package)
             self.docker.rm(package.repository, package.reference)
             self.docker.rm(package.repository, 'latest')
@@ -295,6 +305,8 @@ class PackageManager:
                     log.error(f'{cleanup_err}')
 
         try:
+            self.uninstall_cli_plugins(old_package)
+            add_cleanup(functools.partial(self.install_cli_plugins, old_package))
             self.docker.pull(new_package.repository, new_package.reference, version, ProgressManager())
             add_cleanup(functools.partial(self.docker.rmi, new_package.repository, version))
 
@@ -315,6 +327,8 @@ class PackageManager:
 
             if self.feature_registry.is_feature_enabled(new_feature):
                 self.systemctl_action(new_package, 'start')
+
+            self.install_cli_plugins(new_package)
         except Exception as err:
             exec_cleanup()
             raise PackageInstallationError(f'Failed to upgrade {new_package.name}: {err}')
@@ -480,6 +494,41 @@ class PackageManager:
         if multi_instance:
             for npu in range(self.num_npus):
                 run_command(f'systemctl {action} {name}@{npu}')
+
+    @staticmethod
+    def get_cli_plugin_name(package: Package):
+        return utils.make_python_identifier(package.name) + '.py'
+
+    @classmethod
+    def get_cli_plugin_path(cls, package: Package, command):
+        return cls.HOST_PLUGIN_PATH.format(
+            command,
+            cls.get_cli_plugin_name(package)
+        )
+
+    def install_cli_plugins(self, package: Package):
+        for command in ('show', 'config', 'clear'):
+            self.install_cli_plugin(package, command)
+
+    def uninstall_cli_plugins(self, package: Package):
+        for command in ('show', 'config', 'clear'):
+            self.uninstall_cli_plugin(package, command)
+
+    def install_cli_plugin(self, package: Package, command: str):
+        image_plugin_path = package.manifest['cli'][command]
+        host_plugin_path = self.get_cli_plugin_path(package, command)
+        repo = package.repository
+        tag = str(package.version)
+        if image_plugin_path:
+            self.docker.cp(repo, tag, image_plugin_path, host_plugin_path)
+
+    def uninstall_cli_plugin(self, package: Package, command: str):
+        image_plugin_path = package.manifest['cli'][command]
+        if not image_plugin_path:
+            return
+        host_plugin_path = self.get_cli_plugin_path(package, command)
+        if os.path.exists(host_plugin_path):
+            os.remove(host_plugin_path)
 
     def migrate_package_database(self, old_package_database: PackageDatabase):
         for package in old_package_database:

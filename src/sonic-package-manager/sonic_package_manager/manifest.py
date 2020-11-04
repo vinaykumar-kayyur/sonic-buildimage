@@ -153,6 +153,11 @@ class ManifestSchema:
             ManifestField('name', str),
             ManifestField('command', str),
         ])),
+        ManifestRoot('cli', [
+            ManifestField('show', str, ''),
+            ManifestField('config', str, ''),
+            ManifestField('clear', str, '')
+        ])
     ])
 
 

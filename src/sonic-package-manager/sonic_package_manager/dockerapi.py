@@ -3,6 +3,9 @@
 """ Module provides Docker interface. """
 
 import contextlib
+import io
+import os
+import tarfile
 from typing import Optional
 
 from sonic_package_manager.logger import log
@@ -159,3 +162,25 @@ class DockerApi:
 
         log.debug(f'image {image} labels successfully: {labels}')
         return labels
+
+    def cp(self, repository: str, tag: str, src_path: str, dst_path: str):
+        """ Works like 'docker cp' but works with images. """
+
+        image = f'{repository}:{tag}'
+        buf = bytes()
+
+        container = self.client.containers.create(image)
+        try:
+            bits, _ = container.get_archive(src_path)
+            for chunk in bits:
+                buf += chunk
+        finally:
+            container.remove(force=True)
+
+        with tarfile.open(fileobj=io.BytesIO(buf)) as tar:
+            for member in tar:
+                if dst_path.endswith('/'):
+                    tar.extract(member, dst_path)
+                else:
+                    member.name = dst_path
+                    tar.extract(member, dst_path)
