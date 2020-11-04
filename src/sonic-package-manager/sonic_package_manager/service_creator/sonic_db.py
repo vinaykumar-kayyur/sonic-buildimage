@@ -87,7 +87,7 @@ class SonicDB:
         """ Returns running DB table. """
 
         if not is_db_alive():
-            return False
+            return
 
         if cls._running is None:
             cls._running = swsscommon.DBConnector(CONFIG_DB, 0)
