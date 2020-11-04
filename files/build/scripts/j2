@@ -19,6 +19,9 @@ while (( "$#" )); do
             docker_file=$2
             shift 2
             ;;
+        -f)
+            shift 2
+            ;;
         *)
             shift 1
             ;;
