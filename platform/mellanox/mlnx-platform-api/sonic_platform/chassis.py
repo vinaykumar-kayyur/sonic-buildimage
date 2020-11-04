@@ -8,98 +8,121 @@
 #
 #############################################################################
 
-import sys
-
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.psu import Psu
-    from sonic_platform.fan import Fan
-    from sonic_platform.fan import FAN_PATH
-    from sonic_platform.sfp import SFP
-    from sonic_platform.watchdog import get_watchdog
-    from sonic_daemon_base.daemon_base import Logger
-    from eeprom import Eeprom
+    from sonic_platform_base.component_base import ComponentBase
+    from sonic_py_common import device_info
+    from sonic_py_common.logger import Logger
     from os import listdir
     from os.path import isfile, join
+    import sys
     import io
     import re
-    import subprocess
     import syslog
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
-MLNX_NUM_PSU = 2
+MAX_SELECT_DELAY = 3600
 
-GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
+MLNX_NUM_PSU = 2
 
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
 
 HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 
+MST_DEVICE_NAME_PATTERN = '/dev/mst/mt[0-9]*_pciconf0'
+MST_DEVICE_RE_PATTERN = '/dev/mst/mt([0-9]*)_pciconf0'
+SPECTRUM1_CHIP_ID = '52100'
+
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
 
-REBOOT_CAUSE_POWER_LOSS_FILE = 'reset_main_pwr_fail'
-REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE = 'reset_asic_thermal'
-REBOOT_CAUSE_WATCHDOG_FILE = 'reset_hotswap_or_wd'
-REBOOT_CAUSE_MLNX_FIRMWARE_RESET = 'reset_fw_reset'
-
 REBOOT_CAUSE_FILE_LENGTH = 1
 
-#version retrieving related definitions
-CPLD_VERSION_ROOT = HWMGMT_SYSTEM_ROOT
-
-CPLD1_VERSION_FILE = 'cpld1_version'
-CPLD2_VERSION_FILE = 'cpld2_version'
-CPLD_VERSION_MAX_LENGTH = 4
-
-FW_QUERY_VERSION_COMMAND = 'mlxfwmanager --query'
-BIOS_QUERY_VERSION_COMMAND = 'dmidecode -t 11'
-
-#components definitions
-COMPONENT_BIOS = "BIOS"
-COMPONENT_FIRMWARE = "ASIC-FIRMWARE"
-COMPONENT_CPLD1 = "CPLD1"
-COMPONENT_CPLD2 = "CPLD2"
-
 # Global logger class instance
-SYSLOG_IDENTIFIER = "mlnx-chassis"
-logger = Logger(SYSLOG_IDENTIFIER)
+logger = Logger()
 
-# magic code defnition for port number, qsfp port position of each hwsku
+# magic code defnition for port number, qsfp port position of each Platform
 # port_position_tuple = (PORT_START, QSFP_PORT_START, PORT_END, PORT_IN_BLOCK, EEPROM_OFFSET)
-hwsku_dict = {'ACS-MSN2700': 0, "LS-SN2700":0, 'ACS-MSN2740': 0, 'ACS-MSN2100': 1, 'ACS-MSN2410': 2, 'ACS-MSN2010': 3, 'ACS-MSN3700': 0, 'ACS-MSN3700C': 0, 'Mellanox-SN2700': 0, 'Mellanox-SN2700-D48C8': 0}
-port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1),(0, 18, 21, 22, 1)]
+platform_dict_port = {'x86_64-mlnx_msn2010-r0': 3, 'x86_64-mlnx_msn2100-r0': 1, 'x86_64-mlnx_msn2410-r0': 2, 'x86_64-mlnx_msn2700-r0': 0, 'x86_64-mlnx_lssn2700':0, 'x86_64-mlnx_msn2740-r0': 0, 'x86_64-mlnx_msn3420-r0':5, 'x86_64-mlnx_msn3700-r0': 0, 'x86_64-mlnx_msn3700c-r0': 0, 'x86_64-mlnx_msn3800-r0': 4, 'x86_64-mlnx_msn4600c-r0':4, 'x86_64-mlnx_msn4700-r0': 0}
+port_position_tuple_list = [(0, 0, 31, 32, 1), (0, 0, 15, 16, 1), (0, 48, 55, 56, 1), (0, 18, 21, 22, 1), (0, 0, 63, 64, 1), (0, 48, 59, 60, 1)]
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
 
+    # System status LED
+    _led = None
+
     def __init__(self):
         super(Chassis, self).__init__()
 
+        self.name = "Undefined"
+        self.model = "Undefined"
+
+        # Initialize Platform name
+        self.platform_name = device_info.get_platform()
+        
+        # move the initialization of each components to their dedicated initializer
+        # which will be called from platform
+        self.sfp_module_initialized = False
+        self.sfp_event_initialized = False
+        self.reboot_cause_initialized = False
+        logger.log_info("Chassis loaded successfully")
+
+
+    def __del__(self):
+        if self.sfp_event_initialized:
+            self.sfp_event.deinitialize()
+
+        if self.sfp_module_initialized:
+            from sonic_platform.sfp import deinitialize_sdk_handle
+            deinitialize_sdk_handle(self.sdk_handle)
+
+
+    def initialize_psu(self):
+        from sonic_platform.psu import Psu
         # Initialize PSU list
+        self.psu_module = Psu
         for index in range(MLNX_NUM_PSU):
-            psu = Psu(index)
+            psu = Psu(index, self.platform_name)
             self._psu_list.append(psu)
 
-        # Initialize watchdog
-        self._watchdog = get_watchdog()
 
-        # Initialize FAN list
-        multi_rotor_in_drawer = False
-        num_of_fan, num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
-        multi_rotor_in_drawer = num_of_fan > num_of_drawer
+    def initialize_fan(self):
+        from .device_data import DEVICE_DATA
+        from sonic_platform.fan import Fan
+        from .fan_drawer import RealDrawer, VirtualDrawer
 
-        for index in range(num_of_fan):
-            if multi_rotor_in_drawer:
-                fan = Fan(index, index/2)
-            else:
-                fan = Fan(index, index)
-            self._fan_list.append(fan)
+        fan_data = DEVICE_DATA[self.platform_name]['fans']
+        drawer_num = fan_data['drawer_num']
+        drawer_type = fan_data['drawer_type']
+        fan_num_per_drawer = fan_data['fan_num_per_drawer']
+        drawer_ctor = RealDrawer if drawer_type == 'real' else VirtualDrawer
+        fan_index = 0
+        for drawer_index in range(drawer_num):
+            drawer = drawer_ctor(drawer_index, fan_data)
+            self._fan_drawer_list.append(drawer)
+            for index in range(fan_num_per_drawer):
+                fan = Fan(fan_index, drawer)
+                fan_index += 1
+                drawer._fan_list.append(fan)
+                self._fan_list.append(fan)
+
+
+    def initialize_sfp(self):
+        from sonic_platform.sfp import SFP
+        from sonic_platform.sfp import initialize_sdk_handle
+
+        self.sfp_module = SFP
+        self.sdk_handle = initialize_sdk_handle()
+        
+        if self.sdk_handle is None:
+            self.sfp_module_initialized = False
+            return
 
         # Initialize SFP list
-        port_position_tuple = self._get_port_position_tuple_by_sku_name()
+        port_position_tuple = self._get_port_position_tuple_by_platform_name()
         self.PORT_START = port_position_tuple[0]
         self.QSFP_PORT_START = port_position_tuple[1]
         self.PORT_END = port_position_tuple[2]
@@ -107,25 +130,121 @@ class Chassis(ChassisBase):
 
         for index in range(self.PORT_START, self.PORT_END + 1):
             if index in range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
-                sfp_module = SFP(index, 'QSFP')
+                sfp_module = SFP(index, 'QSFP', self.sdk_handle)
             else:
-                sfp_module = SFP(index, 'SFP')
+                sfp_module = SFP(index, 'SFP', self.sdk_handle)
             self._sfp_list.append(sfp_module)
 
-        # Initialize EEPROM
-        self.eeprom = Eeprom()
+        self.sfp_module_initialized = True
 
+
+    def initialize_thermals(self):
+        from sonic_platform.thermal import initialize_thermals
+        # Initialize thermals
+        initialize_thermals(self.platform_name, self._thermal_list, self._psu_list)
+
+
+    def initialize_eeprom(self):
+        from eeprom import Eeprom
+        # Initialize EEPROM
+        self._eeprom = Eeprom()
+        # Get chassis name and model from eeprom
+        self.name = self._eeprom.get_product_name()
+        self.model = self._eeprom.get_part_number()
+
+
+    def initialize_components(self):
         # Initialize component list
-        self._component_name_list.append(COMPONENT_BIOS)
-        self._component_name_list.append(COMPONENT_FIRMWARE)
-        self._component_name_list.append(COMPONENT_CPLD1)
-        self._component_name_list.append(COMPONENT_CPLD2)
+        from sonic_platform.component import ComponentONIE, ComponentSSD, ComponentBIOS, ComponentCPLD
+        self._component_list.append(ComponentONIE())
+        self._component_list.append(ComponentSSD())
+        self._component_list.append(ComponentBIOS())
+        self._component_list.extend(ComponentCPLD.get_component_list())
+
+    def initizalize_system_led(self):
+        from .led import SystemLed
+        Chassis._led = SystemLed()
+
+
+    def get_name(self):
+        """
+        Retrieves the name of the device
+
+        Returns:
+            string: The name of the device
+        """
+        return self.name
+
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+
+        Returns:
+            string: Model/part number of device
+        """
+        return self.model
+        
+    ##############################################
+    # SFP methods
+    ##############################################
+    def get_num_sfps(self):
+        """
+        Retrieves the number of sfps available on this chassis
+
+        Returns:
+            An integer, the number of sfps available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.initialize_sfp()
+        return len(self._sfp_list)
+
+
+    def get_all_sfps(self):
+        """
+        Retrieves all sfps available on this chassis
+
+        Returns:
+            A list of objects derived from SfpBase representing all sfps 
+            available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.initialize_sfp()
+        return self._sfp_list
+
+
+    def get_sfp(self, index):
+        """
+        Retrieves sfp represented by (1-based) index <index>
+
+        Args:
+            index: An integer, the index (1-based) of the sfp to retrieve.
+                   The index should be the sequence of a physical port in a chassis,
+                   starting from 1.
+                   For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
+
+        Returns:
+            An object dervied from SfpBase representing the specified sfp
+        """
+        if not self.sfp_module_initialized:
+            self.initialize_sfp()
+
+        sfp = None
+        index -= 1
+        try:
+            sfp = self._sfp_list[index]
+        except IndexError:
+            sys.stderr.write("SFP index {} out of range (0-{})\n".format(
+                             index, len(self._sfp_list)-1))
+
+        return sfp
+
 
     def _extract_num_of_fans_and_fan_drawers(self):
         num_of_fan = 0
         num_of_drawer = 0
-        for f in listdir(FAN_PATH):
-            if isfile(join(FAN_PATH, f)):
+        for f in listdir(self.fan_path):
+            if isfile(join(self.fan_path, f)):
                 match_obj = re.match('fan(\d+)_speed_get', f)
                 if match_obj != None:
                     if int(match_obj.group(1)) > num_of_fan:
@@ -137,11 +256,35 @@ class Chassis(ChassisBase):
 
         return num_of_fan, num_of_drawer
 
-    def _get_port_position_tuple_by_sku_name(self):
-        p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        position_tuple = port_position_tuple_list[hwsku_dict[out.rstrip('\n')]]
+    def _get_port_position_tuple_by_platform_name(self):
+        position_tuple = port_position_tuple_list[platform_dict_port[self.platform_name]]
         return position_tuple
+
+
+    def get_watchdog(self):
+        """
+        Retrieves hardware watchdog device on this chassis
+
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+
+        Note:
+            We overload this method to ensure that watchdog is only initialized
+            when it is referenced. Currently, only one daemon can open the watchdog.
+            To initialize watchdog in the constructor causes multiple daemon 
+            try opening watchdog when loading and constructing a chassis object
+            and fail. By doing so we can eliminate that risk.
+        """
+        try:
+            if self._watchdog is None:
+                from sonic_platform.watchdog import get_watchdog
+                self._watchdog = get_watchdog()
+        except Exception as e:
+            logger.log_info("Fail to load watchdog due to {}".format(repr(e)))
+
+        return self._watchdog
+
 
     def get_base_mac(self):
         """
@@ -151,16 +294,18 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self.eeprom.get_base_mac()
+        return self._eeprom.get_base_mac()
 
-    def get_serial_number(self):
+
+    def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
 
         Returns:
             A string containing the hardware serial number for this chassis.
         """
-        return self.eeprom.get_serial_number()
+        return self._eeprom.get_serial_number()
+
 
     def get_system_eeprom_info(self):
         """
@@ -171,7 +316,8 @@ class Chassis(ChassisBase):
             OCP ONIE TlvInfo EEPROM format and values are their corresponding
             values.
         """
-        return self.eeprom.get_system_eeprom_info()
+        return self._eeprom.get_system_eeprom_info()
+
 
     def _read_generic_file(self, filename, len):
         """
@@ -183,9 +329,10 @@ class Chassis(ChassisBase):
             result = fileobj.read(len)
             fileobj.close()
             return result
-        except:
-            logger.log_warning("Fail to read file {}, maybe it doesn't exist".format(filename))
-            return ''
+        except Exception as e:
+            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
+            return '0'
+
 
     def _verify_reboot_cause(self, filename):
         '''
@@ -194,6 +341,33 @@ class Chassis(ChassisBase):
         If a reboot cause file doesn't exists, returns '0'.
         '''
         return bool(int(self._read_generic_file(join(REBOOT_CAUSE_ROOT, filename), REBOOT_CAUSE_FILE_LENGTH).rstrip('\n')))
+
+
+    def initialize_reboot_cause(self):
+        self.reboot_major_cause_dict = {
+            'reset_main_pwr_fail'       :   self.REBOOT_CAUSE_POWER_LOSS,
+            'reset_aux_pwr_or_ref'      :   self.REBOOT_CAUSE_POWER_LOSS,
+            'reset_asic_thermal'        :   self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC,
+            'reset_hotswap_or_wd'       :   self.REBOOT_CAUSE_WATCHDOG,
+            'reset_swb_wd'              :   self.REBOOT_CAUSE_WATCHDOG,
+            'reset_sff_wd'              :   self.REBOOT_CAUSE_WATCHDOG
+        }
+        self.reboot_minor_cause_dict = {
+            'reset_fw_reset'            :   "Reset by ASIC firmware",
+            'reset_long_pb'             :   "Reset by long press on power button",
+            'reset_short_pb'            :   "Reset by short press on power button",
+            'reset_comex_thermal'       :   "ComEx thermal shutdown",
+            'reset_comex_pwr_fail'      :   "ComEx power fail",
+            'reset_comex_wd'            :   "Reset requested from ComEx",
+            'reset_from_asic'           :   "Reset requested from ASIC",
+            'reset_reload_bios'         :   "Reset caused by BIOS reload",
+            'reset_hotswap_or_halt'     :   "Reset caused by hotswap or halt",
+            'reset_from_comex'          :   "Reset from ComEx",
+            'reset_voltmon_upgrade_fail':   "Reset due to voltage monitor devices upgrade failure"
+        }
+        self.reboot_by_software = 'reset_sw_reset'
+        self.reboot_cause_initialized = True
+
 
     def get_reboot_cause(self):
         """
@@ -207,114 +381,136 @@ class Chassis(ChassisBase):
             to pass a description of the reboot cause.
         """
         #read reboot causes files in the following order
-        minor_cause = ''
-        if self._verify_reboot_cause(REBOOT_CAUSE_POWER_LOSS_FILE):
-            major_cause = self.REBOOT_CAUSE_POWER_LOSS
-        elif self._verify_reboot_cause(REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC_FILE):
-            major_cause = self.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
-        elif self._verify_reboot_cause(REBOOT_CAUSE_WATCHDOG_FILE):
-            major_cause = self.REBOOT_CAUSE_WATCHDOG
+        if not self.reboot_cause_initialized:
+            self.initialize_reboot_cause()
+
+        for reset_file, reset_cause in self.reboot_major_cause_dict.iteritems():
+            if self._verify_reboot_cause(reset_file):
+                return reset_cause, ''
+
+        for reset_file, reset_cause in self.reboot_minor_cause_dict.iteritems():
+            if self._verify_reboot_cause(reset_file):
+                return self.REBOOT_CAUSE_HARDWARE_OTHER, reset_cause
+
+        if self._verify_reboot_cause(self.reboot_by_software):
+            logger.log_info("Hardware reboot cause: the system was rebooted due to software requesting")
         else:
-            major_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            if self._verify_reboot_cause(REBOOT_CAUSE_MLNX_FIRMWARE_RESET):
-                minor_cause = "Reset by ASIC firmware"
-            else:
-                major_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            logger.log_info("Hardware reboot cause: no hardware reboot cause found")
 
-        return major_cause, minor_cause
+        return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
-    def _get_cpld_version(self, version_file):
-        cpld_version = self._read_generic_file(join(CPLD_VERSION_ROOT, version_file), CPLD_VERSION_MAX_LENGTH)
-        return cpld_version.rstrip('\n')
 
-    def _get_command_result(self, cmdline):
-        try:
-            proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            result = stdout.rstrip('\n')
-
-        except OSError, e:
-            result = ''
-
-        return result
-
-    def _get_firmware_version(self):
+    def _show_capabilities(self):
         """
-        firmware version is retrieved via command 'mlxfwmanager --query'
-        which should return result in the following convention
-            admin@mtbc-sonic-01-2410:~$ sudo mlxfwmanager --query
-            Querying Mellanox devices firmware ...
-
-            Device #1:
-            ----------
-
-            Device Type:      Spectrum
-            Part Number:      MSN2410-CxxxO_Ax_Bx
-            Description:      Spectrum based 25GbE/100GbE 1U Open Ethernet switch with ONIE; 48 SFP28 ports; 8 QSFP28 ports; x86 dual core; RoHS6
-            PSID:             MT_2860111033
-            PCI Device Name:  /dev/mst/mt52100_pci_cr0
-            Base MAC:         98039bf3f500
-            Versions:         Current        Available     
-                FW         ***13.2000.1140***N/A           
-
-            Status:           No matching image found
-
-        By using regular expression '(Versions:.*\n[\s]+FW[\s]+)([\S]+)',
-        we can extrace the version which is marked with *** in the above context
+        This function is for debug purpose
+        Some features require a xSFP module to support some capabilities but it's unrealistic to
+        check those modules one by one.
+        So this function is introduce to show some capabilities of all xSFP modules mounted on the device.
         """
-        fw_ver_str = self._get_command_result(FW_QUERY_VERSION_COMMAND)
-        try: 
-            m = re.search('(Versions:.*\n[\s]+FW[\s]+)([\S]+)', fw_ver_str)
-            result = m.group(2)
-        except :
-            result = ''
+        for s in self._sfp_list:
+            try:
+                print "index {} tx disable {} dom {} calibration {} temp {} volt {} power (tx {} rx {})".format(s.index,
+                    s.dom_tx_disable_supported,
+                    s.dom_supported,
+                    s.calibration,
+                    s.dom_temp_supported,
+                    s.dom_volt_supported,
+                    s.dom_rx_power_supported,
+                    s.dom_tx_power_supported
+                    )
+            except:
+                print "fail to retrieve capabilities for module index {}".format(s.index)
 
-        return result
 
-    def _get_bios_version(self):
+    def get_change_event(self, timeout=0):
         """
-        BIOS version is retrieved via command 'dmidecode -t 11'
-        which should return result in the following convention
-            # dmidecode 3.0
-            Getting SMBIOS data from sysfs.
-            SMBIOS 2.7 present.
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
 
-            Handle 0x0022, DMI type 11, 5 bytes
-            OEM Strings
-                    String 1:*0ABZS017_02.02.002*
-                    String 2: To Be Filled By O.E.M.
-
-        By using regular expression 'OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)'
-        we can extrace the version string which is marked with * in the above context
-        """
-        bios_ver_str = self._get_command_result(BIOS_QUERY_VERSION_COMMAND)
-        try:
-            m = re.search('OEM[\s]*Strings\n[\s]*String[\s]*1:[\s]*([0-9a-zA-Z_\.]*)', bios_ver_str)
-            result = m.group(1)
-        except:
-            result = ''
-
-        return result
-
-    def get_firmware_version(self, component_name):
-        """
-        Retrieves platform-specific hardware/firmware versions for chassis
-        componenets such as BIOS, CPLD, FPGA, etc.
         Args:
-            component_name: A string, the component name.
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
 
         Returns:
-            A string containing platform-specific component versions
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'}, 
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
         """
-        if component_name in self._component_name_list :
-            if component_name == COMPONENT_BIOS:
-                return self._get_bios_version()
-            elif component_name == COMPONENT_CPLD1:
-                return self._get_cpld_version(CPLD1_VERSION_FILE)
-            elif component_name == COMPONENT_CPLD2:
-                return self._get_cpld_version(CPLD2_VERSION_FILE)
-            elif component_name == COMPONENT_FIRMWARE:
-                return self._get_firmware_version()
+        # Initialize SFP event first
+        if not self.sfp_event_initialized:
+            from sonic_platform.sfp_event import sfp_event
+            self.sfp_event = sfp_event()
+            self.sfp_event.initialize()
+            self.MAX_SELECT_EVENT_RETURNED = self.PORT_END
+            self.sfp_event_initialized = True
 
-        return None
+        wait_for_ever = (timeout == 0)
+        port_dict = {}
+        if wait_for_ever:
+            timeout = MAX_SELECT_DELAY
+            while True:
+                status = self.sfp_event.check_sfp_status(port_dict, timeout)
+                if bool(port_dict):
+                    break
+        else:
+            status = self.sfp_event.check_sfp_status(port_dict, timeout)
+
+        if status:
+            self.reinit_sfps(port_dict)
+            return True, {'sfp':port_dict}
+        else:
+            return True, {'sfp':{}}
+
+    def reinit_sfps(self, port_dict):
+        """
+        Re-initialize SFP if there is any newly inserted SFPs
+        :param port_dict: SFP event data
+        :return:
+        """
+        # SFP not initialize yet, do nothing
+        if not self.sfp_module_initialized:
+            return
+
+        from . import sfp
+        for index, status in port_dict.items():
+            if status == sfp.SFP_STATUS_INSERTED:
+                try:
+                    self.get_sfp(index).reinit()
+                except Exception as e:
+                    logger.log_error("Fail to re-initialize SFP {} - {}".format(index, repr(e)))
+
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        return False if not Chassis._led else Chassis._led.set_status(color)
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        return None if not Chassis._led else Chassis._led.get_status()

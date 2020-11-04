@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -9,6 +9,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Update apt's cache of available packages
 RUN apt-get update
+
+# install redis-server
+RUN curl -o redis-tools_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-tools_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=73zbmjkf3pi%2Bn0R8Hy7CWT2EUvOAyzM5aLYJWCLySGM%3D&se=2030-09-06T19%3A44%3A59Z&sp=r"
+RUN curl -o redis-server_6.0.6-1~bpo10+1_amd64.deb "https://sonicstorage.blob.core.windows.net/packages/redis/redis-server_6.0.6-1~bpo10+1_amd64.deb?sv=2015-04-05&sr=b&sig=2Ketg7BmkZEaTxR%2FgvAFVmhjn7ywdmkc7l2T2rsL57o%3D&se=2030-09-06T19%3A45%3A20Z&sp=r"
+RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f
+RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb
 
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -32,6 +38,13 @@ RUN apt-get clean -y                                  && \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/ \
             ' /etc/redis/redis.conf
 
-COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["supervisord.conf.j2", "/usr/share/sonic/templates/"]
+COPY ["docker-database-init.sh", "/usr/local/bin/"]
+COPY ["database_config.json.j2", "/usr/share/sonic/templates/"]
+COPY ["database_global.json.j2", "/usr/share/sonic/templates/"]
+COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
+COPY ["files/sysctl-net.conf", "/etc/sysctl.d/"]
+COPY ["critical_processes", "/etc/supervisor"]
+COPY ["files/update_chassisdb_config", "/usr/local/bin/"]
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/docker-database-init.sh"]

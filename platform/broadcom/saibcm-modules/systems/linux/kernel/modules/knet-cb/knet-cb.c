@@ -1,15 +1,15 @@
 /*
- * Copyright 2017 Broadcom
- * 
+ * Copyright 2017-2019 Broadcom
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
  */
@@ -45,16 +45,39 @@
 #include <bcm-knet.h>
 #include <linux/if_vlan.h>
 
+/* Enable sflow sampling using psample */
+#ifdef PSAMPLE_SUPPORT
+#include "psample-cb.h"
+#endif
+
 MODULE_AUTHOR("Broadcom Corporation");
 MODULE_DESCRIPTION("Broadcom Linux KNET Call-Back Driver");
 MODULE_LICENSE("GPL");
 
-
-static int debug;
+int debug;
 LKM_MOD_PARAM(debug, "i", int, 0);
 MODULE_PARM_DESC(debug,
 "Debug level (default 0)");
 
+static int tpid=0x8100;
+LKM_MOD_PARAM(tpid, "i", int, 0);
+MODULE_PARM_DESC(debug,
+"Tag Protocol Identifier (TPID) indicates the frame type (default 0x8100)");
+
+static int pri=0;
+LKM_MOD_PARAM(pri, "i", int, 0);
+MODULE_PARM_DESC(pri,
+"Priority (PRI) indicates the frame priority (default 0)");
+
+static int cfi=0;
+LKM_MOD_PARAM(cfi, "i", int, 0);
+MODULE_PARM_DESC(cfi,
+"Canonical Format Indicator (CFI) indicates whether a MAC address is encapsulated in canonical format over different transmission media (default 0)");
+
+static int vid=0;
+LKM_MOD_PARAM(vid, "i", int, 0);
+MODULE_PARM_DESC(vid,
+"VLAN ID (VID) indicates the VLAN to which a frame belongs (default 0)");
 
 /* Module Information */
 #define MODULE_MAJOR 121
@@ -63,8 +86,10 @@ MODULE_PARM_DESC(debug,
 /* set KNET_CB_DEBUG for debug info */
 #define KNET_CB_DEBUG
 
+/* These below need to match incoming enum values */
 #define FILTER_TAG_STRIP 0
 #define FILTER_TAG_KEEP  1
+#define FILTER_TAG_ORIGINAL 2
 
 /* Maintain tag strip statistics */
 struct strip_stats_s {
@@ -100,12 +125,37 @@ strip_vlan_tag(struct sk_buff *skb)
     }
 }
 
+/* Add VLAN tag to untagged packet */
+static void
+add_vlan_tag(struct sk_buff *skb, u32 forward_domain)
+{
+    u32 vlan = 0;
+    uint16_t    vlan_proto = (uint16_t) ((skb->data[12] << 8) | skb->data[13]);
+
+    if ((vlan_proto != 0x8100) && (vlan_proto != 0x88a8) && (vlan_proto != 0x9100)) {
+        /* If vid is specified, use configued vid as VLAN ID, or, use forward_domain as vid */
+        vlan = vid ? vid: forward_domain;
+
+        skb_push(skb, 4);       /* Add 4 bytes from start of buffer */
+        /* Move first 12 bytes of packet forward by 4 */
+        ((u32 *) skb->data)[0] = ((u32 *) skb->data)[1];
+        ((u32 *) skb->data)[1] = ((u32 *) skb->data)[2];
+        ((u32 *) skb->data)[2] = ((u32 *) skb->data)[3];
+
+        /* Set VLAN tag */
+        skb->data[12] = (tpid >> 8) & 0xff;
+        skb->data[13] = tpid & 0xff;
+        skb->data[14] = (((pri & 0x7) << 5) | ((cfi & 0x1) << 4) | ((vlan >> 8) & 0xf)) & 0xff;
+        skb->data[15] = vlan & 0xff;
+    }
+}
+
 /*
  * Location of tagging status in select DCB types found below:
  *
  * DCB type 14: word 12, bits 10.11
  * DCB type 19, 20, 21, 22, 30: word 12, bits 10..11
- * DCB type 23, 29: word 13, bits 0..1 
+ * DCB type 23, 29: word 13, bits 0..1
  * DCB type 31, 34, 37: word 13, bits 0..1
  * DCB type 26, 32, 33, 35: word 13, bits 0..1
  *
@@ -114,6 +164,7 @@ strip_vlan_tag(struct sk_buff *skb)
  * 1 = Single inner-tag
  * 2 = Single outer-tag
  * 3 = Double tagged.
+ * 4 = Dedicated for Dune device, packets are received with original tag status.
  * -1 = Unsupported DCB type
  */
 static int
@@ -150,9 +201,14 @@ get_tag_status(int dcb_type, void *meta)
         {
             /* untested */
             /* TH3 only parses outer tag. */
-            const int   tag_map[4] = { 0, 2, -1, -1 };            
+            const int   tag_map[4] = { 0, 2, -1, -1 };
             tag_status = tag_map[(dcb[9] >> 13) & 0x3];
         }
+        break;
+        case 28:
+        case 39:
+            tag_status = 4;
+            break;
         break;
         default:
             tag_status = -1;
@@ -162,7 +218,7 @@ get_tag_status(int dcb_type, void *meta)
     if (debug & 0x1) {
         gprintk("%s; DCB Type: %d; tag status: %d\n", __func__, dcb_type, tag_status);
     }
-#endif    
+#endif
     return tag_status;
 }
 
@@ -185,10 +241,18 @@ strip_tag_rx_cb(struct sk_buff *skb, int dev_no, void *meta)
                 __func__, netif_flags, filter_flags);
     }
 #endif
+    /* Get DCB type for this packet, passed by KNET driver */
+    dcb_type = KNET_SKB_CB(skb)->dcb_type;
 
     /* KNET implements this already */
     if (filter_flags == FILTER_TAG_KEEP)
     {
+        if (dcb_type ==28 || dcb_type == 39)
+        {
+            uint32 *meta_buffer = (uint32 *)meta;
+            uint32 forward_domain = meta_buffer[1] & 0xffff;
+            add_vlan_tag(skb, forward_domain);
+        }
         strip_stats.skipped++;
         return skb;
     }
@@ -200,29 +264,37 @@ strip_tag_rx_cb(struct sk_buff *skb, int dev_no, void *meta)
     {
         strip_tag = 1;
     }
-    /* Get DCB type for this packet, passed by KNET driver */
-    dcb_type = KNET_SKB_CB(skb)->dcb_type;
+
+
 
     /* Get tag status from DCB */
     tag_status = get_tag_status(dcb_type, meta);
-
 #ifdef KNET_CB_DEBUG
     if (debug & 0x1) {
         gprintk("%s; DCB Type: %d; tag status: %d\n", __func__, dcb_type, tag_status);
     }
 #endif
-
     if (tag_status < 0) {
         /* Unsupported DCB type */
         return skb;
     }
 
+    if (filter_flags == FILTER_TAG_ORIGINAL)
+    {
+        /* If untagged or single inner, strip the extra tag that knet
+           keep tag will add. */
+        if (tag_status  <  2)
+        {
+            strip_tag = 1;
+        }
+    }
+
     strip_stats.checked++;
-   
+
     if (strip_tag) {
 #ifdef KNET_CB_DEBUG
         if (debug & 0x1) {
-            gprintk("%s; Stripping VLAN\n", __func__);
+            gprintk("%s; Stripping VLAN tag\n", __func__);
         }
 #endif
         strip_stats.stripped++;
@@ -231,7 +303,7 @@ strip_tag_rx_cb(struct sk_buff *skb, int dev_no, void *meta)
 #ifdef KNET_CB_DEBUG
     else {
         if (debug & 0x1) {
-            gprintk("%s; Preserve VLAN\n", __func__);
+            gprintk("%s; Keeping VLAN tag\n", __func__);
         }
     }
 #endif
@@ -256,13 +328,46 @@ strip_tag_filter_cb(uint8_t * pkt, int size, int dev_no, void *meta,
     return 0;
 }
 
+static int
+knet_filter_cb(uint8_t * pkt, int size, int dev_no, void *meta,
+                     int chan, kcom_filter_t *kf)
+{
+    /* check for filter callback handler */
+#ifdef PSAMPLE_SUPPORT
+    if (strncmp(kf->desc, PSAMPLE_CB_NAME, KCOM_FILTER_DESC_MAX) == 0) {
+        return psample_filter_cb (pkt, size, dev_no, meta, chan, kf);
+    }
+#endif
+    return strip_tag_filter_cb (pkt, size, dev_no, meta, chan, kf);
+}
+
+static int
+knet_netif_create_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
+{
+    int retv = 0;
+#ifdef PSAMPLE_SUPPORT
+    retv = psample_netif_create_cb(unit, netif, dev);
+#endif
+    return retv;
+}
+
+static int
+knet_netif_destroy_cb(int unit, kcom_netif_t *netif, struct net_device *dev)
+{
+    int retv = 0;
+#ifdef PSAMPLE_SUPPORT
+    retv = psample_netif_destroy_cb(unit, netif, dev);
+#endif
+    return retv;
+}
+
 /*
  * Get statistics.
  * % cat /proc/linux-knet-cb
  */
 static int
 _pprint(void)
-{   
+{
     pprintf("Broadcom Linux KNET Call-Back: Untagged VLAN Stripper\n");
     pprintf("    %lu stripped packets\n", strip_stats.stripped);
     pprintf("    %lu packets checked\n", strip_stats.checked);
@@ -275,32 +380,57 @@ static int
 _cleanup(void)
 {
     bkn_rx_skb_cb_unregister(strip_tag_rx_cb);
-    bkn_tx_skb_cb_unregister(strip_tag_tx_cb);
-    bkn_filter_cb_unregister(strip_tag_filter_cb);
+    /* strip_tag_tx_cb is currently a noop, so
+     * no need to unregister.
+     */
+    if (0)
+    {
+        bkn_tx_skb_cb_unregister(strip_tag_tx_cb);
+    }
 
+    bkn_filter_cb_unregister(knet_filter_cb);
+    bkn_netif_create_cb_unregister(knet_netif_create_cb);
+    bkn_netif_destroy_cb_unregister(knet_netif_destroy_cb);
+
+#ifdef PSAMPLE_SUPPORT
+    psample_cleanup();
+#endif
     return 0;
-}   
+}
 
 static int
 _init(void)
 {
     bkn_rx_skb_cb_register(strip_tag_rx_cb);
-    bkn_tx_skb_cb_register(strip_tag_tx_cb);
-    bkn_filter_cb_register(strip_tag_filter_cb);
+    /* strip_tag_tx_cb is currently a noop, so
+     * no need to register.
+     */
+    if (0)
+    {
+        bkn_tx_skb_cb_register(strip_tag_tx_cb);
+    }
+
+#ifdef PSAMPLE_SUPPORT
+    psample_init();
+#endif
+
+    bkn_filter_cb_register(knet_filter_cb);
+    bkn_netif_create_cb_register(knet_netif_create_cb);
+    bkn_netif_destroy_cb_register(knet_netif_destroy_cb);
 
     return 0;
 }
 
 static gmodule_t _gmodule = {
-    name: MODULE_NAME, 
-    major: MODULE_MAJOR, 
+    name: MODULE_NAME,
+    major: MODULE_MAJOR,
     init: _init,
-    cleanup: _cleanup, 
-    pprint: _pprint, 
+    cleanup: _cleanup,
+    pprint: _pprint,
     ioctl: NULL,
-    open: NULL, 
-    close: NULL, 
-}; 
+    open: NULL,
+    close: NULL,
+};
 
 gmodule_t*
 gmodule_get(void)
