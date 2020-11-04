@@ -8,14 +8,13 @@
 #
 #############################################################################
 
-import json
 import os.path
 import shutil
-import shlex
 import subprocess
 
 try:
-    from sonic_platform_base.device_base import DeviceBase
+    from sonic_platform_base.component_base import ComponentBase
+    from helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -28,42 +27,21 @@ CPLD_ADDR_MAPPING = {
 }
 GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
+COMPONENT_NAME_LIST = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "BIOS"]
+COMPONENT_DES_LIST = ["Used for managing the CPU",
+                      "Used for managing QSFP+ ports (1-10)", "Used for managing QSFP+ ports (11-20)", "Used for managing QSFP+ ports (22-32)", "Basic Input/Output System"]
 
 
-class Component(DeviceBase):
+class Component(ComponentBase):
     """Platform-specific Component class"""
 
     DEVICE_TYPE = "component"
 
-    def __init__(self, component_name):
-        DeviceBase.__init__(self)
-        self.name = component_name.upper()
-
-    def __run_command(self, command):
-        # Run bash command and print output to stdout
-        try:
-            process = subprocess.Popen(
-                shlex.split(command), stdout=subprocess.PIPE)
-            while True:
-                output = process.stdout.readline()
-                if output == '' and process.poll() is not None:
-                    break
-            rc = process.poll()
-            if rc != 0:
-                return False
-        except:
-            return False
-        return True
-
-    def __get_register_value(self, path, register):
-        # Retrieves the cpld register value
-        cmd = "echo {1} > {0}; cat {0}".format(path, register)
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        raw_data, err = p.communicate()
-        if err is not '':
-            return None
-        return raw_data.strip()
+    def __init__(self, component_index):
+        ComponentBase.__init__(self)
+        self.index = component_index
+        self._api_helper = APIHelper()
+        self.name = self.get_name()
 
     def __get_bios_version(self):
         # Retrieves the BIOS firmware version
@@ -74,20 +52,45 @@ class Component(DeviceBase):
         except Exception as e:
             return None
 
+    def get_register_value(self, register):
+        # Retrieves the cpld register value
+        cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
+        p = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        raw_data, err = p.communicate()
+        if err is not '':
+            return None
+        return raw_data.strip()
+
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
         for cpld_name in CPLD_ADDR_MAPPING:
             try:
                 cpld_addr = CPLD_ADDR_MAPPING[cpld_name]
-                cpld_version_raw = self.__get_register_value(
-                    GETREG_PATH, cpld_addr)
+                cpld_version_raw = self.get_register_value(cpld_addr)
                 cpld_version_str = "{}.{}".format(int(cpld_version_raw[2], 16), int(
                     cpld_version_raw[3], 16)) if cpld_version_raw is not None else 'None'
                 cpld_version[cpld_name] = cpld_version_str
             except Exception as e:
                 cpld_version[cpld_name] = 'None'
         return cpld_version
+
+    def get_name(self):
+        """
+        Retrieves the name of the component
+         Returns:
+            A string containing the name of the component
+        """
+        return COMPONENT_NAME_LIST[self.index]
+
+    def get_description(self):
+        """
+        Retrieves the description of the component
+            Returns:
+            A string containing the description of the component
+        """
+        return COMPONENT_DES_LIST[self.index]
 
     def get_firmware_version(self):
         """
@@ -105,7 +108,7 @@ class Component(DeviceBase):
 
         return fw_version
 
-    def upgrade_firmware(self, image_path):
+    def install_firmware(self, image_path):
         """
         Install firmware to module
         Args:
@@ -123,8 +126,7 @@ class Component(DeviceBase):
             new_image_path = os.path.join("/tmp", (root.lower() + ext))
             shutil.copy(image_path, new_image_path)
             install_command = "ispvm %s" % new_image_path
-        elif self.name == "BIOS":
-            print("Not supported")
-            return False
+        # elif self.name == "BIOS":
+        #     install_command = "afulnx_64 %s /p /b /n /x /r" % image_path
 
         return self.__run_command(install_command)

@@ -33,33 +33,11 @@ LIBS = $(LIBDIR)/libkern.a
 
 BDE = linux-kernel-bde.o
 
-ifdef ROBO_CHIPS
-CFLAGS += -I$(ET_ROBO) -I${SDK}/include/shared/et
-ET_ROBO = ${SDK}/systems/drv/et
-endif
-
 # need to add vpath sources
-VPATH = ../shared $(ET_ROBO)
+VPATH = ../shared
 
 # Add the srcs to be found by vpath
 LSRCS += mpool.c
-ifdef ROBO_CHIPS
-platformsplt = $(subst -, , ${platform})    # change hyphens to spaces
-platformbase = $(word 1,${platformsplt})
-
-ifeq ($(platformbase), keystone)
-    LSRCS += etc_robo_spi.c aiutils.c
-else
-    ifeq ($(platformbase), keystone_le)
-        LSRCS += etc_robo_spi.c aiutils.c
-    else
-        ifeq ($(platformbase), iproc)
-             LSRCS += robo_srab.c robo_spi.c aiutils.c
-        endif
-    endif
-endif # platformbase
-
-endif # ROBO_CHIPS
 
 # Add shared BDE sources
 VPATH += ../../shared
@@ -77,14 +55,16 @@ THIS_MOD_NAME := linux-kernel-bde
 MODULE = $(LIBDIR)/$(THIS_MOD_NAME).o
 KMODULE = $(LIBDIR)/$(THIS_MOD_NAME).ko
 
-build: kernel_libs $(MODULE) $(KMODULE)
+build: kernel_libs module $(KMODULE)
 else
 MODULE = $(LIBDIR)/linux-kernel-bde.o
 
-build: kernel_libs $(MODULE)
+build: kernel_libs module
 endif
 
-$(MODULE): $(BLDDIR)/.tree kernel_libs $(BOBJS)
+module: kernel_libs $(MODULE)
+
+$(MODULE): $(BLDDIR)/.tree $(BOBJS)
 	mkdir -p $(@D)
 	$(LD) $(MODULE_LDFLAGS) -r -d $(BOBJS) $(LIBS) -o $@
 ifneq ($(kernel_version),2_4)
