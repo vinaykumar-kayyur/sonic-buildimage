@@ -349,9 +349,11 @@ class RemoteServerHandler:
             if tnow < self.start_time:
                 # Pausing for initial latency since reboot or last retry
                 due_secs = (self.start_time - tnow).seconds
-                log_debug("Pending to start in {} seconds at {}".format(
-                    due_secs, self.start_time))
-                return
+            else:
+                due_secs = 0
+            log_debug("Pending to start in {} seconds at {}".format(
+                due_secs, self.start_time))
+            return
 
         self.handle_update()
 

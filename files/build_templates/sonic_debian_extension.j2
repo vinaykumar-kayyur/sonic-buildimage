@@ -344,7 +344,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install watchd
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install futures==3.3.0
 
 {% if include_kubernetes == "y" %}
-# Update kubelet service files by dropping install section
+# kubelet service is controlled by ctrmgrd daemon.
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 {% endif %}
 
