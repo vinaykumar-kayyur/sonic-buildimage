@@ -181,7 +181,7 @@ if [ "${action}" = configure ]; then
 	hamd_dbus_config
 	systemd_add hamd.service
 	echo "Migrating roles from Linux groups to GECOS"
-	/usr/bin/python3 "${migrate_roles_to_gecos}"
+#	/usr/bin/python3 "${migrate_roles_to_gecos}"
 
 fi
 
