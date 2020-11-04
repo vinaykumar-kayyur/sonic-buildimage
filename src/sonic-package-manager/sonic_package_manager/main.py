@@ -159,8 +159,30 @@ def versions(ctx, name, all, plain):
 def changelog(ctx, expression):
     """ Print the package changelog. """
 
-    # TODO: implement changelog
-    pass
+    manager: PackageManager = ctx.obj
+
+    try:
+        ref = parse_reference_expression(expression)
+        package = manager.get_package(ref.name, ref.reference)
+        changelog = package.manifest['package']['changelog']
+
+        if not changelog:
+            raise PackageManagerError(f'No changelog for package {expression}')
+
+        for version, entry in changelog.items():
+            author = entry.get('author') or 'N/A'
+            email = entry.get('email') or 'N/A'
+            changes = entry.get('changes') or []
+            date = entry.get('date') or 'N/A'
+            click.secho(f'{version}:\n', fg='green', bold=True)
+            for line in changes:
+                click.secho(f'    {BULLET_UC} {line}', bold=True)
+            click.secho(f'\n        {author} '
+                        f'({email}) {date}', fg='green', bold=True)
+            click.secho('')
+
+    except Exception as err:
+        exit_cli(f'Failed to print package changelog: {err}', fg='red')
 
 
 @repository.command()

@@ -122,6 +122,7 @@ class ManifestSchema:
             ManifestArray('depends', PackageConstraint.parse),
             ManifestArray('breaks', PackageConstraint.parse),
             ManifestField('init-cfg', dict, dict()),
+            ManifestField('changelog', dict, dict()),
         ]),
         ManifestRoot('service', [
             ManifestField('name', str),
