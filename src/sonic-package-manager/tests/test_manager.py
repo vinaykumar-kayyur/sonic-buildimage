@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -138,3 +139,26 @@ def test_manager_installation_version_range(package_manager):
                              'Use only following expression "test-package==<version>" '
                              'to install specific version'):
         package_manager.install(f'test-package>=1.6.0')
+
+
+def test_manager_migration(package_manager, fake_db_for_migration):
+    package_manager.install = Mock()
+    package_manager.upgrade = Mock()
+    package_manager.migrate_packages(fake_db_for_migration)
+
+    # test-package-3 was installed but there is a newer version installed
+    # in fake_db_for_migration, asserting for upgrade
+    package_manager.upgrade.assert_has_calls([call('test-package-3==1.6.0')], any_order=True)
+
+    package_manager.install.assert_has_calls([
+        # test-package-4 was not present in DB at all, but it is present and installed in
+        # fake_db_for_migration, thus asserting that it is going to be installed.
+        call('test-package-4==1.5.0'),
+        # test-package-5 1.5.0 was installed in fake_db_for_migration but the default
+        # in current db is 1.9.0, assert that migration will install the newer version.
+        call('test-package-5==1.9.0'),
+        # test-package-6 2.0.0 was installed in fake_db_for_migration but the default
+        # in current db is 1.5.0, assert that migration will install the newer version.
+        call('test-package-6==2.0.0')],
+        any_order=True
+    )

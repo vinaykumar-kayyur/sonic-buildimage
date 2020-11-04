@@ -359,27 +359,26 @@ class PackageManager:
             if new_package.installed or new_package.default_reference is not None:
                 pkg = self.get_package(new_package.name)
                 new_package_version = pkg.manifest['package']['version']
+
+                if old_package.version > new_package_version:
+                    log.info(f'old package version is greater then default version in new image: '
+                             f'{old_package.version} > {new_package_version}')
+                    if new_package.installed:
+                        log.info(f'upgrading {new_package.name} to {old_package.version}')
+                        self.upgrade(f'{new_package.name}=={old_package.version}')
+                    else:
+                        log.info(f'installing {new_package.name} version {old_package.version}')
+                        self.install(f'{new_package.name}=={old_package.version}')
+                else:
+                    if not new_package.installed:
+                        log.info(f'installing {new_package.name} version {new_package_version}')
+                        self.install(f'{new_package.name}=={new_package_version}')
+                    else:
+                        log.info(f'skipping {new_package.name} as installed version is newer')
             else:
                 # No default version and package is not installed.
-                # Set it to 0.0.0 so it will be
-                # always lower than old package version
-                # and the old version will be installed.
-                new_package_version = Version(0, 0, 0)
-
-            if old_package.version > new_package_version:
-                log.info(f'old package version is greater then default version in new image: '
-                         f'{old_package.version} > {new_package_version}')
-                if new_package.installed:
-                    log.info(f'upgrading {new_package.name} to {old_package.version}')
-                    self.upgrade(f'{new_package.name}=={old_package.version}')
-                else:
-                    log.info(f'installing {new_package.name} with version {old_package.version}')
-                    self.install(f'{new_package.name}=={old_package.version}')
-            else:
-                if not new_package.installed:
-                    self.install(f'{new_package.name}')
-                else:
-                    log.info(f'skipping {new_package.name} as installed version is newer')
+                log.info(f'installing {new_package.name} version {old_package.version}')
+                self.install(f'{new_package.name}=={old_package.version}')
 
             self.database.commit()
 
