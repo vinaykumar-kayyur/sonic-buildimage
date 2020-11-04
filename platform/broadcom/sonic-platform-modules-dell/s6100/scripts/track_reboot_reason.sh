@@ -34,6 +34,7 @@ if [[ -d /host/reboot-cause/platform ]]; then
     fi
 fi
 
+SMF_FPGA_VERSION=$((16#$(io_rd_wr.py --get --offset 0x200 | cut -d " " -f 3)))
 SMF_BIOS_REG=$(io_rd_wr.py --get --offset 0x203 | cut -d " " -f 3)
 SMF_BIOS_REG=$((16#$SMF_BIOS_REG))
 bios_secondary_boot=$(($SMF_BIOS_REG & 1))
@@ -143,27 +144,46 @@ update_mailbox_register(){
 
     _get_smf_reset_register
     if [[ -d /sys/devices/platform/SMF.512/hwmon/ ]]; then
-        is_thermal_reboot=$(_is_thermal_reset)
-
-        is_wd_reboot=$(_is_watchdog_reset)
-
         por=$(cat $SMF_POWERON_REASON)
         rst=$(cat $SMF_RESET_REASON)
         mbr=$(cat $MAILBOX_POWERON_REASON)
         reason=$(echo $mbr | cut -d 'x' -f2)
         logger -p user.info -t DELL_S6100_REBOOT_CAUSE "POR: $por, RST: $rst, MBR: $mbr"
-        if [[ $reason = "ff" ]]; then
-            echo "None" > $REBOOT_REASON_FILE
-            echo 0xbb > $MAILBOX_POWERON_REASON
-        elif [[ $is_thermal_reboot = 1 ]]; then
-            echo 0xee > $MAILBOX_POWERON_REASON
-        elif [[ $is_wd_reboot = 1 ]] && [[ $reason != "cc" ]]; then
-            echo 0xdd > $MAILBOX_POWERON_REASON
-        elif [[ $reason = "cc" ]]; then
-            echo 0xaa > $MAILBOX_POWERON_REASON
+
+        SMF_FPGA_VERSION_MAJOR=$(( (SMF_FPGA_VERSION & 0xF0) >> 4 ))
+        SMF_FPGA_VERSION_MINOR=$(( SMF_FPGA_VERSION & 0x0F ))
+
+        if [[ -e $BIOS_VERSION_FILE ]] && [[ $SMF_FPGA_VERSION_MAJOR -ge 1 ]] && [[ $SMF_FPGA_VERSION_MINOR -ge 4 ]]; then
+
+            if [[ $reason = "cc" ]]; then
+                echo 0xaa > $MAILBOX_POWERON_REASON
+            elif [[ $SMF_RESET = "11" ]]; then
+                echo 0xee > $MAILBOX_POWERON_REASON
+            elif [[ $SMF_RESET = "33" ]]; then
+                echo 0xdd > $MAILBOX_POWERON_REASON
+            else
+                echo "Unknown software reboot" > $REBOOT_CAUSE_FILE
+                echo 0x99 > $MAILBOX_POWERON_REASON
+            fi
+
         else
-            _is_unknown_reset $is_thermal_reboot
-            echo 0x99 > $MAILBOX_POWERON_REASON
+            is_thermal_reboot=$(_is_thermal_reset)
+
+            is_wd_reboot=$(_is_watchdog_reset)
+
+            if [[ $reason = "ff" ]]; then
+                echo "None" > $REBOOT_REASON_FILE
+                echo 0xbb > $MAILBOX_POWERON_REASON
+            elif [[ $is_thermal_reboot = 1 ]]; then
+                echo 0xee > $MAILBOX_POWERON_REASON
+            elif [[ $is_wd_reboot = 1 ]] && [[ $reason != "cc" ]]; then
+                echo 0xdd > $MAILBOX_POWERON_REASON
+            elif [[ $reason = "cc" ]]; then
+                echo 0xaa > $MAILBOX_POWERON_REASON
+            else
+                _is_unknown_reset $is_thermal_reboot
+                echo 0x99 > $MAILBOX_POWERON_REASON
+            fi
         fi
     fi
 }
