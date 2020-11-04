@@ -11,7 +11,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Clone wpa repo
 	git clone https://github.com/Azure/sonic-wpa-supplicant.git
-	pushd ./sonic-wpa-supplicant
+	pushd ./sonic-wpa-supplicant/wpa_supplicant
 
 	# Reset HEAD to the commit of the proper tag
 	# NOTE: Using "git checkout <tag_name>" here detaches our HEAD,
@@ -20,7 +20,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git checkout wpa/$(WPASUPPLICANT_VERSION)
 
 	# Build source and Debian packages
-	cp wpa_supplicant/defconfig wpa_supplicant/.config
+	cp defconfig .config
 	make -j$(SONIC_CONFIG_MAKE_JOBS)
 
 	popd
