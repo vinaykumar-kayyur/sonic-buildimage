@@ -208,10 +208,21 @@ led_fw_path
 l2xlrn_thread_interval
 l2xlrn_intr_en
 serdes_lane_config_media_type
+host_as_route_disable
 sai_preinit_cmd_file
 sai_preinit_warmboot_cmd_file
 sai_postinit_cmd_file
 sai_postinit_warmboot_cmd_file
+num_queues_pci
+num_queues_uc0
+num_queues_uc1
+flow_init_mode
+flowtracker_enable
+flowtracker_max_flows
+flowtracker_drop_monitor_enable
+flowtracker_export_interval_usecs
+flowtracker_max_export_pkt_length
+flowtracker_fsp_reinject_max_length
 help_cli_enable
 memlist_enable
 serdes_lane_config_dfe
@@ -219,3 +230,4 @@ serdes_fec_enable
 pbmp_gport_stack
 reglist_enable
 scache_filename
+sai_fast_convergence_support
