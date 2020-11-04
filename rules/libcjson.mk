@@ -1,0 +1,9 @@
+# cjson packages
+
+LIBCJSON_VERSION = 1.7.11
+LIBCJSON = libcjson_$(LIBCJSON_VERSION)_amd64.deb
+$(LIBCJSON)_SRC_PATH = $(SRC_PATH)/libcjson
+SONIC_MAKE_DEBS += $(LIBCJSON)
+
+export LIBCJSON_VERSION
+export LIBCJSON

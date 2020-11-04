@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+clean:
+	dh_auto_clean
+
+build:
+	$(MAKE) all
+
+ifeq ($(SONIC_COVERAGE_ON),y)
+	find . -name "*.gcno" | sed 's|.*|tar -uvf debian/gcov_cjson_$(shell date '+%y%m%d_%H%M').tar &|g'|sh
+endif
+
+binary:
+	mkdir -p debian/libcjson/usr/lib
+	mkdir -p debian/libcjson/usr/include
+	cp libcjson.a debian/libcjson/usr/lib
+	cp cJSON.h debian/libcjson/usr/include
+	dh_gencontrol
+	dh_builddeb

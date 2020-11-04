@@ -1,0 +1,13 @@
+Source: libcjson
+Section: devel
+Priority: optional
+Maintainer: Syd Logan <syd.logan@broadcom.com>
+Build-Depends: debhelper (>= 10)
+
+
+Package: libcjson
+Architecture: amd64
+Section: libs
+Priority: optional
+Description: libcjson
+  JSON parser written in C (https://github.com/DaveGamble/cJSON)
