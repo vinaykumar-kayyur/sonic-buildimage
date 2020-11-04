@@ -199,8 +199,6 @@ def container_stop(feature):
     if docker_id:
         docker_action("stop", docker_id)
 
-    current_owner, remote_state, docker_id = read_state(feature)
-
     debug_msg("END")
 
 
