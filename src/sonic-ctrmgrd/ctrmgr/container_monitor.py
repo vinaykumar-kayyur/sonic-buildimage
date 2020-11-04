@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import signal
 import syslog
@@ -10,7 +10,7 @@ import container_state
 name = None
 
 def mark_end():
-    container_state.down(name)
+    container_state.container_down(name)
     syslog.syslog(syslog.LOG_INFO, "Marking end of docker {}".format(name))
 
 

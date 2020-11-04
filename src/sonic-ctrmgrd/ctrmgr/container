@@ -200,16 +200,6 @@ def container_stop(feature):
         docker_action("stop", docker_id)
 
     current_owner, remote_state, docker_id = read_state(feature)
-    if ((current_owner != "none") or docker_id):
-        # container did not clear data upon termination; Possibly killed
-        # This could also happen when kubelet forcefully terminate
-        # Forceful termination is possible when master connection is reset.
-        #
-        debug_msg("Force resetting feature:{} status to none".format(feature))
-        update_data(feature, {
-            CURRENT_OWNER: "none",
-            REMOTE_STATE: "none",
-            DOCKER_ID: ""})
 
     debug_msg("END")
 

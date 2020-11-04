@@ -103,21 +103,6 @@ def get_docker_id():
     return output.strip()[:12]
 
 
-def _strip_numeric_suffix(s):
-    i = len(s)
-    if not i:
-        return s
-
-    i -= 1
-
-    while (i > 0) and s[i].isdigit():
-        i -= 1
-
-    if not s[i].isdigit():
-        i += 1
-
-    return s[i:]
-
 def instance_lower(feature, version):
     if ((state_data[REMOTE_STATE] == "none") or
             (state_data[REMOTE_STATE] == "stopped")):
@@ -188,7 +173,6 @@ def container_up(feature, owner, version):
     debug_msg("BEGIN")
     read_data(feature)
 
-    version = _strip_numeric_suffix(version)
     debug_msg("args: feature={}, owner={}, version={} DB: set_owner={} state_data={}".format(
         feature, owner, version, set_owner, state_data))
 
