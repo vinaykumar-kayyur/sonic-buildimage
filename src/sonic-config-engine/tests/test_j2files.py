@@ -14,6 +14,7 @@ class TestJ2Files(TestCase):
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.simple_minigraph = os.path.join(self.test_dir, 'simple-sample-graph.xml')
         self.t0_minigraph = os.path.join(self.test_dir, 't0-sample-graph.xml')
+        self.t0_minigraph_ipv6_mgmt_iface = os.path.join(self.test_dir, 't0-sample-graph-ipv6-mgmt-iface.xml')
         self.t0_mvrf_minigraph = os.path.join(self.test_dir, 't0-sample-graph-mvrf.xml')
         self.pc_minigraph = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
@@ -68,9 +69,16 @@ class TestJ2Files(TestCase):
 
     def test_lldp(self):
         lldpd_conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-lldp', 'lldpd.conf.j2')
+
+        # Test generation of lldpd.conf if management interface IPv4 exist
         argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + lldpd_conf_template + ' > ' + self.output_file
         self.run_script(argument)
-        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'lldpd.conf'), self.output_file))
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'lldp_conf', 'lldpd-ipv4-iface.conf'), self.output_file))
+
+        # Test generation of lldpd.conf if Management interface IPv4 doesn't exist (IPv6 only)
+        argument = '-m ' + self.t0_minigraph_ipv6_mgmt_iface + ' -p ' + self.t0_port_config + ' -t ' + lldpd_conf_template + ' > ' + self.output_file
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'lldp_conf', 'lldpd-ipv6-iface.conf'), self.output_file))
 
     def test_bgpd_quagga(self):
         conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'bgpd.conf.j2')
