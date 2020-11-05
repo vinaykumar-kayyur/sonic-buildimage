@@ -205,6 +205,7 @@ enum {
     STATE_START,
     STATE_WRITE,
     STATE_READ,
+    STATE_STOP,
     STATE_ERROR,
 };
 
@@ -230,6 +231,7 @@ enum {
 
 #define IRQ_LTCH_STS        		0x20
 #define PRSNT_LTCH_STS	        	0x10
+#define MODABS_STS                      0x01
 
 #define PORT_CTRL_OFFSET            0x4000
 #define PORT_STS_OFFSET             0x4004
@@ -295,6 +297,7 @@ enum {
 
 #define FPGA_MSI_VECTOR_ID_4       4
 #define FPGA_MSI_VECTOR_ID_5       5
+#define FPGA_MSI_VECTOR_ID_6       6
 #define FPGA_MSI_VECTOR_ID_8       8
 #define FPGA_MSI_VECTOR_ID_9       9
 #define FPGA_MSI_VECTOR_ID_10      10
@@ -522,7 +525,7 @@ static ssize_t get_mod_msi(struct device *dev, struct device_attribute *devattr,
 	int ind = 0, port_status=0, port_irq_status=0;
     struct fpgapci_dev *fpgapci = (struct fpgapci_dev*) dev_get_drvdata(dev);
 	PRINT("%s:xcvr_intr_count:%u\n", __FUNCTION__, fpgapci->xcvr_intr_count);
-	for(ind=0;ind<64;ind++)
+	for(ind=0;ind<66;ind++)
 	{ 
        	port_status = ioread32(fpga_ctl_addr + PORT_STS_OFFSET + (ind*16));
        	port_irq_status = ioread32(fpga_ctl_addr + PORT_IRQ_STS_OFFSET + (ind*16));
@@ -584,6 +587,28 @@ static irqreturn_t fpgaport_33_64_isr(int irq, void *dev)
 	return IRQ_HANDLED;
 }
 
+
+static irqreturn_t fpgaport_65_66_isr(int irq, void *dev)
+{
+	struct pci_dev *pdev = dev;
+    struct fpgapci_dev *fpgapci = (struct fpgapci_dev*) dev_get_drvdata(&pdev->dev);
+	int ind = 0, port_status=0, port_irq_status=0;
+	for(ind=64;ind<66;ind++)
+	{
+        port_irq_status = ioread32(fpga_ctl_addr + PORT_IRQ_STS_OFFSET + (ind*16));
+		if(port_irq_status| (MODABS_STS))
+		{
+			PRINT("%s:port:%d, port_status:%#x, port_irq_status:%#x\n", __FUNCTION__, ind, port_status, port_irq_status);
+				//write on clear
+		iowrite32( MODABS_STS,fpga_ctl_addr + PORT_IRQ_STS_OFFSET + (ind*16));
+		}
+	}
+    fpgapci->xcvr_intr_count++;
+	PRINT("%s: xcvr_intr_count:%u\n", __FUNCTION__, fpgapci->xcvr_intr_count);
+	sysfs_notify(&pdev->dev.kobj, NULL, "port_msi");
+	return IRQ_HANDLED;
+}
+
 static void fpgai2c_process(struct fpgalogic_i2c *i2c)
 {
     struct i2c_msg *msg = i2c->msg;
@@ -591,10 +616,13 @@ static void fpgai2c_process(struct fpgalogic_i2c *i2c)
 
     PRINT("fpgai2c_process in. status reg :0x%x\n", stat);
 
-    if ((i2c->state == STATE_DONE) || (i2c->state == STATE_ERROR)) {
+    if ((i2c->state == STATE_STOP) || (i2c->state == STATE_ERROR)) {
         /* stop has been sent */
         PRINT("fpgai2c_process FPGAI2C_REG_CMD_IACK stat = 0x%x Set FPGAI2C_REG_CMD(0%x) FPGAI2C_REG_CMD_IACK = 0x%x\n",stat, FPGAI2C_REG_CMD, FPGAI2C_REG_CMD_IACK);
         fpgai2c_reg_set(i2c, FPGAI2C_REG_CMD, FPGAI2C_REG_CMD_IACK);
+        if(i2c->state == STATE_STOP) {
+            i2c->state = STATE_DONE;
+        }
         wake_up(&i2c->wait);
         return;
     }
@@ -648,7 +676,7 @@ static void fpgai2c_process(struct fpgalogic_i2c *i2c)
                     ? STATE_READ : STATE_WRITE;
             }
         } else {
-            i2c->state = STATE_DONE;
+            i2c->state = STATE_STOP;
             fpgai2c_stop(i2c);
             return;
         }
@@ -722,6 +750,7 @@ static int fpgai2c_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
 
 
     } else {
+        ret = -ETIMEDOUT;
         PRINT("Set FPGAI2C_REG_DATA(0%x) val = 0x%x\n",FPGAI2C_REG_DATA,
                 (i2c->msg->addr << 1) |    ((i2c->msg->flags & I2C_M_RD) ? 1:0));
 
@@ -733,9 +762,8 @@ static int fpgai2c_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
         /* Interrupt mode */
         if (wait_event_timeout(i2c->wait, (i2c->state == STATE_ERROR) ||
                     (i2c->state == STATE_DONE), HZ))
-            return (i2c->state == STATE_DONE) ? num : -EIO;
-        else
-            return -ETIMEDOUT;
+            ret = (i2c->state == STATE_DONE) ? num : -EIO;
+        return ret;
     }
 }
 
@@ -1118,6 +1146,12 @@ static int register_intr_handler(struct pci_dev *dev, int irq_num_id)
         		PRINT ( "%d: fpgapci_dev: irq: %d, %d\n", __LINE__, dev->irq, irq_num_id);
                 fpgapci->irq_assigned++;
 				break;
+	    case FPGA_MSI_VECTOR_ID_6:
+                err = request_irq(dev->irq + irq_num_id, fpgaport_65_66_isr, IRQF_EARLY_RESUME,
+                        FPGA_PCI_NAME, dev);
+                        PRINT ( "%d: fpgapci_dev: irq: %d, %d\n", __LINE__, dev->irq, irq_num_id);
+                fpgapci->irq_assigned++;
+				break;
             case FPGA_MSI_VECTOR_ID_8:
                 err = request_irq(dev->irq + irq_num_id, fpgai2c_isr, IRQF_EARLY_RESUME,
                         FPGA_PCI_NAME, &fpgalogic_i2c[0]);
@@ -1174,6 +1208,12 @@ static int register_intr_handler(struct pci_dev *dev, int irq_num_id)
                 err = request_irq(dev->irq + irq_num_id, fpgaport_33_64_isr, IRQF_EARLY_RESUME,
                         FPGA_PCI_NAME, dev);
         		PRINT ( "%d: fpgapci_dev: irq: %d, %d\n", __LINE__, dev->irq, irq_num_id);
+                fpgapci->irq_assigned++;
+				break;
+	    case FPGA_MSI_VECTOR_ID_6:
+		err = request_irq(dev->irq + irq_num_id, fpgaport_65_66_isr, IRQF_EARLY_RESUME,
+                        FPGA_PCI_NAME, dev);
+			PRINT ( "%d: fpgapci_dev: irq: %d, %d\n", __LINE__, dev->irq, irq_num_id);
                 fpgapci->irq_assigned++;
 				break;
             case FPGA_MSI_VECTOR_ID_8:

@@ -1,23 +1,20 @@
 /*
  * Copyright 2017 Broadcom
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation (the "GPL").
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License version 2 (GPLv2) for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
  */
+
 /*
- * $Id: linux-user-bde.c,v 1.80 Broadcom SDK $
- * $Copyright: (c) 2005 Broadcom Corp.
- * All Rights Reserved.$
- *
  * Linux User BDE Helper Module
  */
 #include <gmodule.h>
@@ -32,9 +29,6 @@
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)
 #include <linux/uaccess.h>
-#endif
-#ifdef KEYSTONE
-#include <shared/et/bcmdevs.h>
 #endif
 
 
@@ -84,6 +78,17 @@ The INTR base address values are changed for HX5,
 hence making new #defines so runtime decisions can
 be made.
 */
+#define PAXB_0_PAXB_IC_INTRCLR_0       (0x180123a0)
+#define PAXB_0_PAXB_IC_INTRCLR_1       (0x180123a4)
+
+#define PAXB_0_PAXB_IC_INTRCLR_MODE_0  (0x180123a8)
+#define PAXB_0_PAXB_IC_INTRCLR_MODE_1  (0x180123ac)
+
+#define HX5_PAXB_0_PAXB_IC_INTRCLR_0   (0x102303a0)
+#define HX5_PAXB_0_PAXB_IC_INTRCLR_1   (0x102303a4)
+
+#define HX5_PAXB_0_PAXB_IC_INTRCLR_MODE_0   (0x102303a8)
+#define HX5_PAXB_0_PAXB_IC_INTRCLR_MODE_1   (0x102303ac)
 
 #define INTC_INTR_ENABLE_REG0          (0x180130f0)
 #define INTC_INTR_STATUS_REG0          (0x18013190)
@@ -107,12 +112,18 @@ be made.
 #define HX5_IHOST_GICD_ISENABLERN_1        (0x10781104)
 #define HX5_IHOST_GICD_ICENABLERN_1        (0x10781184)
 #define HX5_IHOST_GICD_ICENABLERN_8        (0x107811a0)
+#define HX5_IHOST_GICD_ISPENDRN_8          (0x10781220)
 /* Offset between ISENABLERN_1 and ICENABLERN_1 in 4-bytes */
 #define HX5_IHOST_IRQ_MASK_OFFSET          0x20
-#define HX5_IHOST_INTR_MAP_NUM             (HX5_IHOST_GICD_ICENABLERN_8 - HX5_IHOST_GICD_ISENABLERN_0)
+/* Offset between ISENABLERN_1 and ISPENDRN_1 in 4-bytes */
+#define HX5_IHOST_IRQ_PEND_OFFSET          0x40
+#define HX5_IHOST_INTR_MAP_NUM             (HX5_IHOST_GICD_ISPENDRN_8 - HX5_IHOST_GICD_ISENABLERN_0)
 #define HX5_IHOST_INTR_STATUS_MAP_NUM      (INTC_INTR_REG_NUM * (sizeof(uint32)))
 #define IRQ_BIT(intr)                      (intr % (sizeof(uint32)*8))
 #define IRQ_MASK_INDEX(intr)               (intr / (sizeof(uint32)*8))
+#define HX5_SW_PROG_INTR_PRIORITY          73
+#define INTR_SW_PROG_INTR_BITPOS           (1 << IRQ_BIT(HX5_SW_PROG_INTR_PRIORITY))
+#define INTC_SW_PROG_INTR_REG_IND          IRQ_MASK_INDEX(HX5_SW_PROG_INTR_PRIORITY)
 #define HX5_CHIP_INTR_LOW_PRIORITY         119
 #define INTR_LOW_PRIORITY_BITPOS           (1 << IRQ_BIT(HX5_CHIP_INTR_LOW_PRIORITY))
 #define INTC_LOW_PRIORITY_INTR_REG_IND     IRQ_MASK_INDEX(HX5_CHIP_INTR_LOW_PRIORITY)
@@ -144,9 +155,24 @@ be made.
 static uint32 *ihost_intr_status_base = NULL;
 static uint32 *ihost_intr_enable_base = NULL;
 
+/* Debug output */
+static int debug;
+LKM_MOD_PARAM(debug, "i", int, (S_IRUGO | S_IWUSR));
+MODULE_PARM_DESC(debug,
+"Set debug level (default 0).");
+
 static ibde_t *user_bde = NULL;
 
 typedef void (*isr_f)(void *);
+
+typedef struct _intr_regs_s {
+    uint32 intc_intr_status_base;
+    uint32 intc_intr_enable_base;
+    uint32 intc_intr_clear_0;
+    uint32 intc_intr_clear_1;
+    uint32 intc_intr_clear_mode_0;
+    uint32 intc_intr_clear_mode_1;
+} _intr_regs_t;
 
 typedef struct bde_ctrl_s {
     uint32 dev_type;
@@ -156,6 +182,7 @@ typedef struct bde_ctrl_s {
     isr_f isr;
     uint32 *ba;
     int inst;   /* associate to _bde_inst_resource[] */
+    _intr_regs_t intr_regs;
 } bde_ctrl_t;
 
 #define VALID_DEVICE(_n) (_n < LINUX_BDE_MAX_DEVICES)
@@ -181,6 +208,10 @@ typedef struct {
 } bde_inst_resource_t;
 
 static bde_inst_resource_t _bde_inst_resource[LINUX_BDE_MAX_DEVICES];
+/*
+ * Lock used to protect changes to _bde_inst_resource
+ */
+static spinlock_t bde_resource_lock;
 
 typedef struct {
     phys_addr_t  cpu_pbase; /* CPU physical base address of the DMA pool */
@@ -266,44 +297,33 @@ _cmicx_interrupt(bde_ctrl_t *ctrl)
     int d, ind;
     uint32 stat, iena, mask, fmask;
     bde_inst_resource_t *res;
-    uint32 intc_intr_status_base = 0, intc_intr_enable_base = 0;
 
     d = (((uint8 *)ctrl - (uint8 *)_devices) / sizeof (bde_ctrl_t));
+
+    if (ctrl->dev_type & BDE_PCI_DEV_TYPE) {
+        /* Clear MSI interrupts immediately to prevent spurious interrupts */
+        WRITE_INTC_INTR(d, ctrl->intr_regs.intc_intr_clear_0, 0xFFFFFFFF);
+        WRITE_INTC_INTR(d, ctrl->intr_regs.intc_intr_clear_1, 0xFFFFFFFF);
+    }
+
     res = &_bde_inst_resource[ctrl->inst];
 
     lkbde_irq_mask_get(d, &mask, &fmask);
 
-    if ((ctrl->dev_type & BDE_SWITCH_DEV_TYPE) &&
-            ((user_bde->get_dev(d)->device == BCM56370_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56371_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56372_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56374_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56375_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56376_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56377_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56577_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56578_DEVICE_ID) ||
-             (user_bde->get_dev(d)->device == BCM56579_DEVICE_ID))) {
-        intc_intr_status_base = HX5_INTC_INTR_STATUS_BASE;
-        intc_intr_enable_base = HX5_INTC_INTR_ENABLE_BASE;
-    } else {
-        intc_intr_status_base = INTC_INTR_STATUS_BASE;
-        intc_intr_enable_base = INTC_INTR_ENABLE_BASE;
-    }
     if (fmask) {
         if (ctrl->dev_type & BDE_AXI_DEV_TYPE) {
             IHOST_READ_INTR(d, ihost_intr_status_base + INTC_PDMA_INTR_REG_IND, stat);
             IHOST_READ_INTR(d, ihost_intr_enable_base + INTC_PDMA_INTR_REG_IND, iena);
         } else {
-            READ_INTC_INTR(d, intc_intr_status_base + 4 * INTC_PDMA_INTR_REG_IND, stat);
-            READ_INTC_INTR(d, intc_intr_enable_base + 4 * INTC_PDMA_INTR_REG_IND, iena);
+            READ_INTC_INTR(d, ctrl->intr_regs.intc_intr_status_base + 4 * INTC_PDMA_INTR_REG_IND, stat);
+            READ_INTC_INTR(d, ctrl->intr_regs.intc_intr_enable_base + 4 * INTC_PDMA_INTR_REG_IND, iena);
         }
         if (stat & iena) {
             if (ctrl->dev_type & BDE_AXI_DEV_TYPE) {
                 IHOST_WRITE_INTR(d, ihost_intr_enable_base + INTC_PDMA_INTR_REG_IND +
                     HX5_IHOST_IRQ_MASK_OFFSET, ~0);
             } else {
-                WRITE_INTC_INTR(d, intc_intr_enable_base + 4 * INTC_PDMA_INTR_REG_IND, 0);
+                WRITE_INTC_INTR(d, ctrl->intr_regs.intc_intr_enable_base + 4 * INTC_PDMA_INTR_REG_IND, 0);
             }
 
             for (ind = 0; ind < INTC_INTR_REG_NUM; ind++) {
@@ -311,17 +331,21 @@ _cmicx_interrupt(bde_ctrl_t *ctrl)
                     continue;
                 }
                 if (ctrl->dev_type & BDE_AXI_DEV_TYPE) {
-                    if (ind < INTC_LOW_PRIORITY_INTR_REG_IND) {
+                    if (ind < INTC_SW_PROG_INTR_REG_IND) {
                         continue;
                     }
-                    IHOST_READ_INTR(d, ihost_intr_status_base + ind, stat);
-                    IHOST_READ_INTR(d, ihost_intr_enable_base + ind, iena);
-                    if (ind == INTC_LOW_PRIORITY_INTR_REG_IND) {
-                        stat &= INTR_LOW_PRIORITY_BITPOS;
+                    if (ind == INTC_SW_PROG_INTR_REG_IND) {
+                        IHOST_READ_INTR(d, ihost_intr_enable_base + ind + HX5_IHOST_IRQ_PEND_OFFSET, stat);
+                        stat &= INTR_SW_PROG_INTR_BITPOS;
+                    } else {
+                        IHOST_READ_INTR(d, ihost_intr_status_base + ind, stat);
+                        if (ind == INTC_LOW_PRIORITY_INTR_REG_IND) {
+                            stat &= INTR_LOW_PRIORITY_BITPOS;
+                        }
                     }
                 } else {
-                    READ_INTC_INTR(d, intc_intr_status_base + 4 * ind, stat);
-                    READ_INTC_INTR(d, intc_intr_enable_base + 4 * ind, iena);
+                    READ_INTC_INTR(d, ctrl->intr_regs.intc_intr_status_base + 4 * ind, stat);
+                    READ_INTC_INTR(d, ctrl->intr_regs.intc_intr_enable_base + 4 * ind, iena);
                 }
                 if (stat & iena) {
                     break;
@@ -343,10 +367,13 @@ _cmicx_interrupt(bde_ctrl_t *ctrl)
             continue;
         }
         if (ctrl->dev_type & BDE_AXI_DEV_TYPE) {
-            if (ind < INTC_LOW_PRIORITY_INTR_REG_IND) {
+            if (ind < INTC_SW_PROG_INTR_REG_IND) {
                 continue;
             }
-            if (ind == INTC_LOW_PRIORITY_INTR_REG_IND) {
+            if (ind == INTC_SW_PROG_INTR_REG_IND) {
+                IHOST_WRITE_INTR(d, ihost_intr_enable_base + INTC_SW_PROG_INTR_REG_IND +
+                    HX5_IHOST_IRQ_MASK_OFFSET, INTR_SW_PROG_INTR_BITPOS);
+            } else if (ind == INTC_LOW_PRIORITY_INTR_REG_IND) {
                 IHOST_WRITE_INTR(d, ihost_intr_enable_base + INTC_LOW_PRIORITY_INTR_REG_IND +
                     HX5_IHOST_IRQ_MASK_OFFSET, INTR_LOW_PRIORITY_BITPOS);
             } else {
@@ -354,7 +381,7 @@ _cmicx_interrupt(bde_ctrl_t *ctrl)
                     HX5_IHOST_IRQ_MASK_OFFSET, ~0);
             }
         } else {
-            WRITE_INTC_INTR(d, intc_intr_enable_base + 4*ind, 0);
+            WRITE_INTC_INTR(d, ctrl->intr_regs.intc_intr_enable_base + 4*ind, 0);
         }
     }
 
@@ -570,6 +597,18 @@ _cmicd_interrupt(bde_ctrl_t *ctrl)
         if (stat & imask) {
             break;
         }
+        /** Check if there are interrupts other than PacketIO interrupts on CMC1 */
+        stat = user_bde->read(d, CMIC_CMCx_IRQ_STAT0_OFFSET(1));
+        imask = mask & ~fmask;
+        if (stat & imask) {
+            break;
+        }
+        /** Check if there are interrupts other than PacketIO interrupts on CMC2 */
+        stat = user_bde->read(d, CMIC_CMCx_IRQ_STAT0_OFFSET(2));
+        imask = mask & ~fmask;
+        if (stat & imask) {
+            break;
+        }
         stat = user_bde->read(d, CMIC_CMCx_IRQ_STAT1_OFFSET(cmc));
         if (ctrl->dev_type & BDE_AXI_DEV_TYPE) {
             mask = user_bde->read(d, CMIC_CMCx_UC0_IRQ_MASK1_OFFSET(cmc));
@@ -676,124 +715,10 @@ _bcm88750_interrupt(bde_ctrl_t *ctrl)
 #endif
 }
 
-static void
-_qe2k_interrupt(bde_ctrl_t *ctrl)
-{
-    bde_inst_resource_t *res;
-
-    res = &_bde_inst_resource[ctrl->inst];
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x20/sizeof(uint32));
-
-    atomic_set(&res->intr, 1);
-#ifdef BDE_LINUX_NON_INTERRUPTIBLE
-    wake_up(&res->intr_wq);
-#else
-    wake_up_interruptible(&res->intr_wq);
-#endif
-}
-
-static void
-_fe2k_interrupt(bde_ctrl_t *ctrl)
-{
-    bde_inst_resource_t *res;
-
-    res = &_bde_inst_resource[ctrl->inst];
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x18/sizeof(uint32)); /* PC_INTERRUPT_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x24/sizeof(uint32)); /* PC_ERROR0_MASK    */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x2c/sizeof(uint32)); /* PC_ERROR1_MASK    */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x34/sizeof(uint32)); /* PC_UNIT_MASK      */
-
-    atomic_set(&res->intr, 1);
-#ifdef BDE_LINUX_NON_INTERRUPTIBLE
-    wake_up(&res->intr_wq);
-#else
-    wake_up_interruptible(&res->intr_wq);
-#endif
-}
-
-static void
-_fe2kxt_interrupt(bde_ctrl_t *ctrl)
-{
-    bde_inst_resource_t *res;
-
-    res = &_bde_inst_resource[ctrl->inst];
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x2c/sizeof(uint32)); /* PC_INTERRUPT_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x38/sizeof(uint32)); /* PC_ERROR0_MASK    */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x40/sizeof(uint32)); /* PC_ERROR1_MASK    */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x50/sizeof(uint32)); /* PC_UNIT_MASK      */
-
-    atomic_set(&res->intr, 1);
-#ifdef BDE_LINUX_NON_INTERRUPTIBLE
-    wake_up(&res->intr_wq);
-#else
-    wake_up_interruptible(&res->intr_wq);
-#endif
-}
-
-static void
-_bme3200_interrupt(bde_ctrl_t *ctrl)
-{
-    bde_inst_resource_t *res;
-
-    res = &_bde_inst_resource[ctrl->inst];
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x54/sizeof(uint32)); /* PI_PT_ERROR0 */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x5c/sizeof(uint32)); /* PI_PT_ERROR1 */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x64/sizeof(uint32)); /* PI_PT_ERROR2 */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x6c/sizeof(uint32)); /* PI_PT_ERROR3 */
-
-    atomic_set(&res->intr, 1);
-#ifdef BDE_LINUX_NON_INTERRUPTIBLE
-    wake_up(&res->intr_wq);
-#else
-    wake_up_interruptible(&res->intr_wq);
-#endif
-}
-
-
-static void
-_bm9600_interrupt(bde_ctrl_t *ctrl)
-{
-    bde_inst_resource_t *res;
-
-    res = &_bde_inst_resource[ctrl->inst];
-
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x5c/sizeof(uint32));  /* PI_INTERRUPT_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0xc/sizeof(uint32));   /* PI_UNIT_INTERRUPT0_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x14/sizeof(uint32));  /* PI_UNIT_INTERRUPT1_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x1c/sizeof(uint32));  /* PI_UNIT_INTERRUPT2_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x24/sizeof(uint32));  /* PI_UNIT_INTERRUPT3_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x2c/sizeof(uint32));  /* PI_UNIT_INTERRUPT4_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x34/sizeof(uint32));  /* PI_UNIT_INTERRUPT5_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x3c/sizeof(uint32));  /* PI_UNIT_INTERRUPT6_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x44/sizeof(uint32));  /* PI_UNIT_INTERRUPT7_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x4c/sizeof(uint32));  /* PI_UNIT_INTERRUPT8_MASK */
-    SSOC_WRITEL(0xffffffff, ctrl->ba + 0x54/sizeof(uint32));  /* PI_UNIT_INTERRUPT9_MASK */
-
-    atomic_set(&res->intr, 1);
-#ifdef BDE_LINUX_NON_INTERRUPTIBLE
-    wake_up(&res->intr_wq);
-#else
-    wake_up_interruptible(&res->intr_wq);
-#endif
-}
-
-
-
 /* The actual interrupt handler of ethernet devices */
 static void 
 _ether_interrupt(bde_ctrl_t *ctrl)
 {
-#ifdef KEYSTONE
-    /* 
-        * Since the two GMAC cores are sharing the same IRQ.
-        * Add the checking to handle the interrupt events.
-        */
-    if ((ctrl->devid == BCM53000_GMAC_ID)) {
-        if ((readl(ctrl->ba + 0x020/4) & readl(ctrl->ba + 0x024/4)) == 0) {
-            return;
-        }
-    }
-#endif    
     SSOC_WRITEL(0, ctrl->ba + 0x024/4);
 
     atomic_set(&_ether_interrupt_has_taken_place, 1);
@@ -813,11 +738,6 @@ static struct _intr_mode_s {
     { (isr_f)_cmicm_interrupt,      "CMICm" },
     { (isr_f)_cmicd_interrupt,      "CMICd" },
     { (isr_f)_cmicd_cmc0_interrupt, "CMICd CMC0" },
-    { (isr_f)_qe2k_interrupt,       "QE2K" },
-    { (isr_f)_fe2k_interrupt,       "FE2K" },
-    { (isr_f)_fe2kxt_interrupt,     "FE2KXT" },
-    { (isr_f)_bme3200_interrupt,    "BME3200" },
-    { (isr_f)_bm9600_interrupt,     "BM9600" },
     { (isr_f)_bcm88750_interrupt,   "BCM88750" },
     { (isr_f)_cmicx_interrupt,      "CMICx" },
     { NULL, NULL }
@@ -839,13 +759,33 @@ _intr_mode_str(void *isr)
 }
 
 static void
+_intr_regs_init(bde_ctrl_t *ctrl, int hx5_intr)
+{
+    if (hx5_intr) {
+        ctrl->intr_regs.intc_intr_status_base = HX5_INTC_INTR_STATUS_BASE;
+        ctrl->intr_regs.intc_intr_enable_base = HX5_INTC_INTR_ENABLE_BASE;
+        ctrl->intr_regs.intc_intr_clear_0 = HX5_PAXB_0_PAXB_IC_INTRCLR_0;
+        ctrl->intr_regs.intc_intr_clear_1 = HX5_PAXB_0_PAXB_IC_INTRCLR_1;
+        ctrl->intr_regs.intc_intr_clear_mode_0 = HX5_PAXB_0_PAXB_IC_INTRCLR_MODE_0;
+        ctrl->intr_regs.intc_intr_clear_mode_1 = HX5_PAXB_0_PAXB_IC_INTRCLR_MODE_1;
+    } else {
+        ctrl->intr_regs.intc_intr_status_base = INTC_INTR_STATUS_BASE;
+        ctrl->intr_regs.intc_intr_enable_base = INTC_INTR_ENABLE_BASE;
+        ctrl->intr_regs.intc_intr_clear_0 = PAXB_0_PAXB_IC_INTRCLR_0;
+        ctrl->intr_regs.intc_intr_clear_1 = PAXB_0_PAXB_IC_INTRCLR_1;
+        ctrl->intr_regs.intc_intr_clear_mode_0 = PAXB_0_PAXB_IC_INTRCLR_MODE_0;
+        ctrl->intr_regs.intc_intr_clear_mode_1 = PAXB_0_PAXB_IC_INTRCLR_MODE_1;
+    }
+}
+
+static void
 _devices_init(int d)
 {
     bde_ctrl_t *ctrl;
     uint32 ver;
     uint16 device_id_mask = 0xFFF0;
     uint16 device_id;
-    int state = 0;
+    uint32 state = 0;
 
     (void)lkbde_dev_state_get(d, &state);
     if (state == BDE_DEV_STATE_REMOVED) {
@@ -864,21 +804,6 @@ _devices_init(int d)
     }
     if (ctrl->dev_type & BDE_SWITCH_DEV_TYPE) {
         switch (user_bde->get_dev(d)->device) {
-        case QE2000_DEVICE_ID:
-            ctrl->isr = (isr_f)_qe2k_interrupt;
-            break;
-        case BCM88020_DEVICE_ID:
-            ctrl->isr = (isr_f)_fe2k_interrupt;
-            break;
-        case BCM88025_DEVICE_ID:
-            ctrl->isr = (isr_f)_fe2kxt_interrupt;
-            break;
-        case BME3200_DEVICE_ID:
-            ctrl->isr = (isr_f)_bme3200_interrupt;
-            break;
-        case BM9600_DEVICE_ID:
-            ctrl->isr = (isr_f)_bm9600_interrupt;
-            break;
         case BCM88750_DEVICE_ID:
         case BCM88753_DEVICE_ID:
         case BCM88754_DEVICE_ID:
@@ -890,6 +815,8 @@ _devices_init(int d)
         case BCM53547_DEVICE_ID:
         case BCM53548_DEVICE_ID:
         case BCM53549_DEVICE_ID:
+            ctrl->isr = (isr_f)_cmicd_cmc0_interrupt;
+            break;
         case BCM88670_DEVICE_ID:
         case BCM88671_DEVICE_ID:
         case BCM88671M_DEVICE_ID:
@@ -917,10 +844,10 @@ _devices_init(int d)
         case BCM88683_DEVICE_ID:
         case BCM88684_DEVICE_ID:
         case BCM88685_DEVICE_ID:
+        case BCM88687_DEVICE_ID:
         case BCM88380_DEVICE_ID:
         case BCM88381_DEVICE_ID:
         case BCM88680_DEVICE_ID:
-        case BCM88690_DEVICE_ID:
         case BCM88770_DEVICE_ID:
         case BCM88773_DEVICE_ID:
         case BCM88774_DEVICE_ID:
@@ -938,6 +865,7 @@ _devices_init(int d)
         case BCM88270_DEVICE_ID:
         case BCM88272_DEVICE_ID:
         case BCM88273_DEVICE_ID:
+        case BCM88274_DEVICE_ID:
         case BCM88278_DEVICE_ID:
         case BCM88279_DEVICE_ID:
         case BCM8206_DEVICE_ID:
@@ -948,10 +876,7 @@ _devices_init(int d)
         case BCM88956_DEVICE_ID:
         case BCM88772_DEVICE_ID:
         case BCM88952_DEVICE_ID:
-            ctrl->isr = (isr_f)_cmicd_cmc0_interrupt;
-            break;
-        case BCM88790_DEVICE_ID:
-            ctrl->isr = (isr_f)_cmicx_interrupt;
+            ctrl->isr = (isr_f)_cmicd_interrupt;
             break;
         case BCM56370_DEVICE_ID:
         case BCM56371_DEVICE_ID:
@@ -963,6 +888,12 @@ _devices_init(int d)
         case BCM56577_DEVICE_ID:
         case BCM56578_DEVICE_ID:
         case BCM56579_DEVICE_ID:
+        case BCM56273_DEVICE_ID:
+        case BCM56274_DEVICE_ID:
+        case BCM56275_DEVICE_ID:
+        case BCM56276_DEVICE_ID:
+        case BCM56277_DEVICE_ID:
+        case BCM56278_DEVICE_ID:
             ctrl->isr = (isr_f)_cmicx_interrupt;
             if (ctrl->dev_type & BDE_AXI_DEV_TYPE) {
                 if (!ihost_intr_enable_base) {
@@ -974,6 +905,7 @@ _devices_init(int d)
                                                                  HX5_IHOST_INTR_STATUS_MAP_NUM);
                 }
             }
+            _intr_regs_init(ctrl, 1);
             break;
         default:
             /* Get CMIC version */
@@ -989,7 +921,8 @@ _devices_init(int d)
             }
             /* check if version is CMICX */
             else if (ver == 0x04) {
-                 ctrl->isr = (isr_f)_cmicx_interrupt;
+                ctrl->isr = (isr_f)_cmicx_interrupt;
+                _intr_regs_init(ctrl, 0);
             } else {
                 ctrl->isr = (isr_f)_cmic_interrupt;
                 if ((ctrl->dev_type & BDE_256K_REG_SPACE) &&
@@ -1002,10 +935,26 @@ _devices_init(int d)
             }
             break;
         }
-        /* All Ramon devices from 0x8790 to 0x879F */
-        if ((user_bde->get_dev(d)->device & BCM88790_DEVICE_ID) == BCM88790_DEVICE_ID) {
+
+        /* configure interrupts for DNX devices using iproc >=14 */
+#if defined(BCM_DNXF_SUPPORT) || defined(BCM_DNX_SUPPORT)
+        switch (user_bde->get_dev(d)->device & DNXC_DEVID_FAMILY_MASK) {
+#ifdef BCM_DNX_SUPPORT
+          case JERICHO2_DEVICE_ID:
+          case J2C_DEVICE_ID:
+          case J2C_2ND_DEVICE_ID:
+          case Q2A_DEVICE_ID:
+          case J2P_DEVICE_ID:
+#endif
+#ifdef BCM_DNXF_SUPPORT
+          case  BCM88790_DEVICE_ID:
+#endif
             ctrl->isr = (isr_f)_cmicx_interrupt;
+            _intr_regs_init(ctrl, 0);
+            break;
         }
+#endif /* defined(BCM_DNXF_SUPPORT) || defined(BCM_DNX_SUPPORT) */
+
         if (_intr_mode_str(ctrl->isr) == NULL) {
             gprintk("Warning: Unknown interrupt mode\n");
         }
@@ -1034,6 +983,7 @@ _init(void)
     if ((linux_bde_create(NULL, &user_bde) < 0) || user_bde == NULL) {
         return -ENODEV;
     }
+    spin_lock_init(&bde_resource_lock);
 
     init_waitqueue_head(&_ether_interrupt_wq);
 
@@ -1249,15 +1199,27 @@ _instance_attach(unsigned int inst_id, unsigned int dma_size)
     /* Reprobe the system for hot-plugged device */
     _device_reprobe();
 
+    if (debug >= 2) {
+        gprintk("INFO: Request to attach to instance_id %d with dma size %d!\n", inst_id, dma_size);
+    }
+
+    spin_lock(&bde_resource_lock);
+
     /* Validate the resource with inst_id */
     exist = _instance_validate(inst_id, dma_size);
     if (exist < 0) {
+        spin_unlock(&bde_resource_lock);
         return LUBDE_FAIL;
     }
     if (exist > 0) {
+        if (debug >= 2) {
+            gprintk("INFO: Already attached to instance_id %d with dma size %d!\n", inst_id, dma_size);
+        }
+        spin_unlock(&bde_resource_lock);
         return LUBDE_SUCCESS;
     }
     if (_dma_resource_alloc(dma_size, &dma_offset) < 0) {
+        spin_unlock(&bde_resource_lock);
         return LUBDE_FAIL;
     }
     for (i = 0; i < user_bde->num_devices(BDE_ALL_DEVICES); i++) {
@@ -1284,6 +1246,10 @@ _instance_attach(unsigned int inst_id, unsigned int dma_size)
                 }
             }
         }
+    }
+    spin_unlock(&bde_resource_lock);
+    if (debug >= 2) {
+        gprintk("INFO: Attached to instance_id %d with dma size %d! SUCCESS\n", inst_id, dma_size);
     }
 
     return LUBDE_SUCCESS;
@@ -1332,6 +1298,7 @@ _ioctl(unsigned int cmd, unsigned long arg)
         if (bde_dev) {
             io.d0 = bde_dev->device;
             io.d1 = bde_dev->rev;
+            io.dx.dw[0] = bde_dev->dev_unique_id;
             if (BDE_DEV_MEM_MAPPED(_devices[io.dev].dev_type)) {
                 /* Get physical address to map */
                 io.d2 = lkbde_get_dev_phys(io.dev);
@@ -1386,8 +1353,10 @@ _ioctl(unsigned int cmd, unsigned long arg)
         io.dx.dw[0] = cpu_pbase;
 #ifdef PHYS_ADDRS_ARE_64BITS
         io.dx.dw[1] = cpu_pbase >> 32;
+        io.d3 = dma_pbase >> 32;
 #else
         io.dx.dw[1] = 0;
+        io.d3 = 0;
 #endif
         break;
     case LUBDE_ENABLE_INTERRUPTS:
@@ -1396,6 +1365,14 @@ _ioctl(unsigned int cmd, unsigned long arg)
         }
         if (_devices[io.dev].dev_type & BDE_SWITCH_DEV_TYPE) {
             if (_devices[io.dev].isr && !_devices[io.dev].enabled) {
+                bde_ctrl_t *ctrl;
+                ctrl = &_devices[io.dev];
+                if ((ctrl->isr == (isr_f)_cmicx_interrupt)  &&
+                    (ctrl->dev_type & BDE_PCI_DEV_TYPE)) {
+                    /* Set MSI mode to SW clear vs auto clear */
+                    WRITE_INTC_INTR(io.dev, ctrl->intr_regs.intc_intr_clear_mode_0, 0x0);
+                    WRITE_INTC_INTR(io.dev, ctrl->intr_regs.intc_intr_clear_mode_1, 0x0);
+                }
                 user_bde->interrupt_connect(io.dev,
                                             _devices[io.dev].isr,
                                             _devices+io.dev);
@@ -1456,30 +1433,9 @@ _ioctl(unsigned int cmd, unsigned long arg)
         }
         break;
     case LUBDE_USLEEP:
-        sal_usleep(io.d0);
-        break;
     case LUBDE_UDELAY:
-        sal_udelay(io.d0);
-        break;
     case LUBDE_SEM_OP:
-        switch (io.d0) {
-        case LUBDE_SEM_OP_CREATE:
-            io.p0 = (bde_kernel_addr_t)sal_sem_create("", io.d1, io.d2);
-            break;
-        case LUBDE_SEM_OP_DESTROY:
-            sal_sem_destroy((sal_sem_t)io.p0);
-            break;
-        case LUBDE_SEM_OP_TAKE:
-            io.rc = sal_sem_take((sal_sem_t)io.p0, io.d2);
-            break;
-        case LUBDE_SEM_OP_GIVE:
-            io.rc = sal_sem_give((sal_sem_t)io.p0);
-            break;
-        default:
-            io.rc = LUBDE_FAIL;
-            break;
-        }
-        break;
+        return -EINVAL;
     case LUBDE_WRITE_IRQ_MASK:
         io.rc = lkbde_irq_mask_set(io.dev, io.d0, io.d1, 0);
         break;
@@ -1499,7 +1455,7 @@ _ioctl(unsigned int cmd, unsigned long arg)
     case LUBDE_WRITE_REG_16BIT_BUS:
         io.rc = user_bde->write(io.dev, io.d0, io.d1);
         break;
-#if (defined(BCM_PETRA_SUPPORT) || defined(BCM_DFE_SUPPORT))
+#ifdef BCM_SAND_SUPPORT
     case LUBDE_CPU_WRITE_REG:
     {
         if (lkbde_cpu_write(io.dev, io.d0, (uint32*)io.dx.buf) == -1) {

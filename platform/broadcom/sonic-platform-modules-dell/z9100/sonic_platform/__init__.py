@@ -1,1 +1,3 @@
-../../s6100/sonic_platform/__init__.py
+__all__ = ["platform", "chassis", "fan", "fan_drawer", "psu", "sfp", "thermal"]
+from sonic_platform import *
+
