@@ -1,17 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import os.path
-if sys.version_info[0] < 3:
-    import commands as cmd
-else:
-    import subprocess as cmd
-
-smbus_present = 1
-try:
-   import smbus
-except ImportError as e:
-   smbus_present = 0 
 
 try:
     import sonic_platform.platform

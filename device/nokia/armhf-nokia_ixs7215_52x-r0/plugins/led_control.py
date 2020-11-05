@@ -7,11 +7,7 @@
 
 try:
     from sonic_led.led_control_base import LedControlBase
-    import swsssdk
-    import threading
     import os
-    import logging
-    import struct
     import time
     import syslog
     from socket import *
@@ -28,12 +24,10 @@ try:
 except ImportError, e:
     smbus_present = 0
 
-
 def DBG_PRINT(str):
     syslog.openlog("nokia-led")
     syslog.syslog(syslog.LOG_INFO, str)
     syslog.closelog()
-
 
 
 class LedControl(LedControlBase):
@@ -41,11 +35,9 @@ class LedControl(LedControlBase):
   
     # Constructor
     def __init__(self):
-        MV_GPIO_DIR = "/sys/class/gpio/"
         self.chassis = sonic_platform.platform.Platform().get_chassis()
         self._initDefaultConfig()
         
-
     def _initDefaultConfig(self):
         # For the D1 box the port leds are controlled by Trident3 LED program
         # The fan tray leds will be managed with the new thermalctl daemon / chassis class based API
@@ -61,11 +53,10 @@ class LedControl(LedControlBase):
 
         if (not os.path.isfile(reg_file)):
             return rv
-
         try:
             with open(reg_file, 'w') as fd:
                 rv = fd.write(str(value))
-        except:
+        except Exception as e:
             rv = 'ERR'
 
         return rv
@@ -91,15 +82,15 @@ class LedControl(LedControlBase):
             if ( self.chassis.get_fan(0).get_status() == self.chassis.get_fan(1).get_status()  == True ):
                 if oldfan != 0x1:
                     if (os.path.isfile("/sys/class/gpio/fanLedAmber/value")):
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedAmber/value" , 0 )
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedGreen/value" , 1 )
+                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value" , 0 )
+                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value" , 1 )
                         oldfan = 0x1
                         #DBG_PRINT(" System FAN LED set GRN ")
             else:
                 if oldfan != 0x0:
                     if (os.path.isfile("/sys/class/gpio/fanLedGreen/value")):
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedGreen/value" , 0 )
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedAmber/value" , 1 )
+                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value" , 0 )
+                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value" , 1 )
                         oldfan = 0x0
                         #DBG_PRINT(" System FAN LED set AMBER ")
                         
@@ -107,15 +98,15 @@ class LedControl(LedControlBase):
             if ( self.chassis.get_psu(0).get_status() == self.chassis.get_psu(1).get_status() == True ):
                 if oldpsu != 0x1:
                     if (os.path.isfile("/sys/class/gpio/psuLedAmber/value")):
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedAmber/value" , 0 )
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedGreen/value" , 1 )
+                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value" , 0 )
+                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value" , 1 )
                         oldpsu =0x1
                         #DBG_PRINT(" System PSU LED set GRN ")
             else:
                 if oldpsu != 0x0:
                     if (os.path.isfile("/sys/class/gpio/psuLedGreen/value")):
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedGreen/value" , 0 )
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedAmber/value" , 1 )
+                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value" , 0 )
+                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value" , 1 )
                         oldpsu =0x0
                         #DBG_PRINT(" System PSU LED set AMBER ")
             time.sleep(6)
