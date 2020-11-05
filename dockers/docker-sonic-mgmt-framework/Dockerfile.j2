@@ -17,6 +17,8 @@ RUN pip install connexion==1.1.15 \
 		six==1.11.0 \
 		urllib3==1.21.1
 
+RUN apt-get -y install libcurl3-gnutls libpython2.7
+
 COPY \
 {% for deb in docker_sonic_mgmt_framework_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
