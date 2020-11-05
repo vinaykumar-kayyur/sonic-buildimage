@@ -184,14 +184,19 @@ class PddfSfp(SfpBase):
 	self.is_osfp_port = True if (self.sfp_type=='OSFP' or self.sfp_type=='QSFP-DD') else False
         self.eeprom_path = self.pddf_obj.get_path(self.device, 'eeprom')
 
-        self.info_dict_keys = ['type', 'hardwarerev', 'serialnum', 'manufacturename', 'modelname', 'Connector', 'encoding', 'ext_identifier',
-                               'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
+        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 
+                'ext_identifier', 'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 
+                'specification_compliance', 'vendor_date', 'vendor_oui', 'application_advertisement']
 
-        self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
-                              'rx1power', 'rx2power', 'rx3power', 'rx4power', 'tx1bias', 'tx2bias', 'tx3bias', 'tx4bias', 'tx1power', 'tx2power', 'tx3power', 'tx4power']
+        self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel',
+                'temperature', 'voltage', 'rx1power', 'rx2power', 'rx3power', 'rx4power', 'tx1bias', 'tx2bias', 
+                'tx3bias', 'tx4bias', 'tx1power', 'tx2power', 'tx3power', 'tx4power']
 
-        self.threshold_dict_keys = ['temphighalarm', 'temphighwarning', 'templowalarm', 'templowwarning', 'vcchighalarm', 'vcchighwarning', 'vcclowalarm', 'vcclowwarning', 'rxpowerhighalarm', 'rxpowerhighwarning',
-                                    'rxpowerlowalarm', 'rxpowerlowwarning', 'txpowerhighalarm', 'txpowerhighwarning', 'txpowerlowalarm', 'txpowerlowwarning', 'txbiashighalarm', 'txbiashighwarning', 'txbiaslowalarm', 'txbiaslowwarning']
+        self.threshold_dict_keys = ['temphighalarm', 'temphighwarning', 'templowalarm', 'templowwarning', 
+                'vcchighalarm', 'vcchighwarning', 'vcclowalarm', 'vcclowwarning', 'rxpowerhighalarm', 
+                'rxpowerhighwarning', 'rxpowerlowalarm', 'rxpowerlowwarning', 'txpowerhighalarm', 'txpowerhighwarning',
+                'txpowerlowalarm', 'txpowerlowwarning', 'txbiashighalarm', 'txbiashighwarning', 'txbiaslowalarm', 
+                'txbiaslowwarning']
 
         SfpBase.__init__(self)
 
@@ -204,11 +209,11 @@ class PddfSfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardwarerev                |1*255VCHAR     |hardware version of SFP
-        serialnum                  |1*255VCHAR     |serial number of the SFP
-        manufacturename            |1*255VCHAR     |SFP vendor name
-        modelname                  |1*255VCHAR     |SFP model name
-        Connector                  |1*255VCHAR     |connector information
+        hardware_rev                |1*255VCHAR     |hardware version of SFP
+        serial                  |1*255VCHAR     |serial number of the SFP
+        manufacturer            |1*255VCHAR     |SFP vendor name
+        model                  |1*255VCHAR     |SFP model name
+        connector                  |1*255VCHAR     |connector information
         encoding                   |1*255VCHAR     |encoding information
         ext_identifier             |1*255VCHAR     |extend identifier
         ext_rateselect_compliance  |1*255VCHAR     |extended rateSelect compliance
@@ -217,6 +222,7 @@ class PddfSfp(SfpBase):
         specification_compliance   |1*255VCHAR     |specification compliance
         vendor_date                |1*255VCHAR     |vendor date
         vendor_oui                 |1*255VCHAR     |vendor OUI
+        application_advertisement  |1*255VCHAR     |supported applications advertisement
         ========================================================================
         """
         # check present status
@@ -307,7 +313,7 @@ class PddfSfp(SfpBase):
 
         if sfp_interface_bulk_data:
             xcvr_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
-            xcvr_info_dict['Connector'] = sfp_interface_bulk_data['data']['Connector']['value']
+            xcvr_info_dict['connector'] = sfp_interface_bulk_data['data']['Connector']['value']
             xcvr_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
             xcvr_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
             xcvr_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
@@ -316,10 +322,10 @@ class PddfSfp(SfpBase):
             xcvr_info_dict['type'] = sfp_type_data['data']['type']['value'] if sfp_type_data else 'N/A'
             xcvr_info_dict['type_abbrv_name'] = sfp_type_abbrv_name['data']['type_abbrv_name']['value'] if sfp_type_abbrv_name else 'N/A'
 
-        xcvr_info_dict['manufacturename'] = sfp_vendor_name_data['data']['Vendor Name']['value'] if sfp_vendor_name_data else 'N/A'
-        xcvr_info_dict['modelname'] = sfp_vendor_pn_data['data']['Vendor PN']['value'] if sfp_vendor_pn_data else 'N/A'
-        xcvr_info_dict['hardwarerev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value'] if sfp_vendor_rev_data else 'N/A'
-        xcvr_info_dict['serialnum'] = sfp_vendor_sn_data['data']['Vendor SN']['value'] if sfp_vendor_sn_data else 'N/A'
+        xcvr_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value'] if sfp_vendor_name_data else 'N/A'
+        xcvr_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value'] if sfp_vendor_pn_data else 'N/A'
+        xcvr_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value'] if sfp_vendor_rev_data else 'N/A'
+        xcvr_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value'] if sfp_vendor_sn_data else 'N/A'
         xcvr_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value'] if sfp_vendor_oui_data else 'N/A'
         xcvr_info_dict['vendor_date'] = sfp_vendor_date_data['data']['VendorDataCode(YYYY-MM-DD Lot)']['value'] if sfp_vendor_date_data else 'N/A'
         xcvr_info_dict['cable_type'] = "Unknown"
@@ -341,6 +347,8 @@ class PddfSfp(SfpBase):
                 xcvr_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['Nominal Bit Rate(100Mbs)']['value'])
             else:
                 xcvr_info_dict['nominal_bit_rate'] = 'N/A'
+        elif sfp_type == 'OSFP':
+            pass
         else:
             for key in sfp_cable_length_tup:
                 if key in sfp_interface_bulk_data['data']:
@@ -1334,7 +1342,7 @@ class PddfSfp(SfpBase):
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
         if transceiver_dom_info_dict is not None:
-            return transceiver_dom_info_dict.get("modelname", "N/A")
+            return transceiver_dom_info_dict.get("model", "N/A")
         else:
             return None
 
@@ -1346,7 +1354,7 @@ class PddfSfp(SfpBase):
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
         if transceiver_dom_info_dict is not None:
-            return transceiver_dom_info_dict.get("serialnum", "N/A")
+            return transceiver_dom_info_dict.get("serial", "N/A")
         else:
             return None
 
@@ -1366,7 +1374,7 @@ class PddfSfp(SfpBase):
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
         if transceiver_dom_info_dict is not None:
-            return transceiver_dom_info_dict.get("Connector", "N/A")
+            return transceiver_dom_info_dict.get("connector", "N/A")
         else:
             return None
 

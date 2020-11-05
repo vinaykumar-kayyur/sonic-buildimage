@@ -392,6 +392,18 @@ class PddfParse():
             cmd="echo %s 0x%x > /sys/bus/i2c/devices/i2c-%d/new_device" % (dev['i2c']['topo_info']['dev_type'], 
                     int(dev['i2c']['topo_info']['dev_addr'], 0), int(dev['i2c']['topo_info']['parent_bus'], 0))
             create_ret = self.runcmd(cmd)
+            #print "\n"
+            if create_ret!=0:
+                return create_ret
+            # Add port name
+            port_name_sysfs = '/sys/bus/i2c/devices/{}-00{:02x}/port_name'.format(
+                    int(dev['i2c']['topo_info']['parent_bus'], 0),int(dev['i2c']['topo_info']['dev_addr'], 0))
+
+            if os.path.exists(port_name_sysfs):
+                cmd="echo {} > /sys/bus/i2c/devices/{}-00{:02x}/port_name".format(
+                        dev['dev_info']['virt_parent'].lower(), int(dev['i2c']['topo_info']['parent_bus'], 0),
+                        int(dev['i2c']['topo_info']['dev_addr'], 0))
+            create_ret = self.runcmd(cmd)
             if create_ret!=0:
                 return create_ret
 
@@ -973,12 +985,10 @@ class PddfParse():
                 self.sysfs_obj[KEY] = []
                 path="pddf/devices/led"
                 for attr in self.data[key]['i2c']['attr_list']:
-                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'], path, 
-                            self.sysfs_obj, KEY)
-                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'], path, 
-                            self.sysfs_obj, KEY)
-                    self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'], path, 
-                            self.sysfs_obj, KEY)
+                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'],path,self.sysfs_obj,KEY)
+                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'],path,self.sysfs_obj, KEY)
+                    self.sysfs_attr('swpld_addr_offset',self.data[key]['dev_info']['device_name'],
+                            path,self.sysfs_obj, KEY)
                     self.sysfs_device(self.data[key]['dev_attr'], path, self.sysfs_obj, KEY)
                     for attr_key in attr.keys():
                         attr_path="pddf/devices/led/" + attr['attr_name']
@@ -1159,8 +1169,8 @@ class PddfParse():
                             path="pddf/devices/led/" + attr['attr_name']
                             for entry in attr.keys():
                                 if (entry != 'attr_name' and entry != 'swpld_addr' and entry != 'swpld_addr_offset'):
-                                    self.verify_attr(entry, attr, path)
-                                    if ( entry == 'swpld_addr' or entry == 'swpld_addr_offset'):
+                                        self.verify_attr(entry, attr, path)
+                                if ( entry == 'swpld_addr' or entry == 'swpld_addr_offset'):
                                         self.verify_attr(entry, attr, 'pddf/devices/led')
 
 
@@ -1579,7 +1589,7 @@ class PddfParse():
 
             if attr['device_type'] == 'SFP' or attr['device_type'] == 'SFP28' or \
                     attr['device_type'] == 'QSFP' or attr['device_type'] == 'QSFP28':
-                        return self.optic_parse(dev, ops)
+                    return self.optic_parse(dev, ops)
 
             if attr['device_type'] == 'CPLD':
                     return self.cpld_parse(dev, ops)
@@ -1621,7 +1631,8 @@ class PddfParse():
                             for attr_key in attr.keys():
                                     if (attr_key == 'swpld_addr_offset' or attr_key == 'swpld_addr'):
                                             self.create_attr(attr_key, attr[attr_key], path)
-                                    elif (attr_key != 'attr_name' and attr_key != 'descr'):
+                                    elif (attr_key != 'attr_name' and attr_key != 'descr' and
+                                            attr_key != 'attr_devtype' and attr_key != 'attr_devname'):
                                             state_path=path+'/state_attr'
                                             self.create_attr(attr_key, attr[attr_key],state_path)
                             cmd="echo '"  + attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"

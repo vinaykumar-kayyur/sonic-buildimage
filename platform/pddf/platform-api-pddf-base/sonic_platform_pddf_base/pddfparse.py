@@ -146,6 +146,118 @@ class PddfParse():
 
 	return (color_map[color])
 
+        
+    def get_led_color_devtype(self, key):
+        attr_list=self.data[key]['i2c']['attr_list']
+        for attr in attr_list:
+            if 'attr_devtype' in attr:
+               return attr['attr_devtype'].strip()
+            else:
+               return 'cpld'
+
+    def get_led_color_from_gpio(self, led_device_name):
+        attr_list=self.data[led_device_name]['i2c']['attr_list']
+        attr=attr_list[0]
+        if ':' in attr['bits']:
+            bits_list=attr['bits'].split(':')
+            bits_list.sort(reverse=True)
+            max_bit=int(bits_list[0])
+        else:
+            max_bit=0
+        base_offset=int(attr['swpld_addr_offset'], 16)
+        value = 0
+        bit = 0
+        while bit <= max_bit:
+            offset=base_offset + bit
+            if 'attr_devname' in attr:
+                attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], hex(offset))
+            else:
+                status= "[FAILED] attr_devname is not configured"
+	        return (status)
+            if not os.path.exists(attr_path):
+                status= "[FAILED] {} does not exist".format(attr_path)
+	        return (status)
+            cmd = 'cat ' + attr_path
+            gpio_value = subprocess.check_output(cmd, shell=True)
+            value |= int(gpio_value) << bit
+            bit += 1
+
+        for attr in attr_list:
+            if int(attr['value'].strip(), 16) == value:
+               return(color_map[attr['attr_name']])
+	return (color_map['STATUS_LED_COLOR_OFF'])
+
+
+    def get_led_color_from_cpld(self, led_device_name):
+        index=self.data[led_device_name]['dev_attr']['index']
+        device_name=self.data[led_device_name]['dev_info']['device_name']
+        self.create_attr('device_name', device_name,  self.get_led_path())
+        self.create_attr('index', index, self.get_led_path())
+        self.create_attr('dev_ops', 'get_status',  self.get_led_path())
+        return self.get_led_color()
+
+    def set_led_color_from_gpio(self, led_device_name, color):
+        attr_list=self.data[led_device_name]['i2c']['attr_list']
+        for attr in attr_list:
+            if attr['attr_name'].strip() == color.strip():
+               base_offset=int(attr['swpld_addr_offset'], 16)
+               if ':' in attr['bits']:
+                   bits_list=attr['bits'].split(':')
+                   bits_list.sort(reverse=True)
+                   max_bit = int(bits_list[0])
+               else:
+                   max_bit=0
+               value=int(attr['value'], 16)
+               i = 0
+               while i <= max_bit:
+                  _value =(value>>i) & 1
+                  base_offset += i
+                  attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], hex(base_offset))
+                  i += 1
+                  try:
+                      cmd = "echo {} > {}".format(_value, attr_path)  
+                      self.runcmd(cmd)
+                  except Exception as e:
+                      print "Invalid gpio path : " + attr_path
+                      return (False)
+        return (True)
+
+    def set_led_color_from_cpld(self, led_device_name, color):
+        index=self.data[led_device_name]['dev_attr']['index']
+        device_name=self.data[led_device_name]['dev_info']['device_name']
+        self.create_attr('device_name', device_name,  self.get_led_path())
+        self.create_attr('index', index, self.get_led_path())
+        self.create_attr('color', color, self.get_led_cur_state_path())
+        self.create_attr('dev_ops', 'set_status',  self.get_led_path())
+        return (True) 
+
+
+    def get_system_led_color(self, led_device_name):
+        if (not led_device_name in self.data.keys()):
+            status= "[FAILED] " + led_device_name + " is not configured"
+            return (status)
+
+        type = self.get_led_color_devtype(led_device_name)
+
+        if type == 'gpio':
+           color = self.get_led_color_from_gpio(led_device_name)
+        elif type == 'cpld':  
+           color = self.get_led_color_from_cpld(led_device_name)
+        return color
+
+    def set_system_led_color(self, led_device_name, color):
+        result, msg = self.is_supported_sysled_state(led_device_name, color);
+        if result == False:
+           print msg
+           return (result)
+
+        type = self.get_led_color_devtype(led_device_name)
+
+        if type == 'gpio':
+           return (self.set_led_color_from_gpio(led_device_name, color))
+        else:  
+           return (self.set_led_color_from_cpld(led_device_name, color))
+
     ###################################################################################################################
     #   SHOW ATTRIBIUTES DEFS
     ###################################################################################################################
@@ -584,11 +696,9 @@ class PddfParse():
                 self.sysfs_obj[KEY] = []
                 path="pddf/devices/led"
                 for attr in self.data[key]['i2c']['attr_list']:
-                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'], path, 
-                            self.sysfs_obj, KEY)
-                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'], path, 
-                            self.sysfs_obj, KEY)
-                    self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'], path, 
+                    self.sysfs_attr('device_name', self.data[key]['dev_info']['device_name'],path,self.sysfs_obj,KEY)
+                    self.sysfs_attr('swpld_addr', self.data[key]['dev_info']['device_name'],path,self.sysfs_obj,KEY)
+                    self.sysfs_attr('swpld_addr_offset', self.data[key]['dev_info']['device_name'],path,
                             self.sysfs_obj, KEY)
                     self.sysfs_device(self.data[key]['dev_attr'], path, self.sysfs_obj, KEY)
                     for attr_key in attr.keys():
@@ -773,9 +883,9 @@ class PddfParse():
                             path="pddf/devices/led/" + attr['attr_name']
                             for entry in attr.keys():
                                 if (entry != 'attr_name' and entry != 'swpld_addr' and entry != 'swpld_addr_offset'):
-                                    self.verify_attr(entry, attr, path)
+                                        self.verify_attr(entry, attr, path)
                                 if ( entry == 'swpld_addr' or entry == 'swpld_addr_offset'):
-                                    self.verify_attr(entry, attr, 'pddf/devices/led')
+                                        self.verify_attr(entry, attr, 'pddf/devices/led')
 
 
 
@@ -1133,8 +1243,9 @@ class PddfParse():
             if attr['device_type'] == 'TEMP_SENSOR':
                     return self.temp_sensor_parse(dev, ops)
 
-            if attr['device_type'] == 'SFP' or attr['device_type'] == 'SFP28' or \
-                    attr['device_type'] == 'QSFP' or attr['device_type'] == 'QSFP28':
+            if attr['device_type'] == 'SFP' or attr['device_type'] == 'QSFP' or \
+                    attr['device_type'] == 'SFP28' or attr['device_type'] == 'QSFP28' or \
+                    attr['device_type'] == 'QSFP-DD':
                     return self.optic_parse(dev, ops)
 
             if attr['device_type'] == 'CPLD':
@@ -1156,25 +1267,26 @@ class PddfParse():
             self.runcmd(cmd)
 
     def create_led_platform_device(self, key, ops):
-            if ops['attr']=='all' or ops['attr']=='PLATFORM':
-                    path='pddf/devices/platform'
-                    self.create_attr('num_psus', self.data['PLATFORM']['num_psus'], path)
-                    self.create_attr('num_fantrays', self.data['PLATFORM']['num_fantrays'], path)
+        if ops['attr']=='all' or ops['attr']=='PLATFORM':
+            path='pddf/devices/platform'
+            self.create_attr('num_psus', self.data['PLATFORM']['num_psus'], path)
+            self.create_attr('num_fantrays', self.data['PLATFORM']['num_fantrays'], path)
 
     def create_led_device(self, key, ops):
-            if ops['attr']=='all' or ops['attr']==self.data[key]['dev_info']['device_name']:
-                    path="pddf/devices/led"
-                    for attr in self.data[key]['i2c']['attr_list']:
-                            self.create_attr('device_name', self.data[key]['dev_info']['device_name'], path)
-                            self.create_device(self.data[key]['dev_attr'], path, ops)
-                            for attr_key in attr.keys():
-                                    if (attr_key == 'swpld_addr_offset' or attr_key == 'swpld_addr'):
-                                            self.create_attr(attr_key, attr[attr_key], path)
-                                    elif (attr_key != 'attr_name' and attr_key != 'descr'):
-                                            state_path=path+'/state_attr'
-                                            self.create_attr(attr_key, attr[attr_key],state_path)
-                            cmd="echo '" +  attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"
-                            self.runcmd(cmd)
+        if ops['attr']=='all' or ops['attr']==self.data[key]['dev_info']['device_name']:
+            path="pddf/devices/led"
+            for attr in self.data[key]['i2c']['attr_list']:
+                self.create_attr('device_name', self.data[key]['dev_info']['device_name'], path)
+                self.create_device(self.data[key]['dev_attr'], path, ops)
+                for attr_key in attr.keys():
+                    if (attr_key == 'swpld_addr_offset' or attr_key == 'swpld_addr'):
+                        self.create_attr(attr_key, attr[attr_key], path)
+                    elif (attr_key != 'attr_name' and attr_key != 'descr' and attr_key != 'attr_devtype' and
+                            attr_key != 'attr_devname'):
+                        state_path=path+'/state_attr'
+                        self.create_attr(attr_key, attr[attr_key],state_path)
+                cmd="echo '" +  attr['attr_name']+"' > /sys/kernel/pddf/devices/led/dev_ops"
+                self.runcmd(cmd)
 
 
     def led_parse(self, ops):
