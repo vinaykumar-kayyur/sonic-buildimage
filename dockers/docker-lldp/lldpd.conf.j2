@@ -1,9 +1,9 @@
 {% set mgmt_if = {} %}
 {% if MGMT_INTERFACE %}
-{% for interface in MGMT_INTERFACE.keys()|list %}
-{% if interface[1]|ipv4 %}
-{% if mgmt_if.update({'port_name' : interface[0]}) %} {% endif %}
-{% if mgmt_if.update({'ipv4' : interface[1].split('/')[0]}) %} {% endif %}
+{% for (mgmt_name, mgmt_prefix) in MGMT_INTERFACE|pfx_filter %}
+{% if mgmt_prefix|ipv4 %}
+{% if mgmt_if.update({'port_name' : mgmt_name}) %} {% endif %}
+{% if mgmt_if.update({'ipv4' : mgmt_prefix|ip}) %} {% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
