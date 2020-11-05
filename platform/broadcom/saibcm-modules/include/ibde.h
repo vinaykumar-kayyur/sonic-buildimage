@@ -34,6 +34,12 @@ typedef struct ibde_dev_s {
     sal_vaddr_t base_address;
     sal_vaddr_t base_address1;
     sal_vaddr_t base_address2;
+    /* a unique number representing the specific device.
+     * Must be different for different devices.
+     * May be used to identify specific devices in the system.
+     * May be implemented as a full PCIe address, a persistent configurable user value, ...
+     * Possible implementation value stores in QSPI flash memory of the device. */
+    uint32 dev_unique_id;
 } ibde_dev_t;
 
 
@@ -147,14 +153,6 @@ typedef struct ibde_s {
      *  cmic
      */
     int   (*get_cmic_ver)(int d,  uint32 *ver);
-
-    /*
-     * Probe available devices.
-     * Return value :
-     *   0: success to probe available devices
-     *  -1: error happens during probe
-     */
-    int     (*probe)(void);
 
     /*
      * I2C operations on the Device, assuming it is connected by I2C to the CPU.

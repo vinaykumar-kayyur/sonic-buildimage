@@ -2,20 +2,20 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
-MAIN_TARGET = libteam5_$(LIBTEAM_VERSION)_amd64.deb
-DERIVED_TARGETS = libteam-dev_$(LIBTEAM_VERSION)_amd64.deb \
-		  libteamdctl0_$(LIBTEAM_VERSION)_amd64.deb \
-		  libteam-utils_$(LIBTEAM_VERSION)_amd64.deb \
-		  libteam5-dbgsym_$(LIBTEAM_VERSION)_amd64.deb \
-		  libteamdctl0-dbgsym_$(LIBTEAM_VERSION)_amd64.deb \
-		  libteam-utils-dbgsym_$(LIBTEAM_VERSION)_amd64.deb
+MAIN_TARGET = libteam5_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = libteam-dev_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+		  libteamdctl0_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+		  libteam-utils_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+		  libteam5-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+		  libteamdctl0-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+		  libteam-utils-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain libteam
 	rm -rf ./libteam
 	git clone https://github.com/jpirko/libteam.git
 	pushd ./libteam
-	git checkout -b teamd -f 5c5e498bff9
+	git checkout -b teamd -f c7237377dead39ae4a711297203bacf7edb9fa41
 
 	# Apply patch series
 	stg init
@@ -25,7 +25,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain debian packaging
 	git clone https://salsa.debian.org/debian/libteam.git tmp
 	pushd ./tmp
-	git checkout -f 7188c361  # v1.28-1
+	git checkout -f debian/1.30-1
 	popd
 
 	mv tmp/debian libteam/
