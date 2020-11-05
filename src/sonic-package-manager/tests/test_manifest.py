@@ -15,12 +15,6 @@ def test_manifest_v1_defaults():
     assert manifest['service']['host-service']
 
 
-def test_manifest_v1_empty():
-    with pytest.raises(ManifestError,
-                       match='version is a required field but it is missing'):
-        Manifest.marshal({})
-
-
 def test_manifest_v1_invalid_version():
     with pytest.raises(ManifestError,
                        match='Failed to convert version=abc to type parse: Unable to parse "abc"'):
@@ -45,3 +39,10 @@ def test_manifest_mounts():
     assert manifest['container']['mounts'][0]['source'] == 'a'
     assert manifest['container']['mounts'][0]['target'] == 'b'
     assert manifest['container']['mounts'][0]['type'] == 'bind'
+
+
+def test_manifest_unmarshal():
+    manifest = Manifest.marshal({'package': {'version': '1.0.0',
+                                             'depends': ['swss>1.0.0']},
+                                 'service': {'name': 'test'}})
+    manifest.unmarshal()

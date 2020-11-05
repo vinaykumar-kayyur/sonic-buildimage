@@ -111,7 +111,7 @@ class ManifestSchema:
                 if isinstance(self.type, ManifestSchema.ManifestNode):
                     return self.type.unmarshal(v)
                 else:
-                    return self.type(v)
+                    return str(v)
             return [unmarshal(item) for item in value]
 
     SCHEMA = ManifestRoot('root', [
