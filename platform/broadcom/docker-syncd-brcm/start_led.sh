@@ -34,4 +34,6 @@ if [[ -r ${PLATFORM_DIR}/led_proc_init.soc && ! -f /var/warmboot/warm-starting ]
     wait_syncd
 fi
 
-/usr/bin/bcmcmd -t 60 "rcload /usr/share/sonic/platform/led_proc_init.soc"
+if [ -r ${PLATFORM_DIR}/led_proc_init.soc ]; then
+    /usr/bin/bcmcmd -t 60 "rcload /usr/share/sonic/platform/led_proc_init.soc"
+fi
