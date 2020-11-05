@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install required packages
 RUN apt-get update &&   \
     apt-get install -y  \
-        python-pip      \
+        python-dev      \
         python3-dev     \
         ipmitool        \
         librrd8         \
@@ -19,11 +19,17 @@ RUN apt-get update &&   \
         python-smbus    \
         ethtool         \
         dmidecode       \
-        i2c-tools &&    \
-    pip install enum34
+        i2c-tools
 
-# Install python3 required packages
-RUN python3 -m pip install --no-cache-dir setuptools wheel
+# On Arista devices, the sonic_platform wheel is not installed in the container.
+# Instead, the installation directory is mounted from the host OS. However, this method
+# doesn't ensure all dependencies are installed in the container. So here we
+# install any dependencies required by the Arista sonic_platform package.
+# TODO: eliminate the need to install these explicitly.
+# NOTE: Only install enum34 for Python 2, as our version of Python 3 is 3.7, which
+# contains 'enum' as part of the standard library. Installing enum34 there will
+# cause conflicts.
+RUN pip2 install enum34
 
 {% if docker_platform_monitor_debs.strip() -%}
 # Copy locally-built Debian package dependencies
@@ -51,8 +57,8 @@ RUN python3 -m pip install --no-cache-dir setuptools wheel
 
 # Clean up
 RUN apt-get purge -y           \
-        python3-dev            \
-        python-pip          && \
+        python-dev             \
+        python3-dev         && \
     apt-get clean -y        && \
     apt-get autoclean -y    && \
     apt-get autoremove -y   && \
