@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-rm -f /var/run/rsyslogd.pid
-
-supervisorctl start rsyslogd
-
-supervisorctl start syncd
+if [ -f /usr/bin/ivm_start.sh ];
+then
+   /usr/bin/ivm_start.sh
+fi

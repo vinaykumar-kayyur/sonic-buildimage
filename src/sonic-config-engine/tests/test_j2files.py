@@ -18,6 +18,9 @@ class TestJ2Files(TestCase):
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
         self.mlnx_port_config = os.path.join(self.test_dir, 'sample-port-config-mlnx.ini')
         self.dell6100_t0_minigraph = os.path.join(self.test_dir, 'sample-dell-6100-t0-minigraph.xml')
+        self.arista7050_t0_minigraph = os.path.join(self.test_dir, 'sample-arista-7050-t0-minigraph.xml')
+        self.multi_asic_minigraph = os.path.join(self.test_dir, 'multi_npu_data', 'sample-minigraph.xml')
+        self.multi_asic_port_config = os.path.join(self.test_dir, 'multi_npu_data', 'sample_port_config-0.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
 
     def run_script(self, argument):
@@ -86,12 +89,34 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_l2switch_template(self):
-        argument = '-k Mellanox-SN2700 -t ' + os.path.join(self.test_dir, '../data/l2switch.j2') + ' -p ' + self.t0_port_config + ' > ' + self.output_file
-        self.run_script(argument)
+        argument = '-k Mellanox-SN2700 --preset l2 -p ' + self.t0_port_config
+        output = self.run_script(argument)
+        output_json = json.loads(output)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 'l2switch.json')
+        with open(sample_output_file) as sample_output_fd:
+            sample_output_json = json.load(sample_output_fd)
 
-        self.assertTrue(filecmp.cmp(sample_output_file, self.output_file))
+        self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
+
+    def test_qos_arista7050_render_template(self):
+        arista_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'arista', 'x86_64-arista_7050_qx32s', 'Arista-7050-QX-32S')
+        qos_file = os.path.join(arista_dir_path, 'qos.json.j2')
+        port_config_ini_file = os.path.join(arista_dir_path, 'port_config.ini')
+
+        # copy qos_config.j2 to the Arista 7050 directory to have all templates in one directory
+        qos_config_file = os.path.join(self.test_dir, '..', '..', '..', 'files', 'build_templates', 'qos_config.j2')
+        shutil.copy2(qos_config_file, arista_dir_path)
+
+        argument = '-m ' + self.arista7050_t0_minigraph + ' -p ' + port_config_ini_file + ' -t ' + qos_file + ' > ' + self.output_file
+        self.run_script(argument)
+
+        # cleanup
+        qos_config_file_new = os.path.join(arista_dir_path, 'qos_config.j2')
+        os.remove(qos_config_file_new)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', 'qos-arista7050.json')
+        assert filecmp.cmp(sample_output_file, self.output_file)
 
     def test_qos_dell6100_render_template(self):
         dell_dir_path = os.path.join(self.test_dir, '..', '..', '..', 'device', 'dell', 'x86_64-dell_s6100_c2538-r0', 'Force10-S6100')
@@ -130,6 +155,76 @@ class TestJ2Files(TestCase):
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 'buffers-dell6100.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_ipinip_multi_asic(self):
+        ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
+        argument = '-m ' + self.multi_asic_minigraph + ' -p ' + self.multi_asic_port_config + ' -t ' + ipinip_file  +  ' -n asic0 '  + ' > ' + self.output_file
+        print(argument)
+        self.run_script(argument) 
+        sample_output_file = os.path.join(self.test_dir, 'multi_npu_data',  'ipinip.json')
+        assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_swss_switch_render_template(self):
+        switch_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent',
+            'switch.json.j2'
+        )
+        constants_yml = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'image_config',
+            'constants', 'constants.yml'
+        )
+        test_list = {
+            "t1": {
+                "graph": self.t1_mlnx_minigraph,
+                "output": "t1-switch.json"
+            },
+            "t0": {
+                "graph": self.t0_minigraph,
+                "output": "t0-switch.json"
+            },
+        }
+        for _, v in test_list.items():
+            argument = " -m {} -y {} -t {} > {}".format(
+                v["graph"], constants_yml, switch_template, self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'sample_output', v["output"]
+            )
+            self.run_script(argument)
+            assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_swss_switch_render_template_multi_asic(self):
+        # verify the ECMP hash seed changes per namespace
+        switch_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent',
+            'switch.json.j2'
+        )
+        constants_yml = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'image_config',
+            'constants', 'constants.yml'
+        )
+        test_list = {
+            "0": {
+                "namespace_id": "1",
+                "output": "t0-switch-masic1.json"
+            },
+            "1": {
+                "namespace_id": "3",
+                "output": "t0-switch-masic3.json"
+            },
+        }
+        for _, v in test_list.items():
+            os.environ["NAMESPACE_ID"] = v["namespace_id"]
+            argument = " -m {} -y {} -t {} > {}".format(
+                self.t1_mlnx_minigraph, constants_yml, switch_template,
+                self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'sample_output', v["output"]
+            )
+            self.run_script(argument)
+            assert filecmp.cmp(sample_output_file, self.output_file)
+        os.environ["NAMESPACE_ID"] = ""
 
     def tearDown(self):
         try:

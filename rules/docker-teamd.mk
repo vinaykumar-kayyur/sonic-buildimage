@@ -24,9 +24,10 @@ SONIC_INSTALL_DOCKER_DBG_IMAGES += $(DOCKER_TEAMD_DBG)
 SONIC_STRETCH_DBG_DOCKERS += $(DOCKER_TEAMD_DBG)
 
 $(DOCKER_TEAMD)_CONTAINER_NAME = teamd
-$(DOCKER_TEAMD)_RUN_OPT += --net=host --privileged -t
+$(DOCKER_TEAMD)_RUN_OPT += --privileged -t
 $(DOCKER_TEAMD)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_TEAMD)_RUN_OPT += -v /host/warmboot:/var/warmboot
 
 $(DOCKER_TEAMD)_BASE_IMAGE_FILES += teamdctl:/usr/bin/teamdctl
+$(DOCKER_TEAMD)_BASE_IMAGE_FILES += monit_teamd:/etc/monit/conf.d
 $(DOCKER_TEAMD)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
