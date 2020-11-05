@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import pexpect
 import argparse
+import pexpect
 import sys
 import time
+
 
 def main():
 
@@ -30,7 +31,7 @@ def main():
             p = pexpect.spawn("telnet 127.0.0.1 %s" % args.p, timeout=600, logfile=sys.stdout)
             break
         except Exception as e:
-            print str(e)
+            print(str(e))
             i += 1
             if i == 10:
                 raise
