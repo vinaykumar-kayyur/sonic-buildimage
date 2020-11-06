@@ -12,6 +12,9 @@ from sonic_package_manager.logger import log
 
 
 class AuthService:
+    """ AuthService provides an authentication tokens to access
+    Docker registry. """
+
     @dataclass
     class Token:
         value: str
@@ -22,7 +25,17 @@ class AuthService:
         self._service = service
         self._tokens = {}
 
-    def get_token(self, repository: str, action: str = 'pull'):
+    def get_token(self, repository: str, action: str = 'pull') -> str:
+        """ Retrieve an authentication token. If a token was previously
+        requested and did not expire yet it will be returned from the cache.
+
+        Args:
+            repository: Repository to take action on.
+            action: Action to perform.
+        Returns:
+            token value as a string.
+        """
+
         log.debug(f'getting authentication token for {repository}:{action}')
 
         scope = f'scope=repository:{repository}:{action}'
@@ -46,6 +59,8 @@ class AuthService:
 
 
 class Registry:
+    """ Provides a Docker registry interface. """
+
     def __init__(self, host: str, auth=None):
         self.url = host
         self.auth = auth
@@ -113,6 +128,9 @@ class Registry:
 
 
 class RegistryResolver:
+    """ Returns a registry object based on the input repository reference
+     string. """
+
     DockerHubAuthService = AuthService('https://auth.docker.io', 'registry.docker.io')
     DockerHubRegistry = Registry('https://index.docker.io', DockerHubAuthService)
 
