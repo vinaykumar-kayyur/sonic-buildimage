@@ -90,14 +90,13 @@ def check_routemap_in_file(filename, route_map_name):
             found_entry = False
             found_seq_no = None
         if route_map_re.match(line):
-            found_seq_no = None
             seq_n_txt = route_map_re.match(line).group(1)
             assert seq_n_txt.isdigit(), "wrong sequence number for line '%s'" % line
             found_seq_no = int(seq_n_txt)
             assert found_seq_no not in route_map_entries, "Route-map has duplicate entries: %s - %d" % (route_map_name, found_seq_no)
             found_entry = True
     results = [route_map_entries[seq] for seq in sorted(route_map_entries.keys())]
-    if (len(results)):
+    if len(results):
         err_msg = "route-map %s doesn't have mandatory permit entry for 'set ipv6 next-hop prefer-global" % route_map_name
         assert results[0], err_msg
     return len(results) > 0
