@@ -91,7 +91,7 @@ remote_ctr_config = {
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    print(msg)
+    # print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
@@ -122,6 +122,7 @@ def restart_systemd_service(feat, owner):
     else:
         syslog.syslog(syslog.LOG_INFO,
                 "Restarted {} to switch to {}".format(feat, owner))
+    return status
 
 
 def init():
@@ -147,7 +148,7 @@ class MainServer:
         self.timer_handlers = defaultdict(list)
         self.subscribers = set()
 
-    def register_table(self, db_name):
+    def register_db(self, db_name):
         """ Get DB connector, if not there """
         if db_name not in self.db_connectors:
             self.db_connectors[db_name] = swsscommon.DBConnector(db_name, 0)
@@ -166,7 +167,7 @@ class MainServer:
         in given db. The handler will be called for any update
         to the table in this db.
         """
-        self.register_table(db_name)
+        self.register_db(db_name)
 
         if table_name not in self.callbacks[db_name]:
             conn = self.db_connectors[db_name]
@@ -248,8 +249,6 @@ def update_labels(server, labels):
     ct_unset_labels = server.get_db_entry(STATE_DB_NAME,
             KUBE_LABEL_TABLE, KUBE_LABEL_UNSET_KEY)
 
-    to_upd_set = False
-    to_upd_unset = False
     for (k, v) in labels.items():
         if v:
             if k not in ct_set_labels:
@@ -269,12 +268,18 @@ def update_labels(server, labels):
                 ct_unset_labels[k] = ""
                 to_upd_unset = True
 
-    if to_upd_set:
-        server.set_db_entry(STATE_DB_NAME,
-                KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, ct_set_labels)
-    if to_upd_unset:
-        server.set_db_entry(STATE_DB_NAME,
-                KUBE_LABEL_TABLE, KUBE_LABEL_UNSET_KEY, ct_unset_labels)
+    log_debug("set={} unset={}".format(str(ct_set_labels), str(ct_unset_labels)))
+
+    # Always call update, as update_labels are called only when there
+    # is a change in status. Even if current DB is in sync, do an
+    # update to force a notification to labels-handler, which will
+    # ensure that labels are indeed in sync with API-Server.
+    # There are many scenarios where DB is not in sync with API server.
+    #
+    server.set_db_entry(STATE_DB_NAME,
+            KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, ct_set_labels)
+    server.set_db_entry(STATE_DB_NAME,
+            KUBE_LABEL_TABLE, KUBE_LABEL_UNSET_KEY, ct_unset_labels)
 
 
 def set_node_labels(server):
@@ -291,7 +296,8 @@ def set_node_labels(server):
     update_labels(server, labels)
 
 
-def update_entry(ct, upd):
+def _update_entry(ct, upd):
+    # Helper function, to update with case lowered.
     ret = dict(ct)
     for (k, v) in upd.items():
         ret[k.lower()] = v.lower()
@@ -311,13 +317,17 @@ def update_entry(ct, upd):
 class RemoteServerHandler:
     def __init__(self, server):
         """ Register self for updates """
+        self.server = server
+
         server.register_handler(
                 CONFIG_DB_NAME, SERVER_TABLE, self.on_cfg_update)
-        self.server = server
-        self.cfg_server = {}
+        self.cfg_server = _update_entry(dflt_cfg_ser, server.get_db_entry(
+            CONFIG_DB_NAME, SERVER_TABLE, SERVER_KEY))
 
-        server.register_table(STATE_DB_NAME)
-        self.st_server = update_entry(dflt_st_ser, server.get_db_entry(
+        log_debug("startup config: {}".format(str(self.cfg_server)))
+
+        server.register_db(STATE_DB_NAME)
+        self.st_server = _update_entry(dflt_st_ser, server.get_db_entry(
             STATE_DB_NAME, SERVER_TABLE, SERVER_KEY))
 
         self.start_time = datetime.datetime.now()
@@ -328,8 +338,11 @@ class RemoteServerHandler:
                     seconds=remote_ctr_config[JOIN_LATENCY])
             server.register_timer(self.start_time, self.handle_update)
             self.pending = True
+            log_debug("Pause to join {} seconds @ {}".format(
+                remote_ctr_config[JOIN_LATENCY], self.start_time))
         else:
             self.pending = False
+            self.handle_update()
 
 
 
@@ -337,12 +350,14 @@ class RemoteServerHandler:
         """ On config update """
         if key != SERVER_KEY:
             return
-        if self.cfg_server == data:
+
+        cfg_data = _update_entry(dflt_cfg_ser, data)
+        if self.cfg_server == cfg_data:
             log_debug("No change in server config")
             return
 
         log_debug("Received config update: {}".format(str(data)))
-        self.cfg_server = update_entry(dflt_cfg_ser, data)
+        self.cfg_server = cfg_data
 
         if self.pending:
             tnow = datetime.datetime.now()
@@ -359,18 +374,17 @@ class RemoteServerHandler:
 
 
     def handle_update(self):
+        # Called upon start and upon any config-update only.
         # Called by timer / main thread.
         # Main thread calls only if timer is not running.
         #
         self.pending = False
-        if not self.cfg_server:
-            return
-        log_debug("server: handle_update called")
+
         ip = self.cfg_server[CFG_SER_IP]
         disable = self.cfg_server[CFG_SER_DISABLE] != "false"
         
         pre_state = dict(self.st_server)
-        log_debug("server: disable={} ip={}".format(disable, ip))
+        log_debug("server: handle_update: disable={} ip={}".format(disable, ip))
         if disable or not ip:
             self.do_reset()
         else:
@@ -381,18 +395,19 @@ class RemoteServerHandler:
             self.st_server[ST_SER_UPDATE_TS] = ts_now()
             self.server.set_db_entry(STATE_DB_NAME,
                     SERVER_TABLE, SERVER_KEY, self.st_server)
+            log_debug("Update server state={}".format(str(self.st_server)))
 
 
     def do_reset(self):
         global remote_connected
 
-        log_debug("call kube_commands.kube_reset_master")
         kube_commands.kube_reset_master(True)
 
         self.st_server[ST_SER_CONNECTED] = "false"
         log_debug("kube_reset_master called")
 
         remote_connected = False
+
 
     def do_join(self, ip, port, insecure):
         global remote_connected
@@ -408,13 +423,19 @@ class RemoteServerHandler:
             set_node_labels(self.server)
             log_debug("kube_join_master succeeded")
         else:
-            log_debug("kube_join_master failed")
+            # Ensure state reflects the current status
+            self.st_server[ST_SER_CONNECTED] = "false"
+            remote_connected = False
+
             # Join failed. Retry after an interval
             self.start_time = datetime.datetime.now()
             self.start_time += datetime.timedelta(
                     seconds=remote_ctr_config[JOIN_RETRY])
             self.server.register_timer(self.start_time, self.handle_update)
             self.pending = True
+
+            log_debug("kube_join_master failed retry after {} seconds @{}".
+                    format(remote_ctr_config[JOIN_RETRY], self.start_time))
 
 
 #
@@ -439,21 +460,21 @@ class FeatureTransitionHandler:
 
 
     def handle_update(self, feat, set_owner, ct_owner, remote_state):
+        # Called upon startup once for every feature in config & state DBs.
+        # There after only called upon changes in either that requires action
+        #
         if not is_systemd_active(feat):
             # Nothing todo, if system state is down
             return
 
-        label_add = True
+        label_add = set_owner == "kube"
         service_restart = False
 
         if set_owner == "local":
-            label_add = False
             if ct_owner != "local":
                 service_restart = True
         else:
-            if ct_owner == "local":
-                service_restart = True
-            elif remote_state == "pending":
+            if remote_state == "pending":
                 service_restart = True
 
         log_debug(
@@ -477,18 +498,20 @@ class FeatureTransitionHandler:
         #   This attempt to read will create the key for given
         #   field with empty string as value and return empty string
 
+        init = key not in self.cfg_data
         old_set_owner = self.cfg_data[key][CFG_FEAT_OWNER]
 
-        self.cfg_data[key] = update_entry(dflt_cfg_feat, data)
+        self.cfg_data[key] = _update_entry(dflt_cfg_feat, data)
         set_owner = self.cfg_data[key][CFG_FEAT_OWNER]
 
-        if old_set_owner == set_owner:
+        if (not init) and (old_set_owner == set_owner):
             # No change, bail out
             log_debug("No change in feat={} set_owner={}. Bail out.".format(
                 key, set_owner))
             return
         
         if key in self.st_data:
+            log_debug("{} init={} old_set_owner={} owner={}".format(key, init, old_set_owner, set_owner))
             self.handle_update(key, set_owner, 
                     self.st_data[key][ST_FEAT_OWNER],
                     self.st_data[key][ST_FEAT_REMOTE_STATE])
@@ -505,16 +528,20 @@ class FeatureTransitionHandler:
         # If the key don't pre-exist:
         #   This attempt to read will create the key for given
         #   field with empty string as value and return empty string
+
+        init = key not in self.st_data
         old_remote_state = self.st_data[key][ST_FEAT_REMOTE_STATE]
 
-        self.st_data[key] = update_entry(dflt_st_feat, data)
+        self.st_data[key] = _update_entry(dflt_st_feat, data)
         remote_state = self.st_data[key][ST_FEAT_REMOTE_STATE]
 
-        if old_remote_state == remote_state or remote_state != "pending":
+        if (not init) and (
+                (old_remote_state == remote_state) or (remote_state != "pending")):
             # no change or nothing to do.
             return
 
         if key in self.cfg_data:
+            log_debug("{} init={} old_remote_state={} remote_state={}".format(key, init, old_remote_state, remote_state))
             self.handle_update(key, self.cfg_data[key][CFG_FEAT_OWNER],
                     self.st_data[key][ST_FEAT_OWNER],
                     remote_state)
@@ -539,20 +566,33 @@ class LabelsPendingHandler:
 
 
     def on_update(self, key, op, data):
-        upd = False
+        # For any update sync with kube API server.
+        # Don't optimize, as API server could differ with DB's contents
+        # in many ways.
+        #
         if (key == KUBE_LABEL_SET_KEY):
-            if self.set_labels != data:
-                self.set_labels = dict(data)
-                upd = True
+            self.set_labels = dict(data)
         elif (key == KUBE_LABEL_UNSET_KEY):
-            if self.unset_labels != data:
-                self.unset_labels = dict(data)
-                upd = True
-        if remote_connected and upd and not self.pending:
+            self.unset_labels = dict(data)
+        else:
+            return
+
+        if remote_connected and not self.pending:
             self.update_node_labels()
+        else:
+            log_debug("Skip label update: connected:{} pending:{}".
+                    format(remote_connected, self.pending))
+
 
 
     def update_node_labels(self):
+        # Called on config update by main thread upon init or config-change or
+        # it was not connected during last config update
+        # NOTE: remote-server-handler forces a config update notification upon
+        # join.
+        # Or it could be called by timer thread, if last upate to API server
+        # failed.
+        #
         self.pending = False
         ret = kube_commands.kube_write_labels(self.set_labels, self.unset_labels)
         if (ret != 0):
@@ -560,6 +600,9 @@ class LabelsPendingHandler:
             pause = remote_ctr_config[LABEL_RETRY]
             ts += (datetime.datetime.now() + datetime.timedelta(seconds=pause))
             server.register_timer(ts, self.update_node_labels)
+
+        log_debug("ret={} set={} unset={} pending={}".format(ret,
+            str(self.set_labels), str(self.unset_labels), self.pending))
         return
 
 

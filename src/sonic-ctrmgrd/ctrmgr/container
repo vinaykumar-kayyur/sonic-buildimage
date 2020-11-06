@@ -63,7 +63,7 @@ def get_config_data(fld, dflt):
     return dflt
 
 
-def read_data(is_config, feature, fields, defaults):
+def read_data(is_config, feature, fields):
     """ Read data from DB for desired fields using given defaults"""
     ret = []
 
@@ -72,10 +72,8 @@ def read_data(is_config, feature, fields, defaults):
     tbl = swsscommon.Table(db, FEATURE_TABLE)
 
     data = dict(tbl.get(feature)[1])
-    i = 0
-    for field in fields:
-        val = data.get(field, defaults[i])
-        i += 1
+    for (field, default) in fields:
+        val = data.get(field, default)
         ret += [val]
 
     debug_msg("config:{} feature:{} fields:{} val:{}".format(
@@ -87,7 +85,7 @@ def read_data(is_config, feature, fields, defaults):
 def read_config(feature):
     """ Read requried feature config """
     set_owner, no_fallback  = read_data(True, feature, 
-            (SET_OWNER, NO_FALLBACK), ("local", False))
+            [(SET_OWNER, "local"), (NO_FALLBACK, False)])
 
     return (set_owner, not no_fallback)
 
@@ -96,7 +94,7 @@ def read_state(feature):
     """ Read requried feature state """
 
     return read_data(False, feature,
-            (CURRENT_OWNER, REMOTE_STATE, DOCKER_ID), ("none", "none", ""))
+            [(CURRENT_OWNER, "none"), (REMOTE_STATE, "none"), (DOCKER_ID, "")])
 
 
 def docker_action(action, feature):
@@ -114,16 +112,6 @@ def docker_action(action, feature):
         return -1
 
 
-
-def _set_a_label_entry(tbl, key, tval):
-    # Set if not present
-    data = tbl.get(key)
-    for entry in data[1]:
-        if entry == tval:
-            return
-    tbl.set(key, [tval])
-
-    
 def set_label(feature, create):
     """ Set/drop label as required
         Update is done in state-db.
@@ -138,10 +126,10 @@ def set_label(feature, create):
     # subscriber notification. So no need to pre-check for delete.
     #
     if create:
-        _set_a_label_entry(tbl, KUBE_LABEL_SET_KEY, (fld, "true"))
+        tbl.set(KUBE_LABEL_SET_KEY, [(fld, "true")])
         tbl.hdel(KUBE_LABEL_UNSET_KEY, fld)
     else:
-        _set_a_label_entry(tbl, KUBE_LABEL_UNSET_KEY, (fld, ""))
+        tbl.set(KUBE_LABEL_UNSET_KEY, [(fld, "")])
         tbl.hdel(KUBE_LABEL_SET_KEY, fld)
         
 
@@ -149,6 +137,19 @@ def update_data(feature, data):
     debug_msg("feature:{} data:{}".format(feature, str(data)))
     tbl = swsscommon.Table(state_db, FEATURE_TABLE)
     tbl.set(feature, list(data.items()))
+
+
+def container_id(feature):
+    tbl = swsscommon.Table(state_db, "FEATURE")
+    data = dict(tbl.get(feature)[1])
+
+    # Features that support remote container mgmt has docker-id field
+    # mandatorily in FEATURE table, irrespective of being run local
+    # or remote. So return what is there in DB, if this field is
+    # present, else return the feature name, as those are not
+    # manageable as remote.
+    #
+    return data[DOCKER_ID] if DOCKER_ID in data else feature
 
 
 def container_start(feature):
@@ -182,16 +183,14 @@ def container_start(feature):
 def container_stop(feature):
     debug_msg("BEGIN")
     set_owner, _ = read_config(feature)
-    current_owner, remote_state, docker_id = read_state(feature)
+    current_owner, remote_state, _ = read_state(feature)
+    docker_id = container_id(feature)
     remove_label = (remote_state != "pending") or (set_owner == "local")
 
     debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{}".format(
         feature, set_owner, current_owner, remote_state, docker_id))
 
     update_data(feature, {SYSTEM_STATE: "down"})
-
-    if not docker_id:
-        docker_id = feature
 
     if remove_label:
         set_label(feature, False)
@@ -205,7 +204,8 @@ def container_stop(feature):
 def container_kill(feature):
     debug_msg("BEGIN")
     set_owner, _ = read_config(feature)
-    current_owner, remote_state, docker_id = read_state(feature)
+    current_owner, remote_state, _ = read_state(feature)
+    docker_id = container_id(feature)
     remove_label = (set_owner != "local") or (current_owner != "local")
 
     debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{}".format(
@@ -222,6 +222,9 @@ def container_kill(feature):
     if docker_id:
         docker_action("kill", docker_id)
 
+    # As container gettting killed, it may not have chance to update
+    # state-db. So call here.
+    #
     container_state.down(feature)
 
     debug_msg("END")
@@ -231,15 +234,13 @@ def container_wait(feature):
     debug_msg("BEGIN")
 
     set_owner, fallback = read_config(feature)
-    current_owner, remote_state, docker_id = read_state(feature)
+    current_owner, remote_state, _ = read_state(feature)
+    docker_id = container_id(feature)
     pend_wait_secs = 0
 
-    if not docker_id:
-        if (set_owner == "local") or (current_owner == "local"):
-            docker_id = feature
-        elif fallback:
-            pend_wait_secs = get_config_data(
-                    SONIC_CTR_CONFIG_PEND_SECS, DEFAULT_PEND_SECS)
+    if not docker_id and fallback:
+        pend_wait_secs = get_config_data(
+                SONIC_CTR_CONFIG_PEND_SECS, DEFAULT_PEND_SECS)
 
     debug_msg("{}: set_owner:{} ct_owner:{} state:{} id:{} pend={}".format(
         feature, set_owner, current_owner, remote_state, docker_id,
@@ -271,14 +272,6 @@ def container_wait(feature):
         docker_action("wait", docker_id)
 
 
-def container_id(feature):
-    current_owner, _, docker_id = read_state(feature)
-    if ((not docker_id) and (
-            (set_owner == "local") or (current_owner == "local"))):
-        docker_id = feature
-    print(docker_id)
-
-
 def main():
     parser=argparse.ArgumentParser(description="container commands for start/stop/wait/kill/id")
     parser.add_argument("action", choices=["start", "stop", "wait", "kill", "id"])
@@ -301,7 +294,8 @@ def main():
         container_wait(args.name)
 
     elif args.action == "id":
-        container_id(args.name)
+        id = container_id(args.name)
+        print(id)
 
     else:
         print("Unknown action {} for name {}".format(action, name))

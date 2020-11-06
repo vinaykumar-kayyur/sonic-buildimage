@@ -111,7 +111,8 @@ def kube_write_labels(set_labels, unset_labels):
 
     ret, node_labels = kube_read_labels()
     if ret != 0:
-        log_debug("Read before set failed. Hence skipping set {}".format(str(labels)))
+        log_debug("Read before set failed. Hence skipping set {} unset {}".
+                format(str(set_labels), str(unset_labels)))
         return ret
 
     label_str = ""
@@ -298,6 +299,8 @@ def _do_join(server, port, insecure):
 
     except IOError as e:
         err = "Download failed: {}".format(str(e))
+        ret = -1
+        out = ""
 
     _troubleshoot_tips()
 

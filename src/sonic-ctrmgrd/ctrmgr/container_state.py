@@ -60,14 +60,19 @@ def read_data(feature):
     state_data.update(dict(tbl.get(feature)[1]))
 
 
-def read_field(feature, field, default):
+def read_fields(feature, fields):
     tbl = swsscommon.Table(state_db, 'FEATURE')
+    ret = []
 
     # tbl.get for non-existing feature would return
     # [False, {} ]
     #
     data = dict(tbl.get(feature)[1])
-    return data[field] if field in data else default
+    for (field, default) in fields:
+        val = data[field] if field in data else default
+        ret += [val]
+
+    return tuple(ret)
 
 
 def check_unset_labels(feature, version):
@@ -165,9 +170,14 @@ def update_state(is_up, feature, owner=None, version=None):
 
 
 def do_exit(feat, m):
-    syslog.syslog(syslog.LOG_ERR, "Exiting .... feat:{} docker_id:{} msg:{}".format(
-        feat, get_docker_id(), m))
-    sys.exit(-1)
+    # Exiting will kick off the container to run.
+    # So sleep forever with periodic logs.
+    #
+    while True:
+        syslog.syslog(syslog.LOG_ERR, "Exiting .... feat:{} docker_id:{} msg:{}".format(
+            feat, get_docker_id(), m))
+        time.sleep(60)
+    
 
 def container_up(feature, owner, version):
     debug_msg("BEGIN")
@@ -216,7 +226,15 @@ def container_up(feature, owner, version):
                 i += 1
 
             time.sleep(2)
-            mode = read_field(feature, REMOTE_STATE, "none")
+            mode, db_version = read_fields(feature, [(REMOTE_STATE, "none"), (VERSION, "")])
+            if version != db_version:
+                # looks like another instance has overwritten. Exit for now.
+                # If this happens to be higher version, next deploy by kube will fix
+                # This is a very rare window of opportunity, for this version to be higher.
+                #
+                do_exit(feature, "bail out as current deploy version={} is different than {}. re-deploy higher one".
+                        format(version, db_version))
+
 
         update_state(True, feature, owner, version)
 
