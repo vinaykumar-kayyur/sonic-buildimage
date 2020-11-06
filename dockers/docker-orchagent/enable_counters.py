@@ -12,7 +12,7 @@ def enable_counter_group(db, name):
 
 
 def enable_counters():
-    db = swsssdk.ConfigDBConnector(decode_responses=True)
+    db = swsssdk.ConfigDBConnector()
     db.connect()
     enable_counter_group(db, 'PORT')
     enable_counter_group(db, 'RIF')
