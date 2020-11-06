@@ -90,6 +90,9 @@ def run_command(command: str):
 
 
 class ServiceCreator:
+    """ Creates and registers services in SONiC based on the package
+     manifest. """
+
     def __init__(self, feature_registry: FeatureRegistry):
         self.feature_registry = feature_registry
 
