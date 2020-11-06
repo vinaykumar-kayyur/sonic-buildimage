@@ -41,6 +41,8 @@ def render_template(in_template: str,
         executable: Set executable bit on rendered file
     """
 
+    log.debug(f'Rendering {in_template} to {outfile} with {render_ctx}')
+
     with open(in_template, 'r') as instream:
         template = jinja2.Template(instream.read())
 
