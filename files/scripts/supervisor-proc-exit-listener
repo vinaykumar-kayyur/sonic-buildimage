@@ -78,7 +78,7 @@ def main(argv):
 
             # Read the status of auto-restart feature from Config_DB.
             if container_name != 'database':
-                config_db = swsssdk.ConfigDBConnector(decode_responses=True)
+                config_db = swsssdk.ConfigDBConnector()
                 config_db.connect()
                 features_table = config_db.get_table(FEATURE_TABLE_NAME)
                 if not features_table:
