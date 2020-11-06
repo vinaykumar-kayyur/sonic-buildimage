@@ -218,6 +218,9 @@ class PackageManager:
 
         package = self.get_package(name)
 
+        if package.built_in:
+            raise PackageManagerError(f'Cannot uninstall built-in package {package.name}')
+
         installed_packages = self.get_installed_packages_except(package)
 
         with failure_ignore(force):
@@ -260,6 +263,9 @@ class PackageManager:
 
         old_package = self.get_package(name)
         new_package = self.get_package(name, reference)
+
+        if old_package.built_in:
+            raise PackageManagerError(f'Cannot upgrade built-in package {old_package.name}')
 
         old_feature = old_package.manifest['service']['name']
         new_feature = new_package.manifest['service']['name']
@@ -461,7 +467,7 @@ class PackageManager:
 
     def get_installed_packages_except(self, package: Package) -> List[Package]:
         def filter_package(pkg):
-            return pkg.name == package.name
+            return pkg.name != package.name
 
         packages = filter(filter_package, self.get_installed_packages())
         return list(packages)
