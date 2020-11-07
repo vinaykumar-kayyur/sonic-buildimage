@@ -8,6 +8,9 @@ RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%s
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Pass the image_version to container
+ENV IMAGE_VERSION=$image_version
+
 # Update apt's cache of available packages
 RUN apt-get update
 
@@ -45,8 +48,5 @@ COPY ["lldpmgrd", "/usr/bin/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["files/container_monitor.py", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
-
-# ingrain version into start.sh
-RUN [ -f /usr/bin/start.sh ] && sed -ri "s/^IMAGE_VERSION.*$/IMAGE_VERSION=$image_version/;" /usr/bin/start.sh
 
 ENTRYPOINT ["/usr/bin/docker-lldp-init.sh"]

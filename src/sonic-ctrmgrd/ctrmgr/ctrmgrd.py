@@ -1,12 +1,13 @@
 #!/usr/bin/python3 -u
 
 import datetime
-import syslog
-import os
-import json
 import inspect
-import datetime
+import json
+import os
+import syslog
+
 from collections import defaultdict
+
 from swsscommon import swsscommon
 from sonic_py_common import device_info
 
@@ -320,7 +321,7 @@ class RemoteServerHandler:
         self.server = server
 
         server.register_handler(
-                CONFIG_DB_NAME, SERVER_TABLE, self.on_cfg_update)
+                CONFIG_DB_NAME, SERVER_TABLE, self.on_config_update)
         self.cfg_server = _update_entry(dflt_cfg_ser, server.get_db_entry(
             CONFIG_DB_NAME, SERVER_TABLE, SERVER_KEY))
 
@@ -346,7 +347,7 @@ class RemoteServerHandler:
 
 
 
-    def on_cfg_update(self, key, op, data):
+    def on_config_update(self, key, op, data):
         """ On config update """
         if key != SERVER_KEY:
             return
@@ -453,9 +454,9 @@ class FeatureTransitionHandler:
         self.cfg_data = defaultdict(lambda: defaultdict(str))
         self.st_data = defaultdict(lambda: defaultdict(str))
         server.register_handler(
-                CONFIG_DB_NAME, FEATURE_TABLE, self.on_cfg_update)
+                CONFIG_DB_NAME, FEATURE_TABLE, self.on_config_update)
         server.register_handler(
-                STATE_DB_NAME, FEATURE_TABLE, self.on_st_update)
+                STATE_DB_NAME, FEATURE_TABLE, self.on_state_update)
         return
 
 
@@ -492,7 +493,7 @@ class FeatureTransitionHandler:
 
 
 
-    def on_cfg_update(self, key, op, data):
+    def on_config_update(self, key, op, data):
         # Hint/Note:
         # If the key don't pre-exist:
         #   This attempt to read will create the key for given
@@ -523,7 +524,7 @@ class FeatureTransitionHandler:
             return
 
 
-    def on_st_update(self, key, op, data):
+    def on_state_update(self, key, op, data):
         # Hint/Note:
         # If the key don't pre-exist:
         #   This attempt to read will create the key for given

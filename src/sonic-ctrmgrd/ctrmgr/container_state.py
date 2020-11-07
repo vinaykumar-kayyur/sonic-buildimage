@@ -1,12 +1,13 @@
 #!/usr/bin/python3 -u
 
+import argparse
+import datetime
+import inspect
+import subprocess
 import sys
 import syslog
-import inspect
-import datetime
 import time
-import argparse
-import subprocess
+
 from swsscommon import swsscommon
 
 # DB field names

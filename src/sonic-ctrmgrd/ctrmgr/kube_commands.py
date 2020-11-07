@@ -1,20 +1,23 @@
 #!/usr/bin/python3 -u
 # -*- coding: utf-8 -*-
 
+import argparse
+import fcntl
+import inspect
 import os
-import sys
+import shutil
 import ssl
 import subprocess
+import sys
 import syslog
-import inspect
-import shutil
-import fcntl
 import tempfile
-import argparse
+
+import json
+import yaml
+
 import urllib.request
 from urllib.parse import urlparse
-import yaml
-import json
+
 from sonic_py_common import device_info
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"

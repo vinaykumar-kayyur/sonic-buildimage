@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import signal
-import syslog
 import sys
+import syslog
 
 sys.path.append('/usr/share/sonic/scripts/')
 import container_state

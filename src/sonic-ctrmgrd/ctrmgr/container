@@ -1,13 +1,14 @@
 #!/usr/bin/python3 -u
 
+import argparse
+import docker
+import inspect
+import json
+import os
 import sys
 import syslog
-import argparse
-import inspect
 import time
-import os
-import json
-import docker
+
 from swsscommon import swsscommon
 
 sys.path.append('/usr/share/sonic/scripts/')
@@ -140,6 +141,16 @@ def update_data(feature, data):
 
 
 def container_id(feature):
+    """
+    Return the container ID for the feature.
+    
+    For features that support remote container management, get it
+    from FEATURE table in STATE-DB.
+    For the rest, return feature name as container id.
+
+    :param feature: Name of the feature to start.
+    
+    """
     tbl = swsscommon.Table(state_db, "FEATURE")
     data = dict(tbl.get(feature)[1])
 
@@ -153,6 +164,22 @@ def container_id(feature):
 
 
 def container_start(feature):
+    """
+    Starts a container for given feature.
+    
+    Starts from local image and/or trigger kubernetes to deploy the image
+    for this feature. Marks the feature state up in STATE-DB FEATURE table.
+
+    If feature's set_owner is local, invoke docker start.
+    If feature's set_owner is kube, it creates a node label that
+    would trigger kubernetes to start the container. With kube as 
+    owner, if fallback is enabled and remote_state==none, it starts
+    the local image using docker, which will run until kube
+    deployment occurs.
+
+    :param feature: Name of the feature to start.
+    
+    """
     ret = 0
     debug_msg("BEGIN")
     set_owner, fallback = read_config(feature)
@@ -181,6 +208,19 @@ def container_start(feature):
 
 
 def container_stop(feature):
+    """
+    Stops the running container for this feature.
+
+    Instruct/ensure kube terminates, by removing label, unless
+    an kube upgrade is happening.
+
+    Gets the container ID for this feature and call docker stop.
+
+    Marks the feature state down in STATE-DB FEATURE table.
+
+    :param feature: Name of the feature to stop.
+    
+    """
     debug_msg("BEGIN")
     set_owner, _ = read_config(feature)
     current_owner, remote_state, _ = read_state(feature)
@@ -202,6 +242,18 @@ def container_stop(feature):
 
 
 def container_kill(feature):
+    """
+    Kills the running container for this feature.
+
+    Instruct/ensure kube terminates, by removing label.
+
+    Gets the container ID for this feature and call docker kill.
+
+    Marks the feature state down in STATE-DB FEATURE table.
+
+    :param feature: Name of the feature to kill.
+    
+    """
     debug_msg("BEGIN")
     set_owner, _ = read_config(feature)
     current_owner, remote_state, _ = read_state(feature)
@@ -212,9 +264,6 @@ def container_kill(feature):
         feature, set_owner, current_owner, remote_state, docker_id))
 
     update_data(feature, {SYSTEM_STATE: "down"})
-
-    if not docker_id:
-        docker_id = feature
 
     if remove_label:
         set_label(feature, False)
@@ -231,6 +280,18 @@ def container_kill(feature):
 
 
 def container_wait(feature):
+    """
+    Waits on the running container for this feature.
+
+    Get the container-id and call docker wait.
+
+    If docker-id can't be obtained for a configurable fail-duration
+    the wait clears the feature's remote-state in STATE-DB FEATURE
+    table and exit.
+
+    :param feature: Name of the feature to wait.
+    
+    """
     debug_msg("BEGIN")
 
     set_owner, fallback = read_config(feature)
