@@ -20,4 +20,7 @@ $(SONIC_UTILITIES_PY2)_DEBS_DEPENDS = $(LIBYANG) \
                                       $(LIBYANG_CPP) \
                                       $(LIBYANG_PY2) \
                                       $(LIBYANG_PY3)
+                                      $(LIBSWSSCOMMON) \
+                                      $(PYTHON2_SWSSCOMMON)
+                                      $(PYTHON3_SWSSCOMMON)
 SONIC_PYTHON_WHEELS += $(SONIC_UTILITIES_PY2)
