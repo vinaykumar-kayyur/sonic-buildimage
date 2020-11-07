@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 try:
-    import sys
     import sonic_platform.platform
     import sonic_platform.chassis
     from sonic_sfp.sfputilbase import SfpUtilBase

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-
 try:
     import sonic_platform.platform
     import sonic_platform.chassis
