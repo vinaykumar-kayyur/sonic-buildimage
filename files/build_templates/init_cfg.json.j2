@@ -28,6 +28,7 @@
                    ("syncd", "enabled", false, "enabled", "local"),
                    ("gbsyncd", "enabled", false, "enabled", "local"),
                    ("teamd", "enabled", false, "enabled", "local")] %}
+{%- if sonic_asic_platform == "vs" %}{% do features.append(("gbsyncd", "enabled", false, "enabled", "local")) %}{% endif %}
 {%- if include_iccpd == "y" %}{% do features.append(("iccpd", "disabled", false, "enabled", "local")) %}{% endif %}
 {%- if include_mgmt_framework == "y" %}{% do features.append(("mgmt-framework", "enabled", true, "enabled", "local")) %}{% endif %}
 {%- if include_nat == "y" %}{% do features.append(("nat", "disabled", false, "enabled", "local")) %}{% endif %}
