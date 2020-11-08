@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-# Container image version
-# Acquires build image version as its version during build
-#
-IMAGE_VERSION="0.0.0"
-
 if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"
 fi

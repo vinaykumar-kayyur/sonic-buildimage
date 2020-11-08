@@ -2,11 +2,6 @@
 
 declare -r EXIT_SUCCESS="0"
 
-# Container image version
-# Acquires build image version as its version during build
-#
-IMAGE_VERSION="0.0.0"
-
 if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"
 fi
