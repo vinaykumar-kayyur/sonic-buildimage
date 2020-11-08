@@ -4,7 +4,6 @@ import argparse
 import datetime
 import inspect
 import subprocess
-import sys
 import syslog
 import time
 
