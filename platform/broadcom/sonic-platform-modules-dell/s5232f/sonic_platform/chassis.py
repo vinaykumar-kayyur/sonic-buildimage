@@ -95,7 +95,7 @@ class Chassis(ChassisBase):
         change_dict['sfp'] = port_dict
         while True:
             time.sleep(0.5)
-            for port_num in range(self.PORT_START, (self.PORT_END + 1)):
+            for port_num in range(self.port_start, (self.port_end + 1)):
                 presence = self.get_sfp(port_num-1).get_presence()
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
@@ -112,6 +112,7 @@ class Chassis(ChassisBase):
                 now_ms = time.time() * 1000
                 if (now_ms - start_ms >= timeout):
                     return True, change_dict
+
 
     def get_sfp(self, index):
         """

@@ -106,18 +106,18 @@ def print_temperature_sensors():
 
     print("\nOnboard Temperature Sensors:")
 
-    print('  PT_Left_temp:                   ',
-          get_pmc_register('PT_Left_temp'))
-    print('  PT_Mid_temp:                    ',
-          get_pmc_register('PT_Mid_temp'))
-    print('  PT_Right_temp:                  ',
-          get_pmc_register('PT_Right_temp'))
-    print('  Broadcom Temp:                  ',
-          get_pmc_register('NPU_Near_temp'))
-    print('  Inlet Airflow Temp:             ',
-          get_pmc_register('ILET_AF_temp'))
-    print('  CPU Temp:                       ',
-          get_pmc_register('CPU_temp'))
+    print '  PT_Left_temp:                   ',\
+        (get_pmc_register('PT_Left_temp'))
+    print '  PT_Mid_temp:                    ',\
+        (get_pmc_register('PT_Mid_temp'))
+    print '  PT_Right_temp:                  ',\
+        (get_pmc_register('PT_Right_temp'))
+    print '  Broadcom Temp:                  ',\
+        (get_pmc_register('NPU_Near_temp'))
+    print '  Inlet Airflow Temp:             ',\
+        (get_pmc_register('ILET_AF_temp'))
+    print '  CPU Temp:                       ',\
+        (get_pmc_register('CPU_temp'))
 
 commands.getstatusoutput('echo 0 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us')
 ipmi_sensor_dump()
@@ -180,6 +180,7 @@ def print_fan_tray(tray):
         fan1_status = int(get_pmc_register('FAN4_Front_stat'), 16)
         fan2_status = int(get_pmc_register('FAN4_Rear_stat'), 16)
 
+<<<<<<< HEAD
         print('    Fan1 Speed:                   ',
               get_pmc_register('FAN4_Front_rpm'))
         print('    Fan2 Speed:                   ',
@@ -190,6 +191,18 @@ def print_fan_tray(tray):
               Fan_Status[fan2_status])
     print('    Airflow:                      ',
           get_fan_airflow(tray))
+=======
+        print '    Fan1 Speed:                   ',\
+            get_pmc_register('FAN4_Front_rpm')
+        print '    Fan2 Speed:                   ',\
+            get_pmc_register('FAN4_Rear_rpm')
+        print '    Fan1 State:                   ',\
+            Fan_Status[fan1_status]
+        print '    Fan2 State:                   ',\
+            Fan_Status[fan2_status]
+    print '    Airflow:                       ',\
+        get_fan_airflow(tray)
+>>>>>>> bdc1486b5e6cce87d6a49b4a65afcf3484c28009
 
 
 print('\nFan Trays:')
@@ -302,20 +315,20 @@ def print_psu(psu):
         # print '    FAN Status:      ', Psu_Fan_Status[psu2_fan_status]
 
         # PSU input & output monitors
-        print('       Input Voltage:                ',
-              get_pmc_register('PSU2_In_volt'))
-        print('       Output Voltage:               ',
-              get_pmc_register('PSU2_Out_volt'))
-        print('       Input Power:                  ',
-              get_pmc_register('PSU2_In_watt'))
-        print('       Output Power:                 ',
-              get_pmc_register('PSU2_Out_watt'))
-        print('       Input Current:                ',
-              get_pmc_register('PSU2_In_amp'))
-        print('       Output Current:               ',
-              get_pmc_register('PSU2_Out_amp'))
-    print('       Airflow:                      ',
-          get_psu_airflow(psu))
+        print '       Input Voltage:                ',\
+            get_pmc_register('PSU2_In_volt')
+        print '       Output Voltage:               ',\
+            get_pmc_register('PSU2_Out_volt')
+        print '       Input Power:                  ',\
+            get_pmc_register('PSU2_In_watt')
+        print '       Output Power:                 ',\
+            get_pmc_register('PSU2_Out_watt')
+        print '       Input Current:                ',\
+            get_pmc_register('PSU2_In_amp')
+        print '       Output Current:               ',\
+            get_pmc_register('PSU2_Out_amp')
+    print '       Airflow:                       ',\
+        get_psu_airflow(psu)
 
 
 print('\nPSUs:')
