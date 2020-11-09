@@ -34,9 +34,9 @@ def printExceptionDetails():
 # Run function will run all the tests
 # from a user given list.
 
-class YangModelTesting:
+class Test_yang_models:
 
-    def __init__(self, tests, yangDir, jsonFile):
+    def initTest(self):
         self.defaultYANGFailure = {
             'Must': ['Must condition', 'not satisfied'],
             'InvalidValue': ['Invalid value'],
@@ -60,6 +60,10 @@ class YangModelTesting:
             'VLAN_WITH_NON_EXIST_PORT': {
                 'desc': 'Configure a member port in VLAN_MEMBER table which does not exist.',
                 'eStr': self.defaultYANGFailure['LeafRef']
+            },
+            'PORT_CHANNEL_TEST': {
+                'desc': 'Configure a member port in PORT_CHANNEL table.',
+                'eStr': self.defaultYANGFailure['None']
             },
             'VLAN_MEMEBER_WITH_NON_EXIST_VLAN': {
                 'desc': 'Configure vlan-id in VLAN_MEMBER table which does not exist in VLAN  table.',
@@ -123,7 +127,47 @@ class YangModelTesting:
             },
             'INCORRECT_VLAN_NAME': {
                 'desc': 'INCORRECT VLAN_NAME FIELD IN VLAN TABLE.',
-                'eStr': self.defaultYANGFailure['Pattern']
+                'eStr': self.defaultYANGFailure['Pattern'] + ["Vlan"]
+            },
+            'ACL_TABLE_MANDATORY_TYPE': {
+                'desc': 'ACL_TABLE MANDATORY TYPE FIELD.',
+                'eStr': self.defaultYANGFailure['Mandatory'] + ['type'] + ['ACL_TABLE']
+            },
+            'ACL_TABLE_DEFAULT_VALUE_STAGE': {
+                'desc': 'ACL_TABLE DEFAULT VALUE FOR STAGE FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': "/sonic-acl:sonic-acl/ACL_TABLE/ACL_TABLE_LIST[ACL_TABLE_NAME='NO-NSW-PACL-V4']/ACL_TABLE_NAME",
+                    'key': 'sonic-acl:stage',
+                    'value': 'INGRESS'
+                }
+            },
+            'INCORRECT_VLAN_NAME': {
+                'desc': 'INCORRECT VLAN_NAME FIELD IN VLAN TABLE.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ["Vlan"]
+            },
+            'PORT_CHANNEL_WRONG_PATTERN': {
+                'desc': 'INCORRECT PORTCHANNEL_NAME IN PORT_CHANNEL TABLE.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ["PortChannel"]
+            },
+            'ACL_TABLE_STAGE_SERVICES': {
+                'desc': 'ACL_TABLE LOAD STAGE SERVICES SUCCESSFULLY.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': "/sonic-acl:sonic-acl/ACL_TABLE/ACL_TABLE_LIST[ACL_TABLE_NAME='NO-NSW-PACL-V4']/ACL_TABLE_NAME",
+                    'key': 'sonic-acl:services',
+                    'value': ["SNMP"]
+                }
+            },
+            'PORT_TEST': {
+                'desc': 'LOAD PORT TABLE WITH FEC AND PFC_ASYM SUCCESSFULLY. VERIFY PFC_ASYM.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': "/sonic-port:sonic-port/PORT/PORT_LIST[port_name='Ethernet8']/port_name",
+                    'key': 'sonic-port:pfc_asym',
+                    'value': 'on'
+                }
+            },
+            'PORT_NEG_TEST': {
+                'desc': 'LOAD PORT TABLE FEC PATTERN FAILURE',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['rc']
             }
         }
 
@@ -134,11 +178,9 @@ class YangModelTesting:
             }
         }
 
-        self.tests = tests
-        if (self.tests == None):
-            self.tests = self.ExceptionTests.keys()+self.SpecialTests.keys()
-        self.yangDir = yangDir
-        self.jsonFile = jsonFile
+        self.tests = list(self.ExceptionTests.keys())+list(self.SpecialTests.keys())
+        self.yangDir = './yang-models/'
+        self.jsonFile = './tests/yang_model_tests/yangTest.json'
         self.testNum = 1
         # other class vars
         # self.ctx
@@ -169,24 +211,6 @@ class YangModelTesting:
         return
 
     """
-        Run all tests from list self.tests
-    """
-    def run(self):
-        try:
-            self.loadYangModel(self.yangDir)
-            ret = 0
-            for test in self.tests:
-                test = test.strip()
-                if test in self.ExceptionTests:
-                    ret = ret + self.runExceptionTest(test);
-                elif test in self.SpecialTests:
-                    ret = ret + self.runSpecialTest(test);
-        except Exception as e:
-            printExceptionDetails()
-            raise e
-        return ret
-
-    """
         Get the JSON input based on func name
         and return jsonInput
     """
@@ -200,7 +224,7 @@ class YangModelTesting:
                 jInst = ijson.items(f, test)
                 for it in jInst:
                     jInput = jInput + json.dumps(it)
-            log.debug(jInput)
+            log.debug("Read json JIn: {}".format(jInput))
         except Exception as e:
             printExceptionDetails()
         return jInput
@@ -216,12 +240,37 @@ class YangModelTesting:
 
     """
         Load Config Data and return Exception as String
+
+        Parameters:
+            jInput (dict): input config to load.
+            verify (dict): contains xpath, key and value. This is used to verify,
+            that node tree at xpath contains correct key and value.
+            Example:
+            'verify': {'xpath': "/sonic-acl:sonic-acl/ACL_TABLE/ACL_TABLE_LIST\
+                        [ACL_TABLE_NAME='NO-NSW-PACL-V4']/stage",
+                        'key': 'sonic-acl:stage',
+                        'value': 'INGRESS'
+            }
     """
-    def loadConfigData(self, jInput):
+    def loadConfigData(self, jInput, verify=None):
         s = ""
         try:
             node = self.ctx.parse_data_mem(jInput, ly.LYD_JSON, \
             ly.LYD_OPT_CONFIG | ly.LYD_OPT_STRICT)
+            # verify the data tree if asked
+            if verify is not None:
+                xpath = verify['xpath']
+                log.debug("Verify xpath: {}".format(xpath))
+                set = node.find_path(xpath)
+                for dnode in set.data():
+                    if (xpath == dnode.path()):
+                        log.debug("Verify dnode: {}".format(dnode.path()))
+                        data = dnode.print_mem(ly.LYD_JSON, ly.LYP_WITHSIBLINGS \
+                            | ly.LYP_FORMAT | ly.LYP_WD_ALL)
+                        data = json.loads(data)
+                        log.debug("Verify data: {}".format(data))
+                        assert (data[verify['key']] == verify['value'])
+                        s = 'verified'
         except Exception as e:
             s = str(e)
             log.debug(s)
@@ -236,14 +285,16 @@ class YangModelTesting:
             self.logStartTest(desc)
             jInput = self.readJsonInput(test)
             # load the data, expect a exception with must condition failure
-            s = self.loadConfigData(jInput)
+            s = self.loadConfigData(jInput, self.ExceptionTests[test].get('verify'))
             eStr = self.ExceptionTests[test]['eStr']
-            log.debug(eStr)
+            log.debug("eStr: {}".format(eStr))
             if len(eStr) == 0 and s != "":
                 raise Exception("{} in not empty".format(s))
             elif (sum(1 for str in eStr if str not in s) == 0):
                 log.info(desc + " Passed\n")
                 return PASS
+            else:
+                raise Exception("Unknown Error")
         except Exception as e:
             printExceptionDetails()
         log.info(desc + " Failed\n")
@@ -267,7 +318,7 @@ class YangModelTesting:
             self.logStartTest(desc)
             jInput = json.loads(self.readJsonInput(test))
             # check all Vlan from 1 to 4094
-            for i in xrange(4095):
+            for i in range(4095):
                 vlan = 'Vlan'+str(i)
                 jInput["sonic-vlan:sonic-vlan"]["sonic-vlan:VLAN"]["VLAN_LIST"]\
                       [0]["vlan_name"] = vlan
@@ -280,6 +331,27 @@ class YangModelTesting:
             printExceptionDetails()
         log.info(desc + " Failed\n")
         return FAIL
+
+    """
+        Run all tests from list self.tests
+    """
+    def test_run_tests(self):
+        try:
+            self.initTest()
+            self.loadYangModel(self.yangDir)
+            ret = 0
+            for test in self.tests:
+                test = test.strip()
+                if test in self.ExceptionTests:
+                    ret = ret + self.runExceptionTest(test);
+                elif test in self.SpecialTests:
+                    ret = ret + self.runSpecialTest(test);
+                else:
+                    raise Exception("Unexpected Test")
+        except Exception as e:
+            printExceptionDetails()
+        assert ret == 0
+        return
 # End of Class
 
 """

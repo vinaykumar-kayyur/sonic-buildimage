@@ -96,7 +96,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python3-dev
 
 # Install Python client for Redis
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install "redis==3.5.3"
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install "redis==3.5.3"
 
 # Install redis-dump-load Python 3 package
 # Note: the scripts will be overwritten by corresponding Python 2 package
@@ -108,14 +108,14 @@ sudo rm -rf $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY3_WHEEL_NAME
 # Install redis-dump-load Python 2 package
 REDIS_DUMP_LOAD_PY2_WHEEL_NAME=$(basename {{redis_dump_load_py2_wheel_path}})
 sudo cp {{redis_dump_load_py2_wheel_path}} $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $REDIS_DUMP_LOAD_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $REDIS_DUMP_LOAD_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY2_WHEEL_NAME
 
 # Install Python module for ipaddress
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install ipaddress
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install ipaddress
 
 # Install Python module for psutil
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install psutil
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 
 # Install SwSS SDK Python 3 package
 # Note: the scripts will be overwritten by corresponding Python 2 package
@@ -129,13 +129,13 @@ fi
 # Install SwSS SDK Python 2 package
 SWSSSDK_PY2_WHEEL_NAME=$(basename {{swsssdk_py2_wheel_path}})
 sudo cp {{swsssdk_py2_wheel_path}} $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SWSSSDK_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SWSSSDK_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SWSSSDK_PY2_WHEEL_NAME
 
 # Install sonic-py-common Python 2 package
 SONIC_PY_COMMON_PY2_WHEEL_NAME=$(basename {{sonic_py_common_py2_wheel_path}})
 sudo cp {{sonic_py_common_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_PY_COMMON_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SONIC_PY_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY2_WHEEL_NAME
 
 # Install sonic-py-common Python 3 package
@@ -147,33 +147,41 @@ sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY3_WHEEL_NAME
 # Install SONiC config engine Python package
 CONFIG_ENGINE_PY2_WHEEL_NAME=$(basename {{config_engine_py2_wheel_path}})
 sudo cp {{config_engine_py2_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $CONFIG_ENGINE_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $CONFIG_ENGINE_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
 
 # Install sonic-yang-models py3 package, install dependencies
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python3-yang_*.deb
 SONIC_YANG_MODEL_PY3_WHEEL_NAME=$(basename {{sonic_yang_models_py3_wheel_path}})
 sudo cp {{sonic_yang_models_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MODEL_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
-# Install sonic-yang-mgmt Python package
-SONIC_YANG_MGMT_PY_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py_wheel_path}})
-sudo cp {{sonic_yang_mgmt_py_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_YANG_MGMT_PY_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY_WHEEL_NAME
+
+# Install sonic-yang-mgmt Python2 package
+SONIC_YANG_MGMT_PY2_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py2_wheel_path}})
+sudo cp {{sonic_yang_mgmt_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SONIC_YANG_MGMT_PY2_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY2_WHEEL_NAME
+
+# Install sonic-yang-mgmt Python3 package
+SONIC_YANG_MGMT_PY3_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py3_wheel_path}})
+sudo cp {{sonic_yang_mgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MGMT_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
 
 # Install sonic-platform-common Python 2 package
 PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{platform_common_py2_wheel_path}})
 sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_COMMON_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 
 # Install system-health Python 2 package
 SYSTEM_HEALTH_PY2_WHEEL_NAME=$(basename {{system_health_py2_wheel_path}})
 sudo cp {{system_health_py2_wheel_path}} $FILESYSTEM_ROOT/$SYSTEM_HEALTH_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SYSTEM_HEALTH_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SYSTEM_HEALTH_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SYSTEM_HEALTH_PY2_WHEEL_NAME
 
 # Install sonic-platform-common Python 3 package
@@ -192,7 +200,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # Install SONiC Utilities Python 2 package
 SONIC_UTILITIES_PY2_WHEEL_NAME=$(basename {{sonic_utilities_py2_wheel_path}})
 sudo cp {{sonic_utilities_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $SONIC_UTILITIES_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SONIC_UTILITIES_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_UTILITIES_PY2_WHEEL_NAME
 
 # Install sonic-utilities data files (and any dependencies via 'apt-get -y install -f')
@@ -263,6 +271,9 @@ sudo chmod 600 $FILESYSTEM_ROOT/etc/monit/conf.d/*
 sudo cp $IMAGE_CONFIGS/monit/process_checker $FILESYSTEM_ROOT/usr/bin/
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/process_checker
 
+# Install custom-built openssh sshd
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_*.deb
+
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
 
@@ -321,12 +332,6 @@ sudo cp files/dhcp/90-dhcp6-systcl.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMP
 sudo cp $IMAGE_CONFIGS/interfaces/init_interfaces $FILESYSTEM_ROOT/etc/network/interfaces
 sudo mkdir -p $FILESYSTEM_ROOT/etc/network/interfaces.d
 
-# Copy hostcfgd files
-sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "hostcfgd.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
-
 # copy core file uploader files
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable core_uploader.service
@@ -335,9 +340,11 @@ sudo cp $IMAGE_CONFIGS/corefile_uploader/core_analyzer.rc.json $FILESYSTEM_ROOT_
 sudo chmod og-rw $FILESYSTEM_ROOT_ETC_SONIC/core_analyzer.rc.json
 
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libffi-dev libssl-dev
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install azure-storage==0.36.0
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install watchdog==0.10.2
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install futures==3.3.0
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install azure-storage==0.36.0
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install azure-storage==0.36.0
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install watchdog==0.10.2
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install watchdog==0.10.3
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install futures==3.3.0
 
 {% if include_kubernetes == "y" %}
 # Copy kubelet service files
@@ -403,11 +410,6 @@ sudo cp $IMAGE_CONFIGS/constants/constants.yml $FILESYSTEM_ROOT/etc/sonic/
 # Copy sudoers configuration file
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
-
-# Copy control plane ACL management daemon files
-sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "caclmgrd.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/caclmgrd/caclmgrd $FILESYSTEM_ROOT/usr/bin/
 
 # Copy systemd timer configuration
 sudo cp $BUILD_TEMPLATES/pcie-check.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
@@ -609,7 +611,7 @@ sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 # Install mlnx-sonic-platform-common Python 2 package
 MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{mlnx_platform_api_py2_wheel_path}})
 sudo cp {{mlnx_platform_api_py2_wheel_path}} $FILESYSTEM_ROOT/$MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
 {% endif %}
 
