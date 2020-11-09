@@ -11,9 +11,12 @@ setup(
     maintainer = 'Joe LeVeque',
     maintainer_email = 'jolevequ@microsoft.com',
     scripts = [
+        'scripts/caclmgrd',
+        'scripts/hostcfgd',
         'scripts/procdockerstatsd',
     ],
     install_requires = [
+        'Jinja2>=2.10',
         'sonic-py-common',
         'swsssdk>=2.0.1',
     ],
