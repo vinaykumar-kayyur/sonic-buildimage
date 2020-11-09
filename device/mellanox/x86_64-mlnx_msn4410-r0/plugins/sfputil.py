@@ -4,7 +4,6 @@
 #
 
 try:
-    import time
     import subprocess
     from sonic_sfp.sfputilbase import *
     import syslog
@@ -180,13 +179,11 @@ class SfpUtil(SfpUtilBase):
             print "Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
             return False
 
-        return False
-
     def get_transceiver_change_event(self, timeout=0):
         phy_port_dict = {}
         status = True
 
-        if self.db_sel == None:
+        if self.db_sel is None:
             from swsscommon import swsscommon
             self.state_db = swsscommon.DBConnector("STATE_DB",
                                                    REDIS_TIMEOUT_USECS,
@@ -340,7 +337,6 @@ class SfpUtil(SfpUtilBase):
             if port_num in self.qsfp_ports:
                 offset = 128
                 vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
-                cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
                 interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
                 sfp_type = 'QSFP'
 
@@ -352,7 +348,6 @@ class SfpUtil(SfpUtilBase):
             else:
                 offset = 0
                 vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
-                cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
                 interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
                 sfp_type = 'SFP'
 
