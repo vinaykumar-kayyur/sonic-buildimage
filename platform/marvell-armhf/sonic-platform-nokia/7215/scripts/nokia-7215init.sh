@@ -20,7 +20,7 @@ load_kernel_drivers() {
 
 nokia_7215_profile()
 {
-    MAC_ADDR=$(sudo /usr/local/bin/get-base-mac.py)
+    MAC_ADDR=$(sudo decode-syseeprom -m)
     sed -i "s/switchMacAddress=.*/switchMacAddress=$MAC_ADDR/g" /usr/share/sonic/device/armhf-nokia_ixs7215_52x-r0/Nokia-7215/profile.ini
     echo "Nokia-7215: Updating switch mac address ${MAC_ADDR}"
 }
