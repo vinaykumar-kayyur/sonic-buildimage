@@ -1,0 +1,68 @@
+From f12da7b01afc35a37ffb769e6559092f52ac75fb Mon Sep 17 00:00:00 2001
+From: arheneus <arheneus@marvell.com>
+Date: Thu, 31 Oct 2019 12:31:36 +0530
+Subject: [PATCH] Adding port member failed during port init in "team_option 
+ *team_get_option()" which got err as -ENOENT (-2). If port init failed, it 
+ does rollback and remove the LAG member and never adds back until reboot TO 
+ avoid this, retry the port init 30 times.
+
+Failure LOG from teamd.log:
+Ethernet50: Failed to find "enabled" option.
+get_ifinfo_list: check_call_change_handers failed
+Failed to get interface information list.
+Failed to refresh interface information list.
+Ethernet50: Team refresh failed.
+
+Signed-off-by: arheneus <arheneus@marvell.com>
+---
+ teamd/teamd_per_port.c | 28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
+
+diff --git a/teamd/teamd_per_port.c b/teamd/teamd_per_port.c
+index a87e809..dc582fc 100644
+--- a/teamd/teamd_per_port.c
++++ b/teamd/teamd_per_port.c
+@@ -96,18 +96,34 @@ void *teamd_get_first_port_priv_by_creator(struct teamd_port *tdport,
+ 
+ static int port_priv_init_all(struct teamd_context *ctx, struct port_obj *port_obj)
+ {
++#define RETRY_BEFORE_ROLLING_BACK 30
+ 	struct port_priv_item *ppitem;
+ 	int err;
++        int retry = RETRY_BEFORE_ROLLING_BACK;
+ 
+ 	list_for_each_node_entry(ppitem, &port_obj->priv_list, list) {
+ 		if (!ppitem->pp->init)
+ 			continue;
+-		err = ppitem->pp->init(ctx, _port(port_obj), &ppitem->priv,
+-				       ppitem->creator_priv);
+-		if (err) {
+-			teamd_log_err("Failed to init port priv.");
+-			goto rollback;
+-		}
++                /* Retry logic added during port init while adding lag member, as if fails it never adds back.
++                 * One of the failure seen during testing is team_get_option() return failure as it couldn't get port enabled option
++                 */
++                while(--retry)
++                {
++                    err = ppitem->pp->init(ctx, _port(port_obj), &ppitem->priv,
++                            ppitem->creator_priv);
++                    if (err) {
++                        teamd_log_err("Failed to init port priv. err %d retries %d", err, (RETRY_BEFORE_ROLLING_BACK - retry));
++                        if (retry <= 0) {
++                            goto rollback;
++                        }
++                        else {
++                            sleep(1);
++                        }
++                    }
++                    else {
++                        break;
++                    }
++                }
+ 	}
+ 	return 0;
+ rollback:
+-- 
+2.7.4
+
