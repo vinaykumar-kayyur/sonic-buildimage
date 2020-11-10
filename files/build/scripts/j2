@@ -42,9 +42,19 @@ hash_value=`grep $image_tag $version_file | awk -F== '{print$2}'`
 oldstr=${image_tag//\//\\/}
 newstr=`echo $oldstr | awk -F: '{print$1}'`@$hash_value
 if [[ $update_version =~ .*docker.* ]] || [[ $update_version =~ .*all.* ]];then
-    echo "$image_tag==$hash_value_latest" >> $new_version_file
-    sort -u $new_version_file -o $new_version_file &> /dev/null
+    # record new version in $version_file-latest
+    if [[ $hash_value_latest == "" ]];then
+        if [ -f target/${image_tag}.gz ];then
+            echo "using localfile target/${image_tag}.gz" >> $log_file
+        else
+            echo "##Warning: image not found. $image_tag" >> $log_file
+        fi
+    else
+        echo "$image_tag==$hash_value_latest" >> $new_version_file
+        sort -u $new_version_file -o $new_version_file &> /dev/null
+    fi
 else
+    # process object file, replace $image_tag by $image_hash
     if [[ $hash_value == "" ]];then
         if [ -f target/${image_tag}.gz ];then
             echo "using localfile target/${image_tag}.gz" >> $log_file
