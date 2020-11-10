@@ -10,6 +10,7 @@ from .config import ConfigMgr
 from .directory import Directory
 from .log import log_notice, log_crit
 from .managers_allow_list import BGPAllowListMgr
+from .managers_bbr import BBRMgr
 from .managers_bgp import BGPPeerMgrBase
 from .managers_db import BGPDataBaseMgr
 from .managers_intf import InterfaceMgr
@@ -43,10 +44,13 @@ def do_work():
         ZebraSetSrc(common_objs, "STATE_DB", swsscommon.STATE_INTERFACE_TABLE_NAME),
         # Peer Managers
         BGPPeerMgrBase(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_NEIGHBOR_TABLE_NAME, "general", True),
+        BGPPeerMgrBase(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_INTERNAL_NEIGHBOR_TABLE_NAME, "internal", False),
         BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_MONITORS", "monitors", False),
         BGPPeerMgrBase(common_objs, "CONFIG_DB", "BGP_PEER_RANGE", "dynamic", False),
         # AllowList Managers
         BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES"),
+        # BBR Manager
+        BBRMgr(common_objs, "CONFIG_DB", "BGP_BBR"),
     ]
     runner = Runner()
     for mgr in managers:
