@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import swsssdk
 import time
+import swsssdk
 
 # ALPHA defines the size of the window over which we calculate the average value. ALPHA is 2/(N+1) where N is the interval(window size)
 # In this case we configure the window to be 10s. This way if we have a huge 1s spike in traffic, 
@@ -9,10 +9,12 @@ import time
 DEFAULT_SMOOTH_INTERVAL = '10'
 DEFAULT_ALPHA = '0.18'
 
+
 def enable_counter_group(db, name):
     info = {}
     info['FLEX_COUNTER_STATUS'] = 'enable'
     db.mod_entry("FLEX_COUNTER_TABLE", name, info)
+
 
 def enable_rates():
     # set the default interval for rates 
@@ -37,9 +39,11 @@ def enable_counters():
     enable_counter_group(db, 'PORT_BUFFER_DROP')
     enable_rates()
 
+
 def get_uptime():
     with open('/proc/uptime') as fp:
         return float(fp.read().split(' ')[0])
+
 
 def main():
     # If the switch was just started (uptime less than 5 minutes),
@@ -51,6 +55,7 @@ def main():
     else:
         time.sleep(60)
     enable_counters()
+
 
 if __name__ == '__main__':
     main()

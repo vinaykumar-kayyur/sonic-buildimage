@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import re
 import subprocess
@@ -7,7 +8,7 @@ import yaml
 from natsort import natsorted
 
 # TODO: Replace with swsscommon
-from swsssdk import ConfigDBConnector, SonicDBConfig
+from swsssdk import ConfigDBConnector, SonicDBConfig, SonicV2Connector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"
@@ -19,6 +20,9 @@ SONIC_VERSION_YAML_PATH = "/etc/sonic/sonic_version.yml"
 # Port configuration file names
 PORT_CONFIG_FILE = "port_config.ini"
 PLATFORM_JSON_FILE = "platform.json"
+
+# HwSKU configuration file name
+HWSKU_JSON_FILE = 'hwsku.json'
 
 # Multi-NPU constants
 # TODO: Move Multi-ASIC-related functions and constants to a "multi_asic.py" module
@@ -247,8 +251,26 @@ def get_path_to_port_config_file(hwsku=None, asic=None):
 
     port_config_candidates = []
 
-    # Check for 'platform.json' file presence first
-    port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
+    # Check for 'hwsku.json' file presence first
+    hwsku_json_file = os.path.join(hwsku_path, HWSKU_JSON_FILE)
+
+    # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
+    # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
+
+    """
+    This length check for interfaces in platform.json is performed to make sure
+    the cfggen does not fail if port configuration information is not present
+    TODO: once platform.json has all the necessary port config information
+          remove this check
+    """
+
+    if os.path.isfile(hwsku_json_file):
+        if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
+            json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
+            platform_data = json.loads(open(json_file).read())
+            interfaces = platform_data.get('interfaces', None)
+            if interfaces is not None and len(interfaces) > 0:
+                port_config_candidates.append(os.path.join(platform_path, PLATFORM_JSON_FILE))
 
     # Check for 'port_config.ini' file presence in a few locations
     if asic:
@@ -420,3 +442,38 @@ def get_system_routing_stack():
         raise OSError("Cannot detect routing stack")
 
     return result
+
+# Check if System warm reboot or Container warm restart is enabled.
+def is_warm_restart_enabled(container_name):
+    state_db = SonicV2Connector(host='127.0.0.1')
+    state_db.connect(state_db.STATE_DB, False)
+
+    TABLE_NAME_SEPARATOR = '|'
+    prefix = 'WARM_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
+
+    # Get the system warm reboot enable state
+    _hash = '{}{}'.format(prefix, 'system')
+    wr_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    wr_enable_state = True if wr_system_state == "true" else False
+
+    # Get the container warm reboot enable state
+    _hash = '{}{}'.format(prefix, container_name)
+    wr_container_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    wr_enable_state |= True if wr_container_state == "true" else False
+
+    state_db.close(state_db.STATE_DB)
+    return wr_enable_state
+
+# Check if System fast reboot is enabled.
+def is_fast_reboot_enabled():
+    fb_system_state = 0
+    cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    (stdout, stderr) = proc.communicate()
+
+    if proc.returncode != 0:
+        log.log_error("Error running command '{}'".format(cmd))
+    elif stdout:
+        fb_system_state = stdout.rstrip('\n')
+
+    return fb_system_state

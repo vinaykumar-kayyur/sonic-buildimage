@@ -9,7 +9,10 @@ SHELL = /bin/bash
 USER = $(shell id -un)
 UID = $(shell id -u)
 GUID = $(shell id -g)
-SONIC_GET_VERSION=$(shell export BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) && export BUILD_NUMBER=$(BUILD_NUMBER) && . functions.sh && sonic_get_version)
+
+ifeq ($(SONIC_IMAGE_VERSION),)
+	override SONIC_IMAGE_VERSION = $(shell export BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) && export BUILD_NUMBER=$(BUILD_NUMBER) && . functions.sh && sonic_get_version)
+endif
 
 .SECONDEXPANSION:
 
@@ -51,6 +54,7 @@ IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
 
 export BUILD_NUMBER
 export BUILD_TIMESTAMP
+export SONIC_IMAGE_VERSION
 export CONFIGURED_PLATFORM
 export CONFIGURED_ARCH
 export PYTHON_WHEELS_PATH
@@ -221,6 +225,7 @@ $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BUILD_LOG_TIMESTAMP"             : "$(BUILD_LOG_TIMESTAMP)")
+$(info "SONIC_IMAGE_VERSION"             : "$(SONIC_IMAGE_VERSION)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
 $(info "INCLUDE_MGMT_FRAMEWORK"          : "$(INCLUDE_MGMT_FRAMEWORK)")
@@ -625,7 +630,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.g
 		--build-arg uid=$(UID) \
 		--build-arg guid=$(GUID) \
 		--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
-		--label Tag=$(SONIC_GET_VERSION) \
+		--label Tag=$(SONIC_IMAGE_VERSION) \
 		-t $* $($*.gz_PATH) $(LOG)
 	docker save $* | gzip -c > $@
 	# Clean up
@@ -710,7 +715,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 			--build-arg frr_user_uid=$(FRR_USER_UID) \
 			--build-arg frr_user_gid=$(FRR_USER_GID) \
-			--label Tag=$(SONIC_GET_VERSION) \
+			--label Tag=$(SONIC_IMAGE_VERSION) \
 			-t $* $($*.gz_PATH) $(LOG)
 		docker save $* | gzip -c > $@
 		# Clean up
@@ -750,7 +755,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 			--build-arg http_proxy=$(HTTP_PROXY) \
 			--build-arg https_proxy=$(HTTPS_PROXY) \
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
-			--label Tag=$(SONIC_GET_VERSION) \
+			--label Tag=$(SONIC_IMAGE_VERSION) \
 			--file $($*.gz_PATH)/Dockerfile-dbg \
 			-t $*-dbg $($*.gz_PATH) $(LOG)
 		docker save $*-dbg | gzip -c > $@
@@ -797,20 +802,29 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS) \
                 $(MONIT) \
-                $(PYTHON_SWSSCOMMON)) \
+                $(OPENSSH_SERVER) \
+                $(PYTHON_SWSSCOMMON) \
+                $(PYTHON3_SWSSCOMMON) \
+                $(SONIC_UTILITIES_DATA) \
+                $(SONIC_HOST_SERVICES_DATA)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
         $(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
         $(if $(findstring y,$(INCLUDE_HOST_SERVICE)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_HOST_SERVICE))) \
-        $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_API_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3)) \
-        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY))
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY3)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SYSTEM_HEALTH)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3))
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
 	export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
@@ -841,18 +855,23 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
 	export sonic_py_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2))"
 	export sonic_py_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3))"
-	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
+	export config_engine_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY2))"
+	export config_engine_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY3))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export swsssdk_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY3))"
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
+	export platform_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY3))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export redis_dump_load_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY3))"
 	export install_debug_image="$(INSTALL_DEBUG_TOOLS)"
 	export sonic_yang_models_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MODELS_PY3))"
-	export sonic_yang_mgmt_py_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY))"
+	export sonic_yang_mgmt_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY2))"
+	export sonic_yang_mgmt_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY3))"
 	export multi_instance="false"
-	export python_swss_debs="$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$($(LIBSWSSCOMMON)_RDEPENDS))" 
-	export python_swss_debs+=" $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(LIBSWSSCOMMON)) $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(PYTHON_SWSSCOMMON))"
+	export python_swss_debs="$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$($(LIBSWSSCOMMON)_RDEPENDS))"
+	export python_swss_debs+=" $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(LIBSWSSCOMMON)) $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(PYTHON_SWSSCOMMON)) $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(PYTHON3_SWSSCOMMON))"
+	export sonic_utilities_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES_PY2))"
+	export sonic_host_services_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3))"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
@@ -879,6 +898,15 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			export multi_instance="false"
 			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
 		fi
+		# Any service template, inside share_image directory, will be used to generate -chassis.service file.
+		# TODO: need better way to name the image-shared service
+		if [ -f files/build_templates/share_image/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
+			j2 files/build_templates/share_image/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)-chassis.service
+			$(if $(shell ls files/build_templates/share_image/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_SHARE = yes)
+			)
+		fi
+
 		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 	)
@@ -896,6 +924,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			)\
 			$(eval SERVICES += "$(addsuffix @.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
 			$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
+		)
+		$(if $($(docker:-dbg.gz=.gz)_SHARE),\
+			$(eval SERVICES += "$(addsuffix -chassis.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
 		)
 	)
 	export installer_services="$(SERVICES)"

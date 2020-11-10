@@ -315,8 +315,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-pip              \
     python3-pip             \
     cron                    \
-    haveged
-
+    haveged                 \
+    jq
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
@@ -396,7 +396,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/core
 
 # Config sysctl
 sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p %P'
+set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/local/bin/coredump-compress %e %t %p %P'
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
@@ -413,13 +413,15 @@ done < files/image_config/sysctl/sysctl-net.conf
 
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
-## docker Python API package is needed by Ansible docker module
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'docker==4.1.0'
+# docker Python API package is needed by Ansible docker module as well as some SONiC applications
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'docker==4.1.0'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==4.3.1'
+
 ## Note: keep pip installed for maintainance purpose
 
 ## Get gcc and python dev pkgs
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gcc libpython2.7-dev
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'netifaces==0.10.7'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'netifaces==0.10.7'
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
@@ -449,7 +451,7 @@ fi
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
-build_version: '$(sonic_get_version)'
+build_version: '${SONIC_IMAGE_VERSION}'
 debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
 kernel_version: '$kversion'
 asic_type: $sonic_asic_platform
@@ -463,7 +465,8 @@ EOF
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
 
 ## Copy ASIC config checksum
-python files/build_scripts/generate_asic_config_checksum.py
+sudo chmod 755 files/build_scripts/generate_asic_config_checksum.py
+./files/build_scripts/generate_asic_config_checksum.py
 if [[ ! -f './asic_config_checksum' ]]; then
     echo 'asic_config_checksum not found'
     exit 1

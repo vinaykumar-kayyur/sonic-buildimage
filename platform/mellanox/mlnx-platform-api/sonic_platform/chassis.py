@@ -18,7 +18,6 @@ try:
     import sys
     import io
     import re
-    import subprocess
     import syslog
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -26,9 +25,6 @@ except ImportError as e:
 MAX_SELECT_DELAY = 3600
 
 MLNX_NUM_PSU = 2
-
-GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
-GET_PLATFORM_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.platform"
 
 EEPROM_CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 EEPROM_CACHE_FILE = 'syseeprom_cache'
@@ -61,18 +57,12 @@ class Chassis(ChassisBase):
     def __init__(self):
         super(Chassis, self).__init__()
 
-        # Initialize SKU name and Platform name
-        self.sku_name = self._get_sku_name()
-        self.platform_name = self._get_platform_name()
+        self.name = "Undefined"
+        self.model = "Undefined"
 
-        mi = device_info.get_machine_info()
-        if mi is not None:
-            self.name = mi['onie_platform']
-            self.platform_name = device_info.get_platform()
-        else:
-            self.name = self.sku_name
-            self.platform_name = self._get_platform_name()
-
+        # Initialize Platform name
+        self.platform_name = device_info.get_platform()
+        
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
         self.sfp_module_initialized = False
@@ -84,6 +74,10 @@ class Chassis(ChassisBase):
     def __del__(self):
         if self.sfp_event_initialized:
             self.sfp_event.deinitialize()
+
+        if self.sfp_module_initialized:
+            from sonic_platform.sfp import deinitialize_sdk_handle
+            deinitialize_sdk_handle(self.sdk_handle)
 
 
     def initialize_psu(self):
@@ -118,8 +112,14 @@ class Chassis(ChassisBase):
 
     def initialize_sfp(self):
         from sonic_platform.sfp import SFP
+        from sonic_platform.sfp import initialize_sdk_handle
 
         self.sfp_module = SFP
+        self.sdk_handle = initialize_sdk_handle()
+        
+        if self.sdk_handle is None:
+            self.sfp_module_initialized = False
+            return
 
         # Initialize SFP list
         port_position_tuple = self._get_port_position_tuple_by_platform_name()
@@ -130,9 +130,9 @@ class Chassis(ChassisBase):
 
         for index in range(self.PORT_START, self.PORT_END + 1):
             if index in range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
-                sfp_module = SFP(index, 'QSFP')
+                sfp_module = SFP(index, 'QSFP', self.sdk_handle)
             else:
-                sfp_module = SFP(index, 'SFP')
+                sfp_module = SFP(index, 'SFP', self.sdk_handle)
             self._sfp_list.append(sfp_module)
 
         self.sfp_module_initialized = True
@@ -148,6 +148,9 @@ class Chassis(ChassisBase):
         from eeprom import Eeprom
         # Initialize EEPROM
         self._eeprom = Eeprom()
+        # Get chassis name and model from eeprom
+        self.name = self._eeprom.get_product_name()
+        self.model = self._eeprom.get_part_number()
 
 
     def initialize_components(self):
@@ -173,6 +176,15 @@ class Chassis(ChassisBase):
         return self.name
 
 
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+
+        Returns:
+            string: Model/part number of device
+        """
+        return self.model
+        
     ##############################################
     # SFP methods
     ##############################################
@@ -244,18 +256,6 @@ class Chassis(ChassisBase):
 
         return num_of_fan, num_of_drawer
 
-
-    def _get_sku_name(self):
-        p = subprocess.Popen(GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        return out.rstrip('\n')
-
-
-    def _get_platform_name(self):
-        p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        return out.rstrip('\n')
-
     def _get_port_position_tuple_by_platform_name(self):
         position_tuple = port_position_tuple_list[platform_dict_port[self.platform_name]]
         return position_tuple
@@ -297,7 +297,7 @@ class Chassis(ChassisBase):
         return self._eeprom.get_base_mac()
 
 
-    def get_serial_number(self):
+    def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
 
@@ -465,9 +465,28 @@ class Chassis(ChassisBase):
             status = self.sfp_event.check_sfp_status(port_dict, timeout)
 
         if status:
+            self.reinit_sfps(port_dict)
             return True, {'sfp':port_dict}
         else:
             return True, {'sfp':{}}
+
+    def reinit_sfps(self, port_dict):
+        """
+        Re-initialize SFP if there is any newly inserted SFPs
+        :param port_dict: SFP event data
+        :return:
+        """
+        # SFP not initialize yet, do nothing
+        if not self.sfp_module_initialized:
+            return
+
+        from . import sfp
+        for index, status in port_dict.items():
+            if status == sfp.SFP_STATUS_INSERTED:
+                try:
+                    self.get_sfp(index).reinit()
+                except Exception as e:
+                    logger.log_error("Fail to re-initialize SFP {} - {}".format(index, repr(e)))
 
     def get_thermal_manager(self):
         from .thermal_manager import ThermalManager
