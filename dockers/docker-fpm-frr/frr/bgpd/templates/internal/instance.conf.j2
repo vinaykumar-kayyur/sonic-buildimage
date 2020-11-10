@@ -22,7 +22,7 @@
 {%   endif %}
 {% endif %}
 !
-{%   if bgp_session.has_key('rrclient') and bgp_session['rrclient'] | int != 0 %}
+{%   if 'rrclient' in bgp_session and bgp_session['rrclient'] | int != 0 %}
     neighbor {{ neighbor_addr }} route-reflector-client
 {%   endif %}
 !
