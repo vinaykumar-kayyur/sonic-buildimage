@@ -1,7 +1,7 @@
 from setuptools import setup
 
 dependencies = [
-    'natsort==7.0.1',
+    'natsort',
     'sonic_py_common',
     'swsssdk>=2.0.1',
 ]
