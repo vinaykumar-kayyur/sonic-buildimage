@@ -732,8 +732,20 @@
         "sonic-crm:sonic-crm": {
             "sonic-crm:CRM": {
                 "Config": {
-                    "acl_counter_high_threshold": 85,
-                    "acl_counter_low_threshold": 110,
+                    "acl_counter_high_threshold": 110,
+                    "acl_counter_low_threshold": 85,
+                    "acl_counter_threshold_type": "PERCENTAGE"
+                }
+            }
+        }
+    },
+
+    "CRM_WITH_HIGH_THRESHOLD_ERR": {
+        "sonic-crm:sonic-crm": {
+            "sonic-crm:CRM": {
+                "Config": {
+                    "acl_counter_high_threshold": 80,
+                    "acl_counter_low_threshold": 81,
                     "acl_counter_threshold_type": "PERCENTAGE"
                 }
             }

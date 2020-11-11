@@ -40,7 +40,7 @@ module sonic-crm {
                 leaf acl_counter_high_threshold {
                     must "(current() > ../acl_counter_low_threshold)"
                     {
-                        error-message "high_threshold should be more that low_threshold";
+                        error-message "high_threshold should be more than low_threshold";
                     }
                     type threshold;
                 }

@@ -177,6 +177,12 @@ class Test_yang_models:
                 'desc': 'CRM_WITH_WRONG_PERCENTAGE must condition failure.',
                 'eStr': self.defaultYANGFailure['Must']
             },
+            'CRM_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'CRM_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': self.defaultYANGFailure['high_threshold should be more \
+                    than low_threshold']
+            },
             'CRM_WITH_CORRECT_USED_VALUE': {
                 'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
@@ -317,7 +323,7 @@ class Test_yang_models:
                         s = 'verified'
         except Exception as e:
             s = str(e)
-            log.debug(s)
+            log.info(s)
         return s
 
     """
@@ -338,7 +344,7 @@ class Test_yang_models:
                 log.info(desc + " Passed\n")
                 return PASS
             else:
-                raise Exception("Unknown Error")
+                raise Exception("Mismatch {} and {}".format(eStr, s))
         except Exception as e:
             printExceptionDetails()
         log.info(desc + " Failed\n")
@@ -380,10 +386,10 @@ class Test_yang_models:
         Run all tests from list self.tests
     """
     def test_run_tests(self):
+        ret = 0
         try:
             self.initTest()
             self.loadYangModel(self.yangDir)
-            ret = 0
             for test in self.tests:
                 test = test.strip()
                 if test in self.ExceptionTests:
@@ -394,6 +400,7 @@ class Test_yang_models:
                     raise Exception("Unexpected Test")
         except Exception as e:
             printExceptionDetails()
+
         assert ret == 0
         return
 # End of Class
