@@ -2,4 +2,7 @@
 
 docker exec -i bgp /usr/bin/TSC
 
-portstat -p 5
+TSC_FILE=$(mktemp)
+portstat -p 5 -j > $(TSC_FILE)
+python3 /usr/bin/total_portstat.py $(TSC_FILE)
+rm -f $(TSC_FILE)
