@@ -4,19 +4,16 @@ import signal
 import sys
 import syslog
 
-sys.path.append('/usr/share/sonic/scripts/')
-import container_state
+SCRIPT_PATH = '/usr/share/sonic/scripts/'
 
 name = None
 
 def mark_end():
-    container_state.container_down(name)
-    syslog.syslog(syslog.LOG_INFO, "Marking end of docker {}".format(name))
-
-
-def handler(signum, frame):
-    syslog.syslog(syslog.LOG_ERR, "Received signal {}".format(signum))
-    mark_end()
+    if os.path.exists(os.path.join(SCRIPT_PATH, "container_state.py")):
+        sys.path.append('/usr/share/sonic/scripts/')
+        import container_state
+        container_state.container_down(name)
+        syslog.syslog(syslog.LOG_INFO, "Marking end of docker {}".format(name))
 
 
 def handler(signum, frame):

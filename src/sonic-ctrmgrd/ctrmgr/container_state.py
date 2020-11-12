@@ -42,10 +42,12 @@ def debug_msg(m):
 
 
 def _get_version_key(feature, version):
+    # Coin label for version control
     return "{}_{}_enabled".format(feature, version)
 
 
 def read_data(feature):
+    # read owner from config-db and current state data from state-db.
     global state_db, set_owner, state_data
 
     db = swsscommon.DBConnector("CONFIG_DB", 0)
@@ -61,6 +63,10 @@ def read_data(feature):
 
 
 def read_fields(feature, fields):
+    # Read directly from STATE-DB, given fields
+    # for given feature. 
+    # Fields is a list of tuples (<field name>, <default val>)
+    #
     tbl = swsscommon.Table(state_db, 'FEATURE')
     ret = []
 
@@ -76,7 +82,9 @@ def read_fields(feature, fields):
 
 
 def check_unset_labels(feature, version):
+    # Version that is blocked is recorded in unset labels.
     # check if this feature is in unset list or not 
+    #
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
     labels = dict(tbl.get(KUBE_LABEL_UNSET_KEY)[1])
     return _get_version_key(feature, version) in labels
@@ -96,12 +104,17 @@ def drop_label(feature, version):
         
 
 def update_data(feature, data):
+    # Update STATE-DB entry for this feature with given data
+    #
     debug_msg("{}: {}".format(feature, str(data)))
     tbl = swsscommon.Table(state_db, "FEATURE")
     tbl.set(feature, list(data.items()))
 
 
 def get_docker_id():
+    # Read the container-id
+    # Note: This script runs inside the context of container
+    #
     cmd = 'cat /proc/self/cgroup | grep -e ":memory:" | rev | cut -f1 -d\'/\' | rev'
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     output = proc.communicate()[0].decode("utf-8")
@@ -141,6 +154,17 @@ def is_active(feature):
 
 
 def update_state(is_up, feature, owner=None, version=None):
+    """
+    if up, sets owner, version & container-id for this container in state-db.
+    Else, clears owner to none and container-id to empty string.
+
+    In case of coming up, if local update label to block remote deploying
+    same version or if kube, sets state to "running". 
+
+    In case of going down by a kube deployed container, set remote-state to
+    stopped.
+    
+    """
     data = {
             CURRENT_OWNER: owner if is_up else "none",
             DOCKER_ID: get_docker_id() if is_up else "",
@@ -180,6 +204,21 @@ def do_exit(feat, m):
     
 
 def container_up(feature, owner, version):
+    """
+    This is called by container upon post start.
+
+    The container will run its application, only upon this call
+    complete.
+
+    This call does the basic check for if this starting-container can be allowed
+    to run based on current state, and owner & version of this starting
+    container. 
+
+    If allowed to proceed, this info is recorded in state-db and return
+    to enable container start the main application. Else it proceeds to
+    sleep forever, blocking the container from starting the main application.
+
+    """
     debug_msg("BEGIN")
     read_data(feature)
 
@@ -241,7 +280,13 @@ def container_up(feature, owner, version):
     debug_msg("END")
 
 
-def container_down(feature):
+def container_down(feature, caller_docker_id=None):
+    """
+    Mark this feature container as down in state-db.
+    Safety check: Container ID matches the recorded ID in state-db
+
+    """
+
     debug_msg("BEGIN")
     read_data(feature)
 
@@ -249,7 +294,8 @@ def container_down(feature):
         feature, set_owner, state_data))
 
     ct_docker_id = state_data[DOCKER_ID]
-    caller_docker_id = get_docker_id()
+    if not caller_docker_id:
+        caller_docker_id = get_docker_id()
     if caller_docker_id != ct_docker_id:
         syslog.syslog(syslog.LOG_ERR, "{} down mismatch docker-id. caller_docker_id={} current:{}".
                 format(feature, caller_docker_id, ct_docker_id))

@@ -4,7 +4,11 @@ if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"
 fi
 
-/usr/share/sonic/scripts/container_state.py up -f dhcp_relay -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
+CTR_SCRIPT="/usr/share/sonic/scripts/container_state.py"
+if test -f ${CTR_SCRIPT}
+then
+    ${CTR_SCRIPT} up -f dhcp_relay -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
+fi
 
 # If our supervisor config has entries in the "isc-dhcp-relay" group...
 if [ $(supervisorctl status | grep -c "^isc-dhcp-relay:") -gt 0 ]; then

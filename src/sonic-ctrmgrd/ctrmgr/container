@@ -11,8 +11,7 @@ import time
 
 from swsscommon import swsscommon
 
-sys.path.append('/usr/share/sonic/scripts/')
-import container_state
+CTR_STATE_SCR_PATH = '/usr/share/sonic/scripts/container_state.py'
 
 state_db = None
 
@@ -23,7 +22,7 @@ NO_FALLBACK = "no_fallback_to_local"
 
 CURRENT_OWNER = "current_owner"
 UPD_TIMESTAMP = "update_time"
-DOCKER_ID = "container_id"
+CONTAINER_ID = "container_id"
 REMOTE_STATE = "remote_state"
 VERSION = "version"
 SYSTEM_STATE = "system_state"
@@ -40,6 +39,8 @@ SONIC_CTR_CONFIG_PEND_SECS = "revert_to_local_on_wait_seconds"
 DEFAULT_PEND_SECS = ( 5 * 60 )
 WAIT_POLL_SECS = 2
 
+remote_ctr_enabled = False
+
 def debug_msg(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
     # print(msg)
@@ -48,10 +49,20 @@ def debug_msg(m):
 
 def init():
     """ Get DB connections """
-    global state_db, cfg_db
+    global state_db, cfg_db, remote_ctr_enabled
 
     cfg_db = swsscommon.DBConnector("CONFIG_DB", 0)
     state_db = swsscommon.DBConnector("STATE_DB", 0)
+
+    remote_ctr_enabled = os.path.exists(CTR_STATE_SCR_PATH)
+
+
+def mark_container_down(feature, docker_id)
+    if remote_ctr_enabled:
+        sys.path.append('/usr/share/sonic/scripts/')
+        import container_state
+
+        container_state.down(feature, docker_id)
 
 
 def get_config_data(fld, dflt):
@@ -95,7 +106,7 @@ def read_state(feature):
     """ Read requried feature state """
 
     return read_data(False, feature,
-            [(CURRENT_OWNER, "none"), (REMOTE_STATE, "none"), (DOCKER_ID, "")])
+            [(CURRENT_OWNER, "none"), (REMOTE_STATE, "none"), (CONTAINER_ID, "")])
 
 
 def docker_action(action, feature):
@@ -104,7 +115,7 @@ def docker_action(action, feature):
         client = docker.from_env()
         container = client.containers.get(feature)
         getattr(container, action)()
-        debug_msg("docker cmd: {} for {}".format(action, feature))
+        syslog.syslog(syslog.LOG_INFO, "docker cmd: {} for {}".format(action, feature))
         return 0
 
     except (docker.errors.NotFound, docker.errors.APIError) as err:
@@ -118,26 +129,28 @@ def set_label(feature, create):
         Update is done in state-db.
         ctrmgrd sets it with kube API server as required
     """
-    tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
-    fld = "{}_enabled".format(feature)
+    if remote_ctr_enabled:
+        tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
+        fld = "{}_enabled".format(feature)
 
-    # redundant set (data already exist) can still raise subscriber
-    # notification. So check & set.
-    # Redundant delete (data doesn't exist) does not raise any 
-    # subscriber notification. So no need to pre-check for delete.
-    #
-    if create:
-        tbl.set(KUBE_LABEL_SET_KEY, [(fld, "true")])
-        tbl.hdel(KUBE_LABEL_UNSET_KEY, fld)
-    else:
-        tbl.set(KUBE_LABEL_UNSET_KEY, [(fld, "")])
-        tbl.hdel(KUBE_LABEL_SET_KEY, fld)
+        # redundant set (data already exist) can still raise subscriber
+        # notification. So check & set.
+        # Redundant delete (data doesn't exist) does not raise any 
+        # subscriber notification. So no need to pre-check for delete.
+        #
+        if create:
+            tbl.set(KUBE_LABEL_SET_KEY, [(fld, "true")])
+            tbl.hdel(KUBE_LABEL_UNSET_KEY, fld)
+        else:
+            tbl.set(KUBE_LABEL_UNSET_KEY, [(fld, "")])
+            tbl.hdel(KUBE_LABEL_SET_KEY, fld)
         
 
 def update_data(feature, data):
-    debug_msg("feature:{} data:{}".format(feature, str(data)))
-    tbl = swsscommon.Table(state_db, FEATURE_TABLE)
-    tbl.set(feature, list(data.items()))
+    if remote_ctr_enabled:
+        debug_msg("feature:{} data:{}".format(feature, str(data)))
+        tbl = swsscommon.Table(state_db, FEATURE_TABLE)
+        tbl.set(feature, list(data.items()))
 
 
 def container_id(feature):
@@ -160,7 +173,7 @@ def container_id(feature):
     # present, else return the feature name, as those are not
     # manageable as remote.
     #
-    return data[DOCKER_ID] if DOCKER_ID in data else feature
+    return data[CONTAINER_ID] if CONTAINER_ID in data else feature
 
 
 def container_start(feature):
@@ -237,6 +250,12 @@ def container_stop(feature):
 
     if docker_id:
         docker_action("stop", docker_id)
+    else:
+        syslog.syslog(
+                syslog.LOG_ERR if current_owner != "none" else syslog.LOG_INFO,
+                "docker stop skipped as no docker-id for {}".format(feature))
+
+
 
     debug_msg("END")
 
@@ -271,10 +290,15 @@ def container_kill(feature):
     if docker_id:
         docker_action("kill", docker_id)
 
-    # As container gettting killed, it may not have chance to update
-    # state-db. So call here.
-    #
-    container_state.down(feature)
+        # As container gettting killed, it may not have chance to update
+        # state-db. So call here.
+        #
+        mark_container_down(feature, docker_id)
+    else:
+        syslog.syslog(
+                syslog.LOG_ERR if current_owner != "none" else syslog.LOG_INFO,
+                "docker stop skipped as no docker-id for {}".format(feature))
+
 
     debug_msg("END")
 
