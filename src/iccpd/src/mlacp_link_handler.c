@@ -3368,11 +3368,7 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     {
         update_vlan_if_mac_on_iccp_up(csm->peer_link_if, 1);
     }
-    LIST_FOREACH(cif, &(csm->if_bind_list), csm_next)
-    {
-        iccp_mclagsyncd_update_mclag_intf_lacp_flbk(cif->name, true, false);
-    }
-    sync_unique_ip();
+
     return;
 }
 
@@ -4262,7 +4258,6 @@ int iccp_mclagsyncd_mclag_iface_cfg_handler(struct System *sys, char *msg_buf)
         }
         else if (cfg_info->op_type == MCLAG_CFG_OPER_DEL)
         {
-            iccp_mclagsyncd_update_mclag_intf_lacp_flbk(cfg_info->mclag_iface, false, false);
             iccp_cli_detach_mclag_domain_to_port_channel(cfg_info->mclag_iface);
         }
     }
