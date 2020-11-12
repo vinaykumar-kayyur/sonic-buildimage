@@ -45,8 +45,6 @@ static int vlan_node_compare(const struct VLAN_ID *p_vlan_node1, const struct VL
 }
 RB_GENERATE(vlan_rb_tree, VLAN_ID, vlan_entry, vlan_node_compare);
 
->>>>>>> MCLAG enhacements ICCPd initial code commit
-
 void local_if_init(struct LocalInterface* local_if)
 {
     if (local_if == NULL)
