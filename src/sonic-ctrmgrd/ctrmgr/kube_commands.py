@@ -106,47 +106,47 @@ def kube_read_labels():
     return (ret, labels)
 
  
-def kube_write_labels(set_labels, unset_labels):
+def kube_write_labels(set_labels):
     """ Set given set_labels.
-        Ensure labels in unset_labels are not there.
     """
     KUBECTL_SET_CMD = "kubectl --kubeconfig {} label --overwrite nodes {} {}"
 
     ret, node_labels = kube_read_labels()
     if ret != 0:
-        log_debug("Read before set failed. Hence skipping set {} unset {}".
-                format(str(set_labels), str(unset_labels)))
+        log_debug("Read before set failed. Hence skipping set {}".
+                format(str(set_labels)))
         return ret
 
-    label_str = ""
+    del_label_str = ""
+    add_label_str = ""
     for (name, val) in set_labels.items():
+        skip = False
         if name in node_labels:
-            # Can't update; but can be removed
             if val != node_labels[name]:
-                # A label always get same value. Check it out.
-                # If it is required to modify, need to remove it first
-                log_error(
-                        "label already exists({}={}); can't set different value {}".
-                        format(name, node_labels[name], val))
-                return -1
-        else:
+                # label value can't be modified. Remove it first
+                # and then add
+                del_label_str += "{}- ".format(name)
+            else:
+                # Already exists with same value.
+                skip = True
+        if not skip:
             # Add label
-            label_str += "{}={} ".format(name, val)
+            add_label_str += "{}={} ".format(name, val)
 
-    for name in unset_labels:
-        # Remove labels that are not provided
-        if name in node_labels:
-            # Remove label
-            label_str += "{}- ".format(name)
 
-    if label_str:
+    if add_label_str:
+        # First remove if any
+        if del_label_str:
+            (ret, _, _) = _run_command(KUBECTL_SET_CMD.format(
+            KUBE_ADMIN_CONF, device_info.get_hostname(), del_label_str.strip()))
         (ret, _, _) = _run_command(KUBECTL_SET_CMD.format(
-            KUBE_ADMIN_CONF, device_info.get_hostname(), label_str.strip()))
+            KUBE_ADMIN_CONF, device_info.get_hostname(), add_label_str.strip()))
 
         log_debug("{} kube labels {} ret={}".format(
             "Applied" if ret == 0 else "Failed to apply", label_str, ret))
     else:
         log_debug("Given labels are in sync with node labels. Hence no-op")
+
     return ret
 
  

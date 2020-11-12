@@ -47,7 +47,6 @@ ST_FEAT_SYS_STATE = "system_state"
 
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
-KUBE_LABEL_UNSET_KEY = "UNSET"
 
 remote_connected = False
 
@@ -239,49 +238,6 @@ class MainServer:
                     callback(key, op, dict(fvs))
 
 
-def update_labels(server, labels):
-    """ Get current labels in DB.
-        for given labels
-            Add to SET/UNSET key based on value non-empty/empty
-        Push the latest.
-    """
-    ct_set_labels = server.get_db_entry(STATE_DB_NAME,
-            KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY)
-    ct_unset_labels = server.get_db_entry(STATE_DB_NAME,
-            KUBE_LABEL_TABLE, KUBE_LABEL_UNSET_KEY)
-
-    for (k, v) in labels.items():
-        if v:
-            if k not in ct_set_labels:
-                ct_set_labels[k] = v
-                to_upd_set = True
-            elif ct_set_labels[k] != v:
-                log_error("Label {}  value can't change {} to {}".format(
-                    k, ct_set_labels[k], v))
-            if k in ct_unset_labels:
-                del ct_unset_labels[k]
-                to_upd_unset = True
-        else:
-            if k in ct_set_labels:
-                del ct_set_labels[k]
-                to_upd_set = True
-            if k not in ct_unset_labels:
-                ct_unset_labels[k] = ""
-                to_upd_unset = True
-
-    log_debug("set={} unset={}".format(str(ct_set_labels), str(ct_unset_labels)))
-
-    # Always call update, as update_labels are called only when there
-    # is a change in status. Even if current DB is in sync, do an
-    # update to force a notification to labels-handler, which will
-    # ensure that labels are indeed in sync with API-Server.
-    # There are many scenarios where DB is not in sync with API server.
-    #
-    server.set_db_entry(STATE_DB_NAME,
-            KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, ct_set_labels)
-    server.set_db_entry(STATE_DB_NAME,
-            KUBE_LABEL_TABLE, KUBE_LABEL_UNSET_KEY, ct_unset_labels)
-
 
 def set_node_labels(server):
     labels = {}
@@ -294,7 +250,8 @@ def set_node_labels(server):
     labels["sonic_version"] = version_info['build_version']
     labels["hwsku"] = device_info.get_hwsku()
     labels["deployment_type"] = dep_type
-    update_labels(server, labels)
+    server.mod_db_entry(STATE_DB_NAME,
+            KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, labels)
 
 
 def _update_entry(ct, upd):
@@ -483,8 +440,8 @@ class FeatureTransitionHandler:
                     feat, set_owner, ct_owner, remote_state, service_restart,
                     label_add))
         # read labels and add/drop if different
-        update_labels(self.server,
-                { "{}_enabled".format(feat): ("true" if label_add else "") })
+        server.mod_db_entry(STATE_DB_NAME, KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY,
+                { "{}_enabled".format(feat): ("true" if label_add else "false") })
 
 
         # service_restart
@@ -562,7 +519,6 @@ class LabelsPendingHandler:
         server.register_handler(STATE_DB_NAME, KUBE_LABEL_TABLE, self.on_update)
         self.pending = False
         self.set_labels = {}
-        self.unset_labels = {}
         return
 
 
@@ -573,8 +529,6 @@ class LabelsPendingHandler:
         #
         if (key == KUBE_LABEL_SET_KEY):
             self.set_labels = dict(data)
-        elif (key == KUBE_LABEL_UNSET_KEY):
-            self.unset_labels = dict(data)
         else:
             return
 
@@ -595,15 +549,15 @@ class LabelsPendingHandler:
         # failed.
         #
         self.pending = False
-        ret = kube_commands.kube_write_labels(self.set_labels, self.unset_labels)
+        ret = kube_commands.kube_write_labels(self.set_labels)
         if (ret != 0):
             self.pending = True
             pause = remote_ctr_config[LABEL_RETRY]
             ts += (datetime.datetime.now() + datetime.timedelta(seconds=pause))
             server.register_timer(ts, self.update_node_labels)
 
-        log_debug("ret={} set={} unset={} pending={}".format(ret,
-            str(self.set_labels), str(self.unset_labels), self.pending))
+        log_debug("ret={} set={} pending={}".format(ret,
+            str(self.set_labels), self.pending))
         return
 
 

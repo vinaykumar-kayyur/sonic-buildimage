@@ -21,7 +21,6 @@ SYSTEM_STATE = "system_state"
 
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
-KUBE_LABEL_UNSET_KEY = "UNSET"
 
 state_db = None
 set_owner = "local"
@@ -81,13 +80,13 @@ def read_fields(feature, fields):
     return tuple(ret)
 
 
-def check_unset_labels(feature, version):
-    # Version that is blocked is recorded in unset labels.
-    # check if this feature is in unset list or not 
+def check_version_blocked(feature, version):
+    # Ensure this version is *not* blocked explicitly.
     #
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
-    labels = dict(tbl.get(KUBE_LABEL_UNSET_KEY)[1])
-    return _get_version_key(feature, version) in labels
+    labels = dict(tbl.get(KUBE_LABEL_SET_KEY)[1])
+    key = _get_version_key(feature, version)
+    return (key in labels) and (labels[key].lower() == "false")
 
 
 def drop_label(feature, version):
@@ -97,10 +96,7 @@ def drop_label(feature, version):
     
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
     name = _get_version_key(feature, version)
-    labels = dict(tbl.get(KUBE_LABEL_UNSET_KEY)[1])
-    if name not in labels:
-        tbl.set(KUBE_LABEL_UNSET_KEY, [ (name, "")])
-        tbl.hdel(KUBE_LABEL_SET_KEY, name)
+    tbl.set(KUBE_LABEL_SET_KEY, [ (name, "false")])
         
 
 def update_data(feature, data):
@@ -234,7 +230,7 @@ def container_up(feature, owner, version):
         if not is_active(feature):
             do_exit(feature, "bail out as system state not active")
 
-        if check_unset_labels(feature, version):
+        if check_version_blocked(feature, version):
             do_exit(feature, "This version is marked disabled. Exiting ...")
 
         if instance_lower(feature, version):

@@ -29,7 +29,6 @@ SYSTEM_STATE = "system_state"
 
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
-KUBE_LABEL_UNSET_KEY = "UNSET"
 
 # Get seconds to wait for remote docker to start.
 # If not, revert to local
@@ -57,7 +56,7 @@ def init():
     remote_ctr_enabled = os.path.exists(CTR_STATE_SCR_PATH)
 
 
-def mark_container_down(feature, docker_id)
+def mark_container_down(feature, docker_id):
     if remote_ctr_enabled:
         sys.path.append('/usr/share/sonic/scripts/')
         import container_state
@@ -138,12 +137,7 @@ def set_label(feature, create):
         # Redundant delete (data doesn't exist) does not raise any 
         # subscriber notification. So no need to pre-check for delete.
         #
-        if create:
-            tbl.set(KUBE_LABEL_SET_KEY, [(fld, "true")])
-            tbl.hdel(KUBE_LABEL_UNSET_KEY, fld)
-        else:
-            tbl.set(KUBE_LABEL_UNSET_KEY, [(fld, "")])
-            tbl.hdel(KUBE_LABEL_SET_KEY, fld)
+        tbl.set(KUBE_LABEL_SET_KEY, [(fld, "true" if create else "false")])
         
 
 def update_data(feature, data):
