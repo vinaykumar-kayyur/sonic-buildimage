@@ -8,6 +8,7 @@ nvram_missing=0
 REBOOT_CAUSE_FILE=/host/reboot-cause/reboot-cause.txt
 REBOOT_REASON_FILE=/host/reboot-cause/platform/reboot_reason
 BIOS_VERSION_FILE=/host/reboot-cause/platform/bios_minor_version
+SMF_MSS_VERSION_FILE=/sys/devices/platform/SMF.512/hwmon/*/smf_firmware_ver
 SMF_POWERON_REASON=/sys/devices/platform/SMF.512/hwmon/*/smf_poweron_reason
 SMF_RESET_REASON=/sys/devices/platform/SMF.512/hwmon/*/smf_reset_reason
 MAILBOX_POWERON_REASON=/sys/devices/platform/SMF.512/hwmon/*/mb_poweron_reason
@@ -150,10 +151,15 @@ update_mailbox_register(){
         reason=$(echo $mbr | cut -d 'x' -f2)
         logger -p user.info -t DELL_S6100_REBOOT_CAUSE "POR: $por, RST: $rst, MBR: $mbr"
 
+        SMF_MSS_VERSION=$(cat $SMF_MSS_VERSION_FILE)
+        SMF_MSS_VERSION_MAJOR=$(echo $SMF_MSS_VERSION | cut -d '.' -f1)
+        SMF_MSS_VERSION_MINOR=$(echo $SMF_MSS_VERSION | cut -d '.' -f2)
         SMF_FPGA_VERSION_MAJOR=$(( (SMF_FPGA_VERSION & 0xF0) >> 4 ))
         SMF_FPGA_VERSION_MINOR=$(( SMF_FPGA_VERSION & 0x0F ))
 
-        if [[ -e $BIOS_VERSION_FILE ]] && [[ $SMF_FPGA_VERSION_MAJOR -ge 1 ]] && [[ $SMF_FPGA_VERSION_MINOR -ge 4 ]]; then
+        if [[ -e $BIOS_VERSION_FILE ]] \
+           && [[ $SMF_MSS_VERSION_MAJOR -ge 2 ]] && [[ $SMF_MSS_VERSION_MINOR -ge 7 ]] \
+           && [[ $SMF_FPGA_VERSION_MAJOR -ge 1 ]] && [[ $SMF_FPGA_VERSION_MINOR -ge 4 ]]; then
 
             if [[ $reason = "cc" ]]; then
                 echo 0xaa > $MAILBOX_POWERON_REASON
