@@ -36,7 +36,6 @@ class Component(ComponentBase):
         ["System-CPLD", "Used for managing SFPs, LEDs, PSUs and FANs "],
         ["U-Boot", "Performs initialization during booting"],
     ]
-    CPLD_UPDATE_COMMAND = 'cp /usr/sbin/vme /tmp;cp {} /tmp;cd /tmp; ./vme {};'
 
     def __init__(self, component_index):
         self.index = component_index
@@ -117,17 +116,6 @@ class Component(ComponentBase):
             print("ERROR: the cpld image {} doesn't exist ".format(image_path))
             return False
 
-        cmdline = self.CPLD_UPDATE_COMMAND.format(image_path, image_name)
-
         success_flag = False
-
-        try:
-            subprocess.check_call(cmdline, stderr=subprocess.STDOUT, shell=True)
-            success_flag = True
-        except subprocess.CalledProcessError as e:
-            print("ERROR: Failed to upgrade CPLD: rc={}".format(e.returncode))
-
-        if success_flag:
-            print("INFO: power cycle is required to finish CPLD installation")
 
         return success_flag
