@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -143,7 +143,7 @@ def kube_write_labels(set_labels):
             KUBE_ADMIN_CONF, device_info.get_hostname(), add_label_str.strip()))
 
         log_debug("{} kube labels {} ret={}".format(
-            "Applied" if ret == 0 else "Failed to apply", label_str, ret))
+            "Applied" if ret == 0 else "Failed to apply", add_label_str, ret))
     else:
         log_debug("Given labels are in sync with node labels. Hence no-op")
 

@@ -440,7 +440,7 @@ class FeatureTransitionHandler:
                     feat, set_owner, ct_owner, remote_state, service_restart,
                     label_add))
         # read labels and add/drop if different
-        server.mod_db_entry(STATE_DB_NAME, KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY,
+        self.server.mod_db_entry(STATE_DB_NAME, KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY,
                 { "{}_enabled".format(feat): ("true" if label_add else "false") })
 
 
@@ -517,6 +517,7 @@ class FeatureTransitionHandler:
 class LabelsPendingHandler:
     def __init__(self, server):
         server.register_handler(STATE_DB_NAME, KUBE_LABEL_TABLE, self.on_update)
+        self.server = server
         self.pending = False
         self.set_labels = {}
         return
@@ -554,7 +555,7 @@ class LabelsPendingHandler:
             self.pending = True
             pause = remote_ctr_config[LABEL_RETRY]
             ts += (datetime.datetime.now() + datetime.timedelta(seconds=pause))
-            server.register_timer(ts, self.update_node_labels)
+            self.server.register_timer(ts, self.update_node_labels)
 
         log_debug("ret={} set={} pending={}".format(ret,
             str(self.set_labels), self.pending))
