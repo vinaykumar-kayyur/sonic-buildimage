@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 try:
     import sonic_platform.platform
     import sonic_platform.chassis
     from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError, e:
-    raise ImportError (str(e) + "- required module not found")
+except ImportError as e:
+    raise ImportError(str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
@@ -16,8 +14,7 @@ class SfpUtil(SfpUtilBase):
     ports_in_block = 4
 
     _port_to_eeprom_mapping = {}
-    _changed_ports = [0,0,0,0]
-
+    _changed_ports = [0, 0, 0, 0]
 
     @property
     def port_start(self):
@@ -30,16 +27,13 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_ports(self):
         return range(0, 0)
-        
+
     @property
     def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
+        return self._port_to_eeprom_mapping
 
-
-    
-    
     def __init__(self):
-        # print " SfpUtil(SfpUtilBase) re-directed to chassis PMON 2.0  " 
+        # print " SfpUtil(SfpUtilBase) re-directed to chassis PMON 2.0  "
         SfpUtilBase.__init__(self)
         self.chassis = sonic_platform.platform.Platform().get_chassis()
 
@@ -48,26 +42,24 @@ class SfpUtil(SfpUtilBase):
         if self.chassis is not None:
             return self.chassis.get_sfp(port_num).reset()
         else:
-             print "chassis was None error "
+            return False
 
     def set_low_power_mode(self, port_nuM, lpmode):
-        # print " SfpUtil(SfpUtilBase) targeted for deprecation " 
+        # print " SfpUtil(SfpUtilBase) targeted for deprecation "
         return False
 
     def get_low_power_mode(self, port_num):
-        # print " SfpUtil(SfpUtilBase) targeted for deprecation " 
-        return False 
+        # print " SfpUtil(SfpUtilBase) targeted for deprecation "
+        return False
 
     def get_presence(self, port_num):
         # print " SfpUtil(SfpUtilBase) re-directed to chassis PMON 2.0 "
         if self.chassis is not None:
             return self.chassis.get_sfp(port_num).get_presence()
         else:
-             print "chassis was None error " 
+            return False
 
     def get_transceiver_change_event(self, timeout):
         # print " SfpUtil(SfpUtilBase) targeted for deprecation "
 
         raise NotImplementedError
-        
-        

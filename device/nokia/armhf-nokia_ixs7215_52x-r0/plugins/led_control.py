@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # led_control.py
 #
@@ -10,19 +9,18 @@ try:
     import os
     import time
     import syslog
-    from socket import *
-    from select import *
     import sonic_platform.platform
     import sonic_platform.chassis
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
 smbus_present = 1
 
 try:
     import smbus
-except ImportError, e:
+except ImportError as e:
     smbus_present = 0
+
 
 def DBG_PRINT(str):
     syslog.openlog("nokia-led")
@@ -32,16 +30,16 @@ def DBG_PRINT(str):
 
 class LedControl(LedControlBase):
     """Platform specific LED control class"""
-  
+
     # Constructor
     def __init__(self):
         self.chassis = sonic_platform.platform.Platform().get_chassis()
         self._initDefaultConfig()
-        
+
     def _initDefaultConfig(self):
         # For the D1 box the port leds are controlled by Trident3 LED program
         # The fan tray leds will be managed with the new thermalctl daemon / chassis class based API
-        # leaving only the system leds to be done old style  
+        # leaving only the system leds to be done old style
         DBG_PRINT("starting system leds")
         self._initSystemLed()
         DBG_PRINT(" led done")
@@ -62,11 +60,11 @@ class LedControl(LedControlBase):
         return rv
 
     def _initSystemLed(self):
-        # Front Panel System LEDs setting 
-        oldfan=0xf
-        oldpsu=0xf
+        # Front Panel System LEDs setting
+        oldfan = 0xf
+        oldpsu = 0xf
 
-        # Write sys led 
+        # Write sys led
         if smbus_present == 0:
             DBG_PRINT(" PMON LED SET ERROR ->  smbus present = 0  ")
         else:
@@ -75,44 +73,38 @@ class LedControl(LedControlBase):
             DEVICEREG = 0x7
             bus.write_byte_data(DEVICE_ADDRESS, DEVICEREG, 0x02)
             DBG_PRINT(" System LED set O.K. ")
-            
-            
+
         while True:
-            # Front Panel FAN Panel LED setting in register 0x08 
-            if ( self.chassis.get_fan(0).get_status() == self.chassis.get_fan(1).get_status()  == True ):
+            # Front Panel FAN Panel LED setting in register 0x08
+            if (self.chassis.get_fan(0).get_status() == self.chassis.get_fan(1).get_status() == True):
                 if oldfan != 0x1:
                     if (os.path.isfile("/sys/class/gpio/fanLedAmber/value")):
-                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value" , 0 )
-                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value" , 1 )
+                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value", 1)
                         oldfan = 0x1
-                        #DBG_PRINT(" System FAN LED set GRN ")
             else:
                 if oldfan != 0x0:
                     if (os.path.isfile("/sys/class/gpio/fanLedGreen/value")):
-                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value" , 0 )
-                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value" , 1 )
+                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value", 1)
                         oldfan = 0x0
-                        #DBG_PRINT(" System FAN LED set AMBER ")
-                        
-            # Front Panel PSU Panel LED setting in register 0x09 
-            if ( self.chassis.get_psu(0).get_status() == self.chassis.get_psu(1).get_status() == True ):
+
+            # Front Panel PSU Panel LED setting in register 0x09
+            if (self.chassis.get_psu(0).get_status() == self.chassis.get_psu(1).get_status() == True):
                 if oldpsu != 0x1:
                     if (os.path.isfile("/sys/class/gpio/psuLedAmber/value")):
-                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value" , 0 )
-                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value" , 1 )
-                        oldpsu =0x1
-                        #DBG_PRINT(" System PSU LED set GRN ")
+                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value", 1)
+                        oldpsu = 0x1
             else:
                 if oldpsu != 0x0:
                     if (os.path.isfile("/sys/class/gpio/psuLedGreen/value")):
-                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value" , 0 )
-                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value" , 1 )
-                        oldpsu =0x0
-                        #DBG_PRINT(" System PSU LED set AMBER ")
+                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value", 1)
+                        oldpsu = 0x0
             time.sleep(6)
-                
 
-   # Helper method to map SONiC port name to index
+    # Helper method to map SONiC port name to index
     def _port_name_to_index(self, port_name):
         # Strip "Ethernet" off port name
         if not port_name.startswith(self.SONIC_PORT_NAME_PREFIX):
@@ -123,14 +115,11 @@ class LedControl(LedControlBase):
 
     def _port_state_to_mode(self, port_idx, state):
         DBG_PRINT("_port_state_to_mode")
-    
 
     def _port_led_mode_update(self, port_idx, ledMode):
         DBG_PRINT("_port_led_mode_update")
 
     # called when port states change- implementation of port_link_state_change() method if needed
     def port_link_state_change(self, portname, state):
-        # DBG_PRINT("port_link_state_change ") 
-        return  
-
- 
+        # DBG_PRINT("port_link_state_change ")
+        return

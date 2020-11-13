@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 ARMADA 38x Watchdog - one 32 bit cpu watchdog per cpu - 2 watchdogs ( page 662)
 
