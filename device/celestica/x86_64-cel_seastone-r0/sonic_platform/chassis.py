@@ -11,6 +11,8 @@
 try:
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
+    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
+    from sonic_py_common import device_info
     from event import SfpEvent
     from helper import APIHelper
 except ImportError as e:
@@ -48,9 +50,14 @@ class Chassis(ChassisBase):
             self.__initialize_components()
 
     def __initialize_sfp(self):
+        sfputil_helper = SfpUtilHelper()
+        port_config_file_path = device_info.get_path_to_port_config_file()
+        sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
+
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            sfp = Sfp(index)
+            name_idx = 0 if index+1 == NUM_SFP else index+1
+            sfp = Sfp(index, sfputil_helper.logical[name_idx])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
@@ -174,7 +181,7 @@ class Chassis(ChassisBase):
         if sfp_event:
             return True, {'sfp': sfp_event}
 
-        return False, {}
+        return False, {'sfp': {}}
 
     ##############################################################
     ######################## SFP methods #########################
