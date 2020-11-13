@@ -36,7 +36,12 @@ class TestJ2Files(TestCase):
         return output
 
     def run_diff(self, file1, file2):
-        return subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
+        output = subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
+
+        if utils.PY3x:
+            output = output.decode()
+
+        return output
 
     def test_interfaces(self):
         interfaces_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'interfaces', 'interfaces.j2')
