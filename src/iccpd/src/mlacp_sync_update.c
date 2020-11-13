@@ -626,6 +626,7 @@ void mlacp_enqueue_ndisc(struct CSM *csm, struct Msg *msg)
     return;
 }
 
+
 /*****************************************
 * ARP-Info Update
 * ***************************************/
@@ -1334,6 +1335,7 @@ int mlacp_fsm_update_ndisc_info(struct CSM *csm, struct mLACPNDISCInfoTLV *tlv)
         mlacp_fsm_update_ndisc_entry(csm, &(tlv->NdiscEntry[i]));
     }
 }
+
 
 /*****************************************
 * Port-Channel-Info Update

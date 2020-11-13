@@ -827,7 +827,6 @@ int mclagdctl_parse_dump_dbg_counters(char *msg, int data_len)
     fprintf(stdout, "Link add/del: %u/%u\n",
         sys_counter_p->newlink_count, sys_counter_p->dellink_count);
     fprintf(stdout, "  Unknown if_name: %u\n", sys_counter_p->unknown_if_name_count);
-    fprintf(stdout, "  Not AF_BRIDGE: %u\n", sys_counter_p->not_afbridge_count);
     fprintf(stdout, "Neighbor(ARP) add/del: %u/%u\n",
         sys_counter_p->newnbr_count, sys_counter_p->delnbr_count);
     fprintf(stdout, "  MAC entry add/del: %u/%u\n",

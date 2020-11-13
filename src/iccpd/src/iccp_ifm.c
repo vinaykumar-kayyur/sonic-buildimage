@@ -471,6 +471,8 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
     return;
 }
 
+
+
 int parse_rtattr_flags(struct rtattr *tb[], int max, struct rtattr *rta, int len, unsigned short flags)
 {
     unsigned short type;
@@ -917,6 +919,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
 
     return;
 }
+
 void iccp_from_netlink_port_state_handler( char * ifname, int state)
 {
     struct CSM *csm = NULL;

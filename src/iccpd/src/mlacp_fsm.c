@@ -304,6 +304,7 @@ static void mlacp_sync_send_syncMacInfo(struct CSM* csm)
     return;
 }
 
+
 static void mlacp_sync_send_syncArpInfo(struct CSM* csm)
 {
     int msg_len = 0;
@@ -761,7 +762,6 @@ void mlacp_init(struct CSM* csm, int all)
     MLACP_MSG_QUEUE_REINIT(MLACP(csm).mlacp_msg_list);
     MLACP_MSG_QUEUE_REINIT(MLACP(csm).arp_msg_list);
     MLACP_MSG_QUEUE_REINIT(MLACP(csm).ndisc_msg_list);
-    MLACP_MSG_QUEUE_REINIT(MLACP(csm).lacp_flbk_msg_list);
     mlacp_mac_msg_queue_reinit(csm);
 
     PIF_QUEUE_REINIT(MLACP(csm).pif_list);

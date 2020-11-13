@@ -1768,7 +1768,6 @@ int iccp_system_init_netlink_socket()
     }
 #if 0
     sys->family = genl_ctrl_resolve(sys->genric_sock, TEAM_GENL_NAME);
-
     while (sys->family < 0)
     {
         sleep(1);

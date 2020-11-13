@@ -115,7 +115,6 @@ static int scheduler_transit_fsm()
         iccp_csm_transit(csm);
         app_csm_transit(csm);
         mlacp_fsm_transit(csm);
-        stp_fsm_transit(csm);
     }
 
     //lif->changed flag is marked for state change for lif, for active node when
