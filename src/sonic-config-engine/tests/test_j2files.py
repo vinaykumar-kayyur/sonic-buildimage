@@ -213,7 +213,7 @@ class TestJ2Files(TestCase):
 
         # cleanup
         buffers_config_file_new = os.path.join(dell_dir_path, 'buffers_config.j2')
-        os.remove(buffers_config_file_new)
+#         os.remove(buffers_config_file_new)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'buffers-dell6100.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
@@ -250,7 +250,7 @@ class TestJ2Files(TestCase):
                 v["graph"], constants_yml, switch_template, self.output_file
             )
             sample_output_file = os.path.join(
-                self.test_dir, 'sample_output', v["output"]
+                self.test_dir, 'sample_output', utils.PYvX_DIR, v["output"]
             )
             self.run_script(argument)
             assert filecmp.cmp(sample_output_file, self.output_file)
@@ -282,7 +282,7 @@ class TestJ2Files(TestCase):
                 self.output_file
             )
             sample_output_file = os.path.join(
-                self.test_dir, 'sample_output', v["output"]
+                self.test_dir, 'sample_output', utils.PYvX_DIR, v["output"]
             )
             self.run_script(argument)
             assert filecmp.cmp(sample_output_file, self.output_file)
@@ -298,6 +298,8 @@ class TestJ2Files(TestCase):
         assert filecmp.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
 
     def tearDown(self):
+        pass
+        return
         try:
             os.remove(self.output_file)
         except OSError:
