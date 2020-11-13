@@ -689,11 +689,11 @@ def parse_linkmeta(meta, hname):
             value = device_property.find(str(QName(ns1, "Value"))).text
             if name == "FECDisabled":
                 fec_disabled = value
-            if name == "GeminiPeeringLink":
+            elif name == "GeminiPeeringLink":
                 has_peer_switch = True
-            if name == "UpperTOR":
+            elif name == "UpperTOR":
                 upper_tor_hostname = value
-            if name == "LowerTOR":
+            elif name == "LowerTOR":
                 lower_tor_hostname = value
 
         linkmetas[port] = {}
