@@ -58,7 +58,6 @@
 #define IF_T_VLAN           2
 #define IF_T_VXLAN          3
 #define IF_T_BRIDGE         4
-#define IF_T_SAG            5
 
 typedef struct
 {
@@ -72,6 +71,12 @@ struct If_info
     LIST_ENTRY(If_info) csm_next;
 };
 
+struct Unq_ip_If_info
+{
+    char name[MAX_L_PORT_NAME];
+    LIST_ENTRY(Unq_ip_If_info) if_next;
+};
+
 struct VLAN_ID
 {
     uint16_t vid;
@@ -82,6 +87,13 @@ struct VLAN_ID
 
 RB_HEAD(vlan_rb_tree, VLAN_ID);
 RB_PROTOTYPE(vlan_rb_tree, VLAN_ID, vlan_rb_tree, vlan_node_compare);
+
+struct PendingVlanMbrIf
+{
+    char name[MAX_L_PORT_NAME];
+    struct vlan_rb_tree vlan_tree;
+    LIST_ENTRY(PendingVlanMbrIf) if_next;
+};
 
 #define VLAN_RB_REMOVE(name, head, elm) do {  \
     RB_REMOVE(name, head, elm);              \
@@ -146,7 +158,6 @@ struct LocalInterface
     uint8_t port_config_sync;
     bool is_traffic_disable;   /* Disable traffic tx/rx  */
     bool is_l3_proto_enabled;  /* Enable L3 Protocol support */
-    bool is_sag_enabled;
     uint32_t vlan_count;
     uint32_t master_ifindex;   /* VRF ifindex*/
 

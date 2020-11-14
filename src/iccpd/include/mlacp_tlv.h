@@ -370,17 +370,24 @@ struct mLACPMACInfoTLV
     struct mLACPMACData MacEntry[0];
 } __attribute__ ((packed));
 
+#define NEIGH_LOCAL   1
+#define NEIGH_REMOTE  2
+
 struct ARPMsg
 {
-    uint8_t     op_type;
-    char     ifname[MAX_L_PORT_NAME];
-    uint32_t    ipv4_addr;
-    uint8_t     mac_addr[ETHER_ADDR_LEN];
+    uint8_t op_type;
+    uint8_t flag;
+    uint8_t learn_flag;       /*Loacl or Remote*/
+    char ifname[MAX_L_PORT_NAME];
+    uint32_t ipv4_addr;         // net order
+    uint8_t mac_addr[ETHER_ADDR_LEN];
 };
 
 struct NDISCMsg
 {
     uint8_t op_type;
+    uint8_t flag;
+    uint8_t learn_flag;       /*Loacl or Remote*/
     char ifname[MAX_L_PORT_NAME];
     uint32_t ipv6_addr[4];
     uint8_t mac_addr[ETHER_ADDR_LEN];
@@ -464,9 +471,22 @@ struct mLACPIfUpAckTLV {
 
 enum NEIGH_OP_TYPE
 {
-    NEIGH_SYNC_LIF,
-    NEIGH_SYNC_ADD,
-    NEIGH_SYNC_DEL,
+    NEIGH_SYNC_LIF = 0,
+    NEIGH_SYNC_ADD = 1,
+    NEIGH_SYNC_DEL = 2,
+};
+
+enum NEIGH_FLAG
+{
+    NEIGH_SYNC_FLAG_ACK = 1,
+    NEIGH_SYNC_FLAG_SELF_LL = 2,
+    NEIGH_SYNC_FLAG_SELF_IP = 4,
+};
+
+enum NEIGH_SYNC_DIR
+{
+    NEIGH_SYNC_CLIENT_IP = 1,
+    NEIGH_SYNC_SELF_IP = 2,
 };
 
 enum MAC_AGE_TYPE

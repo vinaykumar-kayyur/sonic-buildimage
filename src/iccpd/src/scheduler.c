@@ -795,6 +795,7 @@ int scheduler_check_csm_config(struct CSM* csm)
         {
             lif->is_peer_link = 1;
             csm->peer_link_if = lif;
+            set_peerlink_learn_kernel(csm, 0, 2);
         }
     }
 
@@ -856,6 +857,7 @@ void scheduler_session_disconnect_handler(struct CSM* csm)
 
     return;
 }
+
 void scheduler_csm_socket_cleanup(struct CSM* csm, int location)
 {
     struct System* sys;

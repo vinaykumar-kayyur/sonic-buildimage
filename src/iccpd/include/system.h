@@ -42,7 +42,6 @@
 #define PORTCHANNEL_PREFIX      "PortChannel"
 #define VLAN_PREFIX             "Vlan"
 #define VXLAN_TUNNEL_PREFIX     "VTTNL"
-#define SAG_PREFIX              "sag"
 
 #define WARM_REBOOT 1
 
@@ -114,6 +113,8 @@ enum SYNCD_RX_DBG_CNTR_MSG_e
     SYNCD_RX_DBG_CNTR_MSG_MAC = 0,
     SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_DOMAIN = 1,
     SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_IFACE  = 2,
+    SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_UNIQUE_IP = 3,
+    SYNCD_RX_DBG_CNTR_MSG_VLAN_MBR_UPDATES = 4,
     SYNCD_RX_DBG_CNTR_MSG_MAX
 };
 
@@ -317,6 +318,8 @@ struct System
     LIST_HEAD(csm_list, CSM) csm_list;
     LIST_HEAD(lif_all_list, LocalInterface) lif_list;
     LIST_HEAD(lif_purge_all_list, LocalInterface) lif_purge_list;
+    LIST_HEAD(unq_ip_all_if_list, Unq_ip_If_info) unq_ip_if_list;
+    LIST_HEAD(pending_vlan_mbr_if_list, PendingVlanMbrIf) pending_vlan_mbr_if_list;
 
     /* Settings */
     char* log_file_path;
@@ -339,6 +342,7 @@ struct CSM* system_create_csm();
 struct CSM* system_get_csm_by_peer_ip(const char*);
 struct CSM* system_get_csm_by_peer_ifname(char *ifname);
 struct CSM* system_get_csm_by_mlacp_id(int id);
+struct CSM* system_get_first_csm();
 struct System* system_get_instance();
 void system_finalize();
 void system_init(struct System*);

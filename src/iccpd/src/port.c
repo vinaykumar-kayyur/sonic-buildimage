@@ -28,10 +28,10 @@
 #include "../include/port.h"
 #include "../include/system.h"
 #include "../include/iccp_csm.h"
-
 #include "../include/mlacp_link_handler.h"
 #include "../include/scheduler.h"
 #include "../include/iccp_netlink.h"
+#include "../include/iccp_ifm.h"
 
 
 static int vlan_node_compare(const struct VLAN_ID *p_vlan_node1, const struct VLAN_ID *p_vlan_node2)
@@ -61,10 +61,13 @@ void local_if_init(struct LocalInterface* local_if)
     local_if->is_peer_link = 0;
     local_if->is_arp_accept = 0;
     local_if->l3_mode = 0;
+    local_if->master_ifindex = 0;
     local_if->state = PORT_STATE_DOWN;
     local_if->prefixlen = 32;
     local_if->csm = NULL;
     local_if->isolate_to_peer_link = 0;
+    local_if->is_l3_proto_enabled = false;
+    local_if->vlan_count = 0;
     RB_INIT(vlan_rb_tree, &local_if->vlan_tree);
 
     return;
@@ -92,11 +95,10 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type, uint
     if (!(sys = system_get_instance()))
         return NULL;
 
-    if (ifindex < 0)
-        return NULL;
-
-    if ((local_if = local_if_find_by_ifindex(ifindex)))
-        return local_if;
+    if (ifindex > 0) {
+        if ((local_if = local_if_find_by_ifindex(ifindex)))
+            return local_if;
+    }
 
     if (!(local_if = (struct LocalInterface*)malloc(sizeof(struct LocalInterface))))
     {
@@ -140,6 +142,10 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type, uint
             break;
 
         case IF_T_VLAN:
+            if(is_unique_ip_configured(local_if->name))
+            {
+                local_if->is_l3_proto_enabled = true;
+            }
             break;
 
         case IF_T_VXLAN:
@@ -160,6 +166,9 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type, uint
 
     LIST_INSERT_HEAD(&(sys->lif_list), local_if, system_next);
 
+    //if there is pending vlan membership for this interface move to system lif
+    move_pending_vlan_mbr_to_lif(sys, local_if);
+
     /*Check the intf is peer-link? Only support PortChannel and Ethernet currently*/
     /*When set peer-link, the local-if is probably not created*/
     LIST_FOREACH(csm, &(sys->csm_list), next)
@@ -168,6 +177,7 @@ struct LocalInterface* local_if_create(int ifindex, char* ifname, int type, uint
         {
             local_if->is_peer_link = 1;
             csm->peer_link_if = local_if;
+            set_peerlink_learn_kernel(csm, 0, 3);
             break;
         }
         /*check the intf is bind with csm*/
@@ -377,8 +387,11 @@ int local_if_is_l3_mode(struct LocalInterface* local_if)
     if (local_if == NULL)
         return 0;
 
-    if (local_if->ipv4_addr != 0 || memcmp(local_if->ipv6_addr, addr_null, 16) != 0)
+    if ((local_if->ipv4_addr != 0)
+            || (memcmp(local_if->ipv6_addr, addr_null, 16) != 0)
+            || (local_if->master_ifindex != 0)) {
         ret = 1;
+    }
 
     return ret;
 }
@@ -577,7 +590,11 @@ int local_if_add_vlan(struct LocalInterface* local_if,  uint16_t vid)
         vlan->vid = vid;
         vlan->vlan_itf = local_if_find_by_name(vlan_name);
 
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Add %s to VLAN %d", local_if->name, vid);
+        if (vlan->vlan_itf == NULL) {
+            ICCPD_LOG_DEBUG(__FUNCTION__, "vlan_itf %s not present", vlan_name);
+        }
+        local_if->vlan_count +=1;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Add %s to VLAN %d vlan count %d", local_if->name, vid, local_if->vlan_count);
         local_if->port_config_sync = 1;
         RB_INSERT(vlan_rb_tree, &(local_if->vlan_tree), vlan);
     }
@@ -614,7 +631,8 @@ void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid)
         VLAN_RB_REMOVE(vlan_rb_tree, &(local_if->vlan_tree), vlan);
         free(vlan);
         local_if->port_config_sync = 1;
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", local_if->name, vid);
+        local_if->vlan_count -=1;
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d, count %d", local_if->name, vid, local_if->vlan_count);
     }
     return;
 }
@@ -628,6 +646,7 @@ void local_if_del_all_vlan(struct LocalInterface* lif)
     RB_FOREACH_SAFE(vlan, vlan_rb_tree, &(lif->vlan_tree), vlan_temp)
     {
         VLAN_RB_REMOVE(vlan_rb_tree, &(lif->vlan_tree), vlan);
+        lif->vlan_count -=1;
         free(vlan);
     }
 
@@ -726,4 +745,27 @@ int set_sys_arp_accept_flag(char* ifname, int flag)
 
     fclose(file_ptr);
     return result;
+}
+
+int local_if_l3_proto_enabled(const char* ifname)
+{
+    struct System* sys = NULL;
+    struct LocalInterface* local_if = NULL;
+
+    if (!ifname)
+        return 0;
+
+    if (!(sys = system_get_instance()))
+        return 0;
+
+    LIST_FOREACH(local_if, &(sys->lif_list), system_next)
+    {
+        if (strcmp(local_if->name, ifname) == 0)
+        {
+            if (local_if->is_l3_proto_enabled)
+                return 1;
+        }
+    }
+
+    return 0;
 }

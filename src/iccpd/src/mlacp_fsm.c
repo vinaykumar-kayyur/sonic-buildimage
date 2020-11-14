@@ -109,7 +109,7 @@
     }
 
 
-
+void mlacp_local_lif_clear_pending_mac(struct CSM* csm, struct LocalInterface *local_lif);
 /*****************************************
 * Rb tree Functions
 *
@@ -304,7 +304,6 @@ static void mlacp_sync_send_syncMacInfo(struct CSM* csm)
     return;
 }
 
-
 static void mlacp_sync_send_syncArpInfo(struct CSM* csm)
 {
     int msg_len = 0;
@@ -318,7 +317,7 @@ static void mlacp_sync_send_syncArpInfo(struct CSM* csm)
         msg = TAILQ_FIRST(&(MLACP(csm).arp_msg_list));
         TAILQ_REMOVE(&(MLACP(csm).arp_msg_list), msg, tail);
 
-        msg_len = mlacp_prepare_for_arp_info(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct ARPMsg*)msg->buf, count);
+        msg_len = mlacp_prepare_for_arp_info(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct ARPMsg*)msg->buf, count, NEIGH_SYNC_CLIENT_IP);
         count++;
         free(msg->buf);
         free(msg);
@@ -350,7 +349,7 @@ static void mlacp_sync_send_syncNdiscInfo(struct CSM *csm)
         msg = TAILQ_FIRST(&(MLACP(csm).ndisc_msg_list));
         TAILQ_REMOVE(&(MLACP(csm).ndisc_msg_list), msg, tail);
 
-        msg_len = mlacp_prepare_for_ndisc_info(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct NDISCMsg *)msg->buf, count, 1);
+        msg_len = mlacp_prepare_for_ndisc_info(csm, g_csm_buf, CSM_BUFFER_SIZE, (struct NDISCMsg *)msg->buf, count, NEIGH_SYNC_CLIENT_IP);
         count++;
         free(msg->buf);
         free(msg);
@@ -723,6 +722,22 @@ void mlacp_local_lif_state_mac_handler(struct CSM* csm)
     }
 }
 
+void mlacp_peer_link_learning_handler(struct CSM* csm)
+{
+    if (csm->peer_link_if == NULL)
+        return;
+
+    if (csm->peer_link_if->vlan_count == 0) {
+        return;
+    }
+
+    if (csm->peer_link_learning_retry_time && ((time(NULL) - csm->peer_link_learning_retry_time) > 2))
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "peer_link_learning_enable %d", csm->peer_link_learning_enable);
+        set_peerlink_learn_kernel(csm, csm->peer_link_learning_enable, 10);
+    }
+}
+
 void mlacp_mac_msg_queue_reinit(struct CSM* csm)
 {
 
@@ -865,6 +880,7 @@ void mlacp_fsm_transit(struct CSM* csm)
     mlacp_sync_send_heartbeat(csm);
 
     mlacp_local_lif_state_mac_handler(csm);
+    mlacp_peer_link_learning_handler(csm);
 
     /* Dequeue msg if any*/
     while (have_msg)
@@ -1091,6 +1107,7 @@ static void mlacp_resync_arp(struct CSM* csm)
         {
             arp_msg = (struct ARPMsg*)msg->buf;
             arp_msg->op_type = NEIGH_SYNC_ADD;
+            arp_msg->flag = 0;
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
@@ -1116,6 +1133,7 @@ static void mlacp_resync_ndisc(struct CSM *csm)
         {
             ndisc_msg = (struct NDISCMsg *)msg->buf;
             ndisc_msg->op_type = NEIGH_SYNC_ADD;
+            ndisc_msg->flag = 0;
             if (iccp_csm_init_msg(&msg_send, (char *)ndisc_msg, sizeof(struct NDISCMsg)) == 0)
             {
                 TAILQ_INSERT_TAIL(&(MLACP(csm).ndisc_msg_list), msg_send, tail);

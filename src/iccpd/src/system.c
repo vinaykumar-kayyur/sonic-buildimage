@@ -28,6 +28,8 @@
 #include "../include/logger.h"
 #include "../include/iccp_netlink.h"
 #include "../include/scheduler.h"
+#include "../include/mlacp_link_handler.h"
+#include "../include/iccp_ifm.h"
 
 #define ETHER_ADDR_LEN 6
 char mac_print_str[ETHER_ADDR_STR_LEN];
@@ -70,6 +72,8 @@ void system_init(struct System* sys)
     LIST_INIT(&(sys->csm_list));
     LIST_INIT(&(sys->lif_list));
     LIST_INIT(&(sys->lif_purge_list));
+    LIST_INIT(&(sys->unq_ip_if_list));
+    LIST_INIT(&(sys->pending_vlan_mbr_if_list));
 
     sys->log_file_path = strdup("/var/log/iccpd.log");
     sys->cmd_file_path = strdup("/var/run/iccpd/iccpd.vty");
@@ -93,6 +97,7 @@ void system_finalize()
     struct System* sys = NULL;
     struct CSM* csm = NULL;
     struct LocalInterface* local_if = NULL;
+    struct Unq_ip_If_info* unq_ip_if = NULL;
 
     if ((sys = system_get_instance()) == NULL )
         return;
@@ -123,6 +128,16 @@ void system_finalize()
         local_if = LIST_FIRST(&(sys->lif_purge_list));
         LIST_REMOVE(local_if, system_purge_next);
         local_if_finalize(local_if);
+    }
+
+    //remove all pending vlan membership entries
+    del_all_pending_vlan_mbr_ifs(sys);
+
+    while (!LIST_EMPTY(&(sys->unq_ip_if_list)))
+    {
+        unq_ip_if = LIST_FIRST(&(sys->unq_ip_if_list));
+        LIST_REMOVE(unq_ip_if, if_next);
+        free(unq_ip_if);
     }
 
     iccp_system_dinit_netlink_socket();
@@ -240,6 +255,22 @@ struct CSM* system_get_csm_by_mlacp_id(int id)
     return NULL;
 }
 
+struct CSM* system_get_first_csm()
+{
+    struct System* sys = NULL;
+    struct CSM* csm = NULL;
+
+    if ((sys = system_get_instance()) == NULL )
+        return NULL;
+
+    LIST_FOREACH(csm, &(sys->csm_list), next)
+    {
+        return csm;
+    }
+
+    return NULL;
+}
+
 SYNCD_TX_DBG_CNTR_MSG_e system_syncdtx_to_dbg_msg_type(uint32_t msg_type)
 {
     switch(msg_type)
@@ -304,6 +335,10 @@ SYNCD_RX_DBG_CNTR_MSG_e system_syncdrx_to_dbg_msg_type(uint32_t msg_type)
             return SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_DOMAIN;
         case MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_IFACE:
             return SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_IFACE;
+        case MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_UNIQUE_IP:
+            return SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_UNIQUE_IP;
+        case MCLAG_SYNCD_MSG_TYPE_VLAN_MBR_UPDATES:
+            return SYNCD_RX_DBG_CNTR_MSG_VLAN_MBR_UPDATES;
         default:
             return SYNCD_RX_DBG_CNTR_MSG_MAX;
     }

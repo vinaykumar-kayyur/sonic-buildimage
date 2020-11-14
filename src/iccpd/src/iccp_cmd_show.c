@@ -34,6 +34,8 @@
 #include "../include/iccp_cmd_show.h"
 #include "../include/mlacp_link_handler.h"
 
+extern int local_if_l3_proto_enabled(const char* ifname);
+
 int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
 {
     struct mclagd_state state_info;
@@ -108,7 +110,6 @@ int iccp_mclag_config_dump(char * *buf,  int *num, int mclag_id)
         state_info.role = csm->role_type;
 
         str_size = MCLAGDCTL_PORT_MEMBER_BUF_LEN;
-        len = 0;
 
         LIST_FOREACH(lif_po, &(MLACP(csm).lif_list), mlacp_next)
         {
@@ -186,6 +187,7 @@ int iccp_arp_dump(char * *buf, int *num, int mclag_id)
             iccpd_arp = (struct ARPMsg*)msg->buf;
 
             mclagd_arp.op_type = iccpd_arp->op_type;
+            mclagd_arp.learn_flag = iccpd_arp->learn_flag;
             memcpy(mclagd_arp.ifname, iccpd_arp->ifname, strlen(iccpd_arp->ifname));
             memcpy(mclagd_arp.ipv4_addr, show_ip_str(iccpd_arp->ipv4_addr), 16);
             memcpy(mclagd_arp.mac_addr, iccpd_arp->mac_addr, 6);
@@ -251,6 +253,7 @@ int iccp_ndisc_dump(char * *buf, int *num, int mclag_id)
             iccpd_ndisc = (struct NDISCMsg *)msg->buf;
 
             mclagd_ndisc.op_type = iccpd_ndisc->op_type;
+            mclagd_ndisc.learn_flag = iccpd_ndisc->learn_flag;
             memcpy(mclagd_ndisc.ifname, iccpd_ndisc->ifname, strlen(iccpd_ndisc->ifname));
             memcpy(mclagd_ndisc.ipv6_addr, show_ipv6_str((char *)iccpd_ndisc->ipv6_addr), 46);
             memcpy(mclagd_ndisc.mac_addr, iccpd_ndisc->mac_addr, 6);
@@ -762,3 +765,50 @@ int iccp_cmd_dbg_counter_dump(char **buf, int *data_len, int mclag_id)
     return EXEC_TYPE_SUCCESS;
 }
 
+int iccp_unique_ip_if_dump(char **buf, int *num, int mclag_id)
+{
+    struct System *sys = NULL;
+    struct mclagd_unique_ip_if mclagd_lif;
+    char *str_buf = NULL;
+    int str_size = MCLAGDCTL_PARA3_LEN - 1;
+    int len = 0;
+    int lif_num = 0;
+    int lif_buf_size = MCLAGDCTL_CMD_SIZE;
+    char *lif_buf = NULL;
+    struct Unq_ip_If_info* unq_ip_if = NULL;
+
+    if (!(sys = system_get_instance()))
+    {
+        ICCPD_LOG_INFO(__FUNCTION__, "cannot find sys!\n");
+        return EXEC_TYPE_NO_EXIST_SYS;
+    }
+
+    lif_buf = (char*)malloc(lif_buf_size);
+    if (!lif_buf)
+        return EXEC_TYPE_FAILED;
+
+    LIST_FOREACH(unq_ip_if, &(sys->unq_ip_if_list), if_next)
+    {
+        memset(&mclagd_lif, 0, sizeof(struct mclagd_unique_ip_if));
+        memcpy(mclagd_lif.name, unq_ip_if->name, MAX_L_PORT_NAME);
+        mclagd_lif.active = local_if_l3_proto_enabled(unq_ip_if->name);
+
+        memcpy(lif_buf + MCLAGD_REPLY_INFO_HDR + lif_num * sizeof(struct mclagd_unique_ip_if),
+                &mclagd_lif, sizeof(struct mclagd_unique_ip_if));
+
+        lif_num++;
+
+        if ((lif_num + 1) * sizeof(struct mclagd_unique_ip_if) > (lif_buf_size - MCLAGD_REPLY_INFO_HDR))
+        {
+            lif_buf_size += MCLAGDCTL_CMD_SIZE;
+            lif_buf = (char*)realloc(lif_buf, lif_buf_size);
+            if (!lif_buf)
+                return EXEC_TYPE_FAILED;
+        }
+    }
+
+    *buf = lif_buf;
+    *num = lif_num;
+
+    return EXEC_TYPE_SUCCESS;
+}

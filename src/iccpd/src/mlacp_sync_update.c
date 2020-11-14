@@ -233,7 +233,7 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
     if (memcmp(MacData->mac_addr, null_mac, ETHER_ADDR_LEN) == 0)
     {
         ICCPD_LOG_ERR(__FUNCTION__, "Invalid MAC address from peer do not add.");
-        return;
+        return 0;
     }
 
 
@@ -317,7 +317,7 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                             ICCPD_LOG_NOTICE("ICCP_FDB", "Remote MAC ADD local IF down, MAC already points to Peer_link done processing "
                                 " interface  %s, MAC %s vlan-id %d ", mac_msg->ifname,
                                 mac_addr_to_str(mac_msg->mac_addr), mac_msg->vid);
-                            return;
+                            return 0;
                         }
 
                         if (csm->peer_link_if && (csm->peer_link_if->state == PORT_STATE_UP))
@@ -392,7 +392,7 @@ int mlacp_fsm_update_mac_entry_from_peer( struct CSM* csm, struct mLACPMACData *
                         ICCPD_LOG_DEBUG("ICCP_FDB", "Remote MAC ADD learn on Orphan port ,MAC already points to Peer_link"
                             " interface  %s, MAC %s vlan-id %d ", mac_msg->ifname,
                             mac_addr_to_str(mac_msg->mac_addr), mac_msg->vid);
-                        return;
+                        return 0;
                     }
 
                     if (csm->peer_link_if && csm->peer_link_if->state == PORT_STATE_UP)
@@ -621,28 +621,27 @@ void mlacp_enqueue_ndisc(struct CSM *csm, struct Msg *msg)
     return;
 }
 
-
 /*****************************************
 * ARP-Info Update
 * ***************************************/
 int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
 {
-#if 0 //to_build tbd_l3
     struct Msg* msg = NULL;
     struct ARPMsg *arp_msg = NULL, arp_data;
     struct LocalInterface *local_if = NULL;
     struct LocalInterface *vlan_if = NULL;
-    struct LocalInterface *sag_if = NULL;
     struct LocalInterface *peer_link_if = NULL;
+    struct LocalInterface *local_vlan_if = NULL;
     struct VLAN_ID *vlan_id_list = NULL;
     int set_arp_flag = 0;
     int my_ip_arp_flag = 0;
     int vlan_count = 0;
-    uint16_t sag_vid = 0;
     char mac_str[18] = "";
-    int err = 0;
+    int err = 0, ln = 0;
     int permanent_neigh = 0;
-    char sagIfname[MAX_L_PORT_NAME];
+    uint16_t vlan_id = 0;
+    struct VLAN_ID vlan_key = { 0 };
+    int vid_intf_present = 0;
 
     if (!csm || !arp_entry)
         return MCLAG_ERROR;
@@ -661,84 +660,49 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
     ICCPD_LOG_DEBUG(__FUNCTION__, "Received ARP Info, Flag %x, intf[%s] IP[%s], MAC[%s]", arp_entry->flag, arp_entry->ifname,
             show_ip_str(arp_entry->ipv4_addr), mac_str);
 
-    if (csm->peer_reboot_disconn_time != 0)
-    {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Ignore Peer ARP Delete Event: peer reboot in process." );
-        return MCLAG_ERROR;
+    if (strncmp(arp_entry->ifname, VLAN_PREFIX, strlen(VLAN_PREFIX)) == 0) {
+        sscanf (arp_entry->ifname, "Vlan%hu", &vlan_id);
     }
 
-    if ((strncmp(arp_entry->ifname, SAG_PREFIX, strlen(SAG_PREFIX)) == 0))
+    if (vlan_id)
     {
-        sscanf (arp_entry->ifname, "sag%d.256", &sag_vid);
-        if (sag_vid != 0) {
-            sag_if = local_if_find_by_name(arp_entry->ifname);
-        }
-    }
+        memset(&vlan_key, 0, sizeof(struct VLAN_ID));
+        vlan_key.vid = vlan_id;
 
-    if ((strncmp(arp_entry->ifname, VLAN_PREFIX, 4) == 0) || (sag_vid != 0))
-    {
         peer_link_if = local_if_find_by_name(csm->peer_itf_name);
 
         if (peer_link_if && !local_if_is_l3_mode(peer_link_if))
         {
+            ln = __LINE__;
             /* Is peer-linlk itf belong to a vlan the same as peer?*/
-            RB_FOREACH(vlan_id_list, vlan_rb_tree, &(peer_link_if->vlan_tree))
+            vlan_id_list = RB_FIND(vlan_rb_tree, &(peer_link_if->vlan_tree), &vlan_key);
+
+            if (vlan_id_list)
             {
                 vlan_count++;
-                if (!vlan_id_list->vlan_itf)
-                    continue;
-
-                if (strcmp(vlan_id_list->vlan_itf->name, arp_entry->ifname) != 0) {
-                    if (sag_vid != 0) {
-                        if (vlan_id_list->vid != sag_vid)
-                        {
-                            continue;
-                        }
-
-                        if (!sag_if) {
-                            continue;
-                        }
-                    } else {
-                        continue;
+                if (vlan_id_list->vlan_itf) {
+                    if (strcmp(vlan_id_list->vlan_itf->name, arp_entry->ifname) == 0) {
+                        ln = __LINE__;
+                        vid_intf_present = 1;
                     }
-                }
 
-                if (!local_if_is_l3_mode(vlan_id_list->vlan_itf)) {
-                    if (sag_vid != 0) {
-                        if (!sag_if || !local_if_is_l3_mode(sag_if)) {
-                            continue;
-                        }
-
-                        if (arp_entry->ipv4_addr == sag_if->ipv4_addr) {
-                            my_ip_arp_flag = 1;
-                        }
-                    } else {
-                        continue;
-                    }
-                }
-
-                if (arp_entry->ipv4_addr == vlan_id_list->vlan_itf->ipv4_addr) {
-                    my_ip_arp_flag = 1;
-                }
-
-                if ((sag_vid == 0) && (my_ip_arp_flag == 0)) {
-                    snprintf(sagIfname, MAX_L_PORT_NAME, "sag%d.256", vlan_id_list->vid);
-                    sag_if = local_if_find_by_name(sagIfname);
-                    if (sag_if) {
-                        if (arp_entry->ipv4_addr == sag_if->ipv4_addr) {
+                    if (vid_intf_present && local_if_is_l3_mode(vlan_id_list->vlan_itf)) {
+                        if (arp_entry->ipv4_addr == vlan_id_list->vlan_itf->ipv4_addr) {
                             my_ip_arp_flag = 1;
                         }
                     }
+
+                    ICCPD_LOG_DEBUG(__FUNCTION__,
+                            "ARP is learnt from intf %s, peer-link %s is the member of this vlan",
+                            vlan_id_list->vlan_itf->name, peer_link_if->name);
+
+                    /* Peer-link belong to L3 vlan is alive, set the ARP info*/
+                    set_arp_flag = 1;
                 }
-                ICCPD_LOG_DEBUG(__FUNCTION__,
-                                "ARP is learnt from intf %s, peer-link %s is the member of this vlan",
-                                vlan_id_list->vlan_itf->name, peer_link_if->name);
-
-                /* Peer-link belong to L3 vlan is alive, set the ARP info*/
-                set_arp_flag = 1;
-
-                break;
             }
+
+            ICCPD_LOG_DEBUG(__FUNCTION__, "ARP Received ln %d, vlan_count %d, set_arp_flag %d, my_ip %d",
+                    ln, vlan_count, set_arp_flag, my_ip_arp_flag);
 
             if (vlan_count == 0)
             {
@@ -749,20 +713,6 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                         my_ip_arp_flag = 1;
                     }
                     set_arp_flag = 1;
-                }
-            } else if (sag_vid != 0) {
-                sag_if = local_if_find_by_name(arp_entry->ifname);
-                if (sag_if)
-                {
-                    if (arp_entry->ipv4_addr == sag_if->ipv4_addr) {
-                        my_ip_arp_flag = 1;
-                    }
-
-                    set_arp_flag = 1;
-                } else {
-                    ICCPD_LOG_DEBUG(__FUNCTION__,"ignoring ARP sync for ip %s, no SAG intf %s ",
-                            show_ip_str(arp_entry->ipv4_addr), arp_entry->ifname);
-                    return 0;
                 }
             }
         }
@@ -783,21 +733,21 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                 if (!local_if_is_l3_mode(local_if))
                 {
                     /* Is the L2 MLAG itf belong to a vlan the same as peer?*/
-                    RB_FOREACH(vlan_id_list, vlan_rb_tree, &(local_if->vlan_tree))
-                    {
-                        if (!vlan_id_list->vlan_itf)
-                            continue;
-                        if (strcmp(vlan_id_list->vlan_itf->name, arp_entry->ifname) != 0)
-                            continue;
-                        if (!local_if_is_l3_mode(vlan_id_list->vlan_itf))
-                            continue;
+                    if (vlan_id) {
+                        vlan_id_list = RB_FIND(vlan_rb_tree, &(local_if->vlan_tree), &vlan_key);
+                        if (vlan_id_list && vlan_id_list->vlan_itf) {
+                            if (arp_entry->ipv4_addr == vlan_id_list->vlan_itf->ipv4_addr) {
+                                my_ip_arp_flag = 1;
+                            }
 
-                        ICCPD_LOG_DEBUG(__FUNCTION__,
-                                        "ARP is learnt from intf %s, mclag %s is the member of this vlan",
-                                        vlan_id_list->vlan_itf->name, local_if->name);
-                        break;
+                            ICCPD_LOG_DEBUG(__FUNCTION__,
+                                "ARP is learnt from intf %s, mclag %s is the member of this vlan",
+                                vlan_id_list->vlan_itf->name, local_if->name);
+                        }
                     }
 
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "ARP received PO %s, active %d, my_ip %d, ln %d",
+                            local_if->name, local_if->po_active, my_ip_arp_flag, ln);
                     if (vlan_id_list && local_if->po_active == 1)
                     {
                         /* Any po of L3 vlan is alive, set the ARP info*/
@@ -811,8 +761,8 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                     if (strcmp(local_if->name, arp_entry->ifname) == 0)
                     {
                         ICCPD_LOG_DEBUG(__FUNCTION__,
-                                        "ARP is learnt from mclag L3 intf %s",
-                                        local_if->name);
+                                        "ARP is learnt from mclag L3 intf %s, active %d",
+                                        local_if->name, local_if->po_active);
                         if (local_if->po_active == 1)
                         {
                             /* po is alive, set the ARP info*/
@@ -822,11 +772,18 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
                     }
                     else
                     {
+                        ln = __LINE__;
                         continue;
                     }
                 }
             }
         }
+    }
+
+    if(my_ip_arp_flag)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__," ignoring ARP sync for self ip %s ", show_ip_str(arp_entry->ipv4_addr));
+        return 0;
     }
 
     /* set dynamic ARP*/
@@ -873,8 +830,15 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
     }
     else
     {
-        ICCPD_LOG_NOTICE(__FUNCTION__, "Failure: port-channel is not alive");
+        ICCPD_LOG_NOTICE(__FUNCTION__, "Failure: port-channel is not alive, ln %d", ln);
         /*TODO Set static route through peer-link or just skip it?*/
+        local_vlan_if = local_if_find_by_name(arp_entry->ifname);
+        if (local_vlan_if) {
+            if (arp_entry->ipv4_addr == local_vlan_if->ipv4_addr) {
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ignore my ip %s", show_ip_str(arp_entry->ipv4_addr));
+                return 0;
+            }
+        }
     }
 
     /* update ARP list*/
@@ -903,8 +867,9 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
         arp_msg = (struct ARPMsg*)&arp_data;
         sprintf(arp_msg->ifname, "%s", arp_entry->ifname);
         arp_msg->ipv4_addr = arp_entry->ipv4_addr;
-        //arp_msg->ipv4_addr = ntohl(arp_entry->ipv4_addr);
         arp_msg->op_type = arp_entry->op_type;
+        arp_msg->flag = 0;
+        arp_msg->learn_flag = NEIGH_REMOTE;
         memcpy(arp_msg->mac_addr, arp_entry->mac_addr, ETHER_ADDR_LEN);
         if (iccp_csm_init_msg(&msg, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
         {
@@ -936,12 +901,10 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
     }
 
     return 0;
-#endif //to_build tbd_l3
 }
 
 int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
 {
-#if 0 //to_build tbd_l3
     int count = 0;
     int i;
 
@@ -954,7 +917,6 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
     {
         mlacp_fsm_update_arp_entry(csm, &(tlv->ArpEntry[i]));
     }
-#endif //to_build tbd_l3
 }
 
 /*****************************************
@@ -962,24 +924,24 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
 * ***************************************/
 int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
 {
-#if 0 //to_build tbd_l3
     struct Msg *msg = NULL;
     struct NDISCMsg *ndisc_msg = NULL, ndisc_data;
     struct LocalInterface *local_if;
-    struct LocalInterface *sag_if = NULL;
     struct LocalInterface *vlan_if = NULL;
     struct LocalInterface *peer_link_if = NULL;
+    struct LocalInterface *local_vlan_if = NULL;
     struct VLAN_ID *vlan_id_list = NULL;
     int set_ndisc_flag = 0;
     char mac_str[18] = "";
     int my_ip_nd_flag = 0;
     int vlan_count = 0;
-    uint16_t sag_vid = 0;
-    int err = 0;
-    char sagIfname[MAX_L_PORT_NAME];
+    int err = 0, ln = 0;
     int permanent_neigh = 0;
-    int is_sag_ll = 0;
+    int is_ack_ll = 0;
     int is_link_local = 0;
+    uint16_t vlan_id = 0;
+    struct VLAN_ID vlan_key = { 0 };
+    int vid_intf_present = 0;
 
     if (!csm || !ndisc_entry)
         return MCLAG_ERROR;
@@ -991,18 +953,8 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
            "Received ND Info, intf[%s] Flag %x, IP[%s], MAC[%s]",
            ndisc_entry->ifname, ndisc_entry->flag, show_ipv6_str((char *)ndisc_entry->ipv6_addr), mac_str);
 
-    if (csm->peer_reboot_disconn_time != 0)
-    {
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Ignore Peer ND Delete Event: peer reboot in process." );
-        return MCLAG_ERROR;
-    }
-
-    if ((strncmp(ndisc_entry->ifname, SAG_PREFIX, strlen(SAG_PREFIX)) == 0))
-    {
-        sscanf (ndisc_entry->ifname, "sag%d.256", &sag_vid);
-        if (sag_vid != 0) {
-            sag_if = local_if_find_by_name(ndisc_entry->ifname);
-        }
+    if (strncmp(ndisc_entry->ifname, VLAN_PREFIX, strlen(VLAN_PREFIX)) == 0) {
+        sscanf (ndisc_entry->ifname, "Vlan%hu", &vlan_id);
     }
 
     if ((memcmp(show_ipv6_str((char *)ndisc_entry->ipv6_addr), "FE80", 4) == 0)
@@ -1011,87 +963,54 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
         is_link_local = 1;
     }
 
-    if ((strncmp(ndisc_entry->ifname, "Vlan", 4) == 0) || (sag_vid != 0))
+    if (vlan_id)
     {
+        memset(&vlan_key, 0, sizeof(struct VLAN_ID));
+        vlan_key.vid = vlan_id;
+
         peer_link_if = local_if_find_by_name(csm->peer_itf_name);
 
         if (peer_link_if && !local_if_is_l3_mode(peer_link_if))
         {
+            ln = __LINE__;
             /* Is peer-linlk itf belong to a vlan the same as peer? */
-            RB_FOREACH(vlan_id_list, vlan_rb_tree, &(peer_link_if->vlan_tree))
+            vlan_id_list = RB_FIND(vlan_rb_tree, &(peer_link_if->vlan_tree), &vlan_key);
+
+            if (vlan_id_list)
             {
                 vlan_count++;
-                if (!vlan_id_list->vlan_itf)
-                    continue;
+                if (vlan_id_list->vlan_itf) {
+                    if (strcmp(vlan_id_list->vlan_itf->name, ndisc_entry->ifname) == 0) {
+                        ln = __LINE__;
+                        vid_intf_present = 1;
+                    }
 
-                if (strcmp(vlan_id_list->vlan_itf->name, ndisc_entry->ifname) != 0) {
-
-                    if (sag_vid != 0) {
-                        if (vlan_id_list->vid != sag_vid)
+                    if (vid_intf_present && local_if_is_l3_mode(vlan_id_list->vlan_itf)) {
+                        if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)vlan_id_list->vlan_itf->ipv6_addr, 16) == 0)
                         {
-                            continue;
-                        }
-
-                        if (!sag_if) {
-                            continue;
-                        }
-                    } else {
-                        continue;
-                    }
-                }
-
-                if (!local_if_is_l3_mode(vlan_id_list->vlan_itf)) {
-
-                    if (sag_vid != 0) {
-                        if (!sag_if || !local_if_is_l3_mode(sag_if)) {
-                            continue;
-                        }
-                        if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)sag_if->ipv6_addr, 16) == 0) {
                             my_ip_nd_flag = 1;
                         }
-                    } else {
-                        continue;
-                    }
-                }
 
-                if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)vlan_id_list->vlan_itf->ipv6_addr, 16) == 0)
-                {
-                    my_ip_nd_flag = 1;
-                }
-
-                if ((my_ip_nd_flag == 0) && is_link_local)
-                {
-                    if ((sag_vid == 0) &&
-                            (memcmp((char *)ndisc_entry->ipv6_addr, (char *)vlan_id_list->vlan_itf->ipv6_ll_addr, 16) == 0))
-                    {
-                        my_ip_nd_flag = 1;
-                    }
-#if 0
-                    if ((my_ip_nd_flag == 0) && (iccp_check_if_addr_from_netlink(AF_INET6, &(ndisc_entry->ipv6_addr), vlan_id_list->vlan_itf)))
-                    {
-                        my_ip_nd_flag = 1;
-                    }
-#endif
-                }
-
-                if ((sag_vid == 0) && (my_ip_nd_flag == 0)) {
-                    snprintf(sagIfname, MAX_L_PORT_NAME, "sag%d.256", vlan_id_list->vid);
-                    sag_if = local_if_find_by_name(sagIfname);
-                    if (sag_if) {
-                        if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)sag_if->ipv6_addr, 16) == 0){
-                            my_ip_nd_flag = 1;
+                        if ((my_ip_nd_flag == 0) && is_link_local)
+                        {
+                            if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)vlan_id_list->vlan_itf->ipv6_ll_addr, 16) == 0)
+                            {
+                                my_ip_nd_flag = 1;
+                            }
                         }
                     }
+
+                    ICCPD_LOG_DEBUG(__FUNCTION__,
+                            "ND is learnt from intf %s, peer-link %s is the member of this vlan",
+                            vlan_id_list->vlan_itf->name, peer_link_if->name);
+
+                    /* Peer-link belong to L3 vlan is alive, set the NDISC info */
+                    set_ndisc_flag = 1;
                 }
-                ICCPD_LOG_DEBUG(__FUNCTION__,
-                                "ND is learnt from intf %s, peer-link %s is the member of this vlan",
-                                vlan_id_list->vlan_itf->name, peer_link_if->name);
-
-                /* Peer-link belong to L3 vlan is alive, set the NDISC info */
-                set_ndisc_flag = 1;
-
-                break;
             }
+
+            ICCPD_LOG_DEBUG(__FUNCTION__, "ND Received ln %d, vlan_count %d, set_ndisc_flag %d, my_ip %d",
+                    ln, vlan_count, set_ndisc_flag, my_ip_nd_flag);
 
             if (vlan_count == 0)
             {
@@ -1109,41 +1028,8 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
                         {
                             my_ip_nd_flag = 1;
                         }
-#if 0
-                        if ((my_ip_nd_flag == 0) && (iccp_check_if_addr_from_netlink(AF_INET6, &(ndisc_entry->ipv6_addr), vlan_if)))
-                        {
-                            my_ip_nd_flag = 1;
-                        }
-#endif
                     }
                     set_ndisc_flag = 1;
-                }
-            } else if (sag_vid != 0) {
-                sag_if = local_if_find_by_name(ndisc_entry->ifname);
-                if (sag_if)
-                {
-                    if ((my_ip_nd_flag == 0) && (memcmp((char *)ndisc_entry->ipv6_addr, (char *)sag_if->ipv6_addr, 16) == 0)){
-                        my_ip_nd_flag = 1;
-                    }
-
-                    if ((my_ip_nd_flag == 0) && is_link_local)
-                    {
-                        if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)sag_if->ipv6_ll_addr, 16) == 0){
-                            my_ip_nd_flag = 1;
-                        }
-#if 0
-                        if ((my_ip_nd_flag == 0) && (iccp_check_if_addr_from_netlink(AF_INET6, &(ndisc_entry->ipv6_addr), sag_if)))
-                        {
-                            my_ip_nd_flag = 1;
-                        }
-#endif
-                    }
-
-                    set_ndisc_flag = 1;
-                } else {
-                    ICCPD_LOG_DEBUG(__FUNCTION__,"ignoring ND sync for ipv6 %s, no SAG intf %s ",
-                            show_ipv6_str((char *)ndisc_entry->ipv6_addr), ndisc_entry->ifname);
-                    return 0;
                 }
             }
         }
@@ -1163,21 +1049,24 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
             {
                 if (!local_if_is_l3_mode(local_if))
                 {
+                    ln = __LINE__;
                     /* Is the L2 MLAG itf belong to a vlan the same as peer? */
-                    RB_FOREACH(vlan_id_list, vlan_rb_tree, &(local_if->vlan_tree))
-                    {
-                        if (!vlan_id_list->vlan_itf)
-                            continue;
-                        if (strcmp(vlan_id_list->vlan_itf->name, ndisc_entry->ifname) != 0)
-                            continue;
-                        if (!local_if_is_l3_mode(vlan_id_list->vlan_itf))
-                            continue;
+                    if (vlan_id) {
+                        vlan_id_list = RB_FIND(vlan_rb_tree, &(local_if->vlan_tree), &vlan_key);
+                        if (vlan_id_list && vlan_id_list->vlan_itf) {
 
-                        ICCPD_LOG_DEBUG(__FUNCTION__,
-                                        "ND is learnt from intf %s, %s is the member of this vlan", vlan_id_list->vlan_itf->name, local_if->name);
-                        break;
+                            if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)vlan_id_list->vlan_itf->ipv6_addr, 16) == 0)
+                            {
+                                my_ip_nd_flag = 1;
+                            }
+
+                            ICCPD_LOG_DEBUG(__FUNCTION__, "ND is learnt from intf %s, %s is the member of this vlan, my_ip %d",
+                                    vlan_id_list->vlan_itf->name, local_if->name, my_ip_nd_flag);
+                        }
                     }
 
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "ND received PO %s, active %d, ln %d",
+                            local_if->name, local_if->po_active, ln);
                     if (vlan_id_list && local_if->po_active == 1)
                     {
                         /* Any po of L3 vlan is alive, set the NDISC info */
@@ -1190,7 +1079,8 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
                     /* Is the ARP belong to a L3 mode MLAG itf? */
                     if (strcmp(local_if->name, ndisc_entry->ifname) == 0)
                     {
-                        ICCPD_LOG_DEBUG(__FUNCTION__, "ND is learnt from mclag L3 intf %s", local_if->name);
+                        ICCPD_LOG_DEBUG(__FUNCTION__, "ND is learnt from mclag L3 intf %s, active %d",
+                                local_if->name, local_if->po_active);
                         if (local_if->po_active == 1)
                         {
                             /* po is alive, set the NDISC info */
@@ -1200,6 +1090,7 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
                     }
                     else
                     {
+                        ln = __LINE__;
                         continue;
                     }
                 }
@@ -1207,13 +1098,18 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
         }
     }
 
+    if(my_ip_nd_flag)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__," ignoring ND sync for self ipv6 %s ", show_ipv6_str((char *)ndisc_entry->ipv6_addr));
+        return 0;
+    }
     /* set dynamic Ndisc */
     if (set_ndisc_flag == 1)
     {
         if (ndisc_entry->flag & NEIGH_SYNC_FLAG_SELF_LL)
         {
             permanent_neigh = 1;
-            is_sag_ll = 1;
+            is_ack_ll = 1;
         }
 
         if (ndisc_entry->flag & NEIGH_SYNC_FLAG_SELF_IP)
@@ -1236,7 +1132,7 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
            if (ndisc_entry->flag & NEIGH_SYNC_FLAG_ACK)
            {
                ICCPD_LOG_DEBUG(__FUNCTION__,"Sync ND on ACK ");
-               syn_ack_local_neigh_mac_info_to_peer(ndisc_entry->ifname, is_sag_ll);
+               syn_ack_local_neigh_mac_info_to_peer(ndisc_entry->ifname, is_ack_ll);
            }
         }
         else
@@ -1256,8 +1152,15 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
     }
     else
     {
-        ICCPD_LOG_NOTICE(__FUNCTION__, "Failure: port-channel is not alive");
+        ICCPD_LOG_NOTICE(__FUNCTION__, "Failure: port-channel is not alive, ln %d", ln);
         /* TODO Set static route through peer-link or just skip it? */
+        local_vlan_if = local_if_find_by_name(ndisc_entry->ifname);
+        if (local_vlan_if) {
+            if (memcmp((char *)ndisc_entry->ipv6_addr, (char *)local_vlan_if->ipv6_addr, 16) == 0) {
+                ICCPD_LOG_DEBUG(__FUNCTION__, "ignore my ip %s", show_ipv6_str((char *)ndisc_entry->ipv6_addr));
+                return 0;
+            }
+        }
     }
 
     /* update NDISC list */
@@ -1287,6 +1190,8 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
         sprintf(ndisc_msg->ifname, "%s", ndisc_entry->ifname);
         memcpy((char *)ndisc_msg->ipv6_addr, (char *)ndisc_entry->ipv6_addr, 16);
         ndisc_msg->op_type = ndisc_entry->op_type;
+        ndisc_msg->flag = 0;
+        ndisc_msg->learn_flag = NEIGH_REMOTE;
         memcpy(ndisc_msg->mac_addr, ndisc_entry->mac_addr, ETHER_ADDR_LEN);
         if (iccp_csm_init_msg(&msg, (char *)ndisc_msg, sizeof(struct NDISCMsg)) == 0)
         {
@@ -1318,12 +1223,10 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
     }
 
     return 0;
-#endif //to_build tbd_l3
 }
 
 int mlacp_fsm_update_ndisc_info(struct CSM *csm, struct mLACPNDISCInfoTLV *tlv)
 {
-#if 0 //to_build tbd_l3
     int count = 0;
     int i;
 
@@ -1336,9 +1239,7 @@ int mlacp_fsm_update_ndisc_info(struct CSM *csm, struct mLACPNDISCInfoTLV *tlv)
     {
         mlacp_fsm_update_ndisc_entry(csm, &(tlv->NdiscEntry[i]));
     }
-#endif //to_build tbd_l3
 }
-
 
 /*****************************************
 * Port-Channel-Info Update

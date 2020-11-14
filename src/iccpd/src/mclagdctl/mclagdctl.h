@@ -72,6 +72,7 @@ enum mclagdctl_notify_peer_type
     INFO_TYPE_DUMP_ARP,
     INFO_TYPE_DUMP_NDISC,
     INFO_TYPE_DUMP_MAC,
+    INFO_TYPE_DUMP_UNIQUE_IP,
     INFO_TYPE_DUMP_LOCAL_PORTLIST,
     INFO_TYPE_DUMP_PEER_PORTLIST,
     INFO_TYPE_DUMP_DBG_COUNTERS,
@@ -143,12 +144,16 @@ struct mclagd_state
     char loglevel[MCLAGDCTL_PARA1_LEN];
 };
 
+#define NEIGH_LOCAL   1
+#define NEIGH_REMOTE  2
+
 struct mclagd_arp_msg
 {
     char op_type;
     char ifname[MCLAGDCTL_MAX_L_PORT_NANE];
     char ipv4_addr[MCLAGDCTL_INET_ADDR_LEN];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
+    uint8_t learn_flag;
 };
 
 struct mclagd_ndisc_msg
@@ -157,6 +162,7 @@ struct mclagd_ndisc_msg
     char ifname[MCLAGDCTL_MAX_L_PORT_NANE];
     char ipv6_addr[MCLAGDCTL_INET6_ADDR_LEN];
     unsigned char mac_addr[MCLAGDCTL_ETHER_ADDR_LEN];
+    uint8_t learn_flag;
 };
 
 struct mclagd_mac_msg
@@ -213,6 +219,12 @@ typedef struct mclagd_dbg_counter_info
     /* Variable length counter buffers containing N mlacp_dbg_counter_info_t
      */
 }mclagd_dbg_counter_info_t;
+
+struct mclagd_unique_ip_if
+{
+    int active;
+    char name[MCLAGDCTL_MAX_L_PORT_NANE];
+};
 
 extern int mclagdctl_enca_dump_state(char *msg, int mclag_id,  int argc, char **argv);
 extern int mclagdctl_parse_dump_state(char *msg, int data_len);

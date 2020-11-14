@@ -63,5 +63,7 @@ int iccp_netlink_neighbor_request(int family, uint8_t *addr, int add, uint8_t *m
 int iccp_check_if_addr_from_netlink(int family, uint8_t *addr, struct LocalInterface *lif);
 
 void recover_if_ipmac_on_standby(struct LocalInterface* lif_po, int dir);
-
+void update_vlan_if_mac_on_standby(struct LocalInterface* lif_vlan, int dir);
+void recover_vlan_if_mac_on_standby(struct LocalInterface* lif_vlan, int dir, uint8_t *remote_system_mac);
+void update_vlan_if_mac_on_iccp_up(struct LocalInterface* lif_peer, int is_up, uint8_t *remote_system_mac);
 #endif

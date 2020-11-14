@@ -132,6 +132,7 @@ int set_peer_link(int mid, const char* ifname)
         if (lif->type == IF_T_PORT_CHANNEL)
             iccp_get_port_member_list(lif);
 
+        set_peerlink_learn_kernel(csm, 0, 4);
     }
 
     /*disconnect the link for mac and arp sync up*/
@@ -151,8 +152,10 @@ int unset_peer_link(int mid)
     if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
     {
         /*must be enabled mac learn*/
-        if (csm->peer_link_if)
+        if (csm->peer_link_if) {
             set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
+            set_peerlink_learn_kernel(csm, 1, 5);
+        }
     }
 
     /* update peer-link link handler*/

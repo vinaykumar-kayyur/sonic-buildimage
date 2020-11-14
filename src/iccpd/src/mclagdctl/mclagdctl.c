@@ -42,7 +42,9 @@ char *mclagdctl_sock_path = "/var/run/iccpd/mclagdctl.sock";
    Already implemented command:
    mclagdctl -i dump state
    mclagdctl -i dump arp
+   mclagdctl -i dump nd
    mclagdctl -i dump mac
+   mclagdctl -i dump unique_ip
    mclagdctl -i dump portlist local
    mclagdctl -i dump portlist peer
  */
@@ -98,6 +100,14 @@ static struct command_type command_types[] =
         .name = "mac",
         .enca_msg = mclagdctl_enca_dump_mac,
         .parse_msg = mclagdctl_parse_dump_mac,
+    },
+    {
+        .id = ID_CMDTYPE_D_A,
+        .parent_id = ID_CMDTYPE_D,
+        .info_type = INFO_TYPE_DUMP_UNIQUE_IP,
+        .name = "unique_ip",
+        .enca_msg = mclagdctl_enca_dump_unique_ip,
+        .parse_msg = mclagdctl_parse_dump_unique_ip,
     },
     {
         .id = ID_CMDTYPE_D_P,
@@ -370,6 +380,7 @@ int mclagdctl_parse_dump_arp(char *msg, int data_len)
     fprintf(stdout, "%-20s", "IP");
     fprintf(stdout, "%-20s", "MAC");
     fprintf(stdout, "%-20s", "DEV");
+    fprintf(stdout, "%s", "Flag");
     fprintf(stdout, "\n");
 
     len = sizeof(struct mclagd_arp_msg);
@@ -386,6 +397,13 @@ int mclagdctl_parse_dump_arp(char *msg, int data_len)
                 arp_info->mac_addr[4], arp_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", arp_info->ifname);
+        if (arp_info->learn_flag == NEIGH_REMOTE) {
+            fprintf(stdout, "%s", "R");
+        } else if (arp_info->learn_flag == NEIGH_LOCAL) {
+            fprintf(stdout, "%s", "L");
+        } else {
+            fprintf(stdout, "%s", "-");
+        }
         fprintf(stdout, "\n");
     }
 
@@ -402,6 +420,7 @@ int mclagdctl_parse_dump_ndisc(char *msg, int data_len)
     fprintf(stdout, "%-52s", "IPv6");
     fprintf(stdout, "%-20s", "MAC");
     fprintf(stdout, "%-20s", "DEV");
+    fprintf(stdout, "%s", "Flag");
     fprintf(stdout, "\n");
 
     len = sizeof(struct mclagd_ndisc_msg);
@@ -417,6 +436,13 @@ int mclagdctl_parse_dump_ndisc(char *msg, int data_len)
                 ndisc_info->mac_addr[2], ndisc_info->mac_addr[3], ndisc_info->mac_addr[4], ndisc_info->mac_addr[5]);
         fprintf(stdout, "   ");
         fprintf(stdout, "%-20s", ndisc_info->ifname);
+        if (ndisc_info->learn_flag == NEIGH_REMOTE) {
+            fprintf(stdout, "%s", "R");
+        } else if (ndisc_info->learn_flag == NEIGH_LOCAL) {
+            fprintf(stdout, "%s", "L");
+        } else {
+            fprintf(stdout, "%s", "-");
+        }
         fprintf(stdout, "\n");
     }
 
@@ -628,6 +654,63 @@ int mclagdctl_parse_dump_peer_portlist(char *msg, int data_len)
     return 0;
 }
 
+int mclagdctl_enca_dump_unique_ip(char *msg, int mclag_id, int argc, char **argv)
+{
+    struct mclagdctl_req_hdr req;
+
+    if (mclag_id <= 0)
+    {
+        fprintf(stderr, "Need to specify mclag-id through the parameter i !\n");
+        return MCLAG_ERROR;
+    }
+
+    memset(&req, 0, sizeof(struct mclagdctl_req_hdr));
+    req.info_type = INFO_TYPE_DUMP_UNIQUE_IP;
+    req.mclag_id = mclag_id;
+    memcpy((struct mclagdctl_req_hdr *)msg, &req, sizeof(struct mclagdctl_req_hdr));
+
+    return 1;
+}
+
+int mclagdctl_parse_dump_unique_ip(char *msg, int data_len)
+{
+    struct mclagd_unique_ip_if *ip_if_info = NULL;
+    int len = 0;
+    int count = 0;
+    int pos = 0;
+
+    for (pos = 0; pos < 60; ++pos)
+        fprintf(stdout, "-");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "%-20s", "Ifname");
+    fprintf(stdout, "%-5s", "Active");
+    fprintf(stdout, "\n");
+
+    for (pos = 0; pos < 60; ++pos)
+        fprintf(stdout, "-");
+    fprintf(stdout, "\n");
+
+    len = sizeof(struct mclagd_unique_ip_if);
+
+    for (; data_len >= len; data_len -= len, count++)
+    {
+        ip_if_info = (struct mclagd_unique_ip_if*)(msg + len * count);
+
+        fprintf(stdout, "%-20s  %-5s\n", ip_if_info->name, ip_if_info->active?"Yes":"No");
+    }
+
+    if (count == 0)
+    {
+        fprintf(stdout, "%s\n", "Unique IP configuration not enabled on any interface");
+    }
+
+    for (pos = 0; pos < 60; ++pos)
+        fprintf(stdout, "-");
+
+    fprintf(stdout, "\n\n");
+    return 0;
+}
+
 /* mclag_id parameter is optional */
 int mclagdctl_enca_dump_dbg_counters(char *msg, int mclag_id, int argc, char **argv)
 {
@@ -734,6 +817,10 @@ static char *mclagdctl_dbg_counter_syncdrx2str(SYNCD_RX_DBG_CNTR_MSG_e syncdrx_i
             return "CfgMclag";
         case SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_IFACE:
             return "CfgMclagIface";
+        case SYNCD_RX_DBG_CNTR_MSG_CFG_MCLAG_UNIQUE_IP:
+            return "CfgMclagUniqueIp";
+        case SYNCD_RX_DBG_CNTR_MSG_VLAN_MBR_UPDATES:
+            return "vlanMbrshipChange";
         default:
             return "Unknown";
     }

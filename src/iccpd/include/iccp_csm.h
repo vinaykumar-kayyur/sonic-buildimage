@@ -113,12 +113,14 @@ struct CSM
     time_t peer_warm_reboot_time;
     time_t warm_reboot_disconn_time;
     char peer_itf_name[IFNAMSIZ];
+    time_t peer_link_learning_retry_time;
     char peer_ip[INET_ADDRSTRLEN];
     char sender_ip[INET_ADDRSTRLEN];
     void* sock_read_event_ptr;
 
     int keepalive_time;
     int session_timeout;
+    int peer_link_learning_enable;
 
     /* Msg queue */
     TAILQ_HEAD(msg_list, Msg) msg_list;
@@ -167,5 +169,5 @@ void iccp_csm_correspond_from_rg_connect_msg(struct CSM*, struct Msg*);
 void iccp_csm_correspond_from_rg_disconnect_msg(struct CSM*, struct Msg*);
 
 int mlacp_bind_port_channel_to_csm(struct CSM* csm, const char *ifname);
-
+int iccp_csm_init_mac_msg(struct MACMsg **mac_msg, char* data, int len);
 #endif /* ICCP_CSM_H_ */

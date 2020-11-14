@@ -144,6 +144,8 @@ void iccp_csm_status_reset(struct CSM* csm, int all)
     csm->heartbeat_update_time = 0;
     csm->peer_warm_reboot_time = 0;
     csm->warm_reboot_disconn_time = 0;
+    csm->peer_link_learning_retry_time = 0;
+    csm->peer_link_learning_enable = 0;
     csm->role_type = STP_ROLE_NONE;
     csm->sock_read_event_ptr = NULL;
     csm->peer_link_if = NULL;
@@ -184,6 +186,7 @@ void iccp_csm_finalize(struct CSM* csm)
         /*Enable peer link port MAC learning*/
         if (csm->peer_link_if) {
             set_peerlink_mlag_port_learn(csm->peer_link_if, 1);
+            set_peerlink_learn_kernel(csm, 1, 1);
         }
     }
 
@@ -861,6 +864,8 @@ void iccp_csm_stp_role_count(struct CSM *csm)
             csm->role_type = STP_ROLE_STANDBY;
             /* Send ICCP role update */
             mlacp_link_set_iccp_role(csm->mlag_id, false, NULL);
+            /*Set Bridge MAC to MY MAC*/
+            mlacp_fix_bridge_mac(csm);
         }
     }
 }

@@ -43,8 +43,10 @@
 #include "../include/iccp_cli.h"
 #include "../include/iccp_cmd.h"
 #include "../include/mlacp_link_handler.h"
+#include "../include/mlacp_sync_prepare.h"
 #include "../include/iccp_netlink.h"
 #include "../include/scheduler.h"
+#include "../include/iccp_ifm.h"
 
 /*****************************************
 * Enum
@@ -1498,6 +1500,7 @@ void syn_arp_info_to_peer(struct CSM *csm, struct LocalInterface *local_if)
 
             arp_msg = (struct ARPMsg*)msg->buf;
             arp_msg->op_type = NEIGH_SYNC_ADD;
+            arp_msg->flag = 0;
 
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, sizeof(struct ARPMsg)) == 0)
             {
@@ -1534,6 +1537,7 @@ void syn_ndisc_info_to_peer(struct CSM *csm, struct LocalInterface *local_if)
 
             ndisc_msg = (struct NDISCMsg *)msg->buf;
             ndisc_msg->op_type = NEIGH_SYNC_ADD;
+            ndisc_msg->flag = 0;
 
             if (iccp_csm_init_msg(&msg_send, (char *)ndisc_msg, sizeof(struct NDISCMsg)) == 0)
             {
@@ -2195,7 +2199,7 @@ static void mlacp_conn_handler_fdb(struct CSM* csm)
     return;
 }
 
-static void mlacp_fix_bridge_mac(struct CSM* csm)
+void mlacp_fix_bridge_mac(struct CSM* csm)
 {
     char syscmd[128];
     int ret = 0;
@@ -2250,6 +2254,7 @@ void mlacp_peer_conn_handler(struct CSM* csm)
     if (csm->peer_link_if)
     {
         set_peerlink_mlag_port_learn(csm->peer_link_if, 0);
+        set_peerlink_learn_kernel(csm, 0, 7);
     }
 
     ICCPD_LOG_NOTICE("ICCP_FSM", "ICCP session up: warm reboot %s, role %s",
@@ -2299,9 +2304,10 @@ void mlacp_peer_conn_handler(struct CSM* csm)
 
     if (csm->peer_link_if)
     {
-        update_vlan_if_mac_on_iccp_up(csm->peer_link_if, 1);
+        update_vlan_if_mac_on_iccp_up(csm->peer_link_if, 1, NULL);
     }
 
+    sync_unique_ip();
     return;
 }
 
@@ -2372,6 +2378,7 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
     struct Msg* msg = NULL;
     struct MACMsg* mac_msg = NULL, *mac_temp = NULL;
     struct System* sys = NULL;
+    uint8_t remote_system_mac[ETHER_ADDR_LEN];
 
     if (!csm)
         return;
@@ -2415,6 +2422,8 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
     /* Clean all port block*/
     peerlink_port_isolate_cleanup(csm);
 
+    memset(remote_system_mac, 0, ETHER_ADDR_LEN);
+    memcpy(remote_system_mac, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN);
     memcpy(MLACP(csm).remote_system.system_id, null_mac, ETHER_ADDR_LEN);
 
     /*If peer is disconnected, recover the MAC address.*/
@@ -2433,7 +2442,7 @@ void mlacp_peer_disconn_handler(struct CSM* csm)
 
     if (csm->peer_link_if)
     {
-        update_vlan_if_mac_on_iccp_up(csm->peer_link_if, 0);
+        update_vlan_if_mac_on_iccp_up(csm->peer_link_if, 0, remote_system_mac);
     }
 
     ICCPD_LOG_DEBUG(__FUNCTION__, "Peer disconnect %u times",
@@ -2484,7 +2493,7 @@ void mlacp_peerlink_up_handler(struct CSM* csm)
 
 void mlacp_peerlink_down_handler(struct CSM* csm)
 {
-    struct Msg* msg = NULL, *mac_temp = NULL;
+    struct MACMsg* mac_temp = NULL;
     struct MACMsg* mac_msg = NULL;
 
     if (!csm)
@@ -3197,6 +3206,149 @@ int iccp_mclagsyncd_mclag_iface_cfg_handler(struct System *sys, char *msg_buf)
     return 0;
 }
 
+int iccp_mclagsyncd_mclag_unique_ip_cfg_handler(struct System *sys, char *msg_buf)
+{
+    struct IccpSyncdHDr *msg_hdr;
+    struct mclag_unique_ip_cfg_info *cfg_info;
+    struct LocalInterface *lif = NULL;
+    int count = 0, i = 0;
+    int sync_add = 0, is_v4 = 0, is_v6 = 0;
+    struct Unq_ip_If_info* unq_ip_if = NULL;
+
+    msg_hdr = (struct IccpSyncdHDr *)msg_buf;
+
+    count = (msg_hdr->len- sizeof(struct IccpSyncdHDr))/sizeof(struct mclag_unique_ip_cfg_info);
+    ICCPD_LOG_DEBUG(__FUNCTION__, "recv domain cfg msg, count %d ",count);
+
+    for (i =0; i<count; i++)
+    {
+        cfg_info = (struct mclag_unique_ip_cfg_info*)((char *)(msg_buf) + sizeof(struct IccpSyncdHDr) + i * sizeof(struct mclag_unique_ip_cfg_info));
+        ICCPD_LOG_NOTICE(__FUNCTION__, "recv mclag unique ip cfg msg, op_type:%d ifname:%s ",
+                cfg_info->op_type, cfg_info->mclag_unique_ip_ifname);
+
+        if (cfg_info->op_type == MCLAG_CFG_OPER_ADD)
+        {
+            LIST_FOREACH(unq_ip_if, &(sys->unq_ip_if_list), if_next)
+            {
+                if (strcmp(unq_ip_if->name, cfg_info->mclag_unique_ip_ifname) == 0)
+                {
+                    break;
+                }
+            }
+
+            if (!unq_ip_if) 
+            {
+                unq_ip_if = (struct Unq_ip_If_info *)malloc(sizeof(struct Unq_ip_If_info));
+                if (!unq_ip_if)
+                    return -1;
+
+                snprintf(unq_ip_if->name, MAX_L_PORT_NAME, "%s", cfg_info->mclag_unique_ip_ifname);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "Add mclag_unique_ip_ifname %s", unq_ip_if->name);
+                LIST_INSERT_HEAD(&(sys->unq_ip_if_list), unq_ip_if, if_next);
+            }
+
+        }
+        else if (cfg_info->op_type == MCLAG_CFG_OPER_DEL)
+        {
+            LIST_FOREACH(unq_ip_if, &(sys->unq_ip_if_list), if_next)
+            {
+                if (strcmp(unq_ip_if->name, cfg_info->mclag_unique_ip_ifname) == 0)
+                {
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "Del mclag_unique_ip_ifname %s", unq_ip_if->name);
+                    LIST_REMOVE(unq_ip_if, if_next);
+                    free(unq_ip_if);
+                    break;
+                }
+            }
+        }
+
+        lif = local_if_find_by_name(cfg_info->mclag_unique_ip_ifname);
+        if (lif)
+        {
+            if (cfg_info->op_type == MCLAG_CFG_OPER_ADD)
+            {
+                lif->is_l3_proto_enabled = true;
+                sync_add = 1;
+                if (lif->ipv4_addr)
+                {
+                    is_v4 = 1;
+                }
+
+                if (lif->prefixlen_v6)
+                {
+                    is_v6 = 1;
+                }
+            }
+            else if (cfg_info->op_type == MCLAG_CFG_OPER_DEL)
+            {
+                lif->is_l3_proto_enabled = false;
+                sync_add = 0;
+                if (lif->ipv4_addr)
+                {
+                    is_v4 = 1;
+                }
+
+                if (lif->prefixlen_v6)
+                {
+                    is_v6 = 1;
+                }
+            }
+
+            ICCPD_LOG_DEBUG(__FUNCTION__,"add %d, v4 %d, v6 %d, l3_mode %d, is_l3 %d",
+                    sync_add, is_v4, is_v6, lif->l3_mode, local_if_is_l3_mode(lif));
+
+            if (local_if_is_l3_mode(lif))
+            {
+                if (sync_add) {
+                    update_vlan_if_mac_on_standby(lif, 6);
+                }
+
+                syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, 1, 1, 0, 1);
+            } else {
+                if (!sync_add) {
+                    recover_vlan_if_mac_on_standby(lif, 6, NULL);
+                    syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, 1, 1, 0, 1);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int iccp_mclagsyncd_vlan_mbr_update_handler(struct System *sys, char *msg_buf)
+{
+    struct IccpSyncdHDr * msg_hdr;
+    struct mclag_vlan_mbr_info* vlan_mbr_info;
+    int count, i = 0;
+    int add_count = 0;
+    int del_count = 0;
+
+    msg_hdr = (struct IccpSyncdHDr *)msg_buf;
+
+    count = (msg_hdr->len- sizeof(struct IccpSyncdHDr))/sizeof(struct mclag_vlan_mbr_info);
+
+    for (i =0; i<count; i++)
+    {
+        vlan_mbr_info = (struct mclag_vlan_mbr_info*)((char *)(msg_buf) + sizeof(struct IccpSyncdHDr) + i * sizeof(struct mclag_vlan_mbr_info));
+        ICCPD_LOG_DEBUG(__FUNCTION__, "recv mclag vlan member updates op_type:%d vlan_id:%d mbr_if:%s ",
+                vlan_mbr_info->op_type, vlan_mbr_info->vid, vlan_mbr_info->mclag_iface);
+
+        if (vlan_mbr_info->op_type == MCLAG_CFG_OPER_ADD)
+        {
+            vlan_mbrship_change_handler(vlan_mbr_info->vid, vlan_mbr_info->mclag_iface, 1 /*add */);
+            add_count++;
+        }
+        else if (vlan_mbr_info->op_type == MCLAG_CFG_OPER_DEL)
+        {
+            vlan_mbrship_change_handler(vlan_mbr_info->vid, vlan_mbr_info->mclag_iface, 0 /* del */);
+            del_count++;
+        }
+    }
+    ICCPD_LOG_NOTICE(__FUNCTION__, "Rx vlan member update count %d add/delete count: %d/%d", count, add_count, del_count);
+
+    return 0;
+}
+
 int iccp_receive_fdb_handler_from_syncd(struct System *sys, char *msg_buf)
 {
     int count = 0;
@@ -3432,7 +3584,15 @@ int iccp_mclagsyncd_msg_handler(struct System *sys)
         {
             iccp_mclagsyncd_mclag_iface_cfg_handler(sys, &msg_buf[pos]);
         }
-        else
+        else if (msg_hdr->type == MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_UNIQUE_IP)
+        {
+            iccp_mclagsyncd_mclag_unique_ip_cfg_handler(sys, &msg_buf[pos]);
+        }
+        else if (msg_hdr->type == MCLAG_SYNCD_MSG_TYPE_VLAN_MBR_UPDATES)
+        {
+            iccp_mclagsyncd_vlan_mbr_update_handler(sys, &msg_buf[pos]);
+        }
+        else 
         {
             ICCPD_LOG_ERR(__FUNCTION__, "recv unknown msg type %d ", msg_hdr->type);
             pos += msg_hdr->len;
@@ -3524,6 +3684,9 @@ char * mclagd_ctl_cmd_str(int req_type)
 
         case INFO_TYPE_DUMP_DBG_COUNTERS:
             return "dump debug counters";
+
+        case INFO_TYPE_DUMP_UNIQUE_IP:
+            return "dump unique_ip";
 
         case INFO_TYPE_CONFIG_LOGLEVEL:
             return "config loglevel";
@@ -3940,6 +4103,46 @@ void mclagd_ctl_handle_dump_dbg_counters(int client_fd, int mclag_id)
        free(Pbuf);
 }
 
+void mclagd_ctl_handle_dump_unique_ip(int client_fd, int mclag_id)
+{
+    char *Pbuf = NULL;
+    char buf[512] = { 0 };
+    int lif_num = 0;
+    int ret = 0;
+    struct mclagd_reply_hdr *hd = NULL;
+    int len_tmp = 0;
+
+    ret = iccp_unique_ip_if_dump(&Pbuf, &lif_num, mclag_id);
+    if (ret != EXEC_TYPE_SUCCESS)
+    {
+        len_tmp = sizeof(struct mclagd_reply_hdr);
+        memcpy(buf, &len_tmp, sizeof(int));
+        hd = (struct mclagd_reply_hdr *)(buf + sizeof(int));
+        hd->exec_result = ret;
+        hd->info_type = INFO_TYPE_DUMP_LOCAL_PORTLIST;
+        hd->data_len = 0;
+        mclagd_ctl_sock_write(client_fd, buf, MCLAGD_REPLY_INFO_HDR);
+
+        if (Pbuf)
+            free(Pbuf);
+
+        return;
+    }
+
+    hd = (struct mclagd_reply_hdr *)(Pbuf + sizeof(int));
+    hd->exec_result = EXEC_TYPE_SUCCESS;
+    hd->info_type = INFO_TYPE_DUMP_UNIQUE_IP;
+    hd->data_len = lif_num * sizeof(struct mclagd_unique_ip_if);
+    len_tmp = (hd->data_len + sizeof(struct mclagd_reply_hdr));
+    memcpy(Pbuf, &len_tmp, sizeof(int));
+    mclagd_ctl_sock_write(client_fd, Pbuf, MCLAGD_REPLY_INFO_HDR + hd->data_len);
+
+    if (Pbuf)
+        free(Pbuf);
+
+    return;
+}
+
 void mclagd_ctl_handle_config_loglevel(int client_fd, int log_level)
 {
     char buf[sizeof(struct mclagd_reply_hdr)+sizeof(int)];
@@ -4008,6 +4211,10 @@ int mclagd_ctl_interactive_process(int client_fd)
              mclagd_ctl_handle_dump_dbg_counters(client_fd, req->mclag_id);
             break;
 
+        case INFO_TYPE_DUMP_UNIQUE_IP:
+            mclagd_ctl_handle_dump_unique_ip(client_fd, req->mclag_id);
+            break;
+
         case INFO_TYPE_CONFIG_LOGLEVEL:
             mclagd_ctl_handle_config_loglevel(client_fd, req->mclag_id);
             break;
@@ -4071,4 +4278,287 @@ int syn_local_mac_info_to_peer(struct CSM* csm, struct LocalInterface *local_if,
         ICCPD_LOG_DEBUG(__FUNCTION__,"success");
     }
     return rc;
+}
+
+int syn_local_arp_info_to_peer(struct CSM* csm, struct LocalInterface *local_if, int sync_add, int ack)
+{
+    struct ARPMsg arp_msg = {0};
+    int msg_len = 0, rc = MCLAG_ERROR;
+
+    if (!csm || !local_if) {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"invalid parameters");
+        return MCLAG_ERROR;
+    }
+
+    if (sync_add) {
+        arp_msg.op_type = NEIGH_SYNC_ADD;
+        if (ack) {
+            arp_msg.flag |= NEIGH_SYNC_FLAG_ACK;
+        }
+    } else {
+        arp_msg.op_type = NEIGH_SYNC_DEL;
+    }
+
+    arp_msg.ipv4_addr = local_if->ipv4_addr;
+    arp_msg.flag |= NEIGH_SYNC_FLAG_SELF_IP;
+    memcpy(arp_msg.ifname, local_if->name, MAX_L_PORT_NAME);
+    memcpy(arp_msg.mac_addr, local_if->mac_addr, ETHER_ADDR_LEN);
+
+    ICCPD_LOG_DEBUG(__FUNCTION__," add %d ack %d ifname %s, ip %s", sync_add, ack, arp_msg.ifname, show_ip_str(arp_msg.ipv4_addr));
+    ICCPD_LOG_DEBUG(__FUNCTION__," mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+        arp_msg.mac_addr[0], arp_msg.mac_addr[1], arp_msg.mac_addr[2], arp_msg.mac_addr[3], arp_msg.mac_addr[4], arp_msg.mac_addr[5]);
+
+    memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+    msg_len = mlacp_prepare_for_arp_info(csm, g_csm_buf, CSM_BUFFER_SIZE, &arp_msg, 0, NEIGH_SYNC_SELF_IP);
+    if (msg_len > 0)
+        rc = iccp_csm_send(csm, g_csm_buf, msg_len);
+
+    if (rc <= 0)
+    {
+        ICCPD_LOG_NOTICE(__FUNCTION__, "failed rc %d, msg_len %d", rc, msg_len);
+    }
+    else
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"success");
+    }
+
+    return rc;
+}
+
+int syn_local_nd_info_to_peer(struct CSM* csm, struct LocalInterface *local_if, int sync_add, int ack, int is_ipv6_ll, int dir)
+{
+    struct NDISCMsg nd_msg = {0};
+    int msg_len = 0, rc = MCLAG_ERROR;
+    uint8_t null_mac[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+    if (!csm || !local_if) {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"invalid parameters");
+        return MCLAG_ERROR;
+    }
+
+    if (sync_add) {
+        nd_msg.op_type = NEIGH_SYNC_ADD;
+        if (ack) {
+            nd_msg.flag |= NEIGH_SYNC_FLAG_ACK;
+        }
+    } else {
+        nd_msg.op_type = NEIGH_SYNC_DEL;
+    }
+
+    if (is_ipv6_ll) {
+        if (local_if->ll_prefixlen_v6 == 0) {
+            ICCPD_LOG_NOTICE(__FUNCTION__, " Link Local Address not configured.");
+            return MCLAG_ERROR;
+        }
+        nd_msg.flag |= NEIGH_SYNC_FLAG_SELF_LL;
+        memcpy(nd_msg.ipv6_addr, local_if->ipv6_ll_addr, 16);
+        if (memcmp(MLACP(csm).system_id, null_mac, ETHER_ADDR_LEN) == 0){
+            ICCPD_LOG_NOTICE(__FUNCTION__, " system_id not initialised.");
+            return MCLAG_ERROR;
+        }
+        memcpy(nd_msg.mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN);
+    } else {
+        nd_msg.flag |= NEIGH_SYNC_FLAG_SELF_IP;
+        memcpy(nd_msg.ipv6_addr, local_if->ipv6_addr, 16);
+        memcpy(nd_msg.mac_addr, local_if->mac_addr, ETHER_ADDR_LEN);
+    }
+    memcpy(nd_msg.ifname, local_if->name, MAX_L_PORT_NAME);
+
+    ICCPD_LOG_DEBUG(__FUNCTION__,"add %d, ack %d, flag %x, is_ll %d, dir %d, ifname %s, ip %s", sync_add, ack,
+            nd_msg.flag, is_ipv6_ll, dir, nd_msg.ifname, show_ipv6_str((char *)nd_msg.ipv6_addr));
+    ICCPD_LOG_DEBUG(__FUNCTION__,"mac [%02X:%02X:%02X:%02X:%02X:%02X]",
+        nd_msg.mac_addr[0], nd_msg.mac_addr[1], nd_msg.mac_addr[2], nd_msg.mac_addr[3], nd_msg.mac_addr[4], nd_msg.mac_addr[5]);
+
+    memset(g_csm_buf, 0, CSM_BUFFER_SIZE);
+    msg_len = mlacp_prepare_for_ndisc_info(csm, g_csm_buf, CSM_BUFFER_SIZE, &nd_msg, 0, NEIGH_SYNC_SELF_IP);
+    if (msg_len > 0)
+        rc = iccp_csm_send(csm, g_csm_buf, msg_len);
+
+    if (rc <= 0)
+    {
+        ICCPD_LOG_NOTICE(__FUNCTION__, "failed rc %d, msg_len %d", rc, msg_len);
+    }
+    else
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"success");
+    }
+
+    return rc;
+}
+
+int syn_local_neigh_mac_info_to_peer(struct LocalInterface *local_if,
+        int sync_add, int is_v4, int is_v6, int sync_mac, int ack, int is_ipv6_ll, int dir)
+{
+    struct System* sys = NULL;
+    struct CSM* csm = NULL;
+
+    if ((sys = system_get_instance()) == NULL) {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"system instance not present, skip sync");
+        return MCLAG_ERROR;
+    }
+
+    while (!LIST_EMPTY(&(sys->csm_list)))
+    {
+        csm = LIST_FIRST(&(sys->csm_list));
+        break;
+    }
+
+    if (!csm) {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"csm not present, skip sync");
+        return MCLAG_ERROR;
+    }
+
+    if (MLACP(csm).current_state != MLACP_STATE_EXCHANGE) {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"Session not up, skip sync");
+        return MCLAG_ERROR;
+    }
+
+    if (local_if->type != IF_T_VLAN) {
+        ICCPD_LOG_DEBUG(__FUNCTION__,"invalid if type %d", local_if->type);
+        return MCLAG_ERROR;
+    }
+
+    ICCPD_LOG_DEBUG(__FUNCTION__,"add %d, v4 %d, v6 %d, mac %d ack %d, is_ipv6_ll %d, dir %d",
+            sync_add, is_v4, is_v6, sync_mac, ack, is_ipv6_ll, dir);
+
+    if (csm->peer_link_if)
+    {
+        set_peerlink_learn_kernel(csm, 0, 9);
+    }
+    if (sync_mac) {
+        syn_local_mac_info_to_peer(csm, local_if, sync_add, is_ipv6_ll);
+    }
+
+    if (is_v4) {
+        syn_local_arp_info_to_peer(csm, local_if, sync_add, ack);
+    }
+
+    if (is_v6) {
+        syn_local_nd_info_to_peer(csm, local_if, sync_add, ack, is_ipv6_ll, 1);
+    }
+
+    return 0;
+}
+
+int syn_ack_local_neigh_mac_info_to_peer(char *ifname, int is_ipv6_ll)
+{
+    struct LocalInterface *lif = NULL;
+    int sync_add = 0, is_v4 = 0, is_v6 = 0;
+
+    if (!ifname)
+        return -1;
+
+    lif = local_if_find_by_name(ifname);
+    if (lif)
+    {
+        if (is_ipv6_ll) {
+            syn_local_neigh_mac_info_to_peer(lif, 1, 0, 1, 1, 0, 1, 2);
+            return 0;
+        }
+
+        if (lif->ipv4_addr)
+        {
+            is_v4 = 1;
+        }
+
+        if (lif->prefixlen_v6)
+        {
+            is_v6 = 1;
+        }
+        ICCPD_LOG_DEBUG(__FUNCTION__," v4 %d, v6 %d, l3_mode %d, proto %d", is_v4, is_v6, lif->l3_mode, lif->is_l3_proto_enabled);
+        if (lif->l3_mode && lif->is_l3_proto_enabled) {
+            syn_local_neigh_mac_info_to_peer(lif, 1, is_v4, is_v6, 1, 0, 0, 3);
+        }
+    }
+    return 0;
+}
+
+int is_unique_ip_configured(char *ifname)
+{
+    struct System* sys = NULL;
+    struct Unq_ip_If_info* unq_ip_if = NULL;
+
+    if (!(sys = system_get_instance()))
+        return 0;
+
+    LIST_FOREACH(unq_ip_if, &(sys->unq_ip_if_list), if_next)
+    {
+        if (strcmp(unq_ip_if->name, ifname) == 0)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int sync_unique_ip()
+{
+    struct System* sys = NULL;
+    struct Unq_ip_If_info* unq_ip_if = NULL;
+    struct LocalInterface* local_if = NULL;
+
+    if (!(sys = system_get_instance()))
+        return 0;
+
+    LIST_FOREACH(unq_ip_if, &(sys->unq_ip_if_list), if_next)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "unq_ip_if name %s", unq_ip_if->name);
+        syn_ack_local_neigh_mac_info_to_peer(unq_ip_if->name, 0);
+    }
+
+    return 0;
+}
+
+void set_peer_mac_in_kernel(char *mac, int vlan, int add)
+{
+    char cmd[256] = { 0 };
+    int ret = 0;
+
+    ICCPD_LOG_DEBUG(__FUNCTION__,"mac %s, vlan %d, add %d", mac, vlan, add);
+
+    if (add) {
+        sprintf(cmd, "bridge fdb replace %s dev Bridge vlan %d local", mac, vlan);
+    } else {
+        sprintf(cmd, "bridge fdb del %s dev Bridge vlan %d local", mac, vlan);
+    }
+
+    ret = system(cmd);
+    ICCPD_LOG_DEBUG(__FUNCTION__, " cmd  %s  ret = %d", cmd, ret);
+
+    return;
+}
+
+void set_peerlink_learn_kernel(
+    struct CSM* csm,
+    int enable, int dir)
+{
+    struct LocalInterface *lif = NULL;
+    if (!csm || !csm->peer_link_if)
+        return;
+
+    lif = csm->peer_link_if;
+
+    ICCPD_LOG_DEBUG(__FUNCTION__,"ifname %s, enable %d, dir %d", lif->name, enable, dir);
+    char cmd[256] = { 0 };
+    int ret = 0;
+    if (enable == 0) {
+        sprintf(cmd, "bridge link set dev %s learning off", lif->name);
+    } else {
+        sprintf(cmd, "bridge link set dev %s learning on", lif->name);
+    }
+
+    ret = system(cmd);
+    ICCPD_LOG_DEBUG(__FUNCTION__, " cmd  %s  ret = %d", cmd, ret);
+
+    if (ret != 0)
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, " cmd  %s  ret = %d", cmd, ret);
+        csm->peer_link_learning_enable = enable;
+        csm->peer_link_learning_retry_time = time(NULL);
+    } else {
+        csm->peer_link_learning_retry_time = 0;
+    }
+
+    return;
 }

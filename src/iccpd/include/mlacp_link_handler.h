@@ -81,5 +81,17 @@ void mlacp_mlag_intf_detach_handler(struct CSM* csm, struct LocalInterface* loca
 void mlacp_peer_mlag_intf_delete_handler(struct CSM* csm, char *mlag_if_name);
 
 int iccp_mclagsyncd_msg_handler(struct System *sys);
-
+int syn_local_neigh_mac_info_to_peer(struct LocalInterface *local_if, int sync_add,
+        int is_v4, int is_v6, int sync_mac, int ack, int is_ipv6_ll, int dir);
+int syn_local_mac_info_to_peer(struct CSM* csm, struct LocalInterface *local_if, int sync_add, int is_sag);
+int syn_local_arp_info_to_peer(struct CSM* csm, struct LocalInterface *local_if, int sync_add, int ack);
+int syn_local_nd_info_to_peer(struct CSM* csm, struct LocalInterface *local_if, int sync_add, int ack, int is_ipv6_ll, int dir);
+int syn_ack_local_neigh_mac_info_to_peer(char *ifname, int is_ipv6_ll);
+int is_unique_ip_configured(char *ifname);
+void set_peerlink_learn_kernel(struct CSM* csm, int enable, int dir);
+void set_peer_mac_in_kernel(char *mac, int vlan, int add);
+void mlacp_fix_bridge_mac(struct CSM* csm);
+void update_orphan_port_mac(struct CSM *csm, struct LocalInterface *lif, int state);
+void mlacp_convert_remote_mac_to_local(struct CSM *csm, char *po_name);
+int sync_unique_ip();
 #endif

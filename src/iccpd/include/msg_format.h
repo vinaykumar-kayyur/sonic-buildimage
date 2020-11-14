@@ -438,7 +438,9 @@ typedef enum mclag_syncd_msg_type_e_
     MCLAG_SYNCD_MSG_TYPE_NONE                   = 0,
     MCLAG_SYNCD_MSG_TYPE_FDB_OPERATION          = 1,
     MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_DOMAIN       = 2,
-    MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_IFACE        = 3
+    MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_IFACE        = 3,
+    MCLAG_SYNCD_MSG_TYPE_VLAN_MBR_UPDATES       = 4,
+    MCLAG_SYNCD_MSG_TYPE_CFG_MCLAG_UNIQUE_IP    = 5
 }mclag_syncd_msg_type_e;
 
 typedef enum mclag_msg_type_e_
@@ -546,6 +548,12 @@ struct mclag_iface_cfg_info
     char mclag_iface[MAX_L_PORT_NAME];
 };
 
+struct mclag_unique_ip_cfg_info
+{
+    int op_type;/*add/del mclag unique ip iface */
+    char mclag_unique_ip_ifname[MAX_L_PORT_NAME];
+};
+
 /* For storing message log: For Notification TLV */
 struct MsgTypeSet
 {
@@ -553,6 +561,13 @@ struct MsgTypeSet
     uint16_t type;
     uint16_t tlv;
 
+};
+
+struct mclag_vlan_mbr_info
+{
+    int op_type;/*add/del vlan_member */
+    unsigned int vid;
+    char mclag_iface[MAX_L_PORT_NAME];
 };
 
 struct MsgLog
