@@ -50,6 +50,8 @@ void set_peerlink_mlag_port_learn(struct LocalInterface *lif, int enable);
 void peerlink_port_isolate_cleanup(struct CSM* csm);
 void update_peerlink_isolate_from_all_csm_lif(struct CSM* csm);
 
+ssize_t iccp_send_to_mclagsyncd(uint8_t msg_type, char *send_buff, uint16_t send_len);
+
 void del_mac_from_chip(struct MACMsg* mac_msg);
 void add_mac_to_chip(struct MACMsg* mac_msg, uint8_t mac_type);
 uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg* mac_msg, uint8_t set, uint8_t update_peer);

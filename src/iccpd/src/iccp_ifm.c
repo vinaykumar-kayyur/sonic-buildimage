@@ -112,6 +112,7 @@ int iccp_sys_local_if_list_get_init()
     return ret;
 }
 
+#if 0 //to_build tbd_l3
 static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int msgtype)
 {
     struct System *sys = NULL;
@@ -470,8 +471,7 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
 
     return;
 }
-
-
+#endif //to_build tbd_l3
 
 int parse_rtattr_flags(struct rtattr *tb[], int max, struct rtattr *rta, int len, unsigned short flags)
 {
@@ -538,7 +538,7 @@ int do_one_neigh_request(struct nlmsghdr *n)
     {
         return(0);
     }
-
+#if 0 //to_build tbd_l3
     if (ndm->ndm_family == AF_INET)
     {
         do_arp_learn_from_kernel(ndm, tb, n->nlmsg_type);
@@ -548,6 +548,7 @@ int do_one_neigh_request(struct nlmsghdr *n)
     {
         do_ndisc_learn_from_kernel(ndm, tb, n->nlmsg_type);
     }
+#endif
     return(0);
 }
 
@@ -614,6 +615,7 @@ int iccp_neigh_get_init()
 /*When received ARP packets from kernel, update arp information*/
 void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, uint8_t mac_addr[ETHER_ADDR_LEN])
 {
+#if 0 //to_build tbd_l3
     struct System *sys = NULL;
     struct CSM *csm = NULL;
     struct Msg *msg = NULL;
@@ -757,10 +759,12 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
     }
 
     return;
+#endif //to_build tbd_l3
 }
 
 void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, uint8_t mac_addr[ETHER_ADDR_LEN])
 {
+#if 0 //to_build tbd_l3
     struct System *sys = NULL;
     struct CSM *csm = NULL;
     struct Msg *msg = NULL;
@@ -918,6 +922,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
     }
 
     return;
+#endif //to_build tbd_l3
 }
 
 void iccp_from_netlink_port_state_handler( char * ifname, int state)

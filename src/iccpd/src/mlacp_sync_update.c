@@ -75,11 +75,6 @@ int mlacp_fsm_update_system_conf(struct CSM* csm, mLACPSysConfigTLV*sysconf)
         mlacp_link_set_iccp_system_id(csm->mlag_id, sysconf->sys_id);
     }
 
-    if(memcmp(old_remote_system_id, sysconf->sys_id, ETHER_ADDR_LEN) != 0)
-    {
-        mlacp_link_set_iccp_peer_system_id(csm->mlag_id, sysconf->sys_id);
-        ICCPD_LOG_INFO(__FUNCTION__, "Peer MAC address %s", mac_addr_to_str(sysconf->sys_id));
-    }
     return 0;
 }
 
@@ -632,6 +627,7 @@ void mlacp_enqueue_ndisc(struct CSM *csm, struct Msg *msg)
 * ***************************************/
 int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
 {
+#if 0 //to_build tbd_l3
     struct Msg* msg = NULL;
     struct ARPMsg *arp_msg = NULL, arp_data;
     struct LocalInterface *local_if = NULL;
@@ -940,10 +936,12 @@ int mlacp_fsm_update_arp_entry(struct CSM* csm, struct ARPMsg *arp_entry)
     }
 
     return 0;
+#endif //to_build tbd_l3
 }
 
 int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
 {
+#if 0 //to_build tbd_l3
     int count = 0;
     int i;
 
@@ -956,6 +954,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
     {
         mlacp_fsm_update_arp_entry(csm, &(tlv->ArpEntry[i]));
     }
+#endif //to_build tbd_l3
 }
 
 /*****************************************
@@ -963,6 +962,7 @@ int mlacp_fsm_update_arp_info(struct CSM* csm, struct mLACPARPInfoTLV* tlv)
 * ***************************************/
 int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
 {
+#if 0 //to_build tbd_l3
     struct Msg *msg = NULL;
     struct NDISCMsg *ndisc_msg = NULL, ndisc_data;
     struct LocalInterface *local_if;
@@ -1318,10 +1318,12 @@ int mlacp_fsm_update_ndisc_entry(struct CSM *csm, struct NDISCMsg *ndisc_entry)
     }
 
     return 0;
+#endif //to_build tbd_l3
 }
 
 int mlacp_fsm_update_ndisc_info(struct CSM *csm, struct mLACPNDISCInfoTLV *tlv)
 {
+#if 0 //to_build tbd_l3
     int count = 0;
     int i;
 
@@ -1334,6 +1336,7 @@ int mlacp_fsm_update_ndisc_info(struct CSM *csm, struct mLACPNDISCInfoTLV *tlv)
     {
         mlacp_fsm_update_ndisc_entry(csm, &(tlv->NdiscEntry[i]));
     }
+#endif //to_build tbd_l3
 }
 
 

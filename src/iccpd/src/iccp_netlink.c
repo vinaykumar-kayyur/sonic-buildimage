@@ -1371,7 +1371,8 @@ void iccp_event_handler_obj_input_newaddr(struct nl_object *obj, void *arg)
         if (lif->is_l3_proto_enabled)
         {
             is_v4 = 1;
-            syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 1, 0, 4);
+            //to_build tbd_l3
+            //syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 1, 0, 4);
         }
         ICCPD_LOG_NOTICE(__FUNCTION__, " ifname %s index %d  address %s l3_proto %d\n",
                 lif->name, lif->ifindex, show_ip_str(lif->ipv4_addr), lif->is_l3_proto_enabled);
@@ -1391,7 +1392,8 @@ void iccp_event_handler_obj_input_newaddr(struct nl_object *obj, void *arg)
                     ICCPD_LOG_NOTICE(__FUNCTION__, " ifname %s index %d  address %s l3_proto %d, prefix_len %d\n",
                         lif->name, lif->ifindex, show_ipv6_str((char *)lif->ipv6_ll_addr), lif->is_l3_proto_enabled, lif->ll_prefixlen_v6);
 
-                    syn_local_neigh_mac_info_to_peer(lif, sync_add, 0, 1, 1, 1, 1, 5);
+                    //to_build tbd_l3
+                    //syn_local_neigh_mac_info_to_peer(lif, sync_add, 0, 1, 1, 1, 1, 5);
                 }
 
             } else {
@@ -1415,7 +1417,8 @@ void iccp_event_handler_obj_input_newaddr(struct nl_object *obj, void *arg)
         if (lif->is_l3_proto_enabled)
         {
             is_v6 = 1;
-            syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 1, 0, 6);
+            //to_build tbd_l3
+            //syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 1, 0, 6);
         }
         ICCPD_LOG_NOTICE(__FUNCTION__, " ifname %s index %d  address %s l3_proto %d\n",
                 lif->name, lif->ifindex, show_ipv6_str((char *)lif->ipv6_addr), lif->is_l3_proto_enabled);
@@ -1456,7 +1459,8 @@ void iccp_event_handler_obj_input_deladdr(struct nl_object *obj, void *arg)
         if (lif->is_l3_proto_enabled)
         {
             is_v4 = 1;
-            syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 0, 0, 7);
+            //to_build tbd_l3
+            //syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 0, 0, 7);
         }
         lif->ipv4_addr = 0;
         lif->prefixlen = 0;
@@ -1470,7 +1474,8 @@ void iccp_event_handler_obj_input_deladdr(struct nl_object *obj, void *arg)
                     lif->is_l3_proto_enabled, lif->name, lif->ifindex, lif->master_ifindex, show_ipv6_str((char *)lif->ipv6_ll_addr));
 
             if ((strncmp(lif->name, SAG_PREFIX, strlen(SAG_PREFIX)) == 0)) {
-                syn_local_neigh_mac_info_to_peer(lif, sync_add, 0, 1, 0, 0, 1, 8);
+                //to_build tbd_l3
+                //syn_local_neigh_mac_info_to_peer(lif, sync_add, 0, 1, 0, 0, 1, 8);
             }
 
             memset((char *)lif->ipv6_ll_addr, 0, 16);
@@ -1491,7 +1496,8 @@ void iccp_event_handler_obj_input_deladdr(struct nl_object *obj, void *arg)
         if (lif->is_l3_proto_enabled)
         {
             is_v6 = 1;
-            syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 0, 0, 9);
+            //to_build tbd_l3
+            //syn_local_neigh_mac_info_to_peer(lif, sync_add, is_v4, is_v6, sync_mac, 0, 0, 9);
         }
         memset((char *)lif->ipv6_addr, 0, 16);
         lif->prefixlen_v6 = 0;
@@ -2278,12 +2284,6 @@ int iccp_handle_events(struct System * sys)
             continue;
         }
 
-        if (events[i].data.fd == sys->stp_sync_fd)
-        {
-          iccp_stpiccpsyncd_msg_handler(sys);
-          continue;
-        }
-
         if (events[i].data.fd == sys->sig_pipe_r)
         {
             iccp_receive_signal_handler(sys);
@@ -2424,7 +2424,8 @@ void update_vlan_if_mac_on_standby(struct LocalInterface* lif_vlan, int dir)
             iccp_set_interface_ipadd_mac(lif_vlan, macaddr);
             memcpy(lif_vlan->l3_mac_addr, system_mac, ETHER_ADDR_LEN);
             if (lif_vlan->is_l3_proto_enabled == false) {
-                set_peer_mac_in_kernel (macaddr, vid, 1);
+                //to_build tbd_l3
+                //set_peer_mac_in_kernel (macaddr, vid, 1);
             }
         } else {
             ICCPD_LOG_DEBUG(__FUNCTION__, "%s mac alreay updated, dir %d", lif_vlan->name, dir);
@@ -2523,7 +2524,8 @@ void recover_vlan_if_mac_on_standby(struct LocalInterface* lif_vlan, int dir)
 
             if (memcmp(MLACP(csm).remote_system.system_id, null_mac, ETHER_ADDR_LEN) != 0) {
                 SET_MAC_STR(remote_macaddr, MLACP(csm).remote_system.system_id);
-                set_peer_mac_in_kernel (remote_macaddr, vid, 0);
+                //to_build tbd_l3
+                //set_peer_mac_in_kernel (remote_macaddr, vid, 0);
             }
         }
     } else {

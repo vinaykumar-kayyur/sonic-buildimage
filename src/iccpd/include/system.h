@@ -42,6 +42,7 @@
 #define PORTCHANNEL_PREFIX      "PortChannel"
 #define VLAN_PREFIX             "Vlan"
 #define VXLAN_TUNNEL_PREFIX     "VTTNL"
+#define SAG_PREFIX              "sag"
 
 #define WARM_REBOOT 1
 
@@ -160,6 +161,10 @@ do{\
 #define SYSTEM_GET_INVALID_PEER_MSG_COUNTER(sys)\
     ((sys) ? ((sys)->dbg_counters.rx_peer_invalid_msg_counter) ? 0)
 
+#define SYSTEM_INCR_RX_READ_SOCK_ZERO_COUNTER(sys)\
+   if (sys)\
+       ++sys->dbg_counters.rx_read_sock_zero_len_counter;
+
 #define SYSTEM_INCR_HDR_READ_SOCK_ERR_COUNTER(sys)\
     if (sys)\
         ++sys->dbg_counters.rx_peer_hdr_read_sock_err_counter;
@@ -188,6 +193,29 @@ do{\
     if (sys)\
         ++sys->dbg_counters.rx_retry_fail_counter;
 
+#define SYSTEM_INCR_MAC_ENTRY_ALLOC_COUNTER(sys)\
+    if (sys)\
+        ++sys->dbg_counters.mac_entry_alloc_counter;
+
+#define SYSTEM_INCR_MAC_ENTRY_FREE_COUNTER(sys)\
+    if (sys)\
+        ++sys->dbg_counters.mac_entry_free_counter;
+
+#define SYSTEM_INCR_RX_READ_SOCK_ZERO_COUNTER(sys)\
+    if (sys)\
+        ++sys->dbg_counters.rx_read_sock_zero_len_counter;
+
+#define SYSTEM_INCR_RX_READ_SOCK_ERR_COUNTER(sys)\
+    if (sys)\
+        ++sys->dbg_counters.rx_read_sock_err_counter;
+
+#define SYSTEM_INCR_RX_READ_STP_SOCK_ZERO_COUNTER(sys)\
+    if (sys)\
+        ++sys->dbg_counters.rx_read_stp_sock_zero_len_counter;
+
+#define SYSTEM_INCR_RX_READ_STP_SOCK_ERR_COUNTER(sys)\
+    if (sys)\
+        ++sys->dbg_counters.rx_read_stp_sock_err_counter;
 #define SYSTEM_SET_RETRY_COUNTER(sys, num_retry)\
     if (sys)\
     {\
@@ -250,6 +278,14 @@ typedef struct system_dbg_counter_info
     uint32_t rx_retry_max_counter; //max non-blocking RX retry for one message
     uint32_t rx_retry_total_counter; //total number of non-blocking RX retry
     uint32_t rx_retry_fail_counter; //total number of non-blocking RX retry failure
+
+    uint32_t rx_read_sock_zero_len_counter; //counts socket header read zero length from sync_fd
+    uint32_t rx_read_sock_err_counter; //counts socket header read zero length from sync_fd
+    uint32_t rx_read_stp_sock_zero_len_counter; //counts socket header read zero length from syncd
+    uint32_t rx_read_stp_sock_err_counter; //counts socket header read zero length from syncd
+
+    uint32_t mac_entry_alloc_counter;
+    uint32_t mac_entry_free_counter;
 
     uint64_t syncd_tx_counters[SYNCD_TX_DBG_CNTR_MSG_MAX][SYNCD_DBG_CNTR_STS_MAX];
     uint64_t syncd_rx_counters[SYNCD_RX_DBG_CNTR_MSG_MAX][SYNCD_DBG_CNTR_STS_MAX];

@@ -58,6 +58,7 @@
 #define IF_T_VLAN           2
 #define IF_T_VXLAN          3
 #define IF_T_BRIDGE         4
+#define IF_T_SAG            5
 
 typedef struct
 {
@@ -124,6 +125,8 @@ struct LocalInterface
     uint8_t prefixlen;
     uint32_t ipv6_addr[4];
     uint8_t prefixlen_v6;
+    uint32_t ipv6_ll_addr[4];
+    uint8_t ll_prefixlen_v6;
 
     uint8_t l3_mode;
     uint8_t l3_mac_addr[ETHER_ADDR_LEN];
@@ -141,7 +144,11 @@ struct LocalInterface
 
     uint8_t changed;
     uint8_t port_config_sync;
-    bool is_traffic_disable;   /* Disable traffic tx/rx  */ 
+    bool is_traffic_disable;   /* Disable traffic tx/rx  */
+    bool is_l3_proto_enabled;  /* Enable L3 Protocol support */
+    bool is_sag_enabled;
+    uint32_t vlan_count;
+    uint32_t master_ifindex;   /* VRF ifindex*/
 
     struct vlan_rb_tree vlan_tree;
 

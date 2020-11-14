@@ -352,6 +352,7 @@ int mlacp_prepare_for_mac_info_to_peer(struct CSM* csm, char* buf, size_t max_bu
 * ***************************************/
 int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, struct ARPMsg* arp_msg, int count)
 {
+#if 0 //to_build tbd_l3
     struct mLACPARPInfoTLV* tlv = NULL;
     size_t msg_len = 0;
     size_t tlv_len = 0;
@@ -396,6 +397,7 @@ int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, 
                     ArpData->mac_addr[0], ArpData->mac_addr[1], ArpData->mac_addr[2], ArpData->mac_addr[3], ArpData->mac_addr[4],
                     ArpData->mac_addr[5], show_ip_str(ArpData->ipv4_addr));
     return msg_len;
+#endif //to_build tbd_l3
 }
 
 /*****************************************
@@ -404,6 +406,7 @@ int mlacp_prepare_for_arp_info(struct CSM* csm, char* buf, size_t max_buf_size, 
 * ***************************************/
 int mlacp_prepare_for_ndisc_info(struct CSM *csm, char *buf, size_t max_buf_size, struct NDISCMsg *ndisc_msg, int count, int dir)
 {
+#if 0 //to_build tbd_l3
     struct mLACPNDISCInfoTLV *tlv = NULL;
     size_t msg_len = 0;
     size_t tlv_len = 0;
@@ -450,6 +453,7 @@ int mlacp_prepare_for_ndisc_info(struct CSM *csm, char *buf, size_t max_buf_size
                     NdiscData->mac_addr[5], show_ipv6_str((char *)NdiscData->ipv6_addr));
 
     return msg_len;
+#endif //to_build tbd_l3
 }
 
 /*****************************************

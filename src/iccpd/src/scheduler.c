@@ -41,7 +41,6 @@
 #include "../include/iccp_cmd.h"
 #include "../include/mlacp_link_handler.h"
 #include "../include/iccp_netlink.h"
-#include "../include/stp_handler.h"
 
 /******************************************************
 *
