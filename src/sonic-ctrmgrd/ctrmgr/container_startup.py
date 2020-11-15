@@ -267,7 +267,6 @@ def container_up(feature, owner, version):
     debug_msg("END")
 
 
-# e.g. container_state <feature> up/down local/kube <docker id>
 def main():
     parser = argparse.ArgumentParser(description="container_startup <feature> kube/local [<version>]")
 

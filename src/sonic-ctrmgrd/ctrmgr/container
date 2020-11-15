@@ -5,14 +5,13 @@ import docker
 import inspect
 import json
 import os
-import sys
 import syslog
 import time
 import datetime
 
 from swsscommon import swsscommon
 
-CTR_STATE_SCR_PATH = '/usr/share/sonic/scripts/container_state.py'
+CTR_STATE_SCR_PATH = '/usr/share/sonic/scripts/container_startup.py'
 
 state_db = None
 
