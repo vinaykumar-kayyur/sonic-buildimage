@@ -40,10 +40,10 @@ Signed-off-by: Mike Tsai (Fruit Ninja) <miktsai@cisco.com>
  create mode 100644 drivers/hwmon/pmbus/cisco_n2200.c
 
 diff --git a/drivers/hwmon/pmbus/Kconfig b/drivers/hwmon/pmbus/Kconfig
-index 39cc63e..ec48945 100644
+index eda871222..c3e72c6e7 100644
 --- a/drivers/hwmon/pmbus/Kconfig
 +++ b/drivers/hwmon/pmbus/Kconfig
-@@ -141,4 +141,14 @@ config SENSORS_ZL6100
+@@ -227,4 +227,14 @@ config SENSORS_DPS1900
  	  This driver can also be built as a module. If so, the module will
  	  be called dps1900.
  
@@ -59,17 +59,17 @@ index 39cc63e..ec48945 100644
 +
  endif # PMBUS
 diff --git a/drivers/hwmon/pmbus/Makefile b/drivers/hwmon/pmbus/Makefile
-index 789376c..5e6c316 100644
+index edc7c315c..df9119c0d 100644
 --- a/drivers/hwmon/pmbus/Makefile
 +++ b/drivers/hwmon/pmbus/Makefile
-@@ -13,3 +13,4 @@ obj-$(CONFIG_SENSORS_MAX8688)	+= max8688.o
- obj-$(CONFIG_SENSORS_UCD9200)	+= ucd9200.o
+@@ -24,3 +24,4 @@ obj-$(CONFIG_SENSORS_UCD9200)	+= ucd9200.o
+ obj-$(CONFIG_SENSORS_XDPE122)	+= xdpe12284.o
  obj-$(CONFIG_SENSORS_ZL6100)	+= zl6100.o
  obj-$(CONFIG_SENSORS_DPS1900)	+= dps1900.o
 +obj-$(CONFIG_SENSORS_CISCO_N2200) += cisco_n2200.o
 diff --git a/drivers/hwmon/pmbus/cisco_n2200.c b/drivers/hwmon/pmbus/cisco_n2200.c
 new file mode 100644
-index 0000000..7a13c08
+index 000000000..7a13c08d2
 --- /dev/null
 +++ b/drivers/hwmon/pmbus/cisco_n2200.c
 @@ -0,0 +1,296 @@

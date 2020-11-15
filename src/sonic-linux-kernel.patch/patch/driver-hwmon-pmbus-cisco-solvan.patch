@@ -1,6 +1,7 @@
 From bf92a84ab2654906b8151db0687e54a7dea7668c Mon Sep 17 00:00:00 2001
+
 From: jiahwang <jiahwang@cisco.com>
-Date: Mon, 5 Feb 2018 16:57:39 -0800
+
 Subject: [PATCH] Add pmbus_cisco driver for Cisco PSU including solvang and DC
  PSU. Skip checking STATUS_CML register, otherwise some PSU may not be probed.
  Don't add READ_VCAP to sensor group, we want hwmon/in2 under sysfs pointing
@@ -9,17 +10,17 @@ Subject: [PATCH] Add pmbus_cisco driver for Cisco PSU including solvang and DC
 
 Signed-off-by: jiahwang <jiahwang@cisco.com>
 ---
- drivers/hwmon/pmbus/Kconfig       |  10 ++
- drivers/hwmon/pmbus/Makefile      |   1 +
- drivers/hwmon/pmbus/pmbus_cisco.c | 243 ++++++++++++++++++++++++++++++++++++++
+ drivers/hwmon/pmbus/Kconfig       |   10 ++
+ drivers/hwmon/pmbus/Makefile      |    1 
+ drivers/hwmon/pmbus/pmbus_cisco.c |  243 +++++++++++++++++++++++++++++++++++++
  3 files changed, 254 insertions(+)
  create mode 100644 drivers/hwmon/pmbus/pmbus_cisco.c
 
 diff --git a/drivers/hwmon/pmbus/Kconfig b/drivers/hwmon/pmbus/Kconfig
-index cc659a1..8e28d7e 100644
+index c3e72c6e7..9351c3677 100644
 --- a/drivers/hwmon/pmbus/Kconfig
 +++ b/drivers/hwmon/pmbus/Kconfig
-@@ -151,4 +151,14 @@ config SENSORS_CISCO_N2200
+@@ -237,4 +237,14 @@ config SENSORS_CISCO_N2200
  	  This driver can also be built as a module. If so, the module will
  	  be called cisco_n2200
  
@@ -35,17 +36,17 @@ index cc659a1..8e28d7e 100644
 +
  endif # PMBUS
 diff --git a/drivers/hwmon/pmbus/Makefile b/drivers/hwmon/pmbus/Makefile
-index c0c689f..8bc90ee 100644
+index df9119c0d..9cdf133bf 100644
 --- a/drivers/hwmon/pmbus/Makefile
 +++ b/drivers/hwmon/pmbus/Makefile
-@@ -16,3 +16,4 @@ obj-$(CONFIG_SENSORS_UCD9000)	+= ucd9000.o
+@@ -25,3 +25,4 @@ obj-$(CONFIG_SENSORS_XDPE122)	+= xdpe12284.o
  obj-$(CONFIG_SENSORS_ZL6100)	+= zl6100.o
  obj-$(CONFIG_SENSORS_DPS1900)	+= dps1900.o
  obj-$(CONFIG_SENSORS_CISCO_N2200) += cisco_n2200.o
 +obj-$(CONFIG_SENSORS_CISCO_PMBUS) += pmbus_cisco.o
 diff --git a/drivers/hwmon/pmbus/pmbus_cisco.c b/drivers/hwmon/pmbus/pmbus_cisco.c
 new file mode 100644
-index 0000000..be2dd78
+index 000000000..561b1aa7f
 --- /dev/null
 +++ b/drivers/hwmon/pmbus/pmbus_cisco.c
 @@ -0,0 +1,243 @@
@@ -79,7 +80,7 @@ index 0000000..be2dd78
 +#include <linux/slab.h>
 +#include <linux/mutex.h>
 +#include <linux/i2c.h>
-+#include <linux/i2c/pmbus.h>
++#include <linux/pmbus.h>
 +#include "pmbus.h"
 +
 +/*
@@ -292,6 +293,3 @@ index 0000000..be2dd78
 +MODULE_AUTHOR("Jiahua Wang");
 +MODULE_DESCRIPTION("Cisco PSU PMBus driver");
 +MODULE_LICENSE("GPL");
--- 
-2.1.4
-
