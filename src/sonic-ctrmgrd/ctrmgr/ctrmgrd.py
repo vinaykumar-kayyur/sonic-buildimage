@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python3
 
 import datetime
 import inspect
@@ -432,7 +432,7 @@ class FeatureTransitionHandler:
             if ct_owner != "local":
                 service_restart = True
         else:
-            if remote_state == "pending":
+            if (ct_owner != "none") and (remote_state == "pending"):
                 service_restart = True
 
         log_debug(

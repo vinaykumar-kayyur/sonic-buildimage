@@ -90,9 +90,9 @@ def check_version_blocked(feature, version):
 
 
 def drop_label(feature, version):
-    # Set/drop label as required
+    # Mark given feature version as dropped in labels.
     # Update is done in state-db.
-    # ctrmgrd sets it with kube API server as required
+    # ctrmgrd sets it with kube API server per reaschability
     
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
     name = _get_version_key(feature, version)
@@ -118,14 +118,17 @@ def get_docker_id():
 
 
 def instance_lower(feature, version):
+    # Compares given version against current version in STATE-DB.
+    # Return True if this version is lower than current.
+    #
     if ((state_data[REMOTE_STATE] == "none") or
             (state_data[REMOTE_STATE] == "stopped")):
         # No one running to compare version
         return False
 
     ct_version = state_data[VERSION]
-    ct = ct_version.split('.') if ct_version else "0.0.0".split('.')
-    nxt = version.split('.') if version else "0.0.0".split('.')
+    ct = ct_version.split('.')
+    nxt = version.split('.')
     ret = False
     for cs, ns in zip(ct, nxt):
         c = int(cs)
@@ -142,6 +145,7 @@ def instance_lower(feature, version):
 
 
 def is_active(feature):
+    # Check current system state of the feature
     if state_data[SYSTEM_STATE] == "up":
         return True
     else:
@@ -149,42 +153,28 @@ def is_active(feature):
         return False
 
 
-def update_state(is_up, feature, owner=None, version=None):
+def update_state(feature, owner=None, version=None):
     """
-    if up, sets owner, version & container-id for this container in state-db.
-    Else, clears owner to none and container-id to empty string.
+    sets owner, version & container-id for this feature in state-db.
 
-    In case of coming up, if local update label to block remote deploying
-    same version or if kube, sets state to "running". 
+    If owner is local, update label to block remote deploying same version or
+    if kube, sets state to "running". 
 
-    In case of going down by a kube deployed container, set remote-state to
-    stopped.
-    
     """
     data = {
-            CURRENT_OWNER: owner if is_up else "none",
-            DOCKER_ID: get_docker_id() if is_up else "",
-            UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            CURRENT_OWNER: owner,
+            DOCKER_ID: get_docker_id(),
+            UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            VERSION: version
             }
-    if is_up:
-        data[VERSION] = version
 
-        if (owner == "local"):
-            # Disable deployment of this version as available locally
-            drop_label(feature, version)
-        else:
-            data[REMOTE_STATE] = "running"
+    if (owner == "local"):
+        # Disable deployment of this version as available locally
+        drop_label(feature, version)
+    else:
+        data[REMOTE_STATE] = "running"
 
-    elif state_data[CURRENT_OWNER] != "local":
-        state = state_data[REMOTE_STATE]
-        if state != "pending":
-            if state != "running":
-                syslog.syslog(syslog.LOG_ERR,
-                        "{} kube down state: {} != running", feature, state)
-            else:
-                data[REMOTE_STATE] = "stopped"
-
-    debug_msg("{} up= {} data:{}".format(feature, is_up, str(data)))
+    debug_msg("{} up data:{}".format(feature, str(data)))
     update_data(feature,  data)
     state_data.update(data)
 
@@ -194,7 +184,7 @@ def do_exit(feat, m):
     # So sleep forever with periodic logs.
     #
     while True:
-        syslog.syslog(syslog.LOG_ERR, "Exiting .... feat:{} docker_id:{} msg:{}".format(
+        syslog.syslog(syslog.LOG_ERR, "Blocking .... feat:{} docker_id:{} msg:{}".format(
             feat, get_docker_id(), m))
         time.sleep(60)
     
@@ -222,7 +212,7 @@ def container_up(feature, owner, version):
         feature, owner, version, set_owner, state_data))
 
     if owner == "local":
-        update_state(True, feature, owner, version)
+        update_state(feature, owner, version)
     else:
         if (set_owner == "local"):
             do_exit(feature, "bail out as set_owner is local")
@@ -238,7 +228,8 @@ def container_up(feature, owner, version):
             # Else kubelet will continue to re-deploy every 5 mins, until
             # master removes the lable to un-deploy.
             #
-            do_exit(feature, "bail out as current deploy id is lower")
+            do_exit(feature, "bail out as current deploy version {} is lower".
+                    format(version))
 
         update_data(feature, { VERSION: version })
 
@@ -271,61 +262,22 @@ def container_up(feature, owner, version):
                         format(version, db_version))
 
 
-        update_state(True, feature, owner, version)
+        update_state(feature, owner, version)
 
     debug_msg("END")
-
-
-def container_down(feature, caller_docker_id=None):
-    """
-    Mark this feature container as down in state-db.
-    Safety check: Container ID matches the recorded ID in state-db
-
-    """
-
-    debug_msg("BEGIN")
-    read_data(feature)
-
-    debug_msg("feature={} set_owner={} state_data={}".format(
-        feature, set_owner, state_data))
-
-    ct_docker_id = state_data[DOCKER_ID]
-    if not caller_docker_id:
-        caller_docker_id = get_docker_id()
-    if caller_docker_id != ct_docker_id:
-        syslog.syslog(syslog.LOG_ERR, "{} down mismatch docker-id. caller_docker_id={} current:{}".
-                format(feature, caller_docker_id, ct_docker_id))
-    else:
-        update_state(False, feature)
-    debug_msg("END")
-
-
-
-def parser_container_up(args):
-    container_up(feature=args.feature, owner=args.owner, version=args.version)
-
-
-def parser_container_down(args):
-    container_down(feature=args.feature)
 
 
 # e.g. container_state <feature> up/down local/kube <docker id>
 def main():
-    parser = argparse.ArgumentParser(description="state up/down <feature> kube/local [<docker id> <instance id>]")
-    subparsers = parser.add_subparsers(title='actions')
+    parser = argparse.ArgumentParser(description="container_startup <feature> kube/local [<version>]")
 
-    parser_up = subparsers.add_parser('up')
-    parser_up.add_argument("-f", "--feature", required=True)
-    parser_up.add_argument("-o", "--owner", choices=["local", "kube"], required=True)
-    parser_up.add_argument("-v", "--version", default="")
-    parser_up.set_defaults(func=parser_container_up)
+    parser.add_argument("-f", "--feature", required=True)
+    parser.add_argument("-o", "--owner", choices=["local", "kube"], required=True)
+    parser.add_argument("-v", "--version", required=True)
     
-    parser_down = subparsers.add_parser('down')
-    parser_down.add_argument("-f", "--feature", required=True)
-    parser_down.set_defaults(func=parser_container_down)
-
     args = parser.parse_args()
-    args.func(args)
+    container_up(args.feature, args.owner, args.version)
+
 
 
 if __name__ == "__main__":

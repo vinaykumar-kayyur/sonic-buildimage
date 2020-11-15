@@ -4,10 +4,10 @@ if [ "${RUNTIME_OWNER}" == "" ]; then
     RUNTIME_OWNER="kube"
 fi
 
-CTR_SCRIPT="/usr/share/sonic/scripts/container_state.py"
+CTR_SCRIPT="/usr/share/sonic/scripts/container_startup.py"
 if test -f ${CTR_SCRIPT}
 then
-    ${CTR_SCRIPT} up -f telemetry -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
+    ${CTR_SCRIPT} -f telemetry -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
 fi
 
 mkdir -p /var/sonic

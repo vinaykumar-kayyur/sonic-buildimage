@@ -8,6 +8,7 @@ import os
 import sys
 import syslog
 import time
+import datetime
 
 from swsscommon import swsscommon
 
@@ -54,14 +55,6 @@ def init():
     state_db = swsscommon.DBConnector("STATE_DB", 0)
 
     remote_ctr_enabled = os.path.exists(CTR_STATE_SCR_PATH)
-
-
-def mark_container_down(feature, docker_id):
-    if remote_ctr_enabled:
-        sys.path.append('/usr/share/sonic/scripts/')
-        import container_state
-
-        container_state.down(feature, docker_id)
 
 
 def get_config_data(fld, dflt):
@@ -151,9 +144,9 @@ def container_id(feature):
     """
     Return the container ID for the feature.
     
-    For features that support remote container management, get it
-    from FEATURE table in STATE-DB.
-    For the rest, return feature name as container id.
+    if current_owner is local, use feature name as the start/stop
+    of local image is synchronous. 
+    Else get it from FEATURE table in STATE-DB
 
     :param feature: Name of the feature to start.
     
@@ -161,13 +154,10 @@ def container_id(feature):
     tbl = swsscommon.Table(state_db, "FEATURE")
     data = dict(tbl.get(feature)[1])
 
-    # Features that support remote container mgmt has docker-id field
-    # mandatorily in FEATURE table, irrespective of being run local
-    # or remote. So return what is there in DB, if this field is
-    # present, else return the feature name, as those are not
-    # manageable as remote.
-    #
-    return data[CONTAINER_ID] if CONTAINER_ID in data else feature
+    if (data.get(CURRENT_OWNER, "").lower() == "local"):
+        return feature
+    else:
+        return data.get(CONTAINER_ID, feature)
 
 
 def container_start(feature):
@@ -187,6 +177,9 @@ def container_start(feature):
     :param feature: Name of the feature to start.
     
     """
+    START_LOCAL = 1
+    START_KUBE = 2
+
     ret = 0
     debug_msg("BEGIN")
     set_owner, fallback = read_config(feature)
@@ -195,21 +188,35 @@ def container_start(feature):
     debug_msg("{}: set_owner:{} fallback:{} remote_state:{}".format(
         feature, set_owner, fallback, remote_state))
 
-    update_data(feature, {SYSTEM_STATE: "up"})
+    data = {
+            SYSTEM_STATE: "up"
+            }
 
+
+    start_val = 0
     if set_owner == "local":
-        # Ensure label is not there.
+        start_val = START_LOCAL
+    else:
+        start_val = START_KUBE
+        if fallback and (remote_state == "none"):
+            start_val |= START_LOCAL
+
+    if start_val == START_LOCAL:
+        # Implies *only* local.
+        # Ensure label is not there, to block kube deployment.
         set_label(feature, False)
-        if remote_state.lower() != "none":
-            update_data(feature, {REMOTE_STATE: "none"})
+        data[REMOTE_STATE] = "none"
+
+    if (start_val & START_LOCAL):
+        data[CURRENT_OWNER] = "local"
+
+    update_data(feature, data)
+
+    if (start_val & START_LOCAL):
         ret = docker_action("start", feature)
 
-    else:
-        if fallback and (remote_state == "none"):
-            # Start local as fallback enabled & no transition occuring.
-            ret = docker_action("start", feature)
+    if (start_val & START_KUBE):
         set_label(feature, True)
-
     debug_msg("END")
     return ret
 
@@ -237,8 +244,6 @@ def container_stop(feature):
     debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{}".format(
         feature, set_owner, current_owner, remote_state, docker_id))
 
-    update_data(feature, {SYSTEM_STATE: "down"})
-
     if remove_label:
         set_label(feature, False)
 
@@ -249,7 +254,27 @@ def container_stop(feature):
                 syslog.LOG_ERR if current_owner != "none" else syslog.LOG_INFO,
                 "docker stop skipped as no docker-id for {}".format(feature))
 
+    # Container could get killed or crashed. In either case
+    # it does not have opportunity to mark itself down.
+    # Even during  normal termination, with SIGTERM received
+    # container process may not have enough window of time to
+    # mark itself down and has the potential to get aborted.
+    #
+    # systemctl ensures that it handles only one instance for
+    # a feature at anytime and however the feature container
+    # exits, upon stop/kill/crash, systemctl-stop process
+    # is assured to get called. So mark the feature down here.
+    #
+    data = {
+            CURRENT_OWNER: "none",
+            UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            CONTAINER_ID: "",
+            SYSTEM_STATE: "down"
+            }
+    if remote_state == "running":
+        data[REMOTE_STATE] = "stopped"
 
+    update_data(feature, data)
 
     debug_msg("END")
 
@@ -259,10 +284,6 @@ def container_kill(feature):
     Kills the running container for this feature.
 
     Instruct/ensure kube terminates, by removing label.
-
-    Gets the container ID for this feature and call docker kill.
-
-    Marks the feature state down in STATE-DB FEATURE table.
 
     :param feature: Name of the feature to kill.
     
@@ -276,18 +297,12 @@ def container_kill(feature):
     debug_msg("{}: set_owner:{} current_owner:{} remote_state:{} docker_id:{}".format(
         feature, set_owner, current_owner, remote_state, docker_id))
 
-    update_data(feature, {SYSTEM_STATE: "down"})
-
     if remove_label:
         set_label(feature, False)
 
     if docker_id:
         docker_action("kill", docker_id)
 
-        # As container gettting killed, it may not have chance to update
-        # state-db. So call here.
-        #
-        mark_container_down(feature, docker_id)
     else:
         syslog.syslog(
                 syslog.LOG_ERR if current_owner != "none" else syslog.LOG_INFO,
