@@ -1,0 +1,50 @@
+From a4c344797fc5abb00c1d74d19455ae0b73688b6b Mon Sep 17 00:00:00 2001
+From: Akhilesh Samineni <akhilesh.samineni@broadcom.com>
+Date: Sun, 15 Nov 2020 01:31:43 -0800
+Subject: [PATCH] Changes to send ipv6 address as nexthop to fpmsyncd.
+
+---
+ zebra/zebra_fpm_netlink.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
+index f347d3955..c2e2fba7d 100644
+--- a/zebra/zebra_fpm_netlink.c
++++ b/zebra/zebra_fpm_netlink.c
+@@ -428,6 +428,16 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
+ 		nhi = &ri->nhs[0];
+ 
+ 		if (nhi->gateway) {
++			if (nhi->type == NEXTHOP_TYPE_IPV6
++					|| nhi->type == NEXTHOP_TYPE_IPV6_IFINDEX)
++			{
++				bytelen = af_addr_size(AF_INET6);
++			}
++			else
++			{
++				bytelen = af_addr_size(AF_INET);
++			}
++
+ 			addattr_l(&req->n, in_buf_len, RTA_GATEWAY,
+ 				  nhi->gateway, bytelen);
+ 		}
+@@ -480,6 +490,16 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
+ 		rta->rta_len += rtnh->rtnh_len;
+ 
+ 		if (nhi->gateway) {
++			if (nhi->type == NEXTHOP_TYPE_IPV6
++					|| nhi->type == NEXTHOP_TYPE_IPV6_IFINDEX)
++			{
++				bytelen = af_addr_size(AF_INET6);
++			}
++			else
++			{
++				bytelen = af_addr_size(AF_INET);
++			}
++
+ 			rta_addattr_l(rta, sizeof(buf), RTA_GATEWAY,
+ 				      nhi->gateway, bytelen);
+ 			rtnh->rtnh_len += sizeof(struct rtattr) + bytelen;
+-- 
+2.18.0
+

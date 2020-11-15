@@ -1,0 +1,45 @@
+From 0bb4cb98927bc6f2f06fa85d9b729bf9a9f70c73 Mon Sep 17 00:00:00 2001
+From: Akhilesh Samineni <akhilesh.samineni@broadcom.com>
+Date: Sun, 15 Nov 2020 01:25:03 -0800
+Subject: [PATCH] VRF interface lookup was still done in the default-vrf which
+ was causing the interface lookup to fail. Due to this static-route pointing
+ to link-local was not getting installed.
+
+---
+ staticd/static_zebra.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/staticd/static_zebra.c b/staticd/static_zebra.c
+index 27605da63..42bfd468a 100644
+--- a/staticd/static_zebra.c
++++ b/staticd/static_zebra.c
+@@ -49,7 +49,7 @@ bool debug;
+ struct zclient *zclient;
+ static struct hash *static_nht_hash;
+ 
+-static struct interface *zebra_interface_if_lookup(struct stream *s)
++static struct interface *zebra_interface_if_lookup(struct stream *s, vrf_id_t vrf_id)
+ {
+ 	char ifname_tmp[INTERFACE_NAMSIZ];
+ 
+@@ -57,7 +57,7 @@ static struct interface *zebra_interface_if_lookup(struct stream *s)
+ 	stream_get(ifname_tmp, s, INTERFACE_NAMSIZ);
+ 
+ 	/* And look it up. */
+-	return if_lookup_by_name(ifname_tmp, VRF_DEFAULT);
++	return if_lookup_by_name(ifname_tmp, vrf_id);
+ }
+ 
+ /* Inteface addition message from zebra. */
+@@ -117,7 +117,7 @@ static int interface_state_up(ZAPI_CALLBACK_ARGS)
+ {
+ 	struct interface *ifp;
+ 
+-	ifp = zebra_interface_if_lookup(zclient->ibuf);
++	ifp = zebra_interface_if_lookup(zclient->ibuf, vrf_id);
+ 
+ 	if (ifp) {
+ 		if (if_is_vrf(ifp)) {
+-- 
+2.18.0
+
