@@ -48,7 +48,7 @@ class AuthService:
 
         response = requests.get(f'{self._host}/token?{scope}&service={self._service}')
         if response.status_code != requests.codes.ok:
-            raise RuntimeError(f'Failed to retrieve token for {repository} action {action}')
+            raise PackageManagerError(f'Failed to retrieve token for {repository} action {action}')
 
         content = json.loads(response.content)
         token = AuthService.Token(content['token'], time.time() + content['expires_in'])
@@ -60,6 +60,8 @@ class AuthService:
 
 class Registry:
     """ Provides a Docker registry interface. """
+
+    MIME_DOCKER_MANIFEST = 'application/vnd.docker.distribution.manifest.v2+json'
 
     def __init__(self, host: str, auth=None):
         self.url = host
@@ -75,13 +77,16 @@ class Registry:
             headers['Authorization'] = f'Bearer {token}'
         return headers
 
+    def _get_base_url(self, repository: str):
+        return f'{self.url}/v2/{repository}'
+
     def tags(self, repository: str) -> List[str]:
         log.debug(f'getting tags for {repository}')
 
         _, repository = reference.Reference.split_docker_domain(repository)
         headers = self._get_headers(repository)
         headers['Accept'] = 'application/json'
-        response = requests.get(f'{self.url}/v2/{repository}/tags/list',
+        response = requests.get(f'{self._get_base_url(repository)}/tags/list',
                                 headers=self._get_headers(repository))
         if response.status_code != requests.codes.ok:
             raise PackageManagerError(f'Failed to retrieve tags from {repository}: '
@@ -97,8 +102,8 @@ class Registry:
 
         _, repository = reference.Reference.split_docker_domain(repository)
         headers = self._get_headers(repository)
-        headers['Accept'] = 'application/vnd.docker.distribution.manifest.v2+json'
-        response = requests.get(f'{self.url}/v2/{repository}/manifests/{ref}',
+        headers['Accept'] = self.MIME_DOCKER_MANIFEST
+        response = requests.get(f'{self._get_base_url(repository)}/manifests/{ref}',
                                 headers=headers)
 
         if response.status_code != requests.codes.ok:
@@ -115,8 +120,8 @@ class Registry:
 
         _, repository = reference.Reference.split_docker_domain(repository)
         headers = self._get_headers(repository)
-        headers['Accept'] = 'application/vnd.docker.distribution.manifest.v2+json'
-        response = requests.get(f'{self.url}/v2/{repository}/blobs/{digest}',
+        headers['Accept'] = self.MIME_DOCKER_MANIFEST
+        response = requests.get(f'{self._get_base_url(repository)}/blobs/{digest}',
                                 headers=headers)
         if response.status_code != requests.codes.ok:
             raise PackageManagerError(f'Failed to retrieve blobs for {repository}:{digest}: '
