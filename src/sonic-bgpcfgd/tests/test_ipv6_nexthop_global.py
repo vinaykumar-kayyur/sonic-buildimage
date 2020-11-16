@@ -2,7 +2,7 @@ import os
 import re
 
 from bgpcfgd.template import TemplateFabric
-from .util import load_constants
+from .util import load_constants_dir_mappings
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 
@@ -19,7 +19,7 @@ def parse_instance_conf(filename):
             if TemplateFabric.is_ipv6(neighbor):
                 neighbors[neighbor] = {}
     # Extract peer-groups and route-maps
-    for neighbor, neighbor_data in neighbors.iteritems():
+    for neighbor, neighbor_data in neighbors.items():
         route_map_in_re = re.compile(r'^neighbor\s+%s\s+route-map\s+(\S+) in$' % neighbor)
         peer_group_re = re.compile(r'^neighbor\s+%s\s+peer-group\s+(\S+)$' % neighbor)
         for line in lines:
@@ -30,7 +30,7 @@ def parse_instance_conf(filename):
                 assert "peer-group" not in neighbor_data
                 neighbor_data["peer-group"] = peer_group_re.match(line).group(1)
     # Ensure that every ivp6 neighbor has either route-map or peer-group
-    for neighbor, neighbor_data in neighbors.iteritems():
+    for neighbor, neighbor_data in neighbors.items():
         assert "route-map" in neighbor_data or "peer-group" in neighbor_data,\
             "IPv6 neighbor '%s' must have either route-map in or peer-group %s" % (neighbor, neighbor_data)
     return neighbors
@@ -110,7 +110,7 @@ def check_routemap(path, route_map_name):
     assert checked, "route-map %s wasn't found" % route_map_name
 
 def test_v6_next_hop_global():
-    paths = ["tests/data/%s" % value for value in load_constants().values()]
+    paths = ["tests/data/%s" % value for value in load_constants_dir_mappings().values()]
     for path in paths:
         test_cases = process_instances(path)
         for test_case in test_cases:

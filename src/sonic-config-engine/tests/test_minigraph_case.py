@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import tests.common_utils as utils
+import minigraph
 
 from unittest import TestCase
 
@@ -51,6 +52,11 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'ToRRouter')
 
+    def test_minigraph_subtype(self):
+        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'subtype\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), 'DualToR')
+
     def test_additional_json_data(self):
         argument = '-a \'{"key1":"value1"}\' -v key1'
         output = self.run_script(argument)
@@ -82,7 +88,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000'}}")
+            utils.to_dict("{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'mac': '00:aa:bb:cc:dd:ee' }}")
         )
 
     def test_minigraph_vlan_members(self):
@@ -120,7 +126,21 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'switch-01t1': {'lo_addr': '10.1.0.186/32', 'mgmt_addr': '10.7.0.196/26', 'hwsku': 'Force10-S6000', 'type': 'LeafRouter', 'deployment_id': '2'}}")
+            utils.to_dict("{" \
+                "'switch-01t1': {" \
+                    "'lo_addr': '10.1.0.186/32'," \
+                    "'mgmt_addr': '10.7.0.196/26'," \
+                    "'hwsku': 'Force10-S6000'," \
+                    "'type': 'LeafRouter'," \
+                    "'deployment_id': '2'" \
+                "}," \
+                "'switch2-t0': {" \
+                    "'hwsku': 'Force10-S6000'," \
+                    "'lo_addr': '25.1.1.10'," \
+                    "'mgmt_addr': '10.7.0.196/26'," \
+                    "'type': 'ToRRouter'" \
+                "}" \
+            "}")
         )
 
 #     everflow portion is not used
@@ -159,3 +179,51 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{}")
 
+    def test_minigraph_peer_switch(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "PEER_SWITCH"'
+        expected_table = {
+            'switch2-t0': {
+                'address_ipv4': "25.1.1.10"
+            }
+        }
+        
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_table
+        )
+
+    def test_mux_cable_parsing(self):
+        result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
+        
+        expected_mux_cable_ports = ["Ethernet4", "Ethernet8"]
+        port_table = result['PORT']
+        for port_name, port in port_table.items():
+            if port_name in expected_mux_cable_ports:
+                self.assertTrue(port["mux_cable"])
+            else:
+                self.assertTrue("mux_cable" not in port)
+
+    def test_minigraph_storage_device(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'storage_device\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "true")
+        
+    def test_minigraph_tunnel_table(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TUNNEL"'
+        expected_tunnel = {
+            "MuxTunnel0": {
+                "tunnel_type": "IPINIP",
+                "dst_ip": "10.1.0.32",
+                "dscp_mode": "uniform",
+                "encap_ecn_mode": "standard",
+                "ecn_mode": "copy_from_outer",
+                "ttl_mode": "pipe"
+            }
+        }
+
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_tunnel
+        )
