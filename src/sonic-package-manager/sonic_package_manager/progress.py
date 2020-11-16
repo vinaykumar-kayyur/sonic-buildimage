@@ -16,7 +16,7 @@ class ProgressManager:
 
     def __init__(self):
         self.manager = enlighten.get_manager()
-        self.pbars = {}  # progress bars map for each docker image layer
+        self.pbars = {}
 
     def __enter__(self):
         return self.manager.__enter__()
@@ -34,7 +34,7 @@ class ProgressManager:
 
         if 'bar_format' not in kwargs:
             kwargs['bar_format'] = BAR_FMT
-        if 'counter_format' not in args:
+        if 'counter_format' not in kwargs:
             kwargs['counter_format'] = COUNTER_FMT
 
         self.pbars[id] = self.manager.counter(*args, **kwargs)
