@@ -1,7 +1,8 @@
-From e49b72c301082bc60eac5b8093490e9296d566d7 Mon Sep 17 00:00:00 2001
+From aa5980af6325482d56093fe40a2406b43c013be5 Mon Sep 17 00:00:00 2001
 From: wangshengjun <wangshengjun@asterfusion.com>
-Date: Mon, 16 Nov 2020 16:40:42 +0800
-Subject: [PATCH] zebra:fix the assert issue when the nexthop type is blockhole
+Date: Mon, 16 Nov 2020 17:41:27 +0800
+Subject: [PATCH] zebra:fix the assert issue when the nexthop type is
+ blackhole.
 
 Signed-off-by: wangshengjun <wangshengjun@asterfusion.com>
 ---
