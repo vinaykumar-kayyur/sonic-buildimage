@@ -52,6 +52,11 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), 'ToRRouter')
 
+    def test_minigraph_subtype(self):
+        argument = '-m "' + self.sample_graph + '" -v "DEVICE_METADATA[\'localhost\'][\'subtype\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), 'DualToR')
+
     def test_additional_json_data(self):
         argument = '-a \'{"key1":"value1"}\' -v key1'
         output = self.run_script(argument)
@@ -174,6 +179,20 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{}")
 
+    def test_minigraph_peer_switch(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "PEER_SWITCH"'
+        expected_table = {
+            'switch2-t0': {
+                'address_ipv4': "25.1.1.10"
+            }
+        }
+        
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_table
+        )
+
     def test_mux_cable_parsing(self):
         result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         
@@ -185,6 +204,11 @@ class TestCfgGenCaseInsensitive(TestCase):
             else:
                 self.assertTrue("mux_cable" not in port)
 
+    def test_minigraph_storage_device(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'storage_device\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "true")
+        
     def test_minigraph_tunnel_table(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TUNNEL"'
         expected_tunnel = {

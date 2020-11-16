@@ -65,6 +65,18 @@ class minigraph_encoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
+def get_peer_switch_info(link_metadata, devices):
+    peer_switch_table = {}
+    for data in link_metadata.values():
+        if "PeerSwitch" in data:
+            peer_hostname = data["PeerSwitch"]
+            peer_lo_addr = devices[peer_hostname]["lo_addr"] 
+            peer_switch_table[peer_hostname] = {
+                'address_ipv4': peer_lo_addr
+            }
+
+    return peer_switch_table
+
 def parse_device(device):
     lo_prefix = None
     mgmt_prefix = None
@@ -98,6 +110,7 @@ def parse_png(png, hname):
     port_speeds = {}
     console_ports = {}
     mux_cable_ports = {}
+    is_storage_device = False
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -153,6 +166,12 @@ def parse_png(png, hname):
                     device_data['deployment_id'] = deployment_id
                 devices[name] = device_data
 
+                if name == hname:
+                    cluster = device.find(str(QName(ns, "ClusterName")))
+
+                    if cluster != None and "str" in cluster.text.lower():
+                        is_storage_device = True
+
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for if_link in child.findall(str(QName(ns, 'DeviceLinkBase'))):
                 if str(QName(ns3, "type")) in if_link.attrib:
@@ -179,7 +198,7 @@ def parse_png(png, hname):
 
                     mux_cable_ports[intf_name] = "true"
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports)
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports, is_storage_device)
 
 def parse_asic_external_link(link, asic_name, hostname):
     neighbors = {}
@@ -667,16 +686,31 @@ def parse_linkmeta(meta, hname):
             # Cannot find a matching hname, something went wrong
             continue
 
+        has_peer_switch = False
+        upper_tor_hostname = ''
+        lower_tor_hostname = ''
+
         properties = linkmeta.find(str(QName(ns1, "Properties")))
         for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
             name = device_property.find(str(QName(ns1, "Name"))).text
             value = device_property.find(str(QName(ns1, "Value"))).text
             if name == "FECDisabled":
                 fec_disabled = value
+            elif name == "GeminiPeeringLink":
+                has_peer_switch = True
+            elif name == "UpperTOR":
+                upper_tor_hostname = value
+            elif name == "LowerTOR":
+                lower_tor_hostname = value
 
         linkmetas[port] = {}
         if fec_disabled:
             linkmetas[port]["FECDisabled"] = fec_disabled
+        if has_peer_switch:
+            if upper_tor_hostname == hname:
+                linkmetas[port]["PeerSwitch"] = lower_tor_hostname
+            else:
+                linkmetas[port]["PeerSwitch"] = upper_tor_hostname
     return linkmetas
 
 
@@ -915,6 +949,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     hostname = None
     linkmetas = {}
     host_lo_intfs = None
+    is_storage_device = False
     local_devices = []
 
     # hostname is the asic_name, get the asic_id from the asic_name
@@ -948,7 +983,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "CpgDec")):
                 (bgp_sessions, bgp_internal_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
             elif child.tag == str(QName(ns, "PngDec")):
-                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports) = parse_png(child, hostname)
+                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports, is_storage_device) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
@@ -992,6 +1027,15 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+
+    results['PEER_SWITCH'] = get_peer_switch_info(linkmetas, devices)
+
+    if bool(results['PEER_SWITCH']):
+        results['DEVICE_METADATA']['localhost']['subtype'] = 'DualToR'
+
+    if is_storage_device:
+        results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
+
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
@@ -1159,7 +1203,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    if current_device['type'] in backend_device_types:
+    if current_device['type'] in backend_device_types and is_storage_device:
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
 
