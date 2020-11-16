@@ -1,17 +1,14 @@
 constants:
   deployment_id_asn_map:
-    "1" : 64523
-    "2" : 65511
-    "3" : 64523
-    "4" : 64523
+    "1" : 65432
+    "2" : 65433
   bgp:
-    traffic_shift_community: 8075:8847
+    traffic_shift_community: 12345:12345
     families:
       - ipv4
       - ipv6
-    use_deployment_id: true
-    use_neighbors_meta: true
-    enable_bbr: false
+    use_deployment_id: false
+    use_neighbors_meta: false
     graceful_restart:
       enabled: true
       restart_time: 240
@@ -38,7 +35,7 @@ constants:
     peers:
       general: # peer_type
         db_table: "BGP_NEIGHBOR"
-        template_dir: "msft.general"
+        template_dir: "general"
         bbr:
           PEER_V4:
             - ipv4
@@ -46,12 +43,14 @@ constants:
             - ipv6
       internal: # peer_type
         db_table: "BGP_INTERNAL_NEIGHBOR"
-        template_dir: "msft.internal"
+        template_dir: "internal"
       monitors: # peer_type
         enabled: true
         db_table: "BGP_MONITORS"
-        template_dir: "msft.monitors"
+        peer_group: "BGPMON"
+        template_dir: "monitors"
       dynamic: # peer_type
         enabled: true
         db_table: "BGP_PEER_RANGE"
-        template_dir: "msft.dynamic"
+        peer_group: "BGP_SPEAKER"
+        template_dir: "dynamic"
