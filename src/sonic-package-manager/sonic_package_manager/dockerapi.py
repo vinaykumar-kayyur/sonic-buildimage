@@ -59,10 +59,9 @@ class DockerApi:
         else:
             image = f'{repository}:{reference}'
 
-        log.debug(f'pulling image by digest {image}')
+        log.debug(f'pulling image {image}')
 
         api = self.client.api
-        digest = None
 
         with progress_manager or contextlib.nullcontext():
             for line in api.pull(repository,
@@ -87,7 +86,6 @@ class DockerApi:
                     if 'complete' in status:
                         pbar.desc = f'{status} {id}'
                         pbar.update(pbar.total)
-                        log.info(f'{status} {id}')
                         continue
 
                     current, total = get_progress(line)
@@ -102,18 +100,13 @@ class DockerApi:
                     # not a progress line
                     pass
 
-                # after pull, the digest is printed in status message
-                # record it for below use
-                if 'status' in line and 'Digest' in line['status']:
-                    _, digest = line['status'].split(': ')
-
         log.debug(f'image {image} pulled successfully')
 
         # Reference might be provided as a digest. In this case
         # Docker will create a dangling image without any tag.
         # This is not desired and may leave garbage Dockers.
         # We are tagging it with a tag provided by the user.
-        if tag and digest:
+        if tag:
             log.debug(f'tagging {image} with {repository}:{tag}')
             api.tag(f'{image}', repository, tag)
 
@@ -153,7 +146,7 @@ class DockerApi:
         log.debug(f'image {src} to {dst} tagged successfully')
 
     def labels(self, repository: str, tag: str):
-        """ Returns a list of labels associated with repository. """
+        """ Returns a list of labels associated with image. """
 
         image = f'{repository}:{tag}'
         log.debug(f'inspecting image labels {image}')
@@ -164,7 +157,7 @@ class DockerApi:
         return labels
 
     def cp(self, repository: str, tag: str, src_path: str, dst_path: str):
-        """ Works like 'docker cp' but works with images. """
+        """ Copy src_path from the docker image to host dst_path. """
 
         image = f'{repository}:{tag}'
         buf = bytes()
