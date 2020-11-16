@@ -21,7 +21,6 @@ Before={{ service }}{% if multi_instance and service in multi_instance_services 
 {%- endfor %}
 BindsTo=sonic.target
 After=sonic.target
-Before=ntp-config.service
 StartLimitIntervalSec=1200
 StartLimitBurst=3
 
