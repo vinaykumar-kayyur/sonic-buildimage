@@ -1,8 +1,13 @@
 !
 ! template: bgpd/templates/msft.dynamic/policies.conf.j2
 !
-{% from "bgpd/templates/msft.dynamic/router.j2" import dynamic_routing with context %}
-{{ dynamic_routing("policies") }}
+{% if CONFIG_DB__DEVICE_METADATA['localhost']['type'] == 'ToRRouter' %}
+!
+route-map FROM_BGP_SPEAKER permit 10
+!
+route-map TO_BGP_SPEAKER deny 10
+!
+{% endif %}
 !
 ! end of template: bgpd/templates/msft.dynamic/policies.conf.j2
 !
