@@ -1,5 +1,11 @@
 from setuptools import setup
 
+dependencies = [
+    'natsort',
+    'sonic_py_common',
+    'swsssdk>=2.0.1',
+]
+
 setup(
     name = 'sonic-host-services',
     version = '1.0',
@@ -13,6 +19,8 @@ setup(
     scripts = [
         'scripts/caclmgrd',
         'scripts/procdockerstatsd',
+        'scripts/determine-reboot-cause',
+        'scripts/process-reboot-cause',
     ],
     install_requires = [
         'sonic-py-common',

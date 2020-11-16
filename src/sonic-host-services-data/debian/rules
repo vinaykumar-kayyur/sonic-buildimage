@@ -8,3 +8,6 @@ build:
 override_dh_installsystemd:
 	dh_installsystemd --no-start --name=caclmgrd
 	dh_installsystemd --no-start --name=procdockerstatsd
+	dh_installsystemd --no-start --name=determine-reboot-cause
+	dh_installsystemd --no-start --name=process-reboot-cause
+
