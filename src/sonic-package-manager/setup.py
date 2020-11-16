@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from setuptools import setup
 
 setup(
@@ -25,7 +23,7 @@ setup(
         'natsort',
         'toposort',
         'sonic-py-common',
-        'swsssdk',
+        'swsssdk',  # Temporary dependency till the issue with py-swsscommon is resolved.
         'requests',
     ],
     setup_requires=[
