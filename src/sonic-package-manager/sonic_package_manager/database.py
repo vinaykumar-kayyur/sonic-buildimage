@@ -18,7 +18,7 @@ class PackageEntry:
     name: str
     repository: str
     description: Optional[str] = None
-    default_reference: str = None
+    default_reference: Optional[str] = None
     version: Optional[Version] = None
     installed: bool = False
     built_in: bool = False
@@ -47,7 +47,7 @@ def package_to_dict(package: PackageEntry) -> Dict:
     return {
         'repository': package.repository,
         'description': package.description,
-        'default-reference': None if package.default_reference is None else str(package.default_reference),
+        'default-reference': package.default_reference,
         'installed-version': None if package.version is None else str(package.version),
         'installed': package.installed,
         'built-in': package.built_in,
@@ -57,9 +57,14 @@ def package_to_dict(package: PackageEntry) -> Dict:
 class PackageDatabase:
     """ An interface to SONiC repository database """
 
-    def __init__(self, database, on_save: Optional[Callable] = None):
+    def __init__(self,
+                 database: Dict[str, PackageEntry],
+                 on_save: Optional[Callable] = None):
         """ Initialize PackageDatabase.
-        Reads the content of packages.yml and loads the database.
+
+        Args:
+            database: Database dictionary
+            on_save: Optional callback to execute on commit()
         """
 
         self._database = database
