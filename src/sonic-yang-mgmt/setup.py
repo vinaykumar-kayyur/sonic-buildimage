@@ -25,14 +25,13 @@ setup(
     license="GNU General Public License v3",
     long_description=readme + '\n\n',
     install_requires = [
-        'ijson==2.6.1',
-        'pyang==2.1.1',
-        'xmltodict==0.12.0'
+        'xmltodict==0.12.0',
+        'ijson==2.6.1'
     ],
     tests_require = [
-        'ijson==2.6.1',
         'pytest>3',
-        'xmltodict==0.12.0'
+        'xmltodict==0.12.0',
+        'ijson==2.6.1'
     ],
     setup_requires = [
         'pytest-runner',
