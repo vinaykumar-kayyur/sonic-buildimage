@@ -1,0 +1,25 @@
+From e49b72c301082bc60eac5b8093490e9296d566d7 Mon Sep 17 00:00:00 2001
+From: wangshengjun <wangshengjun@asterfusion.com>
+Date: Mon, 16 Nov 2020 16:40:42 +0800
+Subject: [PATCH] zebra:fix the assert issue when the nexthop type is blockhole
+
+Signed-off-by: wangshengjun <wangshengjun@asterfusion.com>
+---
+ zebra/zebra_fpm_netlink.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
+index 74aab82..24c62c6 100644
+--- a/zebra/zebra_fpm_netlink.c
++++ b/zebra/zebra_fpm_netlink.c
+@@ -331,6 +331,7 @@ static int netlink_route_info_fill(netlink_route_info_t *ri, int cmd,
+ 				ri->rtm_type = RTN_BLACKHOLE;
+ 				break;
+ 			}
++			return 1;
+ 		}
+ 
+ 		if ((cmd == RTM_NEWROUTE
+-- 
+2.7.4
+
