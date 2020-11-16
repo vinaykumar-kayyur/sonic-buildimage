@@ -16,7 +16,6 @@ class Formatter(click_log.ColorFormatter):
         'critical': dict(fg='red'),
         'debug': dict(fg='blue', bold=True),
         'warning': dict(fg='yellow'),
-        'info': dict(fg='green', bold=True),
     }
 
 
