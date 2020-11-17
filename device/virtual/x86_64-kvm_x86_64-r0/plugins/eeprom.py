@@ -35,7 +35,7 @@ Vendor Name          0x2D   5 SONiC
 """
 
     def decode_eeprom(self, e):
-        print e
+        print(e)
 
     def serial_number_str(self, e):
         """Return service tag instead of serial number"""
