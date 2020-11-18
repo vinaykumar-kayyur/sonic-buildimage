@@ -689,6 +689,63 @@
 		}
 	},
 
+	"PORT_VALID_AUTONEG_TEST": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [{
+					"port_name": "Ethernet8",
+					"alias": "eth8",
+					"lanes": "65",
+					"description": "Ethernet8",
+					"speed": 25000,
+					"fec": "rs",
+					"mtu": 9000,
+					"admin_status": "up",
+					"pfc_asym": "off",
+					"autoneg": 0
+				}]
+			}
+		}
+	},
+
+	"PORT_INVALID_AUTONEG_TEST_1": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [{
+					"port_name": "Ethernet8",
+					"alias": "eth8",
+					"lanes": "65",
+					"description": "Ethernet8",
+					"speed": 25000,
+					"fec": "rs",
+					"mtu": 9000,
+					"admin_status": "up",
+					"pfc_asym": "off",
+					"autoneg": -1
+				}]
+			}
+		}
+	},
+
+	"PORT_INVALID_AUTONEG_TEST_2": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [{
+					"port_name": "Ethernet8",
+					"alias": "eth8",
+					"lanes": "65",
+					"description": "Ethernet8",
+					"speed": 25000,
+					"fec": "rs",
+					"mtu": 9000,
+					"admin_status": "up",
+					"pfc_asym": "off",
+					"autoneg": 260
+				}]
+			}
+		}
+	},
+
 	"ACL_RULE_ARP_TYPE_ICMPV6_CODE_MISMATCH": {
 		"sonic-acl:sonic-acl": {
 			"sonic-acl:ACL_RULE": {
