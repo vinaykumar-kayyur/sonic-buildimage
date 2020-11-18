@@ -1,3 +1,5 @@
+import re
+
 from swsscommon import swsscommon
 
 from .log import log_err, log_info, log_crit
@@ -107,14 +109,28 @@ class BBRMgr(Manager):
         :return: list of commands prepared for FRR
         """
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
+        available_peer_groups = self.__get_available_peer_groups()
         cmds = ["router bgp %s" % bgp_asn]
         prefix_of_commands = "" if status == "enabled" else "no "
         for af in ["ipv4", "ipv6"]:
             cmds.append(" address-family %s" % af)
             for pg_name in sorted(self.bbr_enabled_pgs.keys()):
-                if af in self.bbr_enabled_pgs[pg_name]:
+                if pg_name in available_peer_groups and af in self.bbr_enabled_pgs[pg_name]:
                     cmds.append("  %sneighbor %s allowas-in 1" % (prefix_of_commands, pg_name))
         return cmds
+
+    def __get_available_peer_groups(self):
+        """
+        Extract configured peer-groups from the config
+        :return: set of available peer-groups
+        """
+        re_pg = re.compile(r'^\s*neighbor\s+(\S+)\s+peer-group\s*$')
+        res = set()
+        for line in self.cfg_mgr.get_text():
+            m = re_pg.match(line)
+            if m:
+                res.add(m.group(1))
+        return res
 
     def __restart_peers(self):
         """ Restart peer-groups which support BBR """
