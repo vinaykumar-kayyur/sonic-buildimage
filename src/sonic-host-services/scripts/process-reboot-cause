@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # process-reboot-cause
 #
@@ -49,7 +49,7 @@ def read_reboot_cause_files_and_save_state_db():
 
     data = []
     # Read each sorted previous reboot cause file and update the state db with previous reboot cause information
-    for i in range(min(10,len(TIME_SORTED_FULL_REBOOT_FILE_LIST))) :
+    for i in range(min(10,len(TIME_SORTED_FULL_REBOOT_FILE_LIST))):
         x = TIME_SORTED_FULL_REBOOT_FILE_LIST[i]
         if os.path.isfile(x):
             with open(x, "r") as cause_file:
@@ -59,6 +59,12 @@ def read_reboot_cause_files_and_save_state_db():
                 state_db.set(state_db.STATE_DB, _hash, 'time', data['time'])
                 state_db.set(state_db.STATE_DB, _hash, 'user', data['user'])
                 state_db.set(state_db.STATE_DB, _hash, 'comment', data['comment'])
+
+    if len(TIME_SORTED_FULL_REBOOT_FILE_LIST) > 10:
+        for i in range(len(TIME_SORTED_FULL_REBOOT_FILE_LIST)):
+            if i >= 10:
+                x = TIME_SORTED_FULL_REBOOT_FILE_LIST[i]
+                os.remove(x)
 
 
 def main():
