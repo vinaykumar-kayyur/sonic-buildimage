@@ -7,7 +7,7 @@ import syslog
 
 database_config_file = "/var/run/redis/sonic-db/database_config.json"
 redis_chassis = 'redis_chassis'
-chassis_db = 'CHASSIS_APP_DB'
+chassis_db_list = ['CHASSIS_APP_DB', 'CHASSIS_STATE_DB']
 
 
 def main():
@@ -52,11 +52,12 @@ def main():
        data_keep['INSTANCES'][redis_chassis] = data['INSTANCES'][redis_chassis]
        if delete_config:
            del data['INSTANCES'][redis_chassis]
-    if 'DATABASES' in data and chassis_db in data['DATABASES']:
-       data_keep['DATABASES'] = {}
-       data_keep['DATABASES'][chassis_db] = data['DATABASES'][chassis_db]
-       if delete_config:
-           del data['DATABASES'][chassis_db]
+    for chassis_db in chassis_db_list:
+       if 'DATABASES' in data and chassis_db in data['DATABASES']:
+           data_keep['DATABASES'] = {}
+           data_keep['DATABASES'][chassis_db] = data['DATABASES'][chassis_db]
+           if delete_config:
+               del data['DATABASES'][chassis_db]
     with open(jsonfile, "w") as write_file:
        data_publish = data_keep if keep_config else data
        if port_number:
