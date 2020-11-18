@@ -12,11 +12,7 @@ try:
     import os
     import time
     import struct
-    import sys
-    import getopt
-    import select
     import mmap
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -876,12 +872,6 @@ class Sfp(SfpBase):
     def tx_disable(self, tx_disable):
         """
         Disable SFP TX for all channels
-        """
-        return False
-
-    def tx_disable_channel(self, channel, disable):
-        """
-        Sets the tx_disable for specified SFP channels
         """
         return False
 

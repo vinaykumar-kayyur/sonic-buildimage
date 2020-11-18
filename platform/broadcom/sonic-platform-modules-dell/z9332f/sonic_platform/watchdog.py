@@ -10,8 +10,6 @@
 ########################################################################
 
 try:
-    import sys
-    import struct
     import ctypes
     import subprocess
     from sonic_platform_base.watchdog_base import WatchdogBase
@@ -139,7 +137,6 @@ class Watchdog(WatchdogBase):
             self.timeout = seconds
             return seconds
 
-        return -1
 
     def disarm(self):
         """
