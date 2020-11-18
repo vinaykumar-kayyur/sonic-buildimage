@@ -9,11 +9,11 @@ StartLimitBurst=3
 
 [Service]
 User=root
-ExecStartPre=/usr/bin/monit -g monit_group_teamd monitor
+ExecStartPre=-/usr/bin/monit -g monit_group_teamd monitor
 ExecStartPre=/usr/local/bin/{{docker_container_name}}.sh start{% if multi_instance == 'true' %} %i{% endif %}
 ExecStart=/usr/local/bin/{{docker_container_name}}.sh wait{% if multi_instance == 'true' %} %i{% endif %}
 ExecStop=/usr/local/bin/{{docker_container_name}}.sh stop{% if multi_instance == 'true' %} %i{% endif %}
-ExecStopPost=/usr/bin/monit -g monit_group_teamd unmonitor
+ExecStopPost=-/usr/bin/monit -g monit_group_teamd unmonitor
 Restart=always
 RestartSec=30
 

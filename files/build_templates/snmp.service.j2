@@ -10,11 +10,11 @@ StartLimitBurst=3
 
 [Service]
 User=root
-ExecStartPre=/usr/bin/monit -g monit_group_snmp monitor
+ExecStartPre=-/usr/bin/monit -g monit_group_snmp monitor
 ExecStartPre=/usr/bin/{{docker_container_name}}.sh start
 ExecStart=/usr/bin/{{docker_container_name}}.sh wait
 ExecStop=/usr/bin/{{docker_container_name}}.sh stop
-ExecStopPost=/usr/bin/monit -g monit_group_snmp unmonitor
+ExecStopPost=-/usr/bin/monit -g monit_group_snmp unmonitor
 Restart=always
 RestartSec=30
 
