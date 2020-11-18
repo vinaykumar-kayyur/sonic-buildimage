@@ -115,7 +115,7 @@ sudo rm -rf $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY2_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install ipaddress
 
 # Install Python module for psutil
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install psutil
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 
 # Install SwSS SDK Python 3 package
 # Note: the scripts will be overwritten by corresponding Python 2 package
@@ -154,21 +154,37 @@ sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libyang-cpp_*.deb
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python2-yang_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/python3-yang_*.deb
 SONIC_YANG_MODEL_PY3_WHEEL_NAME=$(basename {{sonic_yang_models_py3_wheel_path}})
 sudo cp {{sonic_yang_models_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MODEL_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MODEL_PY3_WHEEL_NAME
-# Install sonic-yang-mgmt Python package
-SONIC_YANG_MGMT_PY_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py_wheel_path}})
-sudo cp {{sonic_yang_mgmt_py_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SONIC_YANG_MGMT_PY_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY_WHEEL_NAME
+
+# Install sonic-yang-mgmt Python2 package
+SONIC_YANG_MGMT_PY2_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py2_wheel_path}})
+sudo cp {{sonic_yang_mgmt_py2_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $SONIC_YANG_MGMT_PY2_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY2_WHEEL_NAME
+
+# Install sonic-yang-mgmt Python3 package
+SONIC_YANG_MGMT_PY3_WHEEL_NAME=$(basename {{sonic_yang_mgmt_py3_wheel_path}})
+sudo cp {{sonic_yang_mgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_YANG_MGMT_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_YANG_MGMT_PY3_WHEEL_NAME
 
 # Install sonic-platform-common Python 2 package
 PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{platform_common_py2_wheel_path}})
 sudo cp {{platform_common_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $PLATFORM_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
+
+{% if pddf_support == "y" %}
+# Install pddf-platform-api-base Python 2 package
+PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME=$(basename {{pddf_platform_api_base_py2_wheel_path}})
+sudo cp {{pddf_platform_api_base_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
+{% endif %}
 
 # Install system-health Python 2 package
 SYSTEM_HEALTH_PY2_WHEEL_NAME=$(basename {{system_health_py2_wheel_path}})
@@ -323,12 +339,6 @@ sudo cp files/dhcp/90-dhcp6-systcl.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMP
 # Copy initial interfaces configuration file, will be overwritten on first boot
 sudo cp $IMAGE_CONFIGS/interfaces/init_interfaces $FILESYSTEM_ROOT/etc/network/interfaces
 sudo mkdir -p $FILESYSTEM_ROOT/etc/network/interfaces.d
-
-# Copy hostcfgd files
-sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
-echo "hostcfgd.service" | sudo tee -a $GENERATED_SERVICE_FILE
-sudo cp $IMAGE_CONFIGS/hostcfgd/hostcfgd $FILESYSTEM_ROOT/usr/bin/
-sudo cp $IMAGE_CONFIGS/hostcfgd/*.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 
 # copy core file uploader files
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
@@ -555,12 +565,13 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /sys || true
 sudo LANG=C chroot $FILESYSTEM_ROOT umount -lf /sys
 {% endif %}
 
-# Copy service scripts (swss, syncd, bgp, radv)
+# Copy service scripts (swss, syncd, bgp, teamd, radv)
 sudo LANG=C cp $SCRIPTS_DIR/swss.sh $FILESYSTEM_ROOT/usr/local/bin/swss.sh
 sudo LANG=C cp $SCRIPTS_DIR/syncd.sh $FILESYSTEM_ROOT/usr/local/bin/syncd.sh
 sudo LANG=C cp $SCRIPTS_DIR/syncd_common.sh $FILESYSTEM_ROOT/usr/local/bin/syncd_common.sh
 sudo LANG=C cp $SCRIPTS_DIR/gbsyncd.sh $FILESYSTEM_ROOT/usr/local/bin/gbsyncd.sh
 sudo LANG=C cp $SCRIPTS_DIR/bgp.sh $FILESYSTEM_ROOT/usr/local/bin/bgp.sh
+sudo LANG=C cp $SCRIPTS_DIR/teamd.sh $FILESYSTEM_ROOT/usr/local/bin/teamd.sh
 sudo LANG=C cp $SCRIPTS_DIR/radv.sh $FILESYSTEM_ROOT/usr/local/bin/radv.sh
 
 # Copy sonic-netns-exec script

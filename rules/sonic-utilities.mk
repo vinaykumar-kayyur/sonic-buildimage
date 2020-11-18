@@ -14,10 +14,14 @@ $(SONIC_UTILITIES_PY2)_DEPENDS += $(SONIC_PY_COMMON_PY2) \
                                   $(SONIC_PY_COMMON_PY3) \
                                   $(SWSSSDK_PY2) \
                                   $(SONIC_CONFIG_ENGINE_PY2) \
-                                  $(SONIC_YANG_MGMT_PY) \
+                                  $(SONIC_YANG_MGMT_PY2) \
+                                  $(SONIC_YANG_MGMT_PY3) \
                                   $(SONIC_YANG_MODELS_PY3)
 $(SONIC_UTILITIES_PY2)_DEBS_DEPENDS = $(LIBYANG) \
                                       $(LIBYANG_CPP) \
                                       $(LIBYANG_PY2) \
-                                      $(LIBYANG_PY3)
+                                      $(LIBYANG_PY3) \
+                                      $(LIBSWSSCOMMON) \
+                                      $(PYTHON_SWSSCOMMON) \
+                                      $(PYTHON3_SWSSCOMMON)
 SONIC_PYTHON_WHEELS += $(SONIC_UTILITIES_PY2)
