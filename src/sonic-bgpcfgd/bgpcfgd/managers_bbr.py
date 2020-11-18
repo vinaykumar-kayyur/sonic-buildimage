@@ -49,18 +49,23 @@ class BBRMgr(Manager):
         if not 'bgp' in self.constants:
             log_err("BBRMgr::Disabled: 'bgp' key is not found in constants")
             return
-        if 'bbr' in self.constants['bgp'] and \
-                'enabled' in self.constants['bgp']['bbr'] and \
-                self.constants['bgp']['bbr']['enabled']:
+        if 'bbr' in self.constants['bgp'] \
+                and 'enabled' in self.constants['bgp']['bbr'] \
+                and self.constants['bgp']['bbr']['enabled']:
             self.bbr_enabled_pgs = self.__read_pgs()
             if self.bbr_enabled_pgs:
                 self.enabled = True
-                self.directory.put(self.db_name, self.table_name, 'status', "enabled")
-                log_info("BBRMgr::Initialized and enabled")
+                if 'default_state' in self.constants['bgp']['bbr'] \
+                        and self.constants['bgp']['bbr']['default_state'] == 'enabled':
+                    default_status = "enabled"
+                else:
+                    default_status = "disabled"
+                self.directory.put(self.db_name, self.table_name, 'status', default_status)
+                log_info("BBRMgr::Initialized and enabled. Default state: '%s'" % default_status)
             else:
                 log_info("BBRMgr::Disabled: no BBR enabled peers")
         else:
-            log_info("BBRMgr::Disabled: not enabled in the constants")
+            log_info("BBRMgr::Disabled: no bgp.bbr.enabled in the constants")
 
     def __read_pgs(self):
         """

@@ -123,8 +123,6 @@ def __init_common(constants,
     assert m.directory.get("CONFIG_DB", "BGP_BBR", "status") == expected_status
     if expected_status == "enabled":
         assert m.enabled
-    else:
-        assert not m.enabled
     if expected_log_err is not None:
         mocked_log_err.assert_called_with(expected_log_err)
     if expected_log_info is not None:
@@ -135,17 +133,17 @@ def test___init_1():
 
 def test___init_2():
     constants = deepcopy(global_constants)
-    __init_common(constants, "BBRMgr::Disabled: not enabled in the constants", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
 
 def test___init_3():
     constants = deepcopy(global_constants)
     constants["bgp"]["bbr"] = { "123" : False }
-    __init_common(constants, "BBRMgr::Disabled: not enabled in the constants", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
 
 def test___init_4():
     constants = deepcopy(global_constants)
     constants["bgp"]["bbr"] = { "enabled" : False }
-    __init_common(constants, "BBRMgr::Disabled: not enabled in the constants", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
 
 def test___init_5():
     constants = deepcopy(global_constants)
@@ -164,7 +162,35 @@ def test___init_6():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, 'BBRMgr::Initialized and enabled', None, expected_bbr_entries, "enabled")
+    __init_common(constants, "BBRMgr::Initialized and enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
+
+def test___init_7():
+    expected_bbr_entries = {
+                "PEER_V4": ["ipv4"],
+                "PEER_V6": ["ipv6"],
+    }
+    constants = deepcopy(global_constants)
+    constants["bgp"]["bbr"] = { "enabled" : True, "default_state": "disabled" }
+    constants["bgp"]["peers"] = {
+        "general": {
+            "bbr": expected_bbr_entries,
+        }
+    }
+    __init_common(constants, "BBRMgr::Initialized and enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
+
+def test___init_8():
+    expected_bbr_entries = {
+                "PEER_V4": ["ipv4"],
+                "PEER_V6": ["ipv6"],
+    }
+    constants = deepcopy(global_constants)
+    constants["bgp"]["bbr"] = { "enabled" : True, "default_state": "enabled" }
+    constants["bgp"]["peers"] = {
+        "general": {
+            "bbr": expected_bbr_entries,
+        }
+    }
+    __init_common(constants, "BBRMgr::Initialized and enabled. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
 @patch('bgpcfgd.managers_bbr.log_info')
 def read_pgs_common(constants, expected_log_info, expected_bbr_enabled_pgs, mocked_log_info):
