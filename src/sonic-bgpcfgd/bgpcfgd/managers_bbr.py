@@ -126,6 +126,7 @@ class BBRMgr(Manager):
         """
         re_pg = re.compile(r'^\s*neighbor\s+(\S+)\s+peer-group\s*$')
         res = set()
+        self.cfg_mgr.update()
         for line in self.cfg_mgr.get_text():
             m = re_pg.match(line)
             if m:
