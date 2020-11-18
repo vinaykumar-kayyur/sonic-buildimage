@@ -6,8 +6,11 @@
         {%- if ns.firstPrinted %},{% endif %}
 
         "{{ key }}": {
-            "alias": "{{ value.alias }}",
-            "lanes": "{{ value.lanes }}",
+            {%- for k,v in value.items() %}
+
+            "{{ k }}": "{{ v }}",
+            {%- endfor %}
+            
             "admin_status": "up"
         }
         {%- if ns.update({'firstPrinted': True}) %}{% endif -%}
