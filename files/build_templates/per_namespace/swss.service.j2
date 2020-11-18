@@ -19,9 +19,11 @@ StartLimitBurst=3
 [Service]
 User=root
 Environment=sonic_asic_platform={{ sonic_asic_platform }}
+ExecStartPre=/usr/bin/monit -g monit_group_swss monitor
 ExecStartPre=/usr/local/bin/swss.sh start{% if multi_instance == 'true' %} %i{% endif %}
 ExecStart=/usr/local/bin/swss.sh wait{% if multi_instance == 'true' %} %i{% endif %}
 ExecStop=/usr/local/bin/swss.sh stop{% if multi_instance == 'true' %} %i{% endif %}
+ExecStopPost=/usr/bin/monit -g monit_group_swss unmonitor
 Restart=always
 RestartSec=30
 
