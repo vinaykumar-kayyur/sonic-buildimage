@@ -31,7 +31,7 @@ def show_help(ctx):
     ctx.exit(0)
 
 
-def root_privileged_required(func: typing.Callable) -> typing.Callable:
+def root_privileges_required(func: typing.Callable) -> typing.Callable:
     """ Decorates a function, so that the function is invoked
     only if the user is root. """
 
@@ -191,7 +191,7 @@ def changelog(ctx, expression):
 @click.option('--default-reference', type=str)
 @click.option('--description', type=str)
 @click.pass_context
-@root_privileged_required
+@root_privileges_required
 def add(ctx, name, repository, default_reference, description):
     """ Add a new repository to database. """
 
@@ -206,7 +206,7 @@ def add(ctx, name, repository, default_reference, description):
 @repository.command()
 @click.argument("name")
 @click.pass_context
-@root_privileged_required
+@root_privileges_required
 def remove(ctx, name):
     """ Remove a package from database. """
 
@@ -219,16 +219,13 @@ def remove(ctx, name):
 
 
 @cli.command()
-@click.option('--force', is_flag=True)
+@click.option('-f', '--force', is_flag=True)
 @click.option('-y', '--yes', is_flag=True)
-@click.option('--manifest',
-              help="manifest file used to override package manifest",
-              type=click.Path())
 @click.argument('expression')
 @click.pass_context
 @click_log.simple_verbosity_option(log)
-@root_privileged_required
-def install(ctx, expression, force, yes, manifest):
+@root_privileges_required
+def install(ctx, expression, force, yes):
     """ Install a package. """
 
     manager: PackageManager = ctx.obj
@@ -246,16 +243,13 @@ def install(ctx, expression, force, yes, manifest):
 
 
 @cli.command()
-@click.option('--force', is_flag=True)
+@click.option('-f', '--force', is_flag=True)
 @click.option('-y', '--yes', is_flag=True)
-@click.option('--manifest',
-              help="manifest file used to override package manifest",
-              type=click.Path())
 @click.argument('expression')
 @click.pass_context
 @click_log.simple_verbosity_option(log)
-@root_privileged_required
-def upgrade(ctx, expression, force, yes, manifest):
+@root_privileges_required
+def upgrade(ctx, expression, force, yes):
     """ Install a package. """
 
     manager: PackageManager = ctx.obj
@@ -273,12 +267,12 @@ def upgrade(ctx, expression, force, yes, manifest):
 
 
 @cli.command()
-@click.option('--force', is_flag=True)
+@click.option('-f', '--force', is_flag=True)
 @click.option('-y', '--yes', is_flag=True)
 @click.argument('name')
 @click.pass_context
 @click_log.simple_verbosity_option(log)
-@root_privileged_required
+@root_privileges_required
 def uninstall(ctx, name, force, yes):
     """ Uninstall a package. """
 
@@ -297,12 +291,12 @@ def uninstall(ctx, name, force, yes):
 
 
 @cli.command()
-@click.option('--force', is_flag=True)
+@click.option('-f', '--force', is_flag=True)
 @click.option('-y', '--yes', is_flag=True)
 @click.argument('database', type=click.Path())
 @click.pass_context
 @click_log.simple_verbosity_option(log)
-@root_privileged_required
+@root_privileges_required
 def migrate(ctx, database, force, yes):
     manager: PackageManager = ctx.obj
 
