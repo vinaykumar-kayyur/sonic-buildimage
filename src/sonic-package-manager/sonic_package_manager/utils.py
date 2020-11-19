@@ -12,9 +12,16 @@ def make_python_identifier(string):
         https://docs.python.org/2/reference/lexical_analysis.html#identifiers
     """
 
+    # create a working copy (and make it lowercase, while we're at it)
     s = string.lower()
+
+    # remove leading and trailing whitespace
     s = s.strip()
+
+    # Make spaces into underscores
     s = re.sub('[\\s\\t\\n]+', '_', s)
+
+    # Remove invalid characters
     s = re.sub('[^0-9a-zA-Z_]', '', s)
 
     # Remove leading characters until we find a letter or underscore

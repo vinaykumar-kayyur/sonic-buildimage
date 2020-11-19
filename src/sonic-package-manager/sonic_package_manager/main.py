@@ -67,7 +67,7 @@ def cli(ctx):
 @cli.group()
 @click.pass_context
 def repository(ctx):
-    """ PackageEntry management commands. """
+    """ Repository management commands. """
 
     pass
 
@@ -250,7 +250,7 @@ def install(ctx, expression, force, yes):
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
 def upgrade(ctx, expression, force, yes):
-    """ Install a package. """
+    """ Upgrade a package. """
 
     manager: PackageManager = ctx.obj
 
@@ -298,6 +298,8 @@ def uninstall(ctx, name, force, yes):
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
 def migrate(ctx, database, force, yes):
+    """ Migrate SONiC packages from the given database file. """
+
     manager: PackageManager = ctx.obj
 
     if not yes and not force:

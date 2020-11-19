@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Callable
 
 from sonic_package_manager.constraint import PackageConstraint, VersionConstraint
 from sonic_package_manager.errors import ManifestError
@@ -46,7 +46,6 @@ class ManifestSchema:
     @dataclass
     class ManifestRoot(ManifestNode):
         items: List
-        required: bool = False
 
         def marshal(self, value: Optional[dict]):
             result = {}
@@ -66,7 +65,7 @@ class ManifestSchema:
 
     @dataclass
     class ManifestField(ManifestNode):
-        type: Any
+        type: Callable
         default: Optional[Any] = None
 
         def marshal(self, value):
@@ -114,6 +113,7 @@ class ManifestSchema:
                     return str(v)
             return [unmarshal(item) for item in value]
 
+    # TODO: add description for each field
     SCHEMA = ManifestRoot('root', [
         ManifestField('version', Version.parse, Version(1, 0, 0)),
         ManifestRoot('package', [
@@ -131,7 +131,6 @@ class ManifestSchema:
             ManifestArray('wanted-by', str),
             ManifestArray('after', str),
             ManifestArray('before', str),
-            ManifestArray('dependent', str),
             ManifestArray('dependent', str),
             ManifestArray('dependent-of', str),
             ManifestField('post-start-action', str, ''),

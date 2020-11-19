@@ -32,7 +32,7 @@ class PackageConstraint:
     constraint: VersionConstraint
 
     def __str__(self):
-        return f'{self.name} {self.constraint}'
+        return f'{self.name}{self.constraint}'
 
     @staticmethod
     def parse(constraint_expression: str) -> 'PackageConstraint':

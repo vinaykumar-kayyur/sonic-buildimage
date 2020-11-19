@@ -27,7 +27,7 @@ def test_installation_dependencies(package_manager, fake_manifest_resolver):
     manifest['package']['depends'] = [PackageConstraint.parse('swss^2.0.0')]
     with pytest.raises(PackageInstallationError,
                        match='Package test-package requires '
-                             'swss >=2.0.0,<3.0.0 but version 1.0.0 is installed'):
+                             'swss>=2.0.0,<3.0.0 but version 1.0.0 is installed'):
         package_manager.install('test-package')
 
 
@@ -36,7 +36,7 @@ def test_installation_dependencies_missing_package(package_manager, fake_manifes
     manifest['package']['depends'] = [PackageConstraint.parse('missing-package>=1.0.0')]
     with pytest.raises(PackageInstallationError,
                        match='Package test-package requires '
-                             'missing-package >=1.0.0 but it is not installed'):
+                             'missing-package>=1.0.0 but it is not installed'):
         package_manager.install('test-package')
 
 
@@ -54,7 +54,7 @@ def test_installation_breaks(package_manager, fake_manifest_resolver):
     manifest['package']['breaks'] = [PackageConstraint.parse('swss^1.0.0')]
     with pytest.raises(PackageInstallationError,
                        match='Package test-package conflicts with '
-                             'swss >=1.0.0,<2.0.0 but version 1.0.0 is installed'):
+                             'swss>=1.0.0,<2.0.0 but version 1.0.0 is installed'):
         package_manager.install('test-package')
 
 

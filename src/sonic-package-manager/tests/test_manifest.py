@@ -16,8 +16,7 @@ def test_manifest_v1_defaults():
 
 
 def test_manifest_v1_invalid_version():
-    with pytest.raises(ManifestError,
-                       match='Failed to convert version=abc to type parse: Unable to parse "abc"'):
+    with pytest.raises(ManifestError):
         Manifest.marshal({'package': {'version': 'abc'}, 'service': {'name': 'test'}})
 
 
@@ -31,18 +30,30 @@ def test_manifest_v1_service_spec():
     assert manifest['service']['asic-service']
 
 
-def test_manifest_mounts():
+def test_manifest_v1_mounts():
     manifest = Manifest.marshal({'version': '1.0.0', 'package': {'version': '1.0.0'},
                                  'service': {'name': 'cpu-report'},
                                  'container': {'privileged': True,
-                                               'mounts': [{'source':'a', 'target': 'b', 'type': 'bind'}]}})
+                                               'mounts': [{'source': 'a', 'target': 'b', 'type': 'bind'}]}})
     assert manifest['container']['mounts'][0]['source'] == 'a'
     assert manifest['container']['mounts'][0]['target'] == 'b'
     assert manifest['container']['mounts'][0]['type'] == 'bind'
 
 
-def test_manifest_unmarshal():
-    manifest = Manifest.marshal({'package': {'version': '1.0.0',
-                                             'depends': ['swss>1.0.0']},
-                                 'service': {'name': 'test'}})
-    manifest.unmarshal()
+def test_manifest_v1_mounts_invalid():
+    with pytest.raises(ManifestError):
+        Manifest.marshal({'version': '1.0.0', 'package': {'version': '1.0.0'},
+                          'service': {'name': 'cpu-report'},
+                          'container': {'privileged': True,
+                                        'mounts': [{'not-source': 'a', 'target': 'b', 'type': 'bind'}]}})
+
+
+def test_manifest_v1_unmarshal():
+    manifest_json_input = {'package': {'version': '1.0.0',
+                                       'depends': ['swss>1.0.0']},
+                           'service': {'name': 'test'}}
+    manifest = Manifest.marshal(manifest_json_input)
+    manifest_json = manifest.unmarshal()
+    for key, section in manifest_json_input.items():
+        for field, value in section.items():
+            assert manifest_json[key][field] == value
