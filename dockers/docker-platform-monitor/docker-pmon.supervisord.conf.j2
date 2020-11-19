@@ -38,7 +38,7 @@ startsecs=0
 dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
 
-{% if not skip_chassisd %}
+{% if not skip_chassisd and HAVE_PMON_CHASSISD_CONF == 1 %}
 [program:chassisd]
 command=/usr/local/bin/chassisd
 priority=3
