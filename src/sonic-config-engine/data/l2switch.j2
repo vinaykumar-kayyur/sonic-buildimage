@@ -6,11 +6,11 @@
         {%- if ns.firstPrinted %},{% endif %}
 
         "{{ key }}": {
-            {%- for k,v in value.items() %}
+            {%- for keyPort,valuePort in value.items() %}
 
-            "{{ k }}": "{{ v }}",
+            "{{ keyPort }}": "{{ valuePort }}",
             {%- endfor %}
-            
+
             "admin_status": "up"
         }
         {%- if ns.update({'firstPrinted': True}) %}{% endif -%}

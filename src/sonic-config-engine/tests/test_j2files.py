@@ -109,8 +109,6 @@ class TestJ2Files(TestCase):
         template_dir = os.path.join(self.test_dir, '..', 'data', 'l2switch.j2')
         argument = '-t ' + template_dir + ' -k Mellanox-SN2700-D48C8 -p ' + self.t0_port_config
         output = self.run_script(argument)
-        print(json.dumps(output_json, sort_keys=True))
-        print(json.dumps(sample_output_json, sort_keys=True))
 
         self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
 
