@@ -33,7 +33,7 @@
         {
             "i2c":
             {
-                "valmap": { "F2B":"INTAKE", "B2F":"EXHAUST" }
+                "valmap": { "F2B":"EXHAUST", "B2F":"INTAKE" }
             }
         },
 
