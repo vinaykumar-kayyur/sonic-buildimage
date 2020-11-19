@@ -150,6 +150,14 @@ sudo cp {{config_engine_py2_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHE
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $CONFIG_ENGINE_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
 
+# For sonic-config-engine Python 3 package
+# Install pyangbind here, outside sonic-config-engine dependencies, as pyangbind causes enum34 to be installed.
+# Then immediately uninstall enum34, as enum34 should not be installed for Python >= 3.4, as it causes a
+# conflict with the new 'enum' module in the standard library
+# https://github.com/robshakir/pyangbind/issues/232
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install pyangbind==0.8.1
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 uninstall -y enum34
+
 # Install SONiC config engine Python 3 package
 CONFIG_ENGINE_PY3_WHEEL_NAME=$(basename {{config_engine_py3_wheel_path}})
 sudo cp {{config_engine_py3_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY3_WHEEL_NAME
