@@ -45,11 +45,25 @@ def failure_ignore(ignore: bool):
 
 def parse_reference_expression(expression):
     try:
-        return get_package_reference_from_constraint(PackageConstraint.parse(expression))
+        return parse_package_reference_from_constraint(PackageConstraint.parse(expression))
     except ValueError:
         # if we failed to parse the expression as constraint expression
         # we will try to parse it as reference
         return PackageReference.parse(expression)
+
+
+def parse_package_reference_from_constraint(constraint: PackageConstraint) -> PackageReference:
+    package_name, version_constraint = constraint.name, constraint.constraint
+    # Allow only specific version for now.
+    # Later we can improve package manager to support
+    # installing packages using expressions like 'package>1.0.0'
+    if version_constraint == VersionRange():  # empty range means any version
+        return PackageReference(package_name, None)
+    if not isinstance(version_constraint, Version):
+        raise PackageManagerError(f'Can only install specific version. '
+                                  f'Use only following expression "{package_name}==<version>" '
+                                  f'to install specific version')
+    return PackageReference(package_name, str(version_constraint))
 
 
 def check_package_dependencies(packages: Iterable[Package]):
@@ -87,20 +101,6 @@ def check_package_dependencies(packages: Iterable[Package]):
             log.debug(f'conflicting package is installed {conflict.name}: {installed_version}')
             if conflict.constraint.allows_all(installed_version):
                 raise PackageConflictError(pkg.name, conflict, installed_version)
-
-
-def get_package_reference_from_constraint(constraint: PackageConstraint) -> PackageReference:
-    package_name, version_constraint = constraint.name, constraint.constraint
-    # Allow only specific version for now.
-    # Later we can improve package manager to support
-    # installing packages using expressions like 'package>1.0.0'
-    if version_constraint == VersionRange():  # empty range means any version
-        return PackageReference(package_name, None)
-    if not isinstance(version_constraint, Version):
-        raise PackageManagerError(f'Can only install specific version. '
-                                  f'Use only following expression "{package_name}==<version>" '
-                                  f'to install specific version')
-    return PackageReference(package_name, str(version_constraint))
 
 
 class PackageManager:
