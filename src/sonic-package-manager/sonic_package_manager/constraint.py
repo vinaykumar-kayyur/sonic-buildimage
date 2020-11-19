@@ -48,11 +48,11 @@ class PackageConstraint:
             PackageConstraint object.
 
         Examples:
-            >>> PackageConstraint.marshal('syncd^1.0.0').constraint
+            >>> PackageConstraint.parse('syncd^1.0.0').constraint
             <VersionRange (>=1.0.0,<2.0.0)>
-            >>> PackageConstraint.marshal('swss>1.3.2 <4.2.1').constraint
+            >>> PackageConstraint.parse('swss>1.3.2 <4.2.1').constraint
             <VersionRange (>1.3.2,<4.2.1)>
-            >>> PackageConstraint.marshal('swss').constraint
+            >>> PackageConstraint.parse('swss').constraint
             <VersionRange (*)>
         """
 
