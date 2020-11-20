@@ -43,12 +43,12 @@ def read_reboot_cause_files_and_save_state_db():
     state_db.connect(state_db.STATE_DB)
 
     # Sort the previous reboot cause files by creation time
-    REBOOT_FILE_LIST = [os.path.join(REBOOT_CAUSE_HISTORY_DIR,i) for i in os.listdir(REBOOT_CAUSE_HISTORY_DIR)]
+    REBOOT_FILE_LIST = [os.path.join(REBOOT_CAUSE_HISTORY_DIR, i) for i in os.listdir(REBOOT_CAUSE_HISTORY_DIR)]
     TIME_SORTED_FULL_REBOOT_FILE_LIST = sorted(REBOOT_FILE_LIST, key=os.path.getmtime, reverse=True)
 
     data = []
     # Read each sorted previous reboot cause file and update the state db with previous reboot cause information
-    for i in range(min(10,len(TIME_SORTED_FULL_REBOOT_FILE_LIST))):
+    for i in range(min(10, len(TIME_SORTED_FULL_REBOOT_FILE_LIST))):
         x = TIME_SORTED_FULL_REBOOT_FILE_LIST[i]
         if os.path.isfile(x):
             with open(x, "r") as cause_file:
