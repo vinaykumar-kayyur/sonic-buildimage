@@ -13,6 +13,8 @@ import subprocess
 
 try:
     from sonic_platform_base.fan_base import FanBase
+
+    from .led import SharedLed, ComponentFaultyIndicator
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -40,6 +42,10 @@ class Fan(FanBase):
     min_cooling_level = 2
     MIN_VALID_COOLING_LEVEL = 1
     MAX_VALID_COOLING_LEVEL = 10
+
+    # Fan drawer leds
+    fan_drawer_leds = {}
+
     # PSU fan speed vector
     PSU_FAN_SPEED = ['0x3c', '0x3c', '0x3c', '0x3c', '0x3c',
                      '0x3c', '0x3c', '0x46', '0x50', '0x5a', '0x64']
@@ -48,6 +54,14 @@ class Fan(FanBase):
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.drawer_index = drawer_index + 1
+
+        if self.drawer_index not in Fan.fan_drawer_leds:
+            shared_led = SharedLed()
+            Fan.fan_drawer_leds[self.drawer_index] = shared_led
+        else:
+            shared_led = Fan.fan_drawer_leds[self.drawer_index]
+
+        self.fault_indicator = ComponentFaultyIndicator(shared_led)
 
         self.is_psu_fan = psu_fan
         self.always_presence = False if platform not in platform_with_unplugable_fan else True
@@ -288,6 +302,13 @@ class Fan(FanBase):
         return cap_list
 
     def set_status_led(self, color):
+        if self.is_psu_fan:
+            return False
+        self.fault_indicator.set_status(color)
+        target_color = Fan.fan_drawer_leds[self.drawer_index].get_status()
+        return self._set_status_led(color)
+
+    def _set_status_led(self, color):
         """
         Set led to expected color
 
@@ -302,9 +323,6 @@ class Fan(FanBase):
         if led_cap_list is None:
             return False
 
-        if self.is_psu_fan:
-            # PSU fan led status is not able to set
-            return False
         status = False
         try:
             if color == 'green':
