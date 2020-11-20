@@ -415,8 +415,8 @@ class device_monitor(object):
                     as9716_32d_set_fan_speed(new_duty_cycle)
                     
                     break
-            else:
-                fan_fail=0
+           else:
+               fan_fail=0
 
         if current_state!=ori_state:
             fan_policy_state=current_state
