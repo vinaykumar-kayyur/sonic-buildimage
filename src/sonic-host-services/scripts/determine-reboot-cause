@@ -177,9 +177,6 @@ def main():
     hardware_reboot_cause = None
     additional_reboot_info = None
 
-    # Set a default previous reboot cause
-    previous_reboot_cause = REBOOT_CAUSE_UNKNOWN
-
     # 1. Check if the previous reboot was warm/fast reboot by testing whether there is "fast|fastfast|warm" in /proc/cmdline
     proc_cmdline_reboot_cause = find_proc_cmdline_reboot_cause()
 
