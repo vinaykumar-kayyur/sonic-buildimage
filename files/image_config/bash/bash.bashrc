@@ -59,9 +59,17 @@ tty | grep ttyS >/dev/null && TMOUT=900
 
 # if SSH_TARGET_CONSOLE_LINE was set, attach to console line interactive cli directly
 if [ -n "$SSH_TARGET_CONSOLE_LINE" ]; then
-    # enter the interactive cli
-    sudo connect line $SSH_TARGET_CONSOLE_LINE
+    if [ $SSH_TARGET_CONSOLE_LINE -eq $SSH_TARGET_CONSOLE_LINE 2>/dev/null ]; then
+        # enter the interactive cli
+        connect line $SSH_TARGET_CONSOLE_LINE
 
-    # exit after console session ended
-    exit
+        # test exit code, 1 means the console switch feature not enabled
+        if [ $? -ne 1 ]; then
+            # exit after console session ended
+            exit
+        fi
+    else
+        # exit directly when target console line variable is invalid
+        exit
+    fi
 fi
