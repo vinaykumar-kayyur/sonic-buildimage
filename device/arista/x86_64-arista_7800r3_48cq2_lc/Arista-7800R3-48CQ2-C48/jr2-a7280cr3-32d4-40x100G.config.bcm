@@ -443,6 +443,16 @@ tm_port_header_type_out_233.BCM8869X=CPU
 tm_port_header_type_in_240.BCM8869X=INJECTED_2
 tm_port_header_type_out_240.BCM8869X=RAW
 
+sai_recycle_port_lane_base=0
+ucode_port_221.BCM8869X=RCY.21:core_0.221
+ucode_port_222.BCM8869X=RCY.22:core_1.222
+tm_port_header_type_out_221.BCM8869X=ETH
+tm_port_header_type_in_221.BCM8869X=ETH
+tm_port_header_type_out_222.BCM8869X=ETH
+tm_port_header_type_in_222.BCM8869X=ETH
+port_init_speed_221.BCM8869X=400000
+port_init_speed_222.BCM8869X=400000
+
 # fabric
 port_init_cl72_sfi=1
 serdes_lane_config_cl72_auto_polarity_en=0
