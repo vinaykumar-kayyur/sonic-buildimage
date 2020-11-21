@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Ingrasys S9130-32X
 #
@@ -11,7 +9,7 @@
 
 try:
     from sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 

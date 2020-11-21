@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Name: eeprom.py version: 1.0
 #
@@ -37,8 +36,7 @@ try:
     from sonic_eeprom import eeprom_tlvinfo
     import syslog
     from array import *
-
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 SYSLOG_IDENTIFIER = "eeprom.py"

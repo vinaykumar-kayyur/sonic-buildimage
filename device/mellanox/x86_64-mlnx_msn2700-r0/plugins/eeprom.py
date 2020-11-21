@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -10,7 +8,6 @@
 #############################################################################
 
 try:
-    import exceptions
     import binascii
     import time
     import optparse
@@ -18,12 +15,17 @@ try:
     import os
     import sys
     import syslog
-    from cStringIO import StringIO
+
+    if sys.version_info.major == 3:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
     from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
     from sonic_py_common.device_info import get_machine_info
     import subprocess
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 SYSLOG_IDENTIFIER = "eeprom.py"

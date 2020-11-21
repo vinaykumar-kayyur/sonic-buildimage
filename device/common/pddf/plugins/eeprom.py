@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     import os
     import sys
@@ -8,7 +6,7 @@ try:
     import pddfparse
     #from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 

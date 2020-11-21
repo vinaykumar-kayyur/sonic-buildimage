@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 try:
-    import exceptions
     import binascii
     import time
     import optparse
@@ -14,8 +11,7 @@ try:
     import syslog
     from struct import *
     from array import *
-
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 SYSLOG_IDENTIFIER = "eeprom.py"

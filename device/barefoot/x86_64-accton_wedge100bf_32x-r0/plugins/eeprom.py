@@ -1,6 +1,3 @@
-#!/usr/bin/python
-
-
 try:
     import importlib
     import time
@@ -23,10 +20,15 @@ try:
     from thrift.protocol import TMultiplexedProtocol
 
     from argparse import ArgumentParser
-    from cStringIO import StringIO
+
+    if sys.version_info.major == 3:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
     from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 

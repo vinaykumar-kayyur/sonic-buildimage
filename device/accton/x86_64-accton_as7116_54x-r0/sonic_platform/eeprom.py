@@ -11,10 +11,14 @@ try:
     import glob
     import os
     import sys
-    import imp
     import re
     from array import array
-    from cStringIO import StringIO
+
+    if sys.version_info.major == 3:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
     from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
