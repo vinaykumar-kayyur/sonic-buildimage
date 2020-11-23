@@ -7,7 +7,7 @@ import netaddr
 from .log import log_warn, log_err, log_info, log_debug, log_crit
 from .manager import Manager
 from .template import TemplateFabric
-from .frr import run_command
+from .utils import run_command
 
 
 class BGPPeerGroupMgr(object):
