@@ -24,7 +24,7 @@ class SYSStatusUtil():
         try:
             with open(node, 'r') as f:
                 status = f.read()
-                print "board_info : %s" %status
+                print("board_info : %s" %status)
         except IOError:
             return False
 
@@ -36,7 +36,7 @@ class SYSStatusUtil():
         try:
             with open(node, 'r') as f:
                 status = f.read()
-                print "cpld1_version : %s" %status
+                print("cpld1_version : %s" %status)
         except IOError:
             return False
 
@@ -48,7 +48,7 @@ class SYSStatusUtil():
        try:
            with open(node, 'r') as f:
                status = f.read()
-               print "power_module_status : %s" %status
+               print("power_module_status : %s" %status)
        except IOError:
            return False
 
@@ -62,9 +62,9 @@ class SYSStatusUtil():
            try:
                with open(node, 'r') as f:
                    status = f.read()
-                   print "system_reset%s : %s" %(i, status)
+                   print("system_reset%s : %s" %(i, status))
            except IOError:
-               print "system_reset%s not supported" %i
+               print("system_reset%s not supported" %i)
 
 
     def get_misc_status(self):
@@ -76,9 +76,9 @@ class SYSStatusUtil():
            try:
                with open(node, 'r') as f:
                    status = f.read()
-                   print "misc%s : %s" %(i, status)
+                   print("misc%s : %s" %(i, status))
            except IOError:
-               print "system_reset%s not supported" %i
+               print("system_reset%s not supported" %i)
 
 
     def dump_sysfs(self):

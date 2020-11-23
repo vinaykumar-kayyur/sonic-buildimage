@@ -15,7 +15,7 @@ class ThermalUtil:
 
         pddf_obj = pddfparse.PddfParse()
         self.platform = pddf_obj.get_platform()
-        self.num_thermals = self.platform['num_temps'] 
+        self.num_thermals = self.platform['num_temps']
         self.info=[]
 
     def get_num_thermals(self):
@@ -27,7 +27,7 @@ class ThermalUtil:
         list.sort()
         for dev in list:
             data={}
-            device_name = dev['dev_info']['device_name'] 
+            device_name = dev['dev_info']['device_name']
             topo_info = dev['i2c']['topo_info']
             label="%s-i2c-%d-%x" % (topo_info['dev_type'], int(topo_info['parent_bus'], 0), int(topo_info['dev_addr'], 0))
             attr_list = dev['i2c']['attr_list']
@@ -43,12 +43,12 @@ class ThermalUtil:
                         attr_value = int(f.read())
                 except IOError:
                     return False
-                data[attr_name] = attr_value/float(1000)    
+                data[attr_name] = attr_value/float(1000)
             self.info.append(data)
 
     def show_thermal_temp_values(self, idx):
         if idx<1 or idx>self.num_thermals:
-            print "Invalid temperature sensor idx %d"%idx
+            print("Invalid temperature sensor idx %d"%idx)
             return None
         self.get_thermal_info()
         thermal_name = "TEMP"+"%d"%idx
@@ -63,11 +63,11 @@ class ThermalUtil:
 
         return (label, value)
 
-    def show_temp_values(self): 
+    def show_temp_values(self):
         self.get_thermal_info()
         for temp in self.info:
-            print temp['label']
-            print "temp1\t %+.1f C (high = %+.1f C, hyst = %+.1f C)" % (temp['temp1_input'], temp['temp1_max'], temp['temp1_max_hyst'])
+            print(temp['label'])
+            print("temp1\t %+.1f C (high = %+.1f C, hyst = %+.1f C)" % (temp['temp1_input'], temp['temp1_max'], temp['temp1_max_hyst']))
 
 
     def dump_sysfs(self):

@@ -26,7 +26,7 @@ class PsuUtil(PsuBase):
         retval = 'ERR'
         mb_reg_file = mailbox_dir+'/' + reg_name
         if (not os.path.isfile(mb_reg_file)):
-            logging.error(mb_reg_file, "not found !")
+            logging.error(mb_reg_file + " not found !")
             return retval
 
         try:

@@ -29,7 +29,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -54,7 +54,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_modprs", "r")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -85,7 +85,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_lpmode", "r")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -116,7 +116,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_lpmode", "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -156,7 +156,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_reset", "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -190,7 +190,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/dx010_cpld/qsfp_reset", "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = reg_value | mask

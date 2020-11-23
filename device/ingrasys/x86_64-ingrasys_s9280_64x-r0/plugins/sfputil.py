@@ -19,7 +19,7 @@ class SfpUtil(SfpUtilBase):
     EEPROM_OFFSET = 41
     CPLD1_PORTS = 12
     CPLDx_PORTS = 13
-    #TODO: check init sequence for CPLD i2c bus 
+    #TODO: check init sequence for CPLD i2c bus
     CPLD_OFFSET = 1
     CPLD_PRES_BIT = 1
     CPLD_RESET_BIT = 0
@@ -110,7 +110,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
+        return list(range(0, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -157,13 +157,13 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(reg_path)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # content is a string containing the status register value
         content = reg_file.readline().rstrip()
         reg_file.close()
-        
+
         reg_value = int(content, 16)
         # mask for presence bit (bit 1)
         mask = (1 << self.CPLD_PRES_BIT)
@@ -190,7 +190,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(reg_path)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # content is a string containing the status register value
@@ -223,7 +223,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(reg_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # content is a string containing the status register value
@@ -264,7 +264,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(reg_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # content is a string containing the status register value
@@ -287,7 +287,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(reg_path, "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = reg_value | mask

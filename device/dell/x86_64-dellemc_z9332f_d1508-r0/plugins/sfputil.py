@@ -28,8 +28,8 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 1
-    PORT_END = 34 
-    PORTS_IN_BLOCK = 34 
+    PORT_END = 34
+    PORTS_IN_BLOCK = 34
 
     BASE_RES_PATH = "/sys/bus/pci/devices/0000:09:00.0/resource0"
 
@@ -84,7 +84,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -273,7 +273,7 @@ class SfpUtil(SfpUtilBase):
     def get_register(self, reg_file):
             retval = 'ERR'
             if (not path.isfile(reg_file)):
-                print reg_file,  'not found !'
+                print(reg_file +  ' not found !')
                 return retval
 
             try:

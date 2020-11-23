@@ -21,7 +21,7 @@ SFP_MODULE_THRESHOLD_WIDTH = 56
 # I2C page size for sfp
 SFP_I2C_PAGE_SIZE = 256
 
-# parameters for DB connection 
+# parameters for DB connection
 REDIS_TIMEOUT_USECS = 0
 
 # parameters for SFP presence
@@ -79,12 +79,12 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
-        print "dependency on sysfs has been removed"
-        raise Exception() 
+        print("dependency on sysfs has been removed")
+        raise Exception()
 
     def get_port_position_tuple_by_platform_name(self):
         p = subprocess.Popen(GET_PLATFORM_CMD, shell=True, stdout=subprocess.PIPE)
@@ -122,7 +122,7 @@ class SfpUtil(SfpUtilBase):
             if result != '':
                 presence = True
 
-        except OSError, e:
+        except OSError as e:
             return presence
 
         return presence
@@ -139,7 +139,7 @@ class SfpUtil(SfpUtilBase):
             if 'LPM ON' in output:
                 return True
         except subprocess.CalledProcessError as e:
-            print "Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
+            print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
             return False
 
         return False
@@ -161,7 +161,7 @@ class SfpUtil(SfpUtilBase):
         try:
             subprocess.check_output(lpm_cmd, shell=True)
         except subprocess.CalledProcessError as e:
-            print "Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
+            print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
             return False
 
         return True
@@ -177,7 +177,7 @@ class SfpUtil(SfpUtilBase):
             subprocess.check_output(lpm_cmd, shell=True)
             return True
         except subprocess.CalledProcessError as e:
-            print "Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output)
+            print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(port_num, e.returncode, e.output))
             return False
 
         return False
@@ -424,7 +424,7 @@ class SfpUtil(SfpUtilBase):
                     if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
                         compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
                 transceiver_info_dict['specification_compliance'] = str(compliance_code_dict)
-                
+
                 transceiver_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['Nominal Bit Rate(100Mbs)']['value'])
             else:
                 for key in sfp_cable_length_tup:
@@ -447,15 +447,15 @@ class SfpUtil(SfpUtilBase):
         # Below part is added to avoid failing xcvrd
         # Currently, the way in which dom data is read has been changed from
         # using sysfs to using ethtool.
-        # The ethtool returns None for ports without dom support, resulting in 
-        # None being returned. However, this fails xcvrd to add the 
+        # The ethtool returns None for ports without dom support, resulting in
+        # None being returned. However, this fails xcvrd to add the
         # TRANSCEIVER_DOM_SENSOR table entry of associated port to CONFIG_DB
         # and then causes SNMP fail.
         # To address this issue a default dict is initialized with all data set to
         # 'N/A' and is returned is the above case.
         # BTW, in the original implementation which sysfs is used to read dom data,
-        # even though non-None data is returned for ports without dom support, 
-        # it does not contain valid data. This can result in wrong data in 
+        # even though non-None data is returned for ports without dom support,
+        # it does not contain valid data. This can result in wrong data in
         # TRANSCEIVER_DOM_SENSOR table.
         transceiver_dom_info_dict['temperature'] = 'N/A'
         transceiver_dom_info_dict['voltage'] = 'N/A'
@@ -571,7 +571,7 @@ class SfpUtil(SfpUtilBase):
 
             sfpd_obj = sff8472Dom(None, calibration_type)
             if sfpd_obj is None:
-                print "no sff8472Dom"
+                print("no sff8472Dom")
                 return None
 
             dom_temperature_raw = eeprom_domraw[SFP_TEMPE_OFFSET:SFP_TEMPE_OFFSET+SFP_TEMPE_WIDTH]

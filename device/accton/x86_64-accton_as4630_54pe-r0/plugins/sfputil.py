@@ -49,7 +49,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -76,7 +76,7 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print("Error: unable to access file: %s" % str(e))
             return False
         
         if content == "1":
@@ -108,7 +108,7 @@ class SfpUtil(SfpUtilBase):
                 return False
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -138,7 +138,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -163,7 +163,7 @@ class SfpUtil(SfpUtilBase):
         port_dict = {}
 
         if timeout == 0:
-            cd_ms = sys.maxint
+            cd_ms = sys.maxsize
         else:
             cd_ms = timeout
 

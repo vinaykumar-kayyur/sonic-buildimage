@@ -5,21 +5,20 @@ try:
     import time
     import sys
     import re
-    import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 if sys.version_info[0] < 3:
-        import commands as cmd
+    import commands
 else:
-        import subprocess as cmd
+    import subprocess as commands
 
 smbus_present = 1
 
 try:
     import smbus
-except ImportError, e:
+except ImportError as e:
     smbus_present = 0
 
 class SfpUtil(SfpUtilBase):
@@ -30,7 +29,7 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
 
-    _qsfp_ports = range(_port_start, ports_in_block + 1)
+    _qsfp_ports = list(range(_port_start, ports_in_block + 1))
 
     def __init__(self):
         os.system("modprobe i2c-dev")
@@ -51,11 +50,11 @@ class SfpUtil(SfpUtilBase):
             return False
 
         port_ps = "/sys/bus/i2c/devices/0-0050/sfp_port_reset"
-          
+
         try:
             reg_file = open(port_ps, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -77,7 +76,7 @@ class SfpUtil(SfpUtilBase):
         status = 0
         if smbus_present == 0:
             x = "i2cget -y 0 " + hex(device_addr) + " " + hex(offset)
-            cmdstatus, status = cmd.getstatusoutput(x)
+            cmdstatus, status = commands.getstatusoutput(x)
             if cmdstatus != 0:
                 return cmdstatus
             status = int(status, 16)
@@ -93,7 +92,7 @@ class SfpUtil(SfpUtilBase):
         else:
             bus = smbus.SMBus(0)
             bus.write_byte_data(device_addr, offset, value)
-      
+
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
@@ -128,8 +127,8 @@ class SfpUtil(SfpUtilBase):
             path = "/sys/bus/i2c/devices/0-0050/eeprom"
             try:
                 reg_file = open(path)
-                reg_file.seek(01)
-                reg_file.read(02)
+                reg_file.seek(0o1)
+                reg_file.read(0o2)
             except IOError as e:
                 return False
 
@@ -183,7 +182,7 @@ class SfpUtil(SfpUtilBase):
                 # Leave the old code for backward compatibility
                 #if len(line.split()) >= 4:
                 #    fp_port_index = (line.split()[3])
-                #    print(fp_port_index)     
+                #    print(fp_port_index)
                 else:
                     fp_port_index = portname.split("Ethernet").pop()
                     fp_port_index = int(fp_port_index.split("s").pop(0))+1
@@ -232,7 +231,7 @@ class SfpUtil(SfpUtilBase):
         self.logical_to_physical = logical_to_physical
         self.physical_to_logical = physical_to_logical
 
-       
+
         #print(self.logical_to_physical)
 	'''print("logical: " + self.logical)
         print("logical to bcm: " + self.logical_to_bcm)
@@ -247,15 +246,15 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self._port_end
-	
+
     @property
     def qsfp_ports(self):
         return self._qsfp_ports
 
-    @property 
+    @property
     def port_to_eeprom_mapping(self):
          return self._port_to_eeprom_mapping
-    
+
     @property
     def get_transceiver_change_event(self):
-        raise NotImplementedError 
+        raise NotImplementedError

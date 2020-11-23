@@ -8,7 +8,7 @@
 # try:
 #     from sonic_led.led_control_base import LedControlBase
 #     import swsssdk
-# except ImportError, e:
+# except ImportError as e:
 #     raise ImportError (str(e) + " - required module not found")
 
 import time

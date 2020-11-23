@@ -14,7 +14,7 @@ import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

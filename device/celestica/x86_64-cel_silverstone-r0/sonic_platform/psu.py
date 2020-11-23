@@ -15,7 +15,7 @@ import sonic_platform
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from helper import APIHelper
+    from .helper import APIHelper
     from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")

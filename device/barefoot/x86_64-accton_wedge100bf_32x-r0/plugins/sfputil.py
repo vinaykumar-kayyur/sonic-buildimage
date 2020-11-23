@@ -51,12 +51,12 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_ports(self):
         self.update_port_info()
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
-        print "dependency on sysfs has been removed"
-        raise Exception() 
+        print("dependency on sysfs has been removed")
+        raise Exception()
 
     def __init__(self):
         self.ready = False
@@ -127,8 +127,8 @@ class SfpUtil(SfpUtilBase):
             presence = pltfm_mgr.pltfm_mgr_qsfp_presence_get(port_num)
             self.thrift_teardown()
         except Exception as e:
-            print e.__doc__
-            print e.message
+            print(e.__doc__)
+            print(e.message)
 
         return presence
 
@@ -200,7 +200,7 @@ class SfpUtil(SfpUtilBase):
         elif timeout > 0:
             timeout = timeout / float(1000) # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         while forever or timeout > 0:

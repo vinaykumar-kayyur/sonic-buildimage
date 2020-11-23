@@ -11,7 +11,7 @@
 try:
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

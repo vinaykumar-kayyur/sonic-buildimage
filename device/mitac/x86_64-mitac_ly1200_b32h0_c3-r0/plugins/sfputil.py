@@ -31,7 +31,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
+        return list(range(0, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -60,7 +60,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("file_path")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -91,7 +91,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(file_path)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
 
         content = reg_file.readline().rstrip()
 
@@ -119,12 +119,12 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(file_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # LPMode is active high; set or clear the bit accordingly
         if lpmode is True:
-            reg_value = 1 
+            reg_value = 1
         else:
             reg_value = 0
 
@@ -153,7 +153,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(file_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # ResetL is active low
@@ -171,7 +171,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(QSFP_RESET_REGISTER_DEVICE_FILE, "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = 1

@@ -26,7 +26,7 @@ class SfpUtil(SfpUtilBase):
     LP_GPIO_BASE = 160
     RST_GPIO_BASE = 128
     GPIO_OFFSET = 0
-    
+
     BASE_DIR_PATH = "/sys/class/gpio/gpio{0}/direction"
     BASE_VAL_PATH = "/sys/class/gpio/gpio{0}/value"
 
@@ -42,7 +42,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
+        return list(range(0, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -57,7 +57,7 @@ class SfpUtil(SfpUtilBase):
                 try:
                     gpiochip_no = int(d[8:],10)
                 except ValueError as e:
-                    print "Error: %s" % str(e)
+                    print("Error: %s" % str(e))
                 if gpiochip_no > 255:
                     self.GPIO_OFFSET=256
                     return True
@@ -92,7 +92,7 @@ class SfpUtil(SfpUtilBase):
                     port_num + self.ABS_GPIO_BASE)
             val_file = open(abs_device_file)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = val_file.readline().rstrip()
@@ -113,11 +113,11 @@ class SfpUtil(SfpUtilBase):
                     port_num + self.LP_GPIO_BASE)
             val_file = open(lpmode_val_device_file)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
-            
+
         content = val_file.readline().rstrip()
-        
+
         # content is a string, either "0" or "1"
         if content == "1":
             return True
@@ -134,9 +134,9 @@ class SfpUtil(SfpUtilBase):
                     port_num + self.LP_GPIO_BASE)
             val_file = open(lpmode_val_device_file, "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
-            
+
         val_file.write("1" if lpmode is True else "0")
         val_file.close()
 
@@ -146,29 +146,29 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-        
+
         try:
             reset_val_device_file = self.BASE_VAL_PATH.format(
                     port_num + self.RST_GPIO_BASE)
             val_file = open(reset_val_device_file, "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
-            
+
         val_file.write("1")
         val_file.close()
-        
+
         # Sleep 1 second to allow it to settle
         time.sleep(1)
-        
+
         try:
             reset_val_device_file = self.BASE_VAL_PATH.format(
                     port_num + self.RST_GPIO_BASE)
             val_file = open(reset_val_device_file, "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
-            
+
         val_file.write("0")
         val_file.close()
 

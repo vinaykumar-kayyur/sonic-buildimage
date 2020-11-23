@@ -46,6 +46,6 @@ elif oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E:
 else:
     print("LPM UNKNOWN")
 
-print "LPM ON" if lpm_status else "LPM OFF"
+print("LPM ON" if lpm_status else "LPM OFF")
 
 sx_api_close(handle)

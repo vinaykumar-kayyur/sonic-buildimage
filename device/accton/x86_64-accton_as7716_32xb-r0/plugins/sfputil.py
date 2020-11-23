@@ -7,7 +7,7 @@ try:
     import time
     import os
     import sys, getopt
-    import commands
+    import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -19,11 +19,11 @@ class SfpUtil(SfpUtilBase):
     PORT_START = 0
     PORT_END = 31
     PORTS_IN_BLOCK = 32
-    
+
     BASE_OOM_PATH = "/sys/bus/i2c/devices/{0}-0050/"
     BASE_CPLD_PATH = "/sys/bus/i2c/devices/0-0060/"
     BASE_I2C_PATH = "/sys/bus/i2c/devices/"
-    
+
     _port_to_is_present = {}
     _port_to_lp_mode = {}
 
@@ -60,7 +60,7 @@ class SfpUtil(SfpUtilBase):
            28: [30, 49],
            29: [31, 50],
            30: [32, 51],
-           31: [33, 52],              
+           31: [33, 52],
            }
 
     @property
@@ -70,20 +70,20 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self.PORT_END
-   
+
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
         return self._port_to_eeprom_mapping
-    
+
     def get_presence(self, port_num):
-        # Check for invalid port_num        
+        # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-       
+
         present_path = self.BASE_CPLD_PATH + "module_present_" + str(port_num+1)
         self.__port_to_is_present = present_path
 
@@ -93,47 +93,47 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
-        
+
         if content == "1":
             return True
 
         return False
 
     def __init__(self):
-        eeprom_path = self.BASE_I2C_PATH 
+        eeprom_path = self.BASE_I2C_PATH
 
-        for x in range(0, self.port_end+1):            
+        for x in range(0, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 self._port_to_i2c_mapping[x][1]
                 )
-            if(x < 9):    
+            if(x < 9):
                 if(self.get_presence(x)==1):
-                    self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-000" +str(x+1) + "/eeprom"                   
-                    
+                    self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-000" +str(x+1) + "/eeprom"
+
             else:
-                if(self.get_presence(x)==1):    
+                if(self.get_presence(x)==1):
                     self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-00" +str(x+1)+ "/eeprom"
-                   
+
         SfpUtilBase.__init__(self)
 
-    
 
-    def get_low_power_mode(self, port_num): 
+
+    def get_low_power_mode(self, port_num):
       raise NotImplementedError
-        
+
     def set_low_power_mode(self, port_num, lpmode):
         raise NotImplementedError
 
     def reset(self, port_num):
         if port_num < self.port_start or port_num > self.port_end:
             return False
-         
-        mod_rst_cmd = "ipmitool raw 0x34 0x11 " + str(port_num+1) + " 0x11 0x1"        
-        (status, output) = commands.getstatusoutput (mod_rst_cmd)        
+
+        mod_rst_cmd = "ipmitool raw 0x34 0x11 " + str(port_num+1) + " 0x11 0x1"
+        subprocess.check_output(mod_rst_cmd)
         return True
-    
+
     def get_transceiver_change_event(self):
         """
         TODO: This function need to be implemented

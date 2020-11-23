@@ -5,7 +5,7 @@ try:
     import string
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
@@ -19,8 +19,8 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
 
-    _qsfp_ports = range(0, ports_in_block + 1)
-   
+    _qsfp_ports = list(range(0, ports_in_block + 1))
+
     def __init__(self):
         # Override port_to_eeprom_mapping for class initialization
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/sfp_eeprom'
@@ -45,9 +45,9 @@ class SfpUtil(SfpUtilBase):
             reg_value = reg_file.readline().rstrip()
             reg_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print("Error: unable to access file: %s" % str(e))
             return False
-       
+
         if reg_value == '1':
             return True
 
@@ -63,7 +63,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.ports_in_block + 1)
+        return list(range(0, self.ports_in_block + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -97,16 +97,16 @@ class SfpUtil(SfpUtilBase):
             else:
                 return False # High Power Mode if one of the following conditions is matched:
                              # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
                 eeprom.close()
                 time.sleep(0.01)
 
-    def set_low_power_mode(self, port_num, lpmode): 
+    def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
             return False
@@ -128,7 +128,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:

@@ -18,11 +18,11 @@ class LedUtil:
         self.cur_state_path="pddf/devices/led/cur_state"
 
     def set_status_led(self, led_device_name, color, color_state="SOLID"):
-        if (not led_device_name in pddf_obj.data.keys()):
+        if (not led_device_name in list(pddf_obj.data.keys())):
                 status="ERROR: " + led_device_name + " is not configured"
                 return (status)
 
-        if (not color in self.color_map.keys()):
+        if (not color in list(self.color_map.keys())):
                 status="ERROR: Invalid color"
                 return (status)
 
@@ -35,7 +35,7 @@ class LedUtil:
 	return ("Executed")
 
     def get_status_led(self, led_device_name):
-        if (not led_device_name in pddf_obj.data.keys()):
+        if (not led_device_name in list(pddf_obj.data.keys())):
                 status="ERROR: " + led_device_name + " is not configured"
                 return (status)
 
@@ -43,8 +43,8 @@ class LedUtil:
         pddf_obj.create_attr('device_name', led_device_name,  self.path)
         pddf_obj.create_attr('index', index, self.path)
         pddf_obj.create_attr('dev_ops', 'get_status',  self.path)
-        color_f="/sys/kernel/" + self.cur_state_path +"/color"  
-        color_state_f="/sys/kernel/" + self.cur_state_path +"/color_state"  
+        color_f="/sys/kernel/" + self.cur_state_path +"/color"
+        color_state_f="/sys/kernel/" + self.cur_state_path +"/color_state"
 
         try:
                with open(color_f, 'r') as f:
@@ -53,6 +53,6 @@ class LedUtil:
                     color_state = f.read().strip("\r\n")
         except IOError:
 		    status="ERROR :" + color_f + " open failed"
-                    return (status) 
+                    return (status)
 	status = "%s-%s:\t%s %s\n"%(led_device_name, index, color, color_state)
 	return (status)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# Sample pddf_psuutil file 
+# Sample pddf_psuutil file
 #
-# All the supported PSU SysFS aattributes are 
+# All the supported PSU SysFS aattributes are
 #- psu_present
 #- psu_model_name
 #- psu_power_good
@@ -88,7 +88,7 @@ class PsuUtil(PsuBase):
             return False
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return False
 
         device = "PSU"+"%d"%(idx)
@@ -111,7 +111,7 @@ class PsuUtil(PsuBase):
             return None
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return None
 
         device = "PSU"+"%d"%(idx)
@@ -132,7 +132,7 @@ class PsuUtil(PsuBase):
             return None
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return None
 
         device = "PSU"+"%d"%(idx)
@@ -149,7 +149,7 @@ class PsuUtil(PsuBase):
             return None
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return None
 
         device = "PSU"+"%d"%(idx)
@@ -166,7 +166,7 @@ class PsuUtil(PsuBase):
             return None
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return None
 
         device = "PSU"+"%d"%(idx)
@@ -190,7 +190,7 @@ class PsuUtil(PsuBase):
             return 0.0
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return 0.0
 
         device = "PSU"+"%d"%(idx)
@@ -208,7 +208,7 @@ class PsuUtil(PsuBase):
             return 0.0
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return 0.0
 
         device = "PSU"+"%d"%(idx)
@@ -226,7 +226,7 @@ class PsuUtil(PsuBase):
             return 0.0
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return 0.0
 
         device = "PSU"+"%d"%(idx)
@@ -244,7 +244,7 @@ class PsuUtil(PsuBase):
             return 0
 
         if idx<1 or idx>self.platform['num_psus']:
-            print "Invalid index %d\n"%idx
+            print("Invalid index %d\n"%idx)
             return 0
 
 
@@ -252,7 +252,7 @@ class PsuUtil(PsuBase):
         num_fans = pddf_obj.get_num_psu_fans(device)
 
         if fan_idx<1 or fan_idx>num_fans:
-            print "Invalid PSU-fan index %d\n"%fan_idx
+            print("Invalid PSU-fan index %d\n"%fan_idx)
             return 0
 
         output = pddf_obj.get_attr_name_output(device, "psu_fan"+str(fan_idx)+"_speed_rpm")
@@ -265,7 +265,7 @@ class PsuUtil(PsuBase):
             return 0
         else:
             speed = int(output['status'])
-        
+
         return speed
 
     def dump_sysfs(self):

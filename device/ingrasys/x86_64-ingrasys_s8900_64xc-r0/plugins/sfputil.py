@@ -102,7 +102,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -133,7 +133,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/ingrasys-s8900-64xc-cpld.0/qsfp_modprs")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -158,7 +158,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/ingrasys-s8900-64xc-cpld.0/qsfp_lpmode")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -183,7 +183,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/devices/platform/ingrasys-s8900-64xc-cpld.0/qsfp_lpmode", "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -219,7 +219,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(QSFP_RESET_REGISTER_DEVICE_FILE, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -245,7 +245,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(QSFP_RESET_REGISTER_DEVICE_FILE, "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = reg_value | mask

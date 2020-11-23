@@ -9,7 +9,7 @@ try:
     import string
     from ctypes import create_string_buffer
     from sonic_py_common.logger import Logger
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 SYSLOG_IDENTIFIER = "sfputil"
@@ -18,7 +18,7 @@ logger = Logger(SYSLOG_IDENTIFIER)
 qfx5210_qsfp_cable_length_tup = ('Length(km)', 'Length OM3(2m)',
                           'Length OM2(m)', 'Length OM1(m)',
                           'Length Cable Assembly(m)')
-  
+
 qfx5210_sfp_cable_length_tup = ('LengthSMFkm-UnitsOfKm', 'LengthSMF(UnitsOf100m)',
                         'Length50um(UnitsOf10m)', 'Length62.5um(UnitsOfm)',
                         'LengthCable(UnitsOfm)', 'LengthOM3(UnitsOf10m)')
@@ -42,7 +42,7 @@ class SfpUtil(SfpUtilBase):
     _port_start = 0
     _port_end = 63
     ports_in_block = 64
-    cmd = '/var/run/sfppresence' 
+    cmd = '/var/run/sfppresence'
     _port_to_eeprom_mapping = {}
     port_to_i2c_mapping = {
         60 : 25,
@@ -111,7 +111,7 @@ class SfpUtil(SfpUtilBase):
         51 : 88,}
 
         # sys.path.append('/usr/local/bin')
-    _qsfp_ports = range(0, ports_in_block + 1)
+    _qsfp_ports = list(range(0, ports_in_block + 1))
 
 
     def __init__(self):
@@ -127,11 +127,11 @@ class SfpUtil(SfpUtilBase):
             return False
 	path = "/sys/bus/i2c/devices/19-0060/module_reset_{0}"
         port_ps = path.format(port_num+1)
-          
+
         try:
             reg_file = open(port_ps, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #HW will clear reset after set.
@@ -139,7 +139,7 @@ class SfpUtil(SfpUtilBase):
         reg_file.write('1')
         reg_file.close()
         return True
-        
+
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
@@ -151,7 +151,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(port_ps)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = reg_file.readline().rstrip()
@@ -167,12 +167,12 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self._port_end
-	
+
     @property
     def qsfp_ports(self):
-        return range(0, self.ports_in_block + 1)
+        return list(range(0, self.ports_in_block + 1))
 
-    @property 
+    @property
     def port_to_eeprom_mapping(self):
          return self._port_to_eeprom_mapping
 
@@ -181,7 +181,7 @@ class SfpUtil(SfpUtilBase):
         try:
             fp1 = open(file_name, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         for i in from_list:
@@ -191,20 +191,20 @@ class SfpUtil(SfpUtilBase):
         fp1.close()
         return True
 
-     
+
      # Reading from a file to a list
     def read_from_file(self, file_name):
         try:
             fp = open(file_name, 'r')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
 	to_list = fp.readlines()
 	to_list = [x.rstrip() for x in to_list]
 	fp.close()
 	return to_list
-    
+
     def sfp_detect(self):
         x = 0
         ret_dict = {}
@@ -228,7 +228,7 @@ class SfpUtil(SfpUtilBase):
                 new_path = path.format(x + 1)
                 reg_file = open(new_path, 'r')
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False, defl_dict
 
 	    sfp_present = reg_file.readline().rstrip()
@@ -266,16 +266,16 @@ class SfpUtil(SfpUtilBase):
             else:
                 return False # High Power Mode if one of the following conditions is matched:
                              # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
                 eeprom.close()
                 time.sleep(0.01)
 
-    def set_low_power_mode(self, port_num, lpmode): 
+    def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
             return False
@@ -297,7 +297,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -496,10 +496,10 @@ class SfpUtil(SfpUtilBase):
                     if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
                         compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
                 transceiver_info_dict['specification_compliance'] = str(compliance_code_dict)
-               
-                if sfp_interface_bulk_data['data'].has_key('Nominal Bit Rate(100Mbs)'):
+
+                if 'Nominal Bit Rate(100Mbs)' in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['Nominal Bit Rate(100Mbs)']['value'])
-                else:    
+                else:
                     transceiver_info_dict['nominal_bit_rate'] = 'N/A'
             else:
                 for key in qfx5210_sfp_cable_length_tup:
@@ -509,18 +509,18 @@ class SfpUtil(SfpUtilBase):
                     else:
                         transceiver_info_dict['cable_type'] = key
                         transceiver_info_dict['cable_length'] = 'N/A'
- 
+
                 for key in qfx5210_sfp_compliance_code_tup:
                     if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
                         compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
                 transceiver_info_dict['specification_compliance'] = str(compliance_code_dict)
 
-                if sfp_interface_bulk_data['data'].has_key('NominalSignallingRate(UnitsOf100Mbd)'):
+                if 'NominalSignallingRate(UnitsOf100Mbd)' in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
-                else:    
+                else:
                     transceiver_info_dict['nominal_bit_rate'] = 'N/A'
                 #transceiver_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
- 
+
         return transceiver_info_dict
 
     def get_transceiver_dom_info_dict(self, port_num):
@@ -696,7 +696,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_info_dict['tx4power'] = 'N/A'
 
         return transceiver_dom_info_dict
-    
+
     def get_transceiver_dom_threshold_info_dict(self, port_num):
         transceiver_dom_threshold_info_dict = {}
         dom_info_dict_keys = ['temphighalarm',    'temphighwarning',
@@ -784,14 +784,14 @@ class SfpUtil(SfpUtilBase):
             except IOError:
                 print("Error: reading sysfs file %s" % file_path)
                 return None
-            
+
             sfpd_obj = sff8472Dom(None,1)
             if sfpd_obj is None:
                 return transceiver_dom_threshold_info_dict
-            
-            dom_module_threshold_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, 
+
+            dom_module_threshold_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom,
                                              (offset + SFP_MODULE_THRESHOLD_OFFSET), SFP_MODULE_THRESHOLD_WIDTH)
-            
+
             if dom_module_threshold_raw is not None:
                 dom_module_threshold_data = sfpd_obj.parse_alarm_warning_threshold(dom_module_threshold_raw, 0)
             else:
@@ -824,6 +824,6 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_threshold_info_dict['rxpowerlowalarm'] = dom_module_threshold_data['data']['RXPowerLowAlarm']['value']
             transceiver_dom_threshold_info_dict['rxpowerhighwarning'] = dom_module_threshold_data['data']['RXPowerHighWarning']['value']
             transceiver_dom_threshold_info_dict['rxpowerlowwarning'] = dom_module_threshold_data['data']['RXPowerLowWarning']['value']
-            
+
         logger.log_debug("QFX5210: get_transceiver_dom_threshold_info_dict End")
         return transceiver_dom_threshold_info_dict

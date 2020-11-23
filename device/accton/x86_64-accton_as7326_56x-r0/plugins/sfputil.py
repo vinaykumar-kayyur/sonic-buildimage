@@ -113,7 +113,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -151,7 +151,7 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print("Error: unable to access file: %s" % str(e))
             return False
 
         if content == "1":
@@ -179,10 +179,10 @@ class SfpUtil(SfpUtilBase):
             else:
                 return False # High Power Mode if one of the following conditions is matched:
                              # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -211,7 +211,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -226,12 +226,12 @@ class SfpUtil(SfpUtilBase):
         cpld_ps = self._cpld_mapping[cpld_i]
         path = "/sys/bus/i2c/devices/{0}/module_reset_{1}"
         port_ps = path.format(cpld_ps, port_num)
-        
+
         self.__port_to_mod_rst = port_ps
         try:
             reg_file = open(self.__port_to_mod_rst, 'r+', buffering=0)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -241,7 +241,7 @@ class SfpUtil(SfpUtilBase):
         reg_file.seek(0)
         reg_file.write('0')
         reg_file.close()
-        
+
         return True
     @property
     def _get_present_bitmap(self):
@@ -262,7 +262,7 @@ class SfpUtil(SfpUtilBase):
             try:
                 reg_file = open(node[0])
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             bitmap = reg_file.readline().rstrip()
             bitmap = bin(int(bitmap, 16))[2:].zfill(node[1])

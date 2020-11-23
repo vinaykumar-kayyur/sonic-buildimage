@@ -30,9 +30,9 @@ class SfpUtil(SfpUtilBase):
     BASE_CPLD3_PATH = "/sys/bus/i2c/devices/{0}-0062/"
     I2C_BUS_ORDER = -1
 
-    #The sidebands of QSFP is different. 
-    #present is in-order. 
-    #But lp_mode and reset are not. 	
+    #The sidebands of QSFP is different.
+    #present is in-order.
+    #But lp_mode and reset are not.
     qsfp_sb_map = [0, 2, 4, 1, 3, 5]
 
     _port_to_is_present = {}
@@ -111,10 +111,10 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_port_end(self):
         return self.QSFP_PORT_END
-    
+
     @property
     def qsfp_ports(self):
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -138,7 +138,7 @@ class SfpUtil(SfpUtilBase):
             eeprom_path = "/sys/bus/i2c/devices/0-0057/eeprom"
             if os.path.exists(eeprom_path):
                 self.I2C_BUS_ORDER = 1
-        return self.I2C_BUS_ORDER 
+        return self.I2C_BUS_ORDER
 
     def get_presence(self, port_num):
         # Check for invalid port_num
@@ -147,11 +147,11 @@ class SfpUtil(SfpUtilBase):
 
         order = self.update_i2c_order()
         if port_num <= 24:
-            present_path = self.BASE_CPLD2_PATH.format(order)         
+            present_path = self.BASE_CPLD2_PATH.format(order)
         else:
             present_path = self.BASE_CPLD3_PATH.format(order)
-        
-        present_path = present_path + "module_present_" + str(port_num)            
+
+        present_path = present_path + "module_present_" + str(port_num)
         self.__port_to_is_present = present_path
 
         content="0"
@@ -160,9 +160,9 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
-        
+
         if content == "1":
             return True
 
@@ -177,22 +177,22 @@ class SfpUtil(SfpUtilBase):
     def get_low_power_mode_cpld(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-        
+
         order = self.update_i2c_order()
         lp_mode_path = self.BASE_CPLD3_PATH.format(order)
-        lp_mode_path = lp_mode_path + "module_lp_mode_" 
+        lp_mode_path = lp_mode_path + "module_lp_mode_"
         q = self.qsfp_sb_remap(port_num)
         lp_mode_path = lp_mode_path + str(q)
-        
+
         content = "0"
         try:
             val_file = open(lp_mode_path)
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
-       
+
         if content == "1":
             return True
 
@@ -201,7 +201,7 @@ class SfpUtil(SfpUtilBase):
     def get_low_power_mode(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-        
+
         if not self.get_presence(port_num):
             return self.get_low_power_mode_cpld(port_num)
 
@@ -220,7 +220,7 @@ class SfpUtil(SfpUtilBase):
                 else:
                     return False # High Power Mode if "Power set" bit is 0
         except IOError as err:
-            print "Error: unable to open file: %s" % str(err)
+            print("Error: unable to open file: %s" % str(err))
             return False
         finally:
             if eeprom is not None:
@@ -248,7 +248,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as err:
-            print "Error: unable to open file: %s" % str(err)
+            print("Error: unable to open file: %s" % str(err))
             return False
         finally:
             if eeprom is not None:
@@ -258,17 +258,17 @@ class SfpUtil(SfpUtilBase):
     def reset(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-         
+
         order = self.update_i2c_order()
         lp_mode_path = self.BASE_CPLD3_PATH.format(order)
-        mod_rst_path = lp_mode_path + "module_reset_" 
+        mod_rst_path = lp_mode_path + "module_reset_"
         q = self.qsfp_sb_remap(port_num)
         mod_rst_path = mod_rst_path + str(q)
-        
+
         try:
             reg_file = open(mod_rst_path, 'r+', buffering=0)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -284,19 +284,19 @@ class SfpUtil(SfpUtilBase):
     def _get_presence_bitmap(self):
 	nodes = []
         order = self.update_i2c_order()
-        
+
         present_path = self.BASE_CPLD2_PATH.format(order)
         nodes.append(present_path + "module_present_all")
         present_path = self.BASE_CPLD3_PATH.format(order)
         nodes.append(present_path + "module_present_all")
 
 	bitmap = ""
-	for node in nodes: 
+	for node in nodes:
             try:
                 reg_file = open(node)
-    
+
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             bitmap += reg_file.readline().rstrip() + " "
             reg_file.close()
@@ -304,9 +304,9 @@ class SfpUtil(SfpUtilBase):
         rev = bitmap.split(" ")
         rev = "".join(rev[::-1])
         return int(rev,16)
-   
 
-    data = {'valid':0, 'last':0, 'present':0} 
+
+    data = {'valid':0, 'last':0, 'present':0}
     def get_transceiver_change_event(self, timeout=2000):
         now = time.time()
         port_dict = {}
@@ -334,7 +334,7 @@ class SfpUtil(SfpUtilBase):
                     else:
                         port_dict[port] = SFP_STATUS_INSERTED
 
-            # Update cache 
+            # Update cache
             self.data['present'] = reg_value
             self.data['last'] = now
             self.data['valid'] = 1

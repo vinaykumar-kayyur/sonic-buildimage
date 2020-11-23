@@ -20,14 +20,14 @@ class PsuUtil(PsuBase):
 
     def set_gpio_offset(self):
         sys_gpio_dir = "/sys/class/gpio"
-        self.GPIO_OFFSET = 0 
-        gpiochip_no = 0 
+        self.GPIO_OFFSET = 0
+        gpiochip_no = 0
         for d in os.listdir(sys_gpio_dir):
             if "gpiochip" in d:
                 try:
                     gpiochip_no = int(d[8:],10)
                 except ValueError as e:
-                    print "Error: %s" % str(e)
+                    print("Error: %s" % str(e))
                 if gpiochip_no > 255:
                     self.GPIO_OFFSET=256
                     return True

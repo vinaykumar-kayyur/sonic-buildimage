@@ -3,7 +3,7 @@
 try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
@@ -75,7 +75,7 @@ class SfpUtil(SfpUtilBase):
         54 : 63,
     }
 
-    _qsfp_ports = range(_qsfp_port_start, _ports_in_block + 1)
+    _qsfp_ports = list(range(_qsfp_port_start, _ports_in_block + 1))
 
     def get_presence(self, port_num):
         # Check for invalid port_num
@@ -89,7 +89,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(port_ps)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         try:
@@ -100,7 +100,7 @@ class SfpUtil(SfpUtilBase):
             try:
                 reg_value = reg_file.readline().rstrip()
             except IOError as e:
-                print "Error:try again to read file failed: %s %s" % (str(e), port_ps)
+                print("Error:try again to read file failed: %s %s" % (str(e), port_ps))
                 reg_file.close()
                 return False
 
@@ -139,7 +139,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(port_ps, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -166,7 +166,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(port_ps,'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_file.seek(0)
@@ -196,13 +196,13 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(port_ps)
         except IOError as e:
-            print "Error: unable to open file:%s %s" % (str(e), port_ps)
+            print("Error: unable to open file:%s %s" % (str(e), port_ps))
             return False
 
         try:
             reg_value = reg_file.readline().rstrip()
         except IOError as e:
-            print "Error: unable to open file:%s %s" % (str(e), port_ps)
+            print("Error: unable to open file:%s %s" % (str(e), port_ps))
             reg_file.close()
             return False
 

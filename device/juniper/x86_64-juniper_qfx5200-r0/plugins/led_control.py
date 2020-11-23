@@ -7,9 +7,9 @@
 # Copyright (c) 2020, Juniper Networks, Inc.
 # All rights reserved.
 #
-# Notice and Disclaimer: This code is licensed to you under the GNU General 
-# Public License as published by the Free Software Foundation, version 3 or 
-# any later version. This code is not an official Juniper product. You can 
+# Notice and Disclaimer: This code is licensed to you under the GNU General
+# Public License as published by the Free Software Foundation, version 3 or
+# any later version. This code is not an official Juniper product. You can
 # obtain a copy of the License at <https://www.gnu.org/licenses/>
 #
 # OSS License:
@@ -27,8 +27,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-# Third-Party Code: This code may depend on other components under separate 
-# copyright notice and license terms.  Your use of the source code for those 
+# Third-Party Code: This code may depend on other components under separate
+# copyright notice and license terms.  Your use of the source code for those
 # components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
@@ -39,7 +39,7 @@ try:
     import glob
     from socket import *
     from select import *
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
 
@@ -78,7 +78,7 @@ class LedControl(LedControlBase):
                 gpio_export_file.write(str(gpio_pin))
                 gpio_export_file.close()
             except IOError as e:
-                print "Error: unable to open export file: %s" % str(e)
+                print("Error: unable to open export file: %s" % str(e))
                 return False
 
         return True
@@ -96,7 +96,7 @@ class LedControl(LedControlBase):
                 fp = open(flist[0] + "/base")
                 gpio_base = int(fp.readline().rstrip())
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return
         for port in range(gpio_port_start, gpio_port_end + 1):
             self.gpio_port_led_init(gpio_base, port)
@@ -119,7 +119,7 @@ class LedControl(LedControlBase):
             gpio_file.write(str(value))
             success = True
         except IOError as e:
-            print "error: unable to open file: %s" % str(e)
+            print("error: unable to open file: %s" % str(e))
 
         return success
 
@@ -132,7 +132,7 @@ class LedControl(LedControlBase):
             reg_file = open(gpio_pin_path +"/value")
             value = int(reg_file.readline().rstrip())
         except IOError as e:
-            print "error: unable to open file: %s" % str(e)
+            print("error: unable to open file: %s" % str(e))
 
         return value
 

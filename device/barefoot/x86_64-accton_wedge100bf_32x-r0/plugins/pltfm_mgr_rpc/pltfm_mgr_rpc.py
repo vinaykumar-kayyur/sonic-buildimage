@@ -1020,7 +1020,7 @@ class pltfm_mgr_dummy_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1079,7 +1079,7 @@ class pltfm_mgr_dummy_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1121,7 +1121,7 @@ class pltfm_mgr_sys_tmp_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1194,7 +1194,7 @@ class pltfm_mgr_sys_tmp_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1236,7 +1236,7 @@ class pltfm_mgr_sys_eeprom_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1309,7 +1309,7 @@ class pltfm_mgr_sys_eeprom_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1369,7 +1369,7 @@ class pltfm_mgr_pwr_supply_present_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1441,7 +1441,7 @@ class pltfm_mgr_pwr_supply_present_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1501,7 +1501,7 @@ class pltfm_mgr_pwr_supply_info_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1574,7 +1574,7 @@ class pltfm_mgr_pwr_supply_info_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1634,7 +1634,7 @@ class pltfm_mgr_pwr_rail_info_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1707,7 +1707,7 @@ class pltfm_mgr_pwr_rail_info_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1779,7 +1779,7 @@ class pltfm_mgr_fan_speed_set_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1851,7 +1851,7 @@ class pltfm_mgr_fan_speed_set_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1911,7 +1911,7 @@ class pltfm_mgr_fan_info_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1984,7 +1984,7 @@ class pltfm_mgr_fan_info_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2044,7 +2044,7 @@ class pltfm_mgr_qsfp_presence_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2116,7 +2116,7 @@ class pltfm_mgr_qsfp_presence_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2176,7 +2176,7 @@ class pltfm_mgr_qsfp_info_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2248,7 +2248,7 @@ class pltfm_mgr_qsfp_info_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2290,7 +2290,7 @@ class pltfm_mgr_qsfp_get_max_port_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2362,7 +2362,7 @@ class pltfm_mgr_qsfp_get_max_port_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2434,7 +2434,7 @@ class pltfm_mgr_qsfp_reset_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2506,7 +2506,7 @@ class pltfm_mgr_qsfp_reset_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2566,7 +2566,7 @@ class pltfm_mgr_qsfp_lpmode_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2638,7 +2638,7 @@ class pltfm_mgr_qsfp_lpmode_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2710,7 +2710,7 @@ class pltfm_mgr_qsfp_lpmode_set_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2782,7 +2782,7 @@ class pltfm_mgr_qsfp_lpmode_set_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2842,7 +2842,7 @@ class pltfm_mgr_sensor_info_get_args(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -2914,7 +2914,7 @@ class pltfm_mgr_sensor_info_get_result(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):

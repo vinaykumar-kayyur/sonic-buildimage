@@ -36,7 +36,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK)
+        return list(range(0, self.PORTS_IN_BLOCK))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -70,7 +70,7 @@ class SfpUtil(SfpUtilBase):
                 if int(present.readline()) == 0:
                     return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         return False
@@ -87,14 +87,14 @@ class SfpUtil(SfpUtilBase):
         if port_num < 16:
             lpmode_path = "SWPLD2/qsfp_p{}_lpmode".format(port)
         else:
-            lpmode_path = "SWPLD3/qsfp_p{}_lpmode".format(port) 
+            lpmode_path = "SWPLD3/qsfp_p{}_lpmode".format(port)
 
         try:
             with open("/sys/devices/platform/delta-agc032-swpld.0/" + lpmode_path, 'r') as lpmode:
                 if int(lpmode.readline()) == 1:
                     return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         return False
@@ -111,12 +111,12 @@ class SfpUtil(SfpUtilBase):
         if port_num < 16:
             lpmode_path = "SWPLD2/qsfp_p{}_lpmode".format(port)
         else:
-            lpmode_path = "SWPLD3/qsfp_p{}_lpmode".format(port) 
+            lpmode_path = "SWPLD3/qsfp_p{}_lpmode".format(port)
 
         try:
             file = open("/sys/devices/platform/delta-agc032-swpld.0/" + lpmode_path, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         file.seek(0)
@@ -143,12 +143,12 @@ class SfpUtil(SfpUtilBase):
         if port_num < 16:
             reset_path = "SWPLD2/qsfp_p{}_rst".format(port)
         else:
-            reset_path = "SWPLD3/qsfp_p{}_rst".format(port) 
+            reset_path = "SWPLD3/qsfp_p{}_rst".format(port)
 
         try:
             file = open("/sys/devices/platform/delta-agc032-swpld.0/" + reset_path, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         file.seek(0)
@@ -162,7 +162,7 @@ class SfpUtil(SfpUtilBase):
         try:
             file = open("/sys/devices/platform/delta-agc032-swpld.0/" + reset_path, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         file.seek(0)
@@ -177,7 +177,7 @@ class SfpUtil(SfpUtilBase):
         try:
             file = open("/sys/devices/platform/delta-agc032-cpupld.0/cpu_i2c_mux_sel", 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # Switch CPLD to FRONT-PORT EEPROM MUX
@@ -191,7 +191,7 @@ class SfpUtil(SfpUtilBase):
         try:
             file = open("/sys/devices/platform/delta-agc032-cpupld.0/cpu_i2c_mux_sel", 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         # Switch CPLD to FRONT-PORT EEPROM MUX

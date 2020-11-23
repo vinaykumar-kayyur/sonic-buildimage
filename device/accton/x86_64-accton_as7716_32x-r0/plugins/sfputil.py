@@ -21,10 +21,10 @@ class SfpUtil(SfpUtilBase):
     PORT_START = 1
     PORT_END = 32
     PORTS_IN_BLOCK = 32
-    
+
     BASE_OOM_PATH = "/sys/bus/i2c/devices/{0}-0050/"
     BASE_CPLD_PATH = "/sys/bus/i2c/devices/11-0060/"
-    
+
     _port_to_is_present = {}
     _port_to_lp_mode = {}
 
@@ -61,7 +61,7 @@ class SfpUtil(SfpUtilBase):
            29: 49,
            30: 50,
            31: 51,
-           32: 52,              
+           32: 52,
            }
 
     @property
@@ -71,10 +71,10 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self.PORT_END
-   
+
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -83,7 +83,7 @@ class SfpUtil(SfpUtilBase):
     def __init__(self):
         eeprom_path = self.BASE_OOM_PATH + "eeprom"
 
-        for x in range(self.port_start, self.port_end+1):            
+        for x in range(self.port_start, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 self._port_to_i2c_mapping[x]
                 )
@@ -93,7 +93,7 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-       
+
         present_path = self.BASE_CPLD_PATH + "module_present_" + str(port_num)
         self.__port_to_is_present = present_path
 
@@ -103,9 +103,9 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
-        
+
         if content == "1":
             return True
 
@@ -131,16 +131,16 @@ class SfpUtil(SfpUtilBase):
             else:
                 return False # High Power Mode if one of the following conditions is matched:
                              # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
                 eeprom.close()
                 time.sleep(0.01)
 
-    def set_low_power_mode(self, port_num, lpmode): 
+    def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
@@ -162,7 +162,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -172,20 +172,20 @@ class SfpUtil(SfpUtilBase):
     def reset(self, port_num):
         if port_num < self.port_start or port_num > self.port_end:
             return False
-         
+
         mod_rst_path = self.BASE_CPLD_PATH + "module_reset_" + str(port_num)
         self.__port_to_mod_rst = mod_rst_path
         try:
             reg_file = open(self.__port_to_mod_rst, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = '1'
 
         reg_file.write(reg_value)
         reg_file.close()
-        
+
         return True
 
     @property
@@ -199,7 +199,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(node)
 
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             bitmap += reg_file.readline().rstrip() + " "
             reg_file.close()
@@ -241,4 +241,4 @@ class SfpUtil(SfpUtilBase):
         else:
             return True, {}
         return False, {}
- 
+

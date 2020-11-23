@@ -2,8 +2,8 @@
 
 try:
     import time
-    from sonic_sfp.sfputilbase import SfpUtilBase 
-except ImportError, e:
+    from sonic_sfp.sfputilbase import SfpUtilBase
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
@@ -50,7 +50,7 @@ class SfpUtil(SfpUtilBase):
         32 : 63,
     }
 
-    _qsfp_ports = range(0, ports_in_block + 1)
+    _qsfp_ports = list(range(0, ports_in_block + 1))
 
     def __init__(self):
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/eeprom'
@@ -67,7 +67,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/class/cpld-qsfp28/port-"+str(port_num+1)+"/reset", "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = 0
@@ -81,7 +81,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/class/cpld-qsfp28/port-"+str(port_num+1)+"/reset", "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = 1
@@ -98,7 +98,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/class/cpld-qsfp28/port-"+str(port_num+1)+"/lpmode", "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = int(reg_file.readline().rstrip())
@@ -122,7 +122,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/class/cpld-qsfp28/port-"+str(port_num+1)+"/lpmode")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = int(reg_file.readline().rstrip())
@@ -131,7 +131,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         return True
-        
+
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
@@ -139,11 +139,11 @@ class SfpUtil(SfpUtilBase):
 
         #path = "/sys/class/cpld-qsfp28/port-{0}/module_present"
         #port_ps = path.format(self.port_to_i2c_mapping[port_num+1])
-          
+
         try:
             reg_file = open("/sys/class/cpld-qsfp28/port-"+str(port_num+1)+"/module_present")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = reg_file.readline().rstrip()
@@ -159,12 +159,12 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self._port_end
-	
+
     @property
     def qsfp_ports(self):
-        return range(0, self.ports_in_block + 1)
+        return list(range(0, self.ports_in_block + 1))
 
-    @property 
+    @property
     def port_to_eeprom_mapping(self):
          return self._port_to_eeprom_mapping
 

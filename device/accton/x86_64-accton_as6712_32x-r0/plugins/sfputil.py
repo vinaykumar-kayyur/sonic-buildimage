@@ -85,10 +85,10 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_port_end(self):
         return self.QSFP_PORT_END
-    
+
     @property
     def qsfp_ports(self):
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -108,13 +108,13 @@ class SfpUtil(SfpUtilBase):
             cpld_num = 0
         else:
             cpld_num = 1
-        
+
         #cpld can be at either bus 0 or bus 1.
         cpld_path = self.I2C_DEV_PATH + str(0) + self.CPLD_ADDRESS[cpld_num]
-        if not os.path.exists(cpld_path):        
+        if not os.path.exists(cpld_path):
             cpld_path = self.I2C_DEV_PATH + str(1) + self.CPLD_ADDRESS[cpld_num]
         return cpld_path
-        
+
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
@@ -122,7 +122,7 @@ class SfpUtil(SfpUtilBase):
 
 
         cpld_path = self.get_cpld_dev_path(port_num)
-        present_path = cpld_path + "/module_present_" 
+        present_path = cpld_path + "/module_present_"
         present_path += str(self._port_to_i2c_mapping[port_num][0])
 
         self.__port_to_is_present = present_path
@@ -133,20 +133,20 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
-       
+
         if content == "1":
             return True
 
         return False
 
-    def get_low_power_mode_cpld(self, port_num):   
+    def get_low_power_mode_cpld(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-         
+
         cpld_path = self.get_cpld_dev_path(port_num)
-        _path = cpld_path + "/module_lp_mode_" 
+        _path = cpld_path + "/module_lp_mode_"
         _path += str(self._port_to_i2c_mapping[port_num][0])
 
         content="0"
@@ -155,18 +155,18 @@ class SfpUtil(SfpUtilBase):
             content = reg_file.readline().rstrip()
             reg_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
-    
+
         if content == "1":
             return True
 
         return False
 
-    def get_low_power_mode(self, port_num):             
+    def get_low_power_mode(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-        
+
         if not self.get_presence(port_num):
             return False
 
@@ -185,7 +185,7 @@ class SfpUtil(SfpUtilBase):
                 else:
                     return False # High Power Mode if "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -194,7 +194,7 @@ class SfpUtil(SfpUtilBase):
 
     def set_low_power_mode(self, port_num, lpmode):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
-            return False    
+            return False
 
         try:
             eeprom = None
@@ -213,7 +213,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -223,15 +223,15 @@ class SfpUtil(SfpUtilBase):
     def reset(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-         
+
         cpld_path = self.get_cpld_dev_path(port_num)
-        _path = cpld_path + "/module_reset_" 
+        _path = cpld_path + "/module_reset_"
         _path += str(self._port_to_i2c_mapping[port_num][0])
 
         try:
             reg_file = open(_path, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_file.seek(0)
@@ -240,7 +240,7 @@ class SfpUtil(SfpUtilBase):
         reg_file.seek(0)
         reg_file.write('0')
         reg_file.close()
-        
+
         return True
 
     @property
@@ -258,7 +258,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(node)
 
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             bitmap += reg_file.readline().rstrip() + " "
             reg_file.close()

@@ -2,8 +2,8 @@
 
 try:
     import time
-    from sonic_sfp.sfputilbase import SfpUtilBase 
-except ImportError, e:
+    from sonic_sfp.sfputilbase import SfpUtilBase
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 SFP_STATUS_INSERTED = '1'
@@ -75,7 +75,7 @@ class SfpUtil(SfpUtilBase):
         53 : 26,
     }
 
-    _qsfp_ports = range(_qsfp_port_start, _ports_in_block + 1)
+    _qsfp_ports = list(range(_qsfp_port_start, _ports_in_block + 1))
 
     _present_status = dict()
 
@@ -83,24 +83,24 @@ class SfpUtil(SfpUtilBase):
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/sfp_eeprom'
         for x in range(self._port_start, self._port_end + 1):
             port_eeprom_path = eeprom_path.format(self._port_to_i2c_mapping[x])
-            self._port_to_eeprom_mapping[x] = port_eeprom_path 
+            self._port_to_eeprom_mapping[x] = port_eeprom_path
             self._present_status[x] = SFP_STATUS_REMOVED
-            
+
         SfpUtilBase.__init__(self)
-	    	
+
     def reset(self, port_num):
         # Check for invalid port_num
         if port_num < self._qsfp_port_start or port_num > self._port_end:
-            print "Error: port %d is not qsfp port" % port_num
+            print("Error: port %d is not qsfp port" % port_num)
             return False
 
         path = "/sys/bus/i2c/devices/{0}-0050/sfp_port_reset"
         port_ps = path.format(self._port_to_i2c_mapping[port_num])
-          
+
         try:
             reg_file = open(port_ps, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -132,14 +132,14 @@ class SfpUtil(SfpUtilBase):
             reg_value = reg_file.readline().rstrip()
             reg_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print("Error: unable to access file: %s" % str(e))
             return False
-        
+
         if reg_value == '1':
             return True
 
         return False
-    
+
     def get_transceiver_change_event(self, timeout=0):
         raise NotImplementedError
 
@@ -155,7 +155,7 @@ class SfpUtil(SfpUtilBase):
     def qsfp_ports(self):
         return self._qsfp_ports
 
-    @property 
+    @property
     def port_to_eeprom_mapping(self):
          return self._port_to_eeprom_mapping
 
@@ -166,8 +166,8 @@ class SfpUtil(SfpUtilBase):
             if self._present_status[phy_port] != last_present_status:
             	ret_present[phy_port] = last_present_status
             	self._present_status[phy_port] = last_present_status
-            	
+
         time.sleep(2)
-        
-        return True, ret_present	
+
+        return True, ret_present
 

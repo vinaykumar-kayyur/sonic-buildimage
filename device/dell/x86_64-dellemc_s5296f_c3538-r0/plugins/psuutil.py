@@ -5,8 +5,12 @@
 
 
 import logging
-import commands
 import sys
+
+if sys.version_info[0] < 3:
+    import commands
+else:
+    import subprocess as commands
 
 
 S5296F_MAX_PSUS = 2

@@ -171,7 +171,7 @@ class pltfm_mgr_sys_tmp_t(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -483,7 +483,7 @@ class pltfm_mgr_eeprom_t(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -651,7 +651,7 @@ class pltfm_mgr_pwr_supply_info_t(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -891,7 +891,7 @@ class pltfm_mgr_pwr_rail_info_t(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -987,7 +987,7 @@ class pltfm_mgr_fan_info_t(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
@@ -1050,7 +1050,7 @@ class InvalidPltfmMgrOperation(TException):
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
+             for key, value in list(self.__dict__.items())]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):

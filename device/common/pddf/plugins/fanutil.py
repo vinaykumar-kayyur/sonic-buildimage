@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-# Sample pddf_fanutil file 
+# Sample pddf_fanutil file
 # All the supported FAN SysFS aattributes are
 #- fan<idx>_present
 #- fan<idx>_direction
@@ -44,7 +44,7 @@ class FanUtil(FanBase):
     def get_presence(self, idx):
         # 1 based fan index
         if idx<1 or idx>self.num_fans:
-            print "Invalid fan index %d\n"%idx
+            print("Invalid fan index %d\n"%idx)
             return False
 
         attr_name = "fan"+ str(idx) +"_present"
@@ -67,7 +67,7 @@ class FanUtil(FanBase):
     def get_status(self, idx):
         # 1 based fan index
         if idx<1 or idx>self.num_fans:
-            print "Invalid fan index %d\n"%idx
+            print("Invalid fan index %d\n"%idx)
             return False
 
         speed = self.get_speed(idx)
@@ -77,7 +77,7 @@ class FanUtil(FanBase):
     def get_direction(self, idx):
         # 1 based fan index
         if idx<1 or idx>self.num_fans:
-            print "Invalid fan index %d\n"%idx
+            print("Invalid fan index %d\n"%idx)
             return None
 
         attr = "fan" + str(idx) + "_direction"
@@ -116,14 +116,14 @@ class FanUtil(FanBase):
 
             direction = vmap[str(val)]
 
-            print "FAN-%d direction is %s"%(i, direction)
+            print("FAN-%d direction is %s"%(i, direction))
 
         return 0
 
     def get_speed(self, idx):
         # 1 based fan index
         if idx<1 or idx>self.num_fans:
-            print "Invalid fan index %d\n"%idx
+            print("Invalid fan index %d\n"%idx)
             return 0
 
         attr = "fan" + str(idx) + "_input"
@@ -165,17 +165,17 @@ class FanUtil(FanBase):
 
     def set_speed(self, val):
         if val<0 or val>100:
-            print "Error: Invalid speed %d. Please provide a valid speed percentage"%val
+            print("Error: Invalid speed %d. Please provide a valid speed percentage"%val)
             return False
-        
+
         num_fan = self.num_fans
         if 'duty_cycle_to_pwm' not in plugin_data['FAN']:
-            print "Setting fan speed is not allowed !"
+            print("Setting fan speed is not allowed !")
             return False
         else:
             duty_cycle_to_pwm = eval(plugin_data['FAN']['duty_cycle_to_pwm'])
             pwm = duty_cycle_to_pwm(val)
-            print "New Speed: %d%% - PWM value to be set is %d\n"%(val,pwm)
+            print("New Speed: %d%% - PWM value to be set is %d\n"%(val,pwm))
 
             for i in range(1, num_fan+1):
                 attr = "fan" + str(i) + "_pwm"

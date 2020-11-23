@@ -32,6 +32,12 @@ except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
+if sys.version_info.major == 3:
+    STRING_TYPE = str
+else:
+    STRING_TYPE = basestring
+
+
 eeprom_default_dict = {
 	"prod_name"         : ("Product Name",                "0x21", 12),
 	"odm_pcba_part_num" : ("Part Number",                 "0x22", 13),
@@ -141,7 +147,7 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
         f.close()
 
         eeprom_params = ""
-        for attr, val in eeprom.__dict__.iteritems():
+        for attr, val in eeprom.__dict__.items():
             if val is None:
                 continue
 
@@ -149,7 +155,7 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
             if elem is None:
                 continue
 
-            if isinstance(val, basestring):
+            if isinstance(val, STRING_TYPE):
                 value = val.replace('\0', '')
             else:
                 value = str(val)

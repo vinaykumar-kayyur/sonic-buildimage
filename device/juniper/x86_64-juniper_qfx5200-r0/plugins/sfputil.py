@@ -2,14 +2,14 @@
 #
 # Name: sfputil.py version: 1.0
 #
-# Description: Platform-specific SFP transceiver interface for Juniper QFX5200 
+# Description: Platform-specific SFP transceiver interface for Juniper QFX5200
 #
 # Copyright (c) 2020, Juniper Networks, Inc.
 # All rights reserved.
 #
-# Notice and Disclaimer: This code is licensed to you under the GNU General 
-# Public License as published by the Free Software Foundation, version 3 or 
-# any later version. This code is not an official Juniper product. You can 
+# Notice and Disclaimer: This code is licensed to you under the GNU General
+# Public License as published by the Free Software Foundation, version 3 or
+# any later version. This code is not an official Juniper product. You can
 # obtain a copy of the License at <https://www.gnu.org/licenses/>
 #
 # OSS License:
@@ -27,9 +27,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-# Third-Party Code: This code may depend on other components under separate 
-# copyright notice and license terms.  Your use of the source code for those 
-# components is subject to the terms and conditions of the respective license 
+# Third-Party Code: This code may depend on other components under separate
+# copyright notice and license terms.  Your use of the source code for those
+# components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
 try:
@@ -56,17 +56,17 @@ logger = Logger(SYSLOG_IDENTIFIER)
 qfx5200_qsfp_cable_length_tup = ('Length(km)', 'Length OM3(2m)',
                           'Length OM2(m)', 'Length OM1(m)',
                           'Length Cable Assembly(m)')
- 
+
 qfx5200_sfp_cable_length_tup = ('LengthSMFkm-UnitsOfKm', 'LengthSMF(UnitsOf100m)',
                         'Length50um(UnitsOf10m)', 'Length62.5um(UnitsOfm)',
                         'LengthCable(UnitsOfm)', 'LengthOM3(UnitsOf10m)')
-   
+
 qfx5200_sfp_compliance_code_tup = ('10GEthernetComplianceCode', 'InfinibandComplianceCode',
                             'ESCONComplianceCodes', 'SONETComplianceCodes',
                             'EthernetComplianceCodes','FibreChannelLinkLength',
                             'FibreChannelTechnology', 'SFP+CableTechnology',
                             'FibreChannelTransmissionMedia','FibreChannelSpeed')
-     
+
 qfx5200_qsfp_compliance_code_tup = ('10/40G Ethernet Compliance Code', 'SONET Compliance codes',
                             'SAS/SATA compliance codes', 'Gigabit Ethernet Compliant codes',
                             'Fibre Channel link length/Transmitter Technology',
@@ -155,9 +155,9 @@ def gpio_create_file(gpio_pin):
             gpio_export_file.write(str(gpio_pin))
             gpio_export_file.close()
         except IOError as e:
-            print "Error: unable to open export file: %s" % str(e)
+            print("Error: unable to open export file: %s" % str(e))
             return False
-     
+
     return True
 
 def gpio_sfp_port_init(gpio_base, port):
@@ -179,9 +179,9 @@ def gpio_sfp_slave_init(gpio_base_path, gpio_port_start, gpio_port_end):
             fp = open(flist[0]+"/base")
             gpio_base = int(fp.readline().rstrip())
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return
-        
+
 	for port in range(gpio_port_start, gpio_port_end + 1):
             gpio_sfp_port_init(gpio_base, port)
 
@@ -199,8 +199,8 @@ def gpio_sfp_read(gpio_pin):
         reg_file = open(gpio_pin_path +"/value")
         value = int(reg_file.readline().rstrip())
     except IOError as e:
-         print "error: unable to open file: %s" % str(e)
-    
+         print("error: unable to open file: %s" % str(e))
+
     return value
 
 def gpio_sfp_write(gpio_pin, value):
@@ -212,34 +212,34 @@ def gpio_sfp_write(gpio_pin, value):
         gpio_file.write(str(value))
         success = True
     except IOError as e:
-         print "error: unable to open file: %s" % str(e)
+         print("error: unable to open file: %s" % str(e))
 
     return success
 
 def gpio_sfp_presence_get(port):
-    if port not in gpio_sfp_presence.keys():
-        print "Port:" + str(port) +  " not in sfp dict"
+    if port not in list(gpio_sfp_presence.keys()):
+        print("Port:" + str(port) +  " not in sfp dict")
         return 0
 
     gpio_pin = gpio_sfp_presence[port]
     return gpio_sfp_read(gpio_pin)
 
 def gpio_sfp_lpmode_get(port):
-    if port not in gpio_sfp_lpmode.keys():
+    if port not in list(gpio_sfp_lpmode.keys()):
         return 0
 
     gpio_pin = gpio_sfp_lpmode[port]
     return gpio_sfp_read(gpio_pin)
 
 def gpio_sfp_lpmode_set(port, value):
-    if port not in gpio_sfp_lpmode.keys():
+    if port not in list(gpio_sfp_lpmode.keys()):
         return False
 
     gpio_pin = gpio_sfp_lpmode[port]
     return gpio_sfp_write(gpio_pin, value)
 
 def gpio_sfp_reset_set(port, value):
-    if port not in gpio_sfp_reset.keys():
+    if port not in list(gpio_sfp_reset.keys()):
         return False
 
     gpio_pin = gpio_sfp_reset[port]
@@ -291,7 +291,7 @@ class SfpUtil(SfpUtilBase):
         30: 44,
         31: 45
     }
-    
+
     port_ctle_settings = {
 	0: 119,  # 0x77
 	1: 102,  # 0x66
@@ -309,7 +309,7 @@ class SfpUtil(SfpUtilBase):
 	13: 85,  # 0x55
 	14: 68,  # 0x44
 	15: 51,  # 0x33
-	16: 68,  # 0x44 
+	16: 68,  # 0x44
 	17: 85,  # 0x55
 	18: 102, # 0x66
 	19: 102, # 0x66
@@ -323,7 +323,7 @@ class SfpUtil(SfpUtilBase):
 	27: 85,  # 0x55
 	28: 102, # 0x66
 	29: 102, # 0x66
-	30: 119, # 0x77 
+	30: 119, # 0x77
 	31: 119  # 0x77
     }
 
@@ -362,7 +362,7 @@ class SfpUtil(SfpUtilBase):
     def is_100g_optics(self, part_num):
         ret = part_num in self.optics_list_100g
 	return ret
-    
+
     def is_40g_optics(self, part_num):
         ret = part_num in self.optics_list_40g
 	return ret
@@ -379,7 +379,7 @@ class SfpUtil(SfpUtilBase):
         if self.is_100g_optics(part_num):
             logger.log_debug(" QFX5200: TxCTLE port {} and SFP PN NUM {} ".format(port_num,part_num))
 	    # Accessing page 3 of optics
-	    regval = 3                        
+	    regval = 3
 	    buffer = create_string_buffer(1)
 	    buffer[0] = chr(regval)
 	    eeprom.seek(127)
@@ -425,7 +425,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
+        return list(range(0, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -436,12 +436,12 @@ class SfpUtil(SfpUtilBase):
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
         for x in range(0, self.port_end + 1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(self.port_to_i2cbus_mapping[x])
-        
+
         logger.log_debug("QFX5200: SfpUtil __init__")
         if os.path.isfile(self.cmd):
             logger.log_debug("QFX5200: SfpUtil removing sfppresence file")
             os.remove(self.cmd)
-        
+
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
@@ -464,7 +464,7 @@ class SfpUtil(SfpUtilBase):
             lpmode = 1
         else:
             lpmode = 0
-            
+
         status = gpio_sfp_lpmode_set(port_num, lpmode)
         return status
 
@@ -478,7 +478,7 @@ class SfpUtil(SfpUtilBase):
         try:
             fp1 = open(file_name, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         for i in from_list:
@@ -488,13 +488,13 @@ class SfpUtil(SfpUtilBase):
         fp1.close()
         return True
 
-     
+
     # Reading from a file to a list
     def read_from_file(self, file_name):
         try:
             fp = open(file_name, 'r')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
 	to_list = fp.readlines()
@@ -771,10 +771,10 @@ class SfpUtil(SfpUtilBase):
                     if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
                         compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
                 transceiver_info_dict['specification_compliance'] = str(compliance_code_dict)
-               
-                if sfp_interface_bulk_data['data'].has_key('Nominal Bit Rate(100Mbs)'):
+
+                if 'Nominal Bit Rate(100Mbs)' in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['Nominal Bit Rate(100Mbs)']['value'])
-                else:    
+                else:
                     transceiver_info_dict['nominal_bit_rate'] = 'N/A'
             else:
                 for key in qfx5200_sfp_cable_length_tup:
@@ -784,17 +784,17 @@ class SfpUtil(SfpUtilBase):
                     else:
                         transceiver_info_dict['cable_type'] = key
                         transceiver_info_dict['cable_length'] = 'N/A'
- 
+
                 for key in qfx5200_sfp_compliance_code_tup:
                     if key in sfp_interface_bulk_data['data']['Specification compliance']['value']:
                         compliance_code_dict[key] = sfp_interface_bulk_data['data']['Specification compliance']['value'][key]['value']
                 transceiver_info_dict['specification_compliance'] = str(compliance_code_dict)
 
-                if sfp_interface_bulk_data['data'].has_key('NominalSignallingRate(UnitsOf100Mbd)'):
+                if 'NominalSignallingRate(UnitsOf100Mbd)' in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['nominal_bit_rate'] = str(sfp_interface_bulk_data['data']['NominalSignallingRate(UnitsOf100Mbd)']['value'])
-                else:    
+                else:
                     transceiver_info_dict['nominal_bit_rate'] = 'N/A'
- 
+
         logger.log_debug("QFX5200: get_transceiver_info_dict End")
         return transceiver_info_dict
 
@@ -1061,14 +1061,14 @@ class SfpUtil(SfpUtilBase):
             except IOError:
                 print("Error: reading sysfs file %s" % file_path)
                 return None
-            
+
             sfpd_obj = sff8472Dom(None,1)
             if sfpd_obj is None:
                 return transceiver_dom_threshold_info_dict
-            
-            dom_module_threshold_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, 
+
+            dom_module_threshold_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom,
                                              (offset + SFP_MODULE_THRESHOLD_OFFSET), SFP_MODULE_THRESHOLD_WIDTH)
-            
+
             if dom_module_threshold_raw is not None:
                 dom_module_threshold_data = sfpd_obj.parse_alarm_warning_threshold(dom_module_threshold_raw, 0)
             else:
@@ -1101,7 +1101,7 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_threshold_info_dict['rxpowerlowalarm'] = dom_module_threshold_data['data']['RXPowerLowAlarm']['value']
             transceiver_dom_threshold_info_dict['rxpowerhighwarning'] = dom_module_threshold_data['data']['RXPowerHighWarning']['value']
             transceiver_dom_threshold_info_dict['rxpowerlowwarning'] = dom_module_threshold_data['data']['RXPowerLowWarning']['value']
-            
+
         logger.log_debug("QFX5200: get_transceiver_dom_threshold_info_dict End")
         return transceiver_dom_threshold_info_dict
 

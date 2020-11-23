@@ -143,7 +143,7 @@ else:
 # Get SFP module
 sfp_module = int(sys.argv[1]) - 1
 
-print "[+] opening sdk"
+print("[+] opening sdk")
 rc, handle = sx_api_open(None)
 
 if (rc != SX_STATUS_SUCCESS):

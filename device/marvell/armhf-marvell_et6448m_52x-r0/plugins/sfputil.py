@@ -7,19 +7,19 @@ try:
     import sys
     import glob
     from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 if sys.version_info[0] < 3:
-    import commands as cmd
+    import commands
 else:
-    import subprocess as cmd
+    import subprocess as commands
 
 smbus_present = 1
 
 try:
     import smbus
-except ImportError, e:
+except ImportError as e:
     smbus_present = 0
 
 class SfpUtil(SfpUtilBase):
@@ -37,7 +37,7 @@ class SfpUtil(SfpUtilBase):
          52 : 5
     }
 
-    _qsfp_ports = range(_port_start, ports_in_block + 1)
+    _qsfp_ports = list(range(_port_start, ports_in_block + 1))
     _changed_ports = [0,0,0,0]
     def __init__(self):
 
@@ -83,7 +83,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open(port_ps, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -113,9 +113,9 @@ class SfpUtil(SfpUtilBase):
         pos = [1,2,4,8]
         bit_pos = pos[prt]
         if smbus_present == 0:
-             cmdstatus, sfpstatus = cmd.getstatusoutput('i2cget -y 0 0x41 0x3') #need to verify the cpld register logic
+             cmdstatus, sfpstatus = commands.getstatusoutput('i2cget -y 0 0x41 0x3') #need to verify the cpld register logic
              sfpstatus = int(sfpstatus, 16)
-        else :
+        else:
              bus = smbus.SMBus(0)
              DEVICE_ADDRESS = 0x41
              DEVICE_REG = 0x3
@@ -126,7 +126,7 @@ class SfpUtil(SfpUtilBase):
             return True
 
         return False
-        
+
     def read_porttab_mappings(self, porttabfile):
         logical = []
         logical_to_physical = {}
@@ -235,7 +235,7 @@ class SfpUtil(SfpUtilBase):
         port = 0
 
         if timeout == 0:
-            cd_ms = sys.maxint
+            cd_ms = sys.maxsize
         else:
             cd_ms = timeout
         changed_port = 0

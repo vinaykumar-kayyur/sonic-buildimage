@@ -13,7 +13,7 @@ import time
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 

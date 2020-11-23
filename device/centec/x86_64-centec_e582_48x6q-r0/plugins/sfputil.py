@@ -20,7 +20,7 @@ except ImportError as e:
 
 
 def DBG_PRINT(str):
-    print str + "\n"
+    print(str + "\n")
 
 
 class SfpUtil(SfpUtilBase):
@@ -40,7 +40,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(49, self.PORTS_IN_BLOCK + 1)
+        return list(range(49, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -107,7 +107,7 @@ class SfpUtil(SfpUtilBase):
 
         try:
             if not os.path.exists("/var/cache/sonic/sfp"):
-                os.makedirs("/var/cache/sonic/sfp", 0777)
+                os.makedirs("/var/cache/sonic/sfp", 0o777)
             for x in range(1, self.port_end + 1):
                 if not self.get_presence(x):
                     if os.path.exists(self.eeprom_mapping[x]):

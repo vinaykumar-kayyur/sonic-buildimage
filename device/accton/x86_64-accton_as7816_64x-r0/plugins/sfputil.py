@@ -4,8 +4,8 @@ try:
     import time
     import string
     from ctypes import create_string_buffer
-    from sonic_sfp.sfputilbase import SfpUtilBase 
-except ImportError, e:
+    from sonic_sfp.sfputilbase import SfpUtilBase
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 #from xcvrd
@@ -86,7 +86,7 @@ class SfpUtil(SfpUtilBase):
         51 : 87,
         52 : 88,}
 
-    _qsfp_ports = range(0, ports_in_block + 1)
+    _qsfp_ports = list(range(0, ports_in_block + 1))
 
     def __init__(self):
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/eeprom'
@@ -101,11 +101,11 @@ class SfpUtil(SfpUtilBase):
             return False
 	path = "/sys/bus/i2c/devices/19-0060/module_reset_{0}"
         port_ps = path.format(port_num)
-          
+
         try:
             reg_file = open(port_ps, 'w')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #HW will clear reset after set.
@@ -113,7 +113,7 @@ class SfpUtil(SfpUtilBase):
         reg_file.write('1')
         reg_file.close()
         return True
-        
+
     def get_presence(self, port_num):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
@@ -121,16 +121,16 @@ class SfpUtil(SfpUtilBase):
 
         path = "/sys/bus/i2c/devices/19-0060/module_present_{0}"
         port_ps = path.format(port_num)
-          
+
         reg_value = '0'
         try:
             reg_file = open(port_ps)
             reg_value = reg_file.readline().rstrip()
             reg_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)
+            print("Error: unable to access file: %s" % str(e))
             return False
-        
+
         if reg_value == '1':
             return True
 
@@ -143,12 +143,12 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self._port_end
-	
+
     @property
     def qsfp_ports(self):
-        return range(0, self.ports_in_block + 1)
+        return list(range(0, self.ports_in_block + 1))
 
-    @property 
+    @property
     def port_to_eeprom_mapping(self):
          return self._port_to_eeprom_mapping
 
@@ -172,16 +172,16 @@ class SfpUtil(SfpUtilBase):
             else:
                 return False # High Power Mode if one of the following conditions is matched:
                              # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
                 eeprom.close()
                 time.sleep(0.01)
 
-    def set_low_power_mode(self, port_num, lpmode): 
+    def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self._port_start or port_num > self._port_end:
             return False
@@ -203,7 +203,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -223,7 +223,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(node)
 
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             bitmap += reg_file.readline().rstrip() + " "
             reg_file.close()

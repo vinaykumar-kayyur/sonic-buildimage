@@ -125,7 +125,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(0, self.PORTS_IN_BLOCK + 1)
+        return list(range(0, self.PORTS_IN_BLOCK + 1))
 
     @property
     def iom1_port_start(self):
@@ -271,7 +271,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(qsfp_path, "r")
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -320,7 +320,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(qsfp_path, "r")
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -369,7 +369,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(qsfp_path, "r+")
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -430,7 +430,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(qsfp_path, "r+")
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = reg_file.readline().rstrip()
@@ -469,7 +469,7 @@ class SfpUtil(SfpUtilBase):
                 reg_file = open(qsfp_path, "w")
 
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = reg_value | mask
@@ -483,7 +483,7 @@ class SfpUtil(SfpUtilBase):
             retval = 'ERR'
 
             if (not os.path.isfile(reg_file)):
-                print reg_file,  'not found !'
+                print(reg_file + ' not found !')
                 return retval
 
             try:

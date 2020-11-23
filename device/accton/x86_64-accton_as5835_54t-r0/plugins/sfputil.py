@@ -64,10 +64,10 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_port_end(self):
         return self.PORT_END
-    
+
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -83,7 +83,7 @@ class SfpUtil(SfpUtilBase):
 
 
     # For port 49~54 are QSFP, here presumed they're all split to 4 lanes.
-    def get_cage_num(self, port_num):             
+    def get_cage_num(self, port_num):
         cage_num = port_num
         if (port_num >= self.PORT_START):
             cage_num = (port_num - self.PORT_START)/4
@@ -95,7 +95,7 @@ class SfpUtil(SfpUtilBase):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
-        
+
         cage_num = self.get_cage_num(port_num)
         path = "/sys/bus/i2c/devices/3-0062/module_present_{0}"
         port_ps = path.format(cage_num)
@@ -106,40 +106,40 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
-      
+
         if content == "1":
             return True
 
         return False
 
-    def get_low_power_mode_cpld(self, port_num):             
+    def get_low_power_mode_cpld(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
 
         cage_num = self.get_cage_num(port_num)
         path = "/sys/bus/i2c/devices/3-0062/module_lpmode_{0}"
         lp_mode_path = path.format(cage_num)
-        
+
         try:
             val_file = open(lp_mode_path)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         content = val_file.readline().rstrip()
         val_file.close()
-        
+
         if content == "1":
             return True
 
         return False
 
-    def get_low_power_mode(self, port_num):             
+    def get_low_power_mode(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-        
+
         if not self.get_presence(port_num):
             return False
 
@@ -158,7 +158,7 @@ class SfpUtil(SfpUtilBase):
                 else:
                     return False # High Power Mode if "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -167,7 +167,7 @@ class SfpUtil(SfpUtilBase):
 
     def set_low_power_mode(self, port_num, lpmode):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
-            return False    
+            return False
 
         try:
             eeprom = None
@@ -186,7 +186,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -196,14 +196,14 @@ class SfpUtil(SfpUtilBase):
     def reset(self, port_num):
         if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
             return False
-         
+
         cage_num = self.get_cage_num(port_num)
         path = "/sys/bus/i2c/devices/3-0062/module_reset_{0}"
         port_ps = path.format(cage_num)
         try:
             reg_file = open(port_ps, mode="w", buffering=0)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         #toggle reset
@@ -213,7 +213,7 @@ class SfpUtil(SfpUtilBase):
         reg_file.seek(0)
         reg_file.write('1')
         reg_file.close()
-        
+
         return True
 
     @property
@@ -223,7 +223,7 @@ class SfpUtil(SfpUtilBase):
         try:
             reg_file = open("/sys/bus/i2c/devices/3-0062/module_present_all")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         bitmap += reg_file.readline().rstrip() + " "
         reg_file.close()
@@ -247,7 +247,7 @@ class SfpUtil(SfpUtilBase):
         rev = "".join(rev[::-1])
         return int(rev,16)
 
-    data = {'valid':0, 'present':0} 
+    data = {'valid':0, 'present':0}
     def get_transceiver_change_event(self, timeout=0):
 
         start_time = time.time()
@@ -260,13 +260,13 @@ class SfpUtil(SfpUtilBase):
         elif timeout > 0:
             timeout = timeout / float(1000) # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print 'get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout
+            print('get_transceiver_change_event:' \
+                       'time wrap / invalid timeout value', timeout)
 
             return False, {} # Time wrap or possibly incorrect timeout
 
@@ -286,7 +286,7 @@ class SfpUtil(SfpUtilBase):
                         else:
                             port_dict[port] = SFP_STATUS_INSERTED
 
-                # Update cache 
+                # Update cache
                 self.data['present'] = reg_value
                 self.data['valid'] = 1
                 return True, port_dict
@@ -301,5 +301,5 @@ class SfpUtil(SfpUtilBase):
                     if timeout > 0:
                         time.sleep(timeout)
                     return True, {}
-        print "get_transceiver_change_event: Should not reach here."
+        print("get_transceiver_change_event: Should not reach here.")
         return False, {}

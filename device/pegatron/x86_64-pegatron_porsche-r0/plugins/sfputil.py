@@ -5,7 +5,7 @@ try:
     import re
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
@@ -21,8 +21,8 @@ class SfpUtil(SfpUtilBase):
 
     port_to_eeprom_mapping = {}
     port_to_i2c_mapping = {}
-    sfp_ports = range(0, ports_in_block)
-    qsfp_ports = range(ports_in_block - 6, ports_in_block)
+    sfp_ports = list(range(0, ports_in_block))
+    qsfp_ports = list(range(ports_in_block - 6, ports_in_block))
 
 
     def __init__(self):
@@ -51,11 +51,11 @@ class SfpUtil(SfpUtilBase):
             presence_path = '/sys/bus/i2c/devices/6-0074/sfp'+str(port_num+1)+'_present'
         else:
             presence_path = '/sys/bus/i2c/devices/8-0076/sfp'+str(port_num+1)+'_present'
-            
+
         try:
             file = open(presence_path)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         value = int(file.readline().rstrip())
@@ -71,11 +71,11 @@ class SfpUtil(SfpUtilBase):
             return False
 
         lowpower_path = '/sys/bus/i2c/devices/8-0076/sfp'+str(port_num+1)+'_lowpower'
-            
+
         try:
             file = open(lowpower_path)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         value = int(file.readline().rstrip())
@@ -101,7 +101,7 @@ class SfpUtil(SfpUtilBase):
         try:
             file = open(lowpower_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         file.seek(0)
@@ -118,7 +118,7 @@ class SfpUtil(SfpUtilBase):
         try:
             file = open(reset_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         file.seek(0)
@@ -131,7 +131,7 @@ class SfpUtil(SfpUtilBase):
         try:
             file = open(reset_path, "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         file.seek(0)

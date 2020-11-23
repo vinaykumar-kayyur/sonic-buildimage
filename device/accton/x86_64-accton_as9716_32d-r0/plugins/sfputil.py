@@ -15,15 +15,15 @@ except ImportError as e:
 
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
-    
+
     PORT_START = 0
     PORT_END = 33
     PORTS_IN_BLOCK = 34
-    
+
     BASE_OOM_PATH = "/sys/bus/i2c/devices/{0}-0050/"
     BASE_CPLD1_PATH = "/sys/bus/i2c/devices/20-0061/"
     BASE_CPLD2_PATH = "/sys/bus/i2c/devices/21-0062/"
-    
+
     _port_to_is_present = {}
     _port_to_lp_mode = {}
 
@@ -60,9 +60,9 @@ class SfpUtil(SfpUtilBase):
            28: [29, 53],
            29: [30, 54],
            30: [31, 55],
-           31: [32, 56],              
-           32: [33, 57], 
-           33: [34, 58], 
+           31: [32, 56],
+           32: [33, 57],
+           33: [34, 58],
            }
 
     @property
@@ -72,10 +72,10 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_end(self):
         return self.PORT_END
-   
+
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -83,7 +83,7 @@ class SfpUtil(SfpUtilBase):
 
     def __init__(self):
         eeprom_path = self.BASE_OOM_PATH + "eeprom"
-        
+
         for x in range(0, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 self._port_to_i2c_mapping[x][1]
@@ -107,7 +107,7 @@ class SfpUtil(SfpUtilBase):
             content = val_file.readline().rstrip()
             val_file.close()
         except IOError as e:
-            print "Error: unable to access file: %s" % str(e)          
+            print("Error: unable to access file: %s" % str(e))
             return False
 
         if content == "1":
@@ -115,7 +115,7 @@ class SfpUtil(SfpUtilBase):
 
         return False
 
-    def get_low_power_mode(self, port_num): 
+    def get_low_power_mode(self, port_num):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
@@ -135,15 +135,15 @@ class SfpUtil(SfpUtilBase):
             else:
                 return False # High Power Mode if one of the following conditions is matched:
                              # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0 
+                             # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
                 eeprom.close()
                 time.sleep(0.01)
-        
+
     def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
@@ -156,10 +156,10 @@ class SfpUtil(SfpUtilBase):
                 return False # Port is not present, unable to set the eeprom
 
             # Fill in write buffer
-            # 0x3:Low Power Mode. "Power override" bit is 1 and "Power set" bit is 1 
-            # 0x9:High Power Mode. "Power override" bit is 1 ,"Power set" bit is 0 and "High Power Class Enable" bit is 1 
-            regval = 0x3 if lpmode else 0x9 
-            
+            # 0x3:Low Power Mode. "Power override" bit is 1 and "Power set" bit is 1
+            # 0x9:High Power Mode. "Power override" bit is 1 ,"Power set" bit is 0 and "High Power Class Enable" bit is 1
+            regval = 0x3 if lpmode else 0x9
+
             buffer = create_string_buffer(1)
             buffer[0] = chr(regval)
 
@@ -169,7 +169,7 @@ class SfpUtil(SfpUtilBase):
             eeprom.write(buffer[0])
             return True
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
         finally:
             if eeprom is not None:
@@ -179,26 +179,26 @@ class SfpUtil(SfpUtilBase):
     def reset(self, port_num):
         if port_num < self.port_start or port_num > self.port_end:
             return False
-            
+
         if port_num < 16 :
             mod_rst_path = self.BASE_CPLD1_PATH + "module_reset_" + str(port_num+1)
         else:
             mod_rst_path = self.BASE_CPLD2_PATH + "module_reset_" + str(port_num+1)
-        
+
         self.__port_to_mod_rst = mod_rst_path
         try:
             reg_file = open(self.__port_to_mod_rst, 'r+')
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)          
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         reg_value = '1'
 
         reg_file.write(reg_value)
         reg_file.close()
-        
+
         return True
-        
+
     def get_cpld_interrupt(self):
         port_dict={}
         for i in range(0,4):
@@ -206,24 +206,24 @@ class SfpUtil(SfpUtilBase):
                 cpld_i2c_path = self.BASE_CPLD1_PATH + "cpld_intr_" + str(i+1)
             else:
                 cpld_i2c_path = self.BASE_CPLD2_PATH + "cpld_intr_" +str(i+1)
-            
+
             start_i=(i*8)
             end_i=(i*8+8)
             try:
                 val_file = open(cpld_i2c_path)
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
-               
+                print("Error: unable to open file: %s" % str(e))
+
                 for k in range (start_i, end_i):
-                    port_dict[k]=0         
+                    port_dict[k]=0
                 return port_dict
 
             status = val_file.readline().rstrip()
             val_file.close()
             status=status.strip()
             status= int(status, 16)
-            
-            interrupt_status = ~(status & 0xff)                
+
+            interrupt_status = ~(status & 0xff)
             if interrupt_status:
                 port_shift=0
                 for k in range (start_i, end_i):
@@ -234,7 +234,7 @@ class SfpUtil(SfpUtilBase):
                     port_shift=port_shift+1
 
         return port_dict
-        
+
     def get_transceiver_change_event(self, timeout=0):
         start_time = time.time()
         port_dict = {}
@@ -246,25 +246,25 @@ class SfpUtil(SfpUtilBase):
         elif timeout > 0:
             timeout = timeout / float(1000) # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print 'get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout
+            print('get_transceiver_change_event:' \
+                       'time wrap / invalid timeout value', timeout)
 
             return False, {} # Time wrap or possibly incorrect timeout
-       
+
         #for i in range(self.port_start, self.port_end+1):
         #        ori_present[i]=self.get_presence(i)
-                
-        while timeout >= 0: 
+
+        while timeout >= 0:
             change_status=0
-            
+
             port_dict = self.get_cpld_interrupt()
             present=0
-            for key, value in port_dict.iteritems():
+            for key, value in port_dict.items():
                 if value==1:
                     present=self.get_presence(key)
                     change_status=1
@@ -272,8 +272,8 @@ class SfpUtil(SfpUtilBase):
                         port_dict[key]='1'
                     else:
                         port_dict[key]='0'
-               
-            if change_status:               
+
+            if change_status:
                 return True, port_dict
             if forever:
                 time.sleep(1)
@@ -285,5 +285,5 @@ class SfpUtil(SfpUtilBase):
                     if timeout > 0:
                         time.sleep(timeout)
                     return True, {}
-        print "get_evt_change_event: Should not reach here."
+        print("get_evt_change_event: Should not reach here.")
         return False, {}

@@ -168,7 +168,7 @@ class Sfp(SfpBase):
         52: 25,
         53: 26,
     }
-    _sfp_port = range(48, PORT_END + 1)
+    _sfp_port = list(range(48, PORT_END + 1))
     RESET_PATH = "/sys/bus/i2c/devices/{}-0050/sfp_port_reset"
     PRS_PATH = "/sys/bus/i2c/devices/{}-0050/sfp_is_present"
 

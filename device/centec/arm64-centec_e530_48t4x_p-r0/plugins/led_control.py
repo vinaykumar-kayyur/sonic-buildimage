@@ -10,7 +10,7 @@ try:
     import syslog
     from socket import *
     from select import *
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
 

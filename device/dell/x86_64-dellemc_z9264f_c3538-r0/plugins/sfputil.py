@@ -77,7 +77,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(self.PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
@@ -250,7 +250,7 @@ class SfpUtil(SfpUtilBase):
     def get_register(self, reg_file):
             retval = 'ERR'
             if (not path.isfile(reg_file)):
-                print reg_file,  'not found !'
+                print(reg_file + ' not found !')
                 return retval
 
             try:
@@ -337,7 +337,7 @@ class SfpUtil(SfpUtilBase):
                     self.epoll = -1
 
             return False, {}
-    
+
     def get_transceiver_dom_info_dict(self, port_num):
         transceiver_dom_info_dict = {}
 
@@ -593,14 +593,14 @@ class SfpUtil(SfpUtilBase):
             except IOError:
                 print("Error: reading sysfs file %s" % file_path)
                 return None
-            
+
             sfpd_obj = sff8472Dom(None,1)
             if sfpd_obj is None:
                 return transceiver_dom_threshold_info_dict
-            
-            dom_module_threshold_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, 
+
+            dom_module_threshold_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom,
                                              (offset + SFP_MODULE_THRESHOLD_OFFSET), SFP_MODULE_THRESHOLD_WIDTH)
-            
+
             if dom_module_threshold_raw is not None:
                 dom_module_threshold_data = sfpd_obj.parse_alarm_warning_threshold(dom_module_threshold_raw, 0)
             else:
@@ -633,5 +633,5 @@ class SfpUtil(SfpUtilBase):
             transceiver_dom_threshold_info_dict['rxpowerlowalarm'] = dom_module_threshold_data['data']['RXPowerLowAlarm']['value']
             transceiver_dom_threshold_info_dict['rxpowerhighwarning'] = dom_module_threshold_data['data']['RXPowerHighWarning']['value']
             transceiver_dom_threshold_info_dict['rxpowerlowwarning'] = dom_module_threshold_data['data']['RXPowerLowWarning']['value']
-            
+
         return transceiver_dom_threshold_info_dict

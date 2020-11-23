@@ -15,7 +15,7 @@ except ImportError as e:
 
 
 def DBG_PRINT(str):
-    print str + "\n"
+    print(str + "\n")
 
 
 class SfpUtil(SfpUtilBase):

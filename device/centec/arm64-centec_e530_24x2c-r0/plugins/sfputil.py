@@ -15,7 +15,7 @@ except ImportError as e:
 
 
 def DBG_PRINT(str):
-    print str + "\n"
+    print(str + "\n")
 
 SFP_STATUS_INSERTED = '1'
 SFP_STATUS_REMOVED = '0'
@@ -37,7 +37,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def qsfp_ports(self):
-        return range(25, self.PORTS_IN_BLOCK + 1)
+        return list(range(25, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):

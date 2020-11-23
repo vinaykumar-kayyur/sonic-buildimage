@@ -31,7 +31,7 @@ class PsuUtil(PsuBase):
         try:
             reg_file = open(self.psu_path.format(index))
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         if int(reg_file.readline()) == 1:
@@ -46,7 +46,7 @@ class PsuUtil(PsuBase):
         try:
             reg_file = open(self.psu_presence.format(index))
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print("Error: unable to open file: %s" % str(e))
             return False
 
         if int(reg_file.readline()) == 0:

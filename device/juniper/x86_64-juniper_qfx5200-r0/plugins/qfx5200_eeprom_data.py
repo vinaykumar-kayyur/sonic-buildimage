@@ -2,14 +2,14 @@
 #
 # Name: juniper_qfx5200_eepromconv.py version: 1.0
 #
-# Description: This file contains the code to store the contents of Main Board EEPROM and CPU Board EEPROM in file 
+# Description: This file contains the code to store the contents of Main Board EEPROM and CPU Board EEPROM in file
 #
 # Copyright (c) 2020, Juniper Networks, Inc.
 # All rights reserved.
 #
-# Notice and Disclaimer: This code is licensed to you under the GNU General 
-# Public License as published by the Free Software Foundation, version 3 or 
-# any later version. This code is not an official Juniper product. You can 
+# Notice and Disclaimer: This code is licensed to you under the GNU General
+# Public License as published by the Free Software Foundation, version 3 or
+# any later version. This code is not an official Juniper product. You can
 # obtain a copy of the License at <https://www.gnu.org/licenses/>
 #
 # OSS License:
@@ -27,16 +27,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-# Third-Party Code: This code may depend on other components under separate 
-# copyright notice and license terms.  Your use of the source code for those 
-# components is subject to the terms and conditions of the respective license 
+# Third-Party Code: This code may depend on other components under separate
+# copyright notice and license terms.  Your use of the source code for those
+# components is subject to the terms and conditions of the respective license
 # as noted in the Third-Party source code file.
 
-import os
-import commands
 import binascii
+import os
+import sys
 from sonic_eeprom import eeprom_tlvinfo
 
+if sys.version_info[0] < 3:
+    import commands
+else:
+    import subprocess as commands
 
 def fantype_detect():
 
@@ -53,13 +57,13 @@ def fantype_detect():
             fantype_path = os.path.join(refpgaTMC_path, filename)
             cat_string = "cat "
             fantype_string = cat_string + fantype_path
-            status,fan_type=commands.getstatusoutput(fantype_string)
+            status,fan_type = commands.getstatusoutput(fantype_string)
             if ((fan_type == AFO) or (fan_type == AFI)):
                 return fan_type
             else:
                 pass
 
-    return default_fantype 
+    return default_fantype
 
 
 
@@ -69,7 +73,7 @@ def main():
     eeprom_qfx5200 = Eeprom()
 
     fan_type = fantype_detect()
-    
+
     # creating the "/var/run/eeprom" file and storing values of CPU board EEPROM and MAIN Board EEPROM in this file.
     eeprom_file = open ("/var/run/eeprom", "a+")
     eeprom_file.write("\n")
@@ -95,20 +99,20 @@ def main():
 
     eeprom_dict = eeprom_qfx5200.system_eeprom_info()
     key = '0x29'
-    if key in eeprom_dict.keys():
+    if key in list(eeprom_dict.keys()):
         onie_version_str = eeprom_dict.get('0x29', None)
     else:
         onie_version_str = "N/A"
     eeprom_file.write("ONIE Version=%s\r\n" % onie_version_str)
 
     vendor_value_formatted, vendor_value_hexvalue = eeprom_qfx5200.vendor_ext_str()
-    
+
     eeprom_hex = '/etc/init.d/eeprom_qfx5200_hex'
 
     with open(eeprom_hex, 'wb+') as Hexfile:
         Hexfile.write(vendor_value_hexvalue)
 
-    # Assembly ID	
+    # Assembly ID
     ASMID_str = "0D83"
     with open(eeprom_hex, 'rb+') as AsmID_Hexfile:
         AsmID_Hexfile.seek(24, 0)
@@ -144,7 +148,7 @@ def main():
         HWMajorRev_write = eeprom_hexfile.read(2)
         eeprom_file.write("\t")
         eeprom_file.write("HW Major Revision=0x%s\r\n" % HWMajorRev_write)
-    
+
 
         eeprom_hexfile.seek(30, 0)
         HWMinorRev_write = eeprom_hexfile.read(2)
@@ -182,14 +186,14 @@ def main():
     try:
         os.system(MainEepromCreate)
     except OSError:
-        print 'Error: Execution of "%s" failed', MainEepromCreate
+        print('Error: Execution of "%s" failed', MainEepromCreate)
         return False
 
     MainEepromFileCmd = 'cat /sys/bus/i2c/devices/i2c-0/0-0057/eeprom > /etc/init.d/MainEeprom_qfx5200_ascii'
     try:
         os.system(MainEepromFileCmd)
     except OSError:
-        print 'Error: Execution of "%s" failed', MainEepromFileCmd
+        print('Error: Execution of "%s" failed', MainEepromFileCmd)
         return False
 
     maineeprom_ascii = '/etc/init.d/MainEeprom_qfx5200_ascii'
@@ -245,7 +249,7 @@ def main():
         FRUModelNumber_read = eeprom_hexfile.read(46)
         FRUModelNumber_write = binascii.unhexlify(FRUModelNumber_read)
         eeprom_file.write("FRU Model Number=%s\r\n" % str(FRUModelNumber_write))
-        
+
         eeprom_hexfile.seek(204, 0)
         FRUModelMajorNumber_read = eeprom_hexfile.read(2)
         eeprom_file.write("FRU Model Major Number=0x%s\r\n" % str(FRUModelMajorNumber_read))
@@ -264,7 +268,7 @@ def main():
         eeprom_file.write("Chassis Serial Number=%s\r\n" % str(SerialNumber_write))
     eeprom_file.close()
     return True
-        
+
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def __init__(self):
         self.__eeprom_path = "/sys/class/i2c-adapter/i2c-0/0-0051/eeprom"
@@ -371,7 +375,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def MACsize_str(self):
        (is_valid, t) = self.get_tlv_field(self.__eeprom_data, self._TLV_CODE_MAC_SIZE)
-       
+
        if not is_valid:
            return "N/A"
 
@@ -402,7 +406,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
         for c in results[2:2 + ord(results[1])]:
             value += "0x%02X " % (ord(c),)
-        
+
         return value
 
     def vendor_ext_str(self):
