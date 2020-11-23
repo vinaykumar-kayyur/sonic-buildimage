@@ -9,5 +9,6 @@ MINSTOP=23-004d/pwm1=102 23-004d/pwm2=102 23-004d/pwm4=102
 MINPWM=23-004d/pwm1=102 23-004d/pwm2=102 23-004d/pwm4=102
 MAXPWM=23-004d/pwm1=255 23-004d/pwm2=255 23-004d/pwm4=255
 THYST=23-004d/pwm1=2 23-004d/pwm2=2 23-004d/pwm4=2
-MAXTEMPCRIT=/sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp2_input=90 /sys/bus/i2c/devices/3-001a/hwmon/hwmon*/temp3_input=95
-MAXTEMPTYPE=/sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp2_input=ASIC /sys/bus/i2c/devices/3-001a/hwmon/hwmon*/temp3_input=CPU
+MAXTEMPHIGH=/sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp1_input=55 /sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp2_input=85 /sys/bus/i2c/devices/3-001a/hwmon/hwmon*/temp3_input=90
+MAXTEMPCRIT=/sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp1_input=58 /sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp2_input=90 /sys/bus/i2c/devices/3-001a/hwmon/hwmon*/temp3_input=95
+MAXTEMPTYPE=/sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp1_input=ASIC /sys/bus/i2c/devices/11-001a/hwmon/hwmon*/temp2_input=ASIC /sys/bus/i2c/devices/3-001a/hwmon/hwmon*/temp3_input=CPU

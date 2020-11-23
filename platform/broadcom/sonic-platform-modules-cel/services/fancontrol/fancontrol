@@ -69,6 +69,7 @@ function LoadConfig
     MINPWM=`egrep '^MINPWM=.*$' $1 | sed -e 's/MINPWM=//g'`
     MAXPWM=`egrep '^MAXPWM=.*$' $1 | sed -e 's/MAXPWM=//g'`
     THYST=`egrep '^THYST=.*$' $1 | sed -e 's/THYST=//g'`
+    MAXTEMPHIGH=`egrep '^MAXTEMPHIGH=.*$' $1 | sed -e 's/MAXTEMPHIGH=//g'`
     MAXTEMPCRIT=`egrep '^MAXTEMPCRIT=.*$' $1 | sed -e 's/MAXTEMPCRIT=//g'`
     MAXTEMPTYPE=`egrep '^MAXTEMPTYPE=.*$' $1 | sed -e 's/MAXTEMPTYPE=//g'`
     echo 
@@ -168,11 +169,13 @@ function LoadConfig
     do
         CSTEMP[$tscount]=`echo $ts | cut -d '=' -f1`
         CSMAXTEMPCRIT[$tscount]=`echo $ts | cut -d '=' -f2`
+        CSMAXTEMPHIGH=($(echo $MAXTEMPHIGH |sed -e 's/ /\n/g'| cut -d'=' -f2))
         CSMAXTEMPTYPE=($(echo $MAXTEMPTYPE |sed -e 's/ /\n/g'| cut -d'=' -f2))
 
         echo
         echo "Settings for ${CSMAXTEMPTYPE[$tscount]} temperature sensor:"
         echo "  Depends on ${CSTEMP[$tscount]}"
+        echo "  MAXTEMPHIGH=${CSMAXTEMPHIGH[$tscount]}"
         echo "  MAXTEMPCRIT=${CSMAXTEMPCRIT[$tscount]}"
         let tscount=tscount+1
     done
@@ -195,22 +198,42 @@ function CheckFanFault()
     return 0
 }
 
+function SetFullSpeed()
+{
+    local error=$1 fcvcount pwmo
+
+    echo "$error detected, set fan to full speed."
+    let fcvcount=0
+    while (( $fcvcount < ${#AFCPWM[@]} )) # go through all pwm outputs
+    do
+        pwmo=${AFCPWM[$fcvcount]}
+        echo $MAX > $pwmo
+        let fcvcount=$fcvcount+1
+    done
+    echo 'Verify fans have returned to full speed'
+}
+
+
 function CheckTempOver()
 {
     let tempcount=0
     while (( $tempcount < ${#CSTEMP[@]} )) # go through all temp.
     do
         ctemp=`cat ${CSTEMP[$tempcount]}`
-        let maxcrit="${CSMAXTEMPCRIT[$tempcount]}*1000"
-        if [ $ctemp -ge $maxcrit ]
+        if [ ! -z "${CSMAXTEMPCRIT[$tempcount]}" ] && [ $ctemp -ge $((${CSMAXTEMPCRIT[$tempcount]}*1000)) ]
         then
-            logger "Thermal overload : ${CSMAXTEMPTYPE[$tempcount]} temperature ${ctemp} > ${maxcrit}"
+            echo "Critical temperature detected: ${CSMAXTEMPTYPE[$tempcount]} temperature ${ctemp} > $((${CSMAXTEMPCRIT[$tempcount]}*1000))"
             if [ -f "$THERMAL_OVERLOAD_CONTROL_FILE" ]
             then
                 toc_cmd="${THERMAL_OVERLOAD_CONTROL_FILE} ${CSMAXTEMPTYPE[$tempcount],,}"
+                echo toc_cmd
                 bash $toc_cmd
                 exit 1
             fi
+        elif [ ! -z "${CSMAXTEMPHIGH[$tempcount]}" ] && [ $ctemp -ge $((${CSMAXTEMPHIGH[$tempcount]}*1000)) ]
+        then
+            SetFullSpeed "High temperature"
+            return 1
         fi
         let tempcount=$tempcount+1
     done
@@ -493,6 +516,21 @@ function UpdateFanSpeeds
     local tval pwmpval fanval min_fanval one_fan one_fanval
     local -i pwmval
 
+    #if thermal overload
+    CheckTempOver
+    if [ $? -ne 0 ]
+    then
+        return 0
+    fi
+
+    #if some fan fault detected all pwm=100%
+    CheckFanFault
+    if [ $? -ne 0 ]
+    then
+        SetFullSpeed "Fan fault"
+        return 0
+    fi
+
     let fcvcount=0
     while (( $fcvcount < ${#AFCPWM[@]} )) # go through all pwm outputs
     do
@@ -507,18 +545,6 @@ function UpdateFanSpeeds
         minpwm=${AFCMINPWM[$fcvcount]}
         maxpwm=${AFCMAXPWM[$fcvcount]}
         let tHyst="${AFCTHYST[$fcvcount]}*1000"
-
-        #if some fan fault detected all pwm=100%
-        CheckFanFault
-        if [ $? -ne 0 ]
-        then
-            echo $MAX > $pwmo
-            let fcvcount=$fcvcount+1
-            continue
-        fi
-
-		#check thermal overload
-        CheckTempOver
 
         read -t 10 tval < ${tsens}
         if [ $? -ne 0 ]
