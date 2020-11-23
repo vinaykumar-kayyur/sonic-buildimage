@@ -5,11 +5,11 @@ mkdir -p /etc/supervisor/conf.d/
 
 SENSORS_CONF_FILE="/usr/share/sonic/platform/sensors.conf"
 FANCONTROL_CONF_FILE="/usr/share/sonic/platform/fancontrol"
-PMON_CHASSISD_CONF_FILE="/usr/share/sonic/platform/pmon_chassisd.conf"
+MODULAR_CHASSISDB_CONF_FILE="/usr/share/sonic/platform/chassisdb.conf"
 
 HAVE_SENSORS_CONF=0
 HAVE_FANCONTROL_CONF=0
-HAVE_PMON_CHASSISD_CONF=0
+HAVE_MODULAR_CHASSISDB_CONF=0
 
 if [ -e $SENSORS_CONF_FILE ]; then
     HAVE_SENSORS_CONF=1
@@ -19,11 +19,11 @@ if [ -e $FANCONTROL_CONF_FILE ]; then
     HAVE_FANCONTROL_CONF=1
 fi
 
-if [ -e $PMON_CHASSISD_CONF_FILE ]; then
-    HAVE_PMON_CHASSISD_CONF=1
+if [ -e $MODULAR_CHASSISDB_CONF_FILE ]; then
+    HAVE_MODULAR_CHASSISDB_CONF=1
 fi
 
-confvar="{\"HAVE_SENSORS_CONF\":$HAVE_SENSORS_CONF, \"HAVE_FANCONTROL_CONF\":$HAVE_FANCONTROL_CONF, \"HAVE_PMON_CHASSISD_CONF\":$HAVE_PMON_CHASSISD_CONF}"
+confvar="{\"HAVE_SENSORS_CONF\":$HAVE_SENSORS_CONF, \"HAVE_FANCONTROL_CONF\":$HAVE_FANCONTROL_CONF, \"HAVE_MODULAR_CHASSISDB_CONF\":$HAVE_MODULAR_CHASSISDB_CONF}"
 
 if [ -e /usr/share/sonic/platform/pmon_daemon_control.json ];
 then
