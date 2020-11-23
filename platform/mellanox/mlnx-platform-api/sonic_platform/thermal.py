@@ -269,22 +269,6 @@ thermal_profile_list = [
             ]
         )
     },
-    # 4410
-    {
-        THERMAL_DEV_CATEGORY_CPU_CORE:(0, 4),
-        THERMAL_DEV_CATEGORY_MODULE:(1, 32),
-        THERMAL_DEV_CATEGORY_PSU:(1, 2),
-        THERMAL_DEV_CATEGORY_CPU_PACK:(0,1),
-        THERMAL_DEV_CATEGORY_GEARBOX:(0,0),
-        THERMAL_DEV_CATEGORY_AMBIENT:(0,
-            [
-                THERMAL_DEV_ASIC_AMBIENT,
-                THERMAL_DEV_COMEX_AMBIENT,
-                THERMAL_DEV_PORT_AMBIENT,
-                THERMAL_DEV_FAN_AMBIENT
-            ]
-        )
-    },
     # 3420
     {
         THERMAL_DEV_CATEGORY_CPU_CORE:(0, 2),
@@ -305,6 +289,22 @@ thermal_profile_list = [
     {
         THERMAL_DEV_CATEGORY_CPU_CORE:(0, 4),
         THERMAL_DEV_CATEGORY_MODULE:(1, 64),
+        THERMAL_DEV_CATEGORY_PSU:(1, 2),
+        THERMAL_DEV_CATEGORY_CPU_PACK:(0,1),
+        THERMAL_DEV_CATEGORY_GEARBOX:(0,0),
+        THERMAL_DEV_CATEGORY_AMBIENT:(0,
+            [
+                THERMAL_DEV_ASIC_AMBIENT,
+                THERMAL_DEV_COMEX_AMBIENT,
+                THERMAL_DEV_PORT_AMBIENT,
+                THERMAL_DEV_FAN_AMBIENT
+            ]
+        )
+    },
+    # 4410
+    {
+        THERMAL_DEV_CATEGORY_CPU_CORE:(0, 4),
+        THERMAL_DEV_CATEGORY_MODULE:(1, 32),
         THERMAL_DEV_CATEGORY_PSU:(1, 2),
         THERMAL_DEV_CATEGORY_CPU_PACK:(0,1),
         THERMAL_DEV_CATEGORY_GEARBOX:(0,0),
