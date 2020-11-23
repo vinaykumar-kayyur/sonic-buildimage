@@ -25,8 +25,8 @@ Environment=sonic_asic_platform={{ sonic_asic_platform }}
 ExecStartPre=-/usr/bin/monit -g monit_group_syncd monitor
 ExecStartPre=/usr/local/bin/syncd.sh start{% if multi_instance == 'true' %} %i{% endif %}
 ExecStart=/usr/local/bin/syncd.sh wait{% if multi_instance == 'true' %} %i{% endif %}
+ExecStop=-/usr/bin/monit -g monit_group_syncd unmonitor
 ExecStop=/usr/local/bin/syncd.sh stop{% if multi_instance == 'true' %} %i{% endif %}
-ExecStopPost=-/usr/bin/monit -g monit_group_syncd unmonitor
 {% if sonic_asic_platform == 'mellanox' %}
 TimeoutStartSec=150
 {% endif %}

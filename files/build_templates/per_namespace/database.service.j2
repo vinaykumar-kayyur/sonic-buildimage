@@ -17,8 +17,8 @@ User=root
 ExecStartPre=-/usr/bin/monit -g monit_group_database monitor
 ExecStartPre=/usr/bin/{{docker_container_name}}.sh start{% if multi_instance == 'true' %} %i{% endif %}
 ExecStart=/usr/bin/{{docker_container_name}}.sh wait{% if multi_instance == 'true' %} %i{% endif %}
+ExecStop=-/usr/bin/monit -g monit_group_database unmonitor
 ExecStop=/usr/bin/{{docker_container_name}}.sh stop{% if multi_instance == 'true' %} %i{% endif %}
-ExecStopPost=-/usr/bin/monit -g monit_group_database unmonitor
 Restart=always
 RestartSec=30
 

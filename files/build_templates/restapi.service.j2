@@ -9,8 +9,8 @@ User=root
 ExecStartPre=-/usr/bin/monit -g monit_group_restapi monitor
 ExecStartPre=/usr/bin/{{docker_container_name}}.sh start
 ExecStart=/usr/bin/{{docker_container_name}}.sh wait
+ExecStop=-/usr/bin/monit -g monit_group_restapi unmonitor
 ExecStop=/usr/bin/{{docker_container_name}}.sh stop
-ExecStopPost=-/usr/bin/monit -g monit_group_restapi unmonitor
 Restart=always
 RestartSec=30
 
