@@ -84,7 +84,7 @@ class FeatureRegistry:
         return {
             'has_per_asic_scope': str(manifest['service']['asic-service']),
             'has_global_scope': str(manifest['service']['host-service']),
-            'has_timer': 'False',  # TODO: include timer if package requires
+            'has_timer': str(manifest['service']['delayed']),
         }
 
     def _get_tables(self):

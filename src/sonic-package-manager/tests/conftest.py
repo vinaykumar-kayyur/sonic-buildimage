@@ -161,6 +161,11 @@ def fake_device_info():
 
 
 @pytest.fixture
+def mock_sonic_db():
+    yield Mock()
+
+
+@pytest.fixture
 def package_manager(mock_docker_api,
                     mock_registry_resolver,
                     mock_service_creator,

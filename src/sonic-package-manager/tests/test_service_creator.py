@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+from unittest.mock import Mock
 
 import pytest
 
@@ -11,6 +12,7 @@ from sonic_package_manager.service_creator.creator import (
     ETC_SONIC_PATH, DOCKER_CTL_SCRIPT_LOCATION,
     SERVICE_MGMT_SCRIPT_LOCATION, SYSTEMD_LOCATION, MONIT_CONF_LOCATION
 )
+from sonic_package_manager.service_creator.feature import FeatureRegistry
 
 
 @pytest.fixture
@@ -64,3 +66,40 @@ def test_service_creator_with_timer_unit(sonic_fs, manifest, mock_feature_regist
     creator.create(package)
 
     assert sonic_fs.exists(os.path.join(SYSTEMD_LOCATION, 'test.timer'))
+
+
+def test_feature_registration(mock_sonic_db, manifest):
+    mock_feature_table = Mock()
+    mock_feature_table.get = Mock(return_value=(False, ()))
+    mock_sonic_db.initial_table = Mock(return_value=mock_feature_table)
+    mock_sonic_db.persistent_table = Mock(return_value=mock_feature_table)
+    mock_sonic_db.running_table = Mock(return_value=mock_feature_table)
+    feature_registry = FeatureRegistry(mock_sonic_db)
+    feature_registry.register('test', manifest)
+    mock_feature_table.set.assert_called_with('test', [
+        ('state', 'disabled'),
+        ('auto_restart', 'enabled'),
+        ('high_mem_alert', 'disabled'),
+        ('has_per_asic_scope', 'False'),
+        ('has_global_scope', 'True'),
+        ('has_timer', 'False')
+    ])
+
+
+def test_feature_registration_with_timer(mock_sonic_db, manifest):
+    manifest['service']['delayed'] = True
+    mock_feature_table = Mock()
+    mock_feature_table.get = Mock(return_value=(False, ()))
+    mock_sonic_db.initial_table = Mock(return_value=mock_feature_table)
+    mock_sonic_db.persistent_table = Mock(return_value=mock_feature_table)
+    mock_sonic_db.running_table = Mock(return_value=mock_feature_table)
+    feature_registry = FeatureRegistry(mock_sonic_db)
+    feature_registry.register('test', manifest)
+    mock_feature_table.set.assert_called_with('test', [
+        ('state', 'disabled'),
+        ('auto_restart', 'enabled'),
+        ('high_mem_alert', 'disabled'),
+        ('has_per_asic_scope', 'False'),
+        ('has_global_scope', 'True'),
+        ('has_timer', 'True')
+    ])
