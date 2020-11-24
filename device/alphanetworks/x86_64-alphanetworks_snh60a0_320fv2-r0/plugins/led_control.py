@@ -51,97 +51,97 @@ def system_led_check():
     is_reset_button_push = 0
     with open("/sys/bus/i2c/devices/1-005e/fan1_fault", "r") as f1:
         read_fan_fault = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/fan1_led", "w") as f11:
-                if str(read_fan_fault) == str("1\n"):
-                    is_fan_all_OK = 0
-                        f11.write("4")
-                    else:
-                        f11.write("1")
+        with open("/sys/bus/i2c/devices/9-005f/fan1_led", "w") as f11:
+            if str(read_fan_fault) == str("1\n"):
+                is_fan_all_OK = 0
+                f11.write("4")
+            else:
+                f11.write("1")
     with open("/sys/bus/i2c/devices/1-005e/fan2_fault", "r") as f1:
         read_fan_fault = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/fan2_led", "w") as f11:
-                if str(read_fan_fault) == str("1\n"):
-                    is_fan_all_OK = 0
-                        f11.write("4")
-                    else:
-                        f11.write("1")
+        with open("/sys/bus/i2c/devices/9-005f/fan2_led", "w") as f11:
+            if str(read_fan_fault) == str("1\n"):
+                is_fan_all_OK = 0
+                f11.write("4")
+            else:
+                f11.write("1")
     with open("/sys/bus/i2c/devices/1-005e/fan3_fault", "r") as f1:
         read_fan_fault = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/fan3_led", "w") as f11:
-                if str(read_fan_fault) == str("1\n"):
-                    is_fan_all_OK = 0
-                        f11.write("4")
-                    else:
-                        f11.write("1")
+        with open("/sys/bus/i2c/devices/9-005f/fan3_led", "w") as f11:
+            if str(read_fan_fault) == str("1\n"):
+                is_fan_all_OK = 0
+                f11.write("4")
+            else:
+                f11.write("1")
     with open("/sys/bus/i2c/devices/1-005e/fan4_fault", "r") as f1:
         read_fan_fault = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/fan4_led", "w") as f11:
-                if str(read_fan_fault) == str("1\n"):
-                    is_fan_all_OK = 0
-                        f11.write("4")
-                    else:
-                        f11.write("1")
+        with open("/sys/bus/i2c/devices/9-005f/fan4_led", "w") as f11:
+            if str(read_fan_fault) == str("1\n"):
+                is_fan_all_OK = 0
+                f11.write("4")
+            else:
+                f11.write("1")
     with open("/sys/bus/i2c/devices/1-005e/fan5_fault", "r") as f1:
         read_fan_fault = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/fan5_led", "w") as f11:
-                if str(read_fan_fault) == str("1\n"):
-                    is_fan_all_OK = 0
-                        f11.write("4")
-                    else:
-                        f11.write("1")
+        with open("/sys/bus/i2c/devices/9-005f/fan5_led", "w") as f11:
+            if str(read_fan_fault) == str("1\n"):
+                is_fan_all_OK = 0
+                f11.write("4")
+            else:
+                f11.write("1")
     with open("/sys/bus/i2c/devices/1-005e/fan6_fault", "r") as f1:
         read_fan_fault = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/fan6_led", "w") as f11:
-                if str(read_fan_fault) == str("1\n"):
-                    is_fan_all_OK = 0
-                        f11.write("4")
-                    else:
-                        f11.write("1")
+        with open("/sys/bus/i2c/devices/9-005f/fan6_led", "w") as f11:
+            if str(read_fan_fault) == str("1\n"):
+                is_fan_all_OK = 0
+                f11.write("4")
+            else:
+                f11.write("1")
 
     with open("/sys/bus/i2c/devices/1-005e/psu1_power_good", "r") as f1:
         read_power_status = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
-                if str(read_power_status) == str("1\n"):
-                    f11.write("1")
-                else:
-                    f11.write("4")
+        with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
+            if str(read_power_status) == str("1\n"):
+                f11.write("1")
+            else:
+                f11.write("4")
     with open("/sys/bus/i2c/devices/1-005e/psu1_present", "r") as f1:
         read_power_status = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
-                if str(read_power_status) == str("1\n"):
-                    is_power_all_OK = is_power_all_OK + 1
-                        f11.write("1")
-                    else:
-                        f11.write("4")
+        with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
+            if str(read_power_status) == str("1\n"):
+                is_power_all_OK = is_power_all_OK + 1
+                f11.write("1")
+            else:
+                f11.write("4")
     with open("/sys/bus/i2c/devices/1-005e/psu2_power_good", "r") as f1:
         read_power_status = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
-                if str(read_power_status) == str("1\n"):
-                    f11.write("1")
-                else:
-                    f11.write("4")
+        with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
+            if str(read_power_status) == str("1\n"):
+                f11.write("1")
+            else:
+                f11.write("4")
     with open("/sys/bus/i2c/devices/1-005e/psu2_present", "r") as f1:
         read_power_status = f1.read()
-            with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
-                if str(read_power_status) == str("1\n"):
-                    is_power_all_OK = is_power_all_OK + 1
-                        f11.write("1")
-                    else:
-                        f11.write("4")
+        with open("/sys/bus/i2c/devices/9-005f/sys_pwr", "w") as f11:
+            if str(read_power_status) == str("1\n"):
+                is_power_all_OK = is_power_all_OK + 1
+                f11.write("1")
+            else:
+                f11.write("4")
 
     with open("/sys/bus/i2c/devices/9-005f/swi_ctrl", "r") as f5:
         is_reset_button_push = f5.read()
-            if str(is_reset_button_push) == "1\n":
-                is_reset_button_push = 1
-            else:
-                is_reset_button_push = 0
+        if str(is_reset_button_push) == "1\n":
+            is_reset_button_push = 1
+        else:
+            is_reset_button_push = 0
 
     with open("/sys/bus/i2c/devices/4-004d/hwmon/hwmon3/temp1_input", "r") as f3:
         is_thermal_high = f3.read()
-            if int(is_thermal_high) >= 70000:
-                is_thermal_high = 1
-            else:
-                is_thermal_high = 0
+        if int(is_thermal_high) >= 70000:
+            is_thermal_high = 1
+        else:
+            is_thermal_high = 0
 
     with open("/sys/bus/i2c/devices/9-005f/sys_status", "w") as f2:
         if is_reset_button_push == 1:
