@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Sample pddf_psuutil file
 #

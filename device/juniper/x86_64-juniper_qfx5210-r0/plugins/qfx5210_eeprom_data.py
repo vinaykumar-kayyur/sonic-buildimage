@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Name: juniper_qfx5210_eepromconv.py version: 1.0
 #

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Platform and model specific eeprom subclass, inherits from the base class,
 # and provides the followings:

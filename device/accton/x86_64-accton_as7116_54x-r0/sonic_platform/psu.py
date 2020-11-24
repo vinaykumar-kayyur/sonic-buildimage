@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # psuutil.py
 # Platform-specific PSU status interface for SONiC

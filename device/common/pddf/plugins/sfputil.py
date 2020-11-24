@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os.path
 import sys
 sys.path.append('/usr/share/sonic/platform/plugins')

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Sfp contains an implementation of SONiC Platform Base API and
 # provides the sfp device status which are available in the platform

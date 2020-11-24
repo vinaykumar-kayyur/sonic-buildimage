@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Name: psuutil.py version: 1.0
 #

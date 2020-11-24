@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 # Sample pddf_fanutil file
 # All the supported FAN SysFS aattributes are
 #- fan<idx>_present

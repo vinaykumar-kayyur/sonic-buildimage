@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 import os.path
 if sys.version_info[0] < 3:

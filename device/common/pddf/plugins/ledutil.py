@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 sys.path.append('/usr/share/sonic/platform/plugins')
 import pddfparse

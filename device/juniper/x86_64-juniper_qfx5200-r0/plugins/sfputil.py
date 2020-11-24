@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Name: sfputil.py version: 1.0
 #
 # Description: Platform-specific SFP transceiver interface for Juniper QFX5200

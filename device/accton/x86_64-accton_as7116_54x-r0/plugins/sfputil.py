@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase

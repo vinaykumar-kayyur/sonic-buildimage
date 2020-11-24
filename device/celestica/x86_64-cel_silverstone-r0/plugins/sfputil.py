@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Platform-specific SFP transceiver interface for SONiC
 # This plugin supports QSFP-DD, QSFP and SFP.
 

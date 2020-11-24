@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # led_control.py
 # 
 # Platform-specific LED control functionality for SONiC

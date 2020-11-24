@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     import binascii
     import time

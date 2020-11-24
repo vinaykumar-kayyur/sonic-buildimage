@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Component contains an implementation of SONiC Platform Base API and
 # provides the components firmware management function

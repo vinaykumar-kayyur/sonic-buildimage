@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Name: led_control.py version: 1.0
 #
