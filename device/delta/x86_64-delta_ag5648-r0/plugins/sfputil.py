@@ -25,6 +25,7 @@ class SfpUtil(SfpUtilBase):
     @property
     def port_start(self):
         return self.PORT_START
+
     @property
     def port_start_qsfp(self):
         return self.PORT_START_QSFP
@@ -45,7 +46,7 @@ class SfpUtil(SfpUtilBase):
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
 
         for x in range(0, self.port_end + 1):
-            if x > self.port_start_qsfp -1 and x < self.port_end + 1:
+            if x > self.port_start_qsfp - 1 and x < self.port_end + 1:
                 self.get_response(x)
             self._port_to_eeprom_mapping[x] = eeprom_path.format(x + self.EEPROM_OFFSET)
         SfpUtilBase.__init__(self)
@@ -61,9 +62,9 @@ class SfpUtil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-	# set the bit corresponding to our port
-	mask = (port_num + 1) % 8 - 1
-	mask = 1 << mask
+        # set the bit corresponding to our port
+        mask = (port_num + 1) % 8 - 1
+        mask = 1 << mask
 
         # Convert our register value back to a hex string and write back
         content = hex(mask)

@@ -103,6 +103,7 @@ qsfp_compliance_code_tup = ('10/40G Ethernet Compliance Code', 'SONET Compliance
                             'Fibre Channel link length/Transmitter Technology',
                             'Fibre Channel transmission media', 'Fibre Channel Speed')
 
+
 class Sfp(SfpBase):
     """Platform-specific Sfp class"""
 
@@ -178,7 +179,7 @@ class Sfp(SfpBase):
     HWSKU = "Accton-AS7116-54X-R0"
 
     def __init__(self, sfp_index, sfp_type):
-	    # Init index
+        # Init index
         self.index = sfp_index
         self.port_num = self.index + 1
         self.sfp_type = sfp_type

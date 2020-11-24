@@ -5,7 +5,7 @@ try:
     import re
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 if sys.version_info[0] < 3:
     import commands
@@ -19,6 +19,7 @@ try:
 except ImportError as e:
     smbus_present = 0
 
+
 class SfpUtil(SfpUtilBase):
     """Platform specific sfputil class"""
     _port_start = 1
@@ -31,13 +32,13 @@ class SfpUtil(SfpUtilBase):
 
     def __init__(self):
         os.system("modprobe i2c-dev")
-        if not os.path.exists("/sys/bus/i2c/devices/0-0050") :
+        if not os.path.exists("/sys/bus/i2c/devices/0-0050"):
             os.system("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-0/new_device")
 
         eeprom_path = '/sys/bus/i2c/devices/0-0050/eeprom'
-        #for x in range(self.port _start, self.port_end +1):
+        # for x in range(self.port _start, self.port_end +1):
         x = self.port_start
-        while(x<self.port_end+1):
+        while(x < self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path
             x = x + 1
         SfpUtilBase.__init__(self)
@@ -55,7 +56,7 @@ class SfpUtil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-        #toggle reset
+        # toggle reset
         reg_file.seek(0)
         reg_file.write('1')
         time.sleep(1)
@@ -101,11 +102,11 @@ class SfpUtil(SfpUtilBase):
             self.i2c_set(0x74, 0, 0)
             reg = (port_num)/8
             offset = reg % 8
-            if offset >=4:
-                offset=offset-4
-            elif offset<4:
-                offset=offset+4
-            bin_offset =  1<<offset
+            if offset >= 4:
+                offset = offset-4
+            elif offset < 4:
+                offset = offset+4
+            bin_offset = 1 << offset
 
             if port_num >= 0 and port_num <= 63:
                 device_reg = 0x70
@@ -168,11 +169,10 @@ class SfpUtil(SfpUtilBase):
 
                 bcm_port = str(port_pos_in_file)
 
-
                 if "index" in title:
                     fp_port_index = int(line.split()[title.index("index")])
                 # Leave the old code for backward compatibility
-                #if len(line.split()) >= 4:
+                # if len(line.split()) >= 4:
                 #    fp_port_index = (line.split()[3])
                 #    print(fp_port_index)
                 else:
@@ -223,9 +223,8 @@ class SfpUtil(SfpUtilBase):
         self.logical_to_physical = logical_to_physical
         self.physical_to_logical = physical_to_logical
 
-
-        #print(self.logical_to_physical)
-	'''print("logical: " + self.logical)
+        # print(self.logical_to_physical)
+        '''print("logical: " + self.logical)
         print("logical to bcm: " + self.logical_to_bcm)
         print("logical to physical: " + self.logical_to_physical)
         print("physical to logical: " + self.physical_to_logical)'''
@@ -245,7 +244,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
+        return self._port_to_eeprom_mapping
 
     @property
     def get_transceiver_change_event(self):
