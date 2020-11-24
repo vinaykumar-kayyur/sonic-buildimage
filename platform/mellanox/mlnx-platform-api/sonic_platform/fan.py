@@ -268,7 +268,7 @@ class Fan(FanBase):
             return False
         self.fault_indicator.set_status(color)
         target_color = Fan.fan_drawer_leds[self.drawer_index].get_status()
-        return self._set_status_led(color)
+        return self._set_status_led(target_color)
 
     def _set_status_led(self, color):
         """
