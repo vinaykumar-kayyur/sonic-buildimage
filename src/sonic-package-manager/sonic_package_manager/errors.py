@@ -53,6 +53,12 @@ class PackageUninstallationError(PackageManagerError):
     pass
 
 
+class PackageUpgradeError(PackageManagerError):
+    """ Exception for package upgrade error. """
+
+    pass
+
+
 @dataclass
 class PackageSonicRequirementError(PackageInstallationError):
     """ Exception for installation errors, when SONiC version requirement is not met. """

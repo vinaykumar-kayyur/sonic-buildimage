@@ -2,7 +2,7 @@
 import contextlib
 import functools
 import os
-from typing import Optional, Union, Iterable, List
+from typing import Optional, Union, Dict, Any
 
 import docker
 from sonic_py_common import device_info
@@ -17,7 +17,7 @@ from sonic_package_manager.errors import (
     PackageConflictError,
     PackageSonicRequirementError,
     PackageManagerError,
-    PackageUninstallationError
+    PackageUninstallationError, PackageUpgradeError
 )
 from sonic_package_manager.logger import log
 from sonic_package_manager.manifest_resolver import ManifestResolver
@@ -43,15 +43,6 @@ def failure_ignore(ignore: bool):
             raise
 
 
-def parse_reference_expression(expression):
-    try:
-        return parse_package_reference_from_constraint(PackageConstraint.parse(expression))
-    except ValueError:
-        # if we failed to parse the expression as constraint expression
-        # we will try to parse it as reference
-        return PackageReference.parse(expression)
-
-
 def parse_package_reference_from_constraint(constraint: PackageConstraint) -> PackageReference:
     package_name, version_constraint = constraint.name, constraint.constraint
     # Allow only specific version for now.
@@ -66,7 +57,16 @@ def parse_package_reference_from_constraint(constraint: PackageConstraint) -> Pa
     return PackageReference(package_name, str(version_constraint))
 
 
-def check_package_dependencies(packages: Iterable[Package]):
+def parse_reference_expression(expression):
+    try:
+        return parse_package_reference_from_constraint(PackageConstraint.parse(expression))
+    except ValueError:
+        # if we failed to parse the expression as constraint expression
+        # we will try to parse it as reference
+        return PackageReference.parse(expression)
+
+
+def check_dependencies_and_conflicts(packages: Dict[str, Package]):
     """ Verify that all dependencies are met in all packages passed to this function.
     Args:
         packages: list of packages to check
@@ -75,32 +75,26 @@ def check_package_dependencies(packages: Iterable[Package]):
         PackageConflictError: if there is a conflict between packages
     """
 
-    def find(name: str) -> Optional[Package]:
-        for package in packages:
-            if package.name == name:
-                return package
-        return None
-
-    for pkg in packages:
-        log.debug(f'checking dependencies for {pkg.name}')
-        for dependency in pkg.manifest['package']['depends']:
-            dependency_package = find(dependency.name)
+    for name, package in packages.items():
+        log.debug(f'checking dependencies for {name}')
+        for dependency in package.manifest['package']['depends']:
+            dependency_package = packages.get(dependency.name)
             if dependency_package is None:
-                raise PackageDependencyError(pkg.name, dependency)
+                raise PackageDependencyError(package.name, dependency)
             installed_version = dependency_package.version
             log.debug(f'dependency package is installed {dependency.name}: {installed_version}')
             if not dependency.constraint.allows_all(installed_version):
-                raise PackageDependencyError(pkg.name, dependency, installed_version)
+                raise PackageDependencyError(package.name, dependency, installed_version)
 
-        log.debug(f'checking conflicts for {pkg.name}')
-        for conflict in pkg.manifest['package']['breaks']:
-            conflicting_package = find(conflict.name)
+        log.debug(f'checking conflicts for {name}')
+        for conflict in package.manifest['package']['breaks']:
+            conflicting_package = packages.get(conflict.name)
             if conflicting_package is None:
                 continue
             installed_version = conflicting_package.version
             log.debug(f'conflicting package is installed {conflict.name}: {installed_version}')
             if conflict.constraint.allows_all(installed_version):
-                raise PackageConflictError(pkg.name, conflict, installed_version)
+                raise PackageConflictError(package.name, conflict, installed_version)
 
 
 class PackageManager:
@@ -113,7 +107,8 @@ class PackageManager:
                  registry_resolver: RegistryResolver,
                  database: PackageDatabase,
                  manifest_resolver: ManifestResolver,
-                 service_creator: ServiceCreator):
+                 service_creator: ServiceCreator,
+                 device_information: Any):
         """ Initialize PackageManager. """
 
         self.docker = docker
@@ -122,9 +117,10 @@ class PackageManager:
         self.manifest_resolver = manifest_resolver
         self.service_creator = service_creator
         self.feature_registry = service_creator.feature_registry
-        self.is_multi_npu = device_info.is_multi_npu()
-        self.num_npus = device_info.get_num_npus()
-        self.version_info = device_info.get_sonic_version_info() or {}
+        self.is_multi_npu = device_information.is_multi_npu()
+        self.num_npus = device_information.get_num_npus()
+        self.version_info = device_information.get_sonic_version_info()
+        self.base_os_version = Version.parse(self.version_info.get('base-os-compatibility-version'))
 
     def install(self, expression: str, force=False):
         """ Install a SONiC Package from the package reference
@@ -135,7 +131,7 @@ class PackageManager:
             expression: SONiC Package reference expression
             force: Force the installation.
         Raises:
-            PackageInstallationError
+            PackageManagerError
         """
 
         package_reference = parse_reference_expression(expression)
@@ -146,18 +142,19 @@ class PackageManager:
                 raise PackageInstallationError(f'{name} is already installed')
 
         package = self.get_package(name, reference)
-        base_os_version = self.get_base_os_version()
         version_constraint = package.manifest['package']['base-os-constraint']
 
         with failure_ignore(force):
-            if not version_constraint.allows_all(base_os_version):
+            if not version_constraint.allows_all(self.base_os_version):
                 raise PackageSonicRequirementError(package.name, version_constraint,
-                                                   base_os_version)
+                                                   self.base_os_version)
 
         installed_packages = self.get_installed_packages_and(package)
 
         with failure_ignore(force):
-            check_package_dependencies(installed_packages)
+            check_dependencies_and_conflicts(installed_packages)
+
+        # After all checks are passed we proceed to actual installation
 
         version = package.manifest['package']['version']
         cleanup = []  # cleanup function list
@@ -205,26 +202,28 @@ class PackageManager:
             name: SONiC Package name.
             force: Force the installation.
         Raises:
-            PackageUninstallationError
+            PackageManagerError
         """
 
         with failure_ignore(force):
             if not self.is_installed(name):
-                raise PackageInstallationError(f'{name} is not installed')
+                raise PackageUninstallationError(f'{name} is not installed')
 
         with failure_ignore(force):
             if self.feature_registry.is_feature_enabled(name):
-                raise PackageInstallationError(f'{name} is enabled. Disable the feature first')
+                raise PackageUninstallationError(f'{name} is enabled. Disable the feature first')
 
         package = self.get_package(name)
 
         if package.built_in:
-            raise PackageManagerError(f'Cannot uninstall built-in package {package.name}')
+            raise PackageUninstallationError(f'Cannot uninstall built-in package {package.name}')
 
         installed_packages = self.get_installed_packages_except(package)
 
         with failure_ignore(force):
-            check_package_dependencies(installed_packages)
+            check_dependencies_and_conflicts(installed_packages)
+
+        # After all checks are passed we proceed to actual uninstallation
 
         try:
             self.uninstall_cli_plugins(package)
@@ -251,7 +250,7 @@ class PackageManager:
             expression: SONiC Package reference expression
             force: Force the installation.
         Raises:
-            PackageInstallationError
+            PackageManagerError
         """
 
         package_reference = parse_reference_expression(expression)
@@ -259,45 +258,50 @@ class PackageManager:
 
         with failure_ignore(force):
             if not self.is_installed(name):
-                raise PackageInstallationError(f'{name} is not installed')
+                raise PackageUpgradeError(f'{name} is not installed')
 
         old_package = self.get_package(name)
         new_package = self.get_package(name, reference)
 
         if old_package.built_in:
-            raise PackageManagerError(f'Cannot upgrade built-in package {old_package.name}')
+            raise PackageUpgradeError(f'Cannot upgrade built-in package {old_package.name}')
 
         old_feature = old_package.manifest['service']['name']
         new_feature = new_package.manifest['service']['name']
+        old_version = old_package.manifest['package']['version']
+        new_version = new_package.manifest['package']['version']
 
         with failure_ignore(force):
-            old_version = old_package.manifest['package']['version']
-            new_version = new_package.manifest['package']['version']
-
             if old_version == new_version:
-                raise PackageManagerError(f'{new_version} is already installed')
+                raise PackageUpgradeError(f'{new_version} is already installed')
 
+            # TODO: Not all packages might support downgrade.
+            # We put a check here but we understand that for some packages
+            # the downgrade might be safe to do. In that case we might want to
+            # add another argument to this function: allow_downgrade: bool = False.
+            # Another way to do that might be a variable in manifest describing package
+            # downgrade ability or downgrade-able versions.
             if new_version < old_version:
-                raise PackageManagerError(f'Request to downgrade from {old_version} to {new_version}. '
+                raise PackageUpgradeError(f'Request to downgrade from {old_version} to {new_version}. '
                                           f'Downgrade might be not supported by the package')
 
-        base_os_version = self.get_base_os_version()
         version_constraint = new_package.manifest['package']['base-os-constraint']
 
         with failure_ignore(force):
-            if not version_constraint.allows_all(base_os_version):
+            if not version_constraint.allows_all(self.base_os_version):
                 raise PackageSonicRequirementError(new_package.name, version_constraint,
-                                                   base_os_version)
+                                                   self.base_os_version)
 
         # remove currently installed package from the list
         installed_packages = self.get_installed_packages_except(old_package)
         # add the package to upgrade to the list
-        installed_packages.append(new_package)
+        installed_packages[new_package.name] = new_package
 
         with failure_ignore(force):
-            check_package_dependencies(installed_packages)
+            check_dependencies_and_conflicts(installed_packages)
 
-        version = new_package.manifest['package']['version']
+        # After all checks are passed we proceed to actual upgrade
+
         cleanup = []  # cleanup function list
 
         def add_cleanup(func):
@@ -313,23 +317,29 @@ class PackageManager:
         try:
             self.uninstall_cli_plugins(old_package)
             add_cleanup(functools.partial(self.install_cli_plugins, old_package))
-            self.docker.pull(new_package.repository, new_package.reference, version, ProgressManager())
-            add_cleanup(functools.partial(self.docker.rmi, new_package.repository, version))
+            self.docker.pull(new_package.repository, new_package.reference, new_version, ProgressManager())
+            add_cleanup(functools.partial(self.docker.rmi, new_package.repository, new_version))
 
             if self.feature_registry.is_feature_enabled(old_feature):
                 self.systemctl_action(old_package, 'stop')
+                add_cleanup(functools.partial(self.systemctl_action, old_package, 'start'))
 
             self.service_creator.remove(old_package, deregister_feature=False)
+            add_cleanup(functools.partial(self.service_creator.create, old_package, register_feature=False))
+
+            # This is no return point, after we start removing old Docker images
+            # there is no guaranty we can actually successfully roll-back.
+
             self.docker.rm(old_package.repository, old_package.reference)
             self.docker.rm(old_package.repository, 'latest')
             self.docker.rmi(old_package.repository, old_package.reference)
             self.docker.rmi(old_package.repository, 'latest')
 
-            self.docker.tag(new_package.repository, version, new_package.repository, 'latest')
+            self.docker.tag(new_package.repository, new_version, new_package.repository, 'latest')
             add_cleanup(functools.partial(self.docker.rmi, old_package.repository, 'latest'))
 
             self.service_creator.create(new_package, register_feature=False)
-            add_cleanup(functools.partial(self.service_creator.remove, new_package))
+            add_cleanup(functools.partial(self.service_creator.remove, new_package, deregister_feature=False))
 
             if self.feature_registry.is_feature_enabled(new_feature):
                 self.systemctl_action(new_package, 'start')
@@ -337,7 +347,7 @@ class PackageManager:
             self.install_cli_plugins(new_package)
         except Exception as err:
             exec_cleanup()
-            raise PackageInstallationError(f'Failed to upgrade {new_package.name}: {err}')
+            raise PackageUpgradeError(f'Failed to upgrade {new_package.name}: {err}')
         except KeyboardInterrupt:
             exec_cleanup()
             raise
@@ -363,12 +373,12 @@ class PackageManager:
         Args:
             old_package_database: SONiC Package Database to migrate packages from.
         Raises:
-            PackageInstallationError
+            PackageManagerError
         """
 
         self.migrate_package_database(old_package_database)
 
-        # TODO: Toposort packages by their dependencies first.
+        # TODO: Topological sort packages by their dependencies first.
         for old_package in old_package_database:
             if not old_package.installed or old_package.built_in:
                 continue
@@ -402,15 +412,13 @@ class PackageManager:
 
             self.database.commit()
 
-    @staticmethod
-    def get_manager() -> 'PackageManager':
-        docker_api = DockerApi(docker.from_env())
-        registry_resolver = RegistryResolver()
-        return PackageManager(DockerApi(docker.from_env()),
-                              registry_resolver,
-                              PackageDatabase.from_file(),
-                              ManifestResolver(docker_api, registry_resolver),
-                              ServiceCreator(FeatureRegistry(SonicDB)))
+    def migrate_package_database(self, old_package_database: PackageDatabase):
+        for package in old_package_database:
+            if not self.has_package(package.name):
+                self.database.add_package(package.name,
+                                          package.repository,
+                                          package.description,
+                                          package.default_reference)
 
     def get_database(self):
         return self.database
@@ -427,22 +435,48 @@ class PackageManager:
         self.database.commit()
 
     def get_package(self, name: str, ref: Optional[Union[Version, str]] = None) -> Package:
-        package_info = self.get_database().get_package(name)
-        if ref is None:
-            if package_info.installed:
-                ref = str(package_info.version)
-            elif package_info.default_reference is not None:
-                ref = package_info.default_reference
-            else:
-                raise PackageManagerError(f'No default reference tag. '
-                                          f'Please specify the version or digest explicitly')
-        else:
-            if str(package_info.version) != ref:
-                package_info.installed = False
+        """ Get package from name and reference. If reference is not provided
+        reference returned by get_package_default_reference is used.
 
-        manifest = self.get_manifest(package_info, ref)
-        package_info.version = manifest['package']['version']
-        return Package(package_info, ref, manifest)
+        Args:
+            name: Package name
+            ref: Optional reference to use
+        Returns:
+            Package object
+        """
+
+        package_entry = self.get_database().get_package(name)
+        if ref is None:
+            ref = self.get_package_default_reference(package_entry)
+        else:
+            if str(package_entry.version) != ref:
+                package_entry.installed = False
+
+        manifest = self.get_manifest(package_entry, ref)
+        package_entry.version = manifest['package']['version']
+        return Package(package_entry, ref, manifest)
+
+    @staticmethod
+    def get_package_default_reference(package_entry: PackageEntry) -> str:
+        """ Returns default reference for the package.
+        If package is installed the installed tag, a version, is returned.
+        If package is not installed the default reference from package
+        database is used.
+
+        Args:
+            package_entry: Package Database Entry
+        Returns:
+            Reference string
+        """
+
+        if package_entry.installed:
+            return str(package_entry.version)
+
+        if package_entry.default_reference is not None:
+            return package_entry.default_reference
+
+        raise PackageManagerError(f'No default reference tag. '
+                                  f'Please specify the version or digest explicitly')
 
     def get_available_versions(self, name: str, all: bool = False):
         package_info = self.database.get_package(name)
@@ -450,8 +484,6 @@ class PackageManager:
         available_tags = registry.tags(package_info.repository)
 
         def is_semantic_ver_tag(tag: str) -> bool:
-            if all:
-                return True
             try:
                 Version.parse(tag)
                 return True
@@ -459,18 +491,20 @@ class PackageManager:
                 pass
             return False
 
+        if all:
+            return available_tags
+
         return filter(is_semantic_ver_tag, available_tags)
 
-    def get_installed_packages_and(self, package: Package):
-        packages = self.get_installed_packages() + [package]
+    def get_installed_packages_and(self, package: Package) -> Dict[str, Package]:
+        packages = self.get_installed_packages()
+        packages[package.name] = package
         return packages
 
-    def get_installed_packages_except(self, package: Package) -> List[Package]:
-        def filter_package(pkg):
-            return pkg.name != package.name
-
-        packages = filter(filter_package, self.get_installed_packages())
-        return list(packages)
+    def get_installed_packages_except(self, package: Package) -> Dict[str, Package]:
+        packages = self.get_installed_packages()
+        packages.pop(package.name)
+        return packages
 
     def is_installed(self, name: str) -> bool:
         if not self.database.has_package(name):
@@ -482,8 +516,8 @@ class PackageManager:
         return self.database.has_package(name)
 
     def get_installed_packages(self):
-        return [self.get_package(entry.name, str(entry.version))
-                for entry in self.get_database() if entry.installed]
+        return {entry.name: self.get_package(entry.name, str(entry.version))
+                for entry in self.get_database() if entry.installed}
 
     def get_manifest(self, package_info: PackageEntry, ref: str):
         return self.manifest_resolver.get_manifest(package_info, ref)
@@ -536,13 +570,13 @@ class PackageManager:
         if os.path.exists(host_plugin_path):
             os.remove(host_plugin_path)
 
-    def migrate_package_database(self, old_package_database: PackageDatabase):
-        for package in old_package_database:
-            if not self.has_package(package.name):
-                self.database.add_package(package.name,
-                                          package.repository,
-                                          package.description,
-                                          package.default_reference)
-
-    def get_base_os_version(self):
-        return self.version_info.get('base-os-compatibility-version') or Version(1, 0, 0)
+    @staticmethod
+    def get_manager() -> 'PackageManager':
+        docker_api = DockerApi(docker.from_env())
+        registry_resolver = RegistryResolver()
+        return PackageManager(DockerApi(docker.from_env()),
+                              registry_resolver,
+                              PackageDatabase.from_file(),
+                              ManifestResolver(docker_api, registry_resolver),
+                              ServiceCreator(FeatureRegistry(SonicDB)),
+                              device_info)

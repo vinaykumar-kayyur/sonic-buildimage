@@ -28,7 +28,7 @@ def mock_manifest_resolver():
 
 @pytest.fixture
 def fake_manifest_resolver():
-    class TestManifestResolver(ManifestResolver):
+    class FakeManifestResolver:
         def __init__(self):
             self.manifests = {
                 ('database', '1.0.0'): Manifest.marshal({
@@ -124,12 +124,29 @@ def fake_manifest_resolver():
         def get_manifest(self, package_info: PackageEntry, ref: str) -> Manifest:
             return self.manifests[(package_info.name, ref)]
 
-    yield TestManifestResolver()
+    yield FakeManifestResolver()
 
 
 @pytest.fixture
 def mock_service_creator():
-    return Mock()
+    yield Mock()
+
+
+@pytest.fixture
+def fake_device_info():
+    class FakeDeviceInfo:
+        def is_multi_npu(self):
+            return False
+
+        def get_num_npus(self):
+            return 1
+
+        def get_sonic_version_info(self):
+            return {
+                'base-os-compatibility-version': '1.0.0'
+            }
+
+    yield FakeDeviceInfo()
 
 
 @pytest.fixture
@@ -137,10 +154,12 @@ def package_manager(mock_docker_api,
                     mock_registry_resolver,
                     mock_service_creator,
                     fake_manifest_resolver,
-                    fake_db):
-    return PackageManager(mock_docker_api, mock_registry_resolver,
-                          fake_db, fake_manifest_resolver,
-                          mock_service_creator)
+                    fake_db,
+                    fake_device_info):
+    yield PackageManager(mock_docker_api, mock_registry_resolver,
+                         fake_db, fake_manifest_resolver,
+                         mock_service_creator,
+                         fake_device_info)
 
 
 @pytest.fixture
