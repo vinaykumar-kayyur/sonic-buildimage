@@ -26,6 +26,9 @@ DOCKER_CTL_SCRIPT_LOCATION = '/usr/bin'
 MONIT_CONF_TEMPLATE = 'monit.conf.j2'
 MONIT_CONF_LOCATION = '/etc/monit/conf.d/'
 
+DEBUG_DUMP_SCRIPT_TEMPLATE = 'dump.sh.j2'
+DEBUG_DUMP_SCRIPT_LOCATION = '/usr/bin/debug-dump/'
+
 ETC_SONIC_PATH = '/etc/sonic'
 
 TEMPLATES_PATH = '/usr/share/sonic/templates'
@@ -102,13 +105,14 @@ class ServiceCreator:
     def __init__(self, feature_registry: FeatureRegistry):
         self.feature_registry = feature_registry
 
-    def create(self, package: Package, root='/', register_feature=True):
+    def create(self, package: Package, register_feature=True):
         try:
-            self.generate_container_mgmt(package, root)
-            self.generate_service_mgmt(package, root)
-            self.update_dependent_list_file(package, root=root)
-            self.generate_systemd_service(package, root)
-            self.generate_monit_conf(package, root)
+            self.generate_container_mgmt(package)
+            self.generate_service_mgmt(package)
+            self.update_dependent_list_file(package)
+            self.generate_systemd_service(package)
+            self.generate_monit_conf(package)
+            self.generate_dump_script(package)
 
             if not in_chroot():
                 run_command('systemctl daemon-reload')
@@ -117,12 +121,12 @@ class ServiceCreator:
             if register_feature:
                 self.feature_registry.register(package.name, package.manifest)
         except Exception:
-            self.remove(package, root, not register_feature)
+            self.remove(package, not register_feature)
             raise
         except KeyboardInterrupt:
-            self.remove(package, root, not register_feature)
+            self.remove(package, not register_feature)
 
-    def remove(self, package: Package, root='/', deregister_feature=True):
+    def remove(self, package: Package, deregister_feature=True):
         name = package.manifest['service']['name']
 
         def remove_file(path):
@@ -130,13 +134,14 @@ class ServiceCreator:
                 os.remove(path)
                 log.info(f'removed {path}')
 
-        remove_file(os.path.join(root, MONIT_CONF_LOCATION, f'monit_{name}'))
-        remove_file(os.path.join(root, SYSTEMD_LOCATION, f'{name}.service'))
-        remove_file(os.path.join(root, SYSTEMD_LOCATION, f'{name}@.service'))
-        remove_file(os.path.join(root, SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh'))
-        remove_file(os.path.join(root, DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh'))
+        remove_file(os.path.join(MONIT_CONF_LOCATION, f'monit_{name}'))
+        remove_file(os.path.join(SYSTEMD_LOCATION, f'{name}.service'))
+        remove_file(os.path.join(SYSTEMD_LOCATION, f'{name}@.service'))
+        remove_file(os.path.join(SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh'))
+        remove_file(os.path.join(DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh'))
+        remove_file(os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, f'{name}'))
 
-        self.update_dependent_list_file(package, remove=True, root=root)
+        self.update_dependent_list_file(package, remove=True)
 
         if not in_chroot():
             run_command('systemctl daemon-reload')
@@ -145,12 +150,12 @@ class ServiceCreator:
         if deregister_feature:
             self.feature_registry.deregister(package.name)
 
-    def generate_container_mgmt(self, package: Package, root='/'):
+    def generate_container_mgmt(self, package: Package):
         repository = package.repository
         name = package.manifest['service']['name']
         container_spec = package.manifest['container']
         script_path = os.path.join(DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh')
-        script_template = os.path.join(root, TEMPLATES_PATH, DOCKER_CTL_SCRIPT_TEMPLATE)
+        script_template = os.path.join(TEMPLATES_PATH, DOCKER_CTL_SCRIPT_TEMPLATE)
         run_opt = []
 
         if container_spec['privileged']:
@@ -177,11 +182,11 @@ class ServiceCreator:
         render_template(script_template, script_path, render_ctx, executable=True)
         log.info(f'generated {script_path}')
 
-    def generate_service_mgmt(self, package: Package, root='/'):
+    def generate_service_mgmt(self, package: Package):
         name = package.manifest['service']['name']
         multi_instance_services = self.feature_registry.get_multi_instance_features()
         scrip_template = os.path.join(TEMPLATES_PATH, SERVICE_MGMT_SCRIPT_TEMPLATE)
-        script_path = os.path.join(root, SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh')
+        script_path = os.path.join(SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh')
         render_ctx = {
             'source': get_template(SERVICE_MGMT_SCRIPT_TEMPLATE),
             'manifest': package.manifest.unmarshal(),
@@ -190,7 +195,7 @@ class ServiceCreator:
         render_template(scrip_template, script_path, render_ctx, executable=True)
         log.info(f'generated {script_path}')
 
-    def generate_systemd_service(self, package: Package, root='/'):
+    def generate_systemd_service(self, package: Package):
         name = package.manifest['service']['name']
         multi_instance_services = self.feature_registry.get_multi_instance_features()
 
@@ -201,12 +206,12 @@ class ServiceCreator:
             'multi_instance': False,
             'multi_instance_services': multi_instance_services,
         }
-        output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}.service')
+        output_file = os.path.join(SYSTEMD_LOCATION, f'{name}.service')
         render_template(template, output_file, template_vars)
         log.info(f'generated {output_file}')
 
         if package.manifest['service']['asic-service']:
-            output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}@.service')
+            output_file = os.path.join(SYSTEMD_LOCATION, f'{name}@.service')
             template_vars['multi_instance'] = True
             render_template(template, output_file, template_vars)
             log.info(f'generated {output_file}')
@@ -217,28 +222,28 @@ class ServiceCreator:
                 'manifest': package.manifest.unmarshal(),
                 'multi_instance': False,
             }
-            output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}.timer')
+            output_file = os.path.join(SYSTEMD_LOCATION, f'{name}.timer')
             template = os.path.join(TEMPLATES_PATH, TIMER_UNIT_TEMPLATE)
             render_template(template, output_file, template_vars)
             log.info(f'generated {output_file}')
 
             if package.manifest['service']['asic-service']:
-                output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}@.timer')
+                output_file = os.path.join(SYSTEMD_LOCATION, f'{name}@.timer')
                 template_vars['multi_instance'] = True
                 render_template(template, output_file, template_vars)
                 log.info(f'generated {output_file}')
 
-    def generate_monit_conf(self, package: Package, root='/'):
+    def generate_monit_conf(self, package: Package):
         name = package.manifest['service']['name']
         processes = package.manifest['processes']
-        output_filename = os.path.join(root, MONIT_CONF_LOCATION, f'monit_{name}')
+        output_filename = os.path.join(MONIT_CONF_LOCATION, f'monit_{name}')
         render_template(get_template(MONIT_CONF_TEMPLATE), output_filename,
                         {'source': get_template(MONIT_CONF_TEMPLATE),
                          'feature': name,
                          'processes': processes})
         log.info(f'generated {output_filename}')
 
-    def update_dependent_list_file(self, package: Package, remove=False, root='/'):
+    def update_dependent_list_file(self, package: Package, remove=False):
         name = package.manifest['service']['name']
         dependent_of = package.manifest['service']['dependent-of']
         host_service = package.manifest['service']['host-service']
@@ -250,7 +255,7 @@ class ServiceCreator:
             else:
                 filename = f'{service}_dependent'
 
-            filepath = os.path.join(root, ETC_SONIC_PATH, filename)
+            filepath = os.path.join(ETC_SONIC_PATH, filename)
 
             dependent_services = set()
             if os.path.exists(filepath):
@@ -269,3 +274,21 @@ class ServiceCreator:
                 update_dependent(service, name, multi_inst=False)
             if asic_service:
                 update_dependent(service, name, multi_inst=True)
+
+    def generate_dump_script(self, package):
+        name = package.manifest['service']['name']
+
+        if not package.manifest['package']['debug-dump']:
+            return
+
+        if not os.path.exists(DEBUG_DUMP_SCRIPT_LOCATION):
+            os.mkdir(DEBUG_DUMP_SCRIPT_LOCATION)
+
+        scrip_template = os.path.join(TEMPLATES_PATH, DEBUG_DUMP_SCRIPT_TEMPLATE)
+        script_path = os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, f'{name}')
+        render_ctx = {
+            'source': get_template(SERVICE_MGMT_SCRIPT_TEMPLATE),
+            'manifest': package.manifest.unmarshal(),
+        }
+        render_template(scrip_template, script_path, render_ctx, executable=True)
+        log.info(f'generated {script_path}')

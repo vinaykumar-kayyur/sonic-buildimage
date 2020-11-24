@@ -10,7 +10,7 @@ from sonic_package_manager.package import Package
 from sonic_package_manager.service_creator.creator import (
     ServiceCreator,
     ETC_SONIC_PATH, DOCKER_CTL_SCRIPT_LOCATION,
-    SERVICE_MGMT_SCRIPT_LOCATION, SYSTEMD_LOCATION, MONIT_CONF_LOCATION
+    SERVICE_MGMT_SCRIPT_LOCATION, SYSTEMD_LOCATION, MONIT_CONF_LOCATION, DEBUG_DUMP_SCRIPT_LOCATION
 )
 from sonic_package_manager.service_creator.feature import FeatureRegistry
 
@@ -66,6 +66,21 @@ def test_service_creator_with_timer_unit(sonic_fs, manifest, mock_feature_regist
     creator.create(package)
 
     assert sonic_fs.exists(os.path.join(SYSTEMD_LOCATION, 'test.timer'))
+
+
+def test_service_creator_with_debug_dump(sonic_fs, manifest, mock_feature_registry):
+    creator = ServiceCreator(mock_feature_registry)
+    entry = PackageEntry('test', 'azure/sonic-test')
+    package = Package(entry, '1.0.0', manifest)
+    creator.create(package)
+
+    assert not sonic_fs.exists(os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, 'test'))
+
+    manifest['package']['debug-dump'] = '/some/command'
+    package = Package(entry, '1.0.0', manifest)
+    creator.create(package)
+
+    assert sonic_fs.exists(os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, 'test'))
 
 
 def test_feature_registration(mock_sonic_db, manifest):

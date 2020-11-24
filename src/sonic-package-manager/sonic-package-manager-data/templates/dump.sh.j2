@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#
+# =============== Managed by SONiC Package Manager. DO NOT EDIT! ===============
+#             auto-generated from {{ source }} by sonic-package-manager
+#
+
+DEV="$1"
+
+docker exec -it {{ manifest.service.name }}$DEV {{ manifest.package['debug-dump'] }}

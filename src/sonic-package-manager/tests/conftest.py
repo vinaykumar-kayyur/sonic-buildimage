@@ -12,7 +12,7 @@ from sonic_package_manager.registry import RegistryResolver
 from sonic_package_manager.service_creator.creator import (
     TEMPLATES_PATH, SERVICE_FILE_TEMPLATE, TIMER_UNIT_TEMPLATE,
     SERVICE_MGMT_SCRIPT_TEMPLATE, DOCKER_CTL_SCRIPT_TEMPLATE, MONIT_CONF_TEMPLATE, SERVICE_MGMT_SCRIPT_LOCATION,
-    SYSTEMD_LOCATION, ETC_SONIC_PATH, MONIT_CONF_LOCATION, DOCKER_CTL_SCRIPT_LOCATION
+    SYSTEMD_LOCATION, ETC_SONIC_PATH, MONIT_CONF_LOCATION, DOCKER_CTL_SCRIPT_LOCATION, DEBUG_DUMP_SCRIPT_TEMPLATE
 )
 from sonic_package_manager.version import Version
 
@@ -292,6 +292,7 @@ def sonic_fs(fs):
     fs.create_file(os.path.join(TEMPLATES_PATH, SERVICE_MGMT_SCRIPT_TEMPLATE))
     fs.create_file(os.path.join(TEMPLATES_PATH, DOCKER_CTL_SCRIPT_TEMPLATE))
     fs.create_file(os.path.join(TEMPLATES_PATH, MONIT_CONF_TEMPLATE))
+    fs.create_file(os.path.join(TEMPLATES_PATH, DEBUG_DUMP_SCRIPT_TEMPLATE))
     yield fs
 
 
