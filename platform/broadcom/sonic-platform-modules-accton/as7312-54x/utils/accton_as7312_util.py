@@ -67,7 +67,7 @@ def main():
     if len(sys.argv) < 2:
         show_help()
 
-    (options, ARGS) = getopt.getopt(sys.argv[1:], 'hdf', 
+    (options, ARGS) = getopt.getopt(sys.argv[1:], 'hdf',
                                 ['help','debug', 'force'])
     if DEBUG == True:
         print options
@@ -149,7 +149,7 @@ def log_os_system(cmd, show):
 
 
 def driver_check():
-    (ret, lsmod) = log_os_system('lsmod| grep accton', 0)
+    (ret, lsmod) = log_os_system('ls /sys/module/ | grep accton', 0)
     logging.info('mods:' + lsmod)
     if not lsmod:
         return False
@@ -266,14 +266,12 @@ mknod2 = mknod2 + mknod_common
 def i2c_order_check():
     # i2c bus 0 and 1 might be installed in different order.
     # Here check if 0x70 is exist @ i2c-1
-    tmp = 'echo pca9548 0x70 > /sys/bus/i2c/devices/i2c-1/new_device'
-    log_os_system(tmp, 0)
-    if not device_exist():
+    tmp = "i2cget -y -f 0 0x70"
+    ret = log_os_system(tmp, 0)
+    if not ret[0]:
         order = 1
     else:
         order = 0
-    tmp = 'echo 0x70 > /sys/bus/i2c/devices/i2c-1/delete_device'
-    log_os_system(tmp, 0)
     return order
 
 
@@ -281,13 +279,10 @@ def device_install():
     global FORCE
 
     order = i2c_order_check()
-
     # if 0x70 is not exist @i2c-1, use reversed bus order
     if order:
         for i in range(0, len(mknod2)):
-
             # for pca954x need times to built new i2c buses
-
             if mknod2[i].find('pca954') != -1:
                 time.sleep(1)
 
@@ -325,12 +320,6 @@ def device_install():
 def device_uninstall():
     global FORCE
 
-    status = log_os_system('ls /sys/bus/i2c/devices/1-0076', 0)
-    if status[0] == 0:
-        I2C_ORDER = 1
-    else:
-        I2C_ORDER = 0
-
     for i in range(0, len(sfp_map)):
         target = '/sys/bus/i2c/devices/i2c-' + str(sfp_map[i]) \
             + '/delete_device'
@@ -340,10 +329,11 @@ def device_uninstall():
             if FORCE == 0:
                 return status
 
-    if I2C_ORDER == 0:
-        nodelist = mknod
-    else:
+    order = i2c_order_check()
+    if order :
         nodelist = mknod2
+    else:
+        nodelist = mknod
 
     for i in range(len(nodelist)):
         target = nodelist[-(i + 1)]
