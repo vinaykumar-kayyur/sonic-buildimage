@@ -30,11 +30,12 @@ command:
 """
 
 import commands
-import sys
 import getopt
+import sys
 import logging
 import re
 import time
+
 
 PROJECT_NAME = 'as7312_54x'
 version = '0.1.0'
