@@ -177,4 +177,3 @@ class SfpUtil(SfpUtilBase):
         TBD: When the feature request.
         """
         raise NotImplementedError
-

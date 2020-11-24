@@ -16,6 +16,7 @@ except ImportError as e:
 
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 
+
 class Component(DeviceBase):
     """Platform-specific Component class"""
 

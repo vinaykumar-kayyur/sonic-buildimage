@@ -106,6 +106,5 @@ class PsuUtil(PsuBase):
         if (psu_status != 'ERR'):
             # Check for PSU presence
             if (psu_status == 0x00):
-                    status = 1
+                status = 1
         return status
-

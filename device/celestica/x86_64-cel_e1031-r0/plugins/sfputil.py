@@ -13,15 +13,15 @@ class SfpUtil(SfpUtilBase):
     PORT_START = 1
     PORT_END = 52
     port_to_i2c_mapping = {
-         1: None,
-         2: None,
-         3: None,
-         4: None,
-         5: None,
-         6: None,
-         7: None,
-         8: None,
-         9: None,
+        1: None,
+        2: None,
+        3: None,
+        4: None,
+        5: None,
+        6: None,
+        7: None,
+        8: None,
+        9: None,
         10: None,
         11: None,
         12: None,
@@ -93,7 +93,6 @@ class SfpUtil(SfpUtilBase):
             self.port_to_eeprom_mapping[x] = port_eeprom_path
         SfpUtilBase.__init__(self)
 
-
     def get_presence(self, port_num):
         sfp_modabs_path = '/sys/devices/platform/e1031.smc/SFP/sfp_modabs'
 
@@ -137,7 +136,7 @@ class SfpUtil(SfpUtilBase):
                 with open(modabs_interrupt_path, 'r') as port_changes:
                     changes = int(port_changes.read(), 16)
                     for port_num in self._sfp_port:
-                        change = (changes >> ( port_num - 49)) & 1
+                        change = (changes >> (port_num - 49)) & 1
                         if change == 1:
                             port_dict[str(port_num)] = str(int(self.get_presence(port_num)))
                             found_flag = 1

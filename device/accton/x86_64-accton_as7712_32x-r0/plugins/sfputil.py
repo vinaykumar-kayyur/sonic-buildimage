@@ -4,9 +4,9 @@ try:
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
-#from xcvrd
+# from xcvrd
 SFP_STATUS_INSERTED = '1'
 SFP_STATUS_REMOVED = '0'
 
@@ -20,38 +20,38 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     port_to_i2c_mapping = {
-         9 : 18,
-        10 : 19,
-        11 : 20,
-        12 : 21,
-         1 : 22,
-         2 : 23,
-         3 : 24,
-         4 : 25,
-         6 : 26,
-         5 : 27,
-         8 : 28,
-         7 : 29,
-        13 : 30,
-        14 : 31,
-        15 : 32,
-        16 : 33,
-        17 : 34,
-        18 : 35,
-        19 : 36,
-        20 : 37,
-        25 : 38,
-        26 : 39,
-        27 : 40,
-        28 : 41,
-        29 : 42,
-        30 : 43,
-        31 : 44,
-        32 : 45,
-        21 : 46,
-        22 : 47,
-        23 : 48,
-        24 : 49,
+        9: 18,
+        10: 19,
+        11: 20,
+        12: 21,
+        1: 22,
+        2: 23,
+        3: 24,
+        4: 25,
+        6: 26,
+        5: 27,
+        8: 28,
+        7: 29,
+        13: 30,
+        14: 31,
+        15: 32,
+        16: 33,
+        17: 34,
+        18: 35,
+        19: 36,
+        20: 37,
+        25: 38,
+        26: 39,
+        27: 40,
+        28: 41,
+        29: 42,
+        30: 43,
+        31: 44,
+        32: 45,
+        21: 46,
+        22: 47,
+        23: 48,
+        24: 49,
     }
 
     _qsfp_ports = list(range(0, ports_in_block + 1))
@@ -77,7 +77,7 @@ class SfpUtil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-        #toggle reset
+        # toggle reset
         reg_file.seek(0)
         reg_file.write('1')
         time.sleep(1)
@@ -122,7 +122,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
+        return self._port_to_eeprom_mapping
 
     def get_low_power_mode(self, port_num):
         # Check for invalid port_num
@@ -140,11 +140,11 @@ class SfpUtil(SfpUtilBase):
             lpmode = ord(eeprom.read(1))
 
             if ((lpmode & 0x3) == 0x3):
-                return True # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
+                return True  # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
             else:
-                return False # High Power Mode if one of the following conditions is matched:
-                             # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0
+                return False  # High Power Mode if one of the following conditions is matched:
+                # 1. "Power override" bit is 0
+                # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
             return False
@@ -162,10 +162,10 @@ class SfpUtil(SfpUtilBase):
             eeprom = None
 
             if not self.get_presence(port_num):
-                return False # Port is not present, unable to set the eeprom
+                return False  # Port is not present, unable to set the eeprom
 
             # Fill in write buffer
-            regval = 0x3 if lpmode else 0x1 # 0x3:Low Power Mode, 0x1:High Power Mode
+            regval = 0x3 if lpmode else 0x1  # 0x3:Low Power Mode, 0x1:High Power Mode
             buffer = create_string_buffer(1)
             buffer[0] = chr(regval)
 
@@ -202,9 +202,10 @@ class SfpUtil(SfpUtilBase):
 
         rev = bitmap.split(" ")
         rev = "".join(rev[::-1])
-        return int(rev,16)
+        return int(rev, 16)
 
-    data = {'valid':0, 'last':0, 'present':0}
+    data = {'valid': 0, 'last': 0, 'present': 0}
+
     def get_transceiver_change_event(self, timeout=2000):
         now = time.time()
         port_dict = {}
@@ -212,7 +213,7 @@ class SfpUtil(SfpUtilBase):
 
         if timeout < 1000:
             timeout = 1000
-        timeout = (timeout) / float(1000) # Convert to secs
+        timeout = (timeout) / float(1000)  # Convert to secs
 
         if now < (self.data['last'] + timeout) and self.data['valid']:
             return True, {}
@@ -220,7 +221,7 @@ class SfpUtil(SfpUtilBase):
         reg_value = self._get_all_presence
         changed_ports = self.data['present'] ^ reg_value
         if changed_ports:
-            for port in range (self.port_start, self.port_end+1):
+            for port in range(self.port_start, self.port_end+1):
                 # Mask off the bit corresponding to our port
                 mask = (1 << (port - 1))
                 if changed_ports & mask:
@@ -237,4 +238,3 @@ class SfpUtil(SfpUtilBase):
         else:
             return True, {}
         return False, {}
-

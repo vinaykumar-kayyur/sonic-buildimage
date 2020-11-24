@@ -55,7 +55,6 @@ class SfpUtil(SfpUtilBase):
 
         return int(content, 16)
 
-
     def __init__(self):
 
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
@@ -207,17 +206,17 @@ class SfpUtil(SfpUtilBase):
         if timeout == 0:
             forever = True
         elif timeout > 0:
-            timeout = timeout / float(1000) # Convert to secs
+            timeout = timeout / float(1000)  # Convert to secs
         else:
             print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print('get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout)
+            print('get_transceiver_change_event:'
+                  'time wrap / invalid timeout value', timeout)
 
-            return False, {} # Time wrap or possibly incorrect timeout
+            return False, {}  # Time wrap or possibly incorrect timeout
 
         while timeout >= 0:
             # Check for OIR events and return updated port_dict
@@ -247,7 +246,7 @@ class SfpUtil(SfpUtilBase):
             else:
                 timeout = end_time - time.time()
                 if timeout >= 1:
-                    time.sleep(1) # We poll at 1 second granularity
+                    time.sleep(1)  # We poll at 1 second granularity
                 else:
                     if timeout > 0:
                         time.sleep(timeout)

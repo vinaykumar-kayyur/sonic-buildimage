@@ -2,7 +2,7 @@ try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
@@ -17,60 +17,60 @@ class SfpUtil(SfpUtilBase):
     _global_port_pres_dict = {}
 
     _port_to_i2c_mapping = {
-        1 : 8,
-        2 : 9,
-        3 : 10,
-        4 : 11,
-        5 : 12,
-        6 : 13,
-        7 : 14,
-        8 : 15,
-        9 : 16,
+        1: 8,
+        2: 9,
+        3: 10,
+        4: 11,
+        5: 12,
+        6: 13,
+        7: 14,
+        8: 15,
+        9: 16,
         10: 17,
-        11 : 18,
-        12 : 19,
-        13 : 20,
-        14 : 21,
-        15 : 22,
-        16 : 23,
-        17 : 24,
-        18 : 25,
-        19 : 26,
-        20 : 27,
-        21 : 28,
-        22 : 29,
-        23 : 30,
-        24 : 31,
-        25 : 32,
-        26 : 33,
-        27 : 34,
-        28 : 35,
-        29 : 36,
-        30 : 37,
-        31 : 38,
-        32 : 39,
-        33 : 40,
-        34 : 41,
-        35 : 42,
-        36 : 43,
-        37 : 44,
-        38 : 45,
-        39 : 46,
-        40 : 47,
-        41 : 48,
-        42 : 49,
-        43 : 50,
-        44 : 51,
-        45 : 52,
-        46 : 53,
-        47 : 54,
-        48 : 55,
-        49 : 56,
-        50 : 57,
-        51 : 60,
-        52 : 61,
-        53 : 62,
-        54 : 63,
+        11: 18,
+        12: 19,
+        13: 20,
+        14: 21,
+        15: 22,
+        16: 23,
+        17: 24,
+        18: 25,
+        19: 26,
+        20: 27,
+        21: 28,
+        22: 29,
+        23: 30,
+        24: 31,
+        25: 32,
+        26: 33,
+        27: 34,
+        28: 35,
+        29: 36,
+        30: 37,
+        31: 38,
+        32: 39,
+        33: 40,
+        34: 41,
+        35: 42,
+        36: 43,
+        37: 44,
+        38: 45,
+        39: 46,
+        40: 47,
+        41: 48,
+        42: 49,
+        43: 50,
+        44: 51,
+        45: 52,
+        46: 53,
+        47: 54,
+        48: 55,
+        49: 56,
+        50: 57,
+        51: 60,
+        52: 61,
+        53: 62,
+        54: 63,
     }
 
     _qsfp_ports = list(range(_qsfp_port_start, _ports_in_block + 1))
@@ -82,7 +82,6 @@ class SfpUtil(SfpUtilBase):
 
         path = "/sys/bus/i2c/devices/{0}-0050/sfp_is_present"
         port_ps = path.format(self._port_to_i2c_mapping[port_num])
-
 
         try:
             reg_file = open(port_ps)
@@ -116,7 +115,6 @@ class SfpUtil(SfpUtilBase):
         for port_num in range(self.port_start, (self.port_end + 1)):
             self._global_port_pres_dict[port_num] = '0'
 
-
     def __init__(self):
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/sfp_eeprom'
         for x in range(self._port_start, self._port_end + 1):
@@ -140,7 +138,7 @@ class SfpUtil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-        #toggle reset
+        # toggle reset
         reg_file.seek(0)
         reg_file.write('1')
         time.sleep(1)
@@ -156,13 +154,13 @@ class SfpUtil(SfpUtilBase):
 
         pre_value = self.get_presence(port_num)
         if pre_value == False:
-           return False
+            return False
 
         path = "/sys/bus/i2c/devices/{0}-0050/sfp_lpmode"
         port_ps = path.format(self._port_to_i2c_mapping[port_num])
 
         try:
-            reg_file = open(port_ps,'w')
+            reg_file = open(port_ps, 'w')
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
             return False
@@ -176,7 +174,6 @@ class SfpUtil(SfpUtilBase):
         reg_file.close()
 
         return True
-
 
     def get_low_power_mode(self, port_num):
         # Check for invalid port_num
@@ -230,7 +227,6 @@ class SfpUtil(SfpUtilBase):
 
             time.sleep(0.5)
 
-
     @property
     def port_start(self):
         return self._port_start
@@ -245,4 +241,4 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
+        return self._port_to_eeprom_mapping

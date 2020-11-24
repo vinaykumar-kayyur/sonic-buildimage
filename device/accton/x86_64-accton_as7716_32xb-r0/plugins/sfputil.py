@@ -6,7 +6,7 @@
 try:
     import time
     import os
-    import sys, getopt
+    import sys
     import subprocess
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
@@ -29,39 +29,39 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     _port_to_i2c_mapping = {
-           0: [1, 29],
-           1: [2, 30],
-           2: [3, 31],
-           3: [4, 32],
-           4: [5, 34],
-           5: [6, 33],
-           6: [7, 36],
-           7: [8, 35],
-           8: [9, 25],
-           9: [10, 26],
-           10: [11, 27],
-           11: [12, 28],
-           12: [14, 37],
-           13: [15, 38],
-           14: [16, 39],
-           15: [17, 40],
-           16: [18, 41],
-           17: [19, 42],
-           18: [20, 43],
-           19: [21, 44],
-           20: [22, 53],
-           21: [23, 54],
-           22: [24, 55],
-           23: [25, 56],
-           24: [26, 45],
-           25: [27, 46],
-           26: [28, 47],
-           27: [29, 48],
-           28: [30, 49],
-           29: [31, 50],
-           30: [32, 51],
-           31: [33, 52],
-           }
+        0: [1, 29],
+        1: [2, 30],
+        2: [3, 31],
+        3: [4, 32],
+        4: [5, 34],
+        5: [6, 33],
+        6: [7, 36],
+        7: [8, 35],
+        8: [9, 25],
+        9: [10, 26],
+        10: [11, 27],
+        11: [12, 28],
+        12: [14, 37],
+        13: [15, 38],
+        14: [16, 39],
+        15: [17, 40],
+        16: [18, 41],
+        17: [19, 42],
+        18: [20, 43],
+        19: [21, 44],
+        20: [22, 53],
+        21: [23, 54],
+        22: [24, 55],
+        23: [25, 56],
+        24: [26, 45],
+        25: [27, 46],
+        26: [28, 47],
+        27: [29, 48],
+        28: [30, 49],
+        29: [31, 50],
+        30: [32, 51],
+        31: [33, 52],
+    }
 
     @property
     def port_start(self):
@@ -107,21 +107,19 @@ class SfpUtil(SfpUtilBase):
         for x in range(0, self.port_end+1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 self._port_to_i2c_mapping[x][1]
-                )
+            )
             if(x < 9):
-                if(self.get_presence(x)==1):
-                    self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-000" +str(x+1) + "/eeprom"
+                if(self.get_presence(x) == 1):
+                    self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-000" + str(x+1) + "/eeprom"
 
             else:
-                if(self.get_presence(x)==1):
-                    self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-00" +str(x+1)+ "/eeprom"
+                if(self.get_presence(x) == 1):
+                    self.port_to_eeprom_mapping[x] = self.BASE_I2C_PATH + "0-00" + str(x+1) + "/eeprom"
 
         SfpUtilBase.__init__(self)
 
-
-
     def get_low_power_mode(self, port_num):
-      raise NotImplementedError
+        raise NotImplementedError
 
     def set_low_power_mode(self, port_num, lpmode):
         raise NotImplementedError

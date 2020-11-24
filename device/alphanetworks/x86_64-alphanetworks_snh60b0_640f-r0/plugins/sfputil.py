@@ -2,7 +2,7 @@ try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
@@ -14,11 +14,11 @@ class SfpUtil(SfpUtilBase):
 
     port_to_eeprom = {}
     port_to_i2cbus_mapping = {
-         1 : 13,
-         2 : 14,
-         3 : 15,
-         4 : 16,
-         5 : 23,
+        1: 13,
+        2: 14,
+        3: 15,
+        4: 16,
+        5: 23,
     }
 
     eeprom_path_1 = "/sys/bus/i2c/devices/{0}-0020/sfp{1}_eeprom"
@@ -44,7 +44,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-         return self.port_to_eeprom
+        return self.port_to_eeprom
 
     def get_transceiver_change_event(self):
         """
@@ -114,7 +114,6 @@ class SfpUtil(SfpUtilBase):
             path = self.present_path
         port_path = path.format(self.port_to_i2cbus_mapping[cpld_index], index)
 
-
         try:
             reg_file = open(port_path)
         except IOError as e:
@@ -127,4 +126,3 @@ class SfpUtil(SfpUtilBase):
             return True
 
         return False
-

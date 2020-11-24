@@ -3,9 +3,11 @@
 import arista.platforms
 from arista.utils.sonic_reboot import reboot
 
+
 def main():
-   # reboot the system
-   reboot()
+    # reboot the system
+    reboot()
+
 
 if __name__ == "__main__":
-   main()
+    main()

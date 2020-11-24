@@ -177,7 +177,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_sys_tmp_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_sys_tmp_get failed: unknown result")
 
     def pltfm_mgr_sys_eeprom_get(self):
         self.send_pltfm_mgr_sys_eeprom_get()
@@ -205,7 +206,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_sys_eeprom_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_sys_eeprom_get failed: unknown result")
 
     def pltfm_mgr_pwr_supply_present_get(self, ps_num):
         """
@@ -238,7 +240,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_pwr_supply_present_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_pwr_supply_present_get failed: unknown result")
 
     def pltfm_mgr_pwr_supply_info_get(self, ps_num):
         """
@@ -271,7 +274,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_pwr_supply_info_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_pwr_supply_info_get failed: unknown result")
 
     def pltfm_mgr_pwr_rail_info_get(self, ps_num):
         """
@@ -304,7 +308,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_pwr_rail_info_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_pwr_rail_info_get failed: unknown result")
 
     def pltfm_mgr_fan_speed_set(self, fan_num, percent):
         """
@@ -339,7 +344,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_fan_speed_set failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_fan_speed_set failed: unknown result")
 
     def pltfm_mgr_fan_info_get(self, fan_num):
         """
@@ -372,7 +378,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_fan_info_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_fan_info_get failed: unknown result")
 
     def pltfm_mgr_qsfp_presence_get(self, port_num):
         """
@@ -405,7 +412,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_qsfp_presence_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_qsfp_presence_get failed: unknown result")
 
     def pltfm_mgr_qsfp_info_get(self, port_num):
         """
@@ -438,7 +446,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_qsfp_info_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_qsfp_info_get failed: unknown result")
 
     def pltfm_mgr_qsfp_get_max_port(self):
         self.send_pltfm_mgr_qsfp_get_max_port()
@@ -466,7 +475,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_qsfp_get_max_port failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_qsfp_get_max_port failed: unknown result")
 
     def pltfm_mgr_qsfp_reset(self, port_num, reset):
         """
@@ -534,7 +544,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_qsfp_lpmode_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_qsfp_lpmode_get failed: unknown result")
 
     def pltfm_mgr_qsfp_lpmode_set(self, port_num, lpmode):
         """
@@ -569,7 +580,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_qsfp_lpmode_set failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_qsfp_lpmode_set failed: unknown result")
 
     def pltfm_mgr_sensor_info_get(self, options):
         """
@@ -602,7 +614,8 @@ class Client(Iface):
             return result.success
         if result.ouch is not None:
             raise result.ouch
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "pltfm_mgr_sensor_info_get failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT,
+                                    "pltfm_mgr_sensor_info_get failed: unknown result")
 
 
 class Processor(Iface, TProcessor):
@@ -2213,7 +2226,8 @@ class pltfm_mgr_qsfp_info_get_result(object):
                 break
             if fid == 0:
                 if ftype == TType.STRING:
-                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.success = iprot.readString().decode(
+                        'utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 1:
@@ -2817,7 +2831,8 @@ class pltfm_mgr_sensor_info_get_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.options = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.options = iprot.readString().decode(
+                        'utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             else:
@@ -2879,7 +2894,8 @@ class pltfm_mgr_sensor_info_get_result(object):
                 break
             if fid == 0:
                 if ftype == TType.STRING:
-                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.success = iprot.readString().decode(
+                        'utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 1:

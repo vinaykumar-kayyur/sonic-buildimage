@@ -4,7 +4,7 @@ try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
@@ -22,22 +22,20 @@ class SfpUtil(SfpUtilBase):
     sfp_ports = list(range(0, ports_in_block))
     qsfp_ports = list(range(ports_in_block - 6, ports_in_block))
 
-
     def __init__(self):
         for x in range(self.port_start, self.port_end + 1):
             if x < self.cpldb_sfp_num:
-                self.port_to_i2c_mapping.update({x:7})
+                self.port_to_i2c_mapping.update({x: 7})
             elif x < self.cplda_sfp_num + self.cpldb_sfp_num:
-                self.port_to_i2c_mapping.update({x:6})
+                self.port_to_i2c_mapping.update({x: 6})
             else:
-                self.port_to_i2c_mapping.update({x:8})
+                self.port_to_i2c_mapping.update({x: 8})
 
         for x in range(self.port_start, self.port_end+1):
             eeprom_path = '/sys/bus/i2c/devices/{0}-0050/sfp'+str(x+1)+'_eeprom'
             port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x])
             self.port_to_eeprom_mapping[x] = port_eeprom_path
         SfpUtilBase.__init__(self)
-
 
     def get_presence(self, port_num):
         if port_num < self.port_start or port_num > self.port_end:
@@ -231,6 +229,3 @@ class SfpUtil(SfpUtilBase):
         print "logical to physical: " + self.logical_to_physical
         print "physical to logical: " + self.physical_to_logical
         """
-
-
-

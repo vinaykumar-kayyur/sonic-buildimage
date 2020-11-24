@@ -29,12 +29,14 @@ CACHE_FILE = 'syseeprom_cache'
 TLV_EEPROM_I2C_BUS = 0
 TLV_EEPROM_I2C_ADDR = 56
 
+
 class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     EEPROM_DECODE_HEADLINES = 6
 
     def __init__(self):
-        self._eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-00{1}/eeprom".format(TLV_EEPROM_I2C_BUS, TLV_EEPROM_I2C_ADDR)
+        self._eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-00{1}/eeprom".format(
+            TLV_EEPROM_I2C_BUS, TLV_EEPROM_I2C_ADDR)
         super(Tlv, self).__init__(self._eeprom_path, 0, '', True)
         self._eeprom = self._load_eeprom()
 

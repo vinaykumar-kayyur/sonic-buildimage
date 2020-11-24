@@ -8,6 +8,7 @@ import sys
 import errno
 from python_sdk_api.sx_api import *
 
+
 def mgmt_phy_mod_pwr_attr_get(handle, module_id, power_attr_type):
     sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
     sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t()
@@ -21,6 +22,7 @@ def mgmt_phy_mod_pwr_attr_get(handle, module_id, power_attr_type):
         return pwr_mode_attr.admin_pwr_mode_e, pwr_mode_attr.oper_pwr_mode_e
     finally:
         delete_sx_mgmt_phy_mod_pwr_attr_t_p(sx_mgmt_phy_mod_pwr_attr_p)
+
 
 # Check if SFP port number is provided
 if len(sys.argv) < 2:

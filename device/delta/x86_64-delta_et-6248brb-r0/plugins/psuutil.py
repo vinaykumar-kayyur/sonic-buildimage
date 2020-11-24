@@ -3,7 +3,8 @@ import os.path
 try:
     from sonic_psu.psu_base import PsuBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
+
 
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
@@ -14,7 +15,6 @@ class PsuUtil(PsuBase):
         self.psu_path = "/sys/devices/platform/delta-et6248brb-gpio.0/PSU/psu{}_pg"
         self.psu_oper_status = "in1_input"
         self.psu_presence = "/sys/devices/platform/delta-et6248brb-gpio.0/PSU/psu{}_pres"
-
 
     def get_num_psus(self):
         """

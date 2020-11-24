@@ -13,6 +13,7 @@ try:
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
+
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
@@ -58,7 +59,7 @@ class SfpUtil(SfpUtilBase):
         port = (str(port_num + 1)).zfill(2)
 
         # SWPLD2 for port 1~16, SWPLD3 for port 17~34
-        if port_num  < 16:
+        if port_num < 16:
             present_path = "SWPLD2/qsfp_p{}_modprs".format(port)
         elif port_num < self.PORTS_IN_BLOCK:
             present_path = "SWPLD3/qsfp_p{}_modprs".format(port)

@@ -148,7 +148,7 @@ class Fan(FanBase):
         # register = 22 32 42 52 62 72 82
 
         if self.is_psu_fan:
-            ## TODO
+            # TODO
             return False
 
         speed_hex = hex(int(float(speed)/100 * 255))

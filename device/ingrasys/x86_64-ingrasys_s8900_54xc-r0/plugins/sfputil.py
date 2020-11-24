@@ -113,11 +113,11 @@ class SfpUtil(SfpUtilBase):
         for d in os.listdir(sys_gpio_dir):
             if "gpiochip" in d:
                 try:
-                    gpiochip_no = int(d[8:],10)
+                    gpiochip_no = int(d[8:], 10)
                 except ValueError as e:
                     print("Error: %s" % str(e))
                 if gpiochip_no > 255:
-                    self.GPIO_OFFSET=256
+                    self.GPIO_OFFSET = 256
                     return True
         return True
 
@@ -225,7 +225,7 @@ class SfpUtil(SfpUtilBase):
 
         try:
             abs_device_file = self.BASE_VAL_PATH.format(
-                    self.abs_to_gpio_mapping[port_num])
+                self.abs_to_gpio_mapping[port_num])
             val_file = open(abs_device_file)
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
@@ -246,7 +246,7 @@ class SfpUtil(SfpUtilBase):
 
         try:
             lpmode_val_device_file = self.BASE_VAL_PATH.format(
-                    self.lpmode_to_gpio_mapping[port_num])
+                self.lpmode_to_gpio_mapping[port_num])
             val_file = open(lpmode_val_device_file)
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
@@ -267,7 +267,7 @@ class SfpUtil(SfpUtilBase):
 
         try:
             lpmode_val_device_file = self.BASE_VAL_PATH.format(
-                    self.lpmode_to_gpio_mapping[port_num])
+                self.lpmode_to_gpio_mapping[port_num])
             val_file = open(lpmode_val_device_file, "w")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
@@ -287,7 +287,7 @@ class SfpUtil(SfpUtilBase):
         try:
             print("port %s" % str(port_num))
             reset_val_device_file = self.BASE_VAL_PATH.format(
-                    self.reset_to_gpio_mapping[port_num])
+                self.reset_to_gpio_mapping[port_num])
             val_file = open(reset_val_device_file, "w")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
@@ -301,7 +301,7 @@ class SfpUtil(SfpUtilBase):
 
         try:
             reset_val_device_file = self.BASE_VAL_PATH.format(
-                    self.reset_to_gpio_mapping[port_num])
+                self.reset_to_gpio_mapping[port_num])
             val_file = open(reset_val_device_file, "w")
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))

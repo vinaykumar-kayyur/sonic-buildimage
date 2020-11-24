@@ -5,7 +5,9 @@
 
 try:
     import time
-    import os, re, socket
+    import os
+    import re
+    import socket
     from sonic_sfp.sfputilbase import SfpUtilBase
     from collections import OrderedDict
     from sonic_sfp.sff8472 import sff8472Dom
@@ -21,6 +23,7 @@ SFP_CHANNL_MON_WIDTH = 6
 
 NETLINK_KOBJECT_UEVENT = 15
 monitor = None
+
 
 class SWPSEventMonitor(object):
 
@@ -76,38 +79,38 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     port_to_i2cbus_mapping = {
-        0:12,
-        1:13,
-        2:14,
-        3:15,
-        4:16,
-        5:17,
-        6:18,
-        7:19,
-        8:20,
-        9:21,
-        10:22,
-        11:23,
-        12:24,
-        13:25,
-        14:26,
-        15:27,
-        16:28,
-        17:29,
-        18:30,
-        19:31,
-        20:32,
-        21:33,
-        22:34,
-        23:35,
-        24:36,
-        25:37,
-        26:38,
-        27:39,
-        28:40,
-        29:41,
-        30:42,
-        31:43
+        0: 12,
+        1: 13,
+        2: 14,
+        3: 15,
+        4: 16,
+        5: 17,
+        6: 18,
+        7: 19,
+        8: 20,
+        9: 21,
+        10: 22,
+        11: 23,
+        12: 24,
+        13: 25,
+        14: 26,
+        15: 27,
+        16: 28,
+        17: 29,
+        18: 30,
+        19: 31,
+        20: 32,
+        21: 33,
+        22: 34,
+        23: 35,
+        24: 36,
+        25: 37,
+        26: 38,
+        27: 39,
+        28: 40,
+        29: 41,
+        30: 42,
+        31: 43
     }
 
     @property
@@ -228,7 +231,7 @@ class SfpUtil(SfpUtilBase):
 
     def _get_port_eeprom_path(self, port_num, devid):
         sysfs_i2c_adapter_base_path = "/sys/class/i2c-adapter"
-        if devid == self.IDENTITY_EEPROM_ADDR :
+        if devid == self.IDENTITY_EEPROM_ADDR:
             return SfpUtilBase._get_port_eeprom_path(self, port_num, devid)
         else:
             i2c_adapter_id = self._get_port_i2c_adapter_id(port_num)
@@ -252,7 +255,7 @@ class SfpUtil(SfpUtilBase):
             # If sfp device is not present on bus, Add it
             if not os.path.exists(sysfs_sfp_i2c_client_path):
                 ret = self._add_new_sfp_device(
-                        sysfs_sfp_i2c_adapter_path, devid)
+                    sysfs_sfp_i2c_adapter_path, devid)
                 if ret != 0:
                     print("Error adding sfp device")
                     return None
@@ -282,7 +285,8 @@ class SfpUtil(SfpUtilBase):
             if sfpd_obj is None:
                 return None
 
-            dom_temperature_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, (offset + SFP_TEMPE_OFFSET), SFP_TEMPE_WIDTH)
+            dom_temperature_raw = self._read_eeprom_specific_bytes(
+                sysfsfile_eeprom, (offset + SFP_TEMPE_OFFSET), SFP_TEMPE_WIDTH)
             if dom_temperature_raw is not None:
                 print(dom_temperature_raw)
                 dom_temperature_data = sfpd_obj.parse_temperature(dom_temperature_raw, 0)
@@ -290,14 +294,16 @@ class SfpUtil(SfpUtilBase):
             else:
                 return None
 
-            dom_voltage_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, (offset + SFP_VLOT_OFFSET), SFP_VOLT_WIDTH)
+            dom_voltage_raw = self._read_eeprom_specific_bytes(
+                sysfsfile_eeprom, (offset + SFP_VLOT_OFFSET), SFP_VOLT_WIDTH)
             if dom_voltage_raw is not None:
                 print(dom_voltage_raw)
                 dom_voltage_data = sfpd_obj.parse_voltage(dom_voltage_raw, 0)
             else:
                 return None
 
-            dom_channel_monitor_raw = self._read_eeprom_specific_bytes(sysfsfile_eeprom, (offset + SFP_CHANNL_MON_OFFSET), SFP_CHANNL_MON_WIDTH)
+            dom_channel_monitor_raw = self._read_eeprom_specific_bytes(
+                sysfsfile_eeprom, (offset + SFP_CHANNL_MON_OFFSET), SFP_CHANNL_MON_WIDTH)
             if dom_channel_monitor_raw is not None:
                 dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params(dom_channel_monitor_raw, 0)
             else:
@@ -334,7 +340,7 @@ class SfpUtil(SfpUtilBase):
                 if event['SUBSYSTEM'] == 'swps':
                     #print('SWPS event. From %s, ACTION %s, IF_TYPE %s, IF_LANE %s' % (event['DEVPATH'], event['ACTION'], event['IF_TYPE'], event['IF_LANE']))
                     portname = event['DEVPATH'].split("/")[-1]
-                    rc = re.match(r"port(?P<num>\d+)",portname)
+                    rc = re.match(r"port(?P<num>\d+)", portname)
                     if rc is not None:
                         if event['ACTION'] == "remove":
                             remove_num = int(rc.group("num"))

@@ -45,6 +45,7 @@ logger = Logger(SYSLOG_IDENTIFIER)
 
 DEBUG = False
 
+
 def i2c_eeprom_dev_update(port, create_eeprom):
     eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
     i2c_path = "/sys/class/i2c-adapter/i2c-{0}"
@@ -68,12 +69,13 @@ def i2c_eeprom_dev_update(port, create_eeprom):
                 print("Error: unable to write to i2c file: %s" % str(e))
                 return
 
+
 def gpio_sfp_init():
     jnpr_sfp.gpio_sfp_base_init()
 
     time.sleep(2)
 
-    #Reset all ports
+    # Reset all ports
     for port in range(jnpr_sfp.GPIO_PORT_START, jnpr_sfp.GPIO_PORT_END + 1):
         logger.log_debug("GPIO SFP port {}".format(port))
 
@@ -82,7 +84,7 @@ def gpio_sfp_init():
 
     time.sleep(1)
 
-    #Enable optics for all ports which have XCVRs present
+    # Enable optics for all ports which have XCVRs present
     for port in range(jnpr_sfp.GPIO_PORT_START, jnpr_sfp.GPIO_PORT_END + 1):
         jnpr_sfp.gpio_sfp_lpmode_set(port, 1)
 

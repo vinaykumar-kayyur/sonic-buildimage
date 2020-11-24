@@ -236,6 +236,6 @@ class Psu(PsuBase):
         if status:
             failure_detected = (int(status_byte, 16) >> 1) & 1
             input_lost = (int(status_byte, 16) >> 3) & 1
-            psu_status = False if (input_lost or failure_detected) else True            
+            psu_status = False if (input_lost or failure_detected) else True
 
         return psu_status

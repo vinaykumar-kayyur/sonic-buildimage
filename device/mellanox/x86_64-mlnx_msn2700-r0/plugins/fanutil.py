@@ -14,12 +14,14 @@ try:
     from glob import glob
     from sonic_fan.fan_base import FanBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
+
 
 def log_err(msg):
     syslog.openlog("fanutil")
     syslog.syslog(syslog.LOG_ERR, msg)
     syslog.closelog()
+
 
 class FanUtil(FanBase):
     """Platform-specific FanUtil class"""
@@ -27,7 +29,8 @@ class FanUtil(FanBase):
     PWM_MAX = 255
     MAX_FAN_PER_DRAWER = 2
     GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
-    sku_without_fan_direction = ['ACS-MSN2010', 'ACS-MSN2100', 'ACS-MSN2410', 'ACS-MSN2700', 'Mellanox-SN2700', 'Mellanox-SN2700-D48C8', 'LS-SN2700', 'ACS-MSN2740']
+    sku_without_fan_direction = ['ACS-MSN2010', 'ACS-MSN2100', 'ACS-MSN2410',
+                                 'ACS-MSN2700', 'Mellanox-SN2700', 'Mellanox-SN2700-D48C8', 'LS-SN2700', 'ACS-MSN2740']
     sku_with_unpluggable_fan = ['ACS-MSN2010', 'ACS-MSN2100']
 
     def __init__(self):
@@ -48,7 +51,7 @@ class FanUtil(FanBase):
             self.fan_direction = None
         else:
             self.fan_direction = "system/fan_dir"
-        
+
         self.fan_led_green = "led/led_fan*_green"
         self.num_of_fan, self.num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
 
@@ -72,7 +75,7 @@ class FanUtil(FanBase):
     def _convert_fan_index_to_drawer_index(self, index):
         return (index + self.MAX_FAN_PER_DRAWER - 1) / self.MAX_FAN_PER_DRAWER
 
-    def _read_file(self, file_pattern, index = 0):
+    def _read_file(self, file_pattern, index=0):
         """
         Reads the file of the fan
 
@@ -122,7 +125,8 @@ class FanUtil(FanBase):
         :return: Boolean, True if FAN is plugged, False if not
         """
         if index > self.num_of_fan:
-            raise RuntimeError("index ({}) shouldn't be greater than number of fans ({})".format(index, self.num_of_fan))
+            raise RuntimeError(
+                "index ({}) shouldn't be greater than number of fans ({})".format(index, self.num_of_fan))
 
         if self.unpluggable_fan:
             return True
@@ -154,7 +158,8 @@ class FanUtil(FanBase):
             return self.FAN_DIRECTION_NOT_APPLICABLE
 
         if index > self.num_of_fan:
-            raise RuntimeError("index ({}) shouldn't be greater than number of fans ({})".format(index, self.num_of_fan))
+            raise RuntimeError(
+                "index ({}) shouldn't be greater than number of fans ({})".format(index, self.num_of_fan))
 
         drawer_index = self._convert_fan_index_to_drawer_index(index)
 

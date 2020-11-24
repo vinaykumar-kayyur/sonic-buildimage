@@ -2,7 +2,7 @@ try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
@@ -14,38 +14,38 @@ class SfpUtil(SfpUtilBase):
 
     _port_to_eeprom_mapping = {}
     port_to_i2c_mapping = {
-         1 : 32,
-         2 : 33,
-         3 : 34,
-         4 : 35,
-         5 : 36,
-         6 : 37,
-         7 : 38,
-         8 : 39,
-         9 : 40,
-        10 : 41,
-        11 : 42,
-        12 : 43,
-        13 : 44,
-        14 : 45,
-        15 : 46,
-        16 : 47,
-        17 : 48,
-        18 : 49,
-        19 : 50,
-        20 : 51,
-        21 : 52,
-        22 : 53,
-        23 : 54,
-        24 : 55,
-        25 : 56,
-        26 : 57,
-        27 : 58,
-        28 : 59,
-        29 : 60,
-        30 : 61,
-        31 : 62,
-        32 : 63,
+        1: 32,
+        2: 33,
+        3: 34,
+        4: 35,
+        5: 36,
+        6: 37,
+        7: 38,
+        8: 39,
+        9: 40,
+        10: 41,
+        11: 42,
+        12: 43,
+        13: 44,
+        14: 45,
+        15: 46,
+        16: 47,
+        17: 48,
+        18: 49,
+        19: 50,
+        20: 51,
+        21: 52,
+        22: 53,
+        23: 54,
+        24: 55,
+        25: 56,
+        26: 57,
+        27: 58,
+        28: 59,
+        29: 60,
+        30: 61,
+        31: 62,
+        32: 63,
     }
 
     _qsfp_ports = list(range(0, ports_in_block + 1))
@@ -89,7 +89,7 @@ class SfpUtil(SfpUtilBase):
         return True
 
     def set_low_power_mode(self, port_num, lpmode):
-    # Check for invalid port_num
+        # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
@@ -113,7 +113,7 @@ class SfpUtil(SfpUtilBase):
         return True
 
     def get_low_power_mode(self, port_num):
-    # Check for invalid port_num
+        # Check for invalid port_num
         if port_num < self.port_start or port_num > self.port_end:
             return False
 
@@ -164,7 +164,7 @@ class SfpUtil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
+        return self._port_to_eeprom_mapping
 
     def get_transceiver_change_event(self):
         """
@@ -173,5 +173,3 @@ class SfpUtil(SfpUtilBase):
         on this platform.
         """
         raise NotImplementedError
-
-

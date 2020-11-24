@@ -6,7 +6,7 @@ try:
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class SfpUtil(SfpUtilBase):
@@ -15,7 +15,6 @@ class SfpUtil(SfpUtilBase):
     _port_start = 0
     _port_end = 31
     ports_in_block = 32
-
 
     _port_to_eeprom_mapping = {}
 
@@ -93,11 +92,11 @@ class SfpUtil(SfpUtilBase):
             lpmode = ord(eeprom.read(1))
 
             if ((lpmode & 0x3) == 0x3):
-                return True # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
+                return True  # Low Power Mode if "Power override" bit is 1 and "Power set" bit is 1
             else:
-                return False # High Power Mode if one of the following conditions is matched:
-                             # 1. "Power override" bit is 0
-                             # 2. "Power override" bit is 1 and "Power set" bit is 0
+                return False  # High Power Mode if one of the following conditions is matched:
+                # 1. "Power override" bit is 0
+                # 2. "Power override" bit is 1 and "Power set" bit is 0
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
             return False
@@ -115,10 +114,10 @@ class SfpUtil(SfpUtilBase):
             eeprom = None
 
             if not self.get_presence(port_num):
-                return False # Port is not present, unable to set the eeprom
+                return False  # Port is not present, unable to set the eeprom
 
             # Fill in write buffer
-            regval = 0x3 if lpmode else 0x1 # 0x3:Low Power Mode, 0x1:High Power Mode
+            regval = 0x3 if lpmode else 0x1  # 0x3:Low Power Mode, 0x1:High Power Mode
             buffer = create_string_buffer(1)
             buffer[0] = chr(regval)
 

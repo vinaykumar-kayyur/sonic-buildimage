@@ -14,6 +14,7 @@ except ImportError as e:
 HWMON_DIR = "/sys/devices/platform/SMF.512/hwmon/"
 HWMON_NODE = os.listdir(HWMON_DIR)[0]
 
+
 class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
@@ -60,7 +61,7 @@ class PsuUtil(PsuBase):
             psu_status = int(psu_status, 16)
             # Check for PSU statuse
             if (~psu_status & 0b1000) or (psu_status & 0b0100):
-                    status = 1
+                status = 1
 
         return status
 
@@ -77,6 +78,6 @@ class PsuUtil(PsuBase):
             psu_presence = int(psu_presence, 16)
             # Check for PSU presence
             if (~psu_presence & 0b1):
-                    status = 1
+                status = 1
 
         return status

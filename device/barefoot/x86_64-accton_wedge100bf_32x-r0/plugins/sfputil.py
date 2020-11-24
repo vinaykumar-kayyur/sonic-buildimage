@@ -15,13 +15,14 @@ try:
 
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 thrift_server = 'localhost'
 transport = None
 pltfm_mgr = None
 
 SFP_EEPROM_CACHE = "/var/run/platform/sfp/cache"
+
 
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
@@ -78,7 +79,7 @@ class SfpUtil(SfpUtilBase):
 
         if self.QSFP_PORT_END == 0:
             self.thrift_setup()
-            self.QSFP_PORT_END = pltfm_mgr.pltfm_mgr_qsfp_get_max_port();
+            self.QSFP_PORT_END = pltfm_mgr.pltfm_mgr_qsfp_get_max_port()
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
             self.thrift_teardown()
@@ -196,7 +197,7 @@ class SfpUtil(SfpUtilBase):
         if timeout == 0:
             forever = True
         elif timeout > 0:
-            timeout = timeout / float(1000) # Convert to secs
+            timeout = timeout / float(1000)  # Convert to secs
         else:
             print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
@@ -247,4 +248,3 @@ class SfpUtil(SfpUtilBase):
         self.thrift_teardown()
 
         return eeprom_path
-

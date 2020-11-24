@@ -51,11 +51,12 @@ class SfpUtil(SfpUtilBase):
             return False
 
         if port_num > 16:
-            cpld_addr=33
+            cpld_addr = 33
         else:
-            cpld_addr=32
+            cpld_addr = 32
 
-        file_path="/sys/bus/i2c/devices/1-00" + str(cpld_addr) + "/port" + str(port_num) + "/port" + str(port_num) + "_present"
+        file_path = "/sys/bus/i2c/devices/1-00" + \
+            str(cpld_addr) + "/port" + str(port_num) + "/port" + str(port_num) + "_present"
 
         try:
             reg_file = open("file_path")
@@ -67,7 +68,6 @@ class SfpUtil(SfpUtilBase):
 
         # content is a string containing the hex representation of the register
         reg_value = int(content, 16)
-
 
         # ModPrsL is active low
         if reg_value == 0:
@@ -81,12 +81,12 @@ class SfpUtil(SfpUtilBase):
             return False
 
         if port_num > 16:
-            cpld_addr=33
+            cpld_addr = 33
         else:
-            cpld_addr=32
+            cpld_addr = 32
 
-
-        file_path="/sys/bus/i2c/devices/1-00" + str(cpld_addr) + "/port" + str(port_num) + "/port" + str(port_num) + "_lpmode"
+        file_path = "/sys/bus/i2c/devices/1-00" + \
+            str(cpld_addr) + "/port" + str(port_num) + "/port" + str(port_num) + "_lpmode"
 
         try:
             reg_file = open(file_path)
@@ -110,11 +110,12 @@ class SfpUtil(SfpUtilBase):
             return False
 
         if port_num > 16:
-            cpld_addr=33
+            cpld_addr = 33
         else:
-            cpld_addr=32
+            cpld_addr = 32
 
-        file_path="/sys/bus/i2c/devices/1-00" + str(cpld_num) + "/port" + str(port_num) + "/port" + str(port_num) + "_lpmode"
+        file_path = "/sys/bus/i2c/devices/1-00" + \
+            str(cpld_num) + "/port" + str(port_num) + "/port" + str(port_num) + "_lpmode"
 
         try:
             reg_file = open(file_path, "r+")
@@ -144,11 +145,12 @@ class SfpUtil(SfpUtilBase):
             return False
 
         if port_num > 16:
-            cpld_addr=33
+            cpld_addr = 33
         else:
-            cpld_addr=32
+            cpld_addr = 32
 
-        file_path="/sys/bus/i2c/devices/1-00" + str(cpld_num) + "/port" + str(port_num) + "/port" + str(port_num) + "_rst"
+        file_path = "/sys/bus/i2c/devices/1-00" + \
+            str(cpld_num) + "/port" + str(port_num) + "/port" + str(port_num) + "_rst"
 
         try:
             reg_file = open(file_path, "r+")

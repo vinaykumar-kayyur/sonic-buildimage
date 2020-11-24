@@ -16,7 +16,7 @@ class board():
 
     def read_eeprom(self):
         return \
-"""
+            """
 TLV Name             Code Len Value
 -------------------- ---- --- -----
 Product Name         0x21   5 SONiC

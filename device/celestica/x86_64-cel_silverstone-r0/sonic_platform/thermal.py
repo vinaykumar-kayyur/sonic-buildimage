@@ -45,6 +45,7 @@ class Thermal(ThermalBase):
         self.sensor_id = self.THERMAL_LIST[self.index][0]
         self.sensor_des = self.THERMAL_LIST[self.index][1]
         self.sensor_reading_addr = self.THERMAL_LIST[self.index][2]
+
     def __set_threshold(self, key, value):
         print('{} {}'.format(key, value))
 

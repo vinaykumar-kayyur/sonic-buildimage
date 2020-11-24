@@ -63,7 +63,6 @@ class Chassis(ChassisBase):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
 
-
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis

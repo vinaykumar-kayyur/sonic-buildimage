@@ -42,6 +42,7 @@ if sys.version_info[0] < 3:
 else:
     import subprocess as commands
 
+
 def fantype_detect():
 
     refpgaTMC_path = "/sys/devices/pci0000:00/0000:00:1c.0/0000:0f:00.0/refpga-tmc.15"
@@ -49,7 +50,7 @@ def fantype_detect():
     AFO = "1"
     AFI = "0"
 
-    #default fan type is AFO
+    # default fan type is AFO
     default_fantype = "0"
 
     for filename in os.listdir(refpgaTMC_path):
@@ -57,14 +58,13 @@ def fantype_detect():
             fantype_path = os.path.join(refpgaTMC_path, filename)
             cat_string = "cat "
             fantype_string = cat_string + fantype_path
-            status,fan_type = commands.getstatusoutput(fantype_string)
+            status, fan_type = commands.getstatusoutput(fantype_string)
             if ((fan_type == AFO) or (fan_type == AFI)):
                 return fan_type
             else:
                 pass
 
     return default_fantype
-
 
 
 def main():
@@ -75,7 +75,7 @@ def main():
     fan_type = fantype_detect()
 
     # creating the "/var/run/eeprom" file and storing values of CPU board EEPROM and MAIN Board EEPROM in this file.
-    eeprom_file = open ("/var/run/eeprom", "a+")
+    eeprom_file = open("/var/run/eeprom", "a+")
     eeprom_file.write("\n")
     if fan_type == AFO_value:
         eeprom_file.write("Fan Type=AFO\r\n")
@@ -119,9 +119,9 @@ def main():
         AsmID_Hexfile.write(ASMID_str)
         AsmID_Hexfile.seek(0, 0)
         vendorext_read = AsmID_Hexfile.read(58)
-        vendorext=""
+        vendorext = ""
         vendorext += "0x" + vendorext_read[0:2]
-        for i in range(2,58,2):
+        for i in range(2, 58, 2):
             vendorext += " 0x" + vendorext_read[i:i+2]
         eeprom_file.write("Vendor Extension=%s\r\n" % str(vendorext))
 
@@ -143,30 +143,25 @@ def main():
         eeprom_file.write("\t")
         eeprom_file.write("Assembly ID=0x%s\r\n" % AssemblyID_write)
 
-
         eeprom_hexfile.seek(28, 0)
         HWMajorRev_write = eeprom_hexfile.read(2)
         eeprom_file.write("\t")
         eeprom_file.write("HW Major Revision=0x%s\r\n" % HWMajorRev_write)
-
 
         eeprom_hexfile.seek(30, 0)
         HWMinorRev_write = eeprom_hexfile.read(2)
         eeprom_file.write("\t")
         eeprom_file.write("HW Minor Revision=0x%s\r\n" % HWMinorRev_write)
 
-
         eeprom_hexfile.seek(32, 0)
         Deviation_write = eeprom_hexfile.read(10)
         eeprom_file.write("\t")
         eeprom_file.write("Deviation=0x%s\r\n" % Deviation_write)
 
-
         eeprom_hexfile.seek(52, 0)
         JEDC_write = eeprom_hexfile.read(4)
         eeprom_file.write("\t")
         eeprom_file.write("JEDC=0x%s\r\n" % JEDC_write)
-
 
         eeprom_hexfile.seek(56, 0)
         EEPROM_version_write = eeprom_hexfile.read(2)
@@ -204,7 +199,7 @@ def main():
 
     Hexformatoutput = binascii.hexlify(content)
     eeprom_hex = '/etc/init.d/MainEeprom_qfx5200_hex'
-    #Write contents of CPU EEPROM to new file in hexa format
+    # Write contents of CPU EEPROM to new file in hexa format
     with open(eeprom_hex, 'wb+') as Hexfile:
         Hexfile.write(Hexformatoutput)
 
@@ -269,6 +264,7 @@ def main():
     eeprom_file.close()
     return True
 
+
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def __init__(self):
         self.__eeprom_path = "/sys/class/i2c-adapter/i2c-0/0-0051/eeprom"
@@ -312,14 +308,14 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def serial_number_str(self):
         (is_valid, results) = self.get_tlv_field(
-                         self.__eeprom_data, self._TLV_CODE_SERIAL_NUMBER)
+            self.__eeprom_data, self._TLV_CODE_SERIAL_NUMBER)
         if not is_valid:
             return "N/A"
         return results[2]
 
     def base_mac_address(self):
         (is_valid, t) = self.get_tlv_field(
-                          self.__eeprom_data, self._TLV_CODE_MAC_BASE)
+            self.__eeprom_data, self._TLV_CODE_MAC_BASE)
         if not is_valid or t[1] != 6:
             return super(eeprom_tlvinfo.TlvInfoDecoder, self).switchaddrstr(self.__eeprom_data)
 
@@ -327,7 +323,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def modelstr(self):
         (is_valid, results) = self.get_tlv_field(
-                        self.__eeprom_data, self._TLV_CODE_PRODUCT_NAME)
+            self.__eeprom_data, self._TLV_CODE_PRODUCT_NAME)
         if not is_valid:
             return "N/A"
 
@@ -335,7 +331,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def part_number_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_PART_NUMBER)
+            self.__eeprom_data, self._TLV_CODE_PART_NUMBER)
         if not is_valid:
             return "N/A"
 
@@ -343,7 +339,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def serial_tag_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_SERVICE_TAG)
+            self.__eeprom_data, self._TLV_CODE_SERVICE_TAG)
         if not is_valid:
             return "N/A"
 
@@ -351,7 +347,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def revision_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_DEVICE_VERSION)
+            self.__eeprom_data, self._TLV_CODE_DEVICE_VERSION)
         if not is_valid:
             return "N/A"
 
@@ -359,7 +355,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def manuDate_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_MANUF_DATE)
+            self.__eeprom_data, self._TLV_CODE_MANUF_DATE)
         if not is_valid:
             return "N/A"
 
@@ -367,23 +363,23 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def platform_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_PLATFORM_NAME)
+            self.__eeprom_data, self._TLV_CODE_PLATFORM_NAME)
         if not is_valid:
             return "N/A"
 
         return results[2]
 
     def MACsize_str(self):
-       (is_valid, t) = self.get_tlv_field(self.__eeprom_data, self._TLV_CODE_MAC_SIZE)
+        (is_valid, t) = self.get_tlv_field(self.__eeprom_data, self._TLV_CODE_MAC_SIZE)
 
-       if not is_valid:
-           return "N/A"
+        if not is_valid:
+            return "N/A"
 
-       return str((ord(t[2][0]) << 8) | ord(t[2][1]))
+        return str((ord(t[2][0]) << 8) | ord(t[2][1]))
 
     def vendor_name_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_VENDOR_NAME)
+            self.__eeprom_data, self._TLV_CODE_VENDOR_NAME)
         if not is_valid:
             return "N/A"
 
@@ -391,7 +387,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def manufacture_name_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_MANUF_NAME)
+            self.__eeprom_data, self._TLV_CODE_MANUF_NAME)
         if not is_valid:
             return "N/A"
 
@@ -400,7 +396,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def onie_version_str(self):
         value = ""
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_ONIE_VERSION)
+            self.__eeprom_data, self._TLV_CODE_ONIE_VERSION)
         if not is_valid:
             return "N/A"
 
@@ -412,19 +408,19 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
     def vendor_ext_str(self):
 
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_VENDOR_EXT)
+            self.__eeprom_data, self._TLV_CODE_VENDOR_EXT)
 
         if not is_valid:
             return "N/A"
 
-        vendor_value_formatted = ''.join( [ " 0x" + "%02X " % ord( x ) for x in results[2] ] ).strip()
-        vendor_value_hexvalue = ''.join( ["%02X" % ord( x ) for x in results[2] ] ).strip()
+        vendor_value_formatted = ''.join([" 0x" + "%02X " % ord(x) for x in results[2]]).strip()
+        vendor_value_hexvalue = ''.join(["%02X" % ord(x) for x in results[2]]).strip()
 
         return vendor_value_formatted, vendor_value_hexvalue
 
     def crc_str(self):
         (is_valid, results) = self.get_tlv_field(
-                    self.__eeprom_data, self._TLV_CODE_CRC_32)
+            self.__eeprom_data, self._TLV_CODE_CRC_32)
         if not is_valid:
             return "N/A"
 
@@ -435,6 +431,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         found in the system EEPROM.
         """
         return self.__eeprom_tlv_dict
+
 
 if __name__ == "__main__":
     main()

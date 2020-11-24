@@ -2,7 +2,7 @@ try:
     import time
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 
 class sfputil(SfpUtilBase):
@@ -14,38 +14,38 @@ class sfputil(SfpUtilBase):
 
     port_to_eeprom_mapping = {}
     port_to_i2c_mapping = {
-         9 : 18,
-        10 : 19,
-        11 : 20,
-        12 : 21,
-         1 : 22,
-         2 : 23,
-         3 : 24,
-         4 : 25,
-         6 : 26,
-         5 : 27,
-         8 : 28,
-         7 : 29,
-        13 : 30,
-        14 : 31,
-        15 : 32,
-        16 : 33,
-        17 : 34,
-        18 : 35,
-        19 : 36,
-        20 : 37,
-        25 : 38,
-        26 : 39,
-        27 : 40,
-        28 : 41,
-        29 : 42,
-        30 : 43,
-        31 : 44,
-        32 : 45,
-        21 : 46,
-        22 : 47,
-        23 : 48,
-        24 : 49,
+        9: 18,
+        10: 19,
+        11: 20,
+        12: 21,
+        1: 22,
+        2: 23,
+        3: 24,
+        4: 25,
+        6: 26,
+        5: 27,
+        8: 28,
+        7: 29,
+        13: 30,
+        14: 31,
+        15: 32,
+        16: 33,
+        17: 34,
+        18: 35,
+        19: 36,
+        20: 37,
+        25: 38,
+        26: 39,
+        27: 40,
+        28: 41,
+        29: 42,
+        30: 43,
+        31: 44,
+        32: 45,
+        21: 46,
+        22: 47,
+        23: 48,
+        24: 49,
     }
 
     _qsfp_ports = list(range(0, ports_in_block + 1))
@@ -72,7 +72,7 @@ class sfputil(SfpUtilBase):
             print("Error: unable to open file: %s" % str(e))
             return False
 
-        #toggle reset
+        # toggle reset
         reg_file.seek(0)
         reg_file.write('1')
         time.sleep(1)
@@ -123,7 +123,7 @@ class sfputil(SfpUtilBase):
 
     @property
     def port_to_eeprom_mapping(self):
-         return self._port_to_eeprom_mapping
+        return self._port_to_eeprom_mapping
 
     def get_transceiver_change_event(self):
         """

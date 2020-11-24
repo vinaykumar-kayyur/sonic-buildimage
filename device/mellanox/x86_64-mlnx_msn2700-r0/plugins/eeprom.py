@@ -26,11 +26,12 @@ try:
     from sonic_py_common.device_info import get_machine_info
     import subprocess
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 SYSLOG_IDENTIFIER = "eeprom.py"
 EEPROM_SYMLINK = "/var/run/hw-management/eeprom/vpd_info"
 CACHE_FILE = "/var/cache/sonic/decode-syseeprom/syseeprom_cache"
+
 
 def log_error(msg):
     syslog.openlog(SYSLOG_IDENTIFIER)
@@ -45,6 +46,7 @@ if 'simx' in onie_platform:
     subprocess.check_call(['/usr/bin/xxd', '-r', '-p', 'syseeprom.hex', 'syseeprom.bin'], cwd=platform_path)
     CACHE_FILE = os.path.join(platform_path, 'syseeprom.bin')
 
+
 class board(eeprom_tlvinfo.TlvInfoDecoder):
 
     _TLV_INFO_MAX_LEN = 256
@@ -55,7 +57,7 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
             if not os.path.islink(EEPROM_SYMLINK):
                 time.sleep(1)
             else:
-                break  
+                break
 
         if not (os.path.exists(EEPROM_SYMLINK) or os.path.isfile(CACHE_FILE)):
             log_error("Nowhere to read syseeprom from! No symlink or cache file found")
@@ -71,4 +73,3 @@ class board(eeprom_tlvinfo.TlvInfoDecoder):
         decode_output = sys.stdout.getvalue()
         sys.stdout = original_stdout
         print(decode_output.replace('\0', ''))
-

@@ -530,7 +530,6 @@ class Sfp(SfpBase):
             transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
             transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
 
-
             if self.sfp_type == QSFP_TYPE:
                 for key in qsfp_cable_length_tup:
                     if key in sfp_interface_bulk_data['data']:

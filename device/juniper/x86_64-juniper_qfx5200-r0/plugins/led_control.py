@@ -42,7 +42,6 @@ except ImportError as e:
     raise ImportError(str(e) + " - required module not found")
 
 
-
 def DBG_PRINT(str):
     syslog.openlog("ledi_control")
     syslog.syslog(syslog.LOG_INFO, str)
@@ -52,7 +51,7 @@ def DBG_PRINT(str):
 class LedControl(LedControlBase):
     """Platform specific LED control class"""
     SONIC_PORT_NAME_PREFIX = "Ethernet"
-    LED_MODE_OFF   = 0
+    LED_MODE_OFF = 0
     LED_MODE_GREEN = 1
     PORT_START = 0
     PORT_END = 127
@@ -68,7 +67,7 @@ class LedControl(LedControlBase):
     GPIO_LANE3_PORT_LED_OFFSET = 112
 
     # Turn OFF all port leds during init
-    def gpio_create_file(self,gpio_pin):
+    def gpio_create_file(self, gpio_pin):
         gpio_export_path = "/sys/class/gpio/export"
         gpio_pin_path = "/sys/class/gpio/gpio" + str(gpio_pin)
         if not os.path.exists(gpio_pin_path):
@@ -82,13 +81,12 @@ class LedControl(LedControlBase):
 
         return True
 
-    def gpio_port_led_init(self,gpio_base, port):
-        port_led_pin = gpio_base + self.GPIO_LANE0_PORT_LED_OFFSET + 16*(port%4) + ((port % 64)/4)
+    def gpio_port_led_init(self, gpio_base, port):
+        port_led_pin = gpio_base + self.GPIO_LANE0_PORT_LED_OFFSET + 16*(port % 4) + ((port % 64)/4)
         if self.gpio_create_file(port_led_pin):
             self.port_to_gpio_pin_mapping[port] = port_led_pin
 
-
-    def gpio_port_led_slave_init(self,gpio_base_path, gpio_port_start, gpio_port_end):
+    def gpio_port_led_slave_init(self, gpio_base_path, gpio_port_start, gpio_port_end):
         flist = glob.glob(gpio_base_path)
         if len(flist) == 1:
             try:
@@ -100,21 +98,19 @@ class LedControl(LedControlBase):
         for port in range(gpio_port_start, gpio_port_end + 1):
             self.gpio_port_led_init(gpio_base, port)
 
-
     def gpio_port_led_base_init(self):
         self.gpio_port_led_slave_init("/sys/bus/platform/drivers/gpioslave-tmc/gpioslave-tmc.22/gpio/gpio*",
-                        self.GPIO_SLAVE0_PORT_START, self.GPIO_SLAVE0_PORT_END)
+                                      self.GPIO_SLAVE0_PORT_START, self.GPIO_SLAVE0_PORT_END)
         self.gpio_port_led_slave_init("/sys/bus/platform/drivers/gpioslave-tmc/gpioslave-tmc.21/gpio/gpio*",
-                        self.GPIO_SLAVE1_PORT_START, self.GPIO_SLAVE1_PORT_END)
-
+                                      self.GPIO_SLAVE1_PORT_START, self.GPIO_SLAVE1_PORT_END)
 
     # Write driver for port led
-    def gpio_led_write(self,gpio_pin, value):
+    def gpio_led_write(self, gpio_pin, value):
         success = False
         gpio_pin_path = "/sys/class/gpio/gpio" + str(gpio_pin)
 
         try:
-            gpio_file = open(gpio_pin_path +"/value", 'w')
+            gpio_file = open(gpio_pin_path + "/value", 'w')
             gpio_file.write(str(value))
             success = True
         except IOError as e:
@@ -123,12 +119,12 @@ class LedControl(LedControlBase):
         return success
 
     # Read driver for port led
-    def gpio_led_read(self,gpio_pin):
+    def gpio_led_read(self, gpio_pin):
         gpio_pin_path = "/sys/class/gpio/gpio" + str(gpio_pin)
         value = 0
 
         try:
-            reg_file = open(gpio_pin_path +"/value")
+            reg_file = open(gpio_pin_path + "/value")
             value = int(reg_file.readline().rstrip())
         except IOError as e:
             print("error: unable to open file: %s" % str(e))
@@ -159,16 +155,16 @@ class LedControl(LedControlBase):
         else:
             return self.LED_MODE_OFF
 
-
     # Set the port led mode to Green/OFF
+
     def _port_led_mode_update(self, gpio_pin, ledMode):
         if ledMode == self.LED_MODE_GREEN:
             self.gpio_led_write(gpio_pin, 1)
         else:
             self.gpio_led_write(gpio_pin, 0)
 
-
     # Concrete implementation of port_link_state_change() method
+
     def port_link_state_change(self, portname, state):
         port_idx = self._port_name_to_index(portname)
         gpio_pin = self.port_to_gpio_pin_mapping[port_idx]
