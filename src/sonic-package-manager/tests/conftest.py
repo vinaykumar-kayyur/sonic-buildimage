@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 from unittest.mock import Mock, MagicMock
 
 import pytest
@@ -8,6 +9,11 @@ from sonic_package_manager.manager import DockerApi, PackageManager
 from sonic_package_manager.manifest import Manifest
 from sonic_package_manager.manifest_resolver import ManifestResolver
 from sonic_package_manager.registry import RegistryResolver
+from sonic_package_manager.service_creator.creator import (
+    TEMPLATES_PATH, SERVICE_FILE_TEMPLATE, TIMER_UNIT_TEMPLATE,
+    SERVICE_MGMT_SCRIPT_TEMPLATE, DOCKER_CTL_SCRIPT_TEMPLATE, MONIT_CONF_TEMPLATE, SERVICE_MGMT_SCRIPT_LOCATION,
+    SYSTEMD_LOCATION, ETC_SONIC_PATH, MONIT_CONF_LOCATION, DOCKER_CTL_SCRIPT_LOCATION
+)
 from sonic_package_manager.version import Version
 
 
@@ -24,6 +30,11 @@ def mock_registry_resolver():
 @pytest.fixture
 def mock_manifest_resolver():
     yield Mock(ManifestResolver)
+
+
+@pytest.fixture
+def mock_feature_registry():
+    yield MagicMock()
 
 
 @pytest.fixture
@@ -261,6 +272,22 @@ def fake_db_for_migration(mock_docker_api, mock_registry_resolver):
     }
 
     yield PackageDatabase(content)
+
+
+@pytest.fixture
+def sonic_fs(fs):
+    fs.create_file('/proc/1/root')
+    fs.create_dir(ETC_SONIC_PATH)
+    fs.create_dir(SYSTEMD_LOCATION)
+    fs.create_dir(DOCKER_CTL_SCRIPT_LOCATION)
+    fs.create_dir(SERVICE_MGMT_SCRIPT_LOCATION)
+    fs.create_dir(MONIT_CONF_LOCATION)
+    fs.create_file(os.path.join(TEMPLATES_PATH, SERVICE_FILE_TEMPLATE))
+    fs.create_file(os.path.join(TEMPLATES_PATH, TIMER_UNIT_TEMPLATE))
+    fs.create_file(os.path.join(TEMPLATES_PATH, SERVICE_MGMT_SCRIPT_TEMPLATE))
+    fs.create_file(os.path.join(TEMPLATES_PATH, DOCKER_CTL_SCRIPT_TEMPLATE))
+    fs.create_file(os.path.join(TEMPLATES_PATH, MONIT_CONF_TEMPLATE))
+    yield fs
 
 
 @pytest.fixture

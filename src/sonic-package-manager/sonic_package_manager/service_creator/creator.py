@@ -211,21 +211,22 @@ class ServiceCreator:
             render_template(template, output_file, template_vars)
             log.info(f'generated {output_file}')
 
-        template_vars = {
-            'source': get_template(TIMER_UNIT_TEMPLATE),
-            'manifest': package.manifest.unmarshal(),
-            'multi_instance': False,
-        }
-        output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}.timer')
-        template = os.path.join(TEMPLATES_PATH, TIMER_UNIT_TEMPLATE)
-        render_template(template, output_file, template_vars)
-        log.info(f'generated {output_file}')
-
-        if package.manifest['service']['asic-service']:
-            output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}@.timer')
-            template_vars['multi_instance'] = True
+        if package.manifest['service']['delayed']:
+            template_vars = {
+                'source': get_template(TIMER_UNIT_TEMPLATE),
+                'manifest': package.manifest.unmarshal(),
+                'multi_instance': False,
+            }
+            output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}.timer')
+            template = os.path.join(TEMPLATES_PATH, TIMER_UNIT_TEMPLATE)
             render_template(template, output_file, template_vars)
             log.info(f'generated {output_file}')
+
+            if package.manifest['service']['asic-service']:
+                output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}@.timer')
+                template_vars['multi_instance'] = True
+                render_template(template, output_file, template_vars)
+                log.info(f'generated {output_file}')
 
     def generate_monit_conf(self, package: Package, root='/'):
         name = package.manifest['service']['name']
@@ -254,7 +255,7 @@ class ServiceCreator:
             dependent_services = set()
             if os.path.exists(filepath):
                 with open(filepath) as fp:
-                    dependent_services += {line.strip() for line in fp.readlines()}
+                    dependent_services.update({line.strip() for line in fp.readlines()})
             if remove:
                 with contextlib.suppress(KeyError):
                     dependent_services.remove(name)
