@@ -5,7 +5,7 @@
 #             auto-generated from {{ source }} by sonic-package-manager
 #
 
-SERVICE="{{ name }}"
+SERVICE="{{ manifest.package.name }}"
 NAMESPACE_PREFIX="asic"
 SONIC_DB_CLI="sonic-db-cli"
 TMPDIR="/tmp/"
@@ -14,12 +14,21 @@ DEBUGLOG="${TMPDIR}/${SERVICE}.log"
 [[ ! -z $DEV ]] && NET_NS="${NAMESPACE_PREFIX}${DEV}"  # name of the network namespace
 [[ ! -z $DEV ]] && SONIC_DB_CLI="${SONIC_DB_CLI} -n ${NET_NS}"
 
+{%- for service in manifest.service.dependent %}
+{%- if service in multi_instance_services %}
+MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} {{ service }}"
+{%- else %}
+DEPENDENT="${DEPENDENT} {{ service }}"
+{%- endif %}
+{%- endfor %}
+
+# Update dependent list based on other packages requirements
 if [[ -f /etc/sonic/${SERVICE}_dependent ]]; then
-    DEPENDENT="$(cat /etc/sonic/${SERVICE}_dependent)"
+    DEPENDENT="${DEPENDENT} $(cat /etc/sonic/${SERVICE}_dependent)"
 fi
 
 if [[ -f /etc/sonic/${SERVICE}_multi_inst_dependent ]]; then
-    MULTI_INST_DEPENDENT="cat /etc/sonic/${SERVICE}_multi_inst_dependent"
+    MULTI_INST_DEPENDENT="${MULTI_INST_DEPENDENT} cat /etc/sonic/${SERVICE}_multi_inst_dependent"
 fi
 
 function debug()

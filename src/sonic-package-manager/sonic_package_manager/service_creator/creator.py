@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import contextlib
 import os
 import stat
 import subprocess
@@ -105,6 +106,7 @@ class ServiceCreator:
         try:
             self.generate_container_mgmt(package, root)
             self.generate_service_mgmt(package, root)
+            self.update_dependent_list_file(package, root=root)
             self.generate_systemd_service(package, root)
             self.generate_monit_conf(package, root)
 
@@ -133,6 +135,8 @@ class ServiceCreator:
         remove_file(os.path.join(root, SYSTEMD_LOCATION, f'{name}@.service'))
         remove_file(os.path.join(root, SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh'))
         remove_file(os.path.join(root, DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh'))
+
+        self.update_dependent_list_file(package, remove=True, root=root)
 
         if not in_chroot():
             run_command('systemctl daemon-reload')
@@ -175,15 +179,13 @@ class ServiceCreator:
 
     def generate_service_mgmt(self, package: Package, root='/'):
         name = package.manifest['service']['name']
-        dependent_services = []
-        multiasic_dependent_services = []
+        multi_instance_services = self.feature_registry.get_multi_instance_features()
         scrip_template = os.path.join(TEMPLATES_PATH, SERVICE_MGMT_SCRIPT_TEMPLATE)
         script_path = os.path.join(root, SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh')
         render_ctx = {
             'source': get_template(SERVICE_MGMT_SCRIPT_TEMPLATE),
-            'name': name,
-            'dependent_services': dependent_services,
-            'multiasic_dependent_services': multiasic_dependent_services,
+            'manifest': package.manifest.unmarshal(),
+            'multi_instance_services': multi_instance_services,
         }
         render_template(scrip_template, script_path, render_ctx, executable=True)
         log.info(f'generated {script_path}')
@@ -234,3 +236,35 @@ class ServiceCreator:
                          'feature': name,
                          'processes': processes})
         log.info(f'generated {output_filename}')
+
+    def update_dependent_list_file(self, package: Package, remove=False, root='/'):
+        name = package.manifest['service']['name']
+        dependent_of = package.manifest['service']['dependent-of']
+        host_service = package.manifest['service']['host-service']
+        asic_service = package.manifest['service']['asic-service']
+
+        def update_dependent(service, name, multi_inst):
+            if multi_inst:
+                filename = f'{service}_multi_inst_dependent'
+            else:
+                filename = f'{service}_dependent'
+
+            filepath = os.path.join(root, ETC_SONIC_PATH, filename)
+
+            dependent_services = set()
+            if os.path.exists(filepath):
+                with open(filepath) as fp:
+                    dependent_services += {line.strip() for line in fp.readlines()}
+            if remove:
+                with contextlib.suppress(KeyError):
+                    dependent_services.remove(name)
+            else:
+                dependent_services.add(name)
+            with open(filepath, 'w') as fp:
+                fp.write('\n'.join(dependent_services))
+
+        for service in dependent_of:
+            if host_service:
+                update_dependent(service, name, multi_inst=False)
+            if asic_service:
+                update_dependent(service, name, multi_inst=True)
