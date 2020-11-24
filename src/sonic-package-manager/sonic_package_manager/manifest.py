@@ -137,6 +137,7 @@ class ManifestSchema:
             ManifestField('pre-shutdown-action', str, ''),
             ManifestField('asic-service', bool, False),
             ManifestField('host-service', bool, True),
+            ManifestField('delayed', bool, False),
         ]),
         ManifestRoot('container', [
             ManifestField('privileged', bool, False),

@@ -30,8 +30,10 @@ ExecStart={{path}}/{{manifest.service.name}}.sh wait{% if multi_instance %} %i{%
 ExecStop={{path}}/{{manifest.service.name}}.sh stop{% if multi_instance %} %i{% endif %}
 RestartSec=30
 
+{%- if not manifest.service.delayed %}
 [Install]
 WantedBy=sonic.target
 {%- for service in manifest.service["wanted-by"] %}
 WantedBy={{ service }}{% if multi_instance and service in multi_instance_services %}@%i{% endif %}.service
 {%- endfor %}
+{%- endif %}

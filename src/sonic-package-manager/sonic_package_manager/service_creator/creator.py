@@ -12,11 +12,16 @@ from sonic_package_manager.service_creator.feature import FeatureRegistry
 from sonic_package_manager.service_creator.utils import in_chroot
 
 SERVICE_FILE_TEMPLATE = 'sonic.service.j2'
-SERVICE_FILE_LOCATION = '/usr/lib/systemd/system'
+TIMER_UNIT_TEMPLATE = 'timer.unit.j2'
+
+SYSTEMD_LOCATION = '/usr/lib/systemd/system'
+
 SERVICE_MGMT_SCRIPT_TEMPLATE = 'service_mgmt.sh.j2'
 SERVICE_MGMT_SCRIPT_LOCATION = '/usr/local/bin'
+
 DOCKER_CTL_SCRIPT_TEMPLATE = 'docker_image_ctl.j2'
 DOCKER_CTL_SCRIPT_LOCATION = '/usr/bin'
+
 MONIT_CONF_TEMPLATE = 'monit.conf.j2'
 MONIT_CONF_LOCATION = '/etc/monit/conf.d/'
 
@@ -124,8 +129,8 @@ class ServiceCreator:
                 log.info(f'removed {path}')
 
         remove_file(os.path.join(root, MONIT_CONF_LOCATION, f'monit_{name}'))
-        remove_file(os.path.join(root, SERVICE_FILE_LOCATION, f'{name}.service'))
-        remove_file(os.path.join(root, SERVICE_FILE_LOCATION, f'{name}@.service'))
+        remove_file(os.path.join(root, SYSTEMD_LOCATION, f'{name}.service'))
+        remove_file(os.path.join(root, SYSTEMD_LOCATION, f'{name}@.service'))
         remove_file(os.path.join(root, SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh'))
         remove_file(os.path.join(root, DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh'))
 
@@ -185,22 +190,37 @@ class ServiceCreator:
 
     def generate_systemd_service(self, package: Package, root='/'):
         name = package.manifest['service']['name']
-        template = os.path.join(TEMPLATES_PATH, SERVICE_FILE_TEMPLATE)
         multi_instance_services = self.feature_registry.get_multi_instance_features()
 
+        template = os.path.join(TEMPLATES_PATH, SERVICE_FILE_TEMPLATE)
         template_vars = {
-            'source': get_template(MONIT_CONF_TEMPLATE),
+            'source': get_template(SERVICE_FILE_TEMPLATE),
             'manifest': package.manifest.unmarshal(),
             'multi_instance': False,
             'multi_instance_services': multi_instance_services,
         }
-
-        output_file = os.path.join(root, SERVICE_FILE_LOCATION, f'{name}.service')
+        output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}.service')
         render_template(template, output_file, template_vars)
         log.info(f'generated {output_file}')
 
         if package.manifest['service']['asic-service']:
-            output_file = os.path.join(root, SERVICE_FILE_LOCATION, f'{name}@.service')
+            output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}@.service')
+            template_vars['multi_instance'] = True
+            render_template(template, output_file, template_vars)
+            log.info(f'generated {output_file}')
+
+        template_vars = {
+            'source': get_template(TIMER_UNIT_TEMPLATE),
+            'manifest': package.manifest.unmarshal(),
+            'multi_instance': False,
+        }
+        output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}.timer')
+        template = os.path.join(TEMPLATES_PATH, TIMER_UNIT_TEMPLATE)
+        render_template(template, output_file, template_vars)
+        log.info(f'generated {output_file}')
+
+        if package.manifest['service']['asic-service']:
+            output_file = os.path.join(root, SYSTEMD_LOCATION, f'{name}@.timer')
             template_vars['multi_instance'] = True
             render_template(template, output_file, template_vars)
             log.info(f'generated {output_file}')
