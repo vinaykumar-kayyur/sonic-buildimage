@@ -35,6 +35,8 @@ COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
 # 1. don't have fanX_status and should be treated as always present
 platform_with_unplugable_fan = ['x86_64-mlnx_msn2010-r0', 'x86_64-mlnx_msn2100-r0']
 
+VIRTUAL_DRAWER_INDEX = 0
+
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
@@ -55,14 +57,6 @@ class Fan(FanBase):
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.drawer_index = drawer_index + 1
-
-        if self.drawer_index not in Fan.fan_drawer_leds:
-            shared_led = SharedLed()
-            Fan.fan_drawer_leds[self.drawer_index] = shared_led
-        else:
-            shared_led = Fan.fan_drawer_leds[self.drawer_index]
-
-        self.fault_indicator = ComponentFaultyIndicator(shared_led)
 
         self.is_psu_fan = psu_fan
         self.always_presence = False if platform not in platform_with_unplugable_fan else True
@@ -85,11 +79,31 @@ class Fan(FanBase):
             self.psu_i2c_command_path = os.path.join(CONFIG_PATH, 'fan_command')
 
         self.fan_status_path = "fan{}_fault".format(self.index)
-        self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
-        self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
-        self.fan_orange_led_path = "led_fan{}_orange".format(self.drawer_index)
-        self.fan_pwm_path = "pwm1"
-        self.fan_led_cap_path = "led_fan{}_capability".format(self.drawer_index)
+
+        if not self.is_psu_fan: # We don't support PSU led management in 201911
+            if not self.always_presence:
+                if self.drawer_index not in Fan.fan_drawer_leds:
+                    shared_led = SharedLed()
+                    Fan.fan_drawer_leds[self.drawer_index] = shared_led
+                else:
+                    shared_led = Fan.fan_drawer_leds[self.drawer_index]
+                self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
+                self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
+                self.fan_orange_led_path = "led_fan{}_orange".format(self.drawer_index)
+                self.fan_led_cap_path = "led_fan{}_capability".format(self.drawer_index)
+            else: # For 2010/2100, all fans share one LED
+                if VIRTUAL_DRAWER_INDEX not in Fan.fan_drawer_leds:
+                    shared_led = SharedLed()
+                    Fan.fan_drawer_leds[VIRTUAL_DRAWER_INDEX] = shared_led
+                else:
+                    shared_led = Fan.fan_drawer_leds[VIRTUAL_DRAWER_INDEX]
+                self.fan_green_led_path = "led_fan_green"
+                self.fan_red_led_path = "led_fan_red"
+                self.fan_orange_led_path = "led_fan_orange"
+                self.fan_led_cap_path = "led_fan_capability"
+
+            self.fault_indicator = ComponentFaultyIndicator(shared_led)
+
         if has_fan_dir:
             self.fan_dir = FAN_DIR
         else:
@@ -267,7 +281,10 @@ class Fan(FanBase):
         if self.is_psu_fan:
             return False
         self.fault_indicator.set_status(color)
-        target_color = Fan.fan_drawer_leds[self.drawer_index].get_status()
+        if not self.always_presence:
+            target_color = Fan.fan_drawer_leds[self.drawer_index].get_status()
+        else:
+            target_color = Fan.fan_drawer_leds[VIRTUAL_DRAWER_INDEX].get_status()
         return self._set_status_led(target_color)
 
     def _set_status_led(self, color):
