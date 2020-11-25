@@ -9,9 +9,6 @@ marvell_nand
 i2c_mv64xxx
 ar7part
 ofpart
-mtdblock
-mtdblock_ro
 mtdswap
-mtdoops
 mtd_blkdevs
 adt7475
