@@ -24,7 +24,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git branch -D $(FRR_BRANCH)
 	popd
 ifneq ($(wildcard $(FRRS_DBG)),)
-	DERIVED_TARGET += $(FRRS_DBG)
+	mv $(FRRS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGET) $* $(DEST)/
 

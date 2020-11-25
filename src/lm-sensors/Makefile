@@ -29,7 +29,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 ifneq ($(wildcard $(SENSORS_DBG)),)
-	DERIVED_TARGETS += $(SENSORS_DBG)
+	mv $(SENSORS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

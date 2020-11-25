@@ -40,7 +40,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Move the newly-built .deb packages to the destination directory
 ifneq ($(wildcard $(LLDPD_DBG)),)
-	DERIVED_TARGETS += $(LLDPD_DBG)
+	mv $(LLDPD_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

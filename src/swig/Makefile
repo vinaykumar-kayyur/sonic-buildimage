@@ -17,7 +17,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 ifneq ($(wildcard $(SWIG_DBG)),)
-	DERIVED_TARGETS += $(SWIG_DBG)
+	mv $(SWIG_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

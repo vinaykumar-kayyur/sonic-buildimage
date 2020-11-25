@@ -19,7 +19,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 ifneq ($(wildcard $(HIREDIS_DBG)),)
-	DERIVED_TARGETS += $(HIREDIS_DBG)
+	mv $(HIREDIS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

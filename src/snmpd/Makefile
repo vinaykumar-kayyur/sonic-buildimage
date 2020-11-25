@@ -34,7 +34,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 ifneq ($(wildcard $(SNMPDS_DBG)),)
-	DERIVED_TARGETS) += $(SNMPDS_DBG)
+	mv $(SNMPDS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

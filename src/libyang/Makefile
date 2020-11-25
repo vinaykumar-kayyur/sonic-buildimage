@@ -22,7 +22,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	pushd debs
 ifneq ($(wildcard $(LIBYANG_DBG)),)
-	DERIVED_TARGETS += $(LIBYANG_DBG)
+	mv $(LIBYANG_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 	popd

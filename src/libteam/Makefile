@@ -35,7 +35,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 ifneq ($(wildcard $(TEAM_DBG)),)
-	DERIVED_TARGETS += $(TEAM_DBG)
+	mv $(TEAM_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

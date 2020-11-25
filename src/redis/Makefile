@@ -26,7 +26,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 ifneq ($(wildcard $(REDIS_DBG)),)
-	DERIVED_TARGETS += REDIS_DBG
+	mv $(REDIS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 	popd
