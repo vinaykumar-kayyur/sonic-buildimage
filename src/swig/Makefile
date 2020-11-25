@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(SWIG_BASE)
-DERIVED_TARGETS = $(SWIG) $(SWIG_DBG)
+DERIVED_TARGETS = $(SWIG)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -fr ./swig-$(SWIG_VERSION) *.deb
@@ -16,6 +16,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
+ifneq ($(wildcard $(SWIG_DBG)),)
+	DERIVED_TARGETS += $(SWIG_DBG)
+endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

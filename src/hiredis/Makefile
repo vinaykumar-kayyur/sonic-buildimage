@@ -3,7 +3,8 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = libhiredis0.14_$(HIREDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
-DERIVED_TARGETS = libhiredis0.14-dbgsym_$(HIREDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb libhiredis-dev_$(HIREDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+HIREDIS_DBG = libhiredis0.14-dbgsym_$(HIREDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = libhiredis-dev_$(HIREDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf hiredis-$(HIREDIS_VERSION)
@@ -17,6 +18,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	fakeroot debian/rules -j$(SONIC_CONFIG_MAKE_JOBS) binary
 	popd
 
-	mv $* $(DERIVED_TARGETS) $(DEST)/
+ifneq ($(wildcard $(HIREDIS_DBG)),)
+	DERIVED_TARGETS += $(HIREDIS_DBG)
+endif
+	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

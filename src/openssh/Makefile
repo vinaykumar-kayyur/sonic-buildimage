@@ -23,6 +23,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
-	mv $(DERIVED_TARGETS) $* $(DEST)/
+	mv $* $(DEST)/
+ifneq ($(wildcard $(DERIVED_TARGETS)),)
+	mv $(DERIVED_TARGETS) $(DEST)/
+endif
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

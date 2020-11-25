@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(LIBYANG)
-DERIVED_TARGETS = $(LIBYANG_DEV) $(LIBYANG_DBG) $(LIBYANG_PY2) $(LIBYANG_PY3) $(LIBYANG_CPP)
+DERIVED_TARGETS = $(LIBYANG_DEV) $(LIBYANG_PY2) $(LIBYANG_PY3) $(LIBYANG_CPP)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
         # Obtaining the libyang
@@ -21,8 +21,10 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	make build-deb
 
 	pushd debs
-	mv $* $(DEST)/
-	mv $(DERIVED_TARGETS) $(DEST)/
+ifneq ($(wildcard $(LIBYANG_DBG)),)
+	DERIVED_TARGETS += $(LIBYANG_DBG)
+endif
+	mv $(DERIVED_TARGETS) $* $(DEST)/
 	popd
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

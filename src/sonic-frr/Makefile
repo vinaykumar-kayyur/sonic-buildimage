@@ -3,7 +3,8 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(FRR)
-DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG) $(FRR_SNMP) $(FRR_SNMP_DBG)
+FRRS_DBG = $(FRR_DBG) $(FRR_SNMP_DBG)
+DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_SNMP)
 SUFFIX = $(shell date +%Y%m%d\.%H%M%S)
 STG_BRANCH = stg_temp.$(SUFFIX)
 
@@ -22,6 +23,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git rev-parse --short HEAD | xargs git checkout
 	git branch -D $(FRR_BRANCH)
 	popd
+ifneq ($(wildcard $(FRRS_DBG)),)
+	DERIVED_TARGET += $(FRRS_DBG)
+endif
 	mv $(DERIVED_TARGET) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

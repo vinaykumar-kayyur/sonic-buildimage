@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(LLDPD)
-DERIVED_TARGETS = $(LIBLLDPCTL) $(LLDPD_DBG)
+DERIVED_TARGETS = $(LIBLLDPCTL)
 
 LLDP_URL = https://sonicstorage.blob.core.windows.net/debian/pool/main/l/lldpd
 
@@ -39,6 +39,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 	# Move the newly-built .deb packages to the destination directory
-	mv $* $(DERIVED_TARGETS) $(DEST)/
+ifneq ($(wildcard $(LLDPD_DBG)),)
+	DERIVED_TARGETS += $(LLDPD_DBG)
+endif
+	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

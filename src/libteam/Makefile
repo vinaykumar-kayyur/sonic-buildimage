@@ -3,12 +3,12 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = libteam5_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
+TEAM_DBG = libteam5-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+ 		  libteamdctl0-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
+ 		  libteam-utils-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = libteam-dev_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
 		  libteamdctl0_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
-		  libteam-utils_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
-		  libteam5-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
-		  libteamdctl0-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
-		  libteam-utils-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
+		  libteam-utils_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain libteam
@@ -34,6 +34,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
+ifneq ($(wildcard $(TEAM_DBG)),)
+	DERIVED_TARGETS += $(TEAM_DBG)
+endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

@@ -3,11 +3,11 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = libsnmp-base_$(SNMPD_VERSION_FULL)_all.deb
+SNMPDS_DBG = snmp-dbgsym_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
+		  snmpd-dbgsym_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = snmptrapd_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  snmp_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  snmpd_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
-		  snmp-dbgsym_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
-		  snmpd-dbgsym_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  libsnmp30_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  libsnmp30-dbg_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  libsnmp-dev_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
@@ -33,6 +33,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	fakeroot debian/rules -j$(SONIC_CONFIG_MAKE_JOBS) binary
 	popd
 
+ifneq ($(wildcard $(SNMPDS_DBG)),)
+	DERIVED_TARGETS) += $(SNMPDS_DBG)
+endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

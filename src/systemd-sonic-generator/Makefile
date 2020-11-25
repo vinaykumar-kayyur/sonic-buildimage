@@ -3,11 +3,15 @@ CFLAGS=-std=gnu99
 
 BINARY = systemd-sonic-generator
 MAIN_TARGET = $(BINARY)_1.0.0_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = $(BINARY)-dbgsym_1.0.0_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -us -uc -b
 	mv ../$(MAIN_TARGET) $(DEST)/
-	rm ../$(BINARY)-* ../$(BINARY)_*
+	rm ../$(BINARY)_*
+ifneq ($(wildcard $(DERIVED_TARGETS)),)
+	rm ../$(DERIVED_TARGETS)
+endif
 
 $(BINARY): systemd-sonic-generator.c
 	rm -f ./systemd-sonic-generator
