@@ -25,7 +25,6 @@ RUN pip3 install connexion==2.7.0 \
 		six==1.11.0 \
 		urllib3==1.21.1
 
-
 COPY \
 {% for deb in docker_sonic_mgmt_framework_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
