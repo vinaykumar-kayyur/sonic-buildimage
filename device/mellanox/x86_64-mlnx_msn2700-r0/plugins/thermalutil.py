@@ -364,7 +364,7 @@ class ThermalUtil(ThermalBase):
     thermal_list = []
 
     def _get_sku_name(self):
-        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 

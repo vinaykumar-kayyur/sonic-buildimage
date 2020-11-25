@@ -17,7 +17,7 @@ class PsuUtil(PsuBase):
         PsuBase.__init__(self)
 
     def run_command(self, command):
-        proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(command, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
         (out, err) = proc.communicate()
 
         if proc.returncode != 0:

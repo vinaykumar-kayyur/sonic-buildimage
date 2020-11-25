@@ -54,7 +54,7 @@ class Component(ComponentBase):
         # Retrieves the cpld register value
         cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
         p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data, err = p.communicate()
         if err is not '':
             return None

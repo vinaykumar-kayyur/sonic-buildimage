@@ -30,7 +30,7 @@ class Component(DeviceBase):
         # Run bash command and print output to stdout
         try:
             process = subprocess.Popen(
-                shlex.split(command), stdout=subprocess.PIPE)
+                shlex.split(command), universal_newlines=True, stdout=subprocess.PIPE)
             while True:
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:

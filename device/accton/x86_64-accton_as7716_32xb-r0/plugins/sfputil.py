@@ -129,7 +129,7 @@ class SfpUtil(SfpUtilBase):
             return False
 
         mod_rst_cmd = "ipmitool raw 0x34 0x11 " + str(port_num+1) + " 0x11 0x1"
-        subprocess.check_output(mod_rst_cmd)
+        subprocess.check_output(mod_rst_cmd, universal_newlines=True)
         return True
 
     def get_transceiver_change_event(self):

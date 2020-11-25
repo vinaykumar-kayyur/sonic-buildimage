@@ -56,7 +56,7 @@ class FanUtil(FanBase):
         self.num_of_fan, self.num_of_drawer = self._extract_num_of_fans_and_fan_drawers()
 
     def _get_sku_name(self):
-        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(self.GET_HWSKU_CMD, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
         out, err = p.communicate()
         return out.rstrip('\n')
 
