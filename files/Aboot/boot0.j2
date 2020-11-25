@@ -76,11 +76,11 @@ fi
 image_path="$target_path/$image_name"
 hook_path="$image_path/platform/hooks"
 data_path="$image_path/platform/data"
+boot_image_path="$image_path/$boot_image"
 installer_image_path="$image_path/$installer_image"
 
 boot_config="$target_path/boot-config"
 
-flash_re=" /mnt/flash| /host"
 cmdline_allowlist='crashkernel'
 
 # for backward compatibility with the sonic_upgrade= behavior
@@ -106,6 +106,7 @@ clean_flash() {
     for f in $(ls -A $target_path); do
         if [ $f != "${swipath##*/}" ] &&
            [ $f != "boot-config" ] &&
+           [ $f != "preserve-installer" ] &&
            [ $f != "$kernel_params" ] &&
            [ $f != "aquota.user" ] &&
            [ $f != "old_config" ] &&
@@ -254,9 +255,65 @@ cleanup_swi_tmpfs() {
    clean_tmpfs "$(dirname "$swipath")"
 }
 
-extract_image() {
-    mkdir -p "$image_path"
+mount_relpath() {
+    local abspath="$1"
+    local mountpath="$(df "$abspath" | sed -nr '/\//s/^.* ([^ ]+)$/\1/p')"
 
+    echo "$abspath" | sed "s#^$mountpath/##"
+}
+
+zip_file_offset() {
+    local zipfile="$1"
+    local filename="$2"
+
+    if $in_aboot; then
+        unzip -qqf "$zipfile" "$filename"
+    else
+        local hexoffset="$(zipdetails "$zipfile" | sed -En "/Filename +'$filename'/,/^$/p" | sed -En 's/^([^ ]+) PAYLOAD$/\1/p')"
+        echo "$((0x$hexoffset))"
+    fi
+}
+
+SWI_ALREADY_INSTALLED=0
+SWI_NOT_INSTALLED=1
+SWI_VERSION_MISMATCH=2
+SWI_OTHER_VARIANT_INSTALLED=3
+
+is_swi_installed() {
+    local swi_path="$1"
+    local swi_version="$(unzip -qp "$swi_path" .imagehash)"
+    local local_version="$(cat $image_path/.imagehash 2>/dev/null || :)"
+
+    if [ -z "$local_version" ]; then
+        # no image installed for this version
+        return $SWI_NOT_INSTALLED
+    fi
+
+    if [ "$swi_version" != "$local_version" ]; then
+        warn "Installed image has a different version than $swipath"
+        return $SWI_VERSION_MISMATCH
+    fi
+
+    if $secureboot; then
+        if [ -s "$installer_image_path" ]; then
+            # secureboot image already installed
+            return $SWI_ALREADY_INSTALLED
+        else
+            # regular image of the same version already installed
+            return $SWI_OTHER_VARIANT_INSTALLED
+        fi
+    else
+        if [ -s "$boot_image_path" ]; then
+            # regular image already installed
+            return $SWI_ALREADY_INSTALLED
+        else
+            # secureboot image of the same version already installed
+            return $SWI_OTHER_VARIANT_INSTALLED
+        fi
+    fi
+}
+
+extract_image() {
     info "Moving swi to a tmpfs"
     ## Avoid problematic flash usage spike on older systems, also improves I/O
     swipath="$(move_swi_to_tmpfs "$swipath")"
@@ -308,7 +365,6 @@ extract_image() {
 
 extract_image_secureboot() {
     info "Extracting necessary swi content"
-    mkdir "$image_path"
     unzip -oq "$swipath" platform/firsttime .imagehash -d "$image_path"
 
     info "Installing image as $installer_image_path"
@@ -335,7 +391,7 @@ prepare_image_secureboot() {
     sync
 
     # override environment variables preventing external tamper on kernel execution
-    CMDLINE="$(cmdline_echo)"
+    CMDLINE="$(cmdline_echo) $ENV_EXTRA_CMDLINE"
     KERNEL="$(find_first_kernel_under "$boot_tmpfs")"
     INITRD="$(find_first_initrd_under "$boot_tmpfs")"
 }
@@ -375,8 +431,13 @@ write_platform_specific_cmdline() {
     # set varlog size to 100MB
     local varlog_size=100
 
+    # sonic_mode is set to fixed by default.
+    sonic_mode="fixed"
+    supervisor_mode="supervisor"
+    linecard_mode="linecard"
+
     # detect the size of the flash partition from name in Aboot/EOS/SONiC
-    local flash_size=$(($(df | grep -E "$flash_re" | tr -s ' ' | cut -f2 -d' ') / 1000))
+    local flash_size=$(($(df "$target_path" | tail -1 | tr -s ' ' | cut -f2 -d' ') / 1000))
 
     if [ "$platform" = "raven" ]; then
         # Assuming sid=Cloverdale
@@ -446,14 +507,27 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7280cr3k_32d4
         flash_size=7382
     fi
-    if in_array "$platform" "rook" "magpie" "woodpecker"; then
+    if [ "$sid" = "Clearwater2" ]; then
+        aboot_machine=arista_7800r3_48cq2_lc
+        sonic_mode="$linecard_mode"
+    fi
+    if [ "$sid" = "Clearwater2Ms" ]; then
+        aboot_machine=arista_7800r3_48cqm2_lc
+        sonic_mode="$linecard_mode"
+    fi
+    if [ "$sid" = "OtterLake" ]; then
+        aboot_machine=arista_7800_sup
+        flash_size=30000
+        sonic_mode=$supervisor_mode
+    fi
+    if in_array "$platform" "rook" "magpie" "woodpecker" "sprucefish"; then
         cmdline_add tsc=reliable
         cmdline_add pcie_ports=native
         cmdline_add rhash_entries=1
         cmdline_add usb-storage.delay_use=0
         cmdline_add reassign_prefmem
     fi
-    if in_array "$platform" "rook"; then
+    if in_array "$platform" "rook" "sprucefish"; then
         cmdline_add iommu=on
         cmdline_add intel_iommu=on
         read_system_eeprom
@@ -465,6 +539,9 @@ write_platform_specific_cmdline() {
     fi
     if in_array "$platform" "woodpecker"; then
         cmdline_add modprobe.blacklist=snd_hda_intel,hdaudio
+        read_system_eeprom
+    fi
+    if in_array "$platform" "lorikeet" "hedgehog"; then
         read_system_eeprom
     fi
 
@@ -479,6 +556,8 @@ write_platform_specific_cmdline() {
     fi
 
     cmdline_add "varlog_size=$varlog_size"
+
+    cmdline_add "sonic.mode=$sonic_mode"
 }
 
 write_image_specific_cmdline() {
@@ -509,8 +588,9 @@ write_image_specific_cmdline() {
     fi
 
     # Obtain root partition uuid
-    local rootdev="$(mount | grep -E "$flash_re" | cut -f1 -d' ')"
-    local rootfstype="$(mount | grep -E "$flash_re" | cut -f5 -d' ')"
+    local mountstr="$(mount | grep " $target_path ")"
+    local rootdev="$(echo $mountstr | cut -f1 -d' ')"
+    local rootfstype="$(echo $mountstr | cut -f5 -d' ')"
     local rootuuid="$(get_uuid_for $rootdev)"
     if [ -z "$rootuuid" ] || [ "$rootfstype" = "vfat" ] ; then
         cmdline_add "root=$rootdev"
@@ -550,9 +630,9 @@ write_common_configs() {
 
 write_secureboot_configs() {
     write_common_configs
-    cmdline_add "loop=$(echo "$installer_image_path" | sed 's/mnt\/flash\///')"
+    cmdline_add "loop=$(mount_relpath "$installer_image_path")"
     cmdline_add loopfstype=squashfs
-    cmdline_add "loopoffset=$(unzip -qqf "$installer_image_path" fs.squashfs)"
+    cmdline_add "loopoffset=$(zip_file_offset "$installer_image_path" fs.squashfs)"
     cmdline_add docker_inram=on
     cmdline_add secure_boot_enable=y
     cmdline_add aboot.secureboot=enabled
@@ -601,22 +681,27 @@ run_kexec() {
     sync
     kexec --load --initrd="$initrd" --append="$cmdline" "$kernel"
 
-    [ -z "$testonly" ] || exit 0
+    ( [ -z "$testonly" ] && [ -z "$loadonly" ] ) || exit 0
     info "Kexecing..."
     kexec --exec
 }
 
 secureboot_install() {
     if [ -e "$image_path" ]; then
-        warn "Image folder $image_path already exist, wiping..."
-        rm -rf "$image_path"
+        warn "Image folder $image_path already exist (likely regular install)"
     fi
+
+    mkdir -p "$image_path"
 
     info "Installing image as $installer_image_path"
     extract_image_secureboot
 }
 
 regular_install() {
+    if [ -e "$image_path" ]; then
+        warn "Image folder $image_path already exist (likely secureboot install)"
+    fi
+
     mkdir -p $image_path
 
     info "Generating boot-config, machine.conf and cmdline"
@@ -670,6 +755,9 @@ elif [ ! -z "$kexec" ]; then
     do_clean=false
 fi
 
+# Make sure boot-config exists to avoid noise
+touch "$boot_config"
+
 # Verbosity can be defined by the caller, default to false otherwise
 verbose=${verbose:-false}
 debug=${debug:-false}
@@ -693,7 +781,12 @@ if [ -z "$secureboot" ]; then
     fi
 fi
 
+# preserve original installer during regular install when set
 preserve_installer=false
+if [ -f "$target_path/preserve-installer" ] ||
+   [ "$(get_boot_config PRESERVE_INSTALLER)" = "1" ]; then
+    preserve_installer=true
+fi
 
 # enable shell debug mode to get the most verbosity
 if $verbose; then
@@ -702,21 +795,23 @@ fi
 
 # install the image if newer
 if $do_install; then
-    if ! unzip -l "$swipath" 2>&1 > /dev/null; then
+    if ! unzip -ql "$swipath" 2>&1 > /dev/null; then
         err "The swipath= environment variable does not point to a valid SWI"
         exit 1
     fi
 
-    # check the hash file in the image, and determine to install or just skip
-    GIT_REVISION="$(unzip -p "$swipath" .imagehash)"
-    LOCAL_IMAGEHASH="$(cat $image_path/.imagehash 2>/dev/null || true)"
+    swi_installed=0
+    is_swi_installed "$swipath" || swi_installed=$?
 
-    if [ "$GIT_REVISION" != "$LOCAL_IMAGEHASH" ] || [ ! -z "$force" ]; then
-        if $do_clean; then
+    if [ "$swi_installed" -ne $SWI_ALREADY_INSTALLED ] || [ -n "$force" ]; then
+        if [ "$swi_installed" -eq $SWI_VERSION_MISMATCH ] || [ -n "$force" ]; then
+            warn "Removing existing installation folder $image_path"
+            rm -rf $image_path
+        fi
+        if [ "$swi_installed" -ne $SWI_OTHER_VARIANT_INSTALLED ] && $do_clean; then
             info "Cleaning flash content $target_path"
             clean_flash
         fi
-
         if $secureboot; then
             secureboot_install
         else

@@ -3,8 +3,9 @@
 import os
 import struct
 import subprocess
-from sonic_daemon_base.daemon_base import DaemonBase
 from mmap import *
+
+from sonic_py_common import device_info
 
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
 EMPTY_STRING = ""
@@ -13,7 +14,7 @@ EMPTY_STRING = ""
 class APIHelper():
 
     def __init__(self):
-        (self.platform, self.hwsku) = DaemonBase().get_platform_and_hwsku()
+        (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
     def is_host(self):
         return os.system(HOST_CHK_CMD) == 0
@@ -68,6 +69,19 @@ class APIHelper():
         except IOError:
             pass
         return None
+
+    def write_txt_file(self, file_path, value):
+        try:
+            with open(file_path, 'w') as fd:
+                fd.write(str(value))
+        except Exception:
+            return False
+        return True
+
+    def get_cpld_reg_value(self, getreg_path, register):
+        cmd = "echo {1} > {0}; cat {0}".format(getreg_path, register)
+        status, result = self.run_command(cmd)
+        return result if status else None
 
     def ipmi_raw(self, netfn, cmd):
         status = True

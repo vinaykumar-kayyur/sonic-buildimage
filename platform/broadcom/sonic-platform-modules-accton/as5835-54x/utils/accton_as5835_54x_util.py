@@ -30,13 +30,12 @@ command:
     set         : change board setting with fan|led|sfp    
 """
 
-import os
 import commands
-import sys, getopt
+import getopt
+import sys
 import logging
 import re
 import time
-from collections import namedtuple
 
 
 
@@ -314,6 +313,10 @@ def device_install():
                 print output
                 if FORCE == 0:                
                     return status  
+    
+    for i in range(49, 55): #Set qsfp port to normal state
+        log_os_system("echo 0 > /sys/bus/i2c/devices/3-0062/module_reset_" + str(i), 1)    
+         
     for i in range(0,len(sfp_map)):
         if i < qsfp_start:
             status, output =log_os_system("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)

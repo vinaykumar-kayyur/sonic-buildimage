@@ -38,10 +38,11 @@ debs/{{ deb }}{{' '}}
 {%- endfor %}
 
 COPY ["start.sh", "rest-server.sh", "/usr/bin/"]
+COPY ["mgmt_vars.j2", "/usr/share/sonic/templates/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
 RUN apt-get remove -y g++ python-dev
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/supervisord"]
