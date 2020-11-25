@@ -95,8 +95,8 @@ def main(argv):
 
             # If auto-restart feature is not disabled and at the same time
             # a critical process exited unexpectedly, terminate supervisor
-            if ((restart_feature != 'disabled') and expected == 0 and
-                (processname in critical_process_list or groupname in critical_group_list)):
+            if (restart_feature != 'disabled' and expected == 0 and
+               (processname in critical_process_list or groupname in critical_group_list)):
                 MSG_FORMAT_STR = "Process {} exited unxepectedly. Terminating supervisor..."
                 msg = MSG_FORMAT_STR.format(payload_headers['processname'])
                 syslog.syslog(syslog.LOG_INFO, msg)
