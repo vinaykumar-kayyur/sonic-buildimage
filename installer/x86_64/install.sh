@@ -107,8 +107,8 @@ if [ "$install_env" != "build" ]; then
     onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
     blk_dev=$(echo $onie_dev | sed -e 's/[1-9][0-9]*$//' | sed -e 's/\([0-9]\)\(p\)/\1/')
 
+    # check if we have an nvme device
     blk_suffix=
-    echo $blk_dev | grep -q mmcblk && blk_suffix="p"
     echo $blk_dev | grep -q nvme0 && blk_suffix="p"
 
     # Note: ONIE has no mount setting for / with device node, so below will be empty string
