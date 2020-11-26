@@ -273,7 +273,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
             break;       
         case MODULE_TXDISABLE_49 ... MODULE_TXDISABLE_50:
             reg=0x5;
-            mask=0x1 << (attr->index==MODULE_TXFAULT_49?7:3);
+            mask=0x1 << (attr->index==MODULE_TXDISABLE_49?7:3);
             break;
             
         case MODULE_RXLOS_51 ... MODULE_RXLOS_52:
@@ -290,7 +290,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
             break;       
         case MODULE_TXDISABLE_51 ... MODULE_TXDISABLE_52:
             reg=0x6;
-            mask=0x1 << (attr->index==MODULE_TXFAULT_51?7:3);
+            mask=0x1 << (attr->index==MODULE_TXDISABLE_51?7:3);
             break;
         case MODULE_PRESENT_53 ... MODULE_PRESENT_54:
             reg=0x21;
@@ -338,11 +338,11 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
     {
          case MODULE_TXDISABLE_49 ... MODULE_TXDISABLE_50:
             reg=0x5;
-            mask=0x1 << (attr->index==MODULE_TXFAULT_49?7:3);
+            mask=0x1 << (attr->index==MODULE_TXDISABLE_49?7:3);
             break;
         case MODULE_TXDISABLE_51 ... MODULE_TXDISABLE_52:
             reg=0x6;
-            mask=0x1 << (attr->index==MODULE_TXFAULT_51?7:3);
+            mask=0x1 << (attr->index==MODULE_TXDISABLE_51?7:3);
             break;
      
 	    default:
@@ -356,7 +356,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 		goto exit;
 	}
 	/* Update tx_disable status */
-	if (disable) {
+	if (!disable) {
 		status &= ~mask;
 	}
 	else {
