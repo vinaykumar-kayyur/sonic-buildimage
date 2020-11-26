@@ -8,4 +8,5 @@ program:buffermgrd
 program:vrfmgrd
 program:nbrmgrd
 program:vxlanmgrd
+program:coppmgrd
 program:tunnelmgrd

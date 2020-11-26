@@ -12,9 +12,13 @@ setup(
     maintainer_email = 'jolevequ@microsoft.com',
     scripts = [
         'scripts/caclmgrd',
+        'scripts/hostcfgd',
         'scripts/procdockerstatsd',
+        'scripts/determine-reboot-cause',
+        'scripts/process-reboot-cause',
     ],
     install_requires = [
+        'Jinja2>=2.10',
         'sonic-py-common',
         'swsssdk>=2.0.1',
     ],
