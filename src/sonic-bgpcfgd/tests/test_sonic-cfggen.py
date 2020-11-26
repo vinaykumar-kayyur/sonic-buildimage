@@ -1,9 +1,7 @@
 import os
 import subprocess
 
-
-from app.config import ConfigMgr
-from .test_templates import compress_comments, write_result
+from bgpcfgd.config import ConfigMgr
 
 
 TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
@@ -14,12 +12,11 @@ CONSTANTS_PATH = os.path.abspath('../../files/image_config/constants/constants.y
 def run_test(name, template_path, json_path, match_path):
     template_path = os.path.join(TEMPLATE_PATH, template_path)
     json_path = os.path.join(DATA_PATH, json_path)
-    cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
-    command = [cfggen, "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
+    command = ['sonic-cfggen', "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
     p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.returncode == 0, "sonic-cfggen for %s test returned %d code. stderr='%s'" % (name, p.returncode, stderr)
-    raw_generated_result = stdout
+    raw_generated_result = stdout.decode("ascii")
     assert "None" not in raw_generated_result, "Test %s" % name
     canonical_generated_result = ConfigMgr.to_canonical(raw_generated_result)
     match_path = os.path.join(DATA_PATH, match_path)

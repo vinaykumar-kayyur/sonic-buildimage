@@ -31,12 +31,7 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-    # Version name differs between ARCH, copying same version as in sonic-slave docker
-    DOCKER_VERSION=18.06.3~ce~3-0~debian
-else
-    DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
-fi
+DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
 LINUX_KERNEL_VERSION=4.19.0-9-2
 
 ## Working directory to prepare the file system
@@ -202,6 +197,10 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
                                                        curl \
                                                        gnupg2 \
                                                        software-properties-common
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+    # update ssl ca certificates for secure pem
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
+fi
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.gpg -fsSL https://download.docker.com/linux/debian/gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add /tmp/docker.gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT rm /tmp/docker.gpg
@@ -278,6 +277,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python                  \
     python-setuptools       \
     python3-setuptools      \
+    python-jsonschema       \
     python-apt              \
     traceroute              \
     iputils-ping            \
@@ -315,8 +315,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-pip              \
     python3-pip             \
     cron                    \
-    haveged
-
+    haveged                 \
+    jq
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
@@ -396,7 +396,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/core
 
 # Config sysctl
 sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p %P'
+set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/local/bin/coredump-compress %e %t %p %P'
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
@@ -413,13 +413,15 @@ done < files/image_config/sysctl/sysctl-net.conf
 
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
-## docker Python API package is needed by Ansible docker module
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'docker==4.1.0'
+# docker Python API package is needed by Ansible docker module as well as some SONiC applications
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'docker==4.1.0'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==4.3.1'
+
 ## Note: keep pip installed for maintainance purpose
 
 ## Get gcc and python dev pkgs
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gcc libpython2.7-dev
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install 'netifaces==0.10.7'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'netifaces==0.10.7'
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
@@ -449,7 +451,7 @@ fi
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml > /dev/null <<EOF
-build_version: '$(sonic_get_version)'
+build_version: '${SONIC_IMAGE_VERSION}'
 debian_version: '$(cat $FILESYSTEM_ROOT/etc/debian_version)'
 kernel_version: '$kversion'
 asic_type: $sonic_asic_platform
@@ -463,7 +465,8 @@ EOF
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
 
 ## Copy ASIC config checksum
-python files/build_scripts/generate_asic_config_checksum.py
+sudo chmod 755 files/build_scripts/generate_asic_config_checksum.py
+./files/build_scripts/generate_asic_config_checksum.py
 if [[ ! -f './asic_config_checksum' ]]; then
     echo 'asic_config_checksum not found'
     exit 1

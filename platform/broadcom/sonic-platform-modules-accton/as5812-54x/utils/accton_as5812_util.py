@@ -31,12 +31,11 @@ command:
 
 import os
 import commands
-import sys, getopt
+import getopt
+import sys
 import logging
 import re
 import time
-import pickle
-from collections import namedtuple
 
 PROJECT_NAME = 'as5812_54x'
 version = '0.2.0'
@@ -295,30 +294,26 @@ def i2c_order_check():
     # i2c bus 0 and 1 might be installed in different order.
     # Here check if 0x70 is exist @ i2c-0
     tmp = "echo pca9548 0x70 > /sys/bus/i2c/devices/i2c-1/new_device"
-    status, output = log_os_system(tmp, 0)
+    log_os_system(tmp, 0)
     if not device_exist():
         order = 1
     else:
         order = 0
     tmp = "echo 0x70 > /sys/bus/i2c/devices/i2c-1/delete_device"
-    status, output = log_os_system(tmp, 0)
+    log_os_system(tmp, 0)
     return order
 
 def update_i2c_order():
     global I2C_BUS_ORDER
    
     order = i2c_order_check()
-    pickle.dump(order, open("/tmp/accton_util.p", "wb"))  # save it
     I2C_BUS_ORDER = order
     print "[%s]Detected I2C_BUS_ORDER:%d" % (os.path.basename(__file__), I2C_BUS_ORDER)
 
 def get_i2c_order():
     global I2C_BUS_ORDER
     if I2C_BUS_ORDER < 0:
-        if os.path.exists("/tmp/accton_util.p"):
-            I2C_BUS_ORDER = pickle.load(open("/tmp/accton_util.p", "rb"))
-        else:
-            update_i2c_order()
+        update_i2c_order()
 
 def device_install():
     global FORCE
@@ -369,10 +364,7 @@ def device_install():
 
 def device_uninstall():
     global FORCE
-    global I2C_BUS_ORDER
 
-    get_i2c_order()
-    order = I2C_BUS_ORDER
     for i in range(0,len(sfp_map)):
         target = "/sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/delete_device"
         status, output =log_os_system("echo 0x50 > "+ target, 1)
@@ -380,7 +372,8 @@ def device_uninstall():
             print output
             if FORCE == 0:
                 return status
-
+    status, output = log_os_system("ls /sys/bus/i2c/devices/1-0070", 0)
+    order = 0 if (status == 0) else 1
     if order == 0:
         nodelist = mknod
     else:
@@ -553,7 +546,7 @@ def cpld_path_of_port(port_index):
 
 def get_path_sfp_tx_dis(port_index):
     cpld_p = cpld_path_of_port(port_index)
-    if cpld_p == None:
+    if cpld_p is None:
         return False, ''
     else:
         dev = cpld_p+"module_tx_disable_"+str(port_index)
@@ -561,7 +554,7 @@ def get_path_sfp_tx_dis(port_index):
 
 def get_path_sfp_presence(port_index):
     cpld_p = cpld_path_of_port(port_index)
-    if cpld_p == None:
+    if cpld_p is None:
         return False, ''
     else:
         dev = cpld_p+"module_present_"+str(port_index)

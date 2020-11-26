@@ -1,4 +1,4 @@
-from app.template import TemplateFabric
+from bgpcfgd.template import TemplateFabric
 from collections import OrderedDict
 import pytest
 
@@ -42,7 +42,7 @@ def test_pfx_filter_mixed_keys():
         ]
     )
     res = TemplateFabric.pfx_filter(src)
-    assert res == expected
+    assert dict(res) == dict(expected)
 
 
 def test_pfx_filter_pfx_v4_w_mask():
@@ -57,7 +57,7 @@ def test_pfx_filter_pfx_v4_w_mask():
         ]
     )
     res = TemplateFabric.pfx_filter(src)
-    assert res == expected
+    assert dict(res) == dict(expected)
 
 def test_pfx_filter_pfx_v6_w_mask():
     src = {
@@ -85,7 +85,7 @@ def test_pfx_filter_pfx_v4_no_mask():
         ]
     )
     res = TemplateFabric.pfx_filter(src)
-    assert res == expected
+    assert dict(res) == dict(expected)
 
 def test_pfx_filter_pfx_v6_no_mask():
     src = {
@@ -126,7 +126,7 @@ def test_pfx_filter_pfx_comprehensive():
         ]
     )
     res = TemplateFabric.pfx_filter(src)
-    assert res == expected
+    assert dict(res) == dict(expected)
 
 @pytest.fixture
 def test_pfx_filter_wrong_ip(caplog):

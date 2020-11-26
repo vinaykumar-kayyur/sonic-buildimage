@@ -1,11 +1,10 @@
-#!/usr/bin/env python
 try:
-    import os
-    import sys
-    import json
     import ast
+    import json
+    import os
     import re
-    from collections import OrderedDict
+    import sys
+
     from swsssdk import ConfigDBConnector
     from sonic_py_common import device_info
 except ImportError as e:
