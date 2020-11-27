@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from sonic_package_manager import version
 from sonic_package_manager.constraint import PackageConstraint
 from sonic_package_manager.version import Version, VersionRange
 
@@ -47,3 +47,13 @@ def test_constraint_only_name():
     package_constraint = PackageConstraint.parse('swss')
     assert package_constraint.name == 'swss'
     assert package_constraint.constraint == VersionRange()
+
+
+def test_version_to_tag():
+    assert version.version_to_tag(Version.parse('1.0.0-rc0')) == '1.0.0-rc0'
+    assert version.version_to_tag(Version.parse('1.0.0-rc0+152')) == '1.0.0-rc0_152'
+
+
+def test_tag_to_version():
+    assert str(version.tag_to_version('1.0.0-rc0_152')) == '1.0.0-rc0+152'
+    assert str(version.tag_to_version('1.0.0-rc0')) == '1.0.0-rc0'

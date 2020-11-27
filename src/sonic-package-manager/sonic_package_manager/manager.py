@@ -28,7 +28,7 @@ from sonic_package_manager.registry import RegistryResolver
 from sonic_package_manager.service_creator.creator import ServiceCreator, run_command
 from sonic_package_manager.service_creator.feature import FeatureRegistry
 from sonic_package_manager.service_creator.sonic_db import SonicDB
-from sonic_package_manager.version import Version, VersionRange
+from sonic_package_manager.version import Version, VersionRange, version_to_tag, tag_to_version
 
 
 @contextlib.contextmanager
@@ -54,7 +54,7 @@ def parse_package_reference_from_constraint(constraint: PackageConstraint) -> Pa
         raise PackageManagerError(f'Can only install specific version. '
                                   f'Use only following expression "{package_name}==<version>" '
                                   f'to install specific version')
-    return PackageReference(package_name, str(version_constraint))
+    return PackageReference(package_name, version_to_tag(version_constraint))
 
 
 def parse_reference_expression(expression):
@@ -485,7 +485,7 @@ class PackageManager:
 
         def is_semantic_ver_tag(tag: str) -> bool:
             try:
-                Version.parse(tag)
+                tag_to_version(tag)
                 return True
             except ValueError:
                 pass
@@ -494,7 +494,7 @@ class PackageManager:
         if all:
             return available_tags
 
-        return filter(is_semantic_ver_tag, available_tags)
+        return map(tag_to_version, filter(is_semantic_ver_tag, available_tags))
 
     def get_installed_packages_and(self, package: Package) -> Dict[str, Package]:
         packages = self.get_installed_packages()
