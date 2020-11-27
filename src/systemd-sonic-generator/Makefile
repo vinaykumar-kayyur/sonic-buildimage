@@ -9,9 +9,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -us -uc -b
 	mv ../$(MAIN_TARGET) $(DEST)/
 	rm ../$(BINARY)_*
-ifneq ($(wildcard *dbgsym*.deb),)
-	rm ../$(DERIVED_TARGETS)
-endif
+	$(foreach dbg_deb, $(DERIVED_TARGETS), \
+		{ if [ -e $(dbg_deb) ]; then mv $(dbg_deb) $(DEST)/; fi };)
 
 $(BINARY): systemd-sonic-generator.c
 	rm -f ./systemd-sonic-generator

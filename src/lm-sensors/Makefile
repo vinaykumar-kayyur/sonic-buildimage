@@ -28,9 +28,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	DEB_BUILD_OPTIONS=nocheck PROG_EXTRA=sensord dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
-ifneq ($(wildcard *dbgsym*.deb),)
-	mv $(SENSORS_DBG) $(DEST)/
-endif
+	$(foreach dbg_deb, $(SENSORS_DBG), \
+		{ if [ -e $(dbg_deb) ]; then mv $(dbg_deb) $(DEST)/; fi };)
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

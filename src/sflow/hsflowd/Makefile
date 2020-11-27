@@ -24,9 +24,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --buildinfo-option=-u. --changes-option=-u.
 
 	mv $* $(DEST)/
-ifneq ($(wildcard *dbgsym*.deb),)
-	mv $(DERIVED_TARGET) $(DEST)/
-endif
+	$(foreach dbg_deb, $(DERIVED_TARGET), \
+		{ if [ -e $(dbg_deb) ]; then mv $(dbg_deb) $(DEST)/; fi };)
 	popd
 
 $(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

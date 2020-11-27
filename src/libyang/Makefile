@@ -21,9 +21,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	make build-deb
 
 	pushd debs
-ifneq ($(wildcard *dbgsym*.deb),)
-	mv $(LIBYANG_DBG) $(DEST)/
-endif
+	$(foreach dbg_deb, $(LIBYANG_DBG), \
+		{ if [ -e $(dbg_deb) ]; then mv $(dbg_deb) $(DEST)/; fi };)
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 	popd
 

@@ -23,9 +23,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git rev-parse --short HEAD | xargs git checkout
 	git branch -D $(FRR_BRANCH)
 	popd
-ifneq ($(wildcard *dbgsym*.deb),)
-	mv $(FRRS_DBG) $(DEST)/
-endif
+
+	$(foreach dbg_deb, $(FRRS_DBG), \
+		{ if [ -e $(dbg_deb) ]; then mv $(dbg_deb) $(DEST)/; fi };)
 	mv $(DERIVED_TARGET) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

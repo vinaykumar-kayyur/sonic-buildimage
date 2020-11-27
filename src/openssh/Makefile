@@ -24,8 +24,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 	mv $* $(DEST)/
-ifneq ($(wildcard *dbgsym*.deb),)
-	mv $(DERIVED_TARGETS) $(DEST)/
-endif
+	$(foreach dbg_deb, $(DERIVED_TARGETS), \
+		{ if [ -e $(dbg_deb) ]; then mv $(dbg_deb) $(DEST)/; fi };)
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
