@@ -1,6 +1,6 @@
 try:
     import select
-    from helper import APIHelper
+    from .helper import APIHelper
     from sonic_py_common.logger import Logger
 except ImportError as e:
     raise ImportError(repr(e) + " - required module not found")
