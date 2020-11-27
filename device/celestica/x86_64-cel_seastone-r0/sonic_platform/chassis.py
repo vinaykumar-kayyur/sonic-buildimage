@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -13,8 +11,8 @@ try:
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_py_common import device_info
-    from event import SfpEvent
-    from helper import APIHelper
+    from .event import SfpEvent
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
