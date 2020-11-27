@@ -39,7 +39,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 	# Move the newly-built .deb packages to the destination directory
-ifneq ($(wildcard $(LLDPD_DBG)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	mv $(LLDPD_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/

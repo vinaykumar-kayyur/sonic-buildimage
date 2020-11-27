@@ -18,7 +18,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	fakeroot debian/rules -j$(SONIC_CONFIG_MAKE_JOBS) binary
 	popd
 
-ifneq ($(wildcard $(HIREDIS_DBG)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	mv $(HIREDIS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/

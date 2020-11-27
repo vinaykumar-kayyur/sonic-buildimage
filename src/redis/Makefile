@@ -25,7 +25,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
-ifneq ($(wildcard $(REDIS_DBG)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	mv $(REDIS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/

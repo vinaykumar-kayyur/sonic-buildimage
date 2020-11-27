@@ -34,7 +34,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
-ifneq ($(wildcard $(TEAM_DBG)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	mv $(TEAM_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGETS) $* $(DEST)/

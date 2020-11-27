@@ -23,7 +23,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git rev-parse --short HEAD | xargs git checkout
 	git branch -D $(FRR_BRANCH)
 	popd
-ifneq ($(wildcard $(FRRS_DBG)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	mv $(FRRS_DBG) $(DEST)/
 endif
 	mv $(DERIVED_TARGET) $* $(DEST)/

@@ -9,7 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -us -uc -b
 	mv ../$(MAIN_TARGET) $(DEST)/
 	rm ../$(BINARY)_*
-ifneq ($(wildcard $(DERIVED_TARGETS)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	rm ../$(DERIVED_TARGETS)
 endif
 

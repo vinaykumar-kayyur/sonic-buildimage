@@ -28,7 +28,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 
 	# Move the newly-built .deb packages to the destination directory
 	mv $* $(DEST)/
-ifneq ($(wildcard $(DERIVED_TARGETS)),)
+ifneq ($(wildcard *dbgsym*.deb),)
 	mv $(DERIVED_TARGETS) $(DEST)/
 endif
 
