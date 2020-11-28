@@ -1,13 +1,7 @@
-#ACTION=="add",KERNELS=="ttyUSB0",SUBSYSTEMS=="usb-serial",DRIVERS=="cp210x",ATTRS{port_number}=="0",NAME="ttyUSB30",SYMLINK="ttyUSB30"
-
-#ACTION=="add",RUN+="/bin/mkdir test.txt"
-#KERNELS=="1-1.1.3",ATTRS{devpath}=="1.1.3",ATTRS{idProduct}=="2303",ATTRS{idVendor}=="067b",SYMLINK+="ttypl2303-%n" 
-#ACTION=="add",KERNELS=="1-1.1.3",ATTRS{devpath}=="1.1.3",ATTRS{idProduct}=="2303",ATTRS{idVendor}=="067b",SYMLINK+="ttypl2303",RUN+="/bin/mkdir 123.txt"
 
 
 LABEL="parent info"
 ACTION=="add",KERNEL=="1-1",SUBSYSTEM=="usb",RUN+="/bin/bash -c '/usr/local/bin/udev_prefix.sh clear'"
-#ACTION=="add",KERNEL=="ttyUSB*",SUBSYSTEM=="tty",KERNELS=="1-1.1",ATTRS{idProduct}=="2517",ATTRS{idVendor}=="0424",RUN+="/bin/bash -c '/usr/local/bin popmsg.sh 0'",RUN+="/bin/bash -c '/usr/local/bin udev_prefix.sh C0-'",GOTO="C0 Add"
 ACTION=="add",KERNEL=="ttyUSB*",SUBSYSTEM=="tty",KERNELS=="1-1.1",ATTRS{idProduct}=="2517",ATTRS{idVendor}=="0424",RUN+="/bin/bash -c '/usr/local/bin/udev_prefix.sh C0-'",GOTO="C0 Add"
 ACTION=="remove",KERNELS=="1-1.1",ENV{PRODUCT}=="*424/2517/*",RUN+="/bin/bash -c '/usr/local/bin/udev_prefix.sh clear'",GOTO="C0 Remove"
 
