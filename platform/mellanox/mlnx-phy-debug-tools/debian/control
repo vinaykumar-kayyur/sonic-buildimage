@@ -1,0 +1,9 @@
+Source: mlnx-phy-debug-tools
+Priority: optional
+Maintainer: Noa Or <noaor@nvidia.com>
+Section: custom
+Homepage: http://www.mellanox.com
+
+Package: mlnx-phy-debug-tools
+Architecture: any
+Description: Mellanox Phy debug tools for MSN3800
