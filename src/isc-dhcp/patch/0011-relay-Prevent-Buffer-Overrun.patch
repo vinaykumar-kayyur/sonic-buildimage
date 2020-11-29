@@ -1,0 +1,30 @@
+From 2fcfd6277ab5105f970a4e2872a0040bc8fc8744 Mon Sep 17 00:00:00 2001
+From: Tamer Ahmed <tamer.ahmed@microsoft.com>
+Date: Sat, 28 Nov 2020 16:28:37 -0800
+Subject: [PATCH] [relay] Prevent Buffer Overrun
+
+The add/strip relay agent options do not take into account the buffer
+length and so it is possible to overrun the buffer. The issue will
+result in contents from previous packet being aded to the current one.
+
+signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
+---
+ relay/dhcrelay.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/relay/dhcrelay.c b/relay/dhcrelay.c
+index e158efe..4c6997f 100644
+--- a/relay/dhcrelay.c
++++ b/relay/dhcrelay.c
+@@ -1469,7 +1469,7 @@ add_relay_agent_options(struct interface_info *ip, struct dhcp_packet *packet,
+ 	/* Commence processing after the cookie. */
+ 	sp = op = &packet->options[4];
+ 
+-	while (op < max) {
++	while ((op < max) && (op < (((u_int8_t *)packet) + length))) {
+ 		switch(*op) {
+ 			/* Skip padding... */
+ 		      case DHO_PAD:
+-- 
+2.17.1
+
