@@ -3,7 +3,12 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(HSFLOWD)
-DERIVED_TARGET = $(HSFLOWD_DBG)
+DBG_TARGETS = $(HSFLOWD_DBG)
+DERIVED_TARGET =
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -fr ./host-sflow

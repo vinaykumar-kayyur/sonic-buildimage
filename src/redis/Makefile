@@ -6,9 +6,13 @@ REDIS_VERSION = 5.0.3
 REDIS_VERSION_FULL = $(REDIS_VERSION)-3~bpo9+2
 
 MAIN_TARGET = redis-server_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+DBG_TARGETS = redis-tools-dbgsym_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = redis-tools_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
-		  redis-sentinel_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
-		  redis-tools-dbgsym_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+		  redis-sentinel_$(REDIS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf  redis_build

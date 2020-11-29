@@ -3,7 +3,12 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(ISC_DHCP_RELAY)
-DERIVED_TARGETS = $(ISC_DHCP_RELAY_DBG)
+DBG_TARGETS = $(ISC_DHCP_RELAY_DBG)
+DERIVED_TARGETS =
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files

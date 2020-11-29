@@ -3,7 +3,13 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = openssh-server_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
-DERIVED_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
+DBG_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS =
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+endif
+
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain openssh: https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%257.9p1-10+deb10u2

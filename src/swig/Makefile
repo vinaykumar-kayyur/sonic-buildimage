@@ -3,7 +3,12 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(SWIG_BASE)
-DERIVED_TARGETS = $(SWIG) $(SWIG_DBG)
+DBG_TARGETS = $(SWIG_DBG)
+DERIVED_TARGETS = $(SWIG)
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -fr ./swig-$(SWIG_VERSION) *.deb

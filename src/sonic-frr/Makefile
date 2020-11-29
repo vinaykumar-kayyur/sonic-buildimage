@@ -3,9 +3,14 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(FRR)
-DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_DBG) $(FRR_SNMP) $(FRR_SNMP_DBG)
+DBG_TARGETS = $(FRR_DBG) $(FRR_SNMP_DBG)
+DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_SNMP)
 SUFFIX = $(shell date +%Y%m%d\.%H%M%S)
 STG_BRANCH = stg_temp.$(SUFFIX)
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGET += $(DBG_TARGETS))
+endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package

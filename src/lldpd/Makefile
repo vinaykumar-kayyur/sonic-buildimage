@@ -3,7 +3,8 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(LLDPD)
-DERIVED_TARGETS = $(LIBLLDPCTL) $(LLDPD_DBG)
+DBG_TARGETS = $(LLDPD_DBG)
+DERIVED_TARGETS = $(LIBLLDPCTL)
 
 LLDP_URL = https://sonicstorage.blob.core.windows.net/debian/pool/main/l/lldpd
 
@@ -14,6 +15,10 @@ DEBIAN_FILE = lldpd_$(LLDPD_VERSION_FULL).debian.tar.xz
 DSC_FILE_URL = $(LLDP_URL)/$(DSC_FILE)
 ORIG_FILE_URL = $(LLDP_URL)/$(ORIG_FILE)
 DEBIAN_FILE_URL = $(LLDP_URL)/$(DEBIAN_FILE)
+
+ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
+$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
