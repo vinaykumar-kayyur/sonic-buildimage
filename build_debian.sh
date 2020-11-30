@@ -318,6 +318,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     haveged                 \
     jq
 
+## Configure kdump-tools with additional flags for vmcore dump
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cat >> /etc/default/kdump-tools <<"EOF"
+KDUMP_SYSCTL="kernel.panic_on_oops=1 kernel.panic_on_unrecovered_nmi=1 kernel.panic_on_io_nmi=1 kernel.panic_on_stackoverflow=1 kernel.hung_task_panic=1 kernel.softlockup_panic=1 kernel.unknown_nmi_panic=1 vm.panic_on_oom=1"
+EOF'
+
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
