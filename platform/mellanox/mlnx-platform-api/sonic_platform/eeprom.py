@@ -13,10 +13,14 @@ import sys
 import re
 from cStringIO import StringIO
 
+from sonic_py_common.logger import Logger
+
 try:
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
+
+logger = Logger()
 
 #
 # CACHE_XXX stuffs are supposted to be moved to the base classes
@@ -65,8 +69,16 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
             except:
                 pass
 
+        cache_file = os.path.join(CACHE_ROOT, CACHE_FILE)
         try:
-            self.set_cache_name(os.path.join(CACHE_ROOT, CACHE_FILE))
+            # Make sure first time always read eeprom data from hardware
+            if os.path.exists(cache_file):
+                os.remove(cache_file)
+        except Exception as e:
+            logger.log_error('Failed to remove cache file {} - {}'.format(cache_file, repr(e)))
+
+        try:
+            self.set_cache_name(cache_file)
         except:
             pass
 
