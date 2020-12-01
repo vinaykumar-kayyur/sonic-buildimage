@@ -125,6 +125,14 @@ OVERLAY_MODULE_CHECK := \
 
 BUILD_TIMESTAMP := $(shell date +%Y%m%d\.%H%M%S)
 
+# Create separate Docker lockfiles for saving vs. loading an image.
+ifeq ($(DOCKER_LOCKDIR),)
+override DOCKER_LOCKDIR := /tmp/docklock
+endif
+DOCKER_LOCKFILE_SAVE := $(DOCKER_LOCKDIR)/docker_save.lock
+$(shell mkdir -m 0777 -p $(DOCKER_LOCKDIR))
+$(shell [ -f $(DOCKER_LOCKFILE_SAVE) ] || (touch $(DOCKER_LOCKFILE_SAVE) && chmod 0777 $(DOCKER_LOCKFILE_SAVE)))
+
 ifeq ($(DOCKER_BUILDER_MOUNT),)
 override DOCKER_BUILDER_MOUNT := "$(PWD):/sonic"
 endif
@@ -135,6 +143,7 @@ endif
 
 DOCKER_RUN := docker run --rm=true --privileged --init \
     -v $(DOCKER_BUILDER_MOUNT) \
+    -v "$(DOCKER_LOCKDIR):$(DOCKER_LOCKDIR)" \
     -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
@@ -151,6 +160,36 @@ endif
 
 ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache:rw"
+endif
+
+# If SONIC_CONFIG_NATIVE_DOCKERD_SHARED is enabled, force
+# SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD enabled as well.
+ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
+override SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD := y
+endif
+
+# User name and tag for "docker-*" images created by native dockerd mode.
+ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
+DOCKER_USERNAME = -$(USER)
+DOCKER_USERTAG = $(SLAVE_TAG)
+else
+DOCKER_USERNAME =
+DOCKER_USERTAG = latest
+endif
+
+# Define canned sequence to clean up Docker image cache.
+#   - These are the remnants from building the runtime Docker images using native (host) Docker daemon.
+#   - Image naming convention differs on a shared build system vs. non-shared.
+# $(docker-image-cleanup)
+ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD),y)
+define docker-image-cleanup
+    @for i in $(shell docker images --quiet --filter 'dangling=true') ; do (docker rmi -f $$i &> /dev/null || true) ; done
+    @for i in $(shell docker images --quiet docker-*$(DOCKER_USERNAME):$(DOCKER_USERTAG)) ; do (docker rmi -f $$i &> /dev/null || true) ; done
+endef
+else
+define docker-image-cleanup
+    @:
+endef
 endif
 
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
@@ -219,6 +258,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            SONIC_IMAGE_VERSION=$(SONIC_IMAGE_VERSION) \
+                           SLAVE_TAG=$(SLAVE_TAG) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
                            ENABLE_ZTP=$(ENABLE_ZTP) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
@@ -240,6 +280,12 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_DPKG_CACHE_SOURCE=$(SONIC_DPKG_CACHE_SOURCE) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
+                           DOCKER_USERNAME=$(DOCKER_USERNAME) \
+                           DOCKER_USERTAG=$(DOCKER_USERTAG) \
+                           DOCKER_LOCKDIR=$(DOCKER_LOCKDIR) \
+                           DOCKER_LOCKFILE_SAVE=$(DOCKER_LOCKFILE_SAVE) \
+                           SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) \
+                           SONIC_CONFIG_NATIVE_DOCKERD_SHARED=$(SONIC_CONFIG_NATIVE_DOCKERD_SHARED) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            TELEMETRY_WRITABLE=$(TELEMETRY_WRITABLE) \
@@ -285,6 +331,9 @@ ifeq "$(KEEP_SLAVE_ON)" "yes"
 else
 	@$(DOCKER_RUN) $(SLAVE_IMAGE):$(SLAVE_TAG) bash -c "$(SONIC_BUILD_INSTRUCTION) $@; scripts/collect_build_version_files.sh \$$?"
 endif
+
+docker-cleanup:
+	$(docker-image-cleanup)
 
 sonic-build-hooks:
 	@pushd src/sonic-build-hooks; TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) make all; popd
