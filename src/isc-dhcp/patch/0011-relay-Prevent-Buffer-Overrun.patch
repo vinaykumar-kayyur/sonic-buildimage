@@ -5,7 +5,7 @@ Subject: [PATCH] [relay] Prevent Buffer Overrun
 
 The add/strip relay agent options do not take into account the buffer
 length and so it is possible to overrun the buffer. The issue will
-result in contents from previous packet being aded to the current one.
+result in contents from previous packet being added to the current one.
 
 signed-off-by: Tamer Ahmed <tamer.ahmed@microsoft.com>
 ---
