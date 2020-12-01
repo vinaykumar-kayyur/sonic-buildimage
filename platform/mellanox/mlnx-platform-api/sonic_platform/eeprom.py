@@ -63,19 +63,19 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         self._eeprom_loaded = True
 
     def _load_eeprom(self):
+        cache_file = os.path.join(CACHE_ROOT, CACHE_FILE)
         if not os.path.exists(CACHE_ROOT):
             try:
                 os.makedirs(CACHE_ROOT)
             except:
                 pass
-
-        cache_file = os.path.join(CACHE_ROOT, CACHE_FILE)
-        try:
-            # Make sure first time always read eeprom data from hardware
-            if os.path.exists(cache_file):
-                os.remove(cache_file)
-        except Exception as e:
-            logger.log_error('Failed to remove cache file {} - {}'.format(cache_file, repr(e)))
+        else:
+            try:
+                # Make sure first time always read eeprom data from hardware
+                if os.path.exists(cache_file):
+                    os.remove(cache_file)
+            except Exception as e:
+                logger.log_error('Failed to remove cache file {} - {}'.format(cache_file, repr(e)))
 
         try:
             self.set_cache_name(cache_file)
