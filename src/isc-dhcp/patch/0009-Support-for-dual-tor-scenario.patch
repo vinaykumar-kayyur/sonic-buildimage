@@ -1,14 +1,14 @@
-From 03649612bcd71e2f998e4af09b6cb86c3ee9d598 Mon Sep 17 00:00:00 2001
+From 3c57dcb5bfce87f8cb4f4d0537edfa13729997a5 Mon Sep 17 00:00:00 2001
 From: Tianrong Zhang <trzhang@microsoft.com>
-Date: Mon, 30 Nov 2020 18:38:45 -0800
-Subject: [PATCH] Support for dual tor scenario
+Date: Tue, 1 Dec 2020 15:12:13 -0800
+Subject: [PATCH] support for dual tor scenario
 
 ---
- relay/dhcrelay.c | 148 +++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 119 insertions(+), 29 deletions(-)
+ relay/dhcrelay.c | 116 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 97 insertions(+), 19 deletions(-)
 
 diff --git a/relay/dhcrelay.c b/relay/dhcrelay.c
-index e158efe..a20e4bb 100644
+index e158efe..ddde6b6 100644
 --- a/relay/dhcrelay.c
 +++ b/relay/dhcrelay.c
 @@ -56,6 +56,7 @@ int bogus_agent_drops = 0;	/* Packets dropped because agent option
@@ -121,11 +121,7 @@ index e158efe..a20e4bb 100644
 +	if (enable_support_for_dual_tor) {
 +		if (packet->yiaddr.s_addr) {
 +			out = NULL;
- 
--			for (i = 0 ; i < out->address_count ; i++ ) {
--				if (out->addresses[i].s_addr ==
--				    packet->giaddr.s_addr) {
--					i = -1;
++
 +			for (struct downstream_intf_list *cdi = downstream_intfs; cdi; cdi = cdi->next) {
 +				int i = 0;
 +				out = cdi->interface;
@@ -136,7 +132,11 @@ index e158efe..a20e4bb 100644
 +						break;
 +					}
 +				}
-+
+ 
+-			for (i = 0 ; i < out->address_count ; i++ ) {
+-				if (out->addresses[i].s_addr ==
+-				    packet->giaddr.s_addr) {
+-					i = -1;
 +				if (i == -1) {
  					break;
 +				} else {
@@ -201,62 +201,23 @@ index e158efe..a20e4bb 100644
  			return;
  		}
  
-@@ -987,8 +1044,14 @@ do_relay4(struct interface_info *ip, struct dhcp_packet *packet,
- 	   forward the response to the correct net.    If it's already
- 	   set, the response will be sent directly to the relay agent
+@@ -989,6 +1046,7 @@ do_relay4(struct interface_info *ip, struct dhcp_packet *packet,
  	   that set giaddr, so we won't see it. */
--	if (!packet->giaddr.s_addr)
--		packet->giaddr = ip->addresses[0];
-+	if (!packet->giaddr.s_addr) {
-+		if (enable_support_for_dual_tor) {
-+			packet->giaddr = uplink->addresses[0];
-+		} else {
-+			packet->giaddr = ip->addresses[0];
-+		}
-+	}
+ 	if (!packet->giaddr.s_addr)
+ 		packet->giaddr = ip->addresses[0];
 +
  	if (packet->hops < max_hop_count)
  		packet->hops = packet->hops + 1;
  	else
-@@ -1231,7 +1294,7 @@ find_interface_by_agent_option(struct dhcp_packet *packet,
- 	int i = 0;
- 	u_int8_t *circuit_id = 0;
- 	unsigned circuit_id_len = 0;
--	struct interface_info *ip;
-+	struct interface_info *ip = NULL;
+@@ -1264,7 +1322,6 @@ find_interface_by_agent_option(struct dhcp_packet *packet,
  
- 	while (i < len) {
- 		/* If the next agent option overflows the end of the
-@@ -1262,14 +1325,20 @@ find_interface_by_agent_option(struct dhcp_packet *packet,
- 		return (-1);
- 	}
- 
--	/* Scan the interface list looking for an interface whose
--	   name matches the one specified in circuit_id. */
+ 	/* Scan the interface list looking for an interface whose
+ 	   name matches the one specified in circuit_id. */
 -
--	for (ip = interfaces; ip; ip = ip->next) {
--		if (ip->circuit_id &&
--		    ip->circuit_id_len == circuit_id_len &&
--		    !memcmp(ip->circuit_id, circuit_id, circuit_id_len))
--			break;
-+	if (enable_support_for_dual_tor) {
-+		/* If circuit _id does not match, leave ip as NULL. */
-+		if ((*out)->circuit_id && (*out)->circuit_id_len == circuit_id_len &&
-+			!memcmp((*out)->circuit_id, circuit_id, circuit_id_len))
-+			ip = *out;
-+	} else {
-+		/* Scan the interface list looking for an interface whose
-+		   name matches the one specified in circuit_id. */
-+		for (ip = interfaces; ip; ip = ip->next) {
-+			if (ip->circuit_id &&
-+				ip->circuit_id_len == circuit_id_len &&
-+				!memcmp(ip->circuit_id, circuit_id, circuit_id_len))
-+				break;
-+		}
- 	}
- 
- 	/* If we got a match, use it. */
-@@ -1668,6 +1737,7 @@ add_relay_agent_options(struct interface_info *ip, struct dhcp_packet *packet,
+ 	for (ip = interfaces; ip; ip = ip->next) {
+ 		if (ip->circuit_id &&
+ 		    ip->circuit_id_len == circuit_id_len &&
+@@ -1668,6 +1725,7 @@ add_relay_agent_options(struct interface_info *ip, struct dhcp_packet *packet,
  			*sp++ = 4u;
  			memcpy(sp, &giaddr.s_addr, 4);
  			sp += 4;
@@ -264,7 +225,7 @@ index e158efe..a20e4bb 100644
  			packet->giaddr = uplink->addresses[0];
  			log_debug ("Adding link selection suboption"
  				   " with addr: %s", inet_ntoa(giaddr));
-@@ -2398,6 +2468,7 @@ void request_v4_interface(const char* name, int flags) {
+@@ -2398,6 +2456,7 @@ void request_v4_interface(const char* name, int flags) {
          struct interface_info *tmp = NULL;
          int len = strlen(name);
          isc_result_t status;
@@ -272,7 +233,7 @@ index e158efe..a20e4bb 100644
  
          if (len >= sizeof(tmp->name)) {
                  log_fatal("%s: interface name too long (is %d)", name, len);
-@@ -2413,6 +2484,15 @@ void request_v4_interface(const char* name, int flags) {
+@@ -2413,6 +2472,15 @@ void request_v4_interface(const char* name, int flags) {
  		  (flags & INTERFACE_UPSTREAM ? 'Y' : 'N'),
  		  (flags & INTERFACE_DOWNSTREAM ? 'Y' : 'N'));
  
@@ -288,7 +249,7 @@ index e158efe..a20e4bb 100644
          strncpy(tmp->name, name, len);
          interface_snorf(tmp, (INTERFACE_REQUESTED | flags));
          interface_dereference(&tmp, MDL);
-@@ -2487,3 +2567,13 @@ free_interface_alias_map(void) {
+@@ -2487,3 +2555,13 @@ free_interface_alias_map(void) {
  	free(g_interface_name_alias_map);
  	g_interface_name_alias_map_size = 0;
  }
