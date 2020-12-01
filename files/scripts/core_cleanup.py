@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 import argparse
-from argparse import RawTextHelpFormatter
 from stat import ST_CTIME
-import os, time
-from datetime import datetime, timedelta
+import os
 from sonic_py_common.logger import Logger
 import sys
 
@@ -13,9 +11,9 @@ DEFAULT_MAX_DUMPS=4
 SYSLOG_IDENTIFIER = 'core_cleanup.py'
 
 def exe_name(filename):
-    try:
+    if filename.count('.') > 0:
         return filename.split('.')[1]
-    except:
+    else:
         return filename
 
 def corefile_cleanup(input_dir, max_dumps, logger):
@@ -53,7 +51,7 @@ def main():
     parser = argparse.ArgumentParser(description="Core file garbage collector:\n\n"
                                                  "Duplicate core files generated for the same exectable program are deleted.\n"
                                                  "Only the oldest and n-1 latest duplicate core files are saved, rest of them are deleted.",
-                                     formatter_class=RawTextHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     # Directory to clean-up
     parser.add_argument("-d", "--input-dir",
