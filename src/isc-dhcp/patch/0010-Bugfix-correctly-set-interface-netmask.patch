@@ -1,6 +1,6 @@
-From b30d9961cb3092361d50f927db6b08160f17b6b3 Mon Sep 17 00:00:00 2001
+From b19547b0574132e4b2efbda012f3169e4db7923c Mon Sep 17 00:00:00 2001
 From: Tianrong Zhang <trzhang@microsoft.com>
-Date: Wed, 25 Nov 2020 15:50:30 -0800
+Date: Mon, 30 Nov 2020 18:42:09 -0800
 Subject: [PATCH] Bugfix: correctly set interface netmask
 
 ---
