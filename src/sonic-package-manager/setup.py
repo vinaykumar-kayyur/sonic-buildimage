@@ -21,20 +21,20 @@ setup(
         'docker-image-py',
         'enlighten',
         'natsort',
-        'toposort',
         'sonic-py-common',
         'swsssdk',  # Temporary dependency till the issue with py-swsscommon is resolved.
         'requests',
     ],
     setup_requires=[
         'pytest-runner',
-        'wheel'
+        'wheel',
     ],
     tests_require=[
         'pytest',
         'mock>=2.0.0',
         'pytest-sugar',
         'pytest-cov',
+        'pyfakefs',
     ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     classifiers=[
