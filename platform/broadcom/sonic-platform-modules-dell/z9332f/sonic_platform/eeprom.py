@@ -8,10 +8,10 @@
 # - the eeprom format definition
 # - specific encoder/decoder if there is special need
 #############################################################################
+
 try:
     import os.path
     from sonic_eeprom import eeprom_tlvinfo
-    import binascii
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -34,31 +34,36 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         except:
             self.eeprom_data = "N/A"
             raise RuntimeError("Eeprom is not Programmed")
+        else:
+            eeprom = self.eeprom_data
 
-        eeprom = self.eeprom_data
+            if not self.is_valid_tlvinfo_header(eeprom):
+                return
 
-        if not self.is_valid_tlvinfo_header(eeprom):
-            return
+            total_length = (eeprom[9] << 8) | eeprom[10]
+            tlv_index = self._TLV_INFO_HDR_LEN
+            tlv_end = self._TLV_INFO_HDR_LEN + total_length
 
-        total_length = (ord(eeprom[9]) << 8) | ord(eeprom[10])
-        tlv_index = self._TLV_INFO_HDR_LEN
-        tlv_end = self._TLV_INFO_HDR_LEN + total_length
+            while (tlv_index + 2) < len(eeprom) and tlv_index < tlv_end:
+                if not self.is_valid_tlv(eeprom[tlv_index:]):
+                    break
 
-        while (tlv_index + 2) < len(eeprom) and tlv_index < tlv_end:
-            if not self.is_valid_tlv(eeprom[tlv_index:]):
-                break
+                tlv = eeprom[tlv_index:tlv_index + 2
+                             + eeprom[tlv_index + 1]]
+                code = "0x%02X" % tlv[0]
 
-            tlv = eeprom[tlv_index:tlv_index + 2
-                         + ord(eeprom[tlv_index + 1])]
-            code = "0x%02X" % (ord(tlv[0]))
+                if tlv[0] == self._TLV_CODE_VENDOR_EXT:
+                    value = str((tlv[2] << 24) | (tlv[3] << 16) |
+                                (tlv[4] << 8) | tlv[5])
+                    value += tlv[6:6 + tlv[1]].decode('ascii')
+                else:
+                    name, value = self.decoder(None, tlv)
 
-            name, value = self.decoder(None, tlv)
+                self.eeprom_tlv_dict[code] = value
+                if eeprom[tlv_index] == self._TLV_CODE_CRC_32:
+                    break
 
-            self.eeprom_tlv_dict[code] = value
-            if ord(eeprom[tlv_index]) == self._TLV_CODE_CRC_32:
-                break
-
-            tlv_index += ord(eeprom[tlv_index+1]) + 2
+                tlv_index += eeprom[tlv_index+1] + 2
 
     def serial_number_str(self):
         """
@@ -68,18 +73,18 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
                          self.eeprom_data, self._TLV_CODE_SERIAL_NUMBER)
         if not is_valid:
             return "N/A"
-        return results[2]
+        return results[2].decode('ascii')
 
-    def base_mac_addr(self, e):
+    def base_mac_addr(self):
         """
         Returns the base mac address found in the system EEPROM
         """
         (is_valid, t) = self.get_tlv_field(
                           self.eeprom_data, self._TLV_CODE_MAC_BASE)
         if not is_valid or t[1] != 6:
-            return super(eeprom_tlvinfo.TlvInfoDecoder, self).switchaddrstr(t)
+            return super(TlvInfoDecoder, self).switchaddrstr(e)
 
-        return ":".join([binascii.b2a_hex(T) for T in t[2]])
+        return ":".join(["{:02x}".format(T) for T in t[2]]).upper()
 
     def modelstr(self):
         """
@@ -90,7 +95,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         if not is_valid:
             return "N/A"
 
-        return results[2]
+        return results[2].decode('ascii')
 
     def part_number_str(self):
         """
@@ -101,7 +106,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         if not is_valid:
             return "N/A"
 
-        return results[2]
+        return results[2].decode('ascii')
 
     def serial_str(self):
         """
@@ -112,7 +117,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         if not is_valid:
             return "N/A"
 
-        return results[2]
+        return results[2].decode('ascii')
 
     def revision_str(self):
         """
@@ -123,7 +128,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         if not is_valid:
             return "N/A"
 
-        return results[2]
+        return results[2].decode('ascii')
 
     def system_eeprom_info(self):
         """
@@ -132,5 +137,3 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         found in the system EEPROM.
         """
         return self.eeprom_tlv_dict
-
-
