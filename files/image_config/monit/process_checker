@@ -6,7 +6,7 @@ import sys
 import syslog
 
 import psutil
-from sonic_py_common import device_info, multi_asic
+from sonic_py_common import multi_asic
 import swsssdk
 
 
