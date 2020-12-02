@@ -6,8 +6,8 @@ import sys
 import syslog
 
 import psutil
-import swsssdk
 from sonic_py_common import device_info, multi_asic
+import swsssdk
 
 
 def check_process_existence(container_name, process_cmdline):
