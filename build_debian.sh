@@ -165,6 +165,10 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-
 sudo cp files/initramfs-tools/resize-rootfs $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/resize-rootfs
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/resize-rootfs
 
+# Hook into initramfs: run fsck to repair a non-clean filesystem prior to be mounted
+sudo cp files/initramfs-tools/fsck-rootfs $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/fsck-rootfs
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/fsck-rootfs
+
 ## Hook into initramfs: after partition mount and loop file mount
 ## 1. Prepare layered file system
 ## 2. Bind-mount docker working directory (docker overlay storage cannot work over overlay rootfs)
@@ -203,7 +207,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION}
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
 
-if [ "$INSTALL_KUBERNETES" == "y" ]
+if [ "$INCLUDE_KUBERNETES" == "y" ]
 then
     ## Install Kubernetes
     echo '[INFO] Install kubernetes'
@@ -213,6 +217,9 @@ then
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}-00
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${KUBERNETES_VERSION}-00
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
     # kubeadm package auto install kubelet & kubectl
 else
@@ -226,9 +233,12 @@ sudo cp files/docker/docker.service.conf $_
 ## Fix systemd race between docker and containerd
 sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
+## Create redis group
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
+
 ## Create default user
-## Note: user should be in the group with the same name, and also in sudo/docker group
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
+## Note: user should be in the group with the same name, and also in sudo/docker/redis groups
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker,redis $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
@@ -362,58 +372,26 @@ EOF
 sudo sed -i 's/^ListenAddress ::/#ListenAddress ::/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' $FILESYSTEM_ROOT/etc/ssh/sshd_config
 
-## Config sysctl
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
-sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p'
 
+# Config sysctl
+sudo augtool --autosave "
+set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/bin/coredump-compress %e %t %p %P'
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
 set /files/etc/sysctl.conf/fs.suid_dumpable 2
-
-set /files/etc/sysctl.conf/net.ipv4.conf.default.forwarding 1
-set /files/etc/sysctl.conf/net.ipv4.conf.all.forwarding 1
-set /files/etc/sysctl.conf/net.ipv4.conf.eth0.forwarding 0
-
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_accept 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_announce 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_filter 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_notify 0
-set /files/etc/sysctl.conf/net.ipv4.conf.default.arp_ignore 0
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_accept 0
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_announce 1
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_filter 0
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_notify 1
-set /files/etc/sysctl.conf/net.ipv4.conf.all.arp_ignore 2
-
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.base_reachable_time_ms 1800000
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.base_reachable_time_ms 1800000
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh1 1024
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh1 1024
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh2 2048
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh2 2048
-set /files/etc/sysctl.conf/net.ipv4.neigh.default.gc_thresh3 4096
-set /files/etc/sysctl.conf/net.ipv6.neigh.default.gc_thresh3 4096
-
-set /files/etc/sysctl.conf/net.ipv6.conf.default.forwarding 1
-set /files/etc/sysctl.conf/net.ipv6.conf.all.forwarding 1
-set /files/etc/sysctl.conf/net.ipv6.conf.eth0.forwarding 0
-
-set /files/etc/sysctl.conf/net.ipv6.conf.default.accept_dad 0
-set /files/etc/sysctl.conf/net.ipv6.conf.all.accept_dad 0
-set /files/etc/sysctl.conf/net.ipv6.conf.eth0.accept_dad 0
-
-set /files/etc/sysctl.conf/net.ipv6.conf.default.keep_addr_on_down 1
-set /files/etc/sysctl.conf/net.ipv6.conf.all.keep_addr_on_down 1
-set /files/etc/sysctl.conf/net.ipv6.conf.eth0.keep_addr_on_down 1
-
-set /files/etc/sysctl.conf/net.ipv4.tcp_l3mdev_accept 1
-set /files/etc/sysctl.conf/net.ipv4.udp_l3mdev_accept 1
-
-set /files/etc/sysctl.conf/net.core.rmem_max 2097152
-set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
+
+sysctl_net_cmd_string=""
+while read line; do
+  [[ "$line" =~ ^#.*$ ]] && continue
+  sysctl_net_conf_key=`echo $line | awk -F '=' '{print $1}'`
+  sysctl_net_conf_value=`echo $line | awk -F '=' '{print $2}'`
+  sysctl_net_cmd_string=$sysctl_net_cmd_string"set /files/etc/sysctl.conf/$sysctl_net_conf_key $sysctl_net_conf_value"$'\n'
+done < files/image_config/sysctl/sysctl-net.conf
+
+sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     # Configure mcelog to log machine checks to syslog

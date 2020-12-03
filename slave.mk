@@ -88,8 +88,8 @@ ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
 endif
 
-ifeq ($(SONIC_ENABLE_SYSTEM_TELEMETRY),y)
-ENABLE_SYSTEM_TELEMETRY = y
+ifeq ($(SONIC_INCLUDE_SYSTEM_TELEMETRY),y)
+INCLUDE_SYSTEM_TELEMETRY = y
 endif
 
 ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
@@ -97,11 +97,11 @@ ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
     # Issue: qemu crashes when it uses "go get url"
     # Qemu Support: https://bugs.launchpad.net/qemu/+bug/1838946
     # Golang Support: https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/golang-nuts/1txPOGa4aGc
-ENABLE_SYSTEM_TELEMETRY = N
+INCLUDE_SYSTEM_TELEMETRY = n
 endif
 
-ifeq ($(SONIC_ENABLE_RESTAPI),y)
-ENABLE_RESTAPI = y
+ifeq ($(SONIC_INCLUDE_RESTAPI),y)
+INCLUDE_RESTAPI = y
 endif
 
 ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
@@ -112,12 +112,12 @@ ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
 endif
 
-ifeq ($(SONIC_ENABLE_SFLOW),y)
-ENABLE_SFLOW = y
+ifeq ($(SONIC_INCLUDE_SFLOW),y)
+INCLUDE_SFLOW = y
 endif
 
-ifeq ($(SONIC_ENABLE_NAT),y)
-ENABLE_NAT = y
+ifeq ($(SONIC_INCLUDE_NAT),y)
+INCLUDE_NAT = y
 endif
 
 
@@ -187,7 +187,6 @@ $(info "USERNAME"                        : "$(USERNAME)")
 $(info "PASSWORD"                        : "$(PASSWORD)")
 $(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
 $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
-$(info "INSTALL_KUBERNETES"              : "$(INSTALL_KUBERNETES)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
 $(info "INSTALL_DEBUG_TOOLS"             : "$(INSTALL_DEBUG_TOOLS)")
 $(info "ROUTING_STACK"                   : "$(SONIC_ROUTING_STACK)")
@@ -199,8 +198,6 @@ $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
-$(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
-$(info "ENABLE_RESTAPI"                  : "$(ENABLE_RESTAPI)")
 $(info "ENABLE_ZTP"                      : "$(ENABLE_ZTP)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
@@ -208,8 +205,12 @@ $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
-$(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
-$(info "ENABLE_NAT"                      : "$(ENABLE_NAT)")
+$(info "INCLUDE_MGMT_FRAMEWORK"          : "$(INCLUDE_MGMT_FRAMEWORK)")
+$(info "INCLUDE_SYSTEM_TELEMETRY"        : "$(INCLUDE_SYSTEM_TELEMETRY)")
+$(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
+$(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
+$(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
+$(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
@@ -427,6 +428,7 @@ $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -inst
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_PYTHON_STDEB_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PATH)/% : .platform \
+		$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEBS_DEPENDS))) \
 		$$(addsuffix -install,$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*_DEPENDS))) \
 		$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS)))
 	$(HEADER)
@@ -453,7 +455,8 @@ SONIC_TARGET_LIST += $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS
 #     $(SOME_NEW_WHL)_PYTHON_VERSION = 2 (or 3)
 #     $(SOME_NEW_WHL)_DEPENDS = $(SOME_OTHER_WHL1) $(SOME_OTHER_WHL2) ...
 #     SONIC_PYTHON_WHEELS += $(SOME_NEW_WHL)
-$(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS)))
+$(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS))) \
+			$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEBS_DEPENDS)))
 	$(HEADER)
 	pushd $($*_SRC_PATH) $(LOG)
 	# apply series of patches if exist
@@ -630,12 +633,15 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(KDUMP_TOOLS) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS) \
-                $(MONIT)) \
+                $(MONIT) \
+                $(PYTHON_SWSSCOMMON)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
 	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(DEBS_PATH)/,$(SONIC_ZTP))) \
 	$(addprefix $(STRETCH_FILES_PATH)/, $(if $(filter $(CONFIGURED_ARCH),amd64), $(IXGBE_DRIVER))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
@@ -654,22 +660,28 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
 	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
-	export enable_system_telemetry="$(ENABLE_SYSTEM_TELEMETRY)"
-	export enable_restapi="$(ENABLE_RESTAPI)"
 	export enable_ztp="$(ENABLE_ZTP)"
-	export enable_nat="$(ENABLE_NAT)"
+	export include_system_telemetry="$(INCLUDE_SYSTEM_TELEMETRY)"
+	export include_restapi="$(INCLUDE_RESTAPI)"
+	export include_nat="$(INCLUDE_NAT)"
+	export include_sflow="$(INCLUDE_SFLOW)"
+	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
-	export install_kubernetes="$(INSTALL_KUBERNETES)"
+	export include_kubernetes="$(INCLUDE_KUBERNETES)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
 	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($*_INSTALLS))"
 	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(STRETCH_DEBS_PATH)/$(deb))))"
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
+	export sonic_py_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2))"
+	export sonic_py_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3))"
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export install_debug_image="$(INSTALL_DEBUG_TOOLS)"
 	export multi_instance="false"
+	export python_swss_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($(LIBSWSSCOMMON)_RDEPENDS))" 
+	export python_swss_debs+=" $(addprefix $(STRETCH_DEBS_PATH)/,$(LIBSWSSCOMMON)) $(addprefix $(STRETCH_DEBS_PATH)/,$(PYTHON_SWSSCOMMON))"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"

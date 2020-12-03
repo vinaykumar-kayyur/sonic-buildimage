@@ -9,9 +9,13 @@
 #############################################################################
 
 import os.path
+import subprocess
 
 try:
     from sonic_platform_base.fan_base import FanBase
+
+    from .led import SharedLed, ComponentFaultyIndicator
+    from .utils import read_int_from_file, read_str_from_file, write_file
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -22,32 +26,126 @@ PWM_MAX = 255
 
 FAN_PATH = "/var/run/hw-management/thermal/"
 LED_PATH = "/var/run/hw-management/led/"
+CONFIG_PATH = "/var/run/hw-management/config"
+# fan_dir isn't supported on Spectrum 1. It is supported on Spectrum 2 and later switches
+FAN_DIR = "/var/run/hw-management/system/fan_dir"
+COOLING_STATE_PATH = "/var/run/hw-management/thermal/cooling_cur_state"
+
+# Platforms with unplugable FANs:
+# 1. don't have fanX_status and should be treated as always present
+platform_with_unplugable_fan = ['x86_64-mlnx_msn2010-r0', 'x86_64-mlnx_msn2100-r0']
+
+VIRTUAL_DRAWER_INDEX = 0
+
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
-    def __init__(self, fan_index, drawer_index = 1, psu_fan = False):
+
+    STATUS_LED_COLOR_ORANGE = "orange"
+    min_cooling_level = 2
+    MIN_VALID_COOLING_LEVEL = 1
+    MAX_VALID_COOLING_LEVEL = 10
+
+    # Fan drawer leds
+    fan_drawer_leds = {}
+
+    # PSU fan speed vector
+    PSU_FAN_SPEED = ['0x3c', '0x3c', '0x3c', '0x3c', '0x3c',
+                     '0x3c', '0x3c', '0x46', '0x50', '0x5a', '0x64']
+
+    def __init__(self, has_fan_dir, fan_index, drawer_index = 1, psu_fan = False, platform = None):
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.drawer_index = drawer_index + 1
 
         self.is_psu_fan = psu_fan
-        
-        self.fan_min_speed_path = "fan{}_min".format(self.index)
+        self.always_presence = False if platform not in platform_with_unplugable_fan else True
+
         if not self.is_psu_fan:
             self.fan_speed_get_path = "fan{}_speed_get".format(self.index)
             self.fan_speed_set_path = "fan{}_speed_set".format(self.index)
             self.fan_presence_path = "fan{}_status".format(self.drawer_index)
-            self.fan_max_speed_path = "fan{}_max".format(self.index)
+            self.fan_max_speed_path = os.path.join(FAN_PATH, "fan{}_max".format(self.index))
+            self.fan_min_speed_path = os.path.join(FAN_PATH, "fan{}_min".format(self.index))
+            self._name = "fan{}".format(self.index)
         else:
             self.fan_speed_get_path = "psu{}_fan1_speed_get".format(self.index)
             self.fan_presence_path = "psu{}_fan1_speed_get".format(self.index)
-            self.fan_max_speed_path = "psu{}_max".format(self.index)
+            self._name = 'psu_{}_fan_{}'.format(self.index, 1)
+            self.fan_max_speed_path = os.path.join(CONFIG_PATH, "psu_fan_max")
+            self.fan_min_speed_path = os.path.join(CONFIG_PATH, "psu_fan_min")
+            self.psu_i2c_bus_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_bus'.format(self.index))
+            self.psu_i2c_addr_path = os.path.join(CONFIG_PATH, 'psu{0}_i2c_addr'.format(self.index))
+            self.psu_i2c_command_path = os.path.join(CONFIG_PATH, 'fan_command')
+
         self.fan_status_path = "fan{}_fault".format(self.index)
-        self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
-        self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
-        self.fan_orange_led_path = "led_fan{}_orange".format(self.drawer_index)
-        self.fan_pwm_path = "pwm1"
-        self.fan_led_cap_path = "led_fan{}_capability".format(self.drawer_index)
+
+        if not self.is_psu_fan: # We don't support PSU led management in 201911
+            if not self.always_presence:
+                if self.drawer_index not in Fan.fan_drawer_leds:
+                    shared_led = SharedLed()
+                    Fan.fan_drawer_leds[self.drawer_index] = shared_led
+                else:
+                    shared_led = Fan.fan_drawer_leds[self.drawer_index]
+                self.fan_green_led_path = "led_fan{}_green".format(self.drawer_index)
+                self.fan_red_led_path = "led_fan{}_red".format(self.drawer_index)
+                self.fan_orange_led_path = "led_fan{}_orange".format(self.drawer_index)
+                self.fan_led_cap_path = "led_fan{}_capability".format(self.drawer_index)
+            else: # For 2010/2100, all fans share one LED
+                if VIRTUAL_DRAWER_INDEX not in Fan.fan_drawer_leds:
+                    shared_led = SharedLed()
+                    Fan.fan_drawer_leds[VIRTUAL_DRAWER_INDEX] = shared_led
+                else:
+                    shared_led = Fan.fan_drawer_leds[VIRTUAL_DRAWER_INDEX]
+                self.fan_green_led_path = "led_fan_green"
+                self.fan_red_led_path = "led_fan_red"
+                self.fan_orange_led_path = "led_fan_orange"
+                self.fan_led_cap_path = "led_fan_capability"
+
+            self.fault_indicator = ComponentFaultyIndicator(shared_led)
+
+        if has_fan_dir:
+            self.fan_dir = FAN_DIR
+        else:
+            self.fan_dir = None
+
+
+    def get_direction(self):
+        """
+        Retrieves the fan's direction
+
+        Returns:
+            A string, either FAN_DIRECTION_INTAKE or FAN_DIRECTION_EXHAUST
+            depending on fan direction
+
+        Notes:
+            What Mellanox calls forward: 
+            Air flows from fans side to QSFP side, for example: MSN2700-CS2F
+            which means intake in community
+            What Mellanox calls reverse:
+            Air flow from QSFP side to fans side, for example: MSN2700-CS2R
+            which means exhaust in community
+            According to hw-mgmt:
+                1 stands for forward, in other words intake
+                0 stands for reverse, in other words exhaust
+        """
+        if not self.fan_dir or self.is_psu_fan or not self.get_presence():
+            return self.FAN_DIRECTION_NOT_APPLICABLE
+
+        try:
+            with open(os.path.join(self.fan_dir), 'r') as fan_dir:
+                fan_dir_bits = int(fan_dir.read().strip())
+                fan_mask = 1 << self.drawer_index - 1
+                if fan_dir_bits & fan_mask:
+                    return self.FAN_DIRECTION_INTAKE
+                else:
+                    return self.FAN_DIRECTION_EXHAUST
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to read fan direction status to {}".format(repr(e)))
+
+
+    def get_name(self):
+        return self._name
 
     def get_status(self):
         """
@@ -58,15 +156,11 @@ class Fan(FanBase):
         """
         status = 0
         if self.is_psu_fan:
-            status = 1
+            status = 0
         else:
-            try:
-                with open(os.path.join(FAN_PATH, self.fan_status_path), 'r') as fault_status:
-                    status = int(fault_status.read())
-            except (ValueError, IOError):
-                status = 0
+            status = read_int_from_file(os.path.join(FAN_PATH, self.fan_status_path), 1)
 
-        return status == 1
+        return status == 0
 
     def get_presence(self):
         """
@@ -82,33 +176,12 @@ class Fan(FanBase):
             else:
                 status = 0
         else:
-            try:
-                with open(os.path.join(FAN_PATH, self.fan_presence_path), 'r') as presence_status:
-                    status = int(presence_status.read())
-            except (ValueError, IOError):
-                status = 0
+            if self.always_presence:
+                status = 1
+            else:
+                status = read_int_from_file(os.path.join(FAN_PATH, self.fan_presence_path), 0)
 
         return status == 1
-    
-    def _get_min_speed_in_rpm(self):
-        speed = 0
-        try:
-            with open(os.path.join(FAN_PATH, self.fan_min_speed_path), 'r') as min_fan_speed:
-                speed = int(min_fan_speed.read())
-        except (ValueError, IOError):
-            speed = 0
-        
-        return speed
-    
-    def _get_max_speed_in_rpm(self):
-        speed = 0
-        try:
-            with open(os.path.join(FAN_PATH, self.fan_max_speed_path), 'r') as max_fan_speed:
-                speed = int(max_fan_speed.read())
-        except (ValueError, IOError):
-            speed = 0
-        
-        return speed
 
     def get_speed(self):
         """
@@ -118,14 +191,15 @@ class Fan(FanBase):
             int: percentage of the max fan speed
         """
         speed = 0
-        try:
-            with open(os.path.join(FAN_PATH, self.fan_speed_get_path), 'r') as fan_curr_speed:
-                speed_in_rpm = int(fan_curr_speed.read())
-        except (ValueError, IOError):
-            speed_in_rpm = 0
-        
-        max_speed_in_rpm = self._get_max_speed_in_rpm()
+        speed_in_rpm = read_int_from_file(os.path.join(FAN_PATH, self.fan_speed_get_path))
+
+        max_speed_in_rpm = read_int_from_file(self.fan_max_speed_path)
+        if max_speed_in_rpm == 0:
+            return speed_in_rpm
+
         speed = 100*speed_in_rpm/max_speed_in_rpm
+        if speed > 100:
+            speed = 100
 
         return speed
 
@@ -136,20 +210,16 @@ class Fan(FanBase):
         Returns:
             int: percentage of the max fan speed
         """
-        speed = 0
-
         if self.is_psu_fan:
-            # Not like system fan, psu fan speed can not be modified, so target speed is N/A 
-            return speed
-        try:
-            with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'r') as fan_pwm:
-                pwm = int(fan_pwm.read())
-        except (ValueError, IOError):
-            pwm = 0
-        
-        speed = int(round(pwm*100.0/PWM_MAX))
-        
-        return speed
+            try:
+                # Get PSU fan target speed according to current system cooling level
+                cooling_level = self.get_cooling_level()
+                return int(self.PSU_FAN_SPEED[cooling_level], 16)
+            except Exception:
+                return self.get_speed()
+
+        pwm = read_int_from_file(os.path.join(FAN_PATH, self.fan_speed_set_path))
+        return int(round(pwm*100.0/PWM_MAX))
 
     def set_speed(self, speed):
         """
@@ -163,15 +233,34 @@ class Fan(FanBase):
             bool: True if set success, False if fail. 
         """
         status = True
-        pwm = int(round(PWM_MAX*speed/100.0))
 
         if self.is_psu_fan:
-            #PSU fan speed is not setable.
-            return False
-        
+            if not self.get_presence():
+                return False
+            from .thermal import logger
+            try:
+                bus = read_str_from_file(self.psu_i2c_bus_path, raise_exception=True)
+                addr = read_str_from_file(self.psu_i2c_addr_path, raise_exception=True)
+                command = read_str_from_file(self.psu_i2c_command_path, raise_exception=True)
+                speed = Fan.PSU_FAN_SPEED[int(speed / 10)]
+                command = "i2cset -f -y {0} {1} {2} {3} wp".format(bus, addr, command, speed)
+                subprocess.check_call(command, shell = True)
+                return True
+            except subprocess.CalledProcessError as ce:
+                logger.log_error('Failed to call command {}, return code={}, command output={}'.format(ce.cmd, ce.returncode, ce.output))
+                return False
+            except Exception as e:
+                logger.log_error('Failed to set PSU FAN speed - {}'.format(e))
+                return False
+
         try:
-            with open(os.path.join(FAN_PATH, self.fan_speed_set_path), 'w') as fan_pwm:
-                fan_pwm.write(str(pwm))
+            cooling_level = int(speed / 10)
+            if cooling_level < self.min_cooling_level:
+                cooling_level = self.min_cooling_level
+                speed = self.min_cooling_level * 10
+            self.set_cooling_level(cooling_level, cooling_level)
+            pwm = int(round(PWM_MAX*speed/100.0))
+            write_file(os.path.join(FAN_PATH, self.fan_speed_set_path), pwm, raise_exception=True)
         except (ValueError, IOError):
             status = False
 
@@ -189,6 +278,16 @@ class Fan(FanBase):
         return cap_list
 
     def set_status_led(self, color):
+        if self.is_psu_fan:
+            return False
+        self.fault_indicator.set_status(color)
+        if not self.always_presence:
+            target_color = Fan.fan_drawer_leds[self.drawer_index].get_status()
+        else:
+            target_color = Fan.fan_drawer_leds[VIRTUAL_DRAWER_INDEX].get_status()
+        return self._set_status_led(target_color)
+
+    def _set_status_led(self, color):
         """
         Set led to expected color
 
@@ -203,9 +302,6 @@ class Fan(FanBase):
         if led_cap_list is None:
             return False
 
-        if self.is_psu_fan:
-            # PSU fan led status is not able to set
-            return False
         status = False
         try:
             if color == 'green':
@@ -242,5 +338,40 @@ class Fan(FanBase):
             An integer, the percentage of variance from target speed which is
                  considered tolerable
         """
-        # The tolerance value is fixed as 20% for all the Mellanox platform
-        return 20
+        # The tolerance value is fixed as 50% for all the Mellanox platform
+        return 50
+
+    @classmethod
+    def set_cooling_level(cls, level, cur_state):
+        """
+        Change cooling level. The input level should be an integer value [1, 10].
+        1 means 10%, 2 means 20%, 10 means 100%.
+        """
+        if not isinstance(level, int):
+            raise RuntimeError("Failed to set cooling level, input parameter must be integer")
+
+        if level < cls.MIN_VALID_COOLING_LEVEL or level > cls.MAX_VALID_COOLING_LEVEL:
+            raise RuntimeError("Failed to set cooling level, level value must be in range [{}, {}], got {}".format(
+                cls.MIN_VALID_COOLING_LEVEL,
+                cls.MAX_VALID_COOLING_LEVEL,
+                level
+                ))
+
+        try:
+            # Reset FAN cooling level vector. According to low level team,
+            # if we need set cooling level to X, we need first write a (10+X) 
+            # to cooling_cur_state file to reset the cooling level vector.
+            write_file(COOLING_STATE_PATH, level + 10, raise_exception=True)
+
+            # We need set cooling level after resetting the cooling level vector 
+            write_file(COOLING_STATE_PATH, cur_state, raise_exception=True)
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to set cooling level - {}".format(e))
+
+    @classmethod
+    def get_cooling_level(cls):
+        try:
+            return read_int_from_file(COOLING_STATE_PATH, raise_exception=True)
+        except (ValueError, IOError) as e:
+            raise RuntimeError("Failed to get cooling level - {}".format(e))
+
