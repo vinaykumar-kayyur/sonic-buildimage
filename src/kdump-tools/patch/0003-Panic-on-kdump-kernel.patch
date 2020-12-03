@@ -1,0 +1,20 @@
+From: Olivier Singla <olivier.singla@broadcom.com>
+Date: Mon Dec  2 15:25:46 EST 2019
+Subject: kdump: add "panic=X" option so system reboots if the capture kernel crashes or stay stuck
+
+In case the capture kernel (the kdump kernel started with kexec) would
+either crash or be stuck, the system should reboot. We need then to add
+the "panic=X" option to the kernel. Without this option, the system could
+stuck and not reboot.
+
+--- a/debian/kdump-tools.default.orig
++++ b/debian/kdump-tools.default
+@@ -71,7 +71,7 @@ KDUMP_COREDIR="/var/crash"
+ #     "irqpoll nr_cpus=1 nousb systemd.unit=kdump-tools.service ata_piix.prefer_ms_hyperv=0"
+ #KDUMP_KEXEC_ARGS=""
+ #KDUMP_CMDLINE=""
+-#KDUMP_CMDLINE_APPEND="irqpoll nr_cpus=1 nousb systemd.unit=kdump-tools.service ata_piix.prefer_ms_hyperv=0"
++KDUMP_CMDLINE_APPEND="irqpoll nr_cpus=1 nousb systemd.unit=kdump-tools.service ata_piix.prefer_ms_hyperv=0 panic=10 debug hpet=disable pcie_port=compat pci=nommconf platform=__PLATFORM__"
+ 
+ # ---------------------------------------------------------------------------
+ # Architecture specific Overrides:

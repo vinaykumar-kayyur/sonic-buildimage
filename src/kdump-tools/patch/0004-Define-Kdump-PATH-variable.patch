@@ -1,0 +1,27 @@
+From af014a16921a0bbbfc0874a6760e7650a0b8750b Mon Sep 17 00:00:00 2001
+From: Rajendra Dendukuri <rajendra.dendukuri@broadcom.com>
+Date: Tue, 10 Nov 2020 12:35:09 -0800
+Subject: [PATCH] Define Kdump PATH variable
+
+Adjust PATH to use the SONiC reboot script in /usr/local/bin instead of
+the standard binary /sbin/reboot
+---
+ debian/kdump-tools.default | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/debian/kdump-tools.default b/debian/kdump-tools.default
+index 24da656..d389a82 100644
+--- a/debian/kdump-tools.default
++++ b/debian/kdump-tools.default
+@@ -102,3 +102,8 @@ KDUMP_CMDLINE_APPEND="irqpoll nr_cpus=1 nousb systemd.unit=kdump-tools.service a
+ # NFS_TIMEO="600"
+ #
+ # NFS_RETRANS="3"
++
++# ---------------------------------------------------------------------------
++# Kdump environment settings
++
++PATH=/usr/local/bin:$PATH
+-- 
+2.18.0
+
