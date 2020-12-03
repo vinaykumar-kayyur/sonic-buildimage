@@ -538,8 +538,10 @@ trap_push "rm $grub_cfg || true"
 # Check if the CPU vendor is 'Intel' and disable c-states if True
 CPUVENDOR=$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{print $3}')
 echo "Switch CPU vendor is: $CPUVENDOR"
-if [[ $(echo $CPUVENDOR | grep "Intel") ]] ; then
+if [[ $(echo $CPUVENDOR | grep -i "Intel") ]] ; then
     CSTATES="intel_idle.max_cstate=0"
+else
+    CSTATES=""
 fi
 
 DEFAULT_GRUB_SERIAL_COMMAND="serial --port=${CONSOLE_PORT} --speed=${CONSOLE_SPEED} --word=8 --parity=no --stop=1"
