@@ -359,7 +359,6 @@ class HostConfigDaemon:
         ntp_server = self.config_db.get_table('NTP_SERVER')
         ntp_global = self.config_db.get_table('NTP')
         self.ntpcfg.load(ntp_global, ntp_server)
-        self.syslog_server = self.config_db.get_table('SYSLOG_SERVER')
 
     def update_feature_state(self, feature_name, state, feature_table):
         if self.cached_feature_states[feature_name] == "always_enabled":
