@@ -54,8 +54,8 @@ class switch(object):
         else:
             return False
 
-# Read fanN_direction=1: The air flow of Fan6 is AFI-Back to Front
-#                     0: The air flow of Fan6 is AFO-Front to Back
+# Read fanN_direction=1: The air flow of Fan is AFI-Back to Front
+#                     0: The air flow of Fan is AFO-Front to Back
 # Thermal policy:
 # a.Defaut fan duty_cycle=100%
 # b.One fan fail, set to fan duty_cycle=100%
@@ -136,13 +136,49 @@ class switch(object):
 # Core >=69
 # LM75-1(0X4B)>=49
 
+#Yellow Alarm
+#MB board
+#LM75-1(0X48)>=68
+#LM75-2(0X49)>=64
+#LM75-3(0X4A)>=65
+#LM75-4(0X4C)>=61
+#LM75-5(0X4E)>=60
+#LM75-6(0X4F)>=64
+#CPU Board
+#Core>=70
+#LM75-1(0X4B)>=68
+
+#Red Alarm
+#MB board
+#LM75-1(0X48)>=72
+#LM75-2(0X49)>=68
+#LM75-3(0X4A)>=69
+#LM75-4(0X4C)>=65
+#LM75-5(0X4E)>=64
+#LM75-6(0X4F)>=68
+#CPU Board
+#Core>=74
+#LM75-1(0X4B)>=72
+
+#Shut down
+#MB board
+#LM75-1(0X48)>=77
+#LM75-2(0X49)>=73
+#LM75-3(0X4A)>=74
+#LM75-4(0X4C)>=70
+#LM75-5(0X4E)>=69
+#LM75-6(0X4F)>=73
+#CPU Board
+#Core>=79
+#LM75-1(0X4B)>=77
+        
 
 def as9716_32d_set_fan_speed(pwm):
-        
     if pwm<0 or pwm>100:
         print "Error: Wrong duty cycle value %d"%(pwm)
+        return -1
     platform_chassis.get_fan(0).set_speed(pwm)
-    platform_chassis.get_fan(1).set_speed(pwm)
+    time.sleep(1)
     return 0
 
 
@@ -375,14 +411,12 @@ class device_monitor(object):
                 if fan_fail==0:
                     current_state=LEVEL_FAN_MID
                     logging.debug("current_state=LEVEL_FAN_MID")
-                    logging.debug("current_state=LEVEL_FAN_MID")
                 if fan_policy_alarm!=0:
                     logging.warning('Alarm for temperature high is cleared')
                     fan_policy_alarm=0
                     send_yellow_alarm=0
                     send_red_alarm=0
                     test_temp_revert=0
-                  
             
             if mid_to_min==THERMAL_NUM_MAX and ori_state==LEVEL_FAN_MID:
                 if psu_full_load==0:
@@ -407,7 +441,6 @@ class device_monitor(object):
                         logging.debug('fan_%d fail, current_state=LEVEL_FAN_MAX', i)   
                     fan.set_fan_duty_cycle(new_duty_cycle)
                     as9716_32d_set_fan_speed(new_duty_cycle)
-                    
                     break
            else:
                fan_fail=0
@@ -457,6 +490,10 @@ def main(argv):
     
     global platform_chassis
     platform_chassis = platform.Platform().get_chassis()
+
+    status, output = commands.getstatusoutput('i2cset -f -y 0x30 0x66 0x33 0x0')
+    if status:
+        print "Warning: Fan speed watchdog could not be disabled"
 
     as9716_32d_set_fan_speed(100)
     monitor = device_monitor(log_file, log_level)
