@@ -3,11 +3,11 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(LIBYANG)
-DBG_TARGETS = $(LIBYANG_DBG)
+DEBUG_TARGETS = $(LIBYANG_DBG)
 DERIVED_TARGETS = $(LIBYANG_DEV) $(LIBYANG_PY2) $(LIBYANG_PY3) $(LIBYANG_CPP)
 
 ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
 endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :

@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(LLDPD)
-DBG_TARGETS = $(LLDPD_DBG)
+DEBUG_TARGETS = $(LLDPD_DBG)
 DERIVED_TARGETS = $(LIBLLDPCTL)
 
 LLDP_URL = https://sonicstorage.blob.core.windows.net/debian/pool/main/l/lldpd
@@ -17,7 +17,7 @@ ORIG_FILE_URL = $(LLDP_URL)/$(ORIG_FILE)
 DEBIAN_FILE_URL = $(LLDP_URL)/$(DEBIAN_FILE)
 
 ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
 endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :

@@ -3,11 +3,11 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(HSFLOWD)
-DBG_TARGETS = $(HSFLOWD_DBG)
+DEBUG_TARGETS = $(HSFLOWD_DBG)
 DERIVED_TARGET =
 
 ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
 endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :

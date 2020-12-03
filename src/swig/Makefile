@@ -3,11 +3,11 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(SWIG_BASE)
-DBG_TARGETS = $(SWIG_DBG)
+DEBUG_TARGETS = $(SWIG_DBG)
 DERIVED_TARGETS = $(SWIG)
 
 ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
 endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :

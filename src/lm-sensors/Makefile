@@ -4,7 +4,7 @@ SHELL = /bin/bash
 
 
 MAIN_TARGET = $(LM_SENSORS)
-DBG_TARGETS = $(LM_SENSORS_DBG) \
+DEBUG_TARGETS = $(LM_SENSORS_DBG) \
 			  $(LIBSENSORS_DBG) \
 			  $(SENSORD_DBG)
 DERIVED_TARGETS = fancontrol_$(LM_SENSORS_VERSION_FULL)_all.deb \
@@ -12,7 +12,7 @@ DERIVED_TARGETS = fancontrol_$(LM_SENSORS_VERSION_FULL)_all.deb \
 				  sensord_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
 ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DBG_TARGETS))
+$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
 endif
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
