@@ -42,6 +42,13 @@ def obfuscate(data):
         return data
 
 
+def run_cmd(cmd, log_err = True):
+    try:
+        subprocess.check_call(cmd, shell = True)
+    except Exception as err:
+        if log_err:
+            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
+                  .format(err.cmd, err.returncode, err.output))
 
 class Iptables(object):
     def __init__(self):
@@ -226,6 +233,47 @@ class AaaCfg(object):
         with open(NSS_TACPLUS_CONF, 'w') as f:
             f.write(nss_tacplus_conf)
 
+class CoredumpCfg(object):
+    def __init__(self, CfgDb):
+        self.config_db = CfgDb
+        self.coredump_defaults = { "enabled" : "true" }
+
+    def load(self, coredump_table):
+        syslog.syslog(syslog.LOG_INFO, "CoredumpCfg load ...")
+        data = {}
+        coredump_conf = coredump_table.get("config", {})
+        for row in self.coredump_defaults:
+            value = self.coredump_defaults.get(row)
+            if coredump_conf.get(row) is not None:
+                value = coredump_conf.get(row)
+            else:
+                self.config_db.mod_entry("COREDUMP", "config", { row : value})
+            data[row] = value
+        self.coredump_update("config", data, True)
+
+    def coredump_update(self, key, data, isLoad):
+        syslog.syslog(syslog.LOG_INFO, "Coredump global configuration update")
+        if key == "config":
+            coredump_enabled = self.coredump_defaults["enabled"]
+            if data.get("enabled") is not None:
+                coredump_enabled = data.get("enabled")
+            if coredump_enabled.lower() == "false":
+                enabled = False
+            else:
+                enabled = True
+            DISABLE_COREDUMP_CONF="/etc/sysctl.d/50-disable-coredump.conf"
+            if not enabled and not os.path.isfile(DISABLE_COREDUMP_CONF):
+                print('Disabling systemd-coredump')
+                with open(DISABLE_COREDUMP_CONF, "w") as fp:
+                    fp.write("kernel.core_pattern=")
+                # Read sysctl conf files again
+                run_cmd("systemctl restart systemd-sysctl")
+            elif enabled:
+                if os.path.isfile(DISABLE_COREDUMP_CONF):
+                    print('Enabling systemd-coredump')
+                    os.remove(DISABLE_COREDUMP_CONF)
+                    # Read sysctl conf files again
+                    run_cmd("systemctl restart systemd-sysctl")
 
 class HostConfigDaemon:
     def __init__(self):
@@ -239,6 +287,10 @@ class HostConfigDaemon:
         self.cached_feature_states = {}
 
         self.is_multi_npu = device_info.is_multi_npu()
+
+        # Load Coredump configuration
+        self.coredumpCfg = CoredumpCfg(self.config_db)
+        self.coredumpCfg.load(self.config_db.get_table('COREDUMP'))
 
 
     def load(self):
@@ -384,6 +436,10 @@ class HostConfigDaemon:
         if self.cached_feature_states[feature_name] != state:
             self.update_feature_state(feature_name, state, feature_table)
 
+    def coredump_handler (self, key, data):
+        syslog.syslog(syslog.LOG_INFO, 'Coredump handler...')
+        self.coredumpCfg.coredump_update(key, data, False)
+
     def start(self):
 
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
@@ -391,6 +447,7 @@ class HostConfigDaemon:
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
         self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_state_handler(key, data))
+        self.config_db.subscribe('COREDUMP', lambda table, key, data: self.coredump_handler(key, data))
 
         # Update all feature states once upon starting
         self.update_all_feature_states()

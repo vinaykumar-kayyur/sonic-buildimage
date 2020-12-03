@@ -329,6 +329,9 @@ start() {
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
 {%- if install_debug_image == "y" %}
         -v /src:/src:ro -v /debug:/debug:rw \
+        -v /var/log/journal:/var/log/journal:ro \
+        -v /var/lib/systemd/coredump:/var/lib/systemd/coredump:ro \
+        -v /etc/machine-id:/etc/machine-id:ro \
 {%- endif %}
 {%- if '--log-driver=json-file' in docker_image_run_opt or '--log-driver' not in docker_image_run_opt %}
         --log-opt max-size=2M --log-opt max-file=5 \

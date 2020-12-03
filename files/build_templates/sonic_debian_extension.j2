@@ -444,6 +444,24 @@ sudo cp $IMAGE_CONFIGS/constants/constants.yml $FILESYSTEM_ROOT/etc/sonic/
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers $FILESYSTEM_ROOT/etc/
 sudo cp $IMAGE_CONFIGS/sudoers/sudoers.lecture $FILESYSTEM_ROOT/etc/
 
+
+# Allow systemd-coredump to perform cleanup of core files and not tmpfiles.d
+sudo sed -i "/\/var\/lib\/systemd\/coredump/d" $FILESYSTEM_ROOT/usr/lib/tmpfiles.d/systemd.conf
+
+# Customize systemd-coredump configuration
+sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/coredump.conf.d
+sudo cp $IMAGE_CONFIGS/coredump/coredump.conf.d/00-sonic-coredump.conf $FILESYSTEM_ROOT/etc/systemd/coredump.conf.d
+
+## Enable persistent journal to store coredump history
+sudo mkdir -p  $FILESYSTEM_ROOT/etc/systemd/journald.conf.d/
+sudo cp files/image_config/journald/journald.conf.d/00-sonic-journald.conf $FILESYSTEM_ROOT/etc/systemd/journald.conf.d/
+
+## Shortcut to access core files
+sudo ln -sf /var/lib/systemd/coredump $FILESYSTEM_ROOT/var/core
+
+## Configure application core dump handler
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -y systemd-coredump
+
 # Copy systemd timer configuration
 sudo cp $BUILD_TEMPLATES/pcie-check.timer $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable pcie-check.timer

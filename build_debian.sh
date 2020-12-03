@@ -391,11 +391,8 @@ rm /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments
 set /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments/1 -n
 "
 
-sudo mkdir -p $FILESYSTEM_ROOT/var/core
-
 # Config sysctl
 sudo augtool --autosave "
-set /files/etc/sysctl.conf/kernel.core_pattern '|/usr/local/bin/coredump-compress %e %t %p %P'
 set /files/etc/sysctl.conf/kernel.softlockup_panic 1
 set /files/etc/sysctl.conf/kernel.panic 10
 set /files/etc/sysctl.conf/vm.panic_on_oom 2
