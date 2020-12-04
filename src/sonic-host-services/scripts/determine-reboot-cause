@@ -98,17 +98,22 @@ def find_proc_cmdline_reboot_cause():
 
     return proc_cmdline_reboot_cause
 
+
 def get_reboot_cause_from_platform():
     # Until all platform vendors have provided sonic_platform packages,
     # if there is no sonic_platform package installed, we only provide
     # software-related reboot causes.
+    hardware_reboot_cause_major = str()
+    hardware_reboot_cause_minor = str()
     try:
         import sonic_platform
         platform  = sonic_platform.platform.Platform()
         chassis  = platform.get_chassis()
-        return chassis.get_reboot_cause()
+        hardware_reboot_cause_major, hardware_reboot_cause_minor = chassis.get_reboot_cause()
     except ImportError as err:
         sonic_logger.log_warning("sonic_platform package not installed. Unable to detect hardware reboot causes.")
+
+    return hardware_reboot_cause_major, hardware_reboot_cause_minor
 
 
 def find_hardware_reboot_cause():
