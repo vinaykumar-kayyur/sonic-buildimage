@@ -155,4 +155,3 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "BGP_MONITORS"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{}")
-

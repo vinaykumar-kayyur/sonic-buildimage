@@ -229,19 +229,30 @@ class HostConfigDaemon:
         self.config_db = ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
-        aaa = self.config_db.get_table('AAA')
-        tacacs_global = self.config_db.get_table('TACPLUS')
-        tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
+
         self.aaacfg = AaaCfg()
-        self.aaacfg.load(aaa, tacacs_global, tacacs_server)
-        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
         self.iptables = Iptables()
-        self.iptables.load(lpbk_table)
-        self.is_multi_npu = device_info.is_multi_npu()
         # Cache the values of 'state' field in 'FEATURE' table of each container
         self.cached_feature_states = {}
 
+        self.is_multi_npu = device_info.is_multi_npu()
+
+
+    def load(self):
+        aaa = self.config_db.get_table('AAA')
+        tacacs_global = self.config_db.get_table('TACPLUS')
+        tacacs_server = self.config_db.get_table('TACPLUS_SERVER')
+        self.aaacfg.load(aaa, tacacs_global, tacacs_server)
+
+        lpbk_table = self.config_db.get_table('LOOPBACK_INTERFACE')
+        self.iptables.load(lpbk_table)
+
+
     def update_feature_state(self, feature_name, state, feature_table):
+        if state == "always_enabled":
+            syslog.syslog(syslog.LOG_INFO, "Feature '{}' service is always enabled"
+                          .format(feature_name))
+            return
         has_timer = ast.literal_eval(feature_table[feature_name].get('has_timer', 'False'))
         has_global_scope = ast.literal_eval(feature_table[feature_name].get('has_global_scope', 'True'))
         has_per_asic_scope = ast.literal_eval(feature_table[feature_name].get('has_per_asic_scope', 'False'))
@@ -357,20 +368,27 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
             return
 
+        self.cached_feature_states.setdefault(feature_name, 'disabled')
+
         # Enable/disable the container service if the feature state was changed from its previous state.
         if self.cached_feature_states[feature_name] != state:
             self.cached_feature_states[feature_name] = state
             self.update_feature_state(feature_name, state, feature_table)
 
     def start(self):
-        # Update all feature states once upon starting
-        self.update_all_feature_states()
 
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
         self.config_db.subscribe('TACPLUS', lambda table, key, data: self.tacacs_global_handler(key, data))
         self.config_db.subscribe('LOOPBACK_INTERFACE', lambda table, key, data: self.lpbk_handler(key, data))
         self.config_db.subscribe('FEATURE', lambda table, key, data: self.feature_state_handler(key, data))
+
+        # Update all feature states once upon starting
+        self.update_all_feature_states()
+
+        # Defer load until subscribe
+        self.load()
+
         self.config_db.listen()
 
 
