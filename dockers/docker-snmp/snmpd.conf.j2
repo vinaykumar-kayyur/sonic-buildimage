@@ -44,6 +44,28 @@ rocommunity {{ snmp_rocommunity }}
 rocommunity6 {{ snmp_rocommunity }}
 {% endif %}
 
+{% for community in SNMP_COMMUNITY.keys() %}
+{% if SNMP_COMMUNITY[community]['TYPE'] == 'RO' %}
+rocommunity {{ community }}
+rocommunity6 {{ community }}
+{% else %}
+rwcommunity {{ community }}
+rwcommunity6 {{ community }}
+{% endif %}
+{% endfor %}
+
+
+{% for user in SNMP_USER.keys() %}
+{% if SNMP_USER[user]['SNMP_USER_PERMISSION'] == 'RO' %}
+rouser {{ user }} {{ SNMP_USER[user]['SNMP_USER_TYPE'] }}
+CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[user]['SNMP_USER_AUTH_PASSWORD'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_TYPE'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_PASSWORD'] }}
+{% else %}
+rwuser {{ user }} {{ SNMP_USER[user]['SNMP_USER_TYPE'] }}
+CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[user]['SNMP_USER_AUTH_PASSWORD'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_TYPE'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_PASSWORD'] }}
+{% endif %}
+{% endfor %}
+
+
 ###############################################################################
 #
 #  SYSTEM INFORMATION
@@ -52,7 +74,7 @@ rocommunity6 {{ snmp_rocommunity }}
 #  Note that setting these values here, results in the corresponding MIB objects being 'read-only'
 #  See snmpd.conf(5) for more details
 sysLocation    {{ snmp_location }}
-sysContact     Azure Cloud Switch vteam <linuxnetdev@microsoft.com>
+sysContact     {{ SNMP.CONTACT.keys()[0] }} {{ SNMP.CONTACT.values()[0] }}
                                                  # Application + End-to-End layers
 sysServices    72
 
