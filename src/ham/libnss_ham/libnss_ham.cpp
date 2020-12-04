@@ -79,34 +79,32 @@
 #ifndef _GNU_SOURCE
 #   define _GNU_SOURCE
 #endif
-#include <nss.h>                            /* NSS_STATUS_SUCCESS, NSS_STATUS_NOTFOUND */
-#include <pwd.h>                            /* uid_t, struct passwd */
-#include <grp.h>                            /* gid_t, struct group */
-#include <shadow.h>                         /* struct spwd */
-#include <stddef.h>                         /* NULL */
-#include <sys/stat.h>
-#include <sys/types.h>                      /* getpid() */
-#include <unistd.h>                         /* getpid() */
-#include <errno.h>                          /* errno */
-#include <string.h>                         /* strdup() */
-#include <fcntl.h>                          /* open(), O_RDONLY */
-#include <stdio.h>                          /* fopen(), fclose() */
-#include <limits.h>                         /* LINE_MAX */
-#include <stdint.h>                         /* uint32_t */
-#include <syslog.h>                         /* syslog() */
-#include <sys/mman.h>                       /* memfd_create() */
-#include <dbus-c++/dbus.h>                  /* DBus */
+#include <nss.h>                             /* NSS_STATUS_SUCCESS, NSS_STATUS_NOTFOUND */
+#include <pwd.h>                             /* uid_t, struct passwd */
+#include <grp.h>                             /* gid_t, struct group */
+#include <shadow.h>                          /* struct spwd */
+#include <sys/stat.h>                        /* stat() */
+#include <sys/types.h>                       /* getuid(), getgid() */
+#include <unistd.h>                          /* getuid(), getgid() */
+#include <errno.h>                           /* errno, program_invocation_name */
+#include <string.h>                          /* strdup() */
+#include <fcntl.h>                           /* open(), O_RDONLY */
+#include <stdio.h>                           /* fopen(), fclose() */
+#include <limits.h>                          /* LINE_MAX */
+#include <stdint.h>                          /* uint32_t */
+#include <syslog.h>                          /* syslog() */
+#include <sys/mman.h>                        /* memfd_create() */
 
-#include <string>                           /* std::string */
-#include <vector>                           /* std::vector */
-#include <numeric>                          /* std::accumulate() */
-#include <mutex>                            /* std::mutex, std::lock_guard */
+#include <string>                            /* std::string */
+#include <vector>                            /* std::vector */
+#include <numeric>                           /* std::accumulate() */
+#include <mutex>                             /* std::mutex, std::lock_guard */
 
-#include "../shared/utils.h"                /* strneq(), startswith(), cpy2buf(), join() */
+#include "../shared/utils.h"                 /* strneq(), startswith(), cpy2buf(), join() */
 
-#include "../shared/missing-memfd_create.h" /* memfd_create() if missing from sys/mman.h */
-#include "name_service_proxy.h"             /* name_service_proxy_c */
-#include "SYSLOG.h"                         /* SYSLOG(), SYSLOG_CONDITIONAL*/
+#include "../shared/missing-memfd_create.h"  /* memfd_create() if missing from sys/mman.h */
+#include "name_service_proxy.h"              /* name_service_proxy_c */
+#include "SYSLOG.h"                          /* SYSLOG(), SYSLOG_CONDITIONAL */
 
 
 //##############################################################################
@@ -114,6 +112,50 @@
 static FILE * log_p     = nullptr;                 // Optional log file where log messages can be saved. The default is to log to syslog.
 static bool   verbose   = false;                   // For debug only.
 static char * cmdline_p = program_invocation_name; // For debug only.
+
+static char * kv_strip(char * p)
+{
+    #define  WHITESPACE " \t\n\r"
+
+    p[strcspn(p, "\n\r")] = '\0';
+
+    p += strspn(p, WHITESPACE);            // Remove leading newline and spaces
+    if (*p == '#' || *p == '\0')           // Skip comments and empty lines
+    {
+        *p = '\0';
+        return p;
+    }
+    p[strcspn(p, "\n\r")] = '\0';          // Remove trailing newline chars
+
+    // Delete trailing comments (including spaces/tabs that precede the #)
+    char * s = &p[strcspn(p, "#")];
+    *s-- = '\0';
+    while ((s >= p) && ((*s == ' ') || (*s == '\t')))
+    {
+        *s-- = '\0';
+    }
+
+    return p;
+}
+
+static char * kv_keymatch(const char * s, const char * key)
+{
+    char * value = startswith(s, key);
+    if (NULL != value)
+    {
+        switch (*value)
+        {
+        case ' ':  // Make sure
+        case '\t': // key is a whole word.
+        case '=':  // I.e. it should be followed by spaces, tabs, or a equal sign.
+            value += strspn(value, " \t="); // Skip leading spaces, tabs, and equal sign (=)
+            return value;
+        default:;
+        }
+    }
+
+    return NULL;
+}
 
 /**
  * @brief Extract cmdline from /proc/self/cmdline. This is only needed for
@@ -193,19 +235,18 @@ static void read_config()
 
         while (NULL != (p = fgets(line, sizeof line, file)))
         {
-            p += strspn(p, WHITESPACE);            // Remove leading newline and spaces
-            if (*p == '#' || *p == '\0') continue; // Skip comments and empty lines
+            // Clean up string by removing leading/trailing blanks and new line
+            // characters. Also eliminate trailing comments, if any.
+            p = kv_strip(p);
+            if (*p == '\0') continue; // Check that there is still something left in the string
 
-            if (NULL != (s = startswith(p, "debug")))
+            if (NULL != (s = kv_keymatch(p, "debug")))
             {
-                s += strspn(s, " \t=");
                 if (strneq(s, "yes", 3))
                     debug = true;
             }
-            else if (NULL != (s = startswith(p, "log")))
+            else if (NULL != (s = kv_keymatch(p, "log")))
             {
-                s += strspn(s, " \t=");
-                s[strcspn(s, WHITESPACE)] = '\0'; // Remove trailing newline and spaces
                 if (*s != '\0')
                     log_file = s;
             }
@@ -218,7 +259,9 @@ static void read_config()
     {
         if (log_p != nullptr)
         {
-            fclose(log_p);
+            if ((log_p != stderr) && (log_p != stdout))
+                fclose(log_p);
+
             log_p = nullptr;
         }
 
@@ -1169,7 +1212,7 @@ void __attribute__((destructor)) __module_exit(void)
         cmdline_p = nullptr;
     }
 
-    if (log_p != nullptr)
+    if ((log_p != nullptr) && (log_p != stderr) && (log_p != stdout))
     {
         fclose(log_p);
         log_p = nullptr;

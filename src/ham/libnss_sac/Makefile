@@ -3,7 +3,7 @@ TARGET    := libnss_sac.so.2
 SRCS      := $(wildcard *.cpp)
 
 PKGS      := dbus-c++-glib-1
-LDFLAGS   := -shared -Wl,-soname,${TARGET}
+LDFLAGS   := -shared -Wl,-z,nodelete -Wl,-soname,${TARGET} -Wl,--version-script=libnss_sac.sym
 LDLIBS    := $(shell pkg-config --libs   ${PKGS})
 CPPFLAGS  := $(shell pkg-config --cflags ${PKGS})
 CFLAGS    := -fPIC -Wall -Werror -O3
@@ -29,7 +29,7 @@ ifeq (,$(strip $(filter $(MAKECMDGOALS),clean install uninstall)))
 .DEFAULT_GOAL := all
 all: ${TARGET}
 
-${TARGET}: ${OBJS} Makefile
+${TARGET}: ${OBJS} Makefile libnss_sac.sym
 	@printf "%b[1;36m%s%b[0m\n" "\0033" "Building $@" "\0033"
 	$(LL) ${LDFLAGS} -o $@ ${OBJS} $(LDLIBS)
 	@printf "%b[1;32m%s%b[0m\n\n" "\0033" "$@ Done!" "\0033"

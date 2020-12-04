@@ -14,14 +14,14 @@
  * authenticate the user and if this API cannot find the credentials the
  * login will fail.
  *
- * To fix this, this NSS module can automatically allocate credentials (UID
- * and primary GID) to users that are not found by any other NSS methods.
- * We call these credentials "System-Assigned Credentials" or SAC for
- * short. These credentials are only allocated temporarily and won't become
- * permanent until the user has passed authentication. If the user fails to
- * authenticate, then the temporary credentials get deleted. Once the user
- * has successfully authenticated, the credentials become permanent in the
- * /etc/passwd file.
+ * This NSS module solves this problem by automatically allocating
+ * credentials (UID and primary GID) to users that are not found by any
+ * other NSS methods. We call these credentials "System-Assigned
+ * Credentials" or SAC for short. These credentials are only allocated
+ * temporarily and won't become permanent until the user has passed
+ * authentication. If the user fails to authenticate, then the temporary
+ * credentials get deleted. Once the user has successfully authenticated,
+ * the credentials become permanent in the /etc/passwd file.
  *
  * There are 3 components to SAC. The SAC NSS module, the Host Account
  * Management Daemon (hamd), and the RADIUS and/or TACACS+ PAM modules.
@@ -137,71 +137,43 @@
  */
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+#   define _GNU_SOURCE
 #endif
-#include <nss.h>                    /* NSS_STATUS_SUCCESS, NSS_STATUS_NOTFOUND */
-#include <pwd.h>                    /* uid_t, struct passwd */
-#include <grp.h>                    /* gid_t, struct group */
-#include <shadow.h>                 /* struct spwd */
-#include <stddef.h>                 /* NULL */
-#include <sys/stat.h>
-#include <sys/types.h>              /* getpid() */
-#include <unistd.h>                 /* getpid(), access() */
-#include <errno.h>                  /* errno */
-#include <string.h>                 /* strdup() */
-#include <fcntl.h>                  /* open(), O_RDONLY */
-#include <stdio.h>                  /* fopen(), fclose() */
-#include <limits.h>                 /* LINE_MAX */
-#include <stdint.h>                 /* uint32_t */
-#include <syslog.h>                 /* syslog() */
-#include <dbus-c++/dbus.h>          /* DBus */
-#include <systemd/sd-journal.h>     /* sd_journal_print() */
+#include <nss.h>                     /* NSS_STATUS_SUCCESS, NSS_STATUS_NOTFOUND */
+#include <syslog.h>                  /* syslog() */
+#include <stdio.h>                   /* fopen(), fclose() */
+#include <errno.h>                   /* errno, program_invocation_name */
+#include <pwd.h>                     /* uid_t, struct passwd */
+#include <sys/stat.h>                /* stat() */
+#include <sys/types.h>               /* getpid() */
+#include <unistd.h>                  /* getpid(), access() */
+#include <string.h>                  /* strdup() */
+#include <fcntl.h>                   /* open(), O_RDONLY */
+#include <limits.h>                  /* LINE_MAX */
 
-#include <string>                   /* std::string */
-#include <vector>                   /* std::vector */
-#include <algorithm>                /* std::find() */
+#include <string>                    /* std::string */
+#include <vector>                    /* std::vector */
+#include <algorithm>                 /* std::find() */
 
-#include "../shared/utils.h"        /* strneq(), startswith(), cpy2buf(), join() */
-#include "../shared/dbus-address.h" /* DBUS_BUS_NAME_BASE, DBUS_OBJ_PATH_BASE */
-#include "../shared/org.SONiC.HostAccountManagement.dbus-proxy.h"
+#include "prototypes.h"              /* _nss_sac_getpwnam_r() */
+#include "sac_proxy.h"               /* sac_proxy_c */
+#include "../shared/utils.h"         /* strneq(), startswith(), cpy2buf(), join() */
 
 #define SAC_CONFIG_FILE  "/etc/sonic/hamd/libnss_sac.conf"
 #define SAC_ENABLE_FILE  "/etc/sonic/hamd/libnss_sac.enable" // Presence of this file enables SAC
 
 //#define WITH_PYTHON
 
+static FILE                      * log_p   = nullptr;
+static bool                        verbose = false;
+static char                      * cmdline_p = program_invocation_name;
+static std::vector<std::string>    default_programs = { "sshd", "login", "su" };
+static std::vector<std::string>    programs(default_programs);
+#ifdef WITH_PYTHON
+static std::vector<std::string>    default_pyscripts;
+static std::vector<std::string>    pyscripts(default_pyscripts);
+#endif
 
-class sac_proxy_c : public ham::sac_proxy,
-    public DBus::IntrospectableProxy,
-    public DBus::ObjectProxy
-{
-public:
-    sac_proxy_c(DBus::Connection &connection, const char *dbus_bus_name_p, const char *dbus_obj_name_p) :
-        DBus::ObjectProxy(connection, dbus_obj_name_p, dbus_bus_name_p)
-    {
-    }
-};
-
-static DBus::Connection  & get_dbusconn()
-{
-    static DBus::Connection  * conn_p = nullptr;
-    if (conn_p == nullptr)
-    {
-        // DBus::BusDispatcher is a "main loop" construct that
-        // handles (i.e. dispatched) DBus messages. This should
-        // be defined as a singleton to avoid memory leaks.
-        static DBus::BusDispatcher dispatcher;
-
-        // DBus::default_dispatcher must be initialized before DBus::Connection.
-        DBus::default_dispatcher = &dispatcher;
-
-        static DBus::Connection conn = DBus::Connection::SystemBus();
-
-        conn_p = &conn;
-    }
-
-    return *conn_p;
-}
 
 #define SYSLOG(LEVEL, args...) \
 do \
@@ -209,15 +181,66 @@ do \
     if (verbose) \
     { \
         if (log_p != nullptr) fprintf(log_p, args); \
-        else                  sd_journal_print(LEVEL, args);  \
+        else                  syslog(LEVEL, args);  \
     } \
 } while (0)
+
+
+static bool sac_enabled()
+{
+    // The presence of the file SAC_ENABLE_FILE
+    // indicates whether SAC is enabled.
+    return access(SAC_ENABLE_FILE, F_OK) != -1;
+}
+
+static char * kv_strip(char * p)
+{
+    #define  WHITESPACE " \t\n\r"
+
+    p[strcspn(p, "\n\r")] = '\0';
+
+    p += strspn(p, WHITESPACE);            // Remove leading newline and spaces
+    if (*p == '#' || *p == '\0')           // Skip comments and empty lines
+    {
+        *p = '\0';
+        return p;
+    }
+    p[strcspn(p, "\n\r")] = '\0';          // Remove trailing newline chars
+
+    // Delete trailing comments (including spaces/tabs that precede the #)
+    char * s = &p[strcspn(p, "#")];
+    *s-- = '\0';
+    while ((s >= p) && ((*s == ' ') || (*s == '\t')))
+    {
+        *s-- = '\0';
+    }
+
+    return p;
+}
+
+static char * kv_keymatch(const char * s, const char * key)
+{
+    char * value = startswith(s, key);
+    if (NULL != value)
+    {
+        switch (*value)
+        {
+        case ' ':  // Make sure
+        case '\t': // key is a whole word.
+        case '=':  // I.e. it should be followed by spaces, tabs, or a equal sign.
+            value += strspn(value, " \t="); // Skip leading spaces, tabs, and equal sign (=)
+            return value;
+        default:;
+        }
+    }
+
+    return NULL;
+}
 
 /**
  * @brief Extract cmdline from /proc/self/cmdline. This is only needed for
  *        debugging purposes
  */
-static char *cmdline_p = program_invocation_name;
 static void read_cmdline()
 {
     const char *fn = "/proc/self/cmdline";
@@ -270,23 +293,14 @@ static void read_cmdline()
  * @brief Get configuration parameters for this module. Parameters are
  *        retrieved from the file #SAC_CONFIG_FILE
  */
-static FILE                      *log_p   = nullptr;
-static bool                        verbose = false;
-static std::vector<std::string>    default_programs = { "sshd", "login", "su" };
-static std::vector<std::string>    programs(default_programs);
-#ifdef WITH_PYTHON
-static std::vector<std::string>    default_pyscripts;
-static std::vector<std::string>    pyscripts(default_pyscripts);
-#endif
 static void read_config()
 {
     FILE *file = fopen(SAC_CONFIG_FILE, "re");
     if (file)
     {
-#define WHITESPACE " \t\n\r"
         char    line[LINE_MAX];
-        char  *p;
-        char  *s;
+        char  * p;
+        char  * s;
 
         std::vector<std::string> new_programs;
 #ifdef WITH_PYTHON
@@ -295,43 +309,43 @@ static void read_config()
 
         while (NULL != (p = fgets(line, sizeof line, file)))
         {
-            p += strspn(p, WHITESPACE);            // Remove leading newline and spaces
-            if (*p == '#' || *p == '\0') continue; // Skip comments and empty lines
+            // Clean up string by removing leading/trailing blanks and new line
+            // characters. Also eliminate trailing comments, if any.
+            p = kv_strip(p);
+            if (*p == '\0') continue; // Check that there is still something left in the string
 
-            if (NULL != (s = startswith(p, "debug")))
+            if (NULL != (s = kv_keymatch(p, "debug")))
             {
-                s += strspn(s, " \t=");
                 if (strneq(s, "yes", 3)) verbose = true;
             }
-            else if (NULL != (s = startswith(p, "log")))
+            else if (NULL != (s = kv_keymatch(p, "log")))
             {
-                s += strspn(s, " \t=");
-                s[strcspn(s, WHITESPACE)] = '\0'; // Remove trailing newline and spaces
                 if (*s != '\0')
                 {
                     if (log_p != nullptr)
                     {
-                        fclose(log_p);
+                        if ((log_p != stderr) && (log_p != stdout))
+                        {
+                            fclose(log_p);
+                        }
                         log_p = nullptr;
                     }
                     log_p = fopen(s, "w");
                 }
             }
-            if (NULL != (s = startswith(p, "programs")))
+            if (NULL != (s = kv_keymatch(p, "programs")))
             {
                 // 'programs' is a list of comma-separated program names.
                 // So we need to split the list into its components
-                s += strspn(s, " \t=");
                 std::vector<std::string> prog_names = split_any(s, ", \t");
                 for (auto &prog : prog_names) new_programs.push_back(trim(prog));
 
             }
 #ifdef WITH_PYTHON
-            if (NULL != (s = startswith(p, "python_scripts")))
+            if (NULL != (s = kv_keymatch(p, "python_scripts")))
             {
                 // 'python_scripts' is a list of comman-separated python script names.
                 // So we need to split the list into its components
-                s += strspn(s, " \t=");
                 std::vector<std::string> scripts = split_any(s, ", \t");
                 for (auto & script : scripts)
                 new_pyscripts.push_back(trim(script));
@@ -348,10 +362,10 @@ static void read_config()
 
         if (verbose)
         {
-            SYSLOG(LOG_DEBUG, "verbose   = true");
-            SYSLOG(LOG_DEBUG, "programs  = [%s]", join(programs.cbegin(), programs.cend()).c_str());
+            SYSLOG(LOG_DEBUG, "NSS sac: verbose       = true\n");
+            SYSLOG(LOG_DEBUG, "NSS sac: programs      = [%s]\n", join(programs.cbegin(), programs.cend()).c_str());
 #ifdef WITH_PYTHON
-            SYSLOG(LOG_DEBUG, "pyscripts = [%s]", join(pyscripts.cbegin(), pyscripts.cend()).c_str());
+            SYSLOG(LOG_DEBUG, "NSS sac: pyscripts     = [%s]\n", join(pyscripts.cbegin(), pyscripts.cend()).c_str());
 #endif
         }
     }
@@ -359,47 +373,32 @@ static void read_config()
     if (verbose)
     {
         read_cmdline();
-        SYSLOG(LOG_DEBUG, "cmdline   = %s", cmdline_p);
+        SYSLOG(LOG_DEBUG, "NSS sac: cmdline       = %s\n", cmdline_p);
+        SYSLOG(LOG_DEBUG, "NSS sac: sac_enabled() = %s\n", true_false(sac_enabled()));
+        SYSLOG(LOG_DEBUG, "NSS sac: program       = %s\n", program_invocation_short_name);
+        SYSLOG(LOG_DEBUG, "NSS sac: config file   = %s\n", SAC_CONFIG_FILE);
     }
 }
 
-/**
- * @brief Initalize module singletons on entry.
- *
- *        cmdline_p contains the command line of the program that invoked
- *        the NSS module. Used for debug purposes only.
- */
-void __attribute__((constructor)) __module_enter(void)
+static DBus::Connection  & get_dbusconn()
 {
-    read_config();
-}
-
-/**
- * @brief Module clean up on exit
- */
-void __attribute__((destructor)) __module_exit(void)
-{
-    if ((cmdline_p != nullptr) && (cmdline_p != program_invocation_name))
+    static DBus::Connection  * conn_p = nullptr;
+    if (conn_p == nullptr)
     {
-        free(cmdline_p);
-        cmdline_p = nullptr;
+        // DBus::BusDispatcher is a "main loop" construct that
+        // handles (i.e. dispatched) DBus messages. This should
+        // be defined as a singleton to avoid memory leaks.
+        static DBus::BusDispatcher dispatcher;
+
+        // DBus::default_dispatcher must be initialized before DBus::Connection.
+        DBus::default_dispatcher = &dispatcher;
+
+        static DBus::Connection conn = DBus::Connection::SystemBus();
+
+        conn_p = &conn;
     }
 
-    if (log_p != nullptr)
-    {
-        fclose(log_p);
-        log_p = nullptr;
-    }
-
-    if (programs != default_programs)
-    {}
-}
-
-static bool sac_enabled()
-{
-    // The presence of the file SAC_ENABLE_FILE
-    // indicates whether SAC is enabled.
-    return access(SAC_ENABLE_FILE, F_OK) != -1;
+    return *conn_p;
 }
 
 /**
@@ -520,6 +519,10 @@ static nss_status fill_result(struct passwd * pwd,
     return NSS_STATUS_SUCCESS;
 }
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * @brief Automatically create user credentials for AAA authenticated
  *        users.
@@ -545,19 +548,19 @@ enum nss_status _nss_sac_getpwnam_r(const char    * name,
     struct passwd *pwd = fgetpwname("/etc/passwd", name);
     if (pwd)
     {
-        if (verbose) SYSLOG(LOG_DEBUG, "_nss_sac_getpwnam_r() - User \"%s\": user found in /etc/passwd", name);
+        if (verbose) SYSLOG(LOG_DEBUG, "NSS sac: _nss_sac_getpwnam_r() - User \"%s\": user found in /etc/passwd\n", name);
         return fill_result(pwd, name, result, buffer, buflen, errnop);
     }
 
     // Only allow certain programs to automatically allocated credentials.
     // The list of programs is configurable through /etc/
 
-    bool sac_allowed = is_program_allowed_to_alloc_creds();
-    if (verbose) SYSLOG(LOG_DEBUG, "_nss_sac_getpwnam_r() - User \"%s\": invoked from \"%s\" with creds UID=%u GID=%u. sac_allowed=%s",
-                        name, cmdline_p, getuid(), getgid(), sac_allowed ? "yes" : "no");
+    bool program_allowed = is_program_allowed_to_alloc_creds();
+    if (verbose) SYSLOG(LOG_DEBUG, "NSS sac: _nss_sac_getpwnam_r() - User \"%s\": invoked from \"%s\" with creds UID=%u GID=%u. program_allowed=%s\n",
+                        name, cmdline_p, getuid(), getgid(), program_allowed ? "yes" : "no");
 
     /* We should only let login programs continue. */
-    if (!sac_allowed) return NSS_STATUS_NOTFOUND;
+    if (!program_allowed) return NSS_STATUS_NOTFOUND;
 
     try
     {
@@ -571,17 +574,16 @@ enum nss_status _nss_sac_getpwnam_r(const char    * name,
             pwd = fgetpwname("/etc/passwd", name);
             if (pwd)
             {
-                if (verbose) SYSLOG(LOG_DEBUG, "_nss_sac_getpwnam_r() - User \"%s\": user found in /etc/passwd", name);
                 return fill_result(pwd, name, result, buffer, buflen, errnop);
             }
         }
 
-        if (verbose) SYSLOG(LOG_DEBUG, "_nss_sac_getpwnam_r() - User \"%s\": Exiting with Try Again due to: %s, pwd=%p",
+        if (verbose) SYSLOG(LOG_DEBUG, "NSS sac: _nss_sac_getpwnam_r() - User \"%s\": Exiting with Try Again due to: %s, pwd=%p\n",
                             name, errmsg.c_str(), pwd);
     }
     catch (DBus::Error &ex)
     {
-        SYSLOG(LOG_ERR, "_nss_sac_getpwnam_r() - User \"%s\": Exiting with Try Again due to: %s",
+        SYSLOG(LOG_ERR, "NSS sac: _nss_sac_getpwnam_r() - User \"%s\": Exiting with Try Again due to: %s\n",
                name, ex.what());
     }
 
@@ -589,3 +591,35 @@ enum nss_status _nss_sac_getpwnam_r(const char    * name,
     return NSS_STATUS_TRYAGAIN;
 }
 
+/**
+ * @brief Initalize module singletons on entry.
+ *
+ *        cmdline_p contains the command line of the program that invoked
+ *        the NSS module. Used for debug purposes only.
+ */
+void __attribute__((constructor)) __module_enter(void)
+{
+    read_config();
+}
+
+/**
+ * @brief Module clean up on exit
+ */
+void __attribute__((destructor)) __module_exit(void)
+{
+    if ((cmdline_p != nullptr) && (cmdline_p != program_invocation_name))
+    {
+        free(cmdline_p);
+        cmdline_p = nullptr;
+    }
+
+    if ((log_p != nullptr) && (log_p != stderr) && (log_p != stdout))
+    {
+        fclose(log_p);
+        log_p = nullptr;
+    }
+}
+
+#ifdef __cplusplus
+}
+#endif

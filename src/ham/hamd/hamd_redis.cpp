@@ -291,7 +291,7 @@ DBConnector_async_glib::DBConnector_async_glib(GMainContext  * g_main_ctx_p, boo
 
     LOG_CONDITIONAL(verbose, LOG_INFO,
                     "DBConnector_async_glib::DBConnector_async_glib() - Connected to -> %s (%d) socket:%s",
-                    db_pm->db_name().c_str(), db_pm->db_id(), db_pm->sock_addr().c_str());
+                    db_pm->getDbName(), db_pm->getDbId(), db_pm->getSockAddr());
 
     g_source_attach(redis_source_new(db_pm->context()), g_main_ctx_p);
 }
