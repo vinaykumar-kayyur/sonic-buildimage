@@ -60,9 +60,6 @@ def check_process_existence(container_name, process_cmdline):
             process_namespace_diff_set = process_namespace_expected_set.difference(process_namespace_found_set)
 
             if process_namespace_diff_set:
-                 # If this script is run by Monit, then the following output will be appended to
-                 # Monit's syslog message.
-
                  host_display_str = ""
                  namespace_display_str = ""
 
@@ -76,7 +73,9 @@ def check_process_existence(container_name, process_cmdline):
                              namespace_display_str += ", " + ns
 
                  join_str = " and" if host_display_str and namespace_display_str else ""
-
+                 
+                 # If this script is run by Monit, then the following output will be appended to
+                 # Monit's syslog message.
                  print("'{}' is not running{}{}{}".format(process_cmdline, host_display_str, join_str, namespace_display_str))
                  sys.exit(1)
     else:
