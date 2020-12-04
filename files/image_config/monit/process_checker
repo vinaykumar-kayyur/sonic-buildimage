@@ -48,23 +48,18 @@ def check_process_existence(container_name, process_cmdline):
                 process_namespace_expected_set.add(multi_asic.DEFAULT_NAMESPACE)
 
             if has_per_asic_scope:
-               process_namespace_expected_set.update(multi_asic.get_namespace_list())
-
-            is_running = False
+                process_namespace_expected_set.update(multi_asic.get_namespace_list())
 
             for process in psutil.process_iter(["cmdline", "status", "pid"]):
-                 try:
-                     if ((' '.join(process.cmdline())).startswith(process_cmdline) and process.status() in ["running", "sleeping"]):
+                try:
+                    if ((' '.join(process.cmdline())).startswith(process_cmdline) and process.status() in ["running", "sleeping"]):
                          process_namespace_found_set.add(multi_asic.get_current_namespace(process.info['pid']))
-                 except psutil.NoSuchProcess:
-                     pass
+                except psutil.NoSuchProcess:
+                    pass
 
             process_namespace_diff_set = process_namespace_expected_set.difference(process_namespace_found_set)
 
-            if not process_namespace_diff_set:
-                is_running = True
-
-            if not is_running:
+            if process_namespace_diff_set:
                  # If this script is run by Monit, then the following output will be appended to
                  # Monit's syslog message.
 
