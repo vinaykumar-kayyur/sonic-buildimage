@@ -79,7 +79,7 @@ else
 fi
 rm $db_cfg_file_tmp
 
-# flush unused database after warmboot restoration
+# copy dump.rdb file to each instance for restoration
 DUMPFILE=/var/lib/redis/dump.rdb
 redis_inst_list=`/usr/bin/python -c "import swsssdk; print(' '.join(swsssdk.SonicDBConfig.get_instancelist().keys()))"`
 for inst in $redis_inst_list
