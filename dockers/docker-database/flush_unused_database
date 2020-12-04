@@ -4,9 +4,10 @@ import redis
 import subprocess
 import time
 
-output = ""
-while('PONG' not in output):
+while(True):
     output = subprocess.Popen(['sonic-db-cli', 'PING'], stdout=subprocess.PIPE).communicate()[0]
+    if 'PONG' in output:
+        break
     time.sleep(1)
 
 instlists = swsssdk.SonicDBConfig.get_instancelist()
