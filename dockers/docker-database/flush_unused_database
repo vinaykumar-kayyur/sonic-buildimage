@@ -1,0 +1,26 @@
+#!/usr/bin/python
+import swsssdk
+import redis
+import subprocess
+import time
+
+output = subprocess.check_output('sonic-db-cli PING', stderr=subprocess.STDOUT, shell=True)
+while('PONG' not in output):
+    time.sleep(1)
+
+instlists = swsssdk.SonicDBConfig.get_instancelist()
+for instname, v in instlists.items():
+    insthost = v['hostname']
+    instsocket = v['unix_socket_path']
+
+    dblists = swsssdk.SonicDBConfig.get_dblist()
+    for dbname in dblists:
+        dbid = swsssdk.SonicDBConfig.get_dbid(dbname)
+        dbinst = swsssdk.SonicDBConfig.get_instancename(dbname)
+
+        # this DB is on current instance, skip flush
+        if dbinst == instname:
+            continue
+
+        r = redis.Redis(host=insthost, unix_socket_path=instsocket, db=dbid)
+        r.flushdb()
