@@ -6,7 +6,7 @@ import time
 
 output = ""
 while('PONG' not in output):
-    output = subprocess.check_output('sonic-db-cli PING', stderr=subprocess.STDOUT, shell=True)
+    output = subprocess.Popen(['sonic-db-cli', 'PING'], stdout=subprocess.PIPE).communicate()[0]
     time.sleep(1)
 
 instlists = swsssdk.SonicDBConfig.get_instancelist()
