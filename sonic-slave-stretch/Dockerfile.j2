@@ -291,6 +291,11 @@ RUN apt-get update && apt-get install -y \
 # For iptables
         libnetfilter-conntrack-dev \
         libnftnl-dev \
+# eBPF tools		
+        clang-6.0 \
+        llvm-6.0 \
+        libbpf-dev \
+        libelf-dev \
 # For SAI3.7
         protobuf-compiler \
         libprotobuf-dev \

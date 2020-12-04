@@ -1,0 +1,6 @@
+sonic (1.0.0) stable; urgency=medium
+
+  * Initial release.
+
+ -- EBPF <kalimuthu.velappan@broadcom.com>  Fri, 26 Nov 2019 12:00:00 -0800
+

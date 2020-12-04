@@ -390,6 +390,8 @@ start() {
 {%- if sonic_asic_platform != "mellanox" %}
         --tmpfs /tmp \
 {%- endif %}
+        -v /sys/kernel/debug:/sys/kernel/debug \
+        --ulimit memlock=67108864:67108864 \
         --tmpfs /var/tmp \
         --env "NAMESPACE_ID"="$DEV" \
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
