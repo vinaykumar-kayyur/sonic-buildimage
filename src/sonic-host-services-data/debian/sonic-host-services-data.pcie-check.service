@@ -4,4 +4,4 @@ After=rc.local.service database.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/pcie-check.sh
+ExecStart=/usr/local/bin/pcie-check

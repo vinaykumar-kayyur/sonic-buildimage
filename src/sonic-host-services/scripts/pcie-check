@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+
+"""
+    pcie-check
+    PCIe device check service during boot-up
+"""
+
+try:
+    import os
+    import signal
+    import subprocess
+    import sys
+    import threading
+    from time import time
+
+    import swsssdk
+    from sonic_py_common import device_info, logger
+except ImportError as e:
+    raise ImportError(str(e) + " - required module not found")
+
+#
+# Constants ====================================================================
+#
+SYSLOG_IDENTIFIER = "pcie-check"
+
+PCIE_RESULT_REGEX = "PCIe Device Checking All Test"
+PCIE_TABLE_NAME = "PCIE_STATUS"
+
+PCIE_CONF_FILE = 'pcie.yaml'
+
+PCIE_CHECK_MAX_WAIT_SECONDS=15
+PCIE_CHECK_INTERVAL=0.1
+
+PCIE_BUS_RESCAN_CMD = "echo 1 > /sys/bus/pci/rescan"
+
+REDIS_HOSTIP = "127.0.0.1"
+
+# Global logger class instance
+sonic_logger = logger.Logger(SYSLOG_IDENTIFIER)
+
+
+# ============================= Functions =============================
+def init():
+    (platform_path, _) = device_info.get_paths_to_platform_and_hwsku_dirs()
+    pciefilePath = os.path.join(platform_path, PCIE_CONF_FILE)
+    sys.path.append(os.path.abspath(pciefilePath))
+    if not os.path.exists(pciefilePath):
+        sonic_logger("Platform pcie configuration file doesn't exist! Exiting ...")
+        sys.exit("Platform PCIe Configuration file doesn't exist!")
+
+    state_db = swsssdk.SonicV2Connector(host=REDIS_HOSTIP)
+    state_db.connect("STATE_DB")
+
+
+def update_state_db(key1, key2, value):
+    state_db.set('STATE_DB', key1, key2, value)
+
+# Check the PCIe devices
+def check_pcie_devices():
+    try:
+        platform_path, _ = device_info.get_paths_to_platform_and_hwsku_dirs()
+        sys.path.append(os.path.abspath(platform_path))
+        from pcieutil import PcieUtil
+    except ImportError as e:
+        sonic_logger("Failed to load platform-specific PcieUtil module. Falling back to the common implementation")
+        try:
+            from sonic_platform_base.sonic_pcie.pcie_common import PcieUtil
+            platform_pcieutil = PcieUtil(platform_path)
+        except ImportError as e:
+            sonic_logger("Failed to load default PcieUtil module. Error : {}".format(str(e)), True)
+            raise e
+
+    resultInfo = platform_pcieutil.get_pcie_check()
+    err = 0
+
+    for item in resultInfo:
+        if item["result"] == "Failed":
+            sonic_logger.log_warning("PCIe Device: " + item["name"] + " Not Found")
+            err += 1
+
+    if err:
+        update_state_db("PCIE_DEVICES", "status", "FAILED")
+        sonic_logger.log_error("PCIe device status check : FAILED")
+    else:
+        update_state_db("PCIE_DEVICES", "status", "PASSED")
+        sonic_logger.log_info("PCIe device status check : PASSED")
+    return err
+
+# 
+def pcie_check_n_rescan():
+    sonic_logger.log_info("Starting up...")
+
+    init()
+
+    begin = time()
+    end = ((begin + MAX_WAIT_SECONDS))
+    rescan_time = ((MAX_WAIT_SECONDS/2))
+    rescan_time = ((begin + rescan_time))
+
+    while True:
+        now = time()
+
+        if now >= end:
+            break
+
+        # Check the Pcie device status
+        if check_pcie_devices() == 0:
+            sonic_logger.log_info("PCIe check passed")
+            sys.exit("PCIe check passed")
+        else:
+            sonic_logger.log_debug("sleep 0.1 seconds")
+            sleep(PCIE_CHECK_INTERVAL)
+            if now >= rescan_time:
+                sonic_logger.log_debug("PCIe check failed, try pci bus rescan")
+                os.system(PCIE_BUS_RESCAN_CMD)
+                rescan_time = end
+
+    sonic_logger.log_info("PCIe check failed")
+    sys.exit("PCIe check failed")
+
+#
+# Main =========================================================================
+#
+
+
+def main():
+    # Configure logger to log all messages INFO level and higher
+    sonic_logger.set_min_log_priority_info()
+
+    sonic_logger.log_info("Starting up...")
+
+    if not os.geteuid() == 0:
+        sonic_logger.log_error("User {} does not have permission to execute".format(pwd.getpwuid(os.getuid()).pw_name))
+        sys.exit("This utility must be run as root")
+
+    pcie_check_n_rescan()
+
+
+if __name__ == "__main__":
+    main()
