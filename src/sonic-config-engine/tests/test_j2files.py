@@ -68,9 +68,28 @@ class TestJ2Files(TestCase):
 
     def test_lldp(self):
         lldpd_conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-lldp', 'lldpd.conf.j2')
-        argument = '-m ' + self.t0_minigraph + ' -p ' + self.t0_port_config + ' -t ' + lldpd_conf_template + ' > ' + self.output_file
+
+        expected_mgmt_ipv4 = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'lldp_conf', 'lldpd-ipv4-iface.conf')
+        expected_mgmt_ipv6 = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'lldp_conf', 'lldpd-ipv6-iface.conf')
+        expected_mgmt_ipv4_and_ipv6 = expected_mgmt_ipv4
+
+        # Test generation of lldpd.conf if IPv4 and IPv6 management interfaces exist
+        mgmt_iface_ipv4_and_ipv6_json = os.path.join(self.test_dir, "data", "lldp", "mgmt_iface_ipv4_and_ipv6.json")
+        argument = '-j {} -t {} > {}'.format(mgmt_iface_ipv4_and_ipv6_json, lldpd_conf_template, self.output_file)
         self.run_script(argument)
-        self.assertTrue(filecmp.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'lldpd.conf'), self.output_file))
+        self.assertTrue(filecmp.cmp(expected_mgmt_ipv4_and_ipv6, self.output_file))
+
+        # Test generation of lldpd.conf if management interface IPv4 only exist
+        mgmt_iface_ipv4_json = os.path.join(self.test_dir, "data", "lldp", "mgmt_iface_ipv4.json")
+        argument = '-j {} -t {} > {}'.format(mgmt_iface_ipv4_json, lldpd_conf_template, self.output_file)
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(expected_mgmt_ipv4, self.output_file))
+
+        # Test generation of lldpd.conf if Management interface IPv6 only exist
+        mgmt_iface_ipv6_json = os.path.join(self.test_dir, "data", "lldp", "mgmt_iface_ipv6.json")
+        argument = '-j {} -t {} > {}'.format(mgmt_iface_ipv6_json, lldpd_conf_template, self.output_file)
+        self.run_script(argument)
+        self.assertTrue(filecmp.cmp(expected_mgmt_ipv6, self.output_file))
 
     def test_bgpd_quagga(self):
         conf_template = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-quagga', 'bgpd.conf.j2')
@@ -103,6 +122,13 @@ class TestJ2Files(TestCase):
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'l2switch.json')
         with open(sample_output_file) as sample_output_fd:
             sample_output_json = json.load(sample_output_fd)
+
+        self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
+
+        template_dir = os.path.join(self.test_dir, '..', 'data', 'l2switch.j2')
+        argument = '-t ' + template_dir + ' -k Mellanox-SN2700 -p ' + self.t0_port_config
+        output = self.run_script(argument)
+        output_json = json.loads(output)
 
         self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
 
@@ -171,6 +197,68 @@ class TestJ2Files(TestCase):
         sample_output_file = os.path.join(self.test_dir, 'multi_npu_data', utils.PYvX_DIR, 'ipinip.json')
         assert filecmp.cmp(sample_output_file, self.output_file)
 
+    def test_swss_switch_render_template(self):
+        switch_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent',
+            'switch.json.j2'
+        )
+        constants_yml = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'image_config',
+            'constants', 'constants.yml'
+        )
+        test_list = {
+            "t1": {
+                "graph": self.t1_mlnx_minigraph,
+                "output": "t1-switch.json"
+            },
+            "t0": {
+                "graph": self.t0_minigraph,
+                "output": "t0-switch.json"
+            },
+        }
+        for _, v in test_list.items():
+            argument = " -m {} -y {} -t {} > {}".format(
+                v["graph"], constants_yml, switch_template, self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'sample_output', v["output"]
+            )
+            self.run_script(argument)
+            assert filecmp.cmp(sample_output_file, self.output_file)
+
+    def test_swss_switch_render_template_multi_asic(self):
+        # verify the ECMP hash seed changes per namespace
+        switch_template = os.path.join(
+            self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent',
+            'switch.json.j2'
+        )
+        constants_yml = os.path.join(
+            self.test_dir, '..', '..', '..', 'files', 'image_config',
+            'constants', 'constants.yml'
+        )
+        test_list = {
+            "0": {
+                "namespace_id": "1",
+                "output": "t0-switch-masic1.json"
+            },
+            "1": {
+                "namespace_id": "3",
+                "output": "t0-switch-masic3.json"
+            },
+        }
+        for _, v in test_list.items():
+            os.environ["NAMESPACE_ID"] = v["namespace_id"]
+            argument = " -m {} -y {} -t {} > {}".format(
+                self.t1_mlnx_minigraph, constants_yml, switch_template,
+                self.output_file
+            )
+            sample_output_file = os.path.join(
+                self.test_dir, 'sample_output', v["output"]
+            )
+            self.run_script(argument)
+            assert filecmp.cmp(sample_output_file, self.output_file)
+        os.environ["NAMESPACE_ID"] = ""
+
     def test_ndppd_conf(self):
         conf_template = os.path.join(self.test_dir, "ndppd.conf.j2")
         vlan_interfaces_json = os.path.join(self.test_dir, "data", "ndppd", "vlan_interfaces.json")
@@ -179,7 +267,6 @@ class TestJ2Files(TestCase):
         argument = '-j {} -t {} > {}'.format(vlan_interfaces_json, conf_template, self.output_file)
         self.run_script(argument)
         assert filecmp.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
-
 
     def tearDown(self):
         try:

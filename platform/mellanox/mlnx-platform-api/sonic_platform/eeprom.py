@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -7,16 +5,23 @@
 # provides the eeprom information which are available in the platform
 #
 #############################################################################
-import exceptions
 import os
 import sys
 import re
-from cStringIO import StringIO
+
+if sys.version_info.major == 3:
+    from io import StringIO
+else:
+    from cStringIO import StringIO
+
+from sonic_py_common.logger import Logger
 
 try:
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
+
+logger = Logger()
 
 #
 # CACHE_XXX stuffs are supposted to be moved to the base classes
@@ -59,14 +64,22 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         self._eeprom_loaded = True
 
     def _load_eeprom(self):
+        cache_file = os.path.join(CACHE_ROOT, CACHE_FILE)
         if not os.path.exists(CACHE_ROOT):
             try:
                 os.makedirs(CACHE_ROOT)
             except:
                 pass
+        else:
+            try:
+                # Make sure first time always read eeprom data from hardware
+                if os.path.exists(cache_file):
+                    os.remove(cache_file)
+            except Exception as e:
+                logger.log_error('Failed to remove cache file {} - {}'.format(cache_file, repr(e)))
 
         try:
-            self.set_cache_name(os.path.join(CACHE_ROOT, CACHE_FILE))
+            self.set_cache_name(cache_file)
         except:
             pass
 
@@ -82,18 +95,26 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         self._base_mac = self.mgmtaddrstr(eeprom)
         if self._base_mac is None:
             self._base_mac = "Undefined."
+        else:
+            self._base_mac = self._base_mac.strip('\0')
 
         self._serial_str = self.serial_number_str(eeprom)
         if self._serial_str is None:
             self._serial_str = "Undefined."
+        else:
+            self._serial_str = self._serial_str.strip('\0')
 
         self._product_name = self.modelstr(eeprom)
         if self._product_name is None:
             self._product_name = "Undefined."
+        else:
+            self._product_name = self._product_name.strip('\0')
 
         self._part_number = self.part_number_str(eeprom)
         if self._part_number is None:
             self._part_number = "Undefined."
+        else:
+            self._part_number = self._part_number.strip('\0')
 
         original_stdout = sys.stdout
         sys.stdout = StringIO()

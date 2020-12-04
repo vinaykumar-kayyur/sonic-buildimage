@@ -14,17 +14,14 @@ class Chassis(ChassisBase):
     """
     def __init__(self):
         ChassisBase.__init__(self)
-        SFP_PORT_END = Sfp.port_end()
-        PORTS_IN_BLOCK = (SFP_PORT_END + 1)
-        MAX_PSU = Psu.get_num_psus()
 
         self._eeprom = Eeprom()
 
-        for index in range(0, PORTS_IN_BLOCK):
+        for index in range(Sfp.port_start(), Sfp.port_end() + 1):
             sfp_node = Sfp(index)
             self._sfp_list.append(sfp_node)
 
-        for i in range(1, MAX_PSU + 1):
+        for i in range(1, Psu.get_num_psus() + 1):
             psu = Psu(i)
             self._psu_list.append(psu)
 
@@ -100,15 +97,6 @@ class Chassis(ChassisBase):
             'XX:XX:XX:XX:XX:XX'
         """
         return self._eeprom.base_mac_addr()
-
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-
-        Returns:
-            A string containing the hardware serial number for this chassis.
-        """
-        return self._eeprom.serial_number_str()
 
     def get_system_eeprom_info(self):
         """

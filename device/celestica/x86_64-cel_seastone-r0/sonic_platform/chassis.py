@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -11,7 +9,7 @@
 try:
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -90,14 +88,6 @@ class Chassis(ChassisBase):
             'XX:XX:XX:XX:XX:XX'
         """
         return self._eeprom.get_mac()
-
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-        Returns:
-            A string containing the hardware serial number for this chassis.
-        """
-        return self._eeprom.get_serial()
 
     def get_system_eeprom_info(self):
         """
@@ -252,7 +242,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of device
         """
-        return self.get_serial_number()
+        return self._eeprom.get_serial()
 
     def get_status(self):
         """
