@@ -78,16 +78,16 @@ class LedControl(LedControlBase):
             if (self.chassis.get_fan(0).get_status() == self.chassis.get_fan(1).get_status() == True):
                 if (os.path.isfile("/sys/class/gpio/fanLedAmber/value")):
                     if oldfan != 0x1:
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedAmber/value", 0)
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedGreen/value", 1)
+                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value", 1)
                         oldfan = 0x1
                 else:
                         oldfan = 0xf
             else:
                 if (os.path.isfile("/sys/class/gpio/fanLedGreen/value")):
                     if oldfan != 0x0:
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedGreen/value", 0)
-                        rv = self._set_i2c_register("/sys/class/gpio/fanLedAmber/value", 1)
+                        self._set_i2c_register("/sys/class/gpio/fanLedGreen/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/fanLedAmber/value", 1)
                         oldfan = 0x0
                 else:
                     oldfan = 0xf
@@ -96,16 +96,16 @@ class LedControl(LedControlBase):
             if (self.chassis.get_psu(0).get_status() == self.chassis.get_psu(1).get_status() == True):
                 if (os.path.isfile("/sys/class/gpio/psuLedAmber/value")):
                     if oldpsu != 0x1:
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedAmber/value", 0)
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedGreen/value", 1)
+                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value", 1)
                         oldpsu = 0x1
                 else:
                     oldpsu = 0xf
             else:
                 if (os.path.isfile("/sys/class/gpio/psuLedGreen/value")):
                     if oldpsu != 0x0:
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedGreen/value", 0)
-                        rv = self._set_i2c_register("/sys/class/gpio/psuLedAmber/value", 1)
+                        self._set_i2c_register("/sys/class/gpio/psuLedGreen/value", 0)
+                        self._set_i2c_register("/sys/class/gpio/psuLedAmber/value", 1)
                         oldpsu = 0x0
                 else:
                     oldpsu = 0xf
