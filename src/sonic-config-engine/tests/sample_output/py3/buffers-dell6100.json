@@ -645,7 +645,7 @@
     },
     "LOSSLESS_TRAFFIC_PATTERN": {
         "AZURE": {
-            "mtu": "1500",
+            "mtu": "1024",
             "small_packet_percentage": "100"
         }
     }
