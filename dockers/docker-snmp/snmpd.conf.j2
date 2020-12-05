@@ -44,6 +44,7 @@ rocommunity {{ snmp_rocommunity }}
 rocommunity6 {{ snmp_rocommunity }}
 {% endif %}
 
+{% if SNMP_COMMUNITY is defined %}
 {% for community in SNMP_COMMUNITY.keys() %}
 {% if SNMP_COMMUNITY[community]['TYPE'] == 'RO' %}
 rocommunity {{ community }}
@@ -53,8 +54,11 @@ rwcommunity {{ community }}
 rwcommunity6 {{ community }}
 {% endif %}
 {% endfor %}
+{% else %}
+{% endif %}
 
 
+{% if SNMP_USER is defined %}
 {% for user in SNMP_USER.keys() %}
 {% if SNMP_USER[user]['SNMP_USER_PERMISSION'] == 'RO' %}
 rouser {{ user }} {{ SNMP_USER[user]['SNMP_USER_TYPE'] }}
@@ -64,6 +68,8 @@ rwuser {{ user }} {{ SNMP_USER[user]['SNMP_USER_TYPE'] }}
 CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[user]['SNMP_USER_AUTH_PASSWORD'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_TYPE'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_PASSWORD'] }}
 {% endif %}
 {% endfor %}
+{% else %}
+{% endif %}
 
 
 ###############################################################################
@@ -74,7 +80,10 @@ CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[
 #  Note that setting these values here, results in the corresponding MIB objects being 'read-only'
 #  See snmpd.conf(5) for more details
 sysLocation    {{ snmp_location }}
+{% if SNMP_CONTACT is defined %}
 sysContact     {{ SNMP.CONTACT.keys()[0] }} {{ SNMP.CONTACT.values()[0] }}
+{% else %}
+{% endif %}
                                                  # Application + End-to-End layers
 sysServices    72
 
