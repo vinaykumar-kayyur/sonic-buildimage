@@ -7,9 +7,9 @@ RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%s
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y g++ python3-dev libxml2 libcurl3-gnutls libcjson-dev
+    apt-get install -y g++ python-dev libxml2 libcurl3-gnutls libpython2.7 libcjson-dev
 
-RUN python3 -m pip install connexion==1.1.15 \
+RUN pip install connexion==1.1.15 \
 		setuptools==21.0.0 \
 		grpcio-tools==1.20.0 \
 		certifi==2017.4.17 \
@@ -32,11 +32,8 @@ COPY ["start.sh", "rest-server.sh", "/usr/bin/"]
 COPY ["mgmt_vars.j2", "/usr/share/sonic/templates/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 
-RUN apt-get remove -y g++
+RUN apt-get remove -y g++ python-dev
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
-
-RUN ln -sf /host_etc/passwd /etc/passwd
-RUN ln -sf /host_etc/group /etc/group
 
 ENTRYPOINT ["/usr/bin/supervisord"]
