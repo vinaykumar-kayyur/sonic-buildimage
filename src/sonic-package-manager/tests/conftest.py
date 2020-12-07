@@ -38,6 +38,16 @@ def mock_feature_registry():
 
 
 @pytest.fixture
+def mock_service_creator():
+    yield Mock()
+
+
+@pytest.fixture
+def mock_sonic_db():
+    yield Mock()
+
+
+@pytest.fixture
 def fake_manifest_resolver():
     class FakeManifestResolver:
         def __init__(self):
@@ -139,11 +149,6 @@ def fake_manifest_resolver():
 
 
 @pytest.fixture
-def mock_service_creator():
-    yield Mock()
-
-
-@pytest.fixture
 def fake_device_info():
     class FakeDeviceInfo:
         def is_multi_npu(self):
@@ -158,24 +163,6 @@ def fake_device_info():
             }
 
     yield FakeDeviceInfo()
-
-
-@pytest.fixture
-def mock_sonic_db():
-    yield Mock()
-
-
-@pytest.fixture
-def package_manager(mock_docker_api,
-                    mock_registry_resolver,
-                    mock_service_creator,
-                    fake_manifest_resolver,
-                    fake_db,
-                    fake_device_info):
-    yield PackageManager(mock_docker_api, mock_registry_resolver,
-                         fake_db, fake_manifest_resolver,
-                         mock_service_creator,
-                         fake_device_info)
 
 
 @pytest.fixture
@@ -294,6 +281,19 @@ def sonic_fs(fs):
     fs.create_file(os.path.join(TEMPLATES_PATH, MONIT_CONF_TEMPLATE))
     fs.create_file(os.path.join(TEMPLATES_PATH, DEBUG_DUMP_SCRIPT_TEMPLATE))
     yield fs
+
+
+@pytest.fixture
+def package_manager(mock_docker_api,
+                    mock_registry_resolver,
+                    mock_service_creator,
+                    fake_manifest_resolver,
+                    fake_db,
+                    fake_device_info):
+    yield PackageManager(mock_docker_api, mock_registry_resolver,
+                         fake_db, fake_manifest_resolver,
+                         mock_service_creator,
+                         fake_device_info)
 
 
 @pytest.fixture

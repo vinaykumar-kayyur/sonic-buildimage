@@ -6,11 +6,12 @@ import os
 import swsssdk
 from swsscommon import swsscommon
 
+from sonic_package_manager.service_creator import ETC_SONIC_PATH
 from sonic_package_manager.service_creator.utils import in_chroot
 
 CONFIG_DB = 'CONFIG_DB'
-CONFIG_DB_JSON = '/etc/sonic/config_db.json'
-INIT_CFG_JSON = '/etc/sonic/init_cfg.json'
+CONFIG_DB_JSON = os.path.join(ETC_SONIC_PATH, 'config_db.json')
+INIT_CFG_JSON = os.path.join(ETC_SONIC_PATH, 'init_cfg.json')
 
 
 def is_db_alive():
@@ -51,8 +52,9 @@ class FileDbTable:
 
         table = config.get(self._table, {})
         exists = key in table
-        fvs = table.get(key, {})
-        return exists, list(fvs.items())
+        fvs_dict = table.get(key, {})
+        fvs = list(fvs_dict.items())
+        return exists, fvs
 
     def set(self, key, fvs):
         with open(self._file) as stream:
@@ -87,7 +89,7 @@ class SonicDB:
         """ Returns running DB table. """
 
         if not is_db_alive():
-            return
+            return None
 
         if cls._running is None:
             cls._running = swsscommon.DBConnector(CONFIG_DB, 0)

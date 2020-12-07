@@ -3,10 +3,12 @@ import contextlib
 import os
 import stat
 import subprocess
+from pprint import pprint
 from typing import Dict
 
 import jinja2 as jinja2
 
+from sonic_package_manager.service_creator import ETC_SONIC_PATH
 from sonic_package_manager.logger import log
 from sonic_package_manager.package import Package
 from sonic_package_manager.service_creator.feature import FeatureRegistry
@@ -29,8 +31,6 @@ MONIT_CONF_LOCATION = '/etc/monit/conf.d/'
 DEBUG_DUMP_SCRIPT_TEMPLATE = 'dump.sh.j2'
 DEBUG_DUMP_SCRIPT_LOCATION = '/usr/bin/debug-dump/'
 
-ETC_SONIC_PATH = '/etc/sonic'
-
 TEMPLATES_PATH = '/usr/share/sonic/templates'
 
 
@@ -50,7 +50,7 @@ def render_template(in_template: str,
         executable: Set executable bit on rendered file
     """
 
-    log.debug(f'Rendering {in_template} to {outfile} with {render_ctx}')
+    log.debug(f'Rendering {in_template} to {outfile} with {pprint(render_ctx, indent=4)}')
 
     with open(in_template, 'r') as instream:
         template = jinja2.Template(instream.read())
@@ -62,7 +62,7 @@ def render_template(in_template: str,
         set_executable_bit(outfile)
 
 
-def get_template(template_name: str) -> str:
+def get_tmpl_path(template_name: str) -> str:
     """ Returns a path to a template.
     Args:
         template_name: Template file name.
@@ -87,7 +87,7 @@ def run_command(command: str):
                              is not 0.
     """
 
-    log.info(f'running command: {command}')
+    log.debug(f'running command: {command}')
 
     proc = subprocess.Popen(command,
                             shell=True,
@@ -114,17 +114,13 @@ class ServiceCreator:
             self.generate_monit_conf(package)
             self.generate_dump_script(package)
 
-            if not in_chroot():
-                run_command('systemctl daemon-reload')
-                run_command('systemctl reload monit')
+            self.post_install()
 
             if register_feature:
                 self.feature_registry.register(package.name, package.manifest)
-        except Exception:
+        except (Exception, KeyboardInterrupt):
             self.remove(package, not register_feature)
             raise
-        except KeyboardInterrupt:
-            self.remove(package, not register_feature)
 
     def remove(self, package: Package, deregister_feature=True):
         name = package.manifest['service']['name']
@@ -143,19 +139,22 @@ class ServiceCreator:
 
         self.update_dependent_list_file(package, remove=True)
 
-        if not in_chroot():
-            run_command('systemctl daemon-reload')
-            run_command('systemctl reload monit')
+        self.post_install()
 
         if deregister_feature:
             self.feature_registry.deregister(package.name)
+
+    def post_install(self):
+        if not in_chroot():
+            run_command('systemctl daemon-reload')
+            run_command('systemctl reload monit')
 
     def generate_container_mgmt(self, package: Package):
         repository = package.repository
         name = package.manifest['service']['name']
         container_spec = package.manifest['container']
         script_path = os.path.join(DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh')
-        script_template = os.path.join(TEMPLATES_PATH, DOCKER_CTL_SCRIPT_TEMPLATE)
+        script_template = get_tmpl_path(DOCKER_CTL_SCRIPT_TEMPLATE)
         run_opt = []
 
         if container_spec['privileged']:
@@ -185,10 +184,10 @@ class ServiceCreator:
     def generate_service_mgmt(self, package: Package):
         name = package.manifest['service']['name']
         multi_instance_services = self.feature_registry.get_multi_instance_features()
-        scrip_template = os.path.join(TEMPLATES_PATH, SERVICE_MGMT_SCRIPT_TEMPLATE)
         script_path = os.path.join(SERVICE_MGMT_SCRIPT_LOCATION, f'{name}.sh')
+        scrip_template = get_tmpl_path(SERVICE_MGMT_SCRIPT_TEMPLATE)
         render_ctx = {
-            'source': get_template(SERVICE_MGMT_SCRIPT_TEMPLATE),
+            'source': get_tmpl_path(SERVICE_MGMT_SCRIPT_TEMPLATE),
             'manifest': package.manifest.unmarshal(),
             'multi_instance_services': multi_instance_services,
         }
@@ -199,9 +198,9 @@ class ServiceCreator:
         name = package.manifest['service']['name']
         multi_instance_services = self.feature_registry.get_multi_instance_features()
 
-        template = os.path.join(TEMPLATES_PATH, SERVICE_FILE_TEMPLATE)
+        template = get_tmpl_path(SERVICE_FILE_TEMPLATE)
         template_vars = {
-            'source': get_template(SERVICE_FILE_TEMPLATE),
+            'source': get_tmpl_path(SERVICE_FILE_TEMPLATE),
             'manifest': package.manifest.unmarshal(),
             'multi_instance': False,
             'multi_instance_services': multi_instance_services,
@@ -218,7 +217,7 @@ class ServiceCreator:
 
         if package.manifest['service']['delayed']:
             template_vars = {
-                'source': get_template(TIMER_UNIT_TEMPLATE),
+                'source': get_tmpl_path(TIMER_UNIT_TEMPLATE),
                 'manifest': package.manifest.unmarshal(),
                 'multi_instance': False,
             }
@@ -237,8 +236,8 @@ class ServiceCreator:
         name = package.manifest['service']['name']
         processes = package.manifest['processes']
         output_filename = os.path.join(MONIT_CONF_LOCATION, f'monit_{name}')
-        render_template(get_template(MONIT_CONF_TEMPLATE), output_filename,
-                        {'source': get_template(MONIT_CONF_TEMPLATE),
+        render_template(get_tmpl_path(MONIT_CONF_TEMPLATE), output_filename,
+                        {'source': get_tmpl_path(MONIT_CONF_TEMPLATE),
                          'feature': name,
                          'processes': processes})
         log.info(f'generated {output_filename}')
@@ -287,7 +286,7 @@ class ServiceCreator:
         scrip_template = os.path.join(TEMPLATES_PATH, DEBUG_DUMP_SCRIPT_TEMPLATE)
         script_path = os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, f'{name}')
         render_ctx = {
-            'source': get_template(SERVICE_MGMT_SCRIPT_TEMPLATE),
+            'source': get_tmpl_path(SERVICE_MGMT_SCRIPT_TEMPLATE),
             'manifest': package.manifest.unmarshal(),
         }
         render_template(scrip_template, script_path, render_ctx, executable=True)

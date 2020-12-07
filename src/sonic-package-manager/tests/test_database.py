@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from unittest.mock import Mock
 
 import pytest
 
@@ -21,7 +20,7 @@ def test_database_get_package(fake_db):
     assert swss_package.version == Version(1, 0, 0)
 
 
-def test_database_get_package_not_essential(fake_db):
+def test_database_get_package_not_builtin(fake_db):
     test_package = fake_db.get_package('test-package')
     assert not test_package.installed
     assert not test_package.built_in
