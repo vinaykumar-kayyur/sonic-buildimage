@@ -45,7 +45,7 @@ function updateSyslogConf()
 
 function getMountPoint()
 {
-    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.basename(mnts[0]['Source'])" 2>/dev/null
+    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source'])" 2>/dev/null
 }
 
 function getBootType()
@@ -138,12 +138,16 @@ function postStartAction()
         if [[ -x /usr/local/bin/db_migrator.py ]]; then
             # Migrate the DB to the latest schema version if needed
             if [ -z "$DEV" ]; then
-                /usr/bin/db_migrator.py -o migrate
+                /usr/local/bin/db_migrator.py -o migrate
             fi
         fi
         # Add redis UDS to the redis group and give read/write access to the group
         REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
     else
+        until [[ ($(docker exec -i ${DOCKERNAME} pgrep -x -c supervisord) -gt 0) &&
+                 ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
+           sleep 1
+        done
         REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
@@ -189,9 +193,14 @@ start() {
     {%- if docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
     HWSKU=""
+    MOUNTPATH=""
     {%- else %}
     # Obtain our HWSKU as we will mount directories with these names in each docker
     HWSKU=${HWSKU:-`$SONIC_CFGGEN -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`}
+    MOUNTPATH="/usr/share/sonic/device/$PLATFORM/$HWSKU"
+    if [ "$DEV" ]; then
+        MOUNTPATH="$MOUNTPATH/$DEV"
+    fi
     {%- endif %}
     DOCKERCHECK=`docker inspect --type container ${DOCKERNAME} 2>/dev/null`
     if [ "$?" -eq "0" ]; then
@@ -200,7 +209,7 @@ start() {
         {%- else %}
         DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
         {%- endif %}
-        if [ x"$DOCKERMOUNT" == x"$HWSKU" ]; then
+        if [ x"$DOCKERMOUNT" == x"$MOUNTPATH" ]; then
             {%- if docker_container_name == "database" %}
             echo "Starting existing ${DOCKERNAME} container"
             {%- else %}

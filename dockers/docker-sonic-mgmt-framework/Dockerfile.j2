@@ -39,4 +39,4 @@ RUN rm -rf /debs
 RUN ln -sf /host_etc/passwd /etc/passwd
 RUN ln -sf /host_etc/group /etc/group
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/supervisord"]
