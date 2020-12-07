@@ -87,7 +87,9 @@ do
     mkdir -p /var/lib/$inst
     if [[ -f $DUMPFILE ]]; then
         # copy warmboot rdb file into each new instance location
-        cp -u $DUMPFILE /var/lib/$inst/dump.rdb
+        if [[ "$DUMPFILE" != "/var/lib/$inst/dump.rdb" ]]; then
+            cp $DUMPFILE /var/lib/$inst/dump.rdb
+        fi
     else
         echo -n > /var/lib/$inst/dump.rdb
     fi
