@@ -9,9 +9,7 @@
 #############################################################################
 
 try:
-    import os
     import time
-    import select
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp

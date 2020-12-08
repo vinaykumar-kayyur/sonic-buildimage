@@ -26,9 +26,8 @@ except ImportError as e:
 ext_media_module = None
 try:
     import ext_media_api as ext_media_module
-except:
+except EnvironmentError:
     ext_media_module = None
-    pass
 
 PAGE_OFFSET = 0
 KEY_OFFSET = 1
@@ -702,24 +701,24 @@ class Sfp(SfpBase):
         """
         Retrieves the temperature of this SFP
         """
-        temperature = 'N/A'
+        temperature = None
         try :
             temperature_data = self._get_eeprom_data('Temperature')
             temperature = temperature_data['data']['Temperature']['value']
         except (TypeError, ValueError):
-            return 'N/A'
+            return None
         return temperature
 
     def get_voltage(self):
         """
         Retrieves the supply voltage of this SFP
         """
-        voltage = 'N/A'
+        voltage = None 
         try:
             voltage_data = self._get_eeprom_data('Voltage')
             voltage = voltage_data['data']['Vcc']['value']
         except (TypeError, ValueError):
-            return 'N/A'
+            return None
         return voltage
 
     def get_tx_bias(self):
@@ -809,7 +808,7 @@ class Sfp(SfpBase):
                 reg_value = reg_value & ~mask
 
                 # Convert our register value back to a hex string and write back
-                status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+                self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
                 # Sleep 1 second to allow it to settle
                 time.sleep(1)
@@ -817,7 +816,7 @@ class Sfp(SfpBase):
                 reg_value = reg_value | mask
 
                 # Convert our register value back to a hex string and write back
-                status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+                self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
         except  ValueError:
             return  False
         return True
@@ -844,7 +843,7 @@ class Sfp(SfpBase):
                     reg_value = reg_value & ~mask
 
                 # Convert our register value back to a hex string and write back
-                status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+                self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
         except  ValueError:
             return  False
         return True
