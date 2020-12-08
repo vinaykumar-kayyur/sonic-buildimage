@@ -82,7 +82,7 @@ class HealthDaemon(DaemonBase):
 
                 if self.stop_event.wait(manager.config.interval):
                     break
-        except ImportError as _:
+        except ImportError:
             self.log_warning("sonic_platform package not installed. Cannot start system-health daemon")
 
         self.deinit()
