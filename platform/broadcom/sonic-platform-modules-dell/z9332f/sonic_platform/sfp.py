@@ -23,11 +23,13 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-ext_media_module = None
-try:
-    import ext_media_api as ext_media_module
-except EnvironmentError:
-    ext_media_module = None
+# Enabled when ext_media is available
+#ext_media_module = None
+#try:
+#    import ext_media_api as ext_media_module
+#except :
+#    ext_media_module = None
+#    pass
 
 PAGE_OFFSET = 0
 KEY_OFFSET = 1
@@ -375,13 +377,13 @@ class Sfp(SfpBase):
         except (ValueError, TypeError) : pass
 
         # Attempt ext_media read
-        if ext_media_module is not None:
-            ext_media_dict = ext_media_module.get_ext_media_info(self)
-            for key in ext_media_dict:
-                value = ext_media_dict[key]
-                if value in [None, 'None', 'none','n/a', '']:
-                    value = 'N/A'
-                transceiver_info_dict[key] = str(value)
+#        if ext_media_module is not None:
+#            ext_media_dict = ext_media_module.get_ext_media_info(self)
+#            for key in ext_media_dict:
+#                value = ext_media_dict[key]
+#                if value in [None, 'None', 'none','n/a', '']:
+#                    value = 'N/A'
+#                transceiver_info_dict[key] = str(value)
 
         return transceiver_info_dict
 
@@ -701,24 +703,24 @@ class Sfp(SfpBase):
         """
         Retrieves the temperature of this SFP
         """
-        temperature = None
+        temperature = 'N/A'
         try :
             temperature_data = self._get_eeprom_data('Temperature')
             temperature = temperature_data['data']['Temperature']['value']
         except (TypeError, ValueError):
-            return None
+            return 'N/A'
         return temperature
 
     def get_voltage(self):
         """
         Retrieves the supply voltage of this SFP
         """
-        voltage = None 
+        voltage = 'N/A'
         try:
             voltage_data = self._get_eeprom_data('Voltage')
             voltage = voltage_data['data']['Vcc']['value']
         except (TypeError, ValueError):
-            return None
+            return 'N/A'
         return voltage
 
     def get_tx_bias(self):
