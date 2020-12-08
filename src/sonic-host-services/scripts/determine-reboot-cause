@@ -103,8 +103,8 @@ def get_reboot_cause_from_platform():
     # Until all platform vendors have provided sonic_platform packages,
     # if there is no sonic_platform package installed, we only provide
     # software-related reboot causes.
-    hardware_reboot_cause_major = str()
-    hardware_reboot_cause_minor = str()
+    hardware_reboot_cause_major = "N/A"
+    hardware_reboot_cause_minor = "N/A"
     try:
         import sonic_platform
         platform  = sonic_platform.platform.Platform()
@@ -121,11 +121,12 @@ def find_hardware_reboot_cause():
 
     REBOOT_CAUSE_HARDWARE_OTHER = "Hardware - Other"
     REBOOT_CAUSE_NON_HARDWARE = "Non-Hardware"
+    REBOOT_CAUSE_HARDWARE_NA = "N/A"
 
     hardware_reboot_cause_major, hardware_reboot_cause_minor = get_reboot_cause_from_platform()
     sonic_logger.log_info("Platform api returns reboot cause {}, {}".format(hardware_reboot_cause_major, hardware_reboot_cause_minor))
 
-    if hardware_reboot_cause_major == REBOOT_CAUSE_NON_HARDWARE:
+    if hardware_reboot_cause_major == REBOOT_CAUSE_NON_HARDWARE or hardware_reboot_cause_major == REBOOT_CAUSE_HARDWARE_NA:
         # The reboot was not caused by hardware. If there is a REBOOT_CAUSE_FILE, it will
         # contain any software-related reboot info. We will use it as the previous cause.
         pass
