@@ -13,6 +13,9 @@ from sonic_py_common import device_info
 
 import kube_commands
 
+UNIT_TESTING = 0
+UNIT_TESTING_ACTIVE = 0
+
 # Kube config file
 SONIC_CTR_CONFIG = "/etc/sonic/remote_ctr.config.json"
 
@@ -91,7 +94,7 @@ remote_ctr_config = {
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    # print(msg)
+    print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
@@ -108,14 +111,22 @@ def ts_now():
 
 
 def is_systemd_active(feat):
-    status = os.system('systemctl is-active --quiet {}'.format(feat))
+    if not UNIT_TESTING:
+        status = os.system('systemctl is-active --quiet {}'.format(feat))
+    else:
+        status = UNIT_TESTING_ACTIVE
     log_debug("system status for {}: {}".format(feat, str(status)))
     return status == 0
 
 
-def restart_systemd_service(feat, owner):
+def restart_systemd_service(server, feat, owner):
     log_debug("Restart service {} to owner:{}".format(feat, owner))
-    status = os.system("systemctl restart {}".format(feat))
+    if not UNIT_TESTING:
+        status = os.system("systemctl restart {}".format(feat))
+    else:
+        server.mod_db_entry(STATE_DB_NAME,
+                FEATURE_TABLE, feat, {"restart": "true"})
+        status = 0
     if status != 0:
         syslog.syslog(syslog.LOG_ERR,
                 "Failed to restart {} to switch to {}".format(feat, owner))
@@ -188,6 +199,7 @@ class MainServer:
         """ Modify entry for given table|key with given dict type data """
         conn = self.db_connectors[db_name]
         tbl = swsscommon.Table(conn, table_name)
+        print("mod_db_entry: db={} tbl={} key={} data={}".format(db_name, table_name, key, str(data)))
         tbl.set(key, list(data.items()))
 
 
@@ -225,7 +237,11 @@ class MainServer:
             if state == self.selector.TIMEOUT:
                 continue
             elif state == self.selector.ERROR:
-                raise Exception("Received error from select")
+                if not UNIT_TESTING:
+                    raise Exception("Received error from select")
+                else:
+                    print("Skipped Exception; Received error from select")
+                    return
 
             for subscriber in self.subscribers:
                 key, op, fvs = subscriber.pop()
@@ -242,13 +258,14 @@ class MainServer:
 def set_node_labels(server):
     labels = {}
 
-    version_info = device_info.get_sonic_version_info()
+    version_info = (device_info.get_sonic_version_info() if not UNIT_TESTING
+            else { "build_version": "20201230.111"})
     dev_data = server.get_db_entry(CONFIG_DB_NAME, 'DEVICE_METADATA',
             'localhost')
-    dep_type = dev_data['type'] if 'type' in dev_data else "Unknown"
+    dep_type = dev_data['type'] if 'type' in dev_data else "unknown"
 
     labels["sonic_version"] = version_info['build_version']
-    labels["hwsku"] = device_info.get_hwsku()
+    labels["hwsku"] = device_info.get_hwsku() if not UNIT_TESTING else "mock"
     labels["deployment_type"] = dep_type
     server.mod_db_entry(STATE_DB_NAME,
             KUBE_LABEL_TABLE, KUBE_LABEL_SET_KEY, labels)
@@ -446,7 +463,7 @@ class FeatureTransitionHandler:
 
         # service_restart
         if service_restart:
-            restart_systemd_service(feat, set_owner)
+            restart_systemd_service(self.server, feat, set_owner)
 
 
 
@@ -554,7 +571,7 @@ class LabelsPendingHandler:
         if (ret != 0):
             self.pending = True
             pause = remote_ctr_config[LABEL_RETRY]
-            ts += (datetime.datetime.now() + datetime.timedelta(seconds=pause))
+            ts = (datetime.datetime.now() + datetime.timedelta(seconds=pause))
             self.server.register_timer(ts, self.update_node_labels)
 
         log_debug("ret={} set={} pending={}".format(ret,
@@ -569,6 +586,8 @@ def main():
     FeatureTransitionHandler(server)
     LabelsPendingHandler(server)
     server.run()
+    print("ctrmgrd.py main called")
+    return 0
 
 
 if __name__ == '__main__':

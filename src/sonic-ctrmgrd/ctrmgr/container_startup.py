@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python3
 
 import argparse
 import datetime
@@ -6,6 +6,7 @@ import inspect
 import subprocess
 import syslog
 import time
+import json
 
 from swsscommon import swsscommon
 
@@ -33,10 +34,12 @@ state_data = {
         SYSTEM_STATE: ""
         }
 
+UNIT_TESTING = 0
+
 
 def debug_msg(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
-    # print(msg)
+    print(msg)
     syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
@@ -117,27 +120,26 @@ def get_docker_id():
     return output.strip()[:12]
 
 
-def instance_lower(feature, version):
+def instance_higher(feature, version):
     # Compares given version against current version in STATE-DB.
-    # Return True if this version is lower than current.
+    # Return True if this version is higher than current.
     #
-    if ((state_data[REMOTE_STATE] == "none") or
-            (state_data[REMOTE_STATE] == "stopped")):
-        # No one running to compare version
-        return False
-
-    ct_version = state_data[VERSION]
-    ct = ct_version.split('.')
-    nxt = version.split('.')
     ret = False
-    for cs, ns in zip(ct, nxt):
-        c = int(cs)
-        n = int(ns)
-        if n < c:
-            ret = True
-            break
-        elif n > c:
-            break
+    ct_version = state_data[VERSION]
+    if ct_version:
+        ct = ct_version.split('.')
+        nxt = version.split('.')
+        for cs, ns in zip(ct, nxt):
+            c = int(cs)
+            n = int(ns)
+            if n < c:
+                break
+            elif n > c:
+                ret = True
+                break
+    else:
+        # Empty version implies no one is running.
+        ret = True
 
     debug_msg("compare version: new:{} current:{} res={}".format(
         version, ct_version, ret))
@@ -163,8 +165,9 @@ def update_state(feature, owner=None, version=None):
     """
     data = {
             CURRENT_OWNER: owner,
-            DOCKER_ID: get_docker_id(),
+            DOCKER_ID: get_docker_id() if owner != "local" else feature,
             UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            "hello": "world",
             VERSION: version
             }
 
@@ -186,6 +189,8 @@ def do_exit(feat, m):
     while True:
         syslog.syslog(syslog.LOG_ERR, "Blocking .... feat:{} docker_id:{} msg:{}".format(
             feat, get_docker_id(), m))
+        if UNIT_TESTING:
+            break
         time.sleep(60)
     
 
@@ -209,27 +214,31 @@ def container_up(feature, owner, version):
     read_data(feature)
 
     debug_msg("args: feature={}, owner={}, version={} DB: set_owner={} state_data={}".format(
-        feature, owner, version, set_owner, state_data))
+        feature, owner, version, set_owner, json.dumps(state_data, indent=4)))
 
     if owner == "local":
         update_state(feature, owner, version)
     else:
         if (set_owner == "local"):
             do_exit(feature, "bail out as set_owner is local")
+            return
 
         if not is_active(feature):
             do_exit(feature, "bail out as system state not active")
+            return
 
         if check_version_blocked(feature, version):
             do_exit(feature, "This version is marked disabled. Exiting ...")
+            return
 
-        if instance_lower(feature, version):
-            # Remove label <feature_name>_<version>_enabled
+        if not instance_higher(feature, version):
+            # TODO: May Remove label <feature_name>_<version>_enabled
             # Else kubelet will continue to re-deploy every 5 mins, until
             # master removes the lable to un-deploy.
             #
-            do_exit(feature, "bail out as current deploy version {} is lower".
+            do_exit(feature, "bail out as current deploy version {} is not higher".
                     format(version))
+            return
 
         update_data(feature, { VERSION: version })
 
@@ -243,13 +252,9 @@ def container_up(feature, owner, version):
         
         i = 0
         while (mode != "ready"):
-            if i == 0:
+            if (i % 10) == 0:
                 debug_msg("{}: remote_state={}. Waiting to go ready".format(feature, mode))
-                i = 1
-            elif i == 9:
-                i = 0
-            else:
-                i += 1
+            i += 1
 
             time.sleep(2)
             mode, db_version = read_fields(feature, [(REMOTE_STATE, "none"), (VERSION, "")])
@@ -258,8 +263,12 @@ def container_up(feature, owner, version):
                 # If this happens to be higher version, next deploy by kube will fix
                 # This is a very rare window of opportunity, for this version to be higher.
                 #
-                do_exit(feature, "bail out as current deploy version={} is different than {}. re-deploy higher one".
+                do_exit(feature,
+                        "bail out as current deploy version={} is different than {}. re-deploy higher one".
                         format(version, db_version))
+                return
+            if UNIT_TESTING:
+                return
 
 
         update_state(feature, owner, version)

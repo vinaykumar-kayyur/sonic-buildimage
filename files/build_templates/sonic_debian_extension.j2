@@ -590,6 +590,23 @@ else
 fi
 sudo umount /proc || true
 sudo rm $FILESYSTEM_ROOT/etc/init.d/docker
+
+sudo bash -c "echo { > $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/ctr_image_names.json"
+{% for entry in feature_vs_image_names.split(' ') -%}
+{% if entry|length %}
+{% set lst = entry.split(':') %}
+{% set lst1 = lst[1].split('.') %}
+    sudo bash -c "echo -n -e \"\x22{{ lst[0] }}\x22 : \x22{{ lst1[0] }}\x22\" >> $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/ctr_image_names.json"
+{% if not loop.last %}
+    sudo bash -c "echo \",\" >> $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/ctr_image_names.json"
+{% else %}
+    sudo bash -c "echo \"\" >> $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/ctr_image_names.json"
+{% endif %}
+{% endif %}
+{% endfor %}
+sudo bash -c "echo } >> $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/ctr_image_names.json"
+
+installer_start_scripts.split
 {% for script in installer_start_scripts.split(' ') -%}
 sudo cp {{script}} $FILESYSTEM_ROOT/usr/bin/
 {% endfor %}

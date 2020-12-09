@@ -21,6 +21,10 @@ from urllib.parse import urlparse
 from sonic_py_common import device_info
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
+KUBELET_YAML = "/var/lib/kubelet/config.yaml"
+SERVER_ADMIN_URL = "https://{}/admin.conf"
+LOCK_FILE = "/var/lock/kube_join.lock"
+
 # kubectl --kubeconfig <KUBE_ADMIN_CONF> label nodes
 #       <device_info.get_hostname()> <label to be added>
 
@@ -31,7 +35,8 @@ def log_debug(m):
 
 
 def log_error(m):
-    print(m)
+    msg = "{}: {}".format(inspect.stack()[1][3], m)
+    print(msg)
     syslog.syslog(syslog.LOG_ERR, m)
 
 
@@ -45,19 +50,9 @@ def to_str(s):
     return str(s)
 
 
-def systemd_service_action(action, feat):
-    log_debug("{} service {}".format(action, feat))
-    status = os.system("systemctl {} {}".format(action, feat))
-    if status != 0:
-        syslog.syslog(syslog.LOG_ERR,
-                "Failed to {} {}".format(action, feat))
-    else:
-        syslog.syslog(syslog.LOG_INFO,
-                "{} {} is done".format(action, feat))
-
-
 def _run_command(cmd, timeout=5):
     """ Run shell command and return exit code, along with stdout. """
+    ret = 0
     try:
         proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
@@ -163,7 +158,6 @@ def func_get_labels(args):
 
 def is_connected(server=""):
     """ Check if we are currently connected """
-    KUBELET_YAML = "/var/lib/kubelet/config.yaml"
 
     if (os.path.exists(KUBELET_YAML) and os.path.exists(KUBE_ADMIN_CONF)):
         with open(KUBE_ADMIN_CONF, 'r') as s:
@@ -184,12 +178,11 @@ def func_is_connected(args):
     connected = is_connected()
     print("Currently {} to Kube master".format(
         "connected" if connected else "not connected"))
-    return 0
+    return 0 if connected else 1
 
 
 def _take_lock():
     """ Take a lock to block concurrent calls """
-    LOCK_FILE = "/var/lock/kube_join.lock"
     lock_fd = None
     try:
         lock_fd = open(LOCK_FILE, "w")
@@ -203,7 +196,6 @@ def _take_lock():
 
 def _download_file(server, port, insecure):
     """ Download file from Kube master to assist join as node. """
-    SERVER_ADMIN_URL = "https://{}/admin.conf"
 
     if insecure:
         r = urllib.request.urlopen(SERVER_ADMIN_URL.format(server),
@@ -218,19 +210,22 @@ def _download_file(server, port, insecure):
 
     # Ensure the admin.conf has given VIP as server-IP.
     update_file = "{}.upd".format(fname)
-    cmd = 'sed "s/server:.*:{}/server: https:\/\/{}:{}/" {} > {}'.format(
+    cmd = r'sed "s/server:.*:{}/server: https:\/\/{}:{}/" {} > {}'.format(
             str(port), server, str(port), fname, update_file)
     (ret, _, err) = _run_command(cmd)
 
+    print("sed command: ret={}".format(ret))
     if ret != 0:
-        log_err("sed update of downloaded file failed with ret={}\n{}".
-                format(ret, err))
+        log_error("sed update of downloaded file failed with ret={}".
+                format(ret))
+        print("sed command failed: ret={}".format(ret))
         return ret
 
     shutil.copyfile(update_file, KUBE_ADMIN_CONF)
 
     _run_command("rm -f {} {}".format(fname, update_file))
     log_debug("{} downloaded".format(KUBE_ADMIN_CONF))
+    return ret
 
 
 def _troubleshoot_tips():
@@ -287,18 +282,20 @@ def _do_reset(pending_join = False):
 
 def _do_join(server, port, insecure):
     KUBEADM_JOIN_CMD = "kubeadm join --discovery-file {} --node-name {}"
-
+    err = ""
+    out = ""
     try:
-        _download_file(server, port, insecure)
+        ret = _download_file(server, port, insecure)
+        print("_download ret={}".format(ret))
+        if ret == 0:
+            _do_reset(True)
+            _run_command("modprobe br_netfilter")
+            (ret, _, _) = _run_command("systemctl start kubelet")
 
-        _do_reset(True)
-
-        _run_command("modprobe br_netfilter")
-
-        _run_command("systemctl start kubelet")
-
-        (ret, out, err) = _run_command(KUBEADM_JOIN_CMD.format(
-            KUBE_ADMIN_CONF, device_info.get_hostname()), timeout=60)
+        if ret == 0:
+            (ret, out, err) = _run_command(KUBEADM_JOIN_CMD.format(
+                KUBE_ADMIN_CONF, device_info.get_hostname()), timeout=60)
+            print("ret = {}".format(ret))
 
     except IOError as e:
         err = "Download failed: {}".format(str(e))
@@ -326,10 +323,10 @@ def kube_join_master(server, port, insecure, force=False):
     lock_fd = _take_lock()
     if not lock_fd:
         log_error("Lock {} is active; Bail out".format(LOCK_FILE))
-        return
+        return (-1, "", "")
 
-    systemd_service_action("start", "kubelet")
     if ((not force) and is_connected(server)):
+        _run_command("systemctl start kubelet")
         err = "Master {} is already connected. "
         err += "Reset or join with force".format(server)
     else:
@@ -346,9 +343,8 @@ def kube_reset_master(force):
     lock_fd = _take_lock()
     if not lock_fd:
         log_error("Lock {} is active; Bail out".format(LOCK_FILE))
-        return
+        return (-1, "")
 
-    systemd_service_action("stop", "kubelet")
     if not force:
         if not is_connected():
             err = "Currently not connected to master. "
@@ -358,6 +354,8 @@ def kube_reset_master(force):
 
     if ret == 0:
         _do_reset()
+    else:
+        _run_command("systemctl stop kubelet")
 
     return (ret, err)
 
@@ -379,12 +377,14 @@ def main():
 
     if len(sys.argv) < 2:
         parser.print_help()
-        exit(-1)
+        return -1
 
     args = parser.parse_args()
-    args.func(args)
+    ret = args.func(args)
 
     syslog.closelog()
+    return ret
+
 
 if __name__ == "__main__":
     if os.geteuid() != 0:

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import argparse
+import os
 import docker
 import inspect
 import json
-import os
 import syslog
 import time
 import datetime
@@ -24,7 +24,7 @@ CURRENT_OWNER = "current_owner"
 UPD_TIMESTAMP = "update_time"
 CONTAINER_ID = "container_id"
 REMOTE_STATE = "remote_state"
-VERSION = "version"
+VERSION = "container_version"
 SYSTEM_STATE = "system_state"
 
 KUBE_LABEL_TABLE = "KUBE_LABELS"
@@ -150,6 +150,8 @@ def container_id(feature):
     :param feature: Name of the feature to start.
     
     """
+    init()
+
     tbl = swsscommon.Table(state_db, "FEATURE")
     data = dict(tbl.get(feature)[1])
 
@@ -181,6 +183,9 @@ def container_start(feature):
 
     ret = 0
     debug_msg("BEGIN")
+
+    init()
+
     set_owner, fallback = read_config(feature)
     _, remote_state, _ = read_state(feature)
 
@@ -188,7 +193,8 @@ def container_start(feature):
         feature, set_owner, fallback, remote_state))
 
     data = {
-            SYSTEM_STATE: "up"
+            SYSTEM_STATE: "up",
+            UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             }
 
 
@@ -208,6 +214,7 @@ def container_start(feature):
 
     if (start_val & START_LOCAL):
         data[CURRENT_OWNER] = "local"
+        data[CONTAINER_ID] = feature
 
     update_data(feature, data)
 
@@ -235,6 +242,9 @@ def container_stop(feature):
     
     """
     debug_msg("BEGIN")
+
+    init()
+
     set_owner, _ = read_config(feature)
     current_owner, remote_state, _ = read_state(feature)
     docker_id = container_id(feature)
@@ -268,6 +278,7 @@ def container_stop(feature):
             CURRENT_OWNER: "none",
             UPD_TIMESTAMP: str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
             CONTAINER_ID: "",
+            VERSION: "",
             SYSTEM_STATE: "down"
             }
     if remote_state == "running":
@@ -288,6 +299,9 @@ def container_kill(feature):
     
     """
     debug_msg("BEGIN")
+
+    init()
+
     set_owner, _ = read_config(feature)
     current_owner, remote_state, _ = read_state(feature)
     docker_id = container_id(feature)
@@ -325,6 +339,8 @@ def container_wait(feature):
     
     """
     debug_msg("BEGIN")
+
+    init()
 
     set_owner, fallback = read_config(feature)
     current_owner, remote_state, _ = read_state(feature)
@@ -372,8 +388,6 @@ def main():
 
     args = parser.parse_args()
 
-    init()
-
     if args.action == "start":
         container_start(args.name)
 
@@ -389,9 +403,6 @@ def main():
     elif args.action == "id":
         id = container_id(args.name)
         print(id)
-
-    else:
-        print("Unknown action {} for name {}".format(action, name))
 
 
 if __name__ == "__main__":

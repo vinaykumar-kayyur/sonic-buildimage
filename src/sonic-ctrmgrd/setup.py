@@ -31,6 +31,6 @@ setup(
     packages=find_packages(),
     setup_requires=setup_requirements,
     version='1.0.0',
-    scripts=['ctrmgr/container', 'ctrmgr/kube_commands.py', 'ctrmgr/ctrmgrd.py'],
+    scripts=['ctrmgr/container', 'ctrmgr/ctrmgr_tools.py', 'ctrmgr/kube_commands.py', 'ctrmgr/ctrmgrd.py'],
     zip_safe=False,
 )

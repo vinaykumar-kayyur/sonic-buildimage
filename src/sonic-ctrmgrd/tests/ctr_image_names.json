@@ -1,0 +1,16 @@
+{
+"sflow" : "docker-sflow",
+"bgp" : "docker-fpm-frr",
+"mgmt-framework" : "docker-sonic-mgmt-framework",
+"telemetry" : "docker-sonic-telemetry",
+"swss" : "docker-orchagent",
+"database" : "docker-database",
+"lldp" : "docker-lldp",
+"pmon" : "docker-platform-monitor",
+"radv" : "docker-router-advertiser",
+"nat" : "docker-nat",
+"teamd" : "docker-teamd",
+"snmp" : "docker-snmp",
+"dhcp_relay" : "docker-dhcp-relay",
+"syncd" : "docker-syncd-brcm"
+}
