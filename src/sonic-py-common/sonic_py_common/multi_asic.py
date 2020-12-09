@@ -138,17 +138,18 @@ def get_asic_id_from_name(asic_name):
         raise ValueError('Unknown asic namespace name {}'.format(asic_name))
 
 
-def get_current_namespace():
+def get_current_namespace(pid=None):
     """
     This API returns the network namespace in which it is
     invoked. In case of global namepace the API returns None
     """
 
     net_namespace = None
-    command = ["/bin/ip netns identify", str(os.getpid())]
+    command = ["sudo /bin/ip netns identify {}".format(os.getpid() if not pid else pid)]
     proc = subprocess.Popen(command,
                             stdout=subprocess.PIPE,
                             shell=True,
+                            universal_newlines=True,
                             stderr=subprocess.STDOUT)
     try:
         stdout, stderr = proc.communicate()
@@ -158,6 +159,8 @@ def get_current_namespace():
             )
         if stdout.rstrip('\n') != "":
             net_namespace = stdout.rstrip('\n')
+        else:
+            net_namespace = DEFAULT_NAMESPACE
     except OSError as e:
         raise OSError("Error running command {}".format(command))
 
