@@ -290,8 +290,6 @@ RUN apt-get update && apt-get install -y \
         libevent-dev \
 # For libyang
         swig \
-# For SWI Tools
-        python-m2crypto \
 # For sonic-mgmt-framework
         autoconf \
         m4 \
@@ -339,7 +337,7 @@ RUN pip2 install \
          ctypesgen==0.r125 \
          crc16
 
-# Note: Stick with Jinja2 2.x branch as the 3.x dropped support for Python 2.7 
+# Note: Stick with Jinja2 2.x branch as the 3.x dropped support for Python 2.7
 RUN pip2 install --force-reinstall --upgrade "Jinja2<3.0.0"
 
 # For sonic config engine testing
@@ -365,9 +363,6 @@ RUN pip3 install "lxml==4.6.1"
 # For sonic-platform-common testing
 RUN pip3 install redis
 
-# For supervisor build
-RUN pip2 install meld3 mock
-
 # For vs image build
 RUN pip2 install pexpect==4.6.0
 
@@ -379,11 +374,7 @@ RUN pip2 install setuptools==40.8.0
 # For sonic-swss-common testing
 RUN pip2 install Pympler==0.8
 
-# For sonic_yang_mgmt build
-RUN pip2 install ijson==2.6.1
-RUN pip3 install ijson==2.6.1
-RUN pip2 install jsondiff==1.2.0
-RUN pip2 install xmltodict==0.12.0
+# For sonic_yang_model build
 RUN pip2 install pyang==2.1.1
 
 # For mgmt-framework build
@@ -444,6 +435,9 @@ RUN apt-get install -y docker-ce=5:18.09.5~3-0~debian-stretch docker-ce-cli=5:18
 RUN apt-get install -y docker-ce=18.06.3~ce~3-0~debian
 {%- endif %}
 RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/docker
+
+# Install m2crypto package, needed by SWI tools
+RUN pip install m2crypto==0.36.0
 
 # Install swi tools
 RUN pip2 install git+https://github.com/aristanetworks/swi-tools.git@d51761ec0bb93c73039233f3c01ed48235ffad00

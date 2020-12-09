@@ -180,7 +180,7 @@ QSFP_DD_RX_POWER_OFFSET = 58
 QSFP_DD_RX_POWER_WIDTH = 16
 QSFP_DD_TX_POWER_OFFSET = 26
 QSFP_DD_TX_POWER_WIDTH = 16
-QSFP_DD_CHANNL_MON_OFFSET = 154
+QSFP_DD_CHANNL_MON_OFFSET = 26
 QSFP_DD_CHANNL_MON_WIDTH = 48
 QSFP_DD_CHANNL_DISABLE_STATUS_OFFSET = 86
 QSFP_DD_CHANNL_DISABLE_STATUS_WIDTH = 1
@@ -309,7 +309,8 @@ def deinitialize_sdk_handle(sdk_handle):
 class SFP(SfpBase):
     """Platform-specific SFP class"""
 
-    def __init__(self, sfp_index, sfp_type, sdk_handle):
+    def __init__(self, sfp_index, sfp_type, sdk_handle, platform):
+        SfpBase.__init__(self)
         self.index = sfp_index + 1
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
@@ -319,7 +320,12 @@ class SFP(SfpBase):
         self.sdk_handle = sdk_handle
         self.sdk_index = sfp_index
 
+        # initialize SFP thermal list
+        from .thermal import initialize_sfp_thermals
+        initialize_sfp_thermals(platform, self._thermal_list, self.index)
+
     def reinit(self):
+
         """
         Re-initialize this SFP object when a new SFP inserted
         :return: 
@@ -466,8 +472,7 @@ class SFP(SfpBase):
                     self.dom_tx_power_supported = True
                     self.dom_tx_bias_power_supported = True
                     self.dom_thresholds_supported = True
-                    #currently set to False becasue Page 11h is not supported by FW
-                    self.dom_rx_tx_power_bias_supported = False
+                    self.dom_rx_tx_power_bias_supported = True
                 else:
                     self.dom_supported = False
                     self.second_application_list = False
@@ -975,7 +980,8 @@ class SFP(SfpBase):
 
             if self.dom_rx_tx_power_bias_supported:
                 # page 11h
-                dom_data_raw = self._read_eeprom_specific_bytes((QSFP_DD_CHANNL_MON_OFFSET), QSFP_DD_CHANNL_MON_WIDTH)
+                offset = 512
+                dom_data_raw = self._read_eeprom_specific_bytes(offset + QSFP_DD_CHANNL_MON_OFFSET, QSFP_DD_CHANNL_MON_WIDTH)
                 if dom_data_raw is None:
                     return transceiver_dom_info_dict
                 dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params(dom_data_raw, 0)
@@ -1265,7 +1271,7 @@ class SFP(SfpBase):
                 return False
         elif self.sfp_type == QSFP_DD_TYPE:
             offset = 0
-            sfpd_obj = qsfp_dd_InterfaceId()
+            sfpd_obj = qsfp_dd_Dom()
             dom_channel_status_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_STATUS_OFFSET), QSFP_DD_CHANNL_STATUS_WIDTH)
 
             if dom_channel_status_raw is None:
@@ -1301,7 +1307,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_DD_CHANNL_RX_LOS_STATUS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     rx_los_data = int(dom_channel_monitor_raw[0], 8)
@@ -1353,7 +1359,7 @@ class SFP(SfpBase):
             return None
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_DD_CHANNL_TX_FAULT_STATUS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     tx_fault_data = int(dom_channel_monitor_raw[0], 8)
@@ -1646,7 +1652,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 sfpd_obj = qsfp_dd_Dom()
                 if sfpd_obj is None:
                     return None
@@ -1723,7 +1729,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 sfpd_obj = qsfp_dd_Dom()
                 if sfpd_obj is None:
                     return None
@@ -1801,7 +1807,7 @@ class SFP(SfpBase):
             return None
             # page 11
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 sfpd_obj = qsfp_dd_Dom()
                 if sfpd_obj is None:
                     return None
@@ -2034,3 +2040,11 @@ class SFP(SfpBase):
             False if not
         """
         return NotImplementedError
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True
