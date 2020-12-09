@@ -4,7 +4,6 @@
 
 import contextlib
 import io
-import os
 import tarfile
 from typing import Optional
 
