@@ -2,6 +2,7 @@
 import contextlib
 import functools
 import os
+import pkgutil
 from typing import Optional, Union, Dict, Any
 
 import docker
@@ -99,8 +100,6 @@ def check_dependencies_and_conflicts(packages: Dict[str, Package]):
 
 class PackageManager:
     """ SONiC Package Manager. """
-
-    HOST_PLUGIN_PATH = '/usr/local/lib/python2.7/dist-packages/{}/plugins/{}'
 
     def __init__(self,
                  docker: DockerApi,
@@ -541,10 +540,11 @@ class PackageManager:
 
     @classmethod
     def get_cli_plugin_path(cls, package: Package, command):
-        return cls.HOST_PLUGIN_PATH.format(
-            command,
-            cls.get_cli_plugin_name(package)
-        )
+        pkg_loader = pkgutil.get_loader(f'{command}.plugins')
+        if pkg_loader is None:
+            raise PackageManagerError(f'Failed to get plugins path for {command} CLI')
+        plugins_pkg_path = os.path.dirname(pkg_loader.path)
+        return os.path.join(plugins_pkg_path, cls.get_cli_plugin_name(package))
 
     def install_cli_plugins(self, package: Package):
         for command in ('show', 'config', 'clear'):

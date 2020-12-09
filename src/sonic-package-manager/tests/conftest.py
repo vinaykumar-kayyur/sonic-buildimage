@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+from unittest import mock
 from unittest.mock import Mock, MagicMock
 
 import pytest
@@ -281,6 +282,12 @@ def sonic_fs(fs):
     fs.create_file(os.path.join(TEMPLATES_PATH, MONIT_CONF_TEMPLATE))
     fs.create_file(os.path.join(TEMPLATES_PATH, DEBUG_DUMP_SCRIPT_TEMPLATE))
     yield fs
+
+
+@pytest.fixture(autouse=True)
+def mock_pkgutil():
+    with mock.patch('pkgutil.get_loader'):
+        yield
 
 
 @pytest.fixture
