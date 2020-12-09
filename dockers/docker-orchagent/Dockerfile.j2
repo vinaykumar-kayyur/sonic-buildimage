@@ -21,7 +21,6 @@ RUN apt-get update &&       \
         ndppd               \
         # Needed for installing netifaces Python package
         build-essential     \
-        python-dev          \
         python3-dev
 
 {% if ( CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" ) %}
@@ -36,11 +35,10 @@ RUN ln -s -f /usr/bin/gcc-8 /usr/bin/arm-linux-gnueabihf-gcc
 RUN ln -s -f /usr/bin/gcc-8 /usr/bin/aarch64-linux-gnu-gcc
 {% endif %}
 
-RUN pip2 install \
+RUN pip3 install \
          scapy==2.4.2 \
          setuptools \
-         pyroute2==0.5.3
-RUN pip2 install \
+         pyroute2==0.5.3 \
          netifaces==0.10.7 \
          monotonic==1.5
 
@@ -63,10 +61,10 @@ RUN apt-get remove -y gcc-8
 {{ install_debian_packages(docker_orchagent_debs.split(' ')) }}
 {%- endif %}
 
+
 # Clean up
 RUN apt-get purge -y          \
         build-essential       \
-        python-dev            \
         python3-dev        && \
     apt-get clean -y       && \
     apt-get autoclean -y   && \
