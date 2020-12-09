@@ -703,24 +703,24 @@ class Sfp(SfpBase):
         """
         Retrieves the temperature of this SFP
         """
-        temperature = 'N/A'
+        temperature = None
         try :
             temperature_data = self._get_eeprom_data('Temperature')
             temperature = temperature_data['data']['Temperature']['value']
         except (TypeError, ValueError):
-            return 'N/A'
+            return None
         return temperature
 
     def get_voltage(self):
         """
         Retrieves the supply voltage of this SFP
         """
-        voltage = 'N/A'
+        voltage = None
         try:
             voltage_data = self._get_eeprom_data('Voltage')
             voltage = voltage_data['data']['Vcc']['value']
         except (TypeError, ValueError):
-            return 'N/A'
+            return None
         return voltage
 
     def get_tx_bias(self):
