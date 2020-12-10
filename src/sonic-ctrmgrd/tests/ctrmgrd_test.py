@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 import unittest
 from unittest.mock import MagicMock, patch
 from . import common_test
@@ -385,6 +383,9 @@ class TestContainerStartup(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         print("SETUP")
+
+
+    def init(self):
         ctrmgrd.UNIT_TESTING = 1
         ctrmgrd.SONIC_CTR_CONFIG = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), "remote_ctr.config.json")
@@ -399,6 +400,7 @@ class TestContainerStartup(unittest.TestCase):
     @patch("ctrmgrd.kube_commands.kube_write_labels")
     def test_server(self, mock_kube_wr, mock_kube_join, mock_kube_rst, mock_subs,
             mock_select, mock_table, mock_conn):
+        self.init()
         ret = 0
         common_test.set_mock(mock_table, mock_conn)
         common_test.set_mock_sel(mock_select, mock_subs)
@@ -432,6 +434,7 @@ class TestContainerStartup(unittest.TestCase):
     @patch("ctrmgrd.kube_commands.kube_write_labels")
     def test_feature(self, mock_kube_wr, mock_kube_join, mock_kube_rst, mock_subs,
             mock_select, mock_table, mock_conn):
+        self.init()
         ret = 0
         common_test.set_mock(mock_table, mock_conn)
         common_test.set_mock_sel(mock_select, mock_subs)
@@ -460,6 +463,7 @@ class TestContainerStartup(unittest.TestCase):
     @patch("ctrmgrd.kube_commands.kube_write_labels")
     def test_labels(self, mock_kube_wr, mock_kube_join, mock_kube_rst, mock_subs,
             mock_select, mock_table, mock_conn):
+        self.init()
         ret = 0
         common_test.set_mock(mock_table, mock_conn)
         common_test.set_mock_sel(mock_select, mock_subs)
@@ -484,10 +488,5 @@ class TestContainerStartup(unittest.TestCase):
 
             ret = common_test.check_kube_actions()
             assert ret == 0
-
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 

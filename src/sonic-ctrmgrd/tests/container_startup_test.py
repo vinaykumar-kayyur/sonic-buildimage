@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 import unittest
 from unittest.mock import MagicMock, patch
 from . import common_test
@@ -377,11 +375,11 @@ class TestContainerStartup(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         print("SETUP")
-        container_startup.UNIT_TESTING = 1
 
     @patch("container_startup.swsscommon.DBConnector")
     @patch("container_startup.swsscommon.Table")
     def test_start(self, mock_table, mock_conn):
+        container_startup.UNIT_TESTING = 1
         common_test.set_mock(mock_table, mock_conn)
         for (i, ct_data) in startup_test_data.items():
             common_test.do_start_test("container_startup", i, ct_data)
@@ -391,9 +389,5 @@ class TestContainerStartup(unittest.TestCase):
 
             ret = common_test.check_tables_returned()
             assert ret == 0
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 

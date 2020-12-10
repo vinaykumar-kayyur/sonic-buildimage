@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 import unittest
 from unittest.mock import MagicMock, patch
 from . import common_test
@@ -258,6 +256,9 @@ class TestKubeCommands(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         print("SETUP")
+
+
+    def init(self):
         kube_commands.KUBELET_YAML = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), "kubelet_config.yaml")
         kube_commands.SERVER_ADMIN_URL = "file://{}".format(
@@ -267,6 +268,7 @@ class TestKubeCommands(unittest.TestCase):
 
     @patch("kube_commands.subprocess.Popen")
     def test_read_labels(self, mock_subproc):
+        self.init()
         common_test.set_kube_mock(mock_subproc)
 
         for (i, ct_data) in read_labels_test_data.items():
@@ -303,6 +305,7 @@ class TestKubeCommands(unittest.TestCase):
 
     @patch("kube_commands.subprocess.Popen")
     def test_write_labels(self, mock_subproc):
+        self.init()
         common_test.set_kube_mock(mock_subproc)
 
         for (i, ct_data) in write_labels_test_data.items():
@@ -326,6 +329,7 @@ class TestKubeCommands(unittest.TestCase):
 
     @patch("kube_commands.subprocess.Popen")
     def test_join(self, mock_subproc):
+        self.init()
         common_test.set_kube_mock(mock_subproc)
 
         for (i, ct_data) in join_test_data.items():
@@ -362,6 +366,7 @@ class TestKubeCommands(unittest.TestCase):
 
     @patch("kube_commands.subprocess.Popen")
     def test_reset(self, mock_subproc):
+        self.init()
         common_test.set_kube_mock(mock_subproc)
 
         for (i, ct_data) in reset_test_data.items():
@@ -378,9 +383,5 @@ class TestKubeCommands(unittest.TestCase):
                     ct_data[common_test.ARGS][0])
             if common_test.RETVAL in ct_data:
                 assert ret == ct_data[common_test.RETVAL]
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 

@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 import unittest
 from unittest.mock import MagicMock, patch
 from . import common_test
@@ -257,13 +255,13 @@ class TestCtrmgrTools(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         print("SETUP")
-        ctrmgr_tools.CTR_NAMES_FILE = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "ctr_image_names.json")
 
     @patch("ctrmgr_tools.swsscommon.DBConnector")
     @patch("ctrmgr_tools.swsscommon.Table")
     @patch("ctrmgr_tools.docker.from_env")
     def test_tools(self, mock_docker, mock_table, mock_conn):
+        ctrmgr_tools.CTR_NAMES_FILE = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), "ctr_image_names.json")
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (i, ct_data) in tools_test_data.items():
@@ -279,9 +277,5 @@ class TestCtrmgrTools(unittest.TestCase):
 
             ret = common_test.check_mock_containers()
             assert ret == 0
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 

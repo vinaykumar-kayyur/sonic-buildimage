@@ -4,6 +4,7 @@ import datetime
 import inspect
 import json
 import os
+import sys
 import syslog
 
 from collections import defaultdict
@@ -11,6 +12,7 @@ from collections import defaultdict
 from swsscommon import swsscommon
 from sonic_py_common import device_info
 
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import kube_commands
 
 UNIT_TESTING = 0

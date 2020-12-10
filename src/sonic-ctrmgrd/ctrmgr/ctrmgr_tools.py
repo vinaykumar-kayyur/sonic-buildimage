@@ -1,7 +1,9 @@
 #! /usr/bin/python3
 
 import os
+import sys
 
+sys.path.append("tests")
 import docker
 import argparse
 

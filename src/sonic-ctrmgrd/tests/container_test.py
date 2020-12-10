@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 import unittest
 from unittest.mock import MagicMock, patch
 import imp
@@ -435,6 +433,9 @@ class TestContainer(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         print("SETUP")
+
+
+    def init(self):
         container.CTR_STATE_SCR_PATH = __file__
         container.SONIC_CTR_CONFIG = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), "remote_ctr.config.json")
@@ -443,6 +444,7 @@ class TestContainer(unittest.TestCase):
     @patch("container.swsscommon.Table")
     @patch("container.docker.from_env")
     def test_start(self, mock_docker, mock_table, mock_conn):
+        self.init()
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (i, ct_data) in start_test_data.items():
@@ -462,6 +464,7 @@ class TestContainer(unittest.TestCase):
     @patch("container.swsscommon.Table")
     @patch("container.docker.from_env")
     def test_stop_ct(self, mock_docker, mock_table, mock_conn):
+        self.init()
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (i, ct_data) in stop_test_data.items():
@@ -480,6 +483,7 @@ class TestContainer(unittest.TestCase):
     @patch("container.swsscommon.Table")
     @patch("container.docker.from_env")
     def test_kill(self, mock_docker, mock_table, mock_conn):
+        self.init()
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (i, ct_data) in kill_test_data.items():
@@ -498,6 +502,7 @@ class TestContainer(unittest.TestCase):
     @patch("container.swsscommon.Table")
     @patch("container.docker.from_env")
     def test_wait(self, mock_docker, mock_table, mock_conn):
+        self.init()
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (i, ct_data) in wait_test_data.items():
@@ -516,6 +521,7 @@ class TestContainer(unittest.TestCase):
     @patch("container.swsscommon.Table")
     @patch("container.docker.from_env")
     def test_main(self, mock_docker, mock_table, mock_conn):
+        self.init()
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (k,v) in [ ("start", start_test_data),
@@ -527,9 +533,5 @@ class TestContainer(unittest.TestCase):
 
             with unittest.mock.patch('sys.argv', ['container', k, 'snmp']):
                 container.main()
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
