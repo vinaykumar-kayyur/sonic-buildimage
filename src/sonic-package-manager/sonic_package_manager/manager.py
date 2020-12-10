@@ -119,7 +119,7 @@ class PackageManager:
         self.is_multi_npu = device_information.is_multi_npu()
         self.num_npus = device_information.get_num_npus()
         self.version_info = device_information.get_sonic_version_info()
-        self.base_os_version = Version.parse(self.version_info.get('base-os-compatibility-version'))
+        self.base_os_version = Version.parse(self.version_info.get('base_os_compatibility_version'))
 
     def install(self, expression: str, force=False):
         """ Install a SONiC Package from the package reference

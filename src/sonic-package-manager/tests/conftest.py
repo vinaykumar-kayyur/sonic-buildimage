@@ -160,7 +160,7 @@ def fake_device_info():
 
         def get_sonic_version_info(self):
             return {
-                'base-os-compatibility-version': '1.0.0'
+                'base_os_compatibility_version': '1.0.0'
             }
 
     yield FakeDeviceInfo()
