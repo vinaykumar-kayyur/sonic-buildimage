@@ -7,7 +7,9 @@ from sonic_package_manager.version import VersionRange
 
 
 def test_manifest_v1_defaults():
-    manifest = Manifest.marshal({'package': {'version': '1.0.0'}, 'service': {'name': 'test'}})
+    manifest = Manifest.marshal({'package': {'name': 'test',
+                                             'version': '1.0.0'},
+                                 'service': {'name': 'test'}})
     assert manifest['package']['depends'] == []
     assert manifest['package']['breaks'] == []
     assert manifest['package']['base-os-constraint'] == VersionRange()
@@ -17,21 +19,27 @@ def test_manifest_v1_defaults():
 
 def test_manifest_v1_invalid_version():
     with pytest.raises(ManifestError):
-        Manifest.marshal({'package': {'version': 'abc'}, 'service': {'name': 'test'}})
+        Manifest.marshal({'package': {'version': 'abc', 'name': 'test'},
+                          'service': {'name': 'test'}})
 
 
 def test_manifest_v1_invalid_package_constraint():
     with pytest.raises(ManifestError):
-        Manifest.marshal({'package': {'version': '1.0.0', 'depends': ['swss>a']}, 'service': {'name': 'test'}})
+        Manifest.marshal({'package': {'name': 'test', 'version': '1.0.0',
+                                      'depends': ['swss>a']},
+                          'service': {'name': 'test'}})
 
 
 def test_manifest_v1_service_spec():
-    manifest = Manifest.marshal({'package': {'version': '1.0.0'}, 'service': {'name': 'test', 'asic-service': True}})
+    manifest = Manifest.marshal({'package': {'name': 'test',
+                                             'version': '1.0.0'},
+                                 'service': {'name': 'test', 'asic-service': True}})
     assert manifest['service']['asic-service']
 
 
 def test_manifest_v1_mounts():
-    manifest = Manifest.marshal({'version': '1.0.0', 'package': {'version': '1.0.0'},
+    manifest = Manifest.marshal({'version': '1.0.0', 'package': {'name': 'test',
+                                                                 'version': '1.0.0'},
                                  'service': {'name': 'cpu-report'},
                                  'container': {'privileged': True,
                                                'mounts': [{'source': 'a', 'target': 'b', 'type': 'bind'}]}})
@@ -42,14 +50,14 @@ def test_manifest_v1_mounts():
 
 def test_manifest_v1_mounts_invalid():
     with pytest.raises(ManifestError):
-        Manifest.marshal({'version': '1.0.0', 'package': {'version': '1.0.0'},
+        Manifest.marshal({'version': '1.0.0', 'package': {'name': 'test', 'version': '1.0.0'},
                           'service': {'name': 'cpu-report'},
                           'container': {'privileged': True,
                                         'mounts': [{'not-source': 'a', 'target': 'b', 'type': 'bind'}]}})
 
 
 def test_manifest_v1_unmarshal():
-    manifest_json_input = {'package': {'version': '1.0.0',
+    manifest_json_input = {'package': {'name': 'test', 'version': '1.0.0',
                                        'depends': ['swss>1.0.0']},
                            'service': {'name': 'test'}}
     manifest = Manifest.marshal(manifest_json_input)

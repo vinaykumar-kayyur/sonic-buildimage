@@ -118,6 +118,7 @@ class ManifestSchema:
         ManifestField('version', Version.parse, Version(1, 0, 0)),
         ManifestRoot('package', [
             ManifestField('version', Version.parse),
+            ManifestField('name', str),
             ManifestField('base-os-constraint', VersionConstraint.parse, VersionRange()),
             ManifestArray('depends', PackageConstraint.parse),
             ManifestArray('breaks', PackageConstraint.parse),

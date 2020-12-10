@@ -56,6 +56,7 @@ def fake_manifest_resolver():
                 ('database', '1.0.0'): Manifest.marshal({
                     'package': {
                         'version': '1.0.0',
+                        'name': 'database',
                     },
                     'service': {
                         'name': 'database',
@@ -64,6 +65,7 @@ def fake_manifest_resolver():
                 ('swss', '1.0.0'): Manifest.marshal({
                     'package': {
                         'version': '1.0.0',
+                        'name': 'swss',
                     },
                     'service': {
                         'name': 'swss',
@@ -72,6 +74,7 @@ def fake_manifest_resolver():
                 ('test-package', '1.6.0'): Manifest.marshal({
                     'package': {
                         'version': '1.6.0',
+                        'name': 'test-package',
                     },
                     'service': {
                         'name': 'test-package',
@@ -80,6 +83,7 @@ def fake_manifest_resolver():
                 ('test-package-2', '1.5.0'): Manifest.marshal({
                     'package': {
                         'version': '1.5.0',
+                        'name': 'test-package-2',
                     },
                     'service': {
                         'name': 'test-package-2',
@@ -88,6 +92,7 @@ def fake_manifest_resolver():
                 ('test-package-3', '1.5.0'): Manifest.marshal({
                     'package': {
                         'version': '1.5.0',
+                        'name': 'test-package-3',
                     },
                     'service': {
                         'name': 'test-package-3',
@@ -96,6 +101,7 @@ def fake_manifest_resolver():
                 ('test-package-3', '1.6.0'): Manifest.marshal({
                     'package': {
                         'version': '1.6.0',
+                        'name': 'test-package-3',
                     },
                     'service': {
                         'name': 'test-package-3',
@@ -104,6 +110,7 @@ def fake_manifest_resolver():
                 ('test-package-4', '1.5.0'): Manifest.marshal({
                     'package': {
                         'version': '1.5.0',
+                        'name': 'test-package-4',
                     },
                     'service': {
                         'name': 'test-package-4',
@@ -112,6 +119,7 @@ def fake_manifest_resolver():
                 ('test-package-5', '1.5.0'): Manifest.marshal({
                     'package': {
                         'version': '1.5.0',
+                        'name': 'test-package-5',
                     },
                     'service': {
                         'name': 'test-package-5',
@@ -120,6 +128,7 @@ def fake_manifest_resolver():
                 ('test-package-5', '1.9.0'): Manifest.marshal({
                     'package': {
                         'version': '1.9.0',
+                        'name': 'test-package-5',
                     },
                     'service': {
                         'name': 'test-package-5',
@@ -128,6 +137,7 @@ def fake_manifest_resolver():
                 ('test-package-6', '1.5.0'): Manifest.marshal({
                     'package': {
                         'version': '1.5.0',
+                        'name': 'test-package-6',
                     },
                     'service': {
                         'name': 'test-package-6',
@@ -136,6 +146,7 @@ def fake_manifest_resolver():
                 ('test-package-6', '2.0.0'): Manifest.marshal({
                     'package': {
                         'version': '2.0.0',
+                        'name': 'test-package-6',
                     },
                     'service': {
                         'name': 'test-package-6',
