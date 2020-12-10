@@ -68,6 +68,7 @@ class Chassis(ChassisBase):
         self.sfp_module_initialized = False
         self.sfp_event_initialized = False
         self.reboot_cause_initialized = False
+        self.sdk_handle = None
         logger.log_info("Chassis loaded successfully")
 
 
