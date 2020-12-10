@@ -273,7 +273,8 @@ class SystemLed(Led):
 class SharedLed(object):
     LED_PRIORITY = {
         Led.STATUS_LED_COLOR_RED: 0,
-        Led.STATUS_LED_COLOR_GREEN: 1
+        Led.STATUS_LED_COLOR_OFF: 1,
+        Led.STATUS_LED_COLOR_GREEN: 2
     }
 
     def __init__(self, led):
@@ -286,9 +287,11 @@ class SharedLed(object):
     def update_status_led(self):
         target_color = Led.STATUS_LED_COLOR_GREEN
         for virtual_led in self._virtual_leds:
-            if SharedLed.LED_PRIORITY[virtual_led.get_led_color()] < SharedLed.LED_PRIORITY[target_color]:
-                target_color = virtual_led.get_led_color()
-
+            try:
+                if SharedLed.LED_PRIORITY[virtual_led.get_led_color()] < SharedLed.LED_PRIORITY[target_color]:
+                    target_color = virtual_led.get_led_color()
+            except KeyError:
+                return False
         return self._led.set_status(target_color)
 
     def get_status(self):
