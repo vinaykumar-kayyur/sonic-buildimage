@@ -266,7 +266,8 @@
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
-      <Device i:type="ToRRouter">
+      <Device i:type="i:ToRRouter">
+        <ElementType>ToRRouter</ElementType>
         <Address xmlns:d5p1="Microsoft.Search.Autopilot.NetMux">
           <d5p1:IPPrefix>26.1.1.10/32</d5p1:IPPrefix>
         </Address>
