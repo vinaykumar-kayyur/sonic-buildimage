@@ -40,9 +40,6 @@ ENV LC_CTYPE=en_US.UTF-8
 RUN sed -i '/^#.* en_US.* /s/^#//' /etc/locale.gen
 RUN locale-gen
 
-# Install packages necessary for installing some wheel packages
-RUN pip3 install --no-cache-dir setuptools wheel
-
 # Install dependencies used by some plugins
 RUN pip3 install --no-cache-dir \
         hiredis                             \

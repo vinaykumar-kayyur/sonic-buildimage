@@ -81,9 +81,13 @@ RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb || apt-get install -f -y
 RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb
 {% endif %}
 
+# Upgrade pip via PyPI and uninstall the Debian version
+RUN pip3 install --upgrade pip
+RUN apt-get purge -y python3-pip
+
 # setuptools and wheel are necessary for installing some Python wheel packages
-RUN pip3 install setuptools==49.6.00
-RUN pip3 install wheel==0.35.1
+RUN pip3 install --no-cache-dir setuptools==49.6.00
+RUN pip3 install --no-cache-dir wheel==0.35.1
 
 # For templating
 RUN pip3 install j2cli
