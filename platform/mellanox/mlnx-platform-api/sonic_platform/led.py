@@ -1,4 +1,8 @@
 class Led(object):
+    LED_PATH = "/var/run/hw-management/led/"
+    LED_ON = '1'
+    LED_OFF = '0'
+    LED_BLINK = '50'
     STATUS_LED_COLOR_GREEN = 'green'
     STATUS_LED_COLOR_GREEN_BLINK = 'green_blink'
     STATUS_LED_COLOR_RED = 'red'
@@ -11,7 +15,8 @@ class Led(object):
 class SharedLed(object):
     LED_PRIORITY = {
         Led.STATUS_LED_COLOR_RED: 0,
-        Led.STATUS_LED_COLOR_GREEN: 1
+        Led.STATUS_LED_COLOR_OFF: 1,
+        Led.STATUS_LED_COLOR_GREEN: 2
     }
 
     def __init__(self):
@@ -24,9 +29,11 @@ class SharedLed(object):
     def update_status_led(self):
         target_color = Led.STATUS_LED_COLOR_GREEN
         for virtual_led in self._virtual_leds:
-            if SharedLed.LED_PRIORITY[virtual_led.get_led_color()] < SharedLed.LED_PRIORITY[target_color]:
-                target_color = virtual_led.get_led_color()
-
+            try:
+                if SharedLed.LED_PRIORITY[virtual_led.get_led_color()] < SharedLed.LED_PRIORITY[target_color]:
+                    target_color = virtual_led.get_led_color()
+            except KeyError:
+                return False
         self._target_color = target_color
         return True
 
