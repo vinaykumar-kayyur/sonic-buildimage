@@ -35,12 +35,6 @@ RUN ln -s -f /usr/bin/gcc-8 /usr/bin/arm-linux-gnueabihf-gcc
 RUN ln -s -f /usr/bin/gcc-8 /usr/bin/aarch64-linux-gnu-gcc
 {% endif %}
 
-RUN pip3 install \
-         scapy==2.4.2 \
-         pyroute2==0.5.3 \
-         netifaces==0.10.7 \
-         monotonic==1.5
-
 # Dependencies of restore_neighbors.py
 RUN pip3 install \
          scapy==2.4.4 \
@@ -59,7 +53,6 @@ RUN apt-get remove -y gcc-8
 # Install locally-built Debian packages and implicitly install their dependencies
 {{ install_debian_packages(docker_orchagent_debs.split(' ')) }}
 {%- endif %}
-
 
 # Clean up
 RUN apt-get purge -y          \
