@@ -69,9 +69,9 @@ dependent_startup_wait_for=rsyslogd:running
 {% if not skip_xcvrd %}
 [program:xcvrd]
 {% if delay_xcvrd %}
-command=bash -c "sleep 30 && {% if API_VERSION == 3 and 'xcvrd' in python3_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/xcvrd"
+command=bash -c "sleep 30 && {% if API_VERSION == 3 and 'xcvrd' not in python2_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/xcvrd"
 {% else %}
-command={% if API_VERSION == 3 and 'xcvrd' in python3_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/xcvrd
+command={% if API_VERSION == 3 and 'xcvrd' not in python2_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/xcvrd
 {% endif %}
 priority=6
 autostart=false
@@ -85,7 +85,7 @@ dependent_startup_wait_for=rsyslogd:running
 
 {% if not skip_psud %}
 [program:psud]
-command={% if API_VERSION == 3 and 'psud' in python3_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/psud
+command={% if API_VERSION == 3 and 'psud' not in python2_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/psud
 priority=7
 autostart=false
 autorestart=false
@@ -98,7 +98,7 @@ dependent_startup_wait_for=rsyslogd:running
 
 {% if not skip_syseepromd %}
 [program:syseepromd]
-command={% if API_VERSION == 3 and 'syseepromd' in python3_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/syseepromd
+command={% if API_VERSION == 3 and 'syseepromd' not in python2_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/syseepromd
 priority=8
 autostart=false
 autorestart=unexpected
@@ -111,7 +111,7 @@ dependent_startup_wait_for=rsyslogd:running
 
 {% if not skip_thermalctld %}
 [program:thermalctld]
-command={% if API_VERSION == 3 and 'thermalctld' in python3_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/thermalctld
+command={% if API_VERSION == 3 and 'thermalctld' not in python2_daemons %}python3 {% else %} python2 {% endif %}/usr/local/bin/thermalctld
 priority=9
 autostart=false
 autorestart=unexpected
