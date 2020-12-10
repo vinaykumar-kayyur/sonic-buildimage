@@ -1,0 +1,28 @@
+From c1b47255413f7d36dafba06197373fdf95dfca7a Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Sat, 9 Jan 2021 05:17:10 -0800
+Subject: [PATCH] any configuration for next-hop-self change will not take 
+ effect if this flag is not reset
+
+---
+ bgpd/bgp_route.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
+index 056ea5848..6d58d13a2 100644
+--- a/bgpd/bgp_route.c
++++ b/bgpd/bgp_route.c
+@@ -1858,6 +1858,10 @@ bool subgroup_announce_check(struct bgp_dest *dest, struct bgp_path_info *pi,
+ 	/* For modify attribute, copy it to temporary structure. */
+ 	*attr = *piattr;
+ 
++	/* Remove rmap flags that got copied from inbound rmap. Otherwise inbound
++	* next-hop filters impact outbound next-hop */
++	RESET_FLAG(attr->rmap_change_flags);
++
+ 	/* If local-preference is not set. */
+ 	if ((peer->sort == BGP_PEER_IBGP || peer->sort == BGP_PEER_CONFED)
+ 	    && (!(attr->flag & ATTR_FLAG_BIT(BGP_ATTR_LOCAL_PREF)))) {
+-- 
+2.12.2
+

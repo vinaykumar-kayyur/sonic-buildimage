@@ -1,0 +1,32 @@
+From 2c8210f2b31c2e833df936ceb725d9d685c0d2be Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Fri, 8 Jan 2021 23:12:00 -0800
+Subject: [PATCH] BGP keepalive timer wasn't reset in case of duplicate 
+ connection. Identified the fix and found the similar FRR PR. Pulling 
+ following ones: 5429, 5368, and 5446.
+
+---
+ bgpd/bgp_packet.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/bgpd/bgp_packet.c b/bgpd/bgp_packet.c
+index f26c8a6a2..e5c15f547 100644
+--- a/bgpd/bgp_packet.c
++++ b/bgpd/bgp_packet.c
+@@ -506,6 +506,13 @@ void bgp_keepalive_send(struct peer *peer)
+ {
+ 	struct stream *s;
+ 
++	if (peer->fd < 0)
++	{
++		if (bgp_debug_keepalive(peer))
++			zlog_debug("%s: Null fd, failed to send KEEPALIVE", peer->host);
++		return;
++	}
++
+ 	s = stream_new(BGP_MAX_PACKET_SIZE);
+ 
+ 	/* Make keepalive packet. */
+-- 
+2.12.2
+

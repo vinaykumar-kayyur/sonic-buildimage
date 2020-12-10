@@ -1,0 +1,36 @@
+From bacdacefe8ceffeb656d8ac17a64e9d4dd46819f Mon Sep 17 00:00:00 2001
+From: Kishore Kunal <kishore.kunal@broadcom.com>
+Date: Mon, 27 Jan 2020 14:19:42 -0800
+Subject: [PATCH] [JIRA SONIC-16617] Remove the assert since in the case where
+ l3vni was in the oper down state, it is possoble that the function return len
+ as zero. Asserts are already present in the called function, so no need to
+ have assert here. So removing the assert at this location.
+
+Change-Id: Ic119c21223b7a372528e49cf1d26e0f3c69aabbc
+---
+ zebra/zebra_fpm.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/zebra/zebra_fpm.c b/zebra/zebra_fpm.c
+index 4c27e1344..0ae88204c 100644
+--- a/zebra/zebra_fpm.c
++++ b/zebra/zebra_fpm.c
+@@ -996,8 +996,13 @@ static int zfpm_build_route_updates(void)
+ 		if (write_msg) {
+ 			data_len = zfpm_encode_route(dest, re, (char *)data,
+ 						     buf_end - data, &msg_type);
+-
+-			assert(data_len);
++			/*
++			 * It is possible that zfpm_encode_route return zero, when route is not required to be
++			 * send to the FPM, like in case of l3vni, if oper status for the l3vni is not up, route
++			 * should not be send to FPM. If there are issue with encoding assert is already present
++			 * in the function netlink_route_info_encode.
++			 */
++			//assert(data_len);
+ 			if (data_len) {
+ 				hdr->msg_type = msg_type;
+ 				msg_len = fpm_data_len_to_msg_len(data_len);
+-- 
+2.12.2
+

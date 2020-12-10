@@ -1,0 +1,71 @@
+From 28c0e4c2aeaf92704f145a1b928086c7842be102 Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Sat, 9 Jan 2021 01:32:33 -0800
+Subject: [PATCH] When user is config connect timer, it doesn't reflect 
+ immediately. It reflect when next time neighbor is tried to reconnect.
+
+Fix: Code is change to update the connect timer immediately if BGP
+session is not in establish state.
+---
+ bgpd/bgpd.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/bgpd/bgpd.c b/bgpd/bgpd.c
+index 22962a65c..bb832464e 100644
+--- a/bgpd/bgpd.c
++++ b/bgpd/bgpd.c
+@@ -5119,6 +5119,12 @@ int peer_timers_connect_set(struct peer *peer, uint32_t connect)
+ 	peer->connect = connect;
+ 	peer->v_connect = connect;
+ 
++	if (!CHECK_FLAG(peer->sflags, PEER_STATUS_GROUP) && (peer->status != Established) ) {
++		if (peer_active(peer))
++			BGP_EVENT_ADD(peer, BGP_Stop);
++		BGP_EVENT_ADD(peer, BGP_Start);
++	}
++
+ 	/* Skip peer-group mechanics for regular peers. */
+ 	if (!CHECK_FLAG(peer->sflags, PEER_STATUS_GROUP))
+ 		return 0;
+@@ -5136,6 +5142,12 @@ int peer_timers_connect_set(struct peer *peer, uint32_t connect)
+ 		SET_FLAG(member->flags, PEER_FLAG_TIMER_CONNECT);
+ 		member->connect = connect;
+ 		member->v_connect = connect;
++
++		if (member->status != Established) {
++			if (peer_active(member))
++				BGP_EVENT_ADD(member, BGP_Stop);
++			BGP_EVENT_ADD(member, BGP_Start);
++		}
+ 	}
+ 
+ 	return 0;
+@@ -5162,6 +5174,12 @@ int peer_timers_connect_unset(struct peer *peer)
+ 	else
+ 		peer->v_connect = peer->bgp->default_connect_retry;
+ 
++	if (!CHECK_FLAG(peer->sflags, PEER_STATUS_GROUP) && (peer->status != Established) ) {
++		if (peer_active(peer))
++			BGP_EVENT_ADD(peer, BGP_Stop);
++		BGP_EVENT_ADD(peer, BGP_Start);
++	}
++
+ 	/* Skip peer-group mechanics for regular peers. */
+ 	if (!CHECK_FLAG(peer->sflags, PEER_STATUS_GROUP))
+ 		return 0;
+@@ -5179,6 +5197,12 @@ int peer_timers_connect_unset(struct peer *peer)
+ 		UNSET_FLAG(member->flags, PEER_FLAG_TIMER_CONNECT);
+ 		member->connect = 0;
+ 		member->v_connect = peer->bgp->default_connect_retry;
++
++		if (member->status != Established) {
++			if (peer_active(member))
++				BGP_EVENT_ADD(member, BGP_Stop);
++			BGP_EVENT_ADD(member, BGP_Start);
++		}
+ 	}
+ 
+ 	return 0;
+-- 
+2.12.2
+

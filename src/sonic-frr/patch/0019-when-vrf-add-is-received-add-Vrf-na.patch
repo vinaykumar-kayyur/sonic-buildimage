@@ -1,0 +1,46 @@
+From 743d562892a6d57b932b3d89c1a416a3827dd20a Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Sat, 9 Jan 2021 01:41:40 -0800
+Subject: [PATCH] when vrf add is received, add Vrf-name to the interface 
+ database. This is needed while binding the VRF interface to the BGP socket
+ https://github.com/FRRouting/frr/pull/7432
+
+---
+ bgpd/bgp_main.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/bgpd/bgp_main.c b/bgpd/bgp_main.c
+index fa67cfd56..d8d3867e7 100644
+--- a/bgpd/bgp_main.c
++++ b/bgpd/bgp_main.c
+@@ -261,16 +261,23 @@ static __attribute__((__noreturn__)) void bgp_exit(int status)
+ static int bgp_vrf_new(struct vrf *vrf)
+ {
+ 	if (BGP_DEBUG(zebra, ZEBRA))
+-		zlog_debug("VRF Created: %s(%u)", vrf->name, vrf->vrf_id);
+-
+-	return 0;
++		zlog_info("VRF Creation message received: %s(%u)", vrf->name, vrf->vrf_id);
++        struct interface *ifp;
++        ifp = if_get_by_name(vrf->name, vrf->vrf_id);
++        if (ifp)
++        {
++		if (BGP_DEBUG(zebra, ZEBRA))
++			zlog_info("VRF interface Created: %s(%u) ifindex %d", ifp->name, ifp->vrf_id, ifp->ifindex);
++        }
++        return 0;
+ }
+ 
+ static int bgp_vrf_delete(struct vrf *vrf)
+ {
+ 	if (BGP_DEBUG(zebra, ZEBRA))
+ 		zlog_debug("VRF Deletion: %s(%u)", vrf->name, vrf->vrf_id);
+-
++        /* No need to delete vrf here as it will be deleted when BGP client receives
++           ZEBRA_VRF_DELETE message from zebra */
+ 	return 0;
+ }
+ 
+-- 
+2.12.2
+

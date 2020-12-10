@@ -1,0 +1,30 @@
+From 82e00c4162ae70815f8b6c58a3574268720affb2 Mon Sep 17 00:00:00 2001
+From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
+Date: Fri, 22 May 2020 17:12:40 -0700
+Subject: [PATCH]  Holdtime and keepalive parameters weren't
+ copied from peer-group to peer-group members.  Fixed the issue by copying
+ holdtime and keepalive parameters from peer-group to its members.
+ The corresponding pull request is https://github.com/FRRouting/frr/pull/7435.
+Change-Id: I50b91dde2b8cad2000ce97f1d11f1434c22b4055
+---
+ bgpd/bgpd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bgpd/bgpd.c b/bgpd/bgpd.c
+index 3fb6c9f11..1b67522b1 100644
+--- a/bgpd/bgpd.c
++++ b/bgpd/bgpd.c
+@@ -4989,8 +4989,8 @@ int peer_timers_set(struct peer *peer, uint32_t keepalive, uint32_t holdtime)
+ 
+ 		/* Set flag and configuration on peer-group member. */
+ 		SET_FLAG(member->flags, PEER_FLAG_TIMER);
+-		PEER_ATTR_INHERIT(peer, peer->group, holdtime);
+-		PEER_ATTR_INHERIT(peer, peer->group, keepalive);
++		PEER_ATTR_INHERIT(member, peer->group, holdtime);
++		PEER_ATTR_INHERIT(member, peer->group, keepalive);
+ 	}
+ 
+ 	return 0;
+-- 
+2.12.2
+

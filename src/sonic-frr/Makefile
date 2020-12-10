@@ -10,6 +10,16 @@ STG_BRANCH = stg_temp.$(SUFFIX)
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package
 	pushd ./frr
+	# delete previously created temporary branches, if any
+	git checkout master
+	git branch | grep stg_temp | xargs --no-run-if-empty git branch -D
+	if [ `git branch | grep $(FRR_BRANCH)` ]
+	then
+		echo "Branch named $(FRR_BRANCH) already exists"
+		git branch -D $(FRR_BRANCH)
+	else
+		echo "Branch named $(FRR_BRANCH) does not exist"
+	fi
 	git checkout -b $(FRR_BRANCH) origin/$(FRR_BRANCH)
 	stg branch --create $(STG_BRANCH) $(FRR_TAG)
 	stg import -s ../patch/series

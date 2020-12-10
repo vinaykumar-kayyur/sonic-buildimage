@@ -1,0 +1,52 @@
+From cedcd601b54f9f561c5bf289e0862215d9820464 Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Fri, 8 Jan 2021 23:30:34 -0800
+Subject: [PATCH] Aggregate member route was enqueued for  recalculation while 
+ bgp instance was deleted. As part of aggregate member  route deletion, the 
+ aggregate route is reinstalled with self-peer as source,  but self-peer is 
+ already removed. Assert() for null peer pointer is path  attribute aborts 
+ bgp.
+
+Fix :
+When bgp instance is in the state of deletion, or self-peer is null,
+avoid installation of aggregate-prefix as part of aggregate member
+delete.
+When all of the aggregate members are removed, the aggregate prefix is
+automatically removed from zebra.
+The pull request is https://github.com/FRRouting/frr/pull/7433/files
+---
+ bgpd/bgp_route.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
+index 0e91b9955..056ea5848 100644
+--- a/bgpd/bgp_route.c
++++ b/bgpd/bgp_route.c
+@@ -6276,14 +6276,19 @@ static void bgp_aggregate_install(
+ 			bgp_aggregate_delete(bgp, p, afi, safi, aggregate);
+ 			return;
+ 		}
+-
+-		new = info_make(ZEBRA_ROUTE_BGP, BGP_ROUTE_AGGREGATE, 0,
++		/* Do not install the aggregate route if BGP is in the
++		* process of termination.
++		*/
++		if (bgp->peer_self &&
++			!CHECK_FLAG(bgp->flags, BGP_FLAG_DELETE_IN_PROGRESS)) {
++			new = info_make(ZEBRA_ROUTE_BGP, BGP_ROUTE_AGGREGATE, 0,
+ 				bgp->peer_self, attr, dest);
+ 
+-		SET_FLAG(new->flags, BGP_PATH_VALID);
++			SET_FLAG(new->flags, BGP_PATH_VALID);
++			bgp_path_info_add(dest, new);
++			bgp_process(bgp, dest, afi, safi);
++		}
+ 
+-		bgp_path_info_add(dest, new);
+-		bgp_process(bgp, dest, afi, safi);
+ 	} else {
+ 		for (pi = orig; pi; pi = pi->next)
+ 			if (pi->peer == bgp->peer_self
+-- 
+2.12.2
+

@@ -1,0 +1,44 @@
+From b22ef450f81894eb97bee10264bb2fc58406bff7 Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Sat, 9 Jan 2021 05:22:50 -0800
+Subject: [PATCH] added a new line for showing established neighbors count
+
+---
+ bgpd/bgp_vty.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/bgpd/bgp_vty.c b/bgpd/bgp_vty.c
+index 42bb98694..8593fb190 100644
+--- a/bgpd/bgp_vty.c
++++ b/bgpd/bgp_vty.c
+@@ -9192,7 +9192,7 @@ static int bgp_show_summary(struct vty *vty, struct bgp *bgp, int afi, int safi,
+ {
+ 	struct peer *peer;
+ 	struct listnode *node, *nnode;
+-	unsigned int count = 0, dn_count = 0;
++	unsigned int count = 0, dn_count = 0, up_count = 0;
+ 	char timebuf[BGP_UPTIME_LEN], dn_flag[2];
+ 	char neighbor_buf[VTY_BUFSIZ];
+ 	int neighbor_col_default_width = 16;
+@@ -9508,6 +9508,8 @@ static int bgp_show_summary(struct vty *vty, struct bgp *bgp, int afi, int safi,
+ 		filter = &peer->filter[afi][safi];
+ 
+ 		count++;
++		if (peer->status == Established)
++			up_count++;
+ 		/* Works for both failed & successful cases */
+ 		if (peer_dynamic_neighbor(peer))
+ 			dn_count++;
+@@ -9738,6 +9740,9 @@ static int bgp_show_summary(struct vty *vty, struct bgp *bgp, int afi, int safi,
+ 			vty_out(vty, "%d dynamic neighbor(s), limit %d\n",
+ 				dn_count, bgp->dynamic_neighbors_limit);
+ 		}
++
++		if (count)
++			vty_out(vty, "Total number of neighbors established %d\n", up_count);
+ 	}
+ 
+ 	return CMD_SUCCESS;
+-- 
+2.12.2
+

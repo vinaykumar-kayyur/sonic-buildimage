@@ -1,0 +1,88 @@
+From dce7fb46e91850bd2742b1a788f336a2713e7106 Mon Sep 17 00:00:00 2001
+From: sudhanshukumar22 <sudhanshu.kumar@broadcom.com>
+Date: Sat, 9 Jan 2021 05:07:40 -0800
+Subject: [PATCH] Unable to  access the vtysh and all FRR CLIs are timing OUT
+ after config reload two  times
+
+Due to zebra starting during/prior to configuration being replayed,
+there is huge churn of stale vrf delete followed by new vrf add. This
+can cause timing race condition where vrf delete could be missed and
+further same vrf add would get rejected instead of treating last arrived
+vrf add as update.
+
+Treat vrf add for existing vrf as update.
+Implicitly disable this VRF to cleanup routes and other functions as part of vrf disable.
+Update vrf_id for the vrf and update vrf_id tree.
+Re-enable VRF so that all routes are freshly installed.
+
+Above 3 steps are mandatory since it can happen that with config reload
+stale routes which are installed in vrf-1 table might contain routes from
+older vrf-0 table which might have got deleted due to missing vrf-0 in new configuration.
+FRR community pull request: https://github.com/FRRouting/frr/pull/7508
+---
+ zebra/if_netlink.c | 48 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 19 deletions(-)
+
+diff --git a/zebra/if_netlink.c b/zebra/if_netlink.c
+index 90a08bbd6..c910056fe 100644
+--- a/zebra/if_netlink.c
++++ b/zebra/if_netlink.c
+@@ -335,26 +335,36 @@ static void netlink_vrf_change(struct nlmsghdr *h, struct rtattr *tb,
+ 			zlog_debug("RTM_NEWLINK for VRF %s(%u) table %u", name,
+ 				   ifi->ifi_index, nl_table_id);
+ 
+-		if (!vrf_lookup_by_id((vrf_id_t)ifi->ifi_index)) {
+-			vrf_id_t exist_id;
++                /*Treat VRF add for existing vrf as update
++                 * Update VRF ID and also update in VRF ID table
++                 */
++                if (name)
++                        vrf = vrf_lookup_by_name(name);
++                if (vrf && (vrf_id_t)ifi->ifi_index != VRF_UNKNOWN
++                                && vrf->vrf_id != VRF_UNKNOWN
++                                && vrf->vrf_id != (vrf_id_t)ifi->ifi_index) {
++                        zlog_info("Vrf Update event: %s old id: %u table:%u new id: %u table: %u",
++                                        name, vrf->vrf_id, ((struct zebra_vrf*)vrf->info)->table_id,
++                                        (vrf_id_t)ifi->ifi_index, nl_table_id);
++
++                        /*Disable the vrf to simulate implicit delete
++                         * so that all stale routes are deleted
++                         * This vrf will be enabled down the line*/
++                        vrf_disable(vrf);
++
++
++                        RB_REMOVE(vrf_id_head, &vrfs_by_id, vrf);
++                        vrf->vrf_id = (vrf_id_t)ifi->ifi_index;
++                        RB_INSERT(vrf_id_head, &vrfs_by_id, vrf);
++
++                } else {
++                        /*
++                         * vrf_get is implied creation if it does not exist
++                         */
++                        vrf = vrf_get((vrf_id_t)ifi->ifi_index,
++                                        name); // It would create vrf
++                }
+ 
+-			exist_id = vrf_lookup_by_table(nl_table_id, ns_id);
+-			if (exist_id != VRF_DEFAULT) {
+-				vrf = vrf_lookup_by_id(exist_id);
+-
+-				flog_err(
+-					EC_ZEBRA_VRF_MISCONFIGURED,
+-					"VRF %s id %u table id overlaps existing vrf %s, misconfiguration exiting",
+-					name, ifi->ifi_index, vrf->name);
+-				exit(-1);
+-			}
+-		}
+-
+-		/*
+-		 * vrf_get is implied creation if it does not exist
+-		 */
+-		vrf = vrf_get((vrf_id_t)ifi->ifi_index,
+-			      name); // It would create vrf
+ 		if (!vrf) {
+ 			flog_err(EC_LIB_INTERFACE, "VRF %s id %u not created",
+ 				 name, ifi->ifi_index);
+-- 
+2.12.2
+

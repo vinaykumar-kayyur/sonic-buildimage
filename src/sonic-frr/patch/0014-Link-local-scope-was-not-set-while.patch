@@ -1,0 +1,46 @@
+From f48d4860b5588df9222ed917447e336cfe899d9e Mon Sep 17 00:00:00 2001
+From: Syed Hasan Raza Naqvi <syed.naqvi@broadcom.com>
+Date: Wed, 8 Jan 2020 00:44:17 -0800
+Subject: [PATCH] Link local scope was not set while binding
+ socket with local address causing socket errors for bgp ipv6 link local
+ neighbors. 
+ The corresponding pull request is https://github.com/FRRouting/frr/pull/7434
+Change-Id: I6211f545e288164ff1576103f10be503555dfccd
+---
+ bgpd/bgp_network.c | 5 +++++
+ bgpd/bgp_zebra.c   | 3 +++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/bgpd/bgp_network.c b/bgpd/bgp_network.c
+index a4b91f698..4b7b8f2ab 100644
+--- a/bgpd/bgp_network.c
++++ b/bgpd/bgp_network.c
+@@ -579,6 +579,11 @@ static int bgp_update_address(struct interface *ifp, const union sockunion *dst,
+ 		return 1;
+ 
+ 	prefix2sockunion(sel, addr);
++
++	if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6.sin6_addr)) {
++		addr->sin6.sin6_scope_id = ifp->ifindex;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/bgpd/bgp_zebra.c b/bgpd/bgp_zebra.c
+index dcb9fa8c8..42226d2cc 100644
+--- a/bgpd/bgp_zebra.c
++++ b/bgpd/bgp_zebra.c
+@@ -802,6 +802,9 @@ bool bgp_zebra_nexthop_set(union sockunion *local, union sockunion *remote,
+ 								? peer->conf_if
+ 								: peer->ifname,
+ 							peer->bgp->vrf_id);
++			else if (peer->update_if)
++				ifp = if_lookup_by_name(peer->update_if,
++						peer->bgp->vrf_id);
+ 		} else if (peer->update_if)
+ 			ifp = if_lookup_by_name(peer->update_if,
+ 						peer->bgp->vrf_id);
+-- 
+2.12.2
+
