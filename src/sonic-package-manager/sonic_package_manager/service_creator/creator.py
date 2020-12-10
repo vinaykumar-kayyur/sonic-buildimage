@@ -3,7 +3,7 @@ import contextlib
 import os
 import stat
 import subprocess
-from pprint import pformat
+from prettyprinter import pformat
 from typing import Dict
 
 import jinja2 as jinja2
@@ -50,7 +50,7 @@ def render_template(in_template: str,
         executable: Set executable bit on rendered file
     """
 
-    log.debug(f'Rendering {in_template} to {outfile} with {pformat(render_ctx, indent=4)}')
+    log.debug(f'Rendering {in_template} to {outfile} with {pformat(render_ctx)}')
 
     with open(in_template, 'r') as instream:
         template = jinja2.Template(instream.read())

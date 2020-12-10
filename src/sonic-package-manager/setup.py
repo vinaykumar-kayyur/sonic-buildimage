@@ -21,7 +21,7 @@ setup(
         'docker-image-py',
         'enlighten',
         'natsort',
-        'pprint',
+        'prettyprinter',
         'sonic-py-common',
         'swsssdk',  # Temporary dependency till the issue with py-swsscommon is resolved.
         'requests',
