@@ -28,7 +28,7 @@ RUN apt-get update &&   \
 
 # TODO: Remove these lines once we no longer need Python 2
 RUN apt-get install -f -y python-dev python-pip
-RUN pip2 install --upgrade pip<21
+RUN pip2 install --upgrade 'pip<21'
 RUN apt-get purge -y python-pip
 
 # On Arista devices, the sonic_platform wheel is not installed in the container.

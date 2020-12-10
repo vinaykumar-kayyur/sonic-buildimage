@@ -73,7 +73,7 @@ RUN dpkg -i redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_a
 RUN rm redis-tools_6.0.6-1~bpo10+1_amd64.deb redis-server_6.0.6-1~bpo10+1_amd64.deb
 {% endif %}
 
-RUN pip2 install --upgrade pip<21
+RUN pip2 install --upgrade 'pip<21'
 RUN apt-get purge -y python-pip
 RUN pip2 install setuptools==40.8.0
 RUN pip2 install wheel==0.33.6
