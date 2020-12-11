@@ -43,23 +43,20 @@ rocommunity6 {{ community }}
 rocommunity {{ snmp_rocommunity }}
 rocommunity6 {{ snmp_rocommunity }}
 {% endif %}
-
-{% if SNMP_COMMUNITY is defined %}
-{% for community in SNMP_COMMUNITY.keys() %}
-{% if SNMP_COMMUNITY[community]['TYPE'] == 'RO' %}
-rocommunity {{ community }}
-rocommunity6 {{ community }}
-{% else %}
+                                                 
+{% if snmp_rwcommunities is defined %}
+{% for community in snmp_rwcommunities %}
 rwcommunity {{ community }}
 rwcommunity6 {{ community }}
-{% endif %}
 {% endfor %}
+{% elif snmp_rwcommunity is defined %}
+rwcommunity {{ snmp_rwcommunity }}
+rwcommunity6 {{ snmp_rwcommunity }}
 {% else %}
 {% endif %}
 
-
 {% if SNMP_USER is defined %}
-{% for user in SNMP_USER.keys() %}
+{% for user in SNMP_USER %}
 {% if SNMP_USER[user]['SNMP_USER_PERMISSION'] == 'RO' %}
 rouser {{ user }} {{ SNMP_USER[user]['SNMP_USER_TYPE'] }}
 CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[user]['SNMP_USER_AUTH_PASSWORD'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_TYPE'] }} {{  SNMP_USER[user]['SNMP_USER_ENCRYPTION_PASSWORD'] }}
@@ -70,7 +67,6 @@ CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[
 {% endfor %}
 {% else %}
 {% endif %}
-
 
 ###############################################################################
 #
@@ -83,6 +79,7 @@ sysLocation    {{ snmp_location }}
 {% if SNMP_CONTACT is defined %}
 sysContact     {{ SNMP.CONTACT.keys()[0] }} {{ SNMP.CONTACT.values()[0] }}
 {% else %}
+sysContact     Azure Cloud Switch vteam <linuxnetdev@microsoft.com>
 {% endif %}
                                                  # Application + End-to-End layers
 sysServices    72
