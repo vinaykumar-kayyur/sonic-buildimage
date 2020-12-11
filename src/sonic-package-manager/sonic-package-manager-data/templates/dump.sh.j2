@@ -5,6 +5,8 @@
 #             auto-generated from {{ source }} by sonic-package-manager
 #
 
+# TODO: Multi-ASIC services support
+
 DEV="$1"
 
 docker exec -it {{ manifest.service.name }}$DEV {{ manifest.package['debug-dump'] }}
