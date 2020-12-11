@@ -13,6 +13,8 @@ RUN apt-get update && \
 RUN apt-get install -f -y python-dev python-pip
 RUN pip2 install --upgrade 'pip<21'
 RUN apt-get purge -y python-pip
+RUN pip2 install setuptools==40.8.0
+RUN pip2 install wheel==0.35.1
 RUN pip2 install connexion==1.1.15 \
                 setuptools==21.0.0 \
                 grpcio-tools==1.20.0 \
