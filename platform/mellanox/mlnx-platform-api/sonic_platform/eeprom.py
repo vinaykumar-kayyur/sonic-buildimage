@@ -10,10 +10,8 @@ import sys
 import re
 
 if sys.version_info.major == 3:
-    import builtins as exceptions
     from io import StringIO
 else:
-    import exceptions
     from cStringIO import StringIO
 
 from sonic_py_common.logger import Logger
