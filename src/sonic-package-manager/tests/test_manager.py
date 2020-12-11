@@ -141,6 +141,14 @@ def test_manager_installation_version_range(package_manager):
         package_manager.install(f'test-package>=1.6.0')
 
 
+def test_manager_upgrade(package_manager, sonic_fs):
+    package_manager.install('test-package-6==1.5.0')
+    package_manager.upgrade('test-package-6==2.0.0')
+
+    upgraded_package = package_manager.get_package('test-package-6')
+    assert upgraded_package.entry.version == Version(2, 0, 0)
+
+
 def test_manager_migration(package_manager, fake_db_for_migration):
     package_manager.install = Mock()
     package_manager.upgrade = Mock()

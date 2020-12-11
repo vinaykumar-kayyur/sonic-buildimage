@@ -2,7 +2,7 @@
 
 """ Repository Database interface module. """
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional, Dict, Callable
 
 from sonic_package_manager.errors import PackageManagerError, PackageNotFoundError, PackageAlreadyExistsError
@@ -147,7 +147,7 @@ class PackageDatabase:
         except KeyError:
             raise PackageNotFoundError(name)
 
-        return pkg
+        return replace(pkg)
 
     def has_package(self, name: str) -> bool:
         """ Checks if the database contains an entry for a package.

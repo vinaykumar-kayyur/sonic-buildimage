@@ -29,6 +29,7 @@ from sonic_package_manager.registry import RegistryResolver
 from sonic_package_manager.service_creator.creator import ServiceCreator, run_command
 from sonic_package_manager.service_creator.feature import FeatureRegistry
 from sonic_package_manager.service_creator.sonic_db import SonicDB
+from sonic_package_manager.service_creator.utils import in_chroot
 from sonic_package_manager.version import Version, VersionRange, version_to_tag, tag_to_version
 
 
@@ -527,6 +528,9 @@ class PackageManager:
         asic_service = package.manifest['service']['asic-service']
         single_instance = host_service or (asic_service and not self.is_multi_npu)
         multi_instance = asic_service and self.is_multi_npu
+
+        if in_chroot():
+            return
 
         if single_instance:
             run_command(f'systemctl {action} {name}')
