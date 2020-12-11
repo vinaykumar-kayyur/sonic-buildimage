@@ -277,14 +277,18 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
     def is_rule_ipv4(self, rule_props):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
-           ("DST_IP" in rule_props and rule_props["DST_IP"])):
+           ("DST_IP" in rule_props and rule_props["DST_IP"]) or
+           (rule_props.get("IP_TYPE", None) == "IPV6ANY") or 
+           (ethertype == 0x800)):
             return True
         else:
             return False
 
     def is_rule_ipv6(self, rule_props):
         if (("SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]) or
-           ("DST_IPV6" in rule_props and rule_props["DST_IPV6"])):
+           ("DST_IPV6" in rule_props and rule_props["DST_IPV6"]) or
+           (rule_props.get("IP_TYPE", None) == "IPV6ANY") or
+           (ethertype == 0x86dd)):
             return True
         else:
             return False
@@ -375,6 +379,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         # Walk the ACL tables
         for (table_name, table_data) in self._tables_db_info.items():
+            if not table_data:
+                continue
 
             table_ip_version = None
 
@@ -405,6 +411,15 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                         if not rule_props:
                             self.log_warning("rule_props for rule_id {} empty or null!".format(rule_id))
                             continue
+
+                        rule_props = {k.upper(): v for k,v in rule_props.items()}
+
+                        ethertype = 0
+                        if "ETHER_TYPE" in rule_props:
+                            ethertype = int(rule_props['ETHER_TYPE'], 0)
+                            if ethertype != 0x800 and ethertype != 0x86dd:
+                                log_error("rule_props for rule_id {} does not have valid/supported ethertype.".format(rule_id))
+                                continue
 
                         try:
                             acl_rules[rule_props["PRIORITY"]] = rule_props
@@ -440,6 +455,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                 # For each ACL rule in this table (in descending order of priority)
                 for priority in sorted(iter(acl_rules.keys()), reverse=True):
                     rule_props = acl_rules[priority]
+                    rule_props = {k.upper(): v for k,v in rule_props.items()}
 
                     if "PACKET_ACTION" not in rule_props:
                         self.log_error("ACL rule does not contain PACKET_ACTION property")
