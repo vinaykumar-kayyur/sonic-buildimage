@@ -309,6 +309,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     makedumpfile            \
     conntrack               \
     python-pip              \
+    python3                 \
+    python3-distutils       \
     python3-pip             \
     cron                    \
     haveged                 \
@@ -521,7 +523,7 @@ then
 fi
 
 ## Remove gcc and python dev pkgs
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev python3-distutils
 
 ## Add mtd and uboot firmware tools package
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools mtd-utils device-tree-compiler
