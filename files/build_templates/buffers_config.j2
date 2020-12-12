@@ -177,7 +177,8 @@ def
 {% endfor %}
     }
 {% endif %}
-,
+{% if dynamic_mode is defined %}
+   ,
     "DEFAULT_LOSSLESS_BUFFER_PARAMETER": {
         "AZURE": {
             "default_dynamic_th": "0"
@@ -189,4 +190,5 @@ def
             "small_packet_percentage": "100"
         }
     }
+{% endif %}
 }
