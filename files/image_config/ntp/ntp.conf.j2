@@ -78,12 +78,6 @@ interface listen eth0
 {% for (mgmt_intf, mgmt_prefix) in MGMT_INTERFACE|pfx_filter %}
 interface listen {{ mgmt_prefix | ip }}
 {% endfor %}
-{% elif LOOPBACK_INTERFACE %}
-{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-{% if prefix | ipv4 and name == 'Loopback0' %}
-interface listen {{ prefix | ip }}
-{% endif %}
-{% endfor %}
 {% else %}
 interface listen eth0
 {% endif %}
