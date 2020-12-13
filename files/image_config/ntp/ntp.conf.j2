@@ -50,7 +50,7 @@ true
     {%- endif %}
 {%- endmacro %}
 
-{% set ns = namespace(source_intf) %}
+{% set ns = namespace(source_intf = "") %}
 {% set ns = namespace(source_intf_ip = 'false') %}
 {% if (NTP) and (NTP['global']['src_intf'])  %}
     {% set ns.source_intf = (NTP['global']['src_intf']) %}
@@ -74,9 +74,14 @@ interface listen {{ns.source_intf}}
 {% elif (NTP) and NTP['global']['vrf'] == 'mgmt' %}
 interface listen eth0
 {% elif MGMT_INTERFACE %}
-
 {% for (mgmt_intf, mgmt_prefix) in MGMT_INTERFACE|pfx_filter %}
 interface listen {{ mgmt_prefix | ip }}
+{% endfor %}
+{% elif LOOPBACK_INTERFACE %}
+{% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name == 'Loopback0' %}
+interface listen {{ prefix | ip }}
+{% endif %}
 {% endfor %}
 {% else %}
 interface listen eth0
