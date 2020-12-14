@@ -560,11 +560,12 @@ class PackageManager:
 
     def install_cli_plugin(self, package: Package, command: str):
         image_plugin_path = package.manifest['cli'][command]
+        if not image_plugin_path:
+            return
         host_plugin_path = self.get_cli_plugin_path(package, command)
         repo = package.repository
         tag = str(package.version)
-        if image_plugin_path:
-            self.docker.cp(repo, tag, image_plugin_path, host_plugin_path)
+        self.docker.cp(repo, tag, image_plugin_path, host_plugin_path)
 
     def uninstall_cli_plugin(self, package: Package, command: str):
         image_plugin_path = package.manifest['cli'][command]
