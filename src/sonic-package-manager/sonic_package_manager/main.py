@@ -74,15 +74,15 @@ def repository(ctx):
 
 @cli.group()
 @click.pass_context
-def package(ctx):
-    """ SONiC Package commands. """
+def show(ctx):
+    """ SONiC package manager show commands. """
 
     pass
 
 
-@package.group()
+@show.group()
 @click.pass_context
-def show(ctx):
+def package(ctx):
     """ Package show CLI commands. """
 
     pass
@@ -117,7 +117,7 @@ def list(ctx):
         exit_cli(f'Failed to list repositories: {err}', fg='red')
 
 
-@show.command()
+@package.command()
 @click.argument('expression')
 @click.pass_context
 def manifest(ctx, expression):
@@ -134,7 +134,7 @@ def manifest(ctx, expression):
         exit_cli(f'Failed to describe {expression}: {err}', fg='red')
 
 
-@show.command()
+@package.command()
 @click.argument('name')
 @click.option('--all', is_flag=True, help='Show all available tags in repository')
 @click.option('--plain', is_flag=True, help='Plain output')
@@ -153,7 +153,7 @@ def versions(ctx, name, all, plain):
         exit_cli(f'Failed to get package versions {name}: {err}', fg='red')
 
 
-@show.command()
+@package.command()
 @click.argument('expression')
 @click.pass_context
 def changelog(ctx, expression):

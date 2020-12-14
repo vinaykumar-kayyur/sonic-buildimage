@@ -45,7 +45,7 @@ def test_show_changelog(package_manager, fake_manifest_resolver):
 
 """
 
-    result = runner.invoke(main.package.commands['show'].commands['changelog'], ['test-package'], obj=package_manager)
+    result = runner.invoke(main.show.commands['package'].commands['changelog'], ['test-package'], obj=package_manager)
 
     assert result.exit_code == 0
     assert result.output == expected_output
@@ -56,7 +56,7 @@ def test_show_changelog_no_changelog(package_manager):
     when there is no changelog provided by package. """
 
     runner = CliRunner()
-    result = runner.invoke(main.package.commands['show'].commands['changelog'], ['test-package'], obj=package_manager)
+    result = runner.invoke(main.show.commands['package'].commands['changelog'], ['test-package'], obj=package_manager)
 
     assert result.exit_code == 1
     assert result.output == 'Failed to print package changelog: No changelog for package test-package\n'
