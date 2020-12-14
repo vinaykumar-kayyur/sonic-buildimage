@@ -40,7 +40,7 @@ dependent_startup_wait_for=rsyslogd:running
 
 {% if not skip_chassisd and IS_MODULAR_CHASSIS == 1 %}
 [program:chassisd]
-command=python3 /usr/local/bin/chassisd
+command=/usr/local/bin/chassisd
 priority=3
 autostart=false
 autorestart=false
