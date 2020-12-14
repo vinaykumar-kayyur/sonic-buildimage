@@ -15,8 +15,7 @@ class Led(object):
 class SharedLed(object):
     LED_PRIORITY = {
         Led.STATUS_LED_COLOR_RED: 0,
-        Led.STATUS_LED_COLOR_OFF: 1,
-        Led.STATUS_LED_COLOR_GREEN: 2
+        Led.STATUS_LED_COLOR_GREEN: 1
     }
 
     def __init__(self):
@@ -48,8 +47,13 @@ class ComponentFaultyIndicator(object):
         self._shared_led.add_virtual_leds(self)
 
     def set_status(self, color):
+        current_color = self._color
         self._color = color
-        return self._shared_led.update_status_led()
+        if self._shared_led.update_status_led():
+            return True
+        else:
+            self._color = current_color
+            return False
 
     def get_led_color(self):
         return self._color
