@@ -1,7 +1,8 @@
 # sonic-chassisd (SONiC Chassis mgmt daemon) wheel package
 
-SONIC_CHASSISD = sonic_chassisd-1.0-py2-none-any.whl
-$(SONIC_CHASSISD)_SRC_PATH = $(SRC_PATH)/sonic-platform-daemons/sonic-chassisd
-$(SONIC_CHASSISD)_DEPENDS = $(SONIC_PY_COMMON_PY2)
-$(SONIC_CHASSISD)_PYTHON_VERSION = 2
-SONIC_PYTHON_WHEELS += $(SONIC_CHASSISD)
+SONIC_CHASSISD_PY3 = sonic_chassisd-1.0-py3-none-any.whl
+$(SONIC_CHASSISD_PY3)_SRC_PATH = $(SRC_PATH)/sonic-platform-daemons/sonic-chassisd
+$(SONIC_CHASSISD_PY3)_DEPENDS = $(SONIC_PY_COMMON_PY3)
+$(SONIC_CHASSISD_PY3)_DEBS_DEPENDS = $(LIBSWSSCOMMON) $(PYTHON3_SWSSCOMMON)
+$(SONIC_CHASSISD_PY3)_PYTHON_VERSION = 3
+SONIC_PYTHON_WHEELS += $(SONIC_CHASSISD_PY3)
