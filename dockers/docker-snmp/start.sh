@@ -2,6 +2,8 @@
 
 mkdir -p /etc/ssw /etc/snmp
 
+python /usr/bin/snmp_yml_to_configdb.py
+
 SONIC_CFGGEN_ARGS=" \
     -d \
     -y /etc/sonic/sonic_version.yml \
