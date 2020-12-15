@@ -315,11 +315,11 @@ class ServiceCreator:
 
             return tables
 
-        for table, content in init_cfg.items():
+        for tablename, content in init_cfg.items():
             if not isinstance(content, dict):
                 continue
 
-            tables = get_tables(table)
+            tables = get_tables(tablename)
 
             for key in content:
                 for table in tables:
