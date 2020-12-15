@@ -233,18 +233,6 @@ class Psu(PsuBase):
                 with open(led_path, 'w') as psu_led:
                     psu_led.write(Led.LED_ON)
                     status = True
-            elif color == Led.STATUS_LED_COLOR_OFF:
-                if Led.STATUS_LED_COLOR_GREEN in led_cap_list:
-                    with open(os.path.join(Led.LED_PATH, self.psu_green_led_path), 'w') as psu_led:
-                        psu_led.write(str(Led.LED_OFF))
-                if Led.STATUS_LED_COLOR_RED in led_cap_list:
-                    with open(os.path.join(Led.LED_PATH, self.psu_red_led_path), 'w') as psu_led:
-                        psu_led.write(str(Led.LED_OFF))
-                if Led.STATUS_LED_COLOR_ORANGE in led_cap_list:
-                    with open(os.path.join(Led.LED_PATH, self.psu_orange_led_path), 'w') as psu_led:
-                        psu_led.write(str(Led.LED_OFF))
-
-                status = True
             else:
                 status = False
         except (ValueError, IOError):
