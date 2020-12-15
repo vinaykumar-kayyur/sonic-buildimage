@@ -16,8 +16,6 @@ RUN apt-get install -y        \
         libz-dev
 {%- endif %}
 
-RUN pip install --upgrade pip
-
 {% if docker_config_engine_stretch_debs.strip() %}
 # Copy locally-built Debian package dependencies
 {{ copy_files("debs/", docker_config_engine_stretch_debs.split(' '), "/debs/") }}

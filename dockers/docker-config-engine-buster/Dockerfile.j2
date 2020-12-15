@@ -8,18 +8,13 @@ RUN apt-get update         && \
     apt-get install -y        \
         apt-utils             \
         build-essential       \
-        apt-utils             \
-        python3-dev           \
-        python3-pip
+        python3-dev
 
 {%- if CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" %}
 RUN apt-get install -y        \
         libxslt-dev           \
         libz-dev
 {%- endif %}
-
-RUN pip3 install --upgrade pip
-RUN apt-get purge -y python3-pip
 
 # For sonic-config-engine Python 3 package
 # Explicitly install pyangbind here, as pyangbind causes enum34 to be installed.
