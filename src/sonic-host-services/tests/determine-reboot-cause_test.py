@@ -100,7 +100,7 @@ class TestDetermineRebootCause(object):
 
     def test_find_hardware_reboot_cause(self):
         result = find_hardware_reboot_cause()
-        assert result == (REBOOT_CAUSE_NON_HARDWARE, "N/A")
+        assert result == "Non-Hardware (N/A)"
 
     def test_get_reboot_cause_dict_watchdog(self):
         reboot_cause_dict = get_reboot_cause_dict(REBOOT_CAUSE_WATCHDOG, "", GEN_TIME_WATCHDOG) 
