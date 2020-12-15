@@ -1,7 +1,7 @@
-#!/usr/lib/env python
+#!/usr/lib/env python3
 
 import yaml
-from swsssdk import ConfigDBConnector, SonicV2Connector, SonicDBConfig
+from swsssdk import ConfigDBConnector
 
 db = ConfigDBConnector()
 db.connect()
@@ -26,8 +26,5 @@ for comm_type in full_snmp_comm_list:
             community = yaml_snmp_info['snmp_rwcommunity']
             db.set_entry('SNMP_COMMUNITY', community, {"TYPE": "RW"})
 
-
 if yaml_snmp_info['snmp_location']:
     db.set_entry('SNMP', 'LOCATION', {'Location': yaml_snmp_info['snmp_location']})
-
-
