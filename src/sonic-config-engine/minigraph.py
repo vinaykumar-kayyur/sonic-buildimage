@@ -36,6 +36,7 @@ spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
 chassis_backend_role = 'ChassisBackendRouter'
 
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
+console_device_types = ['MgmtTsToR']
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -66,8 +67,10 @@ def get_peer_switch_info(link_metadata, devices):
         if "PeerSwitch" in data:
             peer_hostname = data["PeerSwitch"]
             peer_lo_addr = devices[peer_hostname]["lo_addr"] 
+            peer_lo_addr = ipaddress.ip_network(UNICODE_TYPE(peer_lo_addr))
+
             peer_switch_table[peer_hostname] = {
-                'address_ipv4': peer_lo_addr
+                'address_ipv4': str(peer_lo_addr.network_address)
             }
 
     return peer_switch_table
@@ -1316,6 +1319,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Special parsing for spine chassis frontend routers
     if current_device['type'] == spine_chassis_frontend_role:
         parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
+
+    # Enable console management feature for console swtich
+    results['CONSOLE_SWITCH'] = {
+        'console_mgmt' : {
+            'enabled' : 'yes' if current_device['type'] in console_device_types else 'no'
+        }
+    }
 
     return results
 
