@@ -387,8 +387,8 @@ class TestContainerStartup(unittest.TestCase):
 
     def init(self):
         ctrmgrd.UNIT_TESTING = 1
-        ctrmgrd.SONIC_CTR_CONFIG = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "remote_ctr.config.json")
+        ctrmgrd.SONIC_CTR_CONFIG = (
+                common_test.create_remote_ctr_config_json())
 
 
     @patch("ctrmgrd.swsscommon.DBConnector")

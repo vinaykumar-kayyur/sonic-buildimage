@@ -7,6 +7,14 @@ sys.path.append("ctrmgr")
 import ctrmgr_tools
 
 
+# ctr_image_names.json data for the test cases
+#
+str_ctr_image_names_json = '\
+{\n\
+"snmp" : "docker-snmp",\n\
+"lldp" : "docker-lldp"\n\
+}\n'
+
 # ctrmgr_tools test cases
 # NOTE: Ensure state-db entry is complete in PRE as we need to
 # overwrite any context left behind from last test run.
@@ -260,8 +268,11 @@ class TestCtrmgrTools(unittest.TestCase):
     @patch("ctrmgr_tools.swsscommon.Table")
     @patch("ctrmgr_tools.docker.from_env")
     def test_tools(self, mock_docker, mock_table, mock_conn):
-        ctrmgr_tools.CTR_NAMES_FILE = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "ctr_image_names.json")
+        fname = "/tmp/ctr_image_names.json"
+        with open(fname, "w") as s:
+            s.write(str_ctr_image_names_json)
+
+        ctrmgr_tools.CTR_NAMES_FILE = fname
         common_test.set_mock(mock_table, mock_conn, mock_docker)
 
         for (i, ct_data) in tools_test_data.items():

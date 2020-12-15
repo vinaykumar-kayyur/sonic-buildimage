@@ -640,3 +640,18 @@ def mock_subproc_side_effect(cmd, shell=False, stdout=None, stderr=None):
 def set_kube_mock(mock_subproc):
     mock_subproc.side_effect = mock_subproc_side_effect
 
+def create_remote_ctr_config_json():
+    str_conf = '\
+{\n\
+    "join_latency_on_boot_seconds": 2,\n\
+    "retry_join_interval_seconds": 0,\n\
+    "retry_labels_update_seconds": 0,\n\
+    "revert_to_local_on_wait_seconds": 5\n\
+}\n'
+
+    fname = "/tmp/remote_ctr.config.json"
+    with open(fname, "w") as s:
+        s.write(str_conf)
+
+    return fname
+

@@ -259,10 +259,20 @@ class TestKubeCommands(unittest.TestCase):
 
 
     def init(self):
-        kube_commands.KUBELET_YAML = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "kubelet_config.yaml")
-        kube_commands.SERVER_ADMIN_URL = "file://{}".format(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "kube_admin.conf"))
+        conf_str = "\
+apiVersion: v1\n\
+clusters:\n\
+- cluster:\n\
+    server: https://10.3.157.24:6443\n\
+"
+        self.admin_conf_file = "/tmp/kube_admin_url.info"
+        with open(self.admin_conf_file, "w") as s:
+            s.write(conf_str)
+        kubelet_yaml = "/tmp/kubelet_config.yaml"
+        with open(kubelet_yaml, "w") as s:
+            s.close()
+        kube_commands.KUBELET_YAML = kubelet_yaml
+        kube_commands.SERVER_ADMIN_URL = "file://{}".format(self.admin_conf_file)
         kube_commands.KUBE_ADMIN_CONF = KUBE_ADMIN_CONF
 
 
@@ -373,9 +383,7 @@ class TestKubeCommands(unittest.TestCase):
             common_test.do_start_test("kube:reset", i, ct_data)
 
             if ct_data.get(common_test.DO_JOIN, False):
-                shutil.copyfile(os.path.join(os.path.dirname(
-                    os.path.realpath(__file__)), "kube_admin.conf"),
-                    KUBE_ADMIN_CONF)
+                shutil.copyfile(self.admin_conf_file, KUBE_ADMIN_CONF)
             else:
                 os.system("rm -f {}".format(KUBE_ADMIN_CONF))
 
