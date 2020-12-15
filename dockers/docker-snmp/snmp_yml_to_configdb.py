@@ -1,4 +1,4 @@
-#!/usr/lib/env python3
+#!/usr/bin/env python3
 
 import yaml
 from swsssdk import ConfigDBConnector
