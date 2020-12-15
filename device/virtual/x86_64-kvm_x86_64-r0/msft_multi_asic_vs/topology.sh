@@ -8,10 +8,10 @@ NUM_INTERFACES_PER_ASIC=32
 
 start () {
     # Move external links into assigned frontend namespaces
-    # eth0  - eth15: asic2 
-    # eth16 - eth31: asic3 
-    # eth32 - eth47: asic4
-    # eth48 - eth63: asic5
+    # eth1  - eth16: asic0
+    # eth17 - eth32: asic1 
+    # eth33 - eth48: asic2
+    # eth49 - eth64: asic3
     for ASIC in `seq $FIRST_FRONTEND_ASIC $LAST_FRONTEND_ASIC`; do
         for NUM in `seq 1 16`; do
             ORIG="eth$((16 * $ASIC + $NUM))"
@@ -54,8 +54,8 @@ stop() {
     for ASIC in `seq $FIRST_FRONTEND_ASIC $LAST_FRONTEND_ASIC`; do
         for NUM in `seq 1 16`; do
             TEMP="eth999"
-            OLD="eth$((16 * $ASIC + $NUM))"
-            NAME="eth$((16 * $ASIC + $NUM - 1))"
+            OLD="eth$(($NUM))"
+            NAME="eth$((16 * $ASIC + $NUM))"
             sudo ip netns exec asic$ASIC ip link set dev $OLD down
             sudo ip netns exec asic$ASIC ip link set dev $OLD name $TEMP
             sudo ip netns exec asic$ASIC ip link set dev $TEMP netns 1
