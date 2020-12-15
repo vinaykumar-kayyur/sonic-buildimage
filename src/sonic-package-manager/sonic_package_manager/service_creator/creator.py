@@ -3,14 +3,14 @@ import contextlib
 import os
 import stat
 import subprocess
-from prettyprinter import pformat
 from typing import Dict
 
 import jinja2 as jinja2
+from prettyprinter import pformat
 
-from sonic_package_manager.service_creator import ETC_SONIC_PATH
 from sonic_package_manager.logger import log
 from sonic_package_manager.package import Package
+from sonic_package_manager.service_creator import ETC_SONIC_PATH
 from sonic_package_manager.service_creator.feature import FeatureRegistry
 from sonic_package_manager.service_creator.utils import in_chroot
 
@@ -102,8 +102,9 @@ class ServiceCreator:
     """ Creates and registers services in SONiC based on the package
      manifest. """
 
-    def __init__(self, feature_registry: FeatureRegistry):
+    def __init__(self, feature_registry: FeatureRegistry, sonic_db):
         self.feature_registry = feature_registry
+        self.sonic_db = sonic_db
 
     def create(self, package: Package, register_feature=True):
         try:
@@ -113,6 +114,8 @@ class ServiceCreator:
             self.generate_systemd_service(package)
             self.generate_monit_conf(package)
             self.generate_dump_script(package)
+
+            self.set_initial_config(package)
 
             self.post_install()
 
@@ -291,3 +294,38 @@ class ServiceCreator:
         }
         render_template(scrip_template, script_path, render_ctx, executable=True)
         log.info(f'generated {script_path}')
+
+    def set_initial_config(self, package):
+        init_cfg = package.manifest['package']['init-cfg']
+
+        def get_tables(table_name):
+            tables = []
+
+            running_table = self.sonic_db.running_table(table_name)
+            if running_table is not None:
+                tables.append(running_table)
+
+            persistent_table = self.sonic_db.persistent_table(table_name)
+            if persistent_table is not None:
+                tables.append(persistent_table)
+
+            initial_table = self.sonic_db.initial_table(table_name)
+            if initial_table is not None:
+                tables.append(initial_table)
+
+            return tables
+
+        for table, content in init_cfg.items():
+            if not isinstance(content, dict):
+                continue
+
+            tables = get_tables(table)
+
+            for key in content:
+                for table in tables:
+                    cfg = content[key]
+                    exists, old_fvs = table.get(key)
+                    if exists:
+                        cfg.update(old_fvs)
+                    fvs = list(cfg.items())
+                    table.set(key, fvs)

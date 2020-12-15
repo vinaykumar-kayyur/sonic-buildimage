@@ -296,7 +296,7 @@ def sonic_fs(fs):
 
 
 @pytest.fixture(autouse=True)
-def mock_pkgutil():
+def patch_pkgutil():
     with mock.patch('pkgutil.get_loader'):
         yield
 

@@ -18,7 +18,8 @@ from sonic_package_manager.errors import (
     PackageConflictError,
     PackageSonicRequirementError,
     PackageManagerError,
-    PackageUninstallationError, PackageUpgradeError
+    PackageUninstallationError,
+    PackageUpgradeError
 )
 from sonic_package_manager.logger import log
 from sonic_package_manager.manifest_resolver import ManifestResolver
@@ -583,5 +584,5 @@ class PackageManager:
                               registry_resolver,
                               PackageDatabase.from_file(),
                               ManifestResolver(docker_api, registry_resolver),
-                              ServiceCreator(FeatureRegistry(SonicDB)),
+                              ServiceCreator(FeatureRegistry(SonicDB), SonicDB),
                               device_info)
