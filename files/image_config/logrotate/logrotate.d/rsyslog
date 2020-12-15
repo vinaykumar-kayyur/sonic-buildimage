@@ -27,6 +27,7 @@
 /var/log/cron.log
 /var/log/syslog
 /var/log/teamd.log
+/var/log/neighsyncd.log
 /var/log/telemetry.log
 /var/log/quagga/bgpd.log
 /var/log/quagga/zebra.log

@@ -20,7 +20,7 @@ fi
 
 # Start arp_update and NDP proxy daemon when VLAN exists
 if [ "$VLAN" != "" ]; then
-    cp /usr/share/sonic/templates/arp_update.conf /etc/supervisor/conf.d/
+    #cp /usr/share/sonic/templates/arp_update.conf /etc/supervisor/conf.d/
     cp /usr/share/sonic/templates/ndppd.conf /etc/supervisor/conf.d/
 fi
 
