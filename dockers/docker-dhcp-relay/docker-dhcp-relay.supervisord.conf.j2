@@ -38,33 +38,75 @@ stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
 
-{# If our configuration has VLANs... #}
-{% if VLAN_INTERFACE %}
-{# Count how many VLANs require a DHCP relay agent... #}
 {% set num_relays = { 'count': 0 } %}
-{% for vlan_name in VLAN_INTERFACE %}
-{% if VLAN and vlan_name in VLAN and VLAN[vlan_name]['dhcp_servers'] %}
+{# If our configuration has VLANs... #}
+{% if VLAN %}
+{# Count how many VLANs require a DHCP relay agent... #}
+{% for vlan_name in VLAN %}
+{% if VLAN[vlan_name]['dhcp_servers'] %}
 {% set _dummy = num_relays.update({'count': num_relays.count + 1}) %}
 {% endif %}
 {% endfor %}
-{# If one or more of the VLANs require a DHCP relay agent... #}
+{% endif %}
+{# If our configuration has Portchannels... #}
+{% if PORTCHANNEL_INTERFACE %}
+{# Count how many Portchannels interfaces require a DHCP relay agent... #}
+{% for pc_name in PORTCHANNEL_INTERFACE %}
+{% if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{% set _dummy = num_relays.update({'count': num_relays.count + 1}) %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{# If our configuration has Ethernet.. #}
+{% if INTERFACE %}
+{# Count how many Ethernet interfaces require a DHCP relay agent... #}
+{% for intf_name in INTERFACE %}
+{% if INTERFACE[intf_name]['dhcp_servers'] %}
+{% set _dummy = num_relays.update({'count': num_relays.count + 1}) %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{# If one or more of the VLANs/Portchannel/Ethernet interfaces require a DHCP relay agent... #}
 {% if num_relays.count > 0 %}
 [group:isc-dhcp-relay]
 programs=
 {%- set add_preceding_comma = { 'flag': False } %}
-{% for vlan_name in VLAN_INTERFACE %}
-{% if VLAN and vlan_name in VLAN and VLAN[vlan_name]['dhcp_servers'] %}
+{% if VLAN %}
+{% for vlan_name in VLAN %}
+{% if VLAN[vlan_name]['dhcp_servers'] %}
 {% if add_preceding_comma.flag %},{% endif %}
 {% set _dummy = add_preceding_comma.update({'flag': True}) %}
 isc-dhcp-relay-{{ vlan_name }}
 {%- endif %}
 {% endfor %}
-
+{% endif %}
+{% if PORTCHANNEL_INTERFACE %}
+{% for pc_name in PORTCHANNEL_INTERFACE %}
+{% if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{% if add_preceding_comma.flag %},{% endif %}
+{% set _dummy = add_preceding_comma.update({'flag': True}) %}
+isc-dhcp-relay-{{ pc_name }}
+{%- endif %}
+{% endfor %}
+{% endif %}
+{% if INTERFACE %}
+{% for intf_name in INTERFACE %}
+{% if INTERFACE[intf_name]['dhcp_servers'] %}
+{% if add_preceding_comma.flag %},{% endif %}
+{% set _dummy = add_preceding_comma.update({'flag': True}) %}
+isc-dhcp-relay-{{ intf_name }}
+{%- endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
 
 {# Create a program entry for each DHCP relay agent instance #}
+{% if num_relays.count > 0 %}
 {% set relay_for_ipv4 = { 'flag': False } %}
-{% for vlan_name in VLAN_INTERFACE %}
-{% if VLAN and vlan_name in VLAN and VLAN[vlan_name]['dhcp_servers'] %}
+{% if VLAN %}
+{% for vlan_name in VLAN %}
+{% if VLAN[vlan_name]['dhcp_servers'] %}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
 {% if dhcp_server | ipv4 %}
 {% set _dummy = relay_for_ipv4.update({'flag': True}) %}
@@ -78,15 +120,27 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {#- Dual ToR Option #}
 {% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %} -U Loopback0 -dt{% endif -%}
 {#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{%- if VLAN_INTERFACE -%}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 and name != vlan_name %} -iu {{ name }}{% endif -%}
 {% endfor %}
+{%- endif -%}
+{%- if INTERFACE -%}
 {% for (name, prefix) in INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
+{%- endif -%}
+{%- if PORTCHANNEL_INTERFACE -%}
 {% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
+{%- endif -%}
+{%- if VLAN[vlan_name].has_key('dhcp_relay_src_intf') %}
+{%- set src_intf = VLAN[vlan_name]['dhcp_relay_src_intf'] %}
+{%- if VLAN[vlan_name].has_key('dhcp_relay_link_select') and VLAN[vlan_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
+{%- else %} -S {{ src_intf }}
+{% endif -%}
+{% endif -%}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
 {%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
 {% endfor %}
@@ -102,23 +156,148 @@ dependent_startup_wait_for=start:exited
 {% endif %}
 {% endif %}
 {% endfor %}
+{% endif %}
+  
+{% if PORTCHANNEL_INTERFACE %}
+{% for pc_name in PORTCHANNEL_INTERFACE %}
+{%- if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] -%}
+{% for dhcp_server in PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{% if dhcp_server | ipv4 %}
+{% set _dummy = relay_for_ipv4.update({'flag': True}) %}
+{% endif %}
+{% endfor %}
+{% if relay_for_ipv4.flag %}
+{% set _dummy = relay_for_ipv4.update({'flag': False}) %}
+[program:isc-dhcp-relay-{{ pc_name }}]
+{# We treat this PORTCHANNEL_INTERFACE as a downstream interface (-id), as we only want to listen for requests #}
+command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /tmp/port-name-alias-map.txt -id {{ pc_name }}
+{#- Dual ToR Option #}
+{% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %} -U Loopback0 -dt{% endif -%}
+{#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name != pc_name %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{%- if INTERFACE -%}
+{% for (name, prefix) in INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{%- endif -%}
+{%- if VLAN_INTERFACE -%}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{%- endif -%}
+{%- if PORTCHANNEL_INTERFACE[pc_name].has_key('dhcp_relay_src_intf') %}
+{%- set src_intf = PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_src_intf'] %}
+{%- if PORTCHANNEL_INTERFACE[pc_name].has_key('dhcp_relay_link_select') and PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
+{%- else %} -S {{ src_intf }}
+{% endif -%}
+{% endif -%}
+{% for dhcp_server in PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
+{% endfor %}
 
+priority=3
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=start:exited
+
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+  
+{% if INTERFACE %}
+{% for intf_name in INTERFACE %}
+{% if INTERFACE[intf_name]['dhcp_servers'] %}
+{% for dhcp_server in INTERFACE[intf_name]['dhcp_servers'] %}
+{% if dhcp_server | ipv4 %}
+{% set _dummy = relay_for_ipv4.update({'flag': True}) %}
+{% endif %}
+{% endfor %}
+{% if relay_for_ipv4.flag %}
+{% set _dummy = relay_for_ipv4.update({'flag': False}) %}
+[program:isc-dhcp-relay-{{ intf_name }}]
+{# We treat this INTERFACE as a downstream interface (-id), as we only want to listen for requests #}
+command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /tmp/port-name-alias-map.txt -id {{ intf_name }}
+{#- Dual ToR Option #}
+{% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %} -U Loopback0 -dt{% endif -%}
+{#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{% for (name, prefix) in INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name != intf_name %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{%- if VLAN_INTERFACE -%}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{%- endif -%}
+{%- if PORTCHANNEL_INTERFACE -%}
+{% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{%- endif -%}
+{%- if INTERFACE[intf_name].has_key('dhcp_relay_src_intf') %}
+{%- set src_intf = INTERFACE[intf_name]['dhcp_relay_src_intf'] %}
+{%- if INTERFACE[intf_name].has_key('dhcp_relay_link_select') and INTERFACE[intf_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
+{%- else %} -S {{ src_intf }}
+{% endif -%}
+{% endif -%}
+{% for dhcp_server in INTERFACE[intf_name]['dhcp_servers'] %}
+{%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
+{% endfor %}
+
+priority=3
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=start:exited
+
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+  
 [group:dhcpmon]
 programs=
 {%- set add_preceding_comma = { 'flag': False } %}
-{% for vlan_name in VLAN_INTERFACE %}
-{% if VLAN and vlan_name in VLAN and VLAN[vlan_name]['dhcp_servers'] %}
+{% if VLAN %}
+{% for vlan_name in VLAN %}
+{% if VLAN[vlan_name]['dhcp_servers'] %}
 {% if add_preceding_comma.flag %},{% endif %}
 {% set _dummy = add_preceding_comma.update({'flag': True}) %}
 dhcpmon-{{ vlan_name }}
 {%- endif %}
 {% endfor %}
-
-
+{% endif %}
+{% if PORTCHANNEL_INTERFACE %}
+{% for pc_name in PORTCHANNEL_INTERFACE %}
+{% if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{% if add_preceding_comma.flag %},{% endif %}
+{% set _dummy = add_preceding_comma.update({'flag': True}) %}
+dhcpmon-{{ pc_name }}
+{%- endif %}
+{% endfor %}
+{% endif %}
+{% if INTERFACE %}
+{% for intf_name in INTERFACE %}
+{% if INTERFACE[intf_name]['dhcp_servers'] %}
+{% if add_preceding_comma.flag %},{% endif %}
+{% set _dummy = add_preceding_comma.update({'flag': True}) %}
+dhcpmon-{{ intf_name }}
+{%- endif %}
+{% endfor %}
+{% endif %}
+  
 {# Create a program entry for each DHCP MONitor instance #}
 {% set relay_for_ipv4 = { 'flag': False } %}
-{% for vlan_name in VLAN_INTERFACE %}
-{% if VLAN and vlan_name in VLAN and VLAN[vlan_name]['dhcp_servers'] %}
+{% if VLAN %}
+{% for vlan_name in VLAN %}
+{% if VLAN[vlan_name]['dhcp_servers'] %}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
 {% if dhcp_server | ipv4 %}
 {% set _dummy = relay_for_ipv4.update({'flag': True}) %}
@@ -130,15 +309,21 @@ dhcpmon-{{ vlan_name }}
 {# We treat this VLAN as a downstream interface (-id), as we only want to listen for requests #}
 command=/usr/sbin/dhcpmon -id {{ vlan_name }}
 {#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{% if VLAN_INTERFACE %}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 and name != vlan_name %} -iu {{ name }}{% endif -%}
 {% endfor %}
+{% endif %}
+{% if INTERFACE %}
 {% for (name, prefix) in INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
+{% endif %}
+{% if PORTCHANNEL_INTERFACE %}
 {% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
+{% endif %}
 {% if MGMT_INTERFACE %}
 {% for (name, prefix) in MGMT_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %} -im {{ name }}{% endif -%}
@@ -156,6 +341,99 @@ dependent_startup_wait_for=isc-dhcp-relay-{{ vlan_name }}:running
 {% endif %}
 {% endif %}
 {% endfor %}
+{% endif %}
+  
+{% if PORTCHANNEL_INTERFACE %}
+{% for pc_name in PORTCHANNEL_INTERFACE %}
+{% if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{% for dhcp_server in PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
+{% if dhcp_server | ipv4 %}
+{% set _dummy = relay_for_ipv4.update({'flag': True}) %}
+{% endif %}
+{% endfor %}
+{% if relay_for_ipv4.flag %}
+{% set _dummy = relay_for_ipv4.update({'flag': False}) %}
+[program:dhcpmon-{{ pc_name }}]
+{# We treat this PORTCHANNEL_INTERFACE as a downstream interface (-id), as we only want to listen for requests #}
+ command=/usr/sbin/dhcpmon -id {{ pc_name }}
+{#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name != pc_name %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% if INTERFACE %}
+{% for (name, prefix) in INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% endif %}
+{% if VLAN_INTERFACE %}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% endif %}
+{% if MGMT_INTERFACE %}
+{% for (name, prefix) in MGMT_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -im {{ name }}{% endif -%}
+{% endfor %}
+{% endif %}
+
+priority=4
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=isc-dhcp-relay-{{ pc_name }}:running
 
 {% endif %}
 {% endif %}
+{% endfor %}
+{% endif %}
+
+{% if INTERFACE %}
+{% for intf_name in INTERFACE %}
+{% if INTERFACE[intf_name]['dhcp_servers'] %}
+{% for dhcp_server in INTERFACE[intf_name]['dhcp_servers'] %}
+{% if dhcp_server | ipv4 %}
+{% set _dummy = relay_for_ipv4.update({'flag': True}) %}
+{% endif %}
+{% endfor %}
+{% if relay_for_ipv4.flag %}
+{% set _dummy = relay_for_ipv4.update({'flag': False}) %}
+[program:dhcpmon-{{ intf_name }}]
+{# We treat this INTERFACE as a downstream interface (-id), as we only want to listen for requests #}
+command=/usr/sbin/dhcpmon -id {{ intf_name }}
+{#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
+{% for (name, prefix) in INTERFACE|pfx_filter %}
+{% if prefix | ipv4 and name != intf_name %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% if VLAN_INTERFACE %}
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% endif %}
+{% if PORTCHANNEL_INTERFACE %}
+{% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% endif %}
+{% if MGMT_INTERFACE %}
+{% for (name, prefix) in MGMT_INTERFACE|pfx_filter %}
+{% if prefix | ipv4 %} -im {{ name }}{% endif -%}
+{% endfor %}
+{% endif %}
+
+priority=4
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=isc-dhcp-relay-{{ intf_name }}:running
+
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% endif %}
+
