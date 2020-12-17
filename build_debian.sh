@@ -273,8 +273,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     ntpstat                 \
     openssh-server          \
     python                  \
-    python-setuptools       \
-    python3-setuptools      \
     python-jsonschema       \
     python-apt              \
     traceroute              \
@@ -311,6 +309,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     makedumpfile            \
     conntrack               \
     python-pip              \
+    python3                 \
+    python3-distutils       \
     python3-pip             \
     cron                    \
     haveged                 \
@@ -333,6 +333,9 @@ sudo LANG=c chroot $FILESYSTEM_ROOT chmod 644 /etc/group
 # Needed to install kdump-tools
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/initramfs-tools/conf.d"
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/initramfs-tools/conf.d/driver-policy"
+
+# Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
+sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
@@ -410,6 +413,17 @@ while read line; do
 done < files/image_config/sysctl/sysctl-net.conf
 
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
+
+# Upgrade pip via PyPI and uninstall the Debian version
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install --upgrade pip
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install --upgrade pip
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-pip python3-pip
+
+# For building Python packages
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'setuptools==40.8.0'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'wheel==0.35.1'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setuptools==49.6.00'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install 'docker==4.1.0'

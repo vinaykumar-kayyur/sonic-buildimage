@@ -5,12 +5,15 @@ mkdir -p /etc/supervisor/conf.d/
 
 SENSORS_CONF_FILE="/usr/share/sonic/platform/sensors.conf"
 FANCONTROL_CONF_FILE="/usr/share/sonic/platform/fancontrol"
+
 SUPERVISOR_CONF_TEMPLATE="/usr/share/sonic/templates/docker-pmon.supervisord.conf.j2"
 SUPERVISOR_CONF_FILE="/etc/supervisor/conf.d/supervisord.conf"
 PMON_DAEMON_CONTROL_FILE="/usr/share/sonic/platform/pmon_daemon_control.json"
+MODULAR_CHASSISDB_CONF_FILE="/usr/share/sonic/platform/chassisdb.conf"
 
 HAVE_SENSORS_CONF=0
 HAVE_FANCONTROL_CONF=0
+IS_MODULAR_CHASSIS=0
 # Default use python2 version
 SONIC_PLATFORM_API_PYTHON_VERSION=2
 
@@ -77,7 +80,11 @@ if [ -e $FANCONTROL_CONF_FILE ]; then
     /bin/cp -f $FANCONTROL_CONF_FILE /etc/
 fi
 
-confvar="{\"HAVE_SENSORS_CONF\":$HAVE_SENSORS_CONF, \"HAVE_FANCONTROL_CONF\":$HAVE_FANCONTROL_CONF, \"API_VERSION\":$SONIC_PLATFORM_API_PYTHON_VERSION}"
+if [ -e $MODULAR_CHASSISDB_CONF_FILE ]; then
+    IS_MODULAR_CHASSIS=1
+fi
+
+confvar="{\"HAVE_SENSORS_CONF\":$HAVE_SENSORS_CONF, \"HAVE_FANCONTROL_CONF\":$HAVE_FANCONTROL_CONF, \"API_VERSION\":$SONIC_PLATFORM_API_PYTHON_VERSION, \"IS_MODULAR_CHASSIS\":$IS_MODULAR_CHASSIS}"
 
 if [ -e $PMON_DAEMON_CONTROL_FILE ];
 then
