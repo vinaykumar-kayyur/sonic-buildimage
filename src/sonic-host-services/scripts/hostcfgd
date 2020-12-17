@@ -467,7 +467,8 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO,
                       "Waiting for systemctl to finish initialization")
         self.wait_till_system_init_done()
-        syslog.syslog(syslog.LOG_INFO, "starting update of feature states")
+        syslog.syslog(syslog.LOG_INFO,
+                      "systemctl has finished initialization -- proceeding ...")
 
         # Update all feature states once upon starting
         self.update_all_feature_states()
