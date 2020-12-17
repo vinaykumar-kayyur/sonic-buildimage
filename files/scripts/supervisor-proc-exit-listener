@@ -89,7 +89,6 @@ def is_process_running(process_name):
     is_running = False
 
     command_stdout = get_command_result(supervisorctl_status_command)
-
     for line in command_stdout.split("\n"):
         if process_name in line:
             status = line.split()[1].strip()
