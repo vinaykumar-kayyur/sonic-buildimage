@@ -75,7 +75,7 @@ class Chassis(ChassisBase):
 
         for port_num in range(self.PORT_START, self.PORTS_IN_BLOCK):
             # sfp get uses zero-indexing, but port numbers start from 1
-            presence = self.get_sfp(port_num-1).get_presence()
+            presence = self.get_sfp(port_num).get_presence()
             self._global_port_pres_dict[port_num] = '1' if presence else '0'
 
     def __del__(self):
@@ -99,7 +99,7 @@ class Chassis(ChassisBase):
         while True:
             time.sleep(0.5)
             for port_num in range(self.PORT_START, (self.PORT_END + 1)):
-                presence = self.get_sfp(port_num-1).get_presence()
+                presence = self.get_sfp(port_num).get_presence()
                 if(presence and self._global_port_pres_dict[port_num] == '0'):
                     self._global_port_pres_dict[port_num] = '1'
                     port_dict[port_num] = '1'
@@ -134,10 +134,10 @@ class Chassis(ChassisBase):
 
         try:
             # The index will start from 0
-            sfp = self._sfp_list[index]
+            sfp = self._sfp_list[index-1]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (0-{})\n".format(
-                             index, len(self._sfp_list)-1))
+                             index, len(self._sfp_list)))
         return sfp
 
     def get_name(self):

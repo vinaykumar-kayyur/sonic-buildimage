@@ -1,15 +1,10 @@
 from __future__ import print_function
 
-import calendar
-from ipaddress import IPv4Address, IPv4Network, ip_address, ip_network
+import ipaddress
 import math
 import os
 import sys
-import socket
-import struct
 import json
-import copy
-import ipaddress
 from collections import defaultdict
 
 from lxml import etree as ET
@@ -41,6 +36,7 @@ spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
 chassis_backend_role = 'ChassisBackendRouter'
 
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
+console_device_types = ['MgmtTsToR']
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -71,8 +67,10 @@ def get_peer_switch_info(link_metadata, devices):
         if "PeerSwitch" in data:
             peer_hostname = data["PeerSwitch"]
             peer_lo_addr = devices[peer_hostname]["lo_addr"] 
+            peer_lo_addr = ipaddress.ip_network(UNICODE_TYPE(peer_lo_addr))
+
             peer_switch_table[peer_hostname] = {
-                'address_ipv4': peer_lo_addr
+                'address_ipv4': str(peer_lo_addr.network_address)
             }
 
     return peer_switch_table
@@ -85,8 +83,6 @@ def parse_device(device):
     hwsku = None
     name = None
     deployment_id = None
-    if str(QName(ns3, "type")) in device.attrib:
-        d_type = device.attrib[str(QName(ns3, "type"))]
 
     for node in device:
         if node.tag == str(QName(ns, "Address")):
@@ -101,6 +97,12 @@ def parse_device(device):
             hwsku = node.text
         elif node.tag == str(QName(ns, "DeploymentId")):
             deployment_id = node.text
+        elif node.tag == str(QName(ns, "ElementType")):
+            d_type = node.text
+
+    if d_type is None and str(QName(ns3, "type")) in device.attrib:
+        d_type = device.attrib[str(QName(ns3, "type"))]
+
     return (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id)
 
 def parse_png(png, hname):
@@ -809,7 +811,7 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
                 intf_name = pc_member[1]
                 break
 
-        if intf_name == None:
+        if intf_name is None:
             print('Warning: cannot find any interfaces that belong to %s' % (pc_intf), file=sys.stderr)
             continue
 
@@ -1097,10 +1099,24 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for intf in intfs:
         if intf[0][0:4] == 'Vlan':
             vlan_intfs[intf] = {}
-            vlan_intfs[intf[0]] = {}
+
+            if bool(results['PEER_SWITCH']):
+                vlan_intfs[intf[0]] = {
+                    'proxy_arp': 'enabled',
+                    'grat_arp': 'enabled'
+                }
+            else:
+                vlan_intfs[intf[0]] = {}
         elif intf[0] in vlan_invert_mapping:
             vlan_intfs[(vlan_invert_mapping[intf[0]], intf[1])] = {}
-            vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
+
+            if bool(results['PEER_SWITCH']):
+                vlan_intfs[vlan_invert_mapping[intf[0]]] = {
+                    'proxy_arp': 'enabled',
+                    'grat_arp': 'enabled'
+                }
+            else:
+                vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
         elif intf[0][0:11] == 'PortChannel':
             pc_intfs[intf] = {}
             pc_intfs[intf[0]] = {}
@@ -1308,14 +1324,21 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if current_device['type'] == spine_chassis_frontend_role:
         parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
 
+    # Enable console management feature for console swtich
+    results['CONSOLE_SWITCH'] = {
+        'console_mgmt' : {
+            'enabled' : 'yes' if current_device['type'] in console_device_types else 'no'
+        }
+    }
+
     return results
 
 def get_tunnel_entries(tunnel_intfs, lo_intfs, hostname):
     lo_addr = ''
     # Use the first IPv4 loopback as the tunnel destination IP
     for addr in lo_intfs.keys():
-        ip_addr = ip_network(UNICODE_TYPE(addr[1]))
-        if isinstance(ip_addr, IPv4Network):
+        ip_addr = ipaddress.ip_network(UNICODE_TYPE(addr[1]))
+        if isinstance(ip_addr, ipaddress.IPv4Network):
             lo_addr = str(ip_addr.network_address)
             break
 

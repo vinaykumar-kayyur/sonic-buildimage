@@ -138,12 +138,16 @@ function postStartAction()
         if [[ -x /usr/local/bin/db_migrator.py ]]; then
             # Migrate the DB to the latest schema version if needed
             if [ -z "$DEV" ]; then
-                /usr/bin/db_migrator.py -o migrate
+                /usr/local/bin/db_migrator.py -o migrate
             fi
         fi
         # Add redis UDS to the redis group and give read/write access to the group
         REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
     else
+        until [[ ($(docker exec -i ${DOCKERNAME} pgrep -x -c supervisord) -gt 0) &&
+                 ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
+           sleep 1
+        done
         REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
@@ -241,6 +245,19 @@ start() {
     fi
     {%- else %}
     echo "Creating new ${DOCKERNAME} container with HWSKU $HWSKU"
+    {%- endif %}
+
+    {%- if docker_container_name == "swss" %}
+    # Obtain the vendor name
+    ASIC_VENDOR=`$SONIC_CFGGEN -y /etc/sonic/sonic_version.yml -v asic_type`
+
+    # Generate the asic_table.json and peripheral_table.json
+    if [ ! -f /etc/sonic/asic_table.json ] && [ -f /usr/share/sonic/templates/asic_table.j2 ]; then
+        sonic-cfggen -d -t /usr/share/sonic/templates/asic_table.j2 > /etc/sonic/asic_table.json
+    fi
+    if [ ! -f /etc/sonic/peripheral_table.json ] && [ -f /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 ]; then
+        sonic-cfggen -d -t /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 > /etc/sonic/peripheral_table.json
+    fi
     {%- endif %}
 
     # In Multi ASIC platforms the global database config file database_global.json will exist.
@@ -355,6 +372,9 @@ start() {
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
 {%- endif %}
 {%- endif %}
+{%- if docker_container_name == "swss" %}
+        -e ASIC_VENDOR=$ASIC_VENDOR \
+{%- endif -%}
 {%- if docker_container_name == "bgp" %}
         -v /etc/sonic/frr/$DEV:/etc/frr:rw \
 {%- endif %}
