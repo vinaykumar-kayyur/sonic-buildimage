@@ -278,7 +278,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     def is_rule_ipv4(self, rule_props):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
            ("DST_IP" in rule_props and rule_props["DST_IP"]) or
-           (rule_props.get("IP_TYPE", None) == "IPV6ANY") or 
+           (rule_props.get("IP_TYPE", None) == "IPV4ANY") or 
            (ethertype == 0x800)):
             return True
         else:
@@ -380,6 +380,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         # Walk the ACL tables
         for (table_name, table_data) in self._tables_db_info.items():
             if not table_data:
+                self.log_warning("table_data is empty or null!")
                 continue
 
             table_ip_version = None
