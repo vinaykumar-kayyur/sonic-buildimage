@@ -23,8 +23,6 @@ CRITICAL_PROCESSES_FILE = '/etc/supervisor/critical_processes'
 # The FEATURE table in config db contains auto-restart field
 FEATURE_TABLE_NAME = 'FEATURE'
 
-CHECK_INTERVAL_MINS = 5
-
 
 def get_critical_group_and_process_list():
     """
