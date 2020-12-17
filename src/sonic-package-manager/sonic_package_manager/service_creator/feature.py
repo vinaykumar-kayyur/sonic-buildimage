@@ -22,7 +22,8 @@ class FeatureRegistry:
     def __init__(self, sonic_db: Type[SonicDB]):
         self._sonic_db = sonic_db
 
-    def register(self, name: str, manifest: Manifest):
+    def register(self, manifest: Manifest):
+        name = manifest['service']['name']
         for table in self._get_tables():
             cfg_entries = self.get_default_feature_entries()
             non_cfg_entries = self.get_non_configurable_feature_entries(manifest)

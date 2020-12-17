@@ -120,7 +120,7 @@ class ServiceCreator:
             self.post_install()
 
             if register_feature:
-                self.feature_registry.register(package.name, package.manifest)
+                self.feature_registry.register(package.manifest)
         except (Exception, KeyboardInterrupt):
             self.remove(package, not register_feature)
             raise
@@ -145,7 +145,7 @@ class ServiceCreator:
         self.post_install()
 
         if deregister_feature:
-            self.feature_registry.deregister(package.name)
+            self.feature_registry.deregister(package.manifest['serivce']['name'])
 
     def post_install(self):
         if not in_chroot():

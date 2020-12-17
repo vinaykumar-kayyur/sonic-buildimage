@@ -121,7 +121,7 @@ def test_feature_registration(mock_sonic_db, manifest):
     mock_sonic_db.persistent_table = Mock(return_value=mock_feature_table)
     mock_sonic_db.running_table = Mock(return_value=mock_feature_table)
     feature_registry = FeatureRegistry(mock_sonic_db)
-    feature_registry.register('test', manifest)
+    feature_registry.register(manifest)
     mock_feature_table.set.assert_called_with('test', [
         ('state', 'disabled'),
         ('auto_restart', 'enabled'),
@@ -140,7 +140,7 @@ def test_feature_registration_with_timer(mock_sonic_db, manifest):
     mock_sonic_db.persistent_table = Mock(return_value=mock_feature_table)
     mock_sonic_db.running_table = Mock(return_value=mock_feature_table)
     feature_registry = FeatureRegistry(mock_sonic_db)
-    feature_registry.register('test', manifest)
+    feature_registry.register(manifest)
     mock_feature_table.set.assert_called_with('test', [
         ('state', 'disabled'),
         ('auto_restart', 'enabled'),
