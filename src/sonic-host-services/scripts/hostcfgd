@@ -382,6 +382,11 @@ class HostConfigDaemon:
 
 
     def update_all_feature_states(self):
+        syslog.syslog(syslog.LOG_INFO,
+                      "Waiting for systemctl to finish initialization")
+        self.wait_till_system_init_done()
+        syslog.syslog(syslog.LOG_INFO, "starting update of feature states")
+        
         feature_table = self.config_db.get_table('FEATURE')
         for feature_name in feature_table:
             if not feature_name:
@@ -455,13 +460,7 @@ class HostConfigDaemon:
         systemctl_cmd = "sudo systemctl is-system-running --wait --quiet"
         subprocess.call(systemctl_cmd, shell=True)
 
-
     def start(self):
-
-        syslog.syslog(syslog.LOG_INFO,
-                      "Waiting for systemctl to finish initialization")
-        self.wait_till_system_init_done()
-        syslog.syslog(syslog.LOG_INFO, "starting hostcfgd...")
 
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
