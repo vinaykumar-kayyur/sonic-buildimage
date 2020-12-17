@@ -80,6 +80,9 @@ class ManifestSchema:
             return return_value
 
         def unmarshal(self, value):
+            # return raw value for built-in types which can be serialized by JSONEncoder
+            if self.type in (dict, list, tuple, str, int, float, bool):
+                return value
             return str(value)
 
     @dataclass

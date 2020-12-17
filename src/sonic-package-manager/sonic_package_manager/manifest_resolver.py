@@ -58,8 +58,8 @@ class ManifestResolver:
 
         try:
             return self.get_manifest_from_labels(labels)
-        except (KeyError, TypeError, ValueError):
-            raise ManifestError(f'No manifest defined for {repo}:{version}')
+        except (KeyError, TypeError, ValueError) as err:
+            raise ManifestError(f'No manifest defined for {repo}:{version}: {err}')
 
     def get_manifest_remote(self, package: PackageEntry, ref: str) -> Manifest:
         """ Gets the package manifest from remote registry.
