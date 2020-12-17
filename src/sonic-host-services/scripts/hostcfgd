@@ -300,6 +300,7 @@ class HostConfigDaemon:
         self.kdumpCfg = KdumpCfg(self.config_db)
         self.kdumpCfg.load(self.config_db.get_table('KDUMP'))
 
+
     def load(self):
         aaa = self.config_db.get_table('AAA')
         tacacs_global = self.config_db.get_table('TACPLUS')
@@ -447,7 +448,20 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO, 'Kdump handler...')
         self.kdumpCfg.kdump_update(key, data, False)
 
+    def wait_till_system_init_done(self):
+
+        # No need to print the output in the log file so using the "--quiet"
+        # flag
+        systemctl_cmd = "sudo systemctl is-system-running --wait --quiet"
+        subprocess.call(systemctl_cmd, shell=True)
+
+
     def start(self):
+
+        syslog.syslog(syslog.LOG_INFO,
+                      "Waiting for systemctl to finish initialization")
+        self.wait_till_system_init_done()
+        syslog.syslog(syslog.LOG_INFO, "starting hostcfgd...")
 
         self.config_db.subscribe('AAA', lambda table, key, data: self.aaa_handler(key, data))
         self.config_db.subscribe('TACPLUS_SERVER', lambda table, key, data: self.tacacs_server_handler(key, data))
