@@ -31,3 +31,5 @@ check program routeCheck with path "/usr/local/bin/route_check.py"
     every 5 cycles
     if status != 0 for 3 cycle then alert repeat every 1 cycles
 
+check program monitoring_containers with path "/usr/bin/monitoring_containers"
+    if status != 0 for 5 times within 5 cycles then alert repeat every 1 cycles

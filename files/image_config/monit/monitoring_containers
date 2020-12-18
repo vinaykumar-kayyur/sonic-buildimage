@@ -1,0 +1,114 @@
+#!/usr/bin/python
+
+import sys
+import subprocess
+
+import swsssdk
+
+from sonic_py_common import multi_asic
+
+def get_command_result(command):
+    """
+    @summary: This function will execture the command and return the result.
+    @return: A string which contains the output of command.
+    """
+    command_stdout = ""
+
+    try:
+        proc_instance = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                                         shell=True, universal_newlines=True)
+        command_stdout, command_stderr = proc_instance.communicate()
+        if proc_instance.returncode != 0:
+            print("Failed to execute the command '{}'. Return code: '{}'".format(
+                command, proc_instance.returncode))
+            sys.exit(1)
+    except OSError as os_err:
+        print("Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
+        sys.exit(2)
+    except ValueError as val_err:
+        print("Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
+        sys.exit(3)
+
+    return command_stdout.split("\n")
+
+
+def get_expected_running_containers():
+    """
+    @summary: This function will get the expected running container list by following the rule:
+              The 'state' field of container in 'FEATURE' table should not be 'disabled'. Then
+              if the device has Multi-ASIC, this function will generate list by determining the
+              value of field 'has_global_scope', the number of ASICs and the value of field of
+              'has_per_asic_scope'. If the device has single ASIC, just put the container name into
+              the list.
+    @return:  A set which contains the expected running containers.
+    """
+    config_db = swsssdk.ConfigDBConnector()
+    config_db.connect()
+    feature_table = config_db.get_table("FEATURE")
+
+    expected_running_containers = set()
+
+    for container_name in feature_table.keys():
+        if feature_table[container_name]["state"] != "disabled":
+            if multi_asic.is_multi_asic():
+                if feature_table[container_name]["has_global_scope"] == "True":
+                    expected_running_containers.add(container_name)
+                if feature_table[container_name]["has_per_asic_scope"] == "True":
+                    num_asics = multi_asic.get_num_asics()
+                    for asic_id in range(num_asics):
+                        expected_running_containers.add(container_name + str(asic_id))
+            else:
+                expected_running_containers.add(container_name)
+
+    return expected_running_containers
+
+
+def get_current_running_containers():
+    """
+    @summary: This function will get the current running container list by analyzing the
+              output of command `docker ps`.
+    @return:  A set which contains the current running contianers.
+    """
+    running_containers = set()
+
+    command = "docker ps"
+    command_stdout = get_command_result(command)
+    for line in command_stdout:
+        if line and "CONTAINER ID" not in line:
+            running_containers.add(line.split()[-1].strip())
+
+    return running_containers
+
+
+def monitoring_containers_and_alerting():
+    """
+    @summary: This function will compare the difference between the current running containers
+              and the containers which were expected to run. If containers which were exepcted
+              to run but not running, then an alerting message will be written into syslog.
+    """
+    expected_running_containers = get_expected_running_containers()
+    current_running_containers = get_current_running_containers()
+
+    not_running_containers = expected_running_containers.difference(current_running_containers)
+
+    if not_running_containers:
+        log_message = ""
+        for container_name in not_running_containers:
+            if not log_message:
+                log_message = container_name
+            else:
+                log_message += ", " + container_name
+        
+        if len(not_running_containers) > 1:
+            print("Containers '{}' were not running.".format(log_message))
+        else:
+            print("Container '{}' was not running.".format(log_message))
+
+        sys.exit(4)
+
+
+def main():
+    monitoring_containers_and_alerting()
+
+if __name__ == "__main__":
+    main()
