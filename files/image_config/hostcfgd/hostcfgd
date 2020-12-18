@@ -257,8 +257,7 @@ class HostConfigDaemon:
                 stdout=subprocess.PIPE,
             )
             output = proc.communicate()[0].rstrip('\n')
-            if output.lower() == "initializing" or \
-                    output.lower() == "starting":
+            if output.lower() in ["initializing", "starting"]:
                 time.sleep(1)
                 continue
 
