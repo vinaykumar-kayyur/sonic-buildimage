@@ -208,13 +208,14 @@ class PackageManager:
 
         with failure_ignore(force):
             if not self.is_installed(name):
-                raise PackageUninstallationError(f'{name} is not installed')
-
-        with failure_ignore(force):
-            if self.feature_registry.is_feature_enabled(name):
-                raise PackageUninstallationError(f'{name} is enabled. Disable the feature first')
+                raise PackageUninstallationError(f'{name} is not installed')\
 
         package = self.get_package(name)
+        service_name = package.manifest['service']['name']
+
+        with failure_ignore(force):
+            if self.feature_registry.is_feature_enabled(service_name):
+                raise PackageUninstallationError(f'{service_name} is enabled. Disable the feature first')
 
         if package.built_in:
             raise PackageUninstallationError(f'Cannot uninstall built-in package {package.name}')
