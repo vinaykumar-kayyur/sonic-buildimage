@@ -23,17 +23,6 @@ SYSTEM_STATE = "system_state"
 KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 
-state_db = None
-set_owner = "local"
-state_data = {
-        CURRENT_OWNER: "none",
-        UPD_TIMESTAMP: "",
-        DOCKER_ID: "",
-        REMOTE_STATE: "none",
-        VERSION: "0.0.0",
-        SYSTEM_STATE: ""
-        }
-
 UNIT_TESTING = 0
 
 
@@ -49,9 +38,18 @@ def _get_version_key(feature, version):
 
 
 def read_data(feature):
-    # read owner from config-db and current state data from state-db.
-    global state_db, set_owner, state_data
+    state_data = {
+            CURRENT_OWNER: "none",
+            UPD_TIMESTAMP: "",
+            DOCKER_ID: "",
+            REMOTE_STATE: "none",
+            VERSION: "0.0.0",
+            SYSTEM_STATE: ""
+            }
 
+    set_owner = "local"
+
+    # read owner from config-db and current state data from state-db.
     db = swsscommon.DBConnector("CONFIG_DB", 0)
     tbl = swsscommon.Table(db, 'FEATURE')
     data = dict(tbl.get(feature)[1])
@@ -63,8 +61,10 @@ def read_data(feature):
     tbl = swsscommon.Table(state_db, 'FEATURE')
     state_data.update(dict(tbl.get(feature)[1]))
 
+    return (state_db, set_owner, state_data)
 
-def read_fields(feature, fields):
+
+def read_fields(state_db, feature, fields):
     # Read directly from STATE-DB, given fields
     # for given feature. 
     # Fields is a list of tuples (<field name>, <default val>)
@@ -83,7 +83,7 @@ def read_fields(feature, fields):
     return tuple(ret)
 
 
-def check_version_blocked(feature, version):
+def check_version_blocked(state_db, feature, version):
     # Ensure this version is *not* blocked explicitly.
     #
     tbl = swsscommon.Table(state_db, KUBE_LABEL_TABLE)
@@ -92,7 +92,7 @@ def check_version_blocked(feature, version):
     return (key in labels) and (labels[key].lower() == "false")
 
 
-def drop_label(feature, version):
+def drop_label(state_db, feature, version):
     # Mark given feature version as dropped in labels.
     # Update is done in state-db.
     # ctrmgrd sets it with kube API server per reaschability
@@ -102,7 +102,7 @@ def drop_label(feature, version):
     tbl.set(KUBE_LABEL_SET_KEY, [ (name, "false")])
         
 
-def update_data(feature, data):
+def update_data(state_db, feature, data):
     # Update STATE-DB entry for this feature with given data
     #
     debug_msg("{}: {}".format(feature, str(data)))
@@ -120,12 +120,11 @@ def get_docker_id():
     return output.strip()[:12]
 
 
-def instance_higher(feature, version):
+def instance_higher(feature, ct_version, version):
     # Compares given version against current version in STATE-DB.
     # Return True if this version is higher than current.
     #
     ret = False
-    ct_version = state_data[VERSION]
     if ct_version:
         ct = ct_version.split('.')
         nxt = version.split('.')
@@ -146,16 +145,16 @@ def instance_higher(feature, version):
     return ret
 
 
-def is_active(feature):
+def is_active(feature, system_state):
     # Check current system state of the feature
-    if state_data[SYSTEM_STATE] == "up":
+    if system_state == "up":
         return True
     else:
         syslog.syslog(syslog.LOG_ERR, "Found inactive for {}".format(feature))
         return False
 
 
-def update_state(feature, owner=None, version=None):
+def update_state(state_db, feature, owner=None, version=None):
     """
     sets owner, version & container-id for this feature in state-db.
 
@@ -173,16 +172,15 @@ def update_state(feature, owner=None, version=None):
 
     if (owner == "local"):
         # Disable deployment of this version as available locally
-        drop_label(feature, version)
+        drop_label(state_db, feature, version)
     else:
         data[REMOTE_STATE] = "running"
 
     debug_msg("{} up data:{}".format(feature, str(data)))
-    update_data(feature,  data)
-    state_data.update(data)
+    update_data(state_db, feature,  data)
 
 
-def do_exit(feat, m):
+def do_freeze(feat, m):
     # Exiting will kick off the container to run.
     # So sleep forever with periodic logs.
     #
@@ -211,40 +209,40 @@ def container_up(feature, owner, version):
 
     """
     debug_msg("BEGIN")
-    read_data(feature)
+    (state_db, set_owner, state_data) = read_data(feature)
 
     debug_msg("args: feature={}, owner={}, version={} DB: set_owner={} state_data={}".format(
         feature, owner, version, set_owner, json.dumps(state_data, indent=4)))
 
     if owner == "local":
-        update_state(feature, owner, version)
+        update_state(state_db, feature, owner, version)
     else:
         if (set_owner == "local"):
-            do_exit(feature, "bail out as set_owner is local")
+            do_freeze(feature, "bail out as set_owner is local")
             return
 
-        if not is_active(feature):
-            do_exit(feature, "bail out as system state not active")
+        if not is_active(feature, state_data[SYSTEM_STATE]):
+            do_freeze(feature, "bail out as system state not active")
             return
 
-        if check_version_blocked(feature, version):
-            do_exit(feature, "This version is marked disabled. Exiting ...")
+        if check_version_blocked(state_db, feature, version):
+            do_freeze(feature, "This version is marked disabled. Exiting ...")
             return
 
-        if not instance_higher(feature, version):
+        if not instance_higher(feature, state_data[VERSION], version):
             # TODO: May Remove label <feature_name>_<version>_enabled
             # Else kubelet will continue to re-deploy every 5 mins, until
             # master removes the lable to un-deploy.
             #
-            do_exit(feature, "bail out as current deploy version {} is not higher".
+            do_freeze(feature, "bail out as current deploy version {} is not higher".
                     format(version))
             return
 
-        update_data(feature, { VERSION: version })
+        update_data(state_db, feature, { VERSION: version })
 
         mode = state_data[REMOTE_STATE]
         if mode in ("none", "running", "stopped"):
-            update_data(feature, { REMOTE_STATE: "pending" })
+            update_data(state_db, feature, { REMOTE_STATE: "pending" })
             mode = "pending"
         else:
             debug_msg("{}: Skip remote_state({}) update".format(feature, mode))
@@ -257,13 +255,14 @@ def container_up(feature, owner, version):
             i += 1
 
             time.sleep(2)
-            mode, db_version = read_fields(feature, [(REMOTE_STATE, "none"), (VERSION, "")])
+            mode, db_version = read_fields(state_db, 
+                    feature, [(REMOTE_STATE, "none"), (VERSION, "")])
             if version != db_version:
                 # looks like another instance has overwritten. Exit for now.
                 # If this happens to be higher version, next deploy by kube will fix
                 # This is a very rare window of opportunity, for this version to be higher.
                 #
-                do_exit(feature,
+                do_freeze(feature,
                         "bail out as current deploy version={} is different than {}. re-deploy higher one".
                         format(version, db_version))
                 return
@@ -271,7 +270,7 @@ def container_up(feature, owner, version):
                 return
 
 
-        update_state(feature, owner, version)
+        update_state(state_db, feature, owner, version)
 
     debug_msg("END")
 
