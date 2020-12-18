@@ -4,16 +4,18 @@ import os
 import sys 
 
 import yaml
-
 from sonic_py_common.logger import Logger
 from swsssdk import ConfigDBConnector
 
 db = ConfigDBConnector()
 db.connect()
 
+
 SYSLOG_IDENTIFIER = 'snmp_yml_to_configdb.py'
 logger = Logger(SYSLOG_IDENTIFIER)
 logger.set_min_log_priority_info()
+
+logger.log_info('STARTING: snmp_yaml_to_configdb_conversion')
 
 snmp_comm_config_db = db.get_table('SNMP_COMMUNITY')
 snmp_config_db_communities = snmp_comm_config_db.keys()
@@ -28,7 +30,7 @@ if not os.path.exists('/etc/sonic/snmp.yml'):
     sys.exit(1)
 
 with open('/etc/sonic/snmp.yml', 'r') as yaml_file:
-    yaml_snmp_info = yaml.load(yaml_file)
+    yaml_snmp_info = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
 for comm_type in full_snmp_comm_list:
     if comm_type in yaml_snmp_info.keys():
@@ -49,7 +51,7 @@ for comm_type in full_snmp_comm_list:
             if community not in snmp_config_db_communities:
                 db.set_entry('SNMP_COMMUNITY', community, {"TYPE": "RW"})
 
-if yaml_snmp_info['snmp_location']:
+if yaml_snmp_info.get('snmp_location'):
     if 'LOCATION' not in snmp_general_keys:
         db.set_entry('SNMP', 'LOCATION', {'Location': yaml_snmp_info['snmp_location']})
 else:
