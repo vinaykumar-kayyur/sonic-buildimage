@@ -15,15 +15,12 @@ SYSLOG_IDENTIFIER = 'snmp_yml_to_configdb.py'
 logger = Logger(SYSLOG_IDENTIFIER)
 logger.set_min_log_priority_info()
 
-logger.log_info('STARTING: snmp_yaml_to_configdb_conversion')
-
 snmp_comm_config_db = db.get_table('SNMP_COMMUNITY')
 snmp_config_db_communities = snmp_comm_config_db.keys()
 snmp_general_config_db = db.get_table('SNMP')
 snmp_general_keys = snmp_general_config_db.keys()
 
 full_snmp_comm_list = ['snmp_rocommunity', 'snmp_rocommunities', 'snmp_rwcommunity', 'snmp_rwcommunities']
-
 
 if not os.path.exists('/etc/sonic/snmp.yml'):
     logger.log_info('/etc/sonic/snmp.yml does not exist')
