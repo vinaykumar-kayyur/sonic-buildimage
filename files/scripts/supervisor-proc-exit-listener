@@ -117,7 +117,7 @@ def generate_alerting_message(process_name):
 
 def monitoring_process_and_alerting(process_name):
     """
-    @summary: This function  will determine whether a critical process was running or not in every minute.
+    @summary: This function will determine whether a critical process was running or not in every minute.
               If it was not running, then an alerting message will be writen into syslog. Otherwise,
               this function will exit.
     """
@@ -132,7 +132,7 @@ def monitoring_process_and_alerting(process_name):
 def get_autorestart_state(container_name):
     """
     @summary: Read the status of auto-restart feature from Config_DB.
-    @return: Return the status of auto-restart feature..
+    @return: Return the status of auto-restart feature.
     """
     config_db = swsssdk.ConfigDBConnector()
     config_db.connect()
