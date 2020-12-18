@@ -7,31 +7,31 @@ dependencies = [
 ]
 
 setup(
-    name = 'system-health',
-    version = '1.0',
-    description = 'SONiC system health package',
-    license = 'Apache 2.0',
-    author = 'SONiC Team',
-    author_email = 'linuxnetdev@microsoft.com',
-    url = 'https://github.com/Azure/sonic-buildimage',
-    maintainer = 'Junchao Chen',
-    maintainer_email = 'junchaow@mellanox.com',
+    name='system-health',
+    version='1.0',
+    description='SONiC system health package',
+    license='Apache 2.0',
+    author='SONiC Team',
+    author_email='linuxnetdev@microsoft.com',
+    url='https://github.com/Azure/sonic-buildimage',
+    maintainer='Junchao Chen',
+    maintainer_email='junchaow@mellanox.com',
     install_requires=dependencies,
-    packages = [
+    packages=[
         'health_checker',
         'tests'
     ],
-    scripts = [
+    scripts=[
         'scripts/healthd',
     ],
-    setup_requires = [
+    setup_requires=[
         'pytest-runner'
     ],
-    tests_require = [
+    tests_require=[
         'pytest',
         'mock>=2.0.0'
     ],
-    classifiers = [
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: No Input/Output (Daemon)',
         'Intended Audience :: Developers',
@@ -43,7 +43,6 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: System :: Hardware',
     ],
-    keywords = 'SONiC sonic HEALTH health',
-    test_suite = 'setup.get_test_suite'
+    keywords='SONiC sonic HEALTH health',
+    test_suite='setup.get_test_suite'
 )
-
