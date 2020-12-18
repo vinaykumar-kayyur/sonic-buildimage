@@ -52,3 +52,6 @@ for comm_type in full_snmp_comm_list:
 if yaml_snmp_info['snmp_location']:
     if 'LOCATION' not in snmp_general_keys:
         db.set_entry('SNMP', 'LOCATION', {'Location': yaml_snmp_info['snmp_location']})
+else:
+    logger.log_info('snmp_location does not exist in snmp.yml file')
+    sys.exit(1)
