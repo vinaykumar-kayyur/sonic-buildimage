@@ -20,7 +20,7 @@ stderr_logfile=syslog
 {% if INSTANCES %}
 {%     for redis_inst, redis_items in INSTANCES.iteritems() %}
 [program: {{ redis_inst }}]
-{% if redis_items['hostname'] != '127.0.0.1' %}
+{% if redis_items['hostname'] != '127.0.0.1' and redis_inst != 'redis_chassis' %}
 {%- set LOOPBACK_IP = '127.0.0.1' -%}
 {%- else -%}
 {%- set LOOPBACK_IP = '' -%}
@@ -33,3 +33,11 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 {%     endfor %}
 {% endif %}
+
+[program:flushdb]
+command=/bin/bash -c "sleep 300 && /usr/local/bin/flush_unused_database"
+priority=3
+autostart=true
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
