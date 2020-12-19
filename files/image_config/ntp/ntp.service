@@ -3,7 +3,7 @@ Description=Network Time Service
 Documentation=man:ntpd(8)
 After=network.target
 Conflicts=systemd-timesyncd.service
-StartLimitBurst=15
+StartLimitIntervalSec=0
 
 [Service]
 Type=forking
