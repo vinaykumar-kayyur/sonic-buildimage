@@ -3,7 +3,7 @@
 mkdir -p /etc/ssw /etc/snmp
 
 # Parse snmp.yml and insert the data in Config DB
-python /usr/bin/snmp_yml_to_configdb.py
+/usr/bin/snmp_yml_to_configdb.py
 
 SONIC_CFGGEN_ARGS=" \
     -d \
