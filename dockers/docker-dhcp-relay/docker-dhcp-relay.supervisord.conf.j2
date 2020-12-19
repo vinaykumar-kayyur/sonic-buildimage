@@ -135,9 +135,9 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {%- endif -%}
-{%- if VLAN[vlan_name].has_key('dhcp_relay_src_intf') %}
+{%- if 'dhcp_relay_src_intf' in VLAN[vlan_name] %}
 {%- set src_intf = VLAN[vlan_name]['dhcp_relay_src_intf'] %}
-{%- if VLAN[vlan_name].has_key('dhcp_relay_link_select') and VLAN[vlan_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
+{%- if 'dhcp_relay_link_select' in VLAN[vlan_name] and VLAN[vlan_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
 {%- else %} -S {{ src_intf }}
 {% endif -%}
 {% endif -%}
@@ -157,7 +157,6 @@ dependent_startup_wait_for=start:exited
 {% endif %}
 {% endfor %}
 {% endif %}
-  
 {% if PORTCHANNEL_INTERFACE %}
 {% for pc_name in PORTCHANNEL_INTERFACE %}
 {%- if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] -%}
@@ -187,9 +186,9 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {%- endif -%}
-{%- if PORTCHANNEL_INTERFACE[pc_name].has_key('dhcp_relay_src_intf') %}
+{%- if 'dhcp_relay_src_intf' in PORTCHANNEL_INTERFACE[pc_name] %}
 {%- set src_intf = PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_src_intf'] %}
-{%- if PORTCHANNEL_INTERFACE[pc_name].has_key('dhcp_relay_link_select') and PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
+{%- if 'dhcp_relay_link_select' in PORTCHANNEL_INTERFACE[pc_name] and PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
 {%- else %} -S {{ src_intf }}
 {% endif -%}
 {% endif -%}
@@ -209,7 +208,6 @@ dependent_startup_wait_for=start:exited
 {% endif %}
 {% endfor %}
 {% endif %}
-  
 {% if INTERFACE %}
 {% for intf_name in INTERFACE %}
 {% if INTERFACE[intf_name]['dhcp_servers'] %}
@@ -239,9 +237,9 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {%- endif -%}
-{%- if INTERFACE[intf_name].has_key('dhcp_relay_src_intf') %}
+{%- if 'dhcp_relay_src_intf' in INTERFACE[intf_name] %}
 {%- set src_intf = INTERFACE[intf_name]['dhcp_relay_src_intf'] %}
-{%- if INTERFACE[intf_name].has_key('dhcp_relay_link_select') and INTERFACE[intf_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
+{%- if 'dhcp_relay_link_select' in INTERFACE[intf_name] and INTERFACE[intf_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
 {%- else %} -S {{ src_intf }}
 {% endif -%}
 {% endif -%}
@@ -261,7 +259,7 @@ dependent_startup_wait_for=start:exited
 {% endif %}
 {% endfor %}
 {% endif %}
-  
+
 [group:dhcpmon]
 programs=
 {%- set add_preceding_comma = { 'flag': False } %}
@@ -292,7 +290,7 @@ dhcpmon-{{ intf_name }}
 {%- endif %}
 {% endfor %}
 {% endif %}
-  
+
 {# Create a program entry for each DHCP MONitor instance #}
 {% set relay_for_ipv4 = { 'flag': False } %}
 {% if VLAN %}
@@ -342,7 +340,6 @@ dependent_startup_wait_for=isc-dhcp-relay-{{ vlan_name }}:running
 {% endif %}
 {% endfor %}
 {% endif %}
-  
 {% if PORTCHANNEL_INTERFACE %}
 {% for pc_name in PORTCHANNEL_INTERFACE %}
 {% if PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
@@ -388,7 +385,6 @@ dependent_startup_wait_for=isc-dhcp-relay-{{ pc_name }}:running
 {% endif %}
 {% endfor %}
 {% endif %}
-
 {% if INTERFACE %}
 {% for intf_name in INTERFACE %}
 {% if INTERFACE[intf_name]['dhcp_servers'] %}
@@ -436,4 +432,3 @@ dependent_startup_wait_for=isc-dhcp-relay-{{ intf_name }}:running
 {% endif %}
 
 {% endif %}
-
