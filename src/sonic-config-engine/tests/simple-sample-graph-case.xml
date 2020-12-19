@@ -266,9 +266,10 @@
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
-      <Device i:type="ToRRouter">
+      <Device xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution" i:type="a:ToRRouter">
+        <ElementType>ToRRouter</ElementType>
         <Address xmlns:d5p1="Microsoft.Search.Autopilot.NetMux">
-          <d5p1:IPPrefix>26.1.1.10</d5p1:IPPrefix>
+          <d5p1:IPPrefix>26.1.1.10/32</d5p1:IPPrefix>
         </Address>
         <Hostname>switch-t0</Hostname>
         <HwSku>Force10-S6000</HwSku>
@@ -276,7 +277,7 @@
       </Device>
       <Device i:type="ToRRouter">
         <Address xmlns:d5p1="Microsoft.Search.Autopilot.NetMux">
-          <d5p1:IPPrefix>25.1.1.10</d5p1:IPPrefix>
+          <d5p1:IPPrefix>25.1.1.10/32</d5p1:IPPrefix>
         </Address>
         <ManagementAddress xmlns:a="Microsoft.Search.Autopilot.NetMux">
           <a:IPPrefix>10.7.0.196/26</a:IPPrefix>

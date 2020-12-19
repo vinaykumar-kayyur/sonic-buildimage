@@ -149,6 +149,11 @@ sudo cp {{sonic_py_common_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY3
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_PY_COMMON_PY3_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PY_COMMON_PY3_WHEEL_NAME
 
+# Install dependency pkgs for SONiC config engine Python 2 package
+if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libxslt-dev libz-dev
+fi
+
 # Install SONiC config engine Python 2 package
 CONFIG_ENGINE_PY2_WHEEL_NAME=$(basename {{config_engine_py2_wheel_path}})
 sudo cp {{config_engine_py2_wheel_path}} $FILESYSTEM_ROOT/$CONFIG_ENGINE_PY2_WHEEL_NAME
@@ -201,7 +206,7 @@ sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_COMMON_PY2_WHEEL_NAME
 # Install pddf-platform-api-base Python 2 package
 PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME=$(basename {{pddf_platform_api_base_py2_wheel_path}})
 sudo cp {{pddf_platform_api_base_py2_wheel_path}} $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip install $PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$PLATFORM_PDDF_COMMON_PY2_WHEEL_NAME
 {% endif %}
 
@@ -285,6 +290,7 @@ sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo DEBIAN_FRONTEND=noninteractive dpkg --root=$FILESYSTEM_ROOT -i $debs_path/kdump-tools_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot $FILESYSTEM_ROOT apt-get -q --no-install-suggests --no-install-recommends --force-no install
+    cat $IMAGE_CONFIGS/kdump/kdump-tools | sudo tee -a $FILESYSTEM_ROOT/etc/default/kdump-tools > /dev/null
 fi
 
 # Install python-swss-common package and all its dependent packages
@@ -315,6 +321,7 @@ sudo cp $IMAGE_CONFIGS/ntp/ntp-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_S
 echo "ntp-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/ntp/ntp-config.sh $FILESYSTEM_ROOT/usr/bin/
 sudo cp $IMAGE_CONFIGS/ntp/ntp.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+sudo cp $IMAGE_CONFIGS/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
 sudo cp $IMAGE_CONFIGS/ntp/ntp.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "ntp.service" | sudo tee -a $GENERATED_SERVICE_FILE
 
@@ -399,6 +406,19 @@ sudo cp $BUILD_TEMPLATES/buffers_config.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMP
 
 # Copy the qos configuration template
 sudo cp $BUILD_TEMPLATES/qos_config.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
+
+# Copy the templates for dynamically buffer calculation
+{% if sonic_asic_platform == "mellanox" or sonic_asic_platform == "vs" %}
+if [ -f platform/{{ sonic_asic_platform }}/asic_table.j2 ]
+then
+    sudo cp platform/{{ sonic_asic_platform }}/asic_table.j2 $FILESYSTEM_ROOT/usr/share/sonic/templates/asic_table.j2
+fi
+
+if [ -f platform/{{ sonic_asic_platform }}/peripheral_table.j2 ]
+then
+    sudo cp platform/{{ sonic_asic_platform }}/peripheral_table.j2 $FILESYSTEM_ROOT/usr/share/sonic/templates/peripheral_table.j2
+fi
+{% endif %}
 
 # Copy hostname configuration scripts
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
@@ -640,11 +660,17 @@ sudo cp $files_path/$MLNX_SSD_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_SSD_FW_UP
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 
-# Install mlnx-sonic-platform-common Python 2 package
-MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME=$(basename {{mlnx_platform_api_py2_wheel_path}})
-sudo cp {{mlnx_platform_api_py2_wheel_path}} $FILESYSTEM_ROOT/$MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
-sudo rm -rf $FILESYSTEM_ROOT/$MLNX_PLATFORM_COMMON_PY2_WHEEL_NAME
+# Install mlnx-sonic-platform Python 2 package
+MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME=$(basename {{mlnx_platform_api_py2_wheel_path}})
+sudo cp {{mlnx_platform_api_py2_wheel_path}} $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install $MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY2_WHEEL_NAME
+
+# Install mlnx-sonic-platform Python 3 package
+MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME=$(basename {{mlnx_platform_api_py3_wheel_path}})
+sudo cp {{mlnx_platform_api_py3_wheel_path}} $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME
 {% endif %}
 
 {%- if SONIC_ROUTING_STACK == "frr" %}
