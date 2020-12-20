@@ -2,13 +2,13 @@
 
 import argparse
 import os
-import docker
 import inspect
 import json
 import syslog
 import time
 import datetime
 
+import docker
 from swsscommon import swsscommon
 
 CTR_STATE_SCR_PATH = '/usr/share/sonic/scripts/container_startup.py'

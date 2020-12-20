@@ -1,15 +1,12 @@
 #! /usr/bin/env python3
 
+import argparse
+import json
 import os
 import sys
-
-sys.path.append("tests")
-import docker
-import argparse
-
-import json
 import syslog
 
+import docker
 from swsscommon import swsscommon
 
 CTR_NAMES_FILE = "/usr/share/sonic/templates/ctr_image_names.json"
@@ -149,4 +146,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

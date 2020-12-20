@@ -1,9 +1,14 @@
+import imp
+import os
+import sys
+
 import unittest
 from unittest.mock import MagicMock, patch
+
 from . import common_test
-import sys
-import os
 sys.path.append("ctrmgr")
+imp.load_source("docker",
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "mock_docker.py"))
 import ctrmgr_tools
 
 

@@ -596,4 +596,3 @@ if __name__ == '__main__':
     if os.geteuid() != 0:
         exit("Please run as root. Exiting ...")
     main()
-

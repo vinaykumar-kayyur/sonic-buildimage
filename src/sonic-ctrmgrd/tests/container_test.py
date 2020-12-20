@@ -1,10 +1,12 @@
-import unittest
-from unittest.mock import MagicMock, patch
 import imp
 import os
+
+import unittest
+from unittest.mock import MagicMock, patch
+
 from . import common_test
 imp.load_source("docker",
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "docker.py"))
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "mock_docker.py"))
 container = imp.load_source("container",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "../ctrmgr/container"))
 

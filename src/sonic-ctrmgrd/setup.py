@@ -21,7 +21,7 @@ setup(
     ],
     description="Package contains remote container mgmt modules",
     url='https://github.com/Azure/sonic-buildimage',
-    tests_require = [
+    tests_require=[
         'pytest',
         'pytest-cov',
     ],

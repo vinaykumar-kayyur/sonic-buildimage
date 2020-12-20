@@ -1,10 +1,11 @@
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
+
 from . import common_test
-import sys
+
 sys.path.append("ctrmgr")
 import container_startup
-
 
 # container_startup test cases
 # NOTE: Ensure state-db entry is complete in PRE as we need to
