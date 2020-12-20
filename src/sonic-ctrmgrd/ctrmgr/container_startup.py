@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import argparse
 import datetime
@@ -289,4 +289,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

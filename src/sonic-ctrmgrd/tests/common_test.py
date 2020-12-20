@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/env python3
 
 import copy
 import json
@@ -654,4 +654,3 @@ def create_remote_ctr_config_json():
         s.write(str_conf)
 
     return fname
-

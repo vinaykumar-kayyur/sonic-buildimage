@@ -533,5 +533,3 @@ class TestContainer(unittest.TestCase):
 
             with unittest.mock.patch('sys.argv', ['container', k, 'snmp']):
                 container.main()
-
-

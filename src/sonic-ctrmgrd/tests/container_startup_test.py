@@ -389,5 +389,3 @@ class TestContainerStartup(unittest.TestCase):
 
             ret = common_test.check_tables_returned()
             assert ret == 0
-
-

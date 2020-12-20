@@ -288,5 +288,3 @@ class TestCtrmgrTools(unittest.TestCase):
 
             ret = common_test.check_mock_containers()
             assert ret == 0
-
-

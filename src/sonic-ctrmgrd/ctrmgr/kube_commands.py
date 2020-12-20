@@ -1,9 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
 import fcntl
 import inspect
+import json
 import os
 import shutil
 import ssl
@@ -11,13 +12,10 @@ import subprocess
 import sys
 import syslog
 import tempfile
-
-import json
-import yaml
-
 import urllib.request
 from urllib.parse import urlparse
 
+import yaml
 from sonic_py_common import device_info
 
 KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
@@ -391,4 +389,3 @@ if __name__ == "__main__":
         exit("Please run as root. Exiting ...")
     main()
     sys.exit(0)
-

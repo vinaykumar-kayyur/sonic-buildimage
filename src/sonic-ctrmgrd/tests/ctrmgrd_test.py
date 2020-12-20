@@ -1,8 +1,10 @@
-import unittest
-from unittest.mock import MagicMock, patch
-from . import common_test
 import os
 import sys
+import unittest
+from unittest.mock import MagicMock, patch
+
+from . import common_test
+
 sys.path.append("ctrmgr")
 import ctrmgrd
 
@@ -488,5 +490,3 @@ class TestContainerStartup(unittest.TestCase):
 
             ret = common_test.check_kube_actions()
             assert ret == 0
-
-

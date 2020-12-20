@@ -1,10 +1,12 @@
-import unittest
-from unittest.mock import MagicMock, patch
-from . import common_test
-import sys
+import json
 import os
 import shutil
-import json
+import sys
+import unittest
+from unittest.mock import MagicMock, patch
+
+from . import common_test
+
 sys.path.append("ctrmgr")
 import kube_commands
 
@@ -391,5 +393,3 @@ clusters:\n\
                     ct_data[common_test.ARGS][0])
             if common_test.RETVAL in ct_data:
                 assert ret == ct_data[common_test.RETVAL]
-
-
