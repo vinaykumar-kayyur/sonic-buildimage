@@ -256,11 +256,6 @@ None".format(KUBE_ADMIN_CONF),
 
 class TestKubeCommands(object):
 
-    @classmethod
-    def setup_class(cls):
-        print("SETUP")
-
-
     def init(self):
         conf_str = "\
 apiVersion: v1\n\

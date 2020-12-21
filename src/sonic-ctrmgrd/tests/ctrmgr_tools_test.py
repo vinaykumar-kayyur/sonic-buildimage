@@ -266,10 +266,6 @@ tools_test_data = {
 
 class TestCtrmgrTools(object):
 
-    @classmethod
-    def setup_class(cls):
-        print("SETUP")
-
     @patch("ctrmgr_tools.swsscommon.DBConnector")
     @patch("ctrmgr_tools.swsscommon.Table")
     @patch("ctrmgr_tools.docker.from_env")

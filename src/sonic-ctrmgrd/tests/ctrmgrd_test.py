@@ -383,11 +383,6 @@ labels_test_data = {
 
 class TestContainerStartup(object):
 
-    @classmethod
-    def setup_class(cls):
-        print("SETUP")
-
-
     def init(self):
         ctrmgrd.UNIT_TESTING = 1
         ctrmgrd.SONIC_CTR_CONFIG = (

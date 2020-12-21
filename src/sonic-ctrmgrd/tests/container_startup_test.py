@@ -374,10 +374,6 @@ startup_test_data = {
 
 class TestContainerStartup(object):
 
-    @classmethod
-    def setup_class(cls):
-        print("SETUP")
-
     @patch("container_startup.swsscommon.DBConnector")
     @patch("container_startup.swsscommon.Table")
     def test_start(self, mock_table, mock_conn):

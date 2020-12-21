@@ -432,11 +432,6 @@ wait_test_data = {
 
 class TestContainer(object):
 
-    @classmethod
-    def setup_class(cls):
-        print("SETUP")
-
-
     def init(self):
         container.CTR_STATE_SCR_PATH = __file__
         container.SONIC_CTR_CONFIG = (
