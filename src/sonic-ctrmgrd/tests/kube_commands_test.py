@@ -1,9 +1,10 @@
 import json
 import os
-import pytest
 import shutil
 import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from . import common_test
 

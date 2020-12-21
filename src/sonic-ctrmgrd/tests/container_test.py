@@ -1,9 +1,10 @@
 import os
-import pytest
-
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from . import common_test
+
 common_test.load_mod_from_file("docker",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "mock_docker.py"))
 container = common_test.load_mod_from_file("container",
