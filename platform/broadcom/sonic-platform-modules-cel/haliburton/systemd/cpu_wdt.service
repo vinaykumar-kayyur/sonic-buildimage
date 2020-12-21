@@ -1,0 +1,11 @@
+[Unit]
+Description=CPU WDT
+After=platform-modules-haliburton.service
+Requires=platform-modules-haliburton.service
+
+[Service]
+ExecStart=-/usr/local/bin/cpu_wdt start
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
