@@ -3,10 +3,10 @@
 import argparse
 import datetime
 import inspect
+import json
 import subprocess
 import syslog
 import time
-import json
 
 from swsscommon import swsscommon
 
