@@ -1,13 +1,12 @@
-import imp
 import os
 import sys
 
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
 sys.path.append("ctrmgr")
-imp.load_source("docker",
+common_test.load_mod_from_file("docker",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "mock_docker.py"))
 import ctrmgr_tools
 
@@ -263,7 +262,7 @@ tools_test_data = {
 }
 
 
-class TestCtrmgrTools(unittest.TestCase):
+class TestCtrmgrTools(TestCase):
 
     @classmethod
     def setup_class(cls):
@@ -283,7 +282,7 @@ class TestCtrmgrTools(unittest.TestCase):
         for (i, ct_data) in tools_test_data.items():
             common_test.do_start_test("ctrmgr_tools", i, ct_data)
 
-            with unittest.mock.patch('sys.argv', ct_data[common_test.ARGS].split()):
+            with patch('sys.argv', ct_data[common_test.ARGS].split()):
                 ret = ctrmgr_tools.main()
                 if common_test.RETVAL in ct_data:
                     assert ret == ct_data[common_test.RETVAL]

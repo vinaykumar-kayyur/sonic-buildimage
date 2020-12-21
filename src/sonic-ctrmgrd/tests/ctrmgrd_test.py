@@ -1,6 +1,6 @@
 import os
 import sys
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -380,7 +380,7 @@ labels_test_data = {
 }
 
 
-class TestContainerStartup(unittest.TestCase):
+class TestContainerStartup(TestCase):
 
     @classmethod
     def setup_class(cls):
@@ -416,7 +416,7 @@ class TestContainerStartup(unittest.TestCase):
             else:
                 common_test.kube_return = 0
 
-            with unittest.mock.patch('sys.argv', ct_data[common_test.ARGS].split()):
+            with patch('sys.argv', ct_data[common_test.ARGS].split()):
                 ret = ctrmgrd.main()
 
             ret = common_test.check_tables_returned()
@@ -449,7 +449,7 @@ class TestContainerStartup(unittest.TestCase):
                 ctrmgrd.UNIT_TESTING_ACTIVE = ct_data[common_test.ACTIVE]
                 print("systemctl active = {}".format(ctrmgrd.UNIT_TESTING_ACTIVE))
 
-            with unittest.mock.patch('sys.argv', ct_data[common_test.ARGS].split()):
+            with patch('sys.argv', ct_data[common_test.ARGS].split()):
                 ret = ctrmgrd.main()
 
             ret = common_test.check_tables_returned()
@@ -482,7 +482,7 @@ class TestContainerStartup(unittest.TestCase):
             else:
                 common_test.kube_return = 0
 
-            with unittest.mock.patch('sys.argv', ct_data[common_test.ARGS].split()):
+            with patch('sys.argv', ct_data[common_test.ARGS].split()):
                 ret = ctrmgrd.main()
 
             ret = common_test.check_tables_returned()

@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 import sys
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -253,7 +253,7 @@ None".format(KUBE_ADMIN_CONF),
     }
 }
 
-class TestKubeCommands(unittest.TestCase):
+class TestKubeCommands(TestCase):
 
     @classmethod
     def setup_class(cls):
@@ -304,13 +304,13 @@ clusters:\n\
         # Exercist through main
         common_test.do_start_test("kube:main:read-labels", 0,
                 read_labels_test_data[0])
-        with unittest.mock.patch('sys.argv', "kube_commands get-labels".split()):
+        with patch('sys.argv', "kube_commands get-labels".split()):
             ret = kube_commands.main()
             assert ret == 0
 
         # Exercist through main with no args
         common_test.do_start_test("kube:main:none", 0, read_labels_test_data[0])
-        with unittest.mock.patch('sys.argv', "kube_commands".split()):
+        with patch('sys.argv', "kube_commands".split()):
             ret = kube_commands.main()
             assert ret == -1
 
@@ -367,7 +367,7 @@ clusters:\n\
 
         # Exercist through main is_connected
         common_test.do_start_test("kube:main:is_connected", 0, join_test_data[0])
-        with unittest.mock.patch('sys.argv', "kube_commands connected".split()):
+        with patch('sys.argv', "kube_commands connected".split()):
             ret = kube_commands.main()
             assert ret == 1
 

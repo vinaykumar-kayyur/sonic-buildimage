@@ -1,13 +1,12 @@
-import imp
 import os
 
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
-imp.load_source("docker",
+common_test.load_mod_from_file("docker",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "mock_docker.py"))
-container = imp.load_source("container",
+container = common_test.load_mod_from_file("container",
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "../ctrmgr/container"))
 
 
@@ -430,7 +429,7 @@ wait_test_data = {
 }
 
 
-class TestContainer(unittest.TestCase):
+class TestContainer(TestCase):
 
     @classmethod
     def setup_class(cls):
@@ -533,5 +532,5 @@ class TestContainer(unittest.TestCase):
                 ("id", wait_test_data)]:
             common_test.do_start_test("container_main:{}".format(k), 0, v[0])
 
-            with unittest.mock.patch('sys.argv', ['container', k, 'snmp']):
+            with patch('sys.argv', ['container', k, 'snmp']):
                 container.main()

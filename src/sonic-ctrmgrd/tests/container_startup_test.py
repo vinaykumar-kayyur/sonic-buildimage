@@ -1,5 +1,5 @@
 import sys
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -371,7 +371,7 @@ startup_test_data = {
 }
 
 
-class TestContainerStartup(unittest.TestCase):
+class TestContainerStartup(TestCase):
 
     @classmethod
     def setup_class(cls):
@@ -385,7 +385,7 @@ class TestContainerStartup(unittest.TestCase):
         for (i, ct_data) in startup_test_data.items():
             common_test.do_start_test("container_startup", i, ct_data)
 
-            with unittest.mock.patch('sys.argv', ct_data[common_test.ARGS].split()):
+            with patch('sys.argv', ct_data[common_test.ARGS].split()):
                 container_startup.main()
 
             ret = common_test.check_tables_returned()
