@@ -1,6 +1,6 @@
 import os
+import pytest
 
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -429,7 +429,7 @@ wait_test_data = {
 }
 
 
-class TestContainer(TestCase):
+class TestContainer(object):
 
     @classmethod
     def setup_class(cls):

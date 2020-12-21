@@ -1,6 +1,6 @@
 import os
+import pytest
 import sys
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -380,7 +380,7 @@ labels_test_data = {
 }
 
 
-class TestContainerStartup(TestCase):
+class TestContainerStartup(object):
 
     @classmethod
     def setup_class(cls):

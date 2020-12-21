@@ -1,7 +1,7 @@
 import os
+import pytest
 import sys
 
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -262,7 +262,7 @@ tools_test_data = {
 }
 
 
-class TestCtrmgrTools(TestCase):
+class TestCtrmgrTools(object):
 
     @classmethod
     def setup_class(cls):

@@ -1,8 +1,8 @@
 import json
 import os
+import pytest
 import shutil
 import sys
-from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from . import common_test
@@ -253,7 +253,7 @@ None".format(KUBE_ADMIN_CONF),
     }
 }
 
-class TestKubeCommands(TestCase):
+class TestKubeCommands(object):
 
     @classmethod
     def setup_class(cls):
