@@ -5,7 +5,7 @@ Description=SONiC Host Service
 Type=dbus
 BusName=org.SONiC.HostService
 
-ExecStart=/usr/local/bin/sonic-host-server
+ExecStart=/usr/bin/python3 -u /usr/local/bin/sonic-host-server
 
 Restart=on-failure
 RestartSec=10
