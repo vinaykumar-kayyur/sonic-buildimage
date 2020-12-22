@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import time
 import signal
 import syslog
@@ -60,7 +61,7 @@ def log_info(msg, also_print_to_console=False):
     syslog.closelog()
 
     if also_print_to_console:
-        print msg
+        print(msg)
 
 
 def log_warning(msg, also_print_to_console=False):
@@ -69,7 +70,7 @@ def log_warning(msg, also_print_to_console=False):
     syslog.closelog()
 
     if also_print_to_console:
-        print msg
+        print(msg)
 
 
 def log_error(msg, also_print_to_console=False):
@@ -78,7 +79,7 @@ def log_error(msg, also_print_to_console=False):
     syslog.closelog()
 
     if also_print_to_console:
-        print msg
+        print(msg)
 
 
 class Watchdog(WatchdogBase):
@@ -148,7 +149,6 @@ class Watchdog(WatchdogBase):
         """
         if self.mmc_v <= V06_MMC_VERSION:
             self._disable()
-            time.sleep(0.1)
             self._enable()
 
         else:
@@ -273,6 +273,11 @@ def main():
     parser.add_argument("--keep_alive", "-k",
                         help="WDT keep alive period", type=int)
     args = parser.parse_args()
+
+    # Check the cpld driver loading status.
+    if not os.path.isfile(os.path.join(PLATFORM_CPLD_PATH, SETREG_FILE)):
+        print("Error: The cpld driver has not been loaded.")
+        sys.exit(1)
 
     # Init WDT Class
     watchdog = Watchdog()
