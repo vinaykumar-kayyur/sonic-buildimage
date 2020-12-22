@@ -276,7 +276,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         return fwd_snmp_traffic_from_namespace_to_host_cmds
 
     def get_ethertype_from_rule_props(rule_props):
-        ethertype = int(rule_props['ETHER_TYPE'], 0)
+        ethertype_str = rule_props.get('ETHER_TYPE', '0')
+        ethertype = int(ethertype_str, 0)
         return ethertype
     
     def is_rule_ipv4(self, rule_props):
