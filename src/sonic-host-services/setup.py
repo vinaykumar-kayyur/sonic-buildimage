@@ -16,6 +16,7 @@ setup(
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
         'scripts/process-reboot-cause',
+        'scripts/sonic-host-server'
     ],
     install_requires = [
         'Jinja2>=2.10',
