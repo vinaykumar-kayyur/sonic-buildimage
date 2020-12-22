@@ -410,7 +410,6 @@ def do_sonic_platform_clean():
         if status:
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
         else:
-            #log_os_system("rm -rf /usr/local/lib/python3.7/dist-packages/sonic_platform", 0)
             print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
 
     status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 0)   
@@ -423,7 +422,6 @@ def do_sonic_platform_clean():
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY2))
             return status
         else:
-            #log_os_system("rm -rf /usr/local/lib/python2.7/dist-packages/sonic_platform > /dev/null 2>&1", 0)
             print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY2))
             
     return

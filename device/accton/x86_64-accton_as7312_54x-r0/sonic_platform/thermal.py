@@ -68,8 +68,6 @@ class Thermal(ThermalBase):
                 return True
             except IOError as e:
                 print("IOError")
-                pass
-
 
 
     def get_temperature(self):
@@ -103,7 +101,7 @@ class Thermal(ThermalBase):
         """
         temp_file = "temp{}_max".format(self.ss_index)
         temperature = temperature *1000
-        temp_max=self.__set_threshold(temp_file, temperature)
+        self.__set_threshold(temp_file, temperature)
         
         return True
 
