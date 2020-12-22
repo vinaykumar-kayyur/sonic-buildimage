@@ -16,7 +16,9 @@ RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ bust
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ buster/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian buster-backports main" >> /etc/apt/sources.list
+        echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian buster-backports main" >> /etc/apt/sources.list && \
+        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=amd64] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
 
 {%- if CONFIGURED_ARCH == "armhf" %}
 RUN echo "deb [arch=armhf] http://deb.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
@@ -25,7 +27,9 @@ RUN echo "deb [arch=armhf] http://deb.debian.org/debian buster main contrib non-
         echo "deb-src [arch=armhf] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=armhf] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=armhf] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb [arch=armhf] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list
+        echo 'deb [arch=armhf] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list && \
+        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=armhf] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
 {%- elif CONFIGURED_ARCH == "arm64" %}
 RUN echo "deb [arch=arm64] http://deb.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://deb.debian.org/debian buster main contrib non-free" >> /etc/apt/sources.list && \
@@ -33,7 +37,9 @@ RUN echo "deb [arch=arm64] http://deb.debian.org/debian buster main contrib non-
         echo "deb-src [arch=arm64] http://deb.debian.org/debian buster-updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb [arch=arm64] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
         echo "deb-src [arch=arm64] http://security.debian.org buster/updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo 'deb [arch=arm64] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list
+        echo 'deb [arch=arm64] http://ftp.debian.org/debian buster-backports main' >> /etc/apt/sources.list && \
+        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian buster main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb [arch=arm64] http://packages.trafficmanager.net/debian/debian buster-updates main contrib non-free" >> /etc/apt/sources.list
 {%- endif %}
 
 ## Make apt-get non-interactive
@@ -248,6 +254,9 @@ RUN apt-get update && apt-get install -y \
         python3-sphinx \
 # For sonic config engine testing
         python-dev \
+{%- if CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" %}
+        libxslt-dev \
+{%- endif %}
 # For lockfile
         procmail \
 # For gtest
@@ -313,6 +322,26 @@ RUN apt-get update && apt-get install -y \
         python-lxml \
         libexpat1-dev
 
+# Build fix for ARMHF buster libsairedis
+{%- if CONFIGURED_ARCH == "armhf" %}
+       # Install doxygen build dependency packages
+       RUN apt install -y libxapian-dev yui-compressor libclang-3.9-dev texlive-extra-utils \
+           texlive-font-utils  rdfind llvm-6.0-dev libclang-6.0-dev sassc
+
+       # Update doxygen with 64bit file offset patch
+       RUN dget -u http://deb.debian.org/debian/pool/main/d/doxygen/doxygen_1.8.13-10.dsc && \
+           cd doxygen-1.8.13 && \
+           sed -i '56 a add_definitions(-D_FILE_OFFSET_BITS=64)' CMakeLists.txt && \
+           DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -us -uc -b && \
+           cd .. && \
+           dpkg -i ./doxygen_1.8.13-10_armhf.deb && \
+           rm -fr doxygen*
+
+       # Aspell is unable to locate the language dictionaries.
+       # Re-installing aspell-en dictionary to fix it.
+       RUN apt-get install --reinstall -y aspell-en
+{%- endif %}
+
 ## Config dpkg
 ## install the configuration file if it’s currently missing
 RUN sudo augtool --autosave "set /files/etc/dpkg/dpkg.cfg/force-confmiss"
@@ -346,7 +375,9 @@ RUN apt-get purge -y python-pip python3-pip
 
 # For building Python packages
 RUN pip2 install setuptools==40.8.0
+RUN pip2 install wheel==0.35.1
 RUN pip3 install setuptools==49.6.00
+RUN pip3 install wheel==0.35.1
 
 # For building sonic-utilities
 RUN pip2 install fastentrypoints
