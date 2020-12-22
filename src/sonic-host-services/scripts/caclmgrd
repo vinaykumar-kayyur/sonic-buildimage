@@ -275,20 +275,24 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         return fwd_snmp_traffic_from_namespace_to_host_cmds
 
-    def is_rule_ipv4(self, rule_props, ethertype):
+    def get_ethertype_from_rule_props(rule_props):
+        ethertype = int(rule_props['ETHER_TYPE'], 0)
+        return ethertype
+    
+    def is_rule_ipv4(self, rule_props):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
            ("DST_IP" in rule_props and rule_props["DST_IP"]) or
            (rule_props.get("IP_TYPE", None) == "IPV4ANY") or 
-           (ethertype == 0x800)):
+           (get_ethertype_from_rule_props(rule_props) == 0x800)):
             return True
         else:
             return False
 
-    def is_rule_ipv6(self, rule_props, ethertype):
+    def is_rule_ipv6(self, rule_props):
         if (("SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]) or
            ("DST_IPV6" in rule_props and rule_props["DST_IPV6"]) or
            (rule_props.get("IP_TYPE", None) == "IPV6ANY") or
-           (ethertype == 0x86dd)):
+           (get_ethertype_from_rule_props(rule_props) == 0x86dd)):
             return True
         else:
             return False
@@ -417,7 +421,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
                         ethertype = 0
                         if "ETHER_TYPE" in rule_props:
-                            ethertype = int(rule_props['ETHER_TYPE'], 0)
+                            ethertype = get_ethertype_from_rule_props(rule_props)
                             if ethertype != 0x800 and ethertype != 0x86dd:
                                 log_error("rule_props for rule_id {} does not have valid/supported ethertype.".format(rule_id))
                                 continue
@@ -432,16 +436,16 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                         # try to do it now. We attempt to determine heuristically based on
                         # whether the src or dst IP of this rule is an IPv4 or IPv6 address.
                         if not table_ip_version:
-                            if self.is_rule_ipv6(rule_props, ethertype):
+                            if self.is_rule_ipv6(rule_props):
                                 table_ip_version = 6
-                            elif self.is_rule_ipv4(rule_props, ethertype):
+                            elif self.is_rule_ipv4(rule_props):
                                 table_ip_version = 4
 
-                        if (self.is_rule_ipv6(rule_props, ethertype) and (table_ip_version == 4)):
+                        if (self.is_rule_ipv6(rule_props) and (table_ip_version == 4)):
                             self.log_error("CtrlPlane ACL table {} is a IPv4 based table and rule {} is a IPV6 rule! Ignoring rule."
                                            .format(table_name, rule_id))
                             acl_rules.pop(rule_props["PRIORITY"])
-                        elif (self.is_rule_ipv4(rule_props, ethertype) and (table_ip_version == 6)):
+                        elif (self.is_rule_ipv4(rule_props) and (table_ip_version == 6)):
                             self.log_error("CtrlPlane ACL table {} is a IPv6 based table and rule {} is a IPV4 rule! Ignroing rule."
                                            .format(table_name, rule_id))
                             acl_rules.pop(rule_props["PRIORITY"])
