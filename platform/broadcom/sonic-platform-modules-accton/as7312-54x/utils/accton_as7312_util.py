@@ -90,6 +90,10 @@ def main():
             do_install()
         elif arg == 'clean':
             do_uninstall()
+        elif arg == 'api':
+           do_sonic_platform_install()
+        elif arg == 'api_clean':   
+           do_sonic_platform_clean()
         elif arg == 'show':
             device_traversal()
         elif arg == 'sff':
@@ -357,6 +361,72 @@ def system_ready():
         return False
     return True
 
+PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
+PLATFORM_API2_WHL_FILE_PY2 ='sonic_platform-1.0-py2-none-any.whl'
+PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
+def do_sonic_platform_install():
+    device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
+    SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
+    SONIC_PLATFORM_BSP_WHL_PKG_PY2 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY2])
+    status, output = log_os_system("python3.7 -m pip show sonic-platform > /dev/null 2>&1", 0)
+    #check sonic_plagform py3 installed or not  
+    if status:
+        #Check API2.0 on py3.7 whl file  
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3):            
+            status, output = log_os_system("python3.7 -m pip install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 0)
+            if status:
+                print('Error: Failed to install {}'.format(PLATFORM_API2_WHL_FILE_PY3))
+                return status
+            else:
+                print ('Successfully installed {} package'.format(PLATFORM_API2_WHL_FILE_PY3))
+        else:
+            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
+    else:        
+        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
+        
+    #Check API2.0 on py2.7 whl file    
+    status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 0)
+    if status:
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
+            status, output = log_os_system("pip install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY2, 1)
+            if status:
+                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY2)
+                return status
+            else:
+                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY2)
+        else:
+            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY2))
+    else:        
+        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY2))
+     
+    return 
+     
+def do_sonic_platform_clean():
+    status, output = log_os_system("python3.7 -m pip show sonic-platform > /dev/null 2>&1", 0)   
+    if status:        
+        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))          
+    else:
+        status, output = log_os_system("python3.7 -m pip uninstall sonic-platform -y", 0)
+        if status:
+            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
+        else:
+            #log_os_system("rm -rf /usr/local/lib/python3.7/dist-packages/sonic_platform", 0)
+            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
+
+    status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 0)   
+    if status:
+        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY2))
+        
+    else:        
+        status, output = log_os_system("pip uninstall sonic-platform -y", 0)
+        if status:
+            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY2))
+            return status
+        else:
+            #log_os_system("rm -rf /usr/local/lib/python2.7/dist-packages/sonic_platform > /dev/null 2>&1", 0)
+            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY2))
+            
+    return
 
 def do_install():
     print 'Checking system....'
@@ -459,8 +529,8 @@ def devices_info():
 
 def show_eeprom(index):
     if system_ready() is False:
-        print "System's not ready."
-        print 'Please install first!'
+        print('Systems not ready.')
+        print('Please install first!')
         return
 
     if len(ALL_DEVICE) == 0:
@@ -487,7 +557,7 @@ def show_eeprom(index):
     if ret == 0:
         print log
     else:
-        print '**********device no found**********'
+        print( '**********device no found**********')
     return
 
 
@@ -495,8 +565,8 @@ def set_device(args):
     global DEVICE_NO
     global ALL_DEVICE
     if system_ready() is False:
-        print "System's not ready."
-        print 'Please install first!'
+        print('System is not ready.')
+        print('Please install first!')
         return
 
     if not ALL_DEVICE:
@@ -564,7 +634,7 @@ def get_value(i):
 
 def device_traversal():
     if system_ready() is False:
-        print "System's not ready."
+        print "System is  not ready."
         print 'Please install first!'
         return
 
