@@ -55,16 +55,16 @@
             "default_brkout_mode": "1x25G[10G]"
         },
         "Ethernet72": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet76": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet80": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet84": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         }
     }
 }
