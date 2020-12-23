@@ -1,0 +1,63 @@
+diff --git a/agent/mibgroup/ip-mib/data_access/systemstats_linux.c b/agent/mibgroup/ip-mib/data_access/systemstats_linux.c
+index 4a26e41..a9df3eb 100644
+--- a/agent/mibgroup/ip-mib/data_access/systemstats_linux.c
++++ b/agent/mibgroup/ip-mib/data_access/systemstats_linux.c
+@@ -15,6 +15,8 @@
+ #include <sys/types.h>
+ #include <dirent.h>
+ #include <ctype.h>
++#include <errno.h>
++#include <stdio.h>
+ 
+ static int _systemstats_v4(netsnmp_container* container, u_int load_flags);
+ static int _additional_systemstats_v4(netsnmp_systemstats_entry* entry,
+@@ -629,11 +631,15 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+                     dev_snmp6_entry->d_name);
+             continue;
+         }
++
+         if (NULL == (devin = fopen(dev_filename, "r"))) {
+-            snmp_log(LOG_ERR, "Failed to open %s\n", dev_filename);
++            /* Log the error (but not for 'no such file' because of its transient nature) */
++            if (errno != ENOENT) {
++                snmp_log(LOG_ERR, "Failed to open %s, %s - skip\n", dev_filename, strerror(errno));
++            }
+             continue;
+         }
+-    
++
+         /*
+          * If a stat file name is made of digits, the name is interface index.
+          * If it is an interface name, the file includes a line labeled ifIndex.
+diff --git a/agent/mibgroup/ip-mib/data_access/systemstats_sysctl.c b/agent/mibgroup/ip-mib/data_access/systemstats_sysctl.c
+index a1ca16d..1583715 100644
+--- a/agent/mibgroup/ip-mib/data_access/systemstats_sysctl.c
++++ b/agent/mibgroup/ip-mib/data_access/systemstats_sysctl.c
+@@ -23,6 +23,8 @@
+ #include <sys/types.h>
+ #include <dirent.h>
+ #include <ctype.h>
++#include <errno.h>
++#include <stdio.h>
+ 
+ #include <sys/param.h>
+ #include <sys/sysctl.h>
+@@ -715,11 +717,15 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+                     dev_snmp6_entry->d_name);
+             continue;
+         }
++
+         if (NULL == (devin = fopen(dev_filename, "r"))) {
+-            snmp_log(LOG_ERR, "Failed to open %s\n", dev_filename);
++            /* Log the error (but not for 'no such file' because of its transient nature) */
++            if (errno != ENOENT) {
++                snmp_log(LOG_ERR, "Failed to open %s, %s - skip\n", dev_filename, strerror(errno));
++            }
+             continue;
+         }
+-    
++
+         /*
+          * If a stat file name is made of digits, the name is interface index.
+          * If it is an interface name, the file includes a line labeled ifIndex.
+          

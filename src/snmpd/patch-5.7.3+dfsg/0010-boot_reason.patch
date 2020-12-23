@@ -1,0 +1,60 @@
+--- net-snmp-5.7.3+dfsg/agent/snmpd.c.org	2020-01-05 23:11:50.926268000 -0800
++++ net-snmp-5.7.3+dfsg/agent/snmpd.c	2020-01-05 23:11:56.092916000 -0800
+@@ -31,7 +31,7 @@
+  * *****************************************************************
+  */
+ /*
+- * Copyright © 2003 Sun Microsystems, Inc. All rights reserved.
++ * Copyright ? 2003 Sun Microsystems, Inc. All rights reserved.
+  * Use is subject to license terms specified in the COPYING file
+  * distributed with the Net-SNMP package.
+  */
+@@ -413,6 +413,30 @@
+      */
+ }
+ 
++int get_reboot_reason(void)
++{
++    FILE *fp;
++    char *ch;
++    char buf[1000];
++    int i=0;
++    char *reboot_reason[] = {"User issued 'warm-reboot'",
++                              NULL};
++    fp = fopen("/host/reboot-cause/previous-reboot-cause.txt", "r");
++    if (!fp)
++        return 0;
++    if(fgets(buf, 1000, fp))
++    {
++        for( i=0; reboot_reason[i]; i++)
++        {
++            ch = strstr(buf, reboot_reason[i]);
++            if (ch)
++                return 1;
++        }
++
++    }
++    return 0;
++}
++
+ /*******************************************************************-o-******
+  * main - Non Windows
+  * SnmpDaemonMain - Windows to support windows service
+@@ -1092,10 +1116,13 @@
+     signal(SIGHUP, SnmpdReconfig);
+ #endif
+ 
+-    /*
+-     * Send coldstart trap if possible.  
+-     */
+-    send_easy_trap(0, 0);
++     /*
++      * Send warmstart/coldstart trap if possible.
++      */
++    if(get_reboot_reason())
++        send_easy_trap(1, 0); //warmstart trap
++    else
++        send_easy_trap(0, 0);
+ 
+     /*
+      * We're up, log our version number.  

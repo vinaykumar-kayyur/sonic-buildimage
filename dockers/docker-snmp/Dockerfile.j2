@@ -48,7 +48,8 @@ RUN pip3 install --no-cache-dir setuptools wheel
 RUN python3 -m pip install --no-cache-dir \
         hiredis                             \
         pyyaml                              \
-        smbus
+        smbus                               \
+        bitstring>=3.1.6
 
 {% if docker_snmp_whls.strip() -%}
 # Copy locally-built Python wheel dependencies

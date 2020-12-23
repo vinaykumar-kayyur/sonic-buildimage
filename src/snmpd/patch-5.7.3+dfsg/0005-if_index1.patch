@@ -1,0 +1,100 @@
+diff -ur net-snmp-5.7.3+dfsg/agent/mibgroup/if-mib/data_access/interface_ioctl.c net-snmp-5.7.3+dfsg_new/agent/mibgroup/if-mib/data_access/interface_ioctl.c
+--- net-snmp-5.7.3+dfsg/agent/mibgroup/if-mib/data_access/interface_ioctl.c	2019-08-29 02:23:39.694188664 -0700
++++ net-snmp-5.7.3+dfsg_new/agent/mibgroup/if-mib/data_access/interface_ioctl.c	2019-08-29 23:22:43.692156096 -0700
+@@ -74,7 +74,14 @@
+     strlcpy(ifrq->ifr_name, name, sizeof(ifrq->ifr_name));
+     rc = ioctl(fd, which, ifrq);
+     if (rc < 0) {
+-		snmp_log(LOG_ERR,"ioctl %d returned %d errno:%d ifname:%s ifr_name:%s\n", which, rc, errno, name, ifrq->ifr_name);
++		/* 
++		 * Config reload restarts applications without rebooting kerenel. So during config reload 
++		 * there is a possible that snmpd might request for MTU,HWAddr,ifindex
++		 * of vlan interfaces which are already cleaned by vlanmgrd. So skip log as this is expected.
++		 */ 
++		if(errno != ENODEV) {
++		    snmp_log(LOG_ERR,"ioctl %d returned %d errno:%d ifname:%s ifr_name:%s\n", which, rc, errno, name, ifrq->ifr_name);
++		}
+         rc = -3;
+     }
+ 
+@@ -390,7 +397,7 @@
+     return rc;
+ }
+ #endif /* SIOCGIFMTU */
+-
++#if 0
+ /**
+  * interface entry ifIndex ioctl wrapper
+  *
+@@ -425,7 +432,36 @@
+ #endif
+ #endif /* SIOCGIFINDEX */
+ }
++#endif
+ 
++#define PHYSICAL_INDEX_OFFSET	1
++#define MGMT_INDEX_OFFSET	1000
++#define PORTCHANNEL_INDEX_OFFSET	10000
++#define LOOPBACK_INDEX_OFFSET	20000
++#define VLAN_INDEX_OFFSET	 30000
++
++oid
++netsnmp_access_interface_ioctl_ifindex_get(int fd, const char *name)
++{
++	if (!name)
++		return 0;
++	if( (name[0] == 'E') && !strncmp(name, "Ethernet", 8)) { //Ethernet
++		return atoi(name+8)+PHYSICAL_INDEX_OFFSET;
++	}
++	else if( (name[0] == 'P') && !strncmp(name, "PortChannel", 11)) { //PortChannel
++		return atoi(name+11)+PORTCHANNEL_INDEX_OFFSET;
++	}
++	else if( (name[0] == 'V') && !strncmp(name, "Vlan", 4)) { //Vlan
++		return atoi(name+4)+VLAN_INDEX_OFFSET;
++	}
++	else if( (name[0] == 'e') && !strncmp(name, "eth", 3)) { //eth0
++		return atoi(name+3)+MGMT_INDEX_OFFSET;
++	}
++	else if( (name[0] == 'L') && !strncmp(name, "Loopback", 8)) {
++		return atoi(name+8)+LOOPBACK_INDEX_OFFSET; //Loopback
++	}
++	return 0;
++}
+ /**
+  * check an interface for ipv4 addresses
+  *
+diff -ur net-snmp-5.7.3+dfsg/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c net-snmp-5.7.3+dfsg_new/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c
+--- net-snmp-5.7.3+dfsg/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c	2019-08-29 02:21:41.524747841 -0700
++++ net-snmp-5.7.3+dfsg_new/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c	2019-08-29 02:26:51.731842744 -0700
+@@ -222,7 +222,11 @@
+         entry->if_index =
+             netsnmp_access_interface_ioctl_ifindex_get(sd, ifrp->ifr_name);
+         if (0 == entry->if_index) {
+-            snmp_log(LOG_ERR,"no ifindex found for interface\n");
++
++			/* We dont want to show internal interfaces like dummy,
++			 * Bridge, lo, docker etc.. So don't log error as if_index 
++			 * will be 0 for these interfaces.
++			 */
+             netsnmp_access_ipaddress_entry_free(entry);
+             continue;
+         }
+diff -ur net-snmp-5.7.3+dfsg/agent/mibgroup/ip-mib/data_access/ipaddress_linux.c net-snmp-5.7.3+dfsg_new/agent/mibgroup/ip-mib/data_access/ipaddress_linux.c
+--- net-snmp-5.7.3+dfsg/agent/mibgroup/ip-mib/data_access/ipaddress_linux.c	2019-08-29 02:22:06.502223525 -0700
++++ net-snmp-5.7.3+dfsg_new/agent/mibgroup/ip-mib/data_access/ipaddress_linux.c	2019-08-29 02:27:07.490926723 -0700
+@@ -299,6 +299,15 @@
+          * every time it is called.
+          */
+         entry->if_index = netsnmp_access_interface_index_find(if_name);
++        if (0 == entry->if_index) {
++
++			/* We dont want to show internal interfaces like dummy,
++			 * Bridge, lo, docker etc.. So don't log error as if_index 
++			 * will be 0 for these interfaces.
++			 */
++            netsnmp_access_ipaddress_entry_free(entry);
++            continue;
++        }
+         memset(&addr_info, 0, sizeof(struct address_flag_info));
+         addr_info = netsnmp_access_other_info_get(entry->if_index, AF_INET6);
+ 

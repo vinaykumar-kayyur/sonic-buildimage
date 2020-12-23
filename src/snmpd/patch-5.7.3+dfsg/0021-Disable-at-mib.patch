@@ -1,0 +1,10 @@
+--- net-snmp-5.7.3+dfsg/debian/rules.org	2020-08-17 23:55:31.908007000 -0700
++++ net-snmp-5.7.3+dfsg/debian/rules	2020-08-17 23:56:00.777047000 -0700
+@@ -37,6 +37,7 @@
+ IPV6 = --enable-ipv6
+ MIB_MODULES += host
+ EXCL_MIB_MODULES += mibII/ipv6
++EXCL_MIB_MODULES += mibII/at
+ endif
+ 
+ %:

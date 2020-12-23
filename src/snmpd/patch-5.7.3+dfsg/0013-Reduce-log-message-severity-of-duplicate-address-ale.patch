@@ -1,0 +1,27 @@
+From 78abe718b0f3c2895cffdfb55ba27428bdf514b6 Mon Sep 17 00:00:00 2001
+From: Rajendra Dendukuri <rajendra.dendukuri@broadcom.com>
+Date: Wed, 29 Jan 2020 10:53:46 -0800
+Subject: [PATCH] Reduce log message severity of duplicate address alerts from
+ error to warning
+
+Signed-off-by: Rajendra Dendukuri <rajendra.dendukuri@broadcom.com>
+---
+ agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c b/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c
+index a287c59..a84095f 100644
+--- a/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c
++++ b/agent/mibgroup/ip-mib/data_access/ipaddress_ioctl.c
+@@ -349,7 +349,7 @@ _netsnmp_ioctl_ipaddress_container_load_v4(netsnmp_container *container,
+ 
+         if (CONTAINER_INSERT(container, entry) < 0) {
+             DEBUGMSGTL(("access:ipaddress:container","error with ipaddress_entry: insert into container failed.\n"));
+-            NETSNMP_LOGONCE((LOG_ERR, "Duplicate IPv4 address detected, some interfaces may not be visible in IP-MIB\n"));
++            NETSNMP_LOGONCE((LOG_WARNING, "Duplicate IPv4 address detected, some interfaces may not be visible in IP-MIB\n"));
+             netsnmp_access_ipaddress_entry_free(entry);
+             continue;
+         }
+-- 
+2.18.0
+

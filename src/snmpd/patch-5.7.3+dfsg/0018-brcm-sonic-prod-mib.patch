@@ -1,0 +1,260 @@
+diff -Nur net-snmp-5.7.3+dfsg/mibs/BRCM-PROD-MIB.txt net-snmp-5.7.3+dfsg_new/mibs/BRCM-PROD-MIB.txt
+--- net-snmp-5.7.3+dfsg/mibs/BRCM-PROD-MIB.txt	1969-12-31 16:00:00.000000000 -0800
++++ net-snmp-5.7.3+dfsg_new/mibs/BRCM-PROD-MIB.txt	2020-03-25 10:48:56.067412000 -0700
+@@ -0,0 +1,89 @@
++BROADCOM-REF-MIB DEFINITIONS ::= BEGIN
++
++-- Broadcom  Reference MIB
++-- Copyright 2016-2020 Broadcom.
++-- This SNMP Management Information Specification
++-- embodies Broadcom's confidential and proprietary
++-- intellectual property.  Broadcom retains all title
++-- and ownership in the Specification including any revisions.
++
++-- This Specification is supplied "AS IS", Broadcom 
++-- makes no warranty, either expressed or implied,
++-- as to the use, operation, condition, or performance of the
++-- Specification.
++
++
++IMPORTS
++    MODULE-IDENTITY                     FROM SNMPv2-SMI
++    TEXTUAL-CONVENTION                  FROM SNMPv2-TC
++    enterprises                         FROM RFC1155-SMI;
++    
++    broadcom MODULE-IDENTITY
++        LAST-UPDATED "202003230000Z" -- 23 March 2020 12:00:00 GMT
++        ORGANIZATION "Broadcom"
++        CONTACT-INFO
++          "                      Customer Support
++          Postal:                Broadcom 
++                                 1030 Swabia Court
++                                 Suite 400
++                                 Durham, NC 27703
++          Tel:                   +1 919 865 2700"
++        DESCRIPTION
++          ""
++           
++        -- Revision history.
++        REVISION
++          "202003250000Z" -- 25 March 2020 12:00:00 GMT
++        DESCRIPTION
++          "Add Broadcom SONiC definition."
++        REVISION
++          "201101260000Z" -- 26 January 2011 12:00:00 GMT
++        DESCRIPTION
++          "Postal address updated."
++        REVISION
++          "200705230000Z" -- 23 May 2007 12:00:00 GMT
++        DESCRIPTION
++          "Broadcom branding related changes."
++        REVISION
++          "200311210000Z" -- 21 November 2003 12:00:00 GMT
++        DESCRIPTION
++          "Revisions made for new release."
++        REVISION
++          "200302061200Z" -- 6 February 2003 12:00:00 GMT
++        DESCRIPTION
++          "Updated for release"
++          
++    ::= {  enterprises 4413 }
++
++    
++-- New definitions
++ broadcomProducts         OBJECT IDENTIFIER ::= { broadcom 1 }
++ fastPath                 OBJECT IDENTIFIER ::= { broadcomProducts 1 }
++ broadcomSonic            OBJECT IDENTIFIER ::= { broadcomProducts 2 }
++
++-- Textual Conventions
++AgentPortMask ::= TEXTUAL-CONVENTION
++   STATUS  current
++   DESCRIPTION
++       "Each octet within this value specifies a set of eight
++        ports, with the first octet specifying ports 1 through
++        8, the second octet specifying ports 9 through 16, etc.
++        Within each octet, the most significant bit represents
++        the lowest numbered port, and the least significant bit
++        represents the highest numbered port.  Thus, each port
++        of the bridge is represented by a single bit within the
++        value of this object.  If that bit has a value of '1'
++        then that port is included in the set of ports; the port
++        is not included if its bit has a value of '0'
++             
++        When setting this value, the system will ignore
++        configuration for ports not between the first and last
++        valid ports.  Configuration of any port numbers within
++        this range that are not valid ports return a failure
++        message, but will still apply configuration for valid
++        ports."
++   SYNTAX  OCTET STRING
++
++
++END
++
+diff -Nur net-snmp-5.7.3+dfsg/mibs/BROADCOM-SONIC-CONF-MGMT-MIB.txt net-snmp-5.7.3+dfsg_new/mibs/BROADCOM-SONIC-CONF-MGMT-MIB.txt
+--- net-snmp-5.7.3+dfsg/mibs/BROADCOM-SONIC-CONF-MGMT-MIB.txt	1969-12-31 16:00:00.000000000 -0800
++++ net-snmp-5.7.3+dfsg_new/mibs/BROADCOM-SONIC-CONF-MGMT-MIB.txt	2020-06-02 04:06:34.680641000 -0700
+@@ -0,0 +1,62 @@
++BROADCOM-SONIC-CONF-MGMT-MIB DEFINITIONS ::= BEGIN
++
++-- Copyright 2019-2020 Broadcom.
++-- This SNMP Management Information Specification
++-- embodies Broadcom's confidential and proprietary
++-- intellectual property.  Broadcom retains all title
++-- and ownership in the Specification including any revisions.
++
++-- This Specification is supplied "AS IS", Broadcom 
++-- makes no warranty, either expressed or implied,
++-- as to the use, operation, condition, or performance of the
++-- Specification.
++
++
++IMPORTS
++    MODULE-IDENTITY             FROM SNMPv2-SMI
++    brcmSonicMibs               FROM BROADCOM-SONIC-PRODUCT-MIB;
++    
++    brcmSonicConfMgmt MODULE-IDENTITY
++        LAST-UPDATED "202004200000Z" -- 20 April 2020 12:00:00 GMT
++        ORGANIZATION "Broadcom"
++        CONTACT-INFO
++          "                      Customer Support
++          Postal:                Broadcom 
++                                 1030 Swabia Court
++                                 Suite 400
++                                 Durham, NC 27703
++          Tel:                   +1 919 865 2700"
++        DESCRIPTION
++          "This mib module defines objects used for managing the
++		   configuration of Broadcom Sonic devices."
++           
++        -- Revision history.
++        REVISION
++          "202004200000Z" -- 20 April 2020 12:00:00 GMT
++        DESCRIPTION
++          "Added configuration change notification"
++          
++    ::= {  brcmSonicMibs 1 }
++
++ 
++ --Subtree for defining mib objects
++ brcmSonicConfMgmtObjects                  OBJECT IDENTIFIER ::= { brcmSonicConfMgmt 1}
++
++ --Subtree for defining notifications
++ brcmSonicConfMgmtNotificationPrefix       OBJECT IDENTIFIER ::= { brcmSonicConfMgmt 2}
++ brcmSonicConfMgmtNotifications            OBJECT IDENTIFIER ::= { brcmSonicConfMgmtNotificationPrefix 0}
++
++ brcmSonicConfigChange NOTIFICATION-TYPE
++       STATUS  current
++       DESCRIPTION
++		"This notification is generated when running configuration was changed.
++		 Snmpd does not generate notification immediately. It waits for 30 secs
++		 for another config change to avoid multiple notifications in case config
++		 is changed within 30 sec. If there is no config change within 30 sec then 
++		 trap is generated.
++		 "
++	::= { brcmSonicConfMgmtNotifications 1 }
++
++
++END
++
+diff -Nur net-snmp-5.7.3+dfsg/mibs/BROADCOM-SONIC-PRODUCT-MIB.txt net-snmp-5.7.3+dfsg_new/mibs/BROADCOM-SONIC-PRODUCT-MIB.txt
+--- net-snmp-5.7.3+dfsg/mibs/BROADCOM-SONIC-PRODUCT-MIB.txt	1969-12-31 16:00:00.000000000 -0800
++++ net-snmp-5.7.3+dfsg_new/mibs/BROADCOM-SONIC-PRODUCT-MIB.txt	2020-04-20 04:27:15.636988000 -0700
+@@ -0,0 +1,97 @@
++BROADCOM-SONIC-PRODUCT-MIB DEFINITIONS ::= BEGIN
++
++-- Broadcom  Reference MIB
++-- Copyright 2019-2020 Broadcom.
++-- This SNMP Management Information Specification
++-- embodies Broadcom's confidential and proprietary
++-- intellectual property.  Broadcom retains all title
++-- and ownership in the Specification including any revisions.
++
++-- This Specification is supplied "AS IS", Broadcom 
++-- makes no warranty, either expressed or implied,
++-- as to the use, operation, condition, or performance of the
++-- Specification.
++
++
++IMPORTS
++    MODULE-IDENTITY                     FROM SNMPv2-SMI
++    broadcomSonic			FROM BROADCOM-REF-MIB;
++    
++    sonicDevices MODULE-IDENTITY
++        LAST-UPDATED "202003250000Z" -- 25 March 2020 12:00:00 GMT
++        ORGANIZATION "Broadcom"
++        CONTACT-INFO
++          "                      Customer Support
++          Postal:                Broadcom 
++                                 1030 Swabia Court
++                                 Suite 400
++                                 Durham, NC 27703
++          Tel:                   +1 919 865 2700"
++        DESCRIPTION
++          ""
++           
++        -- Revision history.
++        REVISION
++          "202003250000Z" -- 25 March 2020 12:00:00 GMT
++        DESCRIPTION
++          "Added Broadcom supported platforms on SONiC"
++          
++    ::= {  broadcomSonic 1 }
++
++
++ -- Root oid for  Broadcom Sonic mib modules
++ brcmSonicMibs         OBJECT IDENTIFIER ::= { broadcomSonic 2}
++    
++-- New definitions
++ acctonSonicDevices       OBJECT IDENTIFIER ::= { sonicDevices 1}
++ dellSonicDevices         OBJECT IDENTIFIER ::= { sonicDevices 2}
++ quantaSonicDevices       OBJECT IDENTIFIER ::= { sonicDevices 3}
++
++--Accton
++ accton-AS4630-54PE     OBJECT IDENTIFIER ::= { acctonSonicDevices 1}
++ accton-AS5712-54X      OBJECT IDENTIFIER ::= { acctonSonicDevices 2}
++ accton-AS7326-56X      OBJECT IDENTIFIER ::= { acctonSonicDevices 3}
++ accton-AS7726-32X      OBJECT IDENTIFIER ::= { acctonSonicDevices 4}
++ accton-AS7712-32X      OBJECT IDENTIFIER ::= { acctonSonicDevices 5}
++ accton-AS7816-64X      OBJECT IDENTIFIER ::= { acctonSonicDevices 6}
++ accton-AS9716-32D      OBJECT IDENTIFIER ::= { acctonSonicDevices 7}
++
++--Dell
++ dellEMC-S5232f-C32     OBJECT IDENTIFIER ::= { dellSonicDevices 1}
++ dellEMC-S5232f-P-10G   OBJECT IDENTIFIER ::= { dellSonicDevices 2}
++ dellEMC-S5232f-P-25G   OBJECT IDENTIFIER ::= { dellSonicDevices 3}
++ dellEMC-S5232f-P-100G  OBJECT IDENTIFIER ::= { dellSonicDevices 4}
++ dellEMC-S5248f-P-10G   OBJECT IDENTIFIER ::= { dellSonicDevices 5}
++ dellEMC-S5248f-P-25G   OBJECT IDENTIFIER ::= { dellSonicDevices 6}
++ dellEMC-S5248f-P-25G-DPB OBJECT IDENTIFIER ::= { dellSonicDevices 7}
++ dellEMC-S5296f-P-10G   OBJECT IDENTIFIER ::= { dellSonicDevices 8}
++ dellEMC-S5296f-P-25G   OBJECT IDENTIFIER ::= { dellSonicDevices 9}
++ dellEMC-S5296f-P-25G-DPB OBJECT IDENTIFIER ::= { dellSonicDevices 10}
++ dellEMC-Z9264f-C64     OBJECT IDENTIFIER ::= { dellSonicDevices 11}
++ dellEMC-Z9264f-Q64     OBJECT IDENTIFIER ::= { dellSonicDevices 12}
++ dellEMC-Z9264f-C8D112  OBJECT IDENTIFIER ::= { dellSonicDevices 13}
++ dellEMC-Z9332f-O32     OBJECT IDENTIFIER ::= { dellSonicDevices 14}
++ dellEMC-Z9332f-O16C64  OBJECT IDENTIFIER ::= { dellSonicDevices 15}
++ dellEMC-Z9332f-O16C64SH OBJECT IDENTIFIER ::= { dellSonicDevices 16}
++ dellEMC-Z9332f-C32      OBJECT IDENTIFIER ::= { dellSonicDevices 17}
++ dellEMC-Z9332f-C64O16SH OBJECT IDENTIFIER ::= { dellSonicDevices 18}
++ dellEMC-S5212f-P-10G    OBJECT IDENTIFIER ::= { dellSonicDevices 19}
++ dellEMC-S5212f-P-25G    OBJECT IDENTIFIER ::= { dellSonicDevices 20}
++ dellEMC-S5224f-P-10G    OBJECT IDENTIFIER ::= { dellSonicDevices 21}
++ dellEMC-S5224f-P-25G    OBJECT IDENTIFIER ::= { dellSonicDevices 22}
++ dELLEMC-N3248TE         OBJECT IDENTIFIER ::= { dellSonicDevices 23}
++ force10-S6000          OBJECT IDENTIFIER ::= { dellSonicDevices 24}
++ force10-S6000-Q32      OBJECT IDENTIFIER ::= { dellSonicDevices 25}
++ force10-S6100          OBJECT IDENTIFIER ::= { dellSonicDevices 26}
++ force10-Z9100-C32      OBJECT IDENTIFIER ::= { dellSonicDevices 27}
++ force10-Z9100-C8D48    OBJECT IDENTIFIER ::= { dellSonicDevices 28}
++ 
++
++--Quanta
++ quanta-IX4-64X         OBJECT IDENTIFIER ::= { quantaSonicDevices 1}
++ quanta-IX8-56X         OBJECT IDENTIFIER ::= { quantaSonicDevices 2}
++ quanta-IX9-32X         OBJECT IDENTIFIER ::= { quantaSonicDevices 3}
++ 
++
++END
++

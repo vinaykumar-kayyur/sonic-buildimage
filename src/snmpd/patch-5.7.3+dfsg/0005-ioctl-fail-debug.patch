@@ -1,0 +1,19 @@
+--- net-snmp-5.7.3+dfsg/agent/mibgroup/if-mib/data_access/interface_ioctl.c.org	2019-08-19 02:01:00.609895000 -0700
++++ net-snmp-5.7.3+dfsg/agent/mibgroup/if-mib/data_access/interface_ioctl.c	2019-08-19 02:02:49.931316000 -0700
+@@ -25,6 +25,7 @@
+ #ifdef HAVE_SYS_IOCTL_H
+ #include <sys/ioctl.h>
+ #endif
++#include <errno.h>
+ 
+ #include "interface_ioctl.h"
+ #include "ip-mib/data_access/ipaddress_ioctl.h"
+@@ -73,7 +74,7 @@
+     strlcpy(ifrq->ifr_name, name, sizeof(ifrq->ifr_name));
+     rc = ioctl(fd, which, ifrq);
+     if (rc < 0) {
+-        snmp_log(LOG_ERR,"ioctl %d returned %d\n", which, rc);
++		snmp_log(LOG_ERR,"ioctl %d returned %d errno:%d ifname:%s ifr_name:%s\n", which, rc, errno, name, ifrq->ifr_name);
+         rc = -3;
+     }
+ 

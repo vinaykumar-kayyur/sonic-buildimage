@@ -1,0 +1,11 @@
+--- a/agent/mibgroup/host/data_access/swinst_apt.c.org	2020-03-14 12:30:00.311065000 -0700
++++ b/agent/mibgroup/host/data_access/swinst_apt.c	2020-03-14 12:30:09.605223000 -0700
+@@ -64,7 +64,7 @@
+     char status[SNMP_MAXBUF];
+     char buf[BUFSIZ];
+     netsnmp_swinst_entry *entry;
+-    int i = 0;
++    int i = 1;
+ 
+     if (p == NULL) {
+ 	snmp_perror("dpkg-list");
