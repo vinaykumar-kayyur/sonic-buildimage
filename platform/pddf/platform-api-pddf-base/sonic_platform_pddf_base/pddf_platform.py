@@ -23,6 +23,7 @@ class PddfPlatform(PlatformBase):
     """
     pddf_data = {}
     pddf_plugin_data = {}
+
     def __init__(self):
         # Initialize the JSON data
         self.pddf_data = pddfparse.PddfParse()
