@@ -37,11 +37,9 @@ class Fan(FanBase):
 
     def __init__(self, fan_tray_index, fan_index=0, is_psu_fan=False, psu_index=0):
         self._api_helper=APIHelper()
-        fan_index = fan_index
         self.fan_index = fan_index
         self.fan_tray_index = fan_tray_index
         self.is_psu_fan = is_psu_fan
-        #logging.debug('fan_index=%d, fan_tray_index=%d, is_psu_fan=%d',fan_tray_index, fan_index, is_psu_fan)
         if self.is_psu_fan:
             self.psu_index = psu_index
             self.psu_i2c_num = PSU_I2C_MAPPING[self.psu_index]['num']
@@ -70,7 +68,6 @@ class Fan(FanBase):
                 direction=self.FAN_DIRECTION_EXHAUST
         else: #For PSU
             dir_str = "{}{}".format(self.psu_hwmon_path,'psu_hwmon_path')
-            logging.debug('psu dir path=%s',dir_str)
             val=self._api_helper.read_txt_file(dir_str)
             if val=='F2B':
                 direction=self.FAN_DIRECTION_EXHAUST

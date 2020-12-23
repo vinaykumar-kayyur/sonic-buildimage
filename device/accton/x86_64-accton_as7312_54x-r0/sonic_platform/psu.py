@@ -12,7 +12,6 @@
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_platform.fan import Fan
     from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -59,8 +58,12 @@ class Psu(PsuBase):
         self.i2c_num = PSU_CPLD_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
+        self.__initialize_fan()
+        
+    def __initialize_fan(self):
+        from sonic_platform.fan import Fan
         for fan_index in range(0, PSU_NUM_FAN[self.index]):
-            fan = Fan(fan_index, 0, True, self.index)
+            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
             self._fan_list.append(fan)
 
     def get_voltage(self):

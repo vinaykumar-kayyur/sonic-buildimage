@@ -27,7 +27,7 @@ class APIHelper():
             mm.seek(int(offset))
             read_data_stream = mm.read(4)
             result = struct.unpack('I', read_data_stream)
-        except:
+        except Exception:
             status = False
         return status, result
 
@@ -64,7 +64,7 @@ class APIHelper():
         try:
             with open(file_path, 'w') as fd:
                 fd.write(str(value))
-        except Exception:
+        except IOError:
             return False
         return True
 

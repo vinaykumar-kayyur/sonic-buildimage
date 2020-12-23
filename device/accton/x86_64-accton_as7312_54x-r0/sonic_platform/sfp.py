@@ -737,7 +737,6 @@ class Sfp(SfpBase):
             cpld_i = self.__get_cpld_num(self.port_num)
             cpld_path = self._cpld_mapping[cpld_i]        
             rx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_rx_los_', self.port_num)
-            #logging.debug('rx_path=%s', rx_path)
             rx_los=self._api_helper.read_txt_file(rx_path)
             
             #status_control_raw = self.__read_eeprom_specific_bytes(
@@ -772,7 +771,6 @@ class Sfp(SfpBase):
             cpld_i = self.__get_cpld_num(self.port_num)
             cpld_path = self._cpld_mapping[cpld_i]        
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_fault_', self.port_num)
-            #logging.debug('tx_path=%s', tx_path)
             tx_fault=self._api_helper.read_txt_file(tx_path)
             #status_control_raw = self.__read_eeprom_specific_bytes(
             #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
@@ -805,7 +803,6 @@ class Sfp(SfpBase):
             cpld_i = self.__get_cpld_num(self.port_num)
             cpld_path = self._cpld_mapping[cpld_i]        
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)
-            #logging.debug('tx_path=%s', tx_path)
             tx_disable=self._api_helper.read_txt_file(tx_path)
             
             #status_control_raw = self.__read_eeprom_specific_bytes(
@@ -1033,7 +1030,6 @@ class Sfp(SfpBase):
             cpld_path = self._cpld_mapping[cpld_i]        
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)      
             ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)
-            logging.debug('tx_path=%s', tx_path)
             time.sleep(0.01)
             return ret
                       
@@ -1052,7 +1048,6 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom = open(
                     self.port_to_eeprom_mapping[self.port_num], "r+b")
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
-                logging.debug('sysfsfile_eeprom=%s', sysfsfile_eeprom)
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
                 print ('Error: unable to open file: ',str(e))
