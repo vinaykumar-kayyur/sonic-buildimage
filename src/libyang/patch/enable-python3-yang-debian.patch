@@ -1,0 +1,85 @@
+enable python3-yang debian package
+
+From: Guohan Lu <lguohan@gmail.com>
+
+
+---
+ packages/CMakeLists.txt    |    5 ++---
+ packages/debian.control.in |   12 ++++++++++++
+ packages/debian.rules.in   |    4 ++--
+ packages/libyang.dsc.in    |    4 ++++
+ 4 files changed, 20 insertions(+), 5 deletions(-)
+
+diff --git a/packages/CMakeLists.txt b/packages/CMakeLists.txt
+index 982be91d..79b92d38 100644
+--- a/packages/CMakeLists.txt
++++ b/packages/CMakeLists.txt
+@@ -23,9 +23,8 @@ configure_file(${PROJECT_SOURCE_DIR}/packages/debian.${CPP_PACKAGE}.install
+                ${PROJECT_BINARY_DIR}/build-packages/debian.${CPP_PACKAGE}.install COPYONLY)
+ configure_file(${PROJECT_SOURCE_DIR}/packages/debian.${CPP_PACKAGE}-dev.install
+                ${PROJECT_BINARY_DIR}/build-packages/debian.${CPP_PACKAGE}-dev.install COPYONLY)
+-# no python package for Debian because there is only SWIG 3.10 on Debian 9 :-/
+-#configure_file(${PROJECT_SOURCE_DIR}/packages/debian.${PYTHON_PACKAGE}.install
+-#               ${PROJECT_BINARY_DIR}/build-packages/debian.${PYTHON_PACKAGE}.install COPYONLY)
++configure_file(${PROJECT_SOURCE_DIR}/packages/debian.${PYTHON_PACKAGE}.install
++               ${PROJECT_BINARY_DIR}/build-packages/debian.${PYTHON_PACKAGE}.install COPYONLY)
+ 
+ if(NOT DEB_BUILDER)
+     message(STATUS "Missing tools (devscripts, debhelper package) for building DEB package.")
+diff --git a/packages/debian.control.in b/packages/debian.control.in
+index a5a6a698..565a625d 100644
+--- a/packages/debian.control.in
++++ b/packages/debian.control.in
+@@ -49,3 +49,15 @@ Depends: @CPP_PACKAGE@ (=@LIBYANG_VERSION@)
+ Section: debug
+ Architecture: any
+ Description: Debug symbols of C++ bidings of libyang library.
++
++Package: @PYTHON_PACKAGE@
++Depends: @PACKAGE@ (=@LIBYANG_VERSION@), @CPP_PACKAGE@ (=@LIBYANG_VERSION@)
++Section: libs
++Architecture: any
++Description: Bindings of libyang library to python3 language.
++
++Package: @PYTHON_PACKAGE@-dbg
++Depends: @PYTHON_PACKAGE@ (=@LIBYANG_VERSION@)
++Section: debug
++Architecture: any
++Description: Debug symbols of python3 bidings of libyang library.
+diff --git a/packages/debian.rules.in b/packages/debian.rules.in
+index 86ea390f..e2e39b94 100644
+--- a/packages/debian.rules.in
++++ b/packages/debian.rules.in
+@@ -9,11 +9,11 @@ export DH_VERBOSE=1
+ override_dh_strip:
+ 	dh_strip -p@PACKAGE@  --dbg-package=@PACKAGE@-dbg
+ 	dh_strip -p@CPP_PACKAGE@ --dbg-package=@CPP_PACKAGE@-dbg
+-#	dh_strip -p@PYTHON_PACKAGE@ --dbg-package=@PYTHON_PACKAGE@-dbg
++	dh_strip -p@PYTHON_PACKAGE@ --dbg-package=@PYTHON_PACKAGE@-dbg
+ 
+ override_dh_auto_configure:
+ 	cmake -DCMAKE_INSTALL_PREFIX=/usr -DFORCE_INSRC_BUILD=ON -DCMAKE_BUILD_TYPE="Package" -DENABLE_LYD_PRIV=ON \
+-	-DGEN_LANGUAGE_BINDINGS=ON -DGEN_PYTHON_BINDINGS=OFF .
++	-DGEN_LANGUAGE_BINDINGS=ON -DGEN_PYTHON_BINDINGS=ON .
+ 
+ override_dh_auto_test:
+ 	ctest --output-on-failure
+diff --git a/packages/libyang.dsc.in b/packages/libyang.dsc.in
+index bd1890ce..ed679b7a 100644
+--- a/packages/libyang.dsc.in
++++ b/packages/libyang.dsc.in
+@@ -7,6 +7,8 @@ Binary:
+  @CPP_PACKAGE@,
+  @CPP_PACKAGE@-dev,
+  @CPP_PACKAGE@-dbg,
++ @PYTHON_PACKAGE@,
++ @PYTHON_PACKAGE@-dbg,
+ Maintainer: CESNET <mvasko@cesnet.cz>
+ Version: @LIBYANG_VERSION@
+ Architecture: any
+@@ -23,3 +25,5 @@ Build-Depends:
+  pkg-config,
+  libpcre3-dev,
+  libcmocka-dev,
++ python3-dev,
++ swig (>= 3.0.12),
