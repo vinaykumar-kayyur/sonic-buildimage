@@ -9,8 +9,6 @@
 import fcntl
 import os
 import array
-import sys
-
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
