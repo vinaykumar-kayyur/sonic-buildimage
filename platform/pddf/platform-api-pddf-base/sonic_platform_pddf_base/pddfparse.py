@@ -65,7 +65,7 @@ class PddfParse():
             stdout = proc.communicate()[0]
             proc.wait()
             hwsku = stdout.rstrip('\n')
-        except OSError, e:
+        except OSError as e:
             raise OSError("Cannot detect platform")
 
         return (platform, hwsku)
@@ -76,7 +76,7 @@ class PddfParse():
     def runcmd(self, cmd):
         rc = os.system(cmd)
         if rc!=0:
-            print "%s -- command failed"%cmd
+            print("%s -- command failed"%cmd)
         return rc 
 
     def get_dev_idx(self, dev, ops):
@@ -95,7 +95,7 @@ class PddfParse():
         string = None
         p = re.search(r'\d+$', target)
         if p is None:
-            for bb in filter(re.compile(target).search,self.data.keys()):
+            for bb in filter(re.compile(target).search, self.data.keys()):
                 path = self.dev_parse(self.data[bb], { "cmd": "show_attr", "target":bb, "attr":attr })
                 if path != "":
                     string = path
@@ -114,7 +114,7 @@ class PddfParse():
 
 
     def get_device_type(self, key):
-        if not key in self.data.keys():
+        if key not in self.data.keys():
 		return None
         return self.data[key]['dev_info']['device_type']
 
@@ -122,10 +122,10 @@ class PddfParse():
         return self.data['PLATFORM']
 
     def get_num_psu_fans(self, dev):
-        if not dev in self.data.keys():
+        if dev not in self.data.keys():
             return 0
 
-        if not 'num_psu_fans' in self.data[dev]['dev_attr']:
+        if 'num_psu_fans' not in self.data[dev]['dev_attr']:
             return 0
         
         return self.data[dev]['dev_attr']['num_psu_fans']
@@ -218,7 +218,7 @@ class PddfParse():
                       cmd = "echo {} > {}".format(_value, attr_path)  
                       self.runcmd(cmd)
                   except Exception as e:
-                      print "Invalid gpio path : " + attr_path
+                      print("Invalid gpio path : " + attr_path)
                       return (False)
         return (True)
 
@@ -233,7 +233,7 @@ class PddfParse():
 
 
     def get_system_led_color(self, led_device_name):
-        if (not led_device_name in self.data.keys()):
+        if led_device_name not in self.data.keys():
             status= "[FAILED] " + led_device_name + " is not configured"
             return (status)
 
@@ -248,7 +248,7 @@ class PddfParse():
     def set_system_led_color(self, led_device_name, color):
         result, msg = self.is_supported_sysled_state(led_device_name, color);
         if result == False:
-           print msg
+           print(msg)
            return (result)
 
         type = self.get_led_color_devtype(led_device_name)
@@ -286,7 +286,7 @@ class PddfParse():
         KEY="eeprom"
         dsysfs_path=""
 
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
         for attr in attr_list:
@@ -300,7 +300,7 @@ class PddfParse():
                         "/%d-00%x"%(int(dev['i2c']['topo_info']['parent_bus'], 0), 
                                 int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
                                         "/%s"%real_name
-                if not dsysfs_path in self.data_sysfs_obj[KEY]:
+                if dsysfs_path not in self.data_sysfs_obj[KEY]:
                     self.data_sysfs_obj[KEY].append(dsysfs_path)
                 str += dsysfs_path+"\n"
         return str
@@ -308,7 +308,7 @@ class PddfParse():
     def show_attr_gpio_device(self, dev, ops):
         ret = ""
         KEY="gpio"
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
         return ret
@@ -317,7 +317,7 @@ class PddfParse():
     def show_attr_mux_device(self, dev, ops):
         ret = ""
         KEY="mux"
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
         return ret
@@ -336,7 +336,7 @@ class PddfParse():
         KEY="psu"
         dsysfs_path=""
 
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
         if target == 'all' or target == dev['dev_info']['virt_parent'] :
@@ -347,7 +347,7 @@ class PddfParse():
                         # Check and enable the gpio from class
                         attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], attr['attr_offset'])
                         if (os.path.exists(attr_path)):
-                            if not attr_path in self.data_sysfs_obj[KEY]:
+                            if attr_path not in self.data_sysfs_obj[KEY]:
                                 self.data_sysfs_obj[KEY].append(attr_path)
                             ret += attr_path + '\n'
                     else:
@@ -360,7 +360,7 @@ class PddfParse():
                                 "/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
                                         int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
                                                 "/%s"%real_name
-                        if not dsysfs_path in self.data_sysfs_obj[KEY]:
+                        if dsysfs_path not in self.data_sysfs_obj[KEY]:
                             self.data_sysfs_obj[KEY].append(dsysfs_path)
                             ret += dsysfs_path+"\n"
         return ret
@@ -377,7 +377,7 @@ class PddfParse():
         KEY="fan"
         dsysfs_path=""
 
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
 
@@ -387,7 +387,7 @@ class PddfParse():
                     # Check and enable the gpio from class
                     attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], attr['attr_offset'])
                     if (os.path.exists(attr_path)):
-                        if not attr_path in self.data_sysfs_obj[KEY]:
+                        if attr_path not in self.data_sysfs_obj[KEY]:
                             self.data_sysfs_obj[KEY].append(attr_path)
                         ret += attr_path + '\n'
                 else:
@@ -400,7 +400,7 @@ class PddfParse():
                             "/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
                                     int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
                                             "/%s"%real_name
-                    if not dsysfs_path in self.data_sysfs_obj[KEY]:
+                    if dsysfs_path not in self.data_sysfs_obj[KEY]:
                         self.data_sysfs_obj[KEY].append(dsysfs_path)
                     ret += dsysfs_path+"\n"
         return ret
@@ -413,7 +413,7 @@ class PddfParse():
         KEY="temp-sensors"
         dsysfs_path=""
 
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
 
@@ -429,7 +429,7 @@ class PddfParse():
                 if (os.path.exists(path)):
                     full_path = glob.glob(path + 'hwmon/hwmon*/' + real_name)[0]
                     dsysfs_path=full_path
-                    if not dsysfs_path in self.data_sysfs_obj[KEY]:
+                    if dsysfs_path not in self.data_sysfs_obj[KEY]:
                         self.data_sysfs_obj[KEY].append(dsysfs_path)
                     str += full_path + "\n"
         return str
@@ -441,14 +441,14 @@ class PddfParse():
         KEY="sys-status"
         dsysfs_path=""
 
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
 
         for attr in attr_list:
            if attr_name == attr['attr_name'] or attr_name == 'all':
               dsysfs_path = "/sys/kernel/pddf/devices/sysstatus/sysstatus_data/" + attr['attr_name']
-              if not dsysfs_path in self.data_sysfs_obj[KEY]:
+              if dsysfs_path not in self.data_sysfs_obj[KEY]:
                   self.data_sysfs_obj[KEY].append(dsysfs_path)
               ret += dsysfs_path+"\n"
         return ret
@@ -460,7 +460,7 @@ class PddfParse():
         ret = ""
         dsysfs_path = ""
         KEY="xcvr"
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
         if target == 'all' or target == dev['dev_info']['virt_parent'] :
@@ -471,7 +471,7 @@ class PddfParse():
                         # Check and enable the gpio from class
                         attr_path = self.get_gpio_attr_path(self.data[attr['attr_devname']], attr['attr_offset'])
                         if (os.path.exists(attr_path)):
-                            if not attr_path in self.data_sysfs_obj[KEY]:
+                            if attr_path not in self.data_sysfs_obj[KEY]:
                                 self.data_sysfs_obj[KEY].append(attr_path)
                             ret += attr_path + '\n'
                     else:
@@ -484,7 +484,7 @@ class PddfParse():
                                 "/%d-00%x" %(int(dev['i2c']['topo_info']['parent_bus'], 0), 
                                         int(dev['i2c']['topo_info']['dev_addr'], 0)) + \
                                                 "/%s"%real_name
-                        if not dsysfs_path in self.data_sysfs_obj[KEY]:
+                        if dsysfs_path not in self.data_sysfs_obj[KEY]:
                             self.data_sysfs_obj[KEY].append(dsysfs_path)
                             ret += dsysfs_path+"\n"
         return ret
@@ -496,7 +496,7 @@ class PddfParse():
     def show_attr_cpld_device(self, dev, ops):
         ret = ""
         KEY="cpld"
-        if not KEY in self.data_sysfs_obj:
+        if KEY not in self.data_sysfs_obj:
             self.data_sysfs_obj[KEY]=[]
 
         return ret
@@ -516,31 +516,31 @@ class PddfParse():
 
     def dump_sysfs_obj(self, obj, key_type):
             if (key_type == 'keys'):
-                for key in obj.keys():	
-                    print key
+                for key in obj.keys():
+                    print(key)
                 return
 
             for key in obj:
                 if (key == key_type or key_type == 'all'):
-                    print key+":"
+                    print(key+":")
                     for entry in obj[key]:
-                        print "\t"+entry
+                        print("\t"+entry)
 
     def add_list_sysfs_obj(self, obj, KEY, list):
         for sysfs in list:
-            if not sysfs in obj[KEY]:
+            if sysfs not in obj[KEY]:
                 obj[KEY].append(sysfs)
 
     def sysfs_attr(self, key, value, path, obj, obj_key):
             sysfs_path="/sys/kernel/%s/%s"%(path, key)
-            if not sysfs_path in obj[obj_key]:
+            if sysfs_path not in obj[obj_key]:
                     obj[obj_key].append(sysfs_path)
 
 
     def sysfs_device(self, attr, path, obj, obj_key):
             for key in attr.keys():
                     sysfs_path="/sys/kernel/%s/%s"%(path, key)
-                    if not sysfs_path in obj[obj_key]:
+                    if sysfs_path not in obj[obj_key]:
                             obj[obj_key].append(sysfs_path)
 
     def show_eeprom_device(self, dev, ops):
@@ -549,12 +549,12 @@ class PddfParse():
 
     def show_mux_device(self, dev, ops):
             KEY ='mux'
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                     self.sysfs_obj[KEY] = []
                     self.sysfs_device(dev['i2c']['topo_info'], "pddf/devices/mux", self.sysfs_obj, KEY)
                     self.sysfs_device(dev['i2c']['dev_attr'], "pddf/devices/mux", self.sysfs_obj, KEY)
                     sysfs_path= "/sys/kernel/pddf/devices/mux/dev_ops"
-                    if not sysfs_path in self.sysfs_obj[KEY]:
+                    if sysfs_path not in self.sysfs_obj[KEY]:
                             self.sysfs_obj[KEY].append(sysfs_path)
                     list=['/sys/kernel/pddf/devices/mux/i2c_type',
                           '/sys/kernel/pddf/devices/mux/i2c_name',
@@ -563,12 +563,12 @@ class PddfParse():
 
     def show_gpio_device(self, dev, ops):
             KEY ='gpio'
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                     self.sysfs_obj[KEY] = []
                     self.sysfs_device(dev['i2c']['topo_info'], "pddf/devices/gpio", self.sysfs_obj, KEY)
                     self.sysfs_device(dev['i2c']['dev_attr'], "pddf/devices/gpio", self.sysfs_obj, KEY)
                     sysfs_path= "/sys/kernel/pddf/devices/gpio/dev_ops"
-                    if not sysfs_path in self.sysfs_obj[KEY]:
+                    if sysfs_path not in self.sysfs_obj[KEY]:
                             self.sysfs_obj[KEY].append(sysfs_path)
                     list=['/sys/kernel/pddf/devices/gpio/i2c_type',
                           '/sys/kernel/pddf/devices/gpio/i2c_name',
@@ -580,7 +580,7 @@ class PddfParse():
         KEY ='psu'
         path='pddf/devices/psu/i2c'
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PSU']:
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                     self.sysfs_obj[KEY] = []
                     self.sysfs_device(dev['i2c']['topo_info'], path, self.sysfs_obj, KEY)
                     sysfs_path = "/sys/kernel/pddf/devices/psu/i2c/psu_idx"
@@ -589,7 +589,7 @@ class PddfParse():
                     for attr in dev['i2c']['attr_list']:
                             self.sysfs_device(attr, "pddf/devices/psu/i2c", self.sysfs_obj, KEY)
                             sysfs_path = "/sys/kernel/pddf/devices/psu/i2c/dev_ops"
-                            if not sysfs_path in self.sysfs_obj[KEY]:
+                            if sysfs_path not in self.sysfs_obj[KEY]:
                                     self.sysfs_obj[KEY].append(sysfs_path)
                     list=['/sys/kernel/pddf/devices/psu/i2c/i2c_type',
                           '/sys/kernel/pddf/devices/fan/i2c/i2c_name',
@@ -604,7 +604,7 @@ class PddfParse():
 
     def show_client_device(self):
         KEY ='client'
-        if not KEY in self.sysfs_obj:
+        if KEY not in self.sysfs_obj:
                self.sysfs_obj[KEY] = []
                list=['/sys/kernel/pddf/devices/showall']
                self.add_list_sysfs_obj(self.sysfs_obj, KEY, list)
@@ -614,7 +614,7 @@ class PddfParse():
         KEY ='fan'
         path='pddf/devices/fan/i2c'
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['FAN']:
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                     self.sysfs_obj[KEY] = []
 
                     self.sysfs_device(dev['i2c']['topo_info'], path, self.sysfs_obj, KEY)
@@ -634,26 +634,26 @@ class PddfParse():
 
     def show_sysstatus_device(self, dev, ops):
         KEY ='sysstatus'
-        if not KEY in self.sysfs_obj:
+        if KEY not in self.sysfs_obj:
             self.sysfs_obj[KEY] = []
             for attr in dev['attr_list']:
                     self.sysfs_device(attr, "pddf/devices/sysstatus", self.sysfs_obj, KEY)
                     sysfs_path= "/sys/kernel/pddf/devices/sysstatus/attr_ops"
-                    if not sysfs_path in self.sysfs_obj[KEY]:
+                    if sysfs_path not in self.sysfs_obj[KEY]:
                             self.sysfs_obj[KEY].append(sysfs_path)
 
 
     def show_xcvr_i2c_device(self, dev, ops):
         KEY ='xcvr'
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PORT_MODULE']:
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                     self.sysfs_obj[KEY] = []
                     self.sysfs_device(dev['i2c']['topo_info'], "pddf/devices/xcvr/i2c", self.sysfs_obj, KEY)
 
                     for attr in dev['i2c']['attr_list']:
                             self.sysfs_device(attr, "pddf/devices/xcvr/i2c", self.sysfs_obj, KEY)
                             sysfs_path = "/sys/kernel/pddf/devices/xcvr/i2c/dev_ops"
-                            if not sysfs_path in self.sysfs_obj[KEY]:
+                            if sysfs_path not in self.sysfs_obj[KEY]:
                                     self.sysfs_obj[KEY].append(sysfs_path)
                     list=['/sys/kernel/pddf/devices/xcvr/i2c/i2c_type',
                           '/sys/kernel/pddf/devices/xcvr/i2c/i2c_name',
@@ -669,11 +669,11 @@ class PddfParse():
     def show_cpld_device(self, dev, ops):
         KEY ='cpld'
         if dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['CPLD']:
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                     self.sysfs_obj[KEY] = []
                     self.sysfs_device(dev['i2c']['topo_info'], "pddf/devices/cpld", self.sysfs_obj, KEY)
                     sysfs_path= "/sys/kernel/pddf/devices/cpld/dev_ops"
-                    if not sysfs_path in self.sysfs_obj[KEY]:
+                    if sysfs_path not in self.sysfs_obj[KEY]:
                             self.sysfs_obj[KEY].append(sysfs_path)
                     list=['/sys/kernel/pddf/devices/cpld/i2c_type',
                           '/sys/kernel/pddf/devices/cpld/i2c_name',
@@ -683,7 +683,7 @@ class PddfParse():
     def show_led_platform_device(self, key, ops):
         if ops['attr']=='all' or ops['attr']=='PLATFORM':
             KEY='platform'
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                 self.sysfs_obj[KEY] = []
                 path='pddf/devices/platform'
                 self.sysfs_attr('num_psus', self.data['PLATFORM']['num_psus'], path, self.sysfs_obj, KEY)
@@ -692,7 +692,7 @@ class PddfParse():
     def show_led_device(self, key, ops):
         if self.check_led_cmds(key, ops):
             KEY='led'
-            if not KEY in self.sysfs_obj:
+            if KEY not in self.sysfs_obj:
                 self.sysfs_obj[KEY] = []
                 path="pddf/devices/led"
                 for attr in self.data[key]['i2c']['attr_list']:
@@ -706,7 +706,7 @@ class PddfParse():
                         if (attr_key != 'attr_name' and attr_key != 'swpld_addr' and attr_key != 'swpld_addr_offset'):
                             self.sysfs_attr(attr_key, attr[attr_key], attr_path, self.sysfs_obj, KEY)
                 sysfs_path="/sys/kernel/pddf/devices/led/dev_ops"
-                if not sysfs_path in self.sysfs_obj[KEY]:
+                if sysfs_path not in self.sysfs_obj[KEY]:
                     self.sysfs_obj[KEY].append(sysfs_path)
                 list=['/sys/kernel/pddf/devices/led/cur_state/color',
                         '/sys/kernel/pddf/devices/led/cur_state/color_state']
@@ -723,7 +723,7 @@ class PddfParse():
                 if 'attr_name' in attr.keys() and 'eeprom' in attr.values():
                     ret_val = "xcvr validation success"
                 else:
-                    print "xcvr validation Failed"
+                    print("xcvr validation Failed")
                     return
 
         elif dev['i2c']['topo_info']['dev_type'] in self.data['PLATFORM']['pddf_dev_types']['PORT_MODULE']:
@@ -731,9 +731,9 @@ class PddfParse():
                 if attr.get("attr_name") in dev_attribs:
                     ret_val = "Success"
                 else:
-                    print "xcvr validation Failed"
+                    print("xcvr validation Failed")
                     return
-        print ret_val
+        print(ret_val)
 
     def validate_eeprom_device(self, dev, ops):
         devtype_list = ['24c02']
@@ -746,7 +746,7 @@ class PddfParse():
                 for attr in dev['i2c']['attr_list']:
                     if attr.get("attr_name") in dev_attribs:
                         ret_val = "eeprom success"
-        print ret_val
+        print(ret_val)
 
     def validate_mux_device(self, dev, ops):
         devtype_list = ['pca9548', 'pca954x']
@@ -757,7 +757,7 @@ class PddfParse():
             for attr in dev['i2c']['channel']:
                 if attr.get("chn") in dev_channels:
                     ret_val = "Mux success"
-        print ret_val
+        print(ret_val)
 
     def validate_cpld_device(self, dev, ops):
         devtype_list = ['i2c_cpld']
@@ -765,7 +765,7 @@ class PddfParse():
 
         if dev['i2c']['topo_info']['dev_type'] in devtype_list:
             ret_val = "cpld success"
-        print ret_val
+        print(ret_val)
 
 
     def validate_sysstatus_device(self, dev, ops):
@@ -778,7 +778,7 @@ class PddfParse():
                 for attr in dev['attr_list']:
                     if attr.get("attr_name") in dev_attribs:
                         ret_val = "sysstatus success"
-        print ret_val
+        print(ret_val)
 
     def validate_temp_sensor_device(self, dev, ops):
         devtype_list = ['lm75']
@@ -790,7 +790,7 @@ class PddfParse():
                 for attr in dev['i2c']['attr_list']:
                     if attr.get("attr_name") in dev_attribs:
                         ret_val = "tempsensor success"
-        print ret_val
+        print(ret_val)
 
     def validate_fan_device(self, dev, ops):
         ret_val = "fan failed"
@@ -799,7 +799,7 @@ class PddfParse():
             if dev['i2c']['dev_attr']['num_fan'] is not None:
                 ret_val = "fan success"
 
-        print ret_val
+        print(ret_val)
 
     def validate_psu_device(self, dev, ops):
         dev_attribs = ['psu_present', 'psu_model_name', 'psu_power_good', 'psu_mfr_id', 'psu_serial_num',
@@ -818,7 +818,7 @@ class PddfParse():
                 else:
                     ret_val = "psu failed"
 
-        print ret_val
+        print(ret_val)
 
     ###################################################################################################################
     #  SPYTEST 
@@ -829,12 +829,12 @@ class PddfParse():
                     with open(node, 'r') as f:
                             status = f.read()
             except IOError:
-                    print "PDDF_VERIFY_ERR: IOError: node:%s key:%s"%(node, key)
+                    print("PDDF_VERIFY_ERR: IOError: node:%s key:%s"%(node, key))
                     return
 
             status=status.rstrip("\n\r")
             if attr[key]!=status:
-                    print "PDDF_VERIFY_ERR: node: %s switch:%s"%(node, status)
+                    print("PDDF_VERIFY_ERR: node: %s switch:%s"%(node, status))
 
     def verify_device(self, attr, path, ops):
             for key in attr.keys():
@@ -851,22 +851,22 @@ class PddfParse():
             dir = '/sys/kernel/pddf/devices/'+validate_type
             if (os.path.exists(dir) or validate_type=='client'):
                 for sysfs in obj[validate_type]:
-                    if(not os.path.exists(sysfs)):
-                        print "[SYSFS FILE] " + sysfs + ": does not exist"
+                    if not os.path.exists(sysfs):
+                        print("[SYSFS FILE] " + sysfs + ": does not exist")
             else:
-                print "[SYSFS DIR] " + dir + ": does not exist"
+                print("[SYSFS DIR] " + dir + ": does not exist")
 
     def validate_dsysfs_creation(self, obj, validate_type):
         if validate_type in obj.keys():
             # There is a possibility that some components dont have any device-self.data attr
             if not obj[validate_type]:
-               print "[SYSFS ATTR] for " + validate_type  + ": empty"
+               print("[SYSFS ATTR] for " + validate_type  + ": empty")
             else:
                for sysfs in obj[validate_type]:
-                  if(not os.path.exists(sysfs)):
-                       print "[SYSFS FILE] " + sysfs + ": does not exist"
+                  if not os.path.exists(sysfs):
+                       print("[SYSFS FILE] " + sysfs + ": does not exist")
         else:
-            print "[SYSFS DIR] " + dir + ": not configured"
+            print("[SYSFS DIR] " + dir + ": not configured")
 
 
 
@@ -898,8 +898,8 @@ class PddfParse():
                             try:
                             	device_type=self.data[key]["dev_info"]["device_type"]
                             except Exception as e:
-                            	print "dev_info or device_type ERROR: " + key
-                            	print e 
+                            	print("dev_info or device_type ERROR: " + key)
+                            	print(e) 
 
 			    if validate_type == 'mismatch':
 	    			 process_validate_type = 1
@@ -914,7 +914,7 @@ class PddfParse():
 		            elif validate_type == 'empty':
 	    			 process_validate_type = 1
 				 if not device_type:
-			            print "Empty device_type for " + key		
+			            print("Empty device_type for " + key)		
                                     continue
                             elif (validate_type=='all' or validate_type==device_type):
 	    			 process_validate_type = 1
@@ -929,22 +929,22 @@ class PddfParse():
                                  temp_obj[device_type]=self.data[key]
                                  for schema_file in schema_list:
                                       if (os.path.exists(schema_file)):
-				          print "Validate " + schema_file + ";" + key
+				          print("Validate " + schema_file + ";" + key)
                                           json_data=json.dumps(temp_obj)
                                           with open(schema_file, 'r') as f:
                                               schema=json.load(f)
 	      			          try:
                                               validate(temp_obj, schema)
 			                  except Exception as e:
-              	  			      print "Validation ERROR: " + schema_file + ";" + key
+              	  			      print("Validation ERROR: " + schema_file + ";" + key)
 					      if validate_type == 'mismatch':
 					  	 return	
 				              else:		
-					  	 print e
+					  	 print(e)
                                       else:
-                                         print "ERROR Missing File: " + schema_file
+                                         print("ERROR Missing File: " + schema_file)
             if not process_validate_type:
-	         print "device_type: " + validate_type + " not configured" 
+	         print("device_type: " + validate_type + " not configured") 
 
     def modules_validation(self, validate_type):
         kos = []
@@ -972,11 +972,11 @@ class PddfParse():
         if supported_type:
             if module_validation_status:
                module_validation_status.append(":ERROR not loaded")
-               print str(module_validation_status)[1:-1]
+               print(str(module_validation_status)[1:-1])
             else:
-               print "Loaded"
+               print("Loaded")
         else:
-            print validate_type + " not configured"
+            print(validate_type + " not configured")
 
 
 
@@ -988,11 +988,11 @@ class PddfParse():
         ret=""
         for ifce in dev['i2c']['interface']:
             ret=getattr(self, ops['cmd']+"_psu_device")(self.data[ifce['dev']], ops )
-            if not ret is None:
+            if ret is not None:
                 if str(ret).isdigit():
                     if ret!=0:
                         # in case if 'create' functions
-                        print "{}_psu_device failed".format(ops['cmd'])
+                        print("{}_psu_device failed".format(ops['cmd']))
                         return ret
                     else:
                         pass
@@ -1004,11 +1004,11 @@ class PddfParse():
     def fan_parse(self, dev, ops):
         parse_str=""
         ret=getattr(self, ops['cmd']+"_fan_device")(dev, ops )
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_fan_device failed".format(ops['cmd'])
+                    print("{}_fan_device failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1021,11 +1021,11 @@ class PddfParse():
     def temp_sensor_parse(self, dev, ops):
         parse_str=""
         ret=getattr(self, ops['cmd']+"_temp_sensor_device")(dev, ops )
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit() :
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_temp_sensor_device failed".format(ops['cmd'])
+                    print("{}_temp_sensor_device failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1038,11 +1038,11 @@ class PddfParse():
     def cpld_parse(self, dev, ops):
         parse_str = ""
         ret = getattr(self, ops['cmd']+"_cpld_device")(dev, ops)
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_cpld_device failed".format(ops['cmd'])
+                    print("{}_cpld_device failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1058,11 +1058,11 @@ class PddfParse():
     def sysstatus_parse(self, dev,ops):
         parse_str = ""
         ret = getattr(self, ops['cmd']+"_sysstatus_device")(dev, ops)
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_sysstatus_device failed".format(ops['cmd'])
+                    print("{}_sysstatus_device failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1075,11 +1075,11 @@ class PddfParse():
     def gpio_parse(self, dev, ops):
         parse_str = ""
         ret = getattr(self, ops['cmd']+"_gpio_device")(dev, ops)
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_temp_sensor_device failed".format(ops['cmd'])
+                    print("{}_temp_sensor_device failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1093,11 +1093,11 @@ class PddfParse():
     def mux_parse(self, dev, ops):
         parse_str = ""
         ret = getattr(self, ops['cmd']+"_mux_device")(dev, ops)
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_mux_device() cmd failed".format(ops['cmd'])
+                    print("{}_mux_device() cmd failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1106,7 +1106,7 @@ class PddfParse():
 
         for ch in dev['i2c']['channel']:
             ret = self.dev_parse(self.data[ch['dev']], ops)	
-            if not ret is None:
+            if ret is not None:
                 if str(ret).isdigit():
                     if ret!=0:
                         # in case if 'create' functions
@@ -1121,7 +1121,7 @@ class PddfParse():
         parse_str = ""
         for ch in reversed(dev['i2c']['channel']):
             ret = self.dev_parse(self.data[ch['dev']], ops)	
-            if not ret is None:
+            if ret is not None:
                 if str(ret).isdigit():
                     if ret!=0:
                         # in case if 'create' functions
@@ -1132,11 +1132,11 @@ class PddfParse():
                     parse_str += ret
 
         ret = getattr(self, ops['cmd']+"_mux_device")(dev, ops)
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_mux_device() cmd failed".format(ops['cmd'])
+                    print("{}_mux_device() cmd failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1149,11 +1149,11 @@ class PddfParse():
     def eeprom_parse(self, dev, ops):
         parse_str = ""
         ret = getattr(self, ops['cmd']+"_eeprom_device")(dev, ops)
-        if not ret is None:
+        if ret is not None:
             if str(ret).isdigit():
                 if ret!=0:
                     # in case if 'create' functions
-                    print "{}_eeprom_device() cmd failed".format(ops['cmd'])
+                    print("{}_eeprom_device() cmd failed".format(ops['cmd']))
                     return ret
                 else:
                     pass
@@ -1167,11 +1167,11 @@ class PddfParse():
         ret=""
         for ifce in dev['i2c']['interface']:
             ret=getattr(self, ops['cmd']+"_xcvr_device")(self.data[ifce['dev']], ops )
-            if not ret is None:
+            if ret is not None:
                 if str(ret).isdigit():
                     if ret!=0:
                         # in case if 'create' functions
-                        print "{}_eeprom_device() cmd failed".format(ops['cmd'])
+                        print("{}_eeprom_device() cmd failed".format(ops['cmd']))
                         return ret
                     else:
                         pass
@@ -1185,7 +1185,7 @@ class PddfParse():
             dev1 = self.data[dev['dev']]
             for d in dev1['i2c']['DEVICES']:
                 ret=self.dev_parse(self.data[d['dev']], ops)
-                if not ret is None:
+                if ret is not None:
                     if str(ret).isdigit():
                         if ret!=0:
                             # in case if 'create' functions
@@ -1202,7 +1202,7 @@ class PddfParse():
             dev1 = self.data[dev['dev']]
             for d in dev1['i2c']['DEVICES']:
                 ret=self.dev_parse(self.data[d['dev']], ops)
-                if not ret is None:
+                if ret is not None:
                     if str(ret).isdigit():
                         if ret!=0:
                             # in case if 'create' functions
@@ -1255,7 +1255,7 @@ class PddfParse():
                     return self.sysstatus_parse(dev,ops)
 
     def is_supported_sysled_state(self, sysled_name, sysled_state):
-            if not sysled_name in self.data.keys():
+            if sysled_name not in self.data.keys():
                 return False, "[FAILED] " + sysled_name + " is not configured"
             for attr in self.data[sysled_name]['i2c']['attr_list']:
                 if attr['attr_name'] == sysled_state:
@@ -1364,7 +1364,7 @@ class PddfParse():
         field_name = str(bmc_attr['field_name']).strip()
         field_pos= int(bmc_attr['field_pos'])-1
 
-        if not bmc_cmd in bmc_cache:
+        if bmc_cmd not in bmc_cache:
            self.populate_bmc_cache_db(bmc_attr)
         else:
            now = time.time()
@@ -1417,7 +1417,7 @@ class PddfParse():
 
             if value != 'N/A':
                 tmp = ''.join(chr(int(i, 16)) for i in value.split())
-                tmp = "".join(i for i in unicode(tmp) if unicodedata.category(i)[0]!="C")
+                tmp = "".join(i for i in str(tmp) if unicodedata.category(i)[0]!="C")
                 value = str(tmp)
 
             return (value)

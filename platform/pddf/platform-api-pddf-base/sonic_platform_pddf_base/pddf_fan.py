@@ -31,11 +31,11 @@ class PddfFan(FanBase):
         self.platform = self.pddf_obj.get_platform()
 
         if tray_idx<0 or tray_idx>=self.platform['num_fantrays']:
-            print "Invalid fantray index %d\n"%tray_idx
+            print("Invalid fantray index %d\n"%tray_idx)
             return
         
         if fan_idx<0 or fan_idx>=self.platform['num_fans_pertray']:
-            print "Invalid fan index (within a tray) %d\n"%fan_idx
+            print("Invalid fan index (within a tray) %d\n"%fan_idx)
             return
 
         self.fantray_index = tray_idx+1
@@ -266,15 +266,15 @@ class PddfFan(FanBase):
             A boolean, True if speed is set successfully, False if not
         """
         if self.is_psu_fan:
-            print "Setting PSU fan speed is not allowed"
+            print("Setting PSU fan speed is not allowed")
             return False
         else:
             if speed<0 or speed>100:
-                print "Error: Invalid speed %d. Please provide a valid speed percentage"%speed
+                print("Error: Invalid speed %d. Please provide a valid speed percentage"%speed)
                 return False
 
             if 'duty_cycle_to_pwm' not in self.plugin_data['FAN']:
-                print "Setting fan speed is not allowed !"
+                print("Setting fan speed is not allowed !")
                 return False
             else:
                 duty_cycle_to_pwm = eval(self.plugin_data['FAN']['duty_cycle_to_pwm'])
@@ -298,7 +298,7 @@ class PddfFan(FanBase):
 
         result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
         if result == False:
-                print msg
+                print(msg)
                 return (False)
 
 
@@ -314,7 +314,7 @@ class PddfFan(FanBase):
         index = str(self.fantray_index-1)
         fan_led_device = "FANTRAY{}".format(self.fantray_index) + "_LED"
 
-        if (not fan_led_device in self.pddf_obj.data.keys()):
+        if fan_led_device not in self.pddf_obj.data.keys():
             # Implement a generic status_led color scheme
             if self.get_status():
                 return self.STATUS_LED_COLOR_GREEN

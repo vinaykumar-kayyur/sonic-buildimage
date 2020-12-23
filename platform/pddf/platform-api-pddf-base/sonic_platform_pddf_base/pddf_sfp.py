@@ -10,7 +10,7 @@ try:
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sff8472 import sffbase
     from sonic_platform_base.sonic_sfp.inf8628 import inf8628InterfaceId
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 # definitions of the offset and width for values in XCVR info eeprom
@@ -154,7 +154,7 @@ class PddfSfp(SfpBase):
             for n in range(0, num_bytes):
                 eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
         except Exception as e:
-            print "Error: Unable to open eeprom_path: %s"%(str(e))
+            print("Error: Unable to open eeprom_path: %s"%(str(e)))
         finally:
             if sysfsfile_eeprom:
                 sysfsfile_eeprom.close()
@@ -174,7 +174,7 @@ class PddfSfp(SfpBase):
         self._port_start = 0
         self._port_end = int(self.platform['num_ports'])
         if index < self._port_start or index >= self._port_end:
-            print "Invalid port index %d"%index
+            print("Invalid port index %d"%index)
             return 
 
         self.port_index = index+1
@@ -890,7 +890,7 @@ class PddfSfp(SfpBase):
                                      # 1. "Power override" bit is 0
                                      # 2. "Power override" bit is 1 and "Power set" bit is 0
                 except IOError as e:
-                    print "Error: unable to open file: %s" % str(e)
+                    print("Error: unable to open file: %s" % str(e))
                     return False
                 finally:
                     if eeprom is not None:
@@ -1087,7 +1087,7 @@ class PddfSfp(SfpBase):
                     eeprom_f.seek(QSFP_CONTROL_OFFSET)
                     eeprom_f.write(buf[0])
                 except IOError as e:
-                    print "Error: unable to open file: %s" % str(e)
+                    print("Error: unable to open file: %s" % str(e))
                     return False
                 finally:
                     if eeprom_f is not None:
@@ -1113,7 +1113,7 @@ class PddfSfp(SfpBase):
                         eeprom_f.seek(SFP_STATUS_CONTROL_OFFSET)
                         eeprom_f.write(buf[0])
                     except Exception as e:
-                        print("Error: unable to open file: %s" % str(e))
+                        print(("Error: unable to open file: %s" % str(e)))
                         return False
                     finally:
                         if eeprom_f:
@@ -1168,7 +1168,7 @@ class PddfSfp(SfpBase):
                 eeprom_f.seek(QSFP_CONTROL_OFFSET)
                 eeprom_f.write(buf[0])
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             finally:
                 if eeprom_f is not None:
@@ -1218,7 +1218,7 @@ class PddfSfp(SfpBase):
                     eeprom_f.write(buffer[0])
                     return True
                 except IOError as e:
-                    print "Error: unable to open file: %s" % str(e)
+                    print("Error: unable to open file: %s" % str(e))
                     return False
                 finally:
                     if eeprom_f is not None:
@@ -1286,7 +1286,7 @@ class PddfSfp(SfpBase):
                 eeprom_f.seek(QSFP_POWEROVERRIDE_OFFSET)
                 eeprom_f.write(buffer[0])
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             finally:
                 if eeprom_f is not None:

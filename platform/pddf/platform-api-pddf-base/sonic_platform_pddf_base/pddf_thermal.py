@@ -90,7 +90,7 @@ class PddfThermal(ThermalBase):
     def set_high_threshold(self, temperature):
         node = self.pddf_obj.get_path(self.thermal_obj_name, "temp1_high_threshold")
         if node is None:
-            print "ERROR %s does not exist"%node
+            print("ERROR %s does not exist"%node)
             return None
 	
 	cmd = "echo '%d' > %s"%(temperature * 1000, node)
@@ -102,7 +102,7 @@ class PddfThermal(ThermalBase):
     def set_low_threshold(self, temperature):
         node = self.pddf_obj.get_path(self.thermal_obj_name, "temp1_low_threshold")
         if node is None:
-            print "ERROR %s does not exist"%node
+            print("ERROR %s does not exist"%node)
             return None
 	cmd = "echo '%d' > %s"%(temperature * 1000, node)
         os.system(cmd)

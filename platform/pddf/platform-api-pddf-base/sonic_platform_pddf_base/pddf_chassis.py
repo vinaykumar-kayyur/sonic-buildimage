@@ -33,7 +33,7 @@ class PddfChassis(ChassisBase):
         self.plugin_data = pddf_plugin_data if pddf_plugin_data else None
         if not self.pddf_obj or not self.plugin_data:
             try:
-                import pddfparse
+                from . import pddfparse
                 import json
                 self.pddf_obj = pddfparse.PddfParse()
                 with open('/usr/share/sonic/platform/pddf/pd-plugin.json') as pd:
@@ -440,7 +440,7 @@ class PddfChassis(ChassisBase):
     def set_system_led(self, led_device_name, color):
         result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
         if result == False:
-                print msg
+                print(msg)
                 return (False)
 
         index=self.pddf_obj.data[led_device_name]['dev_attr']['index']
@@ -453,7 +453,7 @@ class PddfChassis(ChassisBase):
 
 
     def get_system_led(self, led_device_name):
-        if (not led_device_name in self.pddf_obj.data.keys()):
+        if led_device_name not in self.pddf_obj.data.keys():
                 status= "[FAILED] " + led_device_name + " is not configured"
                 return (status)
 

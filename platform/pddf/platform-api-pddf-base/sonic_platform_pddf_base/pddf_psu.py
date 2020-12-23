@@ -232,7 +232,7 @@ class PddfPsu(PsuBase):
 
         result, msg = self.pddf_obj.is_supported_sysled_state(led_device_name, color);
         if result == False:
-                print msg
+                print(msg)
                 return (False)
 
         device_name=self.pddf_obj.data[led_device_name]['dev_info']['device_name']
@@ -245,7 +245,7 @@ class PddfPsu(PsuBase):
     def get_status_led(self):
         index = str(self.psu_index-1)
         psu_led_device = "PSU{}_LED".format(self.psu_index)
-        if (not psu_led_device in self.pddf_obj.data.keys()):
+        if psu_led_device not in self.pddf_obj.data.keys():
             # Implement a generic status_led color scheme
             if self.get_powergood_status():
                 return self.STATUS_LED_COLOR_GREEN
