@@ -258,6 +258,21 @@ def signal_handler(sig, frame):
 #
 
 
+def check_cpld_driver():
+    # Check the cpld driver loading status.
+    cpld_setreg = os.path.join(PLATFORM_CPLD_PATH, SETREG_FILE)
+
+    c = 0
+    while c < 60:
+        if os.path.isfile(cpld_setreg):
+            return
+        c += 1
+        time.sleep(1)
+
+    print("Error: The cpld driver has not been loaded.")
+    sys.exit(1)
+
+
 def main():
     # Register our signal handlers
     signal.signal(signal.SIGHUP, signal_handler)
@@ -274,10 +289,8 @@ def main():
                         help="WDT keep alive period", type=int)
     args = parser.parse_args()
 
-    # Check the cpld driver loading status.
-    if not os.path.isfile(os.path.join(PLATFORM_CPLD_PATH, SETREG_FILE)):
-        print("Error: The cpld driver has not been loaded.")
-        sys.exit(1)
+    # Check the cpld driver
+    check_cpld_driver()
 
     # Init WDT Class
     watchdog = Watchdog()
