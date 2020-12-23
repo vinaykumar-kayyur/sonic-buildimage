@@ -30,6 +30,8 @@ SYSLOG_IDENTIFIER = "caclmgrd"
 
 DEFAULT_NAMESPACE = ''
 
+ETHERTYPE_IPV4 = 0x0800
+ETHERTYPE_IPV6 = 0x86dd
 
 # ========================== Helper Functions =========================
 
@@ -284,7 +286,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         if (("SRC_IP" in rule_props and rule_props["SRC_IP"]) or
            ("DST_IP" in rule_props and rule_props["DST_IP"]) or
            (rule_props.get("IP_TYPE", None) == "IPV4ANY") or 
-           (get_ethertype_from_rule_props(rule_props) == 0x800)):
+           (get_ethertype_from_rule_props(rule_props) == ETHERTYPE_IPV4)):
             return True
         else:
             return False
@@ -293,7 +295,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         if (("SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]) or
            ("DST_IPV6" in rule_props and rule_props["DST_IPV6"]) or
            (rule_props.get("IP_TYPE", None) == "IPV6ANY") or
-           (get_ethertype_from_rule_props(rule_props) == 0x86dd)):
+           (get_ethertype_from_rule_props(rule_props) == ETHERTYPE_IPV6)):
             return True
         else:
             return False
@@ -420,10 +422,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
                         rule_props = {k.upper(): v for k,v in rule_props.items()}
 
-                        ethertype = 0
                         if "ETHER_TYPE" in rule_props:
-                            ethertype = get_ethertype_from_rule_props(rule_props)
-                            if ethertype != 0x800 and ethertype != 0x86dd:
+                            if get_ethertype_from_rule_props(rule_props) not in [ETHERTYPE_IPV4, ETHERTYPE_IPV6]:
                                 log_error("rule_props for rule_id {} does not have valid/supported ethertype.".format(rule_id))
                                 continue
 
