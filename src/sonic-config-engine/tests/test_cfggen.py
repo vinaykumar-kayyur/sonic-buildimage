@@ -26,7 +26,7 @@ class TestCfgGen(TestCase):
         self.mlnx_port_config = os.path.join(self.test_dir, 'mellanox-sample-port-config.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
         self.output2_file = os.path.join(self.test_dir, 'output2')
-        self.ecmp_graph = os.path.join(self.test_dir, 'ecmp_content_minigraph.xml')
+        self.ecmp_graph = os.path.join(self.test_dir, 'fg-ecmp-sample-minigraph.xml')
 
     def tearDown(self):
         try:
@@ -232,31 +232,24 @@ class TestCfgGen(TestCase):
     def test_minigraph_ecmp_members(self):
         argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "FG_NHG_MEMBER.keys()|list|sort"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "['10.218.32.143', '10.218.32.144', '10.218.32.145', '10.218.32.146', '10.218.32.147',"
-                                         " '10.218.32.148', '10.218.32.149', '10.218.32.150', '10.218.32.151', '10.218.32.152',"
-                                         " '10.218.32.153', '10.218.32.154', '2603:10e1:100:100::ada:208f', '2603:10e1:100:100::ada:2090',"
-                                         " '2603:10e1:100:100::ada:2091', '2603:10e1:100:100::ada:2092', '2603:10e1:100:100::ada:2093',"
-                                         " '2603:10e1:100:100::ada:2094', '2603:10e1:100:100::ada:2095', '2603:10e1:100:100::ada:2096',"
-                                         " '2603:10e1:100:100::ada:2097', '2603:10e1:100:100::ada:2098', '2603:10e1:100:100::ada:2099',"
-                                         " '2603:10e1:100:100::ada:209a']")
+        self.assertEqual(output.strip(), "['200.200.200.1', '200.200.200.10', '200.200.200.2', '200.200.200.3', '200.200.200.4', '200.200.200.5',"
+                                         " '200.200.200.6', '200.200.200.7', '200.200.200.8', '200.200.200.9', '200:200:200:200::1', '200:200:200:200::10',"
+                                         " '200:200:200:200::2', '200:200:200:200::3', '200:200:200:200::4', '200:200:200:200::5', '200:200:200:200::6',"
+                                         " '200:200:200:200::7', '200:200:200:200::8', '200:200:200:200::9']")
 
     def test_minigraph_ecmp_neighbors(self):
         argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "NEIGH.keys()|list|sort"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "['Vlan31|10.218.32.143', 'Vlan31|10.218.32.144', 'Vlan31|10.218.32.145', 'Vlan31|10.218.32.146',"
-                                         " 'Vlan31|10.218.32.147', 'Vlan31|10.218.32.148', 'Vlan31|10.218.32.149', 'Vlan31|10.218.32.150',"
-                                         " 'Vlan31|10.218.32.151', 'Vlan31|10.218.32.152', 'Vlan31|10.218.32.153', 'Vlan31|10.218.32.154',"
-                                         " 'Vlan31|2603:10e1:100:100::ada:208f', 'Vlan31|2603:10e1:100:100::ada:2090',"
-                                         " 'Vlan31|2603:10e1:100:100::ada:2091', 'Vlan31|2603:10e1:100:100::ada:2092',"
-                                         " 'Vlan31|2603:10e1:100:100::ada:2093', 'Vlan31|2603:10e1:100:100::ada:2094',"
-                                         " 'Vlan31|2603:10e1:100:100::ada:2095', 'Vlan31|2603:10e1:100:100::ada:2096',"
-                                         " 'Vlan31|2603:10e1:100:100::ada:2097', 'Vlan31|2603:10e1:100:100::ada:2098',"
-                                         " 'Vlan31|2603:10e1:100:100::ada:2099', 'Vlan31|2603:10e1:100:100::ada:209a']")
+        self.assertEqual(output.strip(), "['Vlan31|200.200.200.1', 'Vlan31|200.200.200.10', 'Vlan31|200.200.200.2', 'Vlan31|200.200.200.3',"
+                                         " 'Vlan31|200.200.200.4', 'Vlan31|200.200.200.5', 'Vlan31|200.200.200.6', 'Vlan31|200.200.200.7',"
+                                         " 'Vlan31|200.200.200.8', 'Vlan31|200.200.200.9', 'Vlan31|200:200:200:200::1', 'Vlan31|200:200:200:200::10',"
+                                         " 'Vlan31|200:200:200:200::2', 'Vlan31|200:200:200:200::3', 'Vlan31|200:200:200:200::4', 'Vlan31|200:200:200:200::5', "
+                                         "'Vlan31|200:200:200:200::6', 'Vlan31|200:200:200:200::7', 'Vlan31|200:200:200:200::8', 'Vlan31|200:200:200:200::9']")
 
     def test_minigraph_ecmp_prefixes(self):
         argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "FG_NHG_PREFIX.keys()|list|sort"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "['10.218.36.128/32', '2603:10b0:119::1/128']")
+        self.assertEqual(output.strip(), "['100.50.25.12/32', 'fc:5::/128']")
 
         
     def test_minigraph_portchannels(self):
