@@ -23,8 +23,10 @@ class TestCfgGen(TestCase):
         self.sample_graph_bgp_speaker = os.path.join(self.test_dir, 't0-sample-bgp-speaker.xml')
         self.sample_device_desc = os.path.join(self.test_dir, 'device.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.mlnx_port_config = os.path.join(self.test_dir, 'mellanox-sample-port-config.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
         self.output2_file = os.path.join(self.test_dir, 'output2')
+        self.ecmp_graph = os.path.join(self.test_dir, 'ecmp_content_minigraph.xml')
 
     def tearDown(self):
         try:
@@ -222,6 +224,41 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "[('Vlan1000', '192.168.0.1/27'), 'Vlan1000']")
 
+    def test_minigraph_ecmp_fg_nhg(self):
+        argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v \"FG_NHG.values()|list\"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "[{'bucket_size': 120}, {'bucket_size': 120}]")
+
+    def test_minigraph_ecmp_members(self):
+        argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "FG_NHG_MEMBER.keys()|list|sort"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "['10.218.32.143', '10.218.32.144', '10.218.32.145', '10.218.32.146', '10.218.32.147',"
+                                         " '10.218.32.148', '10.218.32.149', '10.218.32.150', '10.218.32.151', '10.218.32.152',"
+                                         " '10.218.32.153', '10.218.32.154', '2603:10e1:100:100::ada:208f', '2603:10e1:100:100::ada:2090',"
+                                         " '2603:10e1:100:100::ada:2091', '2603:10e1:100:100::ada:2092', '2603:10e1:100:100::ada:2093',"
+                                         " '2603:10e1:100:100::ada:2094', '2603:10e1:100:100::ada:2095', '2603:10e1:100:100::ada:2096',"
+                                         " '2603:10e1:100:100::ada:2097', '2603:10e1:100:100::ada:2098', '2603:10e1:100:100::ada:2099',"
+                                         " '2603:10e1:100:100::ada:209a']")
+
+    def test_minigraph_ecmp_neighbors(self):
+        argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "NEIGH.keys()|list|sort"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "['Vlan31|10.218.32.143', 'Vlan31|10.218.32.144', 'Vlan31|10.218.32.145', 'Vlan31|10.218.32.146',"
+                                         " 'Vlan31|10.218.32.147', 'Vlan31|10.218.32.148', 'Vlan31|10.218.32.149', 'Vlan31|10.218.32.150',"
+                                         " 'Vlan31|10.218.32.151', 'Vlan31|10.218.32.152', 'Vlan31|10.218.32.153', 'Vlan31|10.218.32.154',"
+                                         " 'Vlan31|2603:10e1:100:100::ada:208f', 'Vlan31|2603:10e1:100:100::ada:2090',"
+                                         " 'Vlan31|2603:10e1:100:100::ada:2091', 'Vlan31|2603:10e1:100:100::ada:2092',"
+                                         " 'Vlan31|2603:10e1:100:100::ada:2093', 'Vlan31|2603:10e1:100:100::ada:2094',"
+                                         " 'Vlan31|2603:10e1:100:100::ada:2095', 'Vlan31|2603:10e1:100:100::ada:2096',"
+                                         " 'Vlan31|2603:10e1:100:100::ada:2097', 'Vlan31|2603:10e1:100:100::ada:2098',"
+                                         " 'Vlan31|2603:10e1:100:100::ada:2099', 'Vlan31|2603:10e1:100:100::ada:209a']")
+
+    def test_minigraph_ecmp_prefixes(self):
+        argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "FG_NHG_PREFIX.keys()|list|sort"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "['10.218.36.128/32', '2603:10b0:119::1/128']")
+
+        
     def test_minigraph_portchannels(self):
         argument = '-m "' + self.sample_graph_simple + '" -p "' + self.port_config + '" -v PORTCHANNEL'
         output = self.run_script(argument)
