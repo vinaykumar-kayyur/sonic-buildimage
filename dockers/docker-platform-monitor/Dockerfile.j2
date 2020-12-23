@@ -2,10 +2,14 @@
 FROM docker-config-engine-buster
 
 ARG docker_container_name
+ARG image_version
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Pass the image_version to container
+ENV IMAGE_VERSION=$image_version
 
 # Install required packages
 RUN apt-get update &&   \
@@ -31,6 +35,10 @@ RUN apt-get update &&   \
 # contains 'enum' as part of the standard library. Installing enum34 there will
 # cause conflicts.
 RUN pip2 install enum34
+
+# Barefoot platform vendors' sonic_platform packages import the Python 'thrift' library
+RUN pip2 install thrift==0.13.0
+RUN pip3 install thrift==0.13.0
 
 {% if docker_platform_monitor_debs.strip() -%}
 # Copy locally-built Debian package dependencies

@@ -42,10 +42,11 @@ start)
         echo -n "Setting up board... "
 
         modprobe i2c-dev
-        modprobe i2c-mux-pca954x
+        modprobe i2c-mux-pca954x force-deselect-on-exit=1
         modprobe dx010_wdt
         modprobe leds-dx010
         modprobe lm75
+        modprobe slx_gpio_ich
 
         found=0
         for devnum in 0 1; do
