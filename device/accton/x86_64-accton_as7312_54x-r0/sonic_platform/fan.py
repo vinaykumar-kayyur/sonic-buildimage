@@ -62,16 +62,17 @@ class Fan(FanBase):
             dir_str = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index, '_direction')
             val=self._api_helper.read_txt_file(dir_str)
             if val==0:
-                direction=self.FAN_DIRECTION_INTAKE
-            else: 
                 direction=self.FAN_DIRECTION_EXHAUST
+            else: 
+                direction=self.FAN_DIRECTION_INTAKE
         else: #For PSU
             dir_str = "{}{}".format(self.psu_hwmon_path,'psu_hwmon_path')
             val=self._api_helper.read_txt_file(dir_str)
             if val=='F2B':
-                direction=self.FAN_DIRECTION_EXHAUST
-            else:
                 direction=self.FAN_DIRECTION_INTAKE
+            else:
+                direction=self.FAN_DIRECTION_EXHAUST
+
         return direction
 
     def get_speed(self):
