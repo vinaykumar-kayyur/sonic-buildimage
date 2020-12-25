@@ -34,6 +34,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
+	# dbgsym package may be absent for whatever reason...
+	cp -n /sonic/dummy.deb libteam5-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
+	cp -n /sonic/dummy.deb libteamdctl0-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
+	cp -n /sonic/dummy.deb libteam-utils-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
+
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

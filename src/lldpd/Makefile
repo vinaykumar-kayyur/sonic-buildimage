@@ -38,6 +38,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	env "with_netlink_receive_bufsize=1024*1024" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
+	# dbgsym package may be absent for whatever reason...
+	cp -n /sonic/dummy.deb $(LLDPD_DBG)
+
 	# Move the newly-built .deb packages to the destination directory
 	mv $* $(DERIVED_TARGETS) $(DEST)/
 

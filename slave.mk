@@ -176,13 +176,31 @@ else
 $(warning PASSWORD given on command line: could be visible to other users)
 endif
 
+# These options will be passed to all Debain package builders
+# (debhelper, i.e. dpkg-buildpackage, rules/config)
+# which are parent processes of `make'.
+# `nostrip' will produce a .deb containing binaries with debug symbols builtin
+# `noopt' will replace optimization level -O2, which is the default, by -O0
+# `-ggdb3' gives more debugging info for GDB like macros
+# `-fdebug-types-section' reduces debug database size by eliminating
+# the same types came from different object files
 ifeq ($(SONIC_DEBUGGING_ON),y)
-DEB_BUILD_OPTIONS_GENERIC := nostrip
+DEB_BUILD_OPTIONS_GENERIC := nostrip noopt
+export DEB_CFLAGS_MAINT_APPEND := -ggdb3 -fdebug-types-section
+export DEB_CXXFLAGS_MAINT_APPEND := -ggdb3 -fdebug-types-section
 endif
 
+# Profiling is better on optimized code
 ifeq ($(SONIC_PROFILING_ON),y)
-DEB_BUILD_OPTIONS_GENERIC := nostrip noopt
+DEB_BUILD_OPTIONS_GENERIC := nostrip
+export DEB_CFLAGS_MAINT_APPEND := -ggdb3 -fdebug-types-section
+export DEB_CXXFLAGS_MAINT_APPEND := -ggdb3 -fdebug-types-section
 endif
+
+# Since parallel build of deb package is default on compat 10 but
+# disabled by default on compat 9, it can be enforced till all
+# packages will update themselves.
+DEB_BUILD_OPTIONS_GENERIC += parallel=$(SONIC_CONFIG_MAKE_JOBS)
 
 ifeq ($(SONIC_BUILD_JOBS),)
 override SONIC_BUILD_JOBS := $(SONIC_CONFIG_BUILD_JOBS)

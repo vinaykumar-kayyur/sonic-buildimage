@@ -26,6 +26,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
+	# dbgsym package may be absent for whatever reason...
+	cp -n /sonic/dummy.deb $(ISC_DHCP_RELAY_DBG)
+
 	# Move the newly-built .deb packages to the destination directory
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 

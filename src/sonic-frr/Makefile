@@ -22,6 +22,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git rev-parse --short HEAD | xargs git checkout
 	git branch -D $(FRR_BRANCH)
 	popd
+	# dbgsym package may be absent for whatever reason...
+	cp -n /sonic/dummy.deb $(FRR_DBG)
+	cp -n /sonic/dummy.deb $(FRR_SNMP_DBG)
 	mv $(DERIVED_TARGET) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGET)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

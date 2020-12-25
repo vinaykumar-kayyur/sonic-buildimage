@@ -32,6 +32,10 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	fakeroot debian/rules -j$(SONIC_CONFIG_MAKE_JOBS) binary
 	popd
 
+	# dbgsym package may be absent for whatever reason...
+	cp -n /sonic/dummy.deb snmp-dbgsym_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+	cp -n /sonic/dummy.deb snmpd-dbgsym_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

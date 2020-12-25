@@ -16,6 +16,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
 	popd
 
+	# dbgsym package may be absent for whatever reason...
+	cp -n /sonic/dummy.deb $(SWIG_DBG)
+
 	mv $(DERIVED_TARGETS) $* $(DEST)/
 
 $(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)
