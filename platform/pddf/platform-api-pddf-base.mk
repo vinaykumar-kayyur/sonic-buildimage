@@ -18,6 +18,10 @@ PDDF_PLATFORM_API_BASE_PY3 = sonic_platform_pddf_common-$(PDDF_PLATFORM_API_BASE
 $(PDDF_PLATFORM_API_BASE_PY3)_SRC_PATH = $(PLATFORM_PDDF_PATH)/platform-api-pddf-base
 $(PDDF_PLATFORM_API_BASE_PY3)_PYTHON_VERSION = 3
 $(PDDF_PLATFORM_API_BASE_PY3)_DEPENDS = $(SONIC_CONFIG_ENGINE)
+# Synthetic dependency to avoid building the Python 2 and 3 packages
+# simultaneously and any potential conflicts which may arise
+$(PDDF_PLATFORM_API_BASE_PY3)_DEPENDS += $(PDDF_PLATFORM_API_BASE_PY2)
+$(PDDF_PLATFORM_API_BASE_PY3)_TEST = n
 SONIC_PYTHON_WHEELS += $(PDDF_PLATFORM_API_BASE_PY3)
 
 export pddf_platform_api_base_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(PDDF_PLATFORM_API_BASE_PY3))"
