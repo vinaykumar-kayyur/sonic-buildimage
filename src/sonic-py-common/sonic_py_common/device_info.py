@@ -297,6 +297,8 @@ def get_sonic_version_info():
 
     return data
 
+def get_sonic_version_file():
+    return os.path.join(os.sep, "etc", "sonic", "sonic_version.yml")
 
 #
 # Multi-NPU functionality
