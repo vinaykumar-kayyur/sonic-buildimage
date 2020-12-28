@@ -86,7 +86,7 @@
     postrotate
         if [ $(echo $1 | grep -c "/var/log/swss/") -gt 0 ]; then
             # for multi asic platforms, there are multiple orchagents
-            # send the SIGHUP only to the which needs log file rotation
+            # send the SIGHUP only to the orchagent the which needs log file rotation
             if [ $(pgrep -x orchagent | wc -l) -gt 0 ]; then
                 log_file=$1
                 log_file_name=${log_file#/var/log/swss/}
