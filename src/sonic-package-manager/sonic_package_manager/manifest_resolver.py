@@ -56,10 +56,7 @@ class ManifestResolver:
 
         labels = self.docker.labels(repo, version)
 
-        try:
-            return self.get_manifest_from_labels(labels)
-        except (KeyError, TypeError, ValueError) as err:
-            raise ManifestError(f'No manifest defined for {repo}:{version}: {err}')
+        return self.get_manifest_from_labels(labels)
 
     def get_manifest_remote(self, package: PackageEntry, ref: str) -> Manifest:
         """ Gets the package manifest from remote registry.
@@ -81,11 +78,18 @@ class ManifestResolver:
         blob = registry.blobs(repo, digest)
         labels = blob['config']['Labels']
 
-        try:
-            return self.get_manifest_from_labels(labels)
-        except (KeyError, TypeError, ValueError):
-            raise ManifestError(f'No manifest defined for {repo}:{ref}')
+        return self.get_manifest_from_labels(labels)
 
-    def get_manifest_from_labels(self, labels) -> Manifest:
-        manifest_dict = labels[Manifest.LABEL_NAME]
-        return Manifest.marshal(json.loads(manifest_dict))
+    @staticmethod
+    def get_manifest_from_labels(labels) -> Manifest:
+        try:
+            manifest_string = labels[Manifest.LABEL_NAME]
+        except KeyError:
+            raise ManifestError('No manifest found in image labels')
+
+        try:
+            manifest_dict = json.loads(manifest_string)
+        except (ValueError, TypeError) as err:
+            raise ManifestError(f'Failed to parse manifest JSON: {err}')
+
+        return Manifest.marshal(manifest_dict)
