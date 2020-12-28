@@ -298,7 +298,10 @@ def get_sonic_version_info():
     return data
 
 def get_sonic_version_file():
-    return os.path.join(os.sep, "etc", "sonic", "sonic_version.yml")
+    if not os.path.isfile(SONIC_VERSION_YAML_PATH):
+        return None
+
+    return SONIC_VERSION_YAML_PATH
 
 #
 # Multi-NPU functionality
