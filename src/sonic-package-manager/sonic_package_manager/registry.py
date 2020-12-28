@@ -1,61 +1,53 @@
 #!/usr/bin/env python
 import json
-import time
-from dataclasses import dataclass
 from typing import List, Dict
 
 import requests
+import www_authenticate
 from docker_image import reference
 
-from sonic_package_manager.errors import PackageManagerError
 from sonic_package_manager.logger import log
 
 
-class AuthService:
-    """ AuthService provides an authentication tokens to access
-    Docker registry. """
+class AuthenticationServiceError(Exception):
+    """ Exception class for errors related to authentication. """
 
-    @dataclass
-    class Token:
-        value: str
-        expires: int
+    pass
 
-    def __init__(self, host, service):
-        self._host = host
-        self._service = service
-        self._tokens = {}
 
-    def get_token(self, repository: str, action: str = 'pull') -> str:
-        """ Retrieve an authentication token. If a token was previously
-        requested and did not expire yet it will be returned from the cache.
+class AuthenticationService:
+    """ AuthenticationService provides an authentication tokens. """
+
+    @staticmethod
+    def get_token(realm, service, scope) -> str:
+        """ Retrieve an authentication token.
 
         Args:
-            repository: Repository to take action on.
-            action: Action to perform.
+            realm: Realm: url to request token.
+            service: service to request token for.
+            scope: scope to requests token for.
         Returns:
             token value as a string.
         """
 
-        log.debug(f'getting authentication token for {repository}:{action}')
+        log.debug(f'getting authentication token: realm={realm} service={service} scope={scope}')
 
-        scope = f'scope=repository:{repository}:{action}'
-
-        # Try to get the token from cached tokens if cached token did not expire
-        if scope in self._tokens and self._tokens[scope].expires > time.time():
-            token = self._tokens[scope]
-            log.debug(f'using cached authentication token for {repository}:{action}: {token}')
-            return token.value
-
-        response = requests.get(f'{self._host}/token?{scope}&service={self._service}')
+        response = requests.get(f'{realm}?scope={scope}&service={service}')
         if response.status_code != requests.codes.ok:
-            raise PackageManagerError(f'Failed to retrieve token for {repository} action {action}')
+            raise AuthenticationServiceError(f'Failed to retrieve token')
 
         content = json.loads(response.content)
-        token = AuthService.Token(content['token'], time.time() + content['expires_in'])
+        token = content['token']
+        expires_in = content['expires_in']
 
-        log.debug(f'authentication token for {repository}:{action}: {token}')
-        self._tokens[scope] = token
-        return token.value
+        log.debug(f'authentication token for realm={realm} service={service} scope={scope}: '
+                  f'token={token} expires_in={expires_in}')
+
+        return token
+
+
+class RegistryApiError(Exception):
+    """ Class for registry related errors. """
 
 
 class Registry:
@@ -63,19 +55,24 @@ class Registry:
 
     MIME_DOCKER_MANIFEST = 'application/vnd.docker.distribution.manifest.v2+json'
 
-    def __init__(self, host: str, auth=None):
+    def __init__(self, host: str):
         self.url = host
-        self.auth = auth
 
-        log.debug(f'initialized registry object with {self.url} {self.auth}')
-
-    def _get_headers(self, repository: str):
-        _, repository = reference.Reference.split_docker_domain(repository)
-        headers = {}
-        if self.auth:
-            token = self.auth.get_token(repository)
+    @staticmethod
+    def _execute_get_request(url, headers):
+        response = requests.get(url, headers=headers)
+        if response.status_code == requests.codes.unauthorized:
+            # Get authentication details from headers
+            # Registry should tell how to authenticate
+            www_authenticate_details = response.headers['Www-Authenticate']
+            log.debug(f'unauthorized: retrieving authentication details '
+                      f'from response headers {www_authenticate_details}')
+            bearer = www_authenticate.parse(www_authenticate_details)['bearer']
+            token = AuthenticationService.get_token(**bearer)
             headers['Authorization'] = f'Bearer {token}'
-        return headers
+            # Repeat request
+            response = requests.get(url, headers=headers)
+        return response
 
     def _get_base_url(self, repository: str):
         return f'{self.url}/v2/{repository}'
@@ -84,13 +81,12 @@ class Registry:
         log.debug(f'getting tags for {repository}')
 
         _, repository = reference.Reference.split_docker_domain(repository)
-        headers = self._get_headers(repository)
-        headers['Accept'] = 'application/json'
-        response = requests.get(f'{self._get_base_url(repository)}/tags/list',
-                                headers=self._get_headers(repository))
+        headers = {'Accept': 'application/json'}
+        url = f'{self._get_base_url(repository)}/tags/list'
+        response = self._execute_get_request(url, headers)
         if response.status_code != requests.codes.ok:
-            raise PackageManagerError(f'Failed to retrieve tags from {repository}: '
-                                      f'response: {response.status_code}, content: {response.content}')
+            raise RegistryApiError(f'Failed to retrieve tags from {repository}: '
+                                   f'response: {response.status_code}, content: {response.content}')
 
         content = json.loads(response.content)
         log.debug(f'tags list api response: f{content}')
@@ -101,14 +97,13 @@ class Registry:
         log.debug(f'getting manifest for {repository}:{ref}')
 
         _, repository = reference.Reference.split_docker_domain(repository)
-        headers = self._get_headers(repository)
-        headers['Accept'] = self.MIME_DOCKER_MANIFEST
-        response = requests.get(f'{self._get_base_url(repository)}/manifests/{ref}',
-                                headers=headers)
+        headers = {'Accept': self.MIME_DOCKER_MANIFEST}
+        url = f'{self._get_base_url(repository)}/manifests/{ref}'
+        response = self._execute_get_request(url, headers)
 
         if response.status_code != requests.codes.ok:
-            raise PackageManagerError(f'Failed to retrieve manifest for {repository}:{ref}: '
-                                      f'response: {response.status_code}, content: {response.content}')
+            raise RegistryApiError(f'Failed to retrieve manifest for {repository}:{ref}: '
+                                   f'response: {response.status_code}, content: {response.content}')
 
         content = json.loads(response.content)
         log.debug(f'manifest content for {repository}:{ref}: {content}')
@@ -119,13 +114,12 @@ class Registry:
         log.debug(f'retrieving blob for {repository}:{digest}')
 
         _, repository = reference.Reference.split_docker_domain(repository)
-        headers = self._get_headers(repository)
-        headers['Accept'] = self.MIME_DOCKER_MANIFEST
-        response = requests.get(f'{self._get_base_url(repository)}/blobs/{digest}',
-                                headers=headers)
+        headers = {'Accept': self.MIME_DOCKER_MANIFEST}
+        url = f'{self._get_base_url(repository)}/blobs/{digest}'
+        response = self._execute_get_request(url, headers)
         if response.status_code != requests.codes.ok:
-            raise PackageManagerError(f'Failed to retrieve blobs for {repository}:{digest}: '
-                                      f'response: {response.status_code}, content: {response.content}')
+            raise RegistryApiError(f'Failed to retrieve blobs for {repository}:{digest}: '
+                                   f'response: {response.status_code}, content: {response.content}')
         content = json.loads(response.content)
 
         log.debug(f'retrieved blob for {repository}:{digest}: {content}')
@@ -136,8 +130,7 @@ class RegistryResolver:
     """ Returns a registry object based on the input repository reference
      string. """
 
-    DockerHubAuthService = AuthService('https://auth.docker.io', 'registry.docker.io')
-    DockerHubRegistry = Registry('https://index.docker.io', DockerHubAuthService)
+    DockerHubRegistry = Registry('https://index.docker.io')
 
     def __init__(self):
         pass
@@ -146,6 +139,5 @@ class RegistryResolver:
         domain, _ = reference.Reference.split_docker_domain(ref)
         if domain == reference.DEFAULT_DOMAIN:
             return self.DockerHubRegistry
-        # TODO: authentication service for private registries
         # TODO: support insecure registries
         return Registry(f'https://{domain}')
