@@ -145,28 +145,28 @@
             "default_brkout_mode": "1x25G[10G]"
         },
         "Ethernet192": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet196": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet200": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet204": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet208": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet212": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet216": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         },
         "Ethernet220": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[50G,40G,25G,10G]"
         }
     }
 }

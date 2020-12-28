@@ -292,49 +292,49 @@
             "index": "49,49,49,49",
             "lanes": "192,193,194,195",
             "alias_at_lanes": "etp49a, etp49b, etp49c, etp49d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet196": {
             "index": "50,50,50,50",
             "lanes": "196,197,198,199",
             "alias_at_lanes": "etp50a, etp50b, etp50c, etp50d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet200": {
             "index": "51,51,51,51",
             "lanes": "200,201,202,203",
             "alias_at_lanes": "etp51a, etp51b, etp51c, etp51d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet204": {
             "index": "52,52,52,52",
             "lanes": "204,205,206,207",
             "alias_at_lanes": "etp52a, etp52b, etp52c, etp52d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet208": {
             "index": "53,53,53,53",
             "lanes": "208,209,210,211",
             "alias_at_lanes": "etp53a, etp53b, etp53c, etp53d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet212": {
             "index": "54,54,54,54",
             "lanes": "212,213,214,215",
             "alias_at_lanes": "etp54a, etp54b, etp54c, etp54d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet216": {
             "index": "55,55,55,55",
             "lanes": "216,217,218,219",
             "alias_at_lanes": "etp55a, etp55b, etp55c, etp55d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         },
         "Ethernet220": {
             "index": "56,56,56,56",
             "lanes": "220,221,222,223",
             "alias_at_lanes": "etp56a, etp56b, etp56c, etp56d",
-            "breakout_modes": "1x100G[40G],2x50G,4x25G[10G],None(4)"
+            "breakout_modes": "1x100G[50G,40G,25G,10G],2x50G[40G,25G,10G]"
         }
     }
 }
