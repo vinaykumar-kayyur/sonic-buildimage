@@ -76,12 +76,12 @@ CreateUser {{ user }} {{ SNMP_USER[user]['SNMP_USER_AUTH_TYPE'] }} {{ SNMP_USER[
 
 #  Note that setting these values here, results in the corresponding MIB objects being 'read-only'
 #  See snmpd.conf(5) for more details
-{% if SNMP.LOCATION is defined %}
+{% if SNMP is defined and SNMP.LOCATION is defined %}
 sysLocation    {{ SNMP.LOCATION.Location }}
 {% else %}
 sysLocation    public
 {% endif %}
-{% if SNMP.CONTACT is defined %}
+{% if SNMP is defined and SNMP.CONTACT is defined %}
 sysContact     {{ SNMP.CONTACT.keys()[0] }} {{ SNMP.CONTACT.values()[0] }}
 {% else %}
 sysContact     Azure Cloud Switch vteam <linuxnetdev@microsoft.com>
