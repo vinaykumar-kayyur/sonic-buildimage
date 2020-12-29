@@ -210,13 +210,14 @@ start() {
         DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
         {%- endif %}
         if [ x"$DOCKERMOUNT" == x"$MOUNTPATH" ]; then
+            preStartAction
             {%- if docker_container_name == "database" %}
             echo "Starting existing ${DOCKERNAME} container"
+            docker start ${DOCKERNAME}
             {%- else %}
             echo "Starting existing ${DOCKERNAME} container with HWSKU $HWSKU"
+            /usr/local/bin/container start ${DOCKERNAME}
             {%- endif %}
-            preStartAction
-            docker start ${DOCKERNAME}
             postStartAction
             exit $?
         fi
@@ -245,6 +246,19 @@ start() {
     fi
     {%- else %}
     echo "Creating new ${DOCKERNAME} container with HWSKU $HWSKU"
+    {%- endif %}
+
+    {%- if docker_container_name == "swss" %}
+    # Obtain the vendor name
+    ASIC_VENDOR=`$SONIC_CFGGEN -y /etc/sonic/sonic_version.yml -v asic_type`
+
+    # Generate the asic_table.json and peripheral_table.json
+    if [ ! -f /etc/sonic/asic_table.json ] && [ -f /usr/share/sonic/templates/asic_table.j2 ]; then
+        sonic-cfggen -d -t /usr/share/sonic/templates/asic_table.j2 > /etc/sonic/asic_table.json
+    fi
+    if [ ! -f /etc/sonic/peripheral_table.json ] && [ -f /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 ]; then
+        sonic-cfggen -d -t /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 > /etc/sonic/peripheral_table.json
+    fi
     {%- endif %}
 
     # In Multi ASIC platforms the global database config file database_global.json will exist.
@@ -330,6 +344,7 @@ start() {
 {%- endif %}
     docker create {{docker_image_run_opt}} \
         --net=$NET \
+        -e RUNTIME_OWNER=local \
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
 {%- if install_debug_image == "y" %}
         -v /src:/src:ro -v /debug:/debug:rw \
@@ -359,6 +374,9 @@ start() {
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
 {%- endif %}
 {%- endif %}
+{%- if docker_container_name == "swss" %}
+        -e ASIC_VENDOR=$ASIC_VENDOR \
+{%- endif -%}
 {%- if docker_container_name == "bgp" %}
         -v /etc/sonic/frr/$DEV:/etc/frr:rw \
 {%- endif %}
@@ -384,21 +402,31 @@ start() {
     }
 
     preStartAction
+    {%- if docker_container_name == "database" %}
     docker start $DOCKERNAME
+    {%- else %}
+    /usr/local/bin/container start ${DOCKERNAME}
+    {%- endif %}
     postStartAction
 }
 
 wait() {
+    {%- if docker_container_name == "database" %}
     docker wait $DOCKERNAME
+    {%- else %}
+    /usr/local/bin/container wait $DOCKERNAME
+    {%- endif %}
 }
 
 stop() {
+    {%- if docker_container_name == "database" %}
     docker stop $DOCKERNAME
-{%- if docker_container_name == "database" %}
     if [ "$DEV" ]; then
         ip netns delete "$NET_NS"
     fi
-{%- endif %}
+    {%- else %}
+    /usr/local/bin/container stop $DOCKERNAME
+    {%- endif %}
 }
 
 DOCKERNAME={{docker_container_name}}
