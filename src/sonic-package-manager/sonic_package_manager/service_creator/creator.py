@@ -145,7 +145,7 @@ class ServiceCreator:
         self.post_install()
 
         if deregister_feature:
-            self.feature_registry.deregister(package.manifest['serivce']['name'])
+            self.feature_registry.deregister(package.manifest['service']['name'])
 
     def post_install(self):
         if not in_chroot():
