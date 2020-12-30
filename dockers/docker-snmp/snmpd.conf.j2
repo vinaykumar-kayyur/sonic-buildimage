@@ -41,7 +41,6 @@ rocommunity {{ community }}
 rocommunity6 {{ community }}
 {% endif %}
 {% endfor %}
-{% else %}
 {% endif %}
 
 {% if SNMP_COMMUNITY is defined %}
@@ -51,7 +50,6 @@ rwcommunity {{ community }}
 rwcommunity6 {{ community }}
 {% endif %}
 {% endfor %}
-{% else %}
 {% endif %}
 
 {% if SNMP_USER is defined %}
