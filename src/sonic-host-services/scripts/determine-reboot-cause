@@ -111,6 +111,9 @@ def find_hardware_reboot_cause():
     except ImportError:
         sonic_logger.log_warning("sonic_platform package not installed. Unable to detect hardware reboot causes.")
         hardware_reboot_cause_major, hardware_reboot_cause_minor = REBOOT_CAUSE_NON_HARDWARE, "N/A"
+    except:
+        sonic_logger.log_warning("Unknown exception caught in platform library. Unable to detect hardware reboot causes.")
+        hardware_reboot_cause_major, hardware_reboot_cause_minor = REBOOT_CAUSE_NON_HARDWARE, "N/A"
 
     if hardware_reboot_cause_major:
         sonic_logger.log_info("Platform api indicates reboot cause {}".format(hardware_reboot_cause_major))
