@@ -4,7 +4,7 @@ logfile_backups=2
 nodaemon=true
 
 [eventlistener:dependent-startup]
-command=python -m supervisord_dependent_startup
+command=python3 -m supervisord_dependent_startup
 autostart=true
 autorestart=unexpected
 startretries=0
@@ -26,6 +26,17 @@ autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
+
+[program:start]
+command=/usr/bin/start.sh
+priority=1
+autostart=true
+autorestart=false
+startsecs=0
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=rsyslogd:running
 
 {# Router advertiser should only run on ToR (T0) devices which have #}
 {# at least one VLAN interface which has an IPv6 address asigned #}
@@ -51,7 +62,7 @@ startsecs=0
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=rsyslogd:running
+dependent_startup_wait_for=start:exited
 
 [program:radvd]
 command=/usr/sbin/radvd -n

@@ -125,6 +125,14 @@ class Test_yang_models:
                 'desc': 'Loopback Ip-prefix port-name must condition failure.',
                 'eStr': self.defaultYANGFailure['Must']
             },
+            'CRM_BRK_CFG_FLEX_TABLE': {
+                'desc': 'CRM BREAKOUT CFG FLEX COUNTER TABLE.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DEV_META_DEV_NEIGH_VERSION_TABLE': {
+                'desc': 'DEVICE_METADATA DEVICE_NEIGHBOR VERSION TABLE.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'INCORRECT_VLAN_NAME': {
                 'desc': 'INCORRECT VLAN_NAME FIELD IN VLAN TABLE.',
                 'eStr': self.defaultYANGFailure['Pattern'] + ["Vlan"]
@@ -168,6 +176,51 @@ class Test_yang_models:
             'PORT_NEG_TEST': {
                 'desc': 'LOAD PORT TABLE FEC PATTERN FAILURE',
                 'eStr': self.defaultYANGFailure['Pattern'] + ['rc']
+            },
+            'CRM_WITH_WRONG_PERCENTAGE': {
+                'desc': 'CRM_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'CRM_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'CRM_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'CRM_WITH_CORRECT_USED_VALUE': {
+                'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE': {
+                'desc': 'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'VERSIONS_WITH_INCORRECT_PATTERN': {
+                'desc': 'VERSIONS_WITH_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'VERSIONS_WITH_INCORRECT_PATTERN2': {
+                'desc': 'VERSIONS_WITH_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'DEVICE_METADATA_DEFAULT_BGP_STATUS': {
+                'desc': 'DEVICE_METADATA DEFAULT VALUE FOR BGP_STATUS FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': '/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname',
+                    'key': 'sonic-device_metadata:default_bgp_status',
+                    'value': 'up'
+                }
+            },
+            'DEVICE_METADATA_DEFAULT_PFCWD_STATUS': {
+                'desc': 'DEVICE_METADATA DEFAULT VALUE FOR PFCWD FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': '/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname',
+                    'key': 'sonic-device_metadata:default_pfcwd_status',
+                    'value': 'disable'
+                }
+            },
+            'DEVICE_METADATA_TYPE_INCORRECT_PATTERN': {
+                'desc': 'DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
             }
         }
 
@@ -260,20 +313,20 @@ class Test_yang_models:
             # verify the data tree if asked
             if verify is not None:
                 xpath = verify['xpath']
-                log.debug("Verify xpath: {}".format(xpath))
+                log.info("Verify xpath: {}".format(xpath))
                 set = node.find_path(xpath)
                 for dnode in set.data():
                     if (xpath == dnode.path()):
-                        log.debug("Verify dnode: {}".format(dnode.path()))
+                        log.info("Verify dnode: {}".format(dnode.path()))
                         data = dnode.print_mem(ly.LYD_JSON, ly.LYP_WITHSIBLINGS \
                             | ly.LYP_FORMAT | ly.LYP_WD_ALL)
                         data = json.loads(data)
-                        log.debug("Verify data: {}".format(data))
+                        log.info("Verify data: {}".format(data))
                         assert (data[verify['key']] == verify['value'])
                         s = 'verified'
         except Exception as e:
             s = str(e)
-            log.debug(s)
+            log.info(s)
         return s
 
     """
@@ -294,7 +347,7 @@ class Test_yang_models:
                 log.info(desc + " Passed\n")
                 return PASS
             else:
-                raise Exception("Unknown Error")
+                raise Exception("Mismatch {} and {}".format(eStr, s))
         except Exception as e:
             printExceptionDetails()
         log.info(desc + " Failed\n")
@@ -336,10 +389,12 @@ class Test_yang_models:
         Run all tests from list self.tests
     """
     def test_run_tests(self):
+        ret = 0
         try:
             self.initTest()
             self.loadYangModel(self.yangDir)
-            ret = 0
+            assert len(self.tests) != 0
+            print("Tests:{}".format(self.tests))
             for test in self.tests:
                 test = test.strip()
                 if test in self.ExceptionTests:
@@ -349,7 +404,9 @@ class Test_yang_models:
                 else:
                     raise Exception("Unexpected Test")
         except Exception as e:
+            ret = FAIL * len(self.tests)
             printExceptionDetails()
+
         assert ret == 0
         return
 # End of Class

@@ -12,9 +12,8 @@ CONSTANTS_PATH = os.path.abspath('../../files/image_config/constants/constants.y
 def run_test(name, template_path, json_path, match_path):
     template_path = os.path.join(TEMPLATE_PATH, template_path)
     json_path = os.path.join(DATA_PATH, json_path)
-    cfggen = os.path.abspath("../sonic-config-engine/sonic-cfggen")
-    command = ['/usr/bin/python2.7', cfggen, "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
-    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env={"PYTHONPATH": "."})
+    command = ['sonic-cfggen', "-T", TEMPLATE_PATH, "-t", template_path, "-y", json_path]
+    p = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.returncode == 0, "sonic-cfggen for %s test returned %d code. stderr='%s'" % (name, p.returncode, stderr)
     raw_generated_result = stdout.decode("ascii")
@@ -75,6 +74,12 @@ def test_staticd_default_route():
              "staticd/staticd.default_route.conf.j2",
              "staticd/staticd.default_route.conf.json",
              "staticd/staticd.default_route.conf")
+
+def test_staticd_loopback_route():
+    run_test("staticd.loopback_route.conf.j2",
+             "staticd/staticd.loopback_route.conf.j2",
+             "staticd/staticd.loopback_route.conf.json",
+             "staticd/staticd.loopback_route.conf")
 
 def test_staticd():
     run_test("staticd.conf.j2",
