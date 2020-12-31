@@ -1135,6 +1135,7 @@ _instance_attach(unsigned int inst_id, unsigned int dma_size)
     exist = _instance_validate(inst_id, dma_size);
 
     if (exist < 0) {
+        gprintk("ERROR: The instance_id %d is not valid!\n", inst_id);
         spin_unlock(&bde_resource_lock);
         return LUBDE_FAIL;
     }
@@ -1144,6 +1145,7 @@ _instance_attach(unsigned int inst_id, unsigned int dma_size)
         return LUBDE_SUCCESS;
     }
     if (_dma_resource_alloc(dma_size, &dma_offset) < 0) {
+        gprintk("ERROR: Dma resource alloc FAIL for instance_id %d with dma size %d!\n", inst_id, dma_size);
         spin_unlock(&bde_resource_lock);
         return LUBDE_FAIL;
     }
