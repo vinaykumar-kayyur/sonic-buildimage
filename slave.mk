@@ -5,7 +5,7 @@
 # Select bash for commands
 .ONESHELL:
 SHELL = /bin/bash
-.SHELLFLAGS += -e
+.SHELLFLAGS += -ex
 USER = $(shell id -un)
 UID = $(shell id -u)
 GUID = $(shell id -g)
