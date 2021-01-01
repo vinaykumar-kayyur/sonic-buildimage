@@ -58,7 +58,7 @@ switch_board_qsfp() {
         "new_device")
                         for ((i=10;i<=41;i++));
                         do
-                            echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                            echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
  
@@ -81,7 +81,7 @@ switch_board_sfp() {
         "new_device")
                         for ((i=1;i<=2;i++));
                         do
-                            echo sff8436 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
+                            echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-$i/$1
                         done
                         ;;
  
@@ -99,13 +99,14 @@ switch_board_sfp() {
 
 #Modsel 64 ports to applicable QSFP type modules
 #This enables the adapter to respond for i2c commands
+#Low Power mode enabled by default
 switch_board_modsel() {
 	resource="/sys/bus/pci/devices/0000:09:00.0/resource0"
 	for ((i=1;i<=32;i++));
 	do
 		port_addr=$(( 16384 + ((i - 1) * 16)))
 		hex=$( printf "0x%x" $port_addr )
-		/usr/bin/pcisysfs.py --set --offset $hex --val 0x10 --res $resource  > /dev/null 2>&1
+		/usr/bin/pcisysfs.py --set --offset $hex --val 0x50 --res $resource  > /dev/null 2>&1
 	done
 }
 
@@ -145,13 +146,48 @@ platform_firmware_versions() {
 	ver=`/usr/sbin/i2cget -y 4 0x31 0x0`
 	echo "Switch CPLD 2: $((ver))" >> $FIRMWARE_VERSION_FILE
 }
+
+install_python_api_package() {
+    device="/usr/share/sonic/device"
+    platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+
+    rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
+    rv=$(pip3 install $device/$platform/sonic_platform-1.0-py3-none-any.whl)
+}
+
+remove_python_api_package() {
+    rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv=$(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
+
+    rv=$(pip3 show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv=$(pip3 uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
+}
+
+get_reboot_cause() {
+    REBOOT_REASON_FILE="/host/reboot-cause/platform/reboot_reason"
+
+    mkdir -p $(dirname $REBOOT_REASON_FILE)
+
+    # Handle First Boot into software version with reboot cause determination support
+    if [[ ! -e $REBOOT_REASON_FILE ]]; then
+        echo "0" > $REBOOT_REASON_FILE
+    else
+        /usr/sbin/i2cget -y 5 0x0d 0x06  > $REBOOT_REASON_FILE
+    fi
+}
+
+
 init_devnum
 
 if [ "$1" == "init" ]; then
     modprobe i2c-dev
     modprobe i2c-mux-pca954x force_deselect_on_exit=1
     modprobe ipmi_devintf
-    modprobe ipmi_si
+    modprobe ipmi_si kipmid_max_busy_us=1000
     modprobe cls-i2c-ocore
     modprobe cls-switchboard 
     modprobe mc24lc64t 
@@ -160,8 +196,11 @@ if [ "$1" == "init" ]; then
     switch_board_qsfp "new_device"
     switch_board_sfp "new_device"
     switch_board_led_default
+    install_python_api_package
   # /usr/bin/qsfp_irq_enable.py
     platform_firmware_versions
+    get_reboot_cause
+    echo 1000 > /sys/module/ipmi_si/parameters/kipmid_max_busy_us
 
 elif [ "$1" == "deinit" ]; then
     sys_eeprom "delete_device"
@@ -174,6 +213,7 @@ elif [ "$1" == "deinit" ]; then
     modprobe -r cls-i2c-ocore
     modprobe -r cls-switchboard 
     modprobe -r mc24lc64t 
+    remove_python_api_package
 else
      echo "z9332f_platform : Invalid option !"
 fi
