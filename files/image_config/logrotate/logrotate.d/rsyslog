@@ -95,10 +95,10 @@
             if [ $NUM_ASIC -gt 1 ]; then
                 log_file=$1
                 log_file_name=${log_file#/var/log/swss/}
-                logger -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name:$log_file_name"
+                logger -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name: $log_file_name"
                 pgrep -xa orchagent | grep $log_file_name | awk '{ print $1; }' | xargs /bin/kill -HUP 2>/dev/null || true
             else
-                logger -p syslog.info -t "logrotate" "Sending SIGHUP to OA"
+                logger -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name: $1"
                 pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
             fi
         else
