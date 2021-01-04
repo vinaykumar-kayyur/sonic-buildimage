@@ -2,6 +2,8 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
+include /sonic/rules/functions
+
 MAIN_TARGET = $(LLDPD)
 DEBUG_TARGETS = $(LLDPD_DBG)
 DERIVED_TARGETS = $(LIBLLDPCTL)
@@ -16,9 +18,7 @@ DSC_FILE_URL = $(LLDP_URL)/$(DSC_FILE)
 ORIG_FILE_URL = $(LLDP_URL)/$(ORIG_FILE)
 DEBIAN_FILE_URL = $(LLDP_URL)/$(DEBIAN_FILE)
 
-ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
-endif
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files

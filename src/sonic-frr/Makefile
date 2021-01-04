@@ -2,15 +2,15 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
+include /sonic/rules/functions
+
 MAIN_TARGET = $(FRR)
 DEBUG_TARGETS = $(FRR_DBG) $(FRR_SNMP_DBG)
 DERIVED_TARGET = $(FRR_PYTHONTOOLS) $(FRR_SNMP)
 SUFFIX = $(shell date +%Y%m%d\.%H%M%S)
 STG_BRANCH = stg_temp.$(SUFFIX)
 
-ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGET += $(DEBUG_TARGETS))
-endif
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build the package

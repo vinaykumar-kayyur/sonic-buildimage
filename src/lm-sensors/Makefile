@@ -2,6 +2,7 @@ SHELL = /bin/bash
 .ONESHELL:
 	.SHELLFLAGS += -e
 
+include /sonic/rules/functions
 
 MAIN_TARGET = $(LM_SENSORS)
 DEBUG_TARGETS = $(LM_SENSORS_DBG) \
@@ -11,9 +12,7 @@ DERIVED_TARGETS = fancontrol_$(LM_SENSORS_VERSION_FULL)_all.deb \
 				  $(LIBSENSORS) \
 				  sensord_$(LM_SENSORS_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
-ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
-endif
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf lm-sensors-$(LM_SENSORS_VERSION)

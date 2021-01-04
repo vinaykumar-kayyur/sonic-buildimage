@@ -2,13 +2,13 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
+include /sonic/rules/functions
+
 MAIN_TARGET = $(ISC_DHCP_RELAY)
 DEBUG_TARGETS = $(ISC_DHCP_RELAY_DBG)
 DERIVED_TARGETS =
 
-ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
-endif
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files

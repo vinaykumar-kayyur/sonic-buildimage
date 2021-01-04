@@ -2,6 +2,8 @@
 SHELL = /bin/bash
 .SHELLFLAGS += -e
 
+include /sonic/rules/functions
+
 MAIN_TARGET = libteam5_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
 DEBUG_TARGETS = libteam5-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
 		  libteamdctl0-dbgsym_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
@@ -10,9 +12,7 @@ DERIVED_TARGETS = libteam-dev_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
 		  libteamdctl0_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb \
 		  libteam-utils_$(LIBTEAM_VERSION)_$(CONFIGURED_ARCH).deb
 
-ifneq ($(findstring nostrip,$(DEB_BUILD_OPTIONS)),nostrip)
-$(eval DERIVED_TARGETS += $(DEBUG_TARGETS))
-endif
+$(eval $(call add_dbgsym_debs, $(DEB_BUILD_OPTIONS), $(DEBUG_TARGETS), $(DERIVED_TARGETS)))
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain libteam

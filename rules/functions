@@ -153,3 +153,12 @@ $(foreach deb,$(1), \
 	    fi; \
 	done; } )
 endef
+
+###############################################################################
+## src/*/Makefile functions
+###############################################################################
+define add_dbgsym_debs
+ifneq ($(findstring nostrip, $(1)), nostrip)
+DERIVED_TARGETS = $(2) $(3)
+endif
+endef
