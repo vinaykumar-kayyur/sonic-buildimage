@@ -1,10 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import sys
 import subprocess
 
 import swsssdk
-
 from sonic_py_common import multi_asic
 
 
@@ -81,11 +80,11 @@ def get_current_running_containers():
     return running_containers
 
 
-def monitoring_containers_and_alerting():
+def main():
     """
     @summary: This function will compare the difference between the current running containers
               and the containers which were expected to run. If containers which were exepcted
-              to run but not running, then an alerting message will be written into syslog.
+              to run were not running, then an alerting message will be written into syslog.
     """
     expected_running_containers = get_expected_running_containers()
     current_running_containers = get_current_running_containers()
@@ -106,10 +105,6 @@ def monitoring_containers_and_alerting():
             print("Container '{}' was not running.".format(log_message))
 
         sys.exit(4)
-
-
-def main():
-    monitoring_containers_and_alerting()
 
 
 if __name__ == "__main__":
