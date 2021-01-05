@@ -135,12 +135,6 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {%- endif -%}
-{%- if 'dhcp_relay_src_intf' in VLAN[vlan_name] %}
-{%- set src_intf = VLAN[vlan_name]['dhcp_relay_src_intf'] %}
-{%- if 'dhcp_relay_link_select' in VLAN[vlan_name] and VLAN[vlan_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
-{%- else %} -S {{ src_intf }}
-{% endif -%}
-{% endif -%}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
 {%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
 {% endfor %}
@@ -186,12 +180,6 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {%- endif -%}
-{%- if 'dhcp_relay_src_intf' in PORTCHANNEL_INTERFACE[pc_name] %}
-{%- set src_intf = PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_src_intf'] %}
-{%- if 'dhcp_relay_link_select' in PORTCHANNEL_INTERFACE[pc_name] and PORTCHANNEL_INTERFACE[pc_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
-{%- else %} -S {{ src_intf }}
-{% endif -%}
-{% endif -%}
 {% for dhcp_server in PORTCHANNEL_INTERFACE[pc_name]['dhcp_servers'] %}
 {%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
 {% endfor %}
@@ -237,12 +225,6 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {%- endif -%}
-{%- if 'dhcp_relay_src_intf' in INTERFACE[intf_name] %}
-{%- set src_intf = INTERFACE[intf_name]['dhcp_relay_src_intf'] %}
-{%- if 'dhcp_relay_link_select' in INTERFACE[intf_name] and INTERFACE[intf_name]['dhcp_relay_link_select'] == 'enable' %} -U {{ src_intf }}
-{%- else %} -S {{ src_intf }}
-{% endif -%}
-{% endif -%}
 {% for dhcp_server in INTERFACE[intf_name]['dhcp_servers'] %}
 {%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
 {% endfor %}
