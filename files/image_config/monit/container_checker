@@ -5,11 +5,6 @@ import sys
 
 import swsssdk
 from sonic_py_common import multi_asic
-from sonic_py_common.logger import Logger
-
-SYSLOG_IDENTIFIER = "container_checker"
-logger = Logger(SYSLOG_IDENTIFIER)
-logger.set_min_log_priority_info()
 
 
 def get_command_result(command):
@@ -24,14 +19,14 @@ def get_command_result(command):
                                          shell=True, universal_newlines=True)
         command_stdout, command_stderr = proc_instance.communicate()
         if proc_instance.returncode != 0:
-            logger.log_error("Failed to execute the command '{}'. Return code: '{}'".format(
+            print("Failed to execute the command '{}'. Return code: '{}'".format(
                 command, proc_instance.returncode))
             sys.exit(1)
     except OSError as os_err:
-        logger.log_error("Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
+        print("Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
         sys.exit(2)
     except ValueError as val_err:
-        logger.log_error("Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
+        print("Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
         sys.exit(3)
 
     return command_stdout.split("\n")
@@ -96,7 +91,7 @@ def main():
 
     not_running_containers = expected_running_containers.difference(current_running_containers)
     if not_running_containers:
-        logger.log_error("Containers not running: " + ", ".join(not_running_containers))
+        print("Containers not running: " + ", ".join(not_running_containers))
         sys.exit(4)
 
 
