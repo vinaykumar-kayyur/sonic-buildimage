@@ -5,6 +5,7 @@ import sys
 
 import swsssdk
 from sonic_py_common import multi_asic
+from sonic_py_common.logger import Logger
 
 SYSLOG_IDENTIFIER = "container_checker"
 
@@ -94,7 +95,6 @@ def main():
     current_running_containers = get_current_running_containers(logger)
 
     not_running_containers = expected_running_containers.difference(current_running_containers)
-
     if not_running_containers:
         logger.log_error("Containers not running: " + ", ".join(not_running_containers))
         sys.exit(4)
