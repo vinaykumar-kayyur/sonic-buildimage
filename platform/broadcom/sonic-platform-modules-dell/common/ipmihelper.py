@@ -23,6 +23,29 @@ Cmd_GetSensorReading = 0x2D
 # IPMI FRU Device Commands
 Cmd_ReadFRUData = 0x11
 
+def get_ipmitool_raw_output(args):
+    """
+    Returns a list the elements of which are the individual bytes of
+    ipmitool raw <cmd> command output.
+    """
+    result_bytes = list()
+    result = ""
+    command = "ipmitool raw {}".format(args)
+    try:
+        proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        stdout = proc.communicate()[0]
+        proc.wait()
+        if not proc.returncode:
+            result = stdout.rstrip('\n')
+    except:
+        pass
+
+    for i in result.split():
+        result_bytes.append(int(i, 16))
+
+    return result_bytes
+
 class IpmiSensor(object):
 
     # Sensor Threshold types and their respective bit masks
@@ -39,29 +62,6 @@ class IpmiSensor(object):
         self.id = sensor_id
         self.is_discrete = is_discrete
 
-    def _get_ipmitool_raw_output(self, args):
-        """
-        Returns a list the elements of which are the individual bytes of
-        ipmitool raw <cmd> command output.
-        """
-        result_bytes = list()
-        result = ""
-        command = "ipmitool raw {}".format(args)
-        try:
-            proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            if not proc.returncode:
-                result = stdout.decode('utf-8').rstrip('\n')
-        except:
-            pass
-
-        for i in result.split():
-            result_bytes.append(int(i, 16))
-
-        return result_bytes
-
     def _get_converted_sensor_reading(self, raw_value):
         """
         Returns a 2 element tuple(bool, int) in which first element
@@ -72,7 +72,7 @@ class IpmiSensor(object):
         cmd_args = "{} {} {} {}".format(NetFn_SensorEvent,
                                         Cmd_GetSensorReadingFactors,
                                         self.id, raw_value)
-        factors = self._get_ipmitool_raw_output(cmd_args)
+        factors = get_ipmitool_raw_output(cmd_args)
 
         if len(factors) != 7:
             return False, 0
@@ -107,7 +107,7 @@ class IpmiSensor(object):
         # Get Sensor Reading
         cmd_args = "{} {} {}".format(NetFn_SensorEvent, Cmd_GetSensorReading,
                                      self.id)
-        output = self._get_ipmitool_raw_output(cmd_args)
+        output = get_ipmitool_raw_output(cmd_args)
         if len(output) != 4:
             return False, 0
 
@@ -154,7 +154,7 @@ class IpmiSensor(object):
         # Get Sensor Threshold
         cmd_args = "{} {} {}".format(NetFn_SensorEvent, Cmd_GetSensorThreshold,
                                      self.id)
-        thresholds = self._get_ipmitool_raw_output(cmd_args)
+        thresholds = get_ipmitool_raw_output(cmd_args)
         if len(thresholds) != 7:
             return False, 0
 
