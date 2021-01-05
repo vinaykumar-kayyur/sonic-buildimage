@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
+"""
+container_checker
 
+This script is intended to be run by Monit. It will write an alerting message into
+syslog if it found containers which were expected to run but were not running. Note
+that if print(...) statement in this script was executed, the string in it will be 
+appended to Monit syslog messages.
+
+The following is an example in Monit configuration file to show how Monit will run 
+this script:
+
+check program container_checker with path "/usr/bin/container_checker"
+    if status != 0 for 5 times within 5 cycles then alert repeat every
+
+"""
 import subprocess
 import sys
 
