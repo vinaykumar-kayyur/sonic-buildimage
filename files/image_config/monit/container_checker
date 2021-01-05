@@ -24,7 +24,7 @@ from sonic_py_common import multi_asic
 
 def get_command_result(command):
     """
-    @summary: This function will execture the command and return the result.
+    @summary: This function will execute the command and return the resulting output.
     @return: A string which contains the output of command.
     """
     command_stdout = ""
@@ -37,12 +37,9 @@ def get_command_result(command):
             print("Failed to execute the command '{}'. Return code: '{}'".format(
                 command, proc_instance.returncode))
             sys.exit(1)
-    except OSError as os_err:
-        print("Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
+    except (OSError, ValueError) as err:
+        print("Failed to execute the command '{}'. Error: '{}'".format(command, err))
         sys.exit(2)
-    except ValueError as val_err:
-        print("Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
-        sys.exit(3)
 
     return command_stdout.split("\n")
 
@@ -107,6 +104,11 @@ def main():
     not_running_containers = expected_running_containers.difference(current_running_containers)
     if not_running_containers:
         print("Containers not running: " + ", ".join(not_running_containers))
+        sys.exit(3)
+
+    unexpected_running_containers = current_running_containers.difference(expected_running_containers)
+    if unexpected_running_containers:
+        print("Unexpected running containers: " + ", ".join(unexpected_running_containers))
         sys.exit(4)
 
 
