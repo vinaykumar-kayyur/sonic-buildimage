@@ -297,6 +297,11 @@ def get_sonic_version_info():
 
     return data
 
+def get_sonic_version_file():
+    if not os.path.isfile(SONIC_VERSION_YAML_PATH):
+        return None
+
+    return SONIC_VERSION_YAML_PATH
 
 #
 # Multi-NPU functionality
@@ -407,7 +412,7 @@ def get_system_mac(namespace=None):
         hw_mac_entry_cmds = [mac_address_cmd]
 
     for get_mac_cmd in hw_mac_entry_cmds:
-        proc = subprocess.Popen(get_mac_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(get_mac_cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (mac, err) = proc.communicate()
         if err:
             continue
@@ -439,6 +444,7 @@ def get_system_routing_stack():
         proc = subprocess.Popen(command,
                                 stdout=subprocess.PIPE,
                                 shell=True,
+                                universal_newlines=True,
                                 stderr=subprocess.STDOUT)
         stdout = proc.communicate()[0]
         proc.wait()
@@ -473,7 +479,7 @@ def is_warm_restart_enabled(container_name):
 def is_fast_reboot_enabled():
     fb_system_state = 0
     cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
     (stdout, stderr) = proc.communicate()
 
     if proc.returncode != 0:

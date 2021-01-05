@@ -37,14 +37,16 @@ class Fan(FanBase):
     PSU_FAN_SPEED = ['0x3c', '0x3c', '0x3c', '0x3c', '0x3c',
                      '0x3c', '0x3c', '0x46', '0x50', '0x5a', '0x64']
 
-    def __init__(self, fan_index, fan_drawer, psu_fan = False):
+    def __init__(self, fan_index, fan_drawer, position, psu_fan = False, psu=None):
         super(Fan, self).__init__()
     
         # API index is starting from 0, Mellanox platform index is starting from 1
         self.index = fan_index + 1
         self.fan_drawer = fan_drawer
+        self.position = position
 
         self.is_psu_fan = psu_fan
+        self.psu = psu
         if self.fan_drawer:
             self.led = ComponentFaultyIndicator(self.fan_drawer.get_led())
         elif self.is_psu_fan:
@@ -123,13 +125,8 @@ class Fan(FanBase):
         Returns:
             bool: True if fan is present, False if not
         """
-        status = 0
         if self.is_psu_fan:
-            if os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path)):
-                status = 1
-            else:
-                status = 0
-            return status == 1
+            return self.psu.get_presence() and self.psu.get_powergood_status() and os.path.exists(os.path.join(FAN_PATH, self.fan_presence_path))
         else:
             return self.fan_drawer.get_presence()
 
@@ -147,7 +144,7 @@ class Fan(FanBase):
         if max_speed_in_rpm == 0:
             return speed_in_rpm
 
-        speed = 100*speed_in_rpm/max_speed_in_rpm
+        speed = 100*speed_in_rpm//max_speed_in_rpm
         if speed > 100:
             speed = 100
 
@@ -194,9 +191,9 @@ class Fan(FanBase):
                 bus = read_str_from_file(self.psu_i2c_bus_path, raise_exception=True)
                 addr = read_str_from_file(self.psu_i2c_addr_path, raise_exception=True)
                 command = read_str_from_file(self.psu_i2c_command_path, raise_exception=True)
-                speed = Fan.PSU_FAN_SPEED[int(speed / 10)]
+                speed = Fan.PSU_FAN_SPEED[int(speed // 10)]
                 command = "i2cset -f -y {0} {1} {2} {3} wp".format(bus, addr, command, speed)
-                subprocess.check_call(command, shell = True)
+                subprocess.check_call(command, shell = True, universal_newlines=True)
                 return True
             except subprocess.CalledProcessError as ce:
                 logger.log_error('Failed to call command {}, return code={}, command output={}'.format(ce.cmd, ce.returncode, ce.output))
@@ -206,7 +203,7 @@ class Fan(FanBase):
                 return False
 
         try:
-            cooling_level = int(speed / 10)
+            cooling_level = int(speed // 10)
             if cooling_level < self.min_cooling_level:
                 cooling_level = self.min_cooling_level
                 speed = self.min_cooling_level * 10
@@ -254,6 +251,22 @@ class Fan(FanBase):
         # The tolerance value is fixed as 50% for all the Mellanox platform
         return 50
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device
+        Returns:
+            integer: The 1-based relative physical position in parent device
+        """
+        return self.position
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     @classmethod
     def set_cooling_level(cls, level, cur_state):
         """
@@ -287,4 +300,3 @@ class Fan(FanBase):
             return read_int_from_file(COOLING_STATE_PATH, raise_exception=True)
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to get cooling level - {}".format(e))
-

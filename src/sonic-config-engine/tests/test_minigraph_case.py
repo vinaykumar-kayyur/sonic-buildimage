@@ -96,10 +96,22 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{('Vlan1000', 'Ethernet8'): {'tagging_mode': 'untagged'}}")
 
-    def test_minigraph_vlan_interfaces(self):
+    def test_minigraph_vlan_interfaces_keys(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VLAN_INTERFACE.keys()|list"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "[('Vlan1000', '192.168.0.1/27'), 'Vlan1000']")
+
+    def test_minigraph_vlan_interfaces(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "VLAN_INTERFACE"'
+        output = self.run_script(argument)
+        expected_table = {
+            'Vlan1000|192.168.0.1/27': {},
+            'Vlan1000': {
+                'proxy_arp': 'enabled',
+                'grat_arp': 'enabled'
+            }
+        }
+        self.assertEqual(utils.to_dict(output.strip()), expected_table)
 
     def test_minigraph_portchannels(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v PORTCHANNEL'
@@ -108,6 +120,13 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '1', 'members': ['Ethernet4'], 'mtu': '9100'}}")
         )
+
+    def test_minigraph_console_mgmt_feature(self):
+        argument = '-m "' + self.sample_graph + '" -v CONSOLE_SWITCH'
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'console_mgmt': {'enabled': 'no'}}"))
 
     def test_minigraph_console_port(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v CONSOLE_PORT'
@@ -123,24 +142,41 @@ class TestCfgGenCaseInsensitive(TestCase):
 
     def test_minigraph_neighbor_metadata(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_NEIGHBOR_METADATA"'
+
+        expected_table = {
+            'switch-01t1': { 
+                'lo_addr': '10.1.0.186/32',
+                'mgmt_addr': '10.7.0.196/26',
+                'hwsku': 'Force10-S6000',
+                'type': 'LeafRouter',
+                'deployment_id': '2'
+            },
+            'switch2-t0': {
+                'hwsku': 'Force10-S6000',
+                'lo_addr': '25.1.1.10/32',
+                'mgmt_addr': '10.7.0.196/26',
+                'type': 'ToRRouter'
+            },
+            'server1': {
+                'hwsku': 'server-sku',
+                'lo_addr': '10.10.10.1/32',
+                'lo_addr_v6': 'fe80::0001/128',
+                'mgmt_addr': '10.0.0.1/32',
+                'type': 'Server'
+            },
+            'server2': {
+                'hwsku': 'server-sku',
+                'lo_addr': '10.10.10.2/32',
+                'lo_addr_v6': 'fe80::0002/128',
+                'mgmt_addr': '10.0.0.2/32',
+                'type': 'Server'
+            }
+        }
         output = self.run_script(argument)
+        self.maxDiff = None
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{" \
-                "'switch-01t1': {" \
-                    "'lo_addr': '10.1.0.186/32'," \
-                    "'mgmt_addr': '10.7.0.196/26'," \
-                    "'hwsku': 'Force10-S6000'," \
-                    "'type': 'LeafRouter'," \
-                    "'deployment_id': '2'" \
-                "}," \
-                "'switch2-t0': {" \
-                    "'hwsku': 'Force10-S6000'," \
-                    "'lo_addr': '25.1.1.10'," \
-                    "'mgmt_addr': '10.7.0.196/26'," \
-                    "'type': 'ToRRouter'" \
-                "}" \
-            "}")
+            expected_table
         )
 
 #     everflow portion is not used
@@ -227,3 +263,25 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected_tunnel
         )
+
+    def test_minigraph_mux_cable_table(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "MUX_CABLE"'
+        expected_table = {
+            'Ethernet4': {
+                'state': 'auto',
+                'server_ipv4': '10.10.10.1/32',
+                'server_ipv6': 'fe80::0001/128'
+            },
+            'Ethernet8': {
+                'state': 'auto',
+                'server_ipv4': '10.10.10.2/32',
+                'server_ipv6': 'fe80::0002/128'
+            }
+        }
+
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            expected_table
+        )
+        
