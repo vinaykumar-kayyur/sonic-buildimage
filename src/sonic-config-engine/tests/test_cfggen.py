@@ -50,18 +50,6 @@ class TestCfgGen(TestCase):
             print('    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output)))
         return output
 
-    def test_tac(self):
-        data = '{\
-                "TACPLUS": { "global": { "auth_type": "login", "passkey": "777" } },\
-                "AAA": { "authentication": { "login": "tacacs+", "failthrough": "ddd" } }\
-                }'
-        argument = '-a \'{}\' --preset tac'.format(data)
-        output = self.run_script(argument)
-        data_in = json.loads(data)
-        data_out = json.loads(output)
-        self.assertEqual(data_in, data_out)
-
-
     def test_dummy_run(self):
         argument = ''
         output = self.run_script(argument)

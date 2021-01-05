@@ -38,15 +38,6 @@ def generate_empty_config(data):
         new_data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
     return new_data
 
-
-def generate_tacacs(data):
-    new_data = {
-        "TACPLUS": data["TACPLUS"],
-        "AAA": data["AAA"]
-        }
-    return new_data
-
-
 def generate_l2_config(data):
     data['VLAN'] = {'Vlan1000': {'vlanid': '1000'}}
     data['VLAN_MEMBER'] = {}

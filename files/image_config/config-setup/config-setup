@@ -363,9 +363,6 @@ do_config_backup()
     rm -rf /host/old_config
     cp -ar /etc/sonic /host/old_config
 
-    # Save TACACS
-    sonic-cfggen -d --preset tac > /host/old_config/${TACACS_JSON_BACKUP}
-
     [ -d ${CONFIG_POST_MIGRATION_HOOKS} ] && cp -arL ${CONFIG_POST_MIGRATION_HOOKS} /host/old_config
 
     # Execute custom hooks if present
