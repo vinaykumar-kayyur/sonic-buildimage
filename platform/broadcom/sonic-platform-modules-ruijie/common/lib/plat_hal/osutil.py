@@ -13,7 +13,6 @@ import re
 #import chardet
 from rjutil.smbus import SMBus
 import time
-import commands
 from  functools import wraps
 
 
@@ -160,11 +159,10 @@ class osutil(object):
             locations = glob.glob(location)
             with open(locations[0], 'rb') as fd1:
                 retval = fd1.read()
-            retval = retval.rstrip('\r\n')
-            retval = retval.lstrip(" ")
+            retval = retval.strip()
         except Exception as e:
             return False, (str(e)+" location[%s]" % location)
-        return True, retval
+        return True, retval.decode("utf-8", "ignore")
 
     @staticmethod
     def getdevmem(addr, digit, mask):
@@ -181,7 +179,7 @@ class osutil(object):
 
     @staticmethod
     def rj_os_system(cmd):
-        status, output = commands.getstatusoutput(cmd)
+        status, output = subprocess.getstatusoutput(cmd)
         return status, output
 
     @staticmethod

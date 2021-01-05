@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 #############################################################################
@@ -11,34 +11,32 @@
 
 try:
     import time
-    import commands
+    import subprocess
     from sonic_platform_base.chassis_base import ChassisBase
+    from sonic_platform.common import Common
     from sonic_platform.sfp import Sfp
-    from sonic_platform.psu import Psu
-    from sonic_platform.fan import Fan
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.component import Component
-    from sonic_platform.eeprom import Eeprom
+    from sonic_platform.sfp import PORT_START
+    from sonic_platform.sfp import PORTS_IN_BLOCK
     from sonic_platform.logger import logger
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-PORT_START = 0
-PORT_END = 55
-PORTS_IN_BLOCK = 56
-
 
 class Chassis(ChassisBase):
     """
     Ruijie B6510-48VS8CQ Platform-specific Chassis class
     """
-
-    SFP_STATUS_INSERTED = "1"
-    SFP_STATUS_REMOVED = "0"
-    port_dict = {}
-
     def __init__(self):
         ChassisBase.__init__(self)
+        self.CHASSIS_CONFIG = 'chassis.json'
+        self.THERMAL_CONFIG = 'thermal.json'
+        self.SFP_CONFIG = 'sfp.json'
+        self.PSU_CONFIG = 'psu.json'
+        self.FAN_CONFIG = 'fan.json'
+        self.COMPONENT_CONFIG = 'component.json'
+
+        self.SFP_STATUS_INSERTED = "1"
+        self.SFP_STATUS_REMOVED = "0"
+        self.port_dict = {}
         self.enable_read= "i2cset -f -y 2 0x35 0x2a 0x01"
         self.disable_read = "i2cset -f -y 2 0x35 0x2a 0x00"
         self.enable_write = "i2cset -f -y 2 0x35 0x2b 0x00"
@@ -47,9 +45,10 @@ class Chassis(ChassisBase):
         self.disable_erase = "i2cset -f -y 2 0x35 0x2c 0x00"
         self.read_value = "i2cget -f -y 2 0x35 0x25"
         self.write_value = "i2cset -f -y 2 0x35 0x21 0x0a"
-
+        self.set_sys_led_cmd = "i2cset -f -y 2 0x33 0xb2 "
+        self.get_sys_led_cmd = "i2cget -f -y 2 0x33 0xb2"
+        self.led_status = "red"
         # Initialize SFP list
-
         # sfp.py will read eeprom contents and retrive the eeprom data.
         # It will also provide support sfp controls like reset and setting
         # low power mode.
@@ -63,40 +62,76 @@ class Chassis(ChassisBase):
             else:
                 self.port_dict[index] = self.SFP_STATUS_REMOVED
 
-        try:
-            from sonic_platform.config import DEVICE_CONF
+        self._api_common = Common()
+        config_path = self._api_common.get_config_path(self.CHASSIS_CONFIG)
+        self._config = self._api_common.load_json_file(config_path)
+        self.__initialize_eeprom()
 
-            # init config
-            self._init_by_config(DEVICE_CONF)
-            self._eeprom = Eeprom(config=DEVICE_CONF.get("eeprom"))
-        except ImportError:
-            raise ImportError (str(e) + "- required module not found")
+        if self._api_common.is_host():
+            self.__initialize_fan()
+            self.__initialize_psu()
+            self.__initialize_thermals()
+        else:
+            self.__initialize_components()
+
+    def __initialize_fan(self):
+        from sonic_platform.fan import Fan
+        from sonic_platform.fan_drawer import FanDrawer
+
+        fan_config_path = self._api_common.get_config_path(self.FAN_CONFIG)
+        self.fan_config = self._api_common.load_json_file(fan_config_path)["fans"]
+
+        if self.fan_config:
+            drawer_fan_list = []
+            for index in range(0, len(self.fan_config)):
+                fan = Fan(index, config=self.fan_config[index])
+                self._fan_list.append(fan)
+                drawer_fan_list.append(fan)
+            fan_drawer = FanDrawer(0, fan_list=drawer_fan_list)
+            self._fan_drawer_list.append(fan_drawer)
+
+    def __initialize_psu(self):
+        from sonic_platform.psu import Psu
+
+        psu_config_path = self._api_common.get_config_path(self.PSU_CONFIG)
+        self.psu_config = self._api_common.load_json_file(psu_config_path)["psus"]
+
+        if self.psu_config:
+            for index in range(0, len(self.psu_config)):
+                psu = Psu(index, config=self.psu_config[index])
+                self._psu_list.append(psu)
+
+    def __initialize_thermals(self):
+        from sonic_platform.thermal import Thermal
+
+        thermal_config_path = self._api_common.get_config_path(self.THERMAL_CONFIG)
+        self.thermal_config = self._api_common.load_json_file(thermal_config_path)['thermals']
+
+        if self.thermal_config:
+            for index in range(0, len(self.thermal_config)):
+                thermal = Thermal(index, config=self.thermal_config[index])
+                self._thermal_list.append(thermal)
+
+    def __initialize_eeprom(self):
+        from sonic_platform.eeprom import Eeprom
+        self._eeprom = Eeprom(config=self._config["eeprom"])
+
+
+    def __initialize_components(self):
+        from sonic_platform.component import Component
+
+        component_config_path = self._api_common.get_config_path(self.COMPONENT_CONFIG)
+        self.component_config = self._api_common.load_json_file(component_config_path)['components']
+
+        if self.component_config:
+            for index in range(0, len(self.component_config)):
+                component = Component(index, config=self.component_config[index])
+                self._component_list.append(component)
 
     def _init_standard_config(self, conflist, class_name, objlist):
         for conf in conflist:
             obj = globals()[class_name](conf.get("name"), config=conf)
             objlist.append(obj)
-
-    def _init_by_config(self, config):
-        # init component list
-        coms = config.get("components")
-        if coms and isinstance(coms, list):
-            self._init_standard_config(coms, Component.__name__, self._component_list)
-
-        # init fan list
-        fans = config.get("fans")
-        if fans and isinstance(fans, list):
-            self._init_standard_config(fans, Fan.__name__, self._fan_list)
-
-        # init psu list
-        psus = config.get("psus")
-        if psus and isinstance(psus, list):
-            self._init_standard_config(psus, Psu.__name__, self._psu_list)
-
-        # int thermal list
-        thermals = config.get("thermals")
-        if thermals and isinstance(thermals, list):
-            self._init_standard_config(thermals, Thermal.__name__, self._thermal_list)
 
     def _init_by_hal(self, hal_interface):
         self.hal_interface = hal_interface
@@ -153,16 +188,6 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.base_mac_addr()
 
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-
-        Returns:
-            A string containing the hardware serial number for this
-            chassis.
-        """
-        return self._eeprom.serial_number_str()
-
     def get_system_eeprom_info(self):
         """
         Retrieves the full content of system EEPROM information for the chassis
@@ -186,25 +211,25 @@ class Chassis(ChassisBase):
         try:
             is_power_loss = False
             # enable read
-            commands.getstatusoutput(self.disable_write)
-            commands.getstatusoutput(self.enable_read)
-            ret , log = commands.getstatusoutput(self.read_value)
+            subprocess.getstatusoutput(self.disable_write)
+            subprocess.getstatusoutput(self.enable_read)
+            ret , log = subprocess.getstatusoutput(self.read_value)
             if ret == 0 and "0x0a" in log:
                 is_power_loss = True
 
             # erase i2c and e2
-            commands.getstatusoutput(self.enable_erase)
+            subprocess.getstatusoutput(self.enable_erase)
             time.sleep(1)
-            commands.getstatusoutput(self.disable_erase)
+            subprocess.getstatusoutput(self.disable_erase)
             # clear data
-            commands.getstatusoutput(self.enable_write)
-            commands.getstatusoutput(self.disable_read)
-            commands.getstatusoutput(self.disable_write)
-            commands.getstatusoutput(self.enable_read)
+            subprocess.getstatusoutput(self.enable_write)
+            subprocess.getstatusoutput(self.disable_read)
+            subprocess.getstatusoutput(self.disable_write)
+            subprocess.getstatusoutput(self.enable_read)
             # enable write and set data
-            commands.getstatusoutput(self.enable_write)
-            commands.getstatusoutput(self.disable_read)
-            commands.getstatusoutput(self.write_value)
+            subprocess.getstatusoutput(self.enable_write)
+            subprocess.getstatusoutput(self.disable_read)
+            subprocess.getstatusoutput(self.write_value)
             if is_power_loss:
                 return(self.REBOOT_CAUSE_POWER_LOSS, None)
         except Exception as e:
@@ -299,3 +324,126 @@ class Chassis(ChassisBase):
                 return True, self.port_dict
         print("get_transceiver_change_event: Should not reach here.")
         return False, {}
+
+    def get_all_components(self):
+        return self._component_list
+
+    def get_all_fans(self):
+        return self._fan_list
+
+    def get_all_psus(self):
+        return self._psu_list
+
+    def get_all_thermals(self):
+        return self._thermal_list
+
+    def get_supervisor_slot(self):
+        """
+        Retrieves the physical-slot of the supervisor-module in the modular
+        chassis. On the supervisor or line-card modules, it will return the
+        physical-slot of the supervisor-module.
+        On the fixed-platforms, the API can be ignored.
+        Users of the API can catch the exception and return a default
+        ModuleBase.MODULE_INVALID_SLOT and bypass code for fixed-platforms.
+        Returns:
+            An integer, the vendor specific physical slot identifier of the
+            supervisor module in the modular-chassis.
+        """
+        return 0
+
+    def get_my_slot(self):
+        """
+        Retrieves the physical-slot of this module in the modular chassis.
+        On the supervisor, it will return the physical-slot of the supervisor
+        module. On the linecard, it will return the physical-slot of the
+        linecard module where this instance of SONiC is running.
+        On the fixed-platforms, the API can be ignored.
+        Users of the API can catch the exception and return a default
+        ModuleBase.MODULE_INVALID_SLOT and bypass code for fixed-platforms.
+        Returns:
+            An integer, the vendor specific physical slot identifier of this
+            module in the modular-chassis.
+        """
+        return 0
+
+    def is_modular_chassis(self):
+        """
+        Retrieves whether the sonic instance is part of modular chassis
+        Returns:
+            A bool value, should return False by default or for fixed-platforms.
+            Should return True for supervisor-cards, line-cards etc running as part
+            of modular-chassis.
+        """
+        return True
+
+    def init_midplane_switch(self):
+        """
+        Initializes the midplane functionality of the modular chassis. For
+        example, any validation of midplane, populating any lookup tables etc
+        can be done here. The expectation is that the required kernel modules,
+        ip-address assignment etc are done before the pmon, database dockers
+        are up.
+        Returns:
+            A bool value, should return True if the midplane initialized
+            successfully.
+        """
+        return True
+
+    def get_module_index(self, module_name):
+        """
+        Retrieves module index from the module name
+        Args:
+            module_name: A string, prefixed by SUPERVISOR, LINE-CARD or FABRIC-CARD
+            Ex. SUPERVISOR0, LINE-CARD1, FABRIC-CARD5
+        Returns:
+            An integer, the index of the ModuleBase object in the module_list
+        """
+        return 0
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        colors = {
+            "amber" : "0x00",
+            "red" : "0x02",
+            "green" : "0x04"
+        }
+        regval = colors.get(color, None)
+        if regval is None:
+            print("Invaild color input.")
+            return False
+        ret , log = subprocess.getstatusoutput(self.set_sys_led_cmd + regval)
+        if ret != 0:
+            print("Cannot execute %s" % self.set_sys_led_cmd + regval)
+            return False
+        self.led_status = color
+        return True
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        ret , log = subprocess.getstatusoutput(self.get_sys_led_cmd)
+        if ret != 0:
+            print("Cannot execute %s" % self.get_sys_led_cmd)
+            return False
+        colors = {
+            "0x00" : "amber",
+            "0x02" : "red",
+            "0x04" : "green"
+        }
+        color = colors.get(log, None)
+        if color is None:
+            return "Unknown color status"
+        self.led_status = color
+        return self.led_status
+

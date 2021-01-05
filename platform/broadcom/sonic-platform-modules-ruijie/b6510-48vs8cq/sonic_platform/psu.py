@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ########################################################################
@@ -26,7 +26,7 @@ class Psu(PsuBase):
     # HWMON_NODE = os.listdir(HWMON_DIR)[0]
     # MAILBOX_DIR = HWMON_DIR + HWMON_NODE
 
-    def __init__(self, name, config=None, hal_psu=None):
+    def __init__(self, index, config=None, hal_psu=None):
         """
         "psus": [
             {
@@ -55,9 +55,13 @@ class Psu(PsuBase):
         ]
         """
         self._fan_list = []
-
+        self.PSU_TEMP_MAX = 60 * 1000
+        self.PSU_OUTPUT_POWER_MAX = 1300 * 1000
+        self.PSU_OUTPUT_VOLTAGE_MIN = 11 * 1000
+        self.PSU_OUTPUT_VOLTAGE_MAX = 14 * 1000
+        self.index = index
         if config is not None:
-            self.name = name
+            self.name = config.get("name")
             self.__reg_sn = Reg(config.get("sn"))
             self.__reg_present = Reg(config.get("present"))
             self.__reg_status = Reg(config.get("status"))
@@ -65,7 +69,8 @@ class Psu(PsuBase):
             self.__reg_out_cur = Reg(config.get("out_current"))
             self.__reg_out_pow = Reg(config.get("out_power"))
             self.__reg_pn = Reg(config.get("pn"))
-
+            self.__reg_temperature = Reg(config.get("temperature"))
+            self._fan_list = config.get("fans")
             self._psu_fan_parser(config.get("fans"))
 
         self._hal_psu = hal_psu
@@ -73,13 +78,10 @@ class Psu(PsuBase):
     def _psu_fan_parser(self, fans):
         if not isinstance(fans, list):
             raise TypeError("fan type error fans: {}".format(fans))
-
-        for i, f in enumerate(fans):
-            if not isinstance(f, dict):
+        for index in range(0,len(fans)):
+            if not isinstance(fans[index], dict):
                 raise TypeError("fan type must be a dict")
-
-            fanname = "{}-fan{}".format(self.name, i + 1)
-            self._fan_list.append(Fan(fanname, config=f, is_psu_fan=True))
+            self._fan_list.append(Fan(index, config=fans[index], is_psu_fan=True))
 
     def _reg_setter(self, target, val):
         if isinstance(val, dict):
@@ -138,6 +140,12 @@ class Psu(PsuBase):
     def reg_out_pow(self, val):
         self._reg_setter(self.__reg_out_pow, val)
 
+    def get_all_fans(self):
+        return self._fan_list
+
+    def get_num_fans(self):
+        return len(self._fan_list)
+        
     def get_name(self):
         """
         Retrieves the name of the device
@@ -163,7 +171,7 @@ class Psu(PsuBase):
                 if psu_presence == 0 or psu_presence == "0":
                     return True
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return False
 
@@ -182,7 +190,7 @@ class Psu(PsuBase):
             if isinstance(self.__reg_pn, Reg):
                 return self.__reg_pn.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return "NA"
 
@@ -200,7 +208,7 @@ class Psu(PsuBase):
             if isinstance(self.__reg_sn, Reg):
                 return self.__reg_sn.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return "NA"
 
@@ -230,7 +238,7 @@ class Psu(PsuBase):
                 elif psu_status == 0 or psu_status == "0":
                     return False
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return False
 
@@ -257,7 +265,7 @@ class Psu(PsuBase):
             if isinstance(self.__reg_out_vol, Reg):
                 return self.__reg_out_vol.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return 0.0
 
@@ -284,7 +292,7 @@ class Psu(PsuBase):
             if isinstance(self.__reg_out_cur, Reg):
                 return self.__reg_out_cur.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return 0.0
 
@@ -304,7 +312,7 @@ class Psu(PsuBase):
             if isinstance(self.__reg_out_pow, Reg):
                 return self.__reg_out_pow.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return 0.0
 
@@ -349,3 +357,57 @@ class Psu(PsuBase):
         """
         # not supported
         return False
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125 
+        """
+        if self._hal_psu:
+            pass
+
+        try:
+            if isinstance(self.__reg_temperature, Reg):
+                return self.__reg_temperature.decode()
+        except Exception as e:
+            logger.error(str(e))
+
+        return 0.0
+
+    def get_temperature_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of PSU
+        Returns:
+            A float number, the high threshold temperature of PSU in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        return float(self.PSU_TEMP_MAX/1000)
+
+    def get_voltage_high_threshold(self):
+        """
+        Retrieves the high threshold PSU voltage output
+        Returns:
+            A float number, the high threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        return float(self.PSU_OUTPUT_VOLTAGE_MAX/1000)
+
+    def get_voltage_low_threshold(self):
+        """
+        Retrieves the low threshold PSU voltage output
+        Returns:
+            A float number, the low threshold output voltage in volts, 
+            e.g. 12.1 
+        """
+        return float(self.PSU_OUTPUT_VOLTAGE_MIN/1000)
+
+    def get_maximum_supplied_power(self):
+        """
+        Retrieves the maximum supplied power by PSU
+        Returns:
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
+        """
+        return float(self.PSU_OUTPUT_POWER_MAX/1000)

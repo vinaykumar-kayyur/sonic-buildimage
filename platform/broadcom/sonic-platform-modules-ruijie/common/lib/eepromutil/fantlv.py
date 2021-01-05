@@ -196,7 +196,7 @@ class fan_tlv(object):
                     value += "%02X" % (ord(c),)
                 self._typedevtype = int(value,16)
         except Exception as e:
-            print e
+            print(e)
         return {"name": name, "code": ord(t[0]), "value": value,"lens": _len}
 
     def __str__(self):

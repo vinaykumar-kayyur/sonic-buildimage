@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ########################################################################
 # Ruijie B6510-48VS8CQ
@@ -18,14 +18,17 @@ except ImportError as e:
 
 
 class Thermal(ThermalBase):
-    def __init__(self, name, config=None, hal_thermal=None):
-        self.name = name
+    def __init__(self, index, config=None, hal_thermal=None):
+        self.index = index
         if config:
+            self.name = config.get("name")
             self.__reg_low_threshold = Reg(config.get("low"))
             self.__reg_high_thresnold = Reg(config.get("high"))
             self.__reg_crit_low_threshold = Reg(config.get("crit_low"))
             self.__reg_crit_high_thresnold = Reg(config.get("crit_high"))
             self.__reg_temperature = Reg(config.get("temperature"))
+            self.minimum_thermal = self.get_temperature()
+            self.maximum_thermal = self.get_temperature()
 
     def get_name(self):
         """
@@ -88,7 +91,7 @@ class Thermal(ThermalBase):
             if isinstance(self.__reg_temperature, Reg):
                 return self.__reg_temperature.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return None
 
@@ -104,7 +107,7 @@ class Thermal(ThermalBase):
             if isinstance(self.__reg_high_thresnold, Reg):
                 return float(self.__reg_high_thresnold.decode())
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return None
 
@@ -120,7 +123,7 @@ class Thermal(ThermalBase):
             if isinstance(self.__reg_low_threshold, Reg):
                 return float(self.__reg_low_threshold.decode())
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return None
 
@@ -170,7 +173,7 @@ class Thermal(ThermalBase):
             if isinstance(self.__reg_crit_high_thresnold, Reg):
                 return float(self.__reg_crit_high_thresnold.decode())
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return None
 
@@ -186,6 +189,30 @@ class Thermal(ThermalBase):
             if isinstance(self.__reg_crit_low_threshold, Reg):
                 return float(self.__reg_crit_low_threshold.decode())
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return None
+
+    def get_minimum_recorded(self):
+        """
+        Retrieves the minimum recorded temperature of thermal
+        Returns:
+            A float number, the minimum recorded temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        tmp = self.get_temperature()
+        if tmp < self.minimum_thermal:
+            self.minimum_thermal = tmp
+        raise self.minimum_thermal
+
+    def get_maximum_recorded(self):
+        """
+        Retrieves the maximum recorded temperature of thermal
+        Returns:
+            A float number, the maximum recorded temperature of thermal in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        tmp = self.get_temperature()
+        if tmp > self.maximum_thermal:
+            self.maximum_thermal = tmp
+        raise self.maximum_thermal

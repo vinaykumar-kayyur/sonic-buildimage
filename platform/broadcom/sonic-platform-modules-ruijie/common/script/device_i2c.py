@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 import click
 import os
-import commands
+import subprocess
 import time
-from  ruijieconfig import *
+from  ruijieconfig import GLOBALCONFIG, GLOBALINITPARAM, GLOBALINITCOMMAND, MAC_LED_RESET, STARTMODULE, i2ccheck_params
+
 from  ruijieutil   import rjpciwr
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -25,16 +26,16 @@ class AliasedGroup(click.Group):
    
 def log_os_system(cmd):
     u'''execute shell command'''
-    status, output = commands.getstatusoutput(cmd)
+    status, output = subprocess.getstatusoutput(cmd)
     if status:
-        print output
+        print(output)
     return  status, output
 
 def write_sysfs_value(reg_name, value):
     u'''write sysfs file'''
     mb_reg_file = "/sys/bus/i2c/devices/" + reg_name
     if (not os.path.isfile(mb_reg_file)):
-        print mb_reg_file,  'not found !'
+        print(mb_reg_file,  'not found !')
         return False
     try:
         with open(mb_reg_file, 'w') as fd:
@@ -60,7 +61,7 @@ def i2c_getPid(name):
         if dirname == 'curproc':
             continue
         try:
-            with open('/proc/{}/cmdline'.format(dirname), mode='rb') as fd:
+            with open('/proc/{}/cmdline'.format(dirname), mode='r') as fd:
                 content = fd.read()
         except Exception:
             continue
@@ -118,14 +119,6 @@ def stopFanctrol():
             os.system(cmd)
         return True
 
-def stophal_fanctrl():
-    if STARTMODULE.get('hal_fanctrl',0) == 1:
-        rets = i2c_getPid("hal_fanctrl.py")
-        for ret in rets:
-            cmd = "kill "+ ret
-            os.system(cmd)
-        return True
-
 def stophal_ledctrl():
     if STARTMODULE.get('hal_ledctrl',0) == 1:
         rets = i2c_getPid("hal_ledctrl.py")
@@ -174,20 +167,7 @@ def addDev(name, bus, loc):
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath) == False:
         os.system(cmd)
-    
-def removeQSFP():
-    u'''add SFP according to configuration'''
-    qsfpconfig = GLOBALCONFIG["QSFP"]
-    for bus in range(qsfpconfig["endbus"], qsfpconfig["startbus"] - 1, -1):
-        removeDev(bus , 0x50)
-        removeDev(bus , 0x51)
-        
-def addQSFP():
-    qsfpconfig = GLOBALCONFIG["QSFP"]
-    for bus in range(qsfpconfig["startbus"], qsfpconfig["endbus"] + 1):
-        addDev("rg_sff", bus , 0x50)
-        addDev("rg_sff", bus , 0x51)
-        
+
 def removedevs():
     devs = GLOBALCONFIG["DEVS"]
     for index in range(len(devs)-1, -1, -1 ):
@@ -234,7 +214,7 @@ def removedrivers():
     for index in range(len(drivers)-1, -1, -1 ):
         delay = 0
         name = ""
-        if type(drivers[index]) == dict and drivers[index].has_key("delay"):
+        if type(drivers[index]) == dict and "delay" in drivers[index]:
             name = drivers[index].get("name")
             delay = drivers[index]["delay"]
         else:
@@ -253,7 +233,7 @@ def adddrivers():
     for index in range(0 ,len(drivers)):
         delay = 0
         name = ""
-        if type(drivers[index]) == dict and drivers[index].has_key("delay"):
+        if type(drivers[index]) == dict and "delay" in drivers[index]:
             name = drivers[index].get("name")
             delay = drivers[index]["delay"]
         else:
@@ -271,7 +251,6 @@ def unload_driver():
     u'''remove devices and drivers'''
     stopDevmonitor() # disable removable device driver monitors
     stopFanctrol()  # disable fan-control service
-    removeQSFP()    # remove QSFP
     removedevs()    # remove other devices
     removedrivers() # remove drivers
 
@@ -311,13 +290,12 @@ def MacLedSet(data):
 
 def load_driver():
     u'''load devices and drivers'''
-    adddrivers();
-    adddevs();
+    adddrivers()
+    adddevs()
     if STARTMODULE.get("i2ccheck",0) == 1: #i2c HA
         busend = i2ccheck_params.get("busend")
         retrytime = i2ccheck_params.get("retrytime")
         i2c_check(busend,retrytime)
-    addQSFP()       # add QSFP eeprom
     startFanctrol() # enable fan
     starthal_fanctrl() # enable fan control
     starthal_ledctrl() # enable LED control

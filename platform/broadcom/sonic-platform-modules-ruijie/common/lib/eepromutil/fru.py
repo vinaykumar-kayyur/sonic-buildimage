@@ -711,9 +711,9 @@ class ipmifru(BaseArea):
             self.boardInfoArea.data = eeprom[self.boardInfoAreaOffset * 8: (
                 self.boardInfoAreaOffset * 8 + self.boardInfoArea.size)]
             if FruUtil.checksum(self.boardInfoArea.data[:-1]) != ord(self.boardInfoArea.data[-1:]):
-                print "check boardInfoArea checksum error[cal:%02x data:%02x]" %  \
+                print("check boardInfoArea checksum error[cal:%02x data:%02x]" %  \
                     (FruUtil.checksum(
-                        self.boardInfoArea.data[:-1]), ord(self.boardInfoArea.data[-1:]))
+                        self.boardInfoArea.data[:-1]), ord(self.boardInfoArea.data[-1:])))
                 sys.exit(-1)
             self.boardInfoArea.decodedata()
         if commonHead[4] != self.INITVALUE:

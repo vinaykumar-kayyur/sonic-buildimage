@@ -40,9 +40,8 @@ def get_pmc_register(reg_name):
     filepath = glob.glob(mb_reg_file)
     if len(filepath) == 0:
         return "%s %s  notfound" % (retval, mb_reg_file)
-    mb_reg_file = filepath[0]  # 如果找到多个匹配的路径，默认取第一个匹配的路径。
+    mb_reg_file = filepath[0]  # use first found patch
     if not os.path.isfile(mb_reg_file):
-        # print mb_reg_file,  'not found !'
         return "%s %s  notfound" % (retval, mb_reg_file)
     try:
         with open(mb_reg_file, "r") as fd:
@@ -165,7 +164,7 @@ class status:
                         if (
                             ret["decode"] == "psutype"
                             and s.replace("\x00", "").rstrip() not in rt.keys()
-                        ):  # 电源类型检测
+                        ):  # PSU type detect
                             prob_t["errcode"] = -1
                             prob_t["errmsg"] = "%s" % ("电源类型不匹配,请检查电源是否正确!")
                         else:

@@ -6,7 +6,7 @@ KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_SRC_DIR:= $(shell pwd)
 KBUILD_OUTPUT=$(KERNEL_SRC)/build
 
-LIB_DIR = usr/lib/python2.7/dist-packages
+LIB_DIR = usr/lib/python3.7/dist-packages
 CUSTOM_RULES_DIR := $(shell pwd)/debian
 
 export  INSTALL_MOD_DIR top_srcdir KVERSION  KERNEL_SRC CC  KBUILD_OUTPUT
@@ -53,7 +53,7 @@ $(COMPILE_DIRS): common_build
 			cp -r $(MOD_SRC_DIR)/common/lib/plat_hal $(MOD_SRC_DIR)/$${mod}/; \
 			cp -r $(MOD_SRC_DIR)/common/lib/rjutil $(MOD_SRC_DIR)/$${mod}/; \
 			cp -r $(MOD_SRC_DIR)/common/lib/eepromutil $(MOD_SRC_DIR)/$${mod}/; \
-			python2.7 setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/modules; \
+			python3 setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/modules; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/plat_hal; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/rjutil; \
 			rm -rf $(MOD_SRC_DIR)/$${mod}/eepromutil; \

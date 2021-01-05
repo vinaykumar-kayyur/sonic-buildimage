@@ -27,8 +27,8 @@ def doWork():
     #status.getPsu(a)
     
     nowTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    print nowTime
-    print a
+    print(nowTime)
+    print(a)
 def run(interval):
     while True:
         try:

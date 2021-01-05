@@ -16,7 +16,7 @@ export KBUILD_EXTRA_SYMBOLS
 INSTALL_MODULE_DIR = $(SUB_BUILD_DIR)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR)
 INSTALL_SCRIPT_DIR = $(SUB_BUILD_DIR)/usr/local/bin
 INSTALL_SERVICE_DIR = $(SUB_BUILD_DIR)/lib/systemd/system
-INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python2.7/dist-packages
+INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python3.7/dist-packages
 
 all:
 	$(MAKE) -C $(KERNEL_SRC)/build M=$(DIR_KERNEL_SRC) modules
@@ -25,6 +25,7 @@ all:
 	@if [ ! -d ${INSTALL_SERVICE_DIR} ]; then mkdir -p ${INSTALL_SERVICE_DIR} ;fi
 	@if [ ! -d ${INSTALL_LIB_DIR} ]; then mkdir -p ${INSTALL_LIB_DIR} ;fi
 	@if [ -d $(PWD)/lib/ ]; then cp -r $(PWD)/lib/* ${INSTALL_LIB_DIR} ;fi
+	@if [ -d $(PWD)/lib/ ]; then cp -r $(PWD)/lib/* ${INSTALL_LIB_DIR2} ;fi
 	cp -r $(DIR_KERNEL_SRC)/*.ko $(INSTALL_MODULE_DIR)
 	cp -r $(SCRIPT_DIR)/*  $(INSTALL_SCRIPT_DIR)
 	cp -r $(SERVICE_DIR)/*  $(INSTALL_SERVICE_DIR)

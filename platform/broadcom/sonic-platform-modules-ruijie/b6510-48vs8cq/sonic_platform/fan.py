@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ########################################################################
@@ -24,10 +24,14 @@ class Fan(FanBase):
 
     MAX_SPEED_CODE = 255
 
-    def __init__(self, name, config=None, hal_fan=None, is_psu_fan=False):
-        self.name = name
-        self.is_psu_fan = is_psu_fan
+    def __init__(self, index, config=None, hal_fan=None, is_psu_fan=False):
+        self.index = index
+        self.is_psu_fan = is_psu_fan   
         if config:
+            if self.is_psu_fan:
+                self.name = "Psu{}-{}".format(self.index, config.get("name"))
+            else:
+                self.name = config.get("name")
             self.__reg_sn = Reg(config.get("sn"))
             self.__reg_present = Reg(config.get("present"))
             self.__reg_status = Reg(config.get("status"))
@@ -106,7 +110,7 @@ class Fan(FanBase):
             if isinstance(self.__reg_pn, Reg):
                 return self.__reg_pn.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return "NA"
 
@@ -123,7 +127,7 @@ class Fan(FanBase):
             if isinstance(self.__reg_sn, Reg):
                 return self.__reg_sn.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return "NA"
 
@@ -145,7 +149,7 @@ class Fan(FanBase):
                 if present == 0 or present == "0":
                     return True
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return False
 
@@ -248,7 +252,7 @@ class Fan(FanBase):
                 return self.__reg_led.encode(val)
             return ret
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
         return False
 
 
@@ -271,7 +275,7 @@ class Fan(FanBase):
                         if code ^ led_color == 0:
                             return color
             except Exception as e:
-                logger.error(e.message)
+                logger.error(str(e))
 
             return None
 

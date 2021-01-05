@@ -1,1 +1,1 @@
-__all__ = ["platform", "chassis", "fan", "psu", "sfp", "thermal"]
+__all__ = ["platform", "chassis", "fan", "psu", "sfp", "thermal", "common"]

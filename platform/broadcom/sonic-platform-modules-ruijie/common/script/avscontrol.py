@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 import click
 import time
-from  ruijieutil import * 
 import syslog
 import traceback
+from ruijieutil import waitForDocker, STARTMODULE, AVSUTIL
 try:
     from rest.rest import BMCMessage
 except ImportError:
@@ -48,7 +48,7 @@ def doAvsCtrol():
     index = 0
     url = "/xyz/openbmc_project/hostchannel/attr/MacRov"
     while True:
-        if STARTMODULE.has_key("avscontrol_restful") and STARTMODULE['avscontrol_restful'] == 1:
+        if "avscontrol_restful" in STARTMODULE and STARTMODULE['avscontrol_restful'] == 1:
             try:
                 #for alibmc rest.py has define get_macrov_value function
                 get_macrov_value = getattr(BMCMessage(), "get_macrov_value", None)

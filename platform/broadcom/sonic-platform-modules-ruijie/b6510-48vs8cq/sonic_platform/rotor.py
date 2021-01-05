@@ -19,7 +19,7 @@ class Rotor:
         try:
             return int(self.__reg_speed_getter.decode())
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return 0
 
@@ -27,7 +27,7 @@ class Rotor:
         try:
             return self.__reg_speed_setter.encode(speed)
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return False
 
@@ -36,6 +36,6 @@ class Rotor:
             speed = self.get_speed()
             return (100 * speed) / self.__speed_max
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return 0

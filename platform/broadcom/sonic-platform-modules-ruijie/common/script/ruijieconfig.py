@@ -4,10 +4,10 @@
 # Name:         ruijieconfig.py 
 # Purpose:      block the difference between various product/onie version for other module
 #
-# Author:      tjm
+# Author:      rd
 #
 # Created:     02/07/2018
-# Copyright:   (c) tjm 2018
+# Copyright:   (c) rd 2018
 #-------------------------------------------------------------------------------
 import sys
 import os
@@ -15,8 +15,8 @@ from rjutil.baseutil import get_machine_info
 from rjutil.baseutil import get_platform_info
 
 __all__ = ["getdeviceplatform", "get_rjconfig_info", "MONITOR_CONST", "MAILBOX_DIR", "DEVICE",
-           "GLOBALCONFIG", "GLOBALINITPARAM", "GLOBALINITCOMMAND", "MAC_LED_RESET", "STARTMODULE",
-           "GLOBALCONFIG", "fanloc", "RUIJIE_CARDID", "RUIJIE_PRODUCTNAME", "RUIJIE_PART_NUMBER",
+           "GLOBALCONFIG", "GLOBALINITPARAM", "GLOBALINITCOMMAND", "MAC_LED_RESET", "STARTMODULE", 
+           "fanloc", "RUIJIE_CARDID", "RUIJIE_PRODUCTNAME", "RUIJIE_PART_NUMBER",
            "RUIJIE_LABEL_REVISION", "RUIJIE_MAC_SIZE", "RUIJIE_MANUF_NAME", "RUIJIE_MANUF_COUNTRY",
            "RUIJIE_VENDOR_NAME", "RUIJIE_DIAG_VERSION", "RUIJIE_SERVICE_TAG", "E2_PROTECT", 
            "E2_LOC", "FAN_PROTECT", "FANS_DEF", "MONITOR_FANS_LED", "MONITOR_SYS_FAN_LED",
@@ -62,11 +62,11 @@ OPENBMC_PASSWORD = OPENBMC_PASSWORD if(OPENBMC_PASSWORD != None) else "0penBmc"
 ##  if there is no specific file, use common file
 module_product = None
 if os.path.exists(configfile_pre + grtd_productfile + ".py"):
-    module_product  = __import__(grtd_productfile, globals(), locals(), [], -1)
+    module_product  = __import__(grtd_productfile, globals(), locals(), [], 0)
 elif os.path.exists(configfile_pre + common_productfile + ".py"):
-    module_product  = __import__(common_productfile, globals(), locals(), [], -1)
+    module_product  = __import__(common_productfile, globals(), locals(), [], 0)
 else:
-    print "No Configuration existed, quit"
+    print("No Configuration existed, quit")
     exit(-1)
 ############################################################################################
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ########################################################################
 # Ruijie B6510-48VS8CQ
@@ -10,7 +10,7 @@
 ########################################################################
 
 try:
-    import commands
+    import subprocess
     from sonic_platform_base.component_base import ComponentBase
     from sonic_platform.regutil import Reg
     from sonic_platform.logger import logger
@@ -21,8 +21,9 @@ except ImportError as e:
 class Component(ComponentBase):
     """Ruijie Platform-specific Component class"""
 
-    def __init__(self, name, config=None):
-        self.name = name
+    def __init__(self, index, config=None):
+        self.index = index
+        self.name = config.get("name")
         self._reg_fm_ver = Reg(config.get("firmware_version"))
         self.description = config.get("desc")
         self.slot = config.get("slot")
@@ -55,7 +56,7 @@ class Component(ComponentBase):
         try:
             return self._reg_fm_ver.decode()
         except Exception as e:
-            logger.error(e.message)
+            logger.error(str(e))
 
         return ""
 
@@ -71,12 +72,12 @@ class Component(ComponentBase):
         """
         try:
             successtips = "CPLD Upgrade succeeded!"
-            status, output = commands.getstatusoutput("which firmware_upgrade")
+            status, output = subprocess.getstatusoutput("which firmware_upgrade")
             if status or len(output) <= 0:
                 logger.error("no upgrade tool.")
                 return False
             cmdstr = "%s %s cpld %d cpld"%(output,image_path,self.slot)
-            ret, log = commands.getstatusoutput(cmdstr)
+            ret, log = subprocess.getstatusoutput(cmdstr)
             if ret == 0 and successtips in log:
                 return True
             logger.error("upgrade failed. ret:%d, log:\n%s" % (ret, log))

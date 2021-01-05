@@ -93,7 +93,7 @@ class SfpUtil(SfpUtilBase):
             nd_file.close()
 
         except Exception as err:
-            print "Error writing to new device file: %s" % str(err)
+            print("Error writing to new device file: %s" % str(err))
             return 1
         else:
             return 0
@@ -106,7 +106,7 @@ class SfpUtil(SfpUtilBase):
         else:
             i2c_adapter_id = self._get_port_i2c_adapter_id(port_num)
             if i2c_adapter_id is None:
-                print "Error getting i2c bus num"
+                print("Error getting i2c bus num")
                 return None
 
             # Get i2c virtual bus path for the sfp
@@ -115,7 +115,7 @@ class SfpUtil(SfpUtilBase):
 
             # If i2c bus for port does not exist
             if not os.path.exists(sysfs_sfp_i2c_adapter_path):
-                print "Could not find i2c bus %s. Driver not loaded?" % sysfs_sfp_i2c_adapter_path
+                print("Could not find i2c bus %s. Driver not loaded?" % sysfs_sfp_i2c_adapter_path)
                 return None
 
             sysfs_sfp_i2c_client_path = "%s/%s-00%s" % (sysfs_sfp_i2c_adapter_path,
@@ -131,7 +131,7 @@ class SfpUtil(SfpUtilBase):
                     ret = self._add_new_sfp_device(
                             sysfs_sfp_i2c_adapter_path, devid, self.SFP_DEVICE_TYPE)
                     if ret != 0:
-                        print "Error adding sfp device"
+                        print("Error adding sfp device")
                     return None
 
             sysfs_sfp_i2c_client_eeprom_path = "%s/eeprom" % sysfs_sfp_i2c_client_path
@@ -226,7 +226,7 @@ class SfpUtil(SfpUtilBase):
                 sysfsfile_eeprom.seek(offset + self.QSFP_POWERMODE_OFFSET)
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             finally:
                 if sysfsfile_eeprom is not None:
@@ -306,7 +306,7 @@ class SfpUtil(SfpUtilBase):
                 data.write(sres)
                 data.close()
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print("Error: unable to open file: %s" % str(e))
                 return False
             return True
         else:
@@ -324,12 +324,12 @@ class SfpUtil(SfpUtilBase):
         elif timeout > 0:
             timeout = timeout / float(1000) # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print "get_transceiver_change_event: time wrap / invalid timeout value", timeout
+            print("get_transceiver_change_event: time wrap / invalid timeout value", timeout)
 
             return False, {} # Time wrap or possibly incorrect timeout
 
@@ -355,5 +355,5 @@ class SfpUtil(SfpUtilBase):
                 # Update reg value
                 self.port_dict = currernt_port_dict
                 return True, self.port_dict
-        print "get_transceiver_change_event: Should not reach here."
+        print("get_transceiver_change_event: Should not reach here.")
         return False, {}

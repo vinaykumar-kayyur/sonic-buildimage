@@ -15,8 +15,8 @@ def get_machine_info():
 
 def get_platform_info(machine_info):
     if machine_info != None:
-        if machine_info.has_key('onie_platform'):
+        if 'onie_platform' in machine_info:
             return  machine_info['onie_platform']
-        elif machine_info.has_key('aboot_platform'):
+        elif 'aboot_platform' in machine_info:
             return machine_info['aboot_platform']
     return None

@@ -1,10 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 import click
 import os
 import time
-from  ruijieutil import * 
 import syslog
+from ruijieconfig import MONITOR_CONST, FANCTROLDEBUG, MONITOR_FANS_LED, DEV_LEDS, MONITOR_PSU_STATUS, \
+        MONITOR_SYS_PSU_LED, MONITOR_DEV_STATUS, MONITOR_FAN_STATUS, MONITOR_DEV_STATUS_DECODE, \
+        MONITOR_SYS_FAN_LED, MONITOR_SYS_LED, fanloc
+
+from ruijieutil import rji2cget, getMacTemp_sysfs, write_sysfs_value, get_sysfs_value, strtoint, \
+        rji2cset
+
 import traceback
 import glob
 
@@ -304,7 +310,8 @@ class FanControl():
                             totalerr -= 1
                     else:
                         totalerr -= 1
-                        fanerror("checkfan: %s get %s status error." % item_fan.get('name'),motor["name"])
+                        fanerror("checkfan: %s " % item_fan.get('name'))
+                        fanerror("get %s status error." % motor["name"])
             except Exception as e:
                 totalerr -= 1
                 fanerror("checkfan error")
@@ -717,7 +724,7 @@ class FanControl():
                 setval = (int(val,16) & ~mask) | item.get(color)
                 rji2cset(item["bus"], item["devno"], item["addr"], setval)
             else:
-                fanerror(DEBUG_LEDCONTROL, "led %s" % "i2c read failed")
+                fanerror("led %s" % "i2c read failed")
 
     def setSysLed(self,color):
         for item in MONITOR_SYS_LED:

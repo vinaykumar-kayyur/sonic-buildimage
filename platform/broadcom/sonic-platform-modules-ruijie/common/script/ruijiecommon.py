@@ -267,10 +267,7 @@ DRIVERLISTS = [
         "i2c_mux_pca954x",  #  force_deselect_on_exit=1
         "eeprom",
         "at24",
-		"rg_sff",
-        "ruijie_b6510_platform",
         "ruijie_platform",
-        "rg_avs",
         "rg_cpld",
         "rg_fan",
         "rg_psu",
@@ -292,7 +289,6 @@ DEVICE = [
         {"name":"rg_cpld","bus":2 ,"loc":0x33 },
         {"name":"rg_cpld","bus":2 ,"loc":0x35 },
         {"name":"rg_cpld","bus":2 ,"loc":0x37 },
-        {"name":"rg_avs","bus": 2 ,"loc":0x60 },
         {"name":"pca9548","bus":1,"loc":0x70 },
         {"name":"pca9548","bus":1,"loc":0x71 },
         {"name":"pca9548","bus":1,"loc":0x72 },

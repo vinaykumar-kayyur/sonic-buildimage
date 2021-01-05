@@ -14,7 +14,8 @@ setup(
         'sonic_platform',
         'plat_hal',
         'rjutil',
-        'eepromutil'
+        'eepromutil',
+        'sonic_pcie'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -25,7 +26,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Utilities',
     ],
     keywords='sonic SONiC platform PLATFORM',
