@@ -6,8 +6,9 @@ import sys
 import swsssdk
 from sonic_py_common import multi_asic
 
+SYSLOG_IDENTIFIER = "container_checker"
 
-def get_command_result(command):
+def get_command_result(command, logger):
     """
     @summary: This function will execture the command and return the result.
     @return: A string which contains the output of command.
@@ -19,14 +20,14 @@ def get_command_result(command):
                                          shell=True, universal_newlines=True)
         command_stdout, command_stderr = proc_instance.communicate()
         if proc_instance.returncode != 0:
-            print("Failed to execute the command '{}'. Return code: '{}'".format(
+            logger.log_error("Failed to execute the command '{}'. Return code: '{}'".format(
                 command, proc_instance.returncode))
             sys.exit(1)
     except OSError as os_err:
-        print("Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
+        logger.log_error("Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
         sys.exit(2)
     except ValueError as val_err:
-        print("Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
+        logger.log_error("Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
         sys.exit(3)
 
     return command_stdout.split("\n")
@@ -63,7 +64,7 @@ def get_expected_running_containers():
     return expected_running_containers
 
 
-def get_current_running_containers():
+def get_current_running_containers(logger):
     """
     @summary: This function will get the current running container list by analyzing the
               output of command `docker ps`.
@@ -72,7 +73,7 @@ def get_current_running_containers():
     running_containers = set()
 
     command = "docker ps"
-    command_stdout = get_command_result(command)
+    command_stdout = get_command_result(command, logger)
     for line in command_stdout:
         if line and "CONTAINER ID" not in line:
             running_containers.add(line.split()[-1].strip())
@@ -86,24 +87,16 @@ def main():
               and the containers which were expected to run. If containers which were exepcted
               to run were not running, then an alerting message will be written into syslog.
     """
+    logger = Logger(SYSLOG_IDENTIFIER)
+    logger.set_min_log_priority_info()
+
     expected_running_containers = get_expected_running_containers()
-    current_running_containers = get_current_running_containers()
+    current_running_containers = get_current_running_containers(logger)
 
     not_running_containers = expected_running_containers.difference(current_running_containers)
 
     if not_running_containers:
-        log_message = ""
-        for container_name in not_running_containers:
-            if not log_message:
-                log_message = container_name
-            else:
-                log_message += ", " + container_name
-
-        if len(not_running_containers) > 1:
-            print("Containers '{}' were not running.".format(log_message))
-        else:
-            print("Container '{}' was not running.".format(log_message))
-
+        logger.log_error("Containers not running: " + ", ".join(not_running_containers))
         sys.exit(4)
 
 
