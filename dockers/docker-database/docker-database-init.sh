@@ -50,8 +50,6 @@ if [[ $DATABASE_TYPE == "chassisdb" ]]; then
     # Docker init for database-chassis
     echo "Init docker-database-chassis..."
     update_chassisdb_config -j $db_cfg_file_tmp -k -p $chassis_db_port
-    mkdir -p /var/run/redis/sonic-db
-    cp /etc/default/sonic-db/database_config.json /var/run/redis/sonic-db
     # generate all redis server supervisord configuration file
     sonic-cfggen -j $db_cfg_file_tmp -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
     rm $db_cfg_file_tmp
@@ -78,5 +76,21 @@ else
      update_chassisdb_config -j $db_cfg_file -p $chassis_db_port
 fi
 rm $db_cfg_file_tmp
+
+# copy dump.rdb file to each instance for restoration
+DUMPFILE=/var/lib/redis/dump.rdb
+redis_inst_list=`/usr/bin/python3 -c "import swsssdk; print(' '.join(swsssdk.SonicDBConfig.get_instancelist().keys()))"`
+for inst in $redis_inst_list
+do
+    mkdir -p /var/lib/$inst
+    if [[ -f $DUMPFILE ]]; then
+        # copy warmboot rdb file into each new instance location
+        if [[ "$DUMPFILE" != "/var/lib/$inst/dump.rdb" ]]; then
+            cp $DUMPFILE /var/lib/$inst/dump.rdb
+        fi
+    else
+        echo -n > /var/lib/$inst/dump.rdb
+    fi
+done
 
 exec /usr/local/bin/supervisord

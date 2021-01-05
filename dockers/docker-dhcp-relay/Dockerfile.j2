@@ -2,12 +2,16 @@
 FROM docker-config-engine-buster
 
 ARG docker_container_name
+ARG image_version
 ARG manifest
 
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Pass the image_version to container
+ENV IMAGE_VERSION=$image_version
 
 # Update apt's cache of available packages
 RUN apt-get update

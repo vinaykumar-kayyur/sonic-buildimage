@@ -32,7 +32,7 @@ if [[ -f /usr/share/sonic/virtual_chassis/default_config.json ]]; then
 fi
 
 SYSTEM_MAC_ADDRESS=$(ip link show eth0 | grep ether | awk '{print $2}')
-sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'"}}}' $CHASS_CFG --print-data > /etc/sonic/init_cfg.json
+sonic-cfggen -a '{"DEVICE_METADATA":{"localhost": {"mac": "'$SYSTEM_MAC_ADDRESS'", "buffer_model": "traditional"}}}' $CHASS_CFG --print-data > /etc/sonic/init_cfg.json
 
 if [ -f /etc/sonic/config_db.json ]; then
     sonic-cfggen -j /etc/sonic/init_cfg.json -j /etc/sonic/config_db.json --print-data > /tmp/config_db.json
@@ -76,7 +76,6 @@ supervisorctl start redis-server
 start_chassis_db=`sonic-cfggen -v DEVICE_METADATA.localhost.start_chassis_db -y $chassisdb_cfg_file`
 if [[ "$HOSTNAME" == *"supervisor"* ]] || [ "$start_chassis_db" == "1" ]; then
    supervisorctl start redis-chassis
-   python /usr/bin/chassis_db.py
 fi
 
 conn_chassis_db=`sonic-cfggen -v DEVICE_METADATA.localhost.connect_to_chassis_db -y $chassisdb_cfg_file`
@@ -86,6 +85,11 @@ if [ "$start_chassis_db" != "1" ] && [ "$conn_chassis_db" != "1" ]; then
    cp $db_cfg_file_tmp $db_cfg_file
 fi
 
+if [ "$conn_chassis_db" == "1" ]; then
+   if [ -f /usr/share/sonic/virtual_chassis/coreportindexmap.ini ]; then
+      cp /usr/share/sonic/virtual_chassis/coreportindexmap.ini /usr/share/sonic/hwsku/
+   fi
+fi
 
 /usr/bin/configdb-load.sh
 
@@ -98,6 +102,8 @@ supervisorctl start orchagent
 supervisorctl start coppmgrd
 
 supervisorctl start neighsyncd
+
+supervisorctl start fdbsyncd
 
 supervisorctl start teamsyncd
 
@@ -128,6 +134,8 @@ supervisorctl start sflowmgrd
 supervisorctl start natmgrd
 
 supervisorctl start natsyncd
+
+supervisorctl start tunnelmgrd
 
 # Start arp_update when VLAN exists
 VLAN=`sonic-cfggen -d -v 'VLAN.keys() | join(" ") if VLAN'`
