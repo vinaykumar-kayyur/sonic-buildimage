@@ -8,8 +8,11 @@ from sonic_py_common import multi_asic
 from sonic_py_common.logger import Logger
 
 SYSLOG_IDENTIFIER = "container_checker"
+logger = Logger(SYSLOG_IDENTIFIER)
+logger.set_min_log_priority_info()
 
-def get_command_result(command, logger):
+
+def get_command_result(command):
     """
     @summary: This function will execture the command and return the result.
     @return: A string which contains the output of command.
@@ -65,7 +68,7 @@ def get_expected_running_containers():
     return expected_running_containers
 
 
-def get_current_running_containers(logger):
+def get_current_running_containers():
     """
     @summary: This function will get the current running container list by analyzing the
               output of command `docker ps`.
@@ -74,7 +77,7 @@ def get_current_running_containers(logger):
     running_containers = set()
 
     command = "docker ps"
-    command_stdout = get_command_result(command, logger)
+    command_stdout = get_command_result(command)
     for line in command_stdout:
         if line and "CONTAINER ID" not in line:
             running_containers.add(line.split()[-1].strip())
@@ -88,11 +91,8 @@ def main():
               and the containers which were expected to run. If containers which were exepcted
               to run were not running, then an alerting message will be written into syslog.
     """
-    logger = Logger(SYSLOG_IDENTIFIER)
-    logger.set_min_log_priority_info()
-
     expected_running_containers = get_expected_running_containers()
-    current_running_containers = get_current_running_containers(logger)
+    current_running_containers = get_current_running_containers()
 
     not_running_containers = expected_running_containers.difference(current_running_containers)
     if not_running_containers:
