@@ -25,6 +25,8 @@ SONIC_INSTALL_DOCKER_DBG_IMAGES += $(DOCKER_SNMP_DBG)
 
 $(DOCKER_SNMP)_CONTAINER_NAME = snmp
 $(DOCKER_SNMP)_RUN_OPT += --privileged -t
+$(DOCKER_SNMP)_RUN_OPT += --tmpfs /tmp
+$(DOCKER_SNMP)_RUN_OPT += --tmpfs /var/tmp
 $(DOCKER_SNMP)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_SNMP)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
 $(DOCKER_SNMP)_BASE_IMAGE_FILES += monit_snmp:/etc/monit/conf.d

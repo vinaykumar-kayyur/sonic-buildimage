@@ -12,3 +12,5 @@ $(DOCKER_GBSYNCD_BASE)_DBG_DEPENDS += $(SYNCD_VS_DBG) \
                                 $(LIBSAIVS_DBG)
 
 $(DOCKER_GBSYNCD_BASE)_RUN_OPT += -v /host/warmboot:/var/warmboot
+$(DOCKER_GBSYNCD_BASE)_RUN_OPT += --tmpfs /tmp
+$(DOCKER_GBSYNCD_BASE)_RUN_OPT += --tmpfs /var/tmp

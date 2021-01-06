@@ -14,4 +14,6 @@ SONIC_STRETCH_DOCKERS += $(DOCKER_SYNCD_BASE)
 SONIC_STRETCH_DBG_DOCKERS += $(DOCKER_SYNCD_BASE_DBG)
 
 $(DOCKER_SYNCD_BASE)_RUN_OPT += -v /host/warmboot:/var/warmboot
+$(DOCKER_SYNCD_BASE)_RUN_OPT += --tmpfs /tmp
+$(DOCKER_SYNCD_BASE)_RUN_OPT += --tmpfs /var/tmp
 $(DOCKER_SYNCD_BASE)_BASE_IMAGE_FILES += monit_syncd:/etc/monit/conf.d

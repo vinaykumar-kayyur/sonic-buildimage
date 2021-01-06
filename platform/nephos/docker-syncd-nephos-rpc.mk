@@ -19,6 +19,8 @@ endif
 
 $(DOCKER_SYNCD_NEPHOS_RPC)_CONTAINER_NAME = syncd
 $(DOCKER_SYNCD_NEPHOS_RPC)_RUN_OPT += --net=host --privileged -t
+$(DOCKER_SYNCD_NEPHOS_RPC)_RUN_OPT += --tmpfs /tmp
+$(DOCKER_SYNCD_NEPHOS_RPC)_RUN_OPT += --tmpfs /var/tmp
 $(DOCKER_SYNCD_NEPHOS_RPC)_RUN_OPT += -v /host/machine.conf:/etc/machine.conf
 $(DOCKER_SYNCD_NEPHOS_RPC)_RUN_OPT += -v /host/warmboot:/var/warmboot
 $(DOCKER_SYNCD_NEPHOS_RPC)_RUN_OPT += -v /var/run/docker-syncd:/var/run/sswsyncd
