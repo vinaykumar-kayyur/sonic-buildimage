@@ -49,7 +49,6 @@ def generate_l2_config(data):
 _sample_generators = {
         't1': generate_t1_sample_config,
         'l2': generate_l2_config,
-        'tac': generate_tacacs,
         'empty': generate_empty_config
         }
 
