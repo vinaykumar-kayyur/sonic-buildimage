@@ -86,7 +86,7 @@ def get_current_running_containers():
 
     command = "docker ps"
     command_stdout = get_command_result(command)
-    for line in command_stdout:
+    for line in command_stdout[1:]:
         running_containers.add(line.split()[-1].strip())
 
     return running_containers
