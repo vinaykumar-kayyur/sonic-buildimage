@@ -110,7 +110,7 @@ reload_minigraph()
 {
     echo "Reloading minigraph..."
     config load_minigraph -y -n 
-    if [ -f /etc/sonic/old_config/${TACACS_JSON_BACKUP} ]; then
+    if [ -r /etc/sonic/old_config/${TACACS_JSON_BACKUP} ]; then
         sonic-cfggen -j /etc/sonic/old_config/${TACACS_JSON_BACKUP} --write-to-db
     else
         echo "Missing tacacs json to restore tacacs credentials"
