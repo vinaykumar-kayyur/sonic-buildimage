@@ -42,7 +42,7 @@ def get_command_result(command):
         print("Failed to execute the command '{}'. Error: '{}'".format(command, err))
         sys.exit(2)
 
-    return command_stdout.split("\n")
+    return command_stdout.split("\n")[:-1]
 
 
 def get_expected_running_containers():
@@ -87,8 +87,7 @@ def get_current_running_containers():
     command = "docker ps"
     command_stdout = get_command_result(command)
     for line in command_stdout:
-        if line and "CONTAINER ID" not in line:
-            running_containers.add(line.split()[-1].strip())
+        running_containers.add(line.split()[-1].strip())
 
     return running_containers
 
