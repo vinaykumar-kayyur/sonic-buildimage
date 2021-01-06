@@ -42,7 +42,7 @@ def get_command_result(command):
         print("Failed to execute the command '{}'. Error: '{}'".format(command, err))
         sys.exit(2)
 
-    return command_stdout.split("\n")[:-1]
+    return command_stdout.rstrip().split("\n")
 
 
 def get_expected_running_containers():
