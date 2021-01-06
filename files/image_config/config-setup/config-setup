@@ -362,7 +362,6 @@ do_config_backup()
     echo "Taking backup of curent configuration"
     rm -rf /host/old_config
     cp -ar /etc/sonic /host/old_config
-
     [ -d ${CONFIG_POST_MIGRATION_HOOKS} ] && cp -arL ${CONFIG_POST_MIGRATION_HOOKS} /host/old_config
 
     # Execute custom hooks if present
