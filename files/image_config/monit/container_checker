@@ -103,7 +103,7 @@ def main():
 
     not_running_containers = expected_running_containers.difference(current_running_containers)
     if not_running_containers:
-        print("Containers not running: " + ", ".join(not_running_containers))
+        print("Expected containers not running: " + ", ".join(not_running_containers))
         sys.exit(3)
 
     unexpected_running_containers = current_running_containers.difference(expected_running_containers)
