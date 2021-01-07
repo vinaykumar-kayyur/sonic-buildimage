@@ -186,7 +186,7 @@ class Fan(FanBase):
         fan_speed = self._get_pmc_register(self.get_fan_speed_reg)
         if (fan_speed != 'ERR') and self.get_presence():
             speed_in_rpm = int(fan_speed, 10)
-            speed = (100 * speed_in_rpm)/self.max_fan_speed
+            speed = (100 * speed_in_rpm)//self.max_fan_speed
         else:
             speed = 0
 
@@ -230,8 +230,8 @@ class Fan(FanBase):
             bool: True if set success, False if fail.
         """
         # Leds are controlled by Smart-fussion FPGA.
-        status = False
-        return status
+        # Return True to avoid thermalctld alarm.
+        return True
 
     def get_status_led(self):
         """
@@ -259,6 +259,8 @@ class Fan(FanBase):
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
         """
-        return  0
+        # Fan speeds are controlled by Smart-fussion FPGA.
+        # Return current speed to avoid false thermalctld alarm.
+        return self.get_speed()
 
 

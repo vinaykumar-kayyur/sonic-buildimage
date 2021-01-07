@@ -246,16 +246,6 @@ RUN apt-get update && apt-get install -y \
         lynx \
         texlive-latex-extra \
         texlive-latex-recommended \
-# For python-click build
-        python-sphinx \
-        python-docutils \
-        python3-all \
-        python3-setuptools \
-        python3-sphinx \
-        python3-docutils \
-        python3-requests \
-        python3-pytest \
-        python3-colorama \
 # For bash
         texi2html \
 # For initramfs
@@ -309,12 +299,6 @@ RUN pip install --force-reinstall --upgrade "jinja2>=2.10"
 
 # For templating (requiring jinja2)
 RUN pip install j2cli==0.3.10
-
-# For sonic utilities testing
-RUN pip install click natsort tabulate netifaces==0.10.7 fastentrypoints
-
-# For supervisor build
-RUN pip install meld3 mock
 
 # For vs image build
 RUN pip install pexpect==4.6.0
@@ -372,6 +356,9 @@ RUN echo "DOCKER_OPTS=\"--experimental --storage-driver=vfs\"" >> /etc/default/d
 RUN echo "deb [arch={{ CONFIGURED_ARCH }}] http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
 RUN apt-get -o Acquire::Check-Valid-Until=false update
 RUN apt-get -y -o Acquire::Check-Valid-Until=false install ca-certificates-java=20161107~bpo8+1 openjdk-8-jdk
+
+# Install m2crypto package, needed by SWI tools
+RUN pip install m2crypto==0.36.0
 
 # Install swi tools
 RUN python -m pip install git+https://github.com/aristanetworks/swi-tools.git@d51761ec0bb93c73039233f3c01ed48235ffad00

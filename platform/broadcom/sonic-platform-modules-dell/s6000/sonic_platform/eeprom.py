@@ -18,7 +18,6 @@
 
 try:
     import binascii
-    import os
     import redis
     import struct
     from collections import OrderedDict
@@ -108,7 +107,7 @@ class Eeprom(TlvInfoDecoder):
                 self.serial = 'NA'
                 return
 
-            total_length = (ord(eeprom[9]) << 8) | ord(eeprom[10])
+            total_length = (eeprom[9] << 8) | (eeprom[10])
             tlv_index = self._TLV_INFO_HDR_LEN
             tlv_end = self._TLV_INFO_HDR_LEN + total_length
 
@@ -117,21 +116,21 @@ class Eeprom(TlvInfoDecoder):
                     break
 
                 tlv = eeprom[tlv_index:tlv_index + 2
-                             + ord(eeprom[tlv_index + 1])]
-                code = "0x%02X" % (ord(tlv[0]))
+                             + eeprom[tlv_index + 1]]
+                code = "0x%02X" % (tlv[0])
 
-                if ord(tlv[0]) == self._TLV_CODE_VENDOR_EXT:
-                    value = str((ord(tlv[2]) << 24) | (ord(tlv[3]) << 16) |
-                                (ord(tlv[4]) << 8) | ord(tlv[5]))
-                    value += str(tlv[6:6 + ord(tlv[1])])
+                if tlv[0] == self._TLV_CODE_VENDOR_EXT:
+                    value = str((tlv[2] << 24) | (tlv[3] << 16) |
+                                (tlv[4] << 8) | tlv[5])
+                    value += tlv[6:6 + tlv[1]].decode('ascii')
                 else:
                     name, value = self.decoder(None, tlv)
 
                 self.eeprom_tlv_dict[code] = value
-                if ord(eeprom[tlv_index]) == self._TLV_CODE_CRC_32:
+                if eeprom[tlv_index] == self._TLV_CODE_CRC_32:
                     break
 
-                tlv_index += ord(eeprom[tlv_index+1]) + 2
+                tlv_index += eeprom[tlv_index+1] + 2
 
             self.base_mac = self.eeprom_tlv_dict.get(
                                 "0x%X" % (self._TLV_CODE_MAC_BASE), 'NA')
@@ -191,7 +190,7 @@ class Eeprom(TlvInfoDecoder):
                 else:
                     self.fan_type = 'NA'
 
-    def _get_eeprom_field(self, field_name):
+    def _get_eeprom_field(self, field_name, decode=True):
         """
         For a field name specified in the EEPROM format, returns the
         presence of the field and the value for the same.
@@ -200,7 +199,10 @@ class Eeprom(TlvInfoDecoder):
         for field in self.format:
             field_end = field_start + field[2]
             if field[0] == field_name:
-                return (True, self.eeprom_data[field_start:field_end])
+                if decode:
+                    return (True, self.eeprom_data[field_start:field_end].decode('ascii'))
+                else:
+                    return (True, self.eeprom_data[field_start:field_end])
             field_start = field_end
 
         return (False, None)
@@ -222,9 +224,9 @@ class Eeprom(TlvInfoDecoder):
         Returns the airflow fan type.
         """
         if self.is_psu_eeprom:
-            return int(self.psu_type.encode('hex'), 16)
+            return int(binascii.hexlify(self.psu_type.encode('utf-8')), 16)
         else:
-            return int(self.fan_type.encode('hex'), 16)
+            return int(binascii.hexlify(self.fan_type.encode('utf-8')), 16)
 
     # System EEPROM specific methods
     def get_base_mac(self):
@@ -259,7 +261,7 @@ class EepromS6000(EepromDecoder):
     _EEPROM_MAX_LEN = 128
 
     _BLK_HDR_LEN   = 6
-    _BLK_HDR_MAGIC = '\x3a\x29'
+    _BLK_HDR_MAGIC = b'\x3a\x29'
     _BLK_HDR_REVID = 1
 
     _BLK_CODE_MFG = 0x20
@@ -297,10 +299,10 @@ class EepromS6000(EepromDecoder):
     def _is_valid_block(self, e, blk_code):
         return (e[:2] == self._BLK_HDR_MAGIC
                 and struct.unpack('<H', e[2:4])[0] == self._BLK_INFO[blk_code]["size"]
-                and ord(e[4]) == blk_code
-                and ord(e[5]) == self._BLK_HDR_REVID)
+                and e[4] == blk_code
+                and e[5] == self._BLK_HDR_REVID)
 
-    def _get_eeprom_field(self, e, blk_code, field_name):
+    def _get_eeprom_field(self, e, blk_code, field_name, decode=True):
         """
         For a field name specified in the EEPROM format, returns the
         presence of the field and the value for the same.
@@ -314,7 +316,10 @@ class EepromS6000(EepromDecoder):
         for field in self._BLK_INFO[blk_code]["format"]:
             field_end = field_start + field[1]
             if field[0] == field_name:
-                return (True, e[field_start:field_end])
+                if decode:
+                    return (True, e[field_start:field_end].decode('ascii'))
+                else:
+                    return (True, e[field_start:field_end])
             field_start = field_end
 
         return (False, None)
@@ -323,13 +328,13 @@ class EepromS6000(EepromDecoder):
         """
         Decode and print out the contents of the EEPROM.
         """
-        print "     Field Name      Len        Value"
-        print "-------------------- --- --------------------"
-        for blk_code in self._BLK_INFO.keys():
+        print("     Field Name      Len        Value")
+        print("-------------------- --- --------------------")
+        for blk_code in list(self._BLK_INFO.keys()):
             blk_start = self._BLK_INFO[blk_code]["offset"]
             blk_end = blk_start + self._BLK_INFO[blk_code]["size"]
             if not self._is_valid_block(e[blk_start:blk_end], blk_code):
-                print "Invalid Block starting at EEPROM offset %d" % (blk_start)
+                print("Invalid Block starting at EEPROM offset %d" % (blk_start))
                 return
 
             offset = blk_start + self._BLK_HDR_LEN
@@ -339,14 +344,14 @@ class EepromS6000(EepromDecoder):
                 elif f[0] == "Card ID":
                     data = hex(struct.unpack('<I', e[offset:offset+f[1]])[0])
                 elif f[0] == "Base MAC address":
-                    data = ":".join([binascii.b2a_hex(T) for T in e[offset:offset+f[1]]]).upper()
+                    data = ":".join(["{:02x}".format(T) for T in e[offset:offset+f[1]]]).upper()
                 else:
-                    data = e[offset:offset+f[1]]
-                print "{:<20s} {:>3d} {:<s}".format(f[0], f[1], data)
+                    data = e[offset:offset+f[1]].decode('ascii')
+                print("{:<20s} {:>3d} {:<s}".format(f[0], f[1], data))
                 offset += f[1]
 
             if not self._is_valid_block_checksum(e[blk_start:blk_end]):
-                print "(*** block checksum invalid)"
+                print("(*** block checksum invalid)")
 
     def read_eeprom(self):
         """
@@ -363,23 +368,23 @@ class EepromS6000(EepromDecoder):
         if db_state != '1':
             return -1
 
-        print "     Field Name      Len        Value"
-        print "-------------------- --- --------------------"
-        for blk_code in self._BLK_INFO.keys():
+        print("     Field Name      Len        Value")
+        print("-------------------- --- --------------------")
+        for blk_code in list(self._BLK_INFO.keys()):
             blk_name = self._BLK_INFO[blk_code]["name"]
             blk_start = self._BLK_INFO[blk_code]["offset"]
             is_valid = client.hget('EEPROM_INFO|{}'.format(blk_name), 'Valid')
             if is_valid == '0':
-                print "Invalid Block starting at EEPROM offset %d" % (blk_start)
+                print("Invalid Block starting at EEPROM offset %d" % (blk_start))
                 break
 
             for f in self._BLK_INFO[blk_code]["format"]:
                 data = client.hget('EEPROM_INFO|{}'.format(f[0]), 'Value')
-                print "{:<20s} {:>3d} {:<s}".format(f[0], f[1], data)
+                print("{:<20s} {:>3d} {:<s}".format(f[0], f[1], data))
 
             is_checksum_valid = client.hget('EEPROM_INFO|{}'.format(blk_name), 'Checksum_Valid')
             if is_checksum_valid == '0':
-                print "(*** block checksum invalid)"
+                print("(*** block checksum invalid)")
 
         return 0
 
@@ -388,13 +393,13 @@ class EepromS6000(EepromDecoder):
         Decode the contents of the EEPROM and update the contents to database
         """
         client = redis.Redis(db=STATE_DB_INDEX)
-        for blk_code in self._BLK_INFO.keys():
+        for blk_code in list(self._BLK_INFO.keys()):
             blk_name = self._BLK_INFO[blk_code]["name"]
             blk_start = self._BLK_INFO[blk_code]["offset"]
             blk_end = blk_start + self._BLK_INFO[blk_code]["size"]
             if not self._is_valid_block(e[blk_start:blk_end], blk_code):
                 client.hset('EEPROM_INFO|{}'.format(blk_name), 'Valid', '0')
-                print "Invalid Block starting at EEPROM offset %d" % (blk_start)
+                print("Invalid Block starting at EEPROM offset %d" % (blk_start))
                 break
             else:
                 client.hset('EEPROM_INFO|{}'.format(blk_name), 'Valid', '1')
@@ -406,9 +411,9 @@ class EepromS6000(EepromDecoder):
                 elif f[0] == "Card ID":
                     data = hex(struct.unpack('<I', e[offset:offset+f[1]])[0])
                 elif f[0] == "Base MAC address":
-                    data = ":".join([binascii.b2a_hex(T) for T in e[offset:offset+f[1]]]).upper()
+                    data = ":".join(["{:02x}".format(T) for T in e[offset:offset+f[1]]]).upper()
                 else:
-                    data = e[offset:offset+f[1]]
+                    data = e[offset:offset+f[1]].decode('ascii')
                 client.hset('EEPROM_INFO|{}'.format(f[0]), 'Value', data)
                 offset += f[1]
 
@@ -424,10 +429,10 @@ class EepromS6000(EepromDecoder):
         """
         Returns the base MAC address found in the system EEPROM.
         """
-        (valid, data) = self._get_eeprom_field(self.eeprom_data,
-                                               self._BLK_CODE_MAC, "Base MAC address")
+        (valid, data) = self._get_eeprom_field(self.eeprom_data, self._BLK_CODE_MAC,
+                                               "Base MAC address", False)
         if valid:
-            return ":".join([binascii.b2a_hex(T) for T in data]).upper()
+            return ":".join(["{:02x}".format(T) for T in data]).upper()
         else:
             return 'NA'
 
@@ -479,9 +484,9 @@ class EepromS6000(EepromDecoder):
         """
         Returns the base MAC address.
         """
-        (valid, data) = self._get_eeprom_field(e, self._BLK_CODE_MAC, "Base MAC address")
+        (valid, data) = self._get_eeprom_field(e, self._BLK_CODE_MAC, "Base MAC address", False)
         if valid:
-            return ":".join([binascii.b2a_hex(T) for T in data]).upper()
+            return ":".join(["{:02x}".format(T) for T in data]).upper()
         else:
             return 'NA'
 
