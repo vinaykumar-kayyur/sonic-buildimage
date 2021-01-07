@@ -22,16 +22,16 @@ will now be set if any paths are from iBGP peers. This leaves all-eBGP
 multipath groups still requiring nexthops over connected routes.
 ---
  bgpd/bgp_route.c | 77 ++++++++++++++++++++++++++++++++++--------------
- bgpd/bgp_vty.c   | 42 ++++++++++++++++++++++++++
- bgpd/bgpd.c      |  5 ++++
- bgpd/bgpd.h      |  1 +
- 4 files changed, 103 insertions(+), 22 deletions(-)
+ bgpd/bgp_vty.c   | 47 +++++++++++++++++++++++++++++
+ bgpd/bgp_zebra.c | 16 +++++++++-
+ bgpd/bgpd.h      |  3 +-
+ 4 files changed, 119 insertions(+), 24 deletions(-)
 
 diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
-index b05e93306..db25a7bbe 100644
+index b60cf3068..c21a06ff6 100644
 --- a/bgpd/bgp_route.c
 +++ b/bgpd/bgp_route.c
-@@ -462,6 +462,8 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -540,6 +540,8 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  	int internal_as_route;
  	int confed_as_route;
  	int ret = 0;
@@ -40,29 +40,29 @@ index b05e93306..db25a7bbe 100644
  	char new_buf[PATH_ADDPATH_STR_BUFFER];
  	char exist_buf[PATH_ADDPATH_STR_BUFFER];
  	uint32_t new_mm_seq;
-@@ -792,7 +794,9 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -940,7 +942,9 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  			zlog_debug(
  				"%s: %s wins over %s due to eBGP peer > iBGP peer",
  				pfx_buf, new_buf, exist_buf);
 -		return 1;
-+		if (!bgp_flag_check(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
++		if (!CHECK_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
 +			return 1;
 +		peer_sort_ret = 1;
  	}
  
  	if (exist_sort == BGP_PEER_EBGP
-@@ -802,7 +806,9 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -950,7 +954,9 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  			zlog_debug(
  				"%s: %s loses to %s due to iBGP peer < eBGP peer",
  				pfx_buf, new_buf, exist_buf);
 -		return 0;
-+		if (!bgp_flag_check(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
++		if (!CHECK_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
 +			return 0;
 +		peer_sort_ret = 0;
  	}
  
  	/* 8. IGP metric check. */
-@@ -814,19 +820,19 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -962,19 +968,19 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  		existm = exist->extra->igpmetric;
  
  	if (newm < existm) {
@@ -86,7 +86,7 @@ index b05e93306..db25a7bbe 100644
  	}
  
  	/* 9. Same IGP metric. Compare the cluster list length as
-@@ -844,21 +850,21 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -992,21 +998,21 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  			existm = BGP_CLUSTER_LIST_LENGTH(exist->attr);
  
  			if (newm < existm) {
@@ -112,31 +112,31 @@ index b05e93306..db25a7bbe 100644
  			}
  		}
  	}
-@@ -872,7 +878,10 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -1020,7 +1026,10 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  				zlog_debug(
  					"%s: %s wins over %s due to confed-external peer > confed-internal peer",
  					pfx_buf, new_buf, exist_buf);
 -			return 1;
-+			if (!bgp_flag_check(bgp,
-+					    BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
++			if (!CHECK_FLAG(bgp->flags,
++					BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
 +				return 1;
 +			peer_sort_ret = 1;
  		}
  
  		if (exist_sort == BGP_PEER_CONFED
-@@ -882,7 +891,10 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -1030,7 +1039,10 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  				zlog_debug(
  					"%s: %s loses to %s due to confed-internal peer < confed-external peer",
  					pfx_buf, new_buf, exist_buf);
 -			return 0;
-+			if (!bgp_flag_check(bgp,
-+					    BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
++			if (!CHECK_FLAG(bgp->flags,
++					BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
 +				return 0;
 +			peer_sort_ret = 0;
  		}
  	}
  
-@@ -943,20 +955,41 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
+@@ -1091,20 +1103,41 @@ static int bgp_path_info_cmp(struct bgp *bgp, struct bgp_path_info *new,
  		 * TODO: If unequal cost ibgp multipath is enabled we can
  		 * mark the paths as equal here instead of returning
  		 */
@@ -189,10 +189,10 @@ index b05e93306..db25a7bbe 100644
  	   first (the oldest one).  This step minimizes route-flap, since a
  	   newer path won't displace an older one, even if it was the
 diff --git a/bgpd/bgp_vty.c b/bgpd/bgp_vty.c
-index bb9da327d..f59e423cd 100644
+index 8e13f752a..2748dc858 100644
 --- a/bgpd/bgp_vty.c
 +++ b/bgpd/bgp_vty.c
-@@ -2361,6 +2361,38 @@ DEFUN (no_bgp_bestpath_aspath_multipath_relax,
+@@ -3006,6 +3006,38 @@ DEFUN (no_bgp_bestpath_aspath_multipath_relax,
  	return CMD_SUCCESS;
  }
  
@@ -206,7 +206,7 @@ index bb9da327d..f59e423cd 100644
 +       "Allow load sharing across routes learned from different peer types\n")
 +{
 +	VTY_DECLVAR_CONTEXT(bgp, bgp);
-+	bgp_flag_set(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX);
++	SET_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX);
 +	bgp_recalculate_all_bestpaths(bgp);
 +
 +	return CMD_SUCCESS;
@@ -222,7 +222,7 @@ index bb9da327d..f59e423cd 100644
 +       "Allow load sharing across routes learned from different peer types\n")
 +{
 +	VTY_DECLVAR_CONTEXT(bgp, bgp);
-+	bgp_flag_unset(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX);
++	UNSET_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX);
 +	bgp_recalculate_all_bestpaths(bgp);
 +
 +	return CMD_SUCCESS;
@@ -231,19 +231,31 @@ index bb9da327d..f59e423cd 100644
  /* "bgp log-neighbor-changes" configuration.  */
  DEFUN (bgp_log_neighbor_changes,
         bgp_log_neighbor_changes_cmd,
-@@ -7893,6 +7925,11 @@ static void bgp_show_bestpath_json(struct bgp *bgp, json_object *json)
+@@ -8996,6 +9028,11 @@ static void bgp_show_bestpath_json(struct bgp *bgp, json_object *json)
  	} else
  		json_object_string_add(bestpath, "multiPathRelax", "false");
  
-+	if (bgp_flag_check(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
++	if (CHECK_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX))
 +		json_object_string_add(bestpath, "peerTypeRelax", "true");
 +	else
 +		json_object_string_add(bestpath, "peerTypeRelax", "false");
 +
- 	if (bgp_flag_check(bgp, BGP_FLAG_COMPARE_ROUTER_ID))
+ 	if (CHECK_FLAG(bgp->flags, BGP_FLAG_COMPARE_ROUTER_ID))
  		json_object_string_add(bestpath, "compareRouterId", "true");
- 	if (bgp_flag_check(bgp, BGP_FLAG_MED_CONFED)
-@@ -13206,6 +13243,11 @@ void bgp_vty_init(void)
+ 	if (CHECK_FLAG(bgp->flags, BGP_FLAG_MED_CONFED)
+@@ -15747,6 +15784,11 @@ int bgp_config_write(struct vty *vty)
+ 			vty_out(vty, "\n");
+ 		}
+ 
++		if (CHECK_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX)) {
++			vty_out(vty,
++				" bgp bestpath peer-type multipath-relax\n");
++		}
++
+ 		/* Link bandwidth handling. */
+ 		if (bgp->lb_handling == BGP_LINK_BW_IGNORE_BW)
+ 			vty_out(vty, " bgp bestpath bandwidth ignore\n");
+@@ -16211,6 +16253,11 @@ void bgp_vty_init(void)
  	install_element(BGP_NODE, &bgp_bestpath_aspath_multipath_relax_cmd);
  	install_element(BGP_NODE, &no_bgp_bestpath_aspath_multipath_relax_cmd);
  
@@ -256,10 +268,10 @@ index bb9da327d..f59e423cd 100644
  	install_element(BGP_NODE, &bgp_log_neighbor_changes_cmd);
  	install_element(BGP_NODE, &no_bgp_log_neighbor_changes_cmd);
 diff --git a/bgpd/bgp_zebra.c b/bgpd/bgp_zebra.c
-index e561832e2..ba5734033 100644
+index 9ce849427..436bdab84 100644
 --- a/bgpd/bgp_zebra.c
 +++ b/bgpd/bgp_zebra.c
-@@ -1199,6 +1199,7 @@ void bgp_zebra_announce(struct bgp_node *rn, struct prefix *p,
+@@ -1184,6 +1184,7 @@ void bgp_zebra_announce(struct bgp_dest *dest, const struct prefix *p,
  	int nh_family;
  	unsigned int valid_nh_count = 0;
  	int has_valid_label = 0;
@@ -267,23 +279,23 @@ index e561832e2..ba5734033 100644
  	uint8_t distance;
  	struct peer *peer;
  	struct bgp_path_info *mpinfo;
-@@ -1272,7 +1273,7 @@ void bgp_zebra_announce(struct bgp_node *rn, struct prefix *p,
+@@ -1259,7 +1260,7 @@ void bgp_zebra_announce(struct bgp_dest *dest, const struct prefix *p,
  	    || CHECK_FLAG(peer->flags, PEER_FLAG_DISABLE_CONNECTED_CHECK)
- 	    || bgp_flag_check(bgp, BGP_FLAG_DISABLE_NH_CONNECTED_CHK))
+ 	    || CHECK_FLAG(bgp->flags, BGP_FLAG_DISABLE_NH_CONNECTED_CHK))
  
 -		SET_FLAG(api.flags, ZEBRA_FLAG_ALLOW_RECURSION);
 +		allow_recursion = true;
  
- 	/* Metric is currently based on the best-path only */
- 	metric = info->attr->med;
-@@ -1379,6 +1380,16 @@ void bgp_zebra_announce(struct bgp_node *rn, struct prefix *p,
+ 	if (info->attr->rmap_table_id) {
+ 		SET_FLAG(api.message, ZAPI_MESSAGE_TABLEID);
+@@ -1397,6 +1398,16 @@ void bgp_zebra_announce(struct bgp_dest *dest, const struct prefix *p,
  		if (!nh_updated)
  			continue;
  
 +		/* Allow recursion if it is a multipath group with both
 +		   eBGP and iBGP paths. */
 +		if (!allow_recursion
-+		    && bgp_flag_check(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX)
++		    && CHECK_FLAG(bgp->flags, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX)
 +		    && (mpinfo->peer->sort == BGP_PEER_IBGP
 +			|| mpinfo->peer->sort == BGP_PEER_CONFED)) {
 +
@@ -293,44 +305,32 @@ index e561832e2..ba5734033 100644
  		if (mpinfo->extra
  		    && bgp_is_valid_label(&mpinfo->extra->label[0])
  		    && !CHECK_FLAG(api.flags, ZEBRA_FLAG_EVPN_ROUTE)) {
-@@ -1394,6 +1405,9 @@ void bgp_zebra_announce(struct bgp_node *rn, struct prefix *p,
+@@ -1415,6 +1426,9 @@ void bgp_zebra_announce(struct bgp_dest *dest, const struct prefix *p,
+ 		valid_nh_count++;
  	}
- 
  
 +	if (allow_recursion)
 +		SET_FLAG(api.flags, ZEBRA_FLAG_ALLOW_RECURSION);
 +
- 	/* if this is a evpn route we don't have to include the label */
- 	if (has_valid_label && !(CHECK_FLAG(api.flags, ZEBRA_FLAG_EVPN_ROUTE)))
- 		SET_FLAG(api.message, ZAPI_MESSAGE_LABEL);
-diff --git a/bgpd/bgpd.c b/bgpd/bgpd.c
-index 19f0f136b..af54c7106 100644
---- a/bgpd/bgpd.c
-+++ b/bgpd/bgpd.c
-@@ -7762,6 +7762,11 @@ int bgp_config_write(struct vty *vty)
- 			vty_out(vty, "\n");
- 		}
- 
-+		if (bgp_flag_check(bgp, BGP_FLAG_PEERTYPE_MULTIPATH_RELAX)) {
-+			vty_out(vty,
-+				" bgp bestpath peer-type multipath-relax\n");
-+		}
-+
- 		/* BGP network import check. */
- 		if (!!bgp_flag_check(bgp, BGP_FLAG_IMPORT_CHECK)
- 		    != DFLT_BGP_IMPORT_CHECK)
+ 	/*
+ 	 * When we create an aggregate route we must also
+ 	 * install a Null0 route in the RIB, so overwrite
 diff --git a/bgpd/bgpd.h b/bgpd/bgpd.h
-index 6baa0b79d..bcedfdd68 100644
+index 2aa069002..7f9d90a92 100644
 --- a/bgpd/bgpd.h
 +++ b/bgpd/bgpd.h
-@@ -364,6 +364,7 @@ struct bgp {
- #define BGP_FLAG_GR_PRESERVE_FWD          (1 << 20)
- #define BGP_FLAG_GRACEFUL_SHUTDOWN        (1 << 21)
- #define BGP_FLAG_DELETE_IN_PROGRESS       (1 << 22)
-+#define BGP_FLAG_PEERTYPE_MULTIPATH_RELAX (1 << 23)
+@@ -456,9 +456,10 @@ struct bgp {
+ #define BGP_FLAG_GR_DISABLE_EOR           (1 << 24)
+ #define BGP_FLAG_EBGP_REQUIRES_POLICY (1 << 25)
+ #define BGP_FLAG_SHOW_NEXTHOP_HOSTNAME (1 << 26)
++#define BGP_FLAG_PEERTYPE_MULTIPATH_RELAX (1 << 27)
  
- 	/* BGP Per AF flags */
- 	uint16_t af_flags[AFI_MAX][SAFI_MAX];
+ /* This flag is set if the instance is in administrative shutdown */
+-#define BGP_FLAG_SHUTDOWN (1 << 27)
++#define BGP_FLAG_SHUTDOWN (1 << 28)
+ 
+ 	enum global_mode GLOBAL_GR_FSM[BGP_GLOBAL_GR_MODE]
+ 				      [BGP_GLOBAL_GR_EVENT_CMD];
 -- 
-2.28.0
+2.24.0
 
