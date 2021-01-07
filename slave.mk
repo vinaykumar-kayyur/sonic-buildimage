@@ -182,13 +182,7 @@ ifeq ($(SONIC_BUILD_JOBS),)
 override SONIC_BUILD_JOBS := $(SONIC_CONFIG_BUILD_JOBS)
 endif
 
-# If SONIC_CONFIG_NATIVE_DOCKERD_SHARED is enabled, force
-# SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD enabled as well.
-ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
-override SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD := y
-endif
-
-ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
+ifeq ($(strip $(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD)),y)
 DOCKER_IMAGE_REF = $*$(DOCKER_USERNAME):$(DOCKER_USERTAG)
 DOCKER_DBG_IMAGE_REF = $*-$(DBG_IMAGE_MARK)$(DOCKER_USERNAME):$(DOCKER_USERTAG)
 docker-load-image-get = $(if $(1),$(1)$(DOCKER_USERNAME):$(DOCKER_USERTAG))
@@ -297,9 +291,21 @@ export vs_build_prepare_mem=$(VS_PREPARE_MEM)
 ###############################################################################
 ## Canned sequences
 ###############################################################################
+## When multiple builds are triggered on the same build server that causes the docker image naming problem because
+## all the build jobs are trying to create the same docker image with latest as tag.
+## This happens only when sonic docker images are built using native host dockerd.
+##
+##     docker-swss:latest <=SAVE/LOAD=> docker-swss-<user>:latest
 
-ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
 # $(call docker-image-save,from,to)
+# Sonic docker images are always created with username as extension. During the save operation, 
+# it removes the username extension from docker image and saved them as compressed tar file for SONiC image generation.
+# The save operation is protected with lock for parallel build.
+#
+# $(1) => Docker name
+# $(2) => Docker target name
+
+ifeq ($(strip $(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD)),y)
 define docker-image-save
     @echo "Attempting docker image lock for $(1) save" $(LOG)
     $(call MOD_LOCK,$(1),$(DOCKER_LOCKDIR),$(DOCKER_LOCKFILE_SUFFIX),$(DOCKER_LOCKFILE_TIMEOUT))
@@ -315,7 +321,14 @@ define docker-image-save
     @echo "Removing docker image $(1)$(DOCKER_USERNAME):$(DOCKER_USERTAG)" $(LOG)
     docker rmi -f $(1)$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(LOG)
 endef
+
 # $(call docker-image-load,from)
+# Sonic docker images are always created with username as extension. During the load operation, 
+# it loads the docker image from compressed tar file and tag them with username as extension.
+# The load operation is protected with lock for parallel build.
+#
+# $(1) => Docker name
+# $(2) => Docker target name
 define docker-image-load
     @echo "Attempting docker image lock for $(1) load" $(LOG)
     $(call MOD_LOCK,$(1),$(DOCKER_LOCKDIR),$(DOCKER_LOCKFILE_SUFFIX),$(DOCKER_LOCKFILE_TIMEOUT))

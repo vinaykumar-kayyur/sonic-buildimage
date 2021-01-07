@@ -75,6 +75,7 @@ $(shell rm -f .screen)
 MAKEFLAGS += -B
 
 CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo $(PLATFORM_ARCH))
+CONFIGURED_PLATFORM = $(if $(PLATFORM),$(PLATFORM),$(shell cat .platform 2>/dev/null))
 ifeq ($(CONFIGURED_ARCH),)
     override CONFIGURED_ARCH = amd64
 endif
@@ -115,7 +116,8 @@ $(shell BUILD_SLAVE=y scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(
 
 # Add the versions in the tag, if the version change, need to rebuild the slave
 SLAVE_BASE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* | sha1sum | awk '{print substr($$1,0,11);}')
-SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* | sha1sum | awk '{print substr($$1,0,11);}')
+SLAVE_TAG = $(shell (cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* .git/HEAD && echo $(USER)/$(PWD)/$(CONFIGURED_PLATFORM)) \
+			| sha1sum | awk '{print substr($$1,0,11);}')
 
 OVERLAY_MODULE_CHECK := \
     lsmod | grep -q "^overlay " &>/dev/null || \
@@ -162,15 +164,10 @@ ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_DPKG_CACHE_SOURCE):/dpkg_cache:rw"
 endif
 
-# If SONIC_CONFIG_NATIVE_DOCKERD_SHARED is enabled, force
-# SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD enabled as well.
-ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
-override SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD := y
-endif
 
 # User name and tag for "docker-*" images created by native dockerd mode.
-ifeq ($(strip $(SONIC_CONFIG_NATIVE_DOCKERD_SHARED)),y)
-DOCKER_USERNAME = -$(USER)
+ifeq ($(strip $(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD)),y)
+DOCKER_USERNAME = -$(shell echo $(USER) | tr '[:upper:]' '[:lower:]')
 DOCKER_USERTAG = $(SLAVE_TAG)
 else
 DOCKER_USERNAME =
@@ -285,7 +282,6 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            DOCKER_LOCKDIR=$(DOCKER_LOCKDIR) \
                            DOCKER_LOCKFILE_SAVE=$(DOCKER_LOCKFILE_SAVE) \
                            SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) \
-                           SONIC_CONFIG_NATIVE_DOCKERD_SHARED=$(SONIC_CONFIG_NATIVE_DOCKERD_SHARED) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            TELEMETRY_WRITABLE=$(TELEMETRY_WRITABLE) \
