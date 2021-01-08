@@ -331,28 +331,6 @@ define SHOW_WHY
 endef
 
 
-#
-#Launch DBG bash shell for debugging
-DEBUG_SHELL=$(if $(filter $@,$(MAKECMDGOALS)), \
-	export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}"; \
-	export DEST=$(shell pwd)/$(DEBS_PATH); \
-	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi ;\
-	cd $($*_SRC_PATH); \
-	echo -e "\n\n[ Run the below commands to compile the package ]\n"; \
-	$(if $(filter $*,$(SONIC_MAKE_DEBS)), \
-		echo "  \# $(MAKE) $(shell pwd)/$(DEBS_PATH)/$*"; ) \
-	$(if $(filter $*,$(SONIC_DPKG_DEBS)), \
-		export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}"; \
-		if [ -f ./autogen.sh ]; then echo "  \# ./autogen.sh "; fi; \
-		echo "  \# dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)"; ) \
-	$(if $(filter $*,$(SONIC_PYTHON_STDEB_DEBS)), \
-		echo "  \# python setup.py --command-packages=stdeb.command bdist_deb"; ) \
-	$(if $(filter $*,$(SONIC_PYTHON_WHEELS)), \
-		echo "  \# python$($*_PYTHON_VERSION) setup.py bdist_wheel"; ) \
-	echo -e ""; unset DBGSH; \
-	$(SHELL); exit 0; \
-	)
-
 
 
 # It invokes the Load Cache macro if cache is enabled globally as well as per module level

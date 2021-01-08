@@ -262,6 +262,7 @@ endif
 # Overwrite the buildinfo in slave container
 $(shell sudo scripts/prepare_slave_container_buildinfo.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
 
+include Makefile.debug
 include Makefile.cache
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
