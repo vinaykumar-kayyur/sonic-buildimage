@@ -4,12 +4,13 @@ logfile_backups=2
 nodaemon=true
 
 [eventlistener:dependent-startup]
-command=python -m supervisord_dependent_startup
+command=python3 -m supervisord_dependent_startup
 autostart=true
 autorestart=unexpected
 startretries=0
 exitcodes=0,3
 events=PROCESS_STATE
+buffer_size=25
 
 [eventlistener:supervisor-proc-exit-script]
 command=/usr/bin/supervisor-proc-exit-listener --container-name radv
@@ -26,20 +27,32 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
 
-{# Router advertiser should only run on ToR (T0) devices #}
-{% if DEVICE_METADATA.localhost.type == "ToRRouter" %}
+[program:start]
+command=/usr/bin/start.sh
+priority=1
+autostart=true
+autorestart=false
+startsecs=0
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=rsyslogd:running
 
-  {% if VLAN_INTERFACE %}
-    {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
+{# Router advertiser should only run on ToR (T0) devices which have #}
+{# at least one VLAN interface which has an IPv6 address asigned #}
+{%- set vlan_v6 = namespace(count=0) -%}
+{%- if "ToRRouter" in DEVICE_METADATA.localhost.type and DEVICE_METADATA.localhost.type != "MgmtToRRouter" -%}
+  {%- if VLAN_INTERFACE -%}
+    {%- for (name, prefix) in VLAN_INTERFACE|pfx_filter -%}
       {# If this VLAN has an IPv6 address... #}
-      {% if prefix | ipv6 %}
-        {% set ipv6_found = true %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
+      {%- if prefix | ipv6 -%}
+        {%- set vlan_v6.count = vlan_v6.count + 1 -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endif -%}
 
-  {# Enusre at least one ipv6 vlan interface #}
-  {% if ipv6_found == true %}
+{%- if vlan_v6.count > 0 %}
 [program:wait_for_link]
 command=/usr/bin/wait_for_link.sh
 priority=3
@@ -49,7 +62,7 @@ startsecs=0
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=rsyslogd:running
+dependent_startup_wait_for=start:exited
 
 [program:radvd]
 command=/usr/sbin/radvd -n
@@ -60,6 +73,4 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=wait_for_link:exited
-  {% endif %}
-
-{% endif %}
+{% endif -%}

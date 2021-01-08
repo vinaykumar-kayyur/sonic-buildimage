@@ -1,4 +1,4 @@
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -33,4 +33,4 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/supervisord"]

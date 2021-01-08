@@ -2,12 +2,17 @@
 {% set ipv6_addresses = [] %}
 {% set ipv4_loopback_addresses = [] %}
 {% set ipv6_loopback_addresses = [] %}
+{% if DEVICE_METADATA['localhost']['sub_role'] == 'FrontEnd' or  DEVICE_METADATA['localhost']['sub_role'] == 'BackEnd'%}
+{% set loopback_intf_names = ['Loopback0', 'Loopback4096'] %}
+{% else %}
+{% set loopback_intf_names = ['Loopback0'] %}
+{% endif %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
-    {%- if prefix | ipv4 and name == 'Loopback0' %}
+    {%- if prefix | ipv4 and name in loopback_intf_names %}
         {%- set ipv4_addresses = ipv4_addresses.append(prefix) %}
         {%- set ipv4_loopback_addresses = ipv4_loopback_addresses.append(prefix) %}
     {%- endif %}
-    {%- if prefix | ipv6 and name == 'Loopback0' %}
+    {%- if prefix | ipv6 and name in loopback_intf_names   %}
         {%- set ipv6_addresses = ipv6_addresses.append(prefix) %}
         {%- set ipv6_loopback_addresses = ipv6_loopback_addresses.append(prefix) %}
     {%- endif %}
@@ -41,19 +46,18 @@
     {
         "TUNNEL_DECAP_TABLE:IPINIP_TUNNEL" : {
             "tunnel_type":"IPINIP",
+            "dst_ip":"{% for prefix in ipv4_addresses|sort %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
 {% if "mlnx" in DEVICE_METADATA.localhost.platform %}
-            "dst_ip":"{% for prefix in ipv4_loopback_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
             "dscp_mode":"uniform",
             "ecn_mode":"standard",
 {% else %}
-            "dst_ip":"{% for prefix in ipv4_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
             "dscp_mode":"pipe",
             "ecn_mode":"copy_from_outer",
 {% endif %}
             "ttl_mode":"pipe"
         },
         "OP": "SET"
-    } 
+    }
 {% endif %}
 {% if ipv4_loopback_addresses and ipv6_loopback_addresses %}    ,
 {% endif %}
@@ -61,12 +65,11 @@
     {
         "TUNNEL_DECAP_TABLE:IPINIP_V6_TUNNEL" : {
             "tunnel_type":"IPINIP",
+            "dst_ip":"{% for prefix in ipv6_addresses|sort %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
 {% if "mlnx" in DEVICE_METADATA.localhost.platform %}
-            "dst_ip":"{% for prefix in ipv6_loopback_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
             "dscp_mode":"uniform",
             "ecn_mode":"standard",
 {% else %}
-            "dst_ip":"{% for prefix in ipv6_addresses %}{{ prefix | ip }}{% if not loop.last %},{% endif %}{% endfor %}",
             "dscp_mode":"pipe",
             "ecn_mode":"copy_from_outer",
 {% endif %}

@@ -37,6 +37,15 @@ function check_warm_boot()
     fi
 }
 
+function check_fast_boot()
+{
+    if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
+        FAST_BOOT="true"
+    else
+        FAST_BOOT="false"
+    fi
+}
+
 function validate_restore_count()
 {
     if [[ x"$WARM_BOOT" == x"true" ]]; then
@@ -99,8 +108,8 @@ start_peer_and_dependent_services() {
 }
 
 stop_peer_and_dependent_services() {
-    # if warm start enabled or peer lock exists, don't stop peer service docker
-    if [[ x"$WARM_BOOT" != x"true" ]]; then
+    # if warm/fast start enabled or peer lock exists, don't stop peer service docker
+    if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
         if [[ ! -z $DEV ]]; then
             /bin/systemctl stop ${PEER}@$DEV
         else
@@ -138,7 +147,7 @@ start() {
         $SONIC_DB_CLI ASIC_DB FLUSHDB
         $SONIC_DB_CLI COUNTERS_DB FLUSHDB
         $SONIC_DB_CLI FLEX_COUNTER_DB FLUSHDB
-        clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*'"
+        clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*'"
     fi
 
     # start service docker
@@ -161,7 +170,20 @@ wait() {
         else
             RUNNING=$(docker inspect -f '{{.State.Running}}' ${PEER})
         fi
-        if [[ x"$RUNNING" == x"true" ]]; then
+        ALL_DEPS_RUNNING=true
+        for dep in ${MULTI_INST_DEPENDENT}; do
+            if [[ ! -z $DEV ]]; then
+                DEP_RUNNING=$(docker inspect -f '{{.State.Running}}' ${dep}$DEV)
+            else
+                DEP_RUNNING=$(docker inspect -f '{{.State.Running}}' ${dep})
+            fi
+            if [[ x"$DEP_RUNNING" != x"true" ]]; then
+                ALL_DEPS_RUNNING=false
+                break
+            fi
+        done
+
+        if [[ x"$RUNNING" == x"true" && x"$ALL_DEPS_RUNNING" == x"true" ]]; then
             break
         else
             sleep 1
@@ -170,10 +192,18 @@ wait() {
 
     # NOTE: This assumes Docker containers share the same names as their
     # corresponding services
+    for dep in ${MULTI_INST_DEPENDENT}; do
+        if [[ ! -z $DEV ]]; then
+            ALL_DEPS="$ALL_DEPS ${dep}$DEV"
+        else
+            ALL_DEPS="$ALL_DEPS ${dep}"
+        fi
+    done
+
     if [[ ! -z $DEV ]]; then
-        /usr/bin/docker-wait-any ${SERVICE}$DEV ${PEER}$DEV
+        /usr/bin/docker-wait-any -s ${SERVICE}$DEV -d ${PEER}$DEV ${ALL_DEPS}
     else
-        /usr/bin/docker-wait-any ${SERVICE} ${PEER}
+        /usr/bin/docker-wait-any -s ${SERVICE} -d ${PEER} ${ALL_DEPS}
     fi
 }
 
@@ -185,17 +215,26 @@ stop() {
     lock_service_state_change
     check_warm_boot
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
+    check_fast_boot
+    debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
 
-    /usr/bin/${SERVICE}.sh stop $DEV
-    debug "Stopped ${SERVICE}$DEV service..."
+    # For WARM/FAST boot do not perform service stop
+    if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
+        /usr/bin/${SERVICE}.sh stop $DEV
+        debug "Stopped ${SERVICE}$DEV service..."
+    else
+        debug "Killing Docker swss..."
+        /usr/bin/docker kill swss &> /dev/null || debug "Docker swss is not running ($?) ..."
+    fi
 
     # Flush FAST_REBOOT table when swss needs to stop. The only
     # time when this would take effect is when fast-reboot
     # encountered error, e.g. syncd crashed. And swss needs to
     # be restarted.
-    debug "Clearing FAST_REBOOT flag..."
-    clean_up_tables STATE_DB "'FAST_REBOOT*'"
-
+    if [[ x"$FAST_BOOT" != x"true" ]]; then
+        debug "Clearing FAST_REBOOT flag..."
+        clean_up_tables STATE_DB "'FAST_REBOOT*'"
+    fi
     # Unlock has to happen before reaching out to peer service
     unlock_service_state_change
 

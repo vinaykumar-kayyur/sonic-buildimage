@@ -338,14 +338,12 @@ def system_ready():
                
 def do_install():
     logging.info('Checking system....')
-    if driver_check() == False:
-        logging.info('No driver, installing....')
-        status = driver_install()
-        if status:
-            if FORCE == 0:        
-                return  status
-    else:
-        print PROJECT_NAME.upper()+" drivers detected...."                      
+
+    status = driver_install()
+    if status:
+        if FORCE == 0:        
+            return  status
+
     if not device_exist():
         logging.info('No device, installing....')     
         status = device_install() 
@@ -353,7 +351,8 @@ def do_install():
             if FORCE == 0:        
                 return  status        
     else:
-        print PROJECT_NAME.upper()+" devices detected...."           
+        print PROJECT_NAME.upper()+" devices detected...."
+
     return
     
 def do_uninstall():
@@ -485,7 +484,6 @@ def set_device(args):
         if int(args[1])>100:
             show_set_help()
             return
-        #print  ALL_DEVICE['fan']
         #fan1~6 is all fine, all fan share same setting        
         node = ALL_DEVICE['fan'] ['fan1'][0] 
         node = node.replace(node.split("/")[-1], 'fan_duty_cycle_percentage')

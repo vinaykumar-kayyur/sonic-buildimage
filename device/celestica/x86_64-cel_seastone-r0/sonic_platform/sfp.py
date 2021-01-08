@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -10,7 +8,6 @@
 
 import time
 import subprocess
-import sonic_device_util
 from ctypes import create_string_buffer
 
 try:
@@ -20,8 +17,7 @@ try:
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
     from sonic_platform_base.sonic_sfp.inf8628 import inf8628InterfaceId
-    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -169,10 +165,8 @@ class Sfp(SfpBase):
     RESET_PATH = "/sys/devices/platform/dx010_cpld/qsfp_reset"
     LP_PATH = "/sys/devices/platform/dx010_cpld/qsfp_lpmode"
     PRS_PATH = "/sys/devices/platform/dx010_cpld/qsfp_modprs"
-    PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
-    PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
 
-    def __init__(self, sfp_index):
+    def __init__(self, sfp_index, sfp_name):
         SfpBase.__init__(self)
         # Init index
         self.index = sfp_index
@@ -180,8 +174,7 @@ class Sfp(SfpBase):
         self.dom_supported = False
         self.sfp_type, self.port_name = self.__get_sfp_info()
         self._api_helper = APIHelper()
-        self.platform = self._api_helper.platform
-        self.hwsku = self._api_helper.hwsku
+        self.name = sfp_name
 
         # Init eeprom path
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
@@ -193,7 +186,7 @@ class Sfp(SfpBase):
             port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x])
             self.port_to_eeprom_mapping[x] = port_eeprom_path
 
-        self.info_dict_keys = ['type', 'hardwarerev', 'serialnum', 'manufacturename', 'modelname', 'Connector', 'encoding', 'ext_identifier',
+        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
@@ -235,12 +228,6 @@ class Sfp(SfpBase):
             return float(t_str)
         else:
             return 'N/A'
-
-    def __get_path_to_port_config_file(self):
-        platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.platform])
-        hwsku_path = "/".join([platform_path, self.hwsku]
-                              ) if self._api_helper.is_host() else self.PMON_HWSKU_PATH
-        return "/".join([hwsku_path, "port_config.ini"])
 
     def __read_eeprom_specific_bytes(self, offset, num_bytes):
         sysfsfile_eeprom = None
@@ -373,11 +360,11 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardwarerev                |1*255VCHAR     |hardware version of SFP
-        serialnum                  |1*255VCHAR     |serial number of the SFP
-        manufacturename            |1*255VCHAR     |SFP vendor name
-        modelname                  |1*255VCHAR     |SFP model name
-        Connector                  |1*255VCHAR     |connector information
+        hardware_rev               |1*255VCHAR     |hardware version of SFP
+        serial                     |1*255VCHAR     |serial number of the SFP
+        manufacturer               |1*255VCHAR     |SFP vendor name
+        model                      |1*255VCHAR     |SFP model name
+        connector                  |1*255VCHAR     |connector information
         encoding                   |1*255VCHAR     |encoding information
         ext_identifier             |1*255VCHAR     |extend identifier
         ext_rateselect_compliance  |1*255VCHAR     |extended rateSelect compliance
@@ -444,13 +431,13 @@ class Sfp(SfpBase):
                 return None
 
             transceiver_info_dict['type'] = sfp_type_data['data']['type']['value']
-            transceiver_info_dict['manufacturename'] = sfp_vendor_name_data['data']['Vendor Name']['value']
-            transceiver_info_dict['modelname'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardwarerev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
-            transceiver_info_dict['serialnum'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
+            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
+            transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
+            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             transceiver_info_dict['vendor_oui'] = 'N/A'
             transceiver_info_dict['vendor_date'] = 'N/A'
-            transceiver_info_dict['Connector'] = 'N/A'
+            transceiver_info_dict['connector'] = 'N/A'
             transceiver_info_dict['encoding'] = 'N/A'
             transceiver_info_dict['ext_identifier'] = 'N/A'
             transceiver_info_dict['ext_rateselect_compliance'] = 'N/A'
@@ -521,18 +508,17 @@ class Sfp(SfpBase):
             sfp_vendor_date_data = sfpi_obj.parse_vendor_date(
                 sfp_interface_bulk_raw[start: end], 0)
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
-            transceiver_info_dict['manufacturename'] = sfp_vendor_name_data['data']['Vendor Name']['value']
-            transceiver_info_dict['modelname'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
-            transceiver_info_dict['hardwarerev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
-            transceiver_info_dict['serialnum'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
+            transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
+            transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
+            transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
+            transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value']
             transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value']
             transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
                 'data']['VendorDataCode(YYYY-MM-DD Lot)']['value']
-            transceiver_info_dict['Connector'] = sfp_interface_bulk_data['data']['Connector']['value']
+            transceiver_info_dict['connector'] = sfp_interface_bulk_data['data']['Connector']['value']
             transceiver_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
             transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
             transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
-
 
             if self.sfp_type == QSFP_TYPE:
                 for key in qsfp_cable_length_tup:
@@ -1321,11 +1307,7 @@ class Sfp(SfpBase):
             Returns:
             string: The name of the device
         """
-        sfputil_helper = SfpUtilHelper()
-        sfputil_helper.read_porttab_mappings(
-            self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
-        return name
+        return self.name
 
     def get_presence(self):
         """
@@ -1359,7 +1341,7 @@ class Sfp(SfpBase):
             string: Model/part number of device
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
-        return transceiver_dom_info_dict.get("modelname", "N/A")
+        return transceiver_dom_info_dict.get("model", "N/A")
 
     def get_serial(self):
         """
@@ -1368,7 +1350,7 @@ class Sfp(SfpBase):
             string: Serial number of device
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
-        return transceiver_dom_info_dict.get("serialnum", "N/A")
+        return transceiver_dom_info_dict.get("serial", "N/A")
 
     def get_status(self):
         """

@@ -1,20 +1,25 @@
-#!/usr/bin/env python
-import calendar
+from __future__ import print_function
+
+import ipaddress
 import math
 import os
 import sys
-import socket
-import struct
 import json
-import copy
-import ipaddr as ipaddress
 from collections import defaultdict
 
 from lxml import etree as ET
 from lxml.etree import QName
 
+
 from portconfig import get_port_config
-from sonic_device_util import get_npu_id_from_name
+from sonic_py_common.multi_asic import get_asic_id_from_name
+from sonic_py_common.interface import backplane_prefix
+
+# TODO: Remove this once we no longer support Python 2
+if sys.version_info.major == 3:
+    UNICODE_TYPE = str
+else:
+    UNICODE_TYPE = unicode
 
 """minigraph.py
 version_added: "1.9"
@@ -32,12 +37,12 @@ spine_chassis_frontend_role = 'SpineChassisFrontendRouter'
 chassis_backend_role = 'ChassisBackendRouter'
 
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
+console_device_types = ['MgmtTsToR']
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
 FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
 BACKEND_ASIC_SUB_ROLE = 'BackEnd'
-BACKEND_ASIC_INTERFACE_NAME_PREFIX = 'Ethernet-BP'
 
 # Default Virtual Network Index (VNI) 
 vni_default = 8000
@@ -57,19 +62,34 @@ class minigraph_encoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
+def get_peer_switch_info(link_metadata, devices):
+    peer_switch_table = {}
+    for data in link_metadata.values():
+        if "PeerSwitch" in data:
+            peer_hostname = data["PeerSwitch"]
+            peer_lo_addr_str = devices[peer_hostname]["lo_addr"]
+            peer_lo_addr = ipaddress.ip_network(UNICODE_TYPE(peer_lo_addr_str)) if peer_lo_addr_str else None
+
+            peer_switch_table[peer_hostname] = {
+                'address_ipv4': str(peer_lo_addr.network_address) if peer_lo_addr else peer_lo_addr_str
+            }
+
+    return peer_switch_table
+
 def parse_device(device):
     lo_prefix = None
+    lo_prefix_v6 = None
     mgmt_prefix = None
     d_type = None   # don't shadow type()
     hwsku = None
     name = None
     deployment_id = None
-    if str(QName(ns3, "type")) in device.attrib:
-        d_type = device.attrib[str(QName(ns3, "type"))]
 
     for node in device:
         if node.tag == str(QName(ns, "Address")):
             lo_prefix = node.find(str(QName(ns2, "IPPrefix"))).text
+        elif node.tag == str(QName(ns, "AddressV6")):
+            lo_prefix_v6 = node.find(str(QName(ns2, "IPPrefix"))).text
         elif node.tag == str(QName(ns, "ManagementAddress")):
             mgmt_prefix = node.find(str(QName(ns2, "IPPrefix"))).text
         elif node.tag == str(QName(ns, "Hostname")):
@@ -78,9 +98,81 @@ def parse_device(device):
             hwsku = node.text
         elif node.tag == str(QName(ns, "DeploymentId")):
             deployment_id = node.text
-    return (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id)
+        elif node.tag == str(QName(ns, "ElementType")):
+            d_type = node.text
 
-def parse_png(png, hname):
+    if d_type is None and str(QName(ns3, "type")) in device.attrib:
+        d_type = device.attrib[str(QName(ns3, "type"))]
+
+    return (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id)
+
+def calculate_lcm_for_ecmp (nhdevices_bank_map, nhip_bank_map):
+    banks_enumerated = {}
+    lcm_array = []
+    for value in nhdevices_bank_map.values():
+        for key in nhip_bank_map.keys():
+            if nhip_bank_map[key] == value:
+                if value not in banks_enumerated:
+                    banks_enumerated[value] = 1
+                else:
+                    banks_enumerated[value] = banks_enumerated[value] + 1
+    for bank_enumeration in banks_enumerated.values():
+        lcm_list = range(1, bank_enumeration+1)
+        lcm_comp = lcm_list[0]
+        for i in lcm_list[1:]:
+            lcm_comp = lcm_comp * i / calculate_gcd(lcm_comp, i)
+        lcm_array.append(lcm_comp)
+
+    LCM = sum(lcm_array)
+    return int(LCM)
+
+def calculate_gcd(x, y):
+    while y != 0:
+        (x, y) = (y, x % y)
+    return int(x)
+
+def formulate_fine_grained_ecmp(version, dpg_ecmp_content, port_device_map, port_alias_map):
+    family = ""
+    tag = ""
+    neigh_key = []
+    if version == "ipv4":
+        family = "IPV4"
+        tag = "fgnhg_v4"
+    elif version == "ipv6":
+        family = "IPV6"
+        tag = "fgnhg_v6"
+
+    port_nhip_map = dpg_ecmp_content['port_nhip_map']
+    nhgaddr = dpg_ecmp_content['nhgaddr']
+    nhg_int = dpg_ecmp_content['nhg_int']
+
+    nhip_device_map = {port_nhip_map[x]: port_device_map[x] for x in port_device_map
+                         if x in port_nhip_map}
+    nhip_devices = sorted(list(set(nhip_device_map.values())))
+    nhdevices_ip_bank_map = {device: bank for bank, device in enumerate(nhip_devices)}
+    nhip_bank_map = {ip: nhdevices_ip_bank_map[device] for ip, device in nhip_device_map.items()}
+    LCM = calculate_lcm_for_ecmp(nhdevices_ip_bank_map, nhip_bank_map)
+
+    FG_NHG_MEMBER = {ip: {"FG_NHG": tag, "bank": bank} for ip, bank in nhip_bank_map.items()}
+    nhip_port_map = dict(zip(port_nhip_map.values(), port_nhip_map.keys()))
+
+    
+
+    for nhip, memberinfo in FG_NHG_MEMBER.items():
+        if nhip in nhip_port_map:
+            memberinfo["link"] = port_alias_map[nhip_port_map[nhip]]
+            FG_NHG_MEMBER[nhip] = memberinfo
+
+    FG_NHG_PREFIX = {nhgaddr: {"FG_NHG": tag}}
+    FG_NHG = {tag: {"bucket_size": LCM}}
+    for ip in nhip_bank_map:
+        neigh_key.append(str(nhg_int + "|" + ip))
+    NEIGH = {neigh_key: {"family": family} for neigh_key in neigh_key}
+
+    fine_grained_content = {"FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG, "FG_NHG_PREFIX": FG_NHG_PREFIX, "NEIGH": NEIGH}
+    return fine_grained_content
+
+def parse_png(png, hname, dpg_ecmp_content = None):
     neighbors = {}
     devices = {}
     console_dev = ''
@@ -89,6 +181,15 @@ def parse_png(png, hname):
     mgmt_port = ''
     port_speeds = {}
     console_ports = {}
+    mux_cable_ports = {}
+    is_storage_device = False
+    port_device_map = {}
+    png_ecmp_content = {}
+    FG_NHG_MEMBER = {}
+    FG_NHG_PREFIX = {}
+    FG_NHG = {}
+    NEIGH = {}
+
     for child in png:
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for link in child.findall(str(QName(ns, "DeviceLinkBase"))):
@@ -114,6 +215,11 @@ def parse_png(png, hname):
                             }
                     continue
 
+                if linktype == "DeviceInterfaceLink":
+                    endport = link.find(str(QName(ns, "EndPort"))).text
+                    startdevice = link.find(str(QName(ns, "StartDevice"))).text
+                    port_device_map[endport] = startdevice
+
                 if linktype != "DeviceInterfaceLink" and linktype != "UnderlayInterfaceLink":
                     continue
 
@@ -124,13 +230,13 @@ def parse_png(png, hname):
                 bandwidth_node = link.find(str(QName(ns, "Bandwidth")))
                 bandwidth = bandwidth_node.text if bandwidth_node is not None else None
                 if enddevice.lower() == hname.lower():
-                    if port_alias_map.has_key(endport):
+                    if endport in port_alias_map:
                         endport = port_alias_map[endport]
                     neighbors[endport] = {'name': startdevice, 'port': startport}
                     if bandwidth:
                         port_speeds[endport] = bandwidth
                 elif startdevice.lower() == hname.lower():
-                    if port_alias_map.has_key(startport):
+                    if startport in port_alias_map:
                         startport = port_alias_map[startport]
                     neighbors[startport] = {'name': enddevice, 'port': endport}
                     if bandwidth:
@@ -138,11 +244,19 @@ def parse_png(png, hname):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
+                (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
                 if deployment_id:
                     device_data['deployment_id'] = deployment_id
+                if lo_prefix_v6:
+                    device_data['lo_addr_v6'] = lo_prefix_v6
                 devices[name] = device_data
+
+                if name == hname:
+                    cluster = device.find(str(QName(ns, "ClusterName")))
+
+                    if cluster != None and "str" in cluster.text.lower():
+                        is_storage_device = True
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
             for if_link in child.findall(str(QName(ns, 'DeviceLinkBase'))):
@@ -161,7 +275,29 @@ def parse_png(png, hname):
                             elif node.tag == str(QName(ns, "EndDevice")):
                                 mgmt_dev = node.text
 
-    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports)
+
+        if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
+            for link in child.findall(str(QName(ns, 'DeviceLinkBase'))):
+                if link.find(str(QName(ns, "ElementType"))).text == "LogicalLink":
+                    intf_name = link.find(str(QName(ns, "EndPort"))).text
+                    if intf_name in port_alias_map:
+                        intf_name = port_alias_map[intf_name]
+
+                    mux_cable_ports[intf_name] = "true"
+
+        if (len(dpg_ecmp_content)):
+            for version, content in dpg_ecmp_content.items():  # version is ipv4 or ipv6
+                fine_grained_content = formulate_fine_grained_ecmp(version, content, port_device_map, port_alias_map)  # port_alias_map
+                FG_NHG_MEMBER.update(fine_grained_content['FG_NHG_MEMBER'])
+                FG_NHG_PREFIX.update(fine_grained_content['FG_NHG_PREFIX'])
+                FG_NHG.update(fine_grained_content['FG_NHG'])
+                NEIGH.update(fine_grained_content['NEIGH'])
+
+            png_ecmp_content = {"FG_NHG_PREFIX": FG_NHG_PREFIX, "FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG,
+                            "NEIGH": NEIGH}
+
+    return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports, is_storage_device, png_ecmp_content)
+
 
 def parse_asic_external_link(link, asic_name, hostname):
     neighbors = {}
@@ -175,14 +311,14 @@ def parse_asic_external_link(link, asic_name, hostname):
     # if chassis internal is false, the interface name will be
     # interface alias which should be converted to asic port name
     if (enddevice.lower() == hostname.lower()):
-        if ((port_alias_asic_map.has_key(endport)) and
+        if ((endport in port_alias_asic_map) and
                 (asic_name.lower() in port_alias_asic_map[endport].lower())):
             endport = port_alias_asic_map[endport]
             neighbors[port_alias_map[endport]] = {'name': startdevice, 'port': startport}
             if bandwidth:
                 port_speeds[port_alias_map[endport]] = bandwidth
     elif (startdevice.lower() == hostname.lower()):
-        if ((port_alias_asic_map.has_key(startport)) and
+        if ((startport in port_alias_asic_map) and
                 (asic_name.lower() in port_alias_asic_map[startport].lower())):
             startport = port_alias_asic_map[startport]
             neighbors[port_alias_map[startport]] = {'name': enddevice, 'port': endport}
@@ -202,14 +338,14 @@ def parse_asic_internal_link(link, asic_name, hostname):
     bandwidth = bandwidth_node.text if bandwidth_node is not None else None
     if ((enddevice.lower() == asic_name.lower()) and
             (startdevice.lower() != hostname.lower())):
-        if port_alias_map.has_key(endport):
+        if endport in port_alias_map:
             endport = port_alias_map[endport]
             neighbors[endport] = {'name': startdevice, 'port': startport}
             if bandwidth:
                 port_speeds[endport] = bandwidth
     elif ((startdevice.lower() == asic_name.lower()) and
             (enddevice.lower() != hostname.lower())):
-        if port_alias_map.has_key(startport):
+        if startport in port_alias_map:
             startport = port_alias_map[startport]
             neighbors[startport] = {'name': enddevice, 'port': endport}
             if bandwidth:
@@ -244,16 +380,30 @@ def parse_asic_png(png, asic_name, hostname):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
+                (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
                 if deployment_id:
                     device_data['deployment_id'] = deployment_id
+                if lo_prefix_v6:
+                    device_data['lo_addr_v6']= lo_prefix_v6
                 devices[name] = device_data
+
+
     return (neighbors, devices, port_speeds)
+
+def parse_loopback_intf(child):
+    lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
+    lo_intfs = {}
+    for lointf in lointfs.findall(str(QName(ns1, "LoopbackIPInterface"))):
+        intfname = lointf.find(str(QName(ns, "AttachTo"))).text
+        ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
+        lo_intfs[(intfname, ipprefix)] = {}
+    return lo_intfs
 
 def parse_dpg(dpg, hname):
     aclintfs = None
     mgmtintfs = None
+    tunnelintfs = defaultdict(dict)
     for child in dpg:
         """ 
             In Multi-NPU platforms the acl intfs are defined only for the host not for individual asic.
@@ -269,7 +419,6 @@ def parse_dpg(dpg, hname):
         """
         if mgmtintfs is None and child.find(str(QName(ns, "ManagementIPInterfaces"))) is not None:
             mgmtintfs = child.find(str(QName(ns, "ManagementIPInterfaces")))
-        
         hostname = child.find(str(QName(ns, "Hostname")))
         if hostname.text.lower() != hname.lower():
             continue
@@ -280,22 +429,18 @@ def parse_dpg(dpg, hname):
             if vni_element.text.isdigit():
                 vni = int(vni_element.text)
             else:
-                print >> sys.stderr, "VNI must be an integer (use default VNI %d instead)" % vni_default 
+                print("VNI must be an integer (use default VNI %d instead)" % vni_default, file=sys.stderr) 
 
         ipintfs = child.find(str(QName(ns, "IPInterfaces")))
         intfs = {}
+        ip_intfs_map = {}
         for ipintf in ipintfs.findall(str(QName(ns, "IPInterface"))):
             intfalias = ipintf.find(str(QName(ns, "AttachTo"))).text
             intfname = port_alias_map.get(intfalias, intfalias)
             ipprefix = ipintf.find(str(QName(ns, "Prefix"))).text
             intfs[(intfname, ipprefix)] = {}
-
-        lointfs = child.find(str(QName(ns, "LoopbackIPInterfaces")))
-        lo_intfs = {}
-        for lointf in lointfs.findall(str(QName(ns1, "LoopbackIPInterface"))):
-            intfname = lointf.find(str(QName(ns, "AttachTo"))).text
-            ipprefix = lointf.find(str(QName(ns1, "PrefixStr"))).text
-            lo_intfs[(intfname, ipprefix)] = {}
+            ip_intfs_map[ipprefix] = intfalias
+        lo_intfs =  parse_loopback_intf(child)
 
         mvrfConfigs = child.find(str(QName(ns, "MgmtVrfConfigs")))
         mvrf = {}
@@ -309,8 +454,8 @@ def parse_dpg(dpg, hname):
         for mgmtintf in mgmtintfs.findall(str(QName(ns1, "ManagementIPInterface"))):
             intfname = mgmtintf.find(str(QName(ns, "AttachTo"))).text
             ipprefix = mgmtintf.find(str(QName(ns1, "PrefixStr"))).text
-            mgmtipn = ipaddress.IPNetwork(ipprefix)
-            gwaddr = ipaddress.IPAddress(int(mgmtipn.network) + 1)
+            mgmtipn = ipaddress.ip_network(UNICODE_TYPE(ipprefix), False)
+            gwaddr = ipaddress.ip_address(next(mgmtipn.hosts()))
             mgmt_intf[(intfname, ipprefix)] = {'gwaddr': gwaddr}
 
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
@@ -331,20 +476,66 @@ def parse_dpg(dpg, hname):
                 pcs[pcintfname] = {'members': pcmbr_list, 'fallback': pcintf.find(str(QName(ns, "Fallback"))).text, 'min_links': str(int(math.ceil(len() * 0.75)))}
             else:
                 pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75)))}
+        port_nhipv4_map = {}
+        port_nhipv6_map = {}
+        nhgaddr = ["", ""]
+        nhg_int = ""
+        nhportlist = []
+        dpg_ecmp_content = {}
+        ipnhs = child.find(str(QName(ns, "IPNextHops")))
+        if ipnhs is not None:
+            for ipnh in ipnhs.findall(str(QName(ns, "IPNextHop"))):
+                if ipnh.find(str(QName(ns, "Type"))).text == 'FineGrainedECMPGroupMember':
+                    ipnhfmbr = ipnh.find(str(QName(ns, "AttachTo"))).text
+                    ipnhaddr = ipnh.find(str(QName(ns, "Address"))).text
+                    nhportlist.append(ipnhfmbr)
+                    if "." in ipnhaddr:
+                        port_nhipv4_map[ipnhfmbr] = ipnhaddr
+                    elif ":" in ipnhaddr:
+                        port_nhipv6_map[ipnhfmbr] = ipnhaddr
 
+            if port_nhipv4_map is not None and port_nhipv6_map is not None:
+                subnet_check_ip = list(port_nhipv4_map.values())[0]
+                for subnet_range in ip_intfs_map:
+                    if ("." in subnet_range):
+                        a = ipaddress.ip_address(UNICODE_TYPE(subnet_check_ip))
+                        n = list(ipaddress.ip_network(UNICODE_TYPE(subnet_range), False).hosts())
+                        if a in n:
+                            nhg_int = ip_intfs_map[subnet_range]
+                dwnstrms = child.find(str(QName(ns, "DownstreamSummarySet")))
+                for dwnstrm in dwnstrms.findall(str(QName(ns, "DownstreamSummary"))):
+                    dwnstrmentry = str(ET.tostring(dwnstrm))
+                    if ("FineGrainedECMPGroupDestination" in dwnstrmentry):
+                        subnet_ip = dwnstrm.find(str(QName(ns1, "Subnet"))).text
+                        truncsubnet_ip = subnet_ip.split("/")[0]
+                        if "." in (truncsubnet_ip):
+                            nhgaddr[0] = subnet_ip
+                        elif ":" in (truncsubnet_ip):
+                            nhgaddr[1] = subnet_ip
+                ipv4_content = {"port_nhip_map": port_nhipv4_map, "nhgaddr": nhgaddr[0], "nhg_int": nhg_int}
+                ipv6_content = {"port_nhip_map": port_nhipv6_map, "nhgaddr": nhgaddr[1], "nhg_int": nhg_int}
+                dpg_ecmp_content['ipv4'] = ipv4_content
+                dpg_ecmp_content['ipv6'] = ipv6_content
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
         vlan_intfs = []
         vlans = {}
         vlan_members = {}
+        vlantype_name = ""
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
+            vlantype = vintf.find(str(QName(ns, "Type")))
+            if vlantype != None:
+                vlantype_name = vintf.find(str(QName(ns, "Type"))).text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
                 vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
-                vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
+                if vlantype_name == "Tagged":
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
+                else:
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
             vlan_attributes = {'vlanid': vlanid}
 
@@ -355,6 +546,10 @@ def parse_dpg(dpg, hname):
                 vintfdhcpservers = vintf_node.text
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcp_servers'] = vdhcpserver_list
+
+            vlanmac = vintf.find(str(QName(ns, "MacAddress")))
+            if vlanmac != None:
+                vlan_attributes['mac'] = vlanmac.text
 
             sonic_vlan_name = "Vlan%s" % vlanid
             if sonic_vlan_name != vintfname:
@@ -381,18 +576,18 @@ def parse_dpg(dpg, hname):
             # decide an ACL is a Control Plane ACL if acl_intfs is empty below.
             for member in aclattach:
                 member = member.strip()
-                if pcs.has_key(member):
+                if member in pcs:
                     # If try to attach ACL to a LAG interface then we shall add the LAG to
                     # to acl_intfs directly instead of break it into member ports, ACL attach
                     # to LAG will be applied to all the LAG members internally by SAI/SDK
                     acl_intfs.append(member)
-                elif vlans.has_key(member):
+                elif member in vlans:
                     acl_intfs.append(member)
-                elif port_alias_map.has_key(member):
+                elif member in port_alias_map:
                     acl_intfs.append(port_alias_map[member])
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
                     if port_alias_map[member] in intfs_inpc:
-                        print >> sys.stderr, "Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface"
+                        print("Warning: ACL " + aclname + " is attached to a LAG member interface " + port_alias_map[member] + ", instead of LAG interface", file=sys.stderr)
                 elif member.lower().startswith('erspan') or member.lower().startswith('egress_erspan'):
                     if member.lower().startswith('erspanv6') or member.lower().startswith('egress_erspanv6'):
                         is_mirror_v6 = True
@@ -429,9 +624,9 @@ def parse_dpg(dpg, hname):
                     # append the service to our list of services
                     if aclname in acls:
                         if acls[aclname]['type'] != 'CTRLPLANE':
-                            print >> sys.stderr, "Warning: ACL '%s' type mismatch. Not updating ACL." % aclname
+                            print("Warning: ACL '%s' type mismatch. Not updating ACL." % aclname, file=sys.stderr)
                         elif acls[aclname]['services'] == aclservice:
-                            print >> sys.stderr, "Warning: ACL '%s' already contains service '%s'. Not updating ACL." % (aclname, aclservice)
+                            print("Warning: ACL '%s' already contains service '%s'. Not updating ACL." % (aclname, aclservice), file=sys.stderr)
                         else:
                             acls[aclname]['services'].append(aclservice)
                     else:
@@ -440,14 +635,41 @@ def parse_dpg(dpg, hname):
                                          'stage': stage,
                                          'services': [aclservice]}
                 except:
-                    print >> sys.stderr, "Warning: Ignoring Control Plane ACL %s without type" % aclname
+                    print("Warning: Ignoring Control Plane ACL %s without type" % aclname, file=sys.stderr)
 
-        return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni
+
+        mg_tunnels = child.find(str(QName(ns, "TunnelInterfaces")))
+        if mg_tunnels is not None:
+            table_key_to_mg_key_map = {"encap_ecn_mode": "EcnEncapsulationMode", 
+                                       "ecn_mode": "EcnDecapsulationMode", 
+                                       "dscp_mode": "DifferentiatedServicesCodePointMode", 
+                                       "ttl_mode": "TtlMode"}
+            for mg_tunnel in mg_tunnels.findall(str(QName(ns, "TunnelInterface"))):
+                tunnel_type = mg_tunnel.attrib["Type"]
+                tunnel_name = mg_tunnel.attrib["Name"]
+                tunnelintfs[tunnel_type][tunnel_name] = {
+                    "tunnel_type": mg_tunnel.attrib["Type"].upper(),
+                }
+
+                for table_key, mg_key in table_key_to_mg_key_map.items():
+                    # If the minigraph has the key, add the corresponding config DB key to the table
+                    if mg_key in mg_tunnel.attrib:
+                        tunnelintfs[tunnel_type][tunnel_name][table_key] = mg_tunnel.attrib[mg_key]
+
+        return intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni, tunnelintfs, dpg_ecmp_content
     return None, None, None, None, None, None, None, None, None, None
 
+def parse_host_loopback(dpg, hname):
+    for child in dpg:
+        hostname = child.find(str(QName(ns, "Hostname")))
+        if hostname.text.lower() != hname.lower():
+            continue
+        lo_intfs = parse_loopback_intf(child)
+        return lo_intfs
 
-def parse_cpg(cpg, hname):
+def parse_cpg(cpg, hname, local_devices=[]):
     bgp_sessions = {}
+    bgp_internal_sessions = {}
     myasn = None
     bgp_peers_with_range = {}
     for child in cpg:
@@ -468,24 +690,47 @@ def parse_cpg(cpg, hname):
                 else:
                     keepalive = 60
                 nhopself = 1 if session.find(str(QName(ns, "NextHopSelf"))) is not None else 0
+
                 if end_router.lower() == hname.lower():
-                    bgp_sessions[start_peer.lower()] = {
-                        'name': start_router,
-                        'local_addr': end_peer.lower(),
-                        'rrclient': rrclient,
-                        'holdtime': holdtime,
-                        'keepalive': keepalive,
-                        'nhopself': nhopself
-                    }
+                    if end_router.lower() in local_devices and start_router.lower() in local_devices:
+                        bgp_internal_sessions[start_peer.lower()] = {
+                            'name': start_router,
+                            'local_addr': end_peer.lower(),
+                            'rrclient': rrclient,
+                            'holdtime': holdtime,
+                            'keepalive': keepalive,
+                            'nhopself': nhopself,
+                            'admin_status': 'up'
+                        }
+                    else:
+                        bgp_sessions[start_peer.lower()] = {
+                            'name': start_router,
+                            'local_addr': end_peer.lower(),
+                            'rrclient': rrclient,
+                            'holdtime': holdtime,
+                            'keepalive': keepalive,
+                            'nhopself': nhopself
+                        }
                 elif start_router.lower() == hname.lower():
-                    bgp_sessions[end_peer.lower()] = {
-                        'name': end_router,
-                        'local_addr': start_peer.lower(),
-                        'rrclient': rrclient,
-                        'holdtime': holdtime,
-                        'keepalive': keepalive,
-                        'nhopself': nhopself
-                    }
+                    if end_router.lower() in local_devices and start_router.lower() in local_devices:
+                        bgp_internal_sessions[end_peer.lower()] = {
+                            'name': end_router,
+                            'local_addr': start_peer.lower(),
+                            'rrclient': rrclient,
+                            'holdtime': holdtime,
+                            'keepalive': keepalive,
+                            'nhopself': nhopself,
+                            'admin_status': 'up'
+                        }
+                    else:
+                        bgp_sessions[end_peer.lower()] = {
+                            'name': end_router,
+                            'local_addr': start_peer.lower(),
+                            'rrclient': rrclient,
+                            'holdtime': holdtime,
+                            'keepalive': keepalive,
+                            'nhopself': nhopself
+                        }
         elif child.tag == str(QName(ns, "Routers")):
             for router in child.findall(str(QName(ns1, "BGPRouterDeclaration"))):
                 asn = router.find(str(QName(ns1, "ASN"))).text
@@ -512,11 +757,16 @@ def parse_cpg(cpg, hname):
                         bgp_session = bgp_sessions[peer]
                         if hostname.lower() == bgp_session['name'].lower():
                             bgp_session['asn'] = asn
+                    for peer in bgp_internal_sessions:
+                        bgp_internal_session = bgp_internal_sessions[peer]
+                        if hostname.lower() == bgp_internal_session['name'].lower():
+                            bgp_internal_session['asn'] = asn
 
-    bgp_monitors = { key: bgp_sessions[key] for key in bgp_sessions if bgp_sessions[key].has_key('asn') and bgp_sessions[key]['name'] == 'BGPMonitor' }
-    bgp_sessions = { key: bgp_sessions[key] for key in bgp_sessions if bgp_sessions[key].has_key('asn') and int(bgp_sessions[key]['asn']) != 0 }
+    bgp_monitors = { key: bgp_sessions[key] for key in bgp_sessions if 'asn' in bgp_sessions[key] and bgp_sessions[key]['name'] == 'BGPMonitor' }
+    bgp_sessions = { key: bgp_sessions[key] for key in bgp_sessions if 'asn' in bgp_sessions[key] and int(bgp_sessions[key]['asn']) != 0 }
+    bgp_internal_sessions = { key: bgp_internal_sessions[key] for key in bgp_internal_sessions if 'asn' in bgp_internal_sessions[key] and int(bgp_internal_sessions[key]['asn']) != 0 }
 
-    return bgp_sessions, myasn, bgp_peers_with_range, bgp_monitors
+    return bgp_sessions, bgp_internal_sessions, myasn, bgp_peers_with_range, bgp_monitors
 
 
 def parse_meta(meta, hname):
@@ -529,6 +779,7 @@ def parse_meta(meta, hname):
     deployment_id = None
     region = None
     cloudtype = None
+    resource_type = None
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -555,7 +806,9 @@ def parse_meta(meta, hname):
                     region = value
                 elif name == "CloudType":
                     cloudtype = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype
+                elif name == "ResourceType":
+                    resource_type = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type
 
 
 def parse_linkmeta(meta, hname):
@@ -577,16 +830,31 @@ def parse_linkmeta(meta, hname):
             # Cannot find a matching hname, something went wrong
             continue
 
+        has_peer_switch = False
+        upper_tor_hostname = ''
+        lower_tor_hostname = ''
+
         properties = linkmeta.find(str(QName(ns1, "Properties")))
         for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
             name = device_property.find(str(QName(ns1, "Name"))).text
             value = device_property.find(str(QName(ns1, "Value"))).text
             if name == "FECDisabled":
                 fec_disabled = value
+            elif name == "GeminiPeeringLink":
+                has_peer_switch = True
+            elif name == "UpperTOR":
+                upper_tor_hostname = value
+            elif name == "LowerTOR":
+                lower_tor_hostname = value
 
         linkmetas[port] = {}
         if fec_disabled:
             linkmetas[port]["FECDisabled"] = fec_disabled
+        if has_peer_switch:
+            if upper_tor_hostname == hname:
+                linkmetas[port]["PeerSwitch"] = lower_tor_hostname
+            else:
+                linkmetas[port]["PeerSwitch"] = upper_tor_hostname
     return linkmetas
 
 
@@ -634,9 +902,9 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
     # Vxlan tunnel information
     lo_addr = '0.0.0.0'
     for lo in lo_intfs:
-        lo_network = ipaddress.IPNetwork(lo[1])
+        lo_network = ipaddress.ip_network(UNICODE_TYPE(lo[1]), False)
         if lo_network.version == 4:
-            lo_addr = str(lo_network.ip)
+            lo_addr = str(lo_network.network_address)
             break
     results['VXLAN_TUNNEL'] = {chassis_vxlan_tunnel: {
         'src_ip': lo_addr
@@ -678,8 +946,8 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
                 intf_name = pc_member[1]
                 break
 
-        if intf_name == None:
-            print >> sys.stderr, 'Warning: cannot find any interfaces that belong to %s' % (pc_intf)
+        if intf_name is None:
+            print('Warning: cannot find any interfaces that belong to %s' % (pc_intf), file=sys.stderr)
             continue
 
         # Get the neighbor router of this port channel interface
@@ -706,18 +974,18 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         return filter_acls
 
     front_port_channel_intf = []
+
+    # List of Backplane ports
+    backplane_port_list = [v for k,v in port_alias_map.items() if v.startswith(backplane_prefix())]
    
-    # Get the front panel port channel. It will use port_alias_asic_map
-    # which will get populated from port_config.ini for Multi-NPU 
-    # architecture
+    # Get the front panel port channel.
     for port_channel_intf in port_channels:
-        backend_port_channel = any(lag_member in port_alias_asic_map \
-                                   and lag_member.startswith(BACKEND_ASIC_INTERFACE_NAME_PREFIX) \
+        backend_port_channel = any(lag_member in backplane_port_list \
                                    for lag_member in port_channels[port_channel_intf]['members'])
         if not backend_port_channel:
             front_port_channel_intf.append(port_channel_intf)
 
-    for acl_table, group_params in acls.iteritems():
+    for acl_table, group_params in acls.items():
         group_type = group_params.get('type', None)
         filter_acls[acl_table] = acls[acl_table]
 
@@ -734,8 +1002,10 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         # This will be applicable in Multi-NPU Platforms.
         front_panel_ports = []
         for port in group_params.get('ports', []):
-            if port in port_alias_asic_map and port.startswith(BACKEND_ASIC_INTERFACE_NAME_PREFIX):
+            # Filter out backplane ports
+            if port in backplane_port_list:
                 continue
+            # Filter out backplane port channels
             if port in port_channels and port not in front_port_channel_intf:
                 continue
             front_panel_ports.append(port)
@@ -746,7 +1016,7 @@ def filter_acl_table_bindings(acls, neighbors, port_channels, sub_role):
         active_ports = [port for port in front_panel_ports if port in neighbors.keys() or port in front_port_channel_intf]
         
         if not active_ports:
-            print >> sys.stderr, 'Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table)
+            print('Warning: mirror table {} in ACL_TABLE does not have any ports bound to it'.format(acl_table), file=sys.stderr)
 
         filter_acls[acl_table]['ports'] = active_ports
 
@@ -772,7 +1042,7 @@ def enable_internal_bgp_session(bgp_sessions, filename, asic_name):
 # Main functions
 #
 ###############################################################################
-def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
+def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hwsku_config_file=None):
     """ Parse minigraph xml file.
 
     Keyword arguments:
@@ -782,6 +1052,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     asic_name -- asic name; to parse multi-asic device minigraph to 
     generate asic specific configuration.
      """
+
     root = ET.parse(filename).getroot()
 
     u_neighbors = None
@@ -791,8 +1062,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     bgp_monitors = []
     bgp_asn = None
     intfs = None
+    dpg_ecmp_content = {}
+    png_ecmp_content = {}
     vlan_intfs = None
     pc_intfs = None
+    tunnel_intfs = None
     vlans = None
     vlan_members = None
     pcs = None
@@ -801,11 +1075,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     neighbors = None
     devices = None
     sub_role = None
+    resource_type = None
     docker_routing_config_mode = "separated"
     port_speeds_default = {}
     port_speed_png = {}
     port_descriptions = {}
     console_ports = {}
+    mux_cable_ports = {}
     syslog_servers = []
     dhcp_servers = []
     ntp_servers = []
@@ -818,10 +1094,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     cloudtype = None
     hostname = None
     linkmetas = {}
+    host_lo_intfs = None
+    is_storage_device = False
+    local_devices = []
 
     # hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
-        asic_id = get_npu_id_from_name(asic_name)
+        asic_id = get_asic_id_from_name(asic_name)
     else:
         asic_id = None
 
@@ -836,32 +1115,35 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         if child.tag == str(docker_routing_config_mode_qn):
             docker_routing_config_mode = child.text
 
-    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id)
+    (ports, alias_map, alias_asic_map) = get_port_config(hwsku=hwsku, platform=platform, port_config_file=port_config_file, asic=asic_id, hwsku_config_file=hwsku_config_file)
     port_alias_map.update(alias_map)
     port_alias_asic_map.update(alias_asic_map)
+
+    # Get the local device node from DeviceMetadata
+    local_devices = parse_asic_meta_get_devices(root)
 
     for child in root:
         if asic_name is None:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, hostname)
+                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content) = parse_dpg(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
-                (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
+                (bgp_sessions, bgp_internal_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
             elif child.tag == str(QName(ns, "PngDec")):
-                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports) = parse_png(child, hostname)
+                (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports, is_storage_device, png_ecmp_content) = parse_png(child, hostname, dpg_ecmp_content)
             elif child.tag == str(QName(ns, "UngDec")):
-                (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname)
+                (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
                 (port_speeds_default, port_descriptions) = parse_deviceinfo(child, hwsku)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
-                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni) = parse_dpg(child, asic_name)
+                (intfs, lo_intfs, mvrf, mgmt_intf, vlans, vlan_members, pcs, pc_members, acls, vni, tunnel_intfs, dpg_ecmp_content) = parse_dpg(child, asic_name)
+                host_lo_intfs = parse_host_loopback(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
-                (bgp_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name)
-                enable_internal_bgp_session(bgp_sessions, filename, asic_name)
+                (bgp_sessions, bgp_internal_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name, local_devices)
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
@@ -887,28 +1169,43 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         'docker_routing_config_mode': docker_routing_config_mode,
         'hostname': hostname,
         'hwsku': hwsku,
-        'type': device_type
+        'type': device_type,
+        'synchronous_mode': 'enable'
         }
     }
+
+    results['PEER_SWITCH'] = get_peer_switch_info(linkmetas, devices)
+
+    if bool(results['PEER_SWITCH']):
+        results['DEVICE_METADATA']['localhost']['subtype'] = 'DualToR'
+
+    if is_storage_device:
+        results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
+
     # for this hostname, if sub_role is defined, add sub_role in 
     # device_metadata
     if sub_role is not None:
         current_device['sub_role'] = sub_role
         results['DEVICE_METADATA']['localhost']['sub_role'] =  sub_role
         results['DEVICE_METADATA']['localhost']['asic_name'] =  asic_name
+
+    if resource_type is not None:
+        results['DEVICE_METADATA']['localhost']['resource_type'] = resource_type
+
     results['BGP_NEIGHBOR'] = bgp_sessions
     results['BGP_MONITORS'] = bgp_monitors
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
+    results['BGP_INTERNAL_NEIGHBOR'] = bgp_internal_sessions
     if mgmt_routes:
         # TODO: differentiate v4 and v6
-        mgmt_intf.itervalues().next()['forced_mgmt_routes'] = mgmt_routes
+        next(iter(mgmt_intf.values()))['forced_mgmt_routes'] = mgmt_routes
     results['MGMT_PORT'] = {}
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
     mgmt_alias_reverse_mapping = {}
     for key in mgmt_intf:
         alias = key[0]
-        if mgmt_alias_reverse_mapping.has_key(alias):
+        if alias in mgmt_alias_reverse_mapping:
             name = mgmt_alias_reverse_mapping[alias]
         else:
             name = 'eth' + str(mgmt_intf_count)
@@ -922,21 +1219,41 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     for lo_intf in lo_intfs:
         results['LOOPBACK_INTERFACE'][lo_intf] = lo_intfs[lo_intf]
         results['LOOPBACK_INTERFACE'][lo_intf[0]] = {}
+
+    if host_lo_intfs is not None:
+        for host_lo_intf in host_lo_intfs:
+            results['LOOPBACK_INTERFACE'][host_lo_intf] = host_lo_intfs[host_lo_intf]
+            results['LOOPBACK_INTERFACE'][host_lo_intf[0]] = {}
+
     results['MGMT_VRF_CONFIG'] = mvrf
 
     phyport_intfs = {}
     vlan_intfs = {}
     pc_intfs = {}
-    vlan_invert_mapping = { v['alias']:k for k,v in vlans.items() if v.has_key('alias') }
+    vlan_invert_mapping = { v['alias']:k for k,v in vlans.items() if 'alias' in v }
     vlan_sub_intfs = {}
 
     for intf in intfs:
         if intf[0][0:4] == 'Vlan':
             vlan_intfs[intf] = {}
-            vlan_intfs[intf[0]] = {}
-        elif vlan_invert_mapping.has_key(intf[0]):
+
+            if bool(results['PEER_SWITCH']):
+                vlan_intfs[intf[0]] = {
+                    'proxy_arp': 'enabled',
+                    'grat_arp': 'enabled'
+                }
+            else:
+                vlan_intfs[intf[0]] = {}
+        elif intf[0] in vlan_invert_mapping:
             vlan_intfs[(vlan_invert_mapping[intf[0]], intf[1])] = {}
-            vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
+
+            if bool(results['PEER_SWITCH']):
+                vlan_intfs[vlan_invert_mapping[intf[0]]] = {
+                    'proxy_arp': 'enabled',
+                    'grat_arp': 'enabled'
+                }
+            else:
+                vlan_intfs[vlan_invert_mapping[intf[0]]] = {}
         elif intf[0][0:11] == 'PortChannel':
             pc_intfs[intf] = {}
             pc_intfs[intf[0]] = {}
@@ -949,7 +1266,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
 
     for port_name in port_speeds_default:
         # ignore port not in port_config.ini
-        if not ports.has_key(port_name):
+        if port_name not in ports:
             continue
 
         ports.setdefault(port_name, {})['speed'] = port_speeds_default[port_name]
@@ -959,33 +1276,35 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         # If no port_config_file is found ports is empty so ignore this error
         if port_config_file is not None:
             if port_name not in ports:
-                print >> sys.stderr, "Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name
+                print("Warning: ignore interface '%s' as it is not in the port_config.ini" % port_name, file=sys.stderr)
                 continue
 
         ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
-    for port_name, port in ports.items():
+    for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
-        if port_config_file:
-            alias = port.get('alias')
-        else:
-            alias = port_name
+        alias = port.get('alias', port_name)
         # generate default 100G FEC
         # Note: FECDisabled only be effective on 100G port right now
         if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
             port['fec'] = 'rs'
 
+    # If connected to a smart cable, get the connection position
+    for port_name, port in ports.items():
+        if port_name in mux_cable_ports:
+            port['mux_cable'] = mux_cable_ports[port_name]
+
     # set port description if parsed from deviceinfo
     for port_name in port_descriptions:
         # ignore port not in port_config.ini
-        if not ports.has_key(port_name):
+        if port_name not in ports:
             continue
 
         ports.setdefault(port_name, {})['description'] = port_descriptions[port_name]
 
     for port_name, port in ports.items():
         if not port.get('description'):
-            if neighbors.has_key(port_name):
+            if port_name in neighbors:
                 # for the ports w/o description set it to neighbor name:port
                 port['description'] = "%s:%s" % (neighbors[port_name]['name'], neighbors[port_name]['port'])
             else:
@@ -993,11 +1312,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
                 port['description'] = port.get('alias', port_name)
 
     # set default port MTU as 9100
-    for port in ports.itervalues():
+    for port in ports.values():
         port['mtu'] = '9100'
 
     # asymmetric PFC is disabled by default
-    for port in ports.itervalues():
+    for port in ports.values():
         port['pfc_asym'] = 'off'
 
     # set physical port default admin status up
@@ -1005,41 +1324,46 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         if port[0] in ports:
             ports.get(port[0])['admin_status'] = 'up'
 
-    for member in pc_members.keys() + vlan_members.keys():
+    for member in list(pc_members.keys()) + list(vlan_members.keys()):
         port = ports.get(member[1])
         if port:
             port['admin_status'] = 'up'
+
+    for port in neighbors.keys():
+        if port in ports.keys():
+            # make all neighbors connected ports to 'admin_up'
+            ports[port]['admin_status'] = 'up'
 
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
 
     if port_config_file:
         port_set = set(ports.keys())
-        for (pc_name, mbr_map) in pcs.items():
+        for (pc_name, mbr_map) in list(pcs.items()):
             # remove portchannels that contain ports not existing in port_config.ini
             # when port_config.ini exists
             if not set(mbr_map['members']).issubset(port_set):
-                print >> sys.stderr, "Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name
+                print("Warning: ignore '%s' as part of its member interfaces is not in the port_config.ini" % pc_name, file=sys.stderr)
                 del pcs[pc_name]
 
     # set default port channel MTU as 9100 and admin status up
-    for pc in pcs.itervalues():
+    for pc in pcs.values():
         pc['mtu'] = '9100'
         pc['admin_status'] = 'up'
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
 
-    for pc_intf in pc_intfs.keys():
+    for pc_intf in list(pc_intfs.keys()):
         # remove portchannels not in PORTCHANNEL dictionary
         if isinstance(pc_intf, tuple) and pc_intf[0] not in pcs:
-            print >> sys.stderr, "Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0])
+            print("Warning: ignore '%s' interface '%s' as '%s' is not in the valid PortChannel list" % (pc_intf[0], pc_intf[1], pc_intf[0]), file=sys.stderr)
             del pc_intfs[pc_intf]
             pc_intfs.pop(pc_intf[0], None)
 
     results['PORTCHANNEL_INTERFACE'] = pc_intfs
 
-    if current_device['type'] in backend_device_types:
+    if current_device['type'] in backend_device_types and is_storage_device:
         del results['INTERFACE']
         del results['PORTCHANNEL_INTERFACE']
 
@@ -1068,11 +1392,15 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
 
-    for nghbr in neighbors.keys():
+    results['TUNNEL'] = get_tunnel_entries(tunnel_intfs, lo_intfs, hostname)
+
+    results['MUX_CABLE'] = get_mux_cable_entries(mux_cable_ports, neighbors, devices)
+
+    for nghbr in list(neighbors.keys()):
         # remove port not in port_config.ini
         if nghbr not in ports:
             if port_config_file is not None:
-                print >> sys.stderr, "Warning: ignore interface '%s' in DEVICE_NEIGHBOR as it is not in the port_config.ini" % nghbr
+                print("Warning: ignore interface '%s' in DEVICE_NEIGHBOR as it is not in the port_config.ini" % nghbr, file=sys.stderr)
             del neighbors[nghbr]
     results['DEVICE_NEIGHBOR'] = neighbors
     if asic_name is None:
@@ -1110,18 +1438,25 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
         'certs': {
             'server_crt': '/etc/sonic/credentials/restapiserver.crt',
             'server_key': '/etc/sonic/credentials/restapiserver.key',
-            'client_ca_crt': '/etc/sonic/credentials/restapiclient.crt',
+            'ca_crt': '/etc/sonic/credentials/restapica.crt',
             'client_crt_cname': 'client.restapi.sonic'
         }
     }
+
+    if len(png_ecmp_content):
+        results['FG_NHG_MEMBER'] = png_ecmp_content['FG_NHG_MEMBER']
+        results['FG_NHG_PREFIX'] = png_ecmp_content['FG_NHG_PREFIX']
+        results['FG_NHG'] = png_ecmp_content['FG_NHG']
+        results['NEIGH'] = png_ecmp_content['NEIGH']
+
     # Do not configure the minigraph's mirror session, which is currently unused
     # mirror_sessions = {}
     # if erspan_dst:
     #     lo_addr = '0.0.0.0'
     #     for lo in lo_intfs:
-    #         lo_network = ipaddress.IPNetwork(lo[1])
+    #         lo_network = ipaddress.ip_network(UNICODE_TYPE(lo[1]), False)
     #         if lo_network.version == 4:
-    #             lo_addr = str(lo_network.ip)
+    #             lo_addr = str(lo_network.network_address)
     #             break
     #     count = 0
     #     for dst in erspan_dst:
@@ -1133,12 +1468,49 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None):
     if current_device['type'] == spine_chassis_frontend_role:
         parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_members, devices)
 
+    # Enable console management feature for console swtich
+    results['CONSOLE_SWITCH'] = {
+        'console_mgmt' : {
+            'enabled' : 'yes' if current_device['type'] in console_device_types else 'no'
+        }
+    }
+
     return results
 
+def get_tunnel_entries(tunnel_intfs, lo_intfs, hostname):
+    lo_addr = ''
+    # Use the first IPv4 loopback as the tunnel destination IP
+    for addr in lo_intfs.keys():
+        ip_addr = ipaddress.ip_network(UNICODE_TYPE(addr[1]))
+        if isinstance(ip_addr, ipaddress.IPv4Network):
+            lo_addr = str(ip_addr.network_address)
+            break
+
+    tunnels = {}
+    for type, tunnel_dict in tunnel_intfs.items():
+        for tunnel_key, tunnel_attr in tunnel_dict.items():
+            tunnel_attr['dst_ip'] = lo_addr
+            tunnels[tunnel_key] = tunnel_attr
+    return tunnels
+
+def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
+    mux_cable_table = {}
+
+    for intf in mux_cable_ports:
+        if intf in neighbors:
+            entry = {}
+            neighbor = neighbors[intf]['name']
+            entry['state'] = 'auto'
+            entry['server_ipv4'] = devices[neighbor]['lo_addr']
+            if 'lo_addr_v6' in devices[neighbor]:
+                entry['server_ipv6'] = devices[neighbor]['lo_addr_v6']
+            mux_cable_table[intf] = entry 
+
+    return mux_cable_table
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()
-    (lo_prefix, mgmt_prefix, hostname, hwsku, d_type, _) = parse_device(root)
+    (lo_prefix, lo_prefix_v6, mgmt_prefix, hostname, hwsku, d_type, _) = parse_device(root)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
@@ -1147,10 +1519,12 @@ def parse_device_desc_xml(filename):
         }}
 
     results['LOOPBACK_INTERFACE'] = {('lo', lo_prefix): {}}
+    if lo_prefix_v6:
+        results['LOOPBACK_INTERFACE'] = {('lo_v6', lo_prefix_v6): {}}
 
     mgmt_intf = {}
-    mgmtipn = ipaddress.IPNetwork(mgmt_prefix)
-    gwaddr = ipaddress.IPAddress(int(mgmtipn.network) + 1)
+    mgmtipn = ipaddress.ip_network(UNICODE_TYPE(mgmt_prefix), False)
+    gwaddr = ipaddress.ip_address((next(mgmtipn.hosts())))
     results['MGMT_INTERFACE'] = {('eth0', mgmt_prefix): {'gwaddr': gwaddr}}
 
     return results
@@ -1164,10 +1538,22 @@ def parse_asic_sub_role(filename, asic_name):
             sub_role = parse_asic_meta(child, asic_name)
             return sub_role
 
+def parse_asic_meta_get_devices(root):
+    local_devices = []
+
+    for child in root:
+        if child.tag == str(QName(ns, "MetadataDeclaration")):
+            device_metas = child.find(str(QName(ns, "Devices")))
+            for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
+                name = device.find(str(QName(ns1, "Name"))).text.lower()
+                local_devices.append(name)
+
+    return local_devices
+
 port_alias_map = {}
 port_alias_asic_map = {}
 
 
 def print_parse_xml(filename):
     results = parse_xml(filename)
-    print(json.dumps(results, indent=3, cls=minigraph_encoder))
+    print((json.dumps(results, indent=3, cls=minigraph_encoder)))

@@ -4,12 +4,13 @@ logfile_backups=2
 nodaemon=true
 
 [eventlistener:dependent-startup]
-command=python -m supervisord_dependent_startup
+command=python3 -m supervisord_dependent_startup
 autostart=true
 autorestart=unexpected
 startretries=0
 exitcodes=0,3
 events=PROCESS_STATE
+buffer_size=50
 
 [eventlistener:supervisor-proc-exit-listener]
 command=/usr/bin/supervisor-proc-exit-listener --container-name bgp
@@ -47,7 +48,7 @@ startsecs=0
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=rsyslogd:running
+dependent_startup_wait_for=zebra:running
 
 [program:bgpd]
 command=/usr/lib/frr/bgpd -A 127.0.0.1 -M snmp
@@ -59,7 +60,7 @@ startsecs=0
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=rsyslogd:running
+dependent_startup_wait_for=zebra:running
 
 [program:fpmsyncd]
 command=fpmsyncd
@@ -73,10 +74,21 @@ dependent_startup=true
 dependent_startup_wait_for=bgpd:running
 
 [program:bgpcfgd]
-command=/usr/bin/bgpcfgd
+command=/usr/local/bin/bgpcfgd
 priority=6
 autostart=false
 autorestart=false
+startsecs=0
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=bgpd:running
+
+[program:bgpmon]
+command=/usr/local/bin/bgpmon
+priority=6
+autostart=false
+autorestart=true
 startsecs=0
 stdout_logfile=syslog
 stderr_logfile=syslog
@@ -93,7 +105,7 @@ startsecs=0
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=rsyslogd:running
+dependent_startup_wait_for=bgpd:running
 {% endif %}
 
 {% if WARM_RESTART is defined and WARM_RESTART.bgp is defined and WARM_RESTART.bgp.bgp_eoiu is defined and WARM_RESTART.bgp.bgp_eoiu == "true" %}
@@ -107,5 +119,5 @@ startretries=0
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=rsyslogd:running
+dependent_startup_wait_for=bgpd:running
 {% endif %}

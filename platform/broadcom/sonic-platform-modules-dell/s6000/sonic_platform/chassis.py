@@ -10,13 +10,11 @@
 try:
     import os
     import time
-    import datetime
     import struct
-    import subprocess
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
-    from sonic_platform.eeprom import Eeprom
-    from sonic_platform.fan import Fan
+    from sonic_platform.eeprom import Eeprom, EepromS6000
+    from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
     from sonic_platform.component import Component
@@ -24,7 +22,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
-MAX_S6000_FAN = 3
+MAX_S6000_FANTRAY = 3
 MAX_S6000_PSU = 2
 MAX_S6000_THERMAL = 10
 MAX_S6000_COMPONENT = 4
@@ -68,10 +66,18 @@ class Chassis(ChassisBase):
         # Get Transceiver status
         self.modprs_register = self._get_transceiver_status()
 
-        self._eeprom = Eeprom()
-        for i in range(MAX_S6000_FAN):
-            fan = Fan(i)
-            self._fan_list.append(fan)
+        with open("/sys/class/dmi/id/product_name", "r") as fd:
+            board_type = fd.read()
+
+        if 'S6000-ON' in board_type:
+            self._eeprom = Eeprom()
+        else:
+            self._eeprom = EepromS6000()
+
+        for i in range(MAX_S6000_FANTRAY):
+            fandrawer = FanDrawer(i)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
         for i in range(MAX_S6000_PSU):
             psu = Psu(i)
@@ -138,7 +144,7 @@ class Chassis(ChassisBase):
         Returns:
             string: The name of the chassis
         """
-        return self._eeprom.modelstr()
+        return self._eeprom.get_model()
 
     def get_presence(self):
         """
@@ -154,7 +160,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of chassis
         """
-        return self._eeprom.part_number_str()
+        return self._eeprom.get_part_number()
 
     def get_serial(self):
         """
@@ -162,7 +168,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of chassis
         """
-        return self._eeprom.serial_str()
+        return self._eeprom.get_serial()
 
     def get_status(self):
         """
@@ -181,17 +187,7 @@ class Chassis(ChassisBase):
             A string containing the MAC address in the format
             'XX:XX:XX:XX:XX:XX'
         """
-        return self._eeprom.base_mac_addr()
-
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-
-        Returns:
-            A string containing the hardware serial number for this
-            chassis.
-        """
-        return self._eeprom.serial_number_str()
+        return self._eeprom.get_base_mac()
 
     def get_system_eeprom_info(self):
         """

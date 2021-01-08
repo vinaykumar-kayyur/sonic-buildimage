@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-import os
-import sys
 from natsort import natsorted
 
 def generate_t1_sample_config(data):
@@ -13,13 +10,13 @@ def generate_t1_sample_config(data):
     data['INTERFACE'] = {}
     port_count = 0
     total_port_amount = len(data['PORT'])
-    for port in natsorted(data['PORT'].keys()):
+    for port in natsorted(data['PORT']):
         data['PORT'][port]['admin_status'] = 'up'
         data['PORT'][port]['mtu'] = '9100'
-        local_addr = '10.0.{}.{}'.format(2 * port_count / 256, 2 * port_count % 256)
-        peer_addr = '10.0.{}.{}'.format(2 * port_count / 256, 2 * port_count % 256 + 1)
-        peer_name='ARISTA{0:02d}{1}'.format(1+port_count%(total_port_amount/2), 'T2' if port_count < (total_port_amount/2) else 'T0')
-        peer_asn = 65200 if port_count < total_port_amount/2 else 64001 + port_count - total_port_amount/2
+        local_addr = '10.0.{}.{}'.format(2 * port_count // 256, 2 * port_count % 256)
+        peer_addr = '10.0.{}.{}'.format(2 * port_count // 256, 2 * port_count % 256 + 1)
+        peer_name='ARISTA{0:02d}{1}'.format(1+port_count%(total_port_amount // 2), 'T2' if port_count < (total_port_amount // 2) else 'T0')
+        peer_asn = 65200 if port_count < (total_port_amount // 2) else 64001 + port_count - (total_port_amount // 2)
         data['INTERFACE']['{}|{}/31'.format(port, local_addr)] = {}
         data['BGP_NEIGHBOR'][peer_addr] = {
                 'rrclient': 0,
@@ -35,22 +32,16 @@ def generate_t1_sample_config(data):
 
 def generate_empty_config(data):
     new_data = {'DEVICE_METADATA': data['DEVICE_METADATA']}
-    if not new_data['DEVICE_METADATA']['localhost'].has_key('hostname'):
+    if 'hostname' not in new_data['DEVICE_METADATA']['localhost']:
         new_data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
-    if not new_data['DEVICE_METADATA']['localhost'].has_key('type'):
+    if 'type' not in new_data['DEVICE_METADATA']['localhost']:
         new_data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
     return new_data
 
 def generate_l2_config(data):
-    if not data['DEVICE_METADATA']['localhost'].has_key('hostname'):
-        data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
-    if not data['DEVICE_METADATA']['localhost'].has_key('type'):
-        data['DEVICE_METADATA']['localhost']['type'] = 'ToRRouter'
     data['VLAN'] = {'Vlan1000': {'vlanid': '1000'}}
-    vp = natsorted(data['PORT'].keys())
-    data['VLAN']['Vlan1000'].setdefault('members', vp)
     data['VLAN_MEMBER'] = {}
-    for port in natsorted(data['PORT'].keys()):
+    for port in natsorted(data['PORT']):
         data['PORT'][port].setdefault('admin_status', 'up')
         data['VLAN_MEMBER']['Vlan1000|{}'.format(port)] = {'tagging_mode': 'untagged'}
     return data
@@ -62,7 +53,7 @@ _sample_generators = {
         }
 
 def get_available_config():
-    return _sample_generators.keys()
+    return list(_sample_generators.keys())
 
 def generate_sample_config(data, setting_name):
     return _sample_generators[setting_name.lower()](data)

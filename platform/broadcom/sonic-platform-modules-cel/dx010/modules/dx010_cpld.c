@@ -65,6 +65,22 @@
 #define INT2229     0x3d6
 #define INT3032     0x3d7
 
+#define ABS_INT0108     0x260
+#define ABS_INT0910     0x261
+#define ABS_INT1118     0x2E0
+#define ABS_INT1921     0x2E1
+#define ABS_INT2229     0x3E0
+#define ABS_INT3032     0x3E1
+
+#define ABS_INT_MSK0108     0x262
+#define ABS_INT_MSK0910     0x263
+#define ABS_INT_MSK1118     0x2E2
+#define ABS_INT_MSK1921     0x2E3
+#define ABS_INT_MSK2229     0x3E2
+#define ABS_INT_MSK3032     0x3E3
+
+#define CPLD4_INT0          0x313
+#define CPLD4_INT0_MSK      0x315
 
 #define LENGTH_PORT_CPLD        34
 #define PORT_BANK1_START        1
@@ -322,12 +338,136 @@ static ssize_t get_modirq(struct device *dev, struct device_attribute *devattr,
         return sprintf(buf,"0x%8.8lx\n", irq  & 0xffffffff);
 }
 
+static ssize_t get_modprs_irq(struct device *dev, struct device_attribute *devattr,
+                char *buf)
+{
+        unsigned long prs_int = 0;
+
+        mutex_lock(&cpld_data->cpld_lock);
+
+        /* Clear interrupt source */
+        inb(CPLD4_INT0);
+
+        prs_int =
+                (inb(ABS_INT3032) & 0x07) << (24+5) |
+                inb(ABS_INT2229) << (24-3)  |
+                (inb(ABS_INT1921) & 0x07) << (16 + 2) |
+                inb(ABS_INT1118) << (16-6) |
+                (inb(ABS_INT0910) & 0x03 ) << 8 |
+                inb(ABS_INT0108);
+
+        mutex_unlock(&cpld_data->cpld_lock);
+
+        return sprintf(buf,"0x%8.8lx\n", prs_int & 0xffffffff);
+}
+
+static ssize_t get_modprs_msk(struct device *dev, struct device_attribute *devattr,
+                char *buf)
+{
+        unsigned long prs_int_msk = 0;
+
+        mutex_lock(&cpld_data->cpld_lock);
+
+        prs_int_msk =
+                (inb(ABS_INT_MSK3032) & 0x07) << (24+5) |
+                inb(ABS_INT_MSK2229) << (24-3)  |
+                (inb(ABS_INT_MSK1921) & 0x07) << (16 + 2) |
+                inb(ABS_INT_MSK1118) << (16-6) |
+                (inb(ABS_INT_MSK0910) & 0x03 ) << 8 |
+                inb(ABS_INT_MSK0108);
+
+        mutex_unlock(&cpld_data->cpld_lock);
+
+        return sprintf(buf,"0x%8.8lx\n", prs_int_msk & 0xffffffff);
+}
+
+static ssize_t set_modprs_msk(struct device *dev, struct device_attribute *devattr,
+                const char *buf, size_t count)
+{
+        unsigned long prs_int_msk;
+        int err;
+
+        mutex_lock(&cpld_data->cpld_lock);
+
+        err = kstrtoul(buf, 16, &prs_int_msk);
+        if (err)
+        {
+                mutex_unlock(&cpld_data->cpld_lock);
+                return err;
+        }
+
+        outb( (prs_int_msk >> 0)  & 0xFF, ABS_INT_MSK0108);
+        outb( (prs_int_msk >> 8)  & 0x03, ABS_INT_MSK0910);
+        outb( (prs_int_msk >> 10) & 0xFF, ABS_INT_MSK1118);
+        outb( (prs_int_msk >> 18) & 0x07, ABS_INT_MSK1921);
+        outb( (prs_int_msk >> 21) & 0xFF, ABS_INT_MSK2229);
+        outb( (prs_int_msk >> 29) & 0x07, ABS_INT_MSK3032);
+
+        mutex_unlock(&cpld_data->cpld_lock);
+
+        return count;
+}
+
+static ssize_t get_cpld4_int0(struct device *dev, struct device_attribute *devattr,
+                char *buf)
+{
+        unsigned char int0 = 0;
+
+        mutex_lock(&cpld_data->cpld_lock);
+
+        int0 = inb(CPLD4_INT0);
+
+        mutex_unlock(&cpld_data->cpld_lock);
+
+        return sprintf(buf,"0x%2.2x\n", int0 & 0xff);
+}
+
+static ssize_t get_cpld4_int0_msk(struct device *dev, struct device_attribute *devattr,
+                char *buf)
+{
+        unsigned char int0_msk = 0;
+
+        mutex_lock(&cpld_data->cpld_lock);
+
+        int0_msk = inb(CPLD4_INT0_MSK);
+
+        mutex_unlock(&cpld_data->cpld_lock);
+
+        return sprintf(buf,"0x%2.2x\n", int0_msk & 0xff);
+}
+
+static ssize_t set_cpld4_int0_msk(struct device *dev, struct device_attribute *devattr,
+                const char *buf, size_t count)
+{
+        unsigned long int0_msk;
+        int err;
+
+        mutex_lock(&cpld_data->cpld_lock);
+
+        err = kstrtoul(buf, 16, &int0_msk);
+        if (err)
+        {
+                mutex_unlock(&cpld_data->cpld_lock);
+                return err;
+        }
+
+        outb(int0_msk & 0x3f, CPLD4_INT0_MSK);
+
+        mutex_unlock(&cpld_data->cpld_lock);
+
+        return count;
+}
+
 static DEVICE_ATTR_RW(getreg);
 static DEVICE_ATTR_WO(setreg);
 static DEVICE_ATTR(qsfp_reset, S_IRUGO | S_IWUSR, get_reset, set_reset);
 static DEVICE_ATTR(qsfp_lpmode, S_IRUGO | S_IWUSR, get_lpmode, set_lpmode);
 static DEVICE_ATTR(qsfp_modprs, S_IRUGO, get_modprs, NULL);
 static DEVICE_ATTR(qsfp_modirq, S_IRUGO, get_modirq, NULL);
+static DEVICE_ATTR(qsfp_modprs_irq, S_IRUGO, get_modprs_irq, NULL);
+static DEVICE_ATTR(qsfp_modprs_msk, S_IRUGO | S_IWUSR, get_modprs_msk, set_modprs_msk);
+static DEVICE_ATTR(cpld4_int0, S_IRUGO, get_cpld4_int0, NULL);
+static DEVICE_ATTR(cpld4_int0_msk, S_IRUGO | S_IWUSR, get_cpld4_int0_msk, set_cpld4_int0_msk);
 
 static struct attribute *dx010_lpc_attrs[] = {
         &dev_attr_getreg.attr,
@@ -336,6 +476,10 @@ static struct attribute *dx010_lpc_attrs[] = {
         &dev_attr_qsfp_lpmode.attr,
         &dev_attr_qsfp_modprs.attr,
         &dev_attr_qsfp_modirq.attr,
+        &dev_attr_qsfp_modprs_irq.attr,
+        &dev_attr_qsfp_modprs_msk.attr,
+        &dev_attr_cpld4_int0.attr,
+        &dev_attr_cpld4_int0_msk.attr,
         NULL,
 };
 
@@ -568,7 +712,7 @@ static struct i2c_adapter * cel_dx010_i2c_init(struct platform_device *pdev, int
 static int cel_dx010_lpc_drv_probe(struct platform_device *pdev)
 {
         struct resource *res;
-        int ret =0;
+        int ret = 0;
         int portid_count;
 
         cpld_data = devm_kzalloc(&pdev->dev, sizeof(struct dx010_cpld_data),
@@ -593,6 +737,17 @@ static int cel_dx010_lpc_drv_probe(struct platform_device *pdev)
         for(portid_count=1 ; portid_count<=LENGTH_PORT_CPLD ; portid_count++)
                 cpld_data->i2c_adapter[portid_count-1] =
                                 cel_dx010_i2c_init(pdev, portid_count);
+
+        /* Enable INT0 interrupt register */
+        outb(inb(CPLD4_INT0_MSK) & 0xf8, CPLD4_INT0_MSK);
+
+        /* Enable modprs interrupt register */
+        outb(0, ABS_INT_MSK0108);
+        outb(0, ABS_INT_MSK0910);
+        outb(0, ABS_INT_MSK1118);
+        outb(0, ABS_INT_MSK1921);
+        outb(0, ABS_INT_MSK2229);
+        outb(0, ABS_INT_MSK3032);
 
         return 0;
 }
@@ -634,7 +789,7 @@ void cel_dx010_lpc_exit(void)
 module_init(cel_dx010_lpc_init);
 module_exit(cel_dx010_lpc_exit);
 
-MODULE_AUTHOR("Abhisit Sangjan  <asang@celestica.com>");
-MODULE_AUTHOR("Pariwat Leamsumran  <pleamsum@celestica.com>");
+MODULE_AUTHOR("Pradchaya P <pphuchar@celestica.com>");
+MODULE_VERSION("1.0.1");
 MODULE_DESCRIPTION("Celestica SeaStone DX010 LPC Driver");
 MODULE_LICENSE("GPL");

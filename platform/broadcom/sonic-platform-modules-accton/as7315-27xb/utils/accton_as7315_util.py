@@ -30,13 +30,12 @@ command:
     set         : change board setting with fan|led|sfp    
 """
 
-import os
 import commands
-import sys, getopt
+import getopt
+import sys
 import logging
 import re
 import time
-from collections import namedtuple
 
 
 
@@ -148,11 +147,12 @@ def log_os_system(cmd, show):
     return  status, output
             
 def driver_check():
-    ret, lsmod = log_os_system("lsmod| grep accton", 0)
+    ret, lsmod = log_os_system("ls /sys/module/*accton*", 0)
     logging.info('mods:'+lsmod)
-    if len(lsmod) ==0:
-        return False   
-    return True
+    if ret :
+        return False
+    else :
+        return True
 
 
 

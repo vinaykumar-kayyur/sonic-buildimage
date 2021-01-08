@@ -11,7 +11,7 @@
 try:
     import os.path
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_daemon_base.daemon_base import Logger
+    from sonic_py_common.logger import Logger
     from sonic_platform.fan import Fan
     from .led import PsuLed, SharedLed, ComponentFaultyIndicator
     from .device_data import DEVICE_DATA
@@ -31,7 +31,7 @@ PSU_POWER = "power"
 # in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
 
-platform_dict_psu = {'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4700-r0': 1}
+platform_dict_psu = {'x86_64-mlnx_msn3420-r0':1, 'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1, 'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4600c-r0':1, 'x86_64-mlnx_msn4700-r0': 1, 'x86_64-mlnx_msn4410-r0': 1}
 
 psu_profile_list = [
     # default filename convention
@@ -40,7 +40,7 @@ psu_profile_list = [
         PSU_VOLTAGE : "power/psu{}_volt",
         PSU_POWER : "power/psu{}_power"
     },
-    # for 3420, 3700, 3700c, 3800, 4700
+    # for 3420, 3700, 3700c, 3800, 4600c, 4700
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
@@ -103,13 +103,17 @@ class Psu(PsuBase):
 
         # unplugable PSU has no FAN
         if self.psu_data['hot_swappable']:
-            fan = Fan(psu_index, None, True)
+            fan = Fan(psu_index, None, 1, True, self)
             self._fan_list.append(fan)
 
         if self.psu_data['led_num'] == 1:
             self.led = ComponentFaultyIndicator(Psu.get_shared_led())
         else: # 2010/2100
             self.led = PsuLed(self.index)
+
+        # initialize thermal for PSU
+        from .thermal import initialize_psu_thermals
+        initialize_psu_thermals(platform, self._thermal_list, self.index, self.get_power_available_status)
 
 
     def get_name(self):
@@ -243,6 +247,22 @@ class Psu(PsuBase):
             return False, "absence of power"
         else:
             return True, ""
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device
+        Returns:
+            integer: The 1-based relative physical position in parent device
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return self.psu_data['hot_swappable']
 
     @classmethod
     def get_shared_led(cls):

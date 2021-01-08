@@ -1,11 +1,15 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
+ARG image_version
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Pass the image_version to container
+ENV IMAGE_VERSION=$image_version
 
 # Update apt's cache of available packages
 RUN apt-get update
@@ -25,7 +29,7 @@ RUN apt-get clean -y         && \
     rm -rf /debs
 
 COPY ["docker_init.sh", "start.sh", "/usr/bin/"]
-COPY ["docker-dhcp-relay.supervisord.conf.j2", "wait_for_intf.sh.j2", "/usr/share/sonic/templates/"]
+COPY ["docker-dhcp-relay.supervisord.conf.j2", "port-name-alias-map.txt.j2", "wait_for_intf.sh.j2", "/usr/share/sonic/templates/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 
