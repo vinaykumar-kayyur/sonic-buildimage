@@ -82,24 +82,24 @@ class FanUtil(object):
        
         device_path = self.get_fan_device_path(fan_num, node_num)
        
-            try:
-                val_file = open(device_path, 'r')
-            except IOError as e:
-                logging.error('GET. unable to open file: %s', str(e))
-                return None
+        try:
+            val_file = open(device_path, 'r')
+        except IOError as e:
+            logging.error('GET. unable to open file: %s', str(e))
+            return None
 
-            content = val_file.readline().rstrip()
-            if content == '':
-                logging.debug('GET. content is NULL. device_path:%s', device_path)
-                return None
+        content = val_file.readline().rstrip()
+        if content == '':
+            logging.debug('GET. content is NULL. device_path:%s', device_path)
+            return None
 
-            try:
-                val_file.close()
-            except:
-                logging.debug('GET. unable to close file. device_path:%s', device_path)
-                return None      
+        try:
+            val_file.close()
+        except:
+            logging.debug('GET. unable to close file. device_path:%s', device_path)
+            return None
               
-            return int(content)
+        return int(content)
             
     def _set_fan_node_val(self, fan_num, node_num, val):
         if fan_num < self.FAN_NUM_1_IDX or fan_num > self.FAN_NUM_ON_MAIN_BROAD:
