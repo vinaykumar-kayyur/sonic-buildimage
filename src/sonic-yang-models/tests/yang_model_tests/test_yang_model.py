@@ -186,6 +186,10 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
+            'CRM_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'CRM_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'CRM_WITH_CORRECT_USED_VALUE': {
                 'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
@@ -229,6 +233,45 @@ class Test_yang_models:
             'BREAKOUT_CFG_INCORRECT_MODES': {
                 'desc': 'BREAKOUT_CFG wrong breakout modes',
                 'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'SNAT_WITH_WRONG_PERCENTAGE': {
+                'desc': 'SNAT_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'SNAT_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'SNAT_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'SNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'SNAT_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_WRONG_PERCENTAGE': {
+                'desc': 'DNAT_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'DNAT_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'DNAT_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'DNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'DNAT_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_WRONG_PERCENTAGE': {
+                'desc': 'IPMC_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'IPMC_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'IPMC_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'IPMC_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'IPMC_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+                'eStr': self.defaultYANGFailure['None']
             }
         }
 
