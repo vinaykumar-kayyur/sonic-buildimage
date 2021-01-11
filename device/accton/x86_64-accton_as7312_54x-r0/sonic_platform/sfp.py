@@ -207,7 +207,7 @@ class Sfp(SfpBase):
         for x in range(self.PORT_START, self.PORT_END + 1):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(self._port_to_i2c_mapping[x])
         
-        self.info_dict_keys = ['type', 'hardwarerev', 'serialnum', 'manufacturename', 'modelname', 'Connector', 'encoding', 'ext_identifier',
+        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
