@@ -192,7 +192,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     def is_feature_present(self, feature_name):
         feature_tb_info = self.config_db_map[''].get_table(self.FEATURE_TABLE)
         if feature_tb_info:
-            for k, v in feature_tb_info.iteritems():
+            for k, v in feature_tb_info.items():
                 if feature_name == k:
                     return True
 
