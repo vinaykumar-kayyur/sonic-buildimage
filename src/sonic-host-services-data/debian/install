@@ -1,3 +1,2 @@
 templates/*.j2    /usr/share/sonic/templates/
-host_modules/*.py /usr/lib/sonic_host_service/host_modules
 org.sonic.hostservice.conf /etc/dbus-1/system.d

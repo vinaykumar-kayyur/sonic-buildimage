@@ -10,6 +10,9 @@ setup(
     url = 'https://github.com/Azure/sonic-buildimage',
     maintainer = 'Joe LeVeque',
     maintainer_email = 'jolevequ@microsoft.com',
+    packages = [
+        'host_modules'
+    ],
     scripts = [
         'scripts/caclmgrd',
         'scripts/hostcfgd',
