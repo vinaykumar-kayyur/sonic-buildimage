@@ -275,7 +275,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     ntpstat                 \
     openssh-server          \
     python                  \
-    python-jsonschema       \
     python-apt              \
     traceroute              \
     iputils-ping            \
@@ -578,7 +577,7 @@ sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -e boot -e var/lib/docker -e $PLATFORM_DIR
 
-sudo scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
 
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     # Remove qemu arm bin executable used for cross-building
