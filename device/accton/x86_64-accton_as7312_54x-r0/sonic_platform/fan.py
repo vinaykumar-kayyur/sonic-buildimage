@@ -66,13 +66,13 @@ class Fan(FanBase):
             else: #F2B
                 direction=self.FAN_DIRECTION_EXHAUST
         else: #For PSU
-            dir_str = "{}{}".format(self.psu_hwmon_path,'psu_hwmon_path')
+            dir_str = "{}{}".format(self.psu_hwmon_path,'psu_fan_dir')
             val=self._api_helper.read_txt_file(dir_str)
             if val=='F2B':
                 direction=self.FAN_DIRECTION_EXHAUST
             else:
                 direction=self.FAN_DIRECTION_INTAKE
-
+                
         return direction
 
     def get_speed(self):
