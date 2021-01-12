@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 class FantlvException(Exception):
     def __init__(self,  message='fantlverror', code=-100):

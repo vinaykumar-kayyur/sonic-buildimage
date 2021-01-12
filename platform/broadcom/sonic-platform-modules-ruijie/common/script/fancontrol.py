@@ -57,7 +57,7 @@ def fanwarningdebuglog(debuglevel,s):
         syslog.syslog(syslog.LOG_DEBUG,s)
  
 
-class FanControl():
+class FanControl(object):
     critnum = 0
     def __init__(self):
         self._fanOKNum = 0

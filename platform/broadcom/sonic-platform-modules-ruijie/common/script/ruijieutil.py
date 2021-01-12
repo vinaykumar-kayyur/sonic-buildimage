@@ -247,7 +247,7 @@ def getInputSetmac(val):
         pia.productVersion = b.upper()
     return val
 
-class fan_tlv():
+class fan_tlv(object):
     VERSION = 0x01                    # E2PROM Version，start from 0x01
     FLAG = 0x7E                       # New E2PROM version flag is 0x7E
     HW_VER = 0X01                     # compose by master version and fixed version
@@ -933,7 +933,7 @@ def changeTypeValue(_value, type1, tips, example):
         if len(name) != 12:
             raise SETMACException("MAC address length incorrect, check please")
         release_mac = ""
-        for i in range(len(name) / 2):
+        for i in range(int(len(name) / 2)):
             if i == 0:
                 release_mac += name[i * 2:i * 2 + 2]
             else:
@@ -1376,7 +1376,7 @@ def bmc_setmac():
         RJPRINTERR("\nMAC address invaild, try again\n")
         return False
     release_mac = ""
-    for i in range(len(name) / 2):
+    for i in range(int(len(name) / 2)):
         if i == 0:
             release_mac += name[i * 2:i * 2 + 2]
         else:
