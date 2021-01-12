@@ -250,7 +250,7 @@ class PackageManager:
             image = self.docker.get_image(repotag)
 
             # Clean containers based on this image
-            containers = self.docker.ps(filters={'ancestor': image.id})
+            containers = self.docker.ps(filters={'ancestor': image.id}, all=True)
             for container in containers:
                 self.docker.rm(container.id, force=True)
 
@@ -360,7 +360,7 @@ class PackageManager:
                 old_image = self.docker.get_image(old_repotag)
 
                 # Clean containers based on the old image
-                containers = self.docker.ps(filters={'ancestor': old_image.id})
+                containers = self.docker.ps(filters={'ancestor': old_image.id}, all=True)
                 for container in containers:
                     self.docker.rm(container.id, force=True)
 
