@@ -9,4 +9,4 @@
 
 DEV="$1"
 
-docker exec -it {{ manifest.service.name }}$DEV {{ manifest.package['debug-dump'] }}
+docker exec -t {{ manifest.service.name }}$DEV {{ manifest.package['debug-dump'] }}

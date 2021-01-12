@@ -96,7 +96,7 @@ function start() {
     debug "Started ${SERVICE}$DEV service..."
 
 {%- if manifest.service["post-start-action"] %}
-    docker exec -it ${SERVICE}${DEV} {{ manifest.service["post-start-action"] }}
+    docker exec -t ${SERVICE}${DEV} {{ manifest.service["post-start-action"] }}
 {%- endif %}
 }
 
@@ -114,7 +114,7 @@ function stop() {
     debug "Stopping ${SERVICE}$DEV service..."
 
 {%- if manifest.service["pre-shutdown-action"] %}
-    docker exec -it ${SERVICE}${DEV} {{ manifest.service["pre-shutdown-action"] }}
+    docker exec -t ${SERVICE}${DEV} {{ manifest.service["pre-shutdown-action"] }}
 {%- endif %}
 
     # For WARM/FAST boot do not perform service stop
