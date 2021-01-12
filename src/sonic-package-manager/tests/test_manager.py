@@ -91,13 +91,8 @@ def test_installation_base_os_constraint_satisfied(package_manager, fake_manifes
 def test_installation(package_manager, mock_docker_api, anything):
     package_manager.install('test-package')
     mock_docker_api.pull.assert_called_once_with('Azure/docker-test',
-                                                 '1.6.0',
-                                                 Version.parse('1.6.0'),
-                                                 anything)
-    mock_docker_api.tag.assert_called_once_with('Azure/docker-test',
-                                                Version.parse('1.6.0'),
-                                                'Azure/docker-test',
-                                                'latest')
+                                                 '1.6.0')
+    mock_docker_api.tag.assert_called_once_with(anything, 'Azure/docker-test:latest')
 
 
 def test_installation_using_reference(package_manager,
@@ -110,13 +105,9 @@ def test_installation_using_reference(package_manager,
 
     package_manager.install(f'test-package@{ref}')
     mock_docker_api.pull.assert_called_once_with('Azure/docker-test',
-                                                 f'{ref}',
-                                                 Version.parse('1.6.0'),
-                                                 anything)
-    mock_docker_api.tag.assert_called_once_with('Azure/docker-test',
-                                                Version.parse('1.6.0'),
-                                                'Azure/docker-test',
-                                                'latest')
+                                                 f'{ref}')
+    mock_docker_api.tag.assert_called_once_with(anything,
+                                                'Azure/docker-test:latest')
 
 
 def test_manager_installation_tag(package_manager,
@@ -124,13 +115,15 @@ def test_manager_installation_tag(package_manager,
                                   anything):
     package_manager.install(f'test-package==1.6.0')
     mock_docker_api.pull.assert_called_once_with('Azure/docker-test',
-                                                 '1.6.0',
-                                                 Version.parse('1.6.0'),
-                                                 anything)
-    mock_docker_api.tag.assert_called_once_with('Azure/docker-test',
-                                                Version.parse('1.6.0'),
-                                                'Azure/docker-test',
-                                                'latest')
+                                                 '1.6.0')
+    mock_docker_api.tag.assert_called_once_with(anything,
+                                                'Azure/docker-test:latest')
+
+
+def test_installation_from_file(package_manager, mock_docker_api, anything, sonic_fs):
+    sonic_fs.create_file('/root/test-package:1.6.0')
+    package_manager.install('/root/test-package:1.6.0')
+    mock_docker_api.load.assert_called_once_with(anything)
 
 
 def test_manager_installation_version_range(package_manager):

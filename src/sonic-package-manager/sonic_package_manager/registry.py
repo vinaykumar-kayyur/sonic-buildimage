@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import json
+from dataclasses import dataclass
 from typing import List, Dict
 
 import requests
 import www_authenticate
 from docker_image import reference
+from prettyprinter import pformat
 
 from sonic_package_manager.logger import log
 
@@ -46,8 +48,21 @@ class AuthenticationService:
         return token
 
 
+@dataclass
 class RegistryApiError(Exception):
     """ Class for registry related errors. """
+
+    msg: str
+    response: requests.Response
+
+    def __str__(self):
+        code = self.response.status_code
+        content = self.response.content.decode()
+        try:
+            content = json.loads(content)
+        except ValueError:
+            pass
+        return f'{self.msg}: code: {code} details: {pformat(content)}'
 
 
 class Registry:
@@ -85,8 +100,7 @@ class Registry:
         url = f'{self._get_base_url(repository)}/tags/list'
         response = self._execute_get_request(url, headers)
         if response.status_code != requests.codes.ok:
-            raise RegistryApiError(f'Failed to retrieve tags from {repository}: '
-                                   f'response: {response.status_code}, content: {response.content}')
+            raise RegistryApiError(f'Failed to retrieve tags from {repository}', response)
 
         content = json.loads(response.content)
         log.debug(f'tags list api response: f{content}')
@@ -102,8 +116,7 @@ class Registry:
         response = self._execute_get_request(url, headers)
 
         if response.status_code != requests.codes.ok:
-            raise RegistryApiError(f'Failed to retrieve manifest for {repository}:{ref}: '
-                                   f'response: {response.status_code}, content: {response.content}')
+            raise RegistryApiError(f'Failed to retrieve manifest for {repository}:{ref}', response)
 
         content = json.loads(response.content)
         log.debug(f'manifest content for {repository}:{ref}: {content}')
@@ -118,8 +131,7 @@ class Registry:
         url = f'{self._get_base_url(repository)}/blobs/{digest}'
         response = self._execute_get_request(url, headers)
         if response.status_code != requests.codes.ok:
-            raise RegistryApiError(f'Failed to retrieve blobs for {repository}:{digest}: '
-                                   f'response: {response.status_code}, content: {response.content}')
+            raise RegistryApiError(f'Failed to retrieve blobs for {repository}:{digest}', response)
         content = json.loads(response.content)
 
         log.debug(f'retrieved blob for {repository}:{digest}: {content}')

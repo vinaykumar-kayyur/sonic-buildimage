@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import json
+import tarfile
+from typing import Optional
 
 from sonic_package_manager.database import PackageEntry
 from sonic_package_manager.errors import ManifestError
@@ -16,28 +18,23 @@ class ManifestResolver:
         self.docker = docker
         self.registry_resolver = registry_resolver
 
-    def get_manifest(self, package_info: PackageEntry, ref: str) -> Manifest:
+    def get_manifest(self, package: PackageEntry, ref: Optional[str] = None) -> Manifest:
         """ Gets the package manifest.
         Args:
-            package_info: PackageEntry object
+            package: PackageEntry object
             ref: Reference to resolve, either tag or digest
         Returns:
             Manifest object.
         """
-        name = package_info.name
-        version = package_info.version
-        installed = package_info.installed
 
-        # If the package is installed or the requested
-        # reference is not None read it from remote.
-        if installed and str(version) == ref:
-            log.debug(f'requesting manifest from local for {name} {ref}')
-            manifest = self.get_manifest_local(package_info)
+        if package.installed:
+            log.debug(f'requesting manifest from local for {package.name}')
+            manifest = self.get_manifest_local(package)
         else:
-            log.debug(f'requesting manifest from remote for {name} {ref}')
-            manifest = self.get_manifest_remote(package_info, ref)
+            log.debug(f'requesting manifest from remote for {package.name} {ref}')
+            manifest = self.get_manifest_remote(package, ref)
 
-        log.debug(f'manifest for package {name} {ref}: {manifest}')
+        log.debug(f'manifest for package {package.name} {ref}: {manifest}')
 
         return manifest
 
@@ -51,10 +48,8 @@ class ManifestResolver:
             ManifestError
         """
 
-        repo = package.repository
-        version = str(package.version)
-
-        labels = self.docker.labels(repo, version)
+        repotag = f'{package.repository}:latest'
+        labels = self.docker.labels(repotag)
 
         return self.get_manifest_from_labels(labels)
 
@@ -80,8 +75,21 @@ class ManifestResolver:
 
         return self.get_manifest_from_labels(labels)
 
+    def get_manifest_from_image_tarball(self, image_path: str) -> Manifest:
+        with tarfile.open(image_path) as image:
+            manifest = json.loads(image.extractfile('manifest.json').read())
+
+            blob = manifest[0]['Config']
+            image_config = json.loads(image.extractfile(blob).read())
+            labels = image_config['config']['Labels']
+
+            return self.get_manifest_from_labels(labels)
+
     @staticmethod
     def get_manifest_from_labels(labels) -> Manifest:
+        if labels is None:
+            raise ManifestError('No manifest found in image labels')
+
         try:
             manifest_string = labels[Manifest.LABEL_NAME]
         except KeyError:

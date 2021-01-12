@@ -53,13 +53,22 @@ def fake_manifest_resolver():
     class FakeManifestResolver:
         def __init__(self):
             self.manifests = {
-                ('database', '1.0.0'): Manifest.marshal({
+                ('database', 'latest'): Manifest.marshal({
                     'package': {
                         'version': '1.0.0',
                         'name': 'database',
                     },
                     'service': {
                         'name': 'database',
+                    },
+                }),
+                ('swss', 'latest'): Manifest.marshal({
+                    'package': {
+                        'version': '1.0.0',
+                        'name': 'swss',
+                    },
+                    'service': {
+                        'name': 'swss',
                     },
                 }),
                 ('swss', '1.0.0'): Manifest.marshal({
@@ -98,7 +107,7 @@ def fake_manifest_resolver():
                         'name': 'test-package-3',
                     },
                 }),
-                ('test-package-3', '1.6.0'): Manifest.marshal({
+                ('test-package-3', 'latest'): Manifest.marshal({
                     'package': {
                         'version': '1.6.0',
                         'name': 'test-package-3',
@@ -143,6 +152,15 @@ def fake_manifest_resolver():
                         'name': 'test-package-6',
                     },
                 }),
+                ('test-package-6', 'latest'): Manifest.marshal({
+                    'package': {
+                        'version': '1.5.0',
+                        'name': 'test-package-6',
+                    },
+                    'service': {
+                        'name': 'test-package-6',
+                    },
+                }),
                 ('test-package-6', '2.0.0'): Manifest.marshal({
                     'package': {
                         'version': '2.0.0',
@@ -154,8 +172,14 @@ def fake_manifest_resolver():
                 }),
             }
 
-        def get_manifest(self, package_info: PackageEntry, ref: str) -> Manifest:
+        def get_manifest(self, package_info: PackageEntry, ref: str = None) -> Manifest:
+            if ref is None:
+                ref = 'latest'
             return self.manifests[(package_info.name, ref)]
+
+        def get_manifest_from_image_tarball(self, filepath: str) -> Manifest:
+            name, ref = os.path.basename(filepath).split(':')
+            return self.manifests[(name, ref)]
 
     yield FakeManifestResolver()
 

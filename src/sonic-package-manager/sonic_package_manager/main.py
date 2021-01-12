@@ -14,7 +14,7 @@ from natsort import natsorted
 from sonic_package_manager.database import PackageEntry, PackageDatabase
 from sonic_package_manager.errors import PackageManagerError
 from sonic_package_manager.logger import log
-from sonic_package_manager.manager import PackageManager, parse_reference_expression
+from sonic_package_manager.manager import PackageManager
 
 BULLET_UC = '\u2022'
 
@@ -99,8 +99,7 @@ def list(ctx):
     manager: PackageManager = ctx.obj
 
     try:
-        db = manager.get_database()
-        for package in natsorted(db):
+        for package in natsorted(manager.database):
             version = package.version or 'N/A'
             status = get_package_status(package)
 
@@ -120,18 +119,17 @@ def list(ctx):
 @package.command()
 @click.argument('expression')
 @click.pass_context
+@click_log.simple_verbosity_option(log)
 def manifest(ctx, expression):
     """ Print the manifest content. """
 
     manager: PackageManager = ctx.obj
 
     try:
-        package_reference = parse_reference_expression(expression)
-        package = manager.get_package(package_reference.name,
-                                      package_reference.reference)
+        package = manager.resolve_package(expression)
         click.echo(json.dumps(package.manifest.unmarshal(), indent=4))
     except Exception as err:
-        exit_cli(f'Failed to describe {expression}: {err}', fg='red')
+        exit_cli(f'Failed to print manifest for {expression}: {err}', fg='red')
 
 
 @package.command()
@@ -144,13 +142,13 @@ def versions(ctx, name, all, plain):
 
     try:
         manager: PackageManager = ctx.obj
-        versions = manager.get_available_versions(name, all)
+        versions = manager.get_package_available_versions(name, all)
         for version in versions:
             if not plain:
                 click.secho(f'{BULLET_UC} ', bold=True, fg='green', nl=False)
             click.secho(f'{version}')
     except Exception as err:
-        exit_cli(f'Failed to get package versions {name}: {err}', fg='red')
+        exit_cli(f'Failed to get package versions for {name}: {err}', fg='red')
 
 
 @package.command()
@@ -162,8 +160,7 @@ def changelog(ctx, expression):
     manager: PackageManager = ctx.obj
 
     try:
-        ref = parse_reference_expression(expression)
-        package = manager.get_package(ref.name, ref.reference)
+        package = manager.resolve_package(expression)
         changelog = package.manifest['package']['changelog']
 
         if not changelog:
@@ -198,7 +195,7 @@ def add(ctx, name, repository, default_reference, description):
     manager: PackageManager = ctx.obj
 
     try:
-        manager.add_package(name, repository, description=description, default_reference=default_reference)
+        manager.add_repository(name, repository, description=description, default_reference=default_reference)
     except Exception as err:
         exit_cli(f'Failed to add repository {name}: {err}', fg='red')
 
@@ -213,7 +210,7 @@ def remove(ctx, name):
     manager: PackageManager = ctx.obj
 
     try:
-        manager.remove_package(name)
+        manager.remove_repository(name)
     except Exception as err:
         exit_cli(f'Failed to remove repository {name}: {err}', fg='red')
 

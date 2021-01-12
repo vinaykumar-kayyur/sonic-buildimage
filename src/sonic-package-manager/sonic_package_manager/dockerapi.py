@@ -5,6 +5,7 @@
 import contextlib
 import io
 import tarfile
+import re
 from typing import Optional
 
 from sonic_package_manager.logger import log
@@ -34,33 +35,71 @@ def get_progress(line):
     return current, total
 
 
+def process_progress(progress_manager, line):
+    try:
+        status = get_status(line)
+        id = get_id(line)
+        current, total = get_progress(line)
+
+        if id not in progress_manager:
+            progress_manager.new(id,
+                                 total=total,
+                                 unit='Mb',
+                                 desc=f'{status} {id}')
+        pbar = progress_manager.get(id)
+
+        # Complete status
+        if 'complete' in status:
+            pbar.desc = f'{status} {id}'
+            pbar.update(pbar.total)
+            return
+
+        # Status changed
+        if status not in pbar.desc:
+            pbar.desc = f'{status} {id}'
+            pbar.total = total
+            pbar.count = 0
+
+        pbar.update(current - pbar.count)
+    except KeyError:
+        # not a progress line
+        return
+
+
+def get_repository_from_image(image):
+    """ Returns the first RepoTag repository
+    found in image. """
+
+    repotags = image.attrs['RepoTags']
+    for repotag in repotags:
+        repository, tag = repotag.split(':')
+        return repository
+
+
 class DockerApi:
     """ DockerApi provides a set of methods -
      wrappers around docker client methods """
 
-    def __init__(self, client):
+    def __init__(self,
+                 client,
+                 progress_manager: Optional[ProgressManager] = None):
         self.client = client
+        self.progress_manager = progress_manager
 
     def pull(self, repository: str,
-             reference: str,
-             tag: Optional[str] = None,
-             progress_manager: Optional[ProgressManager] = None):
+             reference: Optional[str] = None):
         """ Docker 'pull' command.
         Args:
             repository: repository to pull
             reference: tag or digest
-            tag: tag the image right after pull with this tag
-            progress_manager: ProgressManager instance
         """
 
-        if is_digest(reference):
-            image = f'{repository}@{reference}'
-        else:
-            image = f'{repository}:{reference}'
-
-        log.debug(f'pulling image {image}')
+        log.debug(f'pulling image from {repository} reference={reference}')
 
         api = self.client.api
+        progress_manager = self.progress_manager
+
+        digest = None
 
         with progress_manager or contextlib.nullcontext():
             for line in api.pull(repository,
@@ -68,86 +107,93 @@ class DockerApi:
                                  stream=True,
                                  decode=True):
                 log.debug(f'pull status: {line}')
-                if progress_manager is None:
-                    continue
-                try:
-                    id = get_id(line)
-                    status = get_status(line)
-                    if id not in progress_manager:
-                        _, total = get_progress(line)
-                        progress_manager.new(id,
-                                             total=total,
-                                             unit='Mb',
-                                             desc=f'{status} {id}')
-                    pbar = progress_manager.get(id)
 
-                    # Complete status
-                    if 'complete' in status:
-                        pbar.desc = f'{status} {id}'
-                        pbar.update(pbar.total)
+                status = get_status(line)
+
+                # Record pulled digest
+                digest_match = re.match(r'Digest: (?P<sha>.*)', status)
+                if digest_match:
+                    digest = digest_match.groupdict()['sha']
+
+                if progress_manager:
+                    process_progress(progress_manager, line)
+
+        log.debug(f'Digest: {digest}')
+        log.debug(f'image from {repository} reference={reference} pulled successfully')
+
+        return self.get_image(f'{repository}@{digest}')
+
+    def load(self, imgpath: str):
+        """ Docker 'load' command.
+        Args:
+
+        """
+
+        log.debug(f'loading image from {imgpath}')
+
+        api = self.client.api
+        progress_manager = self.progress_manager
+
+        imageid = None
+        repotag = None
+
+        with progress_manager or contextlib.nullcontext():
+            with open(imgpath, 'rb') as imagefile:
+                for line in api.load_image(imagefile, quiet=False):
+                    log.debug(f'pull status: {line}')
+
+                    if progress_manager:
+                        process_progress(progress_manager, line)
+
+                    if 'stream' not in line:
                         continue
 
-                    current, total = get_progress(line)
-                    # Status changed
-                    if status not in pbar.desc:
-                        pbar.desc = f'{status} {id}'
-                        pbar.total = total
-                        pbar.count = 0
+                    stream = line['stream']
+                    repotag_match = re.match(r'Loaded image: (?P<repotag>.*)\n', stream)
+                    if repotag_match:
+                        repotag = repotag_match.groupdict()['repotag']
+                    imageid_match = re.match(r'Loaded image ID: sha256:(?P<id>.*)\n', stream)
+                    if imageid_match:
+                        imageid = imageid_match.groupdict()['id']
 
-                    pbar.update(current - pbar.count)
-                except KeyError:
-                    # not a progress line
-                    pass
+        imagename = repotag if repotag else imageid
+        log.debug(f'Loaded image {imagename}')
 
-        log.debug(f'image {image} pulled successfully')
+        return self.get_image(imagename)
 
-        # Reference might be provided as a digest. In this case
-        # Docker will create a dangling image without any tag.
-        # This is not desired and may leave garbage Dockers.
-        # We are tagging it with a tag provided by the user.
-        if tag:
-            log.debug(f'tagging {image} with {repository}:{tag}')
-            api.tag(f'{image}', repository, tag)
-
-    def rmi(self, repository: str, tag: str):
+    def rmi(self, image: str, **kwargs):
         """ Docker 'rmi -f' command. """
 
-        image = f'{repository}:{tag}'
-        log.debug(f'removing image {image}')
+        log.debug(f'removing image {image} kwargs={kwargs}')
 
-        self.client.images.remove(f'{image}', force=True)
+        self.client.images.remove(image, **kwargs)
 
         log.debug(f'image {image} removed successfully')
 
-    def rm(self, repository: str, tag: str):
-        """ Docker 'rm' command but removes by image and tag. """
-
-        for container in self.client.containers.list(all=True):
-            container_image = container.attrs['Config']['Image']
-            if container_image == f'{repository}:{tag}':
-                container.remove(force=True)
-                log.debug(f'removed container {container.name}')
-
-    def tag(self, src_img: str,
-            src_tag: str,
-            target_img: str,
-            target_tag: str):
+    def tag(self, image: str, repotag: str, **kwargs):
         """ Docker 'tag' command """
 
-        src = f'{src_img}:{src_tag}'
-        dst = f'{target_img}:{target_tag}'
+        log.debug(f'tagging image {image} {repotag} kwargs={kwargs}')
 
-        log.debug(f'tagging image {src} to {dst}')
+        img = self.client.images.get(image)
+        img.tag(repotag, **kwargs)
 
-        image = self.client.images.get(src)
-        image.tag(target_img, target_tag, force=True)
+        log.debug(f'image {image} tagged {repotag} successfully')
 
-        log.debug(f'image {src} to {dst} tagged successfully')
+    def rm(self, container: str, **kwargs):
+        """ Docker 'rm' command. """
 
-    def labels(self, repository: str, tag: str):
+        self.client.containers.get(container).remove(**kwargs)
+        log.debug(f'removed container {container}')
+
+    def ps(self, **kwargs):
+        """ Docker 'ps' command. """
+
+        return self.client.containers.list(**kwargs)
+
+    def labels(self, image: str):
         """ Returns a list of labels associated with image. """
 
-        image = f'{repository}:{tag}'
         log.debug(f'inspecting image labels {image}')
 
         labels = self.client.images.get(image).labels
@@ -155,10 +201,12 @@ class DockerApi:
         log.debug(f'image {image} labels successfully: {labels}')
         return labels
 
-    def cp(self, repository: str, tag: str, src_path: str, dst_path: str):
+    def get_image(self, name: str):
+        return self.client.images.get(name)
+
+    def extract(self, image, src_path: str, dst_path: str):
         """ Copy src_path from the docker image to host dst_path. """
 
-        image = f'{repository}:{tag}'
         buf = bytes()
 
         container = self.client.containers.create(image)

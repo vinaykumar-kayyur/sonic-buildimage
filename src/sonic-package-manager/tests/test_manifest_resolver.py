@@ -18,7 +18,7 @@ def test_manifest_resolver_local(mock_registry_resolver, mock_docker_api):
     # but this is not a test objective, so just suppress the error.
     with contextlib.suppress(ManifestError):
         manifest_resolver.get_manifest(package_entry, '1.2.0')
-    mock_docker_api.labels.assert_called_once_with('test-repository', '1.2.0')
+    mock_docker_api.labels.assert_called_once_with('test-repository:latest')
 
 
 def test_manifest_resolver_remote(mock_registry_resolver, mock_docker_api):
@@ -49,7 +49,7 @@ def test_manifest_resolver_remote_different_tag(mock_registry_resolver, mock_doc
     mock_registry.manifest = MagicMock(return_value={'config': {'digest': 'some-digest'}})
     package_entry = PackageEntry(name='test',
                                  repository='test-repository',
-                                 installed=True,
+                                 installed=False,
                                  version=Version(1, 5, 0))
 
     def return_mock_registry(repository):

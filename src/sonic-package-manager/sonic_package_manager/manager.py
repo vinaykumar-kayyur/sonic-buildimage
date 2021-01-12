@@ -3,7 +3,7 @@ import contextlib
 import functools
 import os
 import pkgutil
-from typing import Optional, Union, Dict, Any
+from typing import Dict, Any, Iterable
 
 import docker
 from sonic_py_common import device_info
@@ -11,7 +11,7 @@ from sonic_py_common import device_info
 from sonic_package_manager import utils
 from sonic_package_manager.constraint import PackageConstraint
 from sonic_package_manager.database import PackageDatabase, PackageEntry
-from sonic_package_manager.dockerapi import DockerApi
+from sonic_package_manager.dockerapi import DockerApi, get_repository_from_image
 from sonic_package_manager.errors import (
     PackageInstallationError,
     PackageDependencyError,
@@ -46,7 +46,7 @@ def failure_ignore(ignore: bool):
             raise
 
 
-def parse_package_reference_from_constraint(constraint: PackageConstraint) -> PackageReference:
+def package_constraint_to_reference(constraint: PackageConstraint) -> PackageReference:
     package_name, version_constraint = constraint.name, constraint.constraint
     # Allow only specific version for now.
     # Later we can improve package manager to support
@@ -62,14 +62,14 @@ def parse_package_reference_from_constraint(constraint: PackageConstraint) -> Pa
 
 def parse_reference_expression(expression):
     try:
-        return parse_package_reference_from_constraint(PackageConstraint.parse(expression))
+        return package_constraint_to_reference(PackageConstraint.parse(expression))
     except ValueError:
         # if we failed to parse the expression as constraint expression
         # we will try to parse it as reference
         return PackageReference.parse(expression)
 
 
-def check_dependencies_and_conflicts(packages: Dict[str, Package]):
+def validate_package_tree(packages: Dict[str, Package]):
     """ Verify that all dependencies are met in all packages passed to this function.
     Args:
         packages: list of packages to check
@@ -104,7 +104,7 @@ class PackageManager:
     """ SONiC Package Manager. """
 
     def __init__(self,
-                 docker: DockerApi,
+                 dockerapi: DockerApi,
                  registry_resolver: RegistryResolver,
                  database: PackageDatabase,
                  manifest_resolver: ManifestResolver,
@@ -112,7 +112,7 @@ class PackageManager:
                  device_information: Any):
         """ Initialize PackageManager. """
 
-        self.docker = docker
+        self.docker = dockerapi
         self.registry_resolver = registry_resolver
         self.database = database
         self.manifest_resolver = manifest_resolver
@@ -122,6 +122,24 @@ class PackageManager:
         self.num_npus = device_information.get_num_npus()
         self.version_info = device_information.get_sonic_version_info()
         self.base_os_version = Version.parse(self.version_info.get('base_os_compatibility_version'))
+
+    def add_repository(self, *args, **kwargs):
+        """ Add repository to package database.
+
+        """
+
+        self.database.add_package(*args, **kwargs)
+        self.database.commit()
+
+    def remove_repository(self, name: str):
+        """ Remove repository from package database.
+
+        Args:
+            name: package name
+        """
+
+        self.database.remove_package(name)
+        self.database.commit()
 
     def install(self, expression: str, force=False):
         """ Install a SONiC Package from the package reference
@@ -135,14 +153,13 @@ class PackageManager:
             PackageManagerError
         """
 
-        package_reference = parse_reference_expression(expression)
-        name, reference = package_reference.name, package_reference.reference
+        package = self.resolve_package(expression)
+        name = package.name
 
         with failure_ignore(force):
             if self.is_installed(name):
                 raise PackageInstallationError(f'{name} is already installed')
 
-        package = self.get_package(name, reference)
         version_constraint = package.manifest['package']['base-os-constraint']
 
         with failure_ignore(force):
@@ -150,48 +167,46 @@ class PackageManager:
                 raise PackageSonicRequirementError(package.name, version_constraint,
                                                    self.base_os_version)
 
-        installed_packages = self.get_installed_packages_and(package)
+        installed_packages = self._get_installed_packages_and(package)
 
         with failure_ignore(force):
-            check_dependencies_and_conflicts(installed_packages)
+            validate_package_tree(installed_packages)
 
         # After all checks are passed we proceed to actual installation
 
-        version = package.manifest['package']['version']
-        cleanup = []  # cleanup function list
-
-        def add_cleanup(func):
-            cleanup.append(func)
-
-        def exec_cleanup():
-            for cleanup_func in reversed(cleanup):
-                try:
-                    cleanup_func()
-                except Exception as cleanup_err:
-                    log.error(f'{cleanup_err}')
-
         try:
-            self.docker.pull(package.repository, package.reference, version, ProgressManager())
-            add_cleanup(functools.partial(self.docker.rmi, package.repository, version))
+            with contextlib.ExitStack() as exit_stack:
+                if package.entry.repository:
+                    image = self.docker.pull(package.repository, package.reference)
+                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
+                else:
+                    image = self.docker.load(expression)
+                    repository = get_repository_from_image(image)
+                    if not repository:
+                        # This means the image was saved as unnamed.
+                        # Using package name as a repository.
+                        repository = package.name
+                    package.entry.repository = repository
+                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
 
-            self.docker.tag(package.repository, version, package.repository, 'latest')
-            add_cleanup(functools.partial(self.docker.rmi, package.repository, 'latest'))
+                repotag = f'{package.repository}:latest'
+                self.docker.tag(image.id, repotag)
+                exit_stack.callback(functools.partial(self.docker.rmi, repotag))
 
-            self.service_creator.create(package)
-            add_cleanup(functools.partial(self.service_creator.remove, package))
+                self.service_creator.create(package)
+                exit_stack.callback(functools.partial(self.service_creator.remove, package))
 
-            self.install_cli_plugins(package)
-            add_cleanup(functools.partial(self.uninstall_cli_plugins, package))
+                self._install_cli_plugins(package)
+                exit_stack.callback(functools.partial(self._uninstall_cli_plugins, package))
+
+                exit_stack.pop_all()
         except Exception as err:
-            exec_cleanup()
             raise PackageInstallationError(f'Failed to install {package.name}: {err}')
         except KeyboardInterrupt:
-            exec_cleanup()
             raise
 
-        package_entry = package.entry
-        package_entry.installed = True
-        self.database.update_package(package_entry)
+        package.entry.installed = True
+        self.database.update_package(package.entry)
         self.database.commit()
 
     def uninstall(self, name: str, force=False):
@@ -220,27 +235,32 @@ class PackageManager:
         if package.built_in:
             raise PackageUninstallationError(f'Cannot uninstall built-in package {package.name}')
 
-        installed_packages = self.get_installed_packages_except(package)
+        installed_packages = self._get_installed_packages_except(package)
 
         with failure_ignore(force):
-            check_dependencies_and_conflicts(installed_packages)
+            validate_package_tree(installed_packages)
 
         # After all checks are passed we proceed to actual uninstallation
 
         try:
-            self.uninstall_cli_plugins(package)
+            self._uninstall_cli_plugins(package)
             self.service_creator.remove(package)
-            self.docker.rm(package.repository, package.reference)
-            self.docker.rm(package.repository, 'latest')
-            self.docker.rmi(package.repository, package.reference)
-            self.docker.rmi(package.repository, 'latest')
+
+            repotag = f'{package.repository}:latest'
+            image = self.docker.get_image(repotag)
+
+            # Clean containers based on this image
+            containers = self.docker.ps(filters={'ancestor': image.id})
+            for container in containers:
+                self.docker.rm(container.id, force=True)
+
+            self.docker.rmi(image.id, force=True)
         except Exception as err:
             raise PackageUninstallationError(f'Failed to uninstall {package.name}: {err}')
 
-        package_entry = package.entry
-        package_entry.installed = False
-        package_entry.version = None
-        self.database.update_package(package_entry)
+        package.entry.installed = False
+        package.entry.version = None
+        self.database.update_package(package.entry)
         self.database.commit()
 
     def upgrade(self, expression: str, force=False):
@@ -255,15 +275,14 @@ class PackageManager:
             PackageManagerError
         """
 
-        package_reference = parse_reference_expression(expression)
-        name, reference = package_reference.name, package_reference.reference
+        new_package = self.resolve_package(expression)
+        name = new_package.name
 
         with failure_ignore(force):
             if not self.is_installed(name):
                 raise PackageUpgradeError(f'{name} is not installed')
 
         old_package = self.get_package(name)
-        new_package = self.get_package(name, reference)
 
         if old_package.built_in:
             raise PackageUpgradeError(f'Cannot upgrade built-in package {old_package.name}')
@@ -295,63 +314,70 @@ class PackageManager:
                                                    self.base_os_version)
 
         # remove currently installed package from the list
-        installed_packages = self.get_installed_packages_except(old_package)
+        installed_packages = self._get_installed_packages_except(old_package)
         # add the package to upgrade to the list
         installed_packages[new_package.name] = new_package
 
         with failure_ignore(force):
-            check_dependencies_and_conflicts(installed_packages)
+            validate_package_tree(installed_packages)
 
         # After all checks are passed we proceed to actual upgrade
 
-        cleanup = []  # cleanup function list
-
-        def add_cleanup(func):
-            cleanup.append(func)
-
-        def exec_cleanup():
-            for cleanup_func in reversed(cleanup):
-                try:
-                    cleanup_func()
-                except Exception as cleanup_err:
-                    log.error(f'{cleanup_err}')
-
         try:
-            self.uninstall_cli_plugins(old_package)
-            add_cleanup(functools.partial(self.install_cli_plugins, old_package))
-            self.docker.pull(new_package.repository, new_package.reference, new_version, ProgressManager())
-            add_cleanup(functools.partial(self.docker.rmi, new_package.repository, new_version))
+            with contextlib.ExitStack() as exit_stack:
+                self._uninstall_cli_plugins(old_package)
+                exit_stack.callback(functools.partial(self._install_cli_plugins, old_package))
 
-            if self.feature_registry.is_feature_enabled(old_feature):
-                self.systemctl_action(old_package, 'stop')
-                add_cleanup(functools.partial(self.systemctl_action, old_package, 'start'))
+                if new_package.entry.repository:
+                    image = self.docker.pull(new_package.repository, new_package.reference)
+                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
+                else:
+                    image = self.docker.load(expression)
+                    # get the repository name from
+                    repository = get_repository_from_image(image)
+                    if not repository:
+                        # This means the image was saved as unnamed.
+                        # Using package name as a repository.
+                        repository = new_package.name
+                    new_package.entry.repository = repository
+                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
 
-            self.service_creator.remove(old_package, deregister_feature=False)
-            add_cleanup(functools.partial(self.service_creator.create, old_package, register_feature=False))
+                if self.feature_registry.is_feature_enabled(old_feature):
+                    self._systemctl_action(old_package, 'stop')
+                    exit_stack.callback(functools.partial(self._systemctl_action,
+                                                          old_package, 'start'))
 
-            # This is no return point, after we start removing old Docker images
-            # there is no guaranty we can actually successfully roll-back.
+                self.service_creator.remove(old_package, deregister_feature=False)
+                exit_stack.callback(functools.partial(self.service_creator.create,
+                                                      old_package, register_feature=False))
 
-            self.docker.rm(old_package.repository, old_package.reference)
-            self.docker.rm(old_package.repository, 'latest')
-            self.docker.rmi(old_package.repository, old_package.reference)
-            self.docker.rmi(old_package.repository, 'latest')
+                # This is no return point, after we start removing old Docker images
+                # there is no guaranty we can actually successfully roll-back.
 
-            self.docker.tag(new_package.repository, new_version, new_package.repository, 'latest')
-            add_cleanup(functools.partial(self.docker.rmi, old_package.repository, 'latest'))
+                old_repotag = f'{old_package.repository}:latest'
+                new_repotag = f'{new_package.repository}:latest'
 
-            self.service_creator.create(new_package, register_feature=False)
-            add_cleanup(functools.partial(self.service_creator.remove, new_package, deregister_feature=False))
+                old_image = self.docker.get_image(old_repotag)
 
-            if self.feature_registry.is_feature_enabled(new_feature):
-                self.systemctl_action(new_package, 'start')
+                # Clean containers based on the old image
+                containers = self.docker.ps(filters={'ancestor': image.id})
+                for container in containers:
+                    self.docker.rm(container.id, force=True)
 
-            self.install_cli_plugins(new_package)
+                self.docker.rmi(old_image.id, force=True)
+                self.docker.tag(image.id, new_repotag)
+
+                self.service_creator.create(new_package, register_feature=False)
+
+                if self.feature_registry.is_feature_enabled(new_feature):
+                    self._systemctl_action(new_package, 'start')
+
+                self._install_cli_plugins(new_package)
+
+                exit_stack.pop_all()
         except Exception as err:
-            exec_cleanup()
             raise PackageUpgradeError(f'Failed to upgrade {new_package.name}: {err}')
         except KeyboardInterrupt:
-            exec_cleanup()
             raise
 
         new_package_entry = new_package.entry
@@ -378,7 +404,7 @@ class PackageManager:
             PackageManagerError
         """
 
-        self.migrate_package_database(old_package_database)
+        self._migrate_package_database(old_package_database)
 
         # TODO: Topological sort packages by their dependencies first.
         for old_package in old_package_database:
@@ -389,7 +415,8 @@ class PackageManager:
 
             new_package = self.database.get_package(old_package.name)
             if new_package.installed or new_package.default_reference is not None:
-                pkg = self.get_package(new_package.name)
+                new_package_ref = PackageReference(new_package.name, new_package.default_reference)
+                pkg = self.query_package(new_package_ref)
                 new_package_version = pkg.manifest['package']['version']
 
                 if old_package.version > new_package_version:
@@ -414,73 +441,105 @@ class PackageManager:
 
             self.database.commit()
 
-    def migrate_package_database(self, old_package_database: PackageDatabase):
-        for package in old_package_database:
-            if not self.has_package(package.name):
-                self.database.add_package(package.name,
-                                          package.repository,
-                                          package.description,
-                                          package.default_reference)
+    def get_package(self, name: str) -> Package:
+        """ Get installed package by name.
 
-    def get_database(self):
-        return self.database
+        Args:
+            name: package name.
+        Returns:
+            Package object.
+        """
 
-    def get_docker(self):
-        return self.docker
+        package_entry = self.database.get_package(name)
+        manifest = self.manifest_resolver.get_manifest(package_entry)
+        return Package(package_entry, 'latest', manifest)
 
-    def add_package(self, *args, **kwargs):
-        self.database.add_package(*args, **kwargs)
-        self.database.commit()
-
-    def remove_package(self, name: str):
-        self.database.remove_package(name)
-        self.database.commit()
-
-    def get_package(self, name: str, ref: Optional[Union[Version, str]] = None) -> Package:
+    def query_package(self, package_ref: PackageReference) -> Package:
         """ Get package from name and reference. If reference is not provided
         reference returned by get_package_default_reference is used.
 
         Args:
-            name: Package name
-            ref: Optional reference to use
+            package_ref: Package reference
         Returns:
             Package object
         """
 
-        package_entry = self.get_database().get_package(name)
-        if ref is None:
-            ref = self.get_package_default_reference(package_entry)
-        else:
-            if str(package_entry.version) != ref:
-                package_entry.installed = False
+        package_entry = self.database.get_package(package_ref.name)
 
-        manifest = self.get_manifest(package_entry, ref)
+        if package_ref.reference is None:
+            if package_entry.installed:
+                return self.get_package(package_entry.name)
+            if package_entry.default_reference is not None:
+                package_ref.reference = package_entry.default_reference
+            else:
+                raise PackageManagerError(f'No default reference tag. '
+                                          f'Please specify the version or tag explicitly')
+
+        package_entry.installed = False
+        manifest = self.manifest_resolver.get_manifest(package_entry, package_ref.reference)
         package_entry.version = manifest['package']['version']
-        return Package(package_entry, ref, manifest)
+        return Package(package_entry, package_ref.reference, manifest)
 
-    @staticmethod
-    def get_package_default_reference(package_entry: PackageEntry) -> str:
-        """ Returns default reference for the package.
-        If package is installed the installed tag, a version, is returned.
-        If package is not installed the default reference from package
-        database is used.
+    def read_package(self, image_path: str) -> Package:
+        """ Creates package object from local image tarball.
 
         Args:
-            package_entry: Package Database Entry
+            image_path: str
         Returns:
-            Reference string
+            Package object.
         """
 
-        if package_entry.installed:
-            return str(package_entry.version)
+        manifest = self.manifest_resolver.get_manifest_from_image_tarball(image_path)
 
-        if package_entry.default_reference is not None:
-            return package_entry.default_reference
+        name = manifest['package']['name']
+        version = manifest['package']['version']
 
-        raise PackageManagerError(f'No default reference tag. '
-                                  f'Please specify the version or digest explicitly')
+        # put an empty repository, since this is a local installation
+        # repository has to be initialized after the local image is loaded.
+        repository = ''
+        reference = version_to_tag(version)
 
-    def get_available_versions(self, name: str, all: bool = False):
+        return Package(
+            PackageEntry(
+                name,
+                repository=repository,
+                version=version
+            ),
+            reference,
+            manifest
+        )
+
+    def resolve_package(self, expression: str) -> Package:
+        """ Resolve package from expression string.
+        The expression can be a constraint expression,
+        reference expression or a path to a file.
+
+        Args:
+            expression: package expression string
+        Returns:
+            Package object.
+
+        """
+
+        if os.path.exists(expression):
+            return self.read_package(expression)
+
+        package_ref = parse_reference_expression(expression)
+
+        return self.query_package(package_ref)
+
+    def get_package_available_versions(self,
+                                       name: str,
+                                       all: bool = False) -> Iterable:
+        """ Returns a list of available versions for package.
+
+        Args:
+            name: Package name.
+            all: If set to True will return all tags including
+                 those which do not follow semantic versioning.
+        Returns:
+            List of versions
+        """
         package_info = self.database.get_package(name)
         registry = self.registry_resolver.get_registry_for(package_info.repository)
         available_tags = registry.tags(package_info.repository)
@@ -498,33 +557,52 @@ class PackageManager:
 
         return map(tag_to_version, filter(is_semantic_ver_tag, available_tags))
 
-    def get_installed_packages_and(self, package: Package) -> Dict[str, Package]:
-        packages = self.get_installed_packages()
-        packages[package.name] = package
-        return packages
-
-    def get_installed_packages_except(self, package: Package) -> Dict[str, Package]:
-        packages = self.get_installed_packages()
-        packages.pop(package.name)
-        return packages
-
     def is_installed(self, name: str) -> bool:
+        """ Returns boolean whether a package called name is installed.
+
+        Args:
+            name: Package name.
+        Returns:
+            True if package is installed, False otherwise.
+        """
+
         if not self.database.has_package(name):
             return False
         package_info = self.database.get_package(name)
         return package_info.installed
 
-    def has_package(self, name: str):
-        return self.database.has_package(name)
+    def get_installed_packages(self) -> Dict[str, Package]:
+        """ Returns a dictionary of installed packages where
+        keys are package names and values are package objects.
 
-    def get_installed_packages(self):
-        return {entry.name: self.get_package(entry.name, str(entry.version))
-                for entry in self.get_database() if entry.installed}
+        Returns:
+            Installed packages dictionary.
+        """
 
-    def get_manifest(self, package_info: PackageEntry, ref: str):
-        return self.manifest_resolver.get_manifest(package_info, ref)
+        return {
+            entry.name: self.get_package(entry.name)
+            for entry in self.database if entry.installed
+        }
 
-    def systemctl_action(self, package: Package, action: str):
+    def _migrate_package_database(self, old_package_database: PackageDatabase):
+        for package in old_package_database:
+            if not self.database.has_package(package.name):
+                self.database.add_package(package.name,
+                                          package.repository,
+                                          package.description,
+                                          package.default_reference)
+
+    def _get_installed_packages_and(self, package: Package) -> Dict[str, Package]:
+        packages = self.get_installed_packages()
+        packages[package.name] = package
+        return packages
+
+    def _get_installed_packages_except(self, package: Package) -> Dict[str, Package]:
+        packages = self.get_installed_packages()
+        packages.pop(package.name)
+        return packages
+
+    def _systemctl_action(self, package: Package, action: str):
         name = package.manifest['service']['name']
         host_service = package.manifest['service']['host-service']
         asic_service = package.manifest['service']['asic-service']
@@ -541,39 +619,39 @@ class PackageManager:
                 run_command(f'systemctl {action} {name}@{npu}')
 
     @staticmethod
-    def get_cli_plugin_name(package: Package):
+    def _get_cli_plugin_name(package: Package):
         return utils.make_python_identifier(package.name) + '.py'
 
     @classmethod
-    def get_cli_plugin_path(cls, package: Package, command):
+    def _get_cli_plugin_path(cls, package: Package, command):
         pkg_loader = pkgutil.get_loader(f'{command}.plugins')
         if pkg_loader is None:
             raise PackageManagerError(f'Failed to get plugins path for {command} CLI')
         plugins_pkg_path = os.path.dirname(pkg_loader.path)
-        return os.path.join(plugins_pkg_path, cls.get_cli_plugin_name(package))
+        return os.path.join(plugins_pkg_path, cls._get_cli_plugin_name(package))
 
-    def install_cli_plugins(self, package: Package):
+    def _install_cli_plugins(self, package: Package):
         for command in ('show', 'config', 'clear'):
-            self.install_cli_plugin(package, command)
+            self._install_cli_plugin(package, command)
 
-    def uninstall_cli_plugins(self, package: Package):
+    def _uninstall_cli_plugins(self, package: Package):
         for command in ('show', 'config', 'clear'):
-            self.uninstall_cli_plugin(package, command)
+            self._uninstall_cli_plugin(package, command)
 
-    def install_cli_plugin(self, package: Package, command: str):
+    def _install_cli_plugin(self, package: Package, command: str):
         image_plugin_path = package.manifest['cli'][command]
         if not image_plugin_path:
             return
-        host_plugin_path = self.get_cli_plugin_path(package, command)
-        repo = package.repository
-        tag = str(package.version)
-        self.docker.cp(repo, tag, image_plugin_path, host_plugin_path)
+        host_plugin_path = self._get_cli_plugin_path(package, command)
+        repotag = f'{package.repository}:latest'
+        image = self.docker.get_image(repotag)
+        self.docker.extract(image.id, image_plugin_path, host_plugin_path)
 
-    def uninstall_cli_plugin(self, package: Package, command: str):
+    def _uninstall_cli_plugin(self, package: Package, command: str):
         image_plugin_path = package.manifest['cli'][command]
         if not image_plugin_path:
             return
-        host_plugin_path = self.get_cli_plugin_path(package, command)
+        host_plugin_path = self._get_cli_plugin_path(package, command)
         if os.path.exists(host_plugin_path):
             os.remove(host_plugin_path)
 
@@ -581,7 +659,7 @@ class PackageManager:
     def get_manager() -> 'PackageManager':
         docker_api = DockerApi(docker.from_env())
         registry_resolver = RegistryResolver()
-        return PackageManager(DockerApi(docker.from_env()),
+        return PackageManager(DockerApi(docker.from_env(), ProgressManager()),
                               registry_resolver,
                               PackageDatabase.from_file(),
                               ManifestResolver(docker_api, registry_resolver),
