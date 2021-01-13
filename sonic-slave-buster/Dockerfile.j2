@@ -319,7 +319,9 @@ RUN apt-get update && apt-get install -y \
         libncurses5-dev      \
         libpcsclite-dev      \
         docbook-to-man       \
-        docbook-utils
+        docbook-utils        \
+# For kdump-tools
+        libbz2-dev
 
 # Build fix for ARMHF buster libsairedis
 {%- if CONFIGURED_ARCH == "armhf" %}
