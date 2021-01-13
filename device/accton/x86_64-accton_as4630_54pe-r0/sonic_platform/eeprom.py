@@ -5,10 +5,13 @@ try:
     import os
     import sys
     import re
-    from cStringIO import StringIO
+    if sys.version_info[0] >= 3:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
     
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
@@ -20,7 +23,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
     EEPROM_DECODE_HEADLINES = 6
 
     def __init__(self):
-        self._eeprom_path = "/sys/bus/i2c/devices/1-0057"
+        self._eeprom_path = "/sys/bus/i2c/devices/1-0057/eeprom"
         super(Tlv, self).__init__(self._eeprom_path, 0, '', True)
         self._eeprom = self._load_eeprom()
 

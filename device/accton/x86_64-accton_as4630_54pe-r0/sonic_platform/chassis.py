@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Celestica
+# Edgecore
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the Chassis information which are available in the platform
@@ -12,19 +12,18 @@ import os
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-        
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-NUM_FAN_TRAY = 2
-NUM_FAN = 3
+NUM_FAN_TRAY = 3
+NUM_FAN = 2
 NUM_PSU = 2
 NUM_THERMAL = 3
 NUM_QSFP = 6
 PORT_START = 49
 PORT_END = 54
 NUM_COMPONENT = 2
-RESET_REGISTER = "0x103"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
@@ -37,6 +36,10 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
+        self._api_helper = APIHelper()
+        self._api_helper = APIHelper()
+        self.is_host = self._api_helper.is_host()
+        
         self.config_data = {}
         
         self.__initialize_fan()
@@ -81,12 +84,12 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
-    
+
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
     
-    
+
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
 
@@ -99,6 +102,31 @@ class Chassis(ChassisBase):
             pass
         return None
 
+    def get_name(self):
+        """
+        Retrieves the name of the device
+            Returns:
+            string: The name of the device
+        """
+        
+        return self._api_helper.hwsku
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the Chassis
+        Returns:
+            bool: True if Chassis is present, False if not
+        """
+        return True
+    
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
+    
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -137,34 +165,33 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-        description = 'None'
-
-
-        reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE) if self.__is_host(
-        ) else PMON_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE
-        prev_reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + PREV_REBOOT_CAUSE_FILE) if self.__is_host(
-        ) else PMON_REBOOT_CAUSE_PATH + PREV_REBOOT_CAUSE_FILE
-
-        hw_reboot_cause = self._component_list[0].get_register_value(RESET_REGISTER)
-
-        sw_reboot_cause = self.__read_txt_file(
+      
+        reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
+        sw_reboot_cause = self._api_helper.read_txt_file(
             reboot_cause_path) or "Unknown"
-        prev_sw_reboot_cause = self.__read_txt_file(
-            prev_reboot_cause_path) or "Unknown"
 
-        if sw_reboot_cause == "Unknown" and (prev_sw_reboot_cause == "Unknown" or prev_sw_reboot_cause == self.REBOOT_CAUSE_POWER_LOSS) and hw_reboot_cause == "0x11":
-            reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
-        elif sw_reboot_cause != "Unknown" and hw_reboot_cause == "0x11":
-            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
-            description = sw_reboot_cause
-        elif prev_reboot_cause_path != "Unknown" and hw_reboot_cause == "0x11":
-            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
-            description = prev_sw_reboot_cause
-        elif hw_reboot_cause == "0x22":
-            reboot_cause = self.REBOOT_CAUSE_WATCHDOG,
-        else:
-            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            description = 'Unknown reason'
 
-        return (reboot_cause, description)
+        return ('REBOOT_CAUSE_NON_HARDWARE', sw_reboot_cause)
 
+    def get_sfp(self, index):
+        """
+        Retrieves sfp represented by (1-based) index <index>
+        Args:
+            index: An integer, the index (1-based) of the sfp to retrieve.
+            The index should be the sequence of a physical port in a chassis,
+            starting from 1.
+            For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
+        Returns:
+            An object dervied from SfpBase representing the specified sfp
+        """
+        sfp = None
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        try:
+            # The index will start from 1
+            sfp = self._sfp_list[index-1]
+        except IndexError:
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
+                             index, len(self._sfp_list)))
+        return sfp

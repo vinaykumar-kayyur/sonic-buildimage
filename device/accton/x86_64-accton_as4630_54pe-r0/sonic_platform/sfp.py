@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Celestica
+# Edgecore
 #
 # Sfp contains an implementation of SONiC Platform Base API and
 # provides the sfp device status which are available in the platform
@@ -10,6 +10,7 @@
 
 import os
 import time
+import sys
 
 from ctypes import create_string_buffer
 
@@ -21,6 +22,7 @@ try:
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sffbase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -130,26 +132,26 @@ class Sfp(SfpBase):
     HWSKU = "Accton-AS4630-54PE"
 
     _port_to_i2c_mapping = {
-           49: [18],
-           50: [19],
-           51: [20],
-           52: [21],
-           53: [22],
-           54: [23],
+           49: 18,
+           50: 19,
+           51: 20,
+           52: 21,
+           53: 22,
+           54: 23,
     }
 
     def __init__(self, sfp_index=0):
+        self._api_helper=APIHelper()
         # Init index
         self.index = sfp_index
         self.port_num = self.index + 1
-
         # Init eeprom path
         eeprom_path = '/sys/bus/i2c/devices/{0}-0050/eeprom'
         self.port_to_eeprom_mapping = {}
         for x in range(self.PORT_START, self.PORT_END + 1):
-            self.port_to_eeprom_mapping[x] = eeprom_path.format(self._port_to_i2c_mapping[x][0])
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(self._port_to_i2c_mapping[x])
         
-        self.info_dict_keys = ['type', 'hardwarerev', 'serialnum', 'manufacturename', 'modelname', 'Connector', 'encoding', 'ext_identifier',
+        self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
                                'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
@@ -180,15 +182,14 @@ class Sfp(SfpBase):
         else:
             return 'N/A'
 
-    def __read_txt_file(self, file_path):
+    def __write_txt_file(self, file_path, value):
         try:
-            with open(file_path, 'r') as fd:
-                data = fd.read()
-                return data.strip()
-        except IOError:
-            pass
-        return ""
-
+            with open(file_path, 'w', buffering=0) as fd:
+                fd.write(str(value))
+        except Exception:
+            return False
+        return True
+    
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -210,8 +211,12 @@ class Sfp(SfpBase):
                 sysfs_sfp_i2c_client_eeprom_path, mode="rb", buffering=0)
             sysfsfile_eeprom.seek(offset)
             raw = sysfsfile_eeprom.read(num_bytes)
-            for n in range(0, num_bytes):
-                eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+            if sys.version_info[0] >= 3:
+                for n in range(0, num_bytes):
+                    eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
+            else:
+                for n in range(0, num_bytes):
+                    eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
         except Exception:
             pass
         finally:
@@ -229,11 +234,11 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardwarerev                |1*255VCHAR     |hardware version of SFP
-        serialnum                  |1*255VCHAR     |serial number of the SFP
-        manufacturename            |1*255VCHAR     |SFP vendor name
-        modelname                  |1*255VCHAR     |SFP model name
-        Connector                  |1*255VCHAR     |connector information
+        hardware_rev                |1*255VCHAR     |hardware version of SFP
+        serial                     |1*255VCHAR     |serial number of the SFP
+        manufacturer               |1*255VCHAR     |SFP vendor name
+        model                      |1*255VCHAR     |SFP model name
+        connector                  |1*255VCHAR     |connector information
         encoding                   |1*255VCHAR     |encoding information
         ext_identifier             |1*255VCHAR     |extend identifier
         ext_rateselect_compliance  |1*255VCHAR     |extended rateSelect compliance
@@ -307,17 +312,17 @@ class Sfp(SfpBase):
 
         if sfp_interface_bulk_data:
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
-            transceiver_info_dict['Connector'] = sfp_interface_bulk_data['data']['Connector']['value']
+            transceiver_info_dict['connector'] = sfp_interface_bulk_data['data']['Connector']['value']
             transceiver_info_dict['encoding'] = sfp_interface_bulk_data['data']['EncodingCodes']['value']
             transceiver_info_dict['ext_identifier'] = sfp_interface_bulk_data['data']['Extended Identifier']['value']
             transceiver_info_dict['ext_rateselect_compliance'] = sfp_interface_bulk_data['data']['RateIdentifier']['value']
             transceiver_info_dict['type_abbrv_name'] = sfp_interface_bulk_data['data']['type_abbrv_name']['value']
 
-        transceiver_info_dict['manufacturename'] = sfp_vendor_name_data[
+        transceiver_info_dict['manufacturer'] = sfp_vendor_name_data[
             'data']['Vendor Name']['value'] if sfp_vendor_name_data else 'N/A'
-        transceiver_info_dict['modelname'] = sfp_vendor_pn_data['data']['Vendor PN']['value'] if sfp_vendor_pn_data else 'N/A'
-        transceiver_info_dict['hardwarerev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value'] if sfp_vendor_rev_data else 'N/A'
-        transceiver_info_dict['serialnum'] = sfp_vendor_sn_data['data']['Vendor SN']['value'] if sfp_vendor_sn_data else 'N/A'
+        transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value'] if sfp_vendor_pn_data else 'N/A'
+        transceiver_info_dict['hardware_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value'] if sfp_vendor_rev_data else 'N/A'
+        transceiver_info_dict['serial'] = sfp_vendor_sn_data['data']['Vendor SN']['value'] if sfp_vendor_sn_data else 'N/A'
         transceiver_info_dict['vendor_oui'] = sfp_vendor_oui_data['data']['Vendor OUI']['value'] if sfp_vendor_oui_data else 'N/A'
         transceiver_info_dict['vendor_date'] = sfp_vendor_date_data[
             'data']['VendorDataCode(YYYY-MM-DD Lot)']['value'] if sfp_vendor_date_data else 'N/A'
@@ -645,10 +650,11 @@ class Sfp(SfpBase):
         """
         if self.port_num <53:
             return False # SPF port doesn't support this feature
-          
-        reset_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_reset_', self.port_num)
-        val=self.__read_txt_file(reset_path).rstrip()
-        return int(val, 10)==1
+        
+        return False # CPLD port doesn't support this feature
+        #reset_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_reset_', self.port_num)
+        #val=self._api_helper.read_txt_file(reset_path)
+        #return int(val, 10)==1
 
     def get_rx_los(self):
         """
@@ -658,12 +664,16 @@ class Sfp(SfpBase):
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
         rx_los = False
-        if self.port_num < 53:
-            status_control_raw = self.__read_eeprom_specific_bytes(
-                SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
-            if status_control_raw:
-                data = int(status_control_raw[0], 16)
-                rx_los = (sffbase().test_bit(data, 1) != 0)
+        if self.port_num < 49:
+            rx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_rx_los_', self.port_num)
+            rx_los=self._api_helper.read_txt_file(rx_path)
+            
+            #status_control_raw = self.__read_eeprom_specific_bytes(
+            #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
+            #if status_control_raw:
+            #    data = int(status_control_raw[0], 16)
+            #    rx_los = (sffbase().test_bit(data, 1) != 0)
+            
         else:
             rx_los_list = []
             dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
@@ -686,11 +696,13 @@ class Sfp(SfpBase):
         """
         tx_fault = False
         if self.port_num < 53:
-            status_control_raw = self.__read_eeprom_specific_bytes(
-                SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
-            if status_control_raw:
-                data = int(status_control_raw[0], 16)
-                tx_fault = (sffbase().test_bit(data, 2) != 0)
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_fault_', self.port_num)
+            tx_fault=self._api_helper.read_txt_file(tx_path)
+            #status_control_raw = self.__read_eeprom_specific_bytes(
+            #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
+            #if status_control_raw:
+            #    data = int(status_control_raw[0], 16)
+            #    tx_fault = (sffbase().test_bit(data, 2) != 0)
         else:
             tx_fault_list = []
             dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
@@ -712,17 +724,20 @@ class Sfp(SfpBase):
             A Boolean, True if tx_disable is enabled, False if disabled
         """
         if self.port_num < 53: 
-            tx_disable = False
+            tx_disable = False            
+                
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)
+            tx_disable=self._api_helper.read_txt_file(tx_path)
             
-            status_control_raw = self.__read_eeprom_specific_bytes(
-                SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
-            if status_control_raw:
-                data = int(status_control_raw[0], 16)
-                tx_disable_hard = (sffbase().test_bit(
-                    data, SFP_TX_DISABLE_HARD_BIT) != 0)
-                tx_disable_soft = (sffbase().test_bit(
-                    data, SFP_TX_DISABLE_SOFT_BIT) != 0)
-                tx_disable = tx_disable_hard | tx_disable_soft
+            #status_control_raw = self.__read_eeprom_specific_bytes(
+            #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
+            #if status_control_raw:
+            #    data = int(status_control_raw[0], 16)
+            #    tx_disable_hard = (sffbase().test_bit(
+            #        data, SFP_TX_DISABLE_HARD_BIT) != 0)
+            #    tx_disable_soft = (sffbase().test_bit(
+            #        data, SFP_TX_DISABLE_SOFT_BIT) != 0)
+            #    tx_disable = tx_disable_hard | tx_disable_soft
     
             return tx_disable        
         else:
@@ -779,18 +794,10 @@ class Sfp(SfpBase):
             # SFP doesn't support this feature
             return False
         else:
-            power_override=False
-            power_set = False
-            
-            power_override=self.get_power_override()
             power_set=self.get_power_set()
-            
-            
-            
-            if power_override is True and power_set is True:
-                return True
-            else :
-                return False
+            power_override = self.get_power_override()
+            return power_set and power_override
+      
     
     def get_power_set(self):
         
@@ -807,7 +814,7 @@ class Sfp(SfpBase):
                 return False
     
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
+                QSFP_POWEROVERRIDE_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_set = (
@@ -832,7 +839,7 @@ class Sfp(SfpBase):
                 return False
     
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
+                QSFP_POWEROVERRIDE_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_override = (
@@ -921,20 +928,20 @@ class Sfp(SfpBase):
         # Check for invalid port_num
         if self.port_num <53:
             return False # SFP doesn't support this feature
-          
-        reset_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_reset_', self.port_num)
         
-        try:
-            reg_file = open(reset_path, "r+")
-            reg_val = '1'
-            reg_file.write(reg_val)
-            reg_file.close()
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
-            return False
-
-        return True
-
+        return False #CPLD doens't support this feature
+        '''  
+        reset_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_reset_', self.port_num)
+        ret = self.__write_txt_file(reset_path, 1)
+        if ret is not True:
+            return ret
+        
+        time.sleep(0.01)
+        ret = self.__write_txt_file(reset_path, 0)
+        time.sleep(0.2)
+        
+        return ret
+        '''
     def tx_disable(self, tx_disable):
         """
         Disable SFP TX for all channels
@@ -945,45 +952,29 @@ class Sfp(SfpBase):
             A boolean, True if tx_disable is set successfully, False if not
         """
         if self.port_num < 53:
-            sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[self.port_num]
-            status_control_raw = self.__read_eeprom_specific_bytes(
-                SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
-            if status_control_raw is not None:
-                # Set bit 6 for Soft TX Disable Select
-                # 01000000 = 64 and 10111111 = 191
-                tx_disable_bit = 64 if tx_disable else 191
-                status_control = int(status_control_raw[0], 16)
-                tx_disable_ctl = (status_control | tx_disable_bit) if tx_disable else (
-                    status_control & tx_disable_bit)
-                try:
-                    sysfsfile_eeprom = open(
-                        sysfs_sfp_i2c_client_eeprom_path, mode="r+b", buffering=0)
-                    buffer = create_string_buffer(1)
-                    buffer[0] = chr(tx_disable_ctl)
-                    # Write to eeprom
-                    sysfsfile_eeprom.seek(SFP_STATUS_CONTROL_OFFSET)
-                    sysfsfile_eeprom.write(buffer[0])
-                except Exception:
-                    return False
-                finally:
-                    if sysfsfile_eeprom:
-                        sysfsfile_eeprom.close()
-                        time.sleep(0.01)
-                return True
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)      
+            ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)
+            time.sleep(0.01)
+            return ret
         
         else:
+            if not self.get_presence():
+                return False
             sysfsfile_eeprom = None
             try:
                 tx_disable_ctl = 0xf if tx_disable else 0x0
                 buffer = create_string_buffer(1)
-                buffer[0] = chr(tx_disable_ctl)
+                if sys.version_info[0] >= 3:
+                    buffer[0] = tx_disable_ctl
+                else:
+                    buffer[0] = chr(tx_disable_ctl)
                 # Write to eeprom
                 sysfsfile_eeprom = open(
                     self.port_to_eeprom_mapping[self.port_num], "r+b")
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print ('Error: unable to open file: ',str(e))
                 return False
             finally:
                 if sysfsfile_eeprom is not None:
@@ -1006,22 +997,35 @@ class Sfp(SfpBase):
         if self.port_num < 53:
             return False # SFP doesn't support this feature
         else:
+            if not self.get_presence():
+                return False
+
             sysfsfile_eeprom = None
             try:
                 channel_state = self.get_tx_disable_channel()
-                tx_enable_mask = [0xe, 0xd, 0xb, 0x7]
-                tx_disable_mask = [0x1, 0x3, 0x7, 0xf]
-                tx_disable_ctl = channel_state | tx_disable_mask[
-                    channel] if disable else channel_state & tx_enable_mask[channel]
+
+                for i in range(4):
+                    channel_mask = (1 << i)
+                    if not (channel & channel_mask):
+                        continue
+
+                    if disable:
+                        channel_state |= channel_mask
+                    else:
+                        channel_state &= ~channel_mask
+
                 buffer = create_string_buffer(1)
-                buffer[0] = chr(tx_disable_ctl)
+                if sys.version_info[0] >= 3:
+                    buffer[0] = channel_state
+                else:
+                    buffer[0] = chr(channel_state)
                 # Write to eeprom
                 sysfsfile_eeprom = open(
                     self.port_to_eeprom_mapping[self.port_num], "r+b")
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
+                print ('Error: unable to open file: ', str(e))
                 return False
             finally:
                 if sysfsfile_eeprom is not None:
@@ -1071,28 +1075,22 @@ class Sfp(SfpBase):
             if not self.get_presence():
                 return False
             try:
-                power_override_bit = 0
-                if power_override:
-                    power_override_bit |= 1 << 0
-    
-                power_set_bit = 0
-                if power_set:
-                    power_set_bit |= 1 << 1
+                power_override_bit = (1 << 0) if power_override else 0
+                power_set_bit      = (1 << 1) if power_set else (1 << 3)
     
                 buffer = create_string_buffer(1)
-                buffer[0] = chr(power_override_bit | power_set_bit)
+                if sys.version_info[0] >= 3:
+                    buffer[0] = (power_override_bit | power_set_bit)
+                else:
+                    buffer[0] = chr(power_override_bit | power_set_bit)
                 # Write to eeprom
-                sysfsfile_eeprom = open(
-                    self.port_to_eeprom_mapping[self.port_num], "r+b") 
-                sysfsfile_eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
-                sysfsfile_eeprom.write(buffer[0])
-            except IOError as e:
-                print "Error: unable to open file: %s" % str(e)
-                return False
-            finally:
-                if sysfsfile_eeprom is not None:
-                    sysfsfile_eeprom.close()
+                with open(self.port_to_eeprom_mapping[self.port_num], "r+b") as fd:
+                    fd.seek(QSFP_POWEROVERRIDE_OFFSET)
+                    fd.write(buffer[0])
                     time.sleep(0.01)
+            except Exception:
+                print ('Error: unable to open file: ', str(e))
+                return False
             return True
 
     def get_name(self):
@@ -1109,12 +1107,13 @@ class Sfp(SfpBase):
 
     def get_presence(self):
         """
-        Retrieves the presence of the PSU
+        Retrieves the presence of the device
         Returns:
-            bool: True if PSU is present, False if not
+            bool: True if device is present, False if not
         """
-        present_path = "{}{}{}".format(CPLD_I2C_PATH, 'module_present_', self.port_num)
-        val=self.__read_txt_file(present_path)
+        present_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_present_', self.port_num)
+        val=self._api_helper.read_txt_file(present_path)
+
         return int(val, 10)==1
 
     def get_model(self):
@@ -1124,7 +1123,7 @@ class Sfp(SfpBase):
             string: Model/part number of device
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
-        return transceiver_dom_info_dict.get("modelname", "N/A")
+        return transceiver_dom_info_dict.get("model", "N/A")
 
     def get_serial(self):
         """
@@ -1133,7 +1132,7 @@ class Sfp(SfpBase):
             string: Serial number of device
         """
         transceiver_dom_info_dict = self.get_transceiver_info()
-        return transceiver_dom_info_dict.get("serialnum", "N/A")
+        return transceiver_dom_info_dict.get("serial", "N/A")
 
     def get_status(self):
         """

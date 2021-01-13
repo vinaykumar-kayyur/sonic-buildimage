@@ -1,2 +1,2 @@
-__all__ = ['chassis', 'eeprom', 'platform', 'psu', 'sfp']
-import platform
+__all__ = ['chassis', 'eeprom', 'platform', 'psu', 'sfp', 'thermal', 'fan']
+from . import platform

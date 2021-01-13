@@ -13,17 +13,20 @@ import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CPLD_ADDR_MAPPING = {
-    "CPLD": "3-0060",
+    "CPLD1": "4-0060"
 }
 SYSFS_PATH = "/sys/bus/i2c/devices/"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
-COMPONENT_NAME_LIST = ["CPLD", "BIOS"]
-COMPONENT_DES_LIST = ["CPLD","Basic Input/Output System"]
-
+COMPONENT_LIST= [
+   ("CPLD", "CPLD 1"),
+   ("BIOS", "Basic Input/Output System")
+   
+]
 
 class Component(ComponentBase):
     """Platform-specific Component class"""
@@ -31,6 +34,7 @@ class Component(ComponentBase):
     DEVICE_TYPE = "component"
 
     def __init__(self, component_index=0):
+        self._api_helper=APIHelper()
         ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.get_name()
@@ -59,26 +63,28 @@ class Component(ComponentBase):
                 return bios_version.strip()
         except Exception as e:
             return None
-
+    '''
     def get_sysfs_value(self, addr, name):
         # Retrieves the cpld register value
         cmd = "cat {0}{1}/{2}".format(SYSFS_PATH, addr, name)
         p = subprocess.Popen(
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        raw_data, err = p.communicate()        
+        raw_data, err = p.communicate()
         if err is not '':
             return None
         return raw_data.strip()
+    '''
 
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
         for cpld_name in CPLD_ADDR_MAPPING:
             try:
-                cpld_addr = CPLD_ADDR_MAPPING[cpld_name]
-                cpld_version_raw=self.get_sysfs_value(cpld_addr, "version")
+                cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
+                cpld_version_raw= self._api_helper.read_txt_file(cpld_path)
                 cpld_version[cpld_name] = "{}".format(int(cpld_version_raw,16))
             except Exception as e:
+                print('Get exception when read cpld')
                 cpld_version[cpld_name] = 'None'
         
         return cpld_version
@@ -89,7 +95,7 @@ class Component(ComponentBase):
          Returns:
             A string containing the name of the component
         """
-        return COMPONENT_NAME_LIST[self.index]
+        return COMPONENT_LIST[self.index][0]
 
     def get_description(self):
         """
@@ -97,7 +103,8 @@ class Component(ComponentBase):
             Returns:
             A string containing the description of the component
         """
-        return COMPONENT_DES_LIST[self.index]
+        return COMPONENT_LIST[self.index][1]
+        #return "testhwsku"
 
     def get_firmware_version(self):
         """
@@ -124,6 +131,5 @@ class Component(ComponentBase):
             A boolean, True if install successfully, False if not
         """
         raise NotImplementedError 
-        
 
-        
+                

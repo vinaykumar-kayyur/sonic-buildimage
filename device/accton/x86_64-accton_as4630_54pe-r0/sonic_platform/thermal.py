@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #############################################################################
-# Celestica
+# Edgecore
 #
 # Thermal contains an implementation of SONiC Platform Base API and
 # provides the thermal device status which are available in the platform
@@ -26,7 +26,6 @@ class Thermal(ThermalBase):
 
     def __init__(self, thermal_index=0):
         self.index = thermal_index
-
         # Add thermal name
         self.THERMAL_NAME_LIST.append("Temp sensor 1")
         self.THERMAL_NAME_LIST.append("Temp sensor 2")
@@ -46,28 +45,28 @@ class Thermal(ThermalBase):
     def __read_txt_file(self, file_path):
         for filename in glob.glob(file_path):
             try:
-                with open(filename, 'r') as fd:
-                    #data = fd.read()
+                with open(filename, 'r') as fd:                    
                     data =fd.readline().rstrip()
                     return data
-                    #return data.strip()
             except IOError as e:
                 pass
 
     def __get_temp(self, temp_file):
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_temp = self.__read_txt_file(temp_file_path)
-        temp = float(raw_temp)/1000
-        return "{:.3f}".format(temp)
+        return float(raw_temp)/1000
+        
 
     def __set_threshold(self, file_name, temperature):
         temp_file_path = os.path.join(self.hwmon_path, file_name)
-        try:
-            with open(temp_file_path, 'w') as fd:
-                fd.write(str(temperature))
-            return True
-        except IOError:
-            return False
+        for filename in glob.glob(temp_file_path):
+            try:
+                with open(filename, 'w') as fd:
+                    fd.write(str(temperature))
+                return True
+            except IOError as e:
+                print("IOError")
+
 
     def get_temperature(self):
         """
@@ -98,8 +97,11 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        #Not supported
-        return False
+        temp_file = "temp{}_max".format(self.ss_index)
+        temperature = temperature *1000
+        self.__set_threshold(temp_file, temperature)
+        
+        return True
 
     def get_name(self):
         """
@@ -111,9 +113,9 @@ class Thermal(ThermalBase):
 
     def get_presence(self):
         """
-        Retrieves the presence of the PSU
+        Retrieves the presence of the Thermal
         Returns:
-            bool: True if PSU is present, False if not
+            bool: True if Thermal is present, False if not
         """
         temp_file = "temp{}_input".format(self.ss_index)
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
@@ -125,11 +127,10 @@ class Thermal(ThermalBase):
         Retrieves the operational status of the device
         Returns:
             A boolean value, True if device is operating properly, False if not
-        """
+        """        
 
         file_str = "temp{}_input".format(self.ss_index)
         file_path = os.path.join(self.hwmon_path, file_str)
-
         raw_txt = self.__read_txt_file(file_path)
         if raw_txt is None:
             return False
