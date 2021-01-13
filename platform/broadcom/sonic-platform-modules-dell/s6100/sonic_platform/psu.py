@@ -40,7 +40,7 @@ class Psu(PsuBase):
             self.psu_power_reg = "power4_input"
 
         # Passing True to specify it is a PSU fan
-        psu_fan = Fan(fan_index=self.index, psu_fan=True)
+        psu_fan = Fan(psu_index=self.index, psu_fan=True)
         self._fan_list.append(psu_fan)
 
     def _get_pmc_register(self, reg_name):
@@ -232,3 +232,20 @@ class Psu(PsuBase):
         # In S6100, SmartFusion FPGA controls the PSU LED and the PSU
         # LED state cannot be changed from CPU.
         return False
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this PSU is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True

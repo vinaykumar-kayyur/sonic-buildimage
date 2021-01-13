@@ -172,6 +172,23 @@ class Chassis(ChassisBase):
         """
         return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
