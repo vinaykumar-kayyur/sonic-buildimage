@@ -75,12 +75,9 @@ def get_command_result(command):
             syslog.syslog(syslog.LOG_ERR, "Failed to execute the command '{}'. Return code: '{}'".format(
                 command, proc_instance.returncode))
             sys.exit(7)
-    except OSError as os_err:
-        syslog.syslog(syslog.LOG_ERR, "Failed to execute the command '{}'. Error: '{}'".format(command, os_err))
+    except (OSError, ValueError) as err:
+        syslog.syslog(syslog.LOG_ERR, "Failed to execute the command '{}'. Error: '{}'".format(command, err))
         sys.exit(8)
-    except ValueError as val_err:
-        syslog.syslog(syslog.LOG_ERR, "Failed to execute the command '{}'. Error: '{}'".format(command, val_err))
-        sys.exit(9)
 
     return command_stdout
 
