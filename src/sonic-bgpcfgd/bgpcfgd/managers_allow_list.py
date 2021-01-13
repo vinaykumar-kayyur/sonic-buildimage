@@ -6,7 +6,7 @@ import re
 from .log import log_debug, log_info, log_err, log_warn
 from .template import TemplateFabric
 from .manager import Manager
-from .utils import run_command
+
 
 class BGPAllowListMgr(Manager):
     """ This class initialize "AllowList" settings """
@@ -36,8 +36,6 @@ class BGPAllowListMgr(Manager):
             db,
             table,
         )
-        self.cfg_mgr = common_objs["cfg_mgr"]
-        self.constants = common_objs["constants"]
         self.key_re = re.compile(r"^DEPLOYMENT_ID\|\d+\|\S+$|^DEPLOYMENT_ID\|\d+$")
         self.enabled = self.__get_enabled()
         self.__load_constant_lists()
@@ -63,7 +61,8 @@ class BGPAllowListMgr(Manager):
             prefixes_v4 = str(data['prefixes_v4']).split(",")
         if "prefixes_v6" in data:
             prefixes_v6 = str(data['prefixes_v6']).split(",")
-        self.__update_policy(deployment_id, community_value, prefixes_v4, prefixes_v6)
+        default_action_community = self.__get_default_action_community(data)
+        self.__update_policy(deployment_id, community_value, prefixes_v4, prefixes_v6, default_action_community)
         return True
 
     def __set_handler_validate(self, key, data):
@@ -96,6 +95,9 @@ class BGPAllowListMgr(Manager):
         if not prefixes_v4 and not prefixes_v6:
             log_err("BGPAllowListMgr::Received BGP ALLOWED 'SET' message with no prefixes specified: %s" % str(data))
             return False
+        if "default_action" in data and data["default_action"] != "permit" and data["default_action"] != "deny":
+            log_err("BGPAllowListMgr::Received BGP ALLOWED 'SET' message with invalid 'default_action' field: '%s'" % str(data))
+            return False
         return True
 
     def del_handler(self, key):
@@ -124,13 +126,14 @@ class BGPAllowListMgr(Manager):
             return False
         return True
 
-    def __update_policy(self, deployment_id, community_value, prefixes_v4, prefixes_v6):
+    def __update_policy(self, deployment_id, community_value, prefixes_v4, prefixes_v6, default_action):
         """
         Update "allow list" policy with parameters
         :param deployment_id: deployment id which policy will be changed
         :param community_value: community value to match for the updated policy
         :param prefixes_v4: a list of v4 prefixes for the updated policy
         :param prefixes_v6: a list of v6 prefixes for the updated policy
+        :param default_action: the default action for the policy. should be either 'permit' or 'deny'
         """
         # update all related entries with the information
         info = deployment_id, community_value, str(prefixes_v4), str(prefixes_v6)
@@ -146,10 +149,13 @@ class BGPAllowListMgr(Manager):
         cmds += self.__update_community(names['community'], community_value)
         cmds += self.__update_allow_route_map_entry(self.V4, names['pl_v4'], names['community'], names['rm_v4'])
         cmds += self.__update_allow_route_map_entry(self.V6, names['pl_v6'], names['community'], names['rm_v6'])
+        cmds += self.__update_default_route_map_entry(names['rm_v4'], default_action)
+        cmds += self.__update_default_route_map_entry(names['rm_v6'], default_action)
         if cmds:
-            rc = self.cfg_mgr.push_list(cmds)
-            rc = rc and self.__restart_peers(deployment_id)
-            log_debug("BGPAllowListMgr::__update_policy. The peers were updated: rc=%s" % rc)
+            self.cfg_mgr.push_list(cmds)
+            peer_groups = self.__find_peer_group_by_deployment_id(deployment_id)
+            self.cfg_mgr.restart_peer_groups(peer_groups)
+            log_debug("BGPAllowListMgr::__update_policy. The peers configuration scheduled for updates")
         else:
             log_debug("BGPAllowListMgr::__update_policy. Nothing to update")
         log_info("BGPAllowListMgr::Done")
@@ -176,9 +182,10 @@ class BGPAllowListMgr(Manager):
         cmds += self.__remove_prefix_list(self.V6, names['pl_v6'])
         cmds += self.__remove_community(names['community'])
         if cmds:
-            rc = self.cfg_mgr.push_list(cmds)
-            rc = rc and self.__restart_peers(deployment_id)
-            log_debug("BGPAllowListMgr::__remove_policy. 'Allow list' policy was removed. rc:%s" % rc)
+            self.cfg_mgr.push_list(cmds)
+            peer_groups = self.__find_peer_group_by_deployment_id(deployment_id)
+            self.cfg_mgr.restart_peer_groups(peer_groups)
+            log_debug("BGPAllowListMgr::__remove_policy. 'Allow list' policy was scheduled for removal")
         else:
             log_debug("BGPAllowListMgr::__remove_policy. Nothing to remove")
         log_info('BGPAllowListMgr::Done')
@@ -363,6 +370,52 @@ class BGPAllowListMgr(Manager):
             cmds.append(" match community %s" % community_name)
         return cmds
 
+    def __update_default_route_map_entry(self, route_map_name, default_action_community):
+        """
+        Add or update default action rule for the route-map.
+        Default action rule is hardcoded into route-map permit 65535
+        :param route_map_name: name of the target route_map
+        :param default_action_community: community value to mark not-matched prefixes
+        """
+        info = route_map_name, default_action_community
+        log_debug("BGPAllowListMgr::__update_default_route_map_entry. rm='%s' set_community='%s'" % info)
+        current_default_action_value = self.__parse_default_action_route_map_entry(route_map_name)
+        if current_default_action_value != default_action_community:
+            return [
+                'route-map %s permit 65535' % route_map_name,
+                ' set community %s additive' % default_action_community
+            ]
+        else:
+            return []
+
+    def __parse_default_action_route_map_entry(self, route_map_name):
+        """
+        Parse default-action route-map entry
+        :param route_map_name: Name of the route-map to parse
+        :return: a community value used for default action
+        """
+        log_debug("BGPAllowListMgr::__parse_default_action_route_map_entries. rm='%s'" % route_map_name)
+        match_string = 'route-map %s permit 65535' % route_map_name
+        match_community = re.compile(r'^set community (\S+) additive$')
+        inside_route_map = False
+        community_value = ""
+        conf = self.cfg_mgr.get_text()
+        for line in conf + [""]:
+            s_line = line.strip()
+            if inside_route_map:
+                matched = match_community.match(s_line)
+                if matched:
+                    community_value = matched.group(1)
+                    break
+                else:
+                    log_err("BGPAllowListMgr::Found incomplete route-map '%s' entry. seq_no=65535" % route_map_name)
+                inside_route_map = False
+            elif s_line == match_string:
+                inside_route_map = True
+        if community_value == "":
+            log_err("BGPAllowListMgr::Default action community value is not found. route-map '%s' entry. seq_no=65535" % route_map_name)
+        return community_value
+
     def __remove_allow_route_map_entry(self, af, allow_address_pl_name, community_name, route_map_name):
         """
         Add or update a "Allow address" route-map entry with the parameters
@@ -531,7 +584,8 @@ class BGPAllowListMgr(Manager):
             inside_name = result.group(1)
         return rm_2_call
 
-    def __get_peer_group_to_restart(self, deployment_id, pg_2_rm, rm_2_call):
+    @staticmethod
+    def __get_peer_group_to_restart(deployment_id, pg_2_rm, rm_2_call):
         """
         Get peer_groups which are assigned to deployment_id
         :deployment_id: deployment_id number
@@ -559,23 +613,6 @@ class BGPAllowListMgr(Manager):
         rm_2_call = self.__get_route_map_calls(set(pg_2_rm.values()))
         ret = self.__get_peer_group_to_restart(deployment_id, pg_2_rm, rm_2_call)
         return list(ret)
-
-    def __restart_peers(self, deployment_id):
-        """
-        Restart peer-groups with requested deployment_id
-        :param deployment_id: deployment_id number
-        """
-        log_info("BGPAllowListMgr::Restart peers with deployment_id=%d" % deployment_id)
-        peer_groups = self.__find_peer_group_by_deployment_id(deployment_id)
-        rv = True
-        if peer_groups:
-            for peer_group in peer_groups:
-                no_error, _, _ = run_command(["vtysh", "-c", "clear bgp peer-group %s soft in" % peer_group])
-                rv = no_error == 0 and rv
-        else:
-            no_error, _, _ = run_command(["vtysh", "-c", "clear bgp * soft in"])
-            rv = no_error == 0
-        return rv
 
     def __get_enabled(self):
         """
@@ -638,3 +675,26 @@ class BGPAllowListMgr(Manager):
         :return: prefix list ip family
         """
         return 'ip' if af == self.V4 else 'ipv6'
+
+    def __get_default_action_community(self, data):
+        """
+        Determine the default action community based on the request.
+        If request doesn't contain "default_action" field - the default_action value
+        from the constants is being used
+        :param data: SET request data
+        :return: returns community value for "default_action"
+        """
+        drop_community = self.constants["bgp"]["allow_list"]["drop_community"]
+        if "default_action" in data:
+            if data["default_action"] == "deny":
+                return "no-export"
+            else: # "permit"
+                return drop_community
+        else:
+            if "default_action" in self.constants["bgp"]["allow_list"]:
+                if self.constants["bgp"]["allow_list"]["default_action"].strip() == "deny":
+                    return "no-export"
+                else:
+                    return drop_community
+            else:
+                return drop_community
