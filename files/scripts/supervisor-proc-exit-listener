@@ -204,7 +204,7 @@ def main(argv):
 		        restart_feature = get_autorestart_state(container_name)
 
 		    if container_name == "database" or restart_feature != "disabled":
-		        MSG_FORMAT_STR = "Process '{}' exited unxepectedly. Terminating supervisor '{}'"
+		        MSG_FORMAT_STR = "Process '{}' exited unexpectedly. Terminating supervisor '{}'"
 		        msg = MSG_FORMAT_STR.format(payload_headers['processname'], container_name)
 		        syslog.syslog(syslog.LOG_INFO, msg)
 		        os.kill(os.getppid(), signal.SIGTERM)
