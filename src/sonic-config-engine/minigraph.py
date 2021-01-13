@@ -1178,6 +1178,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if bool(results['PEER_SWITCH']):
         results['DEVICE_METADATA']['localhost']['subtype'] = 'DualToR'
+        if len(results['PEER_SWITCH'].keys()) > 1:
+            print("Warning: more than one peer switch was found. Only the first will be parsed: {}".format(results['PEER_SWITCH'].keys()[0]))
+
+        results['DEVICE_METADATA']['localhost']['peer_switch'] = list(results['PEER_SWITCH'].keys())[0]
 
     if is_storage_device:
         results['DEVICE_METADATA']['localhost']['storage_device'] = "true"
@@ -1501,7 +1505,12 @@ def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
             entry = {}
             neighbor = neighbors[intf]['name']
             entry['state'] = 'auto'
-            entry['server_ipv4'] = devices[neighbor]['lo_addr']
+
+            # Always force a /32 prefix for server IPv4 loopbacks
+            server_ipv4_lo_addr = devices[neighbor]['lo_addr'].split("/")[0]
+            server_ipv4_lo_prefix = ipaddress.ip_network(UNICODE_TYPE(server_ipv4_lo_addr))
+            entry['server_ipv4'] = str(server_ipv4_lo_prefix)
+
             if 'lo_addr_v6' in devices[neighbor]:
                 entry['server_ipv6'] = devices[neighbor]['lo_addr_v6']
             mux_cable_table[intf] = entry 
