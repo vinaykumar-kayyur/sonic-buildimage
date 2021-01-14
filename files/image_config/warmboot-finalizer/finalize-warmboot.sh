@@ -66,7 +66,7 @@ function wait_for_database_service()
 }
 
 
-function set_component_state()
+function get_component_state()
 {
     sonic-db-cli STATE_DB hget "WARM_RESTART_TABLE|$1" state
 }
