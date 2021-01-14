@@ -158,56 +158,51 @@ def main(argv):
     critical_group_list, critical_process_list = get_critical_group_and_process_list()
 
     process_under_alerting = {}
-    listener_ready = True
+    # Transition from ACKNOWLEDGED to READY
+    childutils.listener.ready()
 
     while True:
-        # Transition from ACKNOWLEDGED to READY
-        if listener_ready:
+        file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
+        if len(file_descriptor_list) != 0:
+            line = file_descriptor_list[0].readline()
+            headers = childutils.get_headers(line)
+            payload = sys.stdin.read(int(headers['len']))
+
+            # We only care about PROCESS_STATE_EXITED events
+            if headers['eventname'] == 'PROCESS_STATE_EXITED':
+                payload_headers, payload_data = childutils.eventdata(payload + '\n')
+
+                expected = int(payload_headers['expected'])
+                processname = payload_headers['processname']
+                groupname = payload_headers['groupname']
+
+                if ((processname in critical_process_list or groupname in critical_group_list)
+                        and expected == 0):
+                    if container_name != "database":
+                        restart_feature = get_autorestart_state(container_name)
+
+                    if container_name == "database" or restart_feature != "disabled":
+                        MSG_FORMAT_STR = "Process '{}' exited unexpectedly. Terminating supervisor '{}'"
+                        msg = MSG_FORMAT_STR.format(payload_headers['processname'], container_name)
+                        syslog.syslog(syslog.LOG_INFO, msg)
+                        os.kill(os.getppid(), signal.SIGTERM)
+                    else:
+                        process_under_alerting[processname] = time.time()
+
+            # Transition from READY to ACKNOWLEDGED
+            childutils.listener.ok()
+
+            # Transition from ACKNOWLEDGED to READY
             childutils.listener.ready()
 
-        file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
-        if len(file_descriptor_list) == 0:
-            for process in process_under_alerting.keys():
-                epoch_time = time.time()
-                if process_running(process):
-                    process_under_alerting.pop(process)
-                elif epoch_time - process_under_alerting[process] >= ALERTING_INTERVAL_SECS:
-                    process_under_alerting[process] = epoch_time
-                    generate_alerting_message(process)
-            # If there was no standard input from stdin, then continue to check and event listener
-            # will still be in 'READY' state.
-            listener_ready = False
-            continue
-        else:
-            listener_ready = True
-
-        line = file_descriptor_list[0].readline()
-        headers = childutils.get_headers(line)
-        payload = sys.stdin.read(int(headers['len']))
-
-        # We only care about PROCESS_STATE_EXITED events
-        if headers['eventname'] == 'PROCESS_STATE_EXITED':
-            payload_headers, payload_data = childutils.eventdata(payload + '\n')
-
-            expected = int(payload_headers['expected'])
-            processname = payload_headers['processname']
-            groupname = payload_headers['groupname']
-
-            if ((processname in critical_process_list or groupname in critical_group_list)
-                    and expected == 0):
-                if container_name != "database":
-                    restart_feature = get_autorestart_state(container_name)
-
-                if container_name == "database" or restart_feature != "disabled":
-                    MSG_FORMAT_STR = "Process '{}' exited unexpectedly. Terminating supervisor '{}'"
-                    msg = MSG_FORMAT_STR.format(payload_headers['processname'], container_name)
-                    syslog.syslog(syslog.LOG_INFO, msg)
-                    os.kill(os.getppid(), signal.SIGTERM)
-                else:
-                    process_under_alerting[processname] = time.time()
-
-        # Transition from READY to ACKNOWLEDGED
-        childutils.listener.ok()
+        # Check whether we need write alerting messages into syslog
+        for process in process_under_alerting.keys():
+            epoch_time = time.time()
+            if process_running(process):
+                process_under_alerting.pop(process)
+            elif epoch_time - process_under_alerting[process] >= ALERTING_INTERVAL_SECS:
+                process_under_alerting[process] = epoch_time
+                generate_alerting_message(process)
 
 
 if __name__ == "__main__":
