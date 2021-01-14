@@ -34,7 +34,7 @@ function set_component_list()
     COMPONENT_LIST=""
     for cp in ${CP_LIST}; do
         service=${RECONCILE_COMPONENTS[${cp}]}
-	status=$(sonic-db-cli CONFIG_DB HGET "FEATURE|${service}" state)
+        status=$(sonic-db-cli CONFIG_DB HGET "FEATURE|${service}" state)
         if [[ x"${status}" == x"enabled" || x"${status}" == x"always_enabled" ]]; then
             COMPONENT_LIST="${COMPONENT_LIST} ${cp}"
         fi
