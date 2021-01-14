@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 """
 * onboard temperature sensors
@@ -166,7 +166,7 @@ class status:
                             and s.replace("\x00", "").rstrip() not in rt.keys()
                         ):  # PSU type detect
                             prob_t["errcode"] = -1
-                            prob_t["errmsg"] = "%s" % ("电源类型不匹配,请检查电源是否正确!")
+                            prob_t["errmsg"] = "%s" % ("The power type does not match, please check whether the power is correct!")
                         else:
                             s = rt[str(s).replace("\x00", "").rstrip()]
                 name = ret["name"]

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #############################################################################
 #
 # Module contains an implementation of SONiC Platform Base API and
