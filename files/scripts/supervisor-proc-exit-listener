@@ -166,7 +166,7 @@ def main(argv):
             childutils.listener.ready()
 
         file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
-        if len(stdin_instance) == 0:
+        if len(file_descriptor_list) == 0:
             for process in process_under_alerting.keys():
                 epoch_time = time.time()
                 if process_running(process):
