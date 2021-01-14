@@ -28,13 +28,13 @@ function debug()
 }
 
 
-function set_component_list()
+function filter_component_list()
 {
     CP_LIST=${!RECONCILE_COMPONENTS[@]}
     COMPONENT_LIST=""
     for cp in ${CP_LIST}; do
         service=${RECONCILE_COMPONENTS[${cp}]}
-        status=$(show feature status | grep "^${service}" | awk '{ print $2 }')
+	status=$(sonic-db-cli CONFIG_DB HGET "FEATURE|${service}" state)
         if [[ x"${status}" == x"enabled" || x"${status}" == x"always_enabled" ]]; then
             COMPONENT_LIST="${COMPONENT_LIST} ${cp}"
         fi
@@ -126,7 +126,7 @@ fi
 
 restore_counters_folder
 
-set_component_list
+filter_component_list
 
 debug "Waiting for components: '${COMPONENT_LIST}' to reconcile ..."
 
