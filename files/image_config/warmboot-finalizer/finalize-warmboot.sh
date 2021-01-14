@@ -2,8 +2,18 @@
 
 VERBOSE=no
 
-# Check components
-COMP_LIST="orchagent neighsyncd bgp natsyncd"
+# Define components that needs to reconcile during warm
+# boot:
+#       The key would be the component name that would
+#           reconcile.
+#       The value is the name of the service that the
+#           component belongs to.
+declare -A RECONCILE_COMPONENTS=( \
+                        ["orchagent"]="swss"    \
+                        ["neighsyncd"]="swss"   \
+                        ["bgp"]="bgp"           \
+                        ["natsyncd"]="nat"      \
+                       )
 EXP_STATE="reconciled"
 
 ASSISTANT_SCRIPT="/usr/local/bin/neighbor_advertiser"
@@ -15,6 +25,20 @@ function debug()
     if [[ x"${VERBOSE}" == x"yes" ]]; then
         echo `date` "- $1"
     fi
+}
+
+
+function set_component_list()
+{
+    CP_LIST=${!RECONCILE_COMPONENTS[@]}
+    COMPONENT_LIST=""
+    for cp in ${CP_LIST}; do
+        service=${RECONCILE_COMPONENTS[${cp}]}
+        status=$(show feature status | grep "^${service}" | awk '{ print $2 }')
+        if [[ x"${status}" == x"enabled" || x"${status}" == x"always_enabled" ]]; then
+            COMPONENT_LIST="${COMPONENT_LIST} ${cp}"
+        fi
+    done
 }
 
 
@@ -53,9 +77,9 @@ function check_list()
     RET_LIST=''
     for comp in $@; do
         state=`get_component_state ${comp}`
-	if [[ x"${state}" != x"${EXP_STATE}" ]]; then
+        if [[ x"${state}" != x"${EXP_STATE}" ]]; then
             RET_LIST="${RET_LIST} ${comp}"
-	fi
+        fi
     done
 
     echo ${RET_LIST}
@@ -102,13 +126,17 @@ fi
 
 restore_counters_folder
 
-list=${COMP_LIST}
+set_component_list
+
+debug "Waiting for components: '${COMPONENT_LIST}' to reconcile ..."
+
+list=${COMPONENT_LIST}
 
 # Wait up to 5 minutes
 for i in `seq 60`; do
     list=`check_list ${list}`
     if [[ -z "${list}" ]]; then
-	break
+        break
     fi
     sleep 5
 done
