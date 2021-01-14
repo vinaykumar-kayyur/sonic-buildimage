@@ -158,10 +158,14 @@ def main(argv):
     critical_group_list, critical_process_list = get_critical_group_and_process_list()
 
     process_under_alerting = {}
-    # Transition from ACKNOWLEDGED to READY
-    childutils.listener.ready()
+    listener_state_ready = False
 
     while True:
+        if not listener_state_ready:
+            # Transition from ACKNOWLEDGED to READY
+            childutils.listener.ready()
+            listener_state_ready = True
+
         file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
         if len(file_descriptor_list) > 0:
             line = file_descriptor_list[0].readline()
@@ -191,9 +195,7 @@ def main(argv):
 
             # Transition from BUSY to ACKNOWLEDGED
             childutils.listener.ok()
-
-            # Transition from ACKNOWLEDGED to READY
-            childutils.listener.ready()
+            listener_state_ready = False
 
         # Check whether we need write alerting messages into syslog
         for process in process_under_alerting.keys():
