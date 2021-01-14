@@ -28,7 +28,7 @@ function debug()
 }
 
 
-function set_component_list()
+function get_component_list()
 {
     CP_LIST=${!RECONCILE_COMPONENTS[@]}
     COMPONENT_LIST=""
