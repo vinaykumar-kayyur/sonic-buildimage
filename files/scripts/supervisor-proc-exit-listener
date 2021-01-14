@@ -163,7 +163,7 @@ def main(argv):
 
     while True:
         file_descriptor_list = select.select([sys.stdin], [], [], SELECT_TIMEOUT_SECS)[0]
-        if len(file_descriptor_list) != 0:
+        if len(file_descriptor_list) > 0:
             line = file_descriptor_list[0].readline()
             headers = childutils.get_headers(line)
             payload = sys.stdin.read(int(headers['len']))
@@ -189,7 +189,7 @@ def main(argv):
                     else:
                         process_under_alerting[processname] = time.time()
 
-            # Transition from READY to ACKNOWLEDGED
+            # Transition from BUSY to ACKNOWLEDGED
             childutils.listener.ok()
 
             # Transition from ACKNOWLEDGED to READY
