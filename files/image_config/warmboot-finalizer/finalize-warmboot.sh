@@ -28,7 +28,7 @@ function debug()
 }
 
 
-function filter_component_list()
+function set_component_list()
 {
     CP_LIST=${!RECONCILE_COMPONENTS[@]}
     COMPONENT_LIST=""
@@ -66,7 +66,7 @@ function wait_for_database_service()
 }
 
 
-function get_component_state()
+function set_component_state()
 {
     sonic-db-cli STATE_DB hget "WARM_RESTART_TABLE|$1" state
 }
@@ -126,7 +126,7 @@ fi
 
 restore_counters_folder
 
-filter_component_list
+get_component_list
 
 debug "Waiting for components: '${COMPONENT_LIST}' to reconcile ..."
 
