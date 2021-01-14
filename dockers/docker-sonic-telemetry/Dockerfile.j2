@@ -32,4 +32,8 @@ COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 
+RUN ln -sf /host_etc/passwd /etc/passwd
+RUN ln -sf /host_etc/group /etc/group
+
+
 ENTRYPOINT ["/usr/local/bin/supervisord"]
