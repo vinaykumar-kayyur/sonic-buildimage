@@ -4,15 +4,12 @@ VERBOSE=no
 
 # Define components that needs to reconcile during warm
 # boot:
-#       The key would be the component name that would
-#           reconcile.
-#       The value is the name of the service that the
-#           component belongs to.
+#       The key is the name of the service that the components belong to.
+#       The value is list of component names that will reconcile.
 declare -A RECONCILE_COMPONENTS=( \
-                        ["orchagent"]="swss"    \
-                        ["neighsyncd"]="swss"   \
-                        ["bgp"]="bgp"           \
-                        ["natsyncd"]="nat"      \
+                        ["swss"]="orchagent neighsyncd" \
+                        ["bgp"]="bgp"                   \
+                        ["nat"]="natsyncd"              \
                        )
 EXP_STATE="reconciled"
 
@@ -30,13 +27,13 @@ function debug()
 
 function get_component_list()
 {
-    CP_LIST=${!RECONCILE_COMPONENTS[@]}
+    SVC_LIST=${!RECONCILE_COMPONENTS[@]}
     COMPONENT_LIST=""
-    for cp in ${CP_LIST}; do
-        service=${RECONCILE_COMPONENTS[${cp}]}
+    for service in ${SVC_LIST}; do
+        components=${RECONCILE_COMPONENTS[${service}]}
         status=$(sonic-db-cli CONFIG_DB HGET "FEATURE|${service}" state)
         if [[ x"${status}" == x"enabled" || x"${status}" == x"always_enabled" ]]; then
-            COMPONENT_LIST="${COMPONENT_LIST} ${cp}"
+            COMPONENT_LIST="${COMPONENT_LIST} ${components}"
         fi
     done
 }
