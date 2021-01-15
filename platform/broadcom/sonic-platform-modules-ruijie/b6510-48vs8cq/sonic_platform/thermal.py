@@ -214,3 +214,4 @@ class Thermal(ThermalBase):
         if tmp > self.maximum_thermal:
             self.maximum_thermal = tmp
         raise self.maximum_thermal
+

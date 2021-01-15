@@ -20,3 +20,4 @@ def get_platform_info(machine_info):
         elif 'aboot_platform' in machine_info:
             return machine_info['aboot_platform']
     return None
+

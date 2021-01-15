@@ -410,3 +410,4 @@ class Psu(PsuBase):
             e.g. 1200.1
         """
         return float(self.PSU_OUTPUT_POWER_MAX/1000)
+

@@ -68,3 +68,4 @@ class FanDrawer(FanDrawerBase):
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
         return self._fan_list[self._index].get_status_led(color)
+

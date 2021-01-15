@@ -41,3 +41,4 @@ class Common:
             A string containing the path to json file
         """
         return os.path.join(self.DEVICE_PATH, self.platform, self.CONFIG_DIR, config_name) if self.is_host() else os.path.join(self.PMON_PLATFORM_PATH, self.CONFIG_DIR, config_name)
+

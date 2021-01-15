@@ -104,3 +104,4 @@ class PcieUtil(PcieBase):
         with open(self.config_path + "/" + "pcie.yaml", "w") as conf_file:
             yaml.dump(curInfo, conf_file, default_flow_style=False)
         return
+
