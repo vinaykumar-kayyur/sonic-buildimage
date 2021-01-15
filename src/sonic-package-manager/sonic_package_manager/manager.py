@@ -206,6 +206,10 @@ class PackageManager:
             raise
 
         package.entry.installed = True
+        # When installing package from a tarball, package
+        # may not be in database.
+        if not self.database.has_package(package.name):
+            self.database.add_package(package.name, package.repository)
         self.database.update_package(package.entry)
         self.database.commit()
 
