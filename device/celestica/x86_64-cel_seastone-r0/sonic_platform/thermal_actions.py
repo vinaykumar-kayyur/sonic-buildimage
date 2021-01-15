@@ -27,8 +27,7 @@ class ControlThermalAlgoAction(ThermalPolicyActionBase):
         :return:
         """
         if ControlThermalAlgoAction.JSON_FIELD_STATUS in json_obj:
-            status_str = json_obj[ControlThermalAlgoAction.JSON_FIELD_STATUS].lower(
-            )
+            status_str = json_obj[ControlThermalAlgoAction.JSON_FIELD_STATUS].lower()
             if status_str == 'true':
                 self.status = True
             elif status_str == 'false':
