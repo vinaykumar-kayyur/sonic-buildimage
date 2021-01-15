@@ -290,11 +290,12 @@ def uninstall(ctx, name, force, yes):
 @cli.command()
 @click.option('-f', '--force', is_flag=True)
 @click.option('-y', '--yes', is_flag=True)
+@click.option('--dockerd-socket', type=click.Path())
 @click.argument('database', type=click.Path())
 @click.pass_context
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
-def migrate(ctx, database, force, yes):
+def migrate(ctx, database, force, yes, dockerd_socket):
     """ Migrate SONiC packages from the given database file. """
 
     manager: PackageManager = ctx.obj
@@ -303,7 +304,7 @@ def migrate(ctx, database, force, yes):
         click.confirm('Continue with package migration?', abort=True, show_default=True)
 
     try:
-        manager.migrate_packages(PackageDatabase.from_file(database))
+        manager.migrate_packages(PackageDatabase.from_file(database), dockerd_socket)
     except Exception as err:
         exit_cli(f'Failed to migrate packages {err}', fg='red')
     except KeyboardInterrupt:
