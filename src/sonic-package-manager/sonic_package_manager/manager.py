@@ -4,14 +4,15 @@ import functools
 import os
 import pkgutil
 import tempfile
-from typing import Dict, Any, Iterable, Optional
+from typing import Dict, Any, Iterable, Optional, Callable
 
 import docker
+import filelock as filelock
 from sonic_py_common import device_info
 
 from sonic_package_manager import utils
 from sonic_package_manager.constraint import PackageConstraint
-from sonic_package_manager.database import PackageDatabase, PackageEntry
+from sonic_package_manager.database import PackageDatabase, PackageEntry, PACKAGE_MANAGER_LOCK_FILE
 from sonic_package_manager.dockerapi import DockerApi, get_repository_from_image
 from sonic_package_manager.errors import (
     PackageInstallationError,
@@ -45,6 +46,16 @@ def failure_ignore(ignore: bool):
             log.warning(f'ignoring error {err}')
         else:
             raise
+
+
+def under_lock(func: Callable) -> Callable:
+    """ Execute operations under lock. """
+
+    def wrapped_function(*args, **kwargs):
+        self = args[0]
+        with self.lock:
+            return func(*args, **kwargs)
+    return wrapped_function
 
 
 def package_constraint_to_reference(constraint: PackageConstraint) -> PackageReference:
@@ -110,9 +121,11 @@ class PackageManager:
                  database: PackageDatabase,
                  manifest_resolver: ManifestResolver,
                  service_creator: ServiceCreator,
-                 device_information: Any):
+                 device_information: Any,
+                 lock: filelock.FileLock):
         """ Initialize PackageManager. """
 
+        self.lock = lock
         self.docker = dockerapi
         self.registry_resolver = registry_resolver
         self.database = database
@@ -124,6 +137,7 @@ class PackageManager:
         self.version_info = device_information.get_sonic_version_info()
         self.base_os_version = Version.parse(self.version_info.get('base_os_compatibility_version'))
 
+    @under_lock
     def add_repository(self, *args, **kwargs):
         """ Add repository to package database.
 
@@ -132,6 +146,7 @@ class PackageManager:
         self.database.add_package(*args, **kwargs)
         self.database.commit()
 
+    @under_lock
     def remove_repository(self, name: str):
         """ Remove repository from package database.
 
@@ -142,6 +157,7 @@ class PackageManager:
         self.database.remove_package(name)
         self.database.commit()
 
+    @under_lock
     def install(self, expression: str, force=False):
         """ Install a SONiC Package from the package reference
         expression string. Can force the installation if force parameter
@@ -214,6 +230,7 @@ class PackageManager:
         self.database.update_package(package.entry)
         self.database.commit()
 
+    @under_lock
     def uninstall(self, name: str, force=False):
         """ Uninstall a SONiC Package referenced by name.
         The uninstallation can be forced if force argument is
@@ -268,6 +285,7 @@ class PackageManager:
         self.database.update_package(package.entry)
         self.database.commit()
 
+    @under_lock
     def upgrade(self, expression: str, force=False):
         """ Upgrade a SONiC Package to a version the package reference
         expression specifies. Can force the upgrade if force parameter
@@ -390,6 +408,7 @@ class PackageManager:
         self.database.update_package(new_package_entry)
         self.database.commit()
 
+    @under_lock
     def migrate_packages(self,
                          old_package_database: PackageDatabase,
                          dockerd_sock: Optional[str] = None):
@@ -699,4 +718,5 @@ class PackageManager:
                               PackageDatabase.from_file(),
                               ManifestResolver(docker_api, registry_resolver),
                               ServiceCreator(FeatureRegistry(SonicDB), SonicDB),
-                              device_info)
+                              device_info,
+                              filelock.FileLock(PACKAGE_MANAGER_LOCK_FILE, timeout=0))
