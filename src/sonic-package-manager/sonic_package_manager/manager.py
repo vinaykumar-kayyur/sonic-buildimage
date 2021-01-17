@@ -193,17 +193,12 @@ class PackageManager:
 
         try:
             with contextlib.ExitStack() as exit_stack:
-                if package.entry.repository:
+                if package.reference:
                     image = self.docker.pull(package.repository, package.reference)
                     exit_stack.callback(functools.partial(self.docker.rmi, image.id))
                 else:
                     image = self.docker.load(expression)
-                    repository = get_repository_from_image(image)
-                    if not repository:
-                        # This means the image was saved as unnamed.
-                        # Using package name as a repository.
-                        repository = package.name
-                    package.entry.repository = repository
+                    self._init_repository_from_image(package, image)
                     exit_stack.callback(functools.partial(self.docker.rmi, image.id))
 
                 repotag = f'{package.repository}:latest'
@@ -351,18 +346,12 @@ class PackageManager:
                 self._uninstall_cli_plugins(old_package)
                 exit_stack.callback(functools.partial(self._install_cli_plugins, old_package))
 
-                if new_package.entry.repository:
+                if new_package.reference:
                     image = self.docker.pull(new_package.repository, new_package.reference)
                     exit_stack.callback(functools.partial(self.docker.rmi, image.id))
                 else:
                     image = self.docker.load(expression)
-                    # get the repository name from
-                    repository = get_repository_from_image(image)
-                    if not repository:
-                        # This means the image was saved as unnamed.
-                        # Using package name as a repository.
-                        repository = new_package.name
-                    new_package.entry.repository = repository
+                    self._init_repository_from_image(new_package, image)
                     exit_stack.callback(functools.partial(self.docker.rmi, image.id))
 
                 if self.feature_registry.is_feature_enabled(old_feature):
@@ -548,10 +537,17 @@ class PackageManager:
         name = manifest['package']['name']
         version = manifest['package']['version']
 
-        # put an empty repository, since this is a local installation
-        # repository has to be initialized after the local image is loaded.
-        repository = ''
-        reference = version_to_tag(version)
+        if self.database.has_package(name):
+            # inherit package database info
+            package = self.database.get_package(name)
+            repository = package.repository
+        else:
+            # put an empty repository, since this is a local installation
+            # repository has to be initialized after the local image is loaded.
+            repository = ''
+
+        # Put empty reference, since this is a local installation
+        reference = ''
 
         return Package(
             PackageEntry(
@@ -671,6 +667,21 @@ class PackageManager:
         if multi_instance:
             for npu in range(self.num_npus):
                 run_command(f'systemctl {action} {name}@{npu}')
+
+    @staticmethod
+    def _init_repository_from_image(package: Package, image):
+        """ Set package repository based on image if
+        package has no repository set. """
+
+        if package.repository:  # already set
+            return
+
+        repository = get_repository_from_image(image)
+        if not repository:
+            # This means the image was saved as unnamed.
+            # Using package name as a repository.
+            repository = package.name
+        package.entry.repository = repository
 
     @staticmethod
     def _get_cli_plugin_name(package: Package):

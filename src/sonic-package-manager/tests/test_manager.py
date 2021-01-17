@@ -126,6 +126,33 @@ def test_installation_from_file(package_manager, mock_docker_api, anything, soni
     mock_docker_api.load.assert_called_once_with(anything)
 
 
+def test_installation_from_file_known_package(package_manager, fake_db, sonic_fs):
+    repository = fake_db.get_package('test-package').repository
+    sonic_fs.create_file('/root/test-package:1.6.0')
+    package_manager.install('/root/test-package:1.6.0')
+    # locally installed package does not override already known package repository
+    assert repository == fake_db.get_package('test-package').repository
+
+
+def test_installation_from_file_unknown_package(package_manager, fake_db, sonic_fs):
+    assert not fake_db.has_package('test-package-4')
+    sonic_fs.create_file('/root/test-package-4:1.5.0')
+    package_manager.install('/root/test-package-4:1.5.0')
+    # locally installed package sets the repository to local repository
+    assert fake_db.get_package('test-package-4').repository == 'test-package-4'
+
+
+def test_upgrade_from_file_known_package(package_manager, fake_db, sonic_fs):
+    repository = fake_db.get_package('test-package-6').repository
+    # install older version from repository
+    package_manager.install('test-package-6==1.5.0')
+    # upgrade from file
+    sonic_fs.create_file('/root/test-package-6:2.0.0')
+    package_manager.upgrade('/root/test-package-6:2.0.0')
+    # locally installed package does not override already known package repository
+    assert repository == fake_db.get_package('test-package-6').repository
+
+
 def test_manager_installation_version_range(package_manager):
     with pytest.raises(PackageManagerError,
                        match='Can only install specific version. '
