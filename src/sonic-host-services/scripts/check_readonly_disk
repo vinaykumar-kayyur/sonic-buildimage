@@ -1,0 +1,16 @@
+#! /bin/bash
+
+echo "checking for read-only disk"
+SYSTEM_ERR=4
+
+touch /var/log/syslog
+ret=$?
+
+echo "ret=${ret}"
+
+if [ ${ret} -eq 0 ]; then
+    exit 0
+else
+    echo "Read-Only system"
+    exit $SYSTEM_ERR
+fi
