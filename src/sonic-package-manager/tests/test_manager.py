@@ -142,6 +142,11 @@ def test_installation_from_file_unknown_package(package_manager, fake_db, sonic_
     assert fake_db.get_package('test-package-4').repository == 'test-package-4'
 
 
+def test_installation_non_default_owner(package_manager, anything, mock_service_creator):
+    package_manager.install('test-package', default_owner='kube')
+    mock_service_creator.create.assert_called_once_with(anything, owner='kube')
+
+
 def test_upgrade_from_file_known_package(package_manager, fake_db, sonic_fs):
     repository = fake_db.get_package('test-package-6').repository
     # install older version from repository

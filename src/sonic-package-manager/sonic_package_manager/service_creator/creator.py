@@ -106,7 +106,10 @@ class ServiceCreator:
         self.feature_registry = feature_registry
         self.sonic_db = sonic_db
 
-    def create(self, package: Package, register_feature=True):
+    def create(self,
+               package: Package,
+               register_feature=True,
+               owner='local'):
         try:
             self.generate_container_mgmt(package)
             self.generate_service_mgmt(package)
@@ -120,7 +123,7 @@ class ServiceCreator:
             self.post_install()
 
             if register_feature:
-                self.feature_registry.register(package.manifest)
+                self.feature_registry.register(package.manifest, owner=owner)
         except (Exception, KeyboardInterrupt):
             self.remove(package, not register_feature)
             raise

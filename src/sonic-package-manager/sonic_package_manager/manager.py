@@ -158,7 +158,11 @@ class PackageManager:
         self.database.commit()
 
     @under_lock
-    def install(self, expression: str, force=False):
+    def install(self,
+                expression: str,
+                force=False,
+                enable=False,
+                default_owner='local'):
         """ Install a SONiC Package from the package reference
         expression string. Can force the installation if force parameter
         is True.
@@ -166,6 +170,8 @@ class PackageManager:
         Args:
             expression: SONiC Package reference expression
             force: Force the installation.
+            enable: If True the installed feature package will be enabled.
+            default_owner: Owner of the installed package.
         Raises:
             PackageManagerError
         """
@@ -178,6 +184,7 @@ class PackageManager:
                 raise PackageInstallationError(f'{name} is already installed')
 
         version_constraint = package.manifest['package']['base-os-constraint']
+        feature = package.manifest['service']['name']
 
         with failure_ignore(force):
             if not version_constraint.allows_all(self.base_os_version):
@@ -205,7 +212,7 @@ class PackageManager:
                 self.docker.tag(image.id, repotag)
                 exit_stack.callback(functools.partial(self.docker.rmi, repotag))
 
-                self.service_creator.create(package)
+                self.service_creator.create(package, owner=default_owner)
                 exit_stack.callback(functools.partial(self.service_creator.remove, package))
 
                 self._install_cli_plugins(package)
@@ -224,6 +231,9 @@ class PackageManager:
             self.database.add_package(package.name, package.repository)
         self.database.update_package(package.entry)
         self.database.commit()
+
+        if enable:
+            run_command(f'config feature state {feature} enabled')
 
     @under_lock
     def uninstall(self, name: str, force=False):
