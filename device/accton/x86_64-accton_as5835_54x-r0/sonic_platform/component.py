@@ -70,7 +70,9 @@ class Component(ComponentBase):
                 bios_version = fd.read()
                 return bios_version.strip()
         except Exception as e:    
-
+            print('Get exception when read bios')
+        return None
+        
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
