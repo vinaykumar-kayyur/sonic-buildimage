@@ -23,10 +23,13 @@ class FeatureRegistry:
     def __init__(self, sonic_db: Type[SonicDB]):
         self._sonic_db = sonic_db
 
-    def register(self, manifest: Manifest, owner='local'):
+    def register(self,
+                 manifest: Manifest,
+                 state: str = 'disabled',
+                 owner: str = 'local'):
         name = manifest['service']['name']
         for table in self._get_tables():
-            cfg_entries = self.get_default_feature_entries(owner)
+            cfg_entries = self.get_default_feature_entries(state, owner)
             non_cfg_entries = self.get_non_configurable_feature_entries(manifest)
 
             exists, current_cfg = table.get(name)
@@ -71,11 +74,13 @@ class FeatureRegistry:
         return res
 
     @staticmethod
-    def get_default_feature_entries(owner=None) -> Dict[str, str]:
+    def get_default_feature_entries(state=None, owner=None) -> Dict[str, str]:
         """ Get configurable feature table entries:
         e.g. 'state', 'auto_restart', etc. """
 
         cfg = DEFAULT_FEATURE_CONFIG.copy()
+        if state:
+            cfg['state'] = state
         if owner:
             cfg['set_owner'] = owner
         return cfg

@@ -197,7 +197,7 @@ class PackageManager:
                 raise PackageInstallationError(f'{name} is already installed')
 
         version_constraint = package.manifest['package']['base-os-constraint']
-        feature = package.manifest['service']['name']
+        feature_state = 'enabled' if enable else 'disabled'
 
         with failure_ignore(force):
             if not version_constraint.allows_all(self.base_os_version):
@@ -225,7 +225,7 @@ class PackageManager:
                 self.docker.tag(image.id, repotag)
                 exit_stack.callback(rollback_wrapper(self.docker.rmi, repotag))
 
-                self.service_creator.create(package, owner=default_owner)
+                self.service_creator.create(package, state=feature_state, owner=default_owner)
                 exit_stack.callback(rollback_wrapper(self.service_creator.remove, package))
 
                 self._install_cli_plugins(package)
@@ -244,9 +244,6 @@ class PackageManager:
             self.database.add_package(package.name, package.repository)
         self.database.update_package(package.entry)
         self.database.commit()
-
-        if enable:
-            run_command(f'config feature state {feature} enabled')
 
     @under_lock
     def uninstall(self, name: str, force=False):
@@ -380,11 +377,11 @@ class PackageManager:
                 if self.feature_registry.is_feature_enabled(old_feature):
                     self._systemctl_action(old_package, 'stop')
                     exit_stack.callback(rollback_wrapper(self._systemctl_action,
-                                                          old_package, 'start'))
+                                                         old_package, 'start'))
 
                 self.service_creator.remove(old_package, deregister_feature=False)
                 exit_stack.callback(rollback_wrapper(self.service_creator.create,
-                                                      old_package, register_feature=False))
+                                                     old_package, register_feature=False))
 
                 # This is no return point, after we start removing old Docker images
                 # there is no guaranty we can actually successfully roll-back.

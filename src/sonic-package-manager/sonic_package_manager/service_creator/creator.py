@@ -109,6 +109,7 @@ class ServiceCreator:
     def create(self,
                package: Package,
                register_feature=True,
+               state='enabled',
                owner='local'):
         try:
             self.generate_container_mgmt(package)
@@ -123,7 +124,8 @@ class ServiceCreator:
             self.post_install()
 
             if register_feature:
-                self.feature_registry.register(package.manifest, owner=owner)
+                self.feature_registry.register(package.manifest,
+                                               state, owner)
         except (Exception, KeyboardInterrupt):
             self.remove(package, not register_feature)
             raise
