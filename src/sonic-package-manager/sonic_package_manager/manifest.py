@@ -153,6 +153,7 @@ class ManifestSchema:
                 ManifestField('type', str),
             ])),
             ManifestField('environment', dict, dict()),
+            ManifestArray('tmpfs', str),
         ]),
         ManifestArray('processes', ManifestRoot('processes', [
             ManifestField('critical', bool),

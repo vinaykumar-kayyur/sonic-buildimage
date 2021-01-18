@@ -177,6 +177,9 @@ class ServiceCreator:
             mount_type, source, target = mount['type'], mount['source'], mount['target']
             run_opt.append(f'--mount type={mount_type},source={source},target={target}')
 
+        for tmpfs_mount in container_spec['tmpfs']:
+            run_opt.append(f'--tmpfs {tmpfs_mount}')
+
         for env_name, value in container_spec['environment'].items():
             run_opt.append(f'-e {env_name}={value}')
 
