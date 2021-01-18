@@ -675,6 +675,15 @@ class PackageManager:
         packages.pop(package.name)
         return packages
 
+    # TODO: Replace with "config feature" command.
+    # The problem with current "config feature" command
+    # is that it is asynchronous, thus can't be used
+    # for package upgrade purposes where we need to wait
+    # till service stops before upgrading docker image.
+    # It would be really handy if we could just call
+    # smth like: "config feature state <name> <state> --wait"
+    # instead of operating on systemd service since
+    # this is basically a duplicated code from hostcfgd.
     def _systemctl_action(self, package: Package, action: str):
         name = package.manifest['service']['name']
         host_service = package.manifest['service']['host-service']
