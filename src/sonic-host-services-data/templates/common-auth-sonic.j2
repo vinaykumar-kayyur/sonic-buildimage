@@ -23,6 +23,7 @@ auth	[success=1 default=ignore]	pam_tacplus.so server={{ last_server.ip }}:{{ la
 
 {% endif %}
 {% elif auth['login'] == 'tacacs+' or auth['login'] == 'tacacs+,local' %}
+auth    [default=ignore system_err={{servers | count}}] pam_exec.so debug stdout type=auth /usr/local/bin/check_system
 {% for server in servers %}
 auth	[success=done new_authtok_reqd=done default=ignore{{ ' auth_err=die' if not auth['failthrough'] }}]	pam_tacplus.so server={{ server.ip }}:{{ server.tcp_port }} secret={{ server.passkey }} login={{ server.auth_type }} timeout={{ server.timeout }} {%if server.vrf %} vrf={{ server.vrf }} {% endif %} {{ 'source_ip=%s' % src_ip if src_ip }} try_first_pass
 {% endfor %}
