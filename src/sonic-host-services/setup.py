@@ -12,7 +12,7 @@ setup(
     maintainer_email = 'jolevequ@microsoft.com',
     scripts = [
         'scripts/caclmgrd',
-        'scripts/check_system',
+        'scripts/check_readonly_disk',
         'scripts/hostcfgd',
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
