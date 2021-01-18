@@ -147,6 +147,16 @@ def test_installation_non_default_owner(package_manager, anything, mock_service_
     mock_service_creator.create.assert_called_once_with(anything, owner='kube')
 
 
+def test_installation_fault(package_manager, mock_docker_api):
+    # make 'tag' to fail
+    mock_docker_api.tag = Mock(side_effect=Exception('Failed to tag'))
+    # 'rmi' is called on rollback
+    mock_docker_api.rmi = Mock(side_effect=Exception('Failed to remove image'))
+    # assert that the rollback does not hide the original failure.
+    with pytest.raises(Exception, match='Failed to tag'):
+        package_manager.install('test-package')
+
+
 def test_upgrade_from_file_known_package(package_manager, fake_db, sonic_fs):
     repository = fake_db.get_package('test-package-6').repository
     # install older version from repository

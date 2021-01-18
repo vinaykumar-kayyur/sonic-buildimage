@@ -58,6 +58,19 @@ def under_lock(func: Callable) -> Callable:
     return wrapped_function
 
 
+def rollback_wrapper(func, *args, **kwargs):
+    """ Used in rollback callbacks to ignore failure
+    but proceed with rollback. Error will be printed
+    but not fail the whole procedure of rollback. """
+
+    def wrapper():
+        try:
+            functools.partial(func, *args, **kwargs)
+        except Exception as err:
+            log.error(f'failed in rollback: {err}')
+    return wrapper
+
+
 def package_constraint_to_reference(constraint: PackageConstraint) -> PackageReference:
     package_name, version_constraint = constraint.name, constraint.constraint
     # Allow only specific version for now.
@@ -202,21 +215,21 @@ class PackageManager:
             with contextlib.ExitStack() as exit_stack:
                 if package.reference:
                     image = self.docker.pull(package.repository, package.reference)
-                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
+                    exit_stack.callback(rollback_wrapper(self.docker.rmi, image.id))
                 else:
                     image = self.docker.load(expression)
                     self._init_repository_from_image(package, image)
-                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
+                    exit_stack.callback(rollback_wrapper(self.docker.rmi, image.id))
 
                 repotag = f'{package.repository}:latest'
                 self.docker.tag(image.id, repotag)
-                exit_stack.callback(functools.partial(self.docker.rmi, repotag))
+                exit_stack.callback(rollback_wrapper(self.docker.rmi, repotag))
 
                 self.service_creator.create(package, owner=default_owner)
-                exit_stack.callback(functools.partial(self.service_creator.remove, package))
+                exit_stack.callback(rollback_wrapper(self.service_creator.remove, package))
 
                 self._install_cli_plugins(package)
-                exit_stack.callback(functools.partial(self._uninstall_cli_plugins, package))
+                exit_stack.callback(rollback_wrapper(self._uninstall_cli_plugins, package))
 
                 exit_stack.pop_all()
         except Exception as err:
@@ -354,23 +367,23 @@ class PackageManager:
         try:
             with contextlib.ExitStack() as exit_stack:
                 self._uninstall_cli_plugins(old_package)
-                exit_stack.callback(functools.partial(self._install_cli_plugins, old_package))
+                exit_stack.callback(rollback_wrapper(self._install_cli_plugins, old_package))
 
                 if new_package.reference:
                     image = self.docker.pull(new_package.repository, new_package.reference)
-                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
+                    exit_stack.callback(rollback_wrapper(self.docker.rmi, image.id))
                 else:
                     image = self.docker.load(expression)
                     self._init_repository_from_image(new_package, image)
-                    exit_stack.callback(functools.partial(self.docker.rmi, image.id))
+                    exit_stack.callback(rollback_wrapper(self.docker.rmi, image.id))
 
                 if self.feature_registry.is_feature_enabled(old_feature):
                     self._systemctl_action(old_package, 'stop')
-                    exit_stack.callback(functools.partial(self._systemctl_action,
+                    exit_stack.callback(rollback_wrapper(self._systemctl_action,
                                                           old_package, 'start'))
 
                 self.service_creator.remove(old_package, deregister_feature=False)
-                exit_stack.callback(functools.partial(self.service_creator.create,
+                exit_stack.callback(rollback_wrapper(self.service_creator.create,
                                                       old_package, register_feature=False))
 
                 # This is no return point, after we start removing old Docker images
