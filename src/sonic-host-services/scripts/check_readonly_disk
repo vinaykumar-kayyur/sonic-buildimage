@@ -2,10 +2,13 @@
 
 SYSTEM_ERR=4
 
-touch /host/.test_disk_readwrite
+mkdir -p /host/tmp
 ret=$?
 
-echo "ret=${ret}"
+if [ ${ret} -eq 0 ]; then
+    touch /host/tmp/.test_disk_readwrite
+    ret=$?
+fi
 
 if [ ${ret} -eq 0 ]; then
     exit 0
