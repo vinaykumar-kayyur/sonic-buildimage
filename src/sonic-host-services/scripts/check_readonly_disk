@@ -1,9 +1,8 @@
 #! /bin/bash
 
-echo "checking for read-only disk"
 SYSTEM_ERR=4
 
-touch /var/log/syslog
+touch /home/admin/.test_disk_readwrite
 ret=$?
 
 echo "ret=${ret}"

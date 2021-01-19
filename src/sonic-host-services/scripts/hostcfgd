@@ -164,8 +164,9 @@ class AaaCfg(object):
             self.auth = data
             if 'failthrough' in data:
                 self.auth['failthrough'] = is_true(data['failthrough'])
-            if 'check_readonly_disk' in data:
-                self.auth['check_readonly_disk'] = is_true(data['check_readonly_disk'])
+            if 'failthrough_on_readonly_disk' in data:
+                self.auth['failthrough_on_readonly_disk'] = is_true(
+                        data['failthrough_on_readonly_disk'])
             if 'debug' in data:
                 self.debug = is_true(data['debug'])
         if modify_conf:
