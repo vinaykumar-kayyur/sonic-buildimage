@@ -2,7 +2,7 @@
 
 SYSTEM_ERR=4
 
-touch /home/admin/.test_disk_readwrite
+touch /host/.test_disk_readwrite
 ret=$?
 
 echo "ret=${ret}"
