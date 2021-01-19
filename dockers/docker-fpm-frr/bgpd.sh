@@ -27,7 +27,7 @@ shift $((OPTIND-1))
 
 timeout 5s bash -c -- "until </dev/tcp/${addr}/${port}; do sleep 0.1;done"
 if [ "$?" != "0" ]; then
-    logger "Error: zebra is not ready to accept connections"
+    logger -p error "Error: zebra is not ready to accept connections"
 fi
 
 exec /usr/lib/frr/bgpd "$@"
