@@ -94,9 +94,9 @@ class Fan(FanBase):
         speed = 0
         if self.is_psu_fan:
             psu_fan_path= "{}{}".format(self.psu_hwmon_path, 'psu_fan1_speed_rpm')
-            fan_speed_rpm = self._api_helper.read_txt_file(psu_fan_path)
-            speed = (int(fan_speed_rpm,10))*100/26688
-            if speed is not None:
+            fan_speed_rpm = self._api_helper.read_txt_file(psu_fan_path)           
+            if fan_speed_rpm is not None:
+                speed = (int(fan_speed_rpm,10))*100/26688               
                 if speed > 100:
                     speed=100
             else:
