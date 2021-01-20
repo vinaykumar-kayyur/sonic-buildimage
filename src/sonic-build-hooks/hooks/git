@@ -44,7 +44,6 @@ get_clone_path(){
 
 main(){
     parse_config "$@"
-    get_clone_path "$@"
 
     # execute git.
     $REAL_COMMAND "$@"
@@ -55,6 +54,7 @@ main(){
         exit $result
     fi
 
+    get_clone_path "$@"
     pushd $clone_PATH &> /dev/null
     commit_latest=`$REAL_COMMAND log -n 1 | head -n 1| awk '{print$2}'`
     [ -f $version_file ] && commit=`grep $URL $version_file | awk -F, '{print$2}'`
