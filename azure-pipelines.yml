@@ -111,7 +111,7 @@ stages:
         pushd platform/vs/tests
         sudo py.test -v --junitxml=tr.xml --imgname=docker-sonic-vs:$(Build.BuildNumber) && \
             sudo rm /nfs/azpl/kvmimage/docker-sonic-vs.$(Build.BuildNumber).gz
-      displayName: 'Run vs tests"
+      displayName: "Run vs tests"
 
   - job:
     displayName: "kvmtest"
