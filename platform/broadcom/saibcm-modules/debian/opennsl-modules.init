@@ -57,7 +57,7 @@ function load_kernel_modules()
     # There is a different psample.ko module getting created at net/psample/psample.ko 
     insmod /lib/modules/$(uname -r)/extra/psample.ko
 
-    modprobe linux-bcm-knet use_rx_skb=1 rx_buffer_size=9238 debug=0x5020
+    modprobe linux-bcm-knet use_rx_skb=1 rx_buffer_size=9238 debug=0x5020 default_mtu=9100
     modprobe linux-knet-cb
 }
 
