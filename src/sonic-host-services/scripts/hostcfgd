@@ -23,13 +23,17 @@ TACPLUS_SERVER_PASSKEY_DEFAULT = ""
 TACPLUS_SERVER_TIMEOUT_DEFAULT = "5"
 TACPLUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
 
-def run_cmd(cmd, log_err = True):
+
+def run_cmd(cmd, log_err=True, raise_exception=False):
     try:
-        subprocess.check_call(cmd, shell = True)
+        subprocess.check_call(cmd, shell=True)
     except Exception as err:
         if log_err:
             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
                   .format(err.cmd, err.returncode, err.output))
+        if raise_exception:
+            raise
+
 
 def is_true(val):
     if val == 'True' or val == 'true':
@@ -47,15 +51,6 @@ def obfuscate(data):
         return data[0] + '*****'
     else:
         return data
-
-
-def run_cmd(cmd, log_err = True):
-    try:
-        subprocess.check_call(cmd, shell = True)
-    except Exception as err:
-        if log_err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                  .format(err.cmd, err.returncode, err.output))
 
 
 class Feature(object):
@@ -141,10 +136,8 @@ class FeatureHandler(object):
                 for cmd in start_cmds:
                     syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
                     try:
-                        subprocess.check_call(cmd, shell=True)
-                    except subprocess.CalledProcessError as err:
-                        syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
-                                      .format(err.cmd, err.returncode, err.output))
+                        run_cmd(cmd, raise_exception=True)
+                    except Exception as err:
                         syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be  enabled and started"
                                       .format(feature.name, feature_suffixes[-1]))
                         return
@@ -160,10 +153,8 @@ class FeatureHandler(object):
                 for cmd in stop_cmds:
                     syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
                     try:
-                        subprocess.check_call(cmd, shell=True)
-                    except subprocess.CalledProcessError as err:
-                        syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
-                                      .format(err.cmd, err.returncode, err.output))
+                        run_cmd(cmd, raise_exception=True)
+                    except Exception as err:
                         syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to be stopped "
                                                       "and disabled".format(feature.name))
                         return
@@ -192,10 +183,8 @@ class FeatureHandler(object):
                 cfgfile.write(service_conf)
 
         try:
-            subprocess.check_call("sudo systemctl daemon-reload", shell=True)
-        except subprocess.CalledProcessError as err:
-            syslog.syslog(syslog.LOG_ERR, "'{}' failed. RC: {}, output: {}"
-                          .format(err.cmd, err.returncode, err.output))
+            run_cmd("sudo systemctl daemon-reload", raise_exception=True)
+        except Exception as err:
             syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to configure auto_restart".format(feature.name))
             return
 
