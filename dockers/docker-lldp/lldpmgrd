@@ -94,6 +94,11 @@ class LldpManager(daemon_base.DaemonBase):
         """
         port_desc = None
 
+        # Skip port name prefixed with "Inband". These are recycle ports exposed in PORT_TABLE for
+        # asic-to-asic communication in VOQ based chassis system. We do not configure LLDP on these.
+        if 'Inband' in port_name:
+            return
+
         # Retrieve all entires for this port from the Port table
         port_table = swsscommon.Table(self.config_db, swsscommon.CFG_PORT_TABLE_NAME)
         (status, fvp) = port_table.get(port_name)
