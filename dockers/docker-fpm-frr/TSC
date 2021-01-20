@@ -31,8 +31,6 @@ function check_installed()
   return $((e-c))
 }
 
-echo "Traffic Shift Check:"
-
 check_not_installed
 not_installed=$?
 
