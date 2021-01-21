@@ -393,7 +393,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install watchd
 
 {% if include_kubernetes == "y" %}
 # Install remote Container mgmt package
-# Required even if include_kubernetes != y, as it contains the 
+# Required even if include_kubernetes != y, as it contains the
 # the container wrapper for docker start/stop/wait commands.
 #
 SONIC_CTRMGMT_WHEEL_NAME=$(basename {{sonic_ctrmgmt_py3_wheel_path}})
@@ -417,7 +417,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ctrmgrd.service
 # kubelet service is controlled by ctrmgrd daemon.
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable kubelet.service
 {% else %}
-# container script for docker commands, which is required as 
+# container script for docker commands, which is required as
 # all docker commands are replaced with container commands.
 # So just copy that file only.
 #
@@ -611,7 +611,7 @@ echo "docker images pull complete"
 {% set args = args + ["--default-owner", default_owner] -%}
 {% endif -%}
 {% if enabled == "y" -%}
-{% set args = args + ["--enabled"] -%}
+{% set args = args + ["--enable"] -%}
 {% endif -%}
 {{ args | join(' ') }}
 {% endmacro -%}
@@ -619,12 +619,12 @@ echo "docker images pull complete"
 {% for package in sonic_packages.strip().split() -%}
 {% set name, repo, version, default_owner, enabled = package.split('|') -%}
 sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager repository add {{ name }} {{ repo }}
-sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install {{ name }}=={{ version }} {{ get_install_options(default_owner, enabled) }} 
+sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install {{ name }}=={{ version }} {{ get_install_options(default_owner, enabled) }}
 {% endfor -%}
 
 {% for package in sonic_local_packages.strip().split() -%}
 {% set name, path, default_owner, enabled = package.split('|') -%}
-sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install {{ path }} {{ get_install_options(default_owner, enabled) }} 
+sudo LANG=C chroot $FILESYSTEM_ROOT sonic-package-manager install {{ path }} {{ get_install_options(default_owner, enabled) }}
 {% endfor -%}
 
 sudo umount $FILESYSTEM_ROOT/target
