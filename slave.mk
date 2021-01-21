@@ -924,7 +924,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 				$(addsuffix |$($(package)_REPOSITORY), $(package))))))"
 	export sonic_local_packages="$(foreach package, $(SONIC_PACKAGES_LOCAL),\
 				$(addsuffix |$($(package)_DEFAULT_FEATURE_STATE_ENABLED),\
-				$(addsuffix |$($(package)_DEFAULT_FEATURE_OWNER) \
+				$(addsuffix |$($(package)_DEFAULT_FEATURE_OWNER), \
 				$(addsuffix |$($(package)_PATH)), $(package))))"
 	export sonic_py_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2))"
 	export sonic_py_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3))"
