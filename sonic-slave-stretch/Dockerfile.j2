@@ -336,6 +336,8 @@ RUN pip2 install --force-reinstall --upgrade "Jinja2<3.0.0"
 # Install pyangbind here, outside sonic-config-engine dependencies, as pyangbind causes enum34 to be installed.
 # enum34 causes Python 're' package to not work properly as it redefines an incompatible enum.py module
 # https://github.com/robshakir/pyangbind/issues/232
+# bitarray 1.6.2 triggers build issue
+RUN pip3 install bitarry==1.6.1
 RUN pip3 install pyangbind==0.8.1
 RUN pip3 uninstall -y enum34
 
