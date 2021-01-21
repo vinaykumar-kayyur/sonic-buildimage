@@ -23,7 +23,6 @@ setup(
         'natsort',
         'prettyprinter',
         'sonic-py-common',
-        'swsssdk',  # Temporary dependency till the issue with py-swsscommon is resolved.
         'requests',
         'www_authenticate',
         'filelock',
