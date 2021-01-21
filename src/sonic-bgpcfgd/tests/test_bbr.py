@@ -269,7 +269,7 @@ def __set_prepare_config_common(status, bbr_enabled_pgs, available_pgs, expected
         }
     }
     m.bbr_enabled_pgs = bbr_enabled_pgs
-    m._BBRMgr__get_available_peer_groups = MagicMock(return_value = available_pgs)
+    m._BBRMgr__get_available_peer_groups = MagicMock(return_value = sorted(available_pgs))
     cmds, peer_groups = m._BBRMgr__set_prepare_config(status)
     assert cmds == expected_cmds
     assert set(peer_groups) == (available_pgs if not bbr_applied_pgs else bbr_applied_pgs)
@@ -336,12 +336,12 @@ def test___set_prepare_config_enabled_multiple_peers():
              'router bgp 65500',
         ' address-family ipv4',
         '  neighbor PEER_V4 allowas-in 1',
-        '  neighbor PEER_V4_DEPLOYMENT_ID_1 allowas-in 1',
         '  neighbor PEER_V4_DEPLOYMENT_ID_0 allowas-in 1',
+        '  neighbor PEER_V4_DEPLOYMENT_ID_1 allowas-in 1',
         ' address-family ipv6',
-        '  neighbor PEER_V6_DEPLOYMENT_ID_1 allowas-in 1',
-        '  neighbor PEER_V6_DEPLOYMENT_ID_0 allowas-in 1',
         '  neighbor PEER_V6 allowas-in 1',
+        '  neighbor PEER_V6_DEPLOYMENT_ID_0 allowas-in 1',
+        '  neighbor PEER_V6_DEPLOYMENT_ID_1 allowas-in 1',
         ],
         {"PEER_V4", "PEER_V4_DEPLOYMENT_ID_0", "PEER_V4_DEPLOYMENT_ID_1", "PEER_V6", "PEER_V6_DEPLOYMENT_ID_0", "PEER_V6_DEPLOYMENT_ID_1"})
 
@@ -354,12 +354,12 @@ def test___set_prepare_config_disabled_multiple_peers():
              'router bgp 65500',
         ' address-family ipv4',
         '  no neighbor PEER_V4 allowas-in 1',
-        '  no neighbor PEER_V4_DEPLOYMENT_ID_1 allowas-in 1',
         '  no neighbor PEER_V4_DEPLOYMENT_ID_0 allowas-in 1',
+        '  no neighbor PEER_V4_DEPLOYMENT_ID_1 allowas-in 1',
         ' address-family ipv6',
-        '  no neighbor PEER_V6_DEPLOYMENT_ID_1 allowas-in 1',
-        '  no neighbor PEER_V6_DEPLOYMENT_ID_0 allowas-in 1',
         '  no neighbor PEER_V6 allowas-in 1',
+        '  no neighbor PEER_V6_DEPLOYMENT_ID_0 allowas-in 1',
+        '  no neighbor PEER_V6_DEPLOYMENT_ID_1 allowas-in 1',
         ],
         {"PEER_V4", "PEER_V4_DEPLOYMENT_ID_0", "PEER_V4_DEPLOYMENT_ID_1", "PEER_V6", "PEER_V6_DEPLOYMENT_ID_0", "PEER_V6_DEPLOYMENT_ID_1"})
 
