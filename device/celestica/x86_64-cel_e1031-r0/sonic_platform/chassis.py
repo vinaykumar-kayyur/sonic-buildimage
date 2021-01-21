@@ -13,13 +13,11 @@ import subprocess
 import json
 
 try:
+    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.fan import Fan
-    from sonic_platform.psu import Psu
-    from sonic_platform.component import Component
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.eeprom import Tlv
+    from sonic_py_common import device_info
+    from .event import SfpEvent
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -40,29 +38,62 @@ class Chassis(ChassisBase):
 
     def __init__(self):
         ChassisBase.__init__(self)
-        self.config_data = {}
+        self._api_helper = APIHelper()
+        self.sfp_module_initialized = False
+        self.__initialize_eeprom()
+        self.is_host = self._api_helper.is_host()
+
+
+        if not self.is_host:
+            self.__initialize_fan()
+            self.__initialize_psu()
+            self.__initialize_thermals()
+        else:
+            self.__initialize_components()
+
+        self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.__is_host(
+        ) else PMON_REBOOT_CAUSE_PATH
+
+    def __initialize_sfp(self):
+        sfputil_helper = SfpUtilHelper()
+        port_config_file_path = device_info.get_path_to_port_config_file()
+        sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
+
+        from sonic_platform.sfp import Sfp
+        for index in range(0, NUM_SFP):
+            name_idx = 0 if index+1 == NUM_SFP else index+1
+            sfp = Sfp(index, sfputil_helper.logical[name_idx])
+            self._sfp_list.append(sfp)
+        self.sfp_module_initialized = True
+
+    def __initialize_psu(self):
+        from sonic_platform.psu import Psu
+        for index in range(0, NUM_PSU):
+            psu = Psu(index)
+            self._psu_list.append(psu)
+
+    def __initialize_fan(self):
+        from sonic_platform.fan import Fan
         for fant_index in range(0, NUM_FAN_TRAY):
             for fan_index in range(0, NUM_FAN):
                 fan = Fan(fant_index, fan_index)
                 self._fan_list.append(fan)
-        for index in range(0, NUM_PSU):
-            psu = Psu(index)
-            self._psu_list.append(psu)
+
+    def __initialize_thermals(self):
+        from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-        # sfp index start from 1
-        self._sfp_list.append(None)
-        for index in range(1, NUM_SFP+1):
-            sfp = Sfp(index)
-            self._sfp_list.append(sfp)
+
+    def __initialize_eeprom(self):
+        from sonic_platform.eeprom import Tlv
+        self._eeprom = Tlv()
+
+    def __initialize_components(self):
+        from sonic_platform.component import Component
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
-        self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.__is_host(
-        ) else PMON_REBOOT_CAUSE_PATH
-
-        self._eeprom = Tlv()
 
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
@@ -116,7 +147,8 @@ class Chassis(ChassisBase):
         """
         description = 'None'
         reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-        hw_reboot_cause = self._component_list[0].get_register_value(RESET_REGISTER)
+        hw_reboot_cause = self._component_list[0].get_register_value(
+            RESET_REGISTER)
         sw_reboot_cause = self.__read_txt_file(
             self._reboot_cause_path) or "Unknown"
 
@@ -145,3 +177,34 @@ class Chassis(ChassisBase):
             self._watchdog = Watchdog()
 
         return self._watchdog
+
+    def get_change_event(self, timeout=0):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+        Args:
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
+        Returns:
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'},
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
+        """
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+        if sfp_event:
+            return True, {'sfp': sfp_event}
+
+        return False, {'sfp': {}}
