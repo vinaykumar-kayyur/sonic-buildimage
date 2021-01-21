@@ -6,7 +6,6 @@
 #
 #############################################################################
 
-import json
 import math
 import os.path
 
@@ -115,7 +114,6 @@ class Fan(FanBase):
                 self.psu_hwmon_path, fan_speed_sysfs_name)
             fan_speed_rpm = self._api_common.read_txt_file(
                 fan_speed_sysfs_path) or 0
-            fan_speed_raw = float(fan_speed_rpm)/PSU_FAN_MAX_RPM * 100
             speed = math.ceil(float(fan_speed_rpm) * 100 / PSU_FAN_MAX_RPM)
         elif self.get_presence():
             chip = self.emc2305_chip_mapping[self.fan_index]

@@ -6,10 +6,8 @@
 #
 #############################################################################
 
-import os
-import re
-
 try:
+    import os
     from sonic_platform_base.thermal_base import ThermalBase
     from .common import Common
 except ImportError as e:

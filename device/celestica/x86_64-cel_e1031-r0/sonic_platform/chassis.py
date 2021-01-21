@@ -6,20 +6,9 @@
 #
 #############################################################################
 
-import sys
-import re
-import os
-import subprocess
-import json
-
 try:
+    import sys
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.fan import Fan
-    from sonic_platform.psu import Psu
-    from sonic_platform.component import Component
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.eeprom import Tlv
     from common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
