@@ -75,7 +75,8 @@ stages:
         CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=rcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/vs"
         ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=vs
         trap "sudo rm -rf fsroot" EXIT
-        make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/sonic-vs.img.gz && \
+        make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS \
+            target/docker-sonic-vs.gz target/sonic-vs.img.gz && \
             sudo cp target/sonic-vs.img.gz /nfs/azpl/kvmimage/sonic-vs.$(Build.BuildNumber).img.gz
       displayName: 'Build sonic image'
     - publish: $(System.DefaultWorkingDirectory)/
@@ -118,7 +119,7 @@ stages:
         pwd
         username=$(id -un)
 
-        docker exec sonic-mgmt bash -c "/data/sonic-mgmt/tests/kvmtest.sh -n $(tbname) $(dut)"
+        docker exec sonic-mgmt bash -c "/data/sonic-mgmt/tests/kvmtest.sh -en $(tbname) $(dut)"
 
         # save dut state if test fails
         if [ $? != 0 ]; then
@@ -137,7 +138,7 @@ stages:
 
             rm -rf ptfdump
             mkdir -p ptfdump
-            docker commit $ptf_name docker-ptf:$(Build.BuildNumber)
+            docker commit $(ptf_name) docker-ptf:$(Build.BuildNumber)
             docker save docker-ptf:$(Build.BuildNumber) | gzip -c > ptfdump/docker-ptf-dump.gz
             docker rmi docker-ptf:$(Build.BuildNumber)
 
