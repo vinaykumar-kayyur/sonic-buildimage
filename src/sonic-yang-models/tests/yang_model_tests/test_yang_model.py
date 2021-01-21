@@ -186,13 +186,17 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
-            'CRM_WITH_WRONG_THRESHOLD_TYPE': {
-                'desc': 'CRM_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+            'CRM_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'CRM_WITH_CORRECT_FREE_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
             },
             'CRM_WITH_CORRECT_USED_VALUE': {
                 'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
+            },
+            'CRM_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'CRM_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             },
             'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE': {
                 'desc': 'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE no failure.',
@@ -243,9 +247,17 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
-            'SNAT_WITH_WRONG_THRESHOLD_TYPE': {
-                'desc': 'SNAT_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+            'SNAT_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'SNAT_WITH_CORRECT_FREE_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
+            },
+            'SNAT_WITH_CORRECT_USED_VALUE': {
+                'desc': 'SNAT_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'SNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'SNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             },
             'DNAT_WITH_WRONG_PERCENTAGE': {
                 'desc': 'DNAT_WITH_WRONG_PERCENTAGE must condition failure.',
@@ -256,9 +268,17 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
-            'DNAT_WITH_WRONG_THRESHOLD_TYPE': {
-                'desc': 'DNAT_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+            'DNAT_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'DNAT_WITH_CORRECT_FREE_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_CORRECT_USED_VALUE': {
+                'desc': 'DNAT_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'DNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             },
             'IPMC_WITH_WRONG_PERCENTAGE': {
                 'desc': 'IPMC_WITH_WRONG_PERCENTAGE must condition failure.',
@@ -269,9 +289,17 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
-            'IPMC_WITH_WRONG_THRESHOLD_TYPE': {
-                'desc': 'IPMC_WITH_WRONG_THRESHOLD_TYPE must condition failure.',
+            'IPMC_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'IPMC_WITH_CORRECT_FREE_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_CORRECT_USED_VALUE': {
+                'desc': 'IPMC_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'IPMC_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             }
         }
 
