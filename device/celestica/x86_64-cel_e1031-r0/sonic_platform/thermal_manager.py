@@ -6,7 +6,7 @@ from .thermal_infos import *
 
 
 class ThermalManager(ThermalManagerBase):
-    FSC_ALGORITHM_CMD = 'service fancontrol {}'
+    FSC_ALGORITHM_CMD = ' supervisorctl {} fancontrol'
 
     @classmethod
     def start_thermal_control_algorithm(cls):

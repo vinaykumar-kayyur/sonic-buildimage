@@ -214,6 +214,14 @@ class Chassis(ChassisBase):
         return sfp
 
     ##############################################################
+    ################## ThermalManager methods ####################
+    ##############################################################
+
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
+
+    ##############################################################
     ###################### Device methods ########################
     ##############################################################
 
@@ -257,6 +265,3 @@ class Chassis(ChassisBase):
         """
         return True
 
-        def get_thermal_manager(self):
-            from .thermal_manager import ThermalManager
-            return ThermalManager
