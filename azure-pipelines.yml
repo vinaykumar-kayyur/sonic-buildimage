@@ -103,6 +103,10 @@ stages:
     displayName: "vstest"
     timeoutInMinutes: 60
     steps:
+    - checkout: self
+      submodules: recursive
+      displayName: 'Checkout code'
+
     - task: DownloadPipelineArtifact@2
       inputs:
         source: specific
@@ -115,8 +119,11 @@ stages:
 
     - script: |
         sudo pip install pytest==4.6.2 attrs==19.1.0 exabgp==4.0.10 distro==1.5.0 docker==4.0.2 redis==3.3.4
-        sudo dpkg -i sonic-swss-common.amd64.ubuntu20_04/libswsscommon_1.0.0_amd64.deb
-        sudo dpkg -i sonic-swss-common.amd64.ubuntu20_04/python3-swsscommon_1.0.0_amd64.deb
+        ls
+        pwd
+        ls -l ../
+        sudo dpkg -i ../sonic-swss-common.amd64.ubuntu20_04/libswsscommon_1.0.0_amd64.deb
+        sudo dpkg -i ../sonic-swss-common.amd64.ubuntu20_04/python3-swsscommon_1.0.0_amd64.deb
         sudo docker load -i /nfs/azpl/kvmimage/docker-sonic-vs.$(Build.BuildNumber).gz
         trap "docker rmi docker-sonic-vs:$(Build.BuildNumber)" EXIT
         docker tag docker-sonic-vs:latest docker-sonic-vs:$(Build.BuildNumber)
