@@ -384,7 +384,7 @@ def container_wait(feature, **kwargs):
 def main():
     parser=argparse.ArgumentParser(description="container commands for start/stop/wait/kill/id")
     parser.add_argument("action", choices=["start", "stop", "wait", "kill", "id"])
-    parser.add_argument('-t', '--timeout', type=int, help='container action timeout value', default=10)
+    parser.add_argument('-t', '--timeout', type=int, help='container action timeout value', default=None)
     parser.add_argument("name")
 
     args = parser.parse_args()
@@ -394,7 +394,8 @@ def main():
         container_start(args.name, **kwargs)
 
     elif args.action == "stop":
-        kwargs['timeout'] = args.timeout
+        if args.timeout is not None:
+            kwargs['timeout'] = args.timeout
         container_stop(args.name, **kwargs)
 
     elif args.action == "kill":
