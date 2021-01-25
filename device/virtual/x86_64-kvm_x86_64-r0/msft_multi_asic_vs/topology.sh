@@ -58,7 +58,6 @@ stop() {
         for NUM in `seq 1 4`; do
             TEMP="eth999"
             OLD="eth$(($NUM))"
-            OLD="eth$(($NUM))"
             NAME="eth$((4 * $ASIC + $NUM))"
             sudo ip netns exec asic$ASIC ip link set dev $OLD down
             sudo ip netns exec asic$ASIC ip link set dev $OLD name $TEMP
