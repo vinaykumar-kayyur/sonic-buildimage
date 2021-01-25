@@ -16,7 +16,7 @@ function debug()
 
 function check_and_rescan_pcie_devices()
 {
-    PCIE_CHK_CMD='sudo pcieutil pcie-check |grep "$RESULTS"'
+    PCIE_CHK_CMD='pcieutil check |grep "$RESULTS"'
     PLATFORM=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
 
     if [ ! -f /usr/share/sonic/device/$PLATFORM/pcie.yaml ]; then
