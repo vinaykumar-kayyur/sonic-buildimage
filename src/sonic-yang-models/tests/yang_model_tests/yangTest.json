@@ -696,12 +696,7 @@
 					"port_name": "Ethernet8",
 					"alias": "eth8",
 					"lanes": "65",
-					"description": "Ethernet8",
 					"speed": 25000,
-					"fec": "rs",
-					"mtu": 9000,
-					"admin_status": "up",
-					"pfc_asym": "off",
 					"autoneg": 0
 				}]
 			}
@@ -715,12 +710,7 @@
 					"port_name": "Ethernet8",
 					"alias": "eth8",
 					"lanes": "65",
-					"description": "Ethernet8",
 					"speed": 25000,
-					"fec": "rs",
-					"mtu": 9000,
-					"admin_status": "up",
-					"pfc_asym": "off",
 					"autoneg": -1
 				}]
 			}
@@ -734,12 +724,7 @@
 					"port_name": "Ethernet8",
 					"alias": "eth8",
 					"lanes": "65",
-					"description": "Ethernet8",
 					"speed": 25000,
-					"fec": "rs",
-					"mtu": 9000,
-					"admin_status": "up",
-					"pfc_asym": "off",
 					"autoneg": 260
 				}]
 			}
