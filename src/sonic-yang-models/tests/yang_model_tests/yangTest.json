@@ -1953,15 +1953,6 @@
                 "acl_counter_high_threshold": "85",
                 "acl_counter_low_threshold": "70",
                 "acl_counter_threshold_type": "percentage",
-                "snat_entry_threshold_type": "percentage",
-                "snat_entry_low_threshold": "70",
-                "snat_entry_high_threshold": "85",
-                "dnat_entry_threshold_type": "percentage",
-                "dnat_entry_low_threshold": "70",
-                "dnat_entry_high_threshold": "85",
-                "ipmc_entry_threshold_type": "percentage",
-                "ipmc_entry_low_threshold": "70",
-                "ipmc_entry_high_threshold": "85",
                 "polling_interval": "0"
             }
         },
