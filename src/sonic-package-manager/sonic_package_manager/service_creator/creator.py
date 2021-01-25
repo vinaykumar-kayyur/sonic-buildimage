@@ -29,7 +29,7 @@ MONIT_CONF_TEMPLATE = 'monit.conf.j2'
 MONIT_CONF_LOCATION = '/etc/monit/conf.d/'
 
 DEBUG_DUMP_SCRIPT_TEMPLATE = 'dump.sh.j2'
-DEBUG_DUMP_SCRIPT_LOCATION = '/usr/bin/debug-dump/'
+DEBUG_DUMP_SCRIPT_LOCATION = '/usr/local/bin/debug-dump/'
 
 TEMPLATES_PATH = '/usr/share/sonic/templates'
 
