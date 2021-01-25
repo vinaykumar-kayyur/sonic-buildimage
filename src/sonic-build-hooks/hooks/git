@@ -2,7 +2,7 @@
 
 parse_config(){
     . /usr/local/share/buildinfo/scripts/buildinfo_base.sh
-    [ -z $REAL_COMMAND ] && REAL_COMMAND=$(get_command git)
+    REAL_COMMAND=$(get_command git)
 
     version_file=$VERSION_PATH/versions-git
     new_version_file=$BUILD_VERSION_PATH/versions-git
