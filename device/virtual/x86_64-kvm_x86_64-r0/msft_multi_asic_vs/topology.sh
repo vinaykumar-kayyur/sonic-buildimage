@@ -65,7 +65,6 @@ stop() {
             sudo ip netns exec asic$ASIC ip link set dev $TEMP netns 1
             ip link set dev $TEMP name $NAME
             ip link set dev $NAME up
-            echo "$ASIC: $OLD --> $NAME"
         done
     done
 
@@ -73,7 +72,6 @@ stop() {
         for NUM in `seq 1 4`; do
             sudo ip netns exec asic$ASIC ip link set dev eth$NUM down
             sudo ip netns exec asic$ASIC ip link delete dev eth$NUM
-            echo "$ASIC: eth$NUM"
         done
     done
 }
