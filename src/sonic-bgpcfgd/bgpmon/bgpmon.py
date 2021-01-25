@@ -4,20 +4,20 @@
 Description: bgpmon.py -- populating bgp related information in stateDB.
     script is started by supervisord in bgp docker when the docker is started.
 
-    Initial creation of this daemon is to assist SNMP agent in obtaining the 
+    Initial creation of this daemon is to assist SNMP agent in obtaining the
     BGP related information for its MIB support. The MIB that this daemon is
     assisting is for the CiscoBgp4MIB (Neighbor state only). If there are other
-    BGP related items that needs to be updated in a periodic manner in the 
+    BGP related items that needs to be updated in a periodic manner in the
     future, then more can be added into this process.
 
     The script check if there are any bgp activities by monitoring the bgp
     frr.log file timestamp.  If activity is detected, then it will request bgp
-    neighbor state via vtysh cli interface. This bgp activity monitoring is 
+    neighbor state via vtysh cli interface. This bgp activity monitoring is
     done periodically (every 15 second). When triggered, it looks specifically
     for the neighbor state in the json output of show ip bgp neighbors json
     and update the state DB for each neighbor accordingly.
     In order to not disturb and hold on to the State DB access too long and
-    removal of the stale neighbors (neighbors that was there previously on 
+    removal of the stale neighbors (neighbors that was there previously on
     previous get request but no longer there in the current get request), a
     "previous" neighbor dictionary will be kept and used to determine if there
     is a need to perform update or the peer is stale to be removed from the
@@ -65,11 +65,15 @@ class BgpStateGet:
         except (IOError, OSError):
             return True
 
-    def update_new_peer_states(self, peer_dict):
+    def update_new_peer_states(self, peer_dict, ip_ver):
         peer_l = peer_dict["peers"].keys()
-        self.new_peer_l.extend(peer_l)
         for peer in peer_l:
-            self.new_peer_state[peer] = peer_dict["peers"][peer]["state"]
+            if ip_ver == 4:
+                peer_key = peer + "_ipv4"
+            else:
+                peer_key = peer + "_ipv6"
+            self.new_peer_l.append(peer_key)
+            self.new_peer_state[peer_key] = peer_dict["peers"][peer]["state"]
 
     # Get a new snapshot of BGP neighbors and store them in the "new" location
     def get_all_neigh_states(self):
@@ -84,8 +88,10 @@ class BgpStateGet:
         del self.new_peer_l[:]
         self.new_peer_state.clear()
         for key, value in peer_info.items():
-            if key == "ipv4Unicast" or key == "ipv6Unicast":
-                self.update_new_peer_states(value)
+            if key == "ipv4Unicast":
+                self.update_new_peer_states(value, 4)
+            elif key == "ipv6Unicast":
+                self.update_new_peer_states(value, 6)
 
     # This method will take the caller's dictionary which contains the peer state operation
     # That need to be updated in StateDB using Redis pipeline.
@@ -117,7 +123,7 @@ class BgpStateGet:
         data = {}
         for i in range (0, len(self.new_peer_l)):
             peer = self.new_peer_l[i]
-            key = "NEIGH_STATE_TABLE|%s" % peer
+            key = "NEIGH_STATE_TABLE|%s" % peer.split('_')[0]
             if peer in self.peer_l:
                 # only update the entry if state changed
                 if self.peer_state[peer] != self.new_peer_state[peer]:
@@ -138,9 +144,10 @@ class BgpStateGet:
         while len(self.peer_l) > 0:
             # remove this from the stateDB and the current neighbor state entry
             peer = self.peer_l.pop(0)
-            del_key = "NEIGH_STATE_TABLE|%s" % peer
+            del_key = "NEIGH_STATE_TABLE|%s" % peer.split('_')[0]
             data[del_key] = None
-            del self.peer_state[peer]
+            if peer in self.peer_state:
+                del self.peer_state[peer]
             if len(data) > PIPE_BATCH_MAX_COUNT:
                 self.flush_pipe(data)
         # If anything in the pipeline not yet flushed, flush them now
