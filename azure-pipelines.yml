@@ -6,7 +6,8 @@
 trigger:
   branches:
     include:
-      - "*"
+      - master
+      - 202012
 
 pr:
 - master
