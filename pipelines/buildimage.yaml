@@ -1,0 +1,25 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+- cron: "*/5 * * * *"
+  always: true
+  branches:
+    include:
+    - 202012
+    - bmtor
+    - azure-pipelines
+    - test01
+    - master
+
+stages:
+- stage: CheckOut
+  pool: sonicbld
+  jobs:
+    - job:
+      steps:
+      - bash: |
+          echo hello
+        displayName: "make swi"
