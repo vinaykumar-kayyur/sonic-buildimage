@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check whether the routemap is for internal BGP sessions.
+function is_internal_route_map()
+{
+    [[ "$1" =~ .*"_INTERNAL_".* ]]
+}
+
 function check_installed()
 {
   c=0
@@ -7,6 +13,7 @@ function check_installed()
   config=$(vtysh -c "show run")
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p');
   do
+    is_internal_route_map $route_map_name && continue
     echo "$config" | egrep -q "^route-map $route_map_name permit 20$"
     c=$((c+$?))
     e=$((e+1))
@@ -24,6 +31,7 @@ then
   TSB_FILE=$(mktemp)
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p');
   do
+    is_internal_route_map $route_map_name && continue
     case "$route_map_name" in
       *V4*)
       ;;

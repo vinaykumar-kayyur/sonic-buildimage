@@ -11,10 +11,17 @@ ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
 
 if [[ ($NUM_ASIC -gt 1) ]]; then
     asic=0
+    NAMESPACE_PREFIX='asic'
+
     while [ $asic -lt $NUM_ASIC ]
     do
-        echo -e "BGP"$asic" : \c"
-        docker exec -i bgp$asic /usr/bin/$1
+        # Run TSA/TSB/TSC scripts in BGP instance for frontend ASICs.
+        sub_role=`sonic-cfggen -d -v "DEVICE_METADATA['localhost']['sub_role']" -n $NAMESPACE_PREFIX$asic`
+        if [ $sub_role == 'FrontEnd' ]
+        then
+            echo -e "BGP"$asic" : \c"
+            docker exec -i bgp$asic /usr/bin/$1
+        fi
         asic=$[$asic+1]
     done
 else
