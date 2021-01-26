@@ -8,6 +8,7 @@ stages:
   pool: sonicbld
   jobs:
     - job:
+      timeoutInMinutes: 720
       steps:
       - checkout: self
         displayName: 'checkout code'
