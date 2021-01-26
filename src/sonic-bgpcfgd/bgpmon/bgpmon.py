@@ -145,7 +145,7 @@ class BgpStateGet:
         # If anything in the pipeline not yet flushed, flush them now
         if len(data) > 0:
             self.flush_pipe(data)
-        # Save the new dict
+        # Save the new set
         self.peer_l = self.new_peer_l.copy()
 
 def main():
