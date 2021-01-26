@@ -205,6 +205,6 @@ stages:
       condition: succeededOrFailed()
     - task: PublishTestResults@2
       inputs:
-        testResultsFiles: '$(Build.ArtifactStagingDirectory)/logs/**/*.yml'
+        testResultsFiles: '$(Build.ArtifactStagingDirectory)/logs/**/*.xml'
         testRunTitle: kvmtest
       condition: succeededOrFailed()
