@@ -1,0 +1,5 @@
+steps:
+- bash: |
+    make SONIC_CONFIG_BUILD_JOBS=1 INSTALL_DEBUG_TOOLS=y target/sonic-broadcom.bin
+    mv target/sonic-broadcom.bin target/sonic-broadcom-dbg.bin
+  displayName: 'make bin'
