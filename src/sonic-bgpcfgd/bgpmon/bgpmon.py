@@ -34,13 +34,13 @@ PIPE_BATCH_MAX_COUNT = 50
 
 class BgpStateGet:
     def __init__(self):
-        # list peer_l stores the Neighbor peer Ip address
+        # set peer_l stores the Neighbor peer Ip address
         # dic peer_state stores the Neighbor peer state entries
-        # list new_peer_l stores the new snapshot of Neighbor peer ip address
+        # set new_peer_l stores the new snapshot of Neighbor peer ip address
         # dic new_peer_state stores the new snapshot of Neighbor peer states
-        self.peer_l = []
+        self.peer_l = set()
         self.peer_state = {}
-        self.new_peer_l = []
+        self.new_peer_l = set()
         self.new_peer_state = {}
         self.cached_timestamp = 0
         self.db = swsssdk.SonicV2Connector()
@@ -65,15 +65,11 @@ class BgpStateGet:
         except (IOError, OSError):
             return True
 
-    def update_new_peer_states(self, peer_dict, ip_ver):
+    def update_new_peer_states(self, peer_dict):
         peer_l = peer_dict["peers"].keys()
+        self.new_peer_l.update(peer_l)
         for peer in peer_l:
-            if ip_ver == 4:
-                peer_key = peer + "_ipv4"
-            else:
-                peer_key = peer + "_ipv6"
-            self.new_peer_l.append(peer_key)
-            self.new_peer_state[peer_key] = peer_dict["peers"][peer]["state"]
+            self.new_peer_state[peer] = peer_dict["peers"][peer]["state"]
 
     # Get a new snapshot of BGP neighbors and store them in the "new" location
     def get_all_neigh_states(self):
@@ -84,14 +80,12 @@ class BgpStateGet:
             return
 
         peer_info = json.loads(output)
-        # cmd ran successfully, safe to Clean the "new" lists/dic for new snapshot
-        del self.new_peer_l[:]
+        # cmd ran successfully, safe to Clean the "new" set/dict for new snapshot
+        self.new_peer_l.clear()
         self.new_peer_state.clear()
         for key, value in peer_info.items():
-            if key == "ipv4Unicast":
-                self.update_new_peer_states(value, 4)
-            elif key == "ipv6Unicast":
-                self.update_new_peer_states(value, 6)
+            if key == "ipv4Unicast" or key == "ipv6Unicast":
+                self.update_new_peer_states(value)
 
     # This method will take the caller's dictionary which contains the peer state operation
     # That need to be updated in StateDB using Redis pipeline.
@@ -121,9 +115,8 @@ class BgpStateGet:
 
     def update_neigh_states(self):
         data = {}
-        for i in range (0, len(self.new_peer_l)):
-            peer = self.new_peer_l[i]
-            key = "NEIGH_STATE_TABLE|%s" % peer.split('_')[0]
+        for peer in self.new_peer_l:
+            key = "NEIGH_STATE_TABLE|%s" % peer
             if peer in self.peer_l:
                 # only update the entry if state changed
                 if self.peer_state[peer] != self.new_peer_state[peer]:
@@ -131,7 +124,7 @@ class BgpStateGet:
                     state = self.new_peer_state[peer]
                     data[key] = {'state':state}
                     self.peer_state[peer] = state
-                # remove this neighbor from old list since it is accounted for
+                # remove this neighbor from old set since it is accounted for
                 self.peer_l.remove(peer)
             else:
                 # New neighbor found case. Add to dictionary and state DB
@@ -141,10 +134,9 @@ class BgpStateGet:
             if len(data) > PIPE_BATCH_MAX_COUNT:
                 self.flush_pipe(data)
         # Check for stale state entries to be cleaned up
-        while len(self.peer_l) > 0:
+        for peer in self.peer_l:
             # remove this from the stateDB and the current neighbor state entry
-            peer = self.peer_l.pop(0)
-            del_key = "NEIGH_STATE_TABLE|%s" % peer.split('_')[0]
+            del_key = "NEIGH_STATE_TABLE|%s" % peer
             data[del_key] = None
             if peer in self.peer_state:
                 del self.peer_state[peer]
@@ -153,8 +145,8 @@ class BgpStateGet:
         # If anything in the pipeline not yet flushed, flush them now
         if len(data) > 0:
             self.flush_pipe(data)
-        # Save the new List
-        self.peer_l = self.new_peer_l[:]
+        # Save the new dict
+        self.peer_l = self.new_peer_l.copy()
 
 def main():
 
