@@ -3,23 +3,24 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-schedules:
-- cron: "*/5 * * * *"
-  always: true
-  branches:
-    include:
-    - 202012
-    - bmtor
-    - azure-pipelines
-    - test01
-    - master
-
 stages:
 - stage: CheckOut
   pool: sonicbld
   jobs:
     - job:
       steps:
+      - checkout: self
+        displayName: 'checkout code'
       - bash: |
-          echo hello
+          make init
+          make configure PLATFORM=broadcom
+        displayName: 'make init & config'
+      - template: ./template/dbg.bin.yaml
+      - bash: |
+          make SONIC_CONFIG_BUILD_JOBS=1 target/sonic-broadcom.bin
+          make SONIC_CONFIG_BUILD_JOBS=1 target/sonic-aboot-broadcom.swi
         displayName: "make swi"
+      - publish: $(Build.SourcesDirectory)/target/
+        artifact: target
+        displayName: "archive target"
+
