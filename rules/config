@@ -191,3 +191,6 @@ SONIC_VERSION_CONTROL_COMPONENTS ?= none
 # ENABLE_DOCKER_BASE_PULL = y
 REGISTRY_PORT=443
 REGISTRY_SERVER=sonicdev-microsoft.azurecr.io
+
+# INCLUDE_MUX - build docker-mux for dual ToR (Gemini)
+INCLUDE_MUX = y

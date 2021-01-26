@@ -1,0 +1,581 @@
+/*
+ * LinkManagerStateMachine.h
+ *
+ *  Created on: Oct 18, 2020
+ *      Author: tamer
+ */
+
+#ifndef LINK_MANAGER_LINKMANAGERSTATEMACHINE_H_
+#define LINK_MANAGER_LINKMANAGERSTATEMACHINE_H_
+
+#include <bitset>
+#include <functional>
+#include <string>
+#include <tuple>
+#include <vector>
+
+#include "link_prober/LinkProber.h"
+#include "link_prober/LinkProberState.h"
+#include "link_state/LinkState.h"
+#include "link_state/LinkStateMachine.h"
+#include "mux_state/MuxState.h"
+#include "mux_state/MuxStateMachine.h"
+
+namespace mux {
+#define ps(compositeState)      std::get<0>(compositeState)
+#define ms(compositeState)      std::get<1>(compositeState)
+#define ls(compositeState)      std::get<2>(compositeState)
+
+class MuxPort;
+}
+
+namespace link_manager
+{
+
+/**
+ *@class LinkProberEvent
+ *
+ *@brief signals a LinkeProber event to the composite state machine
+ */
+class LinkProberEvent {
+public:
+    LinkProberEvent() = default;
+    ~LinkProberEvent() = default;
+};
+
+/**
+ *@class MuxStateEvent
+ *
+ *@brief signals a MuxState event to the composite state machine
+ */
+class MuxStateEvent {
+public:
+    MuxStateEvent() = default;
+    ~MuxStateEvent() = default;
+};
+
+/**
+ *@class LinkStateEvent
+ *
+ *@brief signals a LinkState event to the composite state machine
+ */
+class LinkStateEvent {
+public:
+    LinkStateEvent() = default;
+    ~LinkStateEvent() = default;
+};
+
+/**
+ *@class LinkManagerStateMachine
+ *
+ *@brief Composite state machine of LinkProberState, MuxState, and LinkState
+ */
+class LinkManagerStateMachine: public common::StateMachine,
+                               public std::enable_shared_from_this<LinkManagerStateMachine>
+{
+private:
+    /**
+     *@enum anonymous
+     *
+     *@brief used to reference bits corresponding to respective state machine init state
+     */
+    enum {
+        ServerMacComponent,
+        LinkProberComponent,
+        MuxStateComponent,
+        LinkStateComponent,
+
+        ComponentCount
+    };
+
+public:
+    using CompositeState = std::tuple<
+        link_prober::LinkProberState::Label,
+        mux_state::MuxState::Label,
+        link_state::LinkState::Label
+    >;
+    using TransitionFunction = std::function<void (LinkManagerStateMachine*, CompositeState&)>;
+
+public:
+    /**
+    *@method LinkManagerStateMachine
+    *
+    *@brief class default constructor
+    */
+    LinkManagerStateMachine() = delete;
+
+    /**
+    *@method LinkManagerStateMachine
+    *
+    *@brief class copy constructor
+    *
+    *@param LinkManagerStateMachine (in)  reference to LinkManagerStateMachine object to be copied
+    */
+    LinkManagerStateMachine(const LinkManagerStateMachine &) = delete;
+
+    /**
+    *@method LinkManagerStateMachine
+    *
+    *@brief class constructor
+    *
+    *@param muxPortPtr (in)     pointer to container MuxPort object
+    *@param strand (in)         boost serialization object
+    *@param muxPortConfig (in)  reference to MuxPortConfig object
+    */
+    LinkManagerStateMachine(
+        mux::MuxPort *muxPortPtr,
+        boost::asio::io_service::strand &strand,
+        common::MuxPortConfig &muxPortConfig
+    );
+
+    /**
+    *@method ~LinkManagerStateMachine
+    *
+    *@brief class destructor
+    */
+    virtual ~LinkManagerStateMachine() = default;
+
+    /**
+    *@method initializeTransitionFunctionTable
+    *
+    *@brief initialize static transition function table
+    *
+    *@return none
+    */
+    static void initializeTransitionFunctionTable();
+
+    /**
+    *@method getLinkProberEvent
+    *
+    *@brief getter for LinkProberEvent object
+    *
+    *@return reference to LinkProberEvent object
+    */
+    static LinkProberEvent& getLinkProberEvent() {return mLinkProberEvent;};
+
+    /**
+    *@method getMuxStateEvent
+    *
+    *@brief getter for MuxStateEvent object
+    *
+    *@return reference to MuxStateEvent object
+    */
+    static MuxStateEvent& getMuxStateEvent() {return mMuxStateEvent;};
+
+    /**
+    *@method getLinkStateEvent
+    *
+    *@brief getter for LinkStateEvent object
+    *
+    *@return reference to LinkStateEvent object
+    */
+    static LinkStateEvent& getLinkStateEvent() {return mLinkStateEvent;};
+
+    /**
+    *@method getCompositeState
+    *
+    *@brief getter for CompositeState object
+    *
+    *@return reference to CompositeState object
+    */
+    const CompositeState& getCompositeState() {return mCompositeState;};
+
+    /**
+    *@method getLinkProberStateMachine
+    *
+    *@brief getter for LinkProberStateMachine object
+    *
+    *@return reference to LinkProberStateMachine object
+    */
+    link_prober::LinkProberStateMachine& getLinkProberStateMachine() {return mLinkProberStateMachine;};
+
+    /**
+    *@method getMuxStateMachine
+    *
+    *@brief getter for MuxStateMachine object
+    *
+    *@return reference to MuxStateMachine object
+    */
+    mux_state::MuxStateMachine& getMuxStateMachine() {return mMuxStateMachine;};
+
+    /**
+    *@method getLinkStateMachine
+    *
+    *@brief getter for LinkStateMachine object
+    *
+    *@return reference to LinkStateMachine object
+    */
+    link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
+
+private:
+    /**
+    *@method enterLinkProberState
+    *
+    *@brief force LinkProberState to switch state
+    *
+    *@param nextState (in, out)     reference to composite state, the state linkProber
+    *                               entry will be changed to align with state label provided
+    *@param label (in)              state to switch to
+    *
+    *@return none
+    */
+    inline void enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label);
+
+    /**
+    *@method enterMuxState
+    *
+    *@brief force MuxState to switch state
+    *
+    *@param nextState (in, out)     reference to composite state, the state MuxState
+    *                               entry will be changed to align with state label provided
+    *@param label (in)              state to switch to
+    *
+    *@return none
+    */
+    inline void enterMuxState(CompositeState &nextState, mux_state::MuxState::Label label);
+
+    /**
+    *@method enterLinkState
+    *
+    *@brief force LinkState to switch state
+    *
+    *@param nextState (in, out)     reference to composite state, the state LinkState
+    *                               entry will be changed to align with state label provided
+    *@param label (in)              state to switch to
+    *
+    *@return none
+    */
+    inline void enterLinkState(CompositeState &nextState, link_state::LinkState::Label label);
+
+    /**
+    *@method enterMuxWaitState
+    *
+    *@brief force MuxState to switch to WaitState
+    *
+    *@param nextState (in, out)     reference to composite state, the state MuxState
+    *                               entry will be changed to WaitState
+    *
+    *@return none
+    */
+    inline void enterMuxWaitState(CompositeState &nextState);
+
+    /**
+    *@method switchMuxState
+    *
+    *@brief switch Mux to switch via xcvrd to state label provider
+    *
+    *@param nextState (in, out)     reference to composite state, the state MuxState
+    *                               entry will be changed to align with state label provided
+    *@param label (in)              state to switch to
+    *
+    *@return none
+    */
+    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label);
+
+public:
+    /**
+    *@method initializeLinkProber
+    *
+    *@brief initialize LinkProber component. Note if this is the last component to be initialized,
+    *       state machine will be activated
+    *
+    *@return none
+    */
+    void initializeLinkProber();
+
+    /**
+    *@method activateStateMachine
+    *
+    *@brief activate the state machine by starting the LinkProber. This should be done after all
+    *       components have been initialized.
+    *
+    *@return none
+    */
+    void activateStateMachine();
+
+    /**
+    *@method handleStateChange
+    *
+    *@brief handles LinkProverEvent
+    *
+    *@param state (in)  new LinkProberState label
+    *
+    *@return none
+    */
+    void handleStateChange(LinkProberEvent &event, link_prober::LinkProberState::Label state);
+
+    /**
+    *@method handleStateChange
+    *
+    *@brief handles MuxStateEvent
+    *
+    *@param state (in)  new MuxState label
+    *
+    *@return none
+    */
+    void handleStateChange(MuxStateEvent &event, mux_state::MuxState::Label state);
+
+    /**
+    *@method handleStateChange
+    *
+    *@brief handles LinkStateEvent
+    *
+    *@param state (in)  new LinkState label
+    *
+    *@return none
+    */
+    void handleStateChange(LinkStateEvent &event, link_state::LinkState::Label state);
+
+    /**
+    *@method handleGetServerMacNotification
+    *
+    *@brief handle get Server MAC address
+    *
+    *@param address (in)    Server MAC address
+    *
+    *@return none
+    */
+    void handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address);
+
+    /**
+    *@method handleGetMuxStateNotification
+    *
+    *@brief handle get MUX state notification
+    *
+    *@param label (in)              new MuxState label
+    *
+    *@return none
+    */
+    void handleGetMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
+    *@method handleProbeMuxStateNotification
+    *
+    *@brief handle probe MUX state notification
+    *
+    *@param label (in)              new MuxState label
+    *
+    *@return none
+    */
+    void handleProbeMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
+    *@method handleMuxStateNotification
+    *
+    *@brief handle MUX state notification
+    *
+    *@param label (in)              new MuxState label
+    *
+    *@return none
+    */
+    void handleMuxStateNotification(mux_state::MuxState::Label label);
+
+    /**
+    *@method handleSwssLinkStateNotification
+    *
+    *@brief handle link state change notification
+    *
+    *@param label (in)  new LinkState label
+    *
+    *@return none
+    */
+    void handleSwssLinkStateNotification(const link_state::LinkState::Label label);
+
+    /**
+    *@method handleMuxConfigNotification
+    *
+    *@brief handle MUX configuration change notification
+    *
+    *@param mode (in)  new MUX config mode
+    *
+    *@return none
+    */
+    void handleMuxConfigNotification(const common::MuxPortConfig::Mode mode);
+
+    /**
+    *@method handleSuspendTimerExpiry
+    *
+    *@brief handle suspend timer expiry notification from LinkProber
+    *
+    *@return none
+    */
+    void handleSuspendTimerExpiry();
+
+private:
+    /**
+    *@method initLinkProberState
+    *
+    *@brief initialize LinkProberState when configuring the composite state machine
+    *
+    *@param compositeState (in, out)    reference to composite state, the state linkProber
+    *                                   entry will be changed to align with MuxState
+    *
+    *@return none
+    */
+    void initLinkProberState(CompositeState &compositeState);
+
+    /**
+    *@method postMuxStateEvent
+    *
+    *@brief post event to MUX state machine to change state
+    *
+    *@param label (in)      new state label to post event for
+    *
+    *
+    *@return none
+    */
+    void postMuxStateEvent(mux_state::MuxState::Label label);
+
+    /**
+    *@method noopTransitionFunction
+    *
+    *@brief No-op transition function
+    *
+    *@param nextState (in, out)     reference to composite
+    *
+    *@return none
+    */
+    void noopTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberStandbyMuxActiveLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberStandby, MuxActive, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberStandbyMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberUnknownMuxActiveLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberUnknown, MuxActive, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberUnknownMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberActiveMuxStandbyLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberActive, MuxStandby, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberActiveMuxStandbyLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberUnknownMuxStandbyLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberUnknown, MuxStandby, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberUnknownMuxStandbyLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberActiveMuxUnknownLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberActive, MuxUnknown, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberActiveMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberStandbyMuxUnknownLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberStandby, MuxUnknown, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberStandbyMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberActiveMuxActiveLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberActive, MuxActive, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberActiveMuxActiveLinkDownTransitionFunction(CompositeState &nextState);
+
+private:
+    // This is used for testing...
+    friend class mux::MuxPort;
+    /**
+    *@method setLinkProberPtr
+    *
+    *@brief set new linkProber for the state machine. This method is used for testing
+    *
+    *@param linkProberPtr (in)  pointer to LinkProber
+    *
+    *@return none
+    */
+    void setLinkProberPtr(std::shared_ptr<link_prober::LinkProber> linkProberPtr) {mLinkProberPtr = linkProberPtr;};
+
+    /**
+    *@method setComponentInitState
+    *
+    *@brief set component inti state. This method is used for testing
+    *
+    *@param component (in)  component index
+    *
+    *@return none
+    */
+    void setComponentInitState(uint8_t component) {mComponentInitState.set(component);};
+
+private:
+    static TransitionFunction mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
+                                                     [mux_state::MuxState::Label::Count]
+                                                     [link_state::LinkState::Label::Count];
+
+    static LinkProberEvent mLinkProberEvent;
+    static MuxStateEvent mMuxStateEvent;
+    static LinkStateEvent mLinkStateEvent;
+
+    // To print human readable state name
+    static std::vector<std::string> mLinkProberStateName;
+    static std::vector<std::string> mMuxStateName;
+    static std::vector<std::string> mLinkStateName;
+
+private:
+    CompositeState mCompositeState = {
+        link_prober::LinkProberState::Label::Unknown,
+        mux_state::MuxState::Label::Wait,
+        link_state::LinkState::Label::Down
+    };
+
+    mux::MuxPort *mMuxPortPtr;
+    link_prober::LinkProberStateMachine mLinkProberStateMachine;
+    std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
+    mux_state::MuxStateMachine mMuxStateMachine;
+    link_state::LinkStateMachine mLinkStateMachine;
+
+    std::bitset<ComponentCount> mComponentInitState = {0};
+};
+
+} /* namespace link_manager */
+
+#endif /* LINK_MANAGER_LINKMANAGERSTATEMACHINE_H_ */

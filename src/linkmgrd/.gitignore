@@ -1,0 +1,7 @@
+**/*.o
+**/*.d
+debian/debhelper-build-stamp
+debian/sonic-linkmgrd/
+linkmgrd
+linkmgrd-test
+
