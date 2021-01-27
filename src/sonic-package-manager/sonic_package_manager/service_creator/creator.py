@@ -121,7 +121,7 @@ class ServiceCreator:
 
             self.set_initial_config(package)
 
-            self.post_install()
+            self.post_operation_hook()
 
             if register_feature:
                 self.feature_registry.register(package.manifest,
@@ -147,12 +147,12 @@ class ServiceCreator:
 
         self.update_dependent_list_file(package, remove=True)
 
-        self.post_install()
+        self.post_operation_hook()
 
         if deregister_feature:
             self.feature_registry.deregister(package.manifest['service']['name'])
 
-    def post_install(self):
+    def post_operation_hook(self):
         if not in_chroot():
             run_command('systemctl daemon-reload')
             run_command('systemctl reload monit')
@@ -186,7 +186,7 @@ class ServiceCreator:
         run_opt = ' '.join(run_opt)
         render_ctx = {
             'docker_container_name': name,
-            'docker_image_name': image_id,
+            'docker_image_id': image_id,
             'docker_image_run_opt': run_opt,
         }
         render_template(script_template, script_path, render_ctx, executable=True)
