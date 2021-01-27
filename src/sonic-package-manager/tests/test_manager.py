@@ -169,6 +169,19 @@ def test_installation_fault(package_manager, mock_docker_api, mock_service_creat
         package_manager.install('test-package')
 
 
+def test_installation_package_with_description(package_manager, fake_manifest_resolver):
+    package_entry = package_manager.database.get_package('test-package')
+    description = package_entry.description
+    references = fake_manifest_resolver.manifests[package_entry.repository]
+    manifest = references[package_entry.default_reference]['manifest']
+    new_description = description + ' changed description '
+    manifest['package']['description'] = new_description
+    package_manager.install('test-package')
+    package_entry = package_manager.database.get_package('test-package')
+    description = package_entry.description
+    assert description == new_description
+
+
 def test_manager_installation_version_range(package_manager):
     with pytest.raises(PackageManagerError,
                        match='Can only install specific version. '

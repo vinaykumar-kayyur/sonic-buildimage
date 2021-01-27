@@ -113,7 +113,7 @@ class ManifestSchema:
             try:
                 return_value = self.type.marshal(value)
             except Exception as err:
-                raise ManifestError(f'Failed to marshal manifest: {err}')
+                raise ManifestError(f'Failed to marshal {self.key}: {err}')
             return return_value
 
         def unmarshal(self, value):
@@ -145,6 +145,7 @@ class ManifestSchema:
         ManifestRoot('package', [
             ManifestField('version', ParsedMarshaller(Version)),
             ManifestField('name', DefaultMarshaller(str)),
+            ManifestField('description', DefaultMarshaller(str), ''),
             ManifestField('base-os-constraint', ParsedMarshaller(VersionConstraint), VersionRange()),
             ManifestArray('depends', ParsedMarshaller(PackageConstraint)),
             ManifestArray('breaks', ParsedMarshaller(PackageConstraint)),

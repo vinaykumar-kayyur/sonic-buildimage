@@ -56,6 +56,7 @@ class PackageSource:
         manifest = self.get_manifest()
 
         name = manifest['package']['name']
+        description = manifest['package']['description']
 
         repository = None
 
@@ -63,18 +64,20 @@ class PackageSource:
             # inherit package database info
             package = self.database.get_package(name)
             repository = package.repository
+            description = description or package.description
 
         return Package(
             PackageEntry(
                 name,
-                repository
+                repository,
+                description,
             ),
             manifest
         )
 
 
 class TarballSource(PackageSource):
-    """ PackageTarballSource implements PackageSource
+    """ TarballSource implements PackageSource
     for locally existing image saved as tarball. """
 
     def __init__(self,
@@ -98,7 +101,7 @@ class TarballSource(PackageSource):
 
 
 class RegistrySource(PackageSource):
-    """ PackageRepoRefSource implements PackageSource
+    """ RegistrySource implements PackageSource
     for packages that are pulled from registry. """
 
     def __init__(self,
@@ -125,7 +128,8 @@ class RegistrySource(PackageSource):
 
 
 class LocalSource(PackageSource):
-    """ PackageLocalSource """
+    """ LocalSource accesses local docker library to retrieve manifest
+    but does not implement installation of the image. """
 
     def __init__(self,
                  entry: PackageEntry,
