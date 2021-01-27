@@ -364,7 +364,7 @@ start() {
         -e SX_API_SOCKET_FILE=/var/run/sx_sdk/sx_api.sock \
         -v /dev/shm:/dev/shm:rw \
 {%- else %}
-{%- if mount_default_tmpfs == "y" %}
+{%- if mount_default_tmpfs is defined and mount_default_tmpfs == "y" %}
         --tmpfs /tmp \
 {%- endif %}
 {%- endif %}
@@ -390,17 +390,23 @@ start() {
         $REDIS_MNT \
         -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/platform:ro \
 {%- if sonic_asic_platform != "mellanox" %}
-{%- if mount_default_tmpfs == "y" %}
+{%- if mount_default_tmpfs is defined and mount_default_tmpfs == "y" %}
         --tmpfs /tmp \
 {%- endif %}
 {%- endif %}
-{%- if mount_default_tmpfs == "y" %}
+{%- if mount_default_tmpfs is defined and mount_default_tmpfs == "y" %}
         --tmpfs /var/tmp \
 {%- endif %}
         --env "NAMESPACE_ID"="$DEV" \
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
         --env "NAMESPACE_COUNT"=$NUM_ASIC \
-        --name=$DOCKERNAME {{docker_image_name}}:latest || {
+        --name=$DOCKERNAME \
+{%- if docker_image_name is defined %}
+        {{docker_image_name}}:latest \
+{%- else %}
+        {{docker_image_id}} \
+{%- endif %}
+        || {
             echo "Failed to docker run" >&1
             exit 4
     }
