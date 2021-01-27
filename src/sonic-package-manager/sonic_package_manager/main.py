@@ -27,6 +27,8 @@ def exit_cli(*args, **kwargs):
 
 
 def show_help(ctx):
+    """ Show  help message and exit process successfully. """
+
     click.echo(ctx.get_help())
     ctx.exit(0)
 
@@ -47,7 +49,68 @@ def root_privileges_required(func: typing.Callable) -> typing.Callable:
     return wrapped_function
 
 
+def add_options(options):
+    """ Decorator to append options from
+    input list to command. """
+
+    def _add_options(func):
+        for option in reversed(options):
+            func = option(func)
+        return func
+
+    return _add_options
+
+
+class MutuallyExclusiveOption(click.Option):
+    """ This options type is extended with 'mutually_exclusive'
+    parameter which makes CLI to check if several options are now
+    used together in single command. """
+
+    def __init__(self, *args, **kwargs):
+        self.mutually_exclusive = set(kwargs.pop('mutually_exclusive', []))
+        help_string = kwargs.get('help', '')
+        if self.mutually_exclusive:
+            ex_str = ', '.join(self.mutually_exclusive)
+            kwargs['help'] = f'{help_string} ' \
+                             f'NOTE: This argument is mutually ' \
+                             f'exclusive with arguments: [{ex_str}].'
+        super().__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        if self.name in opts and opts[self.name] is not None:
+            for opt_name in self.mutually_exclusive.intersection(opts):
+                if opts[opt_name] is None:
+                    continue
+
+                raise click.UsageError(f'Illegal usage: {self.name} is mutually '
+                                       f'exclusive with arguments '
+                                       f'{", ".join(self.mutually_exclusive)}.')
+
+        return super().handle_parse_result(ctx, opts, args)
+
+
+PACKAGE_SOURCE_OPTIONS = [
+    click.option('--from-repository',
+                 help='Install package directly from image registry repository',
+                 cls=MutuallyExclusiveOption,
+                 mutually_exclusive=['from_tarball', 'package_expr']),
+    click.option('--from-tarball',
+                 type=click.Path(exists=True,
+                                 readable=True,
+                                 file_okay=True,
+                                 dir_okay=False),
+                 help='Install package from saved image tarball',
+                 cls=MutuallyExclusiveOption,
+                 mutually_exclusive=['from_repository', 'package_expr']),
+    click.argument('package-expr',
+                   type=str,
+                   required=False)
+]
+
+
 def get_package_status(package: PackageEntry):
+    """ Returns the installation status message for package. """
+
     if package.built_in:
         return 'Built-In'
     elif package.installed:
@@ -59,7 +122,7 @@ def get_package_status(package: PackageEntry):
 @click.group()
 @click.pass_context
 def cli(ctx):
-    """ SONiC Package Manager. """
+    """ SONiC Package Manager """
 
     ctx.obj = PackageManager.get_manager()
 
@@ -67,7 +130,7 @@ def cli(ctx):
 @cli.group()
 @click.pass_context
 def repository(ctx):
-    """ Repository management commands. """
+    """ Repository management commands """
 
     pass
 
@@ -75,7 +138,7 @@ def repository(ctx):
 @cli.group()
 @click.pass_context
 def show(ctx):
-    """ SONiC package manager show commands. """
+    """ Package manager show commands """
 
     pass
 
@@ -83,7 +146,7 @@ def show(ctx):
 @show.group()
 @click.pass_context
 def package(ctx):
-    """ Package show CLI commands. """
+    """ Package show commands """
 
     pass
 
@@ -91,9 +154,9 @@ def package(ctx):
 @cli.command()
 @click.pass_context
 def list(ctx):
-    """ List available repositories. """
+    """ List available repositories """
 
-    table_header = ["Name", "Repository", "Description", "Version", "Status"]
+    table_header = ['Name', 'Repository', 'Description', 'Version', 'Status']
     table_body = []
 
     manager: PackageManager = ctx.obj
@@ -101,12 +164,13 @@ def list(ctx):
     try:
         for package in natsorted(manager.database):
             version = package.version or 'N/A'
+            description = package.description or 'N/A'
             status = get_package_status(package)
 
             table_body.append([
                 package.name,
                 package.repository,
-                package.description,
+                description,
                 version,
                 status
             ])
@@ -117,19 +181,25 @@ def list(ctx):
 
 
 @package.command()
-@click.argument('expression')
+@add_options(PACKAGE_SOURCE_OPTIONS)
 @click.pass_context
 @click_log.simple_verbosity_option(log)
-def manifest(ctx, expression):
-    """ Print the manifest content. """
+def manifest(ctx,
+             package_expr,
+             from_repository,
+             from_tarball):
+    """ Print package manifest content """
 
     manager: PackageManager = ctx.obj
 
     try:
-        package = manager.resolve_package(expression)
+        source = manager.get_package_source(package_expr,
+                                            from_repository,
+                                            from_tarball)
+        package = source.get_package()
         click.echo(json.dumps(package.manifest.unmarshal(), indent=4))
     except Exception as err:
-        exit_cli(f'Failed to print manifest for {expression}: {err}', fg='red')
+        exit_cli(f'Failed to print manifest: {err}', fg='red')
 
 
 @package.command()
@@ -138,7 +208,7 @@ def manifest(ctx, expression):
 @click.option('--plain', is_flag=True, help='Plain output')
 @click.pass_context
 def versions(ctx, name, all, plain):
-    """ Print available versions. """
+    """ Print available versions """
 
     try:
         manager: PackageManager = ctx.obj
@@ -152,19 +222,25 @@ def versions(ctx, name, all, plain):
 
 
 @package.command()
-@click.argument('expression')
+@add_options(PACKAGE_SOURCE_OPTIONS)
 @click.pass_context
-def changelog(ctx, expression):
-    """ Print the package changelog. """
+def changelog(ctx,
+              package_expr,
+              from_repository,
+              from_tarball):
+    """ Print package changelog """
 
     manager: PackageManager = ctx.obj
 
     try:
-        package = manager.resolve_package(expression)
+        source = manager.get_package_source(package_expr,
+                                            from_repository,
+                                            from_tarball)
+        package = source.get_package()
         changelog = package.manifest['package']['changelog']
 
         if not changelog:
-            raise PackageManagerError(f'No changelog for package {expression}')
+            raise PackageManagerError(f'No changelog for package {package.name}')
 
         for version, entry in changelog.items():
             author = entry.get('author') or 'N/A'
@@ -195,7 +271,10 @@ def add(ctx, name, repository, default_reference, description):
     manager: PackageManager = ctx.obj
 
     try:
-        manager.add_repository(name, repository, description=description, default_reference=default_reference)
+        manager.add_repository(name,
+                               repository,
+                               description=description,
+                               default_reference=default_reference)
     except Exception as err:
         exit_cli(f'Failed to add repository {name}: {err}', fg='red')
 
@@ -205,7 +284,7 @@ def add(ctx, name, repository, default_reference, description):
 @click.pass_context
 @root_privileges_required
 def remove(ctx, name):
-    """ Remove a package from database. """
+    """ Remove package from database. """
 
     manager: PackageManager = ctx.obj
 
@@ -216,29 +295,57 @@ def remove(ctx, name):
 
 
 @cli.command()
-@click.option('-f', '--force', is_flag=True)
-@click.option('-y', '--yes', is_flag=True)
-@click.option('--enable', is_flag=True)
+@click.option('-f', '--force',
+              is_flag=True,
+              help='Force installation by ignoring failures')
+@click.option('-y', '--yes',
+              is_flag=True,
+              help='Automatically answer yes on prompts')
+@click.option('--enable',
+              is_flag=True,
+              help='Set the default state of the feature to enabled '
+                   'and enable feature right after installation. '
+                   'NOTE: user needs to execute "config save -y" to make '
+                   'this setting persistent')
 @click.option('--default-owner',
               type=click.Choice(['local', 'kube']),
-              default='local')
-@click.argument('expression')
+              default='local',
+              help='Default owner configuration setting for a feature')
+@add_options(PACKAGE_SOURCE_OPTIONS)
 @click.pass_context
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
-def install(ctx, expression, force, yes, enable, default_owner):
-    """ Install a package. """
+def install(ctx,
+            package_expr,
+            from_repository,
+            from_tarball,
+            force,
+            yes,
+            enable,
+            default_owner):
+    """ Install package """
 
     manager: PackageManager = ctx.obj
 
+    package_source = package_expr or from_repository or from_tarball
+
     if not yes and not force:
-        click.confirm(f'Package {expression} is going to be installed, '
+        click.confirm(f'{package_source} is going to be installed, '
                       f'continue?', abort=True, show_default=True)
 
+    install_opts = {
+        'force': force,
+        'enable': enable,
+        'default_owner': default_owner,
+    }
+
     try:
-        manager.install(expression, force, enable, default_owner)
+        manager.install(package_expr,
+                        from_repository,
+                        from_tarball,
+                        **install_opts)
     except Exception as err:
-        exit_cli(f'Failed to install package {expression}: {err}', fg='red')
+        exit_cli(f'Failed to install {package_source}: {err}', fg='red')
     except KeyboardInterrupt:
         exit_cli(f'Operation canceled by user', fg='red')
 
@@ -246,23 +353,33 @@ def install(ctx, expression, force, yes, enable, default_owner):
 @cli.command()
 @click.option('-f', '--force', is_flag=True)
 @click.option('-y', '--yes', is_flag=True)
-@click.argument('expression')
+@add_options(PACKAGE_SOURCE_OPTIONS)
 @click.pass_context
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
-def upgrade(ctx, expression, force, yes):
-    """ Upgrade a package. """
+def upgrade(ctx,
+            package_expr,
+            from_repository,
+            from_tarball,
+            force,
+            yes):
+    """ Upgrade package """
 
     manager: PackageManager = ctx.obj
 
+    package_source = package_expr or from_repository or from_tarball
+
     if not yes and not force:
-        click.confirm(f'Package is going to be upgraded to {expression}, '
+        click.confirm(f'Package is going to be upgraded with {package_source}, '
                       f'continue?', abort=True, show_default=True)
 
     try:
-        manager.upgrade(expression, force)
+        manager.upgrade(package_expr,
+                        from_repository,
+                        from_tarball,
+                        force=force)
     except Exception as err:
-        exit_cli(f'Failed to upgrade package {expression}: {err}', fg='red')
+        exit_cli(f'Failed to upgrade {package_source}: {err}', fg='red')
     except KeyboardInterrupt:
         exit_cli(f'Operation canceled by user', fg='red')
 
@@ -275,7 +392,7 @@ def upgrade(ctx, expression, force, yes):
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
 def uninstall(ctx, name, force, yes):
-    """ Uninstall a package. """
+    """ Uninstall package """
 
     manager: PackageManager = ctx.obj
 
@@ -300,7 +417,7 @@ def uninstall(ctx, name, force, yes):
 @click_log.simple_verbosity_option(log)
 @root_privileges_required
 def migrate(ctx, database, force, yes, dockerd_socket):
-    """ Migrate SONiC packages from the given database file. """
+    """ Migrate packages from the given database file """
 
     manager: PackageManager = ctx.obj
 

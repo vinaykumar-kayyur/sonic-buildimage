@@ -26,7 +26,7 @@ def test_show_changelog(package_manager, fake_manifest_resolver):
         "date": "Fri, 23 Oct 2020 12:26:08 +0300"
       }
     }
-    manifest = fake_manifest_resolver.manifests[('test-package', '1.6.0')]
+    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['changelog'] = changelog
 
     expected_output = """\
@@ -45,7 +45,8 @@ def test_show_changelog(package_manager, fake_manifest_resolver):
 
 """
 
-    result = runner.invoke(main.show.commands['package'].commands['changelog'], ['test-package'], obj=package_manager)
+    result = runner.invoke(main.show.commands['package'].commands['changelog'],
+                           ['test-package'], obj=package_manager)
 
     assert result.exit_code == 0
     assert result.output == expected_output

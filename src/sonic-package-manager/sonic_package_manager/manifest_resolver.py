@@ -1,81 +1,69 @@
 #!/usr/bin/env python
 import json
 import tarfile
-from typing import Optional
+from typing import Dict
 
-from sonic_package_manager.database import PackageEntry
 from sonic_package_manager.errors import ManifestError
-from sonic_package_manager.logger import log
 from sonic_package_manager.manifest import Manifest
 
 
 class ManifestResolver:
-    """ Resolve manifest for package. It might resolve the package
-    manifest from local docker image in case package is installed or
-    access Docker Registry if package is not installed."""
+    """ Resolve manifest for package from different sources. """
+
+    LABEL_NAME = 'com.azure.sonic.manifest'
 
     def __init__(self, docker, registry_resolver):
         self.docker = docker
         self.registry_resolver = registry_resolver
 
-    def get_manifest(self, package: PackageEntry, ref: Optional[str] = None) -> Manifest:
-        """ Gets the package manifest.
+    def from_local(self, image: str) -> Manifest:
+        """ Reads manifest from locally installed docker image.
+
         Args:
-            package: PackageEntry object
-            ref: Reference to resolve, either tag or digest
+            image: Docker image ID
         Returns:
-            Manifest object.
-        """
-
-        if package.installed:
-            log.debug(f'requesting manifest from local for {package.name}')
-            manifest = self.get_manifest_local(package)
-        else:
-            log.debug(f'requesting manifest from remote for {package.name} {ref}')
-            manifest = self.get_manifest_remote(package, ref)
-
-        log.debug(f'manifest for package {package.name} {ref}: {manifest}')
-
-        return manifest
-
-    def get_manifest_local(self, package: PackageEntry) -> Manifest:
-        """ Gets the package manifest from locally installed docker image.
-        Args:
-            package: PackageEntry object
-        Returns:
-            Package manifest
+            Manifest
         Raises:
             ManifestError
         """
 
-        repotag = f'{package.repository}:latest'
-        labels = self.docker.labels(repotag)
+        labels = self.docker.labels(image)
+        return self.from_labels(labels)
 
-        return self.get_manifest_from_labels(labels)
+    def from_registry(self,
+                      repository: str,
+                      reference: str) -> Manifest:
+        """ Reads manifest from remote registry.
 
-    def get_manifest_remote(self, package: PackageEntry, ref: str) -> Manifest:
-        """ Gets the package manifest from remote registry.
         Args:
-            package: PackageEntry object
-            ref: Reference to resolve, either tag or digest
+            repository: Repository to pull image from
+            reference: Reference, either tag or digest
         Returns:
-            Package manifest
+            Manifest
         Raises:
             ManifestError
         """
 
-        repo = package.repository
-        registry = self.registry_resolver.get_registry_for(repo)
+        registry = self.registry_resolver.get_registry_for(repository)
 
-        manifest = registry.manifest(repo, ref)
+        manifest = registry.manifest(repository, reference)
         digest = manifest['config']['digest']
 
-        blob = registry.blobs(repo, digest)
+        blob = registry.blobs(repository, digest)
         labels = blob['config']['Labels']
 
-        return self.get_manifest_from_labels(labels)
+        return self.from_labels(labels)
 
-    def get_manifest_from_image_tarball(self, image_path: str) -> Manifest:
+    def from_tarball(self, image_path: str) -> Manifest:
+        """ Reads manifest image tarball.
+        Args:
+            image_path: Path to image tarball.
+        Returns:
+            Manifest
+        Raises:
+            ManifestError
+        """
+
         with tarfile.open(image_path) as image:
             manifest = json.loads(image.extractfile('manifest.json').read())
 
@@ -83,15 +71,25 @@ class ManifestResolver:
             image_config = json.loads(image.extractfile(blob).read())
             labels = image_config['config']['Labels']
 
-            return self.get_manifest_from_labels(labels)
+            return self.from_labels(labels)
 
-    @staticmethod
-    def get_manifest_from_labels(labels) -> Manifest:
+    @classmethod
+    def from_labels(cls, labels: Dict[str, str]) -> Manifest:
+        """ Get manifest from image labels.
+
+        Args:
+            labels: key, value string pairs
+        Returns:
+            Manifest
+        Raises:
+            ManifestError
+        """
+
         if labels is None:
             raise ManifestError('No manifest found in image labels')
 
         try:
-            manifest_string = labels[Manifest.LABEL_NAME]
+            manifest_string = labels[cls.LABEL_NAME]
         except KeyError:
             raise ManifestError('No manifest found in image labels')
 

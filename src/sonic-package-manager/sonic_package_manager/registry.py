@@ -9,6 +9,7 @@ from docker_image import reference
 from prettyprinter import pformat
 
 from sonic_package_manager.logger import log
+from sonic_package_manager.utils import DockerReference
 
 
 class AuthenticationServiceError(Exception):
@@ -148,7 +149,7 @@ class RegistryResolver:
         pass
 
     def get_registry_for(self, ref: str) -> Registry:
-        domain, _ = reference.Reference.split_docker_domain(ref)
+        domain, _ = DockerReference.split_docker_domain(ref)
         if domain == reference.DEFAULT_DOMAIN:
             return self.DockerHubRegistry
         # TODO: support insecure registries

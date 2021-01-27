@@ -195,7 +195,6 @@ class Manifest(dict):
     """ Manifest object. """
 
     SCHEMA = ManifestSchema.SCHEMA
-    LABEL_NAME = 'com.azure.sonic.manifest'
 
     @classmethod
     def marshal(cls, input_dict: dict):

@@ -3,6 +3,10 @@
 import keyword
 import re
 
+from docker_image.reference import Reference
+
+DockerReference = Reference
+
 
 def make_python_identifier(string):
     """

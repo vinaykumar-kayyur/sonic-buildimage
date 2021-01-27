@@ -16,21 +16,37 @@ PACKAGE_MANAGER_LOCK_FILE = os.path.join(BASE_LIBRARY_PATH, '.lock')
 
 @dataclass(order=True)
 class PackageEntry:
-    """ Package database single entry object. """
+    """ Package database single entry object.
+
+    Attributes:
+        name: Name of the package
+        repository: Default repository to pull package from.
+        description: Package description or None if package does not
+                     provide a description.
+        default_reference: Default reference (tag or digest) or None
+                           if default reference is not provided.
+        version: Installed version of the package or None if
+                 package is not installed.
+        installed: Boolean flag whether the package is installed.
+        built_in: Boolean flag whether the package is built in.
+        image_id: Image ID for this package or None if package
+                  is not installed.
+    """
 
     name: str
-    repository: str
+    repository: Optional[str]
     description: Optional[str] = None
     default_reference: Optional[str] = None
     version: Optional[Version] = None
     installed: bool = False
     built_in: bool = False
+    image_id: Optional[str] = None
 
 
 def package_from_dict(name: str, package_info: Dict) -> PackageEntry:
     """ Parse dictionary into PackageEntry object."""
 
-    repository = package_info['repository']
+    repository = package_info.get('repository')
     description = package_info.get('description')
     default_reference = package_info.get('default-reference')
     version = package_info.get('installed-version')
@@ -38,10 +54,11 @@ def package_from_dict(name: str, package_info: Dict) -> PackageEntry:
         version = Version.parse(version)
     installed = package_info.get('installed', False)
     built_in = package_info.get('built-in', False)
+    image_id = package_info.get('image-id')
 
     return PackageEntry(name, repository, description,
                         default_reference, version, installed,
-                        built_in)
+                        built_in, image_id)
 
 
 def package_to_dict(package: PackageEntry) -> Dict:
@@ -54,6 +71,7 @@ def package_to_dict(package: PackageEntry) -> Dict:
         'installed-version': None if package.version is None else str(package.version),
         'installed': package.installed,
         'built-in': package.built_in,
+        'image-id': package.image_id,
     }
 
 

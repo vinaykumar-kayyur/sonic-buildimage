@@ -158,7 +158,7 @@ class ServiceCreator:
             run_command('systemctl reload monit')
 
     def generate_container_mgmt(self, package: Package):
-        repository = package.repository
+        image_id = package.image_id
         name = package.manifest['service']['name']
         container_spec = package.manifest['container']
         script_path = os.path.join(DOCKER_CTL_SCRIPT_LOCATION, f'{name}.sh')
@@ -186,7 +186,7 @@ class ServiceCreator:
         run_opt = ' '.join(run_opt)
         render_ctx = {
             'docker_container_name': name,
-            'docker_image_name': repository,
+            'docker_image_name': image_id,
             'docker_image_run_opt': run_opt,
         }
         render_template(script_template, script_path, render_ctx, executable=True)

@@ -10,9 +10,8 @@ COUNTER_FMT = '{desc}{desc_pad}{count:.1f} {unit}{unit_pad}' + \
 
 
 class ProgressManager:
-    """ ProgressManager is used for creating progress multiple bars
-    which nicely interact with logging and prints.
-    """
+    """ ProgressManager is used for creating multiple progress bars
+    which nicely interact with logging and prints. """
 
     def __init__(self):
         self.manager = enlighten.get_manager()

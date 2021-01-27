@@ -43,7 +43,7 @@ def manifest():
 def test_service_creator(sonic_fs, manifest, mock_feature_registry, mock_sonic_db):
     creator = ServiceCreator(mock_feature_registry, mock_sonic_db)
     entry = PackageEntry('test', 'azure/sonic-test')
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
     creator.create(package)
 
     assert sonic_fs.exists(os.path.join(ETC_SONIC_PATH, 'swss_dependent'))
@@ -56,13 +56,13 @@ def test_service_creator(sonic_fs, manifest, mock_feature_registry, mock_sonic_d
 def test_service_creator_with_timer_unit(sonic_fs, manifest, mock_feature_registry, mock_sonic_db):
     creator = ServiceCreator(mock_feature_registry, mock_sonic_db)
     entry = PackageEntry('test', 'azure/sonic-test')
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
     creator.create(package)
 
     assert not sonic_fs.exists(os.path.join(SYSTEMD_LOCATION, 'test.timer'))
 
     manifest['service']['delayed'] = True
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
     creator.create(package)
 
     assert sonic_fs.exists(os.path.join(SYSTEMD_LOCATION, 'test.timer'))
@@ -71,13 +71,13 @@ def test_service_creator_with_timer_unit(sonic_fs, manifest, mock_feature_regist
 def test_service_creator_with_debug_dump(sonic_fs, manifest, mock_feature_registry, mock_sonic_db):
     creator = ServiceCreator(mock_feature_registry, mock_sonic_db)
     entry = PackageEntry('test', 'azure/sonic-test')
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
     creator.create(package)
 
     assert not sonic_fs.exists(os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, 'test'))
 
     manifest['package']['debug-dump'] = '/some/command'
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
     creator.create(package)
 
     assert sonic_fs.exists(os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, 'test'))
@@ -93,7 +93,7 @@ def test_service_creator_initial_config(sonic_fs, manifest, mock_feature_registr
     creator = ServiceCreator(mock_feature_registry, mock_sonic_db)
 
     entry = PackageEntry('test', 'azure/sonic-test')
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
     creator.create(package)
 
     assert not sonic_fs.exists(os.path.join(DEBUG_DUMP_SCRIPT_LOCATION, 'test'))
@@ -106,7 +106,7 @@ def test_service_creator_initial_config(sonic_fs, manifest, mock_feature_registr
             },
         },
     }
-    package = Package(entry, '1.0.0', manifest)
+    package = Package(entry, manifest)
 
     creator.create(package)
 

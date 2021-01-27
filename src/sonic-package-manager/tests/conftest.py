@@ -1,26 +1,38 @@
 #!/usr/bin/env python
-import os
+
+from dataclasses import dataclass
 from unittest import mock
 from unittest.mock import Mock, MagicMock
 
 import pytest
+from docker_image.reference import Reference
 
-from sonic_package_manager.database import PackageDatabase, PackageEntry, BASE_LIBRARY_PATH
+from sonic_package_manager.database import PackageDatabase, PackageEntry
 from sonic_package_manager.manager import DockerApi, PackageManager
 from sonic_package_manager.manifest import Manifest
 from sonic_package_manager.manifest_resolver import ManifestResolver
 from sonic_package_manager.registry import RegistryResolver
-from sonic_package_manager.service_creator.creator import (
-    TEMPLATES_PATH, SERVICE_FILE_TEMPLATE, TIMER_UNIT_TEMPLATE,
-    SERVICE_MGMT_SCRIPT_TEMPLATE, DOCKER_CTL_SCRIPT_TEMPLATE, MONIT_CONF_TEMPLATE, SERVICE_MGMT_SCRIPT_LOCATION,
-    SYSTEMD_LOCATION, ETC_SONIC_PATH, MONIT_CONF_LOCATION, DOCKER_CTL_SCRIPT_LOCATION, DEBUG_DUMP_SCRIPT_TEMPLATE
-)
-from sonic_package_manager.version import Version
+from sonic_package_manager.service_creator.creator import *
 
 
 @pytest.fixture
 def mock_docker_api():
-    yield MagicMock(DockerApi)
+    docker = MagicMock(DockerApi)
+
+    @dataclass
+    class Image:
+        id: str
+
+    def pull(repo, ref):
+        return Image(f'{repo}:latest')
+
+    def load(filename):
+        return Image(filename)
+
+    docker.pull = MagicMock(side_effect=pull)
+    docker.load = MagicMock(side_effect=load)
+
+    yield docker
 
 
 @pytest.fixture
@@ -52,134 +64,47 @@ def mock_sonic_db():
 def fake_manifest_resolver():
     class FakeManifestResolver:
         def __init__(self):
-            self.manifests = {
-                ('database', 'latest'): Manifest.marshal({
+            self.manifests = {}
+            self.add('docker-database', 'latest', 'database', '1.0.0')
+            self.add('docker-orchagent', 'latest', 'swss', '1.0.0')
+            self.add('Azure/docker-test', '1.6.0', 'test-package', '1.6.0')
+            self.add('Azure/docker-test-2', '1.5.0', 'test-package-2', '1.5.0')
+            self.add('Azure/docker-test-2', '2.0.0', 'test-package-2', '2.0.0')
+            self.add('Azure/docker-test-3', 'latest', 'test-package-3', '1.6.0')
+            self.add('Azure/docker-test-3', '1.5.0', 'test-package-3', '1.5.0')
+            self.add('Azure/docker-test-3', '1.6.0', 'test-package-3', '1.6.0')
+            self.add('Azure/docker-test-4', '1.5.0', 'test-package-4', '1.5.0')
+            self.add('Azure/docker-test-5', '1.5.0', 'test-package-5', '1.5.0')
+            self.add('Azure/docker-test-5', '1.9.0', 'test-package-5', '1.9.0')
+            self.add('Azure/docker-test-6', '1.5.0', 'test-package-6', '1.5.0')
+            self.add('Azure/docker-test-6', '1.9.0', 'test-package-6', '1.9.0')
+            self.add('Azure/docker-test-6', '2.0.0', 'test-package-6', '2.0.0')
+            self.add('Azure/docker-test-6', 'latest', 'test-package-6', '1.5.0')
+
+        def from_registry(self, repository: str, reference: str):
+            return Manifest.marshal(self.manifests[repository][reference]['manifest'])
+
+        def from_local(self, image: str):
+            ref = Reference.parse(image)
+            return Manifest.marshal(self.manifests[ref['name']][ref['tag']]['manifest'])
+
+        def from_tarball(self, filepath: str) -> Manifest:
+            path, ref = filepath.split(':')
+            return Manifest.marshal(self.manifests[path][ref]['manifest'])
+
+        def add(self, repo, reference, name, version):
+            repo_dict = self.manifests.setdefault(repo, {})
+            repo_dict[reference] = {
+                'manifest': {
                     'package': {
-                        'version': '1.0.0',
-                        'name': 'database',
+                        'version': version,
+                        'name': name,
                     },
                     'service': {
-                        'name': 'database',
-                    },
-                }),
-                ('swss', 'latest'): Manifest.marshal({
-                    'package': {
-                        'version': '1.0.0',
-                        'name': 'swss',
-                    },
-                    'service': {
-                        'name': 'swss',
-                    },
-                }),
-                ('swss', '1.0.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.0.0',
-                        'name': 'swss',
-                    },
-                    'service': {
-                        'name': 'swss',
-                    },
-                }),
-                ('test-package', '1.6.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.6.0',
-                        'name': 'test-package',
-                    },
-                    'service': {
-                        'name': 'test-package',
-                    },
-                }),
-                ('test-package-2', '1.5.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.5.0',
-                        'name': 'test-package-2',
-                    },
-                    'service': {
-                        'name': 'test-package-2',
-                    },
-                }),
-                ('test-package-3', '1.5.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.5.0',
-                        'name': 'test-package-3',
-                    },
-                    'service': {
-                        'name': 'test-package-3',
-                    },
-                }),
-                ('test-package-3', 'latest'): Manifest.marshal({
-                    'package': {
-                        'version': '1.6.0',
-                        'name': 'test-package-3',
-                    },
-                    'service': {
-                        'name': 'test-package-3',
-                    },
-                }),
-                ('test-package-4', '1.5.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.5.0',
-                        'name': 'test-package-4',
-                    },
-                    'service': {
-                        'name': 'test-package-4',
-                    },
-                }),
-                ('test-package-5', '1.5.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.5.0',
-                        'name': 'test-package-5',
-                    },
-                    'service': {
-                        'name': 'test-package-5',
-                    },
-                }),
-                ('test-package-5', '1.9.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.9.0',
-                        'name': 'test-package-5',
-                    },
-                    'service': {
-                        'name': 'test-package-5',
-                    },
-                }),
-                ('test-package-6', '1.5.0'): Manifest.marshal({
-                    'package': {
-                        'version': '1.5.0',
-                        'name': 'test-package-6',
-                    },
-                    'service': {
-                        'name': 'test-package-6',
-                    },
-                }),
-                ('test-package-6', 'latest'): Manifest.marshal({
-                    'package': {
-                        'version': '1.5.0',
-                        'name': 'test-package-6',
-                    },
-                    'service': {
-                        'name': 'test-package-6',
-                    },
-                }),
-                ('test-package-6', '2.0.0'): Manifest.marshal({
-                    'package': {
-                        'version': '2.0.0',
-                        'name': 'test-package-6',
-                    },
-                    'service': {
-                        'name': 'test-package-6',
-                    },
-                }),
+                        'name': name,
+                    }
+                },
             }
-
-        def get_manifest(self, package_info: PackageEntry, ref: str = None) -> Manifest:
-            if ref is None:
-                ref = 'latest'
-            return self.manifests[(package_info.name, ref)]
-
-        def get_manifest_from_image_tarball(self, filepath: str) -> Manifest:
-            name, ref = os.path.basename(filepath).split(':')
-            return self.manifests[(name, ref)]
 
     yield FakeManifestResolver()
 
@@ -187,117 +112,202 @@ def fake_manifest_resolver():
 @pytest.fixture
 def fake_device_info():
     class FakeDeviceInfo:
+        def __init__(self):
+            self.multi_npu = True
+            self.num_npus = 1
+            self.compat = '1.0.0'
+
         def is_multi_npu(self):
-            return False
+            return self.multi_npu
 
         def get_num_npus(self):
-            return 1
+            return self.num_npus
 
         def get_sonic_version_info(self):
             return {
-                'base_os_compatibility_version': '1.0.0'
+                'base_os_compatibility_version': self.compat
             }
 
     yield FakeDeviceInfo()
 
 
+def add_package(content, manifests, repository, reference, **kwargs):
+    manifest = manifests.from_registry(repository, reference)
+    name = manifest['package']['name']
+    version = manifest['package']['version']
+    installed = kwargs.get('installed', False)
+    built_in = kwargs.get('built-in', False)
+
+    if installed and not built_in and 'image_id' not in kwargs:
+        kwargs['image_id'] = f'{repository}:{reference}'
+
+    if installed and 'version' not in kwargs:
+        kwargs['version'] = version
+
+    content[name] = PackageEntry(name, repository,**kwargs)
+
+
 @pytest.fixture
-def fake_db(mock_docker_api, mock_registry_resolver):
-    content = {
-        'database': PackageEntry(name='database',
-                                 repository='docker-database',
-                                 description='SONiC database service',
-                                 default_reference='1.0.0',
-                                 version=Version(1, 0, 0),
-                                 installed=True, built_in=True),
-        'swss': PackageEntry(name='swss',
-                             repository='docker-orchagent',
-                             description='SONiC switch state service',
-                             default_reference='1.0.0',
-                             version=Version(1, 0, 0),
-                             installed=True, built_in=True),
-        'test-package': PackageEntry(name='test-package',
-                                     repository='Azure/docker-test',
-                                     description='SONiC Package Manager Test Package',
-                                     default_reference='1.6.0',
-                                     installed=False, built_in=False),
-        'test-package-2': PackageEntry(name='test-package-2',
-                                       repository='Azure/docker-test-2',
-                                       description='SONiC Package Manager Test Package #2',
-                                       default_reference='1.5.0',
-                                       installed=False, built_in=False),
-        'test-package-3': PackageEntry(name='test-package-3',
-                                       repository='Azure/docker-test-3',
-                                       description='SONiC Package Manager Test Package #3',
-                                       default_reference='1.5.0',
-                                       version=Version(1, 5, 0),
-                                       installed=True, built_in=False),
-        'test-package-5': PackageEntry(name='test-package-5',
-                                       repository='Azure/docker-test-5',
-                                       description='SONiC Package Manager Test Package #5',
-                                       default_reference='1.9.0',
-                                       version=Version(1, 9, 0),
-                                       installed=False, built_in=False),
-        'test-package-6': PackageEntry(name='test-package-6',
-                                       repository='Azure/docker-test-6',
-                                       description='SONiC Package Manager Test Package #6',
-                                       default_reference='1.5.0',
-                                       installed=False, built_in=False),
-    }
+def fake_db(fake_manifest_resolver):
+    content = {}
+
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'docker-database',
+        'latest',
+        description='SONiC database service',
+        default_reference='1.0.0',
+        installed=True,
+        built_in=True
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'docker-orchagent',
+        'latest',
+        description='SONiC switch state service',
+        default_reference='1.0.0',
+        installed=True,
+        built_in=True
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test',
+        '1.6.0',
+        description='SONiC Package Manager Test Package',
+        default_reference='1.6.0',
+        installed=False,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-2',
+        '1.5.0',
+        description='SONiC Package Manager Test Package #2',
+        default_reference='1.5.0',
+        installed=False,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-3',
+        '1.5.0',
+        description='SONiC Package Manager Test Package #3',
+        default_reference='1.5.0',
+        installed=True,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-5',
+        '1.9.0',
+        description='SONiC Package Manager Test Package #5',
+        default_reference='1.9.0',
+        installed=False,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-6',
+        '1.5.0',
+        description='SONiC Package Manager Test Package #6',
+        default_reference='1.5.0',
+        installed=False,
+        built_in=False
+    )
 
     yield PackageDatabase(content)
 
 
 @pytest.fixture
-def fake_db_for_migration(mock_docker_api, mock_registry_resolver):
-    content = {
-        'database': PackageEntry(name='database',
-                                 repository='docker-database',
-                                 description='SONiC database service',
-                                 default_reference='1.0.0',
-                                 version=Version(1, 0, 0),
-                                 installed=True, built_in=True),
-        'swss': PackageEntry(name='swss',
-                             repository='docker-orchagent',
-                             description='SONiC switch state service',
-                             default_reference='1.0.0',
-                             version=Version(1, 0, 0),
-                             installed=True, built_in=True),
-        'test-package': PackageEntry(name='test-package',
-                                     repository='Azure/docker-test',
-                                     description='SONiC Package Manager Test Package',
-                                     default_reference='1.6.0',
-                                     installed=False, built_in=False),
-        'test-package-2': PackageEntry(name='test-package-2',
-                                       repository='Azure/docker-test-2',
-                                       description='SONiC Package Manager Test Package #2',
-                                       default_reference='2.0.0',
-                                       installed=False, built_in=False),
-        'test-package-3': PackageEntry(name='test-package-3',
-                                       repository='Azure/docker-test-3',
-                                       description='SONiC Package Manager Test Package #2',
-                                       default_reference='1.6.0',
-                                       version=Version(1, 6, 0),
-                                       installed=True, built_in=False),
-        'test-package-4': PackageEntry(name='test-package-4',
-                                       repository='Azure/docker-test-4',
-                                       description='SONiC Package Manager Test Package #4',
-                                       default_reference='1.5.0',
-                                       version=Version(1, 5, 0),
-                                       installed=True, built_in=False),
-        'test-package-5': PackageEntry(name='test-package-5',
-                                       repository='Azure/docker-test-5',
-                                       description='SONiC Package Manager Test Package #5',
-                                       default_reference='1.5.0',
-                                       version=Version(1, 5, 0),
-                                       installed=True, built_in=False),
-        'test-package-6': PackageEntry(name='test-package-6',
-                                       repository='Azure/docker-test-6',
-                                       description='SONiC Package Manager Test Package #6',
-                                       default_reference='1.5.0',
-                                       version=Version(2, 0, 0),
-                                       installed=True, built_in=False),
-    }
+def fake_db_for_migration(fake_manifest_resolver):
+    content = {}
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'docker-database',
+        'latest',
+        description='SONiC database service',
+        default_reference='1.0.0',
+        installed=True,
+        built_in=True
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'docker-orchagent',
+        'latest',
+        description='SONiC switch state service',
+        default_reference='1.0.0',
+        installed=True,
+        built_in=True
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test',
+        '1.6.0',
+        description='SONiC Package Manager Test Package',
+        default_reference='1.6.0',
+        installed=False,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-2',
+        '2.0.0',
+        description='SONiC Package Manager Test Package #2',
+        default_reference='2.0.0',
+        installed=False,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-3',
+        '1.6.0',
+        description='SONiC Package Manager Test Package #3',
+        default_reference='1.6.0',
+        installed=True,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-4',
+        '1.5.0',
+        description='SONiC Package Manager Test Package #4',
+        default_reference='1.5.0',
+        installed=True,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-5',
+        '1.5.0',
+        description='SONiC Package Manager Test Package #5',
+        default_reference='1.5.0',
+        installed=True,
+        built_in=False
+    )
+    add_package(
+        content,
+        fake_manifest_resolver,
+        'Azure/docker-test-6',
+        '2.0.0',
+        description='SONiC Package Manager Test Package #6',
+        default_reference='2.0.0',
+        installed=True,
+        built_in=False
+    )
 
     yield PackageDatabase(content)
 
