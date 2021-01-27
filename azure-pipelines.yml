@@ -123,14 +123,15 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: sonic-buildimage.kvm
+      displayName: "Download sonic-buildimage.kvm artifact"
 
     - script: |
+        set -x
         sudo dpkg -i --force-confask,confnew ../sonic-swss-common.amd64.ubuntu20_04/libswsscommon_1.0.0_amd64.deb
         sudo dpkg -i ../sonic-swss-common.amd64.ubuntu20_04/python3-swsscommon_1.0.0_amd64.deb
         sudo docker load -i ../sonic-buildimage.kvm/target/docker-sonic-vs.gz
         docker tag docker-sonic-vs:latest docker-sonic-vs:$(Build.BuildNumber)
         username=$(id -un)
-        set -x
 
         trap "docker ps; docker images; ip netns list; \
               docker rmi docker-sonic-vs:$(Build.BuildNumber); \
@@ -153,8 +154,10 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: sonic-buildimage.kvm
+      displayName: "Download sonic-buildimage.kvm artifact"
 
     - script: |
+        set -x
         sudo mkdir -p /data/sonic-vm/images
         sudo cp -v ../sonic-buildimage.kvm/target/sonic-vs.img.gz /data/sonic-vm/images/sonic-vs.img.gz
         sudo gzip -fd /data/sonic-vm/images/sonic-vs.img.gz
