@@ -81,9 +81,7 @@ stages:
         ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=vs
         trap "sudo rm -rf fsroot" EXIT
         make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS \
-            target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz && \
-            sudo cp target/sonic-vs.img.gz /nfs/azpl/kvmimage/sonic-vs.$(Build.BuildNumber).img.gz && \
-            sudo cp target/docker-sonic-vs.gz /nfs/azpl/kvmimage/docker-sonic-vs.$(Build.BuildNumber).gz
+            target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
       displayName: 'Build sonic image'
     - publish: $(System.DefaultWorkingDirectory)/
       artifact: sonic-buildimage.kvm
@@ -125,7 +123,7 @@ stages:
     - script: |
         sudo dpkg -i --force-confask,confnew ../sonic-swss-common.amd64.ubuntu20_04/libswsscommon_1.0.0_amd64.deb
         sudo dpkg -i ../sonic-swss-common.amd64.ubuntu20_04/python3-swsscommon_1.0.0_amd64.deb
-        sudo docker load -i /nfs/azpl/kvmimage/docker-sonic-vs.$(Build.BuildNumber).gz
+        sudo docker load -i ../sonic-buildimage.kvm/target/docker-sonic-vs.gz
         docker tag docker-sonic-vs:latest docker-sonic-vs:$(Build.BuildNumber)
         username=$(id -un)
         set -x
@@ -136,8 +134,7 @@ stages:
               sudo chown -R ${username}.${username} .; \
               sudo chown -R ${username}.${username} $(System.DefaultWorkingDirectory)" EXIT
         pushd platform/vs/tests
-        sudo py.test -v --junitxml=tr.xml --imgname=docker-sonic-vs:$(Build.BuildNumber) && \
-            sudo rm /nfs/azpl/kvmimage/docker-sonic-vs.$(Build.BuildNumber).gz
+        sudo py.test -v --junitxml=tr.xml --imgname=docker-sonic-vs:$(Build.BuildNumber)
       displayName: "Run vs tests"
 
     - task: PublishTestResults@2
@@ -149,9 +146,13 @@ stages:
     displayName: "kvmtest"
     timeoutInMinutes: 240
     steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: sonic-buildimage.kvm
+
     - script: |
         sudo mkdir -p /data/sonic-vm/images
-        sudo cp -v /nfs/azpl/kvmimage/sonic-vs.$(Build.BuildNumber).img.gz /data/sonic-vm/images/sonic-vs.img.gz
+        sudo cp -v ../sonic-buildimage.kvm/target/sonic-vs.img.gz /data/sonic-vm/images/sonic-vs.img.gz
         sudo gzip -fd /data/sonic-vm/images/sonic-vs.img.gz
         username=$(id -un)
         sudo chown -R $username.$username /data/sonic-vm
@@ -193,8 +194,6 @@ stages:
 
             exit 2
         else
-            sudo rm /nfs/azpl/kvmimage/sonic-vs.$(Build.BuildNumber).img.gz
-
             cp -r /data/sonic-mgmt/tests/logs $(Build.ArtifactStagingDirectory)/
         fi
       displayName: "Run T0 tests"
