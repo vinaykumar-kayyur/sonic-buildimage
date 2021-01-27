@@ -120,6 +120,10 @@ stages:
         runBranch: 'refs/heads/master'
       displayName: "Download sonic swss common deb packages"
 
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: sonic-buildimage.kvm
+
     - script: |
         sudo dpkg -i --force-confask,confnew ../sonic-swss-common.amd64.ubuntu20_04/libswsscommon_1.0.0_amd64.deb
         sudo dpkg -i ../sonic-swss-common.amd64.ubuntu20_04/python3-swsscommon_1.0.0_amd64.deb
