@@ -1,0 +1,32 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+stages:
+- stage: All in one
+  pool: sonicbld
+  jobs:
+    - job:
+      timeoutInMinutes: 720
+      steps:
+      - checkout: self
+        displayName: 'checkout code'
+      - bash: |
+          make init
+          make configure PLATFORM=broadcom
+        displayName: 'make init & config'
+      - bash: |
+          make SONIC_CONFIG_BUILD_JOBS=1 INSTALL_DEBUG_TOOLS=y target/sonic-broadcom.bin
+          mv target/sonic-broadcom.bin target/sonic-broadcom-dbg.bin
+        displayName: "make debug bin file"
+      - bash: |
+          make SONIC_CONFIG_BUILD_JOBS=1 target/sonic-broadcom.bin
+        displayName: "make bin file"
+      - bash: |
+          make SONIC_CONFIG_BUILD_JOBS=1 target/sonic-aboot-broadcom.swi
+        displayName: "make swi file"
+      - publish: $(Build.SourcesDirectory)/target/
+        artifact: target
+        displayName: "archive target"
+
