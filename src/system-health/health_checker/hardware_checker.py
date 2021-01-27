@@ -11,10 +11,13 @@ class HardwareChecker(HealthChecker):
     import sonic_platform.platform
     ASIC_TEMPERATURE_KEY = []
     thermal_list = sonic_platform.platform.Platform().get_chassis().get_all_thermals()
-    for i in range(0, len(thermal_list)):
-         thermal_name = thermal_list[i].get_name()
-         if "ASIC" in thermal_name:
-             ASIC_TEMPERATURE_KEY.append('TEMPERATURE_INFO|' + thermal_name)
+    for sensor in thermal_list:
+        try:
+            thermal_name = sensor.get_name()
+            if "ASIC" in thermal_name:
+                ASIC_TEMPERATURE_KEY.append('TEMPERATURE_INFO|' + thermal_name)
+        except NotImplementedError:
+            print("Thermal sensor get_name() is not implemented")
 
     FAN_TABLE_NAME = 'FAN_INFO'
     PSU_TABLE_NAME = 'PSU_INFO'
@@ -42,12 +45,12 @@ class HardwareChecker(HealthChecker):
         if config.ignore_devices and 'asic' in config.ignore_devices:
             return
 
-        for i in range(0, len(HardwareChecker.ASIC_TEMPERATURE_KEY)):
-            temperature = self._db.get(self._db.STATE_DB, HardwareChecker.ASIC_TEMPERATURE_KEY[i],
+        for asic_key in HardwareChecker.ASIC_TEMPERATURE_KEY:
+            temperature = self._db.get(self._db.STATE_DB, asic_key,
                                                           'temperature')
-            temperature_threshold = self._db.get(self._db.STATE_DB, HardwareChecker.ASIC_TEMPERATURE_KEY[i],
+            temperature_threshold = self._db.get(self._db.STATE_DB, asic_key,
                                                           'high_threshold')
-            asic_name = HardwareChecker.ASIC_TEMPERATURE_KEY[i][17:]
+            asic_name = asic_key.split('|')[1]
             if not temperature:
                 self.set_object_not_ok('ASIC', asic_name,
                         'Failed to get {} temperature'.format(asic_name))
