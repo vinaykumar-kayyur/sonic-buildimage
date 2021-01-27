@@ -64,13 +64,13 @@ class HardwareChecker(HealthChecker):
                     if temperature > temperature_threshold:
                         self.set_object_not_ok('ASIC', asic_name,
                                                '{} temperature is too hot, temperature={}, threshold={}'.format(
-                                                asic_name,temperature,temperature_threshold))
+                                                asic_name, temperature, temperature_threshold))
                     else:
                         self.set_object_ok('ASIC', asic_name)
                 except ValueError as e:
                     self.set_object_not_ok('ASIC', asic_name,
                                            'Invalid {} temperature data, temperature={}, threshold={}'.format(
-                                            asic_name,temperature,temperature_threshold))
+                                            asic_name, temperature, temperature_threshold))
 
     def _check_fan_status(self, config):
         """
