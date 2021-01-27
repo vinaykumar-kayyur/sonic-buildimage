@@ -167,6 +167,7 @@ def test_installation_fault(package_manager, mock_docker_api, mock_service_creat
     # assert that the rollback does not hide the original failure.
     with pytest.raises(Exception, match='Failed to create service'):
         package_manager.install('test-package')
+    mock_docker_api.rmi.assert_called_once()
 
 
 def test_installation_package_with_description(package_manager, fake_manifest_resolver):

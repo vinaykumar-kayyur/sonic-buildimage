@@ -58,7 +58,7 @@ def rollback_wrapper(func, *args, **kwargs):
     @functools.wraps(func)
     def wrapper():
         try:
-            functools.partial(func, *args, **kwargs)
+            functools.partial(func, *args, **kwargs)()
         except Exception as err:
             log.error(f'failed in rollback: {err}')
 
