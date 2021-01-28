@@ -81,6 +81,10 @@ class Test_yang_models:
                 'desc': 'Configure undefined packet_action in ACL_RULE table.',
                 'eStr': self.defaultYANGFailure['InvalidValue'] + ['PACKET_ACTION']
             },
+            'ACL_TABLE_EMPTY_PORTS': {
+                'desc': 'Configure ACL_TABLE with empty ports.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'ACL_TABLE_UNDEFINED_TABLE_TYPE': {
                 'desc': 'Configure undefined acl_table_type in ACL_TABLE table.',
                 'eStr': self.defaultYANGFailure['InvalidValue'] + ['type']
@@ -127,6 +131,10 @@ class Test_yang_models:
             },
             'CRM_BRK_CFG_FLEX_TABLE': {
                 'desc': 'CRM BREAKOUT CFG FLEX COUNTER TABLE.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DEV_META_DEV_NEIGH_VERSION_TABLE': {
+                'desc': 'DEVICE_METADATA DEVICE_NEIGHBOR VERSION TABLE.',
                 'eStr': self.defaultYANGFailure['None']
             },
             'INCORRECT_VLAN_NAME': {
@@ -180,8 +188,7 @@ class Test_yang_models:
             'CRM_WITH_HIGH_THRESHOLD_ERR': {
                 'desc': 'CRM_WITH_HIGH_THRESHOLD_ERR must condition failure \
                     about high threshold being lower than low threshold.',
-                'eStr': self.defaultYANGFailure['high_threshold should be more \
-                    than low_threshold']
+                'eStr': ['high_threshold should be more than low_threshold']
             },
             'CRM_WITH_CORRECT_USED_VALUE': {
                 'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
@@ -207,6 +214,14 @@ class Test_yang_models:
                     'value': 'up'
                 }
             },
+            'DEVICE_METADATA_DEFAULT_DOCKER_ROUTING_CONFIG_MODE': {
+                'desc': 'DEVICE_METADATA DEFAULT VALUE FOR DOCKER_ROUTING_CONFIG_MODE FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': '/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname',
+                    'key': 'sonic-device_metadata:docker_routing_config_mode',
+                    'value': 'unified'
+                }
+            },
             'DEVICE_METADATA_DEFAULT_PFCWD_STATUS': {
                 'desc': 'DEVICE_METADATA DEFAULT VALUE FOR PFCWD FIELD.',
                 'eStr': self.defaultYANGFailure['Verify'],
@@ -217,6 +232,14 @@ class Test_yang_models:
             },
             'DEVICE_METADATA_TYPE_INCORRECT_PATTERN': {
                 'desc': 'DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'BREAKOUT_CFG_CORRECT_MODES': {
+                'desc': 'BREAKOUT_CFG correct breakout modes',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'BREAKOUT_CFG_INCORRECT_MODES': {
+                'desc': 'BREAKOUT_CFG wrong breakout modes',
                 'eStr': self.defaultYANGFailure['Pattern']
             }
         }
@@ -390,6 +413,8 @@ class Test_yang_models:
         try:
             self.initTest()
             self.loadYangModel(self.yangDir)
+            assert len(self.tests) != 0
+            print("Tests:{}".format(self.tests))
             for test in self.tests:
                 test = test.strip()
                 if test in self.ExceptionTests:
@@ -399,6 +424,7 @@ class Test_yang_models:
                 else:
                     raise Exception("Unexpected Test")
         except Exception as e:
+            ret = FAIL * len(self.tests)
             printExceptionDetails()
 
         assert ret == 0
