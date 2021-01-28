@@ -8,7 +8,7 @@ schedules:
   displayName: Daily midnight build
   branches:
     include:
-    - *
+    - 202012
   always: true
 
 stages:
