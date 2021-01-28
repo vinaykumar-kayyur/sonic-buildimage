@@ -85,9 +85,9 @@ class TarballSource(PackageSource):
                  database: PackageDatabase,
                  docker: DockerApi,
                  manifest_resolver: ManifestResolver):
-        super(TarballSource, self).__init__(database,
-                                            docker,
-                                            manifest_resolver)
+        super().__init__(database,
+                         docker,
+                         manifest_resolver)
         self.tarball_path = tarball_path
 
     def get_manifest(self) -> Manifest:
@@ -110,9 +110,9 @@ class RegistrySource(PackageSource):
                  database: PackageDatabase,
                  docker: DockerApi,
                  manifest_resolver: ManifestResolver):
-        super(RegistrySource, self).__init__(database,
-                                             docker,
-                                             manifest_resolver)
+        super().__init__(database,
+                         docker,
+                         manifest_resolver)
         self.repository = repository
         self.reference = reference
 

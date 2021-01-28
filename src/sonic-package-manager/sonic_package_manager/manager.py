@@ -1,18 +1,34 @@
 #!/usr/bin/env python
 import contextlib
 import functools
+import os
 import pkgutil
 import tempfile
-from typing import Any, Iterable
+from typing import Any, Iterable, Callable, Dict, Optional
 
 import docker
 import filelock
 from sonic_py_common import device_info
 
 from sonic_package_manager import utils
-from sonic_package_manager.database import *
-from sonic_package_manager.errors import *
+from sonic_package_manager.constraint import PackageConstraint
+from sonic_package_manager.database import (
+    PACKAGE_MANAGER_LOCK_FILE,
+    PackageDatabase
+)
+from sonic_package_manager.dockerapi import DockerApi
+from sonic_package_manager.errors import (
+    PackageManagerError,
+    PackageDependencyError,
+    PackageConflictError,
+    PackageInstallationError,
+    PackageSonicRequirementError,
+    PackageUninstallationError,
+    PackageUpgradeError
+)
 from sonic_package_manager.logger import log
+from sonic_package_manager.manifest_resolver import ManifestResolver
+from sonic_package_manager.package import Package
 from sonic_package_manager.progress import ProgressManager
 from sonic_package_manager.reference import PackageReference
 from sonic_package_manager.registry import RegistryResolver
@@ -20,9 +36,18 @@ from sonic_package_manager.service_creator.creator import ServiceCreator, run_co
 from sonic_package_manager.service_creator.feature import FeatureRegistry
 from sonic_package_manager.service_creator.sonic_db import SonicDB
 from sonic_package_manager.service_creator.utils import in_chroot
-from sonic_package_manager.source import *
+from sonic_package_manager.source import (
+    PackageSource,
+    LocalSource,
+    RegistrySource,
+    TarballSource
+)
 from sonic_package_manager.utils import DockerReference
-from sonic_package_manager.version import *
+from sonic_package_manager.version import (
+    Version,
+    VersionRange,
+    version_to_tag, tag_to_version
+)
 
 
 @contextlib.contextmanager
