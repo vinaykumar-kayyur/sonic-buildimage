@@ -13,6 +13,9 @@ schedules:
 
 stages:
 - stage: Build
+  variables:
+  - name: WCACHE
+    value: "SONIC_DPKG_CACHE_METHOD=wcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(PLATFORM)"
   pool: sonicbld
   jobs:
     - job:
@@ -25,15 +28,18 @@ stages:
           make configure PLATFORM=$(PLATFORM)
         displayName: 'make init & config'
       - bash: |
-          make SONIC_CONFIG_BUILD_JOBS=1 INSTALL_DEBUG_TOOLS=y target/sonic-broadcom.bin
+          make SONIC_CONFIG_BUILD_JOBS=1 $(WCACHE) INSTALL_DEBUG_TOOLS=y target/sonic-broadcom.bin
           mv target/sonic-broadcom.bin target/sonic-broadcom-dbg.bin
         displayName: "make debug bin file"
       - bash: |
-          make SONIC_CONFIG_BUILD_JOBS=1 target/sonic-broadcom.bin
+          make SONIC_CONFIG_BUILD_JOBS=1 $(WCACHE) target/sonic-broadcom.bin
         displayName: "make bin file"
       - bash: |
-          make SONIC_CONFIG_BUILD_JOBS=1 target/sonic-aboot-broadcom.swi
+          make SONIC_CONFIG_BUILD_JOBS=1 $(WCACHE) target/sonic-aboot-broadcom.swi
         displayName: "make swi file"
+      - bash: |
+          make SONIC_CONFIG_BUILD_JOBS=1 $(WCACHE) target/sonic-broadcom.raw
+        displayName: "make raw file"
       - publish: $(Build.SourcesDirectory)/target/
         artifact: target
         displayName: "archive target"
