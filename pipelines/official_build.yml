@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 stages:
-- stage: One
+- stage: Build
   pool: sonicbld
   jobs:
     - job:
