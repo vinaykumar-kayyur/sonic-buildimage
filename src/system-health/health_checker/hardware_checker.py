@@ -20,7 +20,6 @@ class HardwareChecker(HealthChecker):
                     ASIC_TEMPERATURE_KEY.append('TEMPERATURE_INFO|' + thermal_name)
             except NotImplementedError:
                 print("Thermal sensor get_name() is not implemented")
-
     except ImportError as err:
         print(str(err) + "- required module not found")
 
