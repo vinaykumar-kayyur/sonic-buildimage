@@ -8,16 +8,21 @@ class HardwareChecker(HealthChecker):
     """
     Check system hardware status. For now, it checks ASIC, PSU and fan status.
     """
-    import sonic_platform.platform
+
     ASIC_TEMPERATURE_KEY = []
-    thermal_list = sonic_platform.platform.Platform().get_chassis().get_all_thermals()
-    for sensor in thermal_list:
-        try:
-            thermal_name = sensor.get_name()
-            if "ASIC" in thermal_name:
-                ASIC_TEMPERATURE_KEY.append('TEMPERATURE_INFO|' + thermal_name)
-        except NotImplementedError:
-            print("Thermal sensor get_name() is not implemented")
+    try:
+        import sonic_platform.platform
+        thermal_list = sonic_platform.platform.Platform().get_chassis().get_all_thermals()
+        for sensor in thermal_list:
+            try:
+                thermal_name = sensor.get_name()
+                if "ASIC" in thermal_name:
+                    ASIC_TEMPERATURE_KEY.append('TEMPERATURE_INFO|' + thermal_name)
+            except NotImplementedError:
+                print("Thermal sensor get_name() is not implemented")
+
+    except ImportError as err:
+        print(str(err) + "- required module not found")
 
     FAN_TABLE_NAME = 'FAN_INFO'
     PSU_TABLE_NAME = 'PSU_INFO'
