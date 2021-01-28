@@ -9,7 +9,7 @@ start() {
     TOPOLOGY_SCRIPT="topology.sh"
     PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
     HWSKU=${HWSKU:-`sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]["hwsku"]' 2>&1`}
-    if [[ $? -ne 0 ]]; then
+    if [[ $? -ne 0 || HWSKU == "" ]]; then
             if [[ -f "/etc/sonic/minigraph.xml" ]]; then
                 HWSKU=`sonic-cfggen -m /etc/sonic/minigraph.xml -v "DEVICE_METADATA['localhost']['hwsku']" 2>&1`
                 if [[ $? -ne 0 ]]; then
