@@ -5,4 +5,6 @@ $(BFN_SAI)_DEPENDS += $(LIBNL_GENL3_DEV)
 $(BFN_SAI)_RDEPENDS += $(LIBNL_GENL3)
 
 SONIC_ONLINE_DEBS += $(BFN_SAI)
+$(eval $(call add_conflict_package,$(BFN_SAI),$(LIBSAIVS_DEV)))
+
 $(BFN_SAI_DEV)_DEPENDS += $(BFN_SAI)

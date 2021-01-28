@@ -26,3 +26,4 @@ else
 SONIC_ONLINE_DEBS += $(NEPHOS_SAI) 
 endif
 $(NEPHOS_SAI_DEV)_DEPENDS += $(NEPHOS_SAI)
+$(eval $(call add_conflict_package,$(NEPHOS_SAI_DEV),$(LIBSAIVS_DEV)))
