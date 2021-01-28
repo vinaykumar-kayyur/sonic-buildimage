@@ -9,7 +9,6 @@ schedules:
   branches:
     include:
     - 202012
-    - master
   always: true
 
 stages:
