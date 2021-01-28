@@ -208,3 +208,97 @@ class Chassis(ChassisBase):
             return True, {'sfp': sfp_event}
 
         return False, {'sfp': {}}
+
+    ##############################################################
+    ######################## SFP methods #########################
+    ##############################################################
+
+    def get_num_sfps(self):
+        """
+        Retrieves the number of sfps available on this chassis
+        Returns:
+            An integer, the number of sfps available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        return len(self._sfp_list)
+
+    def get_all_sfps(self):
+        """
+        Retrieves all sfps available on this chassis
+        Returns:
+            A list of objects derived from SfpBase representing all sfps
+            available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        return self._sfp_list
+
+    def get_sfp(self, index):
+        """
+        Retrieves sfp represented by (1-based) index <index>
+        Args:
+            index: An integer, the index (1-based) of the sfp to retrieve.
+            The index should be the sequence of a physical port in a chassis,
+            starting from 1.
+            For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
+        Returns:
+            An object dervied from SfpBase representing the specified sfp
+        """
+        sfp = None
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        try:
+            # The index will start from 1
+            sfp = self._sfp_list[index-1]
+        except IndexError:
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(
+                             index, len(self._sfp_list)))
+        return sfp
+
+    ##############################################################
+    ###################### Device methods ########################
+    ##############################################################
+
+    def get_name(self):
+        """
+        Retrieves the name of the device
+            Returns:
+            string: The name of the device
+        """
+        return self._api_helper.hwsku
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the Chassis
+        Returns:
+            bool: True if Chassis is present, False if not
+        """
+        return True
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return self._eeprom.get_pn()
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return self._eeprom.get_serial()
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
