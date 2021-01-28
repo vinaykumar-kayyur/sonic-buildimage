@@ -14,7 +14,7 @@ stages:
         displayName: 'checkout code'
       - bash: |
           make init
-          make configure PLATFORM=broadcom
+          make configure PLATFORM=$(PLATFORM)
         displayName: 'make init & config'
       - bash: |
           make SONIC_CONFIG_BUILD_JOBS=1 INSTALL_DEBUG_TOOLS=y target/sonic-broadcom.bin
