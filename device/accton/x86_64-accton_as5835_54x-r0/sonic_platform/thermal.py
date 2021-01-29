@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -26,19 +24,16 @@ class Thermal(ThermalBase):
 
     def __init__(self, thermal_index=0):
         self.index = thermal_index
-
         # Add thermal name
         self.THERMAL_NAME_LIST.append("Temp sensor 1")
         self.THERMAL_NAME_LIST.append("Temp sensor 2")
         self.THERMAL_NAME_LIST.append("Temp sensor 3")        
-        self.THERMAL_NAME_LIST.append("Temp sensor 4")
 
         # Set hwmon path
         i2c_path = {
-            0: "18-004b/hwmon/hwmon*/", 
-            1: "19-004c/hwmon/hwmon*/", 
-            2: "20-0049/hwmon/hwmon*/",
-            3: "21-004a/hwmon/hwmon*/"
+            0: "14-0048/hwmon/hwmon*/", 
+            1: "24-004b/hwmon/hwmon*/", 
+            2: "25-004a/hwmon/hwmon*/"
         }.get(self.index, None)
           
         self.hwmon_path = "{}/{}".format(self.SYSFS_PATH, i2c_path)
@@ -46,25 +41,23 @@ class Thermal(ThermalBase):
         self.ss_index = 1
 
     def __read_txt_file(self, file_path):
-        for filename in glob.glob(file_path):           
+        for filename in glob.glob(file_path):
             try:
-                with open(filename, 'r') as fd:
+                with open(filename, 'r') as fd:                    
                     data =fd.readline().rstrip()
                     return data
             except IOError as e:
                 pass
-        
+
         return None
         
-            
     def __get_temp(self, temp_file):
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_temp = self.__read_txt_file(temp_file_path)
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
-            return 0
-        
+            return 0        
 
     def __set_threshold(self, file_name, temperature):
         temp_file_path = os.path.join(self.hwmon_path, file_name)
@@ -148,4 +141,3 @@ class Thermal(ThermalBase):
             return False
         else:     
             return int(raw_txt) != 0
-

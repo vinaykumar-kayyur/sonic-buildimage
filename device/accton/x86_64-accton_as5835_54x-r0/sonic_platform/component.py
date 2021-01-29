@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -19,21 +17,15 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CPLD_ADDR_MAPPING = {
-    "CPLD1": "3-0060",
-    "CPLD2": "3-0061",
-    "CPLD3": "3-0062",
+    "CPLD1": "3-0060"
 }
 SYSFS_PATH = "/sys/bus/i2c/devices/"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
    ("CPLD1", "CPLD 1"),
-   ("CPLD2", "CPLD 2"),
-   ("CPLD3", "CPLD 3"),
    ("BIOS", "Basic Input/Output System")
    
 ]
-COMPONENT_DES_LIST = ["CPLD","Basic Input/Output System"]
-
 
 class Component(ComponentBase):
     """Platform-specific Component class"""
@@ -44,8 +36,7 @@ class Component(ComponentBase):
         self._api_helper=APIHelper()
         ComponentBase.__init__(self)
         self.index = component_index
-        self.name = self.get_name()
-        
+        self.name = self.get_name()        
 
     def __run_command(self, command):
         # Run bash command and print output to stdout
@@ -69,17 +60,16 @@ class Component(ComponentBase):
             with open(BIOS_VERSION_PATH, 'r') as fd:
                 bios_version = fd.read()
                 return bios_version.strip()
-        except Exception as e:    
-            print('Get exception when read bios')
-        return None
-        
+        except Exception as e:
+            return None
+
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
-        for cpld_name in CPLD_ADDR_MAPPING:            
+        for cpld_name in CPLD_ADDR_MAPPING:
             try:
-                cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')                
-                cpld_version_raw= self._api_helper.read_txt_file(cpld_path)
+                cpld_path = "{}{}{}".format(SYSFS_PATH, CPLD_ADDR_MAPPING[cpld_name], '/version')
+                cpld_version_raw= self._api_helper.read_txt_file(cpld_path)               
                 cpld_version[cpld_name] = "{}".format(int(cpld_version_raw,16))
             except Exception as e:
                 print('Get exception when read cpld')
@@ -102,7 +92,7 @@ class Component(ComponentBase):
             A string containing the description of the component
         """
         return COMPONENT_LIST[self.index][1]
-        #return "testhwsku"
+        
 
     def get_firmware_version(self):
         """
@@ -111,10 +101,11 @@ class Component(ComponentBase):
             string: The firmware versions of the module
         """
         fw_version = None
+
         if self.name == "BIOS":
             fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
-            cpld_version = self.__get_cpld_version()            
+            cpld_version = self.__get_cpld_version()           
             fw_version = cpld_version.get(self.name)
 
         return fw_version
@@ -127,7 +118,4 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
-        raise NotImplementedError 
-        
-
-        
+        raise NotImplementedError
