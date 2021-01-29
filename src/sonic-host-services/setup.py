@@ -25,6 +25,9 @@ setup(
         'Jinja2>=2.10',
         'sonic-py-common',
         'swsssdk>=2.0.1',
+        'dbus-python',
+        'PyGObject',
+        'systemd-python',
     ],
     setup_requires = [
         'pytest-runner',
