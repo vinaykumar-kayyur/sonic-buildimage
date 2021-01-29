@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -302,7 +300,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardware_rev                |1*255VCHAR     |hardware version of SFP
+        hardware_rev               |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -721,6 +719,8 @@ class Sfp(SfpBase):
         cpld_path = self._cpld_mapping[cpld_i]        
         reset_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_reset_', self.port_num)
         val=self._api_helper.read_txt_file(reset_path)
+        if val is None:
+            return 0
 
         return int(val, 10)==1
 
@@ -737,7 +737,8 @@ class Sfp(SfpBase):
             cpld_path = self._cpld_mapping[cpld_i]        
             rx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_rx_los_', self.port_num)
             rx_los=self._api_helper.read_txt_file(rx_path)
-            
+            if rx_los is None:
+                return False
             #status_control_raw = self.__read_eeprom_specific_bytes(
             #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
             #if status_control_raw:
@@ -771,6 +772,8 @@ class Sfp(SfpBase):
             cpld_path = self._cpld_mapping[cpld_i]        
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_fault_', self.port_num)
             tx_fault=self._api_helper.read_txt_file(tx_path)
+            if tx_fault is None:
+                return False
             #status_control_raw = self.__read_eeprom_specific_bytes(
             #    SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
             #if status_control_raw:
@@ -813,8 +816,11 @@ class Sfp(SfpBase):
             #    tx_disable_soft = (sffbase().test_bit(
             #        data, SFP_TX_DISABLE_SOFT_BIT) != 0)
             #    tx_disable = tx_disable_hard | tx_disable_soft
-    
-            return tx_disable        
+            if tx_disable is not None:
+                return tx_disable 
+            else:
+                return False
+
         else:
             tx_disable_list = []
     
@@ -869,7 +875,7 @@ class Sfp(SfpBase):
             # SFP doesn't support this feature
             return False
         else:
-            power_set      = self.get_power_set()
+            power_set=self.get_power_set()
             power_override = self.get_power_override()
             return power_set and power_override
 
@@ -1100,7 +1106,7 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
-                print ('Error: unable to open file: %s', str(e))
+                print ('Error: unable to open file: ', str(e))
                 return False
             finally:
                 if sysfsfile_eeprom is not None:
@@ -1164,7 +1170,7 @@ class Sfp(SfpBase):
                     fd.write(buffer[0])
                     time.sleep(0.01)
             except Exception:
-                print ('Error: unable to open file: %s', str(e))
+                print ('Error: unable to open file: ', str(e))
                 return False
             return True
 
@@ -1190,8 +1196,10 @@ class Sfp(SfpBase):
         cpld_path = self._cpld_mapping[cpld_i]          
         present_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_present_', self.port_num)
         val=self._api_helper.read_txt_file(present_path)
-
-        return int(val, 10)==1
+        if val is not None:
+            return int(val, 10)==1
+        else:
+            return False
 
     def get_model(self):
         """

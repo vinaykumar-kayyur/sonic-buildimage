@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -61,17 +59,24 @@ class Fan(FanBase):
         if not self.is_psu_fan:
             dir_str = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index, '_direction')
             val=self._api_helper.read_txt_file(dir_str)
-            if val==0: #B2F
-                direction=self.FAN_DIRECTION_INTAKE
-            else: #F2B
-                direction=self.FAN_DIRECTION_EXHAUST
-        else: #For PSU
-            dir_str = "{}{}".format(self.psu_hwmon_path,'psu_fan_dir')
-            val=self._api_helper.read_txt_file(dir_str)
-            if val=='F2B':
-                direction=self.FAN_DIRECTION_EXHAUST
+            if val is not None:
+                if val==0:#F2B
+                    direction=self.FAN_DIRECTION_EXHAUST
+                else:
+                    direction=self.FAN_DIRECTION_INTAKE
             else:
-                direction=self.FAN_DIRECTION_INTAKE
+                direction=self.FAN_DIRECTION_EXHAUST
+
+        else: #For PSU
+            dir_str = "{}{}".format(self.psu_hwmon_path,'psu_hwmon_path')
+            val=self._api_helper.read_txt_file(dir_str)
+            if val is not None:
+                if val=='F2B':
+                    direction=self.FAN_DIRECTION_EXHAUST
+                else:
+                    direction=self.FAN_DIRECTION_INTAKE
+            else:
+                direction=self.FAN_DIRECTION_EXHAUST 
                 
         return direction
 
@@ -87,12 +92,19 @@ class Fan(FanBase):
         if self.is_psu_fan:
             psu_fan_path= "{}{}".format(self.psu_hwmon_path, 'psu_fan1_speed_rpm')
             fan_speed_rpm = self._api_helper.read_txt_file(psu_fan_path)
-            speed = (int(fan_speed_rpm,10))*100/26688
-            if speed > 100:
-                speed=100
+            if fan_speed_rpm is not None:
+                speed = (int(fan_speed_rpm,10))*100/26688
+                if speed > 100:
+                    speed=100
+            else:
+                return 0
+
         elif self.get_presence():            
             speed_path = "{}{}".format(CPLD_I2C_PATH, '_duty_cycle_percentage')
             speed=self._api_helper.read_txt_file(speed_path)
+            if speed is None:
+                return 0
+                
         return int(speed)
             
     def get_target_speed(self):
@@ -157,8 +169,9 @@ class Fan(FanBase):
         val=self._api_helper.read_txt_file(present_path)
         
         if not self.is_psu_fan:
-            return int(val, 10)==1
-            
+            if val is not None:
+                return int(val, 10)==1
+            else:
+                return False
         else:
             return True
-        

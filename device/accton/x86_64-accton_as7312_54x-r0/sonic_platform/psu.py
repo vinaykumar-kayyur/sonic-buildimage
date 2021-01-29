@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -59,7 +57,7 @@ class Psu(PsuBase):
         self.i2c_addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
         self.__initialize_fan()
-        
+
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
         for fan_index in range(0, PSU_NUM_FAN[self.index]):
@@ -85,7 +83,10 @@ class Psu(PsuBase):
         """
         iout_path = "{}{}".format(self.hwmon_path, 'psu_i_out')        
         val=self._api_helper.read_txt_file(iout_path)
-        return float(val)/1000
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
 
     def get_power(self):
         """
@@ -95,8 +96,11 @@ class Psu(PsuBase):
         """
         pout_path = "{}{}".format(self.hwmon_path, 'psu_p_out')        
         val=self._api_helper.read_txt_file(pout_path)
-        return float(val)/1000
-        
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
+
     def get_powergood_status(self):
         """
         Retrieves the powergood status of PSU
@@ -125,7 +129,10 @@ class Psu(PsuBase):
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
         
-        return False  #Controlled by HW
+        if self.get_status():            
+            return True
+        else:
+            return False
 
     def get_temperature(self):
         """
@@ -136,7 +143,10 @@ class Psu(PsuBase):
         """
         temp_path = "{}{}".format(self.hwmon_path, 'psu_temp1_input')        
         val=self._api_helper.read_txt_file(temp_path)
-        return float(val)/1000
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
     
     def get_temperature_high_threshold(self):
         """
@@ -156,7 +166,10 @@ class Psu(PsuBase):
         """
         vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_max')        
         vout_val=self._api_helper.read_txt_file(vout_path)
-        return float(vout_val)/ 1000
+        if vout_val is not None:
+            return float(vout_val)/ 1000
+        else:
+            return 0
 
     def get_voltage_low_threshold(self):
         """
@@ -167,7 +180,10 @@ class Psu(PsuBase):
         """
         vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_min')        
         vout_val=self._api_helper.read_txt_file(vout_path)
-        return float(vout_val)/ 1000
+        if vout_val is not None:
+            return float(vout_val)/ 1000
+        else:
+            return 0
 
     def get_name(self):
         """
@@ -185,7 +201,10 @@ class Psu(PsuBase):
         """        
         presence_path="{}{}".format(self.cpld_path, 'psu_present')
         val=self._api_helper.read_txt_file(presence_path)
-        return int(val, 10) == 1
+        if val is not None:
+            return int(val, 10) == 1
+        else:
+            return 0
 
     def get_status(self):
         """
@@ -195,5 +214,7 @@ class Psu(PsuBase):
         """
         power_path="{}{}".format(self.cpld_path, 'psu_power_good')
         val=self._api_helper.read_txt_file(power_path)
-        return int(val, 10) == 1
-
+        if val is not None:
+            return int(val, 10) == 1
+        else:
+            return 0

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -53,10 +51,15 @@ class Thermal(ThermalBase):
             except IOError as e:
                 pass
 
+        return None
+        
     def __get_temp(self, temp_file):
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_temp = self.__read_txt_file(temp_file_path)
-        return float(raw_temp)/1000
+        if raw_temp is not None:
+            return float(raw_temp)/1000
+        else:
+            return 0 
         
 
     def __set_threshold(self, file_name, temperature):
@@ -122,7 +125,10 @@ class Thermal(ThermalBase):
         temp_file = "temp{}_input".format(self.ss_index)
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_txt = self.__read_txt_file(temp_file_path)
-        return raw_txt!=None
+        if raw_txt is not None:
+            return True
+        else:
+            return False
 
     def get_status(self):
         """
@@ -138,4 +144,3 @@ class Thermal(ThermalBase):
             return False
         else:     
             return int(raw_txt) != 0
-
