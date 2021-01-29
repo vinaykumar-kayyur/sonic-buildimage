@@ -1,7 +1,9 @@
+from unittest.mock import MagicMock, patch
+
+import bgpcfgd.frr
 from bgpcfgd.directory import Directory
 from bgpcfgd.template import TemplateFabric
 import bgpcfgd
-from mock import MagicMock, patch
 
 
 swsscommon_module_mock = MagicMock()
@@ -16,7 +18,9 @@ global_constants = {
                     "deny 0::/0 le 59",
                     "deny 0::/0 ge 65"
                 ]
-            }
+            },
+            "default_action": "permit",
+            "drop_community": "123:123"
         }
     }
 }
@@ -30,7 +34,7 @@ def set_del_test(op, args, currect_config, expected_config):
         assert args == expected_config
         return True
     #
-    bgpcfgd.managers_allow_list.run_command = lambda cmd: (0, "", "")
+    bgpcfgd.frr.run_command = lambda cmd: (0, "", "")
     #
     cfg_mgr = MagicMock()
     cfg_mgr.update.return_value = None
@@ -62,15 +66,20 @@ def test_set_handler_with_community():
                 "prefixes_v4": "10.20.30.0/24,30.50.0.0/16",
                 "prefixes_v6": "fc00:20::/64,fc00:30::/64",
         }),
-        [],
+        [
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 65535',
+            ' set community 123:123 additive',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 65535',
+            ' set community 123:123 additive'
+        ],
         [
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 le 32',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 le 128',
             'bgp community-list standard COMMUNITY_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020 permit 1010:2020',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 10',
             ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4',
@@ -88,15 +97,20 @@ def test_set_handler_no_community():
                 "prefixes_v4": "20.20.30.0/24,40.50.0.0/16",
                 "prefixes_v6": "fc01:20::/64,fc01:30::/64",
         }),
-        [],
+        [
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 65535',
+            ' set community 123:123 additive',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 65535',
+            ' set community 123:123 additive',
+        ],
         [
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 le 32',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 le 128',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 30000',
             ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 30000',
@@ -169,12 +183,12 @@ def test_set_handler_with_community_data_is_already_presented():
         }),
         [
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 le 32',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 le 128',
             'bgp community-list standard COMMUNITY_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020 permit 1010:2020',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 10',
             ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4',
@@ -182,6 +196,10 @@ def test_set_handler_with_community_data_is_already_presented():
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 10',
             ' match ipv6 address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6',
             ' match community COMMUNITY_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 65535',
+            ' set community 123:123 additive',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 65535',
+            ' set community 123:123 additive',
             ""
         ],
         []
@@ -194,16 +212,20 @@ def test_set_handler_no_community_data_is_already_presented():
     cfg_mgr.update.return_value = None
     cfg_mgr.get_text.return_value = [
         'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 10 deny 0.0.0.0/0 le 17',
-        'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 ge 25',
-        'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 ge 17',
+        'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 le 32',
+        'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 le 32',
         'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 10 deny 0::/0 le 59',
         'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 20 deny 0::/0 ge 65',
-        'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 ge 65',
-        'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 ge 65',
+        'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 le 128',
+        'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 le 128',
         'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 30000',
         ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4',
         'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 30000',
         ' match ipv6 address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6',
+        'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 65535',
+        ' set community 123:123 additive',
+        'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 65535',
+        ' set community 123:123 additive',
         ""
     ]
     common_objs = {
@@ -244,12 +266,12 @@ def test_set_handler_with_community_update_prefixes_add():
         }),
         [
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 le 32',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 le 128',
             'bgp community-list standard COMMUNITY_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020 permit 1010:2020',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 10',
             ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4',
@@ -257,20 +279,24 @@ def test_set_handler_with_community_update_prefixes_add():
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 10',
             ' match ipv6 address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6',
             ' match community COMMUNITY_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 65535',
+            ' set community 123:123 additive',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 65535',
+            ' set community 123:123 additive',
             ""
         ],
         [
             'no ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4',
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 ge 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 40 permit 80.90.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 20 permit 10.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 30 permit 30.50.0.0/16 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V4 seq 40 permit 80.90.0.0/16 le 32',
             'no ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 50 permit fc02::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 30 permit fc00:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 40 permit fc00:30::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_1010:2020_V6 seq 50 permit fc02::/64 le 128',
         ]
     )
 
@@ -283,30 +309,34 @@ def test_set_handler_no_community_update_prefixes_add():
         }),
         [
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 le 32',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 le 128',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 30000',
             ' match ip address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4',
             'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 30000',
             ' match ipv6 address prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V4 permit 65535',
+            ' set community 123:123 additive',
+            'route-map ALLOW_LIST_DEPLOYMENT_ID_5_V6 permit 65535',
+            ' set community 123:123 additive',
             ""
         ],
         [
             'no ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4',
             'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 10 deny 0.0.0.0/0 le 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 ge 25',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 ge 17',
-            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 40 permit 80.90.0.0/16 ge 17',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 20 permit 20.20.30.0/24 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 30 permit 40.50.0.0/16 le 32',
+            'ip prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V4 seq 40 permit 80.90.0.0/16 le 32',
             'no ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 10 deny 0::/0 le 59',
             'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 20 deny 0::/0 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 ge 65',
-            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 50 permit fc02::/64 ge 65',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 30 permit fc01:20::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 40 permit fc01:30::/64 le 128',
+            'ipv6 prefix-list PL_ALLOW_LIST_DEPLOYMENT_ID_5_COMMUNITY_empty_V6 seq 50 permit fc02::/64 le 128',
         ]
     )
 
@@ -429,21 +459,11 @@ def test___find_peer_group_by_deployment_id():
     }
     mgr = BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES")
     values = mgr._BGPAllowListMgr__find_peer_group_by_deployment_id(0)
-    assert values == ['PEER_V4_INT', 'PEER_V6_INT', 'PEER_V6', 'PEER_V4']
+    assert set(values) == {'PEER_V4_INT', 'PEER_V6_INT', 'PEER_V6', 'PEER_V4'}
 
 @patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
-def test___restart_peers_found_deployment_id():
+def test___to_prefix_list():
     from bgpcfgd.managers_allow_list import BGPAllowListMgr
-    test___restart_peers_found_deployment_id.run_command_counter = 0
-    def run_command(cmd):
-        output = [
-            ['vtysh', '-c', 'clear bgp peer-group BGP_TEST_PEER_GROUP_1 soft in'],
-            ['vtysh', '-c', 'clear bgp peer-group BGP_TEST_PEER_GROUP_2 soft in'],
-        ]
-        desired_value = output[test___restart_peers_found_deployment_id.run_command_counter]
-        assert cmd == desired_value
-        test___restart_peers_found_deployment_id.run_command_counter += 1
-        return 0, "", ""
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
@@ -452,32 +472,120 @@ def test___restart_peers_found_deployment_id():
         'constants': global_constants,
     }
     mgr = BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES")
-    mocked = MagicMock(name='_BGPAllowListMgr__find_peer_group_by_deployment_id')
-    mocked.return_value = ["BGP_TEST_PEER_GROUP_1", "BGP_TEST_PEER_GROUP_2"]
-    mgr._BGPAllowListMgr__find_peer_group_by_deployment_id = mocked
-    bgpcfgd.managers_allow_list.run_command = run_command
-    rc = mgr._BGPAllowListMgr__restart_peers(5)
-    assert rc
+
+    res_v4 = mgr._BGPAllowListMgr__to_prefix_list(mgr.V4, ["1.2.3.4/32", "10.20.20.10/24"])
+    assert res_v4 == ["permit 1.2.3.4/32", "permit 10.20.20.10/24 le 32"]
+    res_v6 = mgr._BGPAllowListMgr__to_prefix_list(mgr.V6, ["fc00::1/128", "fc00::/64"])
+    assert res_v6 == ["permit fc00::1/128", "permit fc00::/64 le 128"]
 
 @patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
-def test___restart_peers_not_found_deployment_id():
+def construct_BGPAllowListMgr(constants):
     from bgpcfgd.managers_allow_list import BGPAllowListMgr
-    def run_command(cmd):
-        assert cmd == ['vtysh', '-c', 'clear bgp * soft in']
-        return 0, "", ""
     cfg_mgr = MagicMock()
     common_objs = {
         'directory': Directory(),
         'cfg_mgr':   cfg_mgr,
         'tf':        TemplateFabric(),
-        'constants': global_constants,
+        'constants': constants,
     }
     mgr = BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES")
-    mocked = MagicMock(name='_BGPAllowListMgr__find_peer_group_by_deployment_id')
-    mocked.return_value = []
-    mgr._BGPAllowListMgr__find_peer_group_by_deployment_id = mocked
-    bgpcfgd.managers_allow_list.run_command = run_command
-    rc = mgr._BGPAllowListMgr__restart_peers(5)
-    assert rc
+    return mgr
+
+def test___get_enabled_enabled():
+    constants = {
+        "bgp": {
+            "allow_list": {
+                "enabled": True,
+            }
+        }
+    }
+    mgr = construct_BGPAllowListMgr(constants)
+    assert mgr._BGPAllowListMgr__get_enabled()
+
+def test___get_enabled_disabled_1():
+    constants = {
+        "bgp": {
+            "allow_list": {
+                "enabled": False,
+            }
+        }
+    }
+    mgr = construct_BGPAllowListMgr(constants)
+    assert not mgr._BGPAllowListMgr__get_enabled()
+
+def test___get_enabled_disabled_2():
+    constants = {
+        "bgp": {
+            "allow_list": {}
+        }
+    }
+    mgr = construct_BGPAllowListMgr(constants)
+    assert not mgr._BGPAllowListMgr__get_enabled()
+
+def test___get_enabled_disabled_3():
+    constants = {
+        "bgp": {}
+    }
+    mgr = construct_BGPAllowListMgr(constants)
+    assert not mgr._BGPAllowListMgr__get_enabled()
+
+def test___get_enabled_disabled_4():
+    constants = {}
+    mgr = construct_BGPAllowListMgr(constants)
+    assert not mgr._BGPAllowListMgr__get_enabled()
+
+def test___get_default_action_deny():
+    constants = {
+        "bgp": {
+            "allow_list": {
+                "enabled": True,
+                "default_action": "deny",
+                "drop_community": "123:123"
+            }
+        }
+    }
+    data = {}
+    mgr = construct_BGPAllowListMgr(constants)
+    assert mgr._BGPAllowListMgr__get_default_action_community(data) == "no-export"
+
+def test___get_default_action_permit_1():
+    constants = {
+        "bgp": {
+            "allow_list": {
+                "enabled": True,
+                "default_action": "permit",
+                "drop_community": "123:123"
+            }
+        }
+    }
+    data = {}
+    mgr = construct_BGPAllowListMgr(constants)
+    assert mgr._BGPAllowListMgr__get_default_action_community(data) == "123:123"
+
+def test___get_default_action_permit_2():
+    constants = {
+        "bgp": {
+            "allow_list": {
+                "enabled": True,
+                "drop_community": "123:123"
+            }
+        }
+    }
+    data = {}
+    mgr = construct_BGPAllowListMgr(constants)
+    assert mgr._BGPAllowListMgr__get_default_action_community(data) == "123:123"
+
+def test___get_default_action_permit_3():
+    constants = {
+        "bgp": {
+            "allow_list": {
+                "enabled": False,
+                "drop_community": "123:123"
+            }
+        }
+    }
+    data = {}
+    mgr = construct_BGPAllowListMgr(constants)
+    assert mgr._BGPAllowListMgr__get_default_action_community(data) == "123:123"
 
 # FIXME: more testcases for coverage

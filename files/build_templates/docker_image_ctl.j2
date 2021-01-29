@@ -42,10 +42,22 @@ function updateSyslogConf()
         rm -rf $TMP_FILE
     fi
 }
+function ebtables_config()
+{
+    if [ "$DEV" ]; then
+        # Install ebtables filter in namespaces on multi-asic.
+        ip netns exec $NET_NS ebtables-restore < /etc/ebtables.filter.cfg
+    else
+        if [[ ! ($NUM_ASIC -gt 1) ]]; then
+            # Install ebtables filter in host for single asic.
+            ebtables-restore < /etc/ebtables.filter.cfg
+        fi
+    fi
+}
 
 function getMountPoint()
 {
-    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.basename(mnts[0]['Source'])" 2>/dev/null
+    echo $1 | python -c "import sys, json, os; mnts = [x for x in json.load(sys.stdin)[0]['Mounts'] if x['Destination'] == '/usr/share/sonic/hwsku']; print '' if len(mnts) == 0 else os.path.abspath(mnts[0]['Source'])" 2>/dev/null
 }
 
 function getBootType()
@@ -100,6 +112,8 @@ function postStartAction()
         docker exec -i database$DEV sysctl --system -e
         link_namespace $DEV
     fi
+    # Setup ebtables configuration
+    ebtables_config
 
     # chassisdb starts before database starts, bypass the PING check since other
     # databases are not availbale until database container is ready.
@@ -138,12 +152,16 @@ function postStartAction()
         if [[ -x /usr/local/bin/db_migrator.py ]]; then
             # Migrate the DB to the latest schema version if needed
             if [ -z "$DEV" ]; then
-                /usr/bin/db_migrator.py -o migrate
+                /usr/local/bin/db_migrator.py -o migrate
             fi
         fi
         # Add redis UDS to the redis group and give read/write access to the group
         REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
     else
+        until [[ ($(docker exec -i ${DOCKERNAME} pgrep -x -c supervisord) -gt 0) &&
+                 ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
+           sleep 1
+        done
         REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
@@ -189,9 +207,14 @@ start() {
     {%- if docker_container_name == "database" %}
     # Don't mount HWSKU in {{docker_container_name}} container.
     HWSKU=""
+    MOUNTPATH=""
     {%- else %}
     # Obtain our HWSKU as we will mount directories with these names in each docker
     HWSKU=${HWSKU:-`$SONIC_CFGGEN -d -v 'DEVICE_METADATA["localhost"]["hwsku"]'`}
+    MOUNTPATH="/usr/share/sonic/device/$PLATFORM/$HWSKU"
+    if [ "$DEV" ]; then
+        MOUNTPATH="$MOUNTPATH/$DEV"
+    fi
     {%- endif %}
     DOCKERCHECK=`docker inspect --type container ${DOCKERNAME} 2>/dev/null`
     if [ "$?" -eq "0" ]; then
@@ -200,14 +223,15 @@ start() {
         {%- else %}
         DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
         {%- endif %}
-        if [ x"$DOCKERMOUNT" == x"$HWSKU" ]; then
+        if [ x"$DOCKERMOUNT" == x"$MOUNTPATH" ]; then
+            preStartAction
             {%- if docker_container_name == "database" %}
             echo "Starting existing ${DOCKERNAME} container"
+            docker start ${DOCKERNAME}
             {%- else %}
             echo "Starting existing ${DOCKERNAME} container with HWSKU $HWSKU"
+            /usr/local/bin/container start ${DOCKERNAME}
             {%- endif %}
-            preStartAction
-            docker start ${DOCKERNAME}
             postStartAction
             exit $?
         fi
@@ -238,6 +262,19 @@ start() {
     echo "Creating new ${DOCKERNAME} container with HWSKU $HWSKU"
     {%- endif %}
 
+    {%- if docker_container_name == "swss" %}
+    # Obtain the vendor name
+    ASIC_VENDOR=`$SONIC_CFGGEN -y /etc/sonic/sonic_version.yml -v asic_type`
+
+    # Generate the asic_table.json and peripheral_table.json
+    if [ ! -f /etc/sonic/asic_table.json ] && [ -f /usr/share/sonic/templates/asic_table.j2 ]; then
+        sonic-cfggen -d -t /usr/share/sonic/templates/asic_table.j2 > /etc/sonic/asic_table.json
+    fi
+    if [ ! -f /etc/sonic/peripheral_table.json ] && [ -f /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 ]; then
+        sonic-cfggen -d -t /usr/share/sonic/device/$PLATFORM/port_peripheral_config.j2 > /etc/sonic/peripheral_table.json
+    fi
+    {%- endif %}
+
     # In Multi ASIC platforms the global database config file database_global.json will exist.
     # Parse the file and get the include path for the database_config.json files used in
     # various namesapces. The database_config paths are relative to the DIR of SONIC_DB_GLOBAL_JSON.
@@ -253,7 +290,7 @@ start() {
     {%- if docker_container_name == "database" %}
     start_chassis_db=0
     chassis_db_address=""
-    chassisdb_config="/etc/sonic/chassisdb.conf"
+    chassisdb_config="/usr/share/sonic/device/$PLATFORM/chassisdb.conf"
     [ -f $chassisdb_config ] && source $chassisdb_config
     DB_OPT=" -v /var/run/redis-chassis:/var/run/redis-chassis:ro "
     if [[ "$start_chassis_db" != "1" ]] && [[ -z "$chassis_db_address" ]]; then
@@ -321,6 +358,7 @@ start() {
 {%- endif %}
     docker create {{docker_image_run_opt}} \
         --net=$NET \
+        -e RUNTIME_OWNER=local \
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
 {%- if install_debug_image == "y" %}
         -v /src:/src:ro -v /debug:/debug:rw \
@@ -350,6 +388,9 @@ start() {
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
 {%- endif %}
 {%- endif %}
+{%- if docker_container_name == "swss" %}
+        -e ASIC_VENDOR=$ASIC_VENDOR \
+{%- endif -%}
 {%- if docker_container_name == "bgp" %}
         -v /etc/sonic/frr/$DEV:/etc/frr:rw \
 {%- endif %}
@@ -375,21 +416,34 @@ start() {
     }
 
     preStartAction
+    {%- if docker_container_name == "database" %}
     docker start $DOCKERNAME
+    {%- else %}
+    /usr/local/bin/container start ${DOCKERNAME}
+    {%- endif %}
     postStartAction
 }
 
 wait() {
+    {%- if docker_container_name == "database" %}
     docker wait $DOCKERNAME
+    {%- else %}
+    /usr/local/bin/container wait $DOCKERNAME
+    {%- endif %}
 }
 
 stop() {
+    {%- if docker_container_name == "database" %}
     docker stop $DOCKERNAME
-{%- if docker_container_name == "database" %}
     if [ "$DEV" ]; then
         ip netns delete "$NET_NS"
     fi
-{%- endif %}
+    {%- elif docker_container_name == "teamd" %}
+    # Longer timeout of 60 sec to wait for Portchannels to be cleaned.
+    /usr/local/bin/container stop -t 60 $DOCKERNAME
+    {%- else %}
+    /usr/local/bin/container stop $DOCKERNAME
+    {%- endif %}
 }
 
 DOCKERNAME={{docker_container_name}}

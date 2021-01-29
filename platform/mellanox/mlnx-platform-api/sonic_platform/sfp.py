@@ -21,11 +21,19 @@ try:
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_py_common.logger import Logger
-    from python_sdk_api.sxd_api import *
-    from python_sdk_api.sx_api import *
 
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
+
+try:
+    # python_sdk_api does not support python3 for now. Daemons like thermalctld or psud 
+    # also import this file without actually use the sdk lib. So we catch the ImportError
+    # and ignore it here. Meanwhile, we have to trigger xcvrd using python2 now because it
+    # uses the sdk lib.
+    from python_sdk_api.sxd_api import *
+    from python_sdk_api.sx_api import *
+except ImportError as e:
+    pass
 
 # definitions of the offset and width for values in XCVR info eeprom
 XCVR_INTFACE_BULK_OFFSET = 0
@@ -180,7 +188,7 @@ QSFP_DD_RX_POWER_OFFSET = 58
 QSFP_DD_RX_POWER_WIDTH = 16
 QSFP_DD_TX_POWER_OFFSET = 26
 QSFP_DD_TX_POWER_WIDTH = 16
-QSFP_DD_CHANNL_MON_OFFSET = 154
+QSFP_DD_CHANNL_MON_OFFSET = 26
 QSFP_DD_CHANNL_MON_WIDTH = 48
 QSFP_DD_CHANNL_DISABLE_STATUS_OFFSET = 86
 QSFP_DD_CHANNL_DISABLE_STATUS_WIDTH = 1
@@ -279,6 +287,9 @@ PORT_TYPE_MASK = 0xF0000000
 NVE_MASK = PORT_TYPE_MASK & (PORT_TYPE_NVE << PORT_TYPE_OFFSET)
 CPU_MASK = PORT_TYPE_MASK & (PORT_TYPE_CPU << PORT_TYPE_OFFSET)
 
+# parameters for SFP presence
+SFP_STATUS_INSERTED = '1'
+
 # Global logger class instance
 logger = Logger()
 
@@ -306,16 +317,33 @@ def deinitialize_sdk_handle(sdk_handle):
 class SFP(SfpBase):
     """Platform-specific SFP class"""
 
-    def __init__(self, sfp_index, sfp_type, sdk_handle):
+    def __init__(self, sfp_index, sfp_type, sdk_handle_getter, platform):
+        SfpBase.__init__(self)
         self.index = sfp_index + 1
         self.sfp_eeprom_path = "qsfp{}".format(self.index)
         self.sfp_status_path = "qsfp{}_status".format(self.index)
         self._detect_sfp_type(sfp_type)
         self.dom_tx_disable_supported = False
         self._dom_capability_detect()
-        self.sdk_handle = sdk_handle
+        self.sdk_handle_getter = sdk_handle_getter
         self.sdk_index = sfp_index
 
+        # initialize SFP thermal list
+        from .thermal import initialize_sfp_thermals
+        initialize_sfp_thermals(platform, self._thermal_list, self.index)
+
+    @property
+    def sdk_handle(self):
+        return self.sdk_handle_getter()
+
+    def reinit(self):
+
+        """
+        Re-initialize this SFP object when a new SFP inserted
+        :return: 
+        """
+        self._detect_sfp_type(self.sfp_type)
+        self._dom_capability_detect()
 
     def get_presence(self):
         """
@@ -327,14 +355,18 @@ class SFP(SfpBase):
         presence = False
         ethtool_cmd = "ethtool -m sfp{} hex on offset 0 length 1 2>/dev/null".format(self.index)
         try:
-            proc = subprocess.Popen(ethtool_cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen(ethtool_cmd, 
+                                    stdout=subprocess.PIPE, 
+                                    shell=True, 
+                                    stderr=subprocess.STDOUT, 
+                                    universal_newlines=True)
             stdout = proc.communicate()[0]
             proc.wait()
             result = stdout.rstrip('\n')
             if result != '':
                 presence = True
 
-        except OSError, e:
+        except OSError as e:
             raise OSError("Cannot detect sfp")
 
         return presence
@@ -345,7 +377,9 @@ class SFP(SfpBase):
         eeprom_raw = []
         ethtool_cmd = "ethtool -m sfp{} hex on offset {} length {}".format(self.index, offset, num_bytes)
         try:
-            output = subprocess.check_output(ethtool_cmd, shell=True)
+            output = subprocess.check_output(ethtool_cmd, 
+                                             shell=True, 
+                                             universal_newlines=True)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:
@@ -456,8 +490,7 @@ class SFP(SfpBase):
                     self.dom_tx_power_supported = True
                     self.dom_tx_bias_power_supported = True
                     self.dom_thresholds_supported = True
-                    #currently set to False becasue Page 11h is not supported by FW
-                    self.dom_rx_tx_power_bias_supported = False
+                    self.dom_rx_tx_power_bias_supported = True
                 else:
                     self.dom_supported = False
                     self.second_application_list = False
@@ -965,7 +998,8 @@ class SFP(SfpBase):
 
             if self.dom_rx_tx_power_bias_supported:
                 # page 11h
-                dom_data_raw = self._read_eeprom_specific_bytes((QSFP_DD_CHANNL_MON_OFFSET), QSFP_DD_CHANNL_MON_WIDTH)
+                offset = 512
+                dom_data_raw = self._read_eeprom_specific_bytes(offset + QSFP_DD_CHANNL_MON_OFFSET, QSFP_DD_CHANNL_MON_WIDTH)
                 if dom_data_raw is None:
                     return transceiver_dom_info_dict
                 dom_channel_monitor_data = sfpd_obj.parse_channel_monitor_params(dom_data_raw, 0)
@@ -1255,7 +1289,7 @@ class SFP(SfpBase):
                 return False
         elif self.sfp_type == QSFP_DD_TYPE:
             offset = 0
-            sfpd_obj = qsfp_dd_InterfaceId()
+            sfpd_obj = qsfp_dd_Dom()
             dom_channel_status_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_STATUS_OFFSET), QSFP_DD_CHANNL_STATUS_WIDTH)
 
             if dom_channel_status_raw is None:
@@ -1291,7 +1325,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_RX_LOS_STATUS_OFFSET), QSFP_DD_CHANNL_RX_LOS_STATUS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     rx_los_data = int(dom_channel_monitor_raw[0], 8)
@@ -1343,7 +1377,7 @@ class SFP(SfpBase):
             return None
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_DD_CHANNL_TX_FAULT_STATUS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     tx_fault_data = int(dom_channel_monitor_raw[0], 8)
@@ -1636,7 +1670,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11h
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 sfpd_obj = qsfp_dd_Dom()
                 if sfpd_obj is None:
                     return None
@@ -1713,7 +1747,7 @@ class SFP(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             # page 11
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 sfpd_obj = qsfp_dd_Dom()
                 if sfpd_obj is None:
                     return None
@@ -1791,7 +1825,7 @@ class SFP(SfpBase):
             return None
             # page 11
             if self.dom_rx_tx_power_bias_supported:
-                offset = 128
+                offset = 512
                 sfpd_obj = qsfp_dd_Dom()
                 if sfpd_obj is None:
                     return None
@@ -2024,3 +2058,11 @@ class SFP(SfpBase):
             False if not
         """
         return NotImplementedError
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True

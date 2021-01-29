@@ -1,6 +1,3 @@
-#!/usr/bin/python
-
-
 try:
     import os
     import sys
@@ -12,12 +9,16 @@ try:
 
     sys.path.append(os.path.dirname(__file__))
 
-    from cStringIO import StringIO
+    if sys.version_info.major == 3:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
     from sonic_eeprom import eeprom_base
     from sonic_eeprom import eeprom_tlvinfo
 
     from .platform_thrift_client import thrift_try
-except ImportError, e:
+except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 
@@ -135,14 +136,17 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
         return True
 
-    def serial_number_str(self):
+    def serial_str(self):
         return self.eeprom.prod_ser_num
 
     def system_eeprom_info(self):
         return self.eeprom.__dict__
 
-    def get_base_mac(self):
-        return self.eeprom.ext_mac_addr
+    def base_mac_addr(self):
+        return self.eeprom.ext_mac_addr.rstrip('\x00')
 
     def part_number_str(self):
         return self.eeprom.prod_part_num
+
+    def modelstr(self):
+        return self.eeprom.prod_name

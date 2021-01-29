@@ -12,7 +12,6 @@ DERIVED_TARGETS = snmptrapd_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  libsnmp30-dbg_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  libsnmp-dev_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  libsnmp-perl_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
-		  python-netsnmp_$(SNMPD_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
 		  tkmib_$(SNMPD_VERSION_FULL)_all.deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
@@ -30,7 +29,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg init
 	stg import -s ../patch-$(SNMPD_VERSION)/series
 
-	fakeroot debian/rules -j$(SONIC_CONFIG_MAKE_JOBS) binary
+	dpkg-buildpackage -rfakeroot -b -d -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/
