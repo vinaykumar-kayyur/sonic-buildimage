@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -120,6 +118,4 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
-        raise NotImplementedError 
-
-                
+        raise NotImplementedError

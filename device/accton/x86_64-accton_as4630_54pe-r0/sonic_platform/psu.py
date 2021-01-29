@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -229,4 +227,3 @@ class Psu(PsuBase):
             return int(val, 10) == 1
         else:
             return 0
-

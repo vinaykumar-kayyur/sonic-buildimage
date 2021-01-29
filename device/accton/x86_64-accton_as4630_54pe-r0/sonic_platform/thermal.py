@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -143,4 +141,3 @@ class Thermal(ThermalBase):
             return False
         else:     
             return int(raw_txt) != 0
-

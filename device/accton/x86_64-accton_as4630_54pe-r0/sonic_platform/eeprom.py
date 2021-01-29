@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 try:
     import os
     import sys
@@ -103,4 +100,3 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     def get_mac(self):
         return self._eeprom.get('0x24', "Undefined.")
-

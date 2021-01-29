@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -176,4 +174,3 @@ class Fan(FanBase):
                 return False
         else:
             return True
-        
