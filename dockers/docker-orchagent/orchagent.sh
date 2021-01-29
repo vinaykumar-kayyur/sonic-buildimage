@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 
-EXIT_SWSS_VARS_FILE_NOT_FOUND=1
 SWSS_VARS_FILE=/usr/share/sonic/templates/swss_vars.j2
 
-if [ ! -f "$SWSS_VARS_FILE" ]; then
-    echo "SWSS vars template file not found"
-    exit $EXIT_SWSS_VARS_FILE_NOT_FOUND
-fi
-
 # Retrieve SWSS vars from sonic-cfggen
-SWSS_VARS=$(sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t $SWSS_VARS_FILE)
+SWSS_VARS=$(sonic-cfggen -d -y /etc/sonic/sonic_version.yml -t $SWSS_VARS_FILE) || exit 1
 export platform=$(echo $SWSS_VARS | jq -r '.asic_type')
 
 MAC_ADDRESS=$(echo $SWSS_VARS | jq -r '.mac')
@@ -45,6 +39,11 @@ asic_id=$(echo $SWSS_VARS | jq -r '.asic_id')
 if [ -n "$asic_id" ]
 then
     ORCHAGENT_ARGS+="-i $asic_id "
+fi
+
+# for multi asic platforms add the asic name to the record file names
+if [[ "$NAMESPACE_ID" ]]; then
+    ORCHAGENT_ARGS+="-f swss.asic$NAMESPACE_ID.rec -j sairedis.asic$NAMESPACE_ID.rec "
 fi
 
 # Add platform specific arguments if necessary

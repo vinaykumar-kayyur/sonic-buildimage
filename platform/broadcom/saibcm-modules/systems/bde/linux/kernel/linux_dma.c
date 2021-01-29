@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: linux_dma.c,v 1.414 Broadcom SDK $
@@ -67,6 +78,10 @@
 #include <mpool.h>
 #include <sdk_config.h>
 
+#if defined(IPROC_CMICD) && defined(CONFIG_OF)
+#include <linux/of.h>
+#endif
+
 #ifdef BCM_PLX9656_LOCAL_BUS
 #include <asm/cacheflush.h>
 #endif
@@ -74,9 +89,10 @@
 /* allocation types/methods for the DMA memory pool */
 #define ALLOC_TYPE_CHUNK 0 /* use small allocations and join them */
 #define ALLOC_TYPE_API 1 /* use one allocation */
+
 #if _SIMPLE_MEMORY_ALLOCATION_
 #include <linux/dma-mapping.h>
-#if defined(IPROC_CMICD) && defined(CONFIG_CMA) && defined(CONFIG_CMA_SIZE_MBYTES)
+#if defined(CONFIG_CMA) && defined(CONFIG_CMA_SIZE_MBYTES)
 #define DMA_MAX_ALLOC_SIZE (CONFIG_CMA_SIZE_MBYTES * 1024 * 1024)
 #else
 #define DMA_MAX_ALLOC_SIZE (1 << (MAX_ORDER - 1 + PAGE_SHIFT)) /* Maximum size the kernel can allocate in one allocation */
@@ -84,6 +100,7 @@
 #endif /* _SIMPLE_MEMORY_ALLOCATION_ */
 
 #if _SIMPLE_MEMORY_ALLOCATION_ == 1
+/* Use Linux DMA API to allocate contiguous memory */
 #define ALLOC_METHOD_DEFAULT ALLOC_TYPE_API
 #if defined(__arm__)
 #define USE_DMA_MMAP_COHERENT
@@ -117,9 +134,9 @@
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-#define DMA_MAPPING_ERROR(d, p)     dma_mapping_error((d),(p))
+#define BDE_DMA_MAPPING_ERROR(d, p)     dma_mapping_error((d),(p))
 #else
-#define DMA_MAPPING_ERROR(d, p)     dma_mapping_error((p))
+#define BDE_DMA_MAPPING_ERROR(d, p)     dma_mapping_error((p))
 #endif
 
 #ifndef KMALLOC_MAX_SIZE
@@ -190,6 +207,17 @@ MODULE_PARM_DESC(himemaddr,
 #define DMA_MEM_DEFAULT (SAL_BDE_DMA_MEM_DEFAULT * ONE_MB)
 #else
 #define DMA_MEM_DEFAULT (8 * ONE_MB)
+#endif
+
+#ifdef BDE_EDK_SUPPORT
+typedef struct {
+    phys_addr_t  cpu_pbase; /* CPU physical base address of the DMA pool */
+    phys_addr_t  dma_pbase; /* Bus base address of the DMA pool */
+    void __iomem *dma_vbase;
+    uint32  size; /* Total size of the pool */
+}_edk_dma_pool_t;
+static _edk_dma_pool_t _edk_dma_pool[LINUX_BDE_MAX_DEVICES];
+static int _edk_use_dma_mapping = 0;
 #endif
 
 /* We try to assemble a contiguous segment from chunks of this size */
@@ -548,18 +576,145 @@ _pgfree(void *ptr)
     return -1;
 }
 
+#ifdef BDE_EDK_SUPPORT
 /*
- * Function: _pgcleanup
+ * Function: _edk_mpool_free
  *
  * Purpose:
- *    Free all memory allocated by _pgalloc
+ *    Free all memory allocated by _adk_mpool_alloc
  * Parameters:
  *    None
  * Returns:
  *    Nothing.
  */
 static void
-_pgcleanup(void)
+_edk_mpool_free(void)
+{
+    int i, ndevices;
+
+    ndevices = BDE_NUM_DEVICES(BDE_SWITCH_DEVICES);
+    for (i = 0; i < ndevices && DMA_DEV(i); i ++) {
+        if (_edk_dma_pool[i].dma_vbase) {
+            if (_edk_use_dma_mapping) {
+                dma_unmap_single(DMA_DEV(i), (dma_addr_t)_edk_dma_pool[i].dma_pbase,
+                    _edk_dma_pool[i].size, DMA_BIDIRECTIONAL);
+            }
+            _pgfree(_edk_dma_pool[i].dma_vbase);
+            _edk_dma_pool[i].dma_vbase = NULL;
+        }
+    }
+    _edk_use_dma_mapping = 0;
+}
+
+/*
+ * Function: edk_mpool_alloc
+ *
+ * Purpose:
+ *    Allocate DMA memory pool for EDK
+ * Parameters:
+ *    size - size of DMA memory pool
+ * Returns:
+ *    Nothing.
+ */
+static void
+_edk_mpool_alloc(int dev_id, size_t size)
+{
+    static void __iomem *dma_vbase = NULL;
+    static phys_addr_t cpu_pbase = 0;
+    static phys_addr_t dma_pbase = 0;
+
+    struct device *dev = DMA_DEV(DMA_DEV_INDEX);
+    unsigned long pbase = 0;
+
+    dma_vbase = _pgalloc(size);
+    if (!dma_vbase) {
+        gprintk("Failed to allocate memory pool of size 0x%lx for EDK\n",
+                (unsigned long)size);
+        return;
+    }
+    cpu_pbase = virt_to_bus(dma_vbase);
+
+    /* Use dma_map_single to obtain DMA bus address or IOVA if IOMMU is present. */
+    if (dev) {
+        pbase = dma_map_single(dev, dma_vbase, size, DMA_BIDIRECTIONAL);
+        if (BDE_DMA_MAPPING_ERROR(dev, pbase)) {
+            gprintk("Failed to map memory at %p for EDK\n", dma_vbase);
+            _pgfree(dma_vbase);
+            dma_vbase = NULL;
+            return;
+        }
+        _edk_use_dma_mapping = 1;
+    } else {
+        pbase = cpu_pbase;
+    }
+
+    dma_pbase = pbase;
+
+#ifdef REMAP_DMA_NONCACHED
+    _dma_vbase = IOREMAP(dma_pbase, size);
+#endif
+    _edk_dma_pool[dev_id].cpu_pbase = cpu_pbase;
+    _edk_dma_pool[dev_id].dma_pbase = dma_pbase;
+    _edk_dma_pool[dev_id].dma_vbase = dma_vbase;
+    _edk_dma_pool[dev_id].size = size;
+}
+
+int
+lkbde_edk_get_dma_info(int dev_id, phys_addr_t* cpu_pbase, phys_addr_t* dma_pbase, ssize_t* size)
+{
+    if (_edk_dma_pool[dev_id].dma_vbase == NULL) {
+        _edk_mpool_alloc(dev_id, *size * ONE_MB);
+    }
+
+    if (cpu_pbase) {
+        *cpu_pbase = _edk_dma_pool[dev_id].cpu_pbase;
+    }
+
+    if (dma_pbase) {
+        *dma_pbase = _edk_dma_pool[dev_id].dma_pbase;
+    }
+
+    *size = (_edk_dma_pool[dev_id].dma_vbase) ? _edk_dma_pool[dev_id].size : 0;
+    return 0;
+}
+
+/*
+ * The below function validates the memory to the EDK allocated DMA pool,
+ * required to user space via the BDE device file.
+ */
+static int
+_edk_vm_is_valid(struct file *filp, struct vm_area_struct *vma)
+{
+    unsigned long phys_addr = vma->vm_pgoff << PAGE_SHIFT;
+    unsigned long size = vma->vm_end - vma->vm_start;
+    int i, ndevices;
+
+    ndevices = BDE_NUM_DEVICES(BDE_SWITCH_DEVICES);
+    for (i = 0; i < ndevices; i++) {
+        if (phys_addr < (unsigned long )_edk_dma_pool[i].cpu_pbase ||
+            (phys_addr + size) > ((unsigned long )_edk_dma_pool[i].cpu_pbase +
+                                   _edk_dma_pool[i].size)) {
+            continue;
+        }
+        return 1;
+    }
+
+    return 0;
+}
+#endif
+
+/*
+ * Function: _mpool_free
+ *
+ * Purpose:
+ *    Free all memory allocated by _mpool_alloc
+ * Parameters:
+ *    None
+ * Returns:
+ *    Nothing.
+ */
+static void
+_mpool_free(void)
 {
     switch (dmaalloc) {
 #if _SIMPLE_MEMORY_ALLOCATION_
@@ -595,7 +750,7 @@ _pgcleanup(void)
 }
 
 /*
- * Function: _alloc_mpool
+ * Function: _mpool_alloc
  *
  * Purpose:
  *    Allocate DMA memory pool
@@ -609,9 +764,18 @@ _pgcleanup(void)
  *    It is assumed there is only one pool.
  */
 static void
-_alloc_mpool(size_t size)
+_mpool_alloc(size_t size)
 {
     unsigned long pbase = 0;
+    struct device *dev = DMA_DEV(DMA_DEV_INDEX);
+    int dma64_support = 0;
+
+#if defined(IPROC_CMICD) && defined(CONFIG_OF)
+    if (of_find_compatible_node(NULL, NULL, "brcm,iproc-cmicx")) {
+        dma64_support = 1;
+    }
+#endif
+
 #if defined(__arm__) && !defined(CONFIG_HIGHMEM)
     if (_use_himem) {
         gprintk("DMA in high memory requires CONFIG_HIGHMEM on ARM CPUs.\n");
@@ -630,7 +794,22 @@ _alloc_mpool(size_t size)
             gprintk("DMA in high memory at 0x%lx size 0x%lx is beyond the 4GB limit and not supported.\n", pbase, (unsigned long)size);
             return;
         }
-        _cpu_pbase = _dma_pbase = pbase;
+        _cpu_pbase = pbase;
+        if (dev) {
+            /* Use dma_map_single to obtain DMA bus address or I/O virtual address, if
+               IOMMU is present. */
+            pbase = dma_map_single(dev, bus_to_virt(_cpu_pbase), size, DMA_BIDIRECTIONAL);
+            if (BDE_DMA_MAPPING_ERROR(dev, pbase)) {
+                gprintk("Error !! Failed to map memory at phys base 0x%lx\n",
+                        (unsigned long)_cpu_pbase);
+                _cpu_pbase = 0;
+                return;
+            }
+            _use_dma_mapping = 1;
+        } else {
+            pbase = _cpu_pbase;
+        }
+        _dma_pbase = pbase;
         _dma_vbase = IOREMAP(_dma_pbase, size);
     } else {
         /* Get DMA memory from kernel */
@@ -647,8 +826,8 @@ _alloc_mpool(size_t size)
             /* get a memory allocation from the kernel */
             {
                 dma_addr_t dma_handle;
-                if (!(_dma_vbase = dma_alloc_coherent(DMA_DEV(DMA_DEV_INDEX),
-                        alloc_size, &dma_handle, GFP_KERNEL)) || !dma_handle) {
+                _dma_vbase = dma_alloc_coherent(dev, alloc_size, &dma_handle, GFP_KERNEL);
+                if (!_dma_vbase || !dma_handle) {
                     gprintk("Failed to allocate coherent memory pool of size 0x%lx\n", (unsigned long)alloc_size);
                     return;
                 }
@@ -671,14 +850,13 @@ _alloc_mpool(size_t size)
                 return;
             }
             _cpu_pbase = virt_to_bus(_dma_vbase);
-            /* Use dma_map_single to obtain DMA bus address or IOVA if iommu is present. */
-            if (DMA_DEV(DMA_DEV_INDEX)) {
-                pbase = dma_map_single(DMA_DEV(DMA_DEV_INDEX), _dma_vbase, size, DMA_BIDIRECTIONAL);
-                if (DMA_MAPPING_ERROR(DMA_DEV(DMA_DEV_INDEX), pbase)) {
+            /* Use dma_map_single to obtain DMA bus address or IOVA if IOMMU is present. */
+            if (dev) {
+                pbase = dma_map_single(dev, _dma_vbase, size, DMA_BIDIRECTIONAL);
+                if (BDE_DMA_MAPPING_ERROR(dev, pbase)) {
                     gprintk("Failed to map memory at %p\n", _dma_vbase);
-                    _pgcleanup();
+                    _mpool_free();
                     _dma_vbase = NULL;
-                    _cpu_pbase = 0;
                     return;
                 }
                 _use_dma_mapping = 1;
@@ -692,22 +870,23 @@ _alloc_mpool(size_t size)
             return;
         }
 
-        if (((pbase + (size - 1)) >> 16) > DMA_BIT_MASK(16)) {
+        _dma_pbase = pbase;
+
+        if (!dma64_support && ((pbase + (size - 1)) >> 16) > DMA_BIT_MASK(16)) {
             gprintk("DMA memory allocated at 0x%lx size 0x%lx is beyond the 4GB limit and not supported.\n", pbase, (unsigned long)size);
-            _pgcleanup();
+            _mpool_free();
             _dma_vbase = NULL;
             _dma_pbase = 0;
             return;
         }
 
-        _dma_pbase = pbase;
 #ifdef REMAP_DMA_NONCACHED
         _dma_vbase = IOREMAP(_dma_pbase, size);
 #endif
         if (dma_debug >= 1) {
-            gprintk("_use_dma_mapping:%d _dma_vbase:%p _dma_pbase:%lx _cpu_pbase:%lx allocated:%lx dmaalloc:%d\n",
+            gprintk("_use_dma_mapping:%d _dma_vbase:%p _dma_pbase:%lx _cpu_pbase:%lx allocated:%lx dmaalloc:%d, dma64_support:%d\n",
                      _use_dma_mapping, _dma_vbase, (unsigned long)_dma_pbase,
-                     (unsigned long)_cpu_pbase, (unsigned long)size, dmaalloc);
+                     (unsigned long)_cpu_pbase, (unsigned long)size, dmaalloc, dma64_support);
         }
     }
 }
@@ -725,15 +904,27 @@ _alloc_mpool(size_t size)
 int
 _dma_cleanup(void)
 {
+#ifdef BDE_EDK_SUPPORT
+    _edk_mpool_free();
+#endif
     if (_dma_vbase) {
         mpool_destroy(_dma_pool);
         if (_use_himem) {
+            int i, ndevices;
             iounmap(_dma_vbase);
+            if (_use_dma_mapping) {
+                ndevices = BDE_NUM_DEVICES(BDE_SWITCH_DEVICES);
+                for (i = 0; i < ndevices && DMA_DEV(i); i ++) {
+                    dma_unmap_single(DMA_DEV(i), (dma_addr_t)_dma_pbase, _dma_mem_size,
+                                     DMA_BIDIRECTIONAL);
+                }
+                _use_dma_mapping = 0;
+            }
         } else {
 #ifdef REMAP_DMA_NONCACHED
             iounmap(_dma_vbase);
 #endif
-            _pgcleanup();
+            _mpool_free();
         }
         _dma_vbase = NULL;
         _dma_pbase = 0;
@@ -749,7 +940,7 @@ void _dma_init(int dev_index)
     if (dev_index > DMA_DEV_INDEX) {
         if (_use_dma_mapping && DMA_DEV(dev_index) && _dma_vbase) {
             pbase = dma_map_single(DMA_DEV(dev_index), _dma_vbase, _dma_mem_size, DMA_BIDIRECTIONAL);
-            if (DMA_MAPPING_ERROR(DMA_DEV(dev_index), pbase)) {
+            if (BDE_DMA_MAPPING_ERROR(DMA_DEV(dev_index), pbase)) {
                 gprintk("Failed to map memory for device %d at %p\n", dev_index, _dma_vbase);
                 return;
             }
@@ -797,7 +988,7 @@ void _dma_init(int dev_index)
     }
 
     if (_dma_mem_size) {
-        _alloc_mpool(_dma_mem_size);
+        _mpool_alloc(_dma_mem_size);
         if (_dma_vbase == NULL) {
             gprintk("no DMA memory available\n");
         } else {
@@ -821,10 +1012,17 @@ int _dma_mmap(struct file *filp, struct vm_area_struct *vma)
 
     if (phys_addr < (unsigned long )_cpu_pbase ||
         (phys_addr + size) > ((unsigned long )_cpu_pbase + _dma_mem_size)) {
+#ifdef BDE_EDK_SUPPORT
+        if(!_edk_vm_is_valid(filp, vma)) {
+            gprintk("range 0x%lx-0x%lx outside DMA pool\n", phys_addr, phys_addr + size);
+            return -EINVAL;
+        }
+#else
         gprintk("range 0x%lx-0x%lx outside DMA pool 0x%lx-0x%lx\n",
                 phys_addr, phys_addr + size, (unsigned long )_cpu_pbase,
                 (unsigned long )_cpu_pbase + _dma_mem_size);
         return -EINVAL;
+#endif
     }
 
 #ifdef USE_DMA_MMAP_COHERENT
@@ -981,7 +1179,7 @@ lkbde_get_dma_info(phys_addr_t* cpu_pbase, phys_addr_t* dma_pbase, ssize_t* size
         if (_dma_mem_size == 0) {
             _dma_mem_size = DMA_MEM_DEFAULT;
         }
-        _alloc_mpool(_dma_mem_size);
+        _mpool_alloc(_dma_mem_size);
     }
     *cpu_pbase = _cpu_pbase;
     *dma_pbase = _dma_pbase;
@@ -990,9 +1188,12 @@ lkbde_get_dma_info(phys_addr_t* cpu_pbase, phys_addr_t* dma_pbase, ssize_t* size
 }
 
 void
-_dma_pprint(void)
+_dma_pprint(struct seq_file *m)
 {
-    pprintf("DMA Memory (%s): %d bytes, %d used, %d free%s\n",
+    pprintf(m, "\tdmasize=%s\n", dmasize);
+    pprintf(m, "\thimem=%s\n", himem);
+    pprintf(m, "\thimemaddr=%s\n", himemaddr);
+    pprintf(m, "DMA Memory (%s): %d bytes, %d used, %d free%s\n",
             (_use_himem) ? "high" : "kernel",
             (_dma_vbase) ? _dma_mem_size : 0,
             (_dma_vbase) ? mpool_usage(_dma_pool) : 0,
@@ -1003,6 +1204,10 @@ _dma_pprint(void)
 /*
  * Export functions
  */
+
+#ifdef BDE_EDK_SUPPORT
+LKM_EXPORT_SYM(lkbde_edk_get_dma_info);
+#endif
 LKM_EXPORT_SYM(kmalloc_giant);
 LKM_EXPORT_SYM(kfree_giant);
 LKM_EXPORT_SYM(lkbde_get_dma_info);

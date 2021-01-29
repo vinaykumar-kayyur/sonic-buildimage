@@ -20,14 +20,13 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import commands
-    import sys, getopt
+    import getopt
+    import sys
     import logging
     import logging.config
     import logging.handlers
-    import time  # this is only being used as part of the example
-    from tabulate import tabulate
+    import time
     from as9716_32d.fanutil import FanUtil
     from as9716_32d.thermalutil import ThermalUtil
 except ImportError as e:

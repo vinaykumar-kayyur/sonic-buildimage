@@ -65,13 +65,18 @@ if [ $# -ne 0 ]; then
     exit 1
 fi
 
+mountpoint_for_file() {
+   local file="$1"
+   df "$file" | tail -1 | tr -s " " | cut -d ' ' -f6
+}
+
 # extract mount point from the swi path, e.g., /mnt/flash/sonic.swi --> /mnt/flash
 if [ -z "$target_path" ]; then
     if [ -z "$swipath" ]; then
        err "target_path= is required when swipath= is not provided"
        exit 1
     fi
-    target_path=$(df "$swipath" | tail -1 | tr -s " " | cut -d ' ' -f6)
+    target_path=$(mountpoint_for_file "$swipath")
 fi
 image_path="$target_path/$image_name"
 hook_path="$image_path/platform/hooks"
@@ -221,8 +226,19 @@ find_first_initrd_under() {
     find "$path" -name 'initrd.img-*' -type f | head -n 1
 }
 
+is_file_in_memory() {
+    local file="$1"
+    local filemnt=$(mountpoint_for_file "$file")
+    local filemntfs=$(mount | grep " $filemnt " | cut -f5 -d' ')
+
+    case "$filemntfs" in
+       tmpfs|ramfs) return 0;;
+       *) return 1;;
+    esac
+}
+
 get_tmpfs() {
-    local tmpfs="${1:-$(mktemp -d)}"
+    local tmpfs="$(mktemp -d)"
 
     mkdir -p "$tmpfs"
     if ! $in_aboot && ! mount | grep -q ' /tmp type tmpfs'; then
@@ -234,16 +250,27 @@ get_tmpfs() {
 
 clean_tmpfs() {
     local tmpfs="$1"
+
+    case "$tmpfs" in
+       /tmp) return 0;;
+       /tmp/*);; # only cleanup tmpfs created by this script
+       *) return 0;;
+    esac
+
     if mount | grep -q "$tmpfs"; then
         umount "$tmpfs" || :
-    else
-        rm -rf "$tmpfs"
     fi
 }
 
 move_swi_to_tmpfs() {
     local oldswi="$1"
-    local tmpfs="$(get_tmpfs "$swi_tmpfs")"
+
+    if is_file_in_memory "$oldswi"; then
+       echo "$oldswi"
+       return 0
+    fi
+
+    local tmpfs="$(get_tmpfs)"
     local newswi="$tmpfs/$(basename "$oldswi")"
 
     mv "$oldswi" "$newswi"
@@ -252,7 +279,7 @@ move_swi_to_tmpfs() {
 
 cleanup_swi_tmpfs() {
    rm -f "$swipath"
-   clean_tmpfs "$(dirname "$swipath")"
+   clean_tmpfs "$(mountpoint_for_file "$swipath")"
 }
 
 mount_relpath() {
@@ -351,7 +378,7 @@ extract_image() {
         chmod a+r "$installer_image_path"
     else
         info "Remove installer"
-        cleanup_swi_tmpfs "$(basename "$swipath")"
+        cleanup_swi_tmpfs "$swipath"
     fi
 
     ## use new reduced-size boot swi
@@ -431,6 +458,11 @@ write_platform_specific_cmdline() {
     # set varlog size to 100MB
     local varlog_size=100
 
+    # sonic_mode is set to fixed by default.
+    sonic_mode="fixed"
+    supervisor_mode="supervisor"
+    linecard_mode="linecard"
+
     # detect the size of the flash partition from name in Aboot/EOS/SONiC
     local flash_size=$(($(df "$target_path" | tail -1 | tr -s ' ' | cut -f2 -d' ') / 1000))
 
@@ -482,7 +514,7 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7060px4_32
         flash_size=28000
     fi
-    if [ "$sid" = "BlackhawkDD" ]; then
+    if [ "$sid" = "BlackhawkDD" ] || [ "$sid" = "BlackhawkDDM" ]; then
         aboot_machine=arista_7060dx4_32
         flash_size=28000
     fi
@@ -502,16 +534,30 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7280cr3k_32d4
         flash_size=7382
     fi
-    if in_array "$platform" "rook" "magpie" "woodpecker"; then
+    if [ "$sid" = "Clearwater2" ]; then
+        aboot_machine=arista_7800r3_48cq2_lc
+        sonic_mode="$linecard_mode"
+    fi
+    if [ "$sid" = "Clearwater2Ms" ]; then
+        aboot_machine=arista_7800r3_48cqm2_lc
+        sonic_mode="$linecard_mode"
+    fi
+    if [ "$sid" = "OtterLake" ]; then
+        aboot_machine=arista_7800_sup
+        flash_size=30000
+        sonic_mode=$supervisor_mode
+    fi
+    if in_array "$platform" "rook" "magpie" "woodpecker" "sprucefish"; then
         cmdline_add tsc=reliable
         cmdline_add pcie_ports=native
         cmdline_add rhash_entries=1
         cmdline_add usb-storage.delay_use=0
         cmdline_add reassign_prefmem
     fi
-    if in_array "$platform" "rook"; then
+    if in_array "$platform" "rook" "sprucefish"; then
         cmdline_add iommu=on
         cmdline_add intel_iommu=on
+        cmdline_add intel_idle.max_cstate=0
         read_system_eeprom
     fi
     if in_array "$platform" "crow" "magpie"; then
@@ -521,6 +567,10 @@ write_platform_specific_cmdline() {
     fi
     if in_array "$platform" "woodpecker"; then
         cmdline_add modprobe.blacklist=snd_hda_intel,hdaudio
+        read_system_eeprom
+    fi
+    if in_array "$platform" "lorikeet" "hedgehog"; then
+        cmdline_add processor.max_cstate=1
         read_system_eeprom
     fi
 
@@ -535,6 +585,8 @@ write_platform_specific_cmdline() {
     fi
 
     cmdline_add "varlog_size=$varlog_size"
+
+    cmdline_add "sonic.mode=$sonic_mode"
 }
 
 write_image_specific_cmdline() {

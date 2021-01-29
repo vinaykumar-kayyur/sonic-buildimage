@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: types.h,v 1.3 Broadcom SDK $
@@ -92,17 +103,25 @@ typedef signed int		int32;		/* 32-bit quantity */
 
 #define COUNTOF(ary)		((int) (sizeof (ary) / sizeof ((ary)[0])))
 
-typedef uint32	sal_paddr_t;		/* Physical address (PCI address) */
-
 #ifdef PTRS_ARE_64BITS
-typedef uint64	sal_vaddr_t;		/* Virtual address (Host address) */
-#define PTR_TO_INT(x)		((uint32)(((sal_vaddr_t)(x))&0xFFFFFFFF))
+typedef uint64    sal_vaddr_t;        /* Virtual address (Host address) */
+typedef uint64    sal_paddr_t;        /* Physical address (PCI address) */
+#define PTR_TO_INT(x)        ((uint32)(((sal_vaddr_t)(x))&0xFFFFFFFF))
+#define PTR_HI_TO_INT(x)        ((uint32)((((sal_vaddr_t)(x))>>32)&0xFFFFFFFF))
 #else
-typedef uint32	sal_vaddr_t;		/* Virtual address (Host address) */
-#define PTR_TO_INT(x)		((uint32)(x))
+typedef uint32    sal_vaddr_t;        /* Virtual address (Host address) */
+/* Physical address (PCI address) */
+#ifdef PHYS_ADDRS_ARE_64BITS
+typedef uint64    sal_paddr_t;
+#define PTR_HI_TO_INT(x)        ((uint32)((((uint64)(x))>>32)&0xFFFFFFFF))
+#else
+typedef uint32    sal_paddr_t;
+#define PTR_HI_TO_INT(x)        (0)
+#endif
+#define PTR_TO_INT(x)        ((uint32)(x))
 #endif
 
-#define INT_TO_PTR(x)		((void *)((sal_vaddr_t)(x)))
+#define INT_TO_PTR(x)        ((void *)((sal_vaddr_t)(x)))
 
 #define PTR_TO_UINTPTR(x)       ((sal_vaddr_t)(x))
 #define UINTPTR_TO_PTR(x)       ((void *)(x))
@@ -128,6 +147,7 @@ typedef union
 #define SAL_I2C_DEV_TYPE        0x00040 /* I2C device */
 #define SAL_AXI_DEV_TYPE        0x00080 /* AXI device */
 #define SAL_EMMI_DEV_TYPE       0x10000 /* EMMI device */
+#define SAL_COMPOSITE_DEV_TYPE  0x20000 /* Composite device, composed of sub-devices with buses */
 #define SAL_DEV_BUS_TYPE_MASK   0xf00ff /* Odd for historical reasons */
 
 /* Device types */
@@ -152,4 +172,4 @@ typedef union
 /* Special access addresses */
 #define SAL_DEV_OP_EMMI_INIT    0x0fff1000
 
-#endif	/* !_SAL_TYPES_H */
+#endif    /* !_SAL_TYPES_H */

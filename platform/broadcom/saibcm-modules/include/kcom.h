@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: kcom.h,v 1.9 Broadcom SDK $
@@ -59,8 +70,9 @@
 #define KCOM_M_DBGPKT_SET       41 /* Enbale debug packet function */
 #define KCOM_M_DBGPKT_GET       42 /* Get debug packet function info */
 #define KCOM_M_WB_CLEANUP       51 /* Clean up for warmbooting */
+#define KCOM_M_CLOCK_CMD        52 /* Clock Commands */
 
-#define KCOM_VERSION            10 /* Protocol version */
+#define KCOM_VERSION            12 /* Protocol version */
 
 /*
  * Message status codes
@@ -138,11 +150,10 @@ typedef struct kcom_netif_s {
     uint16 vlan;
     uint16 qnum;
     uint8 macaddr[6];
-    uint8 ptch[2];
-    uint8 itmh[4];
     uint8 system_headers[KCOM_NETIF_SYSTEM_HEADERS_SIZE_MAX];
     uint8 system_headers_size;
     char name[KCOM_NETIF_NAME_MAX];
+    uint8 phys_port;
 } kcom_netif_t;
 
 /*
@@ -225,13 +236,9 @@ typedef struct kcom_filter_s {
         uint8 b[KCOM_FILTER_BYTES_MAX];
         uint32 w[KCOM_FILTER_WORDS_MAX];
     } mask;
-    /** Information to parse Dune system headers */
-    uint32 ftmh_lb_key_ext_size;
-    uint32 ftmh_stacking_ext_size;
-    uint32 pph_base_size;
-    uint32 pph_lif_ext_size[8];
-    uint8  udh_enable;
-    uint32 udh_length_type[4];
+    /** Mark to match source modid and modport */
+    uint8  is_src_modport;
+    uint8  spa_unit;
 } kcom_filter_t;
 
 /*
@@ -339,6 +346,21 @@ typedef struct kcom_msg_version_s {
 } kcom_msg_version_t;
 
 /*
+ * Request KCOM interface clock info.
+ */
+#define KSYNC_M_HW_INIT            0
+#define KSYNC_M_HW_DEINIT          1
+#define KSYNC_M_VERSION            2
+#define KSYNC_M_HW_TS_DISABLE      3
+#define KSYNC_M_MTP_TS_UPDATE_ENABLE  4
+#define KSYNC_M_MTP_TS_UPDATE_DISABLE 5
+
+typedef struct kcom_clock_info_s {
+    uint8 cmd;
+    int32 data[8];
+} kcom_clock_info_t;
+
+/*
  * Send literal string to/from kernel module.
  * Mainly for debugging purposes.
  */
@@ -386,6 +408,19 @@ typedef struct kcom_msg_hw_init_s {
     uint8 pkt_hdr_size;
     uint32 dma_hi;
     uint32 cdma_channels;
+    /*
+     * Information to parse Dune system headers
+     */
+    uint32 ftmh_lb_key_ext_size;
+    uint32 ftmh_stacking_ext_size;
+    uint32 pph_base_size;
+    uint32 pph_lif_ext_size[8];
+    uint32 udh_length_type[4];
+    uint32 udh_size;
+    uint32 oamp_punted;
+    uint8 no_skip_udh_check;
+    uint8 system_headers_mode;
+    uint8 udh_enable;
 } kcom_msg_hw_init_t;
 
 /*
@@ -446,6 +481,14 @@ typedef struct kcom_msg_netif_destroy_s {
 } kcom_msg_netif_destroy_t;
 
 /*
+ * Destroy system network interface.
+ */
+typedef struct kcom_msg_clock_s{
+    kcom_msg_hdr_t hdr;
+    kcom_clock_info_t clock_info;
+} kcom_msg_clock_cmd_t;
+
+/*
  * Get list of currently defined system network interfaces.
  */
 #ifndef KCOM_NETIF_MAX
@@ -486,7 +529,7 @@ typedef struct kcom_msg_filter_destroy_s {
  * Get list of currently defined packet filters.
  */
 #ifndef KCOM_FILTER_MAX
-#define KCOM_FILTER_MAX          128
+#define KCOM_FILTER_MAX         128
 #endif
 
 typedef struct kcom_msg_filter_list_s {
@@ -535,6 +578,7 @@ typedef union kcom_msg_s {
     kcom_msg_dbg_pkt_set_t dbg_pkt_set;
     kcom_msg_dbg_pkt_get_t dbg_pkt_get;
     kcom_msg_wb_cleanup_t wb_cleanup;
+    kcom_msg_clock_cmd_t clock_cmd;
 } kcom_msg_t;
 
 /*
