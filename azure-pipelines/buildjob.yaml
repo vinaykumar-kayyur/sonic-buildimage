@@ -1,3 +1,6 @@
+variables:
+  - name: CACHE_OPTIONS
+    value: "SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
 jobs:
 - job:
   displayName: "broadcom"
@@ -14,10 +17,8 @@ jobs:
     displayName: 'reset submodules'
   - script: |
       sudo modprobe overlay
-      CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
       ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=broadcom
       trap "sudo rm -rf fsroot" EXIT
-      echo "nproc: $(nproc), CACHE_OPTIONS: $(CACHE_OPTIONS)"
       make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/sonic-broadcom.bin && \
           ENABLE_SYNCD_RPC=y make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/docker-syncd-brcm-rpc.gz
     displayName: 'Build sonic image'
@@ -41,7 +42,6 @@ jobs:
     displayName: 'reset submodules'
   - script: |
       sudo modprobe overlay
-      CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/mellanox"
       ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=mellanox
       trap "sudo rm -rf fsroot" EXIT
       make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/sonic-mellanox.bin && \
@@ -68,7 +68,6 @@ jobs:
   - script: |
       echo $(Build.BuildNumber)
       sudo modprobe overlay
-      CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/vs"
       ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=vs
       trap "sudo rm -rf fsroot" EXIT
       make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS \
