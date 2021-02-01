@@ -16,7 +16,7 @@ stages:
   pool: sonicbld
   variables:
     - name: cache_mode
-      value: rcache
+      value: wcache
 
   jobs:
   - template: buildjob.yaml
