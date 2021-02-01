@@ -11,13 +11,12 @@ schedules:
     - testmaster
   always: true
 
-variables:
-  - name: cache_mode
-    value: rcache
-
 stages:
 - stage: Build
   pool: sonicbld
+  variables:
+    - name: cache_mode
+      value: rcache
 
-extends:
-  template: buildjob.yaml
+  jobs:
+  - template: buildjob.yaml

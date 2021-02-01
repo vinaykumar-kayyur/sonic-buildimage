@@ -1,10 +1,10 @@
-variables:
-  - name: CACHE_OPTIONS
-    value: "SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
 jobs:
 - job:
   displayName: "broadcom"
   timeoutInMinutes: 600
+  variables:
+    - name: CACHE_OPTIONS
+      value: "SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
   steps:
   - checkout: self
     clean: true
@@ -29,6 +29,9 @@ jobs:
 - job:
   displayName: "mellanox"
   timeoutInMinutes: 600
+  variables:
+    - name: CACHE_OPTIONS
+      value: "SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
   steps:
   - checkout: self
     clean: true
@@ -54,6 +57,9 @@ jobs:
 - job:
   displayName: "kvm"
   timeoutInMinutes: 600
+  variables:
+    - name: CACHE_OPTIONS
+      value: "SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
   steps:
   - checkout: self
     clean: true
