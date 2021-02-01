@@ -19,4 +19,5 @@ stages:
 - stage: Build
   pool: sonicbld
 
+extends:
   template: buildjob.yaml
