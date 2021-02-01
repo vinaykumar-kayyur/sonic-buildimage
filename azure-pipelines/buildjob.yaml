@@ -54,31 +54,3 @@ jobs:
     artifact: sonic-buildimage.mellanox
     displayName: "Archive sonic image"
 
-- job:
-  displayName: "kvm"
-  timeoutInMinutes: 600
-  variables:
-    - name: CACHE_OPTIONS
-      value: "SONIC_DPKG_CACHE_METHOD=$(cache_mode) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    displayName: 'Checkout code'
-
-  - script: |
-       git submodule foreach --recursive git clean -xfdf
-       git submodule foreach --recursive git reset --hard
-       git submodule update --init --recursive
-    displayName: 'reset submodules'
-  - script: |
-      echo $(Build.BuildNumber)
-      sudo modprobe overlay
-      ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=vs
-      trap "sudo rm -rf fsroot" EXIT
-      make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS \
-          target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
-    displayName: 'Build sonic image'
-  - publish: $(System.DefaultWorkingDirectory)/
-    artifact: sonic-buildimage.kvm
-    displayName: "Archive sonic image"
