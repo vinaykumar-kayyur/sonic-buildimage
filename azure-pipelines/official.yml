@@ -15,23 +15,4 @@ stages:
 - stage: Build
   pool: sonicbld
 
-  jobs:
-  - job:
-    displayName: "broadcom"
-    timeoutInMinutes: 600
-    steps:
-    - checkout: self
-      submodules: recursive
-      displayName: 'Checkout code'
-
-    - script: |
-        sudo modprobe overlay
-        CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=wcache SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/broadcom"
-        ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=broadcom
-        trap "sudo rm -rf fsroot" EXIT
-        make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/sonic-broadcom.bin && \
-            ENABLE_SYNCD_RPC=y make USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS target/docker-syncd-brcm-rpc.gz
-      displayName: 'Build sonic image'
-    - publish: $(System.DefaultWorkingDirectory)/
-      artifact: sonic-buildimage.broadcom
-      displayName: "Archive sonic image"
+  template: buildjob.yaml
