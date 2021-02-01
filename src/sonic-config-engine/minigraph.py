@@ -780,6 +780,7 @@ def parse_meta(meta, hname):
     region = None
     cloudtype = None
     resource_type = None
+    kube_data = {}
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -808,7 +809,11 @@ def parse_meta(meta, hname):
                     cloudtype = value
                 elif name == "ResourceType":
                     resource_type = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type
+                elif name == "KubernetesEnabled":
+                    kube_data["disable"] = value
+                elif name == "KubernetesServerIp":
+                    kube_data["ip"] = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, kube_data
 
 
 def parse_linkmeta(meta, hname):
@@ -1097,6 +1102,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     host_lo_intfs = None
     is_storage_device = False
     local_devices = []
+    kube_data = {}
 
     # hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
@@ -1133,7 +1139,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, kube_data) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -1173,6 +1179,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+
+    if kube_data:
+        results['KUBERNETES_MASTER'] = { 'SERVER': {
+            'disable': 'True' if kube_data.get('disable', '0') == '0' else 'False',
+            'ip': kube_data.get('ip', '')
+            }
+        }
 
     results['PEER_SWITCH'] = get_peer_switch_info(linkmetas, devices)
 

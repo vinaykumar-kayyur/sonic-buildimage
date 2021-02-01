@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 
@@ -194,6 +195,12 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TACPLUS_SERVER"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'10.0.10.7': {'priority': '1', 'tcp_port': '49'}, '10.0.10.8': {'priority': '1', 'tcp_port': '49'}}")
+
+    def test_metadata_kube(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "KUBERNETES_MASTER[\'SERVER\']"'
+        output = self.run_script(argument)
+        self.assertEqual(json.loads(output.strip().replace("'", "\"")),
+                json.loads('{"ip": "10.10.10.10", "disable": "True"}'))
 
     def test_minigraph_mgmt_port(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "MGMT_PORT"'
