@@ -55,4 +55,3 @@ def test_directory(mocked_log_err):
     # Test remove_slot() with nonexist table
     directory.remove_slot("db_name", "table_nonexist")
     mocked_log_err.assert_called_with("Directory: Can't remove slot 'db_name__table_nonexist'. The slot doesn't exist")
-    
