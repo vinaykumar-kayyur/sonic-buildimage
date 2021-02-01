@@ -22,11 +22,11 @@ setup(
         'scripts/sonic-host-server'
     ],
     install_requires = [
+        'dbus-python',
         'Jinja2>=2.10',
+        'PyGObject',
         'sonic-py-common',
         'swsssdk>=2.0.1',
-        'dbus-python',
-        'PyGObject',
         'systemd-python',
     ],
     setup_requires = [

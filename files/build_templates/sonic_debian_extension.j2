@@ -249,7 +249,7 @@ sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 # Remove 'PyGObject' package installed via apt
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove python3-gi
 
-# Install prerequisites needed for installing the Python packages, used by sonic-host-services
+# Install prerequisites needed for installing the dependent Python packages of sonic-host-services
 # These packages can be uninstalled after installation
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libcairo2-dev libdbus-1-dev libgirepository1.0-dev libsystemd-dev pkg-config
 

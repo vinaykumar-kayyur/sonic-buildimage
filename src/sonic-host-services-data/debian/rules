@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-ifeq (${SONIC_ENABLE_HOST_SERVICE_ON_START}, y)
+ifeq (${ENABLE_HOST_SERVICE_ON_START}, y)
 	HOST_SERVICE_OPTS := --no-start
 else
 	HOST_SERVICE_OPTS := --no-start --no-enable
