@@ -18,7 +18,6 @@ stages:
   jobs:
   - template: build-template.yml
     parameters:
-
       platform: broadcom
       platform_short: brcm
       cache_mode: wcache
