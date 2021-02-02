@@ -1190,9 +1190,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['DEVICE_METADATA']['localhost']['cluster'] = cluster
 
     if kube_data:
-        results['KUBERNETES_MASTER'] = { 'SERVER': {
-            'disable': str(kube_data.get('enable', '0') == '0'),
-            'ip': kube_data.get('ip', '')
+        results['KUBERNETES_MASTER'] = {
+            'SERVER': {
+                'disable': str(kube_data.get('enable', '0') == '0'),
+                'ip': kube_data.get('ip', '')
             }
         }
 
