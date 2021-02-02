@@ -301,4 +301,3 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected_table
         )
-        
