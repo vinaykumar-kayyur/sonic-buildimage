@@ -146,6 +146,11 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "1")
 
+    def test_minigraph_cluster(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'cluster\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "AAA00PrdStr00")
+
     def test_minigraph_neighbor_metadata(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_NEIGHBOR_METADATA"'
 
