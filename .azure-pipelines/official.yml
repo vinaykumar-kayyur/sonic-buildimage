@@ -8,15 +8,14 @@ schedules:
   displayName: Daily midnight build
   branches:
     include:
-    - testmaster
+    - master
   always: true
 
 stages:
 - stage: Build
   pool: sonicbld
-  variables:
-    - name: cache_mode
-      value: wcache
 
   jobs:
-  - template: buildjob.yaml
+  - template: build-template.yaml
+    parameters:
+      cache_mode: wcache
