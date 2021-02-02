@@ -1191,7 +1191,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if kube_data:
         results['KUBERNETES_MASTER'] = { 'SERVER': {
-            'disable': 'True' if kube_data.get('enable', '0') == '0' else 'False',
+            'disable': str(kube_data.get('enable', '0') == '0'),
             'ip': kube_data.get('ip', '')
             }
         }
