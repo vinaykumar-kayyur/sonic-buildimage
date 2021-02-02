@@ -24,8 +24,12 @@ read_conf_file() {
     local conf_file=$1
     while IFS='=' read -r var value
     do
-        f_char=$(echo $var | cut -c1)
-        [ "$f_char" = "#" ] && continue
+        # remove comment string
+        var=${var%#*}
+        value=${value%#*}
+        # trim the space
+        var="$(echo $var)"
+        # skip blank line
         [ -z "$var" ] && continue
         # remove double quote in the beginning
         tmp_val=${value#\"}
