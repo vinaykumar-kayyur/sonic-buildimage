@@ -254,7 +254,6 @@ $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
-$(info "SONIC_DPKG_CACHE_METHOD"         : "$(SONIC_DPKG_CACHE_METHOD)")
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
