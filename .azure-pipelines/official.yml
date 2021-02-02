@@ -16,6 +16,6 @@ stages:
   pool: sonicbld
 
   jobs:
-  - template: build-template.yaml
+  - template: build-template.yml
     parameters:
       cache_mode: wcache
