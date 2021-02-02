@@ -29,6 +29,17 @@ jobs:
   - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.broadcom
     displayName: "Archive sonic image"
+  - script: |
+      sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
+      sudo rm -f /var/run/march/docker.pid || true
+      sudo rm -rf fsroot || true
+      git clean -xfdf;
+      git reset --hard;
+      git submodule foreach --recursive 'git clean -xfdf || true';
+      git submodule foreach --recursive 'git reset --hard || true';
+      git submodule foreach --recursive 'git remote update || true';
+      git submodule update --init --recursive;
+    displayName: "Clean Workspace"
 
 - job:
   displayName: "mellanox"
@@ -55,6 +66,17 @@ jobs:
   - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.mellanox
     displayName: "Archive sonic image"
+  - script: |
+      sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
+      sudo rm -f /var/run/march/docker.pid || true
+      sudo rm -rf fsroot || true
+      git clean -xfdf;
+      git reset --hard;
+      git submodule foreach --recursive 'git clean -xfdf || true';
+      git submodule foreach --recursive 'git reset --hard || true';
+      git submodule foreach --recursive 'git remote update || true';
+      git submodule update --init --recursive;
+    displayName: "Clean Workspace"
 
 - job:
   displayName: "kvm"
@@ -82,4 +104,14 @@ jobs:
   - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.kvm
     displayName: "Archive sonic image"
-
+  - script: |
+      sudo kill -9 `sudo cat /var/run/march/docker.pid` || true
+      sudo rm -f /var/run/march/docker.pid || true
+      sudo rm -rf fsroot || true
+      git clean -xfdf;
+      git reset --hard;
+      git submodule foreach --recursive 'git clean -xfdf || true';
+      git submodule foreach --recursive 'git reset --hard || true';
+      git submodule foreach --recursive 'git remote update || true';
+      git submodule update --init --recursive;
+    displayName: "Clean Workspace"
