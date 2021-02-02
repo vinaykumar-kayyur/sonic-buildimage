@@ -4,3 +4,4 @@ steps:
     sudo rm -f /var/run/march/docker.pid || true
     sudo rm -rf sonic-buildimage || sudo rm -rf ../sonic-buildimage || true
   displayName: "Clean Workspace"
+  
