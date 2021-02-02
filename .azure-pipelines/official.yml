@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 schedules:
-- cron: "5 0 * * *"
+- cron: "0 8 * * *"
   displayName: Daily midnight build
   branches:
     include:
@@ -18,4 +18,11 @@ stages:
   jobs:
   - template: build-template.yml
     parameters:
+
+      platform: broadcom
+      platform_short: brcm
       cache_mode: wcache
+      dbg_image: true
+      swi_image: true
+      raw_image: true
+      sync_rpc_image: true
