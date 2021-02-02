@@ -33,7 +33,7 @@ def get_ipmitool_raw_output(args):
     command = "ipmitool raw {}".format(args)
     try:
         proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
+                                universal_newlines=True,stderr=subprocess.STDOUT)
         stdout = proc.communicate()[0]
         proc.wait()
         if not proc.returncode:
@@ -175,7 +175,7 @@ class IpmiFru(object):
         command = "ipmitool fru print {}".format(self.id)
         try:
             proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT)
+                                    universal_newlines=True,stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
             proc.wait()
             if not proc.returncode:
@@ -248,7 +248,7 @@ class IpmiFru(object):
                                                           offset_MSB, count)
         try:
             proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT)
+                                    universal_newlines=True,stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
             proc.wait()
             if not proc.returncode:

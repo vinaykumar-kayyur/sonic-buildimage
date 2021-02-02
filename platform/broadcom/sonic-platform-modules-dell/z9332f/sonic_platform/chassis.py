@@ -19,6 +19,7 @@ try:
     from sonic_platform.thermal import Thermal
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.watchdog import Watchdog
+    import sonic_platform.hwaccess as hwaccess
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -53,9 +54,15 @@ class Chassis(ChassisBase):
     REBOOT_CAUSE_PATH = "/host/reboot-cause/platform/reboot_reason"
     oir_fd = -1
     epoll = -1
-
+    io_res = "/dev/port"
+    sysled_offset = 0xA162
+    SYSTEM_LED_COLOR = {
+       "green": 0xd0,
+       "yellow": 0xe0,
+       "flash_green": 0xd2,
+       "flash_yellow": 0xe2
+       }
     _global_port_pres_dict = {}
-
     _port_to_i2c_mapping = {
             1:  10,
             2:  11,
@@ -317,3 +324,48 @@ class Chassis(ChassisBase):
 
     def get_qualified_media_list(self):
         return media_part_num_list
+
+    def initizalize_system_led(self):
+        self.sys_ledcolor = "green"
+
+    def get_status_led(self):
+        val = hwaccess.io_reg_read(self.io_res,self.sysled_offset)
+        if(val != False):
+            val = hex(val)
+            if val == "0xd0":
+                self.sys_ledcolor="green"
+            elif val == "0xe0":
+                self.sys_ledcolor="yellow"
+            elif val == "0xd2":
+                self.sys_ledcolor="flash_green"
+            else:
+                self.sys_ledcolor="flash_yellow"
+        return self.sys_ledcolor
+
+    def set_status_led(self, color):
+        """ Set system LED status based on the color type passed 
+            in the argument.
+        """
+        
+        if color not in list(self.SYSTEM_LED_COLOR.keys()):
+            raise ValueError("Invalid color type {} provided. Valid colors "
+                   "are {}".format(color,list(self.SYSTEM_LED_COLOR.keys())))
+
+        if(color == "green"):
+            if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSTEM_LED_COLOR[color])):
+                return False
+            self.sys_ledcolor=color
+            return True
+
+        elif(color == "flash_green"):
+            if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSTEM_LED_COLOR[color])):
+                return False
+            self.sys_ledcolor=color
+            return True
+
+        elif(color == "yellow"):
+            if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSTEM_LED_COLOR[color])):
+                return False
+            self.sys_ledcolor=color
+            return True
+        return True
