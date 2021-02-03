@@ -60,6 +60,7 @@ jobs:
         make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_short }}-rpc.gz
       fi
       make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/sonic-${{ parameters.platform }}.bin
+      sudo rm -rf fsroot || true
     displayName: 'Build sonic image'
   - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.${{ parameters.platform }}
