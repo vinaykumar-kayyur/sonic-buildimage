@@ -201,12 +201,10 @@ class Sfp(SfpBase):
         port_name = "Unknown"
         sfp_type = "Unknown"
 
-        if self.port_num >= QSFP_PORT_START and self.port_num <= QSFP_TYPE:
+        if self.port_num >= QSFP_PORT_START and self.port_num <= QSFP_PORT_END:
             sfp_type = QSFP_TYPE
             port_name = "QSFP" + str(self.port_num - QSFP_PORT_START + 1)
-        elif self.port_num >= SFP_PORT_START and self.port_num <= SFP_PORT_END:
-            sfp_type = SFP_TYPE
-            port_name = "SFP" + str(self.port_num - SFP_PORT_START + 1)
+
         return sfp_type, port_name
 
     def __convert_string_to_num(self, value_str):
