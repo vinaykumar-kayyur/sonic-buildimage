@@ -43,6 +43,7 @@ jobs:
        git submodule update --init --recursive
     displayName: 'reset submodules'
   - script: |
+      set -e
       sudo modprobe overlay
       CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=${{ parameters.cache_mode }} SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/${{ parameters.platform }}"
       ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=${{ parameters.platform }}
