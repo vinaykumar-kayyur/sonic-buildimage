@@ -22,13 +22,14 @@ _trap_push true
 
 read_conf_file() {
     local conf_file=$1
-    while IFS='=' read -r var value
+    while IFS='=' read -r var value || [ -n "$var" ]
     do
+        # remove newline character
+        var=$(echo $var | tr -d '\r\n')
+        value=$(echo $value | tr -d '\r\n')
         # remove comment string
         var=${var%#*}
         value=${value%#*}
-        # trim the space
-        var="$(echo $var)"
         # skip blank line
         [ -z "$var" ] && continue
         # remove double quote in the beginning
