@@ -187,7 +187,6 @@ void MuxPort::handleMuxConfig(const std::string &config)
         mode = common::MuxPortConfig::Active;
     }
 
-    mMuxPortConfig.setMode(mode);
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
         &link_manager::LinkManagerStateMachine::handleMuxConfigNotification,

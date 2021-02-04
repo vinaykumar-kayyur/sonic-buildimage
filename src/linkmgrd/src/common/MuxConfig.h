@@ -202,7 +202,7 @@ private:
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
     uint32_t mStateChangeRetryCount = 3;
-    uint32_t mSuspendTimeout_msec = 1000;
+    uint32_t mSuspendTimeout_msec = 500;
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
 

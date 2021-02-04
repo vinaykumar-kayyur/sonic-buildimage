@@ -267,10 +267,11 @@ private:
     *@param nextState (in, out)     reference to composite state, the state MuxState
     *                               entry will be changed to align with state label provided
     *@param label (in)              state to switch to
+    *@param forceSwitch (in)        Force switch mux state, used to match the driver state only
     *
     *@return none
     */
-    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label);
+    inline void switchMuxState(CompositeState &nextState, mux_state::MuxState::Label label, bool forceSwitch = false);
 
 public:
     /**
@@ -402,6 +403,17 @@ public:
     void handleSuspendTimerExpiry();
 
 private:
+    /**
+    *@method handleMuxActiveTimeout
+    *
+    *@brief handle when state machine enter LinkProberWait, MuxActive/MuxStandby, LinkUp states
+    *
+    *@param errorCode (in)          timer error code
+    *
+    *@return none
+    */
+    void handleMuxActiveTimeout(boost::system::error_code errorCode);
+
     /**
     *@method initLinkProberState
     *
@@ -572,6 +584,8 @@ private:
     std::shared_ptr<link_prober::LinkProber> mLinkProberPtr = nullptr;
     mux_state::MuxStateMachine mMuxStateMachine;
     link_state::LinkStateMachine mLinkStateMachine;
+
+    boost::asio::deadline_timer mDeadlineTimer;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
 };

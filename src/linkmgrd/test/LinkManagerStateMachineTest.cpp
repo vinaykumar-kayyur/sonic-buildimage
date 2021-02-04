@@ -38,13 +38,18 @@ void LinkManagerStateMachineTest::suspendTxProbes()
 
 void LinkManagerStateMachineTest::runIoService(uint32_t count)
 {
-    for (uint8_t i = 0; i < count; i++) {
+    if (count == 0) {
         mIoService.run();
+        mIoService.reset();
+    }
+
+    for (uint8_t i = 0; i < count; i++) {
+        mIoService.run_one();
         mIoService.reset();
     }
 }
 
-void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label)
+void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count)
 {
     for (uint8_t i = 0; i < mMuxConfig.getStateChangeRetryCount(); i++) {
         switch (label) {
@@ -66,7 +71,7 @@ void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberSta
         default:
             break;
         }
-        runIoService();
+        runIoService(count);
     }
 }
 
@@ -109,10 +114,10 @@ void LinkManagerStateMachineTest::postLinkEvent(link_state::LinkState::Label lab
     }
 }
 
-void LinkManagerStateMachineTest::handleMuxState(std::string state)
+void LinkManagerStateMachineTest::handleMuxState(std::string state, uint32_t count)
 {
     mFakeMuxPort.handleMuxState(state);
-    runIoService();
+    runIoService(count);
 }
 
 void LinkManagerStateMachineTest::handleGetMuxState(std::string state)
@@ -121,10 +126,10 @@ void LinkManagerStateMachineTest::handleGetMuxState(std::string state)
     runIoService();
 }
 
-void LinkManagerStateMachineTest::handleProbeMuxState(std::string state)
+void LinkManagerStateMachineTest::handleProbeMuxState(std::string state, uint32_t count)
 {
     mFakeMuxPort.handleProbeMuxState(state);
-    runIoService();
+    runIoService(count);
 }
 
 void LinkManagerStateMachineTest::handleLinkState(std::string linkState)
@@ -133,10 +138,10 @@ void LinkManagerStateMachineTest::handleLinkState(std::string linkState)
     runIoService();
 }
 
-void LinkManagerStateMachineTest::handleMuxConfig(std::string config)
+void LinkManagerStateMachineTest::handleMuxConfig(std::string config, uint32_t count)
 {
     mFakeMuxPort.handleMuxConfig(config);
-    runIoService();
+    runIoService(count);
 }
 
 void LinkManagerStateMachineTest::activateStateMachine()
@@ -150,7 +155,7 @@ void LinkManagerStateMachineTest::setMuxActive()
     VALIDATE_STATE(Unknown, Wait, Down);
 
     postLinkEvent(link_state::LinkState::Up);
-    VALIDATE_STATE(Unknown, Wait, Up);
+    VALIDATE_STATE(Wait, Wait, Up);
 
     // change state to active
     postLinkProberEvent(link_prober::LinkProberState::Active);
@@ -167,7 +172,7 @@ void LinkManagerStateMachineTest::setMuxStandby()
     VALIDATE_STATE(Unknown, Wait, Down);
 
     postLinkEvent(link_state::LinkState::Up);
-    VALIDATE_STATE(Unknown, Wait, Up);
+    VALIDATE_STATE(Wait, Wait, Up);
 
     // change state to active
     postLinkProberEvent(link_prober::LinkProberState::Standby);
@@ -251,17 +256,21 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverMuxFirst)
     setMuxStandby();
 
     EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 0);
-    handleMuxConfig("active");
+    handleMuxConfig("active", 2);
 
     VALIDATE_STATE(Wait, Wait, Up);
     EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
 
     // swss notification
-    handleMuxState("active");
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    // swss notification
+    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Wait, Active, Up);
 
     // change state to active
-    postLinkProberEvent(link_prober::LinkProberState::Active);
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
     VALIDATE_STATE(Active, Active, Up);
 }
 

@@ -181,7 +181,7 @@ void DbInterface::handleSetMuxState(const std::string portName, mux_state::MuxSt
 //
 void DbInterface::handleProbeMuxState(const std::string portName)
 {
-    MUXLOGINFO(portName);
+    MUXLOGDEBUG(portName);
 
     mAppDbMuxCommandTablePtr->hset(portName, "command", "probe");
 }
@@ -248,9 +248,10 @@ void DbInterface::getLoopback2InterfaceInfo(
             if (v == "ok") {
                 break;
             }
-
-            boost::this_thread::sleep(boost::posix_time::milliseconds(DEFAULT_TIMEOUT_MSEC));
         }
+
+        MUXLOGWARNING("Loopback2 interface is not ready.");
+        boost::this_thread::sleep(boost::posix_time::milliseconds(DEFAULT_TIMEOUT_MSEC));
     }
 }
 
@@ -437,7 +438,7 @@ void DbInterface::handleMuxResponseNotifiction(swss::SubscriberStateTable &appdb
             const std::string f = cit->first;
             const std::string v = cit->second;
 
-            MUXLOGINFO(boost::format("port: %s, operation: %s, f: %s, v: %s") %
+            MUXLOGDEBUG(boost::format("port: %s, operation: %s, f: %s, v: %s") %
                 port %
                 oprtation %
                 f %
@@ -474,7 +475,7 @@ void DbInterface::handleMuxStateNotifiction(swss::SubscriberStateTable &statedbP
             const std::string f = cit->first;
             const std::string v = cit->second;
 
-            MUXLOGINFO(boost::format("port: %s, operation: %s, f: %s, v: %s") %
+            MUXLOGDEBUG(boost::format("port: %s, operation: %s, f: %s, v: %s") %
                 port %
                 oprtation %
                 f %

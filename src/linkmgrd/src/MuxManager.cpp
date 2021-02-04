@@ -73,7 +73,6 @@ void MuxManager::run()
 void MuxManager::terminate()
 {
     mIoService.stop();
-    mIoService.reset();
     mThreadGroup.join_all();
 }
 
@@ -148,7 +147,7 @@ void MuxManager::processGetServerMacAddress(
     const std::array<uint8_t, ETHER_ADDR_LEN> &address
 )
 {
-    MUXLOGINFO(portName);
+    MUXLOGDEBUG(portName);
 
     PortMapIterator portMapIterator = mPortMap.find(portName);
     if (portMapIterator != mPortMap.end()) {
@@ -236,6 +235,7 @@ void MuxManager::handleSignal(const boost::system::error_code errorCode, int sig
         switch (signalNumber) {
         case SIGINT:
         case SIGTERM:
+            mSignalSet.clear();
             mDbInterface.stopSwssNotificationPoll();
             mIoService.stop();
             break;
@@ -254,11 +254,13 @@ void MuxManager::handleSignal(const boost::system::error_code errorCode, int sig
         }
     }
 
-    mSignalSet.async_wait(boost::bind(&MuxManager::handleSignal,
-        this,
-        boost::asio::placeholders::error,
-        boost::asio::placeholders::signal_number
-    ));
+    if (signalNumber != SIGINT && signalNumber != SIGTERM) {
+        mSignalSet.async_wait(boost::bind(&MuxManager::handleSignal,
+            this,
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::signal_number
+        ));
+    }
 }
 
 } /* namespace mux */
