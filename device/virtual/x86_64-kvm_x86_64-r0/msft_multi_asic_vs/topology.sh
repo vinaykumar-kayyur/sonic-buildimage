@@ -22,6 +22,7 @@ start () {
             ip link set dev $ORIG name $TEMP # rename to prevent conflicts before renaming in new namespace
             ip link set dev $TEMP netns asic$ASIC
             sudo ip netns exec asic$ASIC ip link set $TEMP name $NEW # rename to final interface name
+            sudo ip netns exec asic$ASIC ip link set dev $NEW mtu 9100
             sudo ip netns exec asic$ASIC ip link set $NEW up 
         done
     done
@@ -43,7 +44,9 @@ start () {
                 sudo ip netns exec asic$BACKEND ip link set $TEMP_BACK name $BACK_NAME
                 sudo ip netns exec asic$FRONTEND ip link set $TEMP_FRONT name $FRONT_NAME
 
+                sudo ip netns exec asic$BACKEND ip link set dev $BACK_NAME mtu 9100
                 sudo ip netns exec asic$BACKEND ip link set $BACK_NAME up
+                sudo ip netns exec asic$FRONTEND ip link set dev $FRONT_NAME mtu 9100
                 sudo ip netns exec asic$FRONTEND ip link set $FRONT_NAME up
             done
         done
