@@ -1454,7 +1454,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             'server_crt': '/etc/sonic/telemetry/streamingtelemetryserver.cer',
             'server_key': '/etc/sonic/telemetry/streamingtelemetryserver.key',
             'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
-        }
+        },
+        'runInHttpMode': 'false'
     }
     results['RESTAPI'] = {
         'config': {
