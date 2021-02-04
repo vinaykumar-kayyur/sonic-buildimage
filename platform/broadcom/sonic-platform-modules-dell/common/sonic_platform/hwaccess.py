@@ -26,10 +26,10 @@ def i2c_get(bus, i2caddr, ofs):
 
 def io_reg_read(io_resource, offset):
     fd = os.open(io_resource, os.O_RDONLY)
-    if(fd < 0):
+    if fd < 0:
         print('file open failed %s' % io_resource)
         return False
-    if(os.lseek(fd, offset, os.SEEK_SET) != offset):
+    if os.lseek(fd, offset, os.SEEK_SET) != offset:
         print('lseek failed on %s' % io_resource)
         return False
     buf = os.read(fd, 1)
@@ -39,14 +39,14 @@ def io_reg_read(io_resource, offset):
 
 def io_reg_write(io_resource, offset, val):
     fd = os.open(io_resource, os.O_RDWR)
-    if(fd < 0):
+    if fd < 0:
         print('file open failed %s' % io_resource)
         return False
-    if(os.lseek(fd, offset, os.SEEK_SET) != offset):
+    if os.lseek(fd, offset, os.SEEK_SET) != offset:
         print('lseek failed on %s' % io_resource)
         return False
     ret = os.write(fd, struct.pack('B', val))
-    if(ret != 1):
+    if ret != 1:
         print('write failed %d' % ret)
         return False
     os.close(fd)

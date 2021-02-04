@@ -56,12 +56,22 @@ class Chassis(ChassisBase):
     epoll = -1
     io_res = "/dev/port"
     sysled_offset = 0xA162
-    SYSTEM_LED_COLOR = {
+    SYSLED_COLOR_TO_REG = {
        "green": 0xd0,
        "yellow": 0xe0,
        "flash_green": 0xd2,
        "flash_yellow": 0xe2
        }
+
+    REG_TO_SYSLED_COLOR = {
+        0xd0 : "green",
+        0xe0 : "yellow",
+        0xd2 : "flash_green",
+        0xd1 : "flash_green",
+        0xe2 : "flash_yellow",
+        0xe1 : "flash_yellow"
+        }
+
     _global_port_pres_dict = {}
     _port_to_i2c_mapping = {
             1:  10,
@@ -329,43 +339,30 @@ class Chassis(ChassisBase):
         self.sys_ledcolor = "green"
 
     def get_status_led(self):
-        val = hwaccess.io_reg_read(self.io_res,self.sysled_offset)
-        if(val != False):
-            val = hex(val)
-            if val == "0xd0":
-                self.sys_ledcolor="green"
-            elif val == "0xe0":
-                self.sys_ledcolor="yellow"
-            elif val == "0xd2":
-                self.sys_ledcolor="flash_green"
-            else:
-                self.sys_ledcolor="flash_yellow"
+        """
+        Gets the current system LED color
+
+        Returns:
+            A string that represents the supported color
+        """
+        val = hwaccess.io_reg_read(self.io_res, self.sysled_offset)
+        if val != -1:
+            return self.REG_TO_SYSLED_COLOR.get(val)
         return self.sys_ledcolor
 
     def set_status_led(self, color):
-        """ Set system LED status based on the color type passed 
-            in the argument.
+        """ 
+        Set system LED status based on the color type passed in the argument.
+        Argument: Color to be set
+        Returns:
+          bool: True is specified color is set, Otherwise return False
         """
-        
-        if color not in list(self.SYSTEM_LED_COLOR.keys()):
-            raise ValueError("Invalid color type {} provided. Valid colors "
-                   "are {}".format(color,list(self.SYSTEM_LED_COLOR.keys())))
 
-        if(color == "green"):
-            if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSTEM_LED_COLOR[color])):
-                return False
-            self.sys_ledcolor=color
-            return True
+        if color not in list(self.SYSLED_COLOR_TO_REG.keys()):
+            return False
 
-        elif(color == "flash_green"):
-            if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSTEM_LED_COLOR[color])):
-                return False
-            self.sys_ledcolor=color
-            return True
-
-        elif(color == "yellow"):
-            if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSTEM_LED_COLOR[color])):
-                return False
-            self.sys_ledcolor=color
-            return True
+        if(not hwaccess.io_reg_write(self.io_res, self.sysled_offset, self.SYSLED_COLOR_TO_REG[color])):
+            return False
+        self.sys_ledcolor = color
         return True
+
