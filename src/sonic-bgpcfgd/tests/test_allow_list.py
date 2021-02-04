@@ -4,6 +4,7 @@ import bgpcfgd.frr
 from bgpcfgd.directory import Directory
 from bgpcfgd.template import TemplateFabric
 import bgpcfgd
+from copy import deepcopy
 
 
 swsscommon_module_mock = MagicMock()
@@ -26,7 +27,7 @@ global_constants = {
 }
 
 @patch.dict("sys.modules", swsscommon=swsscommon_module_mock)
-def set_del_test(op, args, currect_config, expected_config, gloabl_default_action=None):
+def set_del_test(op, args, currect_config, expected_config, update_global_default_action=None):
     from bgpcfgd.managers_allow_list import BGPAllowListMgr
     set_del_test.push_list_called = False
     def push_list(args):
@@ -40,16 +41,16 @@ def set_del_test(op, args, currect_config, expected_config, gloabl_default_actio
     cfg_mgr.update.return_value = None
     cfg_mgr.push_list = push_list
     cfg_mgr.get_text.return_value = currect_config
-    if gloabl_default_action:
-        global_constants["bgp"]["allow_list"]["default_action"] = gloabl_default_action
     common_objs = {
         'directory': Directory(),
         'cfg_mgr':   cfg_mgr,
         'tf':        TemplateFabric(),
-        'constants': global_constants,
+        'constants': deepcopy(global_constants),
     }
 
     mgr = BGPAllowListMgr(common_objs, "CONFIG_DB", "BGP_ALLOWED_PREFIXES")
+    if update_global_default_action:
+        mgr.constants["bgp"]["allow_list"]["default_action"] = update_global_default_action
     if op == "SET":
         mgr.set_handler(*args)
     elif op == "DEL":
@@ -60,9 +61,6 @@ def set_del_test(op, args, currect_config, expected_config, gloabl_default_actio
         assert set_del_test.push_list_called, "cfg_mgr.push_list wasn't called"
     else:
         assert not set_del_test.push_list_called, "cfg_mgr.push_list was called"
-
-    global_constants["bgp"]["allow_list"]["default_action"] = "permit"
-
 
 def test_set_handler_with_community():
     set_del_test(
