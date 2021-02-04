@@ -119,13 +119,13 @@ class Psu(PsuBase):
         """
         Returns PSU low threshold in Volts
         """
-        return "11.4"
+        return 11.4
 
     def get_voltage_high_threshold(self):
         """
         Returns PSU high threshold in Volts
         """
-        return "12.6"
+        return 12.6
 
     def get_temperature(self):
         """
@@ -145,7 +145,7 @@ class Psu(PsuBase):
         """
         Returns the high temperature threshold for PSU in Celsius
         """
-        return "45.0"
+        return 45.0
 
     def get_current(self):
         """
