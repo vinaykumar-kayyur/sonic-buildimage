@@ -25,7 +25,7 @@ class Psu(PsuBase):
                             "Temperature": 0x35 },
                        2: { "State": 0x39, "Current": 0x41,
                             "Power": 0x42, "Voltage": 0x40, 
-                             "Temperature": 0x3F } }
+                            "Temperature": 0x3F } }
     # ( PSU-ID: FRU-ID }
     FRU_MAPPING = { 1: 3, 2: 4 }
 
