@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
-FROM sonic-sdk-dbg
+FROM sonic-sdk
 
 ARG base_os_version
 ARG docker_database_version
@@ -12,40 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -f -y \
-        build-essential \
-        curl \
-        wget \
-        unzip \
-        git \
-        libtool \
-        lintian \
-        sudo \
-        dh-make \
-        dh-exec \
-        dh-autoreconf \
-        devscripts \
-        pkg-config \
-        libjansson-dev \
-        libboost1.71-dev \
-        libboost-program-options1.71-dev \
-        libboost-system1.71-dev \
-        libboost-thread1.71-dev \
-        libboost-atomic1.71-dev \
-        libboost-chrono1.71-dev \
-        libboost-container1.71-dev \
-        libboost-context1.71-dev \
-        libboost-contract1.71-dev \
-        libboost-coroutine1.71-dev \
-        libboost-date-time1.71-dev \
-        libboost-fiber1.71-dev \
-        libboost-filesystem1.71-dev \
-        libboost-graph-parallel1.71-dev \
-        libboost-log1.71-dev \
-        libboost-regex1.71-dev \
-        libzmq3-dev \
-        googletest \
-        libgtest-dev \
-        libgcc-8-dev
+        build-essential
 
 {% if docker_sonic_sdk_buildenv_debs.strip() -%}
 # Copy locally-built Debian package dependencies
