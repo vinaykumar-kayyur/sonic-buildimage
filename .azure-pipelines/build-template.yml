@@ -15,6 +15,7 @@ parameters:
   values:
   - wcache
   - rcache
+  - cache
 
 - name: dbg_image
   type: boolean
