@@ -106,6 +106,15 @@ class FanDrawer(FanDrawerBase):
 
         return presence
 
+    def get_status(self):
+        """
+        Retrieves the operational status of the Fandrawer
+
+        Returns:
+            bool: True if Fandrawer is operating properly, False if not
+        """
+        return self.get_fan(0).get_status()
+
     def get_position_in_parent(self):
         """
         Retrieves 1-based relative physical position in parent device.

@@ -117,6 +117,19 @@ class FanDrawer(FanDrawerBase):
         # Sample Serial number format "US-01234D-54321-25A-0123-A00"
         return self.eeprom.get_serial_number()
 
+    def get_status(self):
+        """
+        Retrieves the operational status of the Fandrawer
+
+        Returns:
+            bool: True if Fandrawer is operating properly, False if not
+        """
+        status = True
+        for fan in self.get_all_fans():
+            status &= fan.get_status()
+
+        return status
+
     def get_position_in_parent(self):
         """
         Retrieves 1-based relative physical position in parent device.

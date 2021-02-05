@@ -13,7 +13,6 @@ try:
     import os
     import glob
     from sonic_platform_base.thermal_base import ThermalBase
-    from sonic_platform.psu import Psu
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -34,11 +33,20 @@ class Thermal(ThermalBase):
                     'PSU1-Sensor 1', 'PSU1-Sensor 2', 'PSU2-Sensor 1',
                     'PSU2-Sensor 2', 'CPU Core 0', 'CPU Core 1')
 
-    def __init__(self, thermal_index):
-        self.index = thermal_index + 1
-        self.is_psu_thermal = False
+    def __init__(self, thermal_index,
+                 psu_index=1, psu_thermal=False, dependency=None):
+        self.is_psu_thermal = psu_thermal
+        self.dependency = dependency
         self.is_driver_initialized = True
-        self.dependency = None
+
+        if self.is_psu_thermal:
+            self.index = (2 * psu_index) + thermal_index + 2
+        else:
+            # CPU thermal
+            if thermal_index > 3:
+                self.index = thermal_index + 5
+            else:
+                self.index = thermal_index + 1
 
         if self.index < 9:
             i2c_path = self.I2C_DIR + self.I2C_DEV_MAPPING[self.index - 1][0]
@@ -54,10 +62,6 @@ class Thermal(ThermalBase):
 
             if self.index == 4:
                 hwmon_temp_suffix = "crit"
-
-            if self.index > 4:
-                self.is_psu_thermal = True
-                self.dependency = Psu(self.index / 7)
         else:
             dev_path = "/sys/devices/platform/coretemp.0/hwmon/"
             hwmon_temp_index = self.index - 7
