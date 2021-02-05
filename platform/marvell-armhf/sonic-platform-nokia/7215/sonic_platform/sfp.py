@@ -917,3 +917,23 @@ class Sfp(SfpBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence()
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+
+        if self.sfp_type == "SFP":
+            return True
+        else:
+            return False
+        
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device
+        Returns:
+            integer: The 1-based relative physical position in parent device
+        """
+        return self.index
