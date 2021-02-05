@@ -20,7 +20,7 @@ stages:
     parameters:
       platform: broadcom
       platform_short: brcm
-      cache_mode: cache
+      cache_mode: wcache
       dbg_image: true
       swi_image: true
       raw_image: true
