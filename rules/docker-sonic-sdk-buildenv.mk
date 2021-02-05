@@ -8,7 +8,6 @@ $(DOCKER_SONIC_SDK_BUILDENV)_PATH = $(DOCKERS_PATH)/docker-sonic-sdk-buildenv
 
 $(DOCKER_SONIC_SDK_BUILDENV)_DEPENDS += $(LIBSAIVS) \
                                         $(LIBSAIVS_DEV) \
-                                        $(LIBSAIVS_DBG) \
                                         $(LIBSAIREDIS_DEV) \
                                         $(LIBSAIMETADATA_DEV) \
                                         $(LIBSWSSCOMMON_DEV) \
@@ -19,8 +18,10 @@ $(DOCKER_SONIC_SDK_BUILDENV)_DEPENDS += $(LIBSAIVS) \
                                         $(LIBNL_NF3_DEV) \
                                         $(LIBNL_CLI_DEV)
 
-$(DOCKER_SONIC_SDK_BUILDENV)_DBG_DEPENDS = $($(DOCKER_SONIC_SDK)_DBG_DEPENDS)
+$(DOCKER_SONIC_SDK_BUILDENV)_DBG_DEPENDS = $($(DOCKER_SONIC_SDK)_DBG_DEPENDS) \
+                                           $(LIBSAIVS_DBG)
 $(DOCKER_SONIC_SDK_BUILDENV)_DBG_IMAGE_PACKAGES = $($(DOCKER_SONIC_SDK)_DBG_IMAGE_PACKAGES)
+
 
 $(DOCKER_SONIC_SDK_BUILDENV)_LOAD_DOCKERS += $(DOCKER_SONIC_SDK)
 
