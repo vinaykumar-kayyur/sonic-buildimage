@@ -4,6 +4,7 @@ parameters:
   values:
   - broadcom
   - mellanox
+
 - name: platform_short
   type: string
   values:
