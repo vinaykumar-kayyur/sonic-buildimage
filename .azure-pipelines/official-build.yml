@@ -16,7 +16,6 @@ pr: none
 
 stages:
 - stage: Build
-  pool: sonicbld
 
   jobs:
   - template: build-template.yml
@@ -36,3 +35,4 @@ stages:
       platform_arch: armhf
       platform_short: marvell-armhf
       cache_mode: wcache
+      pool: sonicbld_8c

@@ -28,6 +28,13 @@ parameters:
   - rcache
   - cache
 
+- name: pool
+  type: string
+  values:
+  - sonicbld
+  - sonicbld_8c
+  default: sonicbld
+
 - name: dbg_image
   type: boolean
   default: false
@@ -50,6 +57,7 @@ parameters:
 
 jobs:
 - job:
+  pool: ${{ parameters.pool }}
   displayName: ${{ parameters.platform }}
   timeoutInMinutes: ${{ parameters.timeout }}
   steps:
