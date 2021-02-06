@@ -23,7 +23,7 @@ if [ -n "$CERTS" ]; then
     SERVER_CRT=$(echo $CERTS | jq -r '.server_crt')
     SERVER_KEY=$(echo $CERTS | jq -r '.server_key')
     if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
-        TELEMETRY_ARGS+=" --insecure"
+        TELEMETRY_ARGS+=" --noTLS"
     else
         TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
     fi
@@ -36,7 +36,7 @@ elif [ -n "$X509" ]; then
     SERVER_CRT=$(echo $X509 | jq -r '.server_crt')
     SERVER_KEY=$(echo $X509 | jq -r '.server_key')
     if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
-        TELEMETRY_ARGS+=" --insecure"
+        TELEMETRY_ARGS+=" --noTLS"
     else
         TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
     fi
@@ -46,13 +46,12 @@ elif [ -n "$X509" ]; then
         TELEMETRY_ARGS+=" --ca_crt $CA_CRT"
     fi
 else
-    TELEMETRY_ARGS+=" --insecure"
+    TELEMETRY_ARGS+=" --noTLS"
 fi
 
 # If no configuration entry exists for TELEMETRY, create one default port
 if [ -z "$GNMI" ]; then
     PORT=8080
-    sonic-db-cli CONFIG_DB hset "TELEMETRY|gnmi" port $PORT
 else
     PORT=$(echo $GNMI | jq -r '.port')
 fi
