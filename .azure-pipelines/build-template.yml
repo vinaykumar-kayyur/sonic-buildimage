@@ -20,15 +20,19 @@ parameters:
 
 - name: dbg_image
   type: boolean
+  default: false
 
 - name: swi_image
   type: boolean
+  default: false
 
 - name: raw_image
   type: boolean
+  default: false
 
 - name: sync_rpc_image
   type: boolean
+  default: false
 
 jobs:
 - job:
