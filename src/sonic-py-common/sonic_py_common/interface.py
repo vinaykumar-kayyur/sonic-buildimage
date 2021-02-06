@@ -14,7 +14,7 @@ SONIC_INTERFACE_PREFIXES = {
     "Vlan": "Vlan",
     "Loopback": "Loopback",
     "Ethernet-Backplane": "Ethernet-BP",
-    "Inband": "Inband"
+    "Ethernet-Inband": "Ethernet-IB"
 }
 
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
@@ -53,7 +53,7 @@ def inband_prefix():
     """
     Retrieves the SONIC recycle port inband interface name prefix.
     """
-    return SONIC_INTERFACE_PREFIXES["Inband"]
+    return SONIC_INTERFACE_PREFIXES["Ethernet-Inband"]
 
 def get_interface_table_name(interface_name):
     """Get table name by interface_name prefix
