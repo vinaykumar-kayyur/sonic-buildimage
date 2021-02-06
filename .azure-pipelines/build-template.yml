@@ -4,6 +4,7 @@ parameters:
   values:
   - broadcom
   - mellanox
+  - marvell-armhf
 
 - name: platform_arch
   type: string
@@ -18,6 +19,7 @@ parameters:
   values:
   - brcm
   - mlnx
+  - marvell-armhf
 
 - name: cache_mode
   type: string
