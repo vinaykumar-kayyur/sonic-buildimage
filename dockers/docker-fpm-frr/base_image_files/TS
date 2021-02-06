@@ -25,6 +25,5 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
         asic=$[$asic+1]
     done
 else
-    echo -e "BGP : \c"
     docker exec -i bgp /usr/bin/$1
 fi
