@@ -13,6 +13,12 @@ CFGGEN_PARAMS=" \
 "
 VLAN=$(sonic-cfggen $CFGGEN_PARAMS)
 
+mkdir -p /etc/supervisor/
+sonic-cfggen -d -t /usr/share/sonic/templates/critical_processes.j2 > /etc/supervisor/critical_processes
+
+mkdir -p /etc/supervisor/conf.d/
+sonic-cfggen -d -t /usr/share/sonic/templates/supervisord.conf.j2 > /etc/supervisor/conf.d/supervisord.conf
+
 # Executed HWSKU specific initialization tasks.
 if [ -x /usr/share/sonic/hwsku/hwsku-init ]; then
     /usr/share/sonic/hwsku/hwsku-init
