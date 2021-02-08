@@ -45,8 +45,8 @@ class BGPPeerGroupMgr(object):
         except jinja2.TemplateError as e:
             log_err("Can't render policy template name: '%s': %s" % (name, str(e)))
             return False
-
-        return self.update_entity(policy, "Routing policy for peer '%s'" % name)
+        self.update_entity(policy, "Routing policy for peer '%s'" % name)
+        return True
 
     def update_pg(self, name, **kwargs):
         """
@@ -64,8 +64,8 @@ class BGPPeerGroupMgr(object):
             cmd = ('router bgp %s\n' % kwargs['bgp_asn']) + pg
         else:
             cmd = ('router bgp %s vrf %s\n' % (kwargs['bgp_asn'], kwargs['vrf'])) + pg
-
-        return self.update_entity(cmd, "Peer-group for peer '%s'" % name)
+        self.update_entity(cmd, "Peer-group for peer '%s'" % name)
+        return True
 
     def update_entity(self, cmd, txt):
         """
@@ -74,12 +74,9 @@ class BGPPeerGroupMgr(object):
         :param txt: text for the syslog output
         :return:
         """
-        ret_code = self.cfg_mgr.push(cmd)
-        if ret_code:
-            log_info("%s was updated" % txt)
-        else:
-            log_err("Can't update %s" % txt)
-        return ret_code
+        self.cfg_mgr.push(cmd)
+        log_info("%s has been scheduled to be updated" % txt)
+        return True
 
 
 class BGPPeerMgrBase(Manager):
@@ -212,13 +209,10 @@ class BGPPeerMgrBase(Manager):
             log_err("%s: %s" % (msg, str(e)))
             return True
         if cmd is not None:
-            ret_code = self.apply_op(cmd, vrf)
+            self.apply_op(cmd, vrf)
             key = (vrf, nbr)
-            if ret_code:
-                self.peers.add(key)
-                log_info("Peer '(%s|%s)' added with attributes '%s'" % print_data)
-            else:
-                log_err("Peer '(%s|%s)' wasn't added." % (vrf, nbr))
+            self.peers.add(key)
+            log_info("Peer '(%s|%s)' has been scheduled to be added with attributes '%s'" % print_data)
 
         return True
 
@@ -300,7 +294,8 @@ class BGPPeerMgrBase(Manager):
             cmd = ('router bgp %s\n' % bgp_asn) + cmd
         else:
             cmd = ('router bgp %s vrf %s\n' % (bgp_asn, vrf)) + cmd
-        return self.cfg_mgr.push(cmd)
+        self.cfg_mgr.push(cmd)
+        return True
 
     def get_lo0_ipv4(self):
         """
@@ -308,7 +303,7 @@ class BGPPeerMgrBase(Manager):
         :return: ipv4 address for Loopback0, None if nothing found
         """
         loopback0_ipv4 = None
-        for loopback in self.directory.get_slot("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME).iterkeys():
+        for loopback in self.directory.get_slot("CONFIG_DB", swsscommon.CFG_LOOPBACK_INTERFACE_TABLE_NAME).keys():
             if loopback.startswith("Loopback0|"):
                 loopback0_prefix_str = loopback.replace("Loopback0|", "")
                 loopback0_ip_str = loopback0_prefix_str[:loopback0_prefix_str.find('/')]
@@ -333,7 +328,7 @@ class BGPPeerMgrBase(Manager):
         local_address = local_addresses[local_addr]
         interfaces = self.directory.get_slot("LOCAL", "interfaces")
         # Check if the information for the interface of this local address has been set
-        if local_address.has_key("interface") and local_address["interface"] in interfaces:
+        if "interface" in local_address and local_address["interface"] in interfaces:
             return interfaces[local_address["interface"]]
         else:
             return None
@@ -346,7 +341,7 @@ class BGPPeerMgrBase(Manager):
         :return: Return the vnet name of the interface if this interface belongs to a vnet,
                  Otherwise return None
         """
-        if interface.has_key("vnet_name") and interface["vnet_name"]:
+        if "vnet_name" in interface and interface["vnet_name"]:
             return interface["vnet_name"]
         else:
             return None

@@ -21,6 +21,7 @@ INTERNAL_PORT = 'Int'
 PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
+BGP_INTERNAL_NEIGH_CFG_DB_TABLE = 'BGP_INTERNAL_NEIGHBOR'
 NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
@@ -137,17 +138,18 @@ def get_asic_id_from_name(asic_name):
         raise ValueError('Unknown asic namespace name {}'.format(asic_name))
 
 
-def get_current_namespace():
+def get_current_namespace(pid=None):
     """
     This API returns the network namespace in which it is
     invoked. In case of global namepace the API returns None
     """
 
     net_namespace = None
-    command = ["/bin/ip netns identify", str(os.getpid())]
+    command = ["sudo /bin/ip netns identify {}".format(os.getpid() if not pid else pid)]
     proc = subprocess.Popen(command,
                             stdout=subprocess.PIPE,
                             shell=True,
+                            universal_newlines=True,
                             stderr=subprocess.STDOUT)
     try:
         stdout, stderr = proc.communicate()
@@ -157,6 +159,8 @@ def get_current_namespace():
             )
         if stdout.rstrip('\n') != "":
             net_namespace = stdout.rstrip('\n')
+        else:
+            net_namespace = DEFAULT_NAMESPACE
     except OSError as e:
         raise OSError("Error running command {}".format(command))
 
@@ -359,20 +363,10 @@ def is_bgp_session_internal(bgp_neigh_ip, namespace=None):
     for ns in ns_list:
 
         config_db = connect_config_db_for_ns(ns)
-        bgp_sessions = config_db.get_table(BGP_NEIGH_CFG_DB_TABLE)
-        if bgp_neigh_ip not in bgp_sessions:
-            continue
-
-        bgp_neigh_name = bgp_sessions[bgp_neigh_ip]['name']
-        neighbor_metadata = config_db.get_table(
-            NEIGH_DEVICE_METADATA_CFG_DB_TABLE)
-
-        if ((neighbor_metadata) and
-            (neighbor_metadata[bgp_neigh_name]['type'].lower() ==
-             ASIC_NAME_PREFIX)):
+        bgp_sessions = config_db.get_table(BGP_INTERNAL_NEIGH_CFG_DB_TABLE)
+        if bgp_neigh_ip in bgp_sessions:
             return True
-        else:
-            return False
+
     return False
 
 def get_front_end_namespaces():

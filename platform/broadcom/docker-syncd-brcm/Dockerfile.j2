@@ -1,5 +1,5 @@
 {% from "dockers/dockerfile-macros.j2" import install_debian_packages %}
-FROM docker-config-engine-stretch
+FROM docker-config-engine-buster
 
 ARG docker_container_name
 RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
@@ -21,6 +21,9 @@ debs/
 ## TODO: add kmod into Depends
 RUN apt-get install -yf kmod
 
+## BRCM uses ethtool to set host interface speed
+RUN apt-get install -y ethtool
+
 COPY ["files/dsserve", "files/bcmcmd", "start.sh", "start_led.sh", "bcmsh", "/usr/bin/"]
 RUN chmod +x /usr/bin/dsserve /usr/bin/bcmcmd
 
@@ -32,4 +35,4 @@ COPY ["critical_processes", "/etc/supervisor/"]
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/supervisord"]
