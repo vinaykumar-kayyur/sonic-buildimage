@@ -10,6 +10,8 @@ mkdir -p /etc/supervisor/conf.d/
 CFGGEN_PARAMS=" \
     -d \
     -t /usr/share/sonic/templates/docker-dhcp-relay.supervisord.conf.j2,/etc/supervisor/conf.d/docker-dhcp-relay.supervisord.conf \
+    -t /usr/share/sonic/templates/docker-dhcp-relay-ethernet.supervisord.conf.j2,/etc/supervisor/conf.d/docker-dhcp-relay-ethernet.supervisord.conf \
+    -t /usr/share/sonic/templates/docker-dhcp-relay-portchannel.supervisord.conf.j2,/etc/supervisor/conf.d/docker-dhcp-relay-portchannel.supervisord.conf \
     -t /usr/share/sonic/templates/wait_for_intf.sh.j2,/usr/bin/wait_for_intf.sh \
     -t /usr/share/sonic/templates/port-name-alias-map.txt.j2,/tmp/port-name-alias-map.txt \
 "
