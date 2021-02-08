@@ -265,7 +265,7 @@ class Psu(PsuBase):
             time.sleep(5)
         model = self.read_fru(self.eeprom_addr, TLV_ATTR_TYPE_MODEL)
         if not model:
-            return NotImplementedError
+            return "N/A"
         return model
 
     def get_serial(self):
@@ -279,7 +279,7 @@ class Psu(PsuBase):
             time.sleep(5)
         serial = self.read_fru(self.eeprom_addr, TLV_ATTR_TYPE_SERIAL)
         if not serial:
-            return NotImplementedError
+            return "N/A"
         return serial
 
     def get_position_in_parent(self):

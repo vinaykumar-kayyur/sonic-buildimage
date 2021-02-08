@@ -336,13 +336,7 @@ class Chassis(ChassisBase):
         if not set_status_str:
             return False
 
-        try:
-            with open(self.stat_led_path, 'w') as file:
-                file.write(set_status_str)
-        except IOError:
-            return False
-
-        return True
+        return self._api_helper.write_txt_file(self.stat_led_path, set_status_str)
 
     def get_status_led(self):
         """
