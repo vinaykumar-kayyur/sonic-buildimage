@@ -54,7 +54,7 @@ class Chassis(ChassisBase):
 
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            name_idx = 0 if index+1 == NUM_SFP else index+1
+            name_idx = 0 if index + 1 == NUM_SFP else index + 1
             sfp = Sfp(index, sfputil_helper.logical[name_idx])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
@@ -155,7 +155,6 @@ class Chassis(ChassisBase):
 
         return prev_reboot_cause
 
-
     def get_change_event(self, timeout=0):
         """
         Returns a nested dictionary containing all devices which have
@@ -231,7 +230,7 @@ class Chassis(ChassisBase):
 
         try:
             # The index will start from 1
-            sfp = self._sfp_list[index-1]
+            sfp = self._sfp_list[index - 1]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
@@ -301,3 +300,54 @@ class Chassis(ChassisBase):
     def get_thermal_manager(self):
         from .thermal_manager import ThermalManager
         return ThermalManager
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the PSU status LED
+        Args:
+            color: A string representing the color with which to set the PSU status LED
+                   Note: Only support green and off
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+        """
+
+        set_status_str = {
+            self.STATUS_LED_COLOR_GREEN: '1',
+            self.STATUS_LED_COLOR_OFF: '0'
+        }.get(color, None)
+
+        if not set_status_str:
+            return False
+
+        return self._api_helper.write_txt_file(self.stat_led_path, set_status_str)
+
+    def get_status_led(self):
+        """
+        Gets the state of the PSU status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        status = self._api_helper.read_txt_file(self.stat_led_path)
+        status_str = {
+            '255': self.STATUS_LED_COLOR_GREEN,
+            '0': self.STATUS_LED_COLOR_OFF
+        }.get(status, None)
+
+        return status_str
