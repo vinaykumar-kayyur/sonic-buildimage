@@ -33,6 +33,9 @@ IMAGE_CONFIGS=files/image_config
 SCRIPTS_DIR=files/scripts
 DOCKER_SCRIPTS_DIR=files/docker
 
+DOCKER_CTL_DIR = /usr/lib/docker/
+DOCKER_CTL_SCRIPT = "$DOCKER_CTL_DIR/docker.sh"
+
 # Define target fold macro
 FILESYSTEM_ROOT_USR="$FILESYSTEM_ROOT/usr"
 FILESYSTEM_ROOT_USR_LIB="$FILESYSTEM_ROOT/usr/lib/"
@@ -54,12 +57,14 @@ trap_push clean_sys
 sudo LANG=C chroot $FILESYSTEM_ROOT mount sysfs /sys -t sysfs
 
 sudo bash -c "echo \"DOCKER_OPTS=\"--storage-driver=overlay2\"\" >> $FILESYSTEM_ROOT/etc/default/docker"
-sudo cp files/docker/docker $FILESYSTEM_ROOT/etc/init.d/
+# Copy docker start script to be able to start docker in chroot
+sudo mkdir -p "$FILESYSTEM_ROOT/$DOCKER_CTL_DIR"
+sudo cp $DOCKER_SCRIPTS_DIR/docker "$FILESYSTEM_ROOT/$DOCKER_CTL_SCRIPT"
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     SONIC_NATIVE_DOCKERD_FOR_DOCKERFS=" -H unix:///dockerfs/var/run/docker.sock "
     SONIC_NATIVE_DOCKERD_FOR_DOCKERFS_PID="cat `pwd`/dockerfs/var/run/docker.pid"
 else
-    sudo chroot $FILESYSTEM_ROOT service docker start
+    sudo chroot $FILESYSTEM_ROOT $DOCKER_CTL_SCRIPT start
 fi
 
 # Apply apt configuration files
@@ -514,10 +519,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS ta
 {% endif %}
 {% endfor %}
 
-# Copy docker start script to be able to start docker in chroot
-sudo mkdir -p $FILESYSTEM_ROOT_USR_LIB/docker
-sudo cp $DOCKER_SCRIPTS_DIR/docker $FILESYSTEM_ROOT_USR_LIB/docker/docker.sh
-
 {% if include_kubernetes == "y" %}
 ## Pull in kubernetes docker images
 echo "pulling universal k8s images ..."
@@ -532,10 +533,9 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo rm -fr $FILESYSTEM_ROOT/dockerfs
     sudo kill -9 `sudo $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS_PID` || true
 else
-    sudo chroot $FILESYSTEM_ROOT service docker stop
+    sudo chroot $FILESYSTEM_ROOT $DOCKER_CTL_SCRIPT stop
 fi
 sudo umount /proc || true
-sudo rm $FILESYSTEM_ROOT/etc/init.d/docker
 {% for script in installer_start_scripts.split(' ') -%}
 sudo cp {{script}} $FILESYSTEM_ROOT/usr/bin/
 {% endfor %}
