@@ -725,7 +725,7 @@
 					"alias": "eth8",
 					"lanes": "65",
 					"speed": 25000,
-					"autoneg": 260
+					"autoneg": 2
 				}]
 			}
 		}

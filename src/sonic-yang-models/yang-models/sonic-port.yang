@@ -92,8 +92,8 @@ module sonic-port{
 				}
 
 				leaf autoneg {
-					type uint16 {
-						range 0..256;
+					type uint8 {
+						range 0..1;
 					}
 				}
 			} /* end of list PORT_LIST */

@@ -200,7 +200,7 @@ class Test_yang_models:
             },
             'PORT_INVALID_AUTONEG_TEST_2': {
                 'desc': 'PORT_INVALID_AUTONEG_TEST_2 must condition failure.',
-                'eStr': self.defaultYANGFailure['Range'] + ['0..256']
+                'eStr': self.defaultYANGFailure['Range'] + ['0..1']
             },
             'CRM_WITH_WRONG_PERCENTAGE': {
                 'desc': 'CRM_WITH_WRONG_PERCENTAGE must condition failure.',
