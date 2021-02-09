@@ -348,28 +348,12 @@ def system_ready():
     return True
 
 PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
-PLATFORM_API2_WHL_FILE_PY2 ='sonic_platform-1.0-py2-none-any.whl'
 PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
 def do_sonic_platform_install():
     device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
-    SONIC_PLATFORM_BSP_WHL_PKG_PY2 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY2])
     SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
         
-    #Check API2.0 on py whl file    
-    status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 0)
-    if status:
-        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY2): 
-            status, output = log_os_system("pip install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY2, 1)
-            if status:
-                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY2)
-                return status
-            else:
-                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY2)
-        else:
-            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY2))                
-    else:        
-        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY2))
-    
+    #Check API2.0 on py whl file
     status, output = log_os_system("python3 -m pip show sonic-platform > /dev/null 2>&1", 0)
     if status:
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
@@ -387,24 +371,12 @@ def do_sonic_platform_install():
     return 
      
 def do_sonic_platform_clean():
-    status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 0)   
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)   
     if status:
-        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY2))
+        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
         
     else:        
-        status, output = log_os_system("pip uninstall sonic-platform -y", 0)
-        if status:
-            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY2))
-            return status
-        else:
-            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY2))
-            
-    status, output = log_os_system("python3.7 -m pip show sonic-platform > /dev/null 2>&1", 0)   
-    if status:
-        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY2))
-        
-    else:        
-        status, output = log_os_system("python3.7 -m pip uninstall sonic-platform -y", 0)
+        status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
             return status
