@@ -354,10 +354,10 @@ def do_sonic_platform_install():
     SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
         
     #Check API2.0 on py whl file
-    status, output = log_os_system("python3 -m pip show sonic-platform > /dev/null 2>&1", 0)
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
-            status, output = log_os_system("python3.7 -m pip install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
+            status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
             if status:
                 print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3)
                 return status
