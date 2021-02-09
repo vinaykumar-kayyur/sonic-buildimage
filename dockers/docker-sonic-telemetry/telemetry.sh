@@ -23,7 +23,7 @@ if [ -n "$CERTS" ]; then
     SERVER_CRT=$(echo $CERTS | jq -r '.server_crt')
     SERVER_KEY=$(echo $CERTS | jq -r '.server_key')
     if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
-        TELEMETRY_ARGS+=" --noTLS"
+        TELEMETRY_ARGS+=" --insecure"
     else
         TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
     fi
@@ -36,7 +36,7 @@ elif [ -n "$X509" ]; then
     SERVER_CRT=$(echo $X509 | jq -r '.server_crt')
     SERVER_KEY=$(echo $X509 | jq -r '.server_key')
     if [ -z $SERVER_CRT  ] || [ -z $SERVER_KEY  ]; then
-        TELEMETRY_ARGS+=" --noTLS"
+        TELEMETRY_ARGS+=" --insecure"
     else
         TELEMETRY_ARGS+=" --server_crt $SERVER_CRT --server_key $SERVER_KEY "
     fi
