@@ -426,15 +426,11 @@ class HostConfigDaemon:
         self.ntpcfg.load(ntp_global, ntp_server)
 
     def get_target_state(self, feature_name, state):
-        if "{#" in state:
-            state = state.replace("{#", '').replace("#}", '')
-            template = jinja2.Template(state)
-            target_state = template.render(self.device_config)
-            entry = self.config_db.get_entry('FEATURE', feature_name)
-            entry["state"] = target_state
-            self.config_db.set_entry("FEATURE", feature_name, entry)
-        else:
-            target_state = state
+        template = jinja2.Template(state)
+        target_state = template.render(self.device_config)
+        entry = self.config_db.get_entry('FEATURE', feature_name)
+        entry["state"] = target_state
+        self.config_db.set_entry("FEATURE", feature_name, entry)
 
         return target_state
 
