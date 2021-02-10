@@ -632,7 +632,11 @@
 					"fec": "rs",
 					"mtu": 9000,
 					"admin_status": "up",
-					"pfc_asym": "on"
+					"pfc_asym": "on",
+					"autoneg": "1",
+					"adv_speeds": "10000,25000",
+					"adv_interface_types": "CR,CR2",
+					"interface_type": "CR"
 				}]
 			}
 		}
@@ -651,6 +655,28 @@
 					"mtu": 9000,
 					"admin_status": "up",
 					"pfc_asym": "off"
+				}]
+			}
+		}
+	},
+
+	"PORT_INVALID_AUTONEG_TEST": {
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [{
+					"port_name": "Ethernet8",
+					"alias": "eth8",
+					"lanes": "65",
+					"description": "Ethernet8",
+					"speed": 25000,
+					"fec": "rs",
+					"mtu": 9000,
+					"admin_status": "up",
+					"pfc_asym": "on",
+					"autoneg": "2",
+					"adv_speeds": "10000,25000",
+					"adv_interface_types": "CR,CR2",
+					"interface_type": "CR"
 				}]
 			}
 		}

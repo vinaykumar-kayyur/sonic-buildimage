@@ -181,6 +181,10 @@ class Test_yang_models:
                 'desc': 'LOAD PORT TABLE FEC PATTERN FAILURE',
                 'eStr': self.defaultYANGFailure['Pattern'] + ['rc']
             },
+            'PORT_INVALID_AUTONEG_TEST': {
+                'desc': 'LOAD PORT TABLE AUTONEG PATTERN FAILURE.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['2'],
+            },
             'CRM_WITH_WRONG_PERCENTAGE': {
                 'desc': 'CRM_WITH_WRONG_PERCENTAGE must condition failure.',
                 'eStr': self.defaultYANGFailure['Must']
