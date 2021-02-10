@@ -14,7 +14,7 @@ def get_dhcp_helper_address(ctx, vlan):
     return '\n'.join(natsorted(dhcp_helpers))
 
 
-vlan.VlanBrief.COLUMNS.append(('DHCP Helper Address', get_dhcp_helper_address))
+vlan.VlanBrief.register_column('DHCP Helper Address', get_dhcp_helper_address)
 
 
 def register(cli):
