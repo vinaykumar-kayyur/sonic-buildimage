@@ -1326,259 +1326,407 @@
 				"lanes": "65",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet1": {
 				"alias": "Eth1/2",
 				"lanes": "66",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet2": {
 				"alias": "Eth1/3",
 				"lanes": "67",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet3": {
 				"alias": "Eth1/4",
 				"lanes": "68",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet4": {
 				"alias": "Eth2/1",
 				"lanes": "69",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet5": {
 				"alias": "Eth2/2",
 				"lanes": "70",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet6": {
 				"alias": "Eth2/3",
 				"lanes": "71",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet7": {
 				"alias": "Eth2/4",
 				"lanes": "72",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet8": {
 				"alias": "Eth3/1",
 				"lanes": "73",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet9": {
 				"alias": "Eth3/2",
 				"lanes": "74",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet10": {
 				"alias": "Eth3/3",
 				"lanes": "75",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet11": {
 				"alias": "Eth3/4",
 				"lanes": "76",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet12": {
 				"alias": "Eth4/1",
 				"lanes": "77",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet13": {
 				"alias": "Eth4/2",
 				"lanes": "78",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet14": {
 				"alias": "Eth4/3",
 				"lanes": "79",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet15": {
 				"alias": "Eth4/4",
 				"lanes": "80",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet16": {
 				"alias": "Eth5/1",
 				"lanes": "33",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet17": {
 				"alias": "Eth5/2",
 				"lanes": "34",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet18": {
 				"alias": "Eth5/3",
 				"lanes": "35",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet19": {
 				"alias": "Eth5/4",
 				"lanes": "36",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet20": {
 				"alias": "Eth6/1",
 				"lanes": "37",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet21": {
 				"alias": "Eth6/2",
 				"lanes": "38",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet22": {
 				"alias": "Eth6/3",
 				"lanes": "39",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet23": {
 				"alias": "Eth6/4",
 				"lanes": "40",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet24": {
 				"alias": "Eth7/1",
 				"lanes": "41",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet25": {
 				"alias": "Eth7/2",
 				"lanes": "42",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet26": {
 				"alias": "Eth7/3",
 				"lanes": "43",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet27": {
 				"alias": "Eth7/4",
 				"lanes": "44",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet28": {
 				"alias": "Eth8/1",
 				"lanes": "45",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet29": {
 				"alias": "Eth8/2",
 				"lanes": "46",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet30": {
 				"alias": "Eth8/3",
 				"lanes": "47",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet31": {
 				"alias": "Eth8/4",
 				"lanes": "48",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet32": {
 				"alias": "Eth9/1",
 				"lanes": "49",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet33": {
 				"alias": "Eth9/2",
 				"lanes": "50",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet34": {
 				"alias": "Eth9/3",
 				"lanes": "51",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet35": {
 				"alias": "Eth9/4",
 				"lanes": "52",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet36": {
 				"alias": "Eth10/1",
 				"lanes": "53",
 				"description": "",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			},
 			"Ethernet112": {
 				"alias": "Eth29/1",
@@ -1586,7 +1734,11 @@
 				"description": "50G|dccsw01.nw|Eth18",
 				"fec": "fc",
 				"speed": "11100",
-				"admin_status": "up"
+				"admin_status": "up",
+				"autoneg": "1",
+				"adv_speeds": "10000,25000",
+				"adv_interface_types": "CR,CR2",
+				"interface_type": "CR"
 			}
 		},
 		"ACL_TABLE": {
