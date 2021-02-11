@@ -123,6 +123,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
         for line in lines:
             try:
+                # match whitespace-separated tag hex, length and value (value is mathced with its whitespaces)
                 match = re.search('(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)([\S]+[\s]*[\S]*)', line)
                 if match is not None:
                     code = match.group(1)
