@@ -226,13 +226,31 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -s {} -d {} -j ACCEPT".format
                                                 (self.namespace_docker_mgmt_ip[namespace], self.namespace_docker_mgmt_ip[namespace]))
 
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -s {} -d {} -j ACCEPT".format
+                                                (self.namespace_docker_mgmt_ipv6[namespace], self.namespace_docker_mgmt_ipv6[namespace]))
+
             # For namespace docker allow all tcp/udp traffic from host docker bridge to its eth0 management ip
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
                                                  (self.namespace_mgmt_ip, self.namespace_docker_mgmt_ip[namespace]))
 
             allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
                                                  (self.namespace_mgmt_ip, self.namespace_docker_mgmt_ip[namespace]))
+
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
+                                                 (self.namespace_mgmt_ipv6, self.namespace_docker_mgmt_ipv6[namespace]))
+
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
+                                                 (self.namespace_mgmt_ipv6, self.namespace_docker_mgmt_ipv6[namespace]))
+ 
         else:
+
+            # Also host namespace communication on docker bridge.
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -s {} -d {} -j ACCEPT".format
+                                                (self.namespace_mgmt_ip, self.namespace_mgmt_ip))
+
+            allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -s {} -d {} -j ACCEPT".format
+                                                (self.namespace_mgmt_ipv6, self.namespace_mgmt_ipv6))
+            
             # In host allow all tcp/udp traffic from namespace docker eth0 management ip to host docker bridge
             for docker_mgmt_ip in list(self.namespace_docker_mgmt_ip.values()):
                 allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
@@ -240,6 +258,14 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
                 allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
                                                      (docker_mgmt_ip, self.namespace_mgmt_ip))
+
+            for docker_mgmt_ipv6 in list(self.namespace_docker_mgmt_ipv6.values()):
+                allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -p tcp -s {} -d {} -j ACCEPT".format
+                                                     (docker_mgmt_ipv6, self.namespace_mgmt_ipv6))
+
+                allow_internal_docker_ip_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -p udp -s {} -d {} -j ACCEPT".format
+                                                     (docker_mgmt_ipv6, self.namespace_mgmt_ipv6))
+
         return allow_internal_docker_ip_cmds
 
     def generate_fwd_snmp_traffic_from_namespace_to_host_commands(self, namespace):
