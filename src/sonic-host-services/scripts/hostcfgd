@@ -9,7 +9,7 @@ import syslog
 
 import jinja2
 from sonic_py_common import device_info
-from swsssdk import ConfigDBConnector
+from swsssdk import ConfigDBConnector, SonicDBConfig
 
 # FILE
 PAM_AUTH_CONF = "/etc/pam.d/common-auth-sonic"
@@ -388,6 +388,52 @@ class NtpCfg(object):
         run_cmd(cmd)
 
 
+class MultiAsicBgpMonCfg(object):
+    def __init__(self):
+        self.ns_for_bgp_mon = 'asic4'
+        self.bgp_monitor_table = 'BGP_MONITORS'
+        self.config_db = ConfigDBConnector()
+        self.config_db.connect()
+        SonicDBConfig.load_sonic_global_db_config()
+        self.backend_config_db = ConfigDBConnector(namespace=self.ns_for_bgp_mon)
+        self.backend_config_db.connect()
+
+    def _update_bgp_mon_backend_asic(self, key, data):
+        op = "added" if data is not None else "deleted"
+        syslog.syslog(syslog.LOG_INFO,
+                      '{} bgp mon{} on {}'.format(op, key,
+                                                  self.ns_for_bgp_mon))
+        self.backend_config_db.set_entry(self.bgp_monitor_table, key, data)
+
+    def load(self):
+        '''
+        This function loads the bgp mon configuration from the host
+        config_db to a backend config_db.
+        '''
+        host_bgp_mon_table = self.config_db.get_table(self.bgp_monitor_table)
+        if host_bgp_mon_table:
+            for key in host_bgp_mon_table:
+                data = host_bgp_mon_table[key]
+                self._update_bgp_mon_backend_asic(key, data)
+                self.backend_config_db.set_entry(self.bgp_monitor_table, key,
+                                                 data)
+        else:
+            '''
+            the host config_db has no bgp monitor configuration.
+            delete the configuration from the backend asic, if present.
+            '''
+            bkend_bgp_mon_table = self.backend_config_db.get_table(self.bgp_monitor_table)
+            if bkend_bgp_mon_table:
+                self.backend_config_db.delete_table(self.bgp_monitor_table)
+
+    def cfg_handler(self, key, data):
+        key = ConfigDBConnector.deserialize_key(key)
+        keys = self.config_db.get_keys(self.bgp_monitor_table)
+        if key not in keys:
+            data = None
+        self._update_bgp_mon_backend_asic(key, data)
+
+
 class HostConfigDaemon:
     def __init__(self):
         self.config_db = ConfigDBConnector()
@@ -406,6 +452,9 @@ class HostConfigDaemon:
         self.kdumpCfg = KdumpCfg(self.config_db)
         self.kdumpCfg.load(self.config_db.get_table('KDUMP'))
 
+        if self.is_multi_npu:
+            self.masicBgpMonCfg = MultiAsicBgpMonCfg()
+
 
     def load(self):
         aaa = self.config_db.get_table('AAA')
@@ -420,6 +469,10 @@ class HostConfigDaemon:
         ntp_server = self.config_db.get_table('NTP_SERVER')
         ntp_global = self.config_db.get_table('NTP')
         self.ntpcfg.load(ntp_global, ntp_server)
+
+        if self.masicBgpMonCfg:
+            self.masicBgpMonCfg.load()
+
 
     def update_feature_state(self, feature_name, state, feature_table):
         if self.cached_feature_states[feature_name] == "always_enabled":
@@ -569,6 +622,11 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO, 'Kdump handler...')
         self.kdumpCfg.kdump_update(key, data, False)
 
+    def masic_bgp_mon_cfg_handler(self, key, data):
+        if self.masicBgpMonCfg:
+            syslog.syslog(syslog.LOG_INFO, 'Multi asic bgp cfg handler...')
+            self.masicBgpMonCfg.cfg_handler(key, data)
+
     def wait_till_system_init_done(self):
 
         # No need to print the output in the log file so using the "--quiet"
@@ -586,6 +644,8 @@ class HostConfigDaemon:
         self.config_db.subscribe('NTP_SERVER', lambda table, key, data: self.ntp_server_handler(key, data))
         self.config_db.subscribe('NTP', lambda table, key, data: self.ntp_global_handler(key, data))
         self.config_db.subscribe('KDUMP', lambda table, key, data: self.kdump_handler(key, data))
+        if self.is_multi_npu:
+            self.config_db.subscribe('BGP_MONITORS', lambda table, key, data: self.masic_bgp_mon_cfg_handler(key, data))
 
         syslog.syslog(syslog.LOG_INFO,
                       "Waiting for systemctl to finish initialization")
