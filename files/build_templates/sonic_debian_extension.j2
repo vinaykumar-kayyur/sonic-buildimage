@@ -588,8 +588,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS lo
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagename}}:"${SONIC_IMAGE_VERSION}"
 # Check if manifest exists for {{imagename}} and it is a valid JSON
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS inspect {{imagename}}:latest \
-    | jq '.[0].Config.Labels["com.azure.sonic.manifest"]' -r \
-    | jq -e || {
+    | jq '.[0].Config.Labels["com.azure.sonic.manifest"]' -r > /tmp/manifest.json
+jq -e . /tmp/manifest.json || {
     >&2 echo "docker image {{imagename}} has no manifest or manifest is not a valid JSON"
     exit 1
 }
