@@ -35,7 +35,7 @@ class Component(ComponentBase):
         ["System-CPLD", "Used for managing SFPs, LEDs, PSUs and FANs "],
         ["U-Boot", "Performs initialization during booting"],
     ]
-    CPLD_UPDATE_COMMAND = 'cp /usr/sbin/vme /tmp; cp {} /tmp; cd /tmp; ./vme {};  '
+    CPLD_UPDATE_COMMAND = 'cp /usr/sbin/vme /tmp; cp {} /tmp; cd /tmp; ./vme {};'
 
     def __init__(self, component_index):
         self.index = component_index
