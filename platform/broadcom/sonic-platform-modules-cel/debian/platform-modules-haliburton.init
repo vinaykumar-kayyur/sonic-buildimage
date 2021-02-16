@@ -17,7 +17,8 @@ start)
 
         modprobe smc
         modprobe hlx_gpio_ich
-        # modprobe dps200
+        modprobe dps200
+        modprobe cp210x
 
         found=0
         for devnum in 0 1; do

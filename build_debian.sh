@@ -32,7 +32,7 @@ CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
 DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
-LINUX_KERNEL_VERSION=4.19.0-9-2
+LINUX_KERNEL_VERSION=4.19.0-12-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -214,7 +214,9 @@ else
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION}
 fi
 
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2
+# Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
+# pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
 if [ "$INCLUDE_KUBERNETES" == "y" ]
 then
@@ -417,7 +419,7 @@ done < files/image_config/sysctl/sysctl-net.conf
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
 # Upgrade pip via PyPI and uninstall the Debian version
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install --upgrade pip
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip2 install --upgrade 'pip<21'
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install --upgrade pip
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python-pip python3-pip
 
@@ -498,13 +500,8 @@ if [ "${enable_organization_extensions}" = "y" ]; then
    fi
 fi
 
-## Setup ebtable rules (rule file is in binary format)
-sudo cp -f files/image_config/ebtables/ebtables.default $FILESYSTEM_ROOT/etc/default/ebtables
-sudo cp -f files/image_config/ebtables/ebtables.init $FILESYSTEM_ROOT/etc/init.d/ebtables
-sudo cp -f files/image_config/ebtables/ebtables.service $FILESYSTEM_ROOT/lib/systemd/system/ebtables.service
+## Setup ebtable rules (rule file in text format)
 sudo cp files/image_config/ebtables/ebtables.filter.cfg ${FILESYSTEM_ROOT}/etc
-sudo LANG=C chroot $FILESYSTEM_ROOT update-alternatives --set ebtables /usr/sbin/ebtables-legacy
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable ebtables.service
 
 ## Debug Image specific changes
 ## Update motd for debug image
