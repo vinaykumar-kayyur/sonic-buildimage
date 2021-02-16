@@ -159,11 +159,11 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.part_number_str()
 
-    def get_serial(self):
+    def get_service_tag(self):
         """
-        Retrieves the serial number of the chassis (Service tag)
+        Retrieves the Service Tag of the chassis
         Returns:
-            string: Serial number of chassis
+            string: Service Tag of chassis
         """
         return self._eeprom.service_tag_str()
 
