@@ -113,19 +113,19 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(voltage)
+        return float(voltage)
 
     def get_voltage_low_threshold(self):
         """
         Returns PSU low threshold in Volts
         """
-        return "11.4"
+        return 11.4
 
     def get_voltage_high_threshold(self):
         """
         Returns PSU high threshold in Volts
         """
-        return "12.6"
+        return 12.6
 
     def get_temperature(self):
         """
@@ -159,7 +159,7 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(current)
+        return float(current)
 
     def get_power(self):
         """
@@ -173,7 +173,7 @@ class Psu(PsuBase):
         if not is_valid:
             return None
 
-        return "{:.1f}".format(power)
+        return float(power)
 
     def get_powergood_status(self):
         """
