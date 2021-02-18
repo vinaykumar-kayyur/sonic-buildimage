@@ -67,7 +67,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             "multi_asic_ns_to_host_fwd":False
         },
         "SNMP": {
-            "ip_protocols": ["tcp", "udp"],
+            "ip_protocols": ["udp"],
             "dst_ports": ["161"],
             "multi_asic_ns_to_host_fwd":True
         },
@@ -277,31 +277,39 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         for acl_service in self.ACL_SERVICES:
             if self.ACL_SERVICES[acl_service]["multi_asic_ns_to_host_fwd"]:
-                # Get the Source IP Set if exists else use default source ip prefix
-                nat_source_ip_map = acl_source_ip_map[acl_service] if acl_source_ip_map and acl_service in acl_source_ip_map else None
-                nat_source_ipv4_set = nat_source_ip_map["ipv4"] if nat_source_ip_map and "ipv4" in nat_source_ip_map and nat_source_ip_map["ipv4"] else { "0.0.0.0/0" } 
-                nat_source_ipv6_set = nat_source_ip_map["ipv6"] if nat_source_ip_map and "ipv6" in nat_source_ip_map and nat_source_ip_map["ipv6"] else { "::/0" } 
+                for ip_protocol in self.ACL_SERVICES[acl_service]["ip_protocols"]:
+                    for dst_port in  self.ACL_SERVICES[acl_service]["dst_ports"]: 
+                        # Get the Source IP Set if exists else use default source ip prefix
+                        try:
+                            nat_source_ipv4_set = acl_source_ip_map[acl_service]["ipv4"]
+                        except:
+                            nat_source_ipv4_set = { "0.0.0.0/0" }
 
-                for ipv4_src_ip in nat_source_ipv4_set:
-                    # IPv4 rules
-                    fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                       "iptables -t nat -A PREROUTING -p {} -s {} --dport {}  -j DNAT --to-destination {}".format
-                                                       (self.ACL_SERVICES[acl_service]['ip_protocols'][0], ipv4_src_ip, self.ACL_SERVICES[acl_service]['dst_ports'][0],
-                                                        self.namespace_mgmt_ip))
-                    fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                       "iptables -t nat -A POSTROUTING -p {} -s {} --dport {} -j SNAT --to-source {}".format
-                                                       (self.ACL_SERVICES[acl_service]['ip_protocols'][0], ipv4_src_ip, self.ACL_SERVICES[acl_service]['dst_ports'][0],
-                                                        self.namespace_docker_mgmt_ip[namespace]))
-                for ipv6_src_ip in nat_source_ipv6_set:
-                    # IPv6 rules
-                    fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                       "ip6tables -t nat -A PREROUTING -p {} -s {} --dport {}  -j DNAT --to-destination {}".format
-                                                       (self.ACL_SERVICES[acl_service]['ip_protocols'][0], ipv6_src_ip, self.ACL_SERVICES[acl_service]['dst_ports'][0],
-                                                        self.namespace_mgmt_ipv6))
-                    fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
-                                                       "ip6tables -t nat -A POSTROUTING -p {} -s {} --dport {} -j SNAT --to-source {}".format
-                                                       (self.ACL_SERVICES[acl_service]['ip_protocols'][0],ipv6_src_ip, self.ACL_SERVICES[acl_service]['dst_ports'][0],
-                                                        self.namespace_docker_mgmt_ipv6[namespace]))
+                        try:
+                            nat_source_ipv6_set = acl_source_ip_map[acl_service]["ipv6"]
+                        except:
+                            nat_source_ipv6_set = { "::/0" }
+
+                        for ipv4_src_ip in nat_source_ipv4_set:
+                            # IPv4 rules
+                            fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                                               "iptables -t nat -A PREROUTING -p {} -s {} --dport {}  -j DNAT --to-destination {}".format
+                                                               (ip_protocol, ipv4_src_ip, dst_port,
+                                                                self.namespace_mgmt_ip))
+                            fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                                               "iptables -t nat -A POSTROUTING -p {} -s {} --dport {} -j SNAT --to-source {}".format
+                                                               (ip_protocol, ipv4_src_ip, dst_port,
+                                                                self.namespace_docker_mgmt_ip[namespace]))
+                        for ipv6_src_ip in nat_source_ipv6_set:
+                            # IPv6 rules
+                            fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                                               "ip6tables -t nat -A PREROUTING -p {} -s {} --dport {}  -j DNAT --to-destination {}".format
+                                                               (ip_protocol, ipv6_src_ip, dst_port,
+                                                                self.namespace_mgmt_ipv6))
+                            fwd_traffic_from_namespace_to_host_cmds.append(self.iptables_cmd_ns_prefix[namespace] +
+                                                               "ip6tables -t nat -A POSTROUTING -p {} -s {} --dport {} -j SNAT --to-source {}".format
+                                                               (ip_protocol,ipv6_src_ip, dst_port,
+                                                                self.namespace_docker_mgmt_ipv6[namespace]))
 
         return fwd_traffic_from_namespace_to_host_cmds
 
@@ -416,8 +424,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
             acl_services = table_data["services"]
 
             for acl_service in acl_services:
-                ipv4_src_ip_set = set()
-                ipv6_src_ip_set = set()
                 if acl_service not in self.ACL_SERVICES:
                     self.log_warning("Ignoring control plane ACL '{}' with unrecognized service '{}'"
                                      .format(table_name, acl_service))
@@ -469,7 +475,8 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     self.log_warning("Unable to determine if ACL table '{}' contains IPv4 or IPv6 rules. Skipping table..."
                                      .format(table_name))
                     continue
-
+                ipv4_src_ip_set = set()
+                ipv6_src_ip_set = set()
                 # For each ACL rule in this table (in descending order of priority)
                 for priority in sorted(iter(acl_rules.keys()), reverse=True):
                     rule_props = acl_rules[priority]
@@ -489,10 +496,12 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
  
                             if "SRC_IPV6" in rule_props and rule_props["SRC_IPV6"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IPV6"])
-                                ipv6_src_ip_set.add(rule_props["SRC_IPV6"])
+                                if rule_props["PACKET_ACTION"] == "ACCEPT":
+                                    ipv6_src_ip_set.add(rule_props["SRC_IPV6"])
                             elif "SRC_IP" in rule_props and rule_props["SRC_IP"]:
                                 rule_cmd += " -s {}".format(rule_props["SRC_IP"])
-                                ipv4_src_ip_set.add(rule_props["SRC_IP"])
+                                if rule_props["PACKET_ACTION"] == "ACCEPT":
+                                    ipv4_src_ip_set.add(rule_props["SRC_IP"])
 
                             # Destination port 0 is reserved/unused port, so, using it to apply the rule to all ports.
                             if dst_port != "0":
@@ -514,7 +523,9 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                             iptables_cmds.append(self.iptables_cmd_ns_prefix[namespace] + rule_cmd)
                             num_ctrl_plane_acl_rules += 1
 
-                service_to_source_ip_map[acl_service] = { "ipv4" : ipv4_src_ip_set, "ipv6" : ipv6_src_ip_set }
+
+                service_to_source_ip_map.update({ acl_service:{ "ipv4":ipv4_src_ip_set, "ipv6":ipv6_src_ip_set } })
+
         # Add iptables commands to block ip2me traffic
         iptables_cmds += self.generate_block_ip2me_traffic_iptables_commands(namespace)
 
