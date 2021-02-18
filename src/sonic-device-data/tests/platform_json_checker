@@ -6,7 +6,7 @@ import re
 import sys
 
 # Global variable
-PORT_ATTRIBUTES = ["index", "lanes", "alias_at_lanes", "breakout_modes"]
+PORT_ATTRIBUTES = ["index", "lanes", "breakout_modes"]
 ATTR_LEN = len(PORT_ATTRIBUTES)
 PORT_REG = "Ethernet(\d+)"
 PLATFORM_JSON = '*platform.json'
@@ -29,7 +29,9 @@ def check_port_attr(port_attr):
         if not isinstance(port_attr[each_key], str):
             print("Error:value type of  "+ each_key + " must be string.")
             return False
-    return True
+        if each_key == "breakout_modes":
+            brkout_modes = port_attr[each_key]
+            return type(brkout_modes) == dict
 
 
 def check_file(platform_json_file):
