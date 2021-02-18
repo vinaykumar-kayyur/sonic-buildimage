@@ -13,7 +13,6 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
-#include <boost/thread/thread.hpp>
 
 #include "MuxPort.h"
 #include "common/MuxConfig.h"
@@ -105,15 +104,30 @@ public:
     inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mMuxConfig.setTimeoutIpv6_msec(timeout_msec);};
 
     /**
-    *@method setStateChangeRetryCount
+    *@method setPositiveStateChangeRetryCount
     *
-    *@brief setter for LinkProber state change retry count
+    *@brief setter for LinkProber positive state change retry count
     *
     *@param stateChangeRetryCount (in)  state change retry count
     *
     *@return none
     */
-    inline void setStateChangeRetryCount(uint32_t stateChangeRetryCount) {mMuxConfig.setStateChangeRetryCount(stateChangeRetryCount);};
+    inline void setPositiveStateChangeRetryCount(uint32_t stateChangeRetryCount) {
+        mMuxConfig.setPositiveStateChangeRetryCount(stateChangeRetryCount);
+    };
+
+    /**
+    *@method setNegativeStateChangeRetryCount
+    *
+    *@brief setter for LinkProber negative state change retry count
+    *
+    *@param stateChangeRetryCount (in)  state change retry count
+    *
+    *@return none
+    */
+    inline void setNegativeStateChangeRetryCount(uint32_t stateChangeRetryCount) {
+        mMuxConfig.setNegativeStateChangeRetryCount(stateChangeRetryCount);
+    };
 
     /**
     *@method setSuspendTimeout_msec
@@ -271,6 +285,15 @@ private:
     *@return none
     */
     void handleSignal(const boost::system::error_code errorCode, int signalNumber);
+
+    /**
+    *@method handleProcessTerminate
+    *
+    *@brief stop DB interface thread and stop boost io service
+    *
+    *@return none
+    */
+    void handleProcessTerminate();
 
 private:
     std::string mConfigFilename;

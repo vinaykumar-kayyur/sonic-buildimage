@@ -41,7 +41,7 @@ LinkProberState* ActiveState::handleEvent(IcmpPeerEvent &event)
     LinkProberState *nextState;
 
     mUnknownEventCount = 0;
-    if (++mPeerEventCount >= getMuxPortConfig().getStateChangeRetryCount()) {
+    if (++mPeerEventCount >= getMuxPortConfig().getPositiveStateChangeRetryCount()) {
         nextState = dynamic_cast<LinkProberState *> (stateMachine->getStandbyState());
     }
     else {
@@ -81,7 +81,7 @@ LinkProberState* ActiveState::handleEvent(IcmpUnknownEvent &event)
     LinkProberState *nextState;
 
     mPeerEventCount = 0;
-    if (++mUnknownEventCount >= getMuxPortConfig().getStateChangeRetryCount()) {
+    if (++mUnknownEventCount >= getMuxPortConfig().getNegativeStateChangeRetryCount()) {
         nextState = dynamic_cast<LinkProberState *> (stateMachine->getUnknownState());
     }
     else {

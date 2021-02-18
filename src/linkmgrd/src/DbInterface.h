@@ -10,12 +10,15 @@
 
 #include <map>
 #include <memory>
+
 #include <boost/thread.hpp>
+#include <boost/thread/barrier.hpp>
 
 #include "swss/dbconnector.h"
 #include "swss/producerstatetable.h"
 #include "swss/subscriberstatetable.h"
 
+#include "link_manager/LinkManagerStateMachine.h"
 #include "mux_state/MuxState.h"
 
 namespace mux {
@@ -69,6 +72,15 @@ public:
     virtual ~DbInterface() = default;
 
     /**
+    *@method getBarrier
+    *
+    *@brief getter for Boost barrier object
+    *
+    *@return reference to Boost barrier object
+    */
+    inline boost::barrier& getBarrier() {return mBarrier;};
+
+    /**
     *@method getStrand
     *
     *@brief getter for Boost strand object
@@ -110,6 +122,18 @@ public:
     *@return label of MUX state
     */
     virtual void probeMuxState(const std::string &portName);
+
+    /**
+    *@method setMuxLinkmgrState
+    *
+    *@brief set MUX LinkMgr state in State DB for cli processing
+    *
+    *@param portName (in)   MUX/port name
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    virtual void setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label);
 
     /**
     *@method initialize
@@ -177,6 +201,18 @@ private:
     void handleProbeMuxState(const std::string portName);
 
     /**
+    *@method handleSetMuxLinkmgrState
+    *
+    *@brief set MUX LinkMgr state in State DB for cli processing
+    *
+    *@param portName (in)   MUX/port name
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    void handleSetMuxLinkmgrState(const std::string portName, link_manager::LinkManagerStateMachine::Label label);
+
+    /**
     *@method getLoopback2InterfaceInfo
     *
     *@brief retrieve Loopback2 interface information and block until it shows as OK in the state db
@@ -214,15 +250,15 @@ private:
     void handleMuxPortConfigNotifiction(swss::SubscriberStateTable &configMuxTable);
 
     /**
-    *@method handleLocalhostConfigNotifiction
+    *@method handleMuxLinkmgrConfigNotifiction
     *
-    *@brief handles localhost configuration change notification
+    *@brief handles MUX Linkmgr configuration change notification
     *
-    *@param configLocalhostTable (in) reference to localhost config table
+    *@param configLocalhostTable (in) reference to MUX linkmgr config table
     *
     *@return none
     */
-    void handleLocalhostConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
+    void handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
 
     /**
     *@method handleLinkStateNotifiction
@@ -268,6 +304,7 @@ private:
 
 private:
     static std::vector<std::string> mMuxState;
+    static std::vector<std::string> mMuxLinkmgrState;
 
 private:
     mux::MuxManager *mMuxManagerPtr;
@@ -281,12 +318,14 @@ private:
     std::shared_ptr<swss::ProducerStateTable> mAppDbMuxTablePtr;
     // for communicating with the driver (probing the mux)
     std::shared_ptr<swss::Table> mAppDbMuxCommandTablePtr;
-    // for writing the current mux health, should it be health table?
-    std::shared_ptr<swss::ProducerStateTable> mStateDbMuxTablePtr;
+    // for writing the current mux linkmgr health
+    std::shared_ptr<swss::Table> mStateDbMuxLinkmgrTablePtr;
 
     std::shared_ptr<boost::thread> mMuxStateDbThreadPtr;
     std::shared_ptr<boost::thread> mConfigDbThreadPtr;
     std::shared_ptr<boost::thread> mSwssThreadPtr;
+
+    boost::barrier mBarrier;
 
     boost::asio::io_service::strand mStrand;
 

@@ -51,27 +51,33 @@ void LinkManagerStateMachineTest::runIoService(uint32_t count)
 
 void LinkManagerStateMachineTest::postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count)
 {
-    for (uint8_t i = 0; i < mMuxConfig.getStateChangeRetryCount(); i++) {
-        switch (label) {
-        case link_prober::LinkProberState::Active:
+    switch (label) {
+    case link_prober::LinkProberState::Active:
+        for (uint8_t i = 0; i < mMuxConfig.getPositiveStateChangeRetryCount(); i++) {
             mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpSelfEvent&>(
                 link_prober::LinkProberStateMachine::getIcmpSelfEvent()
             );
-            break;
-        case link_prober::LinkProberState::Standby:
+            runIoService(count);
+        }
+        break;
+    case link_prober::LinkProberState::Standby:
+        for (uint8_t i = 0; i < mMuxConfig.getPositiveStateChangeRetryCount(); i++) {
             mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpPeerEvent&>(
                 link_prober::LinkProberStateMachine::getIcmpPeerEvent()
             );
-            break;
-        case link_prober::LinkProberState::Unknown:
+            runIoService(count);
+        }
+        break;
+    case link_prober::LinkProberState::Unknown:
+        for (uint8_t i = 0; i < mMuxConfig.getNegativeStateChangeRetryCount(); i++) {
             mFakeMuxPort.mFakeLinkProber->postLinkProberEvent<link_prober::IcmpUnknownEvent&>(
                 link_prober::LinkProberStateMachine::getIcmpUnknownEvent()
             );
-            break;
-        default:
-            break;
+            runIoService(count);
         }
-        runIoService(count);
+        break;
+    default:
+        break;
     }
 }
 

@@ -117,13 +117,22 @@ public:
     inline uint32_t getTimeoutIpv4_msec() const {return mMuxConfig.getTimeoutIpv4_msec();};
 
     /**
-    *@method getStateChangeRetryCount
+    *@method getPositiveStateChangeRetryCount
     *
-    *@brief getter for LinkProber state change retry count
+    *@brief getter for LinkProber positive state change retry count
     *
     *@return state change retry count
     */
-    inline uint32_t getStateChangeRetryCount() const {return mMuxConfig.getStateChangeRetryCount();};
+    inline uint32_t getPositiveStateChangeRetryCount() const {return mMuxConfig.getPositiveStateChangeRetryCount();};
+
+    /**
+    *@method getNegativeStateChangeRetryCount
+    *
+    *@brief getter for LinkProber negative state change retry count
+    *
+    *@return state change retry count
+    */
+    inline uint32_t getNegativeStateChangeRetryCount() const {return mMuxConfig.getNegativeStateChangeRetryCount();};
 
     /**
     *@method getSuspendTimeout_msec

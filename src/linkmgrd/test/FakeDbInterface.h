@@ -22,6 +22,10 @@ public:
     virtual void setMuxState(const std::string &portName, mux_state::MuxState::Label label) override;
     virtual void getMuxState(const std::string &portName) override;
     virtual void probeMuxState(const std::string &portName) override;
+    virtual void setMuxLinkmgrState(
+        const std::string &portName,
+        link_manager::LinkManagerStateMachine::Label label
+    ) override;
 
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
 
@@ -33,6 +37,7 @@ public:
     uint32_t mSetMuxStateInvokeCount = 0;
     uint32_t mGetMuxStateInvokeCount = 0;
     uint32_t mProbeMuxStateInvokeCount = 0;
+    uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
 };
 
 } /* namespace test */

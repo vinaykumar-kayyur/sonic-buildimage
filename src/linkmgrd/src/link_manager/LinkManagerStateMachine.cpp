@@ -63,6 +63,7 @@ LinkManagerStateMachine::LinkManagerStateMachine(
 {
     assert(muxPortPtr != nullptr);
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
+    setLabel(Unhealthy);
 }
 
 //
@@ -146,6 +147,18 @@ void LinkManagerStateMachine::initializeTransitionFunctionTable()
 //            boost::placeholders::_2
 //        );
 }
+
+//
+// ---> setLabel(Label label);
+//
+// sets linkmgr State db state
+//
+void LinkManagerStateMachine::setLabel(Label label) {
+    if (mLabel != label) {
+        mLabel = label;
+        mMuxPortPtr->setMuxLinkmgrState(label);
+    }
+};
 
 //
 // ---> enterLinkProberState(CompositeState &nextState, link_prober::LinkProberState::Label label);
@@ -261,6 +274,8 @@ void LinkManagerStateMachine::activateStateMachine()
 
         mLinkProberPtr->initialize();
         mLinkProberPtr->startProbing();
+
+        updateMuxLinkmgrState();
     }
 }
 
@@ -283,6 +298,8 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
+
+    updateMuxLinkmgrState();
 }
 
 //
@@ -309,6 +326,8 @@ void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state:
         // Verify if state db MUX state matches the driver/current MUX state
         mMuxPortPtr->getMuxState();
     }
+
+    updateMuxLinkmgrState();
 }
 
 //
@@ -344,6 +363,8 @@ void LinkManagerStateMachine::handleStateChange(LinkStateEvent &event, link_stat
         LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
+
+    updateMuxLinkmgrState();
 }
 
 //
@@ -369,7 +390,7 @@ void LinkManagerStateMachine::handleGetServerMacAddressNotification(std::array<u
 //
 void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGDEBUG(boost::format("%s: state db mux state: %d") % mMuxPortConfig.getPortName() % label);
+    MUXLOGDEBUG(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     if (mComponentInitState.all() && ms(mCompositeState) != label &&
         ms(mCompositeState) != mux_state::MuxState::Wait) {
@@ -391,7 +412,7 @@ void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState:
 //
 void LinkManagerStateMachine::handleProbeMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGDEBUG(boost::format("%s: state db mux state: %d") % mMuxPortConfig.getPortName() % label);
+    MUXLOGINFO(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::DriverUpdate) {
@@ -426,12 +447,11 @@ void LinkManagerStateMachine::handleProbeMuxStateNotification(mux_state::MuxStat
 //
 // ---> handleMuxStateNotification(mux_state::MuxState::Label label);
 //
-// handle MUX state notification. Source of notification could be state_db via
-// orchagent or app_db via xcvrd
+// handle MUX state notification
 //
 void LinkManagerStateMachine::handleMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGDEBUG(boost::format("%s: state db mux state: %d") % mMuxPortConfig.getPortName() % label);
+    MUXLOGDEBUG(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::SwssUpdate ||
@@ -461,7 +481,7 @@ void LinkManagerStateMachine::handleMuxStateNotification(mux_state::MuxState::La
 //
 void LinkManagerStateMachine::handleSwssLinkStateNotification(const link_state::LinkState::Label label)
 {
-    MUXLOGDEBUG(boost::format("%s: state db link state: %d") % mMuxPortConfig.getPortName() % label);
+    MUXLOGDEBUG(boost::format("%s: state db link state: %s") % mMuxPortConfig.getPortName() % mLinkStateName[label]);
 
     if (mComponentInitState.all()) {
         if (label == link_state::LinkState::Label::Up) {
@@ -500,6 +520,8 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
             mMuxPortPtr->probeMuxState();
         }
 
+        updateMuxLinkmgrState();
+
         mMuxPortConfig.setMode(mode);
     }
 }
@@ -518,6 +540,25 @@ void LinkManagerStateMachine::handleSuspendTimerExpiry()
     //               Wait, Active, Up or Wait, Standby, UP or Wait, Unknown, UP
     boost::system::error_code errorCode;
     handleMuxActiveTimeout(errorCode);
+}
+
+//
+// ---> updateMuxLinkmgrState();
+//
+// Update State DB MUX LinkMgr state
+//
+void LinkManagerStateMachine::updateMuxLinkmgrState()
+{
+    Label label = Unhealthy;
+    if (ls(mCompositeState) == link_state::LinkState::Label::Up &&
+        ((ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
+         ms(mCompositeState) == mux_state::MuxState::Label::Active) ||
+        (ps(mCompositeState) == link_prober::LinkProberState::Label::Standby &&
+         ms(mCompositeState) == mux_state::MuxState::Label::Standby))) {
+        label = Healthy;
+    }
+
+    setLabel(label);
 }
 
 //

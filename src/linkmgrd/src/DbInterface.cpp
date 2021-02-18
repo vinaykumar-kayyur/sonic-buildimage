@@ -26,6 +26,7 @@ namespace mux
 {
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown"};
+std::vector<std::string> DbInterface::mMuxLinkmgrState = {"healthy", "unhealthy"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -34,6 +35,7 @@ std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown
 //
 DbInterface::DbInterface(mux::MuxManager *muxManager, boost::asio::io_service *ioService) :
     mMuxManagerPtr(muxManager),
+    mBarrier(2),
     mStrand(*ioService)
 {
 }
@@ -92,6 +94,24 @@ void DbInterface::probeMuxState(const std::string &portName)
 }
 
 //
+// ---> setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label);
+//
+// set MUX LinkMgr state in State DB for cli processing
+//
+void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label)
+{
+    MUXLOGDEBUG(boost::format("%s: setting mux linkmgr to %s") % portName % mMuxLinkmgrState[label]);
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handleSetMuxLinkmgrState,
+        this,
+        portName,
+        label
+    )));
+}
+
+//
 // ---> initialize();
 //
 // initialize DB tables and start SWSS listening thread
@@ -108,8 +128,8 @@ void DbInterface::initialize()
         mAppDbMuxCommandTablePtr = std::make_shared<swss::Table> (
             mAppDbPtr.get(), APP_MUX_CABLE_COMMAND_TABLE_NAME
         );
-        mStateDbMuxTablePtr = std::make_shared<swss::ProducerStateTable> (
-            mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME
+        mStateDbMuxLinkmgrTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(), STATE_MUX_LINKMGR_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
@@ -187,6 +207,23 @@ void DbInterface::handleProbeMuxState(const std::string portName)
 }
 
 //
+// ---> handleSetMuxLinkmgrState(const std::string portName, link_manager::LinkManagerStateMachine::Label label);
+//
+// set MUX LinkMgr state in State DB for cli processing
+//
+void DbInterface::handleSetMuxLinkmgrState(
+    const std::string portName,
+    link_manager::LinkManagerStateMachine::Label label
+)
+{
+    MUXLOGDEBUG(boost::format("%s: setting mux linkmgr state to %s") % portName % mMuxLinkmgrState[label]);
+
+    if (label <= link_manager::LinkManagerStateMachine::Unhealthy) {
+        mStateDbMuxLinkmgrTablePtr->hset(portName, "state", mMuxLinkmgrState[label]);
+    }
+}
+
+//
 // ---> getLoopback2InterfaceInfo(
 //          std::shared_ptr<swss::DBConnector> configDbConnector,
 //          std::shared_ptr<swss::DBConnector> stateDbConnector
@@ -222,8 +259,7 @@ void DbInterface::getLoopback2InterfaceInfo(
                 if (ipAddress.is_v4()) {
                     mMuxManagerPtr->setLoopbackIpv4Address(ipAddress);
                     loopback2IntfKey = loopbackIntf;
-                }
-                else if (ipAddress.is_v6()) {
+                } else if (ipAddress.is_v6()) {
                     // handle IPv6 probing
                 }
             } else {
@@ -340,30 +376,32 @@ void DbInterface::handleMuxPortConfigNotifiction(swss::SubscriberStateTable &con
 }
 
 //
-// ---> handleLocalhostConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
+// ---> handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable);
 //
-// handles localhost configuration change notification
+// handles MUX linkmgr configuration change notification
 //
-void DbInterface::handleLocalhostConfigNotifiction(swss::SubscriberStateTable &configLocalhostTable)
+void DbInterface::handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &configMuxLinkmgrTable)
 {
     std::deque<swss::KeyOpFieldsValuesTuple> entries;
 
-    configLocalhostTable.pops(entries);
+    configMuxLinkmgrTable.pops(entries);
     for (auto &entry: entries) {
         std::string key = kfvKey(entry);
-        if (key == "LINK_PROBE") {
+        if (key == "LINK_PROBER") {
             std::string operation = kfvOp(entry);
             std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
             for (auto &fieldValue: fieldValues) {
                 std::string f = fvField(fieldValue);
                 std::string v = fvValue(fieldValue);
-                if (f == "interval") {
+                if (f == "interval_v4") {
                     mMuxManagerPtr->setTimeoutIpv4_msec(boost::lexical_cast<uint32_t> (v));
-                } else if (f == "interval_for_v6") {
+                } else if (f == "interval_v6") {
                     mMuxManagerPtr->setTimeoutIpv6_msec(boost::lexical_cast<uint32_t> (v));
-                } else if (f == "timeout") {
-                    mMuxManagerPtr->setStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
+                } else if (f == "positive_signal_count") {
+                    mMuxManagerPtr->setPositiveStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
+                } else if (f == "negative_signal_count") {
+                    mMuxManagerPtr->setNegativeStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
                 } else if (f == "suspend_timer") {
                     mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
                 }
@@ -497,8 +535,8 @@ void DbInterface::handleSwssNotification()
     std::shared_ptr<swss::DBConnector> appDbPtr = std::make_shared<swss::DBConnector> ("APPL_DB", 0);
     std::shared_ptr<swss::DBConnector> stateDbPtr = std::make_shared<swss::DBConnector> ("STATE_DB", 0);
 
-    // For reading Link Prober configurations from the localhost table name
-    swss::SubscriberStateTable configDbLocalhostTable(configDbPtr.get(), "LOCALHOST"/*CFG_LOCALHOST_TABLE_NAME*/);
+    // For reading Link Prober configurations from the MUX linkmgr table name
+    swss::SubscriberStateTable configDbMuxLinkmgrTable(configDbPtr.get(), CFG_MUX_LINKMGR_TABLE_NAME);
 
     swss::SubscriberStateTable configDbMuxTable(configDbPtr.get(), CFG_MUX_CABLE_TABLE_NAME);
 
@@ -521,7 +559,7 @@ void DbInterface::handleSwssNotification()
     netlinkNeighbor.dumpRequest(RTM_GETNEIGH);
 
     swss::Select swssSelect;
-    swssSelect.addSelectable(&configDbLocalhostTable);
+    swssSelect.addSelectable(&configDbMuxLinkmgrTable);
     swssSelect.addSelectable(&configDbMuxTable);
     swssSelect.addSelectable(&appDbPortTable);
     swssSelect.addSelectable(&appDbMuxResponseTable);
@@ -535,38 +573,32 @@ void DbInterface::handleSwssNotification()
         if (ret == swss::Select::ERROR) {
             MUXLOGERROR("Error had been returned in select");
             continue;
-        }
-        else if (ret == swss::Select::TIMEOUT) {
+        } else if (ret == swss::Select::TIMEOUT) {
             continue;
-        }
-        else if (ret != swss::Select::OBJECT) {
+        } else if (ret != swss::Select::OBJECT) {
             MUXLOGERROR(boost::format("Unknown return value from Select: %d") % ret);
             continue;
         }
 
-        if (selectable == static_cast<swss::Selectable *> (&configDbLocalhostTable)) {
-            handleLocalhostConfigNotifiction(configDbLocalhostTable);
-        }
-        else if (selectable == static_cast<swss::Selectable *> (&configDbMuxTable)) {
+        if (selectable == static_cast<swss::Selectable *> (&configDbMuxLinkmgrTable)) {
+            handleMuxLinkmgrConfigNotifiction(configDbMuxLinkmgrTable);
+        } else if (selectable == static_cast<swss::Selectable *> (&configDbMuxTable)) {
             handleMuxPortConfigNotifiction(configDbMuxTable);
-        }
-        else if (selectable == static_cast<swss::Selectable *> (&appDbPortTable)) {
+        } else if (selectable == static_cast<swss::Selectable *> (&appDbPortTable)) {
             handleLinkStateNotifiction(appDbPortTable);
-        }
-        else if (selectable == static_cast<swss::Selectable *> (&appDbMuxResponseTable)) {
+        } else if (selectable == static_cast<swss::Selectable *> (&appDbMuxResponseTable)) {
             handleMuxResponseNotifiction(appDbMuxResponseTable);
-        }
-        else if (selectable == static_cast<swss::Selectable *> (&stateDbPortTable)) {
+        } else if (selectable == static_cast<swss::Selectable *> (&stateDbPortTable)) {
             handleMuxStateNotifiction(stateDbPortTable);
-        }
-        else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
+        } else if (selectable == static_cast<swss::Selectable *> (&netlinkNeighbor)) {
             continue;
-        }
-        else {
+        } else {
             MUXLOGERROR("Unknown object returned by select");
         }
     }
 
+    mBarrier.wait();
+    mBarrier.wait();
     mMuxManagerPtr->terminate();
 }
 

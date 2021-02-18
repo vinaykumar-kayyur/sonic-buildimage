@@ -158,11 +158,11 @@ void MuxManager::processGetServerMacAddress(
 //
 // ---> processGetMuxState(const std::string &portName, const std::string &muxState);
 //
-// update MUX port app db notification
+// update MUX port state db notification
 //
 void MuxManager::processGetMuxState(const std::string &portName, const std::string &muxState)
 {
-    MUXLOGINFO(boost::format("%s: app db mux state: %s") % portName % muxState);
+    MUXLOGINFO(boost::format("%s: state db mux state: %s") % portName % muxState);
 
     PortMapIterator portMapIterator = mPortMap.find(portName);
     if (portMapIterator != mPortMap.end()) {
@@ -235,9 +235,6 @@ void MuxManager::handleSignal(const boost::system::error_code errorCode, int sig
         switch (signalNumber) {
         case SIGINT:
         case SIGTERM:
-            mSignalSet.clear();
-            mDbInterface.stopSwssNotificationPoll();
-            mIoService.stop();
             break;
         case SIGUSR1:
              level = common::MuxLogger::getInstance()->getLevel() == boost::log::trivial::severity_level::trace ?
@@ -254,13 +251,29 @@ void MuxManager::handleSignal(const boost::system::error_code errorCode, int sig
         }
     }
 
-    if (signalNumber != SIGINT && signalNumber != SIGTERM) {
+    if (signalNumber == SIGINT || signalNumber == SIGTERM) {
+        mSignalSet.clear();
+        handleProcessTerminate();
+    } else {
         mSignalSet.async_wait(boost::bind(&MuxManager::handleSignal,
             this,
             boost::asio::placeholders::error,
             boost::asio::placeholders::signal_number
         ));
     }
+}
+
+//
+// ---> handleProcessTerminate();
+//
+// stop DB interface thread and stop boost io service
+//
+void MuxManager::handleProcessTerminate()
+{
+    mDbInterface.stopSwssNotificationPoll();
+    mDbInterface.getBarrier().wait();
+    mIoService.stop();
+    mDbInterface.getBarrier().wait();
 }
 
 } /* namespace mux */

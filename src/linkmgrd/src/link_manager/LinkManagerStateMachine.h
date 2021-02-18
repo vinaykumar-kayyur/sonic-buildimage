@@ -73,6 +73,19 @@ public:
 class LinkManagerStateMachine: public common::StateMachine,
                                public std::enable_shared_from_this<LinkManagerStateMachine>
 {
+public:
+    /**
+     *@enum Label
+     *
+     *@brief Label corresponding to each LINKMGR Health State
+     */
+    enum Label {
+        Healthy,
+        Unhealthy,
+
+        Count
+    };
+
 private:
     /**
      *@enum anonymous
@@ -208,6 +221,15 @@ public:
     link_state::LinkStateMachine& getLinkStateMachine() {return mLinkStateMachine;};
 
 private:
+    /**
+    *@method setLabel
+    *
+    *@brief sets linkmgr State db state
+    *
+    *@return none
+    */
+    inline void setLabel(Label label);
+
     /**
     *@method enterLinkProberState
     *
@@ -404,6 +426,15 @@ public:
 
 private:
     /**
+    *@method updateMuxLinkmgrState
+    *
+    *@brief Update State DB MUX LinkMgr state
+    *
+    *@return none
+    */
+    void updateMuxLinkmgrState();
+
+    /**
     *@method handleMuxActiveTimeout
     *
     *@brief handle when state machine enter LinkProberWait, MuxActive/MuxStandby, LinkUp states
@@ -588,6 +619,7 @@ private:
     boost::asio::deadline_timer mDeadlineTimer;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
+    Label mLabel = Healthy;
 };
 
 } /* namespace link_manager */

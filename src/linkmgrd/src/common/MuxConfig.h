@@ -80,15 +80,30 @@ public:
     inline void setTimeoutIpv6_msec(uint32_t timeout_msec) {mTimeoutIpv6_msec = timeout_msec;};
 
     /**
-    *@method setStateChangeRetryCount
+    *@method setPositiveStateChangeRetryCount
     *
-    *@brief setter for LinkProber state change retry count
+    *@brief setter for LinkProber positive state change retry count
     *
     *@param stateChangeRetryCount (in)  state change retry count
     *
     *@return none
     */
-    inline void setStateChangeRetryCount(uint32_t stateChangeRetryCount) {mStateChangeRetryCount = stateChangeRetryCount;};
+    inline void setPositiveStateChangeRetryCount(uint32_t stateChangeRetryCount) {
+        mPositiveStateChangeRetryCount = stateChangeRetryCount;
+    };
+
+    /**
+    *@method setNegativeStateChangeRetryCount
+    *
+    *@brief setter for LinkProber negative state change retry count
+    *
+    *@param stateChangeRetryCount (in)  state change retry count
+    *
+    *@return none
+    */
+    inline void setNegativeStateChangeRetryCount(uint32_t stateChangeRetryCount) {
+        mNegativeStateChangeRetryCount = stateChangeRetryCount;
+    };
 
     /**
     *@method setSuspendTimeout_msec
@@ -153,13 +168,22 @@ public:
     inline uint32_t getTimeoutIpv4_msec() const {return mTimeoutIpv4_msec;};
 
     /**
-    *@method getStateChangeRetryCount
+    *@method getPositiveStateChangeRetryCount
     *
-    *@brief getter for LinkProber state change retry count
+    *@brief getter for LinkProber positive state change retry count
     *
     *@return state change retry count
     */
-    inline uint32_t getStateChangeRetryCount() const {return mStateChangeRetryCount;};
+    inline uint32_t getPositiveStateChangeRetryCount() const {return mPositiveStateChangeRetryCount;};
+
+    /**
+    *@method getNegativeStateChangeRetryCount
+    *
+    *@brief getter for LinkProber negative state change retry count
+    *
+    *@return state change retry count
+    */
+    inline uint32_t getNegativeStateChangeRetryCount() const {return mNegativeStateChangeRetryCount;};
 
     /**
     *@method getSuspendTimeout_msec
@@ -201,7 +225,8 @@ private:
     uint8_t mNumberOfThreads = 4;
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
-    uint32_t mStateChangeRetryCount = 3;
+    uint32_t mPositiveStateChangeRetryCount = 1;
+    uint32_t mNegativeStateChangeRetryCount = 3;
     uint32_t mSuspendTimeout_msec = 500;
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;

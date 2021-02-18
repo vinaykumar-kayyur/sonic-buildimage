@@ -90,7 +90,6 @@ public:
     *
     *@brief set MUX state in APP DB for orchagent processing
     *
-    *@param portName (in)   MUX/port name
     *@param label (in)      label of target state
     *
     *@return none
@@ -118,6 +117,19 @@ public:
     *@return label of MUX state
     */
     inline void probeMuxState() {mDbInterface->probeMuxState(mMuxPortConfig.getPortName());};
+
+    /**
+    *@method setMuxLinkmgrState
+    *
+    *@brief set MUX LinkMgr state in State DB for cli processing
+    *
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    inline void setMuxLinkmgrState(link_manager::LinkManagerStateMachine::Label label) {
+        mDbInterface->setMuxLinkmgrState(mMuxPortConfig.getPortName(), label);
+    };
 
     /**
     *@method setServerIpv4Address
