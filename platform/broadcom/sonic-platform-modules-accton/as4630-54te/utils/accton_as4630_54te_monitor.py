@@ -24,7 +24,6 @@ try:
     import sys
     import getopt
     import subprocess
-    import click
     import imp
     import logging
     import logging.config
@@ -33,7 +32,6 @@ try:
     import time
     import traceback
     import commands
-    from tabulate import tabulate
     from as4630_54te.fanutil import FanUtil
     from as4630_54te.thermalutil import ThermalUtil
 except ImportError as e:
