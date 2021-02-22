@@ -285,17 +285,19 @@ void LinkProber::handleTimeout(boost::system::error_code errorCode)
 //
 void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
 {
-    mSuspendTx = false;
+    if (errorCode == boost::system::errc::success) {
+        mSuspendTx = false;
 
-    // inform the composite state machine about Suspend timer expiry
-    boost::asio::io_service::strand& strand = mLinkProberStateMachine.getStrand();
-    boost::asio::io_service &ioService = strand.context();
-    ioService.post(strand.wrap(boost::bind(
-        static_cast<void (LinkProberStateMachine::*) (SuspendTimerExpiredEvent&)>
-            (&LinkProberStateMachine::processEvent),
-        &mLinkProberStateMachine,
-        LinkProberStateMachine::getSuspendTimerExpiredEvent()
-    )));
+        // inform the composite state machine about Suspend timer expiry
+        boost::asio::io_service::strand& strand = mLinkProberStateMachine.getStrand();
+        boost::asio::io_service &ioService = strand.context();
+        ioService.post(strand.wrap(boost::bind(
+            static_cast<void (LinkProberStateMachine::*) (SuspendTimerExpiredEvent&)>
+                (&LinkProberStateMachine::processEvent),
+            &mLinkProberStateMachine,
+            LinkProberStateMachine::getSuspendTimerExpiredEvent()
+        )));
+    }
 }
 
 //

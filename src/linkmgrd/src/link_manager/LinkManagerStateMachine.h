@@ -435,15 +435,24 @@ private:
     void updateMuxLinkmgrState();
 
     /**
-    *@method handleMuxActiveTimeout
+    *@method startMuxProbeTimer
     *
-    *@brief handle when state machine enter LinkProberWait, MuxActive/MuxStandby, LinkUp states
+    *@brief start a timer to monitor the MUX state
+    *
+    *@return none
+    */
+    inline void startMuxProbeTimer();
+
+    /**
+    *@method handleLinkWaitTimeout
+    *
+    *@brief handle when LinkProber heartbeats were lost due link down, bad cable or server down
     *
     *@param errorCode (in)          timer error code
     *
     *@return none
     */
-    void handleMuxActiveTimeout(boost::system::error_code errorCode);
+    void handleMuxProbeTimeout(boost::system::error_code errorCode);
 
     /**
     *@method initLinkProberState
@@ -553,16 +562,112 @@ private:
     void LinkProberStandbyMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
 
     /**
-    *@method LinkProberActiveMuxActiveLinkDownTransitionFunction
+    *@method LinkProberWaitMuxActiveLinkUpTransitionFunction
     *
-    *@brief transition function when entering {LinkProberActive, MuxActive, LinkDown} state
+    *@brief transition function when entering {LinkProberWait, MuxActive, LinkUp} state
     *
     *@param nextState (in, out)     reference to composite state, the state will be changed
     *                               to reflect next new state.
     *
     *@return none
     */
-    void LinkProberActiveMuxActiveLinkDownTransitionFunction(CompositeState &nextState);
+    void LinkProberWaitMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberWaitMuxStandbyLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberWait, MuxStandby, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberWaitMuxStandbyLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberWaitMuxUnknownLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberWait, MuxUnknown, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberWaitMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberUnknownMuxActiveLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberUnknown, MuxActive, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberUnknownMuxActiveLinkDownTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberUnknownMuxStandbyLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberUnknown, MuxStandby, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberUnknownMuxStandbyLinkDownTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberUnknownMuxUnknownLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberUnknown, MuxUnknown, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberUnknownMuxUnknownLinkDownTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberWaitMuxActiveLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberWait, MuxActive, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberWaitMuxActiveLinkDownTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberWaitMuxStandbyLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberWait, MuxStandby, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberWaitMuxStandbyLinkDownTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberWaitMuxUnknownLinkDownTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberWait, MuxUnknown, LinkDown} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberWaitMuxUnknownLinkDownTransitionFunction(CompositeState &nextState);
 
 private:
     // This is used for testing...

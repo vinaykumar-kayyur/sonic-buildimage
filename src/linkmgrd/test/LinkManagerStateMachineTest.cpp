@@ -161,7 +161,7 @@ void LinkManagerStateMachineTest::setMuxActive()
     VALIDATE_STATE(Unknown, Wait, Down);
 
     postLinkEvent(link_state::LinkState::Up);
-    VALIDATE_STATE(Wait, Wait, Up);
+    VALIDATE_STATE(Unknown, Wait, Up);
 
     // change state to active
     postLinkProberEvent(link_prober::LinkProberState::Active);
@@ -178,7 +178,7 @@ void LinkManagerStateMachineTest::setMuxStandby()
     VALIDATE_STATE(Unknown, Wait, Down);
 
     postLinkEvent(link_state::LinkState::Up);
-    VALIDATE_STATE(Wait, Wait, Up);
+    VALIDATE_STATE(Unknown, Wait, Up);
 
     // change state to active
     postLinkProberEvent(link_prober::LinkProberState::Standby);
@@ -269,10 +269,6 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverMuxFirst)
 
     // swss notification
     handleMuxState("active", 3);
-    VALIDATE_STATE(Wait, Active, Up);
-
-    // swss notification
-    handleProbeMuxState("active", 3);
     VALIDATE_STATE(Wait, Active, Up);
 
     // change state to active
