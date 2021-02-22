@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import swsssdk
+from swsscommon.swsscommon import SonicDBConfig
 import redis
 import subprocess
 import time
@@ -10,15 +10,15 @@ while(True):
         break
     time.sleep(1)
 
-instlists = swsssdk.SonicDBConfig.get_instancelist()
+instlists = SonicDBConfig.getInstanceList()
 for instname, v in instlists.items():
     insthost = v['hostname']
     instsocket = v['unix_socket_path']
 
-    dblists = swsssdk.SonicDBConfig.get_dblist()
+    dblists = SonicDBConfig.getDbList()
     for dbname in dblists:
-        dbid = swsssdk.SonicDBConfig.get_dbid(dbname)
-        dbinst = swsssdk.SonicDBConfig.get_instancename(dbname)
+        dbid = SonicDBConfig.getDbId(dbname)
+        dbinst = SonicDBConfig.getDbInst(dbname)
 
         # this DB is on current instance, skip flush
         if dbinst == instname:
