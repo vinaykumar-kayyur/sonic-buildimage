@@ -54,8 +54,8 @@ class Chassis(ChassisBase):
 
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            name_idx = 0 if index + 1 == NUM_SFP else index + 1
-            sfp = Sfp(index, sfputil_helper.logical[name_idx])
+            #name_idx = 0 if index + 1 == NUM_SFP else index + 1
+            sfp = Sfp(index, sfputil_helper.logical[index])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 

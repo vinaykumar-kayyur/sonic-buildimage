@@ -847,9 +847,9 @@ class Sfp(SfpBase):
             A Boolean, True if SFP has RX LOS, False if not.
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
-        rx_los = False
+        rx_los = []
         if self.sfp_type == OSFP_TYPE:
-            return False
+            return rx_los.append(False)
 
         elif self.sfp_type == QSFP_TYPE:
             offset = 0
@@ -861,14 +861,16 @@ class Sfp(SfpBase):
                 rx2_los = (rx_los_data & 0x02 != 0)
                 rx3_los = (rx_los_data & 0x04 != 0)
                 rx4_los = (rx_los_data & 0x08 != 0)
-                rx_los = (rx1_los and rx2_los and rx3_los and rx4_los)
+                #rx_los = (rx1_los and rx2_los and rx3_los and rx4_los)
+                rx_los.extend([rx1_los, rx2_los, rx3_los, rx4_los])
+                return rx_los
         else:
             offset = 256
             dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
                 (offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
                 rx_los_data = int(dom_channel_monitor_raw[0], 16)
-                rx_los = (rx_los_data & 0x02 != 0)
+                rx_los.append(rx_los_data & 0x02 != 0)
 
         return rx_los
 
@@ -879,10 +881,10 @@ class Sfp(SfpBase):
             A Boolean, True if SFP has TX fault, False if not
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
-        tx4_fault = False
+        tx_fault_list = []
 
         if self.sfp_type == OSFP_TYPE or not self.dom_supported:
-            return False
+            return tx_fault_list.append(False)
 
         elif self.sfp_type == QSFP_TYPE:
             offset = 0
@@ -894,17 +896,17 @@ class Sfp(SfpBase):
                 tx2_fault = (tx_fault_data & 0x02 != 0)
                 tx3_fault = (tx_fault_data & 0x04 != 0)
                 tx4_fault = (tx_fault_data & 0x08 != 0)
-                tx4_fault = (
-                    tx1_fault and tx2_fault and tx3_fault and tx4_fault)
+                tx_fault_list.extend([tx1_fault, tx2_fault, tx3_fault,
+                    tx4_fault])
         else:
             offset = 256
             dom_channel_monitor_raw = self.__read_eeprom_specific_bytes(
                 (offset + SFP_CHANNL_STATUS_OFFSET), SFP_CHANNL_STATUS_WIDTH)
             if dom_channel_monitor_raw is not None:
                 tx_fault_data = int(dom_channel_monitor_raw[0], 16)
-                tx4_fault = (tx_fault_data & 0x04 != 0)
+                tx_fault_list.append(tx_fault_data & 0x04 != 0)
 
-        return tx4_fault
+        return tx_fault_list
 
     def get_tx_disable(self):
         """
@@ -1357,3 +1359,18 @@ class Sfp(SfpBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence() and not self.get_reset_status()
+
+    def get_position_in_parent(self):
+        """
+        Returns:
+            Temp return 0
+        """
+        return 0
+
+    def is_replaceable(self):
+        """
+        Retrieves if replaceable
+        Returns:
+            A boolean value, True if replaceable
+        """
+        return True
