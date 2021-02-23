@@ -51,11 +51,11 @@ https://github.com/Azure/sonic-buildimage/blob/master/device/virtual/x86_64-kvm_
 bring up multi-asic virtual switch.
 
 - Update platform/vs/sonic_multiasic.xml with higher memory and vcpu as required.
-For 4-asic vs platform msft_four_asic_vs hwsku, 8GB memory and 10vCPUs.
-For 6-ASIC vs platform msft_multi_asic_vs hwsku, 8GB and 16vCPUs.
-Update the number of front-panel interfaces in sonic_multliasic..xml
-For 4-ASIC vs platform, 8 front panel interfaces.
-For 6-ASIC vs platform, 64 front panel interfaces.
+  - For 4-asic vs platform msft_four_asic_vs hwsku, 8GB memory and 10vCPUs.
+  - For 7-ASIC vs platform msft_multi_asic_vs hwsku, 8GB and 16vCPUs.
+- Update the number of front-panel interfaces in sonic_multliasic.xml
+    - For 4-ASIC vs platform, 8 front panel interfaces.
+    - For 6-ASIC vs platform, 64 front panel interfaces.
 
 - With multi-asic sonic_vs.img and sonic_multiasic.xml file, bring up multi-asic
 vs as:
