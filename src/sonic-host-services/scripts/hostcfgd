@@ -531,7 +531,7 @@ class HostConfigDaemon:
         self.ntpcfg.load(ntp_global, ntp_server)
 
         if self.masicBgpMonCfg:
-            self.masicBgpMonCfg.load()
+            self.masicBgpMonCfg.load(lpbk_table)
 
 
     def update_feature_state(self, feature_name, state, feature_table):
