@@ -50,7 +50,7 @@ function load_kernel_modules()
 
     # Source the platform env file
     env_file="/usr/share/sonic/device/$platform/platform_env.conf"
-    source $env_file
+    [ -f $env_file ] && . $env_file
 
     modprobe linux-kernel-bde dmasize=$dmasize maxpayload=128 debug=4 dma_debug=1 usemsi=$usemsi
     modprobe linux-user-bde
