@@ -11,6 +11,10 @@ module sonic-types {
      * respective YANG files.
      */
 
+    revision 2021-02-23 {
+        description "Added new sonic types.";
+    }
+
     revision 2019-07-01 {
         description "First Revision";
     }
@@ -105,6 +109,54 @@ module sonic-types {
         type string {
             length 1..64;
             pattern "percentage|used|free|PERCENTAGE|USED|FREE";
+        }
+    }
+
+    typedef oper-status {
+        type enumeration {
+            enum up;
+            enum down;
+        }
+    }
+
+    typedef mode-enable {
+        type enumeration {
+            enum enable;
+            enum disable;
+        }
+    }
+
+    typedef fec-mode {
+        type enumeration {
+            enum rs;
+            enum fc;
+            enum none;
+        }
+    }
+
+    typedef relay-policy-action {
+        type enumeration {
+            enum discard;
+            enum append;
+            enum replace;
+        }
+    }
+
+    typedef percentage {
+        type uint8 {
+            range "0..100";
+        }
+        description
+            "Integer indicating a percentage value";
+    }
+
+    container operation {
+        leaf operation {
+            type enumeration {
+                enum CREATE;
+                enum UPDATE;
+                enum DELETE;
+            }
         }
     }
 }

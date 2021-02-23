@@ -7,6 +7,10 @@ module sonic-extension {
 
     description "Extension yang Module for SONiC OS";
 
+    revision 2021-02-23 {
+        description "Adding extensions as per Sonic Yang Guidelines";
+    }
+
     revision 2019-07-01 {
         description "First Revision";
     }
@@ -18,6 +22,47 @@ module sonic-extension {
 
     extension key-regex-yang-to-configdb {
         description "Key regex used to convert config DB keys to YANG Config";
+        argument "value";
+    }
+
+    extension db-name {
+        description "DB name, e.g. APPL_DB, CONFIG_DB";
+        argument "value";
+    }
+
+    extension key-delim {
+        description "Key delimeter, e.g. - |, :";
+        argument "value";
+    }
+
+    extension key-pattern {
+        description "Key pattern, e.g. - ACL_RULE|{aclname}|{rulename}";
+        argument "value";
+    }
+
+    extension map-list {
+        description "If it is a map list";
+        argument "value";
+    }
+
+    extension map-leaf {
+        description "Map leaf names";
+        argument "value";
+    }
+
+    extension custom-validation {
+        description "Extension for custom validation."; 
+        argument "handler"; 
+    }
+
+    extension dependent-on {
+        description
+            "Entension to define dependency on other table. So during create/update,
+            operation will be performed first on parent table and then on this table.
+            In delete operation, this table will be deleted first and then parent table.
+            This extension can be defined only under list. Table name should always
+            suffixed with '_LIST' as modeled in yang.
+            e.g. - dependent-on STP_LIST";
         argument "value";
     }
 }
