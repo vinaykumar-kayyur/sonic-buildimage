@@ -12,6 +12,7 @@ schedules:
   branches:
     include:
     - 202012
+  always: true
 
 pool: sonicbld
 
