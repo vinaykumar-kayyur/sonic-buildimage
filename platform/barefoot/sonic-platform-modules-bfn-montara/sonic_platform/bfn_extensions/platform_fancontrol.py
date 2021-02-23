@@ -11,7 +11,7 @@ def fan_speed_set(fan, percent):
 
 def fan_speed_info_get():
     for fan_num in range(1, _MAX_FAN + 1):
-        def get_data(client):
+        def get_data(client, fan_num=fan_num):
             return client.pltfm_mgr.pltfm_mgr_fan_info_get(fan_num)
         fan_info = thrift_try(get_data)
         if fan_info.fan_num == fan_num:
