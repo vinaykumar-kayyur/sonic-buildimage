@@ -1,0 +1,57 @@
+#!/usr/bin/python
+
+import importlib
+import time
+import os
+import sys
+
+from sonic_platform.platform.chassis import Chassis
+
+def fan_speed_set(fan, percent):
+    pltfm_mgr.pltfm_mgr_fan_speed_set(fan, percent)
+
+def fan_speed_info_get():
+    for fan_num in range(1, MAX_FAN + 1):
+      fan_info = pltfm_mgr.pltfm_mgr_fan_info_get(fan_num);
+      if (fan_info.fan_num == fan_num):
+        print("fan number: %d front rpm: %d rear rpm: %d percent: %d%% " % (fan_info.fan_num, fan_info.front_rpm, fan_info.rear_rpm, fan_info.percent))
+
+def print_usage():
+    print("Usage: fancontrol.py <function> <param list>         ")
+    print("           function: fan_speed_set <fan #> <percent> ")
+    print("                     fan_speed_info_get              ")
+
+
+argc = len(sys.argv)
+if (argc == 1):
+  print_usage()
+  exit(0)
+
+if sys.argv[1] == "fan_speed_set":
+  if argc != 4:
+    print_usage()
+    exit(0)
+
+  fan = int(sys.argv[2])
+  percent = int(sys.argv[3])
+
+  if (fan > MAX_FAN) | (fan < 0):
+    print("Invalid value for fan #.")
+    print("")
+    print_usage()
+    exit(0)
+
+  if (percent > 100) | (percent < 0):
+    print("Invalid value for precent")
+    print("")
+    print_usage()
+    exit(0)
+
+  fan_speed_set(fan, percent)
+  exit(0)
+
+if sys.argv[1] == "fan_speed_info_get":
+  fan_speed_info_get()
+  exit(0)
+
+print_usage()
