@@ -223,7 +223,6 @@ class Fan(FanBase):
             sysfs_path = "%s%s/%s" % (
                 EMC2305_PATH, device, EMC2305_FAN_PWM)
             sysfs_path = sysfs_path.format(fan_index[self.fan_tray_index])
-            print(sysfs_path, int(pwm))
             return self.__write_txt_file(sysfs_path, int(pwm))
 
         return False
