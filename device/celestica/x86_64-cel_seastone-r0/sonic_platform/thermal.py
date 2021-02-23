@@ -7,7 +7,6 @@
 #############################################################################
 
 import os
-import re
 import os.path
 
 try:
@@ -77,8 +76,7 @@ class Thermal(ThermalBase):
         self._api_helper = APIHelper()
         self._airflow = airflow
         self._thermal_info = THERMAL_INFO[self.index]
-        self._hwmon_path = "{}/{}".format(I2C_ADAPTER_PATH,
-                                         self._thermal_info["i2c_path"])
+        self._hwmon_path = "{}/{}".format(I2C_ADAPTER_PATH, self._thermal_info["i2c_path"])
         self.name = self.get_name()
         self.postion = self._thermal_info["postion"]
         self.ss_index = 1
@@ -163,7 +161,7 @@ class Thermal(ThermalBase):
     def set_low_threshold(self, temperature):
         """
         Sets the low threshold temperature of thermal
-        Args : 
+        Args :
             temperature: A float number up to nearest thousandth of one degree Celsius,
             e.g. 30.125
         Returns:
@@ -180,7 +178,7 @@ class Thermal(ThermalBase):
         """
         max_crit_key = '{}_max_crit'.format(self._airflow)
         max_crit_threshold = self._thermal_info.get(max_crit_key, None)
-        if (max_crit_threshold is not None):
+        if max_crit_threshold is not None:
             max_crit_threshold = float(max_crit_threshold)
         return max_crit_threshold
 
@@ -191,7 +189,7 @@ class Thermal(ThermalBase):
             A float number, the low critical threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return 0.0
+        return 0.001
 
     def get_name(self):
         """
