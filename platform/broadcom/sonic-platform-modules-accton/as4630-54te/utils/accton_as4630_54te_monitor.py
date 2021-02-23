@@ -20,13 +20,13 @@
 # ------------------------------------------------------------------
 
 try:
+    import os
     import sys
     import getopt
     import logging
     import logging.config
     import logging.handlers
     import time
-    import commands
     from as4630_54te.fanutil import FanUtil
     from as4630_54te.thermalutil import ThermalUtil
 except ImportError as e:
@@ -196,6 +196,8 @@ class device_monitor(object):
                 'Alarm-Critical for temperature critical is detected, reset DUT')
             cmd_str = "i2cset -y -f 3 0x60 0x4 0xE4"
             time.sleep(2)
+            return_value = os.system(cmd_str)
+            logging.warning('Fan set: i2cset -y -f 3 0x60 0x4 0xE4, status is %d', return_value)
 
         #logging.debug('ori_state=%d, current_state=%d, temp_val=%d\n\n',ori_state, fan_policy_state, temp_val)
 

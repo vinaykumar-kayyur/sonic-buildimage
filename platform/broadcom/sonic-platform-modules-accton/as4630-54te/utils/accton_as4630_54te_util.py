@@ -160,7 +160,8 @@ FORCE = 0
 
 
 if DEBUG:
-    print 'ARGV      :', sys.argv[1:]
+    print(sys.argv[0])
+    print('ARGV      : %s' % sys.argv[1:])
 
 
 def main():
@@ -362,8 +363,6 @@ def device_install():
 
 def device_uninstall():
     global FORCE
-
-    status, output = log_os_system("ls /sys/bus/i2c/devices/0-0070", 0)
 
     for i in range(0, len(sfp_map)):
         target = "/sys/bus/i2c/devices/i2c-" + \
