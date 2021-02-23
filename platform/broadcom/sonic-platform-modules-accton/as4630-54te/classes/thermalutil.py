@@ -20,12 +20,8 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
-    import time
     import logging
     import glob
-    import commands
-    from collections import namedtuple
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -90,7 +86,7 @@ class ThermalUtil(object):
 
 
 def main():
-    thermal = ThermalUtil()
+    ThermalUtil()
 
 
 if __name__ == '__main__':

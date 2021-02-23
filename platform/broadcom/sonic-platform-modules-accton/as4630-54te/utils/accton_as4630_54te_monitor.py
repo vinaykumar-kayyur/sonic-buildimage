@@ -20,17 +20,12 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import sys
     import getopt
-    import subprocess
-    import imp
     import logging
     import logging.config
     import logging.handlers
-    import types
     import time
-    import traceback
     import commands
     from as4630_54te.fanutil import FanUtil
     from as4630_54te.thermalutil import ThermalUtil
@@ -40,10 +35,6 @@ except ImportError as e:
 # Deafults
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as4630_54te_monitor'
-
-global log_file
-global log_level
-
 
 # Temperature Policy
 # If any fan fail , please set fan speed register to 16
@@ -113,7 +104,7 @@ class device_monitor(object):
             console.setFormatter(formatter)
             logging.getLogger('').addHandler(console)
 
-        sys_handler = handler = logging.handlers.SysLogHandler(
+        sys_handler = logging.handlers.SysLogHandler(
             address='/dev/log')
         sys_handler.setLevel(logging.WARNING)
         logging.getLogger('').addHandler(sys_handler)
@@ -148,7 +139,6 @@ class device_monitor(object):
             LEVEL_TEMP_CRITICAL: [100, 16, 240000, 300000],
         }
         temp = [0, 0, 0]
-        temp_fail = 0
         thermal = ThermalUtil()
         fan = FanUtil()
         ori_duty_cycle = fan.get_fan_duty_cycle()
@@ -158,7 +148,6 @@ class device_monitor(object):
             for i in range(0, 3):
                 temp[i] = thermal._get_thermal_val(i + 1)
                 if temp[i] == 0 or temp[i] is None:
-                    temp_fail = 1
                     logging.warning("Get temp-%d fail", i)
                     return False
         else:
@@ -207,7 +196,6 @@ class device_monitor(object):
                 'Alarm-Critical for temperature critical is detected, reset DUT')
             cmd_str = "i2cset -y -f 3 0x60 0x4 0xE4"
             time.sleep(2)
-            status, output = commands.getstatusoutput(cmd_str)
 
         #logging.debug('ori_state=%d, current_state=%d, temp_val=%d\n\n',ori_state, fan_policy_state, temp_val)
 

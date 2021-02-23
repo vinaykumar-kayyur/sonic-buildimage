@@ -22,26 +22,19 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import sys
     import getopt
-    import subprocess
-    import imp
     import logging
     import logging.config
     import logging.handlers
-    import types
     import time  # this is only being used as part of the example
-    import traceback
+
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
 # Deafults
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as4630_54te_monitor_psu'
-
-global log_file
-global log_level
 
 
 psu_state = [2, 2]
