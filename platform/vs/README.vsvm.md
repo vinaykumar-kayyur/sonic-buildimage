@@ -47,7 +47,7 @@ the specific hwsku.
 For example, for msft_multi_asic_vs:
 https://github.com/Azure/sonic-buildimage/blob/master/device/virtual/x86_64-kvm_x86_64-r0/msft_multi_asic_vs/topology.sh
 
-- with the updated asic.conf and topology.sh, build sonic-vs.img which can be used to 
+- With the updated asic.conf and topology.sh, build sonic-vs.img which can be used to 
 bring up multi-asic virtual switch.
 
 - Update platform/vs/sonic_multiasic.xml with higher memory and vcpu as required.
