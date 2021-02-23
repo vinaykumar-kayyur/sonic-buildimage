@@ -75,13 +75,13 @@ virsh #
 ```
 
 - Steps to convert a prebuilt single asic sonic-vs.img:
-  - Use the update sonic_multiasic.xml file and bring up virtual switch.
+  - Use the updated sonic_multiasic.xml file and bring up virtual switch.
   - Update /usr/share/sonic/device/x86_64-kvm_x86_64-r0/asic.conf as above.
   - Add topology.sh in /usr/share/sonic/device/x86_64-kvm_x86_64-r0/<HWSKU>
   - stop database service and remove database docker, so that when vs is 
 rebooted, database_global.json is created with the right namespaces.
-  - systemctl stop database
-  - docker rm database
+    - systemctl stop database
+    - docker rm database
   - sudo reboot
   - Once rebooted, VS should be multi-asic VS.
 
