@@ -137,24 +137,26 @@ class Thermal(ThermalBase):
         """
         temp_file = "temp{}_max".format(self.ss_index)
         is_set = self.__set_threshold(temp_file, int(temperature*1000))
-        file_set = False
-        if is_set:
-            try:
-                with open(self.SS_CONFIG_PATH, 'r+') as f:
-                    content = f.readlines()
-                    f.seek(0)
-                    ss_found = False
-                    for idx, val in enumerate(content):
-                        if self.name in val:
-                            ss_found = True
-                        elif ss_found and temp_file in val:
-                            content[idx] = "    set {} {}\n".format(
-                                temp_file, temperature)
-                            f.writelines(content)
-                            file_set = True
-                            break
-            except IOError:
-                file_set = False
+        file_set = True
+        if self._api_helper.is_host():
+            file_set = False
+            if is_set:
+                try:
+                    with open(self.SS_CONFIG_PATH, 'r+') as f:
+                        content = f.readlines()
+                        f.seek(0)
+                        ss_found = False
+                        for idx, val in enumerate(content):
+                            if self.name in val:
+                                ss_found = True
+                            elif ss_found and temp_file in val:
+                                content[idx] = "    set {} {}\n".format(
+                                    temp_file, temperature)
+                                f.writelines(content)
+                                file_set = True
+                                break
+                except IOError as err:
+                    file_set = False
 
         return is_set & file_set
 
