@@ -36,6 +36,10 @@ function startplatform() {
         fi
     fi
 
+    if [[ x"$sonic_asic_platform" == x"xsight" ]]; then
+        /home/admin/xlx/start.sh
+    fi
+
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         if [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh start
@@ -115,6 +119,8 @@ function stopplatform2() {
         elif [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh stop
             /etc/init.d/xpnet.sh start
+        elif [ x$sonic_asic_platform == x'xsight' ]; then
+            /home/admin/xlx/down.sh $DEBUGLOG
         fi
     fi
 }
