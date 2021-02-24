@@ -20,7 +20,7 @@ index 3c9f7b6..05d143f 100755
  echo "Start Chassis HW management service."
  logger -t hw-management -p daemon.notice "Start Chassis HW management service."
 diff --git a/usr/usr/bin/hw-management.sh b/usr/usr/bin/hw-management.sh
-index 70f1297..8de1722 100755
+index 70f1297..e427a3d 100755
 --- a/usr/usr/bin/hw-management.sh
 +++ b/usr/usr/bin/hw-management.sh
 @@ -1110,6 +1110,13 @@ do_chip_down()
@@ -29,7 +29,7 @@ index 70f1297..8de1722 100755
  
 +check_simx()
 +{
-+        if [ ! -z "$(lspci -vvv | grep SimX)" ]; then
++        if [ -n "$(lspci -vvv | grep SimX)" ]; then
 +                exit 0
 +        fi
 +}
