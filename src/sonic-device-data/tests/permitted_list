@@ -218,5 +218,3 @@ serdes_fec_enable
 pbmp_gport_stack
 reglist_enable
 scache_filename
-host_as_route_disable
-cancun_dir
