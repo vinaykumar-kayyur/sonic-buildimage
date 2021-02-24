@@ -159,15 +159,14 @@ FORCE = 0
 # logging.basicConfig(level=logging.INFO)
 
 
-if DEBUG:
-    print(sys.argv[0])
-    print('ARGV      : %s' % sys.argv[1:])
-
-
 def main():
     global DEBUG
     global args
     global FORCE
+
+    if DEBUG:
+        print(sys.argv[0])
+        print('ARGV      : %s' % sys.argv[1:])
 
     if len(sys.argv) < 2:
         show_help()
