@@ -11,7 +11,7 @@ module sonic-device_neighbor {
 
     import sonic-extension {
         prefix ext;
-        revision-date 2019-07-01;
+        revision-date 2021-02-23;
     }
 
     import sonic-port {
