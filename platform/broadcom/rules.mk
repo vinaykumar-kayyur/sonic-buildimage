@@ -43,4 +43,4 @@ $(SYNCD)_DEPENDS += $(LIBSAITHRIFT_DEV)
 endif
 
 # Runtime dependency on brcm sai is set only for syncd
-$(SYNCD)_RDEPENDS += $(BRCM_SAI) $(BRCM-DNX_SAI)
+$(SYNCD)_RDEPENDS += $(BRCM_SAI)
