@@ -169,7 +169,7 @@ def main(argv):
             epoch_time = time.time()
             elapsed_secs = epoch_time - process_under_alerting[process_name]["last_alerted"]
             if elapsed_secs >= ALERTING_INTERVAL_SECS:
-                elapsed_mins = int(elapsed_secs / 60)
+                elapsed_mins = elapsed_secs // 60
                 process_under_alerting[process_name]["last_alerted"] = epoch_time
                 process_under_alerting[process_name]["dead_minutes"] += elapsed_mins
                 generate_alerting_message(process_name, process_under_alerting[process_name]["dead_minutes"])
