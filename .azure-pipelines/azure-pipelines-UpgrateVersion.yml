@@ -26,7 +26,7 @@ stages:
   jobs:
   - job: UpgradeVersions
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'ubuntu-20.04'
     steps:
     - script: |
         if [ -z "$(which gh)" ]; then
