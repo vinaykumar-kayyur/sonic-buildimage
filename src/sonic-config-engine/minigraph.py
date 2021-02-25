@@ -623,9 +623,15 @@ def parse_dpg(dpg, hname):
                             acl_intfs.append(panel_port)
                     break
             if acl_intfs:
+                # Remove duplications
+                dedup_intfs = []
+                for intf in acl_intfs:
+                    if intf not in dedup_intfs:
+                        dedup_intfs.append(intf)
+
                 acls[aclname] = {'policy_desc': aclname,
                                  'stage': stage,
-                                 'ports': acl_intfs}
+                                 'ports': dedup_intfs}
                 if is_mirror:
                     acls[aclname]['type'] = 'MIRROR'
                 elif is_mirror_v6:

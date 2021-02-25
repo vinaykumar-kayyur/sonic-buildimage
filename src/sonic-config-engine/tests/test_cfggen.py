@@ -177,7 +177,7 @@ class TestCfgGen(TestCase):
                 "'DATAACLINGRESS': {'stage': 'ingress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04'], 'policy_desc': 'DATAACLINGRESS'}, "
                 "'SNMP_ACL': {'services': ['SNMP'], 'type': 'CTRLPLANE', 'policy_desc': 'SNMP_ACL', 'stage': 'ingress'}, "
                 "'SSH_ACL': {'services': ['SSH'], 'type': 'CTRLPLANE', 'policy_desc': 'SSH_ACL', 'stage': 'ingress'}, "
-                "'DATAACLEGRESS': {'stage': 'egress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02'], 'policy_desc': 'DATAACLEGRESS'}, "
+                "'DATAACLEGRESS': {'stage': 'egress', 'type': 'L3', 'ports': ['PortChannel01', 'PortChannel02', 'Ethernet100', 'PortChannel03'], 'policy_desc': 'DATAACLEGRESS'}, "
                 "'EVERFLOWV6': {'stage': 'ingress', 'type': 'MIRRORV6', 'ports': ['PortChannel01', 'PortChannel02', 'PortChannel03', 'PortChannel04', 'Ethernet4', 'Ethernet100'], 'policy_desc': 'EVERFLOWV6'}}"
             )
         )
