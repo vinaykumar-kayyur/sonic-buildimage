@@ -235,7 +235,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_ecmp_fg_nhg(self):
         argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v \"FG_NHG.values()|list\"'
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "[{'bucket_size': 120, 'match_mode': 'nexthop-based'}, {'bucket_size': 120, 'match_mode': 'nexthop-based'}]")
+        self.assertEqual(output.strip(), "[{'match_mode': 'nexthop-based', 'bucket_size': 120}, {'match_mode': 'nexthop-based', 'bucket_size': 120}]")
 
     def test_minigraph_ecmp_members(self):
         argument = '-m "' + self.ecmp_graph + '" -p "' + self.mlnx_port_config + '" -v "FG_NHG_MEMBER.keys()|list|sort"'
