@@ -33,7 +33,11 @@ case "$1" in
 start)
         echo -n "Setting up board... "
 
+        rmmod i2c-i801
+        rmmod i2c-ismt
         modprobe i2c-dev
+        modprobe i2c-i801
+        modprobe i2c-ismt
         modprobe i2c-mux-pca954x
         modprobe dx010_wdt
         modprobe leds-dx010
