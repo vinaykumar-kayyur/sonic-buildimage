@@ -149,14 +149,4 @@ module sonic-types {
         description
             "Integer indicating a percentage value";
     }
-
-    container operation {
-        leaf operation {
-            type enumeration {
-                enum CREATE;
-                enum UPDATE;
-                enum DELETE;
-            }
-        }
-    }
 }
