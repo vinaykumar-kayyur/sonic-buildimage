@@ -522,7 +522,6 @@ def parse_dpg(dpg, hname):
                 dpg_ecmp_content['ipv4'] = ipv4_content
                 dpg_ecmp_content['ipv6'] = ipv6_content
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
-        vlan_intfs = []
         vlans = {}
         vlan_members = {}
         vlantype_name = ""
@@ -551,7 +550,7 @@ def parse_dpg(dpg, hname):
                 else:
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
-            vlan_attributes = {'vlanid': vlanid}
+            vlan_attributes = {'vlanid': vlanid, 'members': vmbr_list }
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
