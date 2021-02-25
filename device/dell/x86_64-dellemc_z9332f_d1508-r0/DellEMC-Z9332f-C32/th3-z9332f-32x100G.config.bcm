@@ -8,7 +8,7 @@ load_firmware=0x2
 
 ccm_dma_enable=0
 ccmdma_intr_enable=0
-mem_cache_enable=0
+mem_cache_enable=1
 phy_enable=0
 phy_null=1
 
@@ -32,7 +32,7 @@ tdma_intr_enable=1
 tdma_timeout_usec.0=5000000
 parity_correction.0=1
 mmu_lossless.0=0
-bcm_num_cos=8
+bcm_num_cos=10
 default_cpu_tx_queue=7
 pktdma_poll_mode_channel_bitmap=1
 l3_max_ecmp_mode.0=1

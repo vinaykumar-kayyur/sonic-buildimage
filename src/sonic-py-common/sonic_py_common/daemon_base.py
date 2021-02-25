@@ -1,4 +1,4 @@
-import imp
+import importlib
 import signal
 import sys
 
@@ -8,6 +8,7 @@ from .logger import Logger
 #
 # Constants ====================================================================
 #
+
 REDIS_TIMEOUT_MSECS = 0
 
 EEPROM_MODULE_NAME = 'eeprom'
@@ -24,13 +25,28 @@ def db_connect(db_name, namespace=EMPTY_NAMESPACE):
     from swsscommon import swsscommon
     return swsscommon.DBConnector(db_name, REDIS_TIMEOUT_MSECS, True, namespace)
 
+
+def _load_module_from_file(module_name, file_path):
+    loader = importlib.machinery.SourceFileLoader(module_name, file_path)
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    sys.modules[module_name] = module
+    return module
+
+
 #
 # DaemonBase ===================================================================
 #
 
+
 class DaemonBase(Logger):
     def __init__(self, log_identifier):
-        super(DaemonBase, self).__init__(log_identifier, Logger.LOG_FACILITY_DAEMON)
+        super(DaemonBase, self).__init__(
+            log_identifier=log_identifier,
+            log_facility=Logger.LOG_FACILITY_DAEMON,
+            log_option=(Logger.LOG_OPTION_NDELAY | Logger.LOG_OPTION_PID)
+        )
 
         # Register our default signal handlers, unless the signal already has a
         # handler registered, most likely from a subclass implementation
@@ -44,15 +60,15 @@ class DaemonBase(Logger):
     # Default signal handler; can be overridden by subclass
     def signal_handler(self, sig, frame):
         if sig == signal.SIGHUP:
-            log_info("DaemonBase: Caught SIGHUP - ignoring...")
+            self.log_info("DaemonBase: Caught SIGHUP - ignoring...")
         elif sig == signal.SIGINT:
-            log_info("DaemonBase: Caught SIGINT - exiting...")
+            self.log_info("DaemonBase: Caught SIGINT - exiting...")
             sys.exit(128 + sig)
         elif sig == signal.SIGTERM:
-            log_info("DaemonBase: Caught SIGTERM - exiting...")
+            self.log_info("DaemonBase: Caught SIGTERM - exiting...")
             sys.exit(128 + sig)
         else:
-            log_warning("DaemonBase: Caught unhandled signal '{}'".format(sig))
+            self.log_warning("DaemonBase: Caught unhandled signal '{}'".format(sig))
 
     # Loads platform specific platform module from source
     def load_platform_util(self, module_name, class_name):
@@ -63,7 +79,7 @@ class DaemonBase(Logger):
 
         try:
             module_file = "/".join([platform_path, "plugins", module_name + ".py"])
-            module = imp.load_source(module_name, module_file)
+            module = _load_module_from_file(module_name, module_file)
         except IOError as e:
             raise IOError("Failed to load platform module '%s': %s" % (module_name, str(e)))
 

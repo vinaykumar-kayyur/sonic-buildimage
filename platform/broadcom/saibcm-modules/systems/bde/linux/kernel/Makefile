@@ -1,5 +1,10 @@
 #
-#  Copyright 2017 Broadcom
+#  Copyright 2007-2020 Broadcom Inc. All rights reserved.
+#  
+#  Permission is granted to use, copy, modify and/or distribute this
+#  software under either one of the licenses below.
+#  
+#  License Option 1: GPL
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
 #  
 #  You should have received a copy of the GNU General Public License
 #  version 2 (GPLv2) along with this source code.
+#  
+#  
+#  License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+#  
+#  This software is governed by the Broadcom Open Network Switch APIs license:
+#  https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
 #
 # -*- Makefile -*-
 # $Id: Makefile,v 1.18 Broadcom SDK $
@@ -55,14 +66,16 @@ THIS_MOD_NAME := linux-kernel-bde
 MODULE = $(LIBDIR)/$(THIS_MOD_NAME).o
 KMODULE = $(LIBDIR)/$(THIS_MOD_NAME).ko
 
-build: kernel_libs $(MODULE) $(KMODULE)
+build: kernel_libs module $(KMODULE)
 else
 MODULE = $(LIBDIR)/linux-kernel-bde.o
 
-build: kernel_libs $(MODULE)
+build: kernel_libs module
 endif
 
-$(MODULE): $(BLDDIR)/.tree kernel_libs $(BOBJS)
+module: kernel_libs $(MODULE)
+
+$(MODULE): $(BLDDIR)/.tree $(BOBJS)
 	mkdir -p $(@D)
 	$(LD) $(MODULE_LDFLAGS) -r -d $(BOBJS) $(LIBS) -o $@
 ifneq ($(kernel_version),2_4)

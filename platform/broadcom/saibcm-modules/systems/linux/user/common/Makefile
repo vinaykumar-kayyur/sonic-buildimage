@@ -1,5 +1,10 @@
 #
-#  Copyright 2017 Broadcom
+#  Copyright 2007-2020 Broadcom Inc. All rights reserved.
+#  
+#  Permission is granted to use, copy, modify and/or distribute this
+#  software under either one of the licenses below.
+#  
+#  License Option 1: GPL
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
 #  
 #  You should have received a copy of the GNU General Public License
 #  version 2 (GPLv2) along with this source code.
+#  
+#  
+#  License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+#  
+#  This software is governed by the Broadcom Open Network Switch APIs license:
+#  https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
 #
 # -*- Makefile -*-
 # $Id: Makefile,v 1.4 Broadcom SDK $
@@ -65,7 +76,7 @@ ifeq (,$(kernel_version))
 kernel_version=2_4
 endif
 
-ifeq ($(kernel_version),2_6)
+ifneq ($(kernel_version),2_4)
 KOBJ=ko
 else
 KOBJ=o
@@ -94,6 +105,9 @@ BCM_KNET=$(DEST_DIR)/$(BCM_KNET_LOCAL)
 PSAMPLE_LOCAL := psample.$(KOBJ)
 PSAMPLE := $(DEST_DIR)/$(PSAMPLE_LOCAL)
 
+BCM_LPTP_LOCAL :=linux-bcm-ptp-clock.$(KOBJ)
+BCM_LPTP=$(DEST_DIR)/$(BCM_LPTP_LOCAL)
+
 ifeq (,$(findstring DELIVER,$(MAKECMDGOALS)))
 .DEFAULT_GOAL := all
 all_targets := kernel_modules $(KERNEL_BDE) $(USER_BDE)
@@ -109,6 +123,12 @@ endif
 # Build all by default
 ifndef BUILD_KNET
 BUILD_KNET = 1
+endif
+
+# Remove this when LinuxPTP support becomes optional.
+ifndef BUILD_LPTP
+BUILD_LPTP = 1
+BUILD_KNETSYNC = 1
 endif
 
 ifeq ($(BUILD_KNET),1)
@@ -132,18 +152,33 @@ endif
 ifdef BUILD_PSAMPLE
 all_targets += $(PSAMPLE)
 ADD_TO_CFLAGS += -DPSAMPLE_SUPPORT
+
+# KnetSync support
+ifdef BUILD_KNETSYNC
+
+KERNEL_TARGETS += $(BCM_PTP_CLOCK)
+LOCAL_KERNEL_TARGETS += $(patsubst %,$(realpath ..)/$(platform)/%,$(BCM_PTP_CLOCK_LOCAL))
+
+endif # BUILD_KNETSYNC
+
 ifeq ($(NO_LOCAL_TARGETS),)
-LOCAL_TARGETS +=$(patsubst %,../$(platform)/%,$(PSAMPLE_LOCAL))
-all_targets +=$(LOCAL_TARGETS)
+    LOCAL_TARGETS +=$(patsubst %,../$(platform)/%,$(PSAMPLE_LOCAL))
+    all_targets +=$(LOCAL_TARGETS)
+endif
+endif
+
+ifdef BUILD_LPTP
+    all_targets += $(BCM_LPTP)
+
+ifeq ($(NO_LOCAL_TARGETS),)
+    LOCAL_TARGETS +=$(patsubst %,../$(platform)/%,$(BCM_LPTP_LOCAL))
+    all_targets +=$(LOCAL_TARGETS)
 endif
 endif
 
 ADD_TO_CFLAGS += -I$(SDK)/systems/linux/kernel/modules/include
 COND_KNET_LIBS = libuser.$(libext)
 endif
-
-#SAI_FIXUP
-.NOTPARALLEL:
 
 all: $(BLDDIR)/.tree $(all_targets)
 
@@ -161,23 +196,32 @@ ADD_TO_CFLAGS += -I$(SDK)/systems/bde/linux/include
 ADD_TO_CFLAGS += -DPROXY_SUPPORT=0
 
 CFLAGS += $(ADD_TO_CFLAGS)
+
 #SAI_FIXUP
 CFLAGS:=$(filter-out -fPIC, $(CFLAGS))
 
+# KnetSync Support
+ifdef BUILD_KNETSYNC
+    knetsync_subdirs = bcm-ptp-clock
+endif # BUILD_KNETSYNC
 
 kernel_modules:
 	$(MAKE) -C $(SDK)/systems/bde/linux/kernel kernel_version=$(kernel_version)
 	$(MAKE) -C $(SDK)/systems/bde/linux/user/kernel kernel_version=$(kernel_version)
 ifeq ($(BUILD_KNET),1)
-	$(MAKE) -j1 -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
+	$(MAKE) -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
 		subdirs="shared bcm-knet" override-target=linux-$(platform) CFLAGS="$(CFLAGS)"
-ifdef BUILD_PSAMPLE 
-	$(MAKE) -j1 -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
+ifdef BUILD_PSAMPLE
+	$(MAKE) -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
 		subdirs="psample" override-target=linux-$(platform) CFLAGS="$(CFLAGS)"
 endif
 ifdef BUILD_KNET_CB
-	$(MAKE) -j1 -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
+	$(MAKE) -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
 		subdirs="knet-cb" override-target=linux-$(platform) CFLAGS="$(CFLAGS)"
+endif
+ifdef BUILD_LPTP
+	$(MAKE) -C $(SDK)/systems/linux/kernel/modules kernel_version=$(kernel_version) \
+		subdirs="bcm-ptp-clock" override-target=linux-$(platform) CFLAGS="$(CFLAGS)"
 endif
 endif
 
@@ -197,6 +241,8 @@ $(KNET_CB): $(KERN_BLDROOT)/linux-knet-cb.$(KOBJ)
 $(PSAMPLE): $(KERN_BLDROOT)/psample.$(KOBJ)
 	$(OBJCOPY) --strip-debug $< $@
 
+$(BCM_LPTP): $(KERN_BLDROOT)/linux-bcm-ptp-clock.$(KOBJ)
+	$(OBJCOPY) --strip-debug $< $@
 
 ifeq ($(NO_LOCAL_TARGETS),)
 $(foreach targ,$(LOCAL_TARGETS),$(eval $(call LOCAL_TARGET_DEF,$(targ))))
@@ -206,10 +252,10 @@ clean::
 	$(MAKE) -C $(SDK)/systems/bde/linux/kernel $@
 	$(MAKE) -C $(SDK)/systems/bde/linux/user/kernel $@
 	$(MAKE) -C $(SDK)/systems/linux/kernel/modules \
-		subdirs="shared bcm-knet knet-cb" \
+		subdirs="shared bcm-knet knet-cb psample bcm-ptp-clock" \
 		override-target=linux-$(platform) $@
 	$(RM) $(KERNEL_BDE) $(USER_BDE)
-	$(RM) $(BCM_KNET) $(KNET_CB)
+	$(RM) $(BCM_KNET) $(KNET_CB) $(PSAMPLE) $(BCM_LPTP)
 	$(RM) $(KERN_BLDROOT)/linux-kernel-bde.$(KOBJ)
 	$(RM) $(KERN_BLDROOT)/linux-user-bde.$(KOBJ)
 	$(RM) $(KERN_BLDROOT)/linux-bcm-knet.$(KOBJ)

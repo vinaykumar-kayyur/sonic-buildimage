@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-import os
-import sys
 from natsort import natsorted
 
 def generate_t1_sample_config(data):
@@ -16,10 +13,10 @@ def generate_t1_sample_config(data):
     for port in natsorted(data['PORT']):
         data['PORT'][port]['admin_status'] = 'up'
         data['PORT'][port]['mtu'] = '9100'
-        local_addr = '10.0.{}.{}'.format(2 * port_count / 256, 2 * port_count % 256)
-        peer_addr = '10.0.{}.{}'.format(2 * port_count / 256, 2 * port_count % 256 + 1)
-        peer_name='ARISTA{0:02d}{1}'.format(1+port_count%(total_port_amount/2), 'T2' if port_count < (total_port_amount/2) else 'T0')
-        peer_asn = 65200 if port_count < total_port_amount/2 else 64001 + port_count - total_port_amount/2
+        local_addr = '10.0.{}.{}'.format(2 * port_count // 256, 2 * port_count % 256)
+        peer_addr = '10.0.{}.{}'.format(2 * port_count // 256, 2 * port_count % 256 + 1)
+        peer_name='ARISTA{0:02d}{1}'.format(1+port_count%(total_port_amount // 2), 'T2' if port_count < (total_port_amount // 2) else 'T0')
+        peer_asn = 65200 if port_count < (total_port_amount // 2) else 64001 + port_count - (total_port_amount // 2)
         data['INTERFACE']['{}|{}/31'.format(port, local_addr)] = {}
         data['BGP_NEIGHBOR'][peer_addr] = {
                 'rrclient': 0,
@@ -42,13 +39,7 @@ def generate_empty_config(data):
     return new_data
 
 def generate_l2_config(data):
-    if 'hostname' not in data['DEVICE_METADATA']['localhost']:
-        data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
-    if 'type' not in data['DEVICE_METADATA']['localhost']:
-        data['DEVICE_METADATA']['localhost']['type'] = 'ToRRouter'
     data['VLAN'] = {'Vlan1000': {'vlanid': '1000'}}
-    vp = natsorted(list(data['PORT'].keys()))
-    data['VLAN']['Vlan1000'].setdefault('members', vp)
     data['VLAN_MEMBER'] = {}
     for port in natsorted(data['PORT']):
         data['PORT'][port].setdefault('admin_status', 'up')

@@ -131,7 +131,7 @@ class Watchdog(WatchdogBase):
         """
         gpio = "/sys/devices/platform/dell_ich.0/sc_gp_lvl"
         timer_offset = -1
-        if seconds <= 30:
+        if seconds > 0 and seconds <= 30:
             timer_offset = 1
             seconds = 30
         elif seconds > 30 and seconds <= 60:
@@ -151,9 +151,9 @@ class Watchdog(WatchdogBase):
         if self.is_armed():
             gpio_val = self._read_gpio_file(gpio)
             high_val = gpio_val | (1 << 15)
-            if self._write_gpio_file(gpio, hex(high_val)) != -1:
+            if self._write_gpio_file(gpio, hex(high_val).encode('utf-8')) != -1:
                 low_val = high_val & 0xFFFF7FFF
-                if self._write_gpio_file(gpio, hex(low_val)) != -1:
+                if self._write_gpio_file(gpio, hex(low_val).encode('utf-8')) != -1:
                     self.armed_time = self._get_time()
                     self.timeout = seconds
                     return seconds
