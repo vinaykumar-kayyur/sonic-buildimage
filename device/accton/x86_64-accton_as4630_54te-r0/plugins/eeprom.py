@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     from sonic_eeprom import eeprom_tlvinfo
 
