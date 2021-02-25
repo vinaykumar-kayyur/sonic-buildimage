@@ -173,6 +173,13 @@ function postStartAction()
         test -e /host/fast-reboot/default_routes.json && docker cp /host/fast-reboot/default_routes.json swss$DEV:/
         rm -fr /host/fast-reboot
     fi
+
+    if [[ -d /host/config-reload ]] && [[ -f /host/config-reload/needs-restore ]]; then
+        test -e /host/config-reload/fdb.json && docker cp /host/config-reload/fdb.json swss$DEV:/
+        test -e /host/config-reload/arp.json && docker cp /host/config-reload/arp.json swss$DEV:/
+        docker exec swss$DEV touch /config-reload-restore
+        rm -fr /host/config-reload
+    fi
     docker exec swss$DEV touch /ready # signal swssconfig.sh to go
 {%- elif docker_container_name == "pmon" %}
 
