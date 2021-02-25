@@ -579,7 +579,7 @@ def parse_dpg(dpg, hname):
                 aclname = aclintf.find(str(QName(ns, "OutAcl"))).text.upper().replace(" ", "_").replace("-", "_")
                 stage = "egress"
             else:
-                system.exit("Error: 'AclInterface' must contain either an 'InAcl' or 'OutAcl' subelement.")
+                sys.exit("Error: 'AclInterface' must contain either an 'InAcl' or 'OutAcl' subelement.")
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
@@ -596,7 +596,11 @@ def parse_dpg(dpg, hname):
                     # to LAG will be applied to all the LAG members internally by SAI/SDK
                     acl_intfs.append(member)
                 elif member in vlans:
-                    acl_intfs.append(member)
+                    # For egress ACL attaching to vlan, we break them into vlan members
+                    if stage == "egress":
+                        acl_intfs.extend(vlans[member]['members'])
+                    else:
+                        acl_intfs.append(member)
                 elif member in port_alias_map:
                     acl_intfs.append(port_alias_map[member])
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
