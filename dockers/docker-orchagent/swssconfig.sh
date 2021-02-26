@@ -29,6 +29,26 @@ function fast_reboot {
   esac
 }
 
+function config_reload {
+    if [[ -f /config-reload-restore ]];
+    then
+      if [[ -f /fdb.json ]];
+      then
+        swssconfig /fdb.json
+        mv -f /fdb.json /fdb.json.1
+      fi
+
+      if [[ -f /arp.json ]];
+      then
+        swssconfig /arp.json
+        mv -f /arp.json /arp.json.1
+        # Tell kernel_arp_restore.sh that it needs to act
+        touch /restore-kernel
+      fi
+      rm -f /config-reload-restore
+    fi
+}
+
 # Wait until swss.sh in the host system create file swss:/ready
 until [[ -e /ready ]]; do
     sleep 0.1;
@@ -38,6 +58,7 @@ rm -f /ready
 
 # Restore FDB and ARP table ASAP
 fast_reboot
+config_reload
 
 # read SONiC immutable variables
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
