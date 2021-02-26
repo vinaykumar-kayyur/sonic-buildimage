@@ -10,8 +10,8 @@ module sonic-acl-extension {
     type uint16 {
       range 0..4095;
     }
-	  description
-	    "The VLAN ID value may be expressed as a 12-bit number in decimal notation";
+    description
+      "The VLAN ID value may be expressed as a 12-bit number in decimal notation";
   }
 
   typedef icmp-type-type {
