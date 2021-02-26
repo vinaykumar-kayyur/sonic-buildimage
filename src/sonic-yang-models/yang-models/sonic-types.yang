@@ -114,9 +114,11 @@ module sonic-types {
 
     typedef oper-status {
         type enumeration {
+            enum unknown;
             enum up;
             enum down;
         }
+		description "Operational status of an entity such as Port, MCLAG etc";
     }
 
     typedef mode-enable {
@@ -124,14 +126,9 @@ module sonic-types {
             enum enable;
             enum disable;
         }
-    }
-
-    typedef fec-mode {
-        type enumeration {
-            enum rs;
-            enum fc;
-            enum none;
-        }
+        description
+            "This type can be used where toggle functionality required.
+            For ex. IPv6-link-local-only, Dhcp-replay-link-select, SNMP traps etc";
     }
 
     typedef relay-policy-action {
@@ -140,6 +137,7 @@ module sonic-types {
             enum append;
             enum replace;
         }
+        description "DHCP relay policy action value";
     }
 
     typedef percentage {
@@ -149,4 +147,17 @@ module sonic-types {
         description
             "Integer indicating a percentage value";
     }
+
+	// Defined as container because it will be used as xpath in MUST/WHEN
+	// expressions in yang.
+	container operation {
+		leaf operation {
+			type enumeration {
+				enum CREATE;
+				enum UPDATE;
+				enum DELETE;
+			}
+		}
+		description "Sonic data operation types required during validation";
+	}
 }
