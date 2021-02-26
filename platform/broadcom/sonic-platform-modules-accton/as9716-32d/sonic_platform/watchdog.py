@@ -7,8 +7,6 @@
 #############################################################################
 
 try:
-    import os
-    import sys
     from sonic_platform_pddf_base.pddf_watchdog import PddfWatchdog
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")

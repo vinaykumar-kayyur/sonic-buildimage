@@ -20,14 +20,12 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import commands
     import sys, getopt
     import logging
     import logging.config
     import logging.handlers
     import time
-    from tabulate import tabulate
     from sonic_platform import platform
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
@@ -35,9 +33,6 @@ except ImportError as e:
 # Deafults
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as9716_32d_pddf_monitor'
-
-global log_file
-global log_level
 
 class switch(object):
     def __init__(self, value):
