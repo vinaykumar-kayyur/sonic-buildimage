@@ -15,11 +15,11 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Patch
 	pushd ./initramfs-tools
 	git checkout $(INITRAMFS_TOOLS_REVISION)
-	patch -p1 < ../loopback-file-system-support.patch
+	QUILT_PATCHES=.. quilt push -a
 
 	# Build the package
 	rm -f debian/*.debhelper.log
-	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/

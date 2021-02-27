@@ -1,21 +1,7 @@
 #!/bin/bash
 
-function check_installed()
-{
-  c=0
-  e=0
-  config=$(vtysh -c "show run")
-  for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p');
-  do
-    echo "$config" | grep -q "route-map $route_map_name permit 2"
-    c=$((c+$?))
-    e=$((e+1))
-    echo "$config" | grep -q "route-map $route_map_name deny 3"
-    c=$((c+$?))
-    e=$((e+1))
-  done
-  return $((e-c))
-}
+# Load the common functions
+source /usr/bin/TS
 
 check_installed
 installed=$?
@@ -24,6 +10,16 @@ then
   TSB_FILE=$(mktemp)
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p');
   do
+    is_internal_route_map $route_map_name && continue
+    case "$route_map_name" in
+      *V4*)
+      ;;
+      *V6*)
+      ;;
+      *)
+        continue
+      ;;
+    esac
     sonic-cfggen -d -a "{\"route_map_name\":\"$route_map_name\"}" -t /usr/share/sonic/templates/bgpd/tsa/bgpd.tsa.unisolate.conf.j2 > "$TSB_FILE"
     vtysh -f "$TSB_FILE"
     rm -f "$TSB_FILE"

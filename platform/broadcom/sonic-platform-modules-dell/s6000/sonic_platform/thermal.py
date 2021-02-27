@@ -13,7 +13,6 @@ try:
     import os
     import glob
     from sonic_platform_base.thermal_base import ThermalBase
-    from sonic_platform.psu import Psu
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -34,11 +33,21 @@ class Thermal(ThermalBase):
                     'PSU1-Sensor 1', 'PSU1-Sensor 2', 'PSU2-Sensor 1',
                     'PSU2-Sensor 2', 'CPU Core 0', 'CPU Core 1')
 
-    def __init__(self, thermal_index):
-        self.index = thermal_index + 1
-        self.is_psu_thermal = False
+    def __init__(self, thermal_index,
+                 psu_index=1, psu_thermal=False, dependency=None):
+        ThermalBase.__init__(self)
+        self.is_psu_thermal = psu_thermal
+        self.dependency = dependency
         self.is_driver_initialized = True
-        self.dependency = None
+
+        if self.is_psu_thermal:
+            self.index = (2 * psu_index) + thermal_index + 2
+        else:
+            # CPU thermal
+            if thermal_index > 3:
+                self.index = thermal_index + 5
+            else:
+                self.index = thermal_index + 1
 
         if self.index < 9:
             i2c_path = self.I2C_DIR + self.I2C_DEV_MAPPING[self.index - 1][0]
@@ -54,10 +63,6 @@ class Thermal(ThermalBase):
 
             if self.index == 4:
                 hwmon_temp_suffix = "crit"
-
-            if self.index > 4:
-                self.is_psu_thermal = True
-                self.dependency = Psu(self.index / 7)
         else:
             dev_path = "/sys/devices/platform/coretemp.0/hwmon/"
             hwmon_temp_index = self.index - 7
@@ -168,6 +173,23 @@ class Thermal(ThermalBase):
         else:
             return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether Thermal is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_temperature(self):
         """
         Retrieves current temperature reading from thermal
@@ -179,11 +201,11 @@ class Thermal(ThermalBase):
         thermal_temperature = self._read_sysfs_file(
             self.thermal_temperature_file)
         if (thermal_temperature != 'ERR'):
-            thermal_temperature = float(thermal_temperature) / 1000
+            thermal_temperature = float(thermal_temperature)
         else:
             thermal_temperature = 0
 
-        return "{:.3f}".format(thermal_temperature)
+        return thermal_temperature / 1000.0
 
     def get_high_threshold(self):
         """
@@ -197,11 +219,11 @@ class Thermal(ThermalBase):
         thermal_high_threshold = self._read_sysfs_file(
             self.thermal_high_threshold_file)
         if (thermal_high_threshold != 'ERR'):
-            thermal_high_threshold = float(thermal_high_threshold) / 1000
+            thermal_high_threshold = float(thermal_high_threshold)
         else:
             thermal_high_threshold = 0
 
-        return "{:.3f}".format(thermal_high_threshold)
+        return thermal_high_threshold / 1000.0
 
     def get_low_threshold(self):
         """
@@ -215,11 +237,11 @@ class Thermal(ThermalBase):
         thermal_low_threshold = self._read_sysfs_file(
             self.thermal_low_threshold_file)
         if (thermal_low_threshold != 'ERR'):
-            thermal_low_threshold = float(thermal_low_threshold) / 1000
+            thermal_low_threshold = float(thermal_low_threshold)
         else:
             thermal_low_threshold = 0
 
-        return "{:.3f}".format(thermal_low_threshold)
+        return thermal_low_threshold / 1000.0
 
     def set_high_threshold(self, temperature):
         """

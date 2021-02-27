@@ -11,12 +11,14 @@ After=topology.service
 Requires=opennsl-modules.service
 After=opennsl-modules.service
 {% elif sonic_asic_platform == 'nephos' %}
-Requires=nps-modules-4.9.0-11-2-amd64.service
-After=nps-modules-4.9.0-11-2-amd64.service
+Requires=nps-modules.service
+After=nps-modules.service
 {% endif %}
 Requires=updategraph.service
 After=updategraph.service
 After=interfaces-config.service
+BindsTo=sonic.target
+After=sonic.target
 Before=ntp-config.service
 
 [Service]
@@ -26,8 +28,8 @@ ExecStartPre=/usr/local/bin/syncd.sh start{% if multi_instance == 'true' %} %i{%
 ExecStart=/usr/local/bin/syncd.sh wait{% if multi_instance == 'true' %} %i{% endif %}
 ExecStop=/usr/local/bin/syncd.sh stop{% if multi_instance == 'true' %} %i{% endif %}
 {% if sonic_asic_platform == 'mellanox' %}
-TimeoutStartSec=150
+TimeoutStartSec=480
 {% endif %}
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sonic.target

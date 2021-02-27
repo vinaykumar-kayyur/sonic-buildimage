@@ -21,3 +21,15 @@
 {% endfor %}
 {{ L.ip }}
 {%- endmacro %}
+
+{% macro get_vnet_interfaces(interfaces) -%}
+{% set L = namespace(intfs=[]) %}
+{% set vnet_intfs = [] %}
+{% for (key, metadata) in interfaces.items() %}
+{%   if "vnet_name" in metadata %}
+{%     set vnet_intfs = vnet_intfs.append(key) %}
+{%   endif %}
+{% endfor %}
+{% set L.intfs = vnet_intfs %}
+{{ L.intfs }}
+{%- endmacro %}

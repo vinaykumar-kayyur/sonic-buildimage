@@ -502,7 +502,7 @@ int do_one_neigh_request(struct nlmsghdr *n)
 {
     struct ndmsg *ndm = NLMSG_DATA(n);
     int len = n->nlmsg_len;
-    struct rtattr * tb[NDA_MAX + 1];
+    struct rtattr *tb[NDA_MAX + 1] = {0};
 
     if (n->nlmsg_type == NLMSG_DONE)
     {
@@ -691,7 +691,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
     if (!verify_arp)
         return;
 
-    if (iccp_check_if_addr_from_netlink(AF_INET, &addr, arp_lif))
+    if (iccp_check_if_addr_from_netlink(AF_INET, (uint8_t *)&addr, arp_lif))
     {
         ICCPD_LOG_DEBUG(__FUNCTION__, "ARP %s is identical with the ip address of interface %s",
                                       show_ip_str(arp_msg->ipv4_addr), arp_lif->name);
@@ -966,7 +966,7 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
     {
         struct ifinfomsg *ifm = NLMSG_DATA(n);
         int len = n->nlmsg_len;
-        struct rtattr * tb[IFLA_MAX + 1];
+        struct rtattr *tb[IFLA_MAX + 1] = {0};
 
         if (n->nlmsg_type != RTM_NEWLINK)
         {

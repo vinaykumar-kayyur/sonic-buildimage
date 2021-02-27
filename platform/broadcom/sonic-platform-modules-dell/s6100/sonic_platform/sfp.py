@@ -9,9 +9,9 @@
 #############################################################################
 
 try:
-    import os
+    import re
+    import struct
     import time
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -28,6 +28,9 @@ INFO_OFFSET = 128
 DOM_OFFSET = 0
 DOM_OFFSET1 = 384
 
+QSFP_CONTROL_OFFSET = 86
+QSFP_POWEROVERRIDE_OFFSET = 93
+
 cable_length_tup = ('Length(km)', 'Length OM3(2m)', 'Length OM2(m)',
                     'Length OM1(m)', 'Length Cable Assembly(m)')
 
@@ -40,11 +43,12 @@ compliance_code_tup = (
     'Fibre Channel transmission media',
     'Fibre Channel Speed')
 
-info_dict_keys = ['type', 'hardwarerev', 'serialnum',
-                  'manufacturename', 'modelname', 'Connector',
+info_dict_keys = ['type', 'hardware_rev', 'serial',
+                  'manufacturer', 'model', 'connector',
                   'encoding', 'ext_identifier', 'ext_rateselect_compliance',
                   'cable_type', 'cable_length', 'nominal_bit_rate',
-                  'specification_compliance', 'vendor_date', 'vendor_oui']
+                  'specification_compliance', 'vendor_date', 'vendor_oui',
+                  'application_advertisement']
 
 dom_dict_keys = ['rx_los',       'tx_fault',   'reset_status',
                  'power_lpmode', 'tx_disable', 'tx_disable_channel',
@@ -78,7 +82,7 @@ sff8436_parser = {
 
        'cable_type': [INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
      'cable_length': [INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
-        'Connector': [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
+        'connector': [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
              'type': [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
          'encoding': [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
    'ext_identifier': [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
@@ -87,11 +91,11 @@ sff8436_parser = {
  'nominal_bit_rate': [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
  'specification_compliance':
                      [INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
-  'manufacturename': [INFO_OFFSET, 20, 16, 'parse_vendor_name'],
+     'manufacturer': [INFO_OFFSET, 20, 16, 'parse_vendor_name'],
        'vendor_oui': [INFO_OFFSET,  37, 3, 'parse_vendor_oui'],
-        'modelname': [INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
-      'hardwarerev': [INFO_OFFSET, 56,  2, 'parse_vendor_rev'],
-        'serialnum': [INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
+            'model': [INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
+     'hardware_rev': [INFO_OFFSET, 56,  2, 'parse_vendor_rev'],
+           'serial': [INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
       'vendor_date': [INFO_OFFSET, 84,  8, 'parse_vendor_date'],
   'ModuleThreshold': [DOM_OFFSET1, 128, 24, 'parse_module_threshold_values'],
  'ChannelThreshold': [DOM_OFFSET1, 176, 16, 'parse_channel_threshold_values'],
@@ -107,7 +111,7 @@ class Sfp(SfpBase):
             sfp_control, sfp_ctrl_idx):
         SfpBase.__init__(self)
         self.sfp_type = sfp_type
-        self.index = index
+        self.index = index + 1
         self.eeprom_path = eeprom_path
         self.sfp_control = sfp_control
         self.sfp_ctrl_idx = sfp_ctrl_idx
@@ -131,9 +135,10 @@ class Sfp(SfpBase):
             eeprom.close()
             return None
 
+        raw = bytearray(raw)
         try:
             for n in range(0, num_bytes):
-                eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+                eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
         except BaseException:
             eeprom.close()
             return None
@@ -167,6 +172,15 @@ class Sfp(SfpBase):
                     eeprom_data_raw, 0)
 
         return eeprom_data
+
+    def _strip_unit_from_str(self, value_str):
+        match = re.match(r'(.*)C$|(.*)Volts$|(.*)mA$|(.*)dBm$', value_str)
+        if match:
+            for value in match.groups():
+                if value is not None:
+                    return float(value)
+
+        return None
 
     def get_transceiver_info(self):
         """
@@ -205,7 +219,7 @@ class Sfp(SfpBase):
             return transceiver_info_dict
 
         # Vendor Name
-        vendor_name_data = self._get_eeprom_data('manufacturename')
+        vendor_name_data = self._get_eeprom_data('manufacturer')
         if (vendor_name_data is not None):
             vendor_name = vendor_name_data['data']['Vendor Name']['value']
         else:
@@ -219,21 +233,21 @@ class Sfp(SfpBase):
             return transceiver_info_dict
 
         # Vendor PN
-        vendor_pn_data = self._get_eeprom_data('modelname')
+        vendor_pn_data = self._get_eeprom_data('model')
         if (vendor_pn_data is not None):
             vendor_pn = vendor_pn_data['data']['Vendor PN']['value']
         else:
             return transceiver_info_dict
 
         # Vendor Revision
-        vendor_rev_data = self._get_eeprom_data('hardwarerev')
+        vendor_rev_data = self._get_eeprom_data('hardware_rev')
         if (vendor_rev_data is not None):
             vendor_rev = vendor_rev_data['data']['Vendor Rev']['value']
         else:
             return transceiver_info_dict
 
         # Vendor Serial Number
-        vendor_sn_data = self._get_eeprom_data('serialnum')
+        vendor_sn_data = self._get_eeprom_data('serial')
         if (vendor_sn_data is not None):
             vendor_sn = vendor_sn_data['data']['Vendor SN']['value']
         else:
@@ -241,11 +255,11 @@ class Sfp(SfpBase):
 
         # Fill The Dictionary and return
         transceiver_info_dict['type'] = identifier
-        transceiver_info_dict['hardwarerev'] = vendor_rev
-        transceiver_info_dict['serialnum'] = vendor_sn
-        transceiver_info_dict['manufacturename'] = vendor_name
-        transceiver_info_dict['modelname'] = vendor_pn
-        transceiver_info_dict['Connector'] = connector
+        transceiver_info_dict['hardware_rev'] = vendor_rev
+        transceiver_info_dict['serial'] = vendor_sn
+        transceiver_info_dict['manufacturer'] = vendor_name
+        transceiver_info_dict['model'] = vendor_pn
+        transceiver_info_dict['connector'] = connector
         transceiver_info_dict['encoding'] = encoding
         transceiver_info_dict['ext_identifier'] = ext_id
         transceiver_info_dict['ext_rateselect_compliance'] = rate_identifier
@@ -436,7 +450,7 @@ class Sfp(SfpBase):
         """
         Retrieves the model number (or part number) of the sfp
         """
-        vendor_pn_data = self._get_eeprom_data('modelname')
+        vendor_pn_data = self._get_eeprom_data('model')
         if (vendor_pn_data is not None):
             vendor_pn = vendor_pn_data['data']['Vendor PN']['value']
         else:
@@ -448,7 +462,7 @@ class Sfp(SfpBase):
         """
         Retrieves the serial number of the sfp
         """
-        vendor_sn_data = self._get_eeprom_data('serialnum')
+        vendor_sn_data = self._get_eeprom_data('serial')
         if (vendor_sn_data is not None):
             vendor_sn = vendor_sn_data['data']['Vendor SN']['value']
         else:
@@ -492,154 +506,107 @@ class Sfp(SfpBase):
         """
         Retrieves the RX LOS (lost-of-signal) status of SFP
         """
-        rx_los = None
         rx_los_list = []
 
         rx_los_data = self._get_eeprom_data('rx_los')
         if (rx_los_data is not None):
             rx_los = rx_los_data['data']['Rx1LOS']['value']
-            if (rx_los is 'On'):
+            if (rx_los == 'On'):
                 rx_los_list.append(True)
             else:
                 rx_los_list.append(False)
             rx_los = rx_los_data['data']['Rx2LOS']['value']
-            if (rx_los is 'On'):
+            if (rx_los == 'On'):
                 rx_los_list.append(True)
             else:
                 rx_los_list.append(False)
             rx_los = rx_los_data['data']['Rx3LOS']['value']
-            if (rx_los is 'On'):
+            if (rx_los == 'On'):
                 rx_los_list.append(True)
             else:
                 rx_los_list.append(False)
             rx_los = rx_los_data['data']['Rx4LOS']['value']
-            if (rx_los is 'On'):
+            if (rx_los == 'On'):
                 rx_los_list.append(True)
             else:
                 rx_los_list.append(False)
 
-            if (rx_los_list[0] and rx_los_list[1]
-                    and rx_los_list[2] and rx_los_list[3]):
-                rx_los = True
-            else:
-                rx_los = False
-
-        return rx_los
+        return rx_los_list
 
     def get_tx_fault(self):
         """
         Retrieves the TX fault status of SFP
         """
-        tx_fault = None
         tx_fault_list = []
 
         tx_fault_data = self._get_eeprom_data('tx_fault')
         if (tx_fault_data is not None):
             tx_fault = tx_fault_data['data']['Tx1Fault']['value']
-            if (tx_fault is 'On'):
+            if (tx_fault == 'On'):
                 tx_fault_list.append(True)
             else:
                 tx_fault_list.append(False)
             tx_fault = tx_fault_data['data']['Tx2Fault']['value']
-            if (tx_fault is 'On'):
+            if (tx_fault == 'On'):
                 tx_fault_list.append(True)
             else:
                 tx_fault_list.append(False)
             tx_fault = tx_fault_data['data']['Tx3Fault']['value']
-            if (tx_fault is 'On'):
+            if (tx_fault == 'On'):
                 tx_fault_list.append(True)
             else:
                 tx_fault_list.append(False)
             tx_fault = tx_fault_data['data']['Tx4Fault']['value']
-            if (tx_fault is 'On'):
+            if (tx_fault == 'On'):
                 tx_fault_list.append(True)
             else:
                 tx_fault_list.append(False)
 
-            if (tx_fault_list[0] and tx_fault_list[1]
-                    and tx_fault_list[2] and tx_fault_list[3]):
-                tx_fault = True
-            else:
-                tx_fault = False
-
-        return tx_fault
+        return tx_fault_list
 
     def get_tx_disable(self):
         """
         Retrieves the tx_disable status of this SFP
         """
-        tx_disable = None
         tx_disable_list = []
 
         tx_disable_data = self._get_eeprom_data('tx_disable')
         if (tx_disable_data is not None):
             tx_disable = tx_disable_data['data']['Tx1Disable']['value']
-            if (tx_disable is 'On'):
+            if (tx_disable == 'On'):
                 tx_disable_list.append(True)
             else:
                 tx_disable_list.append(False)
             tx_disable = tx_disable_data['data']['Tx2Disable']['value']
-            if (tx_disable is 'On'):
+            if (tx_disable == 'On'):
                 tx_disable_list.append(True)
             else:
                 tx_disable_list.append(False)
             tx_disable = tx_disable_data['data']['Tx3Disable']['value']
-            if (tx_disable is 'On'):
+            if (tx_disable == 'On'):
                 tx_disable_list.append(True)
             else:
                 tx_disable_list.append(False)
             tx_disable = tx_disable_data['data']['Tx4Disable']['value']
-            if (tx_disable is 'On'):
+            if (tx_disable == 'On'):
                 tx_disable_list.append(True)
             else:
                 tx_disable_list.append(False)
 
-            if (tx_disable_list[0] and tx_disable_list[1]
-                    and tx_disable_list[2] and tx_disable_list[3]):
-                tx_disable = True
-            else:
-                tx_disable = False
-
-        return tx_disable
+        return tx_disable_list
 
     def get_tx_disable_channel(self):
         """
         Retrieves the TX disabled channels in this SFP
         """
-        tx_disable = None
-        tx_disable_list = []
+        tx_disable_channel = 0
 
-        tx_disable_data = self._get_eeprom_data('tx_disable')
-        if (tx_disable_data is not None):
-            tx_disable = tx_disable_data['data']['Tx1Disable']['value']
-            if (tx_disable is 'On'):
-                tx_disable_list.append(1)
-            else:
-                tx_disable_list.append(0)
-            tx_disable = tx_disable_data['data']['Tx2Disable']['value']
-            if (tx_disable is 'On'):
-                tx_disable_list.append(1)
-            else:
-                tx_disable_list.append(0)
-            tx_disable = tx_disable_data['data']['Tx3Disable']['value']
-            if (tx_disable is 'On'):
-                tx_disable_list.append(1)
-            else:
-                tx_disable_list.append(0)
-            tx_disable = tx_disable_data['data']['Tx4Disable']['value']
-            if (tx_disable is 'On'):
-                tx_disable_list.append(1)
-            else:
-                tx_disable_list.append(0)
+        tx_disable = self.get_tx_disable()
+        for channel, disable in enumerate(tx_disable):
+            if disable:
+                tx_disable_channel |= 1 << channel
 
-            bit4 = int(tx_disable_list[3]) * 8
-            bit3 = int(tx_disable_list[2]) * 4
-            bit2 = int(tx_disable_list[1]) * 2
-            bit1 = int(tx_disable_list[0]) * 1
-
-            tx_disable_channel = hex(bit4 + bit3 + bit2 + bit1)
-
-            return tx_disable_channel
+        return tx_disable_channel
 
     def get_lpmode(self):
         """
@@ -682,7 +649,7 @@ class Sfp(SfpBase):
         power_override_data = self._get_eeprom_data('power_override')
         if (power_override_data is not None):
             power_override = power_override_data['data']['PowerOverRide']['value']
-        if (power_override is 'On'):
+        if (power_override == 'On'):
             power_override_state = True
         else:
             power_override_state = False
@@ -697,7 +664,7 @@ class Sfp(SfpBase):
 
         temperature_data = self._get_eeprom_data('Temperature')
         if (temperature_data is not None):
-            temperature = temperature_data['data']['Temperature']['value']
+            temperature = self._strip_unit_from_str(temperature_data['data']['Temperature']['value'])
 
         return temperature
 
@@ -709,7 +676,7 @@ class Sfp(SfpBase):
 
         voltage_data = self._get_eeprom_data('Voltage')
         if (voltage_data is not None):
-            voltage = voltage_data['data']['Vcc']['value']
+            voltage = self._strip_unit_from_str(voltage_data['data']['Vcc']['value'])
 
         return voltage
 
@@ -717,19 +684,14 @@ class Sfp(SfpBase):
         """
         Retrieves the TX bias current of this SFP
         """
-        tx_bias = None
         tx_bias_list = []
 
         tx_bias_data = self._get_eeprom_data('ChannelMonitor')
         if (tx_bias_data is not None):
-            tx_bias = tx_bias_data['data']['TX1Bias']['value']
-            tx_bias_list.append(tx_bias)
-            tx_bias = tx_bias_data['data']['TX2Bias']['value']
-            tx_bias_list.append(tx_bias)
-            tx_bias = tx_bias_data['data']['TX3Bias']['value']
-            tx_bias_list.append(tx_bias)
-            tx_bias = tx_bias_data['data']['TX4Bias']['value']
-            tx_bias_list.append(tx_bias)
+            tx_bias_list.append(self._strip_unit_from_str(tx_bias_data['data']['TX1Bias']['value']))
+            tx_bias_list.append(self._strip_unit_from_str(tx_bias_data['data']['TX2Bias']['value']))
+            tx_bias_list.append(self._strip_unit_from_str(tx_bias_data['data']['TX3Bias']['value']))
+            tx_bias_list.append(self._strip_unit_from_str(tx_bias_data['data']['TX4Bias']['value']))
 
         return tx_bias_list
 
@@ -737,34 +699,27 @@ class Sfp(SfpBase):
         """
         Retrieves the received optical power for this SFP
         """
-        rx_power = None
         rx_power_list = []
 
         rx_power_data = self._get_eeprom_data('ChannelMonitor')
         if (rx_power_data is not None):
-            rx_power = rx_power_data['data']['RX1Power']['value']
-            rx_power_list.append(rx_power)
-            rx_power = rx_power_data['data']['RX2Power']['value']
-            rx_power_list.append(rx_power)
-            rx_power = rx_power_data['data']['RX3Power']['value']
-            rx_power_list.append(rx_power)
-            rx_power = rx_power_data['data']['RX4Power']['value']
-            rx_power_list.append(rx_power)
+            rx_power_list.append(self._strip_unit_from_str(rx_power_data['data']['RX1Power']['value']))
+            rx_power_list.append(self._strip_unit_from_str(rx_power_data['data']['RX2Power']['value']))
+            rx_power_list.append(self._strip_unit_from_str(rx_power_data['data']['RX3Power']['value']))
+            rx_power_list.append(self._strip_unit_from_str(rx_power_data['data']['RX4Power']['value']))
 
         return rx_power_list
-
 
     def get_tx_power(self):
         """
         Retrieves the TX power of this SFP
         """
-        tx_power = None
         tx_power_list = []
 
-        tx_power_list.append('-infdBm')
-        tx_power_list.append('-infdBm')
-        tx_power_list.append('-infdBm')
-        tx_power_list.append('-infdBm')
+        tx_power_list.append(float('-inf'))
+        tx_power_list.append(float('-inf'))
+        tx_power_list.append(float('-inf'))
+        tx_power_list.append(float('-inf'))
 
         return tx_power_list
 
@@ -860,25 +815,68 @@ class Sfp(SfpBase):
         """
         Disable SFP TX for all channels
         """
-        return False
+        eeprom = None
+        tx_disable_value = 0xf if tx_disable else 0x0
+
+        try:
+            eeprom = open(self.eeprom_path, "r+b")
+            eeprom.seek(QSFP_CONTROL_OFFSET)
+            eeprom.write(struct.pack('B', tx_disable_value))
+        except IOError:
+            return False
+        finally:
+            if eeprom is not None:
+                eeprom.close()
+                time.sleep(0.01)
+
+        return True
 
     def tx_disable_channel(self, channel, disable):
         """
         Sets the tx_disable for specified SFP channels
         """
-        return False
+        eeprom = None
+        current_state = self.get_tx_disable_channel()
 
-    def tx_disable_channel(self, channel, disable):
-        """
-        Sets the tx_disable for specified SFP channels
-        """
-        return False
+        if disable:
+            tx_disable_value = current_state | channel
+        else:
+            tx_disable_value = current_state & (~channel)
+
+        try:
+            eeprom = open(self.eeprom_path, "r+b")
+            eeprom.seek(QSFP_CONTROL_OFFSET)
+            eeprom.write(struct.pack('B', tx_disable_value))
+        except IOError:
+            return False
+        finally:
+            if eeprom is not None:
+                eeprom.close()
+                time.sleep(0.01)
+
+        return True
 
     def set_power_override(self, power_override, power_set):
         """
         Sets SFP power level using power_override and power_set
         """
-        return False
+        eeprom = None
+        power_override_bit = 0x1 if power_override else 0
+        power_set_bit = 0x2 if power_set else 0
+        value = power_override_bit | power_set_bit
+
+        try:
+            eeprom = open(self.eeprom_path, "r+b")
+            eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
+            eeprom.write(struct.pack('B', value))
+        except IOError:
+            return False
+        finally:
+            if eeprom is not None:
+                eeprom.close()
+                time.sleep(0.01)
+
+        return True
 
     def get_status(self):
         """
@@ -886,9 +884,26 @@ class Sfp(SfpBase):
         """
         reset = self.get_reset_status()
 
-        if (reset == True):
+        if reset:
             status = False
         else:
             status = True
 
         return status
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return self.index
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device  is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return True

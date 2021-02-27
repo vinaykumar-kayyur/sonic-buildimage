@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -22,7 +20,7 @@ try:
     from sonic_platform.sfp import Sfp
     from sonic_platform.psu import Psu
     from sonic_platform.thermal import Thermal
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -65,7 +63,6 @@ class Chassis(ChassisBase):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
 
-
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -75,7 +72,7 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.get_mac()
 
-    def get_serial_number(self):
+    def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
         Returns:

@@ -32,7 +32,7 @@ debs/{{ deb }}{{' '}}
 ##debs/{{ deb }}{{' '}}
 ##{%- endfor %}
 
-COPY ["files/dsserve", "files/npx_diag", "start.sh", "/usr/bin/"]
+COPY ["files/dsserve", "files/npx_diag", "/usr/bin/"]
 RUN chmod +x /usr/bin/npx_diag /usr/bin/dsserve
 
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
@@ -43,4 +43,4 @@ COPY ["critical_processes", "/etc/supervisor/"]
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/usr/local/bin/supervisord"]

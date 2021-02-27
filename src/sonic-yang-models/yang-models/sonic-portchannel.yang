@@ -5,14 +5,6 @@ module sonic-portchannel {
 	namespace "http://github.com/Azure/sonic-portchannel";
 	prefix lag;
 
-	import ietf-yang-types {
-		prefix yang;
-	}
-
-	import ietf-inet-types {
-		prefix inet;
-	}
-
 	import sonic-types {
 		prefix stypes;
 		revision-date 2019-07-01;
@@ -43,9 +35,9 @@ module sonic-portchannel {
 
 				key "portchannel_name";
 
-				ext:key-regex-configdb-to-yang "^(Ethernet[0-9]+)$";
+				ext:key-regex-configdb-to-yang "^(PortChannel[0-9]{1,4})$";
 
-				ext:key-regex-yang-to-configdb "<port_name>";
+				ext:key-regex-yang-to-configdb "<portchannel_name>";
 
 				leaf portchannel_name {
 					type string {
@@ -56,9 +48,19 @@ module sonic-portchannel {
 
 				leaf-list members {
 					/* leaf-list members are unique by default */
-					type leafref {
-						path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+					type union {
+						type leafref {
+							path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+						}
+						type string {
+							pattern "";
+						}
 					}
+					/* Today in SONiC, we do not delete the list once
+					 * created, instead we set to empty list. Due to that
+					 * below default values are needed.
+					 */
+					default "";
 				}
 
 				leaf min_links {

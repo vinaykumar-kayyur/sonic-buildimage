@@ -1,13 +1,15 @@
-from unittest import TestCase
-import subprocess
-import os
 import filecmp
+import os
+import subprocess
 
+import tests.common_utils as utils
+
+from unittest import TestCase
 
 class TestCfgGen(TestCase):
     def setUp(self):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
-        self.script_file = os.path.join(self.test_dir, '..', 'sonic-cfggen')
+        self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(self.test_dir, '..', 'sonic-cfggen')
         self.t0_minigraph = os.path.join(self.test_dir, 't0-sample-graph.xml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
@@ -26,15 +28,23 @@ class TestCfgGen(TestCase):
         else:
             output = subprocess.check_output(self.script_file + ' ' + argument, shell=True)
 
+        if utils.PY3x:
+            output = output.decode()
+
         linecount = output.strip().count('\n')
         if linecount <= 0:
-            print '    Output: ' + output.strip()
+            print('    Output: ' + output.strip())
         else:
-            print '    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output))
+            print('    Output: ({0} lines, {1} bytes)'.format(linecount + 1, len(output)))
         return output
 
     def run_diff(self, file1, file2):
-        return subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
+        output = subprocess.check_output('diff -u {} {} || true'.format(file1, file2), shell=True)
+
+        if utils.PY3x:
+            output = output.decode()
+
+        return output
 
     def run_case(self, template, target):
         template_dir = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-fpm-frr', "frr")
@@ -44,12 +54,11 @@ class TestCfgGen(TestCase):
         cmd = "-m %s -p %s -y %s -t %s -T %s > %s" % cmd_args
         self.run_script(cmd)
 
-        original_filename = os.path.join(self.test_dir, 'sample_output', target)
+        original_filename = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, target)
         r = filecmp.cmp(original_filename, self.output_file)
         diff_output = self.run_diff(original_filename, self.output_file) if not r else ""
 
         return r, "Diff:\n" + diff_output
-
 
     def test_config_frr(self):
         self.assertTrue(*self.run_case('frr.conf.j2', 'frr.conf'))
