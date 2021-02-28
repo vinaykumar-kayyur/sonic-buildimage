@@ -24,7 +24,7 @@ module sonic-bgp-peergroup {
     description
         "SONIC BGP Peer Group YANG";
 
-    revision 2019-10-16 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }

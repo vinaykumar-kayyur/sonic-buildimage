@@ -44,22 +44,7 @@ module sonic-route-map {
     description
         "SONIC Route map YANG";
 
-    revision 2021-01-08 {
-        description
-            "Added support for routed vlan-sub-interface.";
-    }
-
-    revision 2020-09-02 {
-        description
-            "Added the field for IPv6 prefix set match.";
-    }
-
-    revision 2020-04-08 {
-        description
-            "Added the fields for IPv6 next hop.";
-    }
-
-    revision 2019-09-15 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }

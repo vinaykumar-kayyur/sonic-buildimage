@@ -40,12 +40,7 @@ module sonic-bgp-neighbor {
     description
         "SONIC BGP Neighbor";
 
-    revision 2021-01-08 {
-        description
-            "Added support for routed vlan-sub-interface.";
-    }
-
-    revision 2019-09-23 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }

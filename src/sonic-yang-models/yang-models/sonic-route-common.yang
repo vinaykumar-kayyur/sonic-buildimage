@@ -24,7 +24,7 @@ module sonic-route-common {
     description
         "SONIC ROUTE common YANG";
 
-    revision 2019-11-08 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }

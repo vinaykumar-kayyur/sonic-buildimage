@@ -36,17 +36,7 @@ module sonic-bgp-global {
     description
         "SONIC BGP Global YANG";
 
-    revision 2020-12-10 {
-        description
-            "Added CVL validation condition to compare max_delay and establish_wait values.";
-    }
-
-    revision 2019-11-20 {
-        description
-            "Added BGP fields for extensive features.";
-    }
-
-    revision 2019-09-15 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }

@@ -19,7 +19,7 @@ module sonic-bgp-common {
         prefix svlan;
     }
 
-    import sonic-loopback {
+    import sonic-loopback-interface {
         prefix lo;
     }
 
@@ -56,21 +56,7 @@ module sonic-bgp-common {
     description
         "SONIC BGP common YANG attributes for Neighbors and Peer group";
 
-    revision 2021-02-01 {
-        description
-            "Added CVL check to compare strict_capability_match and override_capability.";
-    }
-
-    revision 2021-01-08 {
-        description
-            "Added support for routed vlan-sub-interface.";
-    }
-
-    revision 2020-07-26 {
-        description
-            "Change for sonic-loopback.yang.";
-    }
-    revision 2019-11-04 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }
@@ -246,7 +232,7 @@ module sonic-bgp-common {
                     path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:vlan_name";
                 }
                 type leafref {
-                    path "/lo:sonic-loopback/lo:LOOPBACK/lo:LOOPBACK_LIST/lo:name";
+                    path "/lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:loopback_interface_name";
                 }
             }
             description "Local source address or interface name to use for connection.";

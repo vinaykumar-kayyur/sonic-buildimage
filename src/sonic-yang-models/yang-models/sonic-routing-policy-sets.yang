@@ -20,13 +20,7 @@ module sonic-routing-policy-sets {
     description
         "SONiC ROUTING POLICY SETS";
 
-    revision 2020-09-14 {
-        description
-            "Used enum values permit/deny for action type.";
-    }
-
-
-    revision 2019-10-23 {
+    revision 2021-02-26 {
         description
             "Initial revision.";
     }
