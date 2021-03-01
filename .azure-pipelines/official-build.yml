@@ -15,7 +15,8 @@ trigger: none
 pr: none
 
 stages:
-- stage: 'Build amd64'
+- stage: Build
+  displayName: 'Build for amd64'
   jobs:
   - template: build-template.yml
     parameters:
@@ -79,7 +80,8 @@ stages:
       dbg_image: true
       cache_mode: wcache
 
-- stage: 'Build cross platform'
+- stage: Build
+  displayName: 'Build for arm'
   jobs:
   - template: build-template.yml
     parameters:
