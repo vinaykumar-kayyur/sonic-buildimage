@@ -81,6 +81,7 @@ stages:
       cache_mode: wcache
 
 - stage: Build_arm
+  dependsOn: []
   displayName: 'Build for arm'
   jobs:
   - template: build-template.yml
