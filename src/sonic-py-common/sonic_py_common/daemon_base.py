@@ -30,10 +30,11 @@ def _load_module_from_file(module_name, file_path):
 
     # TODO: Remove this check once we no longer support Python 2
     if sys.version_info.major == 3:
-        from importlib import machinery, util
-        loader = machinery.SourceFileLoader(module_name, file_path)
-        spec = util.spec_from_loader(loader.name, loader)
-        module = util.module_from_spec(spec)
+        import importlib.machinery
+        import importlib.util
+        loader = importlib.machinery.SourceFileLoader(module_name, file_path)
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
         loader.exec_module(module)
     else:
         import imp
