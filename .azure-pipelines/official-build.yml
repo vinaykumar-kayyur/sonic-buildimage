@@ -15,7 +15,7 @@ trigger: none
 pr: none
 
 stages:
-- stage: Build
+- stage: Build_amd64
   displayName: 'Build for amd64'
   jobs:
   - template: build-template.yml
@@ -80,7 +80,7 @@ stages:
       dbg_image: true
       cache_mode: wcache
 
-- stage: Build
+- stage: Build_arm
   displayName: 'Build for arm'
   jobs:
   - template: build-template.yml
