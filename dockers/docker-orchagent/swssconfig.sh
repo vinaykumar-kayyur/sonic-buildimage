@@ -40,7 +40,6 @@ function config_reload {
 
       if [[ -f /arp.json ]];
       then
-        swssconfig /arp.json
         mv -f /arp.json /arp.json.1
         # Tell kernel_arp_restore.sh that it needs to act
         touch /restore-kernel

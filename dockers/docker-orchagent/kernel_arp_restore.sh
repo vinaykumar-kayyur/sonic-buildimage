@@ -4,7 +4,7 @@ function wait_for_intf_up {
     INTF_NAME=$1
 
     until [[ `ip link show $INTF_NAME | grep 'state UP'` ]]; do
-        sleep 0.1;
+        sleep 1;
     done
 }
 
