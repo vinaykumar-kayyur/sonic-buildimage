@@ -29,6 +29,9 @@ while [ $INDEX -lt 52 ]; do
     let INDEX=$INDEX+1
 done
 
+save_cmd "10" "smartctl -a /dev/sda" "SSD"
+save_cmd "10" "sgdisk -p /dev/sda" "SSD Partitions"
+
 save_cmd "10" "cat /host/reboot-cause/reboot-cause.txt" "Reboot Reason"
 save_cmd "10" "show reboot-cause" "Reboot cause"
 

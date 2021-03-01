@@ -55,6 +55,9 @@ save_cmd "10" "grep -H '' $I2C_ADAPTER/i2c-17/17-003e/*" "IOM4"
 save_cmd "30" "grep -H '' /sys/devices/platform/SMF.512/hwmon/hwmon*/*" "SMF DIR"
 save_cmd "10" "i2cdetect -l" "I2C trees"
 
+save_cmd "10" "smartctl -a /dev/sda" "SSD"
+save_cmd "10" "sgdisk -p /dev/sda" "SSD partitions"
+
 save_cmd "10" "cat /host/reboot-cause/platform/reset_reason" "Reset Reason"
 save_cmd "10" "cat /host/reboot-cause/platform/reboot_reason" "Reboot Reason"
 save_cmd "10" "cat /host/reboot-cause/platform/bios_minor_version" "BIOS Version"
