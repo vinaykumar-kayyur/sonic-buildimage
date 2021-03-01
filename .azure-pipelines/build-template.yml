@@ -2,10 +2,15 @@ parameters:
 - name: platform
   type: string
   values:
+  - barefoot
   - broadcom
+  - centec
   - centec-arm64
+  - generic
+  - innovium
   - marvell-armhf
   - mellanox
+  - nephos
   - vs
 
 - name: platform_arch
@@ -19,10 +24,15 @@ parameters:
 - name: platform_short
   type: string
   values:
+  - barefoot
   - brcm
+  - centec
   - centec-arm64
+  - generic
+  - innovium
   - marvell-armhf
   - mlnx
+  - nephos
   - vs
 
 - name: cache_mode

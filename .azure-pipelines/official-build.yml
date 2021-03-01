@@ -15,9 +15,15 @@ trigger: none
 pr: none
 
 stages:
-- stage: Build
-
+- stage: Build amd64
   jobs:
+  - template: build-template.yml
+    parameters:
+      platform: barefoot
+      platform_short: barefoot
+      cache_mode: wcache
+      swi_image: true
+
   - template: build-template.yml
     parameters:
       platform: broadcom
@@ -30,8 +36,38 @@ stages:
 
   - template: build-template.yml
     parameters:
+      platform: centec
+      platform_short: centec
+      cache_mode: wcache
+      dbg_image: true
+      sync_rpc_image: true
+
+  - template: build-template.yml
+    parameters:
+      platform: generic
+      platform_short: generic
+      cache_mode: wcache
+      dbg_image: true
+
+  - template: build-template.yml
+    parameters:
+      platform: innovium
+      platform_short: innovium
+      cache_mode: wcache
+      swi_image: true
+
+  - template: build-template.yml
+    parameters:
       platform: mellanox
       platform_short: mlnx
+      cache_mode: wcache
+      dbg_image: true
+      sync_rpc_image: true
+
+  - template: build-template.yml
+    parameters:
+      platform: nephos
+      platform_short: nephos
       cache_mode: wcache
       dbg_image: true
       sync_rpc_image: true
@@ -43,6 +79,8 @@ stages:
       dbg_image: true
       cache_mode: wcache
 
+- stage: Build cross platform
+  jobs:
   - template: build-template.yml
     parameters:
       timeout: 3600
