@@ -39,11 +39,12 @@ start)
         modprobe leds-dx010
         modprobe lm75
 
-        # Detech 
+        # Detect iSMT SMBus
         ismt_bus=$(i2cdetect -l|grep 'SMBus iSMT'| cut -c5)
 
         [ -z $ismt_bus ] && echo "cannot find iSMT" && exit 1
 
+        # Update the iSMT bus number in the fancontrol configuration.
         sed -i "s/13.0\/i2c-[0-9]/13.0\/i2c-$ismt_bus/g" /usr/share/sonic/device/x86_64-cel_seastone-r0/fancontrol
 
         i2cset -y ${ismt_bus} 0x70 0x10 0x00 0x01 i
