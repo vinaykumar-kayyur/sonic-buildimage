@@ -81,6 +81,10 @@ class Test_yang_models:
                 'desc': 'Configure undefined packet_action in ACL_RULE table.',
                 'eStr': self.defaultYANGFailure['InvalidValue'] + ['PACKET_ACTION']
             },
+            'ACL_TABLE_EMPTY_PORTS': {
+                'desc': 'Configure ACL_TABLE with empty ports.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'ACL_TABLE_UNDEFINED_TABLE_TYPE': {
                 'desc': 'Configure undefined acl_table_type in ACL_TABLE table.',
                 'eStr': self.defaultYANGFailure['InvalidValue'] + ['type']
@@ -186,9 +190,17 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
+            'CRM_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'CRM_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'CRM_WITH_CORRECT_USED_VALUE': {
                 'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
+            },
+            'CRM_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'CRM_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             },
             'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE': {
                 'desc': 'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE no failure.',
@@ -210,6 +222,14 @@ class Test_yang_models:
                     'value': 'up'
                 }
             },
+            'DEVICE_METADATA_DEFAULT_DOCKER_ROUTING_CONFIG_MODE': {
+                'desc': 'DEVICE_METADATA DEFAULT VALUE FOR DOCKER_ROUTING_CONFIG_MODE FIELD.',
+                'eStr': self.defaultYANGFailure['Verify'],
+                'verify': {'xpath': '/sonic-device_metadata:sonic-device_metadata/DEVICE_METADATA/localhost/hostname',
+                    'key': 'sonic-device_metadata:docker_routing_config_mode',
+                    'value': 'unified'
+                }
+            },
             'DEVICE_METADATA_DEFAULT_PFCWD_STATUS': {
                 'desc': 'DEVICE_METADATA DEFAULT VALUE FOR PFCWD FIELD.',
                 'eStr': self.defaultYANGFailure['Verify'],
@@ -221,6 +241,77 @@ class Test_yang_models:
             'DEVICE_METADATA_TYPE_INCORRECT_PATTERN': {
                 'desc': 'DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.',
                 'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'BREAKOUT_CFG_CORRECT_MODES': {
+                'desc': 'BREAKOUT_CFG correct breakout modes',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'BREAKOUT_CFG_INCORRECT_MODES': {
+                'desc': 'BREAKOUT_CFG wrong breakout modes',
+                'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'SNAT_WITH_WRONG_PERCENTAGE': {
+                'desc': 'SNAT_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'SNAT_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'SNAT_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'SNAT_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'SNAT_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'SNAT_WITH_CORRECT_USED_VALUE': {
+                'desc': 'SNAT_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'SNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'SNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
+            },
+            'DNAT_WITH_WRONG_PERCENTAGE': {
+                'desc': 'DNAT_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'DNAT_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'DNAT_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'DNAT_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'DNAT_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_CORRECT_USED_VALUE': {
+                'desc': 'DNAT_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'DNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
+            },
+            'IPMC_WITH_WRONG_PERCENTAGE': {
+                'desc': 'IPMC_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'IPMC_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'IPMC_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'IPMC_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'IPMC_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_CORRECT_USED_VALUE': {
+                'desc': 'IPMC_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'IPMC_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             }
         }
 
