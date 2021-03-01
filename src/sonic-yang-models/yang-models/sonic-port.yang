@@ -92,8 +92,8 @@ module sonic-port{
 				}
 
 				leaf autoneg {
-					type uint8 {
-						range 0..1;
+					type string {
+						pattern "on|off";
 					}
 				}
 			} /* end of list PORT_LIST */
