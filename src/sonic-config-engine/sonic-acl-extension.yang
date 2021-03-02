@@ -9,7 +9,7 @@ module sonic-acl-extension {
   typedef vlan-id-type {
     type union {
       type string {
-	pattern "null";
+        pattern "null";
       }
       type uint16 {
         range 1..4095;
@@ -22,7 +22,7 @@ module sonic-acl-extension {
   typedef icmp-type-type {
     type union {
       type string {
-	pattern "null";
+        pattern "null";
       }
       type uint8 {
         range 0..255;
@@ -35,7 +35,7 @@ module sonic-acl-extension {
   typedef icmp-code-type {
     type union {
       type string {
-	pattern "null";
+        pattern "null";
       }
       type uint8 {
         range 0..255;
