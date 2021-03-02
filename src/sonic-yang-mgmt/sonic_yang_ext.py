@@ -3,7 +3,6 @@
 
 from __future__ import print_function
 import yang as ly
-import re
 import syslog
 
 from json import dump, dumps, loads
