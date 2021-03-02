@@ -23,5 +23,3 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	popd
 
 	mv $* $(DEST)/
-
-
