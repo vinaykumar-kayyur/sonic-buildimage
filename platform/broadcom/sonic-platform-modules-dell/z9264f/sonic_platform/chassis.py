@@ -18,13 +18,12 @@ try:
     from sonic_platform.component import Component
     from sonic_platform.psu import Psu
     from sonic_platform.watchdog import Watchdog
-    from sonic_platform.fan import Fan
+    from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.thermal import Thermal
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 MAX_Z9264F_FANTRAY =4
-MAX_Z9264F_FAN = 2
 MAX_Z9264F_COMPONENT = 8 # BIOS,BMC,FPGA,SYSTEM CPLD,4 SLAVE CPLDs
 MAX_Z9264F_PSU = 2
 MAX_Z9264F_THERMAL = 8
@@ -65,24 +64,24 @@ class Chassis(ChassisBase):
         self._eeprom = Eeprom()
 
         self._watchdog = Watchdog()
-        
+
         for i in range(MAX_Z9264F_COMPONENT):
             component = Component(i)
             self._component_list.append(component)
-            
+
         for i in range(MAX_Z9264F_PSU):
             psu = Psu(i)
             self._psu_list.append(psu)
 
         for i in range(MAX_Z9264F_FANTRAY):
-            for j in range(MAX_Z9264F_FAN):
-                fan = Fan(i,j)
-                self._fan_list.append(fan)
+            fandrawer = FanDrawer(i)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
         for i in range(MAX_Z9264F_THERMAL):
             thermal = Thermal(i)
             self._thermal_list.append(thermal)
-        
+
         for port_num in range(self.PORT_START, (self.PORT_END + 1)):
             presence = self.get_sfp(port_num).get_presence()
             if presence:
@@ -105,7 +104,7 @@ class Chassis(ChassisBase):
         try:
             with os.fdopen(os.open(reg_file, os.O_RDONLY)) as fd:
                 retval = fd.read()
-        except:
+        except Exception:
             pass
         retval = retval.rstrip('\r\n')
         retval = retval.lstrip(" ")
@@ -135,6 +134,8 @@ class Chassis(ChassisBase):
         port_dict = {}
         change_dict = {}
         change_dict['sfp'] = port_dict
+        if timeout != 0:
+            timeout = timeout / 1000
         try:
             # We get notified when there is a MSI interrupt (vector 4/5)CVR
             # Open the sysfs file and register the epoll object
@@ -175,7 +176,7 @@ class Chassis(ChassisBase):
                 if (retval != 0):
                     return False, change_dict
             return True, change_dict
-        except:
+        except Exception:
             return False, change_dict
         finally:
             if self.oir_fd != -1:
@@ -184,7 +185,6 @@ class Chassis(ChassisBase):
                 self.oir_fd.close()
                 self.oir_fd = -1
                 self.epoll = -1
-        return False, change_dict
 
     def get_sfp(self, index):
         """
@@ -282,7 +282,7 @@ class Chassis(ChassisBase):
         try:
             with open(self.REBOOT_CAUSE_PATH) as fd:
                 reboot_cause = int(fd.read(), 16)
-        except:
+        except Exception:
             return (self.REBOOT_CAUSE_NON_HARDWARE, None)
 
         if reboot_cause & 0x1:

@@ -64,8 +64,8 @@ class Test_SonicYang(object):
     def load_yang_model_file(self, yang_s, yang_dir, yang_file, module_name):
         yfile = yang_dir + yang_file
         try:
-	    yang_s._load_schema_module(str(yfile))
-	except Exception as e:
+            yang_s._load_schema_module(str(yfile))
+        except Exception as e:
             print(e)
             raise
 
@@ -106,7 +106,7 @@ class Test_SonicYang(object):
         data_files = []
         data_files.append(data_file)
         data_files.append(data_merge_file)
-	print(yang_files)
+        print(yang_files)
         yang_s._load_data_model(yang_dir, yang_files, data_files)
 
         #validate the data tree from data_merge_file is loaded
@@ -288,10 +288,13 @@ class Test_SonicYang(object):
         syc = sonic_yang_data['syc']
 
         jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON')
+        jIn = json.loads(jIn)
+        numTables = len(jIn)
 
-        syc.loadData(json.loads(jIn))
-
-        # TODO: Make sure no extra table is loaded
+        syc.loadData(jIn)
+        # check all tables are loaded and no tables is without Yang Models
+        assert len(syc.jIn) == numTables
+        assert len(syc.tablesWithOutYang) == 0
 
         syc.getData()
 

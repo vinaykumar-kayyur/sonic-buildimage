@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -13,7 +11,7 @@ import time
 
 try:
     from sonic_platform_base.watchdog_base import WatchdogBase
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -33,6 +31,8 @@ WDT_COMMON_ERROR = -1
 class Watchdog(WatchdogBase):
 
     def __init__(self):
+        WatchdogBase.__init__(self)
+
         # Init helper
         self._api_helper = APIHelper()
 

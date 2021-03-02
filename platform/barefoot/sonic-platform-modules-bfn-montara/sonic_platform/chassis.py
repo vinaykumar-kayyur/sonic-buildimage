@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 try:
+    import sys
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.psu import Psu
@@ -14,17 +15,14 @@ class Chassis(ChassisBase):
     """
     def __init__(self):
         ChassisBase.__init__(self)
-        SFP_PORT_END = Sfp.port_end()
-        PORTS_IN_BLOCK = (SFP_PORT_END + 1)
-        MAX_PSU = Psu.get_num_psus()
 
         self._eeprom = Eeprom()
 
-        for index in range(0, PORTS_IN_BLOCK):
+        for index in range(Sfp.port_start(), Sfp.port_end() + 1):
             sfp_node = Sfp(index)
             self._sfp_list.append(sfp_node)
 
-        for i in range(1, MAX_PSU + 1):
+        for i in range(1, Psu.get_num_psus() + 1):
             psu = Psu(i)
             self._psu_list.append(psu)
 
@@ -58,7 +56,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of chassis
         """
-        return self._eeprom.serial_str()
+        return self._eeprom.serial_number_str()
 
     def get_sfp(self, index):
         """

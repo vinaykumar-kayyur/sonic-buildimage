@@ -77,11 +77,12 @@ class Component(ComponentBase):
         ['Slave CPLD 2',
          'Used for managing SFP28/QSFP28 port transceivers (SFP28 25-48, QSFP28 5-8)',
          get_cpld2_version
-         ],
+         ]
 
     ]
 
     def __init__(self, component_index = 0):
+        ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.CHASSIS_COMPONENTS[self.index][0]
         self.description = self.CHASSIS_COMPONENTS[self.index][1]
