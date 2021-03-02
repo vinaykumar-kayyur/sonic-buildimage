@@ -25,7 +25,7 @@ class Fan(PddfFan):
             depending on fan direction
         """
         if self.is_psu_fan:
-            direction = self.FAN_DIRECTION_INTAKE
+            direction = self.FAN_DIRECTION_EXHAUST
 
         else:
             idx = (self.fantray_index-1)*self.platform['num_fans_pertray'] + self.fan_index

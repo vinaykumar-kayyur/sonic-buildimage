@@ -2,7 +2,7 @@
 
 try:
     from sonic_platform_pddf_base.pddf_eeprom import PddfEeprom
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
