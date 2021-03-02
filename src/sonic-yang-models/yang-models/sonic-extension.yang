@@ -44,13 +44,10 @@ module sonic-extension {
         argument "value";
     }
 
-    extension map-list {
-        description "If it is a map list";
-        argument "value";
-    }
-
     extension map-leaf {
-        description "Map leaf names";
+        description
+           "Extension to indicate nested list and specify fields
+           mappings which are keys of inner list";
         argument "value";
     }
 
@@ -61,7 +58,7 @@ module sonic-extension {
 
     extension dependent-on {
         description
-            "Entension to define dependency on other table. During create/update,
+            "Extension to define dependency on other table. During create/update,
             operation will be performed first on parent table and then on this table.
             In delete operation, this table will be deleted first and then parent table.
             This extension can be defined only under list. Table name should always

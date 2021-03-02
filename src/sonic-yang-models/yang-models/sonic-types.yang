@@ -148,16 +148,16 @@ module sonic-types {
             "Integer indicating a percentage value";
     }
 
-	// Defined as container because it will be used as xpath in MUST/WHEN
-	// expressions in yang.
-	container operation {
-		leaf operation {
-			type enumeration {
-				enum CREATE;
-				enum UPDATE;
-				enum DELETE;
-			}
-		}
-		description "Sonic data operation types required during validation";
-	}
+    // Defined as container because it will be used as xpath in MUST/WHEN
+    // expressions in yang.
+    container operation {
+        leaf operation {
+            type enumeration {
+                enum CREATE;
+                enum UPDATE;
+                enum DELETE;
+            }
+        }
+        description "Sonic data operation types required during validation";
+    }
 }
