@@ -17,8 +17,13 @@ function restore_arp_to_kernel {
         # For the ith object, get the first key
         # 'jq' sorts the keys by default so this should always be
         # the 'NEIGH_TABLE' key, not the 'OP' key
-        KEY=`jq ".[$i] | keys[0]" $ARP_FILE`
-        
+        NUM_KEYS=`jq ".[$i] | keys | length" $ARP_FILE`
+        for j in $( seq 0 $(($NUM_KEYS - 1)) ); do
+            if [[ `jq ".[$i] | keys[$j] | startswith(\"NEIGH_TABLE\")" $ARP_FILE` == 'true' ]]; then 
+                KEY=`jq ".[$i] | keys[$j]" $ARP_FILE`
+                break
+            fi
+        done 
         # For all 'jq' commands below, use '-r' for raw output
         # to prevent double quoting
 
