@@ -25,6 +25,9 @@ def db_connect(db_name, namespace=EMPTY_NAMESPACE):
     return swsscommon.DBConnector(db_name, REDIS_TIMEOUT_MSECS, True, namespace)
 
 
+# TODO: Consider moving this logic out of daemon_base and into antoher file
+# so that it can be used by non-daemons. We can simply call that function here
+# to retain backward compatibility.
 def _load_module_from_file(module_name, file_path):
     module = None
 
