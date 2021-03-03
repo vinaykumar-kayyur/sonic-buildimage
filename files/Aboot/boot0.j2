@@ -313,7 +313,7 @@ platform_specific() {
         aboot_machine=arista_7060px4_32
         flash_size=28000
     fi
-    if [ "$sid" = "BlackhawkDD" ]; then
+    if [ "$sid" = "BlackhawkDD" ] || [ "$sid" = "BlackhawkDDM" ]; then
         aboot_machine=arista_7060dx4_32
         flash_size=28000
     fi
