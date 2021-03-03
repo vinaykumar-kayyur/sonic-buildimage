@@ -356,7 +356,7 @@ class Sfp(SfpBase):
         compliance_code_dict = {}
         transceiver_info_dict = dict.fromkeys(info_dict_keys, 'N/A')
         self.media_type = self.set_media_type()
-        if self.reinit_sfp_driver() == False:
+        if self.reinit_sfp_driver() is False:
            return transceiver_info_dict
 
         # BaseInformation
@@ -1022,16 +1022,19 @@ class Sfp(SfpBase):
             #Avoid re-initialization of the QSFP/SFP optic on QSFP/SFP port.
             if (self.media_type == 'SFP' and (driver_name == 'optoe1' or driver_name == 'optoe3')):
                 subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
+                time.sleep(0.2)
                 new_device = "echo optoe2 0x50 >" + new_sfp_path
                 subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
                 time.sleep(2)
             elif (self.media_type == 'QSFP' and (driver_name == 'optoe2' or driver_name  == 'optoe3')):
                 subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
+                time.sleep(0.2)
                 new_device = "echo optoe1 0x50 >" + new_sfp_path
                 subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
                 time.sleep(2)
             elif (self.media_type == 'QSFP-DD' and (driver_name == 'optoe1' or driver_name  == 'optoe2')):
                 subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
+                time.sleep(0.2)
                 new_device = "echo optoe3 0x50 >" + new_sfp_path
                 subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
                 time.sleep(2)
