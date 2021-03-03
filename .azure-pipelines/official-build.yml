@@ -15,8 +15,8 @@ trigger: none
 pr: none
 
 stages:
-- stage: Build_amd64
-  displayName: 'Build for amd64'
+- stage: Build_barefoot
+  dependsOn: []
   jobs:
   - template: build-template.yml
     parameters:
@@ -25,6 +25,9 @@ stages:
       cache_mode: wcache
       swi_image: true
 
+- stage: Build_broadcom
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: broadcom
@@ -35,6 +38,9 @@ stages:
       raw_image: true
       sync_rpc_image: true
 
+- stage: Build_centec
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: centec
@@ -43,6 +49,9 @@ stages:
       dbg_image: true
       sync_rpc_image: true
 
+- stage: Build_generic
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: generic
@@ -50,6 +59,9 @@ stages:
       cache_mode: wcache
       dbg_image: true
 
+- stage: Build_innovium
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: innovium
@@ -57,6 +69,9 @@ stages:
       cache_mode: wcache
       swi_image: true
 
+- stage: Build_mellanox
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: mellanox
@@ -65,6 +80,9 @@ stages:
       dbg_image: true
       sync_rpc_image: true
 
+- stage: Build_nephos
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: nephos
@@ -73,6 +91,9 @@ stages:
       dbg_image: true
       sync_rpc_image: true
 
+- stage: Build_vs
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       platform: vs
@@ -80,9 +101,8 @@ stages:
       dbg_image: true
       cache_mode: wcache
 
-- stage: Build_arm
+- stage: Build_marvell-armhf
   dependsOn: []
-  displayName: 'Build for arm'
   jobs:
   - template: build-template.yml
     parameters:
@@ -93,6 +113,9 @@ stages:
       cache_mode: wcache
       pool: sonicbld_8c
 
+- stage: Build_centec-arm64
+  dependsOn: []
+  jobs:
   - template: build-template.yml
     parameters:
       timeout: 3600
