@@ -113,7 +113,7 @@ stages:
       cache_mode: wcache
       pool: sonicbld_8c
 
-- stage: Build_centec-arm64
+- stage: Build_centec_arm64
   dependsOn: []
   jobs:
   - template: build-template.yml
