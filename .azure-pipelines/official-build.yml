@@ -101,7 +101,7 @@ stages:
       dbg_image: true
       cache_mode: wcache
 
-- stage: Build_marvell-armhf
+- stage: Build_marvell_armhf
   dependsOn: []
   jobs:
   - template: build-template.yml
