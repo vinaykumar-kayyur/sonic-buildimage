@@ -9,9 +9,9 @@ if [ $SSD_FW_VERSION == "S141002G" ] || [ $SSD_FW_VERSION == "S16425cG" ]; then
     GPIO_STATUS=$(echo "$iSMART_CMD" | grep GPIO | rev | cut -d' ' -f 2 | rev)
 
     if [ $GPIO_STATUS != "0x01" ];then
-	logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit does not support reboot.\
-	    Please perform a warm/fast-reboot instead."
-	exit 1
+        logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is faulty and does not support cold reboot."
+        logger -p user.crit -t DELL_S6100_SSD_MON "Please perform a soft-/fast-/warm-reboot instead"
+        exit 1
     fi
 fi
 
