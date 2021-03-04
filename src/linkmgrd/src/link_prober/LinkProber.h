@@ -102,7 +102,25 @@ public:
     */
     void suspendTxProbes(uint32_t suspendTime_msec);
 
+    /**
+    *@method updateEthernetFrame
+    *
+    *@brief update Ethernet frame of Tx Buffer
+    *
+    *@return none
+    */
+    void updateEthernetFrame();
+
 private:
+    /**
+    *@method handleUpdateEthernetFrame
+    *
+    *@brief update Ethernet frame of Tx Buffer
+    *
+    *@return none
+    */
+    void handleUpdateEthernetFrame();
+
     /**
     *@method sendHeartbeat
     *
@@ -123,6 +141,21 @@ private:
     *@return none
     */
     void handleRecv(
+        const boost::system::error_code &errorCode,
+        size_t bytesTransferred
+    );
+
+    /**
+    *@method handleInitRecv
+    *
+    *@brief handle packet reception
+    *
+    *@param errorCode (in)          socket error code
+    *@param bytesTransferred (in)   number of bytes received
+    *
+    *@return none
+    */
+    void handleInitRecv(
         const boost::system::error_code &errorCode,
         size_t bytesTransferred
     );
@@ -157,6 +190,15 @@ private:
     *@return none
     */
     void startRecv();
+
+    /**
+    *@method startInitRecv
+    *
+    *@brief start ICMP ECHOREPLY reception
+    *
+    *@return none
+    */
+    void startInitRecv();
 
     /**
     *@method startTimer

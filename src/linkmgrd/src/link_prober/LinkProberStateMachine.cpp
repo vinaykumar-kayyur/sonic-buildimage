@@ -188,9 +188,24 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
     boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();
     ioService.post(strand.wrap(boost::bind(
-        static_cast<void (link_manager::LinkManagerStateMachine::*) ()>
-            (&link_manager::LinkManagerStateMachine::handleSuspendTimerExpiry),
+        &link_manager::LinkManagerStateMachine::handleSuspendTimerExpiry,
         &mLinkManagerStateMachine
+    )));
+}
+
+//
+// ---> handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> &address);
+//
+// process LinkProberState MAC address update event
+//
+void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> &address)
+{
+    boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
+    boost::asio::io_service &ioService = strand.context();
+    ioService.post(strand.wrap(boost::bind(
+        &link_manager::LinkManagerStateMachine::handleGetServerMacAddressNotification,
+        &mLinkManagerStateMachine,
+        address
     )));
 }
 

@@ -159,6 +159,17 @@ public:
     void processEvent(SuspendTimerExpiredEvent &suspendTimerExpiredEvent);
 
     /**
+    *@method handleMackAddressUpdate
+    *
+    *@brief process LinkProberState MAC address update event
+    *
+    *@param address (in)    Server MAC address
+    *
+    *@return none
+    */
+    void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> &address);
+
+   /**
     *@method getActiveState
     *
     *@brief getter for ActiveState object

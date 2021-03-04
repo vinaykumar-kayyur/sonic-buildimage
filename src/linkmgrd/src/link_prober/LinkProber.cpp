@@ -135,8 +135,7 @@ void LinkProber::initialize()
     close(fileDescriptor);
 
     mStream.assign(mSocket);
-
-    initializeSendBuffer();
+    startInitRecv();
 }
 
 //
@@ -146,6 +145,8 @@ void LinkProber::initialize()
 //
 void LinkProber::startProbing()
 {
+    mStream.cancel();
+    initializeSendBuffer();
     sendHeartbeat();
     startRecv();
     startTimer();
@@ -166,6 +167,27 @@ void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
     )));
 
     mSuspendTx = true;
+}
+
+//
+// ---> updateEthernetFrame();
+//
+// update Ethernet frame of Tx Buffer
+//
+void LinkProber::updateEthernetFrame()
+{
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(&LinkProber::handleUpdateEthernetFrame, this)));
+}
+
+//
+// ---> handleUpdateEthernetFrame();
+//
+// update Ethernet frame of Tx Buffer
+//
+void LinkProber::handleUpdateEthernetFrame()
+{
+    initializeSendBuffer();
 }
 
 //
@@ -249,6 +271,34 @@ void LinkProber::handleRecv(
 }
 
 //
+// ---> handleInitRecv(const boost::system::error_code& errorCode, size_t bytesTransferred);
+//
+// handle packet reception
+//
+void LinkProber::handleInitRecv(
+    const boost::system::error_code& errorCode,
+    size_t bytesTransferred
+)
+{
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
+    if (errorCode != boost::asio::error::operation_aborted) {
+        ether_header *ethHeader = reinterpret_cast<ether_header *> (mRxBuffer.data());
+        std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
+
+        memcpy(macAddress.data(), ethHeader->ether_shost, macAddress.size());
+
+        boost::asio::io_service::strand& strand = mLinkProberStateMachine.getStrand();
+        boost::asio::io_service &ioService = strand.context();
+        ioService.post(strand.wrap(boost::bind(
+            &LinkProberStateMachine::handleMackAddressUpdate,
+            &mLinkProberStateMachine,
+            macAddress
+        )));
+    }
+}
+
+//
 // ---> handleTimeout(boost::system::error_code ec);
 //
 // handle ICMP packet reception timeout
@@ -311,6 +361,24 @@ void LinkProber::startRecv()
         boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
         mStrand.wrap(boost::bind(
             &LinkProber::handleRecv,
+            this,
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred
+        ))
+    );
+}
+
+//
+// ---> startInitRecv();
+//
+// start ICMP ECHOREPLY reception
+//
+void LinkProber::startInitRecv()
+{
+    mStream.async_read_some(
+        boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
+        mStrand.wrap(boost::bind(
+            &LinkProber::handleInitRecv,
             this,
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred

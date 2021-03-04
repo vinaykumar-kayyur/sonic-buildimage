@@ -461,6 +461,8 @@ void LinkManagerStateMachine::handleGetServerMacAddressNotification(std::array<u
 
         mComponentInitState.set(ServerMacComponent);
         activateStateMachine();
+    } else if (address != mMuxPortConfig.getBladeMacAddress()) {
+        mLinkProberPtr->updateEthernetFrame();
     }
 }
 
