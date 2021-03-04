@@ -161,6 +161,15 @@ public:
     void initialize();
 
     /**
+    *@method deinitialize
+    *
+    *@brief deinitialize MuxManager class and deinitialize DbInterface instance
+    *
+    *@return none
+    */
+    void deinitialize();
+
+    /**
     *@method run
     *
     *@brief start Boost IO Service event loop

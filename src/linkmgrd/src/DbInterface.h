@@ -145,6 +145,15 @@ public:
     void initialize();
 
     /**
+    *@method deinitialize
+    *
+    *@brief deinitialize DB interface and join SWSS listening thread
+    *
+    *@return none
+    */
+    void deinitialize();
+
+    /**
     *@method updateServerMacAddress
     *
     *@brief Update Server MAC address behind a MUX port

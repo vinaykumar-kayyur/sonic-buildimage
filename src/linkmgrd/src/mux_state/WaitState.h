@@ -103,6 +103,17 @@ public:
     virtual MuxState* handleEvent(UnknownEvent &event) override;
 
     /**
+    *@method handleEvent
+    *
+    *@brief handle ErrorEvent from state db
+    *
+    *@param event (in)  reference to ErrorEvent
+    *
+    *@return pointer to next MuxState
+    */
+    virtual MuxState* handleEvent(ErrorEvent &event) override;
+
+    /**
     *@method resetState
     *
     *@brief reset current state attributes
@@ -143,7 +154,8 @@ public:
 private:
     uint8_t mActiveEventCount = 0;
     uint8_t mStandbyEventCount = 0;
-    uint8_t mFailedEventCount = 0;
+    uint8_t mUnknownEventCount = 0;
+    uint8_t mErrorEventCount = 0;
 
     WaitStateCause mWaitStateCause = CauseUnknown;
 };

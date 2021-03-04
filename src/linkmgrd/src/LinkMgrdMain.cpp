@@ -105,6 +105,7 @@ int main(int argc, const char* argv[])
         std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> (configFile);
         muxManagerPtr->initialize();
         muxManagerPtr->run();
+        muxManagerPtr->deinitialize();
     }
 
     return retValue;

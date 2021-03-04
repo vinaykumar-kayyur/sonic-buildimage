@@ -20,6 +20,7 @@ namespace mux_state
 ActiveEvent MuxStateMachine::mActiveEvent;
 StandbyEvent MuxStateMachine::mStandbyEvent;
 UnknownEvent MuxStateMachine::mUnknownEvent;
+ErrorEvent MuxStateMachine::mErrorEvent;
 
 //
 // ---> MuxStateMachine(
@@ -42,6 +43,7 @@ MuxStateMachine::MuxStateMachine(
     mActiveState(*this, muxPortConfig),
     mStandbyState(*this, muxPortConfig),
     mUnknownState(*this, muxPortConfig),
+    mErrorState(*this, muxPortConfig),
     mWaitState(*this, muxPortConfig)
 {
     enterState(label);
@@ -63,7 +65,10 @@ void MuxStateMachine::enterState(MuxState::Label label)
         setCurrentState(dynamic_cast<MuxState *> (getStandbyState()));
         break;
     case MuxState::Label::Unknown:
-        setCurrentState(dynamic_cast<MuxState *> (getUknownState()));
+        setCurrentState(dynamic_cast<MuxState *> (getUnknownState()));
+        break;
+    case MuxState::Label::Error:
+        setCurrentState(dynamic_cast<MuxState *> (getErrorState()));
         break;
     case MuxState::Label::Wait:
         setCurrentState(dynamic_cast<MuxState *> (getWaitState()));
@@ -133,6 +138,14 @@ void MuxStateMachine::postMuxStateEvent<StandbyEvent>(StandbyEvent &e);
 //
 template
 void MuxStateMachine::postMuxStateEvent<UnknownEvent>(UnknownEvent &e);
+
+//
+// ---> postMuxStateEvent<ErrorEvent>(ErrorEvent &e);
+//
+// post MuxState event to the state machine
+//
+template
+void MuxStateMachine::postMuxStateEvent<ErrorEvent>(ErrorEvent &e);
 
 //
 // ---> processEvent(T &t);

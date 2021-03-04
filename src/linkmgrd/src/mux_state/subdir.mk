@@ -5,6 +5,7 @@ CPP_SRCS += \
     ./src/mux_state/MuxStateMachine.cpp \
     ./src/mux_state/StandbyState.cpp \
     ./src/mux_state/UnknownState.cpp \
+    ./src/mux_state/ErrorState.cpp \
     ./src/mux_state/WaitState.cpp 
 
 OBJS += \
@@ -13,6 +14,7 @@ OBJS += \
     ./src/mux_state/MuxStateMachine.o \
     ./src/mux_state/StandbyState.o \
     ./src/mux_state/UnknownState.o \
+    ./src/mux_state/ErrorState.o \
     ./src/mux_state/WaitState.o 
 
 CPP_DEPS += \
@@ -21,6 +23,7 @@ CPP_DEPS += \
     ./src/mux_state/MuxStateMachine.d \
     ./src/mux_state/StandbyState.d \
     ./src/mux_state/UnknownState.d \
+    ./src/mux_state/ErrorState.d \
     ./src/mux_state/WaitState.d 
 
 

@@ -56,6 +56,16 @@ void MuxManager::initialize()
 }
 
 //
+// ---> deinitialize();
+//
+// deinitialize MuxManager class and deinitialize DbInterface instance
+//
+void MuxManager::deinitialize()
+{
+    mDbInterface.deinitialize();
+}
+
+//
 // ---> run();
 //
 // start Boost IO Service event loop

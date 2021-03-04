@@ -562,6 +562,30 @@ private:
     void LinkProberStandbyMuxUnknownLinkUpTransitionFunction(CompositeState &nextState);
 
     /**
+    *@method LinkProberActiveMuxErrorLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberActive, MuxError, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberActiveMuxErrorLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
+    *@method LinkProberStandbyMuxErrorLinkUpTransitionFunction
+    *
+    *@brief transition function when entering {LinkProberStandby, MuxError, LinkUp} state
+    *
+    *@param nextState (in, out)     reference to composite state, the state will be changed
+    *                               to reflect next new state.
+    *
+    *@return none
+    */
+    void LinkProberStandbyMuxErrorLinkUpTransitionFunction(CompositeState &nextState);
+
+    /**
     *@method LinkProberWaitMuxActiveLinkUpTransitionFunction
     *
     *@brief transition function when entering {LinkProberWait, MuxActive, LinkUp} state

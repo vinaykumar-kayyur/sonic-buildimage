@@ -144,6 +144,16 @@ void DbInterface::initialize()
 }
 
 //
+// ---> deinitialize();
+//
+// deinitialize DB interface and join SWSS listening thread
+//
+void DbInterface::deinitialize()
+{
+    mSwssThreadPtr->join();
+}
+
+//
 // ---> updateServerMacAddress(boost::asio::ip::address serverIp, uint8_t *serverMac);
 //
 // Update Server MAC address behind a MUX port

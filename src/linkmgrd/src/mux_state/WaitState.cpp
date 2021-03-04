@@ -41,8 +41,9 @@ MuxState* WaitState::handleEvent(ActiveEvent &event)
         dynamic_cast<MuxStateMachine *> (getStateMachine());
     MuxState *nextState;
 
-    mFailedEventCount = 0;
+    mUnknownEventCount = 0;
     mStandbyEventCount = 0;
+    mErrorEventCount = 0;
     if (++mActiveEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
         nextState = dynamic_cast<MuxState *> (stateMachine->getActiveState());
     }
@@ -56,7 +57,7 @@ MuxState* WaitState::handleEvent(ActiveEvent &event)
 //
 // ---> handleEvent(StandbyEvent &event);
 //
-// handle ActiveEvent from state db/xcvrd
+// handle StandbyEvent from state db/xcvrd
 //
 MuxState* WaitState::handleEvent(StandbyEvent &event)
 {
@@ -67,7 +68,8 @@ MuxState* WaitState::handleEvent(StandbyEvent &event)
     MuxState *nextState;
 
     mActiveEventCount = 0;
-    mFailedEventCount = 0;
+    mUnknownEventCount = 0;
+    mErrorEventCount = 0;
     if (++mStandbyEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
         nextState = dynamic_cast<MuxState *> (stateMachine->getStandbyState());
     }
@@ -81,7 +83,7 @@ MuxState* WaitState::handleEvent(StandbyEvent &event)
 //
 // ---> handleEvent(UnknownEvent &event);
 //
-// handle ActiveEvent from state db/xcvrd
+// handle UnknownEvent from state db/xcvrd
 //
 MuxState* WaitState::handleEvent(UnknownEvent &event)
 {
@@ -93,8 +95,35 @@ MuxState* WaitState::handleEvent(UnknownEvent &event)
 
     mActiveEventCount = 0;
     mStandbyEventCount = 0;
-    if (++mFailedEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
-        nextState = dynamic_cast<MuxState *> (stateMachine->getUknownState());
+    mErrorEventCount = 0;
+    if (++mUnknownEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
+        nextState = dynamic_cast<MuxState *> (stateMachine->getUnknownState());
+    }
+    else {
+        nextState = dynamic_cast<MuxState *> (stateMachine->getWaitState());
+    }
+
+    return nextState;
+}
+
+//
+// ---> handleEvent(ErrorEvent &event);
+//
+// handle ErrorEvent from state db
+//
+MuxState* WaitState::handleEvent(ErrorEvent &event)
+{
+    MUXLOGDEBUG(getMuxPortConfig().getPortName());
+
+    MuxStateMachine *stateMachine =
+        dynamic_cast<MuxStateMachine *> (getStateMachine());
+    MuxState *nextState;
+
+    mActiveEventCount = 0;
+    mStandbyEventCount = 0;
+    mUnknownEventCount = 0;
+    if (++mErrorEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
+        nextState = dynamic_cast<MuxState *> (stateMachine->getErrorState());
     }
     else {
         nextState = dynamic_cast<MuxState *> (stateMachine->getWaitState());
@@ -114,7 +143,8 @@ void WaitState::resetState()
 
     mActiveEventCount = 0;
     mStandbyEventCount = 0;
-    mFailedEventCount = 0;
+    mUnknownEventCount = 0;
+    mErrorEventCount = 0;
 }
 
 } /* namespace mux_state */

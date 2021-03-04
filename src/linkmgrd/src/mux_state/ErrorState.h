@@ -1,82 +1,60 @@
 /*
- * MuxState.h
+ * ErrorState.h
  *
- *  Created on: Oct 18, 2020
- *      Author: tamer
+ *  Created on: Mar 1, 2021
+ *      Author: taahme
  */
 
-#ifndef MUX_STATE_MUXSTATE_H_
-#define MUX_STATE_MUXSTATE_H_
+#ifndef MUX_STATE_ERRORSTATE_H_
+#define MUX_STATE_ERRORSTATE_H_
 
-#include <common/State.h>
+#include <mux_state/MuxState.h>
 
 namespace mux_state
 {
-class MuxStateMachine;
-class ActiveEvent;
-class StandbyEvent;
-class UnknownEvent;
-class ErrorEvent;
-
 /**
- *@class MuxState
+ *@class ErrorState
  *
- *@brief base class for different Mux states
+ *@brief maintains ErrorState state of MuxState
  */
-class MuxState: public common::State
+class ErrorState: public MuxState
 {
 public:
     /**
-     *@enum Label
-     *
-     *@brief Label corresponding to each MuxState State
-     */
-    enum Label {
-        Active,
-        Standby,
-        Unknown,
-        Error,
-        Wait,
-
-        Count
-    };
-
-public:
-    /**
-    *@method MuxState
+    *@method ErrorState
     *
     *@brief class default constructor
     */
-    MuxState() = delete;
+    ErrorState() = delete;
 
     /**
-    *@method MuxState
+    *@method ErrorState
     *
     *@brief class copy constructor
     *
-    *@param MuxState (in)  reference to MuxState object to be copied
+    *@param ErrorState (in)  reference to ErrorState object to be copied
     */
-    MuxState(const MuxState &) = delete;
+    ErrorState(const ErrorState &) = delete;
 
     /**
-    *@method MuxState
+    *@method ErrorState
     *
     *@brief class constructor
     *
-    *@param stateMachine (in)   reference to MuxStateMachine object
+    *@param stateMachine (in)   reference to LinkStateMachine
     *@param muxPortConfig (in)  reference to MuxPortConfig object
     */
-    MuxState(
+    ErrorState(
         MuxStateMachine &stateMachine,
         common::MuxPortConfig &muxPortConfig
     );
 
     /**
-    *@method ~MuxState
+    *@method ~ErrorState
     *
     *@brief class destructor
     */
-    virtual ~MuxState() = default;
+    virtual ~ErrorState() = default;
 
     /**
     *@method handleEvent
@@ -87,7 +65,7 @@ public:
     *
     *@return pointer to next MuxState
     */
-    virtual MuxState* handleEvent(ActiveEvent &event) = 0;
+    virtual MuxState* handleEvent(ActiveEvent &event) override;
 
     /**
     *@method handleEvent
@@ -98,7 +76,7 @@ public:
     *
     *@return pointer to next MuxState
     */
-    virtual MuxState* handleEvent(StandbyEvent &event) = 0;
+    virtual MuxState* handleEvent(StandbyEvent &event) override;
 
     /**
     *@method handleEvent
@@ -109,10 +87,10 @@ public:
     *
     *@return pointer to next MuxState
     */
-    virtual MuxState* handleEvent(UnknownEvent &event) = 0;
+    virtual MuxState* handleEvent(UnknownEvent &event) override;
 
     /**
-    *@method handleEvent
+    *@method ErrorEvent
     *
     *@brief handle ErrorEvent from state db
     *
@@ -120,7 +98,7 @@ public:
     *
     *@return pointer to next MuxState
     */
-    virtual MuxState* handleEvent(ErrorEvent &event) = 0;
+    virtual MuxState* handleEvent(ErrorEvent &event) override;
 
     /**
     *@method resetState
@@ -129,9 +107,23 @@ public:
     *
     *@return none
     */
-    virtual MuxState::Label getStateLabel() = 0;
+    virtual void resetState() override;
+
+    /**
+    *@method getStateLabel
+    *
+    *@brief getter for MuxState label
+    *
+    *@return MuxState Wait label
+    */
+    virtual MuxState::Label getStateLabel() override {return MuxState::Label::Error;};
+
+private:
+    uint8_t mActiveEventCount = 0;
+    uint8_t mStandbyEventCount = 0;
+    uint8_t mUnknownEventCount = 0;
 };
 
 } /* namespace mux_state */
 
-#endif /* MUX_STATE_MUXSTATE_H_ */
+#endif /* MUX_STATE_ERRORSTATE_H_ */

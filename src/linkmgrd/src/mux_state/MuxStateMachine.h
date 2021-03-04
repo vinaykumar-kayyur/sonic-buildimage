@@ -10,9 +10,10 @@
 
 #include "common/StateMachine.h"
 #include "mux_state/ActiveState.h"
+#include "mux_state/ErrorState.h"
 #include "mux_state/StandbyState.h"
 #include "mux_state/WaitState.h"
-#include "UnknownState.h"
+#include "mux_state/UnknownState.h"
 
 namespace link_manager {
 class LinkManagerStateMachine;
@@ -51,6 +52,17 @@ class UnknownEvent {
 public:
     UnknownEvent() = default;
     ~UnknownEvent() = default;
+};
+
+/**
+ *@class ErrorEvent
+ *
+ *@brief signals a ErrorEvent event to MuxState state machine
+ */
+class ErrorEvent {
+public:
+    ErrorEvent() = default;
+    ~ErrorEvent() = default;
 };
 
 /**
@@ -161,7 +173,16 @@ public:
     *
     *@return pointer to UnknownState object
     */
-    UnknownState* getUknownState() {return &mUnknownState;};
+    UnknownState* getUnknownState() {return &mUnknownState;};
+
+    /**
+    *@method getErrorState
+    *
+    *@brief getter for ErrorState object
+    *
+    *@return pointer to ErrorState object
+    */
+    ErrorState* getErrorState() {return &mErrorState;};
 
     /**
     *@method getWaitState
@@ -200,6 +221,15 @@ public:
     static UnknownEvent& getUnknownEvent() {return mUnknownEvent;};
 
     /**
+    *@method getErrorEvent
+    *
+    *@brief getter for ErrorEvent object
+    *
+    *@return pointer to ErrorEvent object
+    */
+    static ErrorEvent& getErrorEvent() {return mErrorEvent;};
+
+    /**
     *@method setWaitStateCause
     *
     *@brief setter Wait Cause
@@ -235,12 +265,14 @@ private:
     static ActiveEvent mActiveEvent;
     static StandbyEvent mStandbyEvent;
     static UnknownEvent mUnknownEvent;
+    static ErrorEvent mErrorEvent;
 
 private:
     link_manager::LinkManagerStateMachine &mLinkManagerStateMachine;
     ActiveState mActiveState;
     StandbyState mStandbyState;
     UnknownState mUnknownState;
+    ErrorState mErrorState;
     WaitState mWaitState;
 };
 

@@ -160,9 +160,10 @@ void MuxPort::handleMuxState(const std::string &muxState)
     mux_state::MuxState::Label label = mux_state::MuxState::Label::Unknown;
     if (muxState == "active") {
         label = mux_state::MuxState::Label::Active;
-    }
-    else if (muxState == "standby") {
+    } else if (muxState == "standby") {
         label = mux_state::MuxState::Label::Standby;
+    } else if (muxState == "error") {
+        label = mux_state::MuxState::Label::Error;
     }
 
     boost::asio::io_service &ioService = mStrand.context();

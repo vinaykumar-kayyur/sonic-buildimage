@@ -1,26 +1,27 @@
 /*
- * StandbyState.cpp
+ * ErrorState.cpp
  *
- *  Created on: Oct 20, 2020
- *      Author: tamer
+ *  Created on: Mar 1, 2021
+ *      Author: taahme
  */
 
 #include "mux_state/ActiveState.h"
+#include "mux_state/ErrorState.h"
 #include "mux_state/StandbyState.h"
+#include "mux_state/UnknownState.h"
 #include "mux_state/MuxStateMachine.h"
 
 #include "common/MuxLogger.h"
-#include "UnknownState.h"
 
 namespace mux_state
 {
 
 //
-// ---> StandbyState(MuxStateMachine &stateMachine, common::MuxPortConfig &muxPortConfig);
+// ---> ErrorState(MuxStateMachine &stateMachine, common::MuxPortConfig &muxPortConfig);
 //
 // class constructor
 //
-StandbyState::StandbyState(
+ErrorState::ErrorState(
     MuxStateMachine &stateMachine,
     common::MuxPortConfig &muxPortConfig
 ) :
@@ -33,20 +34,21 @@ StandbyState::StandbyState(
 //
 // handle ActiveEvent from state db/xcvrd
 //
-MuxState* StandbyState::handleEvent(ActiveEvent &event)
+MuxState* ErrorState::handleEvent(ActiveEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    MuxStateMachine *stateMachine = dynamic_cast<MuxStateMachine *> (getStateMachine());
+    MuxStateMachine *stateMachine =
+        dynamic_cast<MuxStateMachine *> (getStateMachine());
     MuxState *nextState;
 
+    mStandbyEventCount = 0;
     mUnknownEventCount = 0;
-    mErrorEventCount = 0;
     if (++mActiveEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
         nextState = dynamic_cast<MuxState *> (stateMachine->getActiveState());
     }
     else {
-        nextState = dynamic_cast<MuxState *> (stateMachine->getStandbyState());
+        nextState = dynamic_cast<MuxState *> (stateMachine->getErrorState());
     }
 
     return nextState;
@@ -57,14 +59,22 @@ MuxState* StandbyState::handleEvent(ActiveEvent &event)
 //
 // handle StandbyEvent from state db/xcvrd
 //
-MuxState* StandbyState::handleEvent(StandbyEvent &event)
+MuxState* ErrorState::handleEvent(StandbyEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    MuxStateMachine *stateMachine = dynamic_cast<MuxStateMachine *> (getStateMachine());
-    MuxState *nextState = dynamic_cast<MuxState *> (stateMachine->getStandbyState());
+    MuxStateMachine *stateMachine =
+        dynamic_cast<MuxStateMachine *> (getStateMachine());
+    MuxState *nextState;
 
-    resetState();
+    mActiveEventCount = 0;
+    mUnknownEventCount = 0;
+    if (++mStandbyEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
+        nextState = dynamic_cast<MuxState *> (stateMachine->getStandbyState());
+    }
+    else {
+        nextState = dynamic_cast<MuxState *> (stateMachine->getErrorState());
+    }
 
     return nextState;
 }
@@ -74,20 +84,21 @@ MuxState* StandbyState::handleEvent(StandbyEvent &event)
 //
 // handle UnknownEvent from state db/xcvrd
 //
-MuxState* StandbyState::handleEvent(UnknownEvent &event)
+MuxState* ErrorState::handleEvent(UnknownEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    MuxStateMachine *stateMachine = dynamic_cast<MuxStateMachine *> (getStateMachine());
+    MuxStateMachine *stateMachine =
+        dynamic_cast<MuxStateMachine *> (getStateMachine());
     MuxState *nextState;
 
     mActiveEventCount = 0;
-    mErrorEventCount = 0;
+    mStandbyEventCount = 0;
     if (++mUnknownEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
         nextState = dynamic_cast<MuxState *> (stateMachine->getUnknownState());
     }
     else {
-        nextState = dynamic_cast<MuxState *> (stateMachine->getStandbyState());
+        nextState = dynamic_cast<MuxState *> (stateMachine->getErrorState());
     }
 
     return nextState;
@@ -98,22 +109,15 @@ MuxState* StandbyState::handleEvent(UnknownEvent &event)
 //
 // handle ErrorEvent from state db
 //
-MuxState* StandbyState::handleEvent(ErrorEvent &event)
+MuxState* ErrorState::handleEvent(ErrorEvent &event)
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
-    MuxStateMachine *stateMachine =
-        dynamic_cast<MuxStateMachine *> (getStateMachine());
-    MuxState *nextState;
+    MuxStateMachine *stateMachine = dynamic_cast<MuxStateMachine *> (getStateMachine());
+    MuxState *nextState =
+        dynamic_cast<MuxState *> (stateMachine->getErrorState());
 
-    mActiveEventCount = 0;
-    mUnknownEventCount = 0;
-    if (++mErrorEventCount >= getMuxPortConfig().getMuxStateChangeRetryCount()) {
-        nextState = dynamic_cast<MuxState *> (stateMachine->getErrorState());
-    }
-    else {
-        nextState = dynamic_cast<MuxState *> (stateMachine->getStandbyState());
-    }
+    resetState();
 
     return nextState;
 }
@@ -123,13 +127,13 @@ MuxState* StandbyState::handleEvent(ErrorEvent &event)
 //
 // reset current state attributes
 //
-void StandbyState::resetState()
+void ErrorState::resetState()
 {
     MUXLOGDEBUG(getMuxPortConfig().getPortName());
 
     mActiveEventCount = 0;
+    mStandbyEventCount = 0;
     mUnknownEventCount = 0;
-    mErrorEventCount = 0;
 }
 
 } /* namespace mux_state */
