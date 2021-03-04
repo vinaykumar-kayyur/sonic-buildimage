@@ -10,7 +10,6 @@
 
 try:
     import subprocess
-    import time
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
@@ -21,6 +20,7 @@ try:
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_py_common.logger import Logger
+    from . import utils
 
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
@@ -1496,9 +1496,18 @@ class SFP(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        admin_pwr_mode, oper_pwr_mode = self.mgmt_phy_mod_pwr_attr_get(SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E)
+        if utils.is_host():
+            lpm_cmd = "docker exec syncd python /usr/share/sonic/platform/plugins/sfplpmget.py {}".format(self.index)
 
-        return oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E
+            try:
+                output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                return 'LPM ON' in output
+            except subprocess.CalledProcessError as e:
+                print("Error! Unable to get LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
+                return False
+        else:
+            _, oper_pwr_mode = self.mgmt_phy_mod_pwr_attr_get(SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E)
+            return oper_pwr_mode == SX_MGMT_PHY_MOD_PWR_MODE_LOW_E
 
 
     def get_power_override(self):
@@ -1872,11 +1881,21 @@ class SFP(SfpBase):
 
         refer plugins/sfpreset.py
         """
-        rc = sx_mgmt_phy_mod_reset(self.sdk_handle, self.sdk_index)
-        if rc != SX_STATUS_SUCCESS:
-            logger.log_warning("sx_mgmt_phy_mod_reset failed, rc = %d" % rc)
+        if utils.is_host():
+            lpm_cmd = "docker exec syncd python /usr/share/sonic/platform/plugins/sfpreset.py {}".format(self.index)
 
-        return rc == SX_STATUS_SUCCESS
+            try:
+                subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+                return True
+            except subprocess.CalledProcessError as e:
+                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
+                return False
+        else:
+            rc = sx_mgmt_phy_mod_reset(self.sdk_handle, self.sdk_index)
+            if rc != SX_STATUS_SUCCESS:
+                logger.log_warning("sx_mgmt_phy_mod_reset failed, rc = %d" % rc)
+
+            return rc == SX_STATUS_SUCCESS
 
 
     def tx_disable(self, tx_disable):
@@ -2027,15 +2046,31 @@ class SFP(SfpBase):
         Returns:
             A boolean, True if lpmode is set successfully, False if not
         """
-        log_port_list = self.get_logical_ports()
-        if lpmode:
-            self._set_lpmode_raw(log_port_list, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, SX_MGMT_PHY_MOD_PWR_MODE_LOW_E)
-            logger.log_info("Enabled low power mode for module [%d]" % (self.sdk_index))
+        if utils.is_host():
+            if lpmode == self.get_lpmode(self.index):
+                return True
+
+            # Compose LPM command
+            lpm_cmd = "docker exec syncd python /usr/share/sonic/platform/plugins/sfplpmset.py {} {}".format(self.index, 'on' if lpmode else 'off')
+
+            # Set LPM
+            try:
+                subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
+            except subprocess.CalledProcessError as e:
+                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.index, e.returncode, e.output))
+                return False
+
+            return True
         else:
-            self._set_lpmode_raw(log_port_list, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E)
-            logger.log_info( "Disabled low power mode for module [%d]" % (self.sdk_index))
- 
-        return True
+            log_port_list = self.get_logical_ports()
+            if lpmode:
+                self._set_lpmode_raw(log_port_list, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, SX_MGMT_PHY_MOD_PWR_MODE_LOW_E)
+                logger.log_info("Enabled low power mode for module [%d]" % (self.sdk_index))
+            else:
+                self._set_lpmode_raw(log_port_list, SX_MGMT_PHY_MOD_PWR_ATTR_PWR_MODE_E, SX_MGMT_PHY_MOD_PWR_MODE_AUTO_E)
+                logger.log_info( "Disabled low power mode for module [%d]" % (self.sdk_index))
+    
+            return True
 
 
     def set_power_override(self, power_override, power_set):
