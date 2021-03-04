@@ -269,14 +269,26 @@ class Test_SonicYang(object):
     @pytest.fixture(autouse=True, scope='class')
     def sonic_yang_data(self):
         sonic_yang_dir = "../sonic-yang-models/yang-models/"
-        sonic_yang_test_file = "../sonic-yang-models/tests/yang_model_tests/yangTest.json"
+
+        yang_test_file_map = {}
+
+        for test_file in glob.glob("../sonic-yang-models/tests/yang_model_tests/tests_config/*.json"):
+            try:
+                with open(test_file) as fp:
+                    log.info("Loading file " + test_file)
+                    data = json.load(fp)
+                    for key in data:
+                        yang_test_file_map[key] = test_file
+            except Exception as e:
+                log.error("Failed to load file " + test_file)
+                throw(e)
 
         syc = sy.SonicYang(sonic_yang_dir)
         syc.loadYangModel()
 
         sonic_yang_data = dict()
         sonic_yang_data['yang_dir'] = sonic_yang_dir
-        sonic_yang_data['test_file'] = sonic_yang_test_file
+        sonic_yang_data['test_file_map'] = yang_test_file_map
         sonic_yang_data['syc'] = syc
 
         return sonic_yang_data
@@ -284,7 +296,7 @@ class Test_SonicYang(object):
     def test_xlate_rev_xlate(self, sonic_yang_data):
         # In this test, xlation and revXlation is tested with latest Sonic
         # YANG model.
-        test_file = sonic_yang_data['test_file']
+        test_file = sonic_yang_data['test_file_map']['SAMPLE_CONFIG_DB_JSON']
         syc = sonic_yang_data['syc']
 
         jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON')
@@ -310,7 +322,7 @@ class Test_SonicYang(object):
     def test_table_with_no_yang(self, sonic_yang_data):
         # in this test, tables with no YANG models must be stored seperately
         # by this library.
-        test_file = sonic_yang_data['test_file']
+        test_file = sonic_yang_data['test_file_map']['SAMPLE_CONFIG_DB_JSON_1']
         syc = sonic_yang_data['syc']
 
         jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON_1')
