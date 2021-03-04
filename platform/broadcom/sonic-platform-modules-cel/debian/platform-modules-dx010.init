@@ -40,7 +40,7 @@ start)
         modprobe lm75
 
         # Detect iSMT SMBus
-        ismt_bus=$(i2cdetect -l|grep 'SMBus iSMT'| cut -c5)
+        ismt_bus=$(i2cdetect -l | grep 'SMBus iSMT' | cut -c5)
 
         [ -z $ismt_bus ] && echo "cannot find iSMT" && exit 1
 
