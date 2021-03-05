@@ -69,7 +69,7 @@ module sonic-port{
 
 				leaf autoneg {
 					type string {
-						pattern "0|1";
+						pattern "on|off";
 					}
 				}
 				

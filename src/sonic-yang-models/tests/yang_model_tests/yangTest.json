@@ -633,7 +633,7 @@
 					"mtu": 9000,
 					"admin_status": "up",
 					"pfc_asym": "on",
-					"autoneg": "1",
+					"autoneg": "on",
 					"adv_speeds": ["10000","25000"],
 					"adv_interface_types": ["all"],
 					"interface_type": "CR"
@@ -673,7 +673,7 @@
 					"mtu": 9000,
 					"admin_status": "up",
 					"pfc_asym": "on",
-					"autoneg": "2",
+					"autoneg": "invalid",
 					"adv_speeds": "10000,25000",
 					"adv_interface_types": "CR,CR2",
 					"interface_type": "CR"
