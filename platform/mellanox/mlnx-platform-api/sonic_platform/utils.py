@@ -68,6 +68,7 @@ def is_host():
     Test whether current process is running on the host or an docker
     return True for host and False for docker
     """
+    global _is_host
     if _is_host is not None:
         return _is_host
         

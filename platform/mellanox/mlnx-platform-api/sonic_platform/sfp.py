@@ -2047,7 +2047,7 @@ class SFP(SfpBase):
             A boolean, True if lpmode is set successfully, False if not
         """
         if utils.is_host():
-            if lpmode == self.get_lpmode(self.index):
+            if lpmode == self.get_lpmode():
                 return True
 
             # Compose LPM command
