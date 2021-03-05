@@ -2,39 +2,65 @@
     "chassis": {
         "name": "Celestica-DX010-C32",
         "components": [],
-        "fans":[            
+        "fans": [],
+        "fan_drawers": [
             {
-                "name": "FAN-1F"
+                "name": "Drawer1",
+                "fans": [
+                    {
+                        "name": "FAN-1F"
+                    },
+                    {
+                        "name": "FAN-1R"
+                    }
+                ]
             },
             {
-                "name": "FAN-1R"
+                "name": "Drawer2",
+                "fans": [
+                    {
+                        "name": "FAN-2F"
+                    },
+                    {
+                        "name": "FAN-2R"
+                    }
+                ]
             },
             {
-                "name": "FAN-2F"
+                "name": "Drawer3",
+                "fans": [
+                    {
+                        "name": "FAN-3F"
+                    },
+                    {
+                        "name": "FAN-3R"
+                    }
+                ]
             },
             {
-                "name": "FAN-2R"
+                "name": "Drawer4",
+                "fans": [
+                    {
+                        "name": "FAN-4F"
+                    },
+                    {
+                        "name": "FAN-4R"
+                    }
+                ]
             },
             {
-                "name": "FAN-3F"
-            },
-            {
-                "name": "FAN-3R"
-            },
-            {
-                "name": "FAN-4F"
-            },
-            {
-                "name": "FAN-4R"
-            },
-            {
-                "name": "FAN-5F"
-            },
-            {
-                "name": "FAN-5R"
-            }           
+                "name": "Drawer5",
+                "fans": [
+                    {
+                        "name": "FAN-5F"
+                    },
+                    {
+                        "name": "FAN-5R"
+                    }
+                ]
+            }
         ],
-        "fan_drawers": [],
+
         "psus": [
             {
                 "name": "PSU-1"
