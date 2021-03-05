@@ -123,6 +123,39 @@ instantiate =[
 'echo 40 > /sys/class/gpio/export',
 'echo out > /sys/class/gpio/gpio40/direction',
 'echo 1 > /sys/class/gpio/gpio40/value',
+#Set 1 to release reset pins (low active)
+'echo 1 > /sys/class/cpld-qsfpdd/port-1/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-2/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-3/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-4/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-5/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-6/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-7/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-8/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-9/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-10/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-11/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-12/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-13/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-14/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-15/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-16/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-17/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-18/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-19/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-20/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-21/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-22/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-23/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-24/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-25/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-26/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-27/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-28/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-29/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-30/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-31/reset',
+'echo 1 > /sys/class/cpld-qsfpdd/port-32/reset'
 ]
 
 drivers =[
@@ -131,10 +164,12 @@ drivers =[
 'i2c-dev',
 'i2c-mux-pca954x',
 'gpio-pca953x',
+'optoe',
 'qci_cpld_qsfpdd',
 'qci_cpld_led',
 'qci_platform_ix9',
-'ipmi_devintf'
+'ipmi_devintf',
+'quanta_hwmon_ipmi'
 ]
 
 
@@ -191,6 +226,11 @@ def install():
         if status:
             if FORCE == 0:
                 return  status
+        status, output = exec_cmd("pip3 install  /usr/share/sonic/device/x86_64-quanta_ix9_bwde-r0/sonic_platform-1.0-py3-none-any.whl",1)
+        if status:
+               print output
+               if FORCE == 0:
+                  return status
     else:
         print " ix9 driver already installed...."
     return
@@ -204,6 +244,13 @@ def uninstall():
 	   print output
 	   if FORCE == 0:
 	      return status
+
+    status, output = exec_cmd("pip3 uninstall  sonic-platform -y ",1)
+    if status:
+	   print output
+	   if FORCE == 0:
+	      return status
+
     return
 
 def device_found():

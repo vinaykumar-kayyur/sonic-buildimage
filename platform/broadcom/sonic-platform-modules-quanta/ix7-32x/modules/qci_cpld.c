@@ -172,11 +172,20 @@ static ssize_t get_module_present(struct device *dev,
 	u8 group = (u8)(data->cpld_port / 4);
 	u8 group_port = data->cpld_port % 4;
 	s32 value;
+	int retry = 0;
 
 	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
 				data->cpld_port + 1, group + 1, group_port + 1);
 
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
+	for (retry = 0; retry < 10; retry++)
+	{		
+	    value = i2c_smbus_read_word_data(client, get_group_cmd(group));
+		if (value >= 0)
+			break;
+		else
+			printk("%s: retry:%d\n", __FUNCTION__, retry);
+		msleep(1);		
+	}
 	if (value < 0)
 		return -ENODEV;
 
@@ -405,7 +414,7 @@ err_out:
 }
 
 /* FIXME: for older kernel doesn't with idr_is_empty function, implement here */
-#if 1
+#if 0
 static int idr_has_entry(int id, void *p, void *data)
 {
 	return 1;
@@ -438,7 +447,7 @@ static int cpld_remove(struct i2c_client *client)
 		kfree(data->port_data[i]);
 	}
 
-	if (cpld_idr_is_empty(&cpld_ida.idr))
+	if (ida_is_empty(&cpld_ida))
 		class_destroy(cpld_class);
 
 	return 0;

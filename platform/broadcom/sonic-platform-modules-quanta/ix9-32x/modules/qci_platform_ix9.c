@@ -39,7 +39,11 @@
 #include <linux/input-polldev.h>
 #include <linux/rfkill.h>
 #include <linux/slab.h>
+#if LINUX_VERSION_CODE > KERNEL_VERSION(4,14,0)
 #include <linux/platform_data/pca954x.h>
+#else
+#include <linux/i2c/pca954x.h>
+#endif
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3,12,0)
 #include <linux/platform_data/pca953x.h>
 #else

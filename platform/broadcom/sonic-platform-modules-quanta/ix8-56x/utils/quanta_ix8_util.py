@@ -105,10 +105,6 @@ def exec_cmd(cmd, show):
     return  status, output
         
 instantiate =[
-#turn on module power
-'echo 21 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio21/direction',
-'echo 1 >/sys/class/gpio/gpio21/value',
 #export pca9698 for qsfp present
 'echo 34 > /sys/class/gpio/export',
 'echo in > /sys/class/gpio/gpio34/direction',
@@ -126,31 +122,6 @@ instantiate =[
 'echo in > /sys/class/gpio/gpio58/direction',
 'echo 62 > /sys/class/gpio/export',
 'echo in > /sys/class/gpio/gpio62/direction',
-#export pca9698 for qsfp reset
-'echo 32 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio32/direction',
-'echo 1 >/sys/class/gpio/gpio32/value',
-'echo 36 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio36/direction',
-'echo 1 >/sys/class/gpio/gpio36/value',
-'echo 40 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio40/direction',
-'echo 1 >/sys/class/gpio/gpio40/value',
-'echo 44 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio44/direction',
-'echo 1 >/sys/class/gpio/gpio44/value',
-'echo 48 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio48/direction',
-'echo 1 >/sys/class/gpio/gpio48/value',
-'echo 52 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio52/direction',
-'echo 1 >/sys/class/gpio/gpio52/value',
-'echo 56 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio56/direction',
-'echo 1 >/sys/class/gpio/gpio56/value',
-'echo 60 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio60/direction',
-'echo 1 >/sys/class/gpio/gpio60/value',
 #export pca9698 for qsfp lpmode
 'echo 35 > /sys/class/gpio/export',
 'echo out > /sys/class/gpio/gpio35/direction',
@@ -176,14 +147,6 @@ instantiate =[
 'echo 63 > /sys/class/gpio/export',
 'echo out > /sys/class/gpio/gpio63/direction',
 'echo 0 >/sys/class/gpio/gpio63/value',
-#Reset fron-ports LED CPLD
-'echo 73 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio73/direction',
-'echo 0 >/sys/class/gpio/gpio73/value',
-'echo 1 >/sys/class/gpio/gpio73/value',
-#Enable front-ports LED decoding
-'echo 1 > /sys/class/cpld-led/CPLDLED-1/led_decode',
-'echo 1 > /sys/class/cpld-led/CPLDLED-2/led_decode',
 #SFP28 Module TxEnable
 'echo 0 > /sys/class/cpld-sfp28/port-1/tx_dis',
 'echo 0 > /sys/class/cpld-sfp28/port-2/tx_dis',
@@ -252,11 +215,10 @@ drivers =[
 'qci_cpld_sfp28',
 'qci_cpld_led',
 'qci_platform_ix8',
-'ipmi_devintf'
+'ipmi_devintf',
+'quanta_hwmon_ipmi'
 ]
- 
 
-                    
 def system_install():
     global FORCE
 	
@@ -274,35 +236,68 @@ def system_install():
         print output
         if FORCE == 0:
             return status
-    				 
+
+    #turn on module power
+    status, output = exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
+    status, output = exec_cmd("cat /sys/class/gpio/gpio21/value", 1)
+    if output != '1':
+        status, output = exec_cmd("echo out > /sys/class/gpio/gpio21/direction ", 1)
+        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio21/value", 1)
+
+    # qsfp reset gpio
+    time.sleep(1)
+    for qsfp_reset in [32, 36, 40, 44, 48, 52, 56, 60]:
+        status, output = exec_cmd("echo "+str(qsfp_reset)+" > /sys/class/gpio/export", 1)
+        status, output = exec_cmd("cat /sys/class/gpio/gpio"+str(qsfp_reset)+"/value", 1)
+        if output != '1':
+            status, output = exec_cmd("echo out > /sys/class/gpio/gpio"+str(qsfp_reset)+"/direction", 1)
+            status, output = exec_cmd("echo 1 > /sys/class/gpio/gpio"+str(qsfp_reset)+"/value", 1)
+
+    # Reset fron-ports LED CPLD
+    status, output = exec_cmd("echo 73 > /sys/class/gpio/export ", 1)
+    status, output = exec_cmd("cat /sys/class/gpio/gpio73/value", 1)
+    if output != '1':
+        status, output = exec_cmd("echo out > /sys/class/gpio/gpio73/direction ", 1)
+        status, output = exec_cmd("echo 0 >/sys/class/gpio/gpio73/value", 1)
+        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio73/value", 1)
+
     #instantiate devices
     for i in range(0,len(instantiate)):
-       status, output = exec_cmd(instantiate[i], 1)
+        status, output = exec_cmd(instantiate[i], 1)
     if status:
         print output
         if FORCE == 0:
             return status
-    
+
     #QSFP for 1~56 port
     for port_number in range(1,57):
         bus_number = port_number + 31
         os.system("echo %d >/sys/bus/i2c/devices/%d-0050/port_name" % (port_number, bus_number))
-    
-    return 
-     
-        
+
+    status, output = exec_cmd("pip3 install  /usr/share/sonic/device/x86_64-quanta_ix8_rglbmc-r0/sonic_platform-1.0-py3-none-any.whl",1)
+    if status:
+	   print output
+	   if FORCE == 0:
+	      return status
+
+    #Enable front-ports LED decoding
+    status, output = exec_cmd('echo 1 > /sys/class/cpld-led/CPLDLED-1/led_decode', 1)
+    status, output = exec_cmd('echo 1 > /sys/class/cpld-led/CPLDLED-2/led_decode', 1)
+
+    return
+
 def system_ready():
     if not device_found(): 
         return False
     return True
-               
-def install():                      
+    
+def install():
     if not device_found():
-        print "No device, installing...."     
-        status = system_install() 
+        print "No device, installing...."
+        status = system_install()
         if status:
-            if FORCE == 0:        
-                return  status        
+            if FORCE == 0:
+                return  status
     else:
         print " ix8 driver already installed...."
     return
@@ -314,13 +309,18 @@ def uninstall():
        status, output = exec_cmd("rmmod "+drivers[i], 1)
     if status:
 	   print output
-	   if FORCE == 0:                
+	   if FORCE == 0:
+	      return status
+    status, output = exec_cmd("pip3 uninstall  sonic-platform -y ",1)
+    if status:
+	   print output
+	   if FORCE == 0:
 	      return status
     return
 
 def device_found():
     ret1, log = exec_cmd("ls "+i2c_prefix+"i2c-0", 0)
-    return ret1				
+    return ret1
 
 if __name__ == "__main__":
     main()

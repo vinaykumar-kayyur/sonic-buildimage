@@ -39,6 +39,7 @@
 #include <linux/input-polldev.h>
 #include <linux/rfkill.h>
 #include <linux/slab.h>
+#include <linux/delay.h>
 #include <linux/platform_data/pca954x.h>
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0))
 #include <linux/i2c/pca953x.h>
@@ -301,6 +302,24 @@ static struct platform_driver ix8_platform_driver = {
 	},
 };
 
+static struct i2c_adapter *i2c_get_adapter_wait(int nr)
+{
+	struct i2c_adapter *adap = NULL;
+	int i = 0;
+
+	for (i = 0; i < 300; ++i) {
+		adap = i2c_get_adapter(nr);
+		if (adap)
+			break;
+		msleep(10);
+	}
+
+	if (adap == NULL)
+		printk(KERN_ERR "%s: unable to get i2c adapter for bus %d\n", __FILE__, nr);
+
+	return adap;
+}
+
 static struct platform_device *ix8_device;
 
 static int __init ix8_platform_init(void)
@@ -324,72 +343,72 @@ static int __init ix8_platform_init(void)
 	if (ret)
 		goto fail_platform_device;
 
-	adapter = i2c_get_adapter(0);
+	adapter = i2c_get_adapter_wait(0);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[0]);		// pca9546
 	client = i2c_new_device(adapter, &ix8_i2c_devices[1]);		// pca9548
 	client = i2c_new_device(adapter, &ix8_i2c_devices[16]);		// pca9546cpu
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x02);
+	adapter = i2c_get_adapter_wait(0x02);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[17]);		// CPU Board Data
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x10);
+	adapter = i2c_get_adapter_wait(0x10);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[10]);		// CPLD_1
 	client = i2c_new_device(adapter, &ix8_i2c_devices[18]);		// CPLD_4
 	client = i2c_new_device(adapter, &ix8_i2c_devices[19]);		// CPLD_6
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x11);
+	adapter = i2c_get_adapter_wait(0x11);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[11]);		// CPLD_2
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x12);
+	adapter = i2c_get_adapter_wait(0x12);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[12]);		// CPLD_3
 	client = i2c_new_device(adapter, &ix8_i2c_devices[2]);		// MB_BOARDINFO_EEPROM
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x13);
+	adapter = i2c_get_adapter_wait(0x13);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[13]);		// MB Board Data
 	client = i2c_new_device(adapter, &ix8_i2c_devices[14]);		// QSFP:49~52
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x14);
+	adapter = i2c_get_adapter_wait(0x14);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[3]);		// pca9548_1 SFP
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x15);
+	adapter = i2c_get_adapter_wait(0x15);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[4]);		// pca9548_2 SFP
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x16);
+	adapter = i2c_get_adapter_wait(0x16);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[5]);		// pca9548_3 SFP
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x17);
+	adapter = i2c_get_adapter_wait(0x17);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[6]);		// pca9548_4 SFP
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x18);
+	adapter = i2c_get_adapter_wait(0x18);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[7]);		// pca9548_5 SFP
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x19);
+	adapter = i2c_get_adapter_wait(0x19);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[8]);		// pca9548_6 SFP
 	i2c_put_adapter(adapter);
 
-	adapter = i2c_get_adapter(0x1a);
+	adapter = i2c_get_adapter_wait(0x1a);
 	client = i2c_new_device(adapter, &ix8_i2c_devices[9]);		// pca9548_7 QSFP
 	i2c_put_adapter(adapter);
 
 	for(i = 80; i < 88; i ++){									// QSFP 49~56 EEPROM
-		adapter = i2c_get_adapter(i);
+		adapter = i2c_get_adapter_wait(i);
 		client = i2c_new_device(adapter, &ix8_i2c_devices[15]);
 		i2c_put_adapter(adapter);
 	}
 
 	for(i = 32; i < 80; i ++){									// SFP28 1~48 EEPROM
-		adapter = i2c_get_adapter(i);
+		adapter = i2c_get_adapter_wait(i);
 		client = i2c_new_device(adapter, &ix8_i2c_devices[20]);
 		i2c_put_adapter(adapter);
 	}

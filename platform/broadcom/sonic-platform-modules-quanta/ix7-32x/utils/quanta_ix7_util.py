@@ -105,15 +105,6 @@ def exec_cmd(cmd, show):
     return  status, output
         
 instantiate =[
-#turn on module power
-'echo 21 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio21/direction',
-'echo 1 >/sys/class/gpio/gpio21/value',
-#Reset fron-ports LED CPLD
-'echo 73 > /sys/class/gpio/export',
-'echo out > /sys/class/gpio/gpio73/direction',
-'echo 0 >/sys/class/gpio/gpio73/value',
-'echo 1 >/sys/class/gpio/gpio73/value',
 #Enable front-ports LED decoding
 'echo 1 > /sys/class/cpld-led/CPLDLED-1/led_decode',
 'echo 1 > /sys/class/cpld-led/CPLDLED-2/led_decode',
@@ -136,7 +127,8 @@ drivers =[
 'qci_cpld',
 'qci_cpld_led',
 'quanta_platform_ix7',
-'ipmi_devintf'
+'ipmi_devintf',
+'quanta_hwmon_ipmi'
 ]
  
 
@@ -158,6 +150,21 @@ def system_install():
         print output
         if FORCE == 0:
             return status
+
+    #turn on module power
+    status, output = exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
+    status, output = exec_cmd("cat /sys/class/gpio/gpio21/value", 1)
+    if output != '1':
+        status, output = exec_cmd("echo out > /sys/class/gpio/gpio21/direction ", 1)
+        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio21/value", 1)
+
+    #Reset fron-ports LED CPLD
+    status, output = exec_cmd("echo 33 > /sys/class/gpio/export ", 1)
+    status, output = exec_cmd("cat /sys/class/gpio/gpio33/value", 1)
+    if output != '1':
+        status, output = exec_cmd("echo out > /sys/class/gpio/gpio33/direction ", 1)
+        status, output = exec_cmd("echo 0 >/sys/class/gpio/gpio33/value", 1)
+        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio33/value", 1)
 
     #instantiate devices
     for i in range(0,len(instantiate)):
@@ -186,6 +193,12 @@ def install():
         if status:
             if FORCE == 0:        
                 return  status        
+
+        status, output = exec_cmd("pip3 install  /usr/share/sonic/device/x86_64-quanta_ix7_rglbmc-r0/sonic_platform-1.0-py3-none-any.whl",1)
+        if status:
+               print output
+               if FORCE == 0:
+                  return status
     else:
         print " ix7 driver already installed...."
     return
@@ -199,6 +212,12 @@ def uninstall():
         print output
         if FORCE == 0:
             return status
+
+    status, output = exec_cmd("pip3 uninstall  sonic-platform -y ",1)
+    if status:
+	   print output
+	   if FORCE == 0:
+	      return status
     return
 
 def device_found():
