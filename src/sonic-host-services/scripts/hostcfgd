@@ -511,7 +511,9 @@ class HostConfigDaemon:
         # Load Kdump configuration
         self.kdumpCfg = KdumpCfg(self.config_db)
         self.kdumpCfg.load(self.config_db.get_table('KDUMP'))
-
+        
+        # Default is None. Gets initialize for multi-npu platforms
+        self.masicBgpMonCfg = None
         if self.is_multi_npu:
             self.masicBgpMonCfg = MultiAsicBgpMonCfg()
 
