@@ -265,18 +265,6 @@ if [ -f $FIRST_BOOT_FILE ]; then
         mkdir -p /host/reboot-cause/platform
     fi
 
-    if [ -d /host/image-$SONIC_VERSION/platform/common ]; then
-        env_file="/usr/share/sonic/device/$platform/platform_env.conf"
-        [ -f $env_file ] && . $env_file
-
-        gpl_dpkg="/host/image-$SONIC_VERSION/platform/common/opennsl-modules-dnx*.deb"
-        if [ $asic_type = bcm_dnx ]; then
-            dpkg -i $gpl_dpkg
-        else
-            rm gpl_dpkg
-        fi
-    fi
-
     if [ -d /host/image-$SONIC_VERSION/platform/$platform ]; then
         dpkg -i /host/image-$SONIC_VERSION/platform/$platform/*.deb
     fi
