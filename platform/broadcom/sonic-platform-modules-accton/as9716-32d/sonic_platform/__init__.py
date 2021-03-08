@@ -1,3 +1,3 @@
 # All the derived classes for PDDF
 __all__ = ["platform", "chassis", "sfp", "psu", "thermal"]
-import platform
+from sonic_platform import *
