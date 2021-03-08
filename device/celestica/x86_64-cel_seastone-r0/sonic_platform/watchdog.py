@@ -136,6 +136,7 @@ class Watchdog(WatchdogBase):
         if seconds > 16779:
             return ret
 
+
         try:
             if self.timeout != seconds:
                 self.timeout = self._settimeout(seconds)
