@@ -1,0 +1,31 @@
+trigger:
+  branches:
+    include:
+    - master
+
+pr:
+  branches:
+    include:
+    - master
+
+stages:
+- stage: Build
+  jobs:
+  - job:
+    pool: sonicbld
+    displayName: "build"
+    timeoutInMinutes: 60
+    steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+      displayName: 'Checkout code'
+    - script: |
+        echo Hello
+        # the following is copied from jenkins
+        # set -ex
+        # ./scripts/common/sonic-mgmt-framework-build/build.sh
+        # ./scripts/common/sonic-mgmt-framework-build/test.sh
+    - publish: $(System.DefaultWorkingDirectory)/target/
+      artifact: sonic-mgmt-common
+      displayName: "Archive sonic image"

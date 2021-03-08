@@ -1,0 +1,33 @@
+trigger:
+  branches:
+    include:
+    - master
+
+pr:
+  branches:
+    include:
+    - master
+
+stages:
+- stage: Build
+  jobs:
+  - job:
+    pool: sonicbld
+    displayName: "build"
+    timeoutInMinutes: 60
+    steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+      displayName: 'Checkout code'
+    - script: |
+        echo Hello
+        # the following is copied from jenkins
+        # set -ex
+        # #!/bin/bash -x
+        # export ANSI_COLORS_DISABLED=1
+        # cd meta
+        # make
+    - publish: $(System.DefaultWorkingDirectory)/target/python-wheels/
+      artifact: opencomputeproject/SAI
+      displayName: "Archive sonic image"
