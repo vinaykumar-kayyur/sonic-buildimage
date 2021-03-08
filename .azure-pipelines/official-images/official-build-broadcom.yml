@@ -1,0 +1,21 @@
+schedules:
+- cron: "0 8 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+  always: true
+
+trigger: none
+pr: none
+
+jobs:
+- template: ../build-template.yml
+  parameters:
+    platform: broadcom
+    platform_short: brcm
+    cache_mode: wcache
+    dbg_image: true
+    swi_image: true
+    raw_image: true
+    sync_rpc_image: true
