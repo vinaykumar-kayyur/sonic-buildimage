@@ -21,3 +21,4 @@ jobs:
     platform_short: barefoot
     cache_mode: wcache
     swi_image: true
+
