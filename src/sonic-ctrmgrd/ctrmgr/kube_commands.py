@@ -22,6 +22,8 @@ KUBE_ADMIN_CONF = "/etc/sonic/kube_admin.conf"
 KUBELET_YAML = "/var/lib/kubelet/config.yaml"
 SERVER_ADMIN_URL = "https://{}/admin.conf"
 LOCK_FILE = "/var/lock/kube_join.lock"
+FLANNEL_CONF_FILE = "/usr/share/sonic/templates/kube_cni.10-flannel.conflist"
+CNI_DIR = "/etc/cni/net.d"
 
 # kubectl --kubeconfig <KUBE_ADMIN_CONF> label nodes
 #       <device_info.get_hostname()> <label to be added>
@@ -272,7 +274,7 @@ def _do_reset(pending_join = False):
                 format(KUBE_ADMIN_CONF, device_info.get_hostname()))
 
     _run_command("kubeadm reset -f", 10)
-    _run_command("rm -rf /etc/cni/net.d")
+    _run_command("rm -rf {}".format(CNI_DIR))
     if not pending_join:
         _run_command("rm -f {}".format(KUBE_ADMIN_CONF))
     _run_command("systemctl stop kubelet")
@@ -294,6 +296,12 @@ def _do_join(server, port, insecure):
             (ret, out, err) = _run_command(KUBEADM_JOIN_CMD.format(
                 KUBE_ADMIN_CONF, device_info.get_hostname()), timeout=60)
             print("ret = {}".format(ret))
+
+        if ret == 0:
+            # Copy flannel.conf
+            _run_command("mkdir -p {}".format(CNI_DIR))
+            _run_command("cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR))
+            _run_command("systemctl restart kubelet")
 
     except IOError as e:
         err = "Download failed: {}".format(str(e))

@@ -13,6 +13,8 @@ import kube_commands
 
 
 KUBE_ADMIN_CONF = "/tmp/kube_admin.conf"
+FLANNEL_CONF_FILE = "/tmp/flannel.conf"
+CNI_DIR = "/tmp/cni/net.d"
 
 # kube_commands test cases
 # NOTE: Ensure state-db entry is complete in PRE as we need to
@@ -108,12 +110,15 @@ join_test_data = {
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
             "systemctl start kubelet",
             "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF)
+                KUBE_ADMIN_CONF),
+            "mkdir -p {}".format(CNI_DIR),
+            "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
+            "systemctl restart kubelet"
         ],
         common_test.PROC_RUN: [True, True]
     },
@@ -129,12 +134,15 @@ None".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
             "systemctl start kubelet",
             "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF)
+                KUBE_ADMIN_CONF),
+            "mkdir -p {}".format(CNI_DIR),
+            "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
+            "systemctl restart kubelet"
         ],
         common_test.PROC_RUN: [True, True]
     },
@@ -159,12 +167,15 @@ None".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
             "systemctl start kubelet",
             "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF)
+                KUBE_ADMIN_CONF),
+            "mkdir -p {}".format(CNI_DIR),
+            "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
+            "systemctl restart kubelet"
         ],
         common_test.PROC_RUN: [True, True],
         common_test.PROC_FAIL: [True]
@@ -181,12 +192,15 @@ None".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
             "systemctl start kubelet",
             "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF)
+                KUBE_ADMIN_CONF),
+            "mkdir -p {}".format(CNI_DIR),
+            "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
+            "systemctl restart kubelet"
         ],
         common_test.PROC_RUN: [True, True],
         common_test.PROC_FAIL: [True],
@@ -213,7 +227,7 @@ reset_test_data = {
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "rm -f {}".format(KUBE_ADMIN_CONF),
             "systemctl stop kubelet"
         ]
@@ -228,7 +242,7 @@ None".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "rm -f {}".format(KUBE_ADMIN_CONF),
             "systemctl stop kubelet"
         ]
@@ -239,7 +253,7 @@ None".format(KUBE_ADMIN_CONF),
         common_test.ARGS: [True],
         common_test.PROC_CMD: [
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "rm -f {}".format(KUBE_ADMIN_CONF),
             "systemctl stop kubelet"
         ]
@@ -269,7 +283,11 @@ clusters:\n\
         kubelet_yaml = "/tmp/kubelet_config.yaml"
         with open(kubelet_yaml, "w") as s:
             s.close()
+        with open(FLANNEL_CONF_FILE, "w") as s:
+            s.close()
         kube_commands.KUBELET_YAML = kubelet_yaml
+        kube_commands.CNI_DIR = CNI_DIR
+        kube_commands.FLANNEL_CONF_FILE = FLANNEL_CONF_FILE
         kube_commands.SERVER_ADMIN_URL = "file://{}".format(self.admin_conf_file)
         kube_commands.KUBE_ADMIN_CONF = KUBE_ADMIN_CONF
 
