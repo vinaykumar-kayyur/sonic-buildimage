@@ -11,7 +11,6 @@
 
 try:
     import ctypes
-    import subprocess
     from sonic_platform_base.watchdog_base import WatchdogBase
     from sonic_platform.hwaccess import io_reg_read, io_reg_write
 except ImportError as e:
