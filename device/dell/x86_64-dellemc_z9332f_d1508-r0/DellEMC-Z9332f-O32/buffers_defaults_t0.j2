@@ -1,20 +1,43 @@
+{%- set default_cable = '5m' %}
 
-{%- set default_cable = '40m' %}
+{%- macro generate_port_lists(PORT_ALL) %}
+    {# Generate list of ports #}
+    {%- for port_idx in range(0,32) %}
+        {%- if PORT_ALL.append("Ethernet%d" % (port_idx*8)) %}{%- endif %}
+    {%- endfor %}
+{%- endmacro %}
 
 {%- macro generate_buffer_pool_and_profiles() %}
     "BUFFER_POOL": {
+        "ingress_lossless_pool": {
+            "size": "50798476",
+            "type": "ingress",
+            "mode": "dynamic",
+            "xoff": "15728696"
+        },
+        "egress_lossless_pool": {
+            "size": "66527172",
+            "type": "egress",
+            "mode": "static"
+        }
     },
     "BUFFER_PROFILE": {
+        "ingress_lossy_profile": {
+            "pool":"[BUFFER_POOL|ingress_lossless_pool]",
+            "size":"0",
+            "dynamic_th":"3"
+        },
+        "egress_lossless_profile": {
+            "pool":"[BUFFER_POOL|egress_lossless_pool]",
+            "size":"0",
+            "mode": "static",
+            "static_th":"66527172"
+        },
+        "egress_lossy_profile": {
+            "pool":"[BUFFER_POOL|egress_lossless_pool]",
+            "size":"0",
+            "mode": "dynamic",
+            "dynamic_th":"3"
+        }
     },
 {%- endmacro %}
-
-{%- macro generate_pg_profils(port_names_active) %}
-    "BUFFER_PG": {
-    },
-{%- endmacro %}
-
-{% macro generate_queue_buffers(port_names_active) %}
-    "BUFFER_QUEUE": {
-    }
-{% endmacro %}
-
