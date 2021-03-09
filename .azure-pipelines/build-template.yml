@@ -7,6 +7,7 @@ parameters:
   - marvell-armhf
   - mellanox
   - vs
+  - generic
 
 - name: platform_arch
   type: string
@@ -92,6 +93,8 @@ jobs:
         fi
 
         make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
+      elif [ ${{ parameters.platform }} == generic ]; then
+        make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/docker-sonic-mgmt.gz
       else
         if [ ${{ parameters.dbg_image }} == true ]; then
           make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) INSTALL_DEBUG_TOOLS=y target/sonic-${{ parameters.platform }}.bin && \
