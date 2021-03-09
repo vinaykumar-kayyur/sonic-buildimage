@@ -2,15 +2,19 @@
 
 set -e
 
-function fast_reboot {
-  case "$(cat /proc/cmdline)" in
-    *fast-reboot*)
+function restore_app_db {
+  
+  if [[ $(cat /proc/cmdline) == *"fast-reboot"* || -f /config-reload-restore ]];
+  then
       if [[ -f /fdb.json ]];
       then
         swssconfig /fdb.json
         mv -f /fdb.json /fdb.json.1
       fi
+  fi
 
+  if [[ $(cat /proc/cmdline) == *"fast-reboot"* ]];
+  then
       if [[ -f /arp.json ]];
       then
         swssconfig /arp.json
@@ -22,22 +26,12 @@ function fast_reboot {
         swssconfig /default_routes.json
         mv -f /default_routes.json /default_routes.json.1
       fi
-
-      ;;
-    *)
-      ;;
-  esac
+  fi
 }
 
-function config_reload {
+function signal_kernel_restore {
     if [[ -f /config-reload-restore ]];
     then
-      if [[ -f /fdb.json ]];
-      then
-        swssconfig /fdb.json
-        mv -f /fdb.json /fdb.json.1
-      fi
-
       if [[ -f /arp.json ]];
       then
         mv -f /arp.json /arp.json.1
@@ -56,8 +50,8 @@ done
 rm -f /ready
 
 # Restore FDB and ARP table ASAP
-fast_reboot
-config_reload
+restore_app_db
+signal_kernel_restore
 
 # read SONiC immutable variables
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
