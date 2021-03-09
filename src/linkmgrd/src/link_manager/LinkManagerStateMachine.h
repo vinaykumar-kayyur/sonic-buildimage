@@ -80,8 +80,9 @@ public:
      *@brief Label corresponding to each LINKMGR Health State
      */
     enum Label {
-        Healthy,
+        Uninitialized,
         Unhealthy,
+        Healthy,
 
         Count
     };
@@ -748,7 +749,7 @@ private:
     boost::asio::deadline_timer mDeadlineTimer;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
-    Label mLabel = Healthy;
+    Label mLabel = Uninitialized;
 };
 
 } /* namespace link_manager */

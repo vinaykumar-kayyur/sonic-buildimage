@@ -167,7 +167,7 @@ public:
     *
     *@return none
     */
-    void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> &address);
+    void handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address);
 
    /**
     *@method getActiveState

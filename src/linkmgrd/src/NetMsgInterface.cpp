@@ -6,6 +6,7 @@
  */
 
 #include <array>
+#include <stdexcept>
 #include <string>
 #include <netinet/in.h>
 #include <netlink/route/link.h>
@@ -65,8 +66,15 @@ void NetMsgInterface::onMsg(int msgType, NetlinkObject *netlinkObject)
 
                 boost::asio::ip::address ipAddress = boost::asio::ip::make_address(ipStr.data(), errorCode);
                 if (!errorCode) {
-                    swss::MacAddress macAddress(macStr.data());
-                    mDbInterface.updateServerMacAddress(ipAddress, macAddress.getMac());
+                    try {
+                        swss::MacAddress macAddress(macStr.data());
+                        mDbInterface.updateServerMacAddress(ipAddress, macAddress.getMac());
+                    }
+                    catch (const std::invalid_argument &invalidArgument) {
+                        MUXLOGWARNING(boost::format("%s: invalid argument for interface IP '%s', MAC '%s', msgType %d") %
+                            portName % ipStr.data() % macStr.data() % msgType
+                        );
+                    }
                 }
             }
         }

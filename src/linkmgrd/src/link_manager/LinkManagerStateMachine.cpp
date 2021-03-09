@@ -63,7 +63,7 @@ LinkManagerStateMachine::LinkManagerStateMachine(
 {
     assert(muxPortPtr != nullptr);
     mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
-    setLabel(Unhealthy);
+    mMuxPortPtr->setMuxLinkmgrState(mLabel);
 }
 
 //
@@ -476,7 +476,8 @@ void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState:
     MUXLOGDEBUG(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     if (mComponentInitState.all() && ms(mCompositeState) != label &&
-        ms(mCompositeState) != mux_state::MuxState::Wait) {
+        ms(mCompositeState) != mux_state::MuxState::Wait &&
+        ms(mCompositeState) != mux_state::MuxState::Error) {
         // notify swss of mux state change
         MUXLOGWARNING(boost::format("%s: Switching MUX state from '%s' to '%s' to match linkmgrd/xcvrd state") %
             mMuxPortConfig.getPortName() %
@@ -490,12 +491,11 @@ void LinkManagerStateMachine::handleGetMuxStateNotification(mux_state::MuxState:
 //
 // ---> handleProbeMuxStateNotification(mux_state::MuxState::Label label);
 //
-// handle MUX state notification. Source of notification could be state_db via
-// orchagent or app_db via xcvrd
+// handle MUX state notification. Source of notification could be app_db via xcvrd
 //
 void LinkManagerStateMachine::handleProbeMuxStateNotification(mux_state::MuxState::Label label)
 {
-    MUXLOGINFO(boost::format("%s: state db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
+    MUXLOGINFO(boost::format("%s: app db mux state: %s") % mMuxPortConfig.getPortName() % mMuxStateName[label]);
 
     if (mComponentInitState.all()) {
         if (mMuxStateMachine.getWaitStateCause() != mux_state::WaitState::WaitStateCause::DriverUpdate) {

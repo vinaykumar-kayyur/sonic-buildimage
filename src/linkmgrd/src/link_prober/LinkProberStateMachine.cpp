@@ -194,11 +194,11 @@ void LinkProberStateMachine::processEvent(SuspendTimerExpiredEvent &suspendTimer
 }
 
 //
-// ---> handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> &address);
+// ---> handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address);
 //
 // process LinkProberState MAC address update event
 //
-void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> &address)
+void LinkProberStateMachine::handleMackAddressUpdate(const std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
     boost::asio::io_service::strand& strand = mLinkManagerStateMachine.getStrand();
     boost::asio::io_service &ioService = strand.context();

@@ -221,7 +221,7 @@ std::shared_ptr<MuxPort> MuxManager::getMuxPortPtrOrThrow(const std::string &por
             muxPortPtr = portMapIterator->second;
         }
     }
-    catch (const std::bad_alloc& ex) {
+    catch (const std::bad_alloc &ex) {
         std::ostringstream errMsg;
         errMsg << "Failed allocate memory. Exception details: " << ex.what();
 

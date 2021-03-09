@@ -25,8 +25,8 @@
 namespace mux
 {
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
-std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown"};
-std::vector<std::string> DbInterface::mMuxLinkmgrState = {"healthy", "unhealthy"};
+std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
+std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -135,7 +135,7 @@ void DbInterface::initialize()
 
         mSwssThreadPtr = std::make_shared<boost::thread> (&DbInterface::handleSwssNotification, this);
     }
-    catch (const std::bad_alloc& ex) {
+    catch (const std::bad_alloc &ex) {
         std::ostringstream errMsg;
         errMsg << "Failed allocate memory. Exception details: " << ex.what();
 
@@ -228,7 +228,7 @@ void DbInterface::handleSetMuxLinkmgrState(
 {
     MUXLOGDEBUG(boost::format("%s: setting mux linkmgr state to %s") % portName % mMuxLinkmgrState[label]);
 
-    if (label <= link_manager::LinkManagerStateMachine::Unhealthy) {
+    if (label < link_manager::LinkManagerStateMachine::Count) {
         mStateDbMuxLinkmgrTablePtr->hset(portName, "state", mMuxLinkmgrState[label]);
     }
 }
@@ -401,27 +401,32 @@ void DbInterface::handleMuxLinkmgrConfigNotifiction(swss::SubscriberStateTable &
             std::string operation = kfvOp(entry);
             std::vector<swss::FieldValueTuple> fieldValues = kfvFieldsValues(entry);
 
-            for (auto &fieldValue: fieldValues) {
-                std::string f = fvField(fieldValue);
-                std::string v = fvValue(fieldValue);
-                if (f == "interval_v4") {
-                    mMuxManagerPtr->setTimeoutIpv4_msec(boost::lexical_cast<uint32_t> (v));
-                } else if (f == "interval_v6") {
-                    mMuxManagerPtr->setTimeoutIpv6_msec(boost::lexical_cast<uint32_t> (v));
-                } else if (f == "positive_signal_count") {
-                    mMuxManagerPtr->setPositiveStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
-                } else if (f == "negative_signal_count") {
-                    mMuxManagerPtr->setNegativeStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
-                } else if (f == "suspend_timer") {
-                    mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
-                }
+            try {
+                for (auto &fieldValue: fieldValues) {
+                    std::string f = fvField(fieldValue);
+                    std::string v = fvValue(fieldValue);
+                    if (f == "interval_v4") {
+                        mMuxManagerPtr->setTimeoutIpv4_msec(boost::lexical_cast<uint32_t> (v));
+                    } else if (f == "interval_v6") {
+                        mMuxManagerPtr->setTimeoutIpv6_msec(boost::lexical_cast<uint32_t> (v));
+                    } else if (f == "positive_signal_count") {
+                        mMuxManagerPtr->setPositiveStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
+                    } else if (f == "negative_signal_count") {
+                        mMuxManagerPtr->setNegativeStateChangeRetryCount(boost::lexical_cast<uint32_t> (v));
+                    } else if (f == "suspend_timer") {
+                        mMuxManagerPtr->setSuspendTimeout_msec(boost::lexical_cast<uint32_t> (v));
+                    }
 
-                MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
-                    key %
-                    operation %
-                    f %
-                    v
-                );
+                    MUXLOGINFO(boost::format("key: %s, Operation: %s, f: %s, v: %s") %
+                        key %
+                        operation %
+                        f %
+                        v
+                    );
+                }
+            }
+            catch (boost::bad_lexical_cast const &badLexicalCast) {
+                MUXLOGWARNING(boost::format("bad lexical cast: %s") % badLexicalCast.what());
             }
         }
     }
