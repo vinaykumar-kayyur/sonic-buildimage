@@ -113,12 +113,11 @@ None".format(KUBE_ADMIN_CONF),
             "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
-            "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF),
             "mkdir -p {}".format(CNI_DIR),
             "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
-            "systemctl restart kubelet"
+            "systemctl start kubelet",
+            "kubeadm join --discovery-file {} --node-name None".format(
+                KUBE_ADMIN_CONF)
         ],
         common_test.PROC_RUN: [True, True]
     },
@@ -137,12 +136,11 @@ None".format(KUBE_ADMIN_CONF),
             "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
-            "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF),
             "mkdir -p {}".format(CNI_DIR),
             "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
-            "systemctl restart kubelet"
+            "systemctl start kubelet",
+            "kubeadm join --discovery-file {} --node-name None".format(
+                KUBE_ADMIN_CONF)
         ],
         common_test.PROC_RUN: [True, True]
     },
@@ -170,12 +168,11 @@ None".format(KUBE_ADMIN_CONF),
             "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
-            "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF),
             "mkdir -p {}".format(CNI_DIR),
             "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
-            "systemctl restart kubelet"
+            "systemctl start kubelet",
+            "kubeadm join --discovery-file {} --node-name None".format(
+                KUBE_ADMIN_CONF)
         ],
         common_test.PROC_RUN: [True, True],
         common_test.PROC_FAIL: [True]
@@ -195,12 +192,11 @@ None".format(KUBE_ADMIN_CONF),
             "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
-            "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF),
             "mkdir -p {}".format(CNI_DIR),
             "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
-            "systemctl restart kubelet"
+            "systemctl start kubelet",
+            "kubeadm join --discovery-file {} --node-name None".format(
+                KUBE_ADMIN_CONF)
         ],
         common_test.PROC_RUN: [True, True],
         common_test.PROC_FAIL: [True],
