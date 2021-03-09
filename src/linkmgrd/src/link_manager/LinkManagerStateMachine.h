@@ -13,6 +13,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <boost/function.hpp>
 
 #include "link_prober/LinkProber.h"
 #include "link_prober/LinkProberState.h"
@@ -698,15 +699,15 @@ private:
     // This is used for testing...
     friend class mux::MuxPort;
     /**
-    *@method setLinkProberPtr
+    *@method setSuspendTxFnPtr
     *
-    *@brief set new linkProber for the state machine. This method is used for testing
+    *@brief set new SuspendTXFnPtr for the state machine. This method is used for testing
     *
     *@param linkProberPtr (in)  pointer to LinkProber
     *
     *@return none
     */
-    void setLinkProberPtr(std::shared_ptr<link_prober::LinkProber> linkProberPtr) {mLinkProberPtr = linkProberPtr;};
+    void setSuspendTxFnPtr(boost::function<void (uint32_t suspendTime_msec)> suspendTxFnPtr) {mSuspendTxFnPtr = suspendTxFnPtr;};
 
     /**
     *@method setComponentInitState
@@ -747,6 +748,8 @@ private:
     link_state::LinkStateMachine mLinkStateMachine;
 
     boost::asio::deadline_timer mDeadlineTimer;
+
+    boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Uninitialized;

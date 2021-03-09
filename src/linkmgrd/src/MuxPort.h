@@ -228,13 +228,13 @@ protected:
     link_manager::LinkManagerStateMachine* getLinkManagerStateMachine() {return &mLinkManagerStateMachine;};
 
     /**
-    *@method setLinkProberPtr
+    *@method setSuspendTxFnPtr
     *
-    *@brief setter for LinkProber object (used during unit test)
+    *@brief setter for SuspendTxFnPtr object (used during unit test)
     *
-    *@param linkProberPtr (in)  new link prober
+    *@param suspendTxFnPtr (in)  new SuspendTxFnPtr
     */
-    void setLinkProberPtr(std::shared_ptr<link_prober::LinkProber> linkProberPtr) {mLinkManagerStateMachine.setLinkProberPtr(linkProberPtr);};
+    void setSuspendTxFnPtr(boost::function<void (uint32_t suspendTime_msec)> suspendTxFnPtr) {mLinkManagerStateMachine.setSuspendTxFnPtr(suspendTxFnPtr);};
 
     /**
     *@method setComponentInitState

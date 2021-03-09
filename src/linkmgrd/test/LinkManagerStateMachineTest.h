@@ -28,6 +28,7 @@ public:
     void postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count = 0);
     void postMuxEvent(mux_state::MuxState::Label label);
     void postLinkEvent(link_state::LinkState::Label label);
+    void postSuspendTimerExpiredEvent(uint32_t count = 0);
     void handleMuxState(std::string, uint32_t count = 0);
     void handleGetMuxState(std::string);
     void handleProbeMuxState(std::string, uint32_t count = 0);

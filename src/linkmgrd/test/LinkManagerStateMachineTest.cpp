@@ -95,6 +95,9 @@ void LinkManagerStateMachineTest::postMuxEvent(mux_state::MuxState::Label label)
         case mux_state::MuxState::Unknown:
             muxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getUnknownEvent());
             break;
+        case mux_state::MuxState::Error:
+            muxStateMachine.postMuxStateEvent(mux_state::MuxStateMachine::getErrorEvent());
+            break;
         default:
             break;
         }
@@ -118,6 +121,12 @@ void LinkManagerStateMachineTest::postLinkEvent(link_state::LinkState::Label lab
         }
         runIoService();
     }
+}
+
+void LinkManagerStateMachineTest::postSuspendTimerExpiredEvent(uint32_t count)
+{
+    mFakeMuxPort.mFakeLinkProber->postSuspendTimerExpiredEvent();
+    runIoService(count);
 }
 
 void LinkManagerStateMachineTest::handleMuxState(std::string state, uint32_t count)
@@ -322,6 +331,79 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkDown)
 
     handleLinkState("up");
     VALIDATE_STATE(Standby, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownPeerOvertakeLink)
+{
+    setMuxActive();
+
+    // verify MUX enters wait state and that the diver is being probed
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+
+    postSuspendTimerExpiredEvent();
+    VALIDATE_STATE(Unknown, Wait, Up);
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 1);
+
+    postLinkProberEvent(link_prober::LinkProberState::Standby);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    handleProbeMuxState("standby");
+    VALIDATE_STATE(Standby, Standby, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 2);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxActiveLinkProberUnknownReturnActive)
+{
+    setMuxActive();
+
+    // verify MUX enters wait state and that the diver is being probed
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+
+    postSuspendTimerExpiredEvent();
+    VALIDATE_STATE(Unknown, Wait, Up);
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 1);
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 0);
+    handleProbeMuxState("standby");
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    // change state to active
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknown)
+{
+    setMuxStandby();
+
+    // verify MUX enters wait state and that the diver is being probed
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 1);
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 0);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+
+    // change state to active
+    postLinkProberEvent(link_prober::LinkProberState::Active, 3);
+    VALIDATE_STATE(Active, Active, Up);
 }
 
 } /* namespace test */

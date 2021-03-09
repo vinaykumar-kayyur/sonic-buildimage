@@ -141,7 +141,7 @@ void LinkProber::initialize()
 //
 // ---> startProbing();
 //
-// suspend sending ICMP ECHOREQUEST packets
+// start sending ICMP ECHOREQUEST packets
 //
 void LinkProber::startProbing()
 {

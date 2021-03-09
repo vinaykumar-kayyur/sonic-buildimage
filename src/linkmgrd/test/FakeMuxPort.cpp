@@ -31,7 +31,7 @@ FakeMuxPort::FakeMuxPort(
         std::make_shared<FakeLinkProber>(&getLinkManagerStateMachine()->getLinkProberStateMachine())
     )
 {
-    setLinkProberPtr(std::dynamic_pointer_cast<link_prober::LinkProber> (mFakeLinkProber));
+    setSuspendTxFnPtr(boost::bind(&FakeLinkProber::suspendTxProbes, mFakeLinkProber.get(), boost::placeholders::_1));
     link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
 }
 

@@ -9,6 +9,7 @@
 
 #include "link_manager/LinkManagerStateMachine.h"
 #include "common/MuxLogger.h"
+#include "common/MuxException.h"
 #include "MuxPort.h"
 
 #define LOG_MUX_STATE_TRANSITION(portName, currentState, nextState) \
@@ -309,19 +310,30 @@ void LinkManagerStateMachine::switchMuxState(
 // ---> initializeLinkProber();
 //
 // initialize LinkProber component. Note if this is the last component to be initialized,
-//  state machine will be activated
+// state machine will be activated
 //
 void LinkManagerStateMachine::initializeLinkProber()
 {
     if (!mComponentInitState.test(LinkProberComponent)) {
-        mLinkProberPtr = std::make_shared<link_prober::LinkProber> (
-            mMuxPortConfig,
-            getStrand().context(),
-            mLinkProberStateMachine
-        );
-        mComponentInitState.set(LinkProberComponent);
+        try {
+            mLinkProberPtr = std::make_shared<link_prober::LinkProber> (
+                mMuxPortConfig,
+                getStrand().context(),
+                mLinkProberStateMachine
+            );
+            mSuspendTxFnPtr = boost::bind(
+                &link_prober::LinkProber::suspendTxProbes, mLinkProberPtr.get(), boost::placeholders::_1
+            );
+            mComponentInitState.set(LinkProberComponent);
 
-        activateStateMachine();
+            activateStateMachine();
+        }
+        catch (const std::bad_alloc &ex) {
+            std::ostringstream errMsg;
+            errMsg << "Failed allocate memory. Exception details: " << ex.what();
+
+            throw MUX_ERROR(BadAlloc, errMsg.str());
+        }
     }
 }
 
@@ -771,7 +783,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
     // Suspend TX probes to help peer ToR takes over in case active link is bad
-    mLinkProberPtr->suspendTxProbes(mMuxPortConfig.getLinkWaitTimeout_msec());
+    mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
 }
 
 //

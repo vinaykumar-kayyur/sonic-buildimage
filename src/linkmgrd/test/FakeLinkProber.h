@@ -21,6 +21,10 @@ public:
     template<class E>
     void postLinkProberEvent(E &e);
 
+    void postSuspendTimerExpiredEvent();
+
+    void suspendTxProbes(uint32_t suspendTime_msec);
+
 public:
     uint32_t mSuspendTxProbeCallCount = 0;
 
