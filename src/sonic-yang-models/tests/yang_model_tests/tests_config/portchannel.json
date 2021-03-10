@@ -1,0 +1,47 @@
+{
+    "PORT_CHANNEL_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "port_name": "Ethernet0",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "members": [
+                            "Ethernet0"
+                        ],
+                        "min_links": "1",
+                        "mtu": "9100",
+                        "portchannel_name": "PortChannel0001"
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_CHANNEL_WRONG_PATTERN": {
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "mtu": "9100",
+                        "portchannel_name": "PortChannel11001"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -4,8 +4,7 @@
 	"eStr": ["Invalid value", "PACKET_ACTION"]
     },
     "ACL_TABLE_EMPTY_PORTS": {
-	"desc": "Configure ACL_TABLE with empty ports.",
-	"eStr": []
+	"desc": "Configure ACL_TABLE with empty ports."
     },
     "ACL_TABLE_UNDEFINED_TABLE_TYPE": {
 	"desc": "Configure undefined acl_table_type in ACL_TABLE table.",

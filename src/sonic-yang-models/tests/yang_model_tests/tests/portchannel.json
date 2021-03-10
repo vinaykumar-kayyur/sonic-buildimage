@@ -1,0 +1,9 @@
+{
+    "PORT_CHANNEL_TEST": {
+	"desc": "Configure a member port in PORT_CHANNEL table."
+    },
+    "PORT_CHANNEL_WRONG_PATTERN": {
+	"desc": "INCORRECT PORTCHANNEL_NAME IN PORT_CHANNEL TABLE.",
+	"eStr": ["pattern", "does not satisfy", "PortChannel"]
+    }
+}

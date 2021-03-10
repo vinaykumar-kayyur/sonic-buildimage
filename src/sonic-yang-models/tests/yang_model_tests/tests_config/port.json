@@ -1,0 +1,40 @@
+{
+    "PORT_NEG_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth8",
+                        "description": "Ethernet8",
+                        "fec": "rc",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "pfc_asym": "off",
+                        "port_name": "Ethernet8",
+                        "speed": 25000
+                    }
+                ]
+            }
+        }
+    },
+    "PORT_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth8",
+                        "description": "Ethernet8",
+                        "fec": "rs",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "pfc_asym": "on",
+                        "port_name": "Ethernet8",
+                        "speed": 25000
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -57,7 +57,7 @@ class Test_yang_models:
                     self.ExceptionTests.update(json.load(fp))
             except Exception as e:
                 log.error("Failed to load file " + test_file)
-                throw(e)
+                raise(e)
 
         self.SpecialTests = {
             'ALL_VLAN_TEST': {
@@ -79,7 +79,7 @@ class Test_yang_models:
                         self.testFile[key] = test_file
             except Exception as e:
                 log.error("Failed to load file " + test_file)
-                throw(e)
+                raise(e)
 
         self.testNum = 1
         # other class vars
@@ -187,8 +187,12 @@ class Test_yang_models:
             jInput = self.readJsonInput(test)
             # load the data, expect a exception with must condition failure
             s = self.loadConfigData(jInput, self.ExceptionTests[test].get('verify'))
-            eStr = self.ExceptionTests[test]['eStr']
+
+            eStr = []
+            if 'eStr' in self.ExceptionTests[test]:
+                eStr = self.ExceptionTests[test]['eStr']
             log.debug("eStr: {}".format(eStr))
+
             if len(eStr) == 0 and s != "":
                 raise Exception("{} in not empty".format(s))
             elif (sum(1 for str in eStr if str not in s) == 0):

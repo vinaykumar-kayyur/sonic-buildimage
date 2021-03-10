@@ -1,0 +1,13 @@
+{
+    "INTERFACE_IP_PREFIX_EMPTY_STRING": {
+	"desc": "Configure empty string as ip-prefix in INTERFACE table.",
+	"eStr": ["Invalid value", "ip-prefix"]
+    },
+    "INTERFACE_IPPREFIX_PORT_MUST_CONDITION_FALSE": {
+	"desc": "Interface Ip-prefix port-name must condition failure.",
+	"eStr": ["Must condition", "not satisfied"]
+    },
+    "INTERFACE_IPPREFIX_PORT_MUST_CONDITION_TRUE": {
+	"desc": "Interface Ip-prefix port-name must condition pass."
+    }
+}
