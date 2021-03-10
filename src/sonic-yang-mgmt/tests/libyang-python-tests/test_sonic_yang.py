@@ -276,7 +276,7 @@ class Test_SonicYang(object):
 
         sonic_yang_data = dict()
         sonic_yang_data['yang_dir'] = sonic_yang_dir
-        sonic_yang_data['test_file_map'] = yang_test_file_map
+        sonic_yang_data['test_file'] = sonic_yang_test_file
         sonic_yang_data['syc'] = syc
 
         return sonic_yang_data
@@ -322,7 +322,7 @@ class Test_SonicYang(object):
     def test_xlate_rev_xlate(self, sonic_yang_data):
         # In this test, xlation and revXlation is tested with latest Sonic
         # YANG model.
-        test_file = sonic_yang_data['test_file_map']['SAMPLE_CONFIG_DB_JSON']
+        test_file = sonic_yang_data['test_file']
         syc = sonic_yang_data['syc']
 
         jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_JSON')
@@ -348,7 +348,7 @@ class Test_SonicYang(object):
     def test_table_with_no_yang(self, sonic_yang_data):
         # in this test, tables with no YANG models must be stored seperately
         # by this library.
-        test_file = sonic_yang_data['test_file_map']['SAMPLE_CONFIG_DB_JSON_1']
+        test_file = sonic_yang_data['test_file']
         syc = sonic_yang_data['syc']
 
         jIn = self.readIjsonInput(test_file, 'SAMPLE_CONFIG_DB_UNKNOWN')
