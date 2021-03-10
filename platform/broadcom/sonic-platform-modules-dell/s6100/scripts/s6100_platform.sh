@@ -37,12 +37,7 @@ if [[ "$1" == "init" ]]; then
         /usr/local/bin/platform_watchdog_disable.sh
     fi
 
-    iSMART="/usr/local/bin/iSMART_64 -d /dev/sda"
-
-    SSD_FW_VERSION=$($iSMART | grep Version | rev | cut -d' ' -f 2 | rev)
-    if [ $SSD_FW_VERSION == "S141002G" ] || [ $SSD_FW_VERSION == "S16425cG" ]; then
-        systemctl start --no-block s6100-ssd-monitor.timer
-    fi
+    systemctl start --no-block s6100-ssd-upgrade-status.service
 
     is_fast_warm=$(cat /proc/cmdline | grep SONIC_BOOT_TYPE | wc -l)
 
