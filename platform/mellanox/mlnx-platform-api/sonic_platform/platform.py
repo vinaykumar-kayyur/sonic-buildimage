@@ -7,7 +7,6 @@
 #############################################################################
 
 try:
-    import subprocess
     from sonic_platform_base.platform_base import PlatformBase
     from sonic_platform.chassis import Chassis
     from . import utils
