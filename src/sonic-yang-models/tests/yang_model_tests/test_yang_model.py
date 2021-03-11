@@ -54,7 +54,16 @@ class Test_yang_models:
             try:
                 with open(test_file) as fp:
                     log.info("Loading file " + test_file)
-                    self.ExceptionTests.update(json.load(fp))
+                    data = json.load(fp)
+                    for key, test in data.items():
+                        eStr = []
+                        if 'eStrKey' in test:
+                            eStr = list(self.defaultYANGFailure[test['eStrKey']])
+                        if 'eStr' in test:
+                            eStr += list(test['eStr'])
+                        test['eStr'] = eStr
+                        log.debug("estr for " + key + " is  " + str(eStr))
+                        self.ExceptionTests[key] = test
             except Exception as e:
                 log.error("Failed to load file " + test_file)
                 raise(e)
@@ -188,10 +197,9 @@ class Test_yang_models:
             # load the data, expect a exception with must condition failure
             s = self.loadConfigData(jInput, self.ExceptionTests[test].get('verify'))
 
-            eStr = []
-            if 'eStr' in self.ExceptionTests[test]:
-                eStr = self.ExceptionTests[test]['eStr']
+            eStr = self.ExceptionTests[test]['eStr']
             log.debug("eStr: {}".format(eStr))
+            log.debug("s: {}".format(s))
 
             if len(eStr) == 0 and s != "":
                 raise Exception("{} in not empty".format(s))

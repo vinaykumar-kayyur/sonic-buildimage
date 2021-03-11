@@ -4,6 +4,7 @@
     },
     "PORT_CHANNEL_WRONG_PATTERN": {
 	"desc": "INCORRECT PORTCHANNEL_NAME IN PORT_CHANNEL TABLE.",
-	"eStr": ["pattern", "does not satisfy", "PortChannel"]
+	"eStrKey" : "Pattern",
+	"eStr": ["PortChannel"]
     }
 }

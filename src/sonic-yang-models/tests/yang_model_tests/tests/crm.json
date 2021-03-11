@@ -7,11 +7,12 @@
     },
     "CRM_WITH_WRONG_THRESHOLD_TYPE": {
 	"desc": "CRM_WITH_WRONG_THRESHOLD_TYPE pattern failure.",
-	"eStr": [ "pattern", "does not satisfy", "wrong" ]
+        "eStrKey": "Pattern",
+	"eStr": ["wrong" ]
     },
     "CRM_WITH_WRONG_PERCENTAGE": {
 	"desc": "CRM_WITH_WRONG_PERCENTAGE must condition failure.",
-	"eStr": ["Must condition", "not satisfied"]
+        "eStrKey": "Must"
     },
     "CRM_WITH_HIGH_THRESHOLD_ERR": {
 	"desc": "CRM_WITH_HIGH_THRESHOLD_ERR must condition failure  about high threshold being lower than low threshold.",
@@ -22,7 +23,7 @@
     },
     "SNAT_WITH_WRONG_PERCENTAGE": {
 	"desc": "SNAT_WITH_WRONG_PERCENTAGE must condition failure.",
-	"eStr": [ "Must condition", "not satisfied" ]
+        "eStrKey": "Must"
     },
     "SNAT_WITH_HIGH_THRESHOLD_ERR": {
 	"desc": "SNAT_WITH_HIGH_THRESHOLD_ERR must condition failure about high threshold being lower than low threshold.",
@@ -36,11 +37,12 @@
     },
     "SNAT_WITH_WRONG_THRESHOLD_TYPE": {
 	"desc": "SNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.",
-	"eStr": [ "pattern", "does not satisfy", "wrong" ]
+        "eStrKey": "Pattern",
+	"eStr": ["wrong" ]
     },
     "DNAT_WITH_WRONG_PERCENTAGE": {
 	"desc": "DNAT_WITH_WRONG_PERCENTAGE must condition failure.",
-	"eStr": [ "Must condition", "not satisfied" ]
+        "eStrKey": "Must"
     },
     "DNAT_WITH_HIGH_THRESHOLD_ERR": {
 	"desc": "DNAT_WITH_HIGH_THRESHOLD_ERR must condition failure about high threshold being lower than low threshold.",
@@ -54,11 +56,12 @@
     },
     "DNAT_WITH_WRONG_THRESHOLD_TYPE": {
 	"desc": "DNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.",
-	"eStr": [ "pattern", "does not satisfy", "wrong" ]
+        "eStrKey": "Pattern",
+	"eStr": ["wrong" ]
     },
     "IPMC_WITH_WRONG_PERCENTAGE": {
 	"desc": "IPMC_WITH_WRONG_PERCENTAGE must condition failure.",
-	"eStr": [ "Must condition", "not satisfied" ]
+        "eStrKey": "Must"
     },
     "IPMC_WITH_HIGH_THRESHOLD_ERR": {
 	"desc": "IPMC_WITH_HIGH_THRESHOLD_ERR must condition failure about high threshold being lower than low threshold.",
@@ -72,6 +75,7 @@
     },
     "IPMC_WITH_WRONG_THRESHOLD_TYPE": {
 	"desc": "IPMC_WITH_WRONG_THRESHOLD_TYPE pattern failure.",
-	"eStr": [ "pattern", "does not satisfy", "wrong" ]
+        "eStrKey": "Pattern",
+	"eStr": ["wrong" ]
     }
 }
