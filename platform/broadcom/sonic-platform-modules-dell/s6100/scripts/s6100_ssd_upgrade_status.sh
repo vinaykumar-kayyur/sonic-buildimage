@@ -87,22 +87,15 @@ else
 
         echo "$0 `date` SSD upgrade didn’t happened." >> $SSD_UPGRADE_LOG
 
-    else
-        if [ $SSD_UPGRADE_STATUS1 == "1" ]; then
-            rm -rf $SSD_FW_UPGRADE/GPIO7_*
-            touch $SSD_FW_UPGRADE/GPIO7_low
-            logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is faulty and does not support reboot."
-            logger -p user.crit -t DELL_S6100_SSD_MON "If a reboot is required, please perform a soft-/fast-/warm-reboot."
+    elif [ $SSD_UPGRADE_STATUS1 == "1" ]; then
+        rm -rf $SSD_FW_UPGRADE/GPIO7_*
+        touch $SSD_FW_UPGRADE/GPIO7_low
+        logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is faulty and does not support reboot."
+        logger -p user.crit -t DELL_S6100_SSD_MON "If a reboot is required, please perform a soft-/fast-/warm-reboot."
 
-            echo "$0 `date` SSD entered loader mode in first mp_64 upgrade." >> $SSD_UPGRADE_LOG
-        fi
+        echo "$0 `date` SSD entered loader mode in first mp_64 upgrade." >> $SSD_UPGRADE_LOG
 
         if [ $SSD_UPGRADE_STATUS2 == "0" ]; then
-            rm -rf $SSD_FW_UPGRADE/GPIO7_*
-            touch $SSD_FW_UPGRADE/GPIO7_low
-            logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is faulty and does not support reboot."
-            logger -p user.crit -t DELL_S6100_SSD_MON "If a reboot is required, please perform a soft-/fast-/warm-reboot."
-
             echo "$0 `date` SSD entered loader mode in first mp_64 and recovered back to older version in second mp_64." >> $SSD_UPGRADE_LOG
         fi
     fi
