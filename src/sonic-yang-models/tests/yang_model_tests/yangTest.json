@@ -108,6 +108,26 @@
 		}
 	},
 
+	"PORTCHANNEL_MEMEBER_WITH_NON_EXIST_PORTCHANNEL": {
+		"sonic-portchannel:sonic-portchannel": {
+			"sonic-portchannel:PORTCHANNEL_MEMBER": {
+				"PORTCHANNEL_MEMBER_LIST": [{
+					"portchannel_name": "PortChannel0002",
+					"port": "Ethernet0"
+				}]
+			}
+		},
+		"sonic-port:sonic-port": {
+			"sonic-port:PORT": {
+				"PORT_LIST": [{
+					"port_name": "Ethernet0",
+					"speed": 25000,
+					"lanes": "65"
+				}]
+			}
+		}
+	},
+
 	"PORT_CHANNEL_TEST": {
 		"sonic-portchannel:sonic-portchannel": {
 			"sonic-portchannel:PORTCHANNEL": {
@@ -1321,4 +1341,3 @@
         }
     }
 }
-

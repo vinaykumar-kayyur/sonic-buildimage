@@ -27,6 +27,7 @@ module sonic-portchannel {
 	}
 
 	container sonic-portchannel {
+
 		container PORTCHANNEL {
 
 			description "PORTCHANNEL part of config_db.json";
@@ -88,6 +89,34 @@ module sonic-portchannel {
 			} /* end of list PORTCHANNEL_LIST */
 
 		} /* end of container PORTCHANNEL */
+
+		container PORTCHANNEL_MEMBER {
+
+			description "PORTCHANNEL_MEMBER part of config_db.json";
+
+			list PORTCHANNEL_MEMBER_LIST {
+
+				key "portchannel_name port";
+
+				ext:key-regex-configdb-to-yang "^(PortChannel[0-9]{1,4})|(Ethernet[0-9]+)$";
+
+				ext:key-regex-yang-to-configdb "<portchannel_name>|<port>";
+
+				leaf portchannel_name {
+					type leafref {
+						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name";
+					}
+				}
+
+				leaf port {
+					/* key elements are mandatory by default */
+					type leafref {
+						path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+					}
+				}
+			} /* end of list PORTCHANNEL_MEMBER_LIST */
+
+		} /* end of container PORTCHANNEL_MEMBER */
 
 	} /* end of container sonic-portchannel */
 
