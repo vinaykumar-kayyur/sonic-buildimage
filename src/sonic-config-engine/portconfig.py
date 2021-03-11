@@ -195,7 +195,7 @@ def gen_port_config(ports, parent_intf_id, index, alias_list, lanes, k,  offset)
 Given a port and breakout mode, this method returns
 the list of child ports using platform_json file
 """
-def get_child_ports(interface, breakout_mode, platform_json_file):
+def get_child_ports(interface, breakout_mode, platform_json_file, hwsku_dict=None):
     child_ports = {}
 
     port_dict = readJson(platform_json_file)
@@ -226,6 +226,16 @@ def get_child_ports(interface, breakout_mode, platform_json_file):
     parent_intf_id = int(re.search("Ethernet(\d+)", interface).group(1))
     for k in match_list:
         offset = gen_port_config(child_ports, parent_intf_id, index, alias_list, lanes, k, offset)
+
+    if hwsku_dict is None:
+        return child_ports
+
+    # take optional fields from hwsku.json
+    for key, item in hwsku_dict[INTF_KEY][interface].items():
+        if key in OPTIONAL_HWSKU_ATTRIBUTES:
+            for child_key in child_ports.keys():
+                child_ports.get(child_key)[key] = item
+
     return child_ports
 
 def parse_platform_json_file(hwsku_json_file, platform_json_file):
@@ -251,13 +261,7 @@ def parse_platform_json_file(hwsku_json_file, platform_json_file):
         # take default_brkout_mode from hwsku.json
         brkout_mode = hwsku_dict[INTF_KEY][intf][BRKOUT_MODE]
 
-        child_ports = get_child_ports(intf, brkout_mode, platform_json_file)
-
-        # take optional fields from hwsku.json
-        for key, item in hwsku_dict[INTF_KEY][intf].items():
-            if key in OPTIONAL_HWSKU_ATTRIBUTES:
-                for child_key in child_ports.keys():
-                    child_ports.get(child_key)[key] = item
+        child_ports = get_child_ports(intf, brkout_mode, platform_json_file, hwsku_dict)
 
         ports.update(child_ports)
 
