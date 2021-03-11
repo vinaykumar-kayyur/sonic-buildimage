@@ -124,7 +124,8 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         ]
 
         for code in tlvinfo_type_codes_list:
-            eeprom_data[code] = eeprom_data.get(code, NULL)
+            code_str = "0x{:X}".format(code)
+            eeprom_data[code_str] = eeprom_data.get(code_str, NULL)
         return eeprom_data
 
     def get_eeprom(self):
