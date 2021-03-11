@@ -17,7 +17,7 @@ try:
     else:
         from cStringIO import StringIO
 
-    from sonic_platform_base.sonic_eeprom import eepromself._TLVinfo
+    from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -26,7 +26,7 @@ CACHE_FILE = 'syseeprom_cache'
 NULL = 'N/A'
 
 
-class Tlv(eepromself._TLVinfo.TlvInfoDecoder):
+class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     EEPROM_DECODE_HEADLINES = 6
 
