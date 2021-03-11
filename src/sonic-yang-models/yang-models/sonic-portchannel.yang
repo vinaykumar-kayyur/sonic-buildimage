@@ -98,10 +98,6 @@ module sonic-portchannel {
 
 				key "portchannel_name port";
 
-				ext:key-regex-configdb-to-yang "^(PortChannel[0-9]{1,4})|(Ethernet[0-9]+)$";
-
-				ext:key-regex-yang-to-configdb "<portchannel_name>|<port>";
-
 				leaf portchannel_name {
 					type leafref {
 						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name";
