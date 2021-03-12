@@ -12,7 +12,6 @@ schedules:
   always: true
 
 trigger: none
-pr: none
 
 stages:
 - stage: Build
