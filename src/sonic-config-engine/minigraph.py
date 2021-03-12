@@ -1326,7 +1326,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         # If AutoNegotiation is available in the minigraph, we override any value we may have received from port_config.ini
         autoneg = linkmetas.get(alias, {}).get('AutoNegotiation')
         if autoneg:
-            port['autoneg'] = '1' if autoneg.lower() == 'true' else '0'
+            port['autoneg'] = 'on' if autoneg.lower() == 'true' else 'off'
 
     # If connected to a smart cable, get the connection position
     for port_name, port in ports.items():
