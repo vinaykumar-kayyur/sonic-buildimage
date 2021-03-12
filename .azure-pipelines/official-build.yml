@@ -22,7 +22,10 @@ stages:
       platform: $(platform)
       platform_short: $(platform)
       cache_mode: wcache
-      timeout: 2
+      ${{ if ne(variables.TIMEOUTINMINUTES, '' ) }}:
+        timeout: $[ variables['TIMEOUTINMINUTES'] ]
+      ${{ if eq(variables.TIMEOUTINMINUTES, '' ) }}:
+        timeout: 2
       dbg_image: false
       swi_image: false
       raw_image: false
