@@ -8,7 +8,6 @@ if [ -f "$UDEV_DIR" ]; then
         do
                 ttydev=$TTYUSB_DIR$i
                 if [ -c "$ttydev" ]; then
-                        echo "$ttydev"
                         udevadm trigger -c add $ttydev
                 fi
         done
