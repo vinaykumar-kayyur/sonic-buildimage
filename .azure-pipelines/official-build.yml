@@ -22,7 +22,7 @@ stages:
       platform: $(platform)
       platform_short: $(platform)
       cache_mode: wcache
-      timeout: $(TIMEOUTINMINUTES)
+      timeout: $[ variables['TIMEOUTINMINUTES'] ]
       dbg_image: false
       swi_image: false
       raw_image: false
