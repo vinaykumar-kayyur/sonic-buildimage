@@ -33,7 +33,7 @@ parameters:
   default: false
 
 - name: timeout
-  type: number
+  type: string
   default: 600
 
 jobs:
