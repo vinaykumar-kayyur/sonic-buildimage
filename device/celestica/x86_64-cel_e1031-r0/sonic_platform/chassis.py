@@ -8,8 +8,10 @@
 
 try:
     import sys
+    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from sonic_platform_base.chassis_base import ChassisBase
-    from common import Common
+    from .common import Common
+    from .event import SfpEvent
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -42,13 +44,18 @@ class Chassis(ChassisBase):
         else:
             self.__initialize_components()
 
-        self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self._api_common.is_host(
+        self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.__is_host(
         ) else PMON_REBOOT_CAUSE_PATH
 
     def __initialize_sfp(self):
+        sfputil_helper = SfpUtilHelper()
+        port_config_file_path = device_info.get_path_to_port_config_file()
+        sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
+
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            sfp = Sfp(index)
+            name_idx = 0 if index+1 == NUM_SFP else index+1
+            sfp = Sfp(index, sfputil_helper.logical[name_idx])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
@@ -163,6 +170,37 @@ class Chassis(ChassisBase):
 
         return self._watchdog
 
+    def get_change_event(self, timeout=0):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+        Args:
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
+        Returns:
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'},
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
+        """
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+        if sfp_event:
+            return True, {'sfp': sfp_event}
+
+        return False, {'sfp': {}}
+
     ##############################################################
     ######################## SFP methods #########################
     ##############################################################
@@ -247,7 +285,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Model/part number of device
         """
-        return self._eeprom.get_serial()
+        return self._eeprom.get_pn()
 
     def get_serial(self):
         """

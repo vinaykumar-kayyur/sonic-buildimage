@@ -281,3 +281,4 @@ class Fan(FanBase):
             status = self._api_common.read_txt_file(sysfs_path)
 
         return False if int(status) != 0 else True
+
