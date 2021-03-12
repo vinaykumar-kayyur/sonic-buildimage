@@ -23,7 +23,6 @@ stages:
       platform:  $(platform)
       platform_short: $(platform_short)
       cache_mode: wcache
-      pool: $[ variables['pool'] ]
       timeout: $[ variables['timeout'] ]
       dbg_image: $(dbg_image)
       swi_image: $(swi_image)
