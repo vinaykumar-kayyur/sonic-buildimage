@@ -11,6 +11,8 @@ schedules:
     - master
   always: true
 
+name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
 trigger: none
 
 stages:
