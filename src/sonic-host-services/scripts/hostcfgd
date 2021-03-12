@@ -437,10 +437,15 @@ class HostConfigDaemon:
         has_global_scope = ast.literal_eval(feature_table[feature_name].get('has_global_scope', 'True'))
         has_per_asic_scope = ast.literal_eval(feature_table[feature_name].get('has_per_asic_scope', 'False'))
 
+        # This feature may be disabled on some asics (but may not be on all)
+        always_disabled_on_asics = ast.literal_eval(feature_table[feature_name].get('always_disabled_on_asics', '()'))
+        disabled_feature_name_suffix_list = ([(feature_name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus())
+                                             if has_per_asic_scope and self.is_multi_npu and asic_inst in always_disabled_on_asics])
+
         # Create feature name suffix depending feature is running in host or namespace or in both 
         feature_name_suffix_list = (([feature_name] if has_global_scope or not self.is_multi_npu else []) +
                                    ([(feature_name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
-                                    if has_per_asic_scope and self.is_multi_npu]))
+                                    if has_per_asic_scope and self.is_multi_npu and asic_inst not in always_disabled_on_asics]))
 
         if not feature_name_suffix_list:
             syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
@@ -448,9 +453,9 @@ class HostConfigDaemon:
 
         feature_suffixes = ["service"] + (["timer"] if has_timer else [])
 
-        if state == "enabled":
+        def _enableServices(feature_name_suffix_list_):
             start_cmds = []
-            for feature_name_suffix in feature_name_suffix_list:
+            for feature_name_suffix in feature_name_suffix_list_:
                 for suffix in feature_suffixes:
                     start_cmds.append("sudo systemctl unmask {}.{}".format(feature_name_suffix, suffix))
                 # If feature has timer associated with it, start/enable corresponding systemd .timer unit
@@ -469,9 +474,10 @@ class HostConfigDaemon:
                         return
             syslog.syslog(syslog.LOG_INFO, "Feature '{}.{}' is enabled and started"
                           .format(feature_name, feature_suffixes[-1]))
-        elif state == "disabled":
+
+        def _disableServices(feature_name_suffix_list_):
             stop_cmds = []
-            for feature_name_suffix in feature_name_suffix_list:
+            for feature_name_suffix in feature_name_suffix_list_:
                 for suffix in reversed(feature_suffixes):
                     stop_cmds.append("sudo systemctl stop {}.{}".format(feature_name_suffix, suffix))
                     stop_cmds.append("sudo systemctl disable {}.{}".format(feature_name_suffix, suffix))
@@ -490,6 +496,16 @@ class HostConfigDaemon:
             syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
                           .format(state, feature_name))
 
+        if state == "enabled":
+            _enableServices(feature_name_suffix_list)
+        elif state == "disabled":
+            _disableServices(feature_name_suffix_list)
+        else:
+            syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
+                          .format(state, feature_name))
+
+        # Keep services in disabled_feature_name_suffix_list disabled.
+        _disableServices(disabled_feature_name_suffix_list)
 
     def update_all_feature_states(self):
         feature_table = self.config_db.get_table('FEATURE')
