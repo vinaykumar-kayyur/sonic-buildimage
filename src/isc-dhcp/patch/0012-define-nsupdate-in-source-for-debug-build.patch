@@ -1,0 +1,13 @@
+diff --git a/common/dns.c b/common/dns.c
+index 0f8be80..b2be8fe 100644
+--- a/common/dns.c
++++ b/common/dns.c
+@@ -27,6 +27,8 @@
+  *
+  */
+ 
++#define NSUPDATE
++
+ /*! \file common/dns.c
+  */
+ #include "dhcpd.h"
