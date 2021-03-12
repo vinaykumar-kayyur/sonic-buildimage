@@ -332,12 +332,14 @@ endef
 
 
 
+
 # It invokes the Load Cache macro if cache is enabled globally as well as per module level
 # Args:
 # $(1) => target name
 # $(2) => target output file name
 define LOAD_CACHE
 	$(call SHOW_WHY,$(1))
+	$(if $(DBGSH), $(call DEBUG_SHELL))
 	$(if $(call CHECK_RCACHE_ENABLED,$(1)), $(call LOAD_FROM_CACHE,$(1),$(2)) )
 endef
 

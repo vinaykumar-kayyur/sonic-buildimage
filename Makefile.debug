@@ -1,0 +1,68 @@
+#######################################################################
+#
+#   Copyright (c) 2020 Broadcom, Inc.
+#   The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+#
+#   Author: Kalimuthu Velappan
+#   Email : kalimuthu.velappan@broadcom.com
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#######################################################################
+#
+#
+#            SONiC Makefile debug framework
+#
+# Sonic package build happens inside the docker build container.
+# when a package build failure happens, debugging the package compilation requires
+# pre-installation of its dependent packages and package version ENV
+# variables to be set. For example:
+
+# make target/debs/buster/hsflowd_2.0.26-4_amd64.deb
+# < .. failure .. >
+#
+# In oder to compile the hslflowd package inside the container, the
+# following ENV variable to be set.
+#
+# export HSFLOWD_VERSION = 2.0.28
+# export HSFLOWD_SUBVERSION = 2
+#
+# This patch helps to compile the package directly on the source folder
+# inside the build container with required ENV variable set.
+#
+# # make DBGSH=1 target/debs/buster/hsflowd_2.0.26-4_amd64.deb
+#
+# Get into the build container and land on the bash shell.
+#
+# src/sflow/hsflowd $
+# src/sflow/hsflowd $ make hsflowd_2.0.26-4_amd64.deb
+
+#Launch DBG bash shell for debugging
+DEBUG_SHELL=$(if $(filter $@,$(MAKECMDGOALS)), \
+	export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}"; \
+	export DEST=$(shell pwd)/$(DEBS_PATH); \
+	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi ;\
+	cd $($*_SRC_PATH); \
+	echo -e "\n\n[ Run the below commands to compile the package ]\n"; \
+	$(if $(filter $*,$(SONIC_MAKE_DEBS)), \
+		echo "  \# $(MAKE) $(shell pwd)/$(DEBS_PATH)/$*"; ) \
+	$(if $(filter $*,$(SONIC_DPKG_DEBS)), \
+		export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}"; \
+		if [ -f ./autogen.sh ]; then echo "  \# ./autogen.sh "; fi; \
+		echo "  \# dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)"; ) \
+	$(if $(filter $*,$(SONIC_PYTHON_STDEB_DEBS)), \
+		echo "  \# python setup.py --command-packages=stdeb.command bdist_deb"; ) \
+	$(if $(filter $*,$(SONIC_PYTHON_WHEELS)), \
+		echo "  \# python$($*_PYTHON_VERSION) setup.py bdist_wheel"; ) \
+	echo -e ""; unset DBGSH; \
+	$(SHELL); exit 0; \
+	)
+
