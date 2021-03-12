@@ -20,9 +20,9 @@ module sonic-portchannel {
 		revision-date 2019-07-01;
 	}
 
-    import ietf-inet-types {
-        prefix inet;
-    }
+	import ietf-inet-types {
+		prefix inet;
+	}
 
 	description "PORTCHANNEL yang Module for SONiC OS";
 
@@ -94,28 +94,28 @@ module sonic-portchannel {
 		} /* end of container PORTCHANNEL */
 
 
-        container PORTCHANNEL_INTERFACE {
+		container PORTCHANNEL_INTERFACE {
 
-            description "PORTCHANNEL_INTERFACE part of config_db.json";
+			description "PORTCHANNEL_INTERFACE part of config_db.json";
 
-            list PORTCHANNEL_INTERFACE_IPADDR_LIST {
+			list PORTCHANNEL_INTERFACE_IPADDR_LIST {
 
-                key "pch_name ip_prefix";
+				key "pch_name ip_prefix";
 
-                leaf pch_name {
-                    /* key elements are mandatory by default */
-                    type leafref {
-                        path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name";
-                    }
-                }
+				leaf pch_name {
+					/* key elements are mandatory by default */
+					type leafref {
+						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name";
+					}
+				}
 
-                leaf ip_prefix {
-                    /* key elements are mandatory by default */
-                    type inet:ip-prefix;
-                }
-            } /* end of list PORTCHANNEL_INTERFACE_IPADDR_LIST */
+				leaf ip_prefix {
+					/* key elements are mandatory by default */
+					type inet:ip-prefix;
+				}
+			} /* end of list PORTCHANNEL_INTERFACE_IPADDR_LIST */
 
-        } /* end of container PORTCHANNEL_INTERFACE */
+		} /* end of container PORTCHANNEL_INTERFACE */
 
 	} /* end of container sonic-portchannel */
 

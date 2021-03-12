@@ -122,15 +122,6 @@
 				}]
 			}
 		},
-        "PORTCHANNEL_INTERFACE_IP_ADDR_TEST": {
-        "sonic-portchannel:sonic-portchannel": {
-            "sonic-portchannel:PORTCHANNEL_INTERFACE": {
-                "PORTCHANNEL_INTERFACE_IPADDR_LIST": [{
-                    "pch_name": "PortChannel0001",
-                    "ip_prefix": "1.1.1.1/24"
-                }]
-            }
-        },
 		"sonic-port:sonic-port": {
 			"sonic-port:PORT": {
 				"PORT_LIST": [{
@@ -141,6 +132,17 @@
 						"mtu": 9000,
 						"lanes": "65",
 						"admin_status": "up"
+				}]
+			}
+		}
+	},
+
+	"PORTCHANNEL_INTERFACE_IP_ADDR_TEST": {
+		"sonic-portchannel:sonic-portchannel": {
+			"sonic-portchannel:PORTCHANNEL_INTERFACE": {
+				"PORTCHANNEL_INTERFACE_IPADDR_LIST": [{
+					"pch_name": "PortChannel0001",
+					"ip_prefix": "1.1.1.1/24"
 				}]
 			}
 		}
