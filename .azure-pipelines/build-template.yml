@@ -40,7 +40,10 @@ jobs:
 - job:
   pool: ${{ parameters.pool }}
   displayName: ${{ parameters.platform }}
-  timeoutInMinutes: ${{ parameters.timeout }}
+  ${{ if ne(variables.timeout, '') }}:
+    timeoutInMinutes: ${{ variables.timeout }}
+  ${{ if eq(variables.timeout, '') }}:
+    timeoutInMinutes: ${{ parameters.timeout }}
   steps:
   - template: cleanup.yml
   - checkout: self
