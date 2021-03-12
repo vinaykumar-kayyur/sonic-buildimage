@@ -36,12 +36,16 @@ parameters:
   type: string
   default: 600
 
+- name: job_name
+  type: string
+  default: ''
+
 jobs:
 - job:
   pool: ${{ parameters.pool }}
-  ${{ if ne(variables.JOB_NAME, '' ) }}:
-    displayName: ${{ variables.JOB_NAME }}
-  ${{ if eq(variables.JOB_NAME, '' ) }}:
+  ${{ if ne(parameters.job_name, '' ) }}:
+    displayName: ${{ parameters.job_name }}
+  ${{ if eq(parameters.job_name, '' ) }}:
     displayName: ${{ parameters.platform }}
   timeoutInMinutes: ${{ parameters.timeout }}
   steps:
