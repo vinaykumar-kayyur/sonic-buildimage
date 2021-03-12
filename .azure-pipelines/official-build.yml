@@ -21,11 +21,11 @@ stages:
     parameters:
       job_name: build
       platform:  $(platform)
-      platform_short: $(platform)
+      platform_short: $(platform_short)
       cache_mode: wcache
       timeout: $[ variables['TIMEOUTINMINUTES'] ]
-      dbg_image: false
-      swi_image: false
-      raw_image: false
+      dbg_image: $(dbg_image)
+      swi_image: $(swi_image)
+      raw_image: $(raw_image)
       sync_rpc_image: $(sync_rpc_image)
 
