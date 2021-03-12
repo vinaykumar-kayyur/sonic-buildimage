@@ -48,7 +48,8 @@ class Psu(PsuBase):
         :param self.index: An integer, 1-based self.index of the PSU of which to query status
         :return: Boolean, True if PSU is operating properly, False if PSU is faulty
         """
-        return self.__info_get().ffault == False
+        info = self.__info_get()
+        return info.ffault == False and info.vout != 0
 
     def get_voltage(self):
         """
