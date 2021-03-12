@@ -41,7 +41,7 @@ jobs:
   pool: ${{ parameters.pool }}
   displayName: ${{ parameters.platform }}
   ${{ if ne(variables.timeout, '') }}:
-    timeoutInMinutes: ${{ variables.timeout }}
+    timeoutInMinutes:$[ variables['TIMEOUTINMINUTES'] ]
   ${{ if eq(variables.timeout, '') }}:
     timeoutInMinutes: ${{ parameters.timeout }}
   steps:
