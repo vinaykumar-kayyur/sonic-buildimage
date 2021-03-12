@@ -19,27 +19,12 @@ stages:
   jobs:
   - template: build-template.yml
     parameters:
-      platform: $[ variables['platform'] ]
-      platform_short: $[ variables['platform_short'] ]
+      platform: $(platform)
+      platform_short: $(platform)
       cache_mode: wcache
-      ${{ if ne(variables.timeout, '')}}:
-        timeout: $[ variables['timeout'] ]
-      ${{ if eq(variables.timeout, '')}}:
-        timeout: 600
-      ${{ if ne(variables.dbg_image, '')}}:
-        dbg_image: $[ variables['dbg_image'] ]
-      ${{ if eq(variables.dbg_image, '')}}:
-        dbg_image: false
-      ${{ if ne(variables.swi_image, '')}}:
-        swi_image: $[ variables['swi_image'] ]
-      ${{ if eq(variables.swi_image, '')}}:
-        swi_image: false
-      ${{ if ne(variables.raw_image, '')}}:
-        raw_image: $[ variables['raw_image'] ]
-      ${{ if eq(variables.raw_image, '')}}:
-        raw_image: false
-      ${{ if ne(variables.sync_rpc_image, '')}}:
-        sync_rpc_image: $[ variables['sync_rpc_image'] ]
-      ${{ if eq(variables.sync_rpc_image, '')}}:
-        sync_rpc_image: false
+      timeout: 600
+      dbg_image: false
+      swi_image: false
+      raw_image: false
+      sync_rpc_image: $(sync_rpc_image)
 
