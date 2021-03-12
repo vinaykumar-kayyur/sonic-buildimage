@@ -20,7 +20,7 @@ stages:
   - template: build-template.yml
     parameters:
       job_name: build
-      platform:  $[ variables['platform'] ]
+      platform:  $(platform)
       platform_short: $(platform)
       cache_mode: wcache
       timeout: $[ variables['TIMEOUTINMINUTES'] ]
