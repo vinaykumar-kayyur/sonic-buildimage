@@ -13,7 +13,7 @@
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
 #  * ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
-#  * INSTALL_DEBUG_TOOLS: Install debug tools and debug symbol packeages.
+#  * INSTALL_DEBUG_TOOLS: Install debug tools and debug symbol packages.
 #  * USERNAME: Desired username -- default at rules/config
 #  * PASSWORD: Desired password -- default at rules/config
 #  * KEEP_SLAVE_ON: Keeps slave container up and active after building process concludes.
@@ -246,6 +246,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
+                           ENABLE_HOST_SERVICE_ON_START=$(ENABLE_HOST_SERVICE_ON_START) \
                            SLAVE_DIR=$(SLAVE_DIR) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
