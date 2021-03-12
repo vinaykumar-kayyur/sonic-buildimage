@@ -1,8 +1,55 @@
 {
     "chassis": {
         "name": "Celestica-DX010-C32",
-        "components": [],
-        "fans": [],
+        "components": [
+            {
+                "name": "CPLD1"
+            },
+            {
+                "name": "CPLD2"
+            },
+            {
+                "name": "CPLD3"
+            },
+            {
+                "name": "CPLD4"
+            },
+            {
+                "name": "BIOS"
+            }
+        ],
+        "fans": [
+            {
+                "name": "FAN-1F"
+            },
+            {
+                "name": "FAN-1R"
+            },
+            {
+                "name": "FAN-2F"
+            },
+            {
+                "name": "FAN-2R"
+            },
+            {
+                "name": "FAN-3F"
+            },
+            {
+                "name": "FAN-3R"
+            },
+            {
+                "name": "FAN-4F"
+            },
+            {
+                "name": "FAN-4R"
+            },
+            {
+                "name": "FAN-5F"
+            },
+            {
+                "name": "FAN-5R"
+            }
+        ],
         "fan_drawers": [
             {
                 "name": "Drawer1",
@@ -60,31 +107,23 @@
                 ]
             }
         ],
-
         "psus": [
             {
-                "name": "PSU-1"
-            },
-            {
-                "name": "PSU-2"
-            }                  
-        ],
-        "psu": [
-            {
+                "name": "PSU-1",
                 "fans": [
                     {
                         "name": "PSU-1 FAN-1"
                     }
-               ]
+                ]
             },
             {
+                "name": "PSU-2",
                 "fans": [
                     {
                         "name": "PSU-2 FAN-1"
-                    }                
-               ]
-
-            }  
+                    }
+                ]
+            }
         ],
         "thermals": [
             {
