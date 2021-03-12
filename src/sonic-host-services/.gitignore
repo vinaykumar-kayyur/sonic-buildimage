@@ -1,5 +1,4 @@
 # Compiled Python files
-.pytest_cache/
 *.pyc
 scripts/caclmgrdc
 scripts/hostcfgdc
@@ -13,5 +12,6 @@ dist/
 
 # Unit test coverage
 .coverage
+.pytest_cache/
 coverage.xml
 htmlcov/
