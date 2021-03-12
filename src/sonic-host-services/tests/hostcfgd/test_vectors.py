@@ -3,7 +3,7 @@ from unittest.mock import call
 """
     hostcfgd test vector
 """
-hostcfgdTestVector = [
+HOSTCFGD_TEST_VECTOR = [
     [
         "DualTorCase",
         {

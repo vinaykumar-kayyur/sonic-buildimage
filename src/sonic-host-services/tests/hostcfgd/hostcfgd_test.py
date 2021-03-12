@@ -6,7 +6,7 @@ import swsssdk
 
 from parameterized import parameterized
 from unittest import TestCase, mock
-from tests.hostcfgd.test_vectors import hostcfgdTestVector
+from tests.hostcfgd.test_vectors import HOSTCFGD_TEST_VECTOR
 from tests.hostcfgd.mock_configdb import MockConfigDb
 
 
@@ -42,37 +42,37 @@ class TestHostcfgd(TestCase):
             Returns:
                 None
         """
-        isEqual = len(table) == len(expected_table)
-        if isEqual:
+        is_equal = len(table) == len(expected_table)
+        if is_equal:
             for key, fields in expected_table.items():
-                isEqual = isEqual and key in table
-                if isEqual:
+                is_equal = is_equal and key in table and len(fields) == len(table[key])
+                if is_equal:
                     for field, value in fields.items():
-                        isEqual = isEqual and value == table[key][field]
-                        if not isEqual:
+                        is_equal = is_equal and value == table[key][field]
+                        if not is_equal:
                             break;
                 else:
                     break
-        return isEqual
+        return is_equal
 
-    @parameterized.expand(hostcfgdTestVector)
-    def test_hostcfgd(self, name, testData):
+    @parameterized.expand(HOSTCFGD_TEST_VECTOR)
+    def test_hostcfgd(self, test_name, test_data):
         """
             Test hostcfd daemon initialization
 
             Args:
-                name(str): test name
+                test_name(str): test name
                 test_data(dict): test data which contains initial Config Db tables, and expected results
 
             Returns:
                 None
         """
-        MockConfigDb.set_config_db(testData["config_db"])
-        with mock.patch("hostcfgd.subprocess") as mockSubprocess:
-            hostConfigDaemon = hostcfgd.HostConfigDaemon()
-            hostConfigDaemon.update_all_feature_states()
+        MockConfigDb.set_config_db(test_data["config_db"])
+        with mock.patch("hostcfgd.subprocess") as mocked_subprocess:
+            host_config_daemon = hostcfgd.HostConfigDaemon()
+            host_config_daemon.update_all_feature_states()
             assert self.__verify_table(
                 MockConfigDb.get_config_db()["FEATURE"],
-                testData["expected_config_db"]["FEATURE"]
-            ), "Test failed for test data: {0}".format(testData)
-            mockSubprocess.check_call.assert_has_calls(testData["expected_subprocess_calls"], any_order=True)
+                test_data["expected_config_db"]["FEATURE"]
+            ), "Test failed for test data: {0}".format(test_data)
+            mocked_subprocess.check_call.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
