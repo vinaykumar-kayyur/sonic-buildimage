@@ -40,9 +40,9 @@ jobs:
 - job:
   pool: ${{ parameters.pool }}
   displayName: ${{ parameters.platform }}
-  ${{ if ne(variables.timeout, '') }}:
-    timeoutInMinutes:$[ variables['TIMEOUTINMINUTES'] ]
-  ${{ if eq(variables.timeout, '') }}:
+  ${{ if ne(variables.TIMEOUTINMINUTES, '' ) }}:
+    timeoutInMinutes: $[ variables['TIMEOUTINMINUTES'] ]
+  ${{ if eq(variables.TIMEOUTINMINUTES, '' ) }}:
     timeoutInMinutes: ${{ parameters.timeout }}
   steps:
   - template: cleanup.yml
