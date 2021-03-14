@@ -694,6 +694,39 @@
                 "nexthop_group_threshold_type": "percentage",
                 "polling_interval": "0"
             }
+        },
+        "NAT_BINDINGS": {
+            "bind1": {
+                "access_list": "",
+                "nat_pool": "pool1",
+                "nat_type": "snat",
+                "twice_nat_id": "NULL"
+            }
+        },
+        "NAT_GLOBAL": {
+            "Values": {
+                "admin_mode": "enabled",
+                "nat_tcp_timeout": "86400",
+                "nat_timeout": "600",
+                "nat_udp_timeout": "300"
+            }
+        },
+        "NAT_POOL": {
+            "pool1": {
+                "nat_ip": "125.56.90.50-125.56.90.100",
+                "nat_port": "50-100"
+            }
+        },
+        "STATIC_NAPT": {
+            "125.56.90.10|UDP|100": {
+                "local_ip": "12.12.0.2",
+                "local_port": "251"
+            }
+        },
+        "STATIC_NAT": {
+            "125.56.90.8": {
+                "local_ip": "12.12.0.2"
+            }
         }
     },
 

@@ -102,6 +102,9 @@ module sonic-nat {
             list STATIC_NAPT_LIST {
                 key "global_ip ip_protocol global_l4_port";
 
+                ext:key-regex-configdb-to-yang "^([a-fA-F0-9:./]+)|(TCP|UDP)|([0-9]+)$";
+
+                ext:key-regex-yang-to-configdb "global_ip|ip_protocol|global_l4_port";
 
                 leaf ip_protocol {
                     type ip-protocol-type;
@@ -125,6 +128,10 @@ module sonic-nat {
             list STATIC_NAT_LIST {
                 key "global_ip";
 
+                ext:key-regex-configdb-to-yang "^([a-fA-F0-9:./]+)$";
+
+                ext:key-regex-yang-to-configdb "global_ip";
+
                 uses sonic-nat-common;
             }
         }
@@ -140,6 +147,10 @@ module sonic-nat {
             list NAT_GLOBAL_LIST {
                 key "name";
                 max-elements 1;
+
+                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)$";
+
+                ext:key-regex-yang-to-configdb "name";
 
                 leaf name {
                     type enumeration {
@@ -183,6 +194,10 @@ module sonic-nat {
                 key "pool_name";
                 max-elements 16;
 
+                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)$";
+
+                ext:key-regex-yang-to-configdb "name";
+
                 leaf pool_name {
                     type string {
                         pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})';
@@ -210,6 +225,10 @@ module sonic-nat {
 
                 key "name";
                 max-elements 16;
+
+		ext:key-regex-configdb-to-yang "^([a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,15}))$";
+
+		ext:key-regex-yang-to-configdb "name";
 
                 leaf name {
                     type string {
