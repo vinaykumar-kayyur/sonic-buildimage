@@ -59,7 +59,7 @@ index 483eb9c..da9f501 100644
 -			pktinfo.ipi_ifindex = interface->ifp->ifr_index;
 -			if (setsockopt(interface->wfdesc, IPPROTO_IP,
 -				       IP_PKTINFO, (char *)&pktinfo,
--				       sizeof(pktinfo)) < 0)
+-				       sizeof(pktinfo)) < 0) 
 -				log_fatal("setsockopt: IP_PKTINFO: %m");
 +	struct msghdr m;
 +	struct iovec v;
