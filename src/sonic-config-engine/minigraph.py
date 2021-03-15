@@ -84,6 +84,7 @@ def parse_device(device):
     hwsku = None
     name = None
     deployment_id = None
+    cluster = None
 
     for node in device:
         if node.tag == str(QName(ns, "Address")):
@@ -100,11 +101,13 @@ def parse_device(device):
             deployment_id = node.text
         elif node.tag == str(QName(ns, "ElementType")):
             d_type = node.text
+        elif node.tag == str(QName(ns, "ClusterName")):
+            cluster = node.text
 
     if d_type is None and str(QName(ns3, "type")) in device.attrib:
         d_type = device.attrib[str(QName(ns3, "type"))]
 
-    return (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id)
+    return (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id, cluster)
 
 def calculate_lcm_for_ecmp (nhdevices_bank_map, nhip_bank_map):
     banks_enumerated = {}
@@ -143,7 +146,6 @@ def formulate_fine_grained_ecmp(version, dpg_ecmp_content, port_device_map, port
         tag = "fgnhg_v6"
 
     port_nhip_map = dpg_ecmp_content['port_nhip_map']
-    nhgaddr = dpg_ecmp_content['nhgaddr']
     nhg_int = dpg_ecmp_content['nhg_int']
 
     nhip_device_map = {port_nhip_map[x]: port_device_map[x] for x in port_device_map
@@ -156,20 +158,17 @@ def formulate_fine_grained_ecmp(version, dpg_ecmp_content, port_device_map, port
     FG_NHG_MEMBER = {ip: {"FG_NHG": tag, "bank": bank} for ip, bank in nhip_bank_map.items()}
     nhip_port_map = dict(zip(port_nhip_map.values(), port_nhip_map.keys()))
 
-    
-
     for nhip, memberinfo in FG_NHG_MEMBER.items():
         if nhip in nhip_port_map:
             memberinfo["link"] = port_alias_map[nhip_port_map[nhip]]
             FG_NHG_MEMBER[nhip] = memberinfo
 
-    FG_NHG_PREFIX = {nhgaddr: {"FG_NHG": tag}}
-    FG_NHG = {tag: {"bucket_size": LCM}}
+    FG_NHG = {tag: {"bucket_size": LCM, "match_mode": "nexthop-based"}}
     for ip in nhip_bank_map:
         neigh_key.append(str(nhg_int + "|" + ip))
     NEIGH = {neigh_key: {"family": family} for neigh_key in neigh_key}
 
-    fine_grained_content = {"FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG, "FG_NHG_PREFIX": FG_NHG_PREFIX, "NEIGH": NEIGH}
+    fine_grained_content = {"FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG, "NEIGH": NEIGH}
     return fine_grained_content
 
 def parse_png(png, hname, dpg_ecmp_content = None):
@@ -186,7 +185,6 @@ def parse_png(png, hname, dpg_ecmp_content = None):
     port_device_map = {}
     png_ecmp_content = {}
     FG_NHG_MEMBER = {}
-    FG_NHG_PREFIX = {}
     FG_NHG = {}
     NEIGH = {}
 
@@ -244,8 +242,10 @@ def parse_png(png, hname, dpg_ecmp_content = None):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
+                (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id, cluster) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
+                if cluster:
+                    device_data['cluster'] = cluster
                 if deployment_id:
                     device_data['deployment_id'] = deployment_id
                 if lo_prefix_v6:
@@ -253,9 +253,7 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                 devices[name] = device_data
 
                 if name == hname:
-                    cluster = device.find(str(QName(ns, "ClusterName")))
-
-                    if cluster != None and cluster.text != None and "str" in cluster.text.lower():
+                    if cluster and "str" in cluster.lower():
                         is_storage_device = True
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
@@ -289,12 +287,10 @@ def parse_png(png, hname, dpg_ecmp_content = None):
             for version, content in dpg_ecmp_content.items():  # version is ipv4 or ipv6
                 fine_grained_content = formulate_fine_grained_ecmp(version, content, port_device_map, port_alias_map)  # port_alias_map
                 FG_NHG_MEMBER.update(fine_grained_content['FG_NHG_MEMBER'])
-                FG_NHG_PREFIX.update(fine_grained_content['FG_NHG_PREFIX'])
                 FG_NHG.update(fine_grained_content['FG_NHG'])
                 NEIGH.update(fine_grained_content['NEIGH'])
 
-            png_ecmp_content = {"FG_NHG_PREFIX": FG_NHG_PREFIX, "FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG,
-                            "NEIGH": NEIGH}
+            png_ecmp_content = {"FG_NHG_MEMBER": FG_NHG_MEMBER, "FG_NHG": FG_NHG, "NEIGH": NEIGH}
 
     return (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speeds, console_ports, mux_cable_ports, is_storage_device, png_ecmp_content)
 
@@ -380,8 +376,10 @@ def parse_asic_png(png, asic_name, hostname):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id) = parse_device(device)
+                (lo_prefix, lo_prefix_v6, mgmt_prefix, name, hwsku, d_type, deployment_id, cluster) = parse_device(device)
                 device_data = {'lo_addr': lo_prefix, 'type': d_type, 'mgmt_addr': mgmt_prefix, 'hwsku': hwsku }
+                if cluster:
+                    device_data['cluster'] = cluster
                 if deployment_id:
                     device_data['deployment_id'] = deployment_id
                 if lo_prefix_v6:
@@ -478,7 +476,6 @@ def parse_dpg(dpg, hname):
                 pcs[pcintfname] = {'members': pcmbr_list, 'min_links': str(int(math.ceil(len(pcmbr_list) * 0.75)))}
         port_nhipv4_map = {}
         port_nhipv6_map = {}
-        nhgaddr = ["", ""]
         nhg_int = ""
         nhportlist = []
         dpg_ecmp_content = {}
@@ -502,25 +499,23 @@ def parse_dpg(dpg, hname):
                         n = list(ipaddress.ip_network(UNICODE_TYPE(subnet_range), False).hosts())
                         if a in n:
                             nhg_int = ip_intfs_map[subnet_range]
-                dwnstrms = child.find(str(QName(ns, "DownstreamSummarySet")))
-                for dwnstrm in dwnstrms.findall(str(QName(ns, "DownstreamSummary"))):
-                    dwnstrmentry = str(ET.tostring(dwnstrm))
-                    if ("FineGrainedECMPGroupDestination" in dwnstrmentry):
-                        subnet_ip = dwnstrm.find(str(QName(ns1, "Subnet"))).text
-                        truncsubnet_ip = subnet_ip.split("/")[0]
-                        if "." in (truncsubnet_ip):
-                            nhgaddr[0] = subnet_ip
-                        elif ":" in (truncsubnet_ip):
-                            nhgaddr[1] = subnet_ip
-                ipv4_content = {"port_nhip_map": port_nhipv4_map, "nhgaddr": nhgaddr[0], "nhg_int": nhg_int}
-                ipv6_content = {"port_nhip_map": port_nhipv6_map, "nhgaddr": nhgaddr[1], "nhg_int": nhg_int}
+
+                ipv4_content = {"port_nhip_map": port_nhipv4_map, "nhg_int": nhg_int}
+                ipv6_content = {"port_nhip_map": port_nhipv6_map, "nhg_int": nhg_int}
                 dpg_ecmp_content['ipv4'] = ipv4_content
                 dpg_ecmp_content['ipv6'] = ipv6_content
+
         vlanintfs = child.find(str(QName(ns, "VlanInterfaces")))
-        vlan_intfs = []
         vlans = {}
         vlan_members = {}
         vlantype_name = ""
+        intf_vlan_mbr = defaultdict(list)
+        for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
+            vlanid = vintf.find(str(QName(ns, "VlanID"))).text
+            vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
+            vmbr_list = vintfmbr.split(';')
+            for i, member in enumerate(vmbr_list):
+                intf_vlan_mbr[member].append(vlanid)
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
@@ -534,10 +529,12 @@ def parse_dpg(dpg, hname):
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
                 if vlantype_name == "Tagged":
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
+                elif len(intf_vlan_mbr[member]) > 1:
+                    vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
                 else:
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'untagged'}
 
-            vlan_attributes = {'vlanid': vlanid}
+            vlan_attributes = {'vlanid': vlanid, 'members': vmbr_list }
 
             # If this VLAN requires a DHCP relay agent, it will contain a <DhcpRelays> element
             # containing a list of DHCP server IPs
@@ -565,7 +562,7 @@ def parse_dpg(dpg, hname):
                 aclname = aclintf.find(str(QName(ns, "OutAcl"))).text.upper().replace(" ", "_").replace("-", "_")
                 stage = "egress"
             else:
-                system.exit("Error: 'AclInterface' must contain either an 'InAcl' or 'OutAcl' subelement.")
+                sys.exit("Error: 'AclInterface' must contain either an 'InAcl' or 'OutAcl' subelement.")
             aclattach = aclintf.find(str(QName(ns, "AttachTo"))).text.split(';')
             acl_intfs = []
             is_mirror = False
@@ -582,7 +579,11 @@ def parse_dpg(dpg, hname):
                     # to LAG will be applied to all the LAG members internally by SAI/SDK
                     acl_intfs.append(member)
                 elif member in vlans:
-                    acl_intfs.append(member)
+                    # For egress ACL attaching to vlan, we break them into vlan members
+                    if stage == "egress":
+                        acl_intfs.extend(vlans[member]['members'])
+                    else:
+                        acl_intfs.append(member)
                 elif member in port_alias_map:
                     acl_intfs.append(port_alias_map[member])
                     # Give a warning if trying to attach ACL to a LAG member interface, correct way is to attach ACL to the LAG interface
@@ -606,9 +607,15 @@ def parse_dpg(dpg, hname):
                             acl_intfs.append(panel_port)
                     break
             if acl_intfs:
+                # Remove duplications
+                dedup_intfs = []
+                for intf in acl_intfs:
+                    if intf not in dedup_intfs:
+                        dedup_intfs.append(intf)
+
                 acls[aclname] = {'policy_desc': aclname,
                                  'stage': stage,
-                                 'ports': acl_intfs}
+                                 'ports': dedup_intfs}
                 if is_mirror:
                     acls[aclname]['type'] = 'MIRROR'
                 elif is_mirror_v6:
@@ -780,6 +787,7 @@ def parse_meta(meta, hname):
     region = None
     cloudtype = None
     resource_type = None
+    kube_data = {}
     device_metas = meta.find(str(QName(ns, "Devices")))
     for device in device_metas.findall(str(QName(ns1, "DeviceMetadata"))):
         if device.find(str(QName(ns1, "Name"))).text.lower() == hname.lower():
@@ -808,7 +816,11 @@ def parse_meta(meta, hname):
                     cloudtype = value
                 elif name == "ResourceType":
                     resource_type = value
-    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type
+                elif name == "KubernetesEnabled":
+                    kube_data["enable"] = value
+                elif name == "KubernetesServerIp":
+                    kube_data["ip"] = value
+    return syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, kube_data
 
 
 def parse_linkmeta(meta, hname):
@@ -833,6 +845,7 @@ def parse_linkmeta(meta, hname):
         has_peer_switch = False
         upper_tor_hostname = ''
         lower_tor_hostname = ''
+        auto_negotiation = None
 
         properties = linkmeta.find(str(QName(ns1, "Properties")))
         for device_property in properties.findall(str(QName(ns1, "DeviceProperty"))):
@@ -846,6 +859,8 @@ def parse_linkmeta(meta, hname):
                 upper_tor_hostname = value
             elif name == "LowerTOR":
                 lower_tor_hostname = value
+            elif name == "AutoNegotiation":
+                auto_negotiation = value
 
         linkmetas[port] = {}
         if fec_disabled:
@@ -855,6 +870,8 @@ def parse_linkmeta(meta, hname):
                 linkmetas[port]["PeerSwitch"] = lower_tor_hostname
             else:
                 linkmetas[port]["PeerSwitch"] = upper_tor_hostname
+        if auto_negotiation:
+            linkmetas[port]["AutoNegotiation"] = auto_negotiation
     return linkmetas
 
 
@@ -1097,6 +1114,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     host_lo_intfs = None
     is_storage_device = False
     local_devices = []
+    kube_data = {}
 
     # hostname is the asic_name, get the asic_id from the asic_name
     if asic_name is not None:
@@ -1133,7 +1151,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, kube_data) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -1173,6 +1191,18 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'synchronous_mode': 'enable'
         }
     }
+
+    cluster = [devices[key] for key in devices if key.lower() == hostname.lower()][0].get('cluster', "")
+    if cluster:
+        results['DEVICE_METADATA']['localhost']['cluster'] = cluster
+
+    if kube_data:
+        results['KUBERNETES_MASTER'] = {
+            'SERVER': {
+                'disable': str(kube_data.get('enable', '0') == '0'),
+                'ip': kube_data.get('ip', '')
+            }
+        }
 
     results['PEER_SWITCH'] = get_peer_switch_info(linkmetas, devices)
 
@@ -1292,6 +1322,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         # Note: FECDisabled only be effective on 100G port right now
         if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
             port['fec'] = 'rs'
+
+        # If AutoNegotiation is available in the minigraph, we override any value we may have received from port_config.ini
+        autoneg = linkmetas.get(alias, {}).get('AutoNegotiation')
+        if autoneg:
+            port['autoneg'] = 'on' if autoneg.lower() == 'true' else 'off'
 
     # If connected to a smart cable, get the connection position
     for port_name, port in ports.items():
@@ -1449,7 +1484,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     if len(png_ecmp_content):
         results['FG_NHG_MEMBER'] = png_ecmp_content['FG_NHG_MEMBER']
-        results['FG_NHG_PREFIX'] = png_ecmp_content['FG_NHG_PREFIX']
         results['FG_NHG'] = png_ecmp_content['FG_NHG']
         results['NEIGH'] = png_ecmp_content['NEIGH']
 
@@ -1524,7 +1558,7 @@ def get_mux_cable_entries(mux_cable_ports, neighbors, devices):
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()
-    (lo_prefix, lo_prefix_v6, mgmt_prefix, hostname, hwsku, d_type, _) = parse_device(root)
+    (lo_prefix, lo_prefix_v6, mgmt_prefix, hostname, hwsku, d_type, _, _) = parse_device(root)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
