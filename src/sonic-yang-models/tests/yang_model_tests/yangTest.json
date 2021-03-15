@@ -141,7 +141,7 @@
 		"sonic-portchannel:sonic-portchannel": {
 			"sonic-portchannel:PORTCHANNEL_INTERFACE": {
 				"PORTCHANNEL_INTERFACE_IPADDR_LIST": [{
-					"pch_name": "PortChannel0001",
+					"name": "PortChannel0001",
 					"ip_prefix": "1.1.1.1/24"
 				}]
 			}
