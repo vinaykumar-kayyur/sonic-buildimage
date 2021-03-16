@@ -137,16 +137,22 @@
 		}
 	},
 
-	"PORTCHANNEL_INTERFACE_IP_ADDR_TEST": {
-		"sonic-portchannel:sonic-portchannel": {
-			"sonic-portchannel:PORTCHANNEL_INTERFACE": {
-				"PORTCHANNEL_INTERFACE_IPADDR_LIST": [{
-					"name": "PortChannel0001",
-					"ip_prefix": "1.1.1.1/24"
-				}]
-			}
-		}
-	},
+    "PORTCHANNEL_INTERFACE_IP_ADDR_TEST": {
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [{
+                    "name": "PortChannel0001",
+                    "admin_status": "up"
+                }]
+            },
+            "sonic-portchannel:PORTCHANNEL_INTERFACE": {
+                "PORTCHANNEL_INTERFACE_IPADDR_LIST": [{
+                    "name": "PortChannel0001",
+                    "ip_prefix": "1.1.1.1/24"
+                }]
+            }
+        }
+    },
 
 	"PORT_CHANNEL_WRONG_PATTERN": {
 		"sonic-portchannel:sonic-portchannel": {

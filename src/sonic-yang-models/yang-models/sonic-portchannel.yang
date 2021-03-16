@@ -110,7 +110,7 @@ module sonic-portchannel {
 				leaf name {
 					/* key elements are mandatory by default */
 					type leafref {
-						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name";
+						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 					}
 				}
 
@@ -124,4 +124,4 @@ module sonic-portchannel {
 
 	} /* end of container sonic-portchannel */
 
-} /* end of module sonic-port */
+} /* end of module sonic-portchannel */
