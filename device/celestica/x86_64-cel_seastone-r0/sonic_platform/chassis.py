@@ -27,6 +27,7 @@ REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
 GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
+STATUS_LED_PATH = "/sys/devices/platform/leds_dx010/leds/dx010:green:stat/brightness"
 
 
 class Chassis(ChassisBase):
@@ -51,7 +52,6 @@ class Chassis(ChassisBase):
 
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            #name_idx = 0 if index + 1 == NUM_SFP else index + 1
             sfp = Sfp(index, sfputil_helper.logical[index])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
@@ -87,7 +87,9 @@ class Chassis(ChassisBase):
             self._component_list.append(component)
 
     def __get_air_flow(self):
-        air_flow_path = '/usr/share/sonic/device/{}/fan_airflow'.format(self._api_helper.platform) if self.is_host else '/usr/share/sonic/platform/fan_airflow'
+        air_flow_path = '/usr/share/sonic/device/{}/fan_airflow'.format(
+            self._api_helper.platform) \
+            if self.is_host else '/usr/share/sonic/platform/fan_airflow'
         air_flow = self._api_helper.read_one_line_file(air_flow_path)
         return air_flow or 'B2F'
 
@@ -333,7 +335,7 @@ class Chassis(ChassisBase):
         if not set_status_str:
             return False
 
-        return self._api_helper.write_txt_file(self.stat_led_path, set_status_str)
+        return self._api_helper.write_txt_file(STATUS_LED_PATH, set_status_str)
 
     def get_status_led(self):
         """
@@ -341,7 +343,7 @@ class Chassis(ChassisBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        status = self._api_helper.read_txt_file(self.stat_led_path)
+        status = self._api_helper.read_txt_file(STATUS_LED_PATH)
         status_str = {
             '255': self.STATUS_LED_COLOR_GREEN,
             '0': self.STATUS_LED_COLOR_OFF

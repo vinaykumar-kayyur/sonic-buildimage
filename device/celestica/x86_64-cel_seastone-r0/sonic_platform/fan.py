@@ -186,7 +186,7 @@ class Fan(FanBase):
                 EMC2305_PATH, device, EMC2305_FAN_PWM)
             sysfs_path = sysfs_path.format(fan_index[self.fan_tray_index])
             pwm = self._api_helper.read_txt_file(sysfs_path)
-            target = int(int(pwm) / 255 * 100)
+            target = round(int(pwm) / 255 * 100)
 
         return target
 

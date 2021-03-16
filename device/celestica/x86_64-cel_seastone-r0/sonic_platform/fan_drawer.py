@@ -39,7 +39,7 @@ class FanDrawer(FanDrawerBase):
         """
         return self._fan_list[0].set_status_led(color)
 
-    def get_status_led(self, color):
+    def get_status_led(self, color=None):
         """
         Gets the state of the fan drawer LED
         Returns:
