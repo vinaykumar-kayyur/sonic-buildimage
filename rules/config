@@ -129,9 +129,9 @@ INCLUDE_SFLOW = y
 # INCLUDE_MGMT_FRAMEWORK - build docker-sonic-mgmt-framework for CLI and REST server support
 INCLUDE_MGMT_FRAMEWORK = y
 
-# INCLUDE_HOST_SERVICE - build sonic-host-services for mgmt-framework and/or
-# telemetry containers to access host functionality
-INCLUDE_HOST_SERVICE = n
+# ENABLE_HOST_SERVICE_ON_START - enable sonic-host-server for mgmt-framework and/or
+# telemetry containers to access host functionality by default
+ENABLE_HOST_SERVICE_ON_START = n
 
 # INCLUDE_RESTAPI - build docker-sonic-restapi for configuring the switch using REST APIs
 INCLUDE_RESTAPI = n
@@ -145,6 +145,9 @@ INCLUDE_NAT = y
 # INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES = n
+
+# INCLUDE_MACSEC - build docker-macsec for macsec support
+INCLUDE_MACSEC = y
 
 # KUBERNETES_VERSION - Set to the required version.
 # K8s_GCR_IO_PAUSE_VERSION - Version of k8s universal pause container image
