@@ -3,6 +3,8 @@ Description=Router advertiser container
 Requires=updategraph.service
 After=updategraph.service swss.service syncd.service
 Before=ntp-config.service
+BindsTo=sonic.target
+After=sonic.target
 StartLimitIntervalSec=1200
 StartLimitBurst=3
 
@@ -14,4 +16,4 @@ ExecStop=/usr/local/bin/{{ docker_container_name }}.sh stop
 RestartSec=30
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sonic.target

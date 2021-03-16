@@ -23,6 +23,7 @@ on_exit()
 on_error()
 {
     netstat -antp
+    ps aux
     echo "============= kvm_log =============="
     cat $kvm_log
 }
@@ -48,6 +49,7 @@ prepare_installer_disk()
     umount $tmpdir
 }
 
+apt-get install -y net-tools
 create_disk
 prepare_installer_disk
 

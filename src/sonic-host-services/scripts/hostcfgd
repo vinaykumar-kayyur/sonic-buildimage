@@ -56,32 +56,56 @@ def obfuscate(data):
 class Feature(object):
     """ Represents a feature configuration from CONFIG DB data. """
 
-    def __init__(self, feature_name, feature_cfg):
+    def __init__(self, feature_name, feature_cfg, device_config=None):
+        """ Initialize Feature object based on CONFIG DB data.
+
+        Args:
+            feature_name (str): Feature name string
+            feature_cfg (dict): Feature CONFIG DB configuration
+            deviec_config (dict): DEVICE_METADATA section of CONFIG DB
+        """
+
         self.name = feature_name
-        self.state = feature_cfg.get('state')
+        self.state = self._get_target_state(feature_cfg.get('state'), device_config or {})
         self.auto_restart = feature_cfg.get('auto_restart', 'disabled')
         self.has_timer = ast.literal_eval(feature_cfg.get('has_timer', 'False'))
         self.has_global_scope = ast.literal_eval(feature_cfg.get('has_global_scope', 'True'))
         self.has_per_asic_scope = ast.literal_eval(feature_cfg.get('has_per_asic_scope', 'False'))
 
+    def _get_target_state(self, state_configuration, device_config):
+        """ Returns the target state for the feature by rendering the state field as J2 template. 
+        
+        Args:
+            state_configuration (str): State configuration from CONFIG DB
+            deviec_config (dict): DEVICE_METADATA section of CONFIG DB
+        Returns:
+            (str): Target feature state
+        """
+
+        if state_configuration is None:
+            return None
+
+        template = jinja2.Template(state_configuration)
+        target_state = template.render(device_config)
+        if target_state not in ('enabled', 'disabled', 'always_enabled', 'always_disabled'):
+            raise ValueError('Invalid state rendered for feature {}: {}'.format(self.name, target_state))
+        return target_state
+
 
 class FeatureHandler(object):
     """ Handles FEATURE table updates. """
 
-    SYSTEMD_SERVICE_CONF_D = '/etc/systemd/system/{}.service.d/'
+    SYSTEMD_SYSTEM_DIR = '/etc/systemd/system/'
+    SYSTEMD_SERVICE_CONF_D = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
 
-    def __init__(self, config_db):
+    def __init__(self, config_db, device_config):
         self._config_db = config_db
+        self._device_config = device_config
         self._cached_config = {}
         self.is_multi_npu = device_info.is_multi_npu()
 
     def handle(self, feature_name, feature_cfg):
-        feature = Feature(feature_name, feature_cfg)
-        if feature.state is None:
-            syslog.syslog(syslog.LOG_WARNING, "Enable state of feature '{}' is None".format(feature_name))
-            return
-
-        self._cached_config.setdefault(feature_name, Feature(feature_name, {}))
+        feature = Feature(feature_name, feature_cfg, self._device_config)
 
         # Change auto-restart configuration first.
         # If service reached failed state before this configuration applies (e.g. on boot)
@@ -104,78 +128,42 @@ class FeatureHandler(object):
                 syslog.syslog(syslog.LOG_WARNING, "Feature is None")
                 continue
 
-            self.handle(feature_name, feature_table[feature_name])
+            feature = Feature(feature_name, feature_table[feature_name], self._device_config)
+            self._cached_config.setdefault(feature_name, feature)
+
+            self.update_feature_auto_restart(feature)
+
+            self.update_feature_state(feature)
+            self.resync_feature_state(feature)
 
     def update_feature_state(self, feature):
-        if self._cached_config[feature.name].state == "always_enabled":
-            syslog.syslog(syslog.LOG_INFO, "Feature '{}' service is always enabled"
-                .format(feature.name))
-            entry = self._config_db.get_entry('FEATURE', feature.name)
-            entry['state'] = 'always_enabled'
-            self._config_db.set_entry('FEATURE', feature.name, entry)
+        cached_feature = self._cached_config[feature.name]
+
+        if self.is_invariant_feature_state(cached_feature.state):
+            if cached_feature.state != feature.state:
+                syslog.syslog(syslog.LOG_INFO, "Feature {} service is {}".format(feature.name, feature.state))
+                self.resync_feature_state(cached_feature)
+            if feature.state == 'always_disabled':
+                self.disable_feature(feature)
+                syslog.syslog(syslog.LOG_INFO, "Feature {} is stopped and disabled".format(feature.name))
             return
 
-        # Create feature name suffix depending feature is running in host or namespace or in both
-        feature_name_suffix_list = self._get_feature_name_suffixes(feature)
-
-        if not feature_name_suffix_list:
-            syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
-                          .format(feature.name))
-
-        feature_suffixes = self._get_feature_suffixes(feature)
-
         if feature.state == "enabled":
-            start_cmds = []
-            for feature_name_suffix in feature_name_suffix_list:
-                for suffix in feature_suffixes:
-                    start_cmds.append("sudo systemctl unmask {}.{}".format(feature_name_suffix, suffix))
-                # If feature has timer associated with it, start/enable corresponding systemd .timer unit
-                # otherwise, start/enable corresponding systemd .service unit
-                start_cmds.append("sudo systemctl enable {}.{}".format(feature_name_suffix, feature_suffixes[-1]))
-                start_cmds.append("sudo systemctl start {}.{}".format(feature_name_suffix, feature_suffixes[-1]))
-                for cmd in start_cmds:
-                    syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
-                    try:
-                        run_cmd(cmd, raise_exception=True)
-                    except Exception as err:
-                        syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be  enabled and started"
-                                      .format(feature.name, feature_suffixes[-1]))
-                        return
-            syslog.syslog(syslog.LOG_INFO, "Feature '{}.{}' is enabled and started"
-                          .format(feature.name, feature_suffixes[-1]))
+            self.enable_feature(feature)
+            syslog.syslog(syslog.LOG_INFO, "Feature {} is enabled and started".format(feature.name))
         elif feature.state == "disabled":
-            stop_cmds = []
-            for feature_name_suffix in feature_name_suffix_list:
-                for suffix in reversed(feature_suffixes):
-                    stop_cmds.append("sudo systemctl stop {}.{}".format(feature_name_suffix, suffix))
-                    stop_cmds.append("sudo systemctl disable {}.{}".format(feature_name_suffix, suffix))
-                    stop_cmds.append("sudo systemctl mask {}.{}".format(feature_name_suffix, suffix))
-                for cmd in stop_cmds:
-                    syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
-                    try:
-                        run_cmd(cmd, raise_exception=True)
-                    except Exception as err:
-                        syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to be stopped "
-                                                      "and disabled".format(feature.name))
-                        return
-            syslog.syslog(syslog.LOG_INFO, "Feature '{}' is stopped and disabled".format(feature.name))
+            self.disable_feature(feature)
+            syslog.syslog(syslog.LOG_INFO, "Feature {} is stopped and disabled".format(feature.name))
         else:
-            syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature '{}'"
+            syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature {}"
                           .format(feature.state, feature.name))
 
     def update_feature_auto_restart(self, feature):
-        if self._cached_config[feature.name].state == "always_enabled":
-            syslog.syslog(syslog.LOG_INFO, "Feature '{}' service is always enabled"
-                .format(feature.name))
-            entry = self._config_db.get_entry('FEATURE', feature.name)
-            entry['state'] = 'always_enabled'
-            self._config_db.set_entry('FEATURE', feature.name, entry)
-            return
-
         restart_config = "always" if feature.auto_restart == "enabled" else "no"
         service_conf = "[Service]\nRestart={}\n".format(restart_config)
-        feature_name_suffix_list = self._get_feature_name_suffixes(feature)
-        for service_name in feature_name_suffix_list:
+        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+
+        for service_name in feature_names:
             dir_name = self.SYSTEMD_SERVICE_CONF_D.format(service_name)
             if not os.path.exists(dir_name):
                 os.mkdir(dir_name)
@@ -188,13 +176,63 @@ class FeatureHandler(object):
             syslog.syslog(syslog.LOG_ERR, "Feature '{}' failed to configure auto_restart".format(feature.name))
             return
 
-    def _get_feature_name_suffixes(self, feature):
-        return (([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
-               ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus())
-                if feature.has_per_asic_scope and self.is_multi_npu]))
+    def get_feature_attribute(self, feature):
+        # Create feature name suffix depending feature is running in host or namespace or in both 
+        feature_names = (
+            ([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
+            ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
+                if feature.has_per_asic_scope and self.is_multi_npu])
+        )
 
-    def _get_feature_suffixes(self, feature):
-        return ["service"] + (["timer"] if feature.has_timer else [])
+        if not feature_names:
+            syslog.syslog(syslog.LOG_ERR, "Feature '{}' service not available"
+                          .format(feature.name))
+
+        feature_suffixes = ["service"] + (["timer"] if feature.has_timer else [])
+
+        return feature_names, feature_suffixes
+
+    def is_invariant_feature_state(self, state):
+        return state in ('always_enabled', 'always_disabled')
+
+    def enable_feature(self, feature):
+        cmds = []
+        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        for feature_name in feature_names:
+            for suffix in feature_suffixes:
+                cmds.append("sudo systemctl unmask {}.{}".format(feature_name, suffix))
+            # If feature has timer associated with it, start/enable corresponding systemd .timer unit
+            # otherwise, start/enable corresponding systemd .service unit
+            cmds.append("sudo systemctl enable {}.{}".format(feature_name, feature_suffixes[-1]))
+            cmds.append("sudo systemctl start {}.{}".format(feature_name, feature_suffixes[-1]))
+            for cmd in cmds:
+                syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
+                try:
+                    run_cmd(cmd, raise_exception=True)
+                except Exception as err:
+                    syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be enabled and started"
+                                    .format(feature.name, feature_suffixes[-1]))
+                    return
+
+    def disable_feature(self, feature):
+        cmds = []
+        feature_names, feature_suffixes = self.get_feature_attribute(feature)
+        for feature_name in feature_names:
+            for suffix in reversed(feature_suffixes):
+                cmds.append("sudo systemctl stop {}.{}".format(feature_name, suffix))
+                cmds.append("sudo systemctl disable {}.{}".format(feature_name, feature_suffixes[-1]))
+                cmds.append("sudo systemctl mask {}.{}".format(feature_name, feature_suffixes[-1]))
+            for cmd in cmds:
+                syslog.syslog(syslog.LOG_INFO, "Running cmd: '{}'".format(cmd))
+                try:
+                    run_cmd(cmd, raise_exception=True)
+                except Exception as err:
+                    syslog.syslog(syslog.LOG_ERR, "Feature '{}.{}' failed to be stopped and disabled"
+                                    .format(feature.name, feature_suffixes[-1]))
+                    return
+
+    def resync_feature_state(self, feature):
+        self._config_db.mod_entry('FEATURE', feature.name, {'state': feature.state})
 
 
 class Iptables(object):
@@ -534,9 +572,13 @@ class HostConfigDaemon:
         self.config_db.connect(wait_for_init=True, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
 
+        # Load DEVICE metadata configurations
+        self.device_config = {}
+        self.device_config['DEVICE_METADATA'] = self.config_db.get_table('DEVICE_METADATA')
+
         self.aaacfg = AaaCfg()
         self.iptables = Iptables()
-        self.feature = FeatureHandler(self.config_db)
+        self.feature = FeatureHandler(self.config_db, self.device_config)
         self.ntpcfg = NtpCfg(self.config_db)
 
         self.is_multi_npu = device_info.is_multi_npu()
@@ -642,3 +684,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
