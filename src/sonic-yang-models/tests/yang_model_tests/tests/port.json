@@ -3,7 +3,7 @@
 	"desc": "LOAD PORT TABLE WITH FEC AND PFC_ASYM SUCCESSFULLY. VERIFY PFC_ASYM.",
 	"eStrKey" : "Verify",
 	"verify": {
-	    "xpath": "/sonic-port:sonic-port/PORT/PORT_LIST[port_name='Ethernet8']/port_name",
+	    "xpath": "/sonic-port:sonic-port/PORT/PORT_LIST[name='Ethernet8']/name",
 	    "key": "sonic-port:pfc_asym",
 	    "value": "on"
 	}

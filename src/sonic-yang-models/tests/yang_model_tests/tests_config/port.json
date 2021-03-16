@@ -11,7 +11,7 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "pfc_asym": "off",
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "speed": 25000
                     }
                 ]
@@ -30,7 +30,7 @@
                         "lanes": "65",
                         "mtu": 9000,
                         "pfc_asym": "on",
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "speed": 25000
                     }
                 ]

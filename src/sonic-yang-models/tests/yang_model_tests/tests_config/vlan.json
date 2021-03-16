@@ -10,7 +10,7 @@
                             "10.186.72.56"
                         ],
                         "mtu": "9100",
-                        "vlan_name": "Vlan8090"
+                        "name": "Vlan8090"
                     }
                 ]
             }
@@ -27,7 +27,7 @@
                             "10.186.72.566"
                         ],
                         "mtu": "9216",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             }
@@ -42,7 +42,7 @@
                         "alias": "eth0",
                         "description": "Ethernet0",
                         "mtu": 9000,
-                        "port_name": "Ethernet0",
+                        "name": "Ethernet0",
                         "speed": 25000
                     }
                 ]
@@ -53,7 +53,7 @@
                 "VLAN_LIST": [
                     {
                         "description": "server_vlan",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             },
@@ -62,7 +62,7 @@
                     {
                         "port": "Ethernet0",
                         "tagging_mode": "non-tagged",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             }
@@ -74,7 +74,7 @@
                 "VLAN_LIST": [
                     {
                         "description": "server_vlan",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             },
@@ -84,7 +84,7 @@
                         "family": "IPv6",
                         "ip-prefix": "2a04:5555:66:7777::1/64",
                         "scope": "global",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             }
@@ -99,7 +99,7 @@
                         "alias": "eth0",
                         "description": "Ethernet0",
                         "mtu": 9000,
-                        "port_name": "Ethernet0",
+                        "name": "Ethernet0",
                         "speed": 25000
                     }
                 ]
@@ -110,11 +110,11 @@
                 "VLAN_LIST": [
                     {
                         "description": "server_vlan",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     },
                     {
                         "description": "ipmi_vlan",
-                        "vlan_name": "Vlan300"
+                        "name": "Vlan300"
                     }
                 ]
             },
@@ -123,7 +123,7 @@
                     {
                         "port": "Ethernet0",
                         "tagging_mode": "tagged",
-                        "vlan_name": "Vlan200"
+                        "name": "Vlan200"
                     }
                 ]
             }
@@ -138,7 +138,7 @@
                         "alias": "eth0",
                         "description": "Ethernet0",
                         "mtu": 9000,
-                        "port_name": "Ethernet0",
+                        "name": "Ethernet0",
                         "speed": 25000
                     },
                     {
@@ -146,7 +146,7 @@
                         "alias": "eth1",
                         "description": "Ethernet1",
                         "mtu": 9000,
-                        "port_name": "Ethernet1",
+                        "name": "Ethernet1",
                         "speed": 25000
                     }
                 ]
@@ -157,7 +157,7 @@
                 "VLAN_LIST": [
                     {
                         "description": "server_vlan",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             },
@@ -166,7 +166,7 @@
                     {
                         "port": "Ethernet156",
                         "tagging_mode": "tagged",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             }
@@ -178,7 +178,7 @@
                 "VLAN_LIST": [
                     {
                         "description": "server_vlan",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             },
@@ -188,15 +188,30 @@
                         "family": "IPv4",
                         "ip-prefix": "2a04:5555:66:7777::1/64",
                         "scope": "global",
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ],
                 "VLAN_INTERFACE_LIST": [
                     {
-                        "vlan_name": "Vlan100"
+                        "name": "Vlan100"
                     }
                 ]
             }
         }
+    },
+    "ALL_VLAN_TEST": {
+	"sonic-vlan:sonic-vlan": {
+	    "sonic-vlan:VLAN": {
+		"VLAN_LIST": [{
+		    "name": "Vlan1-4094",
+		    "description": "server_vlan",
+		    "dhcp_servers": [
+			"10.186.72.56"
+		    ],
+		    "mtu": "9100",
+		    "admin_status": "up"
+		}]
+	    }
+	}
     }
 }

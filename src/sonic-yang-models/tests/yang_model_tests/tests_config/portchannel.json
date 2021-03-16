@@ -9,7 +9,7 @@
                         "description": "Ethernet0",
                         "lanes": "65",
                         "mtu": 9000,
-                        "port_name": "Ethernet0",
+                        "name": "Ethernet0",
                         "speed": 25000
                     }
                 ]
@@ -25,7 +25,7 @@
                         ],
                         "min_links": "1",
                         "mtu": "9100",
-                        "portchannel_name": "PortChannel0001"
+                        "name": "PortChannel0001"
                     }
                 ]
             }
@@ -38,7 +38,7 @@
                     {
                         "admin_status": "up",
                         "mtu": "9100",
-                        "portchannel_name": "PortChannel11001"
+                        "name": "PortChannel11001"
                     }
                 ]
             }

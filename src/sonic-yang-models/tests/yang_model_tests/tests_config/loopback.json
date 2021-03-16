@@ -6,7 +6,7 @@
                     {
                         "family": "IPv6",
                         "ip-prefix": "2a04:5555:66:7777::1/64",
-                        "loopback_interface_name": "lo1",
+                        "name": "lo1",
                         "scope": "global"
                     }
                 ]

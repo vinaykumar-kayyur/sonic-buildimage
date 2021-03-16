@@ -6,13 +6,13 @@
                     {
                         "family": "IPv4",
                         "ip-prefix": "10.0.0.1/30",
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "scope": "global"
                     }
                 ],
                 "INTERFACE_LIST": [
                     {
-                        "port_name": "Ethernet9"
+                        "name": "Ethernet9"
                     }
                 ]
             }
@@ -26,7 +26,7 @@
                         "description": "Ethernet8",
                         "lanes": "65",
                         "mtu": 9000,
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "speed": 25000
                     },
                     {
@@ -35,7 +35,7 @@
                         "description": "Ethernet9",
                         "lanes": "71",
                         "mtu": 9000,
-                        "port_name": "Ethernet9",
+                        "name": "Ethernet9",
                         "speed": 25000
                     }
                 ]
@@ -49,13 +49,13 @@
                     {
                         "family": "IPv4",
                         "ip-prefix": "10.0.0.1/30",
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "scope": "global"
                     }
                 ],
                 "INTERFACE_LIST": [
                     {
-                        "port_name": "Ethernet8"
+                        "name": "Ethernet8"
                     }
                 ]
             }
@@ -70,7 +70,7 @@
                         "fec": "rs",
                         "lanes": "65",
                         "mtu": 9000,
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "speed": 25000
                     }
                 ]
@@ -84,13 +84,13 @@
                     {
                         "family": "IPv4",
                         "ip-prefix": "",
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "scope": "global"
                     }
                 ],
                 "INTERFACE_LIST": [
                     {
-                        "port_name": "Ethernet8"
+                        "name": "Ethernet8"
                     }
                 ]
             }
@@ -103,7 +103,7 @@
                         "alias": "eth8",
                         "description": "Ethernet8",
                         "mtu": 9000,
-                        "port_name": "Ethernet8",
+                        "name": "Ethernet8",
                         "speed": 25000
                     }
                 ]
