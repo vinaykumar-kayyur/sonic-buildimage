@@ -1,0 +1,25 @@
+{% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files %}
+FROM docker-config-engine-buster
+
+ARG docker_container_name
+RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
+
+## Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update &&     \
+    apt-get install -f -y \
+        rsyslog           \
+        python-scapy
+
+## Clean up
+RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
+
+COPY ["vnetping.py", "vnetpingsrv.py", "/usr/bin/"]
+COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
+COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
+COPY ["critical_processes", "/etc/supervisor"]
+COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
+COPY ["etc/rsyslog.d/*", "/etc/rsyslog.d/"]
+
+ENTRYPOINT ["/usr/local/bin/supervisord"]

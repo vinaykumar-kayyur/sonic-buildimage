@@ -159,6 +159,8 @@ KUBERNETES_CNI_VERSION = 0.8.6
 K8s_GCR_IO_PAUSE_VERSION = 3.2
 # INCLUDE_ACMS - build docker-acms for managing certificates on the device
 INCLUDE_ACMS = y
+# INCLUDE_VNETPING - build docker-vnetping for vnetping utility on the device
+INCLUDE_VNETPING = y
 
 # SONIC_ENABLE_IMAGE_SIGNATURE - enable image signature
 # To not use the auto-generated self-signed certificate, the required files to sign the image as below:
