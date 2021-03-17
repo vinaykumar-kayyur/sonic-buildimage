@@ -480,7 +480,6 @@ class Thermal(ThermalBase):
             return None
         return value_float / 1000.0
 
-
     @classmethod
     def _write_generic_file(cls, filename, content):
         """
@@ -494,6 +493,47 @@ class Thermal(ThermalBase):
                     file_obj.write(content)
         except Exception as e:
             logger.log_info("Fail to write file {} due to {}".format(filename, repr(e)))
+
+
+    def set_high_threshold(self, temperature):
+        """
+        Retrieves the high threshold temperature of thermal
+
+        Returns:
+            True if thermal threshold changed.
+        """
+        if self.high_threshold is None:
+            return False
+
+        value_str = str(int(temperature * 1000))
+        Thermal._write_generic_file(self.high_threshold, value_str)
+
+        read_value_str = self._read_generic_file(self.high_threshold, 0)
+        if value_str != read_value_str:
+            return False
+
+        return True
+
+
+    def set_high_critical_threshold(self, temperature):
+        """
+        Retrieves the high critical threshold temperature of thermal
+
+        Returns:
+            True if thermal threshold changed.
+        """
+        if self.high_critical_threshold is None:
+            return False
+
+        value_str = str(int(temperature * 1000))
+        Thermal._write_generic_file(self.high_critical_threshold, value_str)
+
+        read_value_str = self._read_generic_file(self.high_critical_threshold, 0)
+        if value_str != read_value_str:
+            return False
+
+        return True
+
 
     @classmethod
     def set_thermal_algorithm_status(cls, status, force=True):
