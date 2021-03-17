@@ -68,12 +68,16 @@ module sonic-port{
 				}
 
 				leaf autoneg {
+					/* Port auto negotiation mode */
 					type string {
 						pattern "on|off";
 					}
 				}
 				
 				leaf-list adv_speeds {
+					/* A list of advertised port speeds, 
+					   "all" means to advertise all supported speeds
+					*/
 					type union {
 						type uint32 {
 							range 1..400000;
@@ -85,10 +89,14 @@ module sonic-port{
 				}
 
 				leaf interface_type {
+					/* Port interface type */
 					type stypes:interface_type;
 				}
 
 				leaf-list adv_interface_types {
+					/* A list of advertised interface types,
+					   "all" means to advertise all supported interface types
+					*/
 					type union {
 						type stypes:interface_type;
 						type string {
