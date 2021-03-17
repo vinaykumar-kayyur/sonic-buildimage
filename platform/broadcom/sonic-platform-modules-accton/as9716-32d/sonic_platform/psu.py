@@ -17,14 +17,14 @@ class Psu(PddfPsu):
         PddfPsu.__init__(self, index, pddf_data, pddf_plugin_data)
         
     # Provide the functions/variables below for which implementation is to be overwritten
-    def get_capacity(self):
+    def get_maximum_supplied_power(self):
         """
-        Gets the capacity (maximum output power) of the PSU in watts
-
+        Retrieves the maximum supplied power by PSU (or PSU capacity)
         Returns:
-            An integer, the capacity of PSU
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
         """
-        return (self.PLATFORM_PSU_CAPACITY)
+        return float(self.PLATFORM_PSU_CAPACITY)
 
     def get_type(self):
         """
@@ -33,6 +33,4 @@ class Psu(PddfPsu):
         A string, the type of PSU (AC/DC)
         """
         return "DC"
-    def get_input_current(self):
-        return 0
 
