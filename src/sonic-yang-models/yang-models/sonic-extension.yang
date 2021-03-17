@@ -15,9 +15,9 @@ module sonic-extension {
         description "First Revision";
     }
 
-	/* For complete guide of using these extensions in SONiC yangs, refer
-	SONiC yang guidelines at
-	https://github.com/Azure/SONiC/blob/master/doc/mgmt/SONiC_YANG_Model_Guidelines.md */
+    /* For complete guide of using these extensions in SONiC yangs, refer
+    SONiC yang guidelines at
+    https://github.com/Azure/SONiC/blob/master/doc/mgmt/SONiC_YANG_Model_Guidelines.md */
 
     extension key-regex-configdb-to-yang {
         description "Key regex used to convert config DB keys to YANG Config";
@@ -52,17 +52,18 @@ module sonic-extension {
     }
 
     extension custom-validation {
-        description "Extension for registering custom validation handler."; 
-        argument "handler"; 
+        description "Extension for registering custom validation handler.";
+        argument "handler";
     }
 
     extension dependent-on {
         description
-            "Extension to define dependency on other table. During create/update,
-            operation will be performed first on parent table and then on this table.
-            In delete operation, this table will be deleted first and then parent table.
-            This extension can be defined only under list. Table name should always
-            suffixed with '_LIST' as modeled in yang.
+            "Extension to define dependency on other table. During CREATE/UPDATE,
+            the action will be performed first on the Parent table and then on the
+            Dependent table. In DELETE operation, the Dependent table will be
+            deleted first and then the Parent table. This extension can be defined
+            only under List nodes. Table name should always be suffixed with '_LIST'
+            as modeled in yang.
             e.g. - dependent-on STP_LIST";
         argument "value";
     }

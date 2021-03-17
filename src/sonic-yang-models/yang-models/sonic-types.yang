@@ -118,10 +118,10 @@ module sonic-types {
             enum up;
             enum down;
         }
-		description "Operational status of an entity such as Port, MCLAG etc";
+        description "Operational status of an entity such as Port, MCLAG etc";
     }
 
-    typedef mode-enable {
+    typedef mode-status {
         type enumeration {
             enum enable;
             enum disable;
@@ -131,7 +131,7 @@ module sonic-types {
             For ex. IPv6-link-local-only, Dhcp-replay-link-select, SNMP traps etc";
     }
 
-    typedef relay-policy-action {
+    typedef dhcp-relay-policy-action {
         type enumeration {
             enum discard;
             enum append;
