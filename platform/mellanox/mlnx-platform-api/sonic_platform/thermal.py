@@ -480,6 +480,7 @@ class Thermal(ThermalBase):
             return None
         return value_float / 1000.0
 
+
     @classmethod
     def _write_generic_file(cls, filename, content):
         """
