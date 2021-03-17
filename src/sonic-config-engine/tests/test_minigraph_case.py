@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 
@@ -93,7 +94,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'mac': '00:aa:bb:cc:dd:ee' }}")
+            utils.to_dict("{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'mac': '00:aa:bb:cc:dd:ee', 'members': ['Ethernet8'] }}")
         )
 
     def test_minigraph_vlan_members(self):
@@ -145,6 +146,11 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "1")
 
+    def test_minigraph_cluster(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_METADATA[\'localhost\'][\'cluster\']"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), "AAA00PrdStr00")
+
     def test_minigraph_neighbor_metadata(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "DEVICE_NEIGHBOR_METADATA"'
 
@@ -165,7 +171,7 @@ class TestCfgGenCaseInsensitive(TestCase):
             'server1': {
                 'hwsku': 'server-sku',
                 'lo_addr': '10.10.10.1/32',
-                'lo_addr_v6': 'fe80::0001/128',
+                'lo_addr_v6': 'fe80::0001/80',
                 'mgmt_addr': '10.0.0.1/32',
                 'type': 'Server'
             },
@@ -194,6 +200,12 @@ class TestCfgGenCaseInsensitive(TestCase):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "TACPLUS_SERVER"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "{'10.0.10.7': {'priority': '1', 'tcp_port': '49'}, '10.0.10.8': {'priority': '1', 'tcp_port': '49'}}")
+
+    def test_metadata_kube(self):
+        argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "KUBERNETES_MASTER[\'SERVER\']"'
+        output = self.run_script(argument)
+        self.assertEqual(json.loads(output.strip().replace("'", "\"")),
+                json.loads('{"ip": "10.10.10.10", "disable": "True"}'))
 
     def test_minigraph_mgmt_port(self):
         argument = '-m "' + self.sample_graph + '" -p "' + self.port_config + '" -v "MGMT_PORT"'
@@ -275,12 +287,12 @@ class TestCfgGenCaseInsensitive(TestCase):
             'Ethernet4': {
                 'state': 'auto',
                 'server_ipv4': '10.10.10.1/32',
-                'server_ipv6': 'fe80::0001/128'
+                'server_ipv6': 'fe80::1/128'
             },
             'Ethernet8': {
                 'state': 'auto',
                 'server_ipv4': '10.10.10.2/32',
-                'server_ipv6': 'fe80::0002/128'
+                'server_ipv6': 'fe80::2/128'
             }
         }
 
@@ -289,4 +301,3 @@ class TestCfgGenCaseInsensitive(TestCase):
             utils.to_dict(output.strip()),
             expected_table
         )
-        
