@@ -208,7 +208,7 @@ info_dict_keys = [
     'model', 'connector', 'encoding', 'ext_identifier',
     'ext_rateselect_compliance', 'cable_type', 'cable_length',
     'nominal_bit_rate', 'specification_compliance', 'vendor_date',
-    'vendor_oui', 'application_advertisement'
+    'vendor_oui', 'application_advertisement', 'type_abbrv_name'
 ]
 
 qsfp_cable_length_tup = ('Length(km)', 'Length OM3(2m)',
@@ -1535,6 +1535,7 @@ class Sfp(SfpBase):
         default = 0.0
         if not self.dom_supported:
             return default
+
         if self.sfp_type == QSFP_TYPE:
             offset = 0
 
@@ -1551,10 +1552,6 @@ class Sfp(SfpBase):
                     temp = self._convert_string_to_num(
                         dom_temperature_data['data']['Temperature']['value'])
                     return temp
-                else:
-                    return default
-            else:
-                return default
 
         elif self.sfp_type == QSFP_DD_TYPE:
             offset = 0
@@ -1572,7 +1569,6 @@ class Sfp(SfpBase):
                     temp = self._convert_string_to_num(
                         dom_temperature_data['data']['Temperature']['value'])
                     return temp
-            return default
 
         else:
             offset = 256
@@ -1589,8 +1585,7 @@ class Sfp(SfpBase):
                 temp = self._convert_string_to_num(
                     dom_temperature_data['data']['Temperature']['value'])
                 return temp
-            else:
-                return default
+
         return default
 
     def get_voltage(self):
@@ -2125,12 +2120,12 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', value))
             except BaseException:
-                return False
+                pass
             finally:
                 if sysfsfile_eeprom is not None:
                     sysfsfile_eeprom.close()
                     time.sleep(0.01)
-            return True
+                    return True
         return False
 
     ##############################################################
