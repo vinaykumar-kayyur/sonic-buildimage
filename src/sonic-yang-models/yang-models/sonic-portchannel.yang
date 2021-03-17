@@ -20,10 +20,6 @@ module sonic-portchannel {
 		revision-date 2019-07-01;
 	}
 
-	import ietf-inet-types {
-		prefix inet;
-	}
-
 	description "PORTCHANNEL yang Module for SONiC OS";
 
 	revision 2021-03-15 {
@@ -103,7 +99,7 @@ module sonic-portchannel {
 
 			description "PORTCHANNEL_INTERFACE part of config_db.json";
 
-			list PORTCHANNEL_INTERFACE_IPADDR_LIST {
+			list PORTCHANNEL_INTERFACE_IPPREFIX_LIST {
 
 				key "name ip_prefix";
 
@@ -116,9 +112,12 @@ module sonic-portchannel {
 
 				leaf ip_prefix {
 					/* key elements are mandatory by default */
-					type inet:ip-prefix;
+					type union {
+						type stypes:sonic-ip4-prefix;
+						type stypes:sonic-ip6-prefix;
+					}
 				}
-			} /* end of list PORTCHANNEL_INTERFACE_IPADDR_LIST */
+			} /* end of list PORTCHANNEL_INTERFACE_IPPREFIX_LIST */
 
 		} /* end of container PORTCHANNEL_INTERFACE */
 
