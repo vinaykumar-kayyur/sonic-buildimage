@@ -17,6 +17,7 @@ command=/usr/bin/supervisor-proc-exit-listener --container-name bgp
 events=PROCESS_STATE_EXITED,PROCESS_STATE_RUNNING
 autostart=true
 autorestart=unexpected
+buffer_size=50
 
 [program:rsyslogd]
 command=/usr/sbin/rsyslogd -n -iNONE
