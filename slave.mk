@@ -741,6 +741,10 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_pydebs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_PYTHON_DEBS)))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_whls=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_PYTHON_WHEELS)))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
+		# Label docker image with componenets versions
+		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_labels=$(foreach component,$($*.gz_DEPENDS) $($*.gz_PYTHON_DEBS) $($*.gz_PYTHON_WHEELS),\
+			$(shell [[ ! -z "$($(component)_VERSION)" && ! -z "$($(component)_NAME)" ]] && \
+				echo "--label com.azure.sonic.versions.$($(component)_NAME)=$($(component)_VERSION)")))
 		j2 $($*.gz_PATH)/Dockerfile.j2 > $($*.gz_PATH)/Dockerfile
 		# Prepare docker build info
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
@@ -758,11 +762,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg frr_user_uid=$(FRR_USER_UID) \
 			--build-arg frr_user_gid=$(FRR_USER_GID) \
 			--build-arg image_version=$(SONIC_IMAGE_VERSION) \
-			--build-arg base_os_ver=$(BASE_OS_COMPATIBILITY_VERSION) \
-			--build-arg docker_database_version=$($(DOCKER_DATABASE)_VERSION) \
-			--build-arg docker_swss_version=$($(DOCKER_ORCHAGENT)_VERSION) \
-			--build-arg docker_syncd_version=$($(DOCKER_SYNCD_BASE)_VERSION) \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
+		        $($(subst -,_,$(notdir $($*.gz_PATH)))_labels) \
 			-t $* $($*.gz_PATH) $(LOG)
 		scripts/collect_docker_version_files.sh $* $(TARGET_PATH)
 		docker save $* | gzip -c > $@
