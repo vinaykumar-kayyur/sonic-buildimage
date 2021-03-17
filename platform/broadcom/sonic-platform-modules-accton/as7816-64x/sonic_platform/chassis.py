@@ -26,7 +26,6 @@ class Chassis(PddfChassis):
     def get_change_event(self, timeout=2000):
         now = time.time()
         port_dict = {}
-        port = 0
         change_dict = {}
         change_dict['sfp'] = port_dict
 
@@ -60,6 +59,3 @@ class Chassis(PddfChassis):
             return True, change_dict
         else:
             return True, change_dict
-
-        print("get_change_event: Control should not reach here")
-        return False, change_dict
