@@ -95,7 +95,6 @@ private:
      *@brief used to reference bits corresponding to respective state machine init state
      */
     enum {
-        ServerMacComponent,
         LinkProberComponent,
         MuxStateComponent,
         LinkStateComponent,

@@ -219,7 +219,7 @@ private:
     MuxConfig &mMuxConfig;
     std::string mPortName;
     boost::asio::ip::address mBladeIpv4Address;
-    std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress;
+    std::array<uint8_t, ETHER_ADDR_LEN> mBladeMacAddress = {0, 0, 0, 0, 0, 0};
     uint16_t mServerId;
     Mode mMode = Auto;
 };

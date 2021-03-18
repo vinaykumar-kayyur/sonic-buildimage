@@ -468,12 +468,9 @@ void LinkManagerStateMachine::handleStateChange(LinkStateEvent &event, link_stat
 void LinkManagerStateMachine::handleGetServerMacAddressNotification(std::array<uint8_t, ETHER_ADDR_LEN> address)
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    if (!mComponentInitState.test(ServerMacComponent)) {
-        mMuxPortConfig.setBladeMacAddress(address);
 
-        mComponentInitState.set(ServerMacComponent);
-        activateStateMachine();
-    } else if (address != mMuxPortConfig.getBladeMacAddress()) {
+    if (address != mMuxPortConfig.getBladeMacAddress()) {
+        mMuxPortConfig.setBladeMacAddress(address);
         mLinkProberPtr->updateEthernetFrame();
     }
 }

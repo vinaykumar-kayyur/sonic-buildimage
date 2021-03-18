@@ -40,7 +40,6 @@ void FakeMuxPort::activateStateMachine()
     setComponentInitState(0);
     setComponentInitState(1);
     setComponentInitState(2);
-    setComponentInitState(3);
 }
 
 } /* namespace test */
