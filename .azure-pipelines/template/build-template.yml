@@ -34,8 +34,8 @@ parameters:
   - mlnx
   - nephos
   - vs
-  - ''
-  default: ''
+  - ""
+  default: "" 
 
 - name: cache_mode
   type: string
