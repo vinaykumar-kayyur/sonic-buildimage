@@ -40,7 +40,6 @@ def tcpserver(serverport):
                 ackno = packet[TCP].seq + len(packet[Raw])
                 _ack(packet, "A", seqno, ackno)
 
-    print "vnetping server starts."
     # Wait for client to connect.
     sniffstring = "tcp and dst port " + serverport
     while True:

@@ -126,8 +126,8 @@ ifeq ($(SONIC_INCLUDE_ACMS),y)
 INCLUDE_ACMS = y
 endif
 
-ifeq ($(SONIC_INCLUDE_VNETPING),y)
-INCLUDE_VNETPING = y
+ifeq ($(SONIC_INCLUDE_VNET_MONITOR),y)
+INCLUDE_VNET_MONITOR = y
 endif
 
 ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
@@ -252,7 +252,7 @@ $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
 $(info "ENABLE_ZTP"                      : "$(ENABLE_ZTP)")
 $(info "INCLUDE_ACMS"                    : "$(INCLUDE_ACMS)")
-$(info "INCLUDE_VNETPING"                : "$(INCLUDE_VNETPING)")
+$(info "INCLUDE_VNET_MONITOR"            : "$(INCLUDE_VNET_MONITOR)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
@@ -916,7 +916,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export include_iccpd="$(INCLUDE_ICCPD)"
 	export pddf_support="$(PDDF_SUPPORT)"
 	export include_acms="$(INCLUDE_ACMS)"
-	export include_vnetping="$(INCLUDE_VNETPING)"
+	export include_vnet_monitor="$(INCLUDE_VNET_MONITOR)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
 	export default_buffer_model="$(SONIC_BUFFER_MODEL)"
 	export include_kubernetes="$(INCLUDE_KUBERNETES)"

@@ -14,8 +14,6 @@ from sys import argv, exit
 from swsscommon import swsscommon
 import netaddr
 
-# vnetping -n vnetname -i vlaninterface -s 192.168.0.148 -d 192.168.0.238
-
 #
 # Config
 #
@@ -34,22 +32,23 @@ CFG_METADATA_MAC_KEY_NAME = 'mac'
 ###
 
 #
-# Return True if the value is an ipv4 address
+# Get an ipv4 address from a given string.
+# Return None if the given string is not a valid ipv4 address.
 #
 
-def is_ipv4(value):
+def get_ipv4_address(value):
     if not value:
-        return False
+        return None
 
-    if isinstance(value, netaddr.IPNetwork):
-        addr = value
+    try:
+        addr = netaddr.IPNetwork(str(value))
+    except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
+        return None
+
+    if addr.version == 4:
+        return str(addr.ip)
     else:
-        try:
-            addr = netaddr.IPNetwork(str(value))
-        except (netaddr.NotRegisteredError, netaddr.AddrFormatError, netaddr.AddrConversionError):
-            return False
-
-    return addr.version == 4
+        return None
 
 #
 # Get a value of a key from ConfigDB's tablename|entry_name
@@ -84,9 +83,9 @@ def get_loopback_ipv4():
         for loopback in loopback_interface.getKeys():
             if loopback.startswith("Loopback0|"):
                 loopback0_prefix_str = loopback.replace("Loopback0|", "")
-                loopback0_ip_str = loopback0_prefix_str[:loopback0_prefix_str.find('/')]
-                if is_ipv4(loopback0_ip_str):
-                    loopback0_ipv4 = loopback0_ip_str
+                ipv4_address = get_ipv4_address(loopback0_prefix_str)
+                if ipv4_address is not None:
+                    loopback0_ipv4 = ipv4_address
                     break
     except ValueError as ve:
         print "ValueError %s" %(str(ve))
