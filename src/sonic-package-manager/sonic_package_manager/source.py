@@ -2,8 +2,7 @@
 
 from sonic_package_manager.database import PackageDatabase, PackageEntry
 from sonic_package_manager.dockerapi import DockerApi, get_repository_from_image
-from sonic_package_manager.manifest import Manifest
-from sonic_package_manager.manifest_resolver import ManifestResolver
+from sonic_package_manager.metadata import Metadata, MetadataResolver
 from sonic_package_manager.package import Package
 
 
@@ -15,17 +14,17 @@ class PackageSource(object):
     def __init__(self,
                  database: PackageDatabase,
                  docker: DockerApi,
-                 manifest_resolver: ManifestResolver):
+                 metadata_resolver: MetadataResolver):
         self.database = database
         self.docker = docker
-        self.manifest_resolver = manifest_resolver
+        self.metadata_resolver = metadata_resolver
 
-    def get_manifest(self) -> Manifest:
+    def get_metadata(self) -> Metadata:
         """ Returns package manifest.
         Child class has to implement this method.
 
         Returns:
-            Manifest
+            Metadata
         """
         raise NotImplementedError
 
@@ -71,7 +70,8 @@ class PackageSource(object):
               SONiC Package
         """
 
-        manifest = self.get_manifest()
+        metadata = self.get_metadata()
+        manifest = metadata.manifest
 
         name = manifest['package']['name']
         description = manifest['package']['description']
@@ -90,7 +90,7 @@ class PackageSource(object):
                 repository,
                 description,
             ),
-            manifest
+            metadata
         )
 
 
@@ -102,16 +102,16 @@ class TarballSource(PackageSource):
                  tarball_path: str,
                  database: PackageDatabase,
                  docker: DockerApi,
-                 manifest_resolver: ManifestResolver):
+                 metadata_resolver: MetadataResolver):
         super().__init__(database,
                          docker,
-                         manifest_resolver)
+                         metadata_resolver)
         self.tarball_path = tarball_path
 
-    def get_manifest(self) -> Manifest:
+    def get_metadata(self) -> Metadata:
         """ Returns manifest read from tarball. """
 
-        return self.manifest_resolver.from_tarball(self.tarball_path)
+        return self.metadata_resolver.from_tarball(self.tarball_path)
 
     def install_image(self):
         """ Installs image from local tarball source. """
@@ -128,17 +128,17 @@ class RegistrySource(PackageSource):
                  reference: str,
                  database: PackageDatabase,
                  docker: DockerApi,
-                 manifest_resolver: ManifestResolver):
+                 metadata_resolver: MetadataResolver):
         super().__init__(database,
                          docker,
-                         manifest_resolver)
+                         metadata_resolver)
         self.repository = repository
         self.reference = reference
 
-    def get_manifest(self) -> Manifest:
+    def get_metadata(self) -> Metadata:
         """ Returns manifest read from registry. """
 
-        return self.manifest_resolver.from_registry(self.repository,
+        return self.metadata_resolver.from_registry(self.repository,
                                                     self.reference)
 
     def install_image(self):
@@ -155,13 +155,13 @@ class LocalSource(PackageSource):
                  entry: PackageEntry,
                  database: PackageDatabase,
                  docker: DockerApi,
-                 manifest_resolver: ManifestResolver):
+                 metadata_resolver: MetadataResolver):
         super().__init__(database,
                          docker,
-                         manifest_resolver)
+                         metadata_resolver)
         self.entry = entry
 
-    def get_manifest(self) -> Manifest:
+    def get_metadata(self) -> Metadata:
         """ Returns manifest read from locally installed Docker. """
 
         image = self.entry.image_id
@@ -172,7 +172,7 @@ class LocalSource(PackageSource):
             # repository name as image.
             image = f'{self.entry.repository}:latest'
 
-        return self.manifest_resolver.from_local(image)
+        return self.metadata_resolver.from_local(image)
 
     def get_package(self) -> Package:
-        return Package(self.entry, self.get_manifest())
+        return Package(self.entry, self.get_metadata())

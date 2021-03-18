@@ -10,8 +10,9 @@ from docker_image.reference import Reference
 from sonic_package_manager.database import PackageDatabase, PackageEntry
 from sonic_package_manager.manager import DockerApi, PackageManager
 from sonic_package_manager.manifest import Manifest
-from sonic_package_manager.manifest_resolver import ManifestResolver
+from sonic_package_manager.metadata import Metadata, MetadataResolver
 from sonic_package_manager.registry import RegistryResolver
+from sonic_package_manager.version import Version
 from sonic_package_manager.service_creator.creator import *
 
 
@@ -45,8 +46,8 @@ def mock_registry_resolver():
 
 
 @pytest.fixture
-def mock_manifest_resolver():
-    yield Mock(ManifestResolver)
+def mock_metadata_resolver():
+    yield Mock(MetadataResolver)
 
 
 @pytest.fixture
@@ -65,12 +66,17 @@ def mock_sonic_db():
 
 
 @pytest.fixture
-def fake_manifest_resolver():
-    class FakeManifestResolver:
+def fake_metadata_resolver():
+    class FakeMetadataResolver:
         def __init__(self):
-            self.manifests = {}
+            self.metadata_store = {}
             self.add('docker-database', 'latest', 'database', '1.0.0')
-            self.add('docker-orchagent', 'latest', 'swss', '1.0.0')
+            self.add('docker-orchagent', 'latest', 'swss', '1.0.0',
+                     components={
+                         'libswsscommon': Version.parse('1.0.0'),
+                         'libsairedis': Version.parse('1.0.0')
+                     }
+            )
             self.add('Azure/docker-test', '1.6.0', 'test-package', '1.6.0')
             self.add('Azure/docker-test-2', '1.5.0', 'test-package-2', '1.5.0')
             self.add('Azure/docker-test-2', '2.0.0', 'test-package-2', '2.0.0')
@@ -86,18 +92,24 @@ def fake_manifest_resolver():
             self.add('Azure/docker-test-6', 'latest', 'test-package-6', '1.5.0')
 
         def from_registry(self, repository: str, reference: str):
-            return Manifest.marshal(self.manifests[repository][reference]['manifest'])
+            manifest = Manifest.marshal(self.metadata_store[repository][reference]['manifest'])
+            components = self.metadata_store[repository][reference]['components']
+            return Metadata(manifest, components)
 
         def from_local(self, image: str):
             ref = Reference.parse(image)
-            return Manifest.marshal(self.manifests[ref['name']][ref['tag']]['manifest'])
+            manifest = Manifest.marshal(self.metadata_store[ref['name']][ref['tag']]['manifest'])
+            components = self.metadata_store[ref['name']][ref['tag']]['components']
+            return Metadata(manifest, components)
 
         def from_tarball(self, filepath: str) -> Manifest:
             path, ref = filepath.split(':')
-            return Manifest.marshal(self.manifests[path][ref]['manifest'])
+            manifest = Manifest.marshal(self.metadata_store[path][ref]['manifest'])
+            components = self.metadata_store[path][ref]['components']
+            return Metadata(manifest, components)
 
-        def add(self, repo, reference, name, version):
-            repo_dict = self.manifests.setdefault(repo, {})
+        def add(self, repo, reference, name, version, components=None):
+            repo_dict = self.metadata_store.setdefault(repo, {})
             repo_dict[reference] = {
                 'manifest': {
                     'package': {
@@ -108,9 +120,10 @@ def fake_manifest_resolver():
                         'name': name,
                     }
                 },
+                'components': components or {},
             }
 
-    yield FakeManifestResolver()
+    yield FakeMetadataResolver()
 
 
 @pytest.fixture
@@ -135,10 +148,10 @@ def fake_device_info():
     yield FakeDeviceInfo()
 
 
-def add_package(content, manifests, repository, reference, **kwargs):
-    manifest = manifests.from_registry(repository, reference)
-    name = manifest['package']['name']
-    version = manifest['package']['version']
+def add_package(content, metadata_resolver, repository, reference, **kwargs):
+    metadata = metadata_resolver.from_registry(repository, reference)
+    name = metadata.manifest['package']['name']
+    version = metadata.manifest['package']['version']
     installed = kwargs.get('installed', False)
     built_in = kwargs.get('built-in', False)
 
@@ -148,16 +161,16 @@ def add_package(content, manifests, repository, reference, **kwargs):
     if installed and 'version' not in kwargs:
         kwargs['version'] = version
 
-    content[name] = PackageEntry(name, repository,**kwargs)
+    content[name] = PackageEntry(name, repository, **kwargs)
 
 
 @pytest.fixture
-def fake_db(fake_manifest_resolver):
+def fake_db(fake_metadata_resolver):
     content = {}
 
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'docker-database',
         'latest',
         description='SONiC database service',
@@ -167,7 +180,7 @@ def fake_db(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'docker-orchagent',
         'latest',
         description='SONiC switch state service',
@@ -177,7 +190,7 @@ def fake_db(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test',
         '1.6.0',
         description='SONiC Package Manager Test Package',
@@ -187,7 +200,7 @@ def fake_db(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-2',
         '1.5.0',
         description='SONiC Package Manager Test Package #2',
@@ -197,7 +210,7 @@ def fake_db(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-3',
         '1.5.0',
         description='SONiC Package Manager Test Package #3',
@@ -207,7 +220,7 @@ def fake_db(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-5',
         '1.9.0',
         description='SONiC Package Manager Test Package #5',
@@ -217,7 +230,7 @@ def fake_db(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-6',
         '1.5.0',
         description='SONiC Package Manager Test Package #6',
@@ -230,11 +243,11 @@ def fake_db(fake_manifest_resolver):
 
 
 @pytest.fixture
-def fake_db_for_migration(fake_manifest_resolver):
+def fake_db_for_migration(fake_metadata_resolver):
     content = {}
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'docker-database',
         'latest',
         description='SONiC database service',
@@ -244,7 +257,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'docker-orchagent',
         'latest',
         description='SONiC switch state service',
@@ -254,7 +267,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test',
         '1.6.0',
         description='SONiC Package Manager Test Package',
@@ -264,7 +277,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-2',
         '2.0.0',
         description='SONiC Package Manager Test Package #2',
@@ -274,7 +287,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-3',
         '1.6.0',
         description='SONiC Package Manager Test Package #3',
@@ -284,7 +297,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-4',
         '1.5.0',
         description='SONiC Package Manager Test Package #4',
@@ -294,7 +307,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-5',
         '1.5.0',
         description='SONiC Package Manager Test Package #5',
@@ -304,7 +317,7 @@ def fake_db_for_migration(fake_manifest_resolver):
     )
     add_package(
         content,
-        fake_manifest_resolver,
+        fake_metadata_resolver,
         'Azure/docker-test-6',
         '2.0.0',
         description='SONiC Package Manager Test Package #6',
@@ -343,11 +356,11 @@ def patch_pkgutil():
 def package_manager(mock_docker_api,
                     mock_registry_resolver,
                     mock_service_creator,
-                    fake_manifest_resolver,
+                    fake_metadata_resolver,
                     fake_db,
                     fake_device_info):
     yield PackageManager(mock_docker_api, mock_registry_resolver,
-                         fake_db, fake_manifest_resolver,
+                         fake_db, fake_metadata_resolver,
                          mock_service_creator,
                          fake_device_info,
                          MagicMock())

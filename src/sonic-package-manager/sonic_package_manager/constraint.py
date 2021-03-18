@@ -3,7 +3,8 @@
 """ Package version constraints module. """
 import re
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict, Union
 
 import semver
 
@@ -30,12 +31,13 @@ class PackageConstraint:
 
     name: str
     constraint: VersionConstraint
+    components: Dict[str, VersionConstraint] = field(default_factory=dict)
 
     def __str__(self):
         return f'{self.name}{self.constraint}'
 
     @staticmethod
-    def parse(constraint_expression: str) -> 'PackageConstraint':
+    def from_string(constraint_expression: str) -> 'PackageConstraint':
         """ Parse package constraint string which contains a package
         name separated by a space with zero, one or more version constraint
         expressions. A variety of version matching operators are supported
@@ -67,4 +69,47 @@ class PackageConstraint:
         constraint = groupdict.get('constraint') or '*'
         return PackageConstraint(name, VersionConstraint.parse(constraint))
 
+    @staticmethod
+    def from_dict(constraint_dict: Dict) -> 'PackageConstraint':
+        """ Parse package constraint information from dictionary. E.g:
+
+        {
+            "name": "swss",
+            "version": "^1.0.0",
+            "componenets": {
+                "libswsscommon": "^1.0.0"
+            }
+        }
+
+        Args:
+            constraint_dict: Dictionary of constraint infromation.
+
+        Returns:
+            PackageConstraint object.
+        """
+
+        name = constraint_dict['name']
+        version = VersionConstraint.parse(constraint_dict.get('version') or '*')
+        components = {component: VersionConstraint.parse(version)
+                     for component, version in constraint_dict.get('components', {}).items()}
+        return PackageConstraint(name, version, components)
+
+    @staticmethod
+    def parse(constraint: Union[str, Dict]) -> 'PackageConstraint':
+        """ Parse constraint from string expression or dictionary.
+
+        Args:
+            constraint: string or dictionary. Check from_str() and from_dict() methods.
+
+        Returns:
+            PackageConstraint object.
+
+        """
+
+        if type(constraint) is str:
+            return PackageConstraint.from_string(constraint)
+        elif type(constraint) is dict:
+            return PackageConstraint.from_dict(constraint)
+        else:
+            raise ValueError('Input argument should be either str or dict')
 

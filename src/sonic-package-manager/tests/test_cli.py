@@ -5,7 +5,7 @@ from click.testing import CliRunner
 from sonic_package_manager import main
 
 
-def test_show_changelog(package_manager, fake_manifest_resolver):
+def test_show_changelog(package_manager, fake_metadata_resolver):
     """ Test case for "sonic-package-manager package show changelog [NAME]" """
 
     runner = CliRunner()
@@ -26,7 +26,7 @@ def test_show_changelog(package_manager, fake_manifest_resolver):
         "date": "Fri, 23 Oct 2020 12:26:08 +0300"
       }
     }
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['changelog'] = changelog
 
     expected_output = """\

@@ -17,8 +17,8 @@ def test_installation_already_installed(package_manager):
         package_manager.install('swss')
 
 
-def test_installation_dependencies(package_manager, fake_manifest_resolver, mock_docker_api):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_dependencies(package_manager, fake_metadata_resolver, mock_docker_api):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['depends'] = ['swss^2.0.0']
     with pytest.raises(PackageInstallationError,
                        match='Package test-package requires '
@@ -26,8 +26,8 @@ def test_installation_dependencies(package_manager, fake_manifest_resolver, mock
         package_manager.install('test-package')
 
 
-def test_installation_dependencies_missing_package(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_dependencies_missing_package(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['depends'] = ['missing-package>=1.0.0']
     with pytest.raises(PackageInstallationError,
                        match='Package test-package requires '
@@ -35,14 +35,89 @@ def test_installation_dependencies_missing_package(package_manager, fake_manifes
         package_manager.install('test-package')
 
 
-def test_installation_dependencies_satisfied(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_dependencies_satisfied(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['depends'] = ['database>=1.0.0', 'swss>=1.0.0']
     package_manager.install('test-package')
 
 
-def test_installation_breaks(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_components_dependencies_satisfied(package_manager, fake_metadata_resolver):
+    metadata = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']
+    manifest = metadata['manifest']
+    metadata['components'] = {
+        'libswsscommon': Version.parse('1.1.0')
+    }
+    manifest['package']['depends'] = [
+        {
+            'name': 'swss',
+            'version': '>=1.0.0',
+            'components': {
+                'libswsscommon': '^1.0.0',
+            },
+        },
+    ]
+    package_manager.install('test-package')
+
+
+def test_installation_components_dependencies_not_satisfied(package_manager, fake_metadata_resolver):
+    metadata = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']
+    manifest = metadata['manifest']
+    metadata['components'] = {
+        'libswsscommon': Version.parse('1.1.0')
+    }
+    manifest['package']['depends'] = [
+        {
+            'name': 'swss',
+            'version': '>=1.0.0',
+            'components': {
+                'libswsscommon': '^1.1.0',
+            },
+        },
+    ]
+    with pytest.raises(PackageInstallationError,
+                       match='Package test-package requires libswsscommon >=1.1.0,<2.0.0 '
+                             'in package swss>=1.0.0 but version 1.0.0 is installed'):
+        package_manager.install('test-package')
+
+
+def test_installation_components_dependencies_implicit(package_manager, fake_metadata_resolver):
+    metadata = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']
+    manifest = metadata['manifest']
+    metadata['components'] = {
+        'libswsscommon': Version.parse('2.1.0')
+    }
+    manifest['package']['depends'] = [
+        {
+            'name': 'swss',
+            'version': '>=1.0.0',
+        },
+    ]
+    with pytest.raises(PackageInstallationError,
+                       match='Package test-package requires libswsscommon >=2.1.0,<3.0.0 '
+                             'in package swss>=1.0.0 but version 1.0.0 is installed'):
+        package_manager.install('test-package')
+
+
+def test_installation_components_dependencies_explicitely_allowed(package_manager, fake_metadata_resolver):
+    metadata = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']
+    manifest = metadata['manifest']
+    metadata['components'] = {
+        'libswsscommon': Version.parse('2.1.0')
+    }
+    manifest['package']['depends'] = [
+        {
+            'name': 'swss',
+            'version': '>=1.0.0',
+            'components': {
+                'libswsscommon': '>=1.0.0,<3.0.0'
+            }
+        },
+    ]
+    package_manager.install('test-package')
+
+
+def test_installation_breaks(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['breaks'] = ['swss^1.0.0']
     with pytest.raises(PackageInstallationError,
                        match='Package test-package conflicts with '
@@ -50,20 +125,20 @@ def test_installation_breaks(package_manager, fake_manifest_resolver):
         package_manager.install('test-package')
 
 
-def test_installation_breaks_missing_package(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_breaks_missing_package(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['breaks'] = ['missing-package^1.0.0']
     package_manager.install('test-package')
 
 
-def test_installation_breaks_not_installed_package(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_breaks_not_installed_package(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['breaks'] = ['test-package-2^1.0.0']
     package_manager.install('test-package')
 
 
-def test_installation_base_os_constraint(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_base_os_constraint(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['base-os-constraint'] = '>=2.0.0'
     with pytest.raises(PackageSonicRequirementError,
                        match='Package test-package requires '
@@ -72,8 +147,8 @@ def test_installation_base_os_constraint(package_manager, fake_manifest_resolver
         package_manager.install('test-package')
 
 
-def test_installation_base_os_constraint_satisfied(package_manager, fake_manifest_resolver):
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
+def test_installation_base_os_constraint_satisfied(package_manager, fake_metadata_resolver):
+    manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['base-os-constraint'] = '^1.0.0'
     package_manager.install('test-package')
 
@@ -84,12 +159,12 @@ def test_installation(package_manager, mock_docker_api, anything):
 
 
 def test_installation_using_reference(package_manager,
-                                      fake_manifest_resolver,
+                                      fake_metadata_resolver,
                                       mock_docker_api,
                                       anything):
     ref = 'sha256:9780f6d83e45878749497a6297ed9906c19ee0cc48cc88dc63827564bb8768fd'
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
-    fake_manifest_resolver.manifests['Azure/docker-test'][ref] = {'manifest': manifest}
+    metadata = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']
+    fake_metadata_resolver.metadata_store['Azure/docker-test'][ref] = metadata
 
     package_manager.install(f'test-package@{ref}')
     mock_docker_api.pull.assert_called_once_with('Azure/docker-test', f'{ref}')
@@ -113,10 +188,10 @@ def test_installation_from_registry(package_manager, mock_docker_api):
     mock_docker_api.pull.assert_called_once_with('Azure/docker-test', '1.6.0')
 
 
-def test_installation_from_registry_using_digest(package_manager, mock_docker_api, fake_manifest_resolver):
+def test_installation_from_registry_using_digest(package_manager, mock_docker_api, fake_metadata_resolver):
     ref = 'sha256:9780f6d83e45878749497a6297ed9906c19ee0cc48cc88dc63827564bb8768fd'
-    manifest = fake_manifest_resolver.manifests['Azure/docker-test']['1.6.0']['manifest']
-    fake_manifest_resolver.manifests['Azure/docker-test'][ref] = {'manifest': manifest}
+    metadata = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']
+    fake_metadata_resolver.metadata_store['Azure/docker-test'][ref] = metadata
 
     ref = 'sha256:9780f6d83e45878749497a6297ed9906c19ee0cc48cc88dc63827564bb8768fd'
     package_manager.install(repotag=f'Azure/docker-test@{ref}')
@@ -170,10 +245,10 @@ def test_installation_fault(package_manager, mock_docker_api, mock_service_creat
     mock_docker_api.rmi.assert_called_once()
 
 
-def test_installation_package_with_description(package_manager, fake_manifest_resolver):
+def test_installation_package_with_description(package_manager, fake_metadata_resolver):
     package_entry = package_manager.database.get_package('test-package')
     description = package_entry.description
-    references = fake_manifest_resolver.manifests[package_entry.repository]
+    references = fake_metadata_resolver.metadata_store[package_entry.repository]
     manifest = references[package_entry.default_reference]['manifest']
     new_description = description + ' changed description '
     manifest['package']['description'] = new_description

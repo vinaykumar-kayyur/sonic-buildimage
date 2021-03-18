@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from sonic_package_manager.constraint import PackageConstraint
+from sonic_package_manager.constraint import PackageConstraint, VersionConstraint
 from sonic_package_manager.version import Version
 
 
@@ -17,6 +17,12 @@ class PackageManagerError(Exception):
 
 class ManifestError(Exception):
     """ Class for manifest validate failures. """
+
+    pass
+
+
+class MetadataError(Exception):
+    """ Class for metadata failures. """
 
     pass
 
@@ -88,6 +94,25 @@ class PackageDependencyError(PackageInstallationError):
 
 
 @dataclass
+class PackageComponentDependencyError(PackageInstallationError):
+    """ Exception class for installation error caused by component
+    version dependency. """
+
+    name: str
+    dependency: str
+    component: str
+    constraint: VersionConstraint
+    installed_ver: Optional[Version] = None
+
+    def __str__(self):
+        if self.installed_ver:
+            return (f'Package {self.name} requires {self.component} {self.constraint} '
+                    f'in package {self.dependency} but version {self.installed_ver} is installed')
+        return (f'Package {self.name} requires {self.component} {self.constraint} '
+                f'in package {self.dependency} but it is not installed')
+
+
+@dataclass
 class PackageConflictError(PackageInstallationError):
     """ Exception class for installation errors related to missing dependency. """
 
@@ -98,3 +123,20 @@ class PackageConflictError(PackageInstallationError):
     def __str__(self):
         return (f'Package {self.name} conflicts with {self.constraint} but '
                 f'version {self.installed_ver} is installed')
+
+
+@dataclass
+class PackageComponentConflictError(PackageInstallationError):
+    """ Exception class for installation error caused by component
+    version conflict. """
+
+    name: str
+    dependency: str
+    component: str
+    constraint: VersionConstraint
+    installed_ver: Version
+
+    def __str__(self):
+        return (f'Package {self.name} conflicts with {self.component} {self.constraint} '
+                f'in package {self.dependency} but version {self.installed_ver} is installed')
+

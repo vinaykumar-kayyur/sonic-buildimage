@@ -11,7 +11,10 @@ import filelock
 from sonic_py_common import device_info
 
 from sonic_package_manager import utils
-from sonic_package_manager.constraint import PackageConstraint
+from sonic_package_manager.constraint import (
+    VersionConstraint,
+    PackageConstraint
+)
 from sonic_package_manager.database import (
     PACKAGE_MANAGER_LOCK_FILE,
     PackageDatabase
@@ -20,14 +23,16 @@ from sonic_package_manager.dockerapi import DockerApi
 from sonic_package_manager.errors import (
     PackageManagerError,
     PackageDependencyError,
+    PackageComponentDependencyError,
     PackageConflictError,
+    PackageComponentConflictError,
     PackageInstallationError,
     PackageSonicRequirementError,
     PackageUninstallationError,
     PackageUpgradeError
 )
 from sonic_package_manager.logger import log
-from sonic_package_manager.manifest_resolver import ManifestResolver
+from sonic_package_manager.metadata import MetadataResolver
 from sonic_package_manager.package import Package
 from sonic_package_manager.progress import ProgressManager
 from sonic_package_manager.reference import PackageReference
@@ -128,20 +133,55 @@ def validate_package_tree(packages: Dict[str, Package]):
             dependency_package = packages.get(dependency.name)
             if dependency_package is None:
                 raise PackageDependencyError(package.name, dependency)
+
             installed_version = dependency_package.version
             log.debug(f'dependency package is installed {dependency.name}: {installed_version}')
             if not dependency.constraint.allows_all(installed_version):
                 raise PackageDependencyError(package.name, dependency, installed_version)
+
+            dependency_components = dependency.components
+            if not dependency_components:
+                dependency_components = {}
+                for component, version in package.components.items():
+                    implicit_constraint = VersionConstraint.parse(f'^{version.major}.{version.minor}.0')
+                    component_version = dependency_package.components[component]
+                    dependency_components[component] = implicit_constraint
+
+            for component, constraint in dependency_components.items():
+                if component not in dependency_package.components:
+                    raise PackageComponentDependencyError(package.name, dependency,
+                                                          component, constraint)
+
+                component_version = dependency_package.components[component]
+                log.debug(f'dependency package {dependency.name}: '
+                          f'component {component} version is {component_version}')
+
+                if not constraint.allows_all(component_version):
+                    raise PackageComponentDependencyError(package.name, dependency, component,
+                                                          constraint, component_version)
 
         log.debug(f'checking conflicts for {name}')
         for conflict in package.manifest['package']['breaks']:
             conflicting_package = packages.get(conflict.name)
             if conflicting_package is None:
                 continue
+
             installed_version = conflicting_package.version
             log.debug(f'conflicting package is installed {conflict.name}: {installed_version}')
             if conflict.constraint.allows_all(installed_version):
                 raise PackageConflictError(package.name, conflict, installed_version)
+
+            for component, constraint in conflicting_package.components.items():
+                if component not in conflicting_package.components:
+                    continue
+
+                component_version = conflicting_package.components[component]
+                log.debug(f'conflicting package {dependency.name}: '
+                          f'component {component} version is {component_version}')
+
+                if constraint.allows_all(component_version):
+                    raise PackageComponentConflictError(package.name, dependency, component,
+                                                        constraint, component_version)
 
 
 class PackageManager:
@@ -154,7 +194,7 @@ class PackageManager:
                  docker_api: DockerApi,
                  registry_resolver: RegistryResolver,
                  database: PackageDatabase,
-                 manifest_resolver: ManifestResolver,
+                 metadata_resolver: MetadataResolver,
                  service_creator: ServiceCreator,
                  device_information: Any,
                  lock: filelock.FileLock):
@@ -164,7 +204,7 @@ class PackageManager:
         self.docker = docker_api
         self.registry_resolver = registry_resolver
         self.database = database
-        self.manifest_resolver = manifest_resolver
+        self.metadata_resolver = metadata_resolver
         self.service_creator = service_creator
         self.feature_registry = service_creator.feature_registry
         self.is_multi_npu = device_information.is_multi_npu()
@@ -591,7 +631,7 @@ class PackageManager:
         source = LocalSource(package_entry,
                              self.database,
                              self.docker,
-                             self.manifest_resolver)
+                             self.metadata_resolver)
         return source.get_package()
 
     def get_package_source(self,
@@ -624,12 +664,12 @@ class PackageManager:
                                   reference,
                                   self.database,
                                   self.docker,
-                                  self.manifest_resolver)
+                                  self.metadata_resolver)
         elif tarboll_path:
             return TarballSource(tarboll_path,
                                  self.database,
                                  self.docker,
-                                 self.manifest_resolver)
+                                 self.metadata_resolver)
         elif package_ref:
             package_entry = self.database.get_package(package_ref.name)
 
@@ -643,7 +683,7 @@ class PackageManager:
                     return LocalSource(package_entry,
                                        self.database,
                                        self.docker,
-                                       self.manifest_resolver)
+                                       self.metadata_resolver)
                 if package_entry.default_reference is not None:
                     package_ref.reference = package_entry.default_reference
                 else:
@@ -654,7 +694,7 @@ class PackageManager:
                                   package_ref.reference,
                                   self.database,
                                   self.docker,
-                                  self.manifest_resolver)
+                                  self.metadata_resolver)
         else:
             raise ValueError('No package source provided')
 
@@ -818,7 +858,7 @@ class PackageManager:
         return PackageManager(DockerApi(docker.from_env(), ProgressManager()),
                               registry_resolver,
                               PackageDatabase.from_file(),
-                              ManifestResolver(docker_api, registry_resolver),
+                              MetadataResolver(docker_api, registry_resolver),
                               ServiceCreator(FeatureRegistry(SonicDB), SonicDB),
                               device_info,
                               filelock.FileLock(PACKAGE_MANAGER_LOCK_FILE, timeout=0))

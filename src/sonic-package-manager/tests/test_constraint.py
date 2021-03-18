@@ -49,6 +49,22 @@ def test_constraint_only_name():
     assert package_constraint.constraint == VersionRange()
 
 
+def test_constraint_from_dict():
+    package_constraint = PackageConstraint.parse({
+        'name': 'swss',
+        'version': '^1.0.0',
+        'components': {
+            'libswsscommon': '^1.1.0',
+        },
+    })
+    assert package_constraint.name == 'swss'
+    assert package_constraint.constraint.allows(Version.parse('1.0.0'))
+    assert not package_constraint.constraint.allows(Version.parse('2.0.0'))
+    assert package_constraint.components['libswsscommon'].allows(Version.parse('1.2.0'))
+    assert not package_constraint.components['libswsscommon'].allows(Version.parse('1.0.0'))
+    assert not package_constraint.components['libswsscommon'].allows(Version.parse('2.0.0'))
+
+
 def test_version_to_tag():
     assert version.version_to_tag(Version.parse('1.0.0-rc0')) == '1.0.0-rc0'
     assert version.version_to_tag(Version.parse('1.0.0-rc0+152')) == '1.0.0-rc0_152'

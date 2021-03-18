@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict
 
 from sonic_package_manager.database import PackageEntry
-from sonic_package_manager.manifest import Manifest
+from sonic_package_manager.metadata import Metadata
+from sonic_package_manager.version import Version
 
 
 @dataclass
@@ -12,7 +14,9 @@ class Package:
 
     Attributes:
         entry: Package entry in package database
+        metadata: Metadata object for this package
         manifest: Manifest for this package
+        components: Components versions for this package
         name: Name of the package from package database
         repository: Default repository to pull this package from
         image_id: Docker image ID of the installed package;
@@ -23,7 +27,7 @@ class Package:
     """
 
     entry: PackageEntry
-    manifest: Manifest
+    metadata: Metadata
 
     @property
     def name(self): return self.entry.name
@@ -42,3 +46,10 @@ class Package:
 
     @property
     def version(self): return self.entry.version
+
+    @property
+    def manifest(self): return self.metadata.manifest
+
+    @property
+    def components(self): return self.metadata.components
+
