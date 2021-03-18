@@ -106,6 +106,7 @@ class FeatureHandler(object):
 
     def handle(self, feature_name, feature_cfg):
         feature = Feature(feature_name, feature_cfg, self._device_config)
+        self._cached_config.setdefault(feature_name, Feature(feature_name, {}))
 
         # Change auto-restart configuration first.
         # If service reached failed state before this configuration applies (e.g. on boot)
