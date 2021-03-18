@@ -7,7 +7,6 @@
 #############################################################################
 
 import os
-import time
 
 try:
     from sonic_platform_base.psu_base import PsuBase
@@ -260,9 +259,6 @@ class Psu(PsuBase):
         Returns:
             string: Model/part number of device
         """
-        if not os.path.exists(self.eeprom_addr):
-            os.system('echo 24c02 0x{} > /sys/bus/i2c/devices/i2c-{}/new_device'.format(PSU_I2C_MAPPING[self.index]["eeprom_addr"], self.i2c_num))
-            time.sleep(5)
         model = self.read_fru(self.eeprom_addr, TLV_ATTR_TYPE_MODEL)
         if not model:
             return "N/A"
@@ -274,9 +270,6 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        if not os.path.exists(self.eeprom_addr):
-            os.system('echo 24c02 0x{} > /sys/bus/i2c/devices/i2c-{}/new_device'.format(PSU_I2C_MAPPING[self.index]["eeprom_addr"], self.i2c_num))
-            time.sleep(5)
         serial = self.read_fru(self.eeprom_addr, TLV_ATTR_TYPE_SERIAL)
         if not serial:
             return "N/A"
