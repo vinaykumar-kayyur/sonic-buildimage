@@ -23,31 +23,21 @@ stages:
   - template: template/build-template.yml
     parameters:
       platform: barefoot
-      platform_short: barefoot
   - template: template/build-template.yml
     parameters:
       platform: centec
-      platform_short: centec
   - template: template/build-template.yml
     parameters:
       platform: mellanox
-      platform_short: mlnx
   - template: template/build-template.yml
     parameters:
       platform: vs
-      platform_short: vs
   - template: template/build-template.yml
     parameters:
       platform: innovium
-      platform_short: innovium
   - template: template/build-template.yml
     parameters:
-      platform: broadcom
-      platform_short: brcm
-  - template: template/build-template.yml
-    parameters:
-      platform: broadcom
-      platform_short: brcm
+      platform: nephos
 
 - stage: UpgradeVersions
   jobs:
