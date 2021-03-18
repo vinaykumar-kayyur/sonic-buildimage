@@ -112,10 +112,7 @@ module sonic-portchannel {
 
 				leaf ip_prefix {
 					/* key elements are mandatory by default */
-					type union {
-						type stypes:sonic-ip4-prefix;
-						type stypes:sonic-ip6-prefix;
-					}
+					type stypes:sonic-ip-prefix;
 				}
 			} /* end of list PORTCHANNEL_INTERFACE_IPPREFIX_LIST */
 
