@@ -19,4 +19,11 @@ jobs:
     swi_image: true
     raw_image: true
     sync_rpc_image: true
-
+    reproducible_options: "SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web"
+    postSteps: |
+    - script:
+        make freeze
+        git status files/build/versions
+        git add files/build/versions
+        git diff HEAD files/build/versions
+      displayName: "Show git diff"

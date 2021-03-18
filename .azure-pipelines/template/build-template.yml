@@ -69,58 +69,73 @@ parameters:
   type: number
   default: 600
 
+# for reproducible build
+- name: reproducible_options
+  type: string
+
+- name: 'postSteps'
+  type: stepList
+  default: []
 jobs:
 - job:
   pool: ${{ parameters.pool }}
   displayName: ${{ parameters.platform }}
   timeoutInMinutes: ${{ parameters.timeout }}
   steps:
-  - template: cleanup.yml
+  - script: |
+    if sudo [ -f /var/run/march/docker.pid ] ; then
+        pid=`sudo cat /var/run/march/docker.pid` ; sudo kill $pid
+    fi
+    sudo rm -f /var/run/march/docker.pid
+    sudo rm -rf /data/march/docker
+
+    # clean native docker build
+    if sudo [ -f dockerfs/var/run/docker.pid ] ; then
+        pid=`sudo cat dockerfs/var/run/docker.pid` ; sudo kill $pid
+    fi
+
+    # clean workspace
+    sudo rm -rf $(ls -A1)
+    displayName: "Clean Workspace"
   - checkout: self
-    clean: true
     submodules: recursive
     displayName: 'Checkout code'
-  - script: |
-      git submodule foreach --recursive 'git clean -xfdf || true'
-      git submodule foreach --recursive 'git reset --hard || true'
-      git submodule foreach --recursive 'git remote update || true'
-      git submodule update --init --recursive
-    displayName: 'Reset submodules'
   - script: |
       set -e
       sudo modprobe overlay
       sudo apt-get install -y acl
       export DOCKER_DATA_ROOT_FOR_MULTIARCH=/data/march/docker
       CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=${{ parameters.cache_mode }} SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/${{ parameters.platform }}"
+      MAKE_OPTIONS="USERNAME=admin SONIC_BUILD_JOBS=$(nproc) $CACHE_OPTIONS ${{ parameters.reproducible_options }}"
       ENABLE_DOCKER_BASE_PULL=y make configure PLATFORM=${{ parameters.platform }} PLATFORM_ARCH=${{ parameters.platform_arch }}
-      trap "sudo rm -rf fsroot" EXIT
 
       if [ ${{ parameters.platform }} == vs ]; then
         if [ ${{ parameters.dbg_image }} == true ]; then
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && \
+          make $MAKE_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && \
             mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
         fi
 
-        make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
+        make $MAKE_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
       else
         if [ ${{ parameters.dbg_image }} == true ]; then
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) INSTALL_DEBUG_TOOLS=y target/sonic-${{ parameters.platform }}.bin && \
+          make  $MAKE_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-${{ parameters.platform }}.bin && \
             mv target/sonic-${{ parameters.platform }}.bin target/sonic-${{ parameters.platform }}-dbg.bin
         fi
         if [ ${{ parameters.swi_image }} == true ]; then
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-${{ parameters.platform }}.swi
+          make $MAKE_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-${{ parameters.platform }}.swi
         fi
         if [ ${{ parameters.raw_image }} == true ]; then
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/sonic-${{ parameters.platform }}.raw
+          make $MAKE_OPTIONS target/sonic-${{ parameters.platform }}.raw
         fi
         if [ ${{ parameters.sync_rpc_image }} == true ]; then
-          make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_short }}-rpc.gz
+          make $MAKE_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_short }}-rpc.gz
         fi
 
-        make USERNAME=admin $CACHE_OPTIONS SONIC_BUILD_JOBS=$(nproc) target/sonic-${{ parameters.platform }}.bin
+        make $MAKE_OPTIONS target/sonic-${{ parameters.platform }}.bin
       fi
     displayName: 'Build sonic image'
-  - template: cleanup.yml
+  - postSteps:
+    - ${{ parameters.postSteps }}
   - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.${{ parameters.platform }}
     displayName: "Archive sonic image"
