@@ -18,7 +18,6 @@ stages:
 - stage: Build
   variables:
   - name: input
-    type: object
     value: ['broadcom':'brcm', 'centec':'centec']
   jobs:
     - ${{ each input in parameters.input }}:
