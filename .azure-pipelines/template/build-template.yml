@@ -136,8 +136,7 @@ jobs:
         make $MAKE_OPTIONS target/sonic-${{ parameters.platform }}.bin
       fi
     displayName: 'Build sonic image'
-  - postSteps:
-    - ${{ parameters.postSteps }}
+  - ${{ parameters.postSteps }}
   - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.${{ parameters.platform }}
     displayName: "Archive sonic image"
