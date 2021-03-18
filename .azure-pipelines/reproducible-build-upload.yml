@@ -14,18 +14,6 @@ schedules:
     - master
   always: true
 
-parameters:
-  - name: platform
-    values:
-      - broadcom
-      - barefoot
-      - centec
-  - name: platform_short
-    values:
-      - brcm
-      - barefoot
-      - centec
-
 stages:
 - stage: Build
   variables:
