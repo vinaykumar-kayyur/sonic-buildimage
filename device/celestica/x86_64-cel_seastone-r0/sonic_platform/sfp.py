@@ -1598,6 +1598,7 @@ class Sfp(SfpBase):
 
         if not self.dom_supported:
             return default
+
         if self.sfp_type == QSFP_TYPE:
             offset = 0
             sfpd_obj = sff8436Dom()
@@ -1613,9 +1614,6 @@ class Sfp(SfpBase):
                     voltage = self._convert_string_to_num(
                         dom_voltage_data['data']['Vcc']['value'])
                     return voltage
-                else:
-                    return default
-            return default
 
         if self.sfp_type == QSFP_DD_TYPE:
             offset = 128
@@ -1633,7 +1631,6 @@ class Sfp(SfpBase):
                     voltage = self._convert_string_to_num(
                         dom_voltage_data['data']['Vcc']['value'])
                     return voltage
-            return default
 
         else:
             offset = 256
@@ -1651,8 +1648,7 @@ class Sfp(SfpBase):
                 voltage = self._convert_string_to_num(
                     dom_voltage_data['data']['Vcc']['value'])
                 return voltage
-            else:
-                return default
+
         return default
 
     def get_tx_bias(self):
@@ -2119,6 +2115,8 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom = open(self._eeprom_path, "r+b")
                 sysfsfile_eeprom.seek(QSFP_POWEROVERRIDE_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', value))
+            except IOError as e:
+                print("Error: unable to open file: %s" % str(e))
             except BaseException:
                 pass
             finally:
