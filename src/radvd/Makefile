@@ -10,7 +10,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./radvd
 
 	# Clone radvd repo
-	git clone https://salsa.debian.org/debian/radvd.git
+	git clone https://github.com/qiluo-msft/radvd.git
 	pushd ./radvd
 
 	# Reset HEAD to the commit of the proper tag

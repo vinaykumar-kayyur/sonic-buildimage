@@ -9,7 +9,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./python-click
 
 	# Clone python-click Debian repo
-	git clone https://salsa.debian.org/debian/python-click
+	git clone https://github.com/qiluo-msft/python-click.git
 
 	pushd ./python-click
 
