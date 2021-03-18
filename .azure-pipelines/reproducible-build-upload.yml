@@ -14,24 +14,31 @@ schedules:
     - master
   always: true
 
+parameters:
+  - name: platform
+    values:
+      - broadcom
+      - barefoot
+      - centec
+  - name: platform_short
+    values:
+      - brcm
+      - barefoot
+      - centec
+
 stages:
 - stage: Build
-  strategy:
-    matrix:
-      brcm:
-        platform: broadcom
-        platform_short: brcm
-      barefoot:
-        platform: barefoot
-        platform_short: barefoot
-      centec:
-        platform: centec
-        platform_short: centec
+  variables:
+  - name: input
+    type: object
+    value: ['broadcom':'brcm', 'centec':'centec']
   jobs:
-  - template: template/build-template.yml
-    parameters:
-      platform: $(platform)
-      platform_short: $(platform_short)
+    - ${{ each input in parameters.input }}:
+      - ${{ each pair in input }}:
+        - template: template/build-template.yml
+          parameters:
+            platform:  ${{ pair.key }}
+            platform_short: ${{ pair.value }}
 
 - stage: UpgradeVersions
   jobs:
