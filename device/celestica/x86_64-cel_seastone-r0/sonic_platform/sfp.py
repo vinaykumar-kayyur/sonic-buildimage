@@ -2117,8 +2117,6 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom.write(struct.pack('B', value))
             except IOError as e:
                 print("Error: unable to open file: %s" % str(e))
-            except BaseException:
-                pass
             finally:
                 if sysfsfile_eeprom is not None:
                     sysfsfile_eeprom.close()
