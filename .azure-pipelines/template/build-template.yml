@@ -85,19 +85,19 @@ jobs:
   timeoutInMinutes: ${{ parameters.timeout }}
   steps:
   - script: |
-    if sudo [ -f /var/run/march/docker.pid ] ; then
+      if sudo [ -f /var/run/march/docker.pid ] ; then
         pid=`sudo cat /var/run/march/docker.pid` ; sudo kill $pid
-    fi
-    sudo rm -f /var/run/march/docker.pid
-    sudo rm -rf /data/march/docker
+      fi
+      sudo rm -f /var/run/march/docker.pid
+      sudo rm -rf /data/march/docker
 
-    # clean native docker build
-    if sudo [ -f dockerfs/var/run/docker.pid ] ; then
+      # clean native docker build
+      if sudo [ -f dockerfs/var/run/docker.pid ] ; then
         pid=`sudo cat dockerfs/var/run/docker.pid` ; sudo kill $pid
-    fi
+      fi
 
-    # clean workspace
-    sudo rm -rf $(ls -A1)
+      # clean workspace
+      sudo rm -rf $(ls -A1)
     displayName: "Clean Workspace"
   - checkout: self
     submodules: recursive
