@@ -10,7 +10,7 @@ INITRAMFS_TOOLS_REVISION = 18fc98e1b63b012f9bcf06ae3f5477872a5880c0
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtaining the initramfs-tools
 	rm -rf ./initramfs-tools
-	git clone --branch v0.130 https://salsa.debian.org/kernel-team/initramfs-tools.git ./initramfs-tools
+	git clone --branch v0.130 https://github.com/qiluo-msft/initramfs-tools.git ./initramfs-tools
 
 	# Patch
 	pushd ./initramfs-tools
