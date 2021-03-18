@@ -37,21 +37,21 @@ stages:
   - template: .azure-pipelines/template/build-template.yml
     parameters:
       platform: broadcom
-      platform_short: brcm
+      platform_rpc: brcm
       cache_mode: rcache
       sync_rpc_image: true
 
   - template: .azure-pipelines/template/build-template.yml
     parameters:
       platform: mellanox
-      platform_short: mlnx
+      platform_rpc: mlnx
       cache_mode: rcache
       sync_rpc_image: true
 
   - template: .azure-pipelines/template/build-template.yml
     parameters:
       platform: vs
-      platform_short: vs
+      platform_rpc: vs
       cache_mode: rcache
 
 - stage: Test

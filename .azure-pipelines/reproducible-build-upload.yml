@@ -11,7 +11,7 @@ schedules:
   displayName: Daily Build
   branches:
     include:
-    - master
+    - 202012
   always: true
 
 stages:
@@ -21,30 +21,37 @@ stages:
     parameters:
       platform: broadcom
       swi_image: true
+      clean_slave: y
   - template: template/build-template.yml
     parameters:
       platform: barefoot
       swi_image: true
+      clean_slave: y
   - template: template/build-template.yml
     parameters:
       platform: centec
-      platform_short: centec
+      platform_rpc: centec
       dbg_image: true
       sync_rpc_image: true
+      clean_slave: y
   - template: template/build-template.yml
     parameters:
       platform: mellanox
-      platform_short: mlnx
+      platform_rpc: mlnx
       sync_rpc_image: true
+      clean_slave: y
   - template: template/build-template.yml
     parameters:
       platform: vs
+      clean_slave: y
   - template: template/build-template.yml
     parameters:
       platform: innovium
+      clean_slave: y
   - template: template/build-template.yml
     parameters:
       platform: nephos
+      clean_slave: y
 
 - stage: UpgradeVersions
   jobs:

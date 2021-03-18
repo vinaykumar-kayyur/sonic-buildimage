@@ -21,7 +21,7 @@ parameters:
   - arm64
   default: amd64
 
-- name: platform_short
+- name: platform_rpc
   type: string
   values:
   - barefoot
@@ -73,10 +73,12 @@ parameters:
   default: 600
 
 # for reproducible build
+- name: clean_slave
+  type: string
+  default: 'n'
 - name: reproducible_options
   type: string
   default: ''
-
 - name: 'postSteps'
   type: stepList
   default: []
@@ -100,6 +102,11 @@ jobs:
 
       # clean workspace
       sudo rm -rf $(ls -A1)
+      # clean slave docker
+      if [ "${{ parameters.clean_slave }}" == "y" ]; then
+        images=$(docker images 'sonic-slave-*' -a -q)
+        [ ! -z "$images" ] && docker rmi -f $images
+      fi
     displayName: "Clean Workspace"
   - checkout: self
     submodules: recursive
@@ -132,7 +139,7 @@ jobs:
           make $MAKE_OPTIONS target/sonic-${{ parameters.platform }}.raw
         fi
         if [ ${{ parameters.sync_rpc_image }} == true ]; then
-          make $MAKE_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_short }}-rpc.gz
+          make $MAKE_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-${{ parameters.platform_rpc }}-rpc.gz
         fi
 
         make $MAKE_OPTIONS target/sonic-${{ parameters.platform }}.bin
