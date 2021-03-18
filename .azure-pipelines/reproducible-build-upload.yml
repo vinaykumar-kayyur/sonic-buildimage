@@ -16,7 +16,6 @@ schedules:
 
 stages:
 - stage: Build
-  jobs:
   strategy:
     matrix:
       brcm:
@@ -28,6 +27,7 @@ stages:
       centec:
         platform: centec
         platform_short: centec
+  jobs:
   - template: template/build-template.yml
     parameters:
       platform: $(platform)
