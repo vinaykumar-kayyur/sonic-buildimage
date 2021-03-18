@@ -34,7 +34,8 @@ parameters:
   - mlnx
   - nephos
   - vs
-  default: $(parameters.platform)
+  - ''
+  default: ''
 
 - name: cache_mode
   type: string
