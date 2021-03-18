@@ -34,21 +34,21 @@ stages:
   pool: sonicbld
 
   jobs:
-  - template: .azure-pipelines/build-template.yml
+  - template: .azure-pipelines/template/build-template.yml
     parameters:
       platform: broadcom
       platform_short: brcm
       cache_mode: rcache
       sync_rpc_image: true
 
-  - template: .azure-pipelines/build-template.yml
+  - template: .azure-pipelines/template/build-template.yml
     parameters:
       platform: mellanox
       platform_short: mlnx
       cache_mode: rcache
       sync_rpc_image: true
 
-  - template: .azure-pipelines/build-template.yml
+  - template: .azure-pipelines/template/build-template.yml
     parameters:
       platform: vs
       platform_short: vs
@@ -115,7 +115,7 @@ stages:
     timeoutInMinutes: 240
 
     steps:
-    - template: .azure-pipelines/run-test-template.yml
+    - template: .azure-pipelines/template/run-test-template.yml
       parameters:
         dut: vlab-01
         tbname: vms-kvm-t0
@@ -128,7 +128,7 @@ stages:
     timeoutInMinutes: 240
 
     steps:
-    - template: .azure-pipelines/run-test-template.yml
+    - template: .azure-pipelines/template/run-test-template.yml
       parameters:
         dut: vlab-03
         tbname: vms-kvm-t1-lag

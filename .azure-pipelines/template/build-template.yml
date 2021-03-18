@@ -41,6 +41,8 @@ parameters:
   - wcache
   - rcache
   - cache
+  - none
+  default: none
 
 - name: pool
   type: string

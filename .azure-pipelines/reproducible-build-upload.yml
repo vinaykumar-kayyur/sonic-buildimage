@@ -11,17 +11,35 @@ schedules:
   displayName: Daily Build
   branches:
     include:
-    - 202012
+    - master
   always: true
-
-pool: sonicbld
 
 stages:
 - stage: Build
   jobs:
-  - template: azure-pipelines-build.yml
+  strategy:
+    matrix:
+      brcm:
+        platform: broadcom
+        platform_short: brcm
+      barefoot:
+        platform: barefoot
+        platform_short: barefoot
+      centec:
+        platform: centec
+        platform_short: centec
+  - template: template/build-template.yml
     parameters:
-      buildSlave: y
+      platform: $(platform)
+      platform_short: $(platform_short)
+      postSteps: |
+      - script:
+          make freeze
+          git status files/build/versions
+          git add files/build/versions
+          git diff HEAD files/build/versions
+        displayName: "Show git diff"
+
 - stage: UpgradeVersions
   jobs:
   - job: UpgradeVersions
@@ -57,6 +75,7 @@ stages:
         git diff files/build/versions
       displayName: 'Freeze Versions'
     - script: |
+        exit 0
         if [ -z "$GIT_USER" ]; then
           echo "Skipped to send the pull request, GIT_USER not set."
           exit 0
