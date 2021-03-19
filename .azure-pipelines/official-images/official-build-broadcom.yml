@@ -10,7 +10,7 @@ trigger: none
 pr: none
 
 jobs:
-- template: ../build-template.yml
+- template: ../template/build-template.yml
   parameters:
     platform: broadcom
     platform_short: brcm
