@@ -16,10 +16,10 @@ pr: none
 
 jobs:
 - ${{ if eq(variables.Build.DefinitionName, 'buildimage.centec.official') }}:
-- template: ../template/build-template.yml
-  parameters:
-    platform: centec
-    platform_rpc: centec
-    cache_mode: wcache
-    dbg_image: true
-    sync_rpc_image: true
+  - template: ../template/build-template.yml
+    parameters:
+      platform: centec
+      platform_rpc: centec
+      cache_mode: wcache
+      dbg_image: true
+      sync_rpc_image: true
