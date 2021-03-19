@@ -18,7 +18,7 @@ jobs:
 - job: 
   steps:
     - script: echo $(variables.Build.DefinitionName)
-- ${{ if eq(variables.Build.DefinitionName, 'buildimage.centec.official') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'buildimage.centec.official') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: centec
