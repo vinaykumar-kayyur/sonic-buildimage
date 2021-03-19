@@ -15,6 +15,9 @@ trigger: none
 pr: none
 
 jobs:
+- job: 
+  steps:
+    - script: echo begin
 - ${{ if eq(variables.Build.DefinitionName, 'buildimage.centec.official') }}:
   - template: ../template/build-template.yml
     parameters:
