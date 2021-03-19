@@ -20,8 +20,8 @@ jobs:
     raw_image: true
     sync_rpc_image: true
     reproducible_options: "SONIC_VERSION_CONTROL_COMPONENTS=deb,py2,py3,web"
-    postSteps: |
-    - script:
+    postSteps:
+    - script: |
         make freeze
         git status files/build/versions
         git add files/build/versions
