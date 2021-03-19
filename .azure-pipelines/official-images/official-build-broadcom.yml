@@ -13,7 +13,7 @@ jobs:
 - template: ../template/build-template.yml
   parameters:
     platform: broadcom
-    platform_short: brcm
+    platform_rpc: brcm
     cache_mode: wcache
     dbg_image: true
     swi_image: true
