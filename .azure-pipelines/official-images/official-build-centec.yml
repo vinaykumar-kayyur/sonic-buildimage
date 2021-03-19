@@ -15,8 +15,8 @@ trigger: none
 pr: none
 
 jobs:
+- ${{ if eq($(platform), 'centec') }}:
 - template: ../template/build-template.yml
-  condition: eq($(platform), 'centec')
   parameters:
     platform: centec
     platform_rpc: centec
