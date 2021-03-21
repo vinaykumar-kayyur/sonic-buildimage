@@ -20,15 +20,15 @@ jobs:
     - script: echo $(Build.DefinitionName)
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.barefoot') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: barefoot
-      platform_short: barefoot
+      platform_rpc: barefoot
       cache_mode: wcache
       swi_image: true
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.broadcom') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: broadcom
       platform_rpc: brcm
@@ -39,7 +39,7 @@ jobs:
       sync_rpc_image: true
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.centec') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: centec
       platform_rpc: centec
@@ -51,58 +51,59 @@ jobs:
       timeout: 3600
       platform: centec-arm64
       platform_arch: arm64
-      platform_short: centec-arm64
+      platform_rpc: centec-arm64
       cache_mode: wcache
       pool: sonicbld_8c
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.generic') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: generic
-      platform_short: generic
+      platform_rpc: generic
       cache_mode: wcache
       dbg_image: true
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.innovium') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: innovium
-      platform_short: innovium
+      platform_rpc: innovium
       cache_mode: wcache
       swi_image: true
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.marvell') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       timeout: 3600
       platform: marvell-armhf
       platform_arch: armhf
-      platform_short: marvell-armhf
+      platform_rpc: marvell-armhf
       cache_mode: wcache
       pool: sonicbld_8c
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.mellanox') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: mellanox
-      platform_short: mlnx
+      platform_rpc: mlnx
       cache_mode: wcache
       dbg_image: true
       sync_rpc_image: true
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.nephos') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: nephos
-      platform_short: nephos
+      platform_rpc: nephos
       cache_mode: wcache
       dbg_image: true
       sync_rpc_image: true
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.vs') }}:
-  - template: ../template/build-template.yml
+  - template: template/build-template.yml
     parameters:
       platform: vs
-      platform_short: vs
+      platform_rpc: vs
       dbg_image: true
       cache_mode: wcache
+
