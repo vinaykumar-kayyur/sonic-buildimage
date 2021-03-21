@@ -19,7 +19,7 @@ jobs:
   steps:
     - script: echo $(Build.DefinitionName)
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.barefoot') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.barefoot') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: barefoot
@@ -27,7 +27,7 @@ jobs:
       cache_mode: wcache
       swi_image: true
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.broadcom') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.broadcom') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: broadcom
@@ -38,7 +38,7 @@ jobs:
       raw_image: true
       sync_rpc_image: true
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.centec') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.centec') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: centec
@@ -55,7 +55,7 @@ jobs:
       cache_mode: wcache
       pool: sonicbld_8c
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.generic') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.generic') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: generic
@@ -63,7 +63,7 @@ jobs:
       cache_mode: wcache
       dbg_image: true
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.innovium') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.innovium') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: innovium
@@ -71,7 +71,7 @@ jobs:
       cache_mode: wcache
       swi_image: true
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.marvell') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.marvell') }}:
   - template: ../template/build-template.yml
     parameters:
       timeout: 3600
@@ -81,7 +81,7 @@ jobs:
       cache_mode: wcache
       pool: sonicbld_8c
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.mellanox') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.mellanox') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: mellanox
@@ -90,7 +90,7 @@ jobs:
       dbg_image: true
       sync_rpc_image: true
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.nephos') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.nephos') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: nephos
@@ -99,7 +99,7 @@ jobs:
       dbg_image: true
       sync_rpc_image: true
 
-- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.vs') }}:
+- ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.vs') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: vs
