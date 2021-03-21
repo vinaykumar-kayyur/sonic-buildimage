@@ -18,7 +18,27 @@ jobs:
 - job: 
   steps:
     - script: echo $(Build.DefinitionName)
-- ${{ if eq(variables['platform'], 'centec') }}:
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.barefoot') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: barefoot
+      platform_short: barefoot
+      cache_mode: wcache
+      swi_image: true
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.broadcom') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: broadcom
+      platform_rpc: brcm
+      cache_mode: wcache
+      dbg_image: true
+      swi_image: true
+      raw_image: true
+      sync_rpc_image: true
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.centec') }}:
   - template: ../template/build-template.yml
     parameters:
       platform: centec
@@ -26,3 +46,63 @@ jobs:
       cache_mode: wcache
       dbg_image: true
       sync_rpc_image: true
+  - template: ../template/build-template.yml
+    parameters:
+      timeout: 3600
+      platform: centec-arm64
+      platform_arch: arm64
+      platform_short: centec-arm64
+      cache_mode: wcache
+      pool: sonicbld_8c
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.generic') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: generic
+      platform_short: generic
+      cache_mode: wcache
+      dbg_image: true
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.innovium') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: innovium
+      platform_short: innovium
+      cache_mode: wcache
+      swi_image: true
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.marvell') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      timeout: 3600
+      platform: marvell-armhf
+      platform_arch: armhf
+      platform_short: marvell-armhf
+      cache_mode: wcache
+      pool: sonicbld_8c
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.mellanox') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: mellanox
+      platform_short: mlnx
+      cache_mode: wcache
+      dbg_image: true
+      sync_rpc_image: true
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.nephos') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: nephos
+      platform_short: nephos
+      cache_mode: wcache
+      dbg_image: true
+      sync_rpc_image: true
+
+- ${{ if eq(variables['platform'], 'Azure.sonic-buildimage.official.vs') }}:
+  - template: ../template/build-template.yml
+    parameters:
+      platform: vs
+      platform_short: vs
+      dbg_image: true
+      cache_mode: wcache
