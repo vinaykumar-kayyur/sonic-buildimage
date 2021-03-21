@@ -16,8 +16,7 @@ pr: none
 
 jobs:
 - job: 
-  steps:
-    - script: echo $(Build.DefinitionName)
+  pool: sonicbld
 
 - ${{ if eq(variables['Build.DefinitionName'], 'Azure.sonic-buildimage.official.barefoot') }}:
   - template: template/build-template.yml
