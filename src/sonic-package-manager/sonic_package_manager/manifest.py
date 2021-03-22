@@ -185,6 +185,7 @@ class ManifestSchema:
             ManifestField('command', DefaultMarshaller(str)),
         ])),
         ManifestRoot('cli', [
+            ManifestField('mandatory', DefaultMarshaller(bool), False),
             ManifestField('show', DefaultMarshaller(str), ''),
             ManifestField('config', DefaultMarshaller(str), ''),
             ManifestField('clear', DefaultMarshaller(str), '')

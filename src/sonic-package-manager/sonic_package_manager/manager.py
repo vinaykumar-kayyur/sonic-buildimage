@@ -183,6 +183,25 @@ def validate_package_tree(packages: Dict[str, Package]):
                                                         constraint, component_version)
 
 
+def validate_package_cli_can_be_skipped(package: Package, skip: bool):
+    ''' Checks whether package CLI installation can be skipped.
+
+    Args:
+        package: Package to validate
+        skip: Whether to skip installing CLI
+
+    Raises:
+        PackageManagerError
+
+    '''
+
+    if package.manifest['cli']['mandatory'] and skip:
+        raise PackageManagerError(f'CLI is mandatory for package {package.name} '
+                                  f'but it was requested to be not installed')
+    elif skip:
+        log.warning(f'Package {package.name} CLI plugin will not be installed')
+
+
 class PackageManager:
     """ SONiC Package Manager. This class provides public API
     for sonic_package_manager python library. It has functionality
@@ -263,7 +282,8 @@ class PackageManager:
                             source: PackageSource,
                             force=False,
                             enable=False,
-                            default_owner='local'):
+                            default_owner='local',
+                            skip_cli_plugin_installation=False):
         """ Install SONiC Package from source represented by PackageSource.
         This method contains the logic of package installation.
 
@@ -272,6 +292,7 @@ class PackageManager:
             force: Force the installation.
             enable: If True the installed feature package will be enabled.
             default_owner: Owner of the installed package.
+            skip_cli_plugin_installation: Skip CLI plugin installation.
         Raises:
             PackageManagerError
         """
@@ -297,6 +318,7 @@ class PackageManager:
 
         with failure_ignore(force):
             validate_package_tree(installed_packages)
+            validate_package_cli_can_be_skipped(package, skip_cli_plugin_installation)
 
         # After all checks are passed we proceed to actual installation
 
@@ -313,8 +335,9 @@ class PackageManager:
                 self.service_creator.create(package, state=feature_state, owner=default_owner)
                 exit_stack.callback(rollback_wrapper(self.service_creator.remove, package))
 
-                self._install_cli_plugins(package)
-                exit_stack.callback(rollback_wrapper(self._uninstall_cli_plugins, package))
+                if not skip_cli_plugin_installation:
+                    self._install_cli_plugins(package)
+                    exit_stack.callback(rollback_wrapper(self._uninstall_cli_plugins, package))
 
                 exit_stack.pop_all()
         except Exception as err:
@@ -406,14 +429,16 @@ class PackageManager:
     @under_lock
     def upgrade_from_source(self,
                             source: PackageSource,
-                            force=False):
+                            force=False,
+                            skip_cli_plugin_installation=False):
         """ Upgrade SONiC Package to a version the package reference
         expression specifies. Can force the upgrade if force parameter
         is True. Force can allow a package downgrade.
 
         Args:
             source: SONiC Package source
-            force: Force the installation.
+            force: Force the upgrade.
+            skip_cli_plugin_installation: Skip CLI plugin installation.
         Raises:
             PackageManagerError
         """
@@ -461,6 +486,7 @@ class PackageManager:
 
         with failure_ignore(force):
             validate_package_tree(installed_packages)
+            validate_package_cli_can_be_skipped(new_package, skip_cli_plugin_installation)
 
         # After all checks are passed we proceed to actual upgrade
 
@@ -496,7 +522,8 @@ class PackageManager:
                 if self.feature_registry.is_feature_enabled(new_feature):
                     self._systemctl_action(new_package, 'start')
 
-                self._install_cli_plugins(new_package)
+                if not skip_cli_plugin_installation:
+                    self._install_cli_plugins(new_package)
 
                 exit_stack.pop_all()
         except Exception as err:

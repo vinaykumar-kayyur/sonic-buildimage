@@ -108,6 +108,26 @@ PACKAGE_SOURCE_OPTIONS = [
 ]
 
 
+PACKAGE_COMMON_INSTALL_OPTIONS = [
+    click.option('--skip-cli-plugin-installation',
+                  is_flag=True,
+                  help='Do not install CLI plugins provided by the package '
+                  'on the host OS. NOTE: In case when package /cli/mandatory '
+                  'field is set to True this option will fail the installation.'),
+]
+
+
+PACKAGE_COMMON_OPERATION_OPTIONS = [
+    click.option('-f', '--force',
+                 is_flag=True,
+                 help='Force operation by ignoring failures'),
+    click.option('-y', '--yes',
+                 is_flag=True,
+                 help='Automatically answer yes on prompts'),
+    click_log.simple_verbosity_option(log),
+]
+
+
 def get_package_status(package: PackageEntry):
     """ Returns the installation status message for package. """
 
@@ -184,7 +204,6 @@ def list(ctx):
 @package.command()
 @add_options(PACKAGE_SOURCE_OPTIONS)
 @click.pass_context
-@click_log.simple_verbosity_option(log)
 def manifest(ctx,
              package_expr,
              from_repository,
@@ -296,12 +315,6 @@ def remove(ctx, name):
 
 
 @cli.command()
-@click.option('-f', '--force',
-              is_flag=True,
-              help='Force installation by ignoring failures')
-@click.option('-y', '--yes',
-              is_flag=True,
-              help='Automatically answer yes on prompts')
 @click.option('--enable',
               is_flag=True,
               help='Set the default state of the feature to enabled '
@@ -313,8 +326,9 @@ def remove(ctx, name):
               default='local',
               help='Default owner configuration setting for a feature')
 @add_options(PACKAGE_SOURCE_OPTIONS)
+@add_options(PACKAGE_COMMON_OPERATION_OPTIONS)
+@add_options(PACKAGE_COMMON_INSTALL_OPTIONS)
 @click.pass_context
-@click_log.simple_verbosity_option(log)
 @root_privileges_required
 def install(ctx,
             package_expr,
@@ -323,7 +337,8 @@ def install(ctx,
             force,
             yes,
             enable,
-            default_owner):
+            default_owner,
+            skip_cli_plugin_installation):
     """ Install package """
 
     manager: PackageManager = ctx.obj
@@ -338,6 +353,7 @@ def install(ctx,
         'force': force,
         'enable': enable,
         'default_owner': default_owner,
+        'skip_cli_plugin_installation': skip_cli_plugin_installation,
     }
 
     try:
@@ -352,11 +368,10 @@ def install(ctx,
 
 
 @cli.command()
-@click.option('-f', '--force', is_flag=True)
-@click.option('-y', '--yes', is_flag=True)
 @add_options(PACKAGE_SOURCE_OPTIONS)
+@add_options(PACKAGE_COMMON_OPERATION_OPTIONS)
+@add_options(PACKAGE_COMMON_INSTALL_OPTIONS)
 @click.pass_context
-@click_log.simple_verbosity_option(log)
 @root_privileges_required
 def upgrade(ctx,
             package_expr,
@@ -374,11 +389,16 @@ def upgrade(ctx,
         click.confirm(f'Package is going to be upgraded with {package_source}, '
                       f'continue?', abort=True, show_default=True)
 
+    upgrade_opts = {
+        'force': force,
+        'skip_cli_plugin_installation': skip_cli_plugin_installation,
+    }
+
     try:
         manager.upgrade(package_expr,
                         from_repository,
                         from_tarball,
-                        force=force)
+                        **upgrade_opts)
     except Exception as err:
         exit_cli(f'Failed to upgrade {package_source}: {err}', fg='red')
     except KeyboardInterrupt:
@@ -386,11 +406,9 @@ def upgrade(ctx,
 
 
 @cli.command()
-@click.option('-f', '--force', is_flag=True)
-@click.option('-y', '--yes', is_flag=True)
+@add_options(PACKAGE_COMMON_OPERATION_OPTIONS)
 @click.argument('name')
 @click.pass_context
-@click_log.simple_verbosity_option(log)
 @root_privileges_required
 def uninstall(ctx, name, force, yes):
     """ Uninstall package """
@@ -410,12 +428,10 @@ def uninstall(ctx, name, force, yes):
 
 
 @cli.command()
-@click.option('-f', '--force', is_flag=True)
-@click.option('-y', '--yes', is_flag=True)
+@add_options(PACKAGE_COMMON_OPERATION_OPTIONS)
 @click.option('--dockerd-socket', type=click.Path())
 @click.argument('database', type=click.Path())
 @click.pass_context
-@click_log.simple_verbosity_option(log)
 @root_privileges_required
 def migrate(ctx, database, force, yes, dockerd_socket):
     """ Migrate packages from the given database file """
