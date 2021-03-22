@@ -144,6 +144,7 @@ jobs:
 
         make $MAKE_OPTIONS target/sonic-${{ parameters.platform }}.bin
       fi
+      sudo rm fsroot -rf
     displayName: 'Build sonic image'
   - ${{ parameters.postSteps }}
   - publish: $(System.DefaultWorkingDirectory)/
