@@ -88,7 +88,6 @@ stages:
         git diff files/build/versions
       displayName: 'Freeze Versions'
     - script: |
-        exit 0
         if [ -z "$GIT_USER" ]; then
           echo "Skipped to send the pull request, GIT_USER not set."
           exit 0
