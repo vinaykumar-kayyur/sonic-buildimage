@@ -78,9 +78,6 @@ class Metadata:
 class MetadataResolver:
     """ Resolve metadata for package from different sources. """
 
-    MANIFEST_LABEL_KEY = 'com.azure.sonic.manifest'
-    COMPONENTS_VERSION_LABEL_KEY = 'com.azure.sonic.versions'
-
     def __init__(self, docker, registry_resolver):
         self.docker = docker
         self.registry_resolver = registry_resolver
