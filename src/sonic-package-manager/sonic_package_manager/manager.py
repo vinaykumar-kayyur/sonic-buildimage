@@ -144,7 +144,6 @@ def validate_package_tree(packages: Dict[str, Package]):
                 dependency_components = {}
                 for component, version in package.components.items():
                     implicit_constraint = VersionConstraint.parse(f'^{version.major}.{version.minor}.0')
-                    component_version = dependency_package.components[component]
                     dependency_components[component] = implicit_constraint
 
             for component, constraint in dependency_components.items():

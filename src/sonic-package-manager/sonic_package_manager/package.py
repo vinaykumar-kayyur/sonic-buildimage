@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-from dataclasses import dataclass, field
-from typing import Dict
+from dataclasses import dataclass
 
 from sonic_package_manager.database import PackageEntry
 from sonic_package_manager.metadata import Metadata
-from sonic_package_manager.version import Version
 
 
 @dataclass
