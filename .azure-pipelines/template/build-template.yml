@@ -89,6 +89,7 @@ jobs:
   timeoutInMinutes: ${{ parameters.timeout }}
   steps:
   - script: |
+      set -xe
       if sudo [ -f /var/run/march/docker.pid ] ; then
         pid=`sudo cat /var/run/march/docker.pid` ; sudo kill $pid
       fi
@@ -104,6 +105,9 @@ jobs:
       sudo rm -rf $(ls -A1)
       # clean slave docker
       if [ "${{ parameters.clean_slave }}" == "y" ]; then
+        containers=$(docker ps -qa)
+        [ ! -z "$containers" ] && docker stop $containers
+        [ ! -z "$containers" ] && docker rm $containers
         images=$(docker images 'sonic-slave-*' -a -q)
         [ ! -z "$images" ] && docker rmi -f $images
       fi
