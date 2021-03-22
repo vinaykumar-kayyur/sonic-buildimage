@@ -22,7 +22,7 @@ stages:
     CACHE_MODE: wcache
     VERSION_CONTROL_OPTIONS: 'SONIC_VERSION_CONTROL_COMPONENTS='
   jobs:
-  - template: azure-pipelines-build.yml
+  - template: template/azure-pipelines-build.yml
     parameters:
       buildOptions: '${{ variables.VERSION_CONTROL_OPTIONS }} SONIC_BUILD_JOBS=$(nproc) ENABLE_IMAGE_SIGNATURE=y'
       preSteps:
