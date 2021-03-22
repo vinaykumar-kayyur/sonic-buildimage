@@ -68,7 +68,14 @@ class Test_yang_models:
             'PORTCHANNEL_MEMEBER_WITH_NON_EXIST_PORTCHANNEL': {
                     'desc': 'Configure PortChannel in PORTCHANNEL_MEMEBER table \
                         which does not exist in PORTCHANNEL table.',
-                    'eStr': self.defaultYANGFailure['LeafRef'] + ['portchannel_name']
+                    'eStr': self.defaultYANGFailure['LeafRef'] + \
+                    ['portchannel', 'name']
+            },
+            'PORTCHANNEL_MEMEBER_WITH_NON_EXIST_PORT': {
+                    'desc': 'Configure Port in PORTCHANNEL_MEMEBER table \
+                        which does not exist in PORT table.',
+                    'eStr': self.defaultYANGFailure['LeafRef'] + \
+                    ['port', 'name']
             },
             'VLAN_MEMEBER_WITH_NON_EXIST_VLAN': {
                 'desc': 'Configure vlan-id in VLAN_MEMBER table which does not exist in VLAN table.',

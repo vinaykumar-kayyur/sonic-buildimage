@@ -127,6 +127,22 @@
 			}
 		}
 	},
+	"PORTCHANNEL_MEMEBER_WITH_NON_EXIST_PORT": {
+		"sonic-portchannel:sonic-portchannel": {
+			"sonic-portchannel:PORTCHANNEL_MEMBER": {
+				"PORTCHANNEL_MEMBER_LIST": [{
+					"name": "PortChannel0002",
+					"port": "Ethernet0"
+				}]
+			},
+			"sonic-portchannel:PORTCHANNEL": {
+				"PORTCHANNEL_LIST": [{
+					"name": "PortChannel0002",
+					"admin_status": "up"
+				}]
+			}
+		}
+	},
 
 	"PORT_CHANNEL_TEST": {
 		"sonic-portchannel:sonic-portchannel": {

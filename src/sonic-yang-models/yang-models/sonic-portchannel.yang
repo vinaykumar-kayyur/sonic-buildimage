@@ -96,18 +96,18 @@ module sonic-portchannel {
 
 			list PORTCHANNEL_MEMBER_LIST {
 
-				key "portchannel_name port";
+				key "name port";
 
-				leaf portchannel_name {
+				leaf name {
 					type leafref {
-						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name";
+						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 					}
 				}
 
 				leaf port {
 					/* key elements are mandatory by default */
 					type leafref {
-						path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+						path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
 					}
 				}
 			} /* end of list PORTCHANNEL_MEMBER_LIST */
