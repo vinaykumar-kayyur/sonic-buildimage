@@ -70,12 +70,16 @@ class PackageSonicRequirementError(PackageInstallationError):
     """ Exception for installation errors, when SONiC version requirement is not met. """
 
     name: str
+    component: str
     constraint: PackageConstraint
-    installed_ver: Version
+    installed_ver: Optional[Version] = None
 
     def __str__(self):
-        return (f'Package {self.name} requires base OS compatibility version {self.constraint} '
-                f'while the installed version is {self.installed_ver}')
+        if self.installed_ver is not None:
+            return (f'Package {self.name} requires base OS component {self.component} version {self.constraint} '
+                    f'while the installed version is {self.installed_ver}')
+        return (f'Package {self.name} requires base OS component {self.component} version {self.constraint} '
+                f'but it is not present int base OS image')
 
 
 @dataclass

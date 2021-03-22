@@ -115,6 +115,7 @@ def fake_metadata_resolver():
                     'package': {
                         'version': version,
                         'name': name,
+                        'base-os': {},
                     },
                     'service': {
                         'name': name,
@@ -132,7 +133,9 @@ def fake_device_info():
         def __init__(self):
             self.multi_npu = True
             self.num_npus = 1
-            self.compat = '1.0.0'
+            self.version_info = {
+                'libswsscommon': '1.0.0',
+            }
 
         def is_multi_npu(self):
             return self.multi_npu
@@ -141,9 +144,7 @@ def fake_device_info():
             return self.num_npus
 
         def get_sonic_version_info(self):
-            return {
-                'base_os_compatibility_version': self.compat
-            }
+            return self.version_info
 
     yield FakeDeviceInfo()
 

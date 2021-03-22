@@ -118,6 +118,26 @@ def parse_reference_expression(expression):
         return PackageReference.parse(expression)
 
 
+def validate_package_base_os_constraints(package: Package, sonic_version_info: Dict[str, str]):
+    """ Verify that all dependencies on base OS components are met.
+    Args:
+        package: Package to check constraints for.
+        sonic_version_info: SONiC components version information.
+    Raises:
+        PackageSonicRequirementError: in case dependency is not satisfied.
+    """
+
+    base_os_constraints = package.manifest['package']['base-os'].components
+    for component, constraint in base_os_constraints.items():
+        if component not in sonic_version_info:
+            raise PackageSonicRequirementError(package.name, component, constraint)
+
+        version = Version.parse(sonic_version_info[component])
+
+        if not constraint.allows_all(version):
+            raise PackageSonicRequirementError(package.name, component, constraint, version)
+
+
 def validate_package_tree(packages: Dict[str, Package]):
     """ Verify that all dependencies are met in all packages passed to this function.
     Args:
@@ -228,7 +248,6 @@ class PackageManager:
         self.is_multi_npu = device_information.is_multi_npu()
         self.num_npus = device_information.get_num_npus()
         self.version_info = device_information.get_sonic_version_info()
-        self.base_os_version = Version.parse(self.version_info.get('base_os_compatibility_version'))
 
     @under_lock
     def add_repository(self, *args, **kwargs):
@@ -305,18 +324,11 @@ class PackageManager:
                 raise PackageInstallationError(f'{name} is already installed')
 
         version = package.manifest['package']['version']
-        version_constraint = package.manifest['package']['base-os-constraint']
         feature_state = 'enabled' if enable else 'disabled'
-
-        with failure_ignore(force):
-            if not version_constraint.allows_all(self.base_os_version):
-                raise PackageSonicRequirementError(package.name,
-                                                   version_constraint,
-                                                   self.base_os_version)
-
         installed_packages = self._get_installed_packages_and(package)
 
         with failure_ignore(force):
+            validate_package_base_os_constraints(package, self.version_info)
             validate_package_tree(installed_packages)
             validate_package_cli_can_be_skipped(package, skip_cli_plugin_installation)
 
@@ -474,17 +486,11 @@ class PackageManager:
                 raise PackageUpgradeError(f'Request to downgrade from {old_version} to {new_version}. '
                                           f'Downgrade might be not supported by the package')
 
-        version_constraint = new_package.manifest['package']['base-os-constraint']
-
-        with failure_ignore(force):
-            if not version_constraint.allows_all(self.base_os_version):
-                raise PackageSonicRequirementError(new_package.name, version_constraint,
-                                                   self.base_os_version)
-
         # remove currently installed package from the list
         installed_packages = self._get_installed_packages_and(new_package)
 
         with failure_ignore(force):
+            validate_package_base_os_constraints(new_package, self.version_info)
             validate_package_tree(installed_packages)
             validate_package_cli_can_be_skipped(new_package, skip_cli_plugin_installation)
 

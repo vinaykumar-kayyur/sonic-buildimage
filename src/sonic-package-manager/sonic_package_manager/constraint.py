@@ -33,11 +33,11 @@ class ComponentConstraints:
     components: Dict[str, VersionConstraint] = field(default_factory=dict)
 
     @staticmethod
-    def parse(constraint: Dict) -> 'ComponentConstraints':
+    def parse(constraints: Dict) -> 'ComponentConstraints':
         """ Parse constraint from dictionary.
 
         Args:
-            constraint: dictionary with component name
+            constraints: dictionary with component name
             as key and constraint expression as value
 
         Returns:
@@ -46,7 +46,7 @@ class ComponentConstraints:
         """
 
         components = {component: VersionConstraint.parse(version)
-                     for component, version in constraint.get('components', {}).items()}
+                     for component, version in constraints.items()}
         return ComponentConstraints(components)
 
 

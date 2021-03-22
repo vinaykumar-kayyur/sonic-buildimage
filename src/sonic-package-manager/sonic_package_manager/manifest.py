@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 
 from sonic_package_manager.constraint import (
-    ComponentsConstraint,
+    ComponentConstraints,
     PackageConstraint,
     VersionConstraint
 )
@@ -151,7 +151,7 @@ class ManifestSchema:
             ManifestField('name', DefaultMarshaller(str)),
             ManifestField('description', DefaultMarshaller(str), ''),
             ManifestField('base-os-constraint', ParsedMarshaller(VersionConstraint), VersionRange()),
-            ManifestField('base-os', ParsedMarshaller(ComponentsConstraint)),
+            ManifestField('base-os', ParsedMarshaller(ComponentConstraints), dict()),
             ManifestArray('depends', ParsedMarshaller(PackageConstraint)),
             ManifestArray('breaks', ParsedMarshaller(PackageConstraint)),
             ManifestField('init-cfg', DefaultMarshaller(dict), dict()),

@@ -21,8 +21,8 @@ def test_installation_dependencies(package_manager, fake_metadata_resolver, mock
     manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
     manifest['package']['depends'] = ['swss^2.0.0']
     with pytest.raises(PackageInstallationError,
-                       match='Package test-package requires '
-                             'swss>=2.0.0,<3.0.0 but version 1.0.0 is installed'):
+                       match='Package test-package requires swss>=2.0.0,<3.0.0 '
+                             'but version 1.0.0 is installed'):
         package_manager.install('test-package')
 
 
@@ -139,17 +139,16 @@ def test_installation_breaks_not_installed_package(package_manager, fake_metadat
 
 def test_installation_base_os_constraint(package_manager, fake_metadata_resolver):
     manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
-    manifest['package']['base-os-constraint'] = '>=2.0.0'
+    manifest['package']['base-os']['libswsscommon'] = '>=2.0.0'
     with pytest.raises(PackageSonicRequirementError,
-                       match='Package test-package requires '
-                             'base OS compatibility version >=2.0.0 '
-                             'while the installed version is 1.0.0'):
+                       match='Package test-package requires base OS component libswsscommon '
+                             'version >=2.0.0 while the installed version is 1.0.0'):
         package_manager.install('test-package')
 
 
 def test_installation_base_os_constraint_satisfied(package_manager, fake_metadata_resolver):
     manifest = fake_metadata_resolver.metadata_store['Azure/docker-test']['1.6.0']['manifest']
-    manifest['package']['base-os-constraint'] = '^1.0.0'
+    manifest['package']['base-os']['libswsscommon'] = '>=1.0.0'
     package_manager.install('test-package')
 
 
