@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """ Package version constraints module. """
+
 import re
 from abc import ABC
 from dataclasses import dataclass, field
@@ -23,6 +24,30 @@ class VersionConstraint(semver.VersionConstraint, ABC):
         """
 
         return semver.parse_constraint(constraint_expression)
+
+
+@dataclass
+class ComponentConstraints:
+    """ ComponentConstraints is a set of components version constraints. """
+
+    components: Dict[str, VersionConstraint] = field(default_factory=dict)
+
+    @staticmethod
+    def parse(constraint: Dict) -> 'ComponentConstraints':
+        """ Parse constraint from dictionary.
+
+        Args:
+            constraint: dictionary with component name
+            as key and constraint expression as value
+
+        Returns:
+            ComponentConstraints object.
+
+        """
+
+        components = {component: VersionConstraint.parse(version)
+                     for component, version in constraint.get('components', {}).items()}
+        return ComponentConstraints(components)
 
 
 @dataclass

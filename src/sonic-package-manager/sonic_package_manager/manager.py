@@ -184,7 +184,7 @@ def validate_package_tree(packages: Dict[str, Package]):
 
 
 def validate_package_cli_can_be_skipped(package: Package, skip: bool):
-    ''' Checks whether package CLI installation can be skipped.
+    """ Checks whether package CLI installation can be skipped.
 
     Args:
         package: Package to validate
@@ -193,7 +193,7 @@ def validate_package_cli_can_be_skipped(package: Package, skip: bool):
     Raises:
         PackageManagerError
 
-    '''
+    """
 
     if package.manifest['cli']['mandatory'] and skip:
         raise PackageManagerError(f'CLI is mandatory for package {package.name} '

@@ -3,7 +3,11 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 
-from sonic_package_manager.constraint import PackageConstraint, VersionConstraint
+from sonic_package_manager.constraint import (
+    ComponentsConstraint,
+    PackageConstraint,
+    VersionConstraint
+)
 from sonic_package_manager.errors import ManifestError
 from sonic_package_manager.version import Version, VersionRange
 
@@ -147,6 +151,7 @@ class ManifestSchema:
             ManifestField('name', DefaultMarshaller(str)),
             ManifestField('description', DefaultMarshaller(str), ''),
             ManifestField('base-os-constraint', ParsedMarshaller(VersionConstraint), VersionRange()),
+            ManifestField('base-os', ParsedMarshaller(ComponentsConstraint)),
             ManifestArray('depends', ParsedMarshaller(PackageConstraint)),
             ManifestArray('breaks', ParsedMarshaller(PackageConstraint)),
             ManifestField('init-cfg', DefaultMarshaller(dict), dict()),
