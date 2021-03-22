@@ -22,56 +22,40 @@ class Chassis(PddfChassis):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
 
     # Provide the functions/variables below for which implementation is to be overwritten
-    def get_change_event(self, timeout=0):
-        start_time = time.time()
+    sfp_change_event_data = {'valid': 0, 'last': 0, 'present': 0}
+    def get_change_event(self, timeout=2000):
+        now = time.time()
         port_dict = {}
         change_dict = {}
         change_dict['sfp'] = port_dict
-        forever = False
 
-        if timeout == 0:
-            forever = True
-        elif timeout > 0:
-            timeout = timeout / float(1000)  # Convert to secs
-        else:
-            print("get_change_event:Invalid timeout value", timeout)
-            return False, change_dict
+        if timeout < 1000:
+            timeout = 1000
+        timeout = timeout / float(1000)  # Convert to secs
 
-        end_time = start_time + timeout
-        if start_time > end_time:
-            print('get_change_event: time wrap / invalid timeout value', timeout)
-            return False, change_dict  # Time wrap or possibly incorrect timeout
+        if now < (self.sfp_change_event_data['last'] + timeout) and self.sfp_change_event_data['valid']:
+            return True, change_dict
+        
+        bitmap = 0
+        for i in range(34):
+            modpres = self.get_sfp(i).get_presence()
+            if modpres:
+                bitmap = bitmap | (1 << i)
 
-        while timeout >= 0:
-            change_status = 0
-            for index in range(32):
-                intr_status = self.get_sfp(index).get_intr_status()
-                if intr_status:
-                    port_dict[index] = 1
-                else:
-                    port_dict[index] = 0
-
-            for key, value in port_dict.items():
-                if value == 1:
-                    present = self.get_sfp(key).get_presence()
-                    change_status = 1
-                    if present:
-                        port_dict[key] = '1'
+        changed_ports = self.sfp_change_event_data['present'] ^ bitmap
+        if changed_ports:
+            for i in range(34):
+                if (changed_ports & (1 << i)):
+                    if (bitmap & (1 << i)) == 0:
+                        port_dict[i+1] = '0'
                     else:
-                        port_dict[key] = '0'
+                        port_dict[i+1] = '1'
 
-            if change_status:
-                return True, change_dict
-            if forever:
-                time.sleep(1)
-            else:
-                timeout = end_time - time.time()
-                if timeout >= 1:
-                    time.sleep(1)  # We poll at 1 second granularity
-                else:
-                    if timeout > 0:
-                        time.sleep(timeout)
-                    return True, change_dict
 
-        print("get_change_event: Control should not reach here")
-        return False, change_dict
+            # Update teh cache dict
+            self.sfp_change_event_data['present'] = bitmap
+            self.sfp_change_event_data['last'] = now
+            self.sfp_change_event_data['valid'] = 1
+            return True, change_dict
+        else:
+            return True, change_dict
