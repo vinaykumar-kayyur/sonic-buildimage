@@ -221,10 +221,15 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                     # the first available host IP address of the VLAN subnet)
                     ip_addr = next(ip_ntwrk.hosts()) if iface_table_name == "VLAN_INTERFACE" else ip_ntwrk.network_address
 
+                    mask = ip_ntwrk.max_prefixlen
                     if isinstance(ip_ntwrk, ipaddress.IPv4Network):
-                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen))
+                        if ip_ntwrk.prefixlen in range(0, 33):
+                            mask = ip_ntwrk.prefixlen
+                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "iptables -A INPUT -d {}/{} -j DROP".format(ip_addr, mask))
                     elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
-                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {}/{} -j DROP".format(ip_addr, ip_ntwrk.max_prefixlen))
+                        if ip_ntwrk.prefixlen in range(0, 65):
+                            mask = ip_ntwrk.prefixlen
+                        block_ip2me_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "ip6tables -A INPUT -d {}/{} -j DROP".format(ip_addr, mask))
                     else:
                         self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
