@@ -1,5 +1,6 @@
 {% macro general_routing(template_name) %}
 {% set device_type = CONFIG_DB__DEVICE_METADATA['localhost']['type'] %}
+{% set deployment_id = CONFIG_DB__DEVICE_METADATA['localhost']['deployment_id'] %}
 {% set neighbor_type = CONFIG_DB__DEVICE_NEIGHBOR_METADATA[bgp_session['name']]['type'] %}
 {% set neighbor_deployment_id = CONFIG_DB__DEVICE_NEIGHBOR_METADATA[bgp_session['name']]['deployment_id'] %}
 {% set path_template = "bgpd/templates/msft.general/%s/" + template_name + ".conf.j2" %}
@@ -7,7 +8,11 @@
 {%     if device_type == 'MgmtToRRouter' %}
 {%         include path_template % "v4.mgmttor" %}
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
-{%         include path_template % "v4.tor" %}
+{%         if deployment_id is defined and deployment_id == '26' %}
+{%             include path_template % "v4.tor.rotterdam" %}
+{%         else %}
+{%             include path_template % "v4.tor" %}
+{%         endif %}
 {%     elif device_type in ['LeafRouter', 'BackEndLeafRouter'] %}
 {%         if neighbor_type == 'SpineRouter' %}
 {%             include path_template % "v4.leaf.spine" %}
@@ -26,7 +31,11 @@
 {%     if device_type == 'MgmtToRRouter' %}
 {%         include path_template % "v6.mgmttor" %}
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
-{%         include path_template % "v6.tor" %}
+{%         if deployment_id is defined and deployment_id == '26' %}
+{%             include path_template % "v6.tor.rotterdam" %}
+{%         else %}
+{%             include path_template % "v6.tor" %}
+{%         endif %}
 {%     elif device_type in ['LeafRouter', 'BackEndLeafRouter'] %}
 {%         if neighbor_type == 'SpineRouter' %}
 {%             include path_template % "v6.leaf.spine" %}
