@@ -50,7 +50,7 @@
 ```
 (paste your output here)
 ```
-#### Output of `show tech support`:
+#### Output of `show techsupport`:
 
 ```
 (paste your output here or download and attach the file here )
