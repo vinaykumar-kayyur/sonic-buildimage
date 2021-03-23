@@ -36,7 +36,7 @@ stages:
     CACHE_MODE: rcache
 
   jobs:
-  - template: .azure-pipelines/build-template.yml
+  - template: .azure-pipelines/template/build-template.yml
     parameters:
       buildOptions: USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ENABLE_DOCKER_BASE_PULL=y
       jobGroups:
@@ -113,7 +113,7 @@ stages:
     timeoutInMinutes: 240
 
     steps:
-    - template: .azure-pipelines/run-test-template.yml
+    - template: .azure-pipelines/template/run-test-template.yml
       parameters:
         dut: vlab-01
         tbname: vms-kvm-t0
@@ -126,7 +126,7 @@ stages:
     timeoutInMinutes: 240
 
     steps:
-    - template: .azure-pipelines/run-test-template.yml
+    - template: .azure-pipelines/template/run-test-template.yml
       parameters:
         dut: vlab-03
         tbname: vms-kvm-t1-lag
