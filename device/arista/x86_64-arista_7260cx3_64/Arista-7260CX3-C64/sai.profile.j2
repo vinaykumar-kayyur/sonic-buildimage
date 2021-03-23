@@ -1,0 +1,14 @@
+{# Get sai.profile based on switch_role #}
+{%- if DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['subtype'] is defined -%}
+{%-     set switch_subtype = DEVICE_METADATA['localhost']['subtype'] -%}
+{%-     if 'dualtor' in switch_subtype.lower() %}
+{%         set sai_profile_contents = 'SAI_INIT_CONFIG_FILE=/usr/share/sonic/hwsku/th2-a7260cx3-64-64x100G-dual-tor.config.bcm' -%}
+{%-     else %}
+{%-         set sai_profile_contents = 'SAI_INIT_CONFIG_FILE=/usr/share/sonic/hwsku/th2-a7260cx3-64-64x100G.config.bcm' -%}
+{%-     endif %}
+{%- else %}
+{%-     set sai_profile_contents = 'SAI_INIT_CONFIG_FILE=/usr/share/sonic/hwsku/th2-a7260cx3-64-64x100G.config.bcm' -%}
+{%- endif %}
+{# Write the contents of sai_ profile_filename to sai.profile file #}
+{{ sai_profile_contents }}
+SAI_NUM_ECMP_MEMBERS=64
