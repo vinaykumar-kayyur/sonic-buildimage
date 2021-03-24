@@ -28,6 +28,9 @@
                 },
                 "QUEUE_WATERMARK": {
                     "FLEX_COUNTER_STATUS": "enable"
+                },
+                "PG_DROP": {
+                    "FLEX_COUNTER_STATUS": "enable"
                 }
             }
         }

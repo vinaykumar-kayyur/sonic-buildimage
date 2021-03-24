@@ -104,6 +104,13 @@ module sonic-flex_counter {
                 }
             }
 
+            container PG_DROP {
+                /* PG_DROP_STAT_COUNTER_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+            }
+
         }
         /* end of container FLEX_COUNTER_TABLE */
     }
