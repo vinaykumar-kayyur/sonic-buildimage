@@ -44,7 +44,7 @@ class Component:
                 offset = line.rfind('==')
                 if offset > 0:
                     package = line[:offset].strip()
-                    if not package.startswith('http://') and not package.startswith('https://'):
+                    if 'py2' in version_file.lower() or 'py3' in version_file.lower():
                         package = package.lower()
                     version = line[offset+2:].strip()
                     result[package] = version
