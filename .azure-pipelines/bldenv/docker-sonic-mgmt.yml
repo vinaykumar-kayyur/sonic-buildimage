@@ -17,7 +17,7 @@ resources:
   repositories:
   - repository: sonic-build-tools
     type: github
-    endpoint: http://github.com
+    endpoint: build
     name: Azure/sonic-build-tools
 
 stages:
