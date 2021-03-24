@@ -19,7 +19,7 @@ stages:
   - job: Build
     pool: sonicbld
     steps:
-    - template: ../clean.yml
+    - template: ../cleanup.yml
     - checkout: self
       clean: true
       submodules: recursive
