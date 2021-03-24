@@ -50,7 +50,7 @@ steps:
         img=$(virsh -c qemu:///system domblklist ${{ parameters.dut }} | grep vda | awk '{print $2}')
         cp $img $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.img
         gzip $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.img
-        gzip $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.memdmp
+        sudo gzip $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.memdmp
         virsh -c qemu:///system undefine ${{ parameters.dut }}
     fi
 
