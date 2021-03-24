@@ -25,7 +25,7 @@ stages:
   jobs:
   - job: Build
     pool: sonicbld
-    timeoutInMinutes: 180
+    timeoutInMinutes: 360
     steps:
     - template: ../cleanup.yml
     - checkout: self
