@@ -23,7 +23,7 @@ stages:
     - checkout: self
       clean: true
       submodules: recursive
-    - checkout: https://github.com/Azure/sonic-build-tools
+    - checkout: git://github.com/Azure/sonic-build-tools
     - script: |
         set -xe
         cd sonic-buildimage
