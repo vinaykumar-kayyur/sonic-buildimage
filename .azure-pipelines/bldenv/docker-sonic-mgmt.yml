@@ -13,6 +13,12 @@ schedules:
 trigger: none
 pr: none
 
+resources:
+  repositories:
+  - repository: sonic-build-tools
+    type: github
+    name: Azure/sonic-build-tools
+
 stages:
 - stage: Build
   jobs:
@@ -23,7 +29,7 @@ stages:
     - checkout: self
       clean: true
       submodules: recursive
-    - checkout: git://Azure/sonic-build-tools
+    - checkout: sonic-build-tools
     - script: |
         set -xe
         cd sonic-buildimage
