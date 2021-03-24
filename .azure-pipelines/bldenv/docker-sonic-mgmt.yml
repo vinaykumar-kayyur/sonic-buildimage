@@ -1,0 +1,46 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+- cron: "0 8 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+
+trigger: none
+pr: none
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool: sonicbld
+    steps:
+    - template: ../clean.yml
+      displayName: clean work space
+    - checkout: self
+      clean: true
+      submodules: recursive
+    - checkout: https://github.com/Azure/sonic-build-tools
+    - script: |
+        set -xe
+        cd sonic-buildimage
+        make configure PLATFORM=generic
+        make target/docker-sonic-mgmt.gz
+      displayName: Build docker-sonic-mgmt.gz
+    - script: |
+        set -xe
+        sonic-build-tools/script/lib/docker-upload.sh
+      displayName: Upload docker
+      env:
+        DOCKER_IMAGE_FILE = 'docker-sonic-mgmt.gz'
+        DOCKER_IMAGE_TAG  = 'latest'
+        DOCKER_IMAGE_FILE_DIR = 'sonic-buildimage/target'
+        BUILD_NUMBER = $(Build.BuildNumber)
+        REGISTRY_USERNAME = $(user)
+        REGISTRY_PASSWD = $(passwd)
+        REGISTRY_SERVER = 'sonicdev-microsoft.azurecr.io'
+        REGISTRY_PORT = 443
