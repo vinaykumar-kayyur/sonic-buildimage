@@ -16,8 +16,9 @@ pr: none
 resources:
   repositories:
   - repository: sonic-build-tools
-    type: git
-    name: sonic-build-tools
+    type: github
+    endpoint: MyGitHubServiceConnection
+    name: Azure/sonic-build-tools
 
 stages:
 - stage: Build
