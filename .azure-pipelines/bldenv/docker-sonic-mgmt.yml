@@ -20,7 +20,6 @@ stages:
     pool: sonicbld
     steps:
     - template: ../clean.yml
-      displayName: clean work space
     - checkout: self
       clean: true
       submodules: recursive
@@ -36,11 +35,11 @@ stages:
         sonic-build-tools/script/lib/docker-upload.sh
       displayName: Upload docker
       env:
-        DOCKER_IMAGE_FILE = 'docker-sonic-mgmt.gz'
-        DOCKER_IMAGE_TAG  = 'latest'
-        DOCKER_IMAGE_FILE_DIR = 'sonic-buildimage/target'
-        BUILD_NUMBER = $(Build.BuildNumber)
-        REGISTRY_USERNAME = $(user)
-        REGISTRY_PASSWD = $(passwd)
-        REGISTRY_SERVER = 'sonicdev-microsoft.azurecr.io'
-        REGISTRY_PORT = 443
+        DOCKER_IMAGE_FILE: 'docker-sonic-mgmt.gz'
+        DOCKER_IMAGE_TAG: 'latest'
+        DOCKER_IMAGE_FILE_DIR: 'sonic-buildimage/target'
+        BUILD_NUMBER: $(Build.BuildNumber)
+        REGISTRY_USERNAME: $(user)
+        REGISTRY_PASSWD: $(passwd)
+        REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
+        REGISTRY_PORT: 443
