@@ -17,7 +17,7 @@ resources:
   repositories:
   - repository: sonic-build-tools
     type: git
-    name: Azure/sonic-build-tools
+    name: sonic-build-tools
 
 stages:
 - stage: Build
