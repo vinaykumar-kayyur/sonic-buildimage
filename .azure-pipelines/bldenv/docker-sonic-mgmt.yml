@@ -16,7 +16,7 @@ pr: none
 resources:
   repositories:
   - repository: sonic-build-tools
-    type: github
+    type: git
     name: Azure/sonic-build-tools
 
 stages:
