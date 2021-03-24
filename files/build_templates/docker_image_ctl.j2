@@ -365,8 +365,6 @@ start() {
         -v mlnx_sdk_ready:/tmp \
         -e SX_API_SOCKET_FILE=/var/run/sx_sdk/sx_api.sock \
         -v /dev/shm:/dev/shm:rw \
-        -v /usr/share/sonic/device/$PLATFORM:/usr/share/sonic/device/$PLATFORM:ro \
-        -v /host/machine.conf:/host/machine.conf:ro \
 {%- else %}
         --tmpfs /tmp \
 {%- endif %}
