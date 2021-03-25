@@ -34,13 +34,14 @@ stages:
     - checkout: sonic-build-tools
     - script: |
         set -xe
+        cat $(Agent.BuildDirectory)/sonic-build-tools/script/lib/docker-upload.sh
         cd sonic-buildimage
         make configure PLATFORM=generic
         make target/docker-sonic-mgmt.gz
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
-        sonic-build-tools/script/lib/docker-upload.sh
+        $(Agent.BuildDirectory)/sonic-build-tools/script/lib/docker-upload.sh
       displayName: Upload docker
       env:
         DOCKER_IMAGE_FILE: 'docker-sonic-mgmt.gz'
