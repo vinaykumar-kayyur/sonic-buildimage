@@ -13,6 +13,9 @@ schedules:
 trigger: none
 pr: none
 
+variables:
+- group: Container-Registry
+
 resources:
   repositories:
   - repository: sonic-build-tools
@@ -28,7 +31,7 @@ stages:
     timeoutInMinutes: 360
     steps:
     - script: |
-        ls $(Agent.BuildDirectory)
+        ls $(Agent.SourcesDirectory)
     - template: ../cleanup.yml
     - checkout: self
       clean: true
@@ -36,7 +39,7 @@ stages:
     - checkout: sonic-build-tools
     - script: |
         set -xe
-        cat $(Agent.BuildDirectory)/sonic-build-tools/script/lib/docker-upload.sh
+        cat $(Agent.SourcesDirectory)/sonic-build-tools/script/lib/docker-upload.sh
         cd sonic-buildimage
         make configure PLATFORM=generic
         make target/docker-sonic-mgmt.gz
@@ -50,7 +53,7 @@ stages:
         DOCKER_IMAGE_TAG: 'latest'
         DOCKER_IMAGE_FILE_DIR: 'sonic-buildimage/target'
         BUILD_NUMBER: $(Build.BuildNumber)
-        REGISTRY_USERNAME: $(user)
-        REGISTRY_PASSWD: $(passwd)
+        REGISTRY_USERNAME: $(sonicdev-user)
+        REGISTRY_PASSWD: $(sonicdev-password)
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
         REGISTRY_PORT: 443
