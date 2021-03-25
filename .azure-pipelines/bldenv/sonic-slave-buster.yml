@@ -37,7 +37,11 @@ stages:
       submodules: recursive
     - script: |
         set -xe
+        ID=`id -un`
+        sudo mkdir /home/$ID/.docker -p
+        sudo chown -R $ID:$ID /home/$ID
         bash .azure-pipelines/scripts/build.sh
+        rm /home/$ID/.docker/config.json || true
       displayName: Build slave docker
       env:
         DISTRO: $(distro)
