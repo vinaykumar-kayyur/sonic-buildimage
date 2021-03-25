@@ -60,6 +60,6 @@ stages:
         REGISTRY_PASSWD: $(sonicdev-password)
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
         REGISTRY_PORT: 443
-    - publish: $(Pipeline.Workspace)/sonic-buildimage/target
+    - publish: ./sonic-buildimage/target
       artifact: DockerSonicMgmt
       condition: succeededOrFailed()
