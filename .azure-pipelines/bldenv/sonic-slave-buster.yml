@@ -37,7 +37,7 @@ stages:
       submodules: recursive
     - script: |
         set -xe
-        ls -al .azure-pipelines/scripts/build.sh
+        bash .azure-pipelines/scripts/build.sh
       displayName: Build slave docker
       env:
         DISTRO: $(distro)
