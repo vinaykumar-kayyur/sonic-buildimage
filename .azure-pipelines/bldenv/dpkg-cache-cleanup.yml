@@ -21,5 +21,5 @@ jobs:
   - checkout: none
   - script: |
       set -xe
-      sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +29 -type f -delete
+      sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +30 -type f -delete
     displayName: clean dpkg chache
