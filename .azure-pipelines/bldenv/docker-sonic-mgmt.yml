@@ -40,6 +40,7 @@ stages:
         cd sonic-buildimage
         #make configure PLATFORM=generic
         #make target/docker-sonic-mgmt.gz
+        echo abc > target/abc.log
         cd ..
       displayName: Build docker-sonic-mgmt.gz
     - script: |
@@ -59,6 +60,6 @@ stages:
         REGISTRY_PASSWD: $(sonicdev-password)
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
         REGISTRY_PORT: 443
-    - publish: $(Pipeline.Workspace)/
+    - publish: $(Pipeline.Workspace)/sonic-buildimage/target
       artifact: DockerSonicMgmt
       condition: succeededOrFailed()
