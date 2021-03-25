@@ -30,20 +30,24 @@ stages:
     pool: sonicbld
     timeoutInMinutes: 360
     steps:
-    - script: |
-        ls $(Agent.SourcesDirectory)
     - template: ../cleanup.yml
     - checkout: self
       clean: true
-      submodules: recursive
+      #submodules: recursive
     - checkout: sonic-build-tools
     - script: |
         set -xe
-        cat $(Agent.SourcesDirectory)/sonic-build-tools/script/lib/docker-upload.sh
+        cat $WorkSpace/sonic-build-tools/script/lib/docker-upload.sh
+        echo $REGISTRY_USERNAME
+        echo $REGISTRY_PASSWD
         cd sonic-buildimage
         make configure PLATFORM=generic
         make target/docker-sonic-mgmt.gz
       displayName: Build docker-sonic-mgmt.gz
+      env:
+        WorkSpace: $(Agent.SourcesDirectory)
+        REGISTRY_USERNAME: $(sonicdev-user)
+        REGISTRY_PASSWD: $(sonicdev-password)
     - script: |
         set -xe
         $(Agent.BuildDirectory)/sonic-build-tools/script/lib/docker-upload.sh
