@@ -44,8 +44,7 @@ stages:
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
-        find . -maxdepth 2
-        cat ./sonic-build-tools/script/lib/docker-upload.sh
+        cat ./sonic-build-tools/scripts/lib/docker-upload.sh
       displayName: Upload docker
       env:
         DOCKER_IMAGE_FILE: 'docker-sonic-mgmt.gz'
