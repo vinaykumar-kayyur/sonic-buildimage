@@ -40,6 +40,7 @@ stages:
         cd sonic-buildimage
         #make configure PLATFORM=generic
         #make target/docker-sonic-mgmt.gz
+        cd ..
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
