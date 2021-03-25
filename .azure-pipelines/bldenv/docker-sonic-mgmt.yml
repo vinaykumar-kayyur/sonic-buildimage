@@ -61,3 +61,4 @@ stages:
         REGISTRY_PORT: 443
     - publish: sonic-buildimage/
       artifact: DockerSonicMgmt
+      continueOnError: true
