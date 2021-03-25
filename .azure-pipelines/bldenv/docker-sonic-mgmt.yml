@@ -16,13 +16,6 @@ pr: none
 variables:
 - group: Container-Registry
 
-resources:
-  repositories:
-  - repository: sonic-build-tools
-    type: github
-    endpoint: build
-    name: Azure/sonic-build-tools
-
 stages:
 - stage: Build
   jobs:
@@ -34,30 +27,27 @@ stages:
     - checkout: self
       clean: true
       submodules: recursive
-    - checkout: sonic-build-tools
     - script: |
         set -xe
-        cd sonic-buildimage
         make configure PLATFORM=generic
         make target/docker-sonic-mgmt.gz
-        cd ..
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
         ID=`id -un`
         sudo mkdir /home/$ID/.docker -p
         sudo chown -R $ID:$ID /home/$ID
-        ./sonic-build-tools/scripts/lib/docker-upload.sh
+        .azure-pipelines/scripts/docker-upload.sh
         rm /home/$ID/.docker/config.json
       displayName: Upload docker
       env:
         DOCKER_IMAGE_FILE: 'docker-sonic-mgmt.gz'
         DOCKER_IMAGE_TAG: 'latest'
-        DOCKER_IMAGE_FILE_DIR: 'sonic-buildimage/target'
+        DOCKER_IMAGE_FILE_DIR: 'target'
         BUILD_NUMBER: $(Build.BuildNumber)
         REGISTRY_USERNAME: $(sonicdev-user)
         REGISTRY_PASSWD: $(sonicdev-password)
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
         REGISTRY_PORT: 443
-    - publish: ./sonic-buildimage/target
+    - publish: target
       artifact: DockerSonicMgmt
