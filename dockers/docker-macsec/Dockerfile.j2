@@ -31,5 +31,4 @@ COPY ["etc/wpa_supplicant.conf", "/etc/wpa_supplicant.conf"]
 
 LABEL com.azure.sonic.manifest="$manifest"
 
-# ENTRYPOINT ["/usr/bin/supervisord"]
 ENTRYPOINT ["/usr/local/bin/supervisord"]
