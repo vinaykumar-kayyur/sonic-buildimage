@@ -27,6 +27,8 @@ stages:
     pool: sonicbld
     timeoutInMinutes: 360
     steps:
+    - script: |
+        ls $(Agent.BuildDirectory)
     - template: ../cleanup.yml
     - checkout: self
       clean: true
