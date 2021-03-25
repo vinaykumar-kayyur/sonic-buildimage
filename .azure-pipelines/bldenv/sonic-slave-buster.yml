@@ -29,7 +29,7 @@ stages:
       submodules: recursive
     - script: |
         set -xe
-        ./scripts/build.sh
+        .azure-pipelines/scripts/build.sh
       displayName: Build slave docker
       env:
         DISTRO: buster
