@@ -37,7 +37,9 @@ stages:
     - checkout: sonic-build-tools
     - script: |
         set -xe
-        cat $WorkSpace/sonic-build-tools/script/lib/docker-upload.sh
+        pwd
+        find . -maxdepth 3
+        echo $WorkSpace
         echo $REGISTRY_USERNAME
         echo $REGISTRY_PASSWD
         cd sonic-buildimage
@@ -45,7 +47,7 @@ stages:
         make target/docker-sonic-mgmt.gz
       displayName: Build docker-sonic-mgmt.gz
       env:
-        WorkSpace: $(Agent.SourcesDirectory)
+        WorkSpace: $(Agent.BuildDirectory)
         REGISTRY_USERNAME: $(sonicdev-user)
         REGISTRY_PASSWD: $(sonicdev-password)
     - script: |
