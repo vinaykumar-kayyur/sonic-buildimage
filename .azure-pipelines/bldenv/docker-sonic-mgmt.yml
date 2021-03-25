@@ -26,18 +26,18 @@ stages:
     - template: ../cleanup.yml
     - checkout: self
       clean: true
-      submodules: recursive
+      #submodules: recursive
     - script: |
         set -xe
-        make configure PLATFORM=generic
-        make target/docker-sonic-mgmt.gz
+        #make configure PLATFORM=generic
+        #make target/docker-sonic-mgmt.gz
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
         ID=`id -un`
         sudo mkdir /home/$ID/.docker -p
         sudo chown -R $ID:$ID /home/$ID
-        .azure-pipelines/scripts/docker-upload.sh
+        cat .azure-pipelines/scripts/docker-upload.sh
         rm /home/$ID/.docker/config.json
       displayName: Upload docker
       env:
@@ -51,3 +51,4 @@ stages:
         REGISTRY_PORT: 443
     - publish: target
       artifact: DockerSonicMgmt
+      condition: always()
