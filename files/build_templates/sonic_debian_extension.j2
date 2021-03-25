@@ -530,8 +530,8 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i {{deb}} || sudo LANG=C DEBIAN_FRONTEND=noni
 sudo LANG=C chroot $FILESYSTEM_ROOT depmod -a {{kversion}}
 
 ## download all dependency packages for platform debian packages
-{% if lazy_installer_debs.strip() -%}
-{% for file in lazy_installer_debs.strip().split(' ') -%}
+{% if lazy_platform_installer_debs.strip() -%}
+{% for file in lazy_platform_installer_debs.strip().split(' ') -%}
 
 {% set dev = file.split('@')[0] -%}
 {% set deb = file.split('@')[1] -%}
@@ -548,6 +548,14 @@ done
 
 sudo dpkg --root=$FILESYSTEM_ROOT -P {{ debname }}
 
+{% endfor %}
+{% endif %}
+
+{% if lazy_installer_debs.strip() -%}
+sudo mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/common
+{% for file in lazy_installer_debs.strip().split(' ') -%}
+echo {{file}}
+sudo cp {{ file }} $FILESYSTEM_ROOT/$PLATFORM_DIR/common/
 {% endfor %}
 {% endif %}
 

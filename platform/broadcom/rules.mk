@@ -1,4 +1,5 @@
 include $(PLATFORM_PATH)/sai-modules.mk
+include $(PLATFORM_PATH)/sai-modules-dnx.mk
 include $(PLATFORM_PATH)/sai.mk
 include $(PLATFORM_PATH)/sai-dnx.mk
 include $(PLATFORM_PATH)/platform-modules-dell.mk

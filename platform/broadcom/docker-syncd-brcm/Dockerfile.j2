@@ -18,18 +18,14 @@ debs/
 # Install dependencies for libsaibcm debian packages
 {%- set syncd_brcm_debs = [] %}
 {% for deb in docker_syncd_brcm_debs.split(' ') -%}
-{%- if 'libsaibcm' in deb %}
+{%- if 'libsaibcm' in deb and 'dev' not in deb %}
 RUN apt-get install -y $(dpkg --info debs/{{ deb }} | grep Depends | sed "s/.*ends:\ //" | tr '\n' ' ' | tr ',' ' ')
+COPY debs/{{ deb }} /sai-debs/
+RUN rm -rf /debs/{{ deb }}
 {%- else %}
 {{- syncd_brcm_debs.append(deb) or '' }}
 {%- endif %}
 {%- endfor %}
-
-# To store saibcm debian packages
-RUN mkdir /usr/local/debs
-
-# Move the saibcm debian packages
-RUN mv debs/libsaibcm*_amd64.deb /usr/local/debs
 
 # Install locally-built Debian packages and implicitly install their dependencies
 {{ install_debian_packages(syncd_brcm_debs) }}
