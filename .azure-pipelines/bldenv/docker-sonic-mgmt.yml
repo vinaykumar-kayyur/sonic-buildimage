@@ -33,7 +33,7 @@ stages:
     - template: ../cleanup.yml
     - checkout: self
       clean: true
-      #submodules: recursive
+      submodules: recursive
     - checkout: sonic-build-tools
     - script: |
         set -xe
