@@ -44,6 +44,9 @@ stages:
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
+        id
+        ls -al ~
+        ls -al ~/.docker
         ./sonic-build-tools/scripts/lib/docker-upload.sh
       displayName: Upload docker
       env:
