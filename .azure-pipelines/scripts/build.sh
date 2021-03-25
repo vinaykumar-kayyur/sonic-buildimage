@@ -4,7 +4,7 @@ echo "Building docker containers for $DISTRO"
 
 docker --version
 
-USER=`id -un`
+USER=`id -un | tr A-Z a-z`
 SLAVE_DIR=sonic-slave-$DISTRO
 
 build_and_push_docker()
