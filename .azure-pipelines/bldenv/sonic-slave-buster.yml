@@ -37,7 +37,7 @@ stages:
       submodules: recursive
     - script: |
         set -xe
-        .azure-pipelines/scripts/build.sh
+        ls -al .azure-pipelines/scripts/build.sh
       displayName: Build slave docker
       env:
         DISTRO: $(distro)
@@ -46,4 +46,4 @@ stages:
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
         REGISTRY_PORT: 443
     - publish: target
-      artifact: DockerSonicMgmt
+      artifact: DockerSlave.$(distro)
