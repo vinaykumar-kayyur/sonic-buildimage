@@ -44,10 +44,11 @@ stages:
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
-        id
-        ls -al ~
-        ls -al ~/.docker
+        ID=`id -un`
+        sudo mkdir /home/$ID/.docker -p
+        sudo chown -R $ID:$ID /home/$ID
         ./sonic-build-tools/scripts/lib/docker-upload.sh
+        rm /home/$ID/.docker/config.json
       displayName: Upload docker
       env:
         DOCKER_IMAGE_FILE: 'docker-sonic-mgmt.gz'
@@ -58,3 +59,5 @@ stages:
         REGISTRY_PASSWD: $(sonicdev-password)
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
         REGISTRY_PORT: 443
+    - publish: sonic-buildimage/target/docker-sonic-mgmt.gz
+      artifact: DockerSonicMgmt
