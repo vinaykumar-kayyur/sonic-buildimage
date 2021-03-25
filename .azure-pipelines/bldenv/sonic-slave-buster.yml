@@ -22,6 +22,14 @@ stages:
   - job: Build
     pool: sonicbld
     timeoutInMinutes: 360
+    strategy:
+      matrix:
+        buster:
+          distro: 'buster'
+        jessie:
+          distro: 'jessie'
+        stretch:
+          distro: 'stretch'
     steps:
     - template: ../cleanup.yml
     - checkout: self
@@ -32,7 +40,7 @@ stages:
         .azure-pipelines/scripts/build.sh
       displayName: Build slave docker
       env:
-        DISTRO: buster
+        DISTRO: $(distro)
         REGISTRY_USERNAME: $(sonicdev-user)
         REGISTRY_PASSWD: $(sonicdev-password)
         REGISTRY_SERVER: 'sonicdev-microsoft.azurecr.io'
