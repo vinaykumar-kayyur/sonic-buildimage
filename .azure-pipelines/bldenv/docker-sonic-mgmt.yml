@@ -38,7 +38,7 @@ stages:
         sudo mkdir /home/$ID/.docker -p
         sudo chown -R $ID:$ID /home/$ID
         cat .azure-pipelines/scripts/docker-upload.sh
-        rm /home/$ID/.docker/config.json
+        rm /home/$ID/.docker/config.json || true
       displayName: Upload docker
       env:
         DOCKER_IMAGE_FILE: 'docker-sonic-mgmt.gz'
