@@ -14,7 +14,7 @@ declare -A RECONCILE_COMPONENTS=( \
 
 for reconcile_file in $(find /etc/sonic/ -iname '*_reconcile' -type f); do
     file_basename=$(basename $reconcile_file)
-    docker_container_name=${$file_basename%_reconcile}
+    docker_container_name=${file_basename%_reconcile}
     RECONCILE_COMPONENTS[$docker_container_name]=$(cat $reconcile_file)
 done
 
