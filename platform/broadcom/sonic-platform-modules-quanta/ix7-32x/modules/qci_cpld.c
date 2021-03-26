@@ -347,7 +347,7 @@ static int cpld_probe(struct i2c_client *client,
 
 	if (!cpld_class)
 	{
-		cpld_class = class_create(THIS_MODULE, name);
+		cpld_class = class_create(THIS_MODULE, "cpld-qsfp28");
 		if (IS_ERR(cpld_class)) {
 			pr_err("couldn't create sysfs class\n");
 			return PTR_ERR(cpld_class);
@@ -448,7 +448,10 @@ static int cpld_remove(struct i2c_client *client)
 	}
 
 	if (ida_is_empty(&cpld_ida))
+	{
 		class_destroy(cpld_class);
+		cpld_class = NULL;
+	}
 
 	return 0;
 }

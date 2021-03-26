@@ -268,7 +268,10 @@ static int cpld_led_remove(struct i2c_client *client)
 	kfree(data->cpld_data);
 
 	if (ida_is_empty(&cpld_led_ida))
+	{
 		class_destroy(cpld_class);
+		cpld_class = NULL;
+	}
 
 	return 0;
 }

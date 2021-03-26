@@ -21,10 +21,10 @@ Usage: %(scriptName)s [options] command object
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
-    -f | --force    : ignore error during installation or clean 
+    -f | --force    : ignore error during installation or clean
 command:
     install     : install drivers and generate related sysfs nodes
-    clean       : uninstall drivers and remove related sysfs nodes    
+    clean       : uninstall drivers and remove related sysfs nodes
 """
 
 import os
@@ -43,67 +43,67 @@ i2c_prefix = '/sys/bus/i2c/devices/'
 
 if DEBUG == True:
     print sys.argv[0]
-    print 'ARGV      :', sys.argv[1:]   
+    print 'ARGV      :', sys.argv[1:]
 
 
 def main():
     global DEBUG
     global args
     global FORCE
-        
+
     if len(sys.argv)<2:
         show_help()
-         
+
     options, args = getopt.getopt(sys.argv[1:], 'hdf', ['help',
                                                        'debug',
                                                        'force',
                                                           ])
-    if DEBUG == True:                                                           
+    if DEBUG == True:
         print options
         print args
         print len(sys.argv)
-            
+
     for opt, arg in options:
         if opt in ('-h', '--help'):
             show_help()
-        elif opt in ('-d', '--debug'):            
+        elif opt in ('-d', '--debug'):
             DEBUG = True
             logging.basicConfig(level=logging.INFO)
-        elif opt in ('-f', '--force'): 
+        elif opt in ('-f', '--force'):
             FORCE = 1
         else:
-            logging.info('no option')                          
-    for arg in args:            
+            logging.info('no option')
+    for arg in args:
         if arg == 'install':
            install()
         elif arg == 'clean':
            uninstall()
         else:
             show_help()
-            
-            
-    return 0              
-        
+
+
+    return 0
+
 def show_help():
     print __doc__ % {'scriptName' : sys.argv[0].split("/")[-1]}
     sys.exit(0)
-           
+
 def show_log(txt):
     if DEBUG == True:
         print "[IX7-32X]"+txt
     return
-    
+
 def exec_cmd(cmd, show):
-    logging.info('Run :'+cmd)  
-    status, output = commands.getstatusoutput(cmd)    
+    logging.info('Run :'+cmd)
+    status, output = commands.getstatusoutput(cmd)
     show_log (cmd +"with result:" + str(status))
-    show_log ("      output:"+output)    
+    show_log ("      output:"+output)
     if status:
         logging.info('Failed :'+cmd)
         if show:
             print('Failed :'+cmd)
     return  status, output
-        
+
 instantiate =[
 #Enable front-ports LED decoding
 'echo 1 > /sys/class/cpld-led/CPLDLED-1/led_decode',
@@ -121,6 +121,20 @@ drivers =[
 'lpc_ich',
 'i2c-i801',
 'i2c-dev',
+'i2c-mux-pca954x force_deselect_on_exit=1',
+'gpio-pca953x',
+'optoe',
+'qci_cpld',
+'qci_cpld_led',
+'quanta_platform_ix7',
+'ipmi_devintf',
+'quanta_hwmon_ipmi'
+]
+
+un_drivers =[
+'lpc_ich',
+'i2c-i801',
+'i2c-dev',
 'i2c-mux-pca954x',
 'gpio-pca953x',
 'optoe',
@@ -130,9 +144,7 @@ drivers =[
 'ipmi_devintf',
 'quanta_hwmon_ipmi'
 ]
- 
 
-                    
 def system_install():
     global FORCE
 
@@ -153,10 +165,7 @@ def system_install():
 
     #turn on module power
     status, output = exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
-    status, output = exec_cmd("cat /sys/class/gpio/gpio21/value", 1)
-    if output != '1':
-        status, output = exec_cmd("echo out > /sys/class/gpio/gpio21/direction ", 1)
-        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio21/value", 1)
+    status, output = exec_cmd("echo high > /sys/class/gpio/gpio21/direction ", 1)
 
     #Reset fron-ports LED CPLD
     status, output = exec_cmd("echo 33 > /sys/class/gpio/export ", 1)
@@ -173,26 +182,26 @@ def system_install():
         print output
         if FORCE == 0:
             return status
-    
+
     #QSFP for 1~32 port
     for port_number in range(1,33):
-        bus_number = port_number + 31
+        bus_number = port_number + 16
         os.system("echo %d >/sys/bus/i2c/devices/%d-0050/port_name" % (port_number, bus_number))
-    return 
-     
-        
+    return
+
+
 def system_ready():
-    if not device_found(): 
+    if not device_found():
         return False
     return True
-               
-def install():                      
+
+def install():
     if not device_found():
-        print "No device, installing...."     
-        status = system_install() 
+        print "No device, installing...."
+        status = system_install()
         if status:
-            if FORCE == 0:        
-                return  status        
+            if FORCE == 0:
+                return  status
 
         status, output = exec_cmd("pip3 install  /usr/share/sonic/device/x86_64-quanta_ix7_rglbmc-r0/sonic_platform-1.0-py3-none-any.whl",1)
         if status:
@@ -206,8 +215,8 @@ def install():
 def uninstall():
     global FORCE
     #uninstall drivers
-    for i in range(len(drivers)-1,-1,-1):
-       status, output = exec_cmd("rmmod "+drivers[i], 1)
+    for i in range(len(un_drivers)-1,-1,-1):
+       status, output = exec_cmd("rmmod "+un_drivers[i], 1)
     if status:
         print output
         if FORCE == 0:
@@ -221,8 +230,13 @@ def uninstall():
     return
 
 def device_found():
-    ret1, log = exec_cmd("ls "+i2c_prefix+"i2c-0", 0)
-    return ret1
+    ret1, log1 = exec_cmd("cat /proc/modules | grep ix7 > /tmp/chkdriver.log", 0)
+    ret2, log2 = exec_cmd("cat /tmp/chkdriver.log | grep ix7", 0)
+
+    if ret1 == 0 and len(log2) > 0:
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     main()

@@ -121,6 +121,20 @@ drivers =[
 'lpc_ich',
 'i2c-i801',
 'i2c-dev',
+'i2c-mux-pca954x force_deselect_on_exit=1',
+'gpio-pca953x',
+'optoe',
+'qci_cpld',
+'qci_cpld_led',
+'quanta_platform_ix7_bwde',
+'ipmi_devintf',
+'quanta_hwmon_ipmi'
+]
+
+un_drivers =[
+'lpc_ich',
+'i2c-i801',
+'i2c-dev',
 'i2c-mux-pca954x',
 'gpio-pca953x',
 'optoe',
@@ -131,16 +145,9 @@ drivers =[
 'quanta_hwmon_ipmi'
 ]
 
-
-
 def system_install():
     global FORCE
 
-    #remove default drivers to avoid modprobe order conflicts
-    status, output = exec_cmd("echo 'blacklist i2c-ismt' > /etc/modprobe.d/blacklist.conf", 1)
-    time.sleep(1)
-    status, output = exec_cmd("modprobe -r i2c-ismt ", 1)
-    status, output = exec_cmd("modprobe -r i2c-i801 ", 1)
     #setup driver dependency
     status, output = exec_cmd("depmod -a ", 1)
     #install drivers
@@ -151,21 +158,15 @@ def system_install():
         if FORCE == 0:
             return status
 
-    #remove net rules for generating new net rules
-    status, output = exec_cmd("systemctl stop systemd-udevd.service ", 1)
-    status, output = exec_cmd("rm /etc/udev/rules.d/70-persistent-net.rules ", 1)
+    #reload ethernet drivers for correct order
     status, output = exec_cmd("rmmod ixgbe ", 1)
     status, output = exec_cmd("rmmod igb ", 1)
     status, output = exec_cmd("modprobe igb ", 1)
     status, output = exec_cmd("modprobe ixgbe ", 1)
-    status, output = exec_cmd("systemctl start systemd-udevd.service ", 1)
 
     #turn on module power
     status, output = exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
-    status, output = exec_cmd("cat /sys/class/gpio/gpio21/value", 1)
-    if output != '1':
-        status, output = exec_cmd("echo out > /sys/class/gpio/gpio21/direction ", 1)
-        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio21/value", 1)
+    status, output = exec_cmd("echo high > /sys/class/gpio/gpio21/direction ", 1)
 
     #Reset fron-ports LED CPLD
     status, output = exec_cmd("echo 33 > /sys/class/gpio/export ", 1)
@@ -185,7 +186,7 @@ def system_install():
 
     #QSFP for 1~32 port
     for port_number in range(1,33):
-        bus_number = port_number + 31
+        bus_number = port_number + 12
         os.system("echo %d >/sys/bus/i2c/devices/%d-0050/port_name" % (port_number, bus_number))
 
     status, output = exec_cmd("pip3 install  /usr/share/sonic/device/x86_64-quanta_ix7_bwde-r0/sonic_platform-1.0-py3-none-any.whl",1)
@@ -216,8 +217,8 @@ def install():
 def uninstall():
     global FORCE
     #uninstall drivers
-    for i in range(len(drivers)-1,-1,-1):
-       status, output = exec_cmd("rmmod "+drivers[i], 1)
+    for i in range(len(un_drivers)-1,-1,-1):
+       status, output = exec_cmd("rmmod "+un_drivers[i], 1)
     if status:
         print output
         if FORCE == 0:
@@ -230,8 +231,13 @@ def uninstall():
     return
 
 def device_found():
-    ret1, log = exec_cmd("ls "+i2c_prefix+"i2c-0", 0)
-    return ret1
+    ret1, log1 = exec_cmd("cat /proc/modules | grep ix7_bwde > /tmp/chkdriver.log", 0)
+    ret2, log2 = exec_cmd("cat /tmp/chkdriver.log | grep ix7_bwde", 0)
+
+    if ret1 == 0 and len(log2) > 0:
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     main()

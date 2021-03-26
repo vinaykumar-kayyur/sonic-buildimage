@@ -162,42 +162,48 @@ drivers =[
 'lpc_ich',
 'i2c-i801',
 'i2c-dev',
+'i2c-mux-pca954x force_deselect_on_exit=1',
+'gpio-pca953x',
+'optoe',
+'qci_cpld_qsfpdd',
+'qci_cpld_led',
+'qci_platform_ix9',
+'quanta_hwmon_ipmi',
+'ipmi_devintf'
+]
+
+un_drivers =[
+'lpc_ich',
+'i2c-i801',
+'i2c-dev',
 'i2c-mux-pca954x',
 'gpio-pca953x',
 'optoe',
 'qci_cpld_qsfpdd',
 'qci_cpld_led',
 'qci_platform_ix9',
-'ipmi_devintf',
-'quanta_hwmon_ipmi'
+'quanta_hwmon_ipmi',
+'ipmi_devintf'
 ]
-
-
 
 def system_install():
     global FORCE
 
-    #remove default drivers to avoid modprobe order conflicts
-    status, output = exec_cmd("rmmod i2c_ismt ", 1)
-    status, output = exec_cmd("rmmod i2c-i801 ", 1)
     #setup driver dependency
     status, output = exec_cmd("depmod -a ", 1)
     #install drivers
     for i in range(0,len(drivers)):
-       status, output = exec_cmd("modprobe "+drivers[i], 1)
+       status, output = exec_cmd("modprobe " + drivers[i], 1)
     if status:
        print output
        if FORCE == 0:
           return status
 
-    #remove net rules for generating new net rules
-    status, output = exec_cmd("systemctl stop systemd-udevd.service ", 1)
-    status, output = exec_cmd("rm /etc/udev/rules.d/70-persistent-net.rules ", 1)
+    #reload ethernet drivers in correct order
     status, output = exec_cmd("rmmod ixgbe ", 1)
     status, output = exec_cmd("rmmod igb ", 1)
     status, output = exec_cmd("modprobe igb ", 1)
     status, output = exec_cmd("modprobe ixgbe ", 1)
-    status, output = exec_cmd("systemctl start systemd-udevd.service ", 1)
 
     #instantiate devices
     for i in range(0,len(instantiate)):
@@ -209,7 +215,7 @@ def system_install():
 
     #QSFPDD for 1~32 port
     for port_number in range(1,33):
-        bus_number = port_number + 31
+        bus_number = port_number + 12
         os.system("echo %d >/sys/bus/i2c/devices/%d-0050/port_name" % (port_number, bus_number))
 
     return
@@ -238,8 +244,8 @@ def install():
 def uninstall():
     global FORCE
     #uninstall drivers
-    for i in range(len(drivers)-1,-1,-1):
-       status, output = exec_cmd("rmmod "+drivers[i], 1)
+    for i in range(len(un_drivers) - 1, -1, -1):
+       status, output = exec_cmd("rmmod " + un_drivers[i], 1)
     if status:
 	   print output
 	   if FORCE == 0:
@@ -254,11 +260,13 @@ def uninstall():
     return
 
 def device_found():
-    ret1, log = exec_cmd("ls "+i2c_prefix+"i2c-0", 0)
-    return ret1
+    ret1, log1 = exec_cmd("cat /proc/modules | grep ix9 > /tmp/chkdriver.log", 0)
+    ret2, log2 = exec_cmd("cat /tmp/chkdriver.log | grep ix9", 0)
+
+    if ret1 == 0 and len(log2) > 0:
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     main()
-
-
-

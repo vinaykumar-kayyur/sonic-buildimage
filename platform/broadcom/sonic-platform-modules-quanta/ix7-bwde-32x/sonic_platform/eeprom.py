@@ -13,7 +13,7 @@ except ImportError as e:
 class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def __init__(self):
-        self.__eeprom_path = "/sys/bus/i2c/devices/18-0054/eeprom"
+        self.__eeprom_path = "/sys/bus/i2c/devices/3-0054/eeprom"
         super(Eeprom, self).__init__(self.__eeprom_path, 0, '', True)
         self.__eeprom_tlv_dict = dict()
         try:

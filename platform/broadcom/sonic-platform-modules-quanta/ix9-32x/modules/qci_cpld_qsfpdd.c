@@ -406,7 +406,10 @@ static int cpld_remove(struct i2c_client *client)
 #else
 	if (cpld_idr_is_empty(&cpld_ida.idr))
 #endif
+	{
 		class_destroy(cpld_class);
+		cpld_class = NULL;
+	}
 
 	return 0;
 }

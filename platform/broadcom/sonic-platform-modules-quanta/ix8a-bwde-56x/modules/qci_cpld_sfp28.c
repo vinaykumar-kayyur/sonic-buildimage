@@ -52,7 +52,6 @@ static struct class *cpld_class = NULL;
 struct sfp_data {
 	struct i2c_client *cpld_client;
 	char name[8];
-	char type[8];
 	u8 port_id;
 	u8 cpld_port;
 };
@@ -77,7 +76,7 @@ MODULE_DEVICE_TABLE(i2c, cpld_id);
 static struct i2c_driver cpld_driver = {
 	.class		= I2C_CLASS_HWMON,
 	.driver = {
-		.name	= "qci_cpld_sfp",
+		.name	= "qci_cpld_sfp28",
 	},
 	.probe		= cpld_probe,
 	.remove		= cpld_remove,
@@ -253,326 +252,6 @@ static ssize_t set_tx_dis(struct device *dev,
 }
 //SFP
 
-
-#if 0
-//QSFP
-static ssize_t get_reset(struct device *dev,
-			     struct device_attribute *devattr,
-			     char *buf)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = (u8)(data->cpld_port / 4);
-	u8 group_port = data->cpld_port % 4;
-	s32 value;
-
-	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group + 1, group_port + 1);
-
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group + 1, value);
-
-	value >>= (group_port * 4);
-	value &= RESET_MASK;
-
-	return sprintf(buf, "%d\n", value ? 1 : 0);
-}
-
-static ssize_t get_interrupt(struct device *dev,
-			     struct device_attribute *devattr,
-			     char *buf)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = (u8)(data->cpld_port / 4);
-	u8 group_port = data->cpld_port % 4;
-	s32 value;
-
-	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group + 1, group_port + 1);
-
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group + 1, value);
-
-	value >>= (group_port * 4);
-	value &= INTERRUPT_MASK;
-
-	return sprintf(buf, "%d\n", value ? 1 : 0);
-}
-
-static ssize_t get_module_present(struct device *dev,
-			     struct device_attribute *devattr,
-			     char *buf)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = (u8)(data->cpld_port / 4);
-	u8 group_port = data->cpld_port % 4;
-	s32 value;
-
-	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group + 1, group_port + 1);
-
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group + 1, value);
-
-	value >>= (group_port * 4);
-	value &= MODULE_PRESENT_MASK;
-
-	//FIXME: if present is not low active
-	return sprintf(buf, "%d\n", value ? 0 : 1);
-}
-
-static ssize_t get_lpmode(struct device *dev,
-			     struct device_attribute *devattr,
-			     char *buf)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = (u8)(data->cpld_port / 4);
-	u8 group_port = data->cpld_port % 4;
-	s32 value;
-
-	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group + 1, group_port + 1);
-
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group + 1, value);
-
-	value >>= (group_port * 4);
-	value &= LPMODE_MASK;
-
-	return sprintf(buf, "%d\n", value ? 1 : 0);
-}
-
-static ssize_t set_reset(struct device *dev,
-			    struct device_attribute *devattr,
-			    const char *buf,
-			    size_t count)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = (u8)(data->cpld_port / 4);
-	u8 group_port = data->cpld_port % 4;
-	s32 value;
-	long disable;
-
-	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group + 1, group_port + 1);
-
-	if (kstrtol(buf, 0, &disable))
-		return -EINVAL;
-
-	if ((disable != 1) && (disable != 0))
-		return -EINVAL;
-
-//	mutex_lock(&data->lock);
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group + 1, value);
-
-	value &= ~(RESET_MASK << (group_port * 4));
-	if (disable)
-		value |= (RESET_MASK << (group_port * 4));
-
-	dev_dbg(&client->dev, "write group%d value= %x\n", group + 1, value);
-
-	i2c_smbus_write_word_data(client, get_group_cmd(group), (u16)value);
-//	mutex_unlock(&data->lock);
-
-	return count;
-}
-
-static ssize_t set_lpmode(struct device *dev,
-			    struct device_attribute *devattr,
-			    const char *buf,
-			    size_t count)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = (u8)(data->cpld_port / 4);
-	u8 group_port = data->cpld_port % 4;
-	s32 value;
-	long disable;
-
-	dev_dbg(&client->dev, "port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group + 1, group_port + 1);
-
-	if (kstrtol(buf, 0, &disable))
-		return -EINVAL;
-
-	if ((disable != 1) && (disable != 0))
-		return -EINVAL;
-
-//	mutex_lock(&data->lock);
-	value = i2c_smbus_read_word_data(client, get_group_cmd(group));
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group + 1, value);
-
-	value &= ~(LPMODE_MASK << (group_port * 4));
-	if (disable)
-		value |= (LPMODE_MASK << (group_port * 4));
-
-	dev_dbg(&client->dev, "write group%d value= %x\n", group + 1, value);
-
-	i2c_smbus_write_word_data(client, get_group_cmd(group), (u16)value);
-//	mutex_unlock(&data->lock);
-
-	return count;
-}
-//QSFP
-#endif
-#if 0
-static ssize_t get_led_enable(struct device *dev,
-			     struct device_attribute *devattr,
-			     char *buf)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = 3;
-	u8 group_port = data->cpld_port;
-	s32 value;
-
-	dev_dbg(&client->dev, "get_led_enable port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group, group_port + 1);
-
-	value = i2c_smbus_read_word_data(client, group);
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group, value);
-
-	value >>= (group_port);
-	value &= LED_ENABLE_MASK;
-
-	return sprintf(buf, "%d\n", value ? 1 : 0);
-}
-
-static ssize_t set_led_enable(struct device *dev,
-			    struct device_attribute *devattr,
-			    const char *buf,
-			    size_t count)
-{
-	struct sfp_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = 3;
-	u8 group_port = data->cpld_port;
-	s32 value;
-	long disable;
-
-	dev_dbg(&client->dev, "set_led_enable port_id %d => cpld_port %d, group %d(%d)\n", data->port_id,
-				data->cpld_port + 1, group, group_port + 1);
-
-	if (kstrtol(buf, 0, &disable))
-		return -EINVAL;
-
-	if ((disable != 1) && (disable != 0))
-		return -EINVAL;
-
-//	mutex_lock(&data->lock);
-	value = i2c_smbus_read_word_data(client, group);
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group, value);
-
-	value &= ~(LED_ENABLE_MASK << group_port);
-	if (disable)
-		value |= (LED_ENABLE_MASK << group_port);
-
-	dev_dbg(&client->dev, "write group%d value= %x\n", group, value);
-
-	i2c_smbus_write_word_data(client, group, (u16)value);
-//	mutex_unlock(&data->lock);
-
-	return count;
-}
-#endif
-
-#if 0
-static ssize_t get_monitor_enable(struct device *dev,
-			     struct device_attribute *devattr,
-			     char *buf)
-{
-	struct i2c_monitor_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = 4;
-	s32 value;
-
-	value = i2c_smbus_read_word_data(client, group);
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group, value);
-
-	value &= I2C_MONITOR_MASK;
-
-	return sprintf(buf, "%d\n", value ? 1 : 0);
-}
-
-static ssize_t set_monitor_enable(struct device *dev,
-			    struct device_attribute *devattr,
-			    const char *buf,
-			    size_t count)
-{
-	struct i2c_monitor_data *data = dev_get_drvdata(dev);
-	struct i2c_client *client = data->cpld_client;
-	u8 group = 4;
-	s32 value;
-	long disable;
-
-	if (kstrtol(buf, 0, &disable))
-		return -EINVAL;
-
-	if ((disable != 1) && (disable != 0))
-		return -EINVAL;
-
-//	mutex_lock(&data->lock);
-	value = i2c_smbus_read_word_data(client, group);
-	if (value < 0)
-		return -ENODEV;
-
-	dev_dbg(&client->dev, "read group%d value= %x\n", group, value);
-
-	value &= ~(I2C_MONITOR_MASK);
-	if (disable)
-		value |= (I2C_MONITOR_MASK);
-
-	dev_dbg(&client->dev, "write group%d value= %x\n", group, value);
-
-	i2c_smbus_write_word_data(client, group, (u16)value);
-//	mutex_unlock(&data->lock);
-
-	return count;
-}
-#endif
-
-#if 0
-//QSFP
-static DEVICE_ATTR(reset, S_IWUSR | S_IRUGO, get_reset, set_reset);
-static DEVICE_ATTR(lpmode, S_IWUSR | S_IRUGO, get_lpmode, set_lpmode);
-static DEVICE_ATTR(module_present, S_IRUGO, get_module_present, NULL);
-static DEVICE_ATTR(interrupt, S_IRUGO, get_interrupt, NULL);
-//QSFP
-#endif
-//static DEVICE_ATTR(led_enable, S_IWUSR | S_IRUGO, get_led_enable, set_led_enable);
-//static DEVICE_ATTR(monitor_enable, S_IWUSR | S_IRUGO, get_monitor_enable, set_monitor_enable);
 //SFP
 static DEVICE_ATTR(tx_fault, S_IRUGO, get_tx_fault, NULL);
 static DEVICE_ATTR(tx_dis, S_IWUSR | S_IRUGO, get_tx_dis, set_tx_dis);
@@ -580,15 +259,6 @@ static DEVICE_ATTR(pre_n, S_IRUGO, get_pre_n, NULL);
 static DEVICE_ATTR(rx_los, S_IRUGO, get_rx_los, NULL);
 
 static const struct attribute *sfp_attrs[] = {
-#if 0
-//QSFP
-	&dev_attr_reset.attr,
-	&dev_attr_lpmode.attr,
-	&dev_attr_module_present.attr,
-	&dev_attr_interrupt.attr,
-//QSFP
-#endif
-//	&dev_attr_led_enable.attr,
 	&dev_attr_tx_fault.attr,
 	&dev_attr_tx_dis.attr,
 	&dev_attr_pre_n.attr,
@@ -600,42 +270,19 @@ static const struct attribute_group sfp_attr_group = {
 	.attrs = (struct attribute **) sfp_attrs,
 };
 
-#if 0
-static const struct attribute *i2c_monitor_attrs[] = {
-	&dev_attr_monitor_enable.attr,
-	NULL,
-};
-
-static const struct attribute_group i2c_monitor_attr_group = {
-	.attrs = (struct attribute **) i2c_monitor_attrs,
-};
-#endif
-
 static int cpld_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
 	struct cpld_data *data;
 	struct sfp_data *port_data;
-//	struct i2c_monitor_data *monitor_data;
 	struct device *port_dev;
-//	struct device *i2c_dev;
 	int port_nr, i=0, err;
-	char name[I2C_NAME_SIZE], type[I2C_NAME_SIZE];
 
 	printk("cpld cpld_probe\n");
 
-	while(id->name[i])
-	{
-		name[i]=tolower(id->name[i]);
-		i++;
-	}
-	name[i]='\0';
-	strncpy(type,name+5,strlen(name)-5);
-	type[strlen(name)-5]='\0';
-
 	if (!cpld_class)
 	{
-		cpld_class = class_create(THIS_MODULE, name);
+		cpld_class = class_create(THIS_MODULE, "cpld-sfp28");
 		if (IS_ERR(cpld_class)) {
 			pr_err("couldn't create sysfs class\n");
 			return PTR_ERR(cpld_class);
@@ -665,9 +312,7 @@ static int cpld_probe(struct i2c_client *client,
 		data->port_dev[i] = port_dev;
 		data->port_data[i] = port_data;
 
-		strcpy(port_data->type, type);
-
-		dev_info(&client->dev, "Register %s port-%d\n", port_data->type , port_nr);
+		dev_info(&client->dev, "Register port-%d\n", port_nr);
 
 		/* FIXME: implement Logical/Physical port remapping */
 		//port_data->cpld_port = i;
@@ -711,18 +356,20 @@ static int cpld_remove(struct i2c_client *client)
 {
 	struct cpld_data *data = i2c_get_clientdata(client);
 	int i;
-//	int id;
 
 	for (i = 15; i >= 0; i--)
 	{
-		dev_info(data->port_dev[i], "Remove %s port-%d\n", data->port_data[i]->type , data->port_data[i]->port_id);
+		dev_info(data->port_dev[i], "Remove port-%d\n", data->port_data[i]->port_id);
 		device_unregister(data->port_dev[i]);
 		ida_simple_remove(&cpld_ida, data->port_data[i]->port_id);
 		kfree(data->port_data[i]);
 	}
 
 	if (ida_is_empty(&cpld_ida))
+	{
 		class_destroy(cpld_class);
+		cpld_class = NULL;
+	}
 
 	return 0;
 }

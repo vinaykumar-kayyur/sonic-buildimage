@@ -183,38 +183,38 @@ class Sfp(SfpBase):
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
         self.port_to_eeprom_mapping = {}
         self.port_to_i2c_mapping = {
-             1 : 32,
-             2 : 33,
-             3 : 34,
-             4 : 35,
-             5 : 36,
-             6 : 37,
-             7 : 38,
-             8 : 39,
-             9 : 40,
-            10 : 41,
-            11 : 42,
-            12 : 43,
-            13 : 44,
-            14 : 45,
-            15 : 46,
-            16 : 47,
-            17 : 48,
-            18 : 49,
-            19 : 50,
-            20 : 51,
-            21 : 52,
-            22 : 53,
-            23 : 54,
-            24 : 55,
-            25 : 56,
-            26 : 57,
-            27 : 58,
-            28 : 59,
-            29 : 60,
-            30 : 61,
-            31 : 62,
-            32 : 63
+             1 : 13,
+             2 : 14,
+             3 : 15,
+             4 : 16,
+             5 : 17,
+             6 : 18,
+             7 : 19,
+             8 : 20,
+             9 : 21,
+            10 : 22,
+            11 : 23,
+            12 : 24,
+            13 : 25,
+            14 : 26,
+            15 : 27,
+            16 : 28,
+            17 : 29,
+            18 : 30,
+            19 : 31,
+            20 : 32,
+            21 : 33,
+            22 : 34,
+            23 : 35,
+            24 : 36,
+            25 : 37,
+            26 : 38,
+            27 : 39,
+            28 : 40,
+            29 : 41,
+            30 : 42,
+            31 : 43,
+            32 : 44
         }
 
         for x in range(self.PORT_START, self.PORT_END + 1):
@@ -224,7 +224,8 @@ class Sfp(SfpBase):
         self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer',
             'model', 'connector', 'encoding', 'ext_identifier',
             'ext_rateselect_compliance', 'cable_type', 'cable_length',
-            'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
+            'nominal_bit_rate', 'specification_compliance', 'vendor_date',
+            'application_advertisement', 'vendor_oui']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode',
             'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
@@ -459,6 +460,7 @@ class Sfp(SfpBase):
         specification_compliance   |1*255VCHAR     |specification compliance
         vendor_date                |1*255VCHAR     |vendor date
         vendor_oui                 |1*255VCHAR     |vendor OUI
+        application_advertisement  |1*255VCHAR     |supported applications advertisement
         ========================================================================
          """
 
