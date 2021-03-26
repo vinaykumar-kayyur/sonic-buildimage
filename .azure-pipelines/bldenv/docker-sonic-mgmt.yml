@@ -29,15 +29,15 @@ stages:
       submodules: recursive
     - script: |
         set -xe
-        make configure PLATFORM=generic
-        make target/docker-sonic-mgmt.gz
+        #make configure PLATFORM=generic
+        #make target/docker-sonic-mgmt.gz
       displayName: Build docker-sonic-mgmt.gz
     - script: |
         set -xe
         ID=`id -un`
         sudo mkdir /home/$ID/.docker -p
         sudo chown -R $ID:$ID /home/$ID
-        .azure-pipelines/scripts/docker-upload.sh
+        bash .azure-pipelines/scripts/docker-upload.sh
         rm /home/$ID/.docker/config.json || true
       displayName: Upload docker
       env:
