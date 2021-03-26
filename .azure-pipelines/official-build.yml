@@ -35,3 +35,4 @@ stages:
           git add files/build/versions
           git diff HEAD files/build/versions
         displayName: "Show git diff"
+        
