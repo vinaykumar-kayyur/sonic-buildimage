@@ -1,8 +1,5 @@
 #!/bin/bash -ex
 
-REGISTRY_PORT=443
-REGISTRY_SERVER=sonicdev-microsoft.azurecr.io
-
 echo $DOCKER_IMAGE_FILE_DIR
 echo $DOCKER_IMAGE_FILE
 echo $DOCKER_IMAGE_TAG
