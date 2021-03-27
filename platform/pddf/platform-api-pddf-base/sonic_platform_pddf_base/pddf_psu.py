@@ -1,17 +1,20 @@
-#!/usr/bin/env python
+#############################################################################
+# PDDF
+#
+# PDDF psu base class inherited from the base class
 #
 # All the supported PSU SysFS aattributes are
-#- psu_present
-#- psu_model_name
-#- psu_power_good
-#- psu_mfr_id
-#- psu_serial_num
-#- psu_fan_dir
-#- psu_v_out
-#- psu_i_out
-#- psu_p_out
-#- psu_fan1_speed_rpm
-#
+# - psu_present
+# - psu_model_name
+# - psu_power_good
+# - psu_mfr_id
+# - psu_serial_num
+# - psu_fan_dir
+# - psu_v_out
+# - psu_i_out
+# - psu_p_out
+# - psu_fan1_speed_rpm
+#############################################################################
 
 
 try:
@@ -37,7 +40,6 @@ class PddfPsu(PsuBase):
         self.platform = self.pddf_obj.get_platform()
         self.psu_index = index + 1
 
-        self._fan_list = []     # _fan_list under PsuBase class is a global variable, hence we need to use _fan_list per class instatiation
         self.num_psu_fans = int(self.pddf_obj.get_num_psu_fans('PSU{}'.format(index+1)))
         for psu_fan_idx in range(self.num_psu_fans):
             psu_fan = Fan(0, psu_fan_idx, pddf_data, pddf_plugin_data, True, self.psu_index)
@@ -257,6 +259,24 @@ class PddfPsu(PsuBase):
         self.pddf_obj.create_attr('dev_ops', 'get_status',  self.pddf_obj.get_led_path())
         color = self.pddf_obj.get_led_color()
         return (color)
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125
+        """
+        device = "PSU{}".format(self.psu_index)
+        output = self.pddf_obj.get_attr_name_output(device, "psu_temp1_input")
+        if not output:
+            return 0.0
+
+        temp1 = output['status']
+
+        # temperature returned is in milli celcius
+        return float(temp1)/1000
 
     def get_input_voltage(self):
         """
