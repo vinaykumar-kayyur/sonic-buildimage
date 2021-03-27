@@ -50,6 +50,11 @@ class ProcessTaskBase(object):
         if self._task_process.is_alive():
             os.kill(self._task_process.pid, signal.SIGKILL)
 
+        if self._task_process.is_alive():
+            return False
+
+        return True
+
 
 #
 # ThreadTaskBase =====================================================================
@@ -90,3 +95,8 @@ class ThreadTaskBase(object):
 
         # Wait for the thread to exit
         self._task_thread.join(self._stop_timeout_secs)
+
+        if self._task_thread.is_alive():
+            return False
+
+        return True
