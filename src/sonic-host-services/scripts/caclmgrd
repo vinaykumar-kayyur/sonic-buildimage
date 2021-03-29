@@ -198,7 +198,6 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
     def generate_block_ip2me_traffic_iptables_commands(self, namespace):
         INTERFACE_TABLE_NAME_LIST = [
             "LOOPBACK_INTERFACE",
-            "MGMT_INTERFACE",
             "VLAN_INTERFACE",
             "PORTCHANNEL_INTERFACE",
             "INTERFACE"
@@ -234,6 +233,47 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
                         self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
 
         return block_ip2me_cmds
+
+    def generate_commands_for_mgmt_intf(self, namespace):
+        mgmt_intf_cmds=[]
+
+        # Find table of MGMT interface in config db
+        iface_table = self.config_db_map[namespace].get_table("MGMT_INTERFACE")
+        if iface_table:
+            for key, _ in iface_table.items():
+                if not _ip_prefix_in_key(key):
+                    continue
+                iface_name, iface_cidr = key
+                ip_ntwrk = ipaddress.ip_network(iface_cidr, strict=False)
+                ip_addr = ip_ntwrk.network_address
+
+                # recognize version of IP and value of netmask prefix
+                mask = ip_ntwrk.max_prefixlen
+                table = ""
+                if isinstance(ip_ntwrk, ipaddress.IPv4Network):
+                    if ip_ntwrk.prefixlen in range(0, 33):
+                            mask = ip_ntwrk.prefixlen
+                    table = "iptables"
+                elif isinstance(ip_ntwrk, ipaddress.IPv6Network):
+                    if ip_ntwrk.prefixlen in range(0, 65):
+                        mask = ip_ntwrk.prefixlen
+                    table = "ip6tables"
+                else:
+                    self.log_warning("Unrecognized IP address type on interface '{}': {}".format(iface_name, ip_ntwrk))
+                    continue
+
+                # Add iptables rules to allow input packets of all the known services
+                for acl_service in self.ACL_SERVICES:
+                    # Skip "ANY" record
+                    if acl_service == "ANY":
+                        continue
+                    for ip_protocol in self.ACL_SERVICES[acl_service]["ip_protocols"]:
+                        for dst_port in  self.ACL_SERVICES[acl_service]["dst_ports"]:
+                            mgmt_intf_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "{} -A INPUT -p {} -d {}/{} --dport {} -j ACCEPT".format(table, ip_protocol, ip_addr, mask, dst_port))
+                # Drop the rest of traffic
+                mgmt_intf_cmds.append(self.iptables_cmd_ns_prefix[namespace] + "{} -A INPUT -d {}/{} -j DROP".format(table, ip_addr, mask))
+
+        return mgmt_intf_cmds
 
     def generate_allow_internal_docker_ip_traffic_commands(self, namespace):
         allow_internal_docker_ip_cmds = []
@@ -610,6 +650,9 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
 
         # Add iptables commands to block ip2me traffic
         iptables_cmds += self.generate_block_ip2me_traffic_iptables_commands(namespace)
+
+        # Add iptables/ip6tables commands for MGMT interface
+        iptables_cmds += self.generate_commands_for_mgmt_intf(namespace)
 
         # Add iptables/ip6tables commands to allow all incoming packets with TTL of 0 or 1
         # This allows the device to respond to tools like tcptraceroute
