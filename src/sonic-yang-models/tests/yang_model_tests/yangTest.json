@@ -112,7 +112,7 @@
 		"sonic-portchannel:sonic-portchannel": {
 			"sonic-portchannel:PORTCHANNEL_MEMBER": {
 				"PORTCHANNEL_MEMBER_LIST": [{
-					"portchannel_name": "PortChannel0002",
+					"name": "PortChannel0002",
 					"port": "Ethernet0"
 				}]
 			}
