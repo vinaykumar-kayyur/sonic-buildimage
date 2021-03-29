@@ -81,15 +81,7 @@ def stop_platform_pddf():
     return True
 
 def main():
-    print"stop_platform_svc"
-    stop_platform_svc()
-    #print"start_platform_svc"
-    #start_platform_svc()
-    #print"start_platform_pddf"
-    #start_platform_pddf()
-    print"stop_platform_pddf"
-    stop_platform_pddf()
-    #pass
+    pass
 
 if __name__ == "__main__":
     main()
