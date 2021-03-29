@@ -164,8 +164,8 @@ class FeatureHandler(object):
         service_conf = "[Service]\nRestart={}\n".format(restart_config)
         feature_names, feature_suffixes = self.get_feature_attribute(feature)
 
-        for service_name in feature_names:
-            dir_name = self.SYSTEMD_SERVICE_CONF_D.format(service_name)
+        for feature_name in feature_names:
+            dir_name = self.SYSTEMD_SERVICE_CONF_D.format(feature_name)
             if not os.path.exists(dir_name):
                 os.mkdir(dir_name)
             with open(os.path.join(dir_name, 'auto_restart.conf'), 'w') as cfgfile:
