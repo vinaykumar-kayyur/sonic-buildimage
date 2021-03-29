@@ -45,6 +45,7 @@ import sys
 import logging
 import re
 import time
+import os
 
 
 
@@ -268,7 +269,6 @@ mknod =[
 'echo pca9548 0x74 > /sys/bus/i2c/devices/i2c-36/new_device',
 'echo pca9548 0x75 > /sys/bus/i2c/devices/i2c-37/new_device',
 'echo pca9548 0x76 > /sys/bus/i2c/devices/i2c-38/new_device',
-'echo 24c04 0x56 > /sys/bus/i2c/devices/i2c-0/new_device',
 
 'echo as7326_56x_fan 0x66 > /sys/bus/i2c/devices/i2c-11/new_device ',
 'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-15/new_device',
@@ -286,15 +286,25 @@ mknod =[
 mknod2 =[
 ]
 
+#EERPOM
+eeprom_mknod =[
+'echo 24c04 0x56 > /sys/bus/i2c/devices/i2c-0/new_device',
+'echo 24c02 0x57 > /sys/bus/i2c/devices/i2c-0/new_device'
+]
 
 
 def i2c_order_check():
     # This project has only 1 i2c bus.
     return 0
 
+def eeprom_check():
+    cmd = "i2cget -y -f 0 0x56"
+    status, output = commands.getstatusoutput(cmd)
+    return status
+
 def device_install():
     global FORCE
-
+    
     order = i2c_order_check()
 
     # if 0x70 is not exist @i2c-1, use reversed bus order
@@ -320,6 +330,22 @@ def device_install():
                 print output
                 if FORCE == 0:
                     return status
+    
+    # initiate IDPROM
+    # Close 0x77 mux to make sure if the I2C address of IDPROM is 0x56 or 0x57
+    log_os_system("i2cset -f -y 0 0x77 0 ", 1)
+    ret=eeprom_check()
+    if ret==0:
+        log_os_system(eeprom_mknod[0], 1) #old board, 0x56 eeprom
+        time.sleep(0.2)
+        exists = os.path.isfile('/sys/bus/i2c/devices/0-0056/eeprom')
+        if (exists is False):
+            subprocess.call('echo 0x56 > /sys/bus/i2c/devices/i2c-0/delete_device', shell=True)
+            log_os_system(eeprom_mknod[1], 1)
+    else:
+        log_os_system(eeprom_mknod[1], 1) #new board, 0x57 eeprom                
+                    
+                    
     for i in range(0,len(sfp_map)):
         if i < qsfp_start or i >= qsfp_end:
             status, output =log_os_system("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)
@@ -329,6 +355,9 @@ def device_install():
             print output
             if FORCE == 0:
                 return status
+                
+    
+                
     return
 
 def device_uninstall():
@@ -363,6 +392,20 @@ def device_uninstall():
             print output
             if FORCE == 0:
                 return status
+
+    #Deal with for del 0x56 or 0x57 sysfs device    
+    exists = os.path.isfile('/sys/bus/i2c/devices/0-0056/eeprom')
+        
+    if (exists is True):
+        target = eeprom_mknod[0] #0x56
+    else:
+        target = eeprom_mknod[1] #0x57
+    
+    temp = target.split()
+    del temp[1]
+    temp[-1] = temp[-1].replace('new_device', 'delete_device')
+    status, output = log_os_system(" ".join(temp), 1)
+    
 
     return
 
