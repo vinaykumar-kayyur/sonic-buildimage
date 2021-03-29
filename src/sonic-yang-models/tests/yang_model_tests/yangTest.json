@@ -120,7 +120,7 @@
 		"sonic-port:sonic-port": {
 			"sonic-port:PORT": {
 				"PORT_LIST": [{
-					"port_name": "Ethernet0",
+					"name": "Ethernet0",
 					"speed": 25000,
 					"lanes": "65"
 				}]
