@@ -405,7 +405,10 @@ def device_uninstall():
     del temp[1]
     temp[-1] = temp[-1].replace('new_device', 'delete_device')
     status, output = log_os_system(" ".join(temp), 1)
-    
+    if status:
+        print output
+        if FORCE == 0:
+           return status
 
     return
 
