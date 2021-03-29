@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # Script to stop and start the respective platforms default services. 
 # This will be used while switching the pddf->non-pddf mode and vice versa
-import os
-import sys
+
 import commands
 
 def check_pddf_support():
@@ -81,7 +80,15 @@ def stop_platform_pddf():
     return True
 
 def main():
-    pass
+    print"stop_platform_svc"
+    stop_platform_svc()
+    #print"start_platform_svc"
+    #start_platform_svc()
+    #print"start_platform_pddf"
+    #start_platform_pddf()
+    print"stop_platform_pddf"
+    stop_platform_pddf()
+    #pass
 
 if __name__ == "__main__":
     main()

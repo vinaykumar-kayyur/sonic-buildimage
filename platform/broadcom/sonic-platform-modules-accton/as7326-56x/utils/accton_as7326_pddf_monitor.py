@@ -28,9 +28,7 @@ try:
     import logging
     import logging.config
     import logging.handlers
-    import time  # this is only being used as part of the example
-    import traceback
-    from tabulate import tabulate
+    import time
     from sonic_platform import platform
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
@@ -39,8 +37,6 @@ except ImportError as e:
 VERSION = '1.0'
 FUNCTION_NAME = 'accton_as7326_56x_monitor'
 
-global log_file
-global log_level
 platform_chassis = None
 
 # Default FAN speed: 37.5%(0x05)
@@ -147,10 +143,8 @@ class device_monitor(object):
             3: [61000, 66000,   LEVEL_TEMP_HIGH],
             4: [66000, 200000,  LEVEL_TEMP_CRITICAL],
         }
-
-        fan_dir = platform_chassis.get_fan(0).get_direction()
+        
         ori_perc = platform_chassis.get_fan(0).get_speed()
-        #logging.debug('fan_dir=%s, ori_perc=%f', fan_dir, ori_perc)
         #logging.debug('test_temp=%d', test_temp)
         if test_temp == 0:
             temp2 = platform_chassis.get_thermal(1).get_temperature()*1000
@@ -167,7 +161,7 @@ class device_monitor(object):
         if temp2 == 0:
             temp_get = 50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75%
             logging.debug('lm75_49 detect fail, so set temp_get=50000, let fan to 75%')
-        elif temp2 == 0:
+        elif temp4 == 0:
             temp_get = 50000  # if one detect sensor is fail or zero, assign temp=50000, let fan to 75%
             logging.debug('lm75_4b detect fail, so set temp_get=50000, let fan to 75%')
         else:
