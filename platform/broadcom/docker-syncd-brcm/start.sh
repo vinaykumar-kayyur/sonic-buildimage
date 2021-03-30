@@ -15,6 +15,8 @@ mkdir -p /etc/sai.d/
 # If delta is small, use config.bcm.j2 where additional SAI INIT config properties are added
 #   based on specific device metadata requirement
 #   in this case sai.profile should have been modified to use the path /etc/sai.d/config.bcm
+# There is also a possibility that both sai.profile.j2 and config.bcm.j2 are absent.  in that cacse just copy
+# sai.profile to the new /etc/said directory.
 
 # Create/Copy the sai.profile to /etc/sai.d/sai.profile
 if [ -f $HWSKU_DIR/sai.profile.j2 ]; then
