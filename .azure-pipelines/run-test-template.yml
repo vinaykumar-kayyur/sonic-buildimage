@@ -15,8 +15,8 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifact: sonic-buildimage.kvm
-  displayName: "Download sonic-buildimage.kvm artifact"
+    artifact: sonic-buildimage.vs
+  displayName: "Download sonic-buildimage.vs artifact"
 
 - script: |
     set -x
@@ -49,6 +49,8 @@ steps:
         virsh -c qemu:///system dumpxml ${{ parameters.dut }} > $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.xml
         img=$(virsh -c qemu:///system domblklist ${{ parameters.dut }} | grep vda | awk '{print $2}')
         cp $img $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.img
+        gzip $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.img
+        sudo gzip $(Build.ArtifactStagingDirectory)/kvmdump/${{ parameters.dut }}.memdmp
         virsh -c qemu:///system undefine ${{ parameters.dut }}
     fi
 

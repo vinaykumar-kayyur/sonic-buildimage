@@ -45,6 +45,7 @@ class Test_yang_models:
             'Pattern': ['pattern', 'does not satisfy'],
             'Mandatory': ['required element', 'Missing'],
             'Verify': ['verified'],
+            'Range': ['does not satisfy', 'range'],
             'None': []
         }
 
@@ -65,8 +66,28 @@ class Test_yang_models:
                 'desc': 'Configure a member port in PORT_CHANNEL table.',
                 'eStr': self.defaultYANGFailure['None']
             },
+            'PORTCHANNEL_MEMEBER_WITH_NON_EXIST_PORTCHANNEL': {
+                    'desc': 'Configure PortChannel in PORTCHANNEL_MEMEBER table \
+                        which does not exist in PORTCHANNEL table.',
+                    'eStr': self.defaultYANGFailure['LeafRef'] + \
+                    ['portchannel', 'name']
+            },
+            'PORTCHANNEL_MEMEBER_WITH_NON_EXIST_PORT': {
+                    'desc': 'Configure Port in PORTCHANNEL_MEMEBER table \
+                        which does not exist in PORT table.',
+                    'eStr': self.defaultYANGFailure['LeafRef'] + \
+                    ['port', 'name']
+            },
+            'PORTCHANNEL_INTERFACE_IP_ADDR_TEST': {
+                'desc': 'Configure IP address on PORTCHANNEL_INTERFACE table.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'PORTCHANNEL_INTERFACE_IP_ADDR_ON_NON_EXIST_PO': {
+                'desc': 'Configure IP address on a non existent PortChannel.',
+                'eStr': self.defaultYANGFailure['LeafRef']
+            },
             'VLAN_MEMEBER_WITH_NON_EXIST_VLAN': {
-                'desc': 'Configure vlan-id in VLAN_MEMBER table which does not exist in VLAN  table.',
+                'desc': 'Configure vlan-id in VLAN_MEMBER table which does not exist in VLAN table.',
                 'eStr': self.defaultYANGFailure['LeafRef']
             },
             'TAGGING_MODE_WRONG_VALUE': {
@@ -172,7 +193,7 @@ class Test_yang_models:
             'PORT_TEST': {
                 'desc': 'LOAD PORT TABLE WITH FEC AND PFC_ASYM SUCCESSFULLY. VERIFY PFC_ASYM.',
                 'eStr': self.defaultYANGFailure['Verify'],
-                'verify': {'xpath': "/sonic-port:sonic-port/PORT/PORT_LIST[port_name='Ethernet8']/port_name",
+                'verify': {'xpath': "/sonic-port:sonic-port/PORT/PORT_LIST[name='Ethernet8']/name",
                     'key': 'sonic-port:pfc_asym',
                     'value': 'on'
                 }
@@ -180,6 +201,18 @@ class Test_yang_models:
             'PORT_NEG_TEST': {
                 'desc': 'LOAD PORT TABLE FEC PATTERN FAILURE',
                 'eStr': self.defaultYANGFailure['Pattern'] + ['rc']
+            },
+            'PORT_VALID_AUTONEG_TEST_1': {
+                'desc': 'PORT_VALID_AUTONEG_TEST_1 no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'PORT_VALID_AUTONEG_TEST_2': {
+                'desc': 'PORT_VALID_AUTONEG_TEST_2 no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'PORT_INVALID_AUTONEG_TEST': {
+                'desc': 'PORT_INVALID_AUTONEG_TEST must condition failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['on|off']
             },
             'CRM_WITH_WRONG_PERCENTAGE': {
                 'desc': 'CRM_WITH_WRONG_PERCENTAGE must condition failure.',
@@ -190,9 +223,17 @@ class Test_yang_models:
                     about high threshold being lower than low threshold.',
                 'eStr': ['high_threshold should be more than low_threshold']
             },
+            'CRM_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'CRM_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'CRM_WITH_CORRECT_USED_VALUE': {
                 'desc': 'CRM_WITH_CORRECT_USED_VALUE no failure.',
                 'eStr': self.defaultYANGFailure['None']
+            },
+            'CRM_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'CRM_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             },
             'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE': {
                 'desc': 'FLEX_COUNTER_TABLE_WITH_CORRECT_USED_VALUE no failure.',
@@ -241,6 +282,69 @@ class Test_yang_models:
             'BREAKOUT_CFG_INCORRECT_MODES': {
                 'desc': 'BREAKOUT_CFG wrong breakout modes',
                 'eStr': self.defaultYANGFailure['Pattern']
+            },
+            'SNAT_WITH_WRONG_PERCENTAGE': {
+                'desc': 'SNAT_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'SNAT_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'SNAT_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'SNAT_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'SNAT_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'SNAT_WITH_CORRECT_USED_VALUE': {
+                'desc': 'SNAT_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'SNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'SNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
+            },
+            'DNAT_WITH_WRONG_PERCENTAGE': {
+                'desc': 'DNAT_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'DNAT_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'DNAT_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'DNAT_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'DNAT_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_CORRECT_USED_VALUE': {
+                'desc': 'DNAT_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'DNAT_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'DNAT_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
+            },
+            'IPMC_WITH_WRONG_PERCENTAGE': {
+                'desc': 'IPMC_WITH_WRONG_PERCENTAGE must condition failure.',
+                'eStr': self.defaultYANGFailure['Must']
+            },
+            'IPMC_WITH_HIGH_THRESHOLD_ERR': {
+                'desc': 'IPMC_WITH_HIGH_THRESHOLD_ERR must condition failure \
+                    about high threshold being lower than low threshold.',
+                'eStr': ['high_threshold should be more than low_threshold']
+            },
+            'IPMC_WITH_CORRECT_FREE_VALUE': {
+                'desc': 'IPMC_WITH_CORRECT_FREE_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_CORRECT_USED_VALUE': {
+                'desc': 'IPMC_WITH_CORRECT_USED_VALUE no failure.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'IPMC_WITH_WRONG_THRESHOLD_TYPE': {
+                'desc': 'IPMC_WITH_WRONG_THRESHOLD_TYPE pattern failure.',
+                'eStr': self.defaultYANGFailure['Pattern'] + ['wrong']
             }
         }
 
@@ -394,7 +498,7 @@ class Test_yang_models:
             for i in range(4095):
                 vlan = 'Vlan'+str(i)
                 jInput["sonic-vlan:sonic-vlan"]["sonic-vlan:VLAN"]["VLAN_LIST"]\
-                      [0]["vlan_name"] = vlan
+                      [0]["name"] = vlan
                 log.debug(jInput)
                 s = self.loadConfigData(json.dumps(jInput))
                 if s!="":
