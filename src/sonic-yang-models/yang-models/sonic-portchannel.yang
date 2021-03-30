@@ -20,7 +20,15 @@ module sonic-portchannel {
 		revision-date 2019-07-01;
 	}
 
+	import sonic-vrf {
+                prefix vrf;
+        }
+
 	description "PORTCHANNEL yang Module for SONiC OS";
+
+	revision 2021-03-31 {
+		description "Add PortChannel Interface List with VRF attribute";
+	}
 
 	revision 2021-03-15 {
 		description "Add SONiC PortChannel Interface model";
@@ -118,6 +126,23 @@ module sonic-portchannel {
 		container PORTCHANNEL_INTERFACE {
 
 			description "PORTCHANNEL_INTERFACE part of config_db.json";
+
+			list PORTCHANNEL_INTERFACE_LIST {
+                                key "name";
+
+                                leaf name {
+                                        /* key elements are mandatory by default */
+                                        type leafref {
+                                                path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                                        }
+                                }
+
+                                leaf vrf_name {
+                                        type leafref {
+                                                path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:vrf_name";
+                                        }
+                                }
+                        } /* end of list PORTCHANNEL_INTERFACE_LIST */
 
 			list PORTCHANNEL_INTERFACE_IPPREFIX_LIST {
 

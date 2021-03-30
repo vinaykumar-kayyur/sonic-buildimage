@@ -62,6 +62,18 @@ class Test_yang_models:
                 'desc': 'Configure a member port in VLAN_MEMBER table which does not exist.',
                 'eStr': self.defaultYANGFailure['LeafRef']
             },
+            'VRF_TEST': {
+                'desc': 'Configure VRF in VRF table.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'VRF_TEST_WRONG_VALUE': {
+                'desc': 'Configure wrong value for vrf name.',
+                'eStr' : ['Invalid', 'VRF name']
+            },
+            'VRF_TEST_WITH_FALLBACK': {
+                'desc': 'Configure VRF with fallback in VRF table.',
+                'eStr': self.defaultYANGFailure['None']
+            },
             'PORT_CHANNEL_TEST': {
                 'desc': 'Configure a member port in PORT_CHANNEL table.',
                 'eStr': self.defaultYANGFailure['None']
@@ -84,6 +96,18 @@ class Test_yang_models:
             },
             'PORTCHANNEL_INTERFACE_IP_ADDR_ON_NON_EXIST_PO': {
                 'desc': 'Configure IP address on a non existent PortChannel.',
+                'eStr': self.defaultYANGFailure['LeafRef']
+            },
+            'PORTCHANNEL_INTERFACE_LIST_VRF_TEST': {
+                'desc': 'Configure Vrf name in PORTCHANNEL_INTERFACE table.',
+                'eStr': self.defaultYANGFailure['None']
+            },
+            'PORTCHANNEL_INTERFACE_LIST_VRF_TEST_ON_NON_EXIST_PO': {
+                'desc': 'Configure vrf name on a non existent PortChannel.',
+                'eStr': self.defaultYANGFailure['LeafRef']
+            },
+            'PORTCHANNEL_INTERFACE_LIST_NON_EXIST_VRF_TEST': {
+                'desc': 'Configure a non existent Vrf in PORTCHANNEL_INTERFACE table.',
                 'eStr': self.defaultYANGFailure['LeafRef']
             },
             'VLAN_MEMEBER_WITH_NON_EXIST_VLAN': {
