@@ -701,13 +701,13 @@ def parse_cpg(cpg, hname, local_devices=[]):
                 voq_chassis = session.find(str(QName(ns, "VoQChassisInternal")))
                 if voq_chassis is not None and voq_chassis.text == "true":
                     table = bgp_voq_chassis_sessions
-                    admin_status = None
+                    admin_status = 'up'
                 elif end_router.lower() in local_devices and start_router.lower() in local_devices:
                     table = bgp_internal_sessions
                     admin_status = 'up'
                 else:
                     table = bgp_sessions
-                    admin_status = 'up'
+                    admin_status = None
 
                 if end_router.lower() == hname.lower():
                     table[start_peer.lower()] = {
