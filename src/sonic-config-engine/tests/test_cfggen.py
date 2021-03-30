@@ -495,7 +495,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'rrclient': 0, 'name': 'CHASSIS_PEER', 'local_addr': '10.2.0.20', 'nhopself': 0, 'holdtime': '180', 'asn': '65100', 'keepalive': '60'}")
+            utils.to_dict("{'rrclient': 0, 'name': 'CHASSIS_PEER', 'local_addr': '10.2.0.20', 'nhopself': 0, 'holdtime': '180', 'asn': '65100', 'keepalive': '60', 'admin_status': 'up'}")
         )
 
         # make sure VoQChassisInternal value of false is honored

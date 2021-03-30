@@ -707,7 +707,7 @@ def parse_cpg(cpg, hname, local_devices=[]):
                     admin_status = 'up'
                 else:
                     table = bgp_sessions
-                    admin_status = None
+                    admin_status = 'up'
 
                 if end_router.lower() == hname.lower():
                     table[start_peer.lower()] = {
