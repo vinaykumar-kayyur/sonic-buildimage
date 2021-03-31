@@ -1,6 +1,7 @@
 module sonic-nat {
     namespace "http://github.com/Azure/sonic-nat";
     prefix snat;
+    yang-version 1.1;
 
     import ietf-inet-types {
         prefix inet;
@@ -17,9 +18,9 @@ module sonic-nat {
         "SONiC";
 
     description
-        "SONiC NAT";
+        "SONiC NAT yang model";
 
-    revision 2019-10-30 {
+    revision 2021-03-14 {
         description
             "Initial revision.";
     }
@@ -102,10 +103,6 @@ module sonic-nat {
             list STATIC_NAPT_LIST {
                 key "global_ip ip_protocol global_l4_port";
 
-                ext:key-regex-configdb-to-yang "^([a-fA-F0-9:./]+)|(TCP|UDP)|([0-9]+)$";
-
-                ext:key-regex-yang-to-configdb "global_ip|ip_protocol|global_l4_port";
-
                 leaf ip_protocol {
                     type ip-protocol-type;
                 }
@@ -128,10 +125,6 @@ module sonic-nat {
             list STATIC_NAT_LIST {
                 key "global_ip";
 
-                ext:key-regex-configdb-to-yang "^([a-fA-F0-9:./]+)$";
-
-                ext:key-regex-yang-to-configdb "global_ip";
-
                 uses sonic-nat-common;
             }
         }
@@ -146,11 +139,6 @@ module sonic-nat {
         container NAT_GLOBAL {
             list NAT_GLOBAL_LIST {
                 key "name";
-                max-elements 1;
-
-                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)$";
-
-                ext:key-regex-yang-to-configdb "name";
 
                 leaf name {
                     type enumeration {
@@ -192,11 +180,6 @@ module sonic-nat {
         container NAT_POOL {
             list NAT_POOL_LIST {
                 key "pool_name";
-                max-elements 16;
-
-                ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)$";
-
-                ext:key-regex-yang-to-configdb "name";
 
                 leaf pool_name {
                     type string {
@@ -224,11 +207,6 @@ module sonic-nat {
             list NAT_BINDINGS_LIST {
 
                 key "name";
-                max-elements 16;
-
-		ext:key-regex-configdb-to-yang "^([a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,15}))$";
-
-		ext:key-regex-yang-to-configdb "name";
 
                 leaf name {
                     type string {
@@ -248,9 +226,16 @@ module sonic-nat {
                 }
 
                 leaf access_list {
-                    type leafref {
-                        path "/sacl:sonic-acl/sacl:ACL_TABLE/sacl:ACL_TABLE_LIST/sacl:ACL_TABLE_NAME";
-                    } 
+                    type union {
+                        type leafref {
+                            path "/sacl:sonic-acl/sacl:ACL_TABLE/sacl:ACL_TABLE_LIST/sacl:ACL_TABLE_NAME";
+                        }
+
+                        type string {
+                            pattern "";
+                        }
+                    }
+                    default "";
                 }
 
                 leaf nat_type {

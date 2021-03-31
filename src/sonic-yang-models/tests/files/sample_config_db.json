@@ -700,7 +700,7 @@
                 "access_list": "",
                 "nat_pool": "pool1",
                 "nat_type": "snat",
-                "twice_nat_id": "NULL"
+                "twice_nat_id": "1"
             }
         },
         "NAT_GLOBAL": {
