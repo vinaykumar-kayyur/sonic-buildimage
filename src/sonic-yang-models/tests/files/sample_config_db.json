@@ -1,5 +1,11 @@
 {
     "SAMPLE_CONFIG_DB_JSON": {
+        "VRF": {
+                "default": {
+                },
+                "Vrf_blue": {
+                }
+        },
         "PORTCHANNEL": {
             "PortChannel0003": {
                 "admin_status": "up",
