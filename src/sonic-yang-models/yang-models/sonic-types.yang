@@ -114,4 +114,17 @@ module sonic-types {
             pattern "percentage|used|free|PERCENTAGE|USED|FREE";
         }
     }
+   
+    // Defined as container because it will be used as xpath in MUST/WHEN
+    // expressions in yang.
+    container operation {
+        leaf operation {
+            type enumeration {
+                enum CREATE;
+                enum UPDATE;
+                enum DELETE;
+            }
+        }
+        description "Sonic data operation types required during validation";
+    }
 }

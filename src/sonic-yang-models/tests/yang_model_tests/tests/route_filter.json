@@ -1,0 +1,20 @@
+{
+    "ROUTE_REDISTRIBUTE_VALID": {
+        "desc": "Configure route redistribution table."
+    },
+    "ROUTE_MAP_VALID": {
+        "desc": "Configure route map table."
+    },
+    "ROUTE_PREFIX_VALID": {
+        "desc": "Configure prefix table."
+    },
+    "BGP_COMMUNITY_VALID": {
+        "desc": "Configure BGP community table."
+    },
+    "BGP_EXT_COMMUNITY_VALID": {
+        "desc": "Configure BGP extended community table."
+    },
+    "BGP_AS_PATH_VALID": {
+        "desc": "Configure BGP AS path table."
+    }
+}

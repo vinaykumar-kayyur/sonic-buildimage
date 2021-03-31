@@ -1,0 +1,132 @@
+{
+    "ROUTE_REDISTRIBUTE_VALID": {
+        "sonic-route-common:sonic-route-common":{
+            "sonic-route-common:ROUTE_REDISTRIBUTE": {
+                "ROUTE_REDISTRIBUTE_LIST": [
+                {
+                    "vrf_name": "default",
+                    "src_protocol": "connected",
+                    "dst_protocol": "bgp",
+                    "addr_family": "ipv4" 
+                }
+                ]
+            }
+        }
+    },
+    "ROUTE_MAP_VALID": {
+        "sonic-route-map:sonic-route-map":{
+            "sonic-route-map:ROUTE_MAP_SET": {
+                "ROUTE_MAP_SET_LIST": [
+                {
+                    "name": "map1"
+                }
+                ]
+            }
+        },
+        "sonic-route-map:sonic-route-map":{
+            "sonic-route-map:ROUTE_MAP": {
+                "ROUTE_MAP_LIST": [
+                {
+                    "route_map_name": "map1",
+                    "stmt_name": "1",
+                    "match_med": 100,
+                    "set_metric": 50
+                }
+                ]
+            }
+        }
+    },
+    "ROUTE_PREFIX_VALID": {
+        "sonic-routing-policy-sets:sonic-routing-policy-sets":{
+            "sonic-routing-policy-sets:PREFIX_SET": {
+                "PREFIX_SET_LIST": [
+                {
+                    "name": "prefix1",
+                    "mode": "IPv4"
+                }
+                ]
+            },
+            "sonic-routing-policy-sets:PREFIX": {
+                "PREFIX_LIST": [
+                {
+                    "set_name": "prefix1",
+                    "sequence_number": "10",
+                    "ip_prefix": "20.0.0.0/8",
+                    "masklength_range": "8..16",
+                    "action": "permit"
+                },
+                {
+                    "set_name": "prefix1",
+                    "sequence_number": "11",
+                    "ip_prefix": "21.0.0.0/8",
+                    "masklength_range": "exact",
+                    "action": "permit"
+                }
+                ]
+            }
+        }
+    },
+    "BGP_COMMUNITY_VALID": {
+        "sonic-routing-policy-sets:sonic-routing-policy-sets":{
+            "sonic-routing-policy-sets:COMMUNITY_SET": {
+                "COMMUNITY_SET_LIST": [
+                {
+                    "name": "com1",
+                    "set_type": "STANDARD",
+                    "match_action": "ANY",
+                    "action": "permit",
+                    "community_member": ["1:1"] 
+                },
+                {
+                    "name": "com2",
+                    "set_type": "STANDARD",
+                    "match_action": "ALL",
+                    "action": "permit",
+                    "community_member": ["1:2"] 
+                }
+                ]
+            }
+        }
+    },
+    "BGP_EXT_COMMUNITY_VALID": {
+        "sonic-routing-policy-sets:sonic-routing-policy-sets":{
+            "sonic-routing-policy-sets:EXTENDED_COMMUNITY_SET": {
+                "EXTENDED_COMMUNITY_SET_LIST": [
+                {
+                    "name": "extcom1",
+                    "set_type": "STANDARD",
+                    "match_action": "ANY",
+                    "action": "permit",
+                    "community_member": ["rt:1:1"] 
+                },
+                {
+                    "name": "extcom2",
+                    "set_type": "STANDARD",
+                    "match_action": "ALL",
+                    "action": "permit",
+                    "community_member": ["rt:1:2"] 
+                }
+                ]
+            }
+        }
+    },
+    "BGP_AS_PATH_VALID": {
+        "sonic-routing-policy-sets:sonic-routing-policy-sets":{
+            "sonic-routing-policy-sets:AS_PATH_SET": {
+                "AS_PATH_SET_LIST": [
+                {
+                    "name": "aspath1",
+                    "action": "permit",
+                    "as_path_set_member": ["65001","65003"] 
+                },
+                {
+                    "name": "aspath2",
+                    "action": "deny",
+                    "as_path_set_member": ["65002"] 
+                }
+                ]
+            }
+        }
+    }
+}
+

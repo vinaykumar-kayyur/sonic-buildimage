@@ -82,6 +82,10 @@ class SonicYangExtMixin:
         for j in self.yJson:
             # get module name
             moduleName = j['module']['@name']
+            # Skip sonic-types and sonic-extensions modules
+            if moduleName.strip() == 'sonic-types' or moduleName.strip() == 'sonic-extension':
+                continue
+
             # get top level container
             topLevelContainer = j['module'].get('container')
             # if top level container is none, this is common yang files, which may

@@ -32,5 +32,9 @@
     "DEVICE_METADATA_TYPE_INCORRECT_PATTERN": {
 	"desc": "DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.",
 	"eStrKey" : "Pattern"
+    },
+    "DEVICE_METADATA_FRR_MGMT_FWK_CONFIG": {
+    "desc": "Verifying FRR MGMT framework configuration."
     }
+
 }

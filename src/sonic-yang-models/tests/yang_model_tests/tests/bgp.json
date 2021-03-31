@@ -1,0 +1,39 @@
+{
+    "VRF_VALID": {
+        "desc": "Configure VRF table."
+    },
+    "BGP_GLOBAL_VALID": {
+        "desc": "Configure BGP global table."
+    },
+    "BGP_NEIGHBOR_ALL_VALID": {
+        "desc": "Configure BGP neighbor table."
+    },
+    "BGP_PEERGROUP_ALL_VALID": {
+        "desc": "Configure BGP peer group table."
+    },
+    "BGP_GLOBAL_NEG_VRF_NOT_EXIST": {
+        "desc": "Referring non-existing VRF table.",
+        "eStrKey": "InvalidValue"
+    },
+    "BGP_GLOBAL_AF_NEG_GLOBAL_NOT_EXIST": {
+        "desc": "Referring non-existing BGP global table.",
+        "eStrKey" : "LeafRef"
+    },
+    "BGP_NEIGHBOR_NEG_GLOBAL_NOT_EXIST": {
+        "desc": "Referring non-existing BGP global table.",
+        "eStrKey" : "LeafRef"
+    },
+    "BGP_NEIGHBOR_AF_NEG_NEIGHBOR_NOT_EXIST": {
+        "desc": "Referring non-existing BGP neighbor table.",
+        "eStrKey" : "LeafRef"
+    },
+    "BGP_PEER_GROUP_NEG_GLOBAL_NOT_EXIST": {
+        "desc": "Referring non-existing BGP global table.",
+        "eStrKey" : "LeafRef"
+    },
+    "BGP_PEER_GROUP_AF_NEG_PEER_GROUP_NOT_EXIST": {
+        "desc": "Referring non-existing BGP peer group table.",
+        "eStrKey" : "LeafRef"
+    }
+
+}
