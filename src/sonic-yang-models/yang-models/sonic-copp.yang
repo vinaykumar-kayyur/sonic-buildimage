@@ -1,0 +1,243 @@
+module sonic-copp {
+
+	yang-version 1.1;
+
+	namespace "http://github.com/Azure/sonic-copp";
+	prefix copp;
+
+	description "CoPP YANG Module for SONiC OS";
+
+	revision 2021-03-31 {
+		description
+			"First Revision";
+	}
+
+	container sonic-copp {
+		container COPP_GROUP {
+			list COPP_GROUP_LIST {
+				key name;
+
+				leaf name {
+					type string;
+					description
+						"Control plane policing group name";
+				}
+
+                leaf queue {
+					type uint8 {
+						range "0..47" {
+							error-message "Invalid value passed for queue";
+						}
+					}
+					description
+						"CPU queue id";
+				}
+
+				leaf trap_priority {
+					type uint16 {
+						range "0..1023" {
+							error-message "Invalid value passed for trap_priority";
+						}
+					}
+					description
+						"Trap priority";
+				}
+
+				leaf trap_action {
+					type string {
+						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
+							error-message "Invalid value passed for trap_action";
+						}
+					}
+					description
+						"Trap action";
+				}
+
+                leaf meter_type {
+					type string {
+						pattern "(packets)|(bytes)" {
+							error-message "Invalid value passed for meter_type";
+						}
+					}
+					description
+						"Policer meter type";
+				}
+
+                leaf mode {
+					type string {
+						pattern "(sr_tcm)|(tr_tcm)|(storm)" {
+							error-message "Invalid value passed for mode";
+						}
+					}
+					description
+						"Policer mode";
+				}
+                
+                leaf color {
+					type string {
+						pattern "(aware)|(blind)" {
+							error-message "Invalid value passed for color";
+						}
+					}
+					description
+						"Policer color mode";
+				}
+
+				leaf cir {
+					type uint64;
+					description
+						"Committed information rate for the dual-rate token
+                        bucket policer.  This value represents the rate at which 
+                        tokens are added to the primary bucket.";
+				}
+
+				leaf cbs {
+					type uint64;
+					description
+						"Committed burst size for the dual-rate token bucket
+                        policer.  This value represents the depth of the token
+                        bucket.";
+
+					must "((current()/../cir) and (current()/../cir > 0))" {
+						error-message "cbs can't be configured without cir.";
+					}
+					must "(current() >= current()/../cir)" {
+						error-message "cbs must be greater than or equal to cir";
+					}
+				}
+
+				leaf pir {
+					type uint64;
+					description
+						"Peak information rate for the dual-rate token bucket
+                        policer.  This value represents the rate at which tokens
+                        are added to the secondary bucket.";
+
+					must "((current()/../cir) and (current()/../cir > 0))" {
+						error-message "pir can't be configured without cir.";
+					}
+					must "(current() >= current()/../cir)" {
+						error-message "pir must be greater than or equal to cir";
+					}
+				}
+
+				leaf pbs {
+					type uint64;
+					description
+						"Excess burst size for the dual-rate token bucket policer.
+                        This value represents the depth of the secondary bucket.";
+
+					must "((current()/../pir) and (current()/../pir > 0))" {
+						error-message "pbs can't be configured without pir.";
+					}
+					must "(current() >= current()/../pir)" {
+						error-message "pbs must be greater than or equal to pir";
+					}
+					must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
+						error-message "pbs must be greater than or equal to cbs";
+					}
+				}
+				
+				leaf green_action {
+					type string {
+						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
+							error-message "Invalid value passed for green_action";
+						}
+					}
+					description
+						"Green action";
+				}
+                
+                leaf yellow_action {
+					type string {
+						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
+							error-message "Invalid value passed for yellow_action";
+						}
+					}
+					description
+						"Yellow action";
+				}
+
+				leaf red_action {
+					type string {
+						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
+							error-message "Invalid value passed for red_action";
+						}
+					}
+					description
+						"Red action";
+				}
+
+                leaf genetlink_name {
+					type string {
+						pattern "(psample)" {
+							error-message "Invalid value passed for genetlink_name";
+						}
+					}
+					description
+						"genetlink name";
+				}
+
+                leaf genetlink_mcgrp_name {
+					type string {
+						pattern "(packets)" {
+							error-message "Invalid value passed for genetlink_mcgrp_name";
+						}
+					}
+					description
+						"genetlink multicast group name";
+				}
+			}
+			/* end of list COPP_GROUP_LIST */
+		}
+        /* end of container COPP_GROUP */
+
+		container COPP_TRAP {
+			list COPP_TRAP_LIST {
+				key name;
+
+				leaf name {
+					type string;
+					description
+						"Control plane policing trap name";
+				}
+
+				leaf trap_ids {
+					type string;
+					description
+						"Comma separated string of trap_ids";
+				}
+
+				leaf trap_group {
+					type leafref {
+						path "/sonic-copp/COPP_GROUP/COPP_GROUP_LIST/name";
+					}
+					description
+						"reference to CoPP group";
+				}
+			}
+			/* end of list COPP_TRAP_LIST */
+		}
+        /* end of container COPP_TRAP */
+	}
+    /* end of top level container */
+
+	rpc get-match-protocols {
+		description
+			"RPC to get allowed match protocols";
+
+		output {
+			list Match_protocols {
+				key "Protocol";
+
+				leaf Protocol {
+					type string;
+					description
+						"Protocol name";
+				}
+			}
+		}
+    }
+    /* end of rpc get-match-protocols */
+}
+/* end of module sonic-copp */
