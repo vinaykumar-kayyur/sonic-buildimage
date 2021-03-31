@@ -15,7 +15,7 @@ parameters:
   default: []
 
 jobs:
-- template: azure-pipelines-job-groups.yml
+- template: new-build-template.yml
   parameters:
     jobFilters: ${{ parameters.jobFilters }}
     buildOptions: ${{ parameters.buildOptions }}
