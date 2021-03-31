@@ -23,7 +23,7 @@ module sonic-copp {
 						"Control plane policing group name";
 				}
 
-                leaf queue {
+				leaf queue {
 					type uint8 {
 						range "0..47" {
 							error-message "Invalid value passed for queue";
@@ -52,8 +52,8 @@ module sonic-copp {
 					description
 						"Trap action";
 				}
-
-                leaf meter_type {
+				
+				leaf meter_type {
 					type string {
 						pattern "(packets)|(bytes)" {
 							error-message "Invalid value passed for meter_type";
@@ -62,8 +62,8 @@ module sonic-copp {
 					description
 						"Policer meter type";
 				}
-
-                leaf mode {
+				
+				leaf mode {
 					type string {
 						pattern "(sr_tcm)|(tr_tcm)|(storm)" {
 							error-message "Invalid value passed for mode";
@@ -72,8 +72,8 @@ module sonic-copp {
 					description
 						"Policer mode";
 				}
-                
-                leaf color {
+				
+				leaf color {
 					type string {
 						pattern "(aware)|(blind)" {
 							error-message "Invalid value passed for color";
@@ -87,16 +87,16 @@ module sonic-copp {
 					type uint64;
 					description
 						"Committed information rate for the dual-rate token
-                        bucket policer.  This value represents the rate at which 
-                        tokens are added to the primary bucket.";
+						bucket policer.  This value represents the rate at which 
+						tokens are added to the primary bucket.";
 				}
 
 				leaf cbs {
 					type uint64;
 					description
 						"Committed burst size for the dual-rate token bucket
-                        policer.  This value represents the depth of the token
-                        bucket.";
+						policer.  This value represents the depth of the token
+						bucket.";
 
 					must "((current()/../cir) and (current()/../cir > 0))" {
 						error-message "cbs can't be configured without cir.";
@@ -110,8 +110,8 @@ module sonic-copp {
 					type uint64;
 					description
 						"Peak information rate for the dual-rate token bucket
-                        policer.  This value represents the rate at which tokens
-                        are added to the secondary bucket.";
+						policer.  This value represents the rate at which tokens
+						are added to the secondary bucket.";
 
 					must "((current()/../cir) and (current()/../cir > 0))" {
 						error-message "pir can't be configured without cir.";
@@ -125,7 +125,7 @@ module sonic-copp {
 					type uint64;
 					description
 						"Excess burst size for the dual-rate token bucket policer.
-                        This value represents the depth of the secondary bucket.";
+						This value represents the depth of the secondary bucket.";
 
 					must "((current()/../pir) and (current()/../pir > 0))" {
 						error-message "pbs can't be configured without pir.";
@@ -147,8 +147,8 @@ module sonic-copp {
 					description
 						"Green action";
 				}
-                
-                leaf yellow_action {
+				
+				leaf yellow_action {
 					type string {
 						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
 							error-message "Invalid value passed for yellow_action";
@@ -167,8 +167,8 @@ module sonic-copp {
 					description
 						"Red action";
 				}
-
-                leaf genetlink_name {
+				
+				leaf genetlink_name {
 					type string {
 						pattern "(psample)" {
 							error-message "Invalid value passed for genetlink_name";
@@ -177,8 +177,8 @@ module sonic-copp {
 					description
 						"genetlink name";
 				}
-
-                leaf genetlink_mcgrp_name {
+				
+				leaf genetlink_mcgrp_name {
 					type string {
 						pattern "(packets)" {
 							error-message "Invalid value passed for genetlink_mcgrp_name";
@@ -190,7 +190,7 @@ module sonic-copp {
 			}
 			/* end of list COPP_GROUP_LIST */
 		}
-        /* end of container COPP_GROUP */
+		/* end of container COPP_GROUP */
 
 		container COPP_TRAP {
 			list COPP_TRAP_LIST {
@@ -218,9 +218,9 @@ module sonic-copp {
 			}
 			/* end of list COPP_TRAP_LIST */
 		}
-        /* end of container COPP_TRAP */
+		/* end of container COPP_TRAP */
 	}
-    /* end of top level container */
+	/* end of top level container */
 
 	rpc get-match-protocols {
 		description
@@ -237,7 +237,7 @@ module sonic-copp {
 				}
 			}
 		}
-    }
-    /* end of rpc get-match-protocols */
+	}
+	/* end of rpc get-match-protocols */
 }
 /* end of module sonic-copp */
