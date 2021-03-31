@@ -11,7 +11,7 @@ module sonic-route-common {
         prefix srmap;
     }
 
-    import sonic-common {
+    import sonic-types {
         prefix cmn;
     }
 

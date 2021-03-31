@@ -61,13 +61,13 @@ module sonic-bgp-neighbor {
                     type union {
                         type inet:ip-address;
                         type leafref {
-                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:port_name";
+                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
                         }
                         type leafref {
-                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:portchannel_name";
+                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
                         }
                         type leafref {
-                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:vlan_name";
+                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
                         }
                     }
                     description "Neighbor description, it will be neighbor address or interface name";

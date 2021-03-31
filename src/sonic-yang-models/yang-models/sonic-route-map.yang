@@ -7,7 +7,7 @@ module sonic-route-map {
         prefix inet;
     }
 
-    import sonic-common {
+    import sonic-types {
         prefix cmn;
     }
 
@@ -52,13 +52,13 @@ module sonic-route-map {
     typedef route-map-intf {
         type union {
             type leafref {
-                path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:port_name";
+                path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
             }
             type leafref {
-                path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:portchannel_name";
+                path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
             }
             type leafref {
-                path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:vlan_name";
+                path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
             }
         }
     }
@@ -192,13 +192,13 @@ module sonic-route-map {
                     type union {
                         type inet:ip-address;
                         type leafref {
-                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:port_name";
+                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
                         }
                         type leafref {
-                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:portchannel_name";
+                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
                         }
                         type leafref {
-                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:vlan_name";
+                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
                         }
                     }
                     description

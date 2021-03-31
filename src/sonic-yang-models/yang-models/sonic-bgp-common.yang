@@ -31,7 +31,7 @@ module sonic-bgp-common {
         prefix srmap;
     }
 
-    import sonic-common {
+    import sonic-types {
         prefix cmn;
     }
 
@@ -223,16 +223,16 @@ module sonic-bgp-common {
             type union {
                 type inet:ip-address;
                 type leafref {
-                    path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:port_name";
+                    path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
                 }
                 type leafref {
-                    path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:portchannel_name";
+                    path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
                 }
                 type leafref {
-                    path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:vlan_name";
+                    path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
                 }
                 type leafref {
-                    path "/lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:loopback_interface_name";
+                    path "/lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name";
                 }
             }
             description "Local source address or interface name to use for connection.";

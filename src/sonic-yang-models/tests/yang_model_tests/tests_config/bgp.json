@@ -4,9 +4,6 @@
             "sonic-vrf:VRF": {
                 "VRF_LIST": [
                 {
-                    "vrf_name":"default"
-                },
-                {
                     "vrf_name":"Vrf1"
                 }
                 ]

@@ -23,7 +23,7 @@ module sonic-bgp-global {
         prefix sonic-ext;
     }
 
-    import sonic-common {
+    import sonic-types {
         prefix cmn;
     }
 
