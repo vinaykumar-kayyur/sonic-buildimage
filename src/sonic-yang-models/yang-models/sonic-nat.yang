@@ -54,34 +54,11 @@ module sonic-nat {
         }
     }
 
-    grouping sonic-twice-nat-id {
-
-        leaf twice_nat_id {
-            type uint16 {
-                range "1..9999" {
-                    error-message "Invalid Group Id for twice NAPT.";
-                    error-app-tag twice-nat-id-invalid;
-                }
-            }
+    typedef mode {
+        type enumeration {
+            enum enabled;
+            enum disabled;
         }
-    }
-
-    grouping sonic-nat-common {
-
-        leaf global_ip {
-            type inet:ipv4-address;
-        }
-
-        leaf local_ip {
-            mandatory true;
-            type inet:ipv4-address;
-        }
-
-        leaf nat_type {
-            type nat-type;
-            default dnat;
-        }
-        uses sonic-twice-nat-id;
     }
 
     typedef ip-address {
@@ -103,21 +80,41 @@ module sonic-nat {
             list STATIC_NAPT_LIST {
                 key "global_ip ip_protocol global_l4_port";
 
+                leaf global_ip {
+                    type inet:ipv4-address;
+                }   
+                
                 leaf ip_protocol {
                     type ip-protocol-type;
-                }
-
+                }   
+                
                 leaf global_l4_port {
-                    type inet:port-number ;
-                }
+                    type inet:port-number;
+                }   
+
+                leaf local_ip {
+                    mandatory true;
+                    type inet:ipv4-address;
+                }   
 
                 leaf local_port {
                     mandatory true;
                     type inet:port-number ;
                 }
-
-                uses sonic-nat-common;
-
+                
+                leaf nat_type {
+                    type nat-type;
+                    default dnat;
+                }   
+                
+                leaf twice_nat_id {
+                    type uint16 { 
+                        range "1..9999" {
+                            error-message "Invalid Group Id for twice NAPT.";
+                            error-app-tag twice-nat-id-invalid; 
+                        }   
+                    }   
+                }
             }
         }
 
@@ -125,14 +122,28 @@ module sonic-nat {
             list STATIC_NAT_LIST {
                 key "global_ip";
 
-                uses sonic-nat-common;
-            }
-        }
+                leaf global_ip {
+                    type inet:ipv4-address;
+                }
 
-        typedef mode {
-            type enumeration {
-                enum enabled;
-                enum disabled;
+                leaf local_ip {
+                    mandatory true;
+                    type inet:ipv4-address;
+                }
+
+                leaf nat_type {
+                    type nat-type;
+                    default dnat;
+                }
+
+                leaf twice_nat_id {
+                    type uint16 { 
+                        range "1..9999" {
+                            error-message "Invalid Group Id for twice NAPT.";
+                            error-app-tag twice-nat-id-invalid; 
+                        }   
+                    }   
+                }
             }
         }
 
@@ -242,7 +253,15 @@ module sonic-nat {
                     type nat-type;
                     default snat;
                 }
-                uses sonic-twice-nat-id;
+
+                leaf twice_nat_id {
+                    type uint16 {
+                        range "1..9999" {
+                            error-message "Invalid Group Id for twice NAPT.";
+                            error-app-tag twice-nat-id-invalid;
+                        }
+                    }
+                }
             }
         }
     }
