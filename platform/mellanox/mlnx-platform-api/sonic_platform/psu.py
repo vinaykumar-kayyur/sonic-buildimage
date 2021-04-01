@@ -28,6 +28,9 @@ PSU_CURRENT = "current"
 PSU_VOLTAGE = "voltage"
 PSU_POWER = "power"
 
+SN_VPD_FIELD = "SN_VPD_FIELD"
+PN_VPD_FIELD = "PN_VPD_FIELD"
+
 # in most platforms the file psuX_curr, psuX_volt and psuX_power contain current, voltage and power data respectively. 
 # but there are exceptions which will be handled by the following dictionary
 
@@ -66,6 +69,8 @@ class Psu(PsuBase):
         #psu_oper_status should always be present for all platforms
         self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
         self._name = "PSU{}".format(psu_index + 1)
+        psu_vpd = "eeprom/psu{}_vpd".format(self.index)
+        self.psu_vpd = os.path.join(self.psu_path, psu_vpd)
 
         if platform in platform_dict_psu:
             filemap = psu_profile_list[platform_dict_psu[platform]]
@@ -122,6 +127,25 @@ class Psu(PsuBase):
         return self._name
 
 
+    def _read_vpd_file(self, filename):
+        """
+        Read a vpd file parsed from eeprom with keys and values.
+        Returns a dictionary.
+        """
+        result = {}
+        try:
+            if not os.path.exists(filename):
+                return result
+            with open(filename, 'r') as fileobj:
+                for line in fileobj.readlines():
+                    key = line.split(":")[0].strip()
+                    val = line.split(":")[1].strip()
+                    result[key] = val
+        except Exception as e:
+            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
+        return result
+
+
     def _read_generic_file(self, filename, len):
         """
         Read a generic file, returns the contents of the file
@@ -135,6 +159,26 @@ class Psu(PsuBase):
         except Exception as e:
             logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
         return result
+
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+
+        Returns:
+            string: Model/part number of devic
+        """
+        return self._read_vpd_file(self.psu_vpd)[PN_VPD_FIELD]
+
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+
+        Returns:
+            string: Serial number of device
+        """
+        return self._read_vpd_file(self.psu_vpd)[SN_VPD_FIELD]
 
 
     def get_powergood_status(self):
