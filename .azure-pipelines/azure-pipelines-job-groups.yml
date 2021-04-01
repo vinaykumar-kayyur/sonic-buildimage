@@ -43,7 +43,6 @@ jobs:
       - ${{ parameters.preSteps }}
       - ${{ if ne(jobGroup.script, '') }}:
         - script: |
-            set -e
             ${{ jobGroup.script }}
           env:
             ${{ if ne(parameters.scriptEnv, '') }}:

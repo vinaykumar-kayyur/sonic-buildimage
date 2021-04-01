@@ -15,7 +15,7 @@ parameters:
   default: []
 
 jobs:
-- template: new-build-template.yml
+- template: azure-pipelines-image-template.yml
   parameters:
     jobFilters: ${{ parameters.jobFilters }}
     buildOptions: ${{ parameters.buildOptions }}
