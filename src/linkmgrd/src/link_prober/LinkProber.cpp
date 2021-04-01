@@ -145,6 +145,8 @@ void LinkProber::initialize()
 //
 void LinkProber::startProbing()
 {
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+
     mStream.cancel();
     initializeSendBuffer();
     sendHeartbeat();
@@ -159,6 +161,8 @@ void LinkProber::startProbing()
 //
 void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
+    MUXLOGINFO(mMuxPortConfig.getPortName());
+
     mSuspendTimer.expires_from_now(boost::posix_time::milliseconds(suspendTime_msec));
     mSuspendTimer.async_wait(mStrand.wrap(boost::bind(
         &LinkProber::handleSuspendTimeout,
@@ -197,6 +201,8 @@ void LinkProber::handleUpdateEthernetFrame()
 //
 void LinkProber::sendHeartbeat()
 {
+    MUXLOGTRACE(mMuxPortConfig.getPortName());
+
     // check if suspend timer is running
     if (!mSuspendTx) {
         updateIcmpSequenceNo();
@@ -335,6 +341,8 @@ void LinkProber::handleTimeout(boost::system::error_code errorCode)
 //
 void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
 {
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
+
     if (errorCode == boost::system::errc::success) {
         mSuspendTx = false;
 
@@ -357,6 +365,8 @@ void LinkProber::handleSuspendTimeout(boost::system::error_code errorCode)
 //
 void LinkProber::startRecv()
 {
+    MUXLOGTRACE(mMuxPortConfig.getPortName());
+
     mStream.async_read_some(
         boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
         mStrand.wrap(boost::bind(
@@ -375,6 +385,8 @@ void LinkProber::startRecv()
 //
 void LinkProber::startInitRecv()
 {
+    MUXLOGTRACE(mMuxPortConfig.getPortName());
+
     mStream.async_read_some(
         boost::asio::buffer(mRxBuffer, MUX_MAX_ICMP_BUFFER_SIZE),
         mStrand.wrap(boost::bind(

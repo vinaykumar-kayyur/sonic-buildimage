@@ -133,13 +133,11 @@ void MuxPort::handleProbeMuxState(const std::string &muxState)
 {
     MUXLOGDEBUG(boost::format("port: %s, state db mux state: %s") % mMuxPortConfig.getPortName() % muxState);
 
-    mux_state::MuxState::Label label;
+    mux_state::MuxState::Label label = mux_state::MuxState::Label::Unknown;
     if (muxState == "active") {
         label = mux_state::MuxState::Label::Active;
     } else if (muxState == "standby") {
         label = mux_state::MuxState::Label::Standby;
-    } else if (muxState == "unknown") {
-        label = mux_state::MuxState::Label::Unknown;
     }
 
     boost::asio::io_service &ioService = mStrand.context();

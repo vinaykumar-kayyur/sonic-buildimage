@@ -578,8 +578,7 @@ void LinkManagerStateMachine::handleSwssLinkStateNotification(const link_state::
     if (mComponentInitState.all()) {
         if (label == link_state::LinkState::Label::Up) {
             mLinkStateMachine.postLinkStateEvent(link_state::LinkStateMachine::getUpEvent());
-        }
-        else if (label == link_state::LinkState::Label::Down) {
+        } else if (label == link_state::LinkState::Label::Down) {
             mLinkStateMachine.postLinkStateEvent(link_state::LinkStateMachine::getDownEvent());
         }
     } else {
@@ -781,6 +780,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction
     MUXLOGINFO(mMuxPortConfig.getPortName());
     // Suspend TX probes to help peer ToR takes over in case active link is bad
     mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
+    mWaitActiveUpCount = 0;
 }
 
 //
@@ -811,6 +811,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunctio
     // Start switching MUX to active state as we lost HB from active ToR
     switchMuxState(nextState, mux_state::MuxState::Label::Active);
     mDeadlineTimer.cancel();
+    mWaitActiveUpCount= 0;
 }
 
 //
@@ -883,6 +884,10 @@ void LinkManagerStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(Co
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
+
+    if (mWaitActiveUpCount++ & 0x1) {
+        mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
+    }
 }
 
 //

@@ -750,6 +750,8 @@ private:
 
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
 
+    uint32_t mWaitActiveUpCount = 0;
+
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Uninitialized;
 };

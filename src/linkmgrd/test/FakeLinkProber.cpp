@@ -9,6 +9,7 @@
 #include <boost/bind/bind.hpp>
 
 #include "FakeLinkProber.h"
+#include "common/MuxLogger.h"
 
 namespace test
 {
@@ -58,6 +59,8 @@ void FakeLinkProber::postSuspendTimerExpiredEvent()
 
 void FakeLinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
+    MUXLOGINFO("");
+
     mSuspendTxProbeCallCount++;
 }
 

@@ -29,6 +29,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
         mIoService
     )
 {
+    mMuxConfig.setTimeoutIpv4_msec(10);
 }
 
 void LinkManagerStateMachineTest::suspendTxProbes()
@@ -404,6 +405,82 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyLinkProberUnknown)
     // change state to active
     postLinkProberEvent(link_prober::LinkProberState::Active, 3);
     VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxActiveAsymetricLinkDrop)
+{
+    setMuxActive();
+
+    // verify MUX enters wait state and that the diver is being probed
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+
+    postSuspendTimerExpiredEvent();
+    VALIDATE_STATE(Unknown, Wait, Up);
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 1);
+
+    // Peer took over the link
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 1);
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 2);
+
+    runIoService();
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 3);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
+
+    runIoService();
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 4);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 2);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxStandbyAsymetricLinkDrop)
+{
+    setMuxStandby();
+
+    // verify MUX enters wait state and that the diver is being probed
+    EXPECT_EQ(mDbInterface.mProbeMuxStateInvokeCount, 0);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 1);
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+    // swss notification
+    handleMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 2);
+
+    runIoService();
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Wait, Active, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 3);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+
+    runIoService();
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Standby, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 4);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
 }
 
 } /* namespace test */

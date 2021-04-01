@@ -192,7 +192,7 @@ public:
     *
     *@return suspend timer timeout
     */
-    inline uint32_t getSuspendTimeout_msec() const {return mSuspendTimeout_msec;};
+    inline uint32_t getSuspendTimeout_msec() const {return (mNegativeStateChangeRetryCount + 1) * mTimeoutIpv4_msec;};
 
     /**
     *@method getMuxStateChangeRetryCount
