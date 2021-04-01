@@ -216,7 +216,6 @@ module sonic-nat {
         container NAT_BINDINGS {
 
             list NAT_BINDINGS_LIST {
-
                 key "name";
 
                 leaf name {
