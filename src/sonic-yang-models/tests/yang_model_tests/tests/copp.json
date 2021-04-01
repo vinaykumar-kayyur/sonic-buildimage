@@ -1,0 +1,9 @@
+{
+    "COPP_TRAP_WITH_EXIST_GROUP": {
+    "desc": "Configure COPP_TRAP with group in COPP_GROUP table."
+    },
+    "COPP_TRAP_WITH_NON_EXIST_GROUP": {
+    "desc": "Configure COPP_TRAP with group which does not exist in COPP_GROUP table.",
+    "eStrKey" : "LeafRef"
+    }
+}
