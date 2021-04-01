@@ -1,5 +1,4 @@
 try:
-    import select
     import time
     from .helper import APIHelper
     from sonic_py_common.logger import Logger
