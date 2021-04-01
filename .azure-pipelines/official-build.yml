@@ -27,10 +27,3 @@ stages:
     parameters:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobFilters: none
-      postSteps:
-      - script: |
-          make freeze
-          git status files/build/versions
-          git add files/build/versions
-          git diff HEAD files/build/versions
-        displayName: "Show git diff"
