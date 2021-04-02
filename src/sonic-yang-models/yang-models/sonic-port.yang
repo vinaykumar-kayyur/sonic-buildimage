@@ -64,12 +64,16 @@ module sonic-port{
 				}
 
 				leaf autoneg {
+					description "Port auto negotiation mode";
+
 					type string {
 						pattern "on|off";
 					}
 				}
 				
 				leaf-list adv_speeds {
+					description "Port advertised speeds, valid value could be a list of interger or all";
+
 					type union {
 						type uint32 {
 							range 1..400000;
@@ -81,10 +85,14 @@ module sonic-port{
 				}
 
 				leaf interface_type {
+					description "Port interface type";
+
 					type stypes:interface_type;
 				}
 
 				leaf-list adv_interface_types {
+					description "Port advertised interface type, valid value could be a list of stypes:interface_type or all";
+
 					type union {
 						type stypes:interface_type;
 						type string {
@@ -116,12 +124,6 @@ module sonic-port{
 				}
 
 				leaf pfc_asym {
-					type string {
-						pattern "on|off";
-					}
-				}
-
-				leaf autoneg {
 					type string {
 						pattern "on|off";
 					}
