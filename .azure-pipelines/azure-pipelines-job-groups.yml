@@ -20,9 +20,6 @@ parameters:
 - name: 'timeoutInMinutes'
   type: 'number'
   default: 600
-- name: 'pool'
-  type: string
-  default: 'sonicbld'
 - name: 'jobFilters'
   type: object
   default: ''
