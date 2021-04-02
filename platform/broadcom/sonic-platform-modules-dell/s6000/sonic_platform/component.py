@@ -29,11 +29,12 @@ class Component(ComponentBase):
                   "booting")],
         ["System-CPLD", "Used for managing CPU board devices and power"],
         ["Master-CPLD", ("Used for managing Fan, PSU, system LEDs, QSFP "
-                         "modules (1-16)")],
-        ["Slave-CPLD", "Used for managing QSFP modules (17-32)"]
+                         "modules (17-32)")],
+        ["Slave-CPLD", "Used for managing QSFP modules (1-16)"]
     ]
 
     def __init__(self, component_index):
+        ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.CHASSIS_COMPONENTS[self.index][0]
         self.description = self.CHASSIS_COMPONENTS[self.index][1]
@@ -89,6 +90,55 @@ class Component(ComponentBase):
             A string containing the name of the component
         """
         return self.name
+
+    def get_model(self):
+        """
+        Retrieves the part number of the component
+        Returns:
+            string: Part number of component
+        """
+        return 'NA'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the component
+        Returns:
+            string: Serial number of component
+        """
+        return 'NA'
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the component
+        Returns:
+            bool: True if  present, False if not
+        """
+        return True
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the component
+        Returns:
+            bool: True if component is operating properly, False if not
+        """
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether component is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
 
     def get_description(self):
         """
