@@ -2,6 +2,9 @@ parameters:
 - name: 'preSteps'
   type: stepList
   default: []
+- name: 'buildSteps'
+  type: stepList
+  default: []
 - name: "postSteps"
   type: stepList
   default: []
@@ -16,7 +19,10 @@ parameters:
   default: ''
 - name: 'timeoutInMinutes'
   type: 'number'
-  default: 1440
+  default: 600
+- name: 'pool'
+  type: string
+  default: 'sonicbld'
 - name: 'jobFilters'
   type: object
   default: ''
@@ -30,6 +36,8 @@ jobs:
           ${{ pair.key }}: ${{ pair.value }}
       ${{ if eq(jobGroup.timeoutInMinutes, '') }}:
         timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+      ${{ if eq(jobGroup.pool, '') }}:
+        pool: ${{ parameters.pool }}
       variables:
         GROUP_NAME: ${{ jobGroup.name }}
         GROUP_EXTNAME: '${{ jobGroup.extName }}'
@@ -50,4 +58,5 @@ jobs:
           displayName: 'JobScript'
       - ${{ if ne(jobGroup.steps, '') }}:
         - ${{ jobGroup.steps }}
+      - ${{ parameters.buildSteps }}
       - ${{ parameters.postSteps }}

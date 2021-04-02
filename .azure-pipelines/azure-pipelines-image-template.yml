@@ -10,6 +10,9 @@ parameters:
 - name: 'preSteps'
   type: stepList
   default: []
+- name: 'buildSteps'
+  type: stepList
+  default: []
 - name: 'postSteps'
   type: stepList
   default: []
@@ -52,3 +55,4 @@ jobs:
       - ${{ parameters.postSteps }}
       - template: cleanup.yml
     jobGroups: ${{ parameters.jobGroups }}
+    buildSteps: ${{ parameters.buildSteps }}

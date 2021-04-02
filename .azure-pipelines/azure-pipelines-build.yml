@@ -23,60 +23,69 @@ jobs:
     postSteps: ${{ parameters.postSteps }}
     jobGroups:
       - name: vs
-        script: |
-          make $(BUILD_OPTIONS) INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
-          mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
-          make $(BUILD_OPTIONS) target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
-      - name: broadcom
-        script: |
-          make $(BUILD_OPTIONS) INSTALL_DEBUG_TOOLS=y target/sonic-broadcom.bin
-          mv target/sonic-broadcom.bin target/sonic-broadcom-dbg.bin
-          make $(BUILD_OPTIONS) target/sonic-broadcom.bin 
-          make $(BUILD_OPTIONS) ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-broadcom.swi
-          make $(BUILD_OPTIONS) target/sonic-broadcom.raw
-          make $(BUILD_OPTIONS) ENABLE_SYNCD_RPC=y target/docker-syncd-brcm-rpc.gz
-      - name: mellanox
-        script: |
-          make $(BUILD_OPTIONS) INSTALL_DEBUG_TOOLS=y target/sonic-mellanox.bin
-          mv target/sonic-mellanox.bin target/sonic-mellanox-dbg.bin
-          make $(BUILD_OPTIONS) ENABLE_SYNCD_RPC=y target/sonic-aboot-mlnx-rpc.gz
+        variables:
+          dbg_image: true
       - name: barefoot
-        script: |
-          make $(BUILD_OPTIONS) target/sonic-barefoot.bin
-          make $(BUILD_OPTIONS) ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-barefoot.swi
-      - name: generic
-        script: |
-          make $(BUILD_OPTIONS) INSTALL_DEBUG_TOOLS=y target/sonic-generic.bin
-          mv target/sonic-generic.bin target/sonic-generic-dbg.bin
-          make $(BUILD_OPTIONS) target/sonic-generic.bin
-      - name: innovium
-        script: |
-          make $(BUILD_OPTIONS) ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-innovium.swi
-          make $(BUILD_OPTIONS) target/sonic-innovium.bin
-      - name: nephos
-        script: |
-          make $(BUILD_OPTIONS) INSTALL_DEBUG_TOOLS=y target/sonic-nephos.bin
-          mv target/sonic-nephos.bin target/sonic-nephos-dbg.bin
-          make $(BUILD_OPTIONS) ENABLE_SYNCD_RPC=y target/docker-syncd-nephos-rpc.gz
-          make $(BUILD_OPTIONS) target/sonic-nephos.bin
-      - name: marvell-armhf
-        pool: sonicbld_8c
-        timeoutInMinutes: 3600
         variables:
-          PLATFORM_ARCH: armhf
-        script: |
-          make $(BUILD_OPTIONS) target/sonic-marvell-armhf.bin
+          swi_image: true
+      - name: broadcom
+        variables:
+          platform_rpc: brcm
+          dbg_image: true
+          swi_image: true
+          raw_image: true
+          sync_rpc_image: true
       - name: centec
-        script: |
-          make $(BUILD_OPTIONS) INSTALL_DEBUG_TOOLS=y target/sonic-centec.bin
-          mv target/sonic-centec.bin target/sonic-centec-dbg.bin
-          make $(BUILD_OPTIONS) target/sonic-centec.bin
-          make $(BUILD_OPTIONS) ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-centec.swi
-      - name: centec-arm64
-        pool: sonicbld_8c
-        timeoutInMinutes: 3600
         variables:
-          PLATFORM_ARCH: arm64
-        script: |
-          make $(BUILD_OPTIONS) target/sonic-centec-arm64.bin
-          make $(BUILD_OPTIONS) ENABLE_SYNCD_RPC=y target/docker-syncd-centec-arm64-rpc.gz
+          platform_rpc: centec
+          dbg_image: true
+          sync_rpc_image: true
+      - name: centec-arm64
+        variables:
+          arch: arm64
+          platform_rpc: centec-arm64
+          pool: sonicbld_8c
+          timeoutInMinutes: 1800
+      - name: generic
+        variables:
+          dbg_image: true
+      - name: innovium
+        variables:
+          swi_image: true
+      - name: marvell-armhf
+        variables:
+          arch: armhf
+          pool: sonicbld_8c
+      - name: mellanox
+        variables:
+          platform_rpc: mlnx
+          dbg_image: true
+          sync_rpc_image: true
+      - name: nephos
+        variables:
+          platform_rpc: nephos
+          dbg_image: true
+          sync_rpc_image: true
+    buildSteps:
+      - bash: |
+          if [ $(GROUP_NAME) == vs ]; then
+            if [ $(dbg_image) == true ]; then
+              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz && mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
+            fi
+            make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
+          else
+            if [ $(dbg_image) == true ]; then
+              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin && \
+                mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
+            fi
+            if [ $(swi_image) == true ]; then
+              make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
+            fi
+            if [ $(raw_image) == true ]; then
+              make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).raw
+            fi
+            if [ $(sync_rpc_image) == true ]; then
+              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
+            fi
+            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
+          fi
