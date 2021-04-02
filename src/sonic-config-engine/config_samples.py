@@ -57,6 +57,10 @@ def generate_l2_config(data):
     data['VLAN_MEMBER'] = {}
     if is_dualtor:
         data['DEVICE_METADATA']['localhost']['subtype'] = 'DualToR'
+        data['LOOPBACK_INTERFACE'] = {
+                                        'Loopback2': {},
+                                        'Loopback2|3.3.3.3': {}
+                                     }
         data['MUX_CABLE'] = {}
         data['PEER_SWITCH'] = {
                                 "peer_switch_hostname": {
