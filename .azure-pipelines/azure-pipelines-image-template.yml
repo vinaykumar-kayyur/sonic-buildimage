@@ -4,9 +4,6 @@ parameters:
 - name: 'jobFilters'
   type: object
   default: ''
-- name: 'buildOptions'
-  type: string
-  default: 'SONIC_CONFIG_BUILD_JOBS=1'
 - name: 'preSteps'
   type: stepList
   default: []
@@ -19,15 +16,14 @@ parameters:
 - name: jobGroups
   type: object
   default: []
-
+- name: jobVariables
+  type: object
+  default: []
 jobs:
 - template: azure-pipelines-job-groups.yml
   parameters:
     jobFilters: ${{ parameters.jobFilters }}
-    jobVariables:
-      PLATFORM: $(GROUP_NAME)
-      PLATFORM_ARCH: amd64
-      BUILD_OPTIONS: ${{ parameters.buildOptions }}
+    jobVariables: ${{ parameters.jobVariables }}
     preSteps:
       - template: cleanup.yml
       - ${{ parameters. preSteps }}

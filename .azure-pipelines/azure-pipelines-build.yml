@@ -18,9 +18,17 @@ jobs:
 - template: azure-pipelines-image-template.yml
   parameters:
     jobFilters: ${{ parameters.jobFilters }}
-    buildOptions: ${{ parameters.buildOptions }}
     preSteps: ${{ parameters.preSteps }}
     postSteps: ${{ parameters.postSteps }}
+    jobVariables:
+      PLATFORM: $(GROUP_NAME)
+      PLATFORM_ARCH: amd64
+      BUILD_OPTIONS: ${{ parameters.buildOptions }}
+      dbg_image: false
+      swi_image: false
+      raw_image: false
+      sync_rpc_image: false
+      platform_rpc: false
     jobGroups:
       - name: vs
         variables:
