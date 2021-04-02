@@ -33,8 +33,6 @@ jobs:
           ${{ pair.key }}: ${{ pair.value }}
       ${{ if eq(jobGroup.timeoutInMinutes, '') }}:
         timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-      ${{ if eq(jobGroup.pool, '') }}:
-        pool: ${{ parameters.pool }}
       variables:
         GROUP_NAME: ${{ jobGroup.name }}
         GROUP_EXTNAME: '${{ jobGroup.extName }}'
