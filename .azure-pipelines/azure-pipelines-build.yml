@@ -49,10 +49,10 @@ jobs:
           dbg_image: true
           sync_rpc_image: true
       - name: centec-arm64
+        pool: sonicbld_8c
         variables:
           arch: arm64
           platform_rpc: centec-arm64
-          pool: sonicbld_8c
           timeoutInMinutes: 1800
       - name: generic
         variables:
@@ -61,9 +61,9 @@ jobs:
         variables:
           swi_image: true
       - name: marvell-armhf
+        pool: sonicbld_8c
         variables:
           arch: armhf
-          pool: sonicbld_8c
       - name: mellanox
         variables:
           platform_rpc: mlnx
