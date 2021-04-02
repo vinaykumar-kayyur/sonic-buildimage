@@ -17,7 +17,6 @@ pr: none
 
 stages:
 - stage: Build
-  pool: sonicbld
   variables:
     CACHE_MODE: wcache
     ${{ if eq(variables['Build.SourceBranchName'], '202012') }}:
