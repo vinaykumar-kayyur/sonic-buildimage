@@ -29,7 +29,7 @@ module sonic-vrf {
 
 				leaf name {
 					type string {
-						pattern "default|Vrf[a-zA-Z0-9_-]+" {
+						pattern "Vrf[a-zA-Z0-9_-]+" {
 							error-message "Invalid VRF name";
 							error-app-tag vrf-name-invalid;
 						}
