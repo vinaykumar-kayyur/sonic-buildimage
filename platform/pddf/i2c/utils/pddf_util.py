@@ -511,8 +511,8 @@ def do_switch_pddf():
             if not status:
                 print("Successfully uninstalled the native sonic-platform whl pkg from pmon container")
             else:
-                print("Error: Unable to uninstall the sonic-platform whl pkg from pmon container.\)
-                        Do it manually before moving to nonpddf mode"
+                print("Error: Unable to uninstall the sonic-platform whl pkg from pmon container.\
+                        Do it manually before moving to nonpddf mode")
                 return status
         print("Stopping the pmon service ...")
         status, output = log_os_system("systemctl stop pmon.service", 1)
@@ -567,8 +567,8 @@ def do_switch_nonpddf():
             if not status:
                 print("Successfully uninstalled the sonic-platform whl pkg from pmon container")
             else:
-                print("Error: Unable to uninstall the sonic-platform whl pkg from pmon container.\)
-                        Do it manually before moving to nonpddf mode"
+                print("Error: Unable to uninstall the sonic-platform whl pkg from pmon container.\
+                        Do it manually before moving to nonpddf mode")
                 return status
         print("Stopping the pmon service ...")
         status, output = log_os_system("systemctl stop pmon.service", 1)
