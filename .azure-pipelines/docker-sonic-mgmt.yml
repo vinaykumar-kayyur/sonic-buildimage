@@ -1,0 +1,44 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+- cron: "0 8 * * *"
+  displayName: Build and push sonic-mgmt image
+  branches:
+    include:
+    - master
+  always: true
+
+trigger: none
+pr: none
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool: sonicbld
+    timeoutInMinutes: 360
+    steps:
+    - template: ./template/cleanup.yml
+    - checkout: self
+      clean: true
+      submodules: recursive
+    - bash: |
+        set -xe
+        make configure PLATFORM=generic
+        make target/docker-sonic-mgmt.gz
+        docker load -i target/docker-sonic-mgmt.gz
+        docker tag docker-sonic-mgmt $REGISTRY_SERVER/docker-sonic-mgmt:latest
+      env:
+        REGISTRY_SERVER: soniccr2.azurecr.io
+      displayName: Build docker-sonic-mgmt.gz
+    - task: Docker@2
+      inputs:
+        containerRegistry: soniccr2
+        repository: docker-sonic-mgmt
+        command: push
+        tags: latest
+    - publish: target
+      artifact: DockerSonicMgmt

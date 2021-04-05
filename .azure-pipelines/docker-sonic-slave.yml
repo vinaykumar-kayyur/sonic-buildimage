@@ -1,0 +1,43 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+- cron: "0 8 * * *"
+  displayName: Build and push sonic-slave-* images
+  branches:
+    include:
+    - master
+  always: true
+
+trigger: none
+pr: none
+
+parameters:
+- name: 'arches'
+  type: object
+  default: 
+  - amd64
+  - armhf
+  - arm64
+
+stages:
+- stage: Build
+  jobs:
+  - ${{ each arch in parameters.arches }}:
+    - ${{ if endswith(variables['Build.DefinitionName'], 'buster') }}:
+      - template: template/sonic-slave-build.yml
+        parameters:
+          arch: ${{ arch }}
+          distro: buster
+    - ${{ if endswith(variables['Build.DefinitionName'], 'stretch') }}:
+      - template: template/sonic-slave-build.yml
+        parameters:
+          arch: ${{ arch }}
+          distro: stretch
+    - ${{ if endswith(variables['Build.DefinitionName'], 'jessie') }}:
+      - template: template/sonic-slave-build.yml
+        parameters:
+          arch: ${{ arch }}
+          distro: jessie
