@@ -1,0 +1,69 @@
+parameters:
+- name: arch
+  values:
+  - amd64
+  - armhf
+  - arm64
+- name: distro
+  values:
+  - buster
+  - jessie
+  - stretch
+
+jobs:
+- job: Build_${{ parameters.distro }}_${{ parameters.arch }}
+  pool: sonicbld
+  timeoutInMinutes: 360
+  steps:
+  - template: cleanup.yml
+  - checkout: self
+    clean: true
+  - bash: |
+      set -ex
+
+      USER=`id -un | tr A-Z a-z`
+      SLAVE_DIR=sonic-slave-${{ parameters.distro }}
+      if [ x${{ parameters.arch }} == x"amd64" ]; then
+        SLAVE_BASE_IMAGE=${SLAVE_DIR}
+      else
+        SLAVE_BASE_IMAGE=${SLAVE_DIR}-${{ parameters.arch }}
+      fi
+
+      tmpfile=$(mktemp)
+
+      echo ${{ parameters.arch }} > .arch
+
+      DOCKER_DATA_ROOT_FOR_MULTIARCH=/data/march/docker BLDENV=${{ parameters.distro }} make -f Makefile.work sonic-slave-build | tee $tmpfile
+      SLAVE_BASE_TAG=$(grep "^Checking sonic-slave-base image:" $tmpfile | awk -F ':' '{print $3}')
+      SLAVE_TAG=$(grep "^Checking sonic-slave image:" $tmpfile | awk -F ':' '{print $3}')
+
+      mkdir -p target
+
+      docker tag $SLAVE_BASE_IMAGE-$USER:$SLAVE_TAG local/$SLAVE_BASE_IMAGE-$USER:latest
+      docker tag $SLAVE_BASE_IMAGE-$USER:$SLAVE_TAG $REGISTRY_SERVER/$SLAVE_BASE_IMAGE-$USER:latest
+      docker tag $SLAVE_BASE_IMAGE:$SLAVE_BASE_TAG $REGISTRY_SERVER/$SLAVE_BASE_IMAGE:latest
+      docker tag $SLAVE_BASE_IMAGE:$SLAVE_BASE_TAG $REGISTRY_SERVER/$SLAVE_BASE_IMAGE:$SLAVE_BASE_TAG
+      set +x
+      echo "##vso[task.setvariable variable=VARIABLE_SLAVE_BASE_IMAGE]$SLAVE_BASE_IMAGE"
+      echo "##vso[task.setvariable variable=VARIABLE_SALVE_USER]$USER"
+      echo "##vso[task.setvariable variable=VARIABLE_SLAVE_BASE_TAG]$SLAVE_BASE_TAG"
+    env:
+      REGISTRY_SERVER: soniccr2.azurecr.io
+    displayName: build sonic-slave-${{ parameters.distro }}-${{ parameters.arch }}
+
+  - task: Docker@2
+    inputs:
+      containerRegistry: soniccr2
+      repository: $(VARIABLE_SLAVE_BASE_IMAGE)-$(VARIABLE_SALVE_USER)
+      command: push
+      tags: |
+        latest
+
+  - task: Docker@2
+    inputs:
+      containerRegistry: soniccr2
+      repository: $(VARIABLE_SLAVE_BASE_IMAGE)
+      command: push
+      tags: |
+        $(VARIABLE_SLAVE_BASE_TAG)
+        latest
