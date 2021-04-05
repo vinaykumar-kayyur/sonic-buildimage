@@ -1,6 +1,6 @@
-From a4c344797fc5abb00c1d74d19455ae0b73688b6b Mon Sep 17 00:00:00 2001
+From 6a74cc3b97f405473c7500d5cd0adadba854067f Mon Sep 17 00:00:00 2001
 From: Akhilesh Samineni <akhilesh.samineni@broadcom.com>
-Date: Sun, 15 Nov 2020 01:31:43 -0800
+Date: Mon, 5 Apr 2021 13:31:31 -0700
 Subject: [PATCH] Changes to send ipv6 address as nexthop to fpmsyncd.
 
 ---
@@ -8,10 +8,10 @@ Subject: [PATCH] Changes to send ipv6 address as nexthop to fpmsyncd.
  1 file changed, 20 insertions(+)
 
 diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
-index f347d3955..c2e2fba7d 100644
+index bdc1dcdff..152e46843 100644
 --- a/zebra/zebra_fpm_netlink.c
 +++ b/zebra/zebra_fpm_netlink.c
-@@ -428,6 +428,16 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
+@@ -347,6 +347,16 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
  		nhi = &ri->nhs[0];
  
  		if (nhi->gateway) {
@@ -28,7 +28,7 @@ index f347d3955..c2e2fba7d 100644
  			addattr_l(&req->n, in_buf_len, RTA_GATEWAY,
  				  nhi->gateway, bytelen);
  		}
-@@ -480,6 +490,16 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
+@@ -379,6 +389,16 @@ static int netlink_route_info_encode(netlink_route_info_t *ri, char *in_buf,
  		rta->rta_len += rtnh->rtnh_len;
  
  		if (nhi->gateway) {
