@@ -2,7 +2,7 @@
     "VRF_TEST": {
         "desc": "Configure VRF in VRF table."
     },
-    "VRF_TEST_WRONG_VALUE": {
+    "VRF_TEST_WRONG_NAME": {
         "desc": "Configure wrong value for vrf name.",
         "eStr" : ["Invalid", "VRF name"]
     },

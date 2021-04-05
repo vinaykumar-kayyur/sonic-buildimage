@@ -24,6 +24,10 @@
                 "mtu": "9100"
             }
         },
+        "PORTCHANNEL_INTERFACE": {
+                "PortChannel0003": {},
+                "PortChannel0004": {"vrf_name": "Vrf_blue"}
+        },
         "PORTCHANNEL_MEMBER": {
             "PortChannel0003|Ethernet1": {},
             "PortChannel0004|Ethernet2": {}

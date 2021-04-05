@@ -3,17 +3,17 @@
         "sonic-vrf:sonic-vrf": {
             "sonic-vrf:VRF": {
                 "VRF_LIST": [{
-                        "vrf_name": "Vrf_blue"
+                        "name": "Vrf_blue"
                 }]
             }
         }
     },
 
-    "VRF_TEST_WRONG_VALUE": {
+    "VRF_TEST_WRONG_NAME": {
         "sonic-vrf:sonic-vrf": {
             "sonic-vrf:VRF": {
                 "VRF_LIST": [{
-                        "vrf_name": "blue"
+                        "name": "blue"
                 }]
             }
         }
@@ -23,7 +23,7 @@
         "sonic-vrf:sonic-vrf": {
             "sonic-vrf:VRF": {
                 "VRF_LIST": [{
-                        "vrf_name": "Vrf_blue",
+                        "name": "Vrf_blue",
                         "fallback": true
                 }]
             }

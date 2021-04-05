@@ -54,7 +54,7 @@ module sonic-interface {
 
 				leaf vrf_name {
 					type leafref {
-						path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:vrf_name";
+						path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
 					}
 				}
 			}

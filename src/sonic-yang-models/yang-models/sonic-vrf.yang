@@ -25,9 +25,9 @@ module sonic-vrf {
 			description "Vrf configuration.";			 
 
 			list VRF_LIST {
-				key "vrf_name";
+				key "name";
 
-				leaf vrf_name {
+				leaf name {
 					type string {
 						pattern "default|Vrf[a-zA-Z0-9_-]+" {
 							error-message "Invalid VRF name";
