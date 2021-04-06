@@ -21,8 +21,8 @@ module sonic-portchannel {
 	}
 
 	import sonic-vrf {
-                prefix vrf;
-        }
+		prefix vrf;
+	}
 
 	description "PORTCHANNEL yang Module for SONiC OS";
 

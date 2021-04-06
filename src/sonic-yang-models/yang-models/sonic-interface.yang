@@ -21,8 +21,8 @@ module sonic-interface {
 	}
 
 	import sonic-vrf {
-                prefix vrf;
-        }
+		prefix vrf;
+	}
 
 	description "INTERFACE yang Module for SONiC OS";
 
