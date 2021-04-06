@@ -29,8 +29,8 @@ def tcpserver(serverport):
             ip = IP(src=dstip, dst=srcip)
             TCP_SYNACK = TCP(sport=dstport, dport=srcport, flags=flag, seq=seqno, ack=ackno, options=[(configutil.DEFAULT_TCP_OPTIONS, b'\0')])
             ANSWER = send(ip / TCP_SYNACK, verbose=0)
-        except TypeError as te:
-            vnetlogger.log_info("IndexError {0}".format(str(te)))
+        except IndexError as ie:
+            vnetlogger.log_info("IndexError {0}".format(str(ie)))
 
     # Process packets
     def _processpackets(packet):
