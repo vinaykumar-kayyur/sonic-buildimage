@@ -301,6 +301,41 @@ def test_set_same_route():
         ]
     )
 
+def test_set_add_nh():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "nexthop": "10.0.0.57,10.0.0.59,10.0.0.61",
+            "ifname": "PortChannel0001,PortChannel0002,PortChannel0003",
+            "distance": "10,20,30",
+            "nexthop-vrf": "nh_vrf,,default",
+            "blackhole": "false,false,false",
+        }),
+        True,
+        [
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED"
+        ]
+    )
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "nexthop": "10.0.0.57,10.0.0.59,10.0.0.61,10.0.0.63",
+            "ifname": "PortChannel0001,PortChannel0002,PortChannel0003,PortChannel0004",
+            "distance": "10,20,30,30",
+            "nexthop-vrf": "nh_vrf,,default,",
+            "blackhole": "false,false,false,",
+        }),
+        True,
+        [
+            "ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED",
+        ]
+    )
+
 @patch('bgpcfgd.managers_static_rt.log_debug')
 def test_set_no_action(mocked_log_debug):
     mgr = constructor()
