@@ -15,7 +15,7 @@ from .managers_bgp import BGPPeerMgrBase
 from .managers_db import BGPDataBaseMgr
 from .managers_intf import InterfaceMgr
 from .managers_setsrc import ZebraSetSrc
-from .manager_static_route import StaticRouteMgr
+from .managers_static_rt import StaticRouteMgr
 from .runner import Runner, signal_handler
 from .template import TemplateFabric
 from .utils import read_constants

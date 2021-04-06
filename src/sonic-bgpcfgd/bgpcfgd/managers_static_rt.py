@@ -115,10 +115,10 @@ class IpNextHop:
         zero_ip = lambda af: '0.0.0.0' if af == socket.AF_INET else '::'
         self.af = af_id
         self.blackhole = 'false' if blackhole is None or blackhole == '' else blackhole
-        self.distance = 0 if dist is None else int(dist) # TODO check 0 or 1
+        self.distance = 0 if dist is None else int(dist)
         if self.blackhole == 'true':
             dst_ip = if_name = vrf = None
-        self.ip = zero_ip(af_id) if dst_ip is None else dst_ip
+        self.ip = zero_ip(af_id) if dst_ip is None or dst_ip == '' else dst_ip
         self.interface = '' if if_name is None else if_name
         self.nh_vrf = '' if vrf is None else vrf
         if self.blackhole != 'true' and self.is_zero_ip() and len(self.interface.strip()) == 0:

@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from bgpcfgd.directory import Directory
 from bgpcfgd.template import TemplateFabric
-from bgpcfgd.manager_static_route import StaticRouteMgr
+from bgpcfgd.managers_static_rt import StaticRouteMgr
 from collections import Counter
 
 def constructor():
@@ -135,6 +135,84 @@ def test_set_ipv6():
         ]
     )
 
+def test_set_nh_only():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "nexthop": "10.0.0.57,10.0.0.59,10.0.0.61",
+            "distance": "10,20,30",
+            "nexthop-vrf": "nh_vrf,,default",
+            "blackhole": "false,false,false",
+        }),
+        True,
+        [
+            "ip route 10.1.3.0/24 10.0.0.57 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 30 nexthop-vrf default vrf vrfRED"
+        ]
+    )
+
+def test_set_ifname_only():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "ifname": "PortChannel0001,PortChannel0002,PortChannel0003",
+            "distance": "10,20,30",
+            "nexthop-vrf": "nh_vrf,,default",
+            "blackhole": "false,false,false",
+        }),
+        True,
+        [
+            "ip route 10.1.3.0/24 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0003 30 nexthop-vrf default vrf vrfRED"
+        ]
+    )
+
+def test_set_with_empty_ifname():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "nexthop": "10.0.0.57,10.0.0.59,10.0.0.61",
+            "ifname": "PortChannel0001,,PortChannel0003",
+            "distance": "10,20,30",
+            "nexthop-vrf": "nh_vrf,,default",
+            "blackhole": "false,false,false",
+        }),
+        True,
+        [
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.59 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED"
+        ]
+    )
+
+def test_set_with_empty_nh():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "nexthop": "10.0.0.57,,",
+            "ifname": "PortChannel0001,PortChannel0002,PortChannel0003",
+            "distance": "10,20,30",
+            "nexthop-vrf": "nh_vrf,,default",
+            "blackhole": "false,false,false",
+        }),
+        True,
+        [
+            "ip route 10.1.3.0/24 10.0.0.57 PortChannel0001 10 nexthop-vrf nh_vrf vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0002 20 vrf vrfRED",
+            "ip route 10.1.3.0/24 PortChannel0003 30 nexthop-vrf default vrf vrfRED"
+        ]
+    )
+
 def test_set_del():
     mgr = constructor()
     set_del_test(
@@ -223,7 +301,7 @@ def test_set_same_route():
         ]
     )
 
-@patch('bgpcfgd.manager_static_route.log_debug')
+@patch('bgpcfgd.managers_static_rt.log_debug')
 def test_set_no_action(mocked_log_debug):
     mgr = constructor()
     set_del_test(
@@ -253,7 +331,7 @@ def test_set_no_action(mocked_log_debug):
     )
     mocked_log_debug.assert_called_with("Nothing to update for static route default|10.1.1.0/24")
 
-@patch('bgpcfgd.manager_static_route.log_debug')
+@patch('bgpcfgd.managers_static_rt.log_debug')
 def test_del_no_action(mocked_log_debug):
     mgr = constructor()
     set_del_test(
@@ -278,7 +356,7 @@ def test_set_invalid_arg():
         []
     )
 
-@patch('bgpcfgd.manager_static_route.log_err')
+@patch('bgpcfgd.managers_static_rt.log_err')
 def test_set_invalid_blackhole(mocked_log_err):
     mgr = constructor()
     set_del_test(
