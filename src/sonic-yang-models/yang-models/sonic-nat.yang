@@ -11,6 +11,10 @@ module sonic-nat {
         prefix sacl;
     }
 
+    import sonic-types {
+        prefix stypes;
+    }
+
     organization
         "SONiC";
 
@@ -25,17 +29,6 @@ module sonic-nat {
             "Initial revision.";
     }
 
-    typedef nat-clear-param {
-        type enumeration {
-            enum ENTRIES {
-                description "NAT dynamic Entries";
-            }
-            enum STATISTICS {
-                description "NAT Statistics";
-            }
-        }
-    }
-
     typedef nat-type {
         type enumeration {
             enum snat {
@@ -47,21 +40,7 @@ module sonic-nat {
         }
     }
 
-    typedef ip-protocol-type {
-        type enumeration {
-            enum TCP;
-            enum UDP;
-        }
-    }
-
-    typedef mode {
-        type enumeration {
-            enum enabled;
-            enum disabled;
-        }
-    }
-
-    typedef ip-address {
+    typedef ip-address-range {
         type union {
           type inet:ipv4-address;
           type string {
@@ -77,41 +56,57 @@ module sonic-nat {
 
         container STATIC_NAPT {
 
+            description "STATIC_NAPT table part of config_db.json";
+
             list STATIC_NAPT_LIST {
                 key "global_ip ip_protocol global_l4_port";
 
                 leaf global_ip {
+                    description "Global ip for the Static NAPT entry.";
+
                     type inet:ipv4-address;
                 }   
                 
                 leaf ip_protocol {
-                    type ip-protocol-type;
+                    description "IP Protocol (tcp or udp) for the Static NAPT entry.";
+
+                    type stypes:ip-protocol-type;
                 }   
                 
                 leaf global_l4_port {
+                    description "Global L4 port for the Static NAPT entry.";
+
                     type inet:port-number;
                 }   
 
                 leaf local_ip {
+                    description "Local ip for the Static NAPT entry.";
+
                     mandatory true;
                     type inet:ipv4-address;
                 }   
 
                 leaf local_port {
+                    description "Local port for the Static NAPT entry.";
+
                     mandatory true;
                     type inet:port-number ;
                 }
                 
                 leaf nat_type {
+                    description "Nat type for the static napt entry - snat or dnat";
+
                     type nat-type;
                     default dnat;
                 }   
                 
                 leaf twice_nat_id {
+                    description "Twice nat id for the static napt to achieve the twice napt";
+
                     type uint16 { 
                         range "1..9999" {
-                            error-message "Invalid Group Id for twice NAPT.";
-                            error-app-tag twice-nat-id-invalid; 
+                            error-message "Invalid twice nat id for the static NAPT.";
+                            error-app-tag twice-nat-id-invalid;
                         }   
                     }   
                 }
@@ -119,27 +114,38 @@ module sonic-nat {
         }
 
         container STATIC_NAT {
+
+            description "STATIC_NAT table part of config_db.json";
+
             list STATIC_NAT_LIST {
                 key "global_ip";
 
                 leaf global_ip {
+                    description "Global ip for the Static NAT entry.";
+
                     type inet:ipv4-address;
                 }
 
                 leaf local_ip {
+                    description "Local ip for the Static NAT entry.";
+
                     mandatory true;
                     type inet:ipv4-address;
                 }
 
                 leaf nat_type {
+                    description "Nat type for the static nat entry - snat or dnat";
+
                     type nat-type;
                     default dnat;
                 }
 
                 leaf twice_nat_id {
+                    description "Twice nat id for the static nat to achieve the twice nat";
+
                     type uint16 { 
                         range "1..9999" {
-                            error-message "Invalid Group Id for twice NAPT.";
+                            error-message "Invalid twice nat id for the static NAT.";
                             error-app-tag twice-nat-id-invalid; 
                         }   
                     }   
@@ -148,20 +154,31 @@ module sonic-nat {
         }
 
         container NAT_GLOBAL {
+
+            description "NAT_GLOBAL table part of config_db.json";
+
             list NAT_GLOBAL_LIST {
                 key "name";
+                max-elements 1;
 
                 leaf name {
+                    description "Key - Name of the NAT Global table - Values.";
+
                     type enumeration {
                         enum Values;
                     }
                 }
+
                 leaf admin_mode {
-                    type mode;
+                    description "Admin mode of the NAT feature.";
+
+                    type stypes:admin_mode;
                     default enabled;
                 }
 
                 leaf nat_timeout {
+                    description "Timeout for the nat entries within the range of 300 sec to 432000 secs.";
+
                     type uint32 {
                         range "300..432000" {
                             error-message "Invalid NAT Timeout, valid range 300 sec to 432000 sec.";
@@ -170,6 +187,8 @@ module sonic-nat {
                     }
                 }
                 leaf nat_tcp_timeout {
+                    description "Timeout for the nat tcp entries within the range of 300 sec to 432000 secs.";
+
                     type uint32 {
                         range "300..432000" {
                             error-message "Invalid NAT TCP Timeout, valid range 300 sec to 432000 sec.";
@@ -178,6 +197,8 @@ module sonic-nat {
                     }
                 }
                 leaf nat_udp_timeout {
+                    description "Timeout for the nat udp entries within the range of 120 sec to 600 secs.";
+
                     type uint16 {
                         range "120..600" {
                             error-message "Invalid NAT UDP Timeout, valid range 120 sec to 600 sec.";
@@ -189,23 +210,36 @@ module sonic-nat {
         }
 
         container NAT_POOL {
-            list NAT_POOL_LIST {
-                key "pool_name";
 
-                leaf pool_name {
+            description "NAT_POOL table part of config_db.json";
+
+            list NAT_POOL_LIST {
+                key "name";
+                max-elements 16;
+
+                leaf name {
+                    description "Key - Name of the NAT Pool";
+
                     type string {
                         pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})';
                         length 1..32 {
+                            error-message "Invalid length for the pool name.";
                             error-app-tag pool-name-invalid-length;
                         }
                     }
                 }
 
                 leaf nat_ip {
-                    type ip-address;
+                    description "Single IP address or a range of addresses for a NAT pool.";
+
+                    mandatory true;
+
+                    type ip-address-range;
                 }
 
                 leaf nat_port {
+                    description "Range of port values for a NAT pool.";
+
                     type string {
                         pattern "[0-9]{1,5}(-)[0-9]{1,5}";
                     }
@@ -215,27 +249,38 @@ module sonic-nat {
 
         container NAT_BINDINGS {
 
+            description "NAT_BINDINGS table part of config_db.json";
+
             list NAT_BINDINGS_LIST {
                 key "name";
+                max-elements 16;
 
                 leaf name {
+                    description "Key - Name of the NAT Binding";
+
                     type string {
 
                         pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})';
                         length 1..32 {
+                            error-message "Invalid length for the binding name.";
                             error-app-tag binding-name-invalid-length;
                         }
                     }
                 }
 
                 leaf nat_pool {
+                    description "NAT Pool name mapping for the binding";
+
                     mandatory true;
+
                     type leafref {
-                        path "../../../NAT_POOL/NAT_POOL_LIST/pool_name";
+                        path "../../../NAT_POOL/NAT_POOL_LIST/name";
                     }
                 }
 
                 leaf access_list {
+                    description "ACL table name mapping for the binding";
+
                     type union {
                         type leafref {
                             path "/sacl:sonic-acl/sacl:ACL_TABLE/sacl:ACL_TABLE_LIST/sacl:ACL_TABLE_NAME";
@@ -249,35 +294,22 @@ module sonic-nat {
                 }
 
                 leaf nat_type {
+                    description "Nat type for the binding - snat or dnat";
+
                     type nat-type;
                     default snat;
                 }
 
                 leaf twice_nat_id {
+                    description "Twice nat id for the binding to achieve the Dynamic twice nat";
+
                     type uint16 {
                         range "1..9999" {
-                            error-message "Invalid Group Id for twice NAPT.";
+                            error-message "Invalid twice nat id for the binding.";
                             error-app-tag twice-nat-id-invalid;
                         }
                     }
                 }
-            }
-        }
-    }
-
-    rpc clear_nat {
-        input {
-            leaf nat-param {
-                type nat-clear-param;
-                description
-                    "Parameter for deleting either all dynamic NAT entries or all NAT statistics";
-            }
-        }
-        output {
-            leaf status {
-                type string;
-                description
-                    " Success / Failure of deletion of NAT Parameters";
             }
         }
     }

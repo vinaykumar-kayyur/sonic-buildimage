@@ -114,4 +114,18 @@ module sonic-types {
             pattern "percentage|used|free|PERCENTAGE|USED|FREE";
         }
     }
+
+    typedef admin_mode {
+        type enumeration {
+            enum enabled;
+            enum disabled;
+        }
+    }
+
+    typedef ip-protocol-type {
+        type enumeration {
+            enum TCP;
+            enum UDP;
+        }
+    }
 }
