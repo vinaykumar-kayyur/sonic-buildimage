@@ -349,7 +349,7 @@ def test_set_invalid_arg():
         mgr,
         "SET",
         ("default|10.1.1.0/24", {
-            "nexthop": "10.0.0.57, 10.0.0.59",
+            "nexthop": "10.0.0.57,10.0.0.59",
             "ifname": "PortChannel0001",
         }),
         False,
