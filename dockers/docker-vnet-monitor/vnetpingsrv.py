@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from scapy.all import *
+import configutil
+from sonic_py_common import logger
 
 #
-# Config
+# Global logger instance
 #
-
-DEFAULT_TCP_OPTIONS = 253
-DEFAULT_TCP_PORT = '1021'
+vnetlogger = logger.Logger()
 
 #
 # Setup a TCP ping server
@@ -17,19 +17,24 @@ def tcpserver(serverport):
 
     # Send SYNACK packets
     def _ack(packet, flag, seqno, ackno):
-        srcip = packet[IP].src
-        dstip = packet[IP].dst
-        srcport = packet[TCP].sport
-        dstport = packet[TCP].dport
+        try:
+            srcip = packet[IP].src
+            dstip = packet[IP].dst
 
-        # send SYNACK to remote host
-        ip = IP(src=dstip, dst=srcip)
-        TCP_SYNACK = TCP(sport=int(serverport), dport=srcport, flags=flag, seq=seqno, ack=ackno, options=[(DEFAULT_TCP_OPTIONS, b'\0')])
-        ANSWER = send(ip / TCP_SYNACK, verbose=0)
+            innerpacket = packet[UDP][Ether]
+            srcport = innerpacket[TCP].sport
+            dstport = innerpacket[TCP].dport
+
+            # send SYNACK to remote host
+            ip = IP(src=dstip, dst=srcip)
+            TCP_SYNACK = TCP(sport=dstport, dport=srcport, flags=flag, seq=seqno, ack=ackno, options=[(configutil.DEFAULT_TCP_OPTIONS, b'\0')])
+            ANSWER = send(ip / TCP_SYNACK, verbose=0)
+        except TypeError as te:
+            vnetlogger.log_info("IndexError {0}".format(str(te)))
 
     # Process packets
     def _processpackets(packet):
-        if packet.haslayer(TCP) and packet[TCP].dport == int(serverport) :
+        if packet.haslayer(TCP) and packet[TCP].dport == configutil.DEFAULT_TCP_PORT:
             if packet[TCP].flags & 0x02 == 0x02 : # SYNC
                 seqno = random.randrange(0, (2**32)-1)
                 ackno = packet[TCP].seq + 1
@@ -40,8 +45,10 @@ def tcpserver(serverport):
                 ackno = packet[TCP].seq + len(packet[Raw])
                 _ack(packet, "A", seqno, ackno)
 
+    vnetlogger.log_info("vnetpingsrv: vnetping server starts.")
+    loopbackip = configutil.get_loopback_ipv4()
     # Wait for client to connect.
-    sniffstring = "tcp and dst port " + serverport
+    sniffstring = "udp and dst host " + loopbackip + " and dst port " + str(serverport)
     while True:
         sniff(filter=sniffstring, prn=_processpackets)
 
@@ -51,7 +58,7 @@ def tcpserver(serverport):
 #
 
 def main():
-    tcpserver(DEFAULT_TCP_PORT)
+    tcpserver(configutil.DEFAULT_VXLAN_PORT)
 
 
 #
