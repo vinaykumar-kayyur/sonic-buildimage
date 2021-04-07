@@ -245,7 +245,7 @@ sudo cp files/docker/docker.service.conf $_
 sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
 ## Create redis group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g 1001 redis
 
 ## Create default user
 ## Note: user should be in the group with the same name, and also in sudo/docker/redis groups
