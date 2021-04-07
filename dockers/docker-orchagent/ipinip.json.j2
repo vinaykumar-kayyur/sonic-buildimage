@@ -5,7 +5,7 @@
 {% if DEVICE_METADATA['localhost']['sub_role'] == 'FrontEnd' or  DEVICE_METADATA['localhost']['sub_role'] == 'BackEnd'%}
 {% set loopback_intf_names = ['Loopback0', 'Loopback4096'] %}
 {% else %}
-{% set loopback_intf_names = ['Loopback0', 'Loopback2'] %}
+{% set loopback_intf_names = ['Loopback0', 'Loopback2', 'Loopback3'] %}
 {% endif %}
 {% for (name, prefix) in LOOPBACK_INTERFACE|pfx_filter %}
     {%- if prefix | ipv4 and name in loopback_intf_names %}
