@@ -301,7 +301,7 @@ def test_set_same_route():
         ]
     )
 
-def test_set_add_nh():
+def test_set_add_del_nh():
     mgr = constructor()
     set_del_test(
         mgr,
@@ -333,6 +333,73 @@ def test_set_add_nh():
         True,
         [
             "ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED",
+        ]
+    )
+    set_del_test(
+        mgr,
+        "SET",
+        ("vrfRED|10.1.3.0/24", {
+            "nexthop": "10.0.0.57,10.0.0.59",
+            "ifname": "PortChannel0001,PortChannel0002",
+            "distance": "10,20",
+            "nexthop-vrf": "nh_vrf,",
+            "blackhole": "false,false",
+        }),
+        True,
+        [
+            "no ip route 10.1.3.0/24 10.0.0.61 PortChannel0003 30 nexthop-vrf default vrf vrfRED",
+            "no ip route 10.1.3.0/24 10.0.0.63 PortChannel0004 30 vrf vrfRED",
+        ]
+    )
+
+def test_set_add_del_nh_ethernet():
+    mgr = constructor()
+    set_del_test(
+        mgr,
+        "SET",
+        ("default|20.1.3.0/24", {
+            "nexthop": "20.0.0.57,20.0.0.59,20.0.0.61",
+            "ifname": "Ethernet4,Ethernet8,Ethernet12",
+            "distance": "10,20,30",
+            "nexthop-vrf": "default,,default",
+            "blackhole": "false,false,false",
+        }),
+        True,
+        [
+            "ip route 20.1.3.0/24 20.0.0.57 Ethernet4 10 nexthop-vrf default",
+            "ip route 20.1.3.0/24 20.0.0.59 Ethernet8 20",
+            "ip route 20.1.3.0/24 20.0.0.61 Ethernet12 30 nexthop-vrf default"
+        ]
+    )
+    set_del_test(
+        mgr,
+        "SET",
+        ("default|20.1.3.0/24", {
+            "nexthop": "20.0.0.57,20.0.0.59,20.0.0.61,20.0.0.63",
+            "ifname": "Ethernet4,Ethernet8,Ethernet12,Ethernet16",
+            "distance": "10,20,30,30",
+            "nexthop-vrf": "default,,default,",
+            "blackhole": "false,false,false,",
+        }),
+        True,
+        [
+            "ip route 20.1.3.0/24 20.0.0.63 Ethernet16 30",
+        ]
+    )
+    set_del_test(
+        mgr,
+        "SET",
+        ("default|20.1.3.0/24", {
+            "nexthop": "20.0.0.57,20.0.0.59",
+            "ifname": "Ethernet4,Ethernet8",
+            "distance": "10,20",
+            "nexthop-vrf": "default,",
+            "blackhole": "false,false",
+        }),
+        True,
+        [
+            "no ip route 20.1.3.0/24 20.0.0.61 Ethernet12 30 nexthop-vrf default",
+            "no ip route 20.1.3.0/24 20.0.0.63 Ethernet16 30",
         ]
     )
 
