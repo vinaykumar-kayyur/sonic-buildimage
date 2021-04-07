@@ -20,24 +20,26 @@ module sonic-portchannel {
 
 	description "PORTCHANNEL yang Module for SONiC OS";
 
+	revision 2021-03-15 {
+		description "Add SONiC PortChannel Interface model";
+	}
+
 	revision 2019-07-01 {
 		description "First Revision";
 	}
 
+
 	container sonic-portchannel {
+
 		container PORTCHANNEL {
 
 			description "PORTCHANNEL part of config_db.json";
 
 			list PORTCHANNEL_LIST {
 
-				key "portchannel_name";
+				key "name";
 
-				ext:key-regex-configdb-to-yang "^(PortChannel[0-9]{1,4})$";
-
-				ext:key-regex-yang-to-configdb "<portchannel_name>";
-
-				leaf portchannel_name {
+				leaf name {
 					type string {
 						length 1..128;
 						pattern 'PortChannel[0-9]{1,4}';
@@ -48,7 +50,7 @@ module sonic-portchannel {
 					/* leaf-list members are unique by default */
 					type union {
 						type leafref {
-							path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+							path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
 						}
 						type string {
 							pattern "";
@@ -87,6 +89,53 @@ module sonic-portchannel {
 
 		} /* end of container PORTCHANNEL */
 
+		container PORTCHANNEL_MEMBER {
+
+			description "PORTCHANNEL_MEMBER part of config_db.json";
+
+			list PORTCHANNEL_MEMBER_LIST {
+
+				key "name port";
+
+				leaf name {
+					type leafref {
+						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+					}
+				}
+        
+ 				leaf port {
+					/* key elements are mandatory by default */
+					type leafref {
+						path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
+					}
+				}
+			} /* end of list PORTCHANNEL_MEMBER_LIST */
+
+		} /* end of container PORTCHANNEL_MEMBER */
+
+		container PORTCHANNEL_INTERFACE {
+
+			description "PORTCHANNEL_INTERFACE part of config_db.json";
+
+			list PORTCHANNEL_INTERFACE_IPPREFIX_LIST {
+
+				key "name ip_prefix";
+
+				leaf name {
+					/* key elements are mandatory by default */
+					type leafref {
+						path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+					}
+				}
+
+				leaf ip_prefix {
+					/* key elements are mandatory by default */
+					type stypes:sonic-ip-prefix;
+				}
+			} /* end of list PORTCHANNEL_INTERFACE_IPPREFIX_LIST */
+
+		} /* end of container PORTCHANNEL_INTERFACE */
+
 	} /* end of container sonic-portchannel */
 
-} /* end of module sonic-port */
+} /* end of module sonic-portchannel */

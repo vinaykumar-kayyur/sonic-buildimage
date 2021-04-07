@@ -19,16 +19,6 @@ module sonic-extension {
     SONiC yang guidelines at
     https://github.com/Azure/SONiC/blob/master/doc/mgmt/SONiC_YANG_Model_Guidelines.md */
 
-    extension key-regex-configdb-to-yang {
-        description "Key regex used to convert config DB keys to YANG Config";
-        argument "value";
-    }
-
-    extension key-regex-yang-to-configdb {
-        description "Key regex used to convert config DB keys to YANG Config";
-        argument "value";
-    }
-
     extension db-name {
         description "DB name, e.g. APPL_DB, CONFIG_DB";
         argument "value";
