@@ -583,6 +583,14 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     DOCKERFS_PATH=../dockerfs/
 fi
 
+# Ensure admin gid 1000 is available
+gid_1000=$(sudo LANG=C grep -e ":1000:" $FILESYSTEM_ROOT/etc/group)
+if [ -n "${gid_1000}" ]; then
+    if [ "${gid_1000}" != "admin:x:1000:" ]; then
+        die "gid 1000 is in use. Expect: Reserve it for admin group. use:${gid_1000}"
+    fi
+fi
+
 ## Compress docker files
 pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
