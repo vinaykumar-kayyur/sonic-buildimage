@@ -43,7 +43,7 @@ module sonic-vrf {
                         "Enable/disable fallback feature which is useful for specified VRF user to access internet through global/main route.";
                 }
 
-              }
-        }
-    }
-}
+            } /* end of list VRF_LISt */
+        } /* end of container VRf */
+    } /* end of container sonic-vrf */
+}/* end of module sonic-vrf */

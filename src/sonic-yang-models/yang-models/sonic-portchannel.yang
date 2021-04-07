@@ -128,21 +128,21 @@ module sonic-portchannel {
             description "PORTCHANNEL_INTERFACE part of config_db.json";
 
             list PORTCHANNEL_INTERFACE_LIST {
-                                key "name";
+                key "name";
 
-                                leaf name {
-                                        /* key elements are mandatory by default */
-                                        type leafref {
-                                                path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
-                                        }
-                                }
+                leaf name {
+                    /* key elements are mandatory by default */
+                    type leafref {
+                        path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+                    }
+                }
 
-                                leaf vrf_name {
-                                        type leafref {
-                                                path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
-                                        }
-                                }
-                        } /* end of list PORTCHANNEL_INTERFACE_LIST */
+                leaf vrf_name {
+                    type leafref {
+                        path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
+                    }
+                }
+            } /* end of list PORTCHANNEL_INTERFACE_LIST */
 
             list PORTCHANNEL_INTERFACE_IPPREFIX_LIST {
 
