@@ -14,6 +14,10 @@ from sys import argv, exit
 import configutil
 from sonic_py_common import logger
 
+#
+# Config
+#
+PRINT_TO_CONSOLE = True
 
 #
 # Global logger instance
@@ -68,11 +72,11 @@ class TcpSession:
             self.receivedpackets += 1
             if syn_ack.time and tcpsync.sent_time:
                 self.rttms = (syn_ack.time - tcpsync.sent_time) * 1000
-                vnetlogger.log_info("Reply from {0}: time={1}.2fms TTL={2}".format(self.dstip, self.rttms, self.ttl))
+                vnetlogger.log_info("Reply from {0}: time={1}.2fms TTL={2}".format(self.dstip, self.rttms, self.ttl), PRINT_TO_CONSOLE)
             else:
-                vnetlogger.log_info("Reply from {0}: TTL={1}".format(self.dstip, self.ttl))
+                vnetlogger.log_info("Reply from {0}: TTL={1}".format(self.dstip, self.ttl), PRINT_TO_CONSOLE)
         elif self.srcip == self.loopbackip:
-            vnetlogger.log_info("Request timed out.")
+            vnetlogger.log_info("Request timed out.", PRINT_TO_CONSOLE)
 
 
     #
@@ -100,6 +104,7 @@ def main(argv):
     args = parser.parse_args()
 
     logging.getLogger("scapy").setLevel(logging.CRITICAL)
+    vnetlogger.set_min_log_priority_info()
 
     vnetname = args.vnetname
     srcip = args.srcip
@@ -110,7 +115,7 @@ def main(argv):
 
     if srcip is None:
         if loopbackip is None:
-            vnetlogger.log_error("srcip and loopbackip can't be None in the same time")
+            vnetlogger.log_error("srcip and loopbackip can't be None in the same time", PRINT_TO_CONSOLE)
             sys.exit(1)
         else:
             srcip = loopbackip
@@ -124,10 +129,10 @@ def main(argv):
 
     if srcip == loopbackip:
         lostrate = (tcp_hs.sentpackets - tcp_hs.receivedpackets) * 100 / tcp_hs.sentpackets
-        vnetlogger.log_info("Ping statistics for {0}:".format(dstip))
-        vnetlogger.log_info("    Packets: Sent = {0}, Received = {1}, Lost = {2} ({3}%% loss)".format(tcp_hs.sentpackets, tcp_hs.receivedpackets, lostrate, lostrate))
+        vnetlogger.log_info("Ping statistics for {0}:".format(dstip), PRINT_TO_CONSOLE)
+        vnetlogger.log_info("    Packets: Sent = {0}, Received = {1}, Lost = {2} ({3}%% loss)".format(tcp_hs.sentpackets, tcp_hs.receivedpackets, lostrate, lostrate), PRINT_TO_CONSOLE)
     else:
-        vnetlogger.log_info("{0} packets sent".format(tcp_hs.sentpackets))
+        vnetlogger.log_info("{0} packets sent".format(tcp_hs.sentpackets), PRINT_TO_CONSOLE)
 
 
 #
