@@ -235,6 +235,32 @@
                 "port": "Eth18"
             }
         },
+        "MGMT_PORT": {
+            "eth0": {
+                "alias": "eth0",
+                "admin_status": "up"
+            }
+        },
+        "MGMT_INTERFACE": {
+            "eth0": {},
+            "eth0|10.11.150.11/16": {
+                "gwaddr": "10.11.0.1"
+            }
+        },
+        "MGMT_VRF_CONFIG": {
+            "vrf_global": {}
+        },
+        "NTP": {
+            "global": {
+                "vrf": "default",
+                "src": "eth0"
+            }
+        },
+        "NTP_SERVER": {
+            "0.debian.pool.ntp.org": {},
+            "23.92.29.245": {},
+            "2001:aa:aa::aa": {}
+        },
         "PORT": {
             "Ethernet0": {
                 "alias": "Eth1/1",

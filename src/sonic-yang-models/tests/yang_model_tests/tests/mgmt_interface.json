@@ -1,0 +1,35 @@
+{
+    "MGMT_INTERFACE_TEST": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH IP AND GW."
+    },
+    "MGMT_INTERFACE_WITH_NON_EXIST_PORT": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH NON EXIST MGMT PORT.",
+        "eStrKey": "LeafRef",
+        "eStr": ["port", "name"]
+    },
+    "MGMT_INTERFACE_WITH_WRONG_PORT": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH WRONG MGMT PORT.",
+        "eStrKey": "LeafRef",
+        "eStr": ["port", "name"]
+    },
+    "MGMT_INTERFACE_WITH_INVALID_IPV4": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH INVALID IPV4 ADDRESS.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["ip_prefix"]
+    },
+    "MGMT_INTERFACE_WITH_INVALID_IPV6": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH INVALID IPV6 ADDRESS.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["ip_prefix"]
+    },
+    "MGMT_INTERFACE_WITH_INVALID_IPV4_GW": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH INVALID IPV4 GW ADDRESS.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["gwaddr"]
+    },
+    "MGMT_INTERFACE_WITH_INVALID_IPV6_GW": {
+        "desc": "CONFIGURE MANAGEMENT INTERFACE WITH INVALID IPV6 GW ADDRESS.",
+        "eStrKey": "InvalidValue",
+        "eStr": ["gwaddr"]
+    }
+}

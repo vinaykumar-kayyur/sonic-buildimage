@@ -1,0 +1,355 @@
+{
+    "NTP_SERVER_1_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_2_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "2001:aa:aa::aa"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_3_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "pool.ntp.org"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_1_NEG_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": ""
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_2_NEG_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "2001:aa:aa:aa"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_3_NEG_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "pool@.ntp.org"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_DEFAULT_VRF_1_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "vrf": "default"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_DEFAULT_VRF_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "vrf": "default"
+                    } 
+                ]
+            }
+        }
+    },
+    "NTP_MGMT_VRF_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "vrf": "mgmt"
+                    }
+                ]
+            }
+        },
+        "sonic-mgmt-vrf:sonic-mgmt-vrf": {
+            "sonic-mgmt-vrf:MGMT_VRF_CONFIG": {
+                "MGMT_VRF_CONFIG_LIST": [
+                    {
+                        "name": "vrf_global",
+                        "mgmtVrfEnabled": "true"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_MGMT_VRF_INVALID_MGMT_VRF_STATE_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "vrf": "mgmt"
+                    }
+                ]
+            }
+        },
+        "sonic-mgmt-vrf:sonic-mgmt-vrf": {
+            "sonic-mgmt-vrf:MGMT_VRF_CONFIG": {
+                "MGMT_VRF_CONFIG_LIST": [
+                    {
+                        "name": "vrf_global",
+                        "mgmtVrfEnabled": "false"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_MGMT_VRF_WITH_NOEXIST_MGMT_VRF_TEST": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "vrf": "mgmt"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_VRF_INVALID_NAME": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "vrf": "Vrf_1"
+                    }
+                ]
+            }
+        }
+
+    },
+    "NTP_SRC_INTF_WITH_ETH_PORT": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "Ethernet0"
+                    }
+                ]
+            }
+        },
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "speed": 25000,
+                        "lanes": "65"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_ETH_PORT": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "Ethernet0"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_VLAN_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "Vlan100"
+                    }
+                ]   
+            }
+        },
+        "sonic-vlan:sonic-vlan": {
+            "sonic-vlan:VLAN": {
+                "VLAN_LIST": [
+                    {
+                        "admin_status": "up",
+                        "description": "vlan 100",
+                        "mtu": "9100",
+                        "name": "Vlan100"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_VLAN_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "Vlan100"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_LOOPBACK_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "Loopback100"
+                    }
+                ]
+            }
+        },
+        "sonic-loopback-interface:sonic-loopback-interface": {
+            "sonic-loopback-interface:LOOPBACK_INTERFACE": {
+                "LOOPBACK_INTERFACE_LIST": [
+                    {
+                        "name": "Loopback100"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_LOOPBACK_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "Loopback100"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_PORTCHANNEL_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "PortChannel10"
+                    }
+                ]
+            }
+        },
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "name": "PortChannel10" 
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_PORTCHANNEL_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "PortChannel10"
+                    }
+                ]
+            }
+        },
+        "sonic-portchannel:sonic-portchannel": {
+            "sonic-portchannel:PORTCHANNEL": {
+                "PORTCHANNEL_LIST": [
+                    {
+                        "admin_status": "up",
+                        "name": "PortChannel11"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_MGMT_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "eth0"
+                    }
+                ]
+            }
+        },
+        "sonic-mgmt-port:sonic-mgmt-port": {
+            "sonic-mgmt-port:MGMT_PORT": {
+                "MGMT_PORT_LIST": [
+                    {
+                        "name": "eth0"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_MGMT_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "NTP_LIST": [
+                    {
+                        "global_key": "global",
+                        "src": "eth1"
+                    }
+                ]
+            }
+        },
+        "sonic-mgmt-port:sonic-mgmt-port": {
+            "sonic-mgmt-port:MGMT_PORT": {
+                "MGMT_PORT_LIST": [
+                    {
+                        "name": "eth0"
+                    }
+                ]
+            }
+        }
+    }
+}

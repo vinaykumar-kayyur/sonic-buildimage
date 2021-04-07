@@ -1,0 +1,37 @@
+{
+    "MGMT_VRF_1_TEST": {
+        "sonic-mgmt-vrf:sonic-mgmt-vrf": {
+            "sonic-mgmt-vrf:MGMT_VRF_CONFIG": {
+                "MGMT_VRF_CONFIG_LIST": [
+                    {
+                        "name": "vrf_global",
+                        "mgmtVrfEnabled": true 
+                    }
+                ]
+            }
+        }
+    },
+    "MGMT_VRF_2_TEST": {
+        "sonic-mgmt-vrf:sonic-mgmt-vrf": {
+            "sonic-mgmt-vrf:MGMT_VRF_CONFIG": {
+                "MGMT_VRF_CONFIG_LIST": [
+                    {
+                        "name": "vrf_global",
+                        "mgmtVrfEnabled": false 
+                    }
+                ]
+            }
+        }
+    },
+    "MGMT_VRF_3_TEST": {
+        "sonic-mgmt-vrf:sonic-mgmt-vrf": {
+            "sonic-mgmt-vrf:MGMT_VRF_CONFIG": {
+                "MGMT_VRF_CONFIG_LIST": [
+                    {
+                        "name": "vrf_global"
+                    }
+                ]
+            }
+        }
+    }
+}

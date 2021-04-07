@@ -1,0 +1,111 @@
+module sonic-ntp {
+
+    yang-version 1.1;
+
+    namespace "http://github.com/Azure/sonic-system-ntp";
+    prefix ntp;
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+
+    import sonic-port {
+        prefix prt;
+    }
+
+    import sonic-mgmt-vrf {
+        prefix mvrf;
+    }
+
+    import sonic-portchannel {
+        prefix po;
+    }
+
+    import sonic-vlan {
+        prefix vlan;
+    }
+
+    import sonic-loopback-interface {
+        prefix lo;
+    }
+
+    import sonic-mgmt-port {
+        prefix mprt;
+    }
+    
+    description
+        "NTP yang Module for SONiC OS";
+
+    revision 2020-04-25 {
+        description
+            "First revision";
+    }
+
+    container sonic-ntp {
+
+        container NTP {
+
+            description "Global NTP part of config_db.json";
+
+            list NTP_LIST {
+                
+                key "global_key";
+
+                leaf global_key {
+                    type enumeration {
+                        enum global;
+                    }
+                }
+
+                leaf src {
+                    type union {
+                        type leafref {
+                            path /prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name;
+                        }
+                        type leafref {
+                            path /po:sonic-portchannel/po:PORTCHANNEL/po:PORTCHANNEL_LIST/po:name;
+                        }
+                        type leafref {
+                            path /vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name;
+                        }
+                        type leafref {
+                            path /lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name;
+                        }
+                        type leafref {
+                            path /mprt:sonic-mgmt-port/mprt:MGMT_PORT/mprt:MGMT_PORT_LIST/mprt:name;
+                        }
+                    }
+                }
+
+                leaf vrf {
+                    must "(current() != 'mgmt') or (/mvrf:sonic-mgmt-vrf/mvrf:MGMT_VRF_CONFIG/mvrf:MGMT_VRF_CONFIG_LIST[mvrf:name='vrf_global']/mvrf:mgmtVrfEnabled = 'true')" {
+                        error-message "Must condition not satisfied. Try enable Management VRF.";
+                    }
+
+                    type string {
+                        pattern "mgmt|default";
+                    }
+                }
+
+            } /* end of container NTP_LIST */
+
+        } /* end of container NTP */
+
+        container NTP_SERVER {
+        
+            description "NTP SERVER part of config_db.json";
+    
+            list NTP_SERVER_LIST {
+                max-elements 10;
+                key "server_address";
+
+                leaf server_address {
+                    type inet:host;
+                }
+            } /* end of list NTP_SERVER_LIST */ 
+
+        } /* end of container NTP_SERVER */
+
+    } /* end of container  sonic-ntp */
+
+} /* end of module sonic-ntp */

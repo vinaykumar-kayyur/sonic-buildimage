@@ -1,0 +1,43 @@
+module sonic-mgmt-vrf {
+
+    yang-version 1.1;
+
+    namespace "http://github.com/Azure/sonic-mgmt-vrf";
+    prefix mvrf;
+
+    description
+        "SONiC MGMT VRF";
+
+    revision 2019-10-08 {
+        description
+            "First revision";
+    }
+
+    container sonic-mgmt-vrf {
+        container MGMT_VRF_CONFIG {
+
+            description "MANAGEMENT VRF part of config_db.json";            
+
+            list MGMT_VRF_CONFIG_LIST {
+                key "name";
+                max-elements 1;
+
+                leaf name {
+                    type enumeration {
+                        enum vrf_global;
+                    }
+                }   
+
+                leaf mgmtVrfEnabled {
+                    type boolean;
+                    default false;
+                }
+
+            } /* end of list MGMT_VRF_CONFIG_LIST */
+
+        } /* end of container MGMT_VRF_CONFIG */
+
+    } /* end of container sonic-mgmt-vrf */
+
+} /* end of module sonic-mgmt-vrf */
+
