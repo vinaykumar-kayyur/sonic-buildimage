@@ -38,21 +38,20 @@ jobs:
           swi_image: true
       - name: broadcom
         variables:
-          platform_rpc: brcm
           dbg_image: true
           swi_image: true
           raw_image: true
           sync_rpc_image: true
+          platform_rpc: brcm
       - name: centec
         variables:
-          platform_rpc: centec
           dbg_image: true
           sync_rpc_image: true
+          platform_rpc: centec
       - name: centec-arm64
         pool: sonicbld_8c
         variables:
           arch: arm64
-          platform_rpc: centec-arm64
           timeoutInMinutes: 1800
       - name: generic
         variables:
@@ -64,16 +63,17 @@ jobs:
         pool: sonicbld_8c
         variables:
           arch: armhf
+          timeoutInMinutes: 1800
       - name: mellanox
         variables:
-          platform_rpc: mlnx
           dbg_image: true
           sync_rpc_image: true
+          platform_rpc: mlnx
       - name: nephos
         variables:
-          platform_rpc: nephos
           dbg_image: true
           sync_rpc_image: true
+          platform_rpc: nephos
     buildSteps:
       - bash: |
           if [ $(GROUP_NAME) == vs ]; then
