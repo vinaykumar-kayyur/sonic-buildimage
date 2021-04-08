@@ -539,16 +539,6 @@ class HostConfigDaemon:
         if self.masicBgpMonCfg:
             self.masicBgpMonCfg.load(lpbk_table)
 
-
-    def update_feature_state(self, feature_name, state, feature_table):
-        if self.cached_feature_states[feature_name] == "always_enabled":
-            if state != "always_enabled":
-                syslog.syslog(syslog.LOG_INFO, "Feature '{}' service is always enabled"
-                              .format(feature_name))
-                entry = self.config_db.get_entry('FEATURE', feature_name)
-                entry['state'] = 'always_enabled'
-                self.config_db.set_entry('FEATURE', feature_name, entry)
-            return
     def get_target_state(self, feature_name, state):
         template = jinja2.Template(state)
         target_state = template.render(self.device_config)
