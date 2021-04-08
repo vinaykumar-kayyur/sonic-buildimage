@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     import os
     import sys
@@ -17,13 +15,14 @@ try:
 
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError (str(e) + "- required module not found")
+    raise ImportError(str(e) + "- required module not found")
 
 thrift_server = 'localhost'
 transport = None
 pltfm_mgr = None
 
 SFP_EEPROM_CACHE = "/var/run/platform/sfp/cache"
+
 
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
@@ -35,6 +34,8 @@ class SfpUtil(SfpUtilBase):
     QSFP_PORT_END = 0
     EEPROM_OFFSET = 0
     QSFP_CHECK_INTERVAL = 4
+    THRIFT_RETRIES = 5
+    THRIFT_TIMEOUT = 5
 
     @property
     def port_start(self):
@@ -49,12 +50,12 @@ class SfpUtil(SfpUtilBase):
     @property
     def qsfp_ports(self):
         self.update_port_info()
-        return range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1)
+        return list(range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1))
 
     @property
     def port_to_eeprom_mapping(self):
-        print "dependency on sysfs has been removed"
-        raise Exception() 
+        print("dependency on sysfs has been removed")
+        raise Exception()
 
     def __init__(self):
         self.ready = False
@@ -78,7 +79,7 @@ class SfpUtil(SfpUtilBase):
 
         if self.QSFP_PORT_END == 0:
             self.thrift_setup()
-            self.QSFP_PORT_END = pltfm_mgr.pltfm_mgr_qsfp_get_max_port();
+            self.QSFP_PORT_END = pltfm_mgr.pltfm_mgr_qsfp_get_max_port()
             self.PORT_END = self.QSFP_PORT_END
             self.PORTS_IN_BLOCK = self.QSFP_PORT_END
             self.thrift_teardown()
@@ -94,7 +95,20 @@ class SfpUtil(SfpUtilBase):
         pltfm_mgr_protocol = TMultiplexedProtocol.TMultiplexedProtocol(bprotocol, "pltfm_mgr_rpc")
         pltfm_mgr = pltfm_mgr_client_module.Client(pltfm_mgr_protocol)
 
-        transport.open()
+        for i in range(self.THRIFT_RETRIES):
+            try:
+                transport.open()
+                if i:
+                    # The main thrift server is starded without platform api
+                    # Platform api is added later during syncd initialization
+                    # So we need to wait a little bit before do any platform api call
+                    # Just in case when can't connect from the first try (warm-reboot case)
+                    time.sleep(self.THRIFT_TIMEOUT)
+                break
+            except TTransport.TTransportException as e:
+                if e.type != TTransport.TTransportException.NOT_OPEN or i >= self.THRIFT_RETRIES - 1:
+                    raise e
+                time.sleep(self.THRIFT_TIMEOUT)
 
     def thrift_teardown(self):
         global transport
@@ -112,8 +126,8 @@ class SfpUtil(SfpUtilBase):
             presence = pltfm_mgr.pltfm_mgr_qsfp_presence_get(port_num)
             self.thrift_teardown()
         except Exception as e:
-            print e.__doc__
-            print e.message
+            print(e.__doc__)
+            print(e.message)
 
         return presence
 
@@ -146,7 +160,7 @@ class SfpUtil(SfpUtilBase):
         status = pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, True)
         status = pltfm_mgr.pltfm_mgr_qsfp_reset(port_num, False)
         self.thrift_teardown()
-        return status
+        return (status == 0)
 
     def check_transceiver_change(self):
         if not self.ready:
@@ -183,9 +197,9 @@ class SfpUtil(SfpUtilBase):
         if timeout == 0:
             forever = True
         elif timeout > 0:
-            timeout = timeout / float(1000) # Convert to secs
+            timeout = timeout / float(1000)  # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         while forever or timeout > 0:
@@ -234,4 +248,3 @@ class SfpUtil(SfpUtilBase):
         self.thrift_teardown()
 
         return eeprom_path
-

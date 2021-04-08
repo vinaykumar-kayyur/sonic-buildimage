@@ -7,7 +7,6 @@ include $(PLATFORM_PATH)/docker-syncd-nephos.mk
 include $(PLATFORM_PATH)/docker-syncd-nephos-rpc.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
-include $(PLATFORM_PATH)/docker-ptf-nephos.mk
 
 NPX_DIAG = npx_diag
 $(NPX_DIAG)_URL = "https://github.com/NephosInc/SONiC/raw/master/sdk/npx_diag"
@@ -22,10 +21,12 @@ SONIC_ONLINE_FILES += $(NPX_DIAG) $(WARM_VERIFIER) $(DSSERVE)
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) $(DOCKER_FPM)
 
-# Inject nephos sai into sairedis
-$(LIBSAIREDIS)_DEPENDS += $(NEPHOS_SAI) $(NEPHOS_SAI_DEV)
+# Inject nephos sai into syncd
+$(SYNCD)_DEPENDS += $(NEPHOS_SAI) $(NEPHOS_SAI_DEV)
+$(SYNCD)_UNINSTALLS += $(NEPHOS_SAI_DEV)
+
 ifeq ($(ENABLE_SYNCD_RPC),y)
-$(LIBSAIREDIS)_DEPENDS += $(LIBSAITHRIFT_DEV)
+$(SYNCD)_DEPENDS += $(LIBSAITHRIFT_DEV)
 endif
 
 # Runtime dependency on nephos sai is set only for syncd

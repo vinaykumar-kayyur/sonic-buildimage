@@ -20,8 +20,13 @@ on_exit()
     rm -f $kvm_log
 }
 
-kvm_log=$(mktemp)
-trap on_exit EXIT
+on_error()
+{
+    netstat -antp
+    ps aux
+    echo "============= kvm_log =============="
+    cat $kvm_log
+}
 
 create_disk()
 {
@@ -44,17 +49,23 @@ prepare_installer_disk()
     umount $tmpdir
 }
 
+apt-get install -y net-tools
 create_disk
 prepare_installer_disk
 
 echo "Prepare memory for KVM build: $vs_build_prepare_mem"
+mount proc /proc -t proc || true
 free -m
 if [[ "$vs_build_prepare_mem" == "yes" ]]; then
     # Force o.s. to drop cache and compact memory so that KVM can get 2G memory
-    sudo bash -c 'echo 1 > /proc/sys/vm/drop_caches'
-    sudo bash -c 'echo 1 > /proc/sys/vm/compact_memory'
+    bash -c 'echo 1 > /proc/sys/vm/drop_caches'
+    bash -c 'echo 1 > /proc/sys/vm/compact_memory'
     free -m
 fi
+
+kvm_log=$(mktemp)
+trap on_exit EXIT
+trap on_error ERR
 
 /usr/bin/kvm -m $MEM \
     -name "onie" \

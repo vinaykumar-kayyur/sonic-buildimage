@@ -1,3 +1,4 @@
+sai_load_hw_config=/etc/bcm/flex/bcm56870_a0_issu/b870.6.4.1/
 #polarity/lanemap is using TH2 style.
 core_clock_frequency=1525
 dpp_clock_ratio=2:3
@@ -14,7 +15,7 @@ fpem_mem_entries=16384
 l2xmsg_mode=1
 
 # Platform specfic
-bcm_num_cos=8
+bcm_num_cos=10
 bcm_stat_interval=2000000
 cdma_timeout_usec=3000000
 ifp_inports_support_enable=1

@@ -17,7 +17,6 @@
 
 """
 Usage: %(scriptName)s [options] command object
-
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
@@ -30,13 +29,12 @@ command:
     set         : change board setting with fan|led|sfp
 """
 
-import os
 import commands
-import sys, getopt
+import getopt
+import sys
 import logging
 import re
 import time
-from collections import namedtuple
 
 PROJECT_NAME = 'as4630_54pe'
 version = '0.0.1'
@@ -54,7 +52,6 @@ hwmon_types = {'led': ['diag','fan','loc','psu1','psu2'],
                'fan2': ['fan'],
                'fan3': ['fan'],
                'fan4': ['fan'],
-               'fan5': ['fan'],
                'fan5': ['fan'],
               }
 hwmon_nodes = {'led': ['brightness'] ,
@@ -108,7 +105,12 @@ mknod =[
 'echo 24c02 0x57 > /sys/bus/i2c/devices/i2c-1/new_device',
 ]
 
-
+# Disable CPLD debug mode
+cpld_set =[
+'i2cset -y -f 3 0x60 0x2a 0xff',
+'i2cset -y -f 3 0x60 0x2b 0xff',
+'i2cset -y -f 3 0x60 0x86 0x89'
+]
 
 FORCE = 0
 logging.basicConfig(filename= PROJECT_NAME+'.log', filemode='w',level=logging.DEBUG)
@@ -212,10 +214,12 @@ def log_os_system(cmd, show):
     return  status, output
 
 def driver_inserted():
-    ret, lsmod = log_os_system("lsmod| grep accton", 0)
+    ret, lsmod = log_os_system("ls /sys/module/*accton*", 0)
     logging.info('mods:'+lsmod)
-    if len(lsmod) ==0:
+    if ret :
         return False
+    else :
+        return True
 
 #'modprobe cpr_4011_4mxx',
 
@@ -353,6 +357,12 @@ def do_install():
                 return  status
     else:
         print PROJECT_NAME.upper()+" devices detected...."
+
+    for i in range(len(cpld_set)):
+        status, output = log_os_system(cpld_set[i], 1)
+        if status:
+            if FORCE == 0:
+                return status
     return
 
 def do_uninstall():

@@ -12,6 +12,7 @@
 try:
     from sonic_platform_base.psu_base import PsuBase
     from sonic_platform.ipmihelper import IpmiSensor, IpmiFru
+    from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -37,6 +38,9 @@ class Psu(PsuBase):
         self.current_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index]["Current"])
         self.power_sensor = IpmiSensor(self.SENSOR_MAPPING[self.index]["Power"])
         self.fru = IpmiFru(self.FRU_MAPPING[self.index])
+
+        self._fan_list.append(Fan(fan_index=self.index, psu_fan=True,
+            dependency=self))
 
     def get_name(self):
         """
@@ -107,7 +111,7 @@ class Psu(PsuBase):
         if not is_valid:
             voltage = 0
 
-        return "{:.1f}".format(voltage)
+        return float(voltage)
 
     def get_current(self):
         """
@@ -121,7 +125,7 @@ class Psu(PsuBase):
         if not is_valid:
             current = 0
 
-        return "{:.1f}".format(current)
+        return float(current)
 
     def get_power(self):
         """
@@ -135,7 +139,7 @@ class Psu(PsuBase):
         if not is_valid:
             power = 0
 
-        return "{:.1f}".format(power)
+        return float(power)
 
     def get_powergood_status(self):
         """

@@ -5,7 +5,7 @@ SHELL = /bin/bash
 MAIN_TARGET = $(LLDPD)
 DERIVED_TARGETS = $(LIBLLDPCTL) $(LLDPD_DBG)
 
-LLDP_URL = http://ftp.debian.org/debian/pool/main/l/lldpd
+LLDP_URL = https://sonicstorage.blob.core.windows.net/debian/pool/main/l/lldpd
 
 DSC_FILE = lldpd_$(LLDPD_VERSION_FULL).dsc
 ORIG_FILE = lldpd_$(LLDPD_VERSION).orig.tar.gz
@@ -35,7 +35,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg import -s ../patch/series
 
 	# Build source and Debian packages
-	env "with_netlink_receive_bufsize=1024*1024" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
+	env "with_netlink_receive_bufsize=1024*1024" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	# Move the newly-built .deb packages to the destination directory

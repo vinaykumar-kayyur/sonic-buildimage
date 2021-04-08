@@ -39,6 +39,7 @@ class Component(ComponentBase):
     ]
 
     def __init__(self, component_index=0):
+        ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.CHASSIS_COMPONENTS[self.index][0]
         self.description = self.CHASSIS_COMPONENTS[self.index][1]
@@ -67,7 +68,7 @@ class Component(ComponentBase):
                                     stderr=subprocess.STDOUT)
             stdout = proc.communicate()[0]
             proc.wait()
-            result = stdout.rstrip('\n')
+            result = stdout.decode('utf-8').rstrip('\n')
         except OSError:
             result = None
 

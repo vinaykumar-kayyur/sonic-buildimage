@@ -100,13 +100,25 @@ switch_board_sfp() {
 #Modsel 64 ports to applicable QSFP type modules
 #This enables the adapter to respond for i2c commands
 switch_board_modsel() {
-	resource="/sys/bus/pci/devices/0000:04:00.0/resource0"
-	for ((i=1;i<=64;i++));
-	do
-		port_addr=$(( 16384 + ((i - 1) * 16)))
-		hex=$( printf "0x%x" $port_addr )
-		python /usr/bin/pcisysfs.py --set --offset $hex --val 0x10 --res $resource  > /dev/null 2>&1
-	done
+    resource="/sys/bus/pci/devices/0000:04:00.0/resource0"
+    for ((i=1;i<=64;i++));
+    do
+        port_addr=$(( 16384 + ((i - 1) * 16)))
+        hex=$( printf "0x%x" $port_addr )
+        /usr/bin/pcisysfs.py --set --offset $hex --val 0x10 --res $resource  > /dev/null 2>&1
+    done
+
+    # Disabling low power mode for last two 10G ports
+    # From last 6th bit: Disable - 0; Enable - 1
+    reg_offset=$(/usr/bin/pcisysfs.py --get --offset 0x4400 --res $resource | cut -d':' -f 2)
+    reg_offset=$( printf '0x%s' $reg_offset)
+    reg_offset=$( printf '0x%x' $(( $reg_offset & 0xbf )) )
+    /usr/bin/pcisysfs.py --set --offset 0x4400 --val $reg_offset --res $resource  > /dev/null 2>&1
+
+    reg_offset=$(/usr/bin/pcisysfs.py --get --offset 0x4410 --res $resource | cut -d':' -f 2)
+    reg_offset=$( printf '0x%s' $reg_offset)
+    reg_offset=$( printf '0x%x' $(( $reg_offset & 0xbf )) )
+    /usr/bin/pcisysfs.py --set --offset 0x4410 --val $reg_offset --res $resource  > /dev/null 2>&1
 }
 
 # Copy led_proc_init.soc file according to the HWSKU
@@ -130,12 +142,18 @@ install_python_api_package() {
     platform=$(/usr/local/bin/sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
 
     rv=$(pip install $device/$platform/sonic_platform-1.0-py2-none-any.whl)
+    rv=$(pip3 install $device/$platform/sonic_platform-1.0-py3-none-any.whl)
 }
 
 remove_python_api_package() {
     rv=$(pip show sonic-platform > /dev/null 2>/dev/null)
     if [ $? -eq 0 ]; then
         rv=$(pip uninstall -y sonic-platform > /dev/null 2>/dev/null)
+    fi
+
+    rv=$(pip3 show sonic-platform > /dev/null 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        rv=$(pip3 uninstall -y sonic-platform > /dev/null 2>/dev/null)
     fi
 }
 
@@ -183,6 +201,18 @@ platform_firmware_versions()
     echo "Slave CPLD 4: $((r_maj)).$((r_min))" >> $FIRMWARE_VERSION_FILE
 }
 
+get_reboot_cause() {
+    REBOOT_REASON_FILE="/host/reboot-cause/platform/reboot_reason"
+    resource="/sys/bus/pci/devices/0000:04:00.0/resource0"
+
+    # Handle First Boot into software version with reboot cause determination support
+    if [[ ! -e $REBOOT_REASON_FILE ]]; then
+        echo "0" > $REBOOT_REASON_FILE
+    else
+        /usr/bin/pcisysfs.py --get --offset 0x18 --res $resource | sed '1d; s/.*:\(.*\)$/\1/;' > $REBOOT_REASON_FILE
+    fi
+    /usr/bin/pcisysfs.py --set --val 0x0 --offset 0x18 --res $resource
+}
 
 init_devnum
 
@@ -194,14 +224,16 @@ if [ "$1" == "init" ]; then
     modprobe i2c_ocores
     modprobe dell_z9264f_fpga_ocores
     sys_eeprom "new_device"
+    get_reboot_cause
     switch_board_qsfp_mux "new_device"
     switch_board_qsfp "new_device"
     switch_board_sfp "new_device"
     switch_board_modsel
     init_switch_port_led
     install_python_api_package
-    python /usr/bin/qsfp_irq_enable.py
+    /usr/bin/port_irq_enable.py
     platform_firmware_versions
+
 
 elif [ "$1" == "deinit" ]; then
     sys_eeprom "delete_device"

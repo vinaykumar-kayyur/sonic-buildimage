@@ -12,11 +12,7 @@ try:
     import os
     import time
     import struct
-    import sys
-    import getopt
-    import select
     import mmap
-    from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform_base.sfp_base import SfpBase
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436Dom
@@ -66,8 +62,8 @@ sfp_compliance_code_tup = ('10GEthernetComplianceCode', 'InfinibandComplianceCod
                            'FibreChannelTechnology', 'SFP+CableTechnology',
                            'FibreChannelTransmissionMedia', 'FibreChannelSpeed')
 
-info_dict_keys = ['type', 'hardwarerev', 'serialnum',
-                  'manufacturename', 'modelname', 'Connector',
+info_dict_keys = ['type', 'hardware_rev', 'serial',
+                  'manufacturer', 'model', 'connector',
                   'encoding', 'ext_identifier', 'ext_rateselect_compliance',
                   'cable_type', 'cable_length', 'nominal_bit_rate',
                   'specification_compliance', 'type_abbrv_name','vendor_date', 'vendor_oui']
@@ -106,7 +102,7 @@ sff8436_parser = {
 
        'cable_type': [QSFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
      'cable_length': [QSFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
-        'Connector': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
+        'connector': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
              'type': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
          'encoding': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
    'ext_identifier': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
@@ -116,13 +112,13 @@ sff8436_parser = {
  'specification_compliance':
                      [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
   'type_abbrv_name': [QSFP_INFO_OFFSET,  0, 20, 'parse_sfp_info_bulk'],
-  'manufacturename': [QSFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
+     'manufacturer': [QSFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
        'vendor_oui': [QSFP_INFO_OFFSET, 37,  3, 'parse_vendor_oui'],
-        'modelname': [QSFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
-      'hardwarerev': [QSFP_INFO_OFFSET, 56,  2, 'parse_vendor_rev'],
-        'serialnum': [QSFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
+            'model': [QSFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
+     'hardware_rev': [QSFP_INFO_OFFSET, 56,  2, 'parse_vendor_rev'],
+           'serial': [QSFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
       'vendor_date': [QSFP_INFO_OFFSET, 84,  8, 'parse_vendor_date'],
-   'dom_capability': [QSFP_INFO_OFFSET, 92,  1, 'parse_qsfp_dom_capability'],
+   'dom_capability': [QSFP_INFO_OFFSET, 92,  1, 'parse_dom_capability'],
           'dom_rev': [QSFP_DOM_OFFSET,   1,  1, 'parse_sfp_dom_rev'],
   'ModuleThreshold': [QSFP_DOM_OFFSET1, 128, 24, 'parse_module_threshold_values'],
  'ChannelThreshold': [QSFP_DOM_OFFSET1, 176, 16, 'parse_channel_threshold_values'],
@@ -135,7 +131,7 @@ sff8472_parser = {
 
        'cable_type': [SFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
      'cable_length': [SFP_INFO_OFFSET, -1, -1, 'parse_sfp_info_bulk'],
-        'Connector': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
+        'connector': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
              'type': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
          'encoding': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
    'ext_identifier': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
@@ -145,11 +141,11 @@ sff8472_parser = {
  'specification_compliance':
                      [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
   'type_abbrv_name': [SFP_INFO_OFFSET,  0, 21, 'parse_sfp_info_bulk'],
-  'manufacturename': [SFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
+     'manufacturer': [SFP_INFO_OFFSET, 20, 16, 'parse_vendor_name'],
        'vendor_oui': [SFP_INFO_OFFSET,  37, 3, 'parse_vendor_oui'],
-        'modelname': [SFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
-      'hardwarerev': [SFP_INFO_OFFSET, 56,  4, 'parse_vendor_rev'],
-        'serialnum': [SFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
+            'model': [SFP_INFO_OFFSET, 40, 16, 'parse_vendor_pn'],
+     'hardware_rev': [SFP_INFO_OFFSET, 56,  4, 'parse_vendor_rev'],
+           'serial': [SFP_INFO_OFFSET, 68, 16, 'parse_vendor_sn'],
       'vendor_date': [SFP_INFO_OFFSET, 84,  8, 'parse_vendor_date'],
   'ModuleThreshold': [SFP_DOM_OFFSET,   0, 56, 'parse_alarm_warning_threshold'],
 }
@@ -219,8 +215,13 @@ class Sfp(SfpBase):
             return None
 
         try:
-            for n in range(0, num_bytes):
-                eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+            if isinstance(raw , str):
+                for n in range(0, num_bytes):
+                    eeprom_raw[n] = hex(ord(raw[n]))[2:].zfill(2)
+            else:
+                for n in range(0, num_bytes):
+                    eeprom_raw[n] = hex(raw[n])[2:].zfill(2)
+
         except BaseException:
             eeprom.close()
             return None
@@ -326,7 +327,7 @@ class Sfp(SfpBase):
             return transceiver_info_dict
 
         # Vendor Name
-        vendor_name_data = self._get_eeprom_data('manufacturename')
+        vendor_name_data = self._get_eeprom_data('manufacturer')
         if (vendor_name_data is not None):
             vendor_name = vendor_name_data['data']['Vendor Name']['value']
         else:
@@ -340,21 +341,21 @@ class Sfp(SfpBase):
             return transceiver_info_dict
 
         # Vendor PN
-        vendor_pn_data = self._get_eeprom_data('modelname')
+        vendor_pn_data = self._get_eeprom_data('model')
         if (vendor_pn_data is not None):
             vendor_pn = vendor_pn_data['data']['Vendor PN']['value']
         else:
             return transceiver_info_dict
 
         # Vendor Revision
-        vendor_rev_data = self._get_eeprom_data('hardwarerev')
+        vendor_rev_data = self._get_eeprom_data('hardware_rev')
         if (vendor_rev_data is not None):
             vendor_rev = vendor_rev_data['data']['Vendor Rev']['value']
         else:
             return transceiver_info_dict
 
         # Vendor Serial Number
-        vendor_sn_data = self._get_eeprom_data('serialnum')
+        vendor_sn_data = self._get_eeprom_data('serial')
         if (vendor_sn_data is not None):
             vendor_sn = vendor_sn_data['data']['Vendor SN']['value']
         else:
@@ -362,11 +363,11 @@ class Sfp(SfpBase):
 
         # Fill The Dictionary and return
         transceiver_info_dict['type'] = identifier
-        transceiver_info_dict['hardwarerev'] = vendor_rev
-        transceiver_info_dict['serialnum'] = vendor_sn
-        transceiver_info_dict['manufacturename'] = vendor_name
-        transceiver_info_dict['modelname'] = vendor_pn
-        transceiver_info_dict['Connector'] = connector
+        transceiver_info_dict['hardware_rev'] = vendor_rev
+        transceiver_info_dict['serial'] = vendor_sn
+        transceiver_info_dict['manufacturer'] = vendor_name
+        transceiver_info_dict['model'] = vendor_pn
+        transceiver_info_dict['connector'] = connector
         transceiver_info_dict['encoding'] = encoding
         transceiver_info_dict['ext_identifier'] = ext_id
         transceiver_info_dict['ext_rateselect_compliance'] = rate_identifier
@@ -562,7 +563,7 @@ class Sfp(SfpBase):
         """
         Retrieves the model number (or part number) of the sfp
         """
-        vendor_pn_data = self._get_eeprom_data('modelname')
+        vendor_pn_data = self._get_eeprom_data('model')
         if (vendor_pn_data is not None):
             vendor_pn = vendor_pn_data['data']['Vendor PN']['value']
         else:
@@ -574,7 +575,7 @@ class Sfp(SfpBase):
         """
         Retrieves the serial number of the sfp
         """
-        vendor_sn_data = self._get_eeprom_data('serialnum')
+        vendor_sn_data = self._get_eeprom_data('serial')
         if (vendor_sn_data is not None):
             vendor_sn = vendor_sn_data['data']['Vendor SN']['value']
         else:
@@ -971,7 +972,7 @@ class Sfp(SfpBase):
             reg_value = reg_value & ~mask
 
             # Convert our register value back to a hex string and write back
-            status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+            self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
             # Sleep 1 second to allow it to settle
             time.sleep(1)
@@ -979,7 +980,7 @@ class Sfp(SfpBase):
             reg_value = reg_value | mask
 
             # Convert our register value back to a hex string and write back
-            status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+            self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
             return True
 
@@ -1011,7 +1012,7 @@ class Sfp(SfpBase):
                 reg_value = reg_value & ~mask
 
             # Convert our register value back to a hex string and write back
-            status = self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
+            self.pci_set_value(self.BASE_RES_PATH, reg_value, port_offset)
 
             return True
 
@@ -1021,12 +1022,6 @@ class Sfp(SfpBase):
     def tx_disable(self, tx_disable):
         """
         Disable SFP TX for all channels
-        """
-        return False
-
-    def tx_disable_channel(self, channel, disable):
-        """
-        Sets the tx_disable for specified SFP channels
         """
         return False
 

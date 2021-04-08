@@ -19,21 +19,22 @@ declare -r EXIT_SUCCESS="0"
 declare -r EXIT_FAILURE="1"
 
 declare -r QUERY_CMD="mlxfwmanager --query"
+declare -r LIST_CONTENT_CMD="mlxfwmanager --list-content"
 declare -r BURN_CMD="mlxfwmanager -u -f -y"
 
 declare -r QUERY_FILE="/tmp/mlxfwmanager-query.log"
+declare -r LIST_CONTENT_FILE="/tmp/mlxfwmanager-list-content.log"
 
 declare -r SPC1_ASIC="spc1"
 declare -r SPC2_ASIC="spc2"
+declare -r SPC3_ASIC="spc3"
 declare -r UNKN_ASIC="unknown"
+declare -r UNKN_MST="unknown"
 
 declare -rA FW_FILE_MAP=( \
     [$SPC1_ASIC]="/etc/mlnx/fw-SPC.mfa" \
     [$SPC2_ASIC]="/etc/mlnx/fw-SPC2.mfa" \
-)
-declare -rA FW_REQUIRED_MAP=( \
-    [$SPC1_ASIC]="{{ MLNX_SPC_FW_VERSION }}" \
-    [$SPC2_ASIC]="{{ MLNX_SPC2_FW_VERSION }}" \
+    [$SPC3_ASIC]="/etc/mlnx/fw-SPC3.mfa" \
 )
 
 IMAGE_UPGRADE="${NO_PARAM}"
@@ -135,6 +136,7 @@ function GetAsicType() {
 
     local -r SPC1_PRODUCT_ID="cb84"
     local -r SPC2_PRODUCT_ID="cf6c"
+    local -r SPC3_PRODUCT_ID="cf70"
 
     if lspci -n | grep "${VENDOR_ID}:${SPC1_PRODUCT_ID}" &>/dev/null; then
         echo "${SPC1_ASIC}"
@@ -142,10 +144,25 @@ function GetAsicType() {
     elif lspci -n | grep "${VENDOR_ID}:${SPC2_PRODUCT_ID}" &>/dev/null; then
         echo "${SPC2_ASIC}"
         exit "${EXIT_SUCCESS}"
+    elif lspci -n | grep "${VENDOR_ID}:${SPC3_PRODUCT_ID}" &>/dev/null; then
+        echo "${SPC3_ASIC}"
+        exit "${EXIT_SUCCESS}"
     fi
 
     echo "${UNKN_ASIC}"
     exit "${EXIT_FAILURE}"
+}
+
+function GetMstDevice() {
+    local _MST_DEVICE="$(ls /dev/mst/*_pci_cr0 2>&1)"
+
+    if [[ ! -c "${_MST_DEVICE}" ]]; then
+        echo "${UNKN_MST}"
+    else 
+        echo "${_MST_DEVICE}"
+    fi
+
+    exit "${EXIT_SUCCESS}"
 }
 
 function RunCmd() {
@@ -173,25 +190,23 @@ function UpgradeFW() {
 
     if [ ! -z "${_FS_MOUNTPOINT}" ]; then
         local -r _FW_FILE="${_FS_MOUNTPOINT}/${FW_FILE_MAP[$_ASIC_TYPE]}"
-
-        if [ ! -f "${_FW_FILE}" ]; then
-            ExitFailure "no such file: ${_FW_FILE}"
-        fi
-
-        RunCmd "${QUERY_CMD} -i ${_FW_FILE} -L ${QUERY_FILE}" &>/dev/null
-
-        local -r _FW_INFO="$(grep FW ${QUERY_FILE})"
-        local -r _FW_CURRENT="$(echo ${_FW_INFO} | cut -f2 -d' ')"
-        local -r _FW_AVAILABLE="$(echo ${_FW_INFO} | cut -f3 -d' ')"
     else
         local -r _FW_FILE="${FW_FILE_MAP[$_ASIC_TYPE]}"
-
-        RunCmd "${QUERY_CMD} -L ${QUERY_FILE}" &>/dev/null
-
-        local -r _FW_INFO="$(grep FW ${QUERY_FILE})"
-        local -r _FW_CURRENT="$(echo ${_FW_INFO} | cut -f2 -d' ')"
-        local -r _FW_AVAILABLE="${FW_REQUIRED_MAP[$_ASIC_TYPE]}"
     fi
+
+    if [ ! -f "${_FW_FILE}" ]; then
+        ExitFailure "no such file: ${_FW_FILE}"
+    fi
+
+    RunCmd "${QUERY_CMD} -o ${QUERY_FILE}"
+    local -r _FW_CURRENT_INFO="$(grep FW ${QUERY_FILE})"
+    local -r _FW_CURRENT="$(echo ${_FW_CURRENT_INFO} | cut -f2 -d' ')"
+    local -r _PSID_INFO="$(grep PSID ${QUERY_FILE})"
+    local -r _PSID="$(echo ${_PSID_INFO} | cut -f2 -d' ')"
+
+    RunCmd "${LIST_CONTENT_CMD} -i ${_FW_FILE} -o ${LIST_CONTENT_FILE}"
+    local -r _FW_AVAILABLE_INFO="$(grep ${_PSID} ${LIST_CONTENT_FILE})"
+    local -r _FW_AVAILABLE="$(echo ${_FW_AVAILABLE_INFO} | cut -f4 -d' ')"
 
     if [[ -z "${_FW_CURRENT}" ]]; then
         ExitFailure "could not retreive current FW version"
@@ -205,13 +220,19 @@ function UpgradeFW() {
         ExitSuccess "firmware is up to date"
     else
         LogNotice "firmware upgrade is required. Installing compatible version..."
-        RunCmd "${BURN_CMD} -i ${_FW_FILE}"
+        local -r _MST_DEVICE="$(GetMstDevice)"
+        if [[ "${_MST_DEVICE}" = "${UNKN_MST}" ]]; then
+            LogWarning "could not find fastest mst device, using default device"
+            RunCmd "${BURN_CMD} -i ${_FW_FILE}"
+        else
+            RunCmd "${BURN_CMD} -d ${_MST_DEVICE} -i ${_FW_FILE}"
+        fi
     fi
 }
 
 function UpgradeFWFromImage() {
-    local -r _NEXT_SONIC_IMAGE="$(sonic_installer list | grep "Next: " | cut -f2 -d' ')"
-    local -r _CURRENT_SONIC_IMAGE="$(sonic_installer list | grep "Current: " | cut -f2 -d' ')"
+    local -r _NEXT_SONIC_IMAGE="$(sonic-installer list | grep "Next: " | cut -f2 -d' ')"
+    local -r _CURRENT_SONIC_IMAGE="$(sonic-installer list | grep "Current: " | cut -f2 -d' ')"
 
     local -r _FS_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/fs.squashfs"
     local -r _FS_MOUNTPOINT="/tmp/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}-fs"
@@ -230,7 +251,7 @@ function UpgradeFWFromImage() {
 }
 
 function ExitIfQEMU() {
-    if [[ $(cat /sys/devices/virtual/dmi/id/chassis_vendor) = "QEMU" ]]; then
+    if [ -n "$(lspci -vvv | grep SimX)" ]; then
         ExitSuccess "No FW upgrade for SimX platform"
     fi
 }

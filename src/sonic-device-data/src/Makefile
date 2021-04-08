@@ -11,4 +11,10 @@ test:
 	for f in $$(find ../../../device -name media_settings.json); do
 	    ./media_checker $$f
 	done
+	for f in $$(find ../../../device -name platform.json); do
+	    ./platform_json_checker $$f
+	done
+	for f in $$(find ../../../device -name hwsku.json); do
+	    ./hwsku_json_checker $$f
+	done
 	popd

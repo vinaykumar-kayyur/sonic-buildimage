@@ -3,10 +3,10 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = $(IPTABLES)
-DERIVED_TARGETS = libip4tc0_$(IPTABLES_VERSION_FULL)_amd64.deb \
-		  libip6tc0_$(IPTABLES_VERSION_FULL)_amd64.deb \
-		  libiptc0_$(IPTABLES_VERSION_FULL)_amd64.deb \
-		  libxtables12_$(IPTABLES_VERSION_FULL)_amd64.deb
+DERIVED_TARGETS = libip4tc0_$(IPTABLES_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
+		  libip6tc0_$(IPTABLES_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
+		  libiptc0_$(IPTABLES_VERSION_FULL)_$(CONFIGURED_ARCH).deb \
+		  libxtables12_$(IPTABLES_VERSION_FULL)_$(CONFIGURED_ARCH).deb
 
 IPTABLES_URL = http://deb.debian.org/debian/pool/main/i/iptables
 
@@ -38,7 +38,7 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg import -s ../patch/series
 
 	# Build source and Debian packages
-	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS)
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 	popd
 
 	# Move the newly-built .deb packages to the destination directory
