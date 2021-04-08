@@ -79,6 +79,8 @@ TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $I
 # Prepare buildinfo
 sudo scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
 
+sudo chown root:root $FILESYSTEM_ROOT
+
 ## Config hostname and hosts, otherwise 'sudo ...' will complain 'sudo: unable to resolve host ...'
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '$HOSTNAME' > /etc/hostname"
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '127.0.0.1       $HOSTNAME' >> /etc/hosts"
@@ -109,7 +111,7 @@ sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-language
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y upgrade
 echo '[INFO] Install packages for building image'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc systemd-sysv
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
 
 ## Create device files
 echo '[INFO] MAKEDEV'
@@ -244,14 +246,15 @@ sudo cp files/docker/docker.service.conf $_
 ## Fix systemd race between docker and containerd
 sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
-## Create redis group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
-
 ## Create default user
 ## Note: user should be in the group with the same name, and also in sudo/docker/redis groups
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker,redis $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAULT_USERINFO" -m -s /bin/bash
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
+
+## Create redis group
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
+sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG redis $USERNAME
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     ## Pre-install hardware drivers
@@ -347,7 +350,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -na
 # Install certain fundamental packages from $IMAGE_DISTRO-backports in order to get
 # more up-to-date (but potentially less stable) versions
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y -t $IMAGE_DISTRO-backports install \
-    picocom
+    picocom \
+    systemd-sysv
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
@@ -581,6 +585,12 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     # Remove qemu arm bin executable used for cross-building
     sudo rm -f $FILESYSTEM_ROOT/usr/bin/qemu*static || true
     DOCKERFS_PATH=../dockerfs/
+fi
+
+# Ensure admin gid is 1000
+gid_user=$(sudo LANG=C chroot $FILESYSTEM_ROOT id -g $USERNAME) || gid_user="none"
+if [ "${gid_user}" != "1000" ]; then
+    die "expect gid 1000. current:${gid_user}"
 fi
 
 ## Compress docker files
