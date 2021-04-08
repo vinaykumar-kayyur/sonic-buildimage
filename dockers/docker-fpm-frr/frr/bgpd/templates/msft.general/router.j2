@@ -5,7 +5,7 @@
 {% set neighbor_deployment_id = CONFIG_DB__DEVICE_NEIGHBOR_METADATA[bgp_session['name']]['deployment_id'] %}
 {% set path_template = "bgpd/templates/msft.general/%s/" + template_name + ".conf.j2" %}
 {% if neighbor_addr | ipv4 %}
-{%     if device_type == 'MgmtToRRouter' %}
+{%     if device_type == 'MgmtToRRouter' or device_type == 'EPMS' %}
 {%         include path_template % "v4.mgmttor" %}
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
 {%         if deployment_id is defined and deployment_id == '26' %}
@@ -28,7 +28,7 @@
 {%     endif %}
 {% endif %}
 {% if neighbor_addr | ipv6 %}
-{%     if device_type == 'MgmtToRRouter' %}
+{%     if device_type == 'MgmtToRRouter' or device_type == 'EPMS' %}
 {%         include path_template % "v6.mgmttor" %}
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
 {%         if deployment_id is defined and deployment_id == '26' %}
