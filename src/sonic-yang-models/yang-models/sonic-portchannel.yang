@@ -74,6 +74,8 @@ module sonic-portchannel {
                 }
 
                 leaf min_links {
+                    type uint16 {
+                        range 1..1024;
                     type uint8 {
                         range 1..128;
                     }
