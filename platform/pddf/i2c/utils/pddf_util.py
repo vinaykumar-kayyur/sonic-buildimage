@@ -3,7 +3,6 @@
 
 """
 Usage: %(scriptName)s [options] command object
-
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
@@ -180,10 +179,10 @@ def config_pddf_utils():
     pddf_path = get_path_to_pddf_plugin()
 
     # ##########################################################################
-    SONIC_PLATFORM_BSP_WHL_PKG = "/".join([device_path, 'sonic_platform-1.0-py3-none-any.whl'])
-    SONIC_PLATFORM_PDDF_WHL_PKG = "/".join([device_path, 'pddf', 'sonic_platform-1.0-py3-none-any.whl'])
-    SONIC_PLATFORM_BSP_WHL_PKG_BK = "/".join([device_path, 'sonic_platform-1.0-py3-none-any.whl.orig'])
-    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 1)
+    SONIC_PLATFORM_BSP_WHL_PKG = "/".join([device_path, 'sonic_platform-1.0-py2-none-any.whl'])
+    SONIC_PLATFORM_PDDF_WHL_PKG = "/".join([device_path, 'pddf', 'sonic_platform-1.0-py2-none-any.whl'])
+    SONIC_PLATFORM_BSP_WHL_PKG_BK = "/".join([device_path, 'sonic_platform-1.0-py2-none-any.whl.orig'])
+    status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 1)
     if status:
         if os.path.exists(SONIC_PLATFORM_PDDF_WHL_PKG):
             # Platform API 2.0 is supported
@@ -195,7 +194,7 @@ def config_pddf_utils():
             # PDDF 2.0 ref API classes and some changes on top of it ... install it
             shutil.copy(SONIC_PLATFORM_PDDF_WHL_PKG, SONIC_PLATFORM_BSP_WHL_PKG)
             print "Attemting to install the PDDF sonic_platform wheel package ..."
-            status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG, 1)
+            status, output = log_os_system("pip install "+ SONIC_PLATFORM_BSP_WHL_PKG, 1)
             if status:
                 print "Error: Failed to install {}".format(SONIC_PLATFORM_BSP_WHL_PKG)
                 return status
@@ -224,12 +223,12 @@ def config_pddf_utils():
                 log_os_system('mv '+SONIC_PLATFORM_BSP_WHL_PKG+' '+SONIC_PLATFORM_BSP_WHL_PKG_BK, 1)
                 shutil.copy(SONIC_PLATFORM_PDDF_WHL_PKG, SONIC_PLATFORM_BSP_WHL_PKG)
                 # uninstall the existing bsp whl pkg
-                status, output = log_os_system("pip3 uninstall sonic-platform -y &> /dev/null", 1)
+                status, output = log_os_system("pip uninstall sonic-platform -y &> /dev/null", 1)
                 if status:
                     print "Error: Unable to uninstall BSP sonic-platform whl package"
                     return status
                 print "Attemting to install the PDDF sonic_platform wheel package ..."
-                status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG, 1)
+                status, output = log_os_system("pip install "+ SONIC_PLATFORM_BSP_WHL_PKG, 1)
                 if status:
                     print "Error: Failed to install {}".format(SONIC_PLATFORM_BSP_WHL_PKG)
                     return status
@@ -266,11 +265,11 @@ def config_pddf_utils():
 
 def cleanup_pddf_utils():
     device_path = get_path_to_device()
-    SONIC_PLATFORM_BSP_WHL_PKG = "/".join([device_path, 'sonic_platform-1.0-py3-none-any.whl'])
-    SONIC_PLATFORM_PDDF_WHL_PKG = "/".join([device_path, 'pddf', 'sonic_platform-1.0-py3-none-any.whl'])
-    SONIC_PLATFORM_BSP_WHL_PKG_BK = "/".join([device_path, 'sonic_platform-1.0-py3-none-any.whl.orig'])
+    SONIC_PLATFORM_BSP_WHL_PKG = "/".join([device_path, 'sonic_platform-1.0-py2-none-any.whl'])
+    SONIC_PLATFORM_PDDF_WHL_PKG = "/".join([device_path, 'pddf', 'sonic_platform-1.0-py2-none-any.whl'])
+    SONIC_PLATFORM_BSP_WHL_PKG_BK = "/".join([device_path, 'sonic_platform-1.0-py2-none-any.whl.orig'])
     # ##########################################################################
-    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 1)
+    status, output = log_os_system("pip show sonic-platform > /dev/null 2>&1", 1)
     if status:
         # PDDF Platform API 2.0 is not supported but system is in PDDF mode, hence PDDF 1.0 plugins are present
         device_plugin_path = "/".join([device_path, "plugins"])
@@ -291,12 +290,12 @@ def cleanup_pddf_utils():
             if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_BK):
                 # platform is 2.0 compliant and original bsp 2.0 whl package exist
                 log_os_system('mv '+SONIC_PLATFORM_BSP_WHL_PKG_BK+' '+SONIC_PLATFORM_BSP_WHL_PKG, 1)
-                status, output = log_os_system("pip3 uninstall sonic-platform -y &> /dev/null", 1)
+                status, output = log_os_system("pip uninstall sonic-platform -y &> /dev/null", 1)
                 if status:
                     print "Error: Unable to uninstall PDDF sonic-platform whl package"
                     return status
                 print "Attemting to install the BSP sonic_platform wheel package ..."
-                status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG, 1)
+                status, output = log_os_system("pip install "+ SONIC_PLATFORM_BSP_WHL_PKG, 1)
                 if status:
                     print "Error: Failed to install {}".format(SONIC_PLATFORM_BSP_WHL_PKG)
                     return status
@@ -307,7 +306,7 @@ def cleanup_pddf_utils():
                 # remove and uninstall the PDDF whl package
                 if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG):
                     os.remove(SONIC_PLATFORM_BSP_WHL_PKG)
-                status, output = log_os_system("pip3 uninstall sonic-platform -y &> /dev/null", 1)
+                status, output = log_os_system("pip uninstall sonic-platform -y &> /dev/null", 1)
                 if status:
                     print "Error: Unable to uninstall PDDF sonic-platform whl package"
                     return status
@@ -500,10 +499,10 @@ def do_switch_pddf():
         print PROJECT_NAME.upper() +" system is already in pddf mode...."
     else:
         print "Check if the native sonic-platform whl package is installed in the pmon docker"
-        status, output = log_os_system("docker exec -it pmon pip3 show sonic-platform", 1)
+        status, output = log_os_system("docker exec -it pmon pip show sonic-platform", 1)
         if not status:
             # Need to remove this whl module
-            status, output = log_os_system("docker exec -it pmon pip3 uninstall sonic-platform -y", 1)
+            status, output = log_os_system("docker exec -it pmon pip uninstall sonic-platform -y", 1)
             if not status:
                 print "Successfully uninstalled the native sonic-platform whl pkg from pmon container"
             else:
@@ -556,10 +555,10 @@ def do_switch_nonpddf():
         print PROJECT_NAME.upper() +" system is already in non-pddf mode...."
     else:
         print "Check if the sonic-platform whl package is installed in the pmon docker"
-        status, output = log_os_system("docker exec -it pmon pip3 show sonic-platform", 1)
+        status, output = log_os_system("docker exec -it pmon pip show sonic-platform", 1)
         if not status:
             # Need to remove this whl module
-            status, output = log_os_system("docker exec -it pmon pip3 uninstall sonic-platform -y", 1)
+            status, output = log_os_system("docker exec -it pmon pip uninstall sonic-platform -y", 1)
             if not status:
                 print "Successfully uninstalled the sonic-platform whl pkg from pmon container"
             else:
