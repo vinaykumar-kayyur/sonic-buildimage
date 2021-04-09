@@ -10,7 +10,7 @@ DEVICE_DATA = {
             'drawer_num': 4,
             'drawer_type': 'real',
             'fan_num_per_drawer': 2,
-            'support_fan_direction': False,
+            'support_fan_direction': True,
             'hot_swappable': True
         },
         'psus': {
@@ -31,7 +31,7 @@ DEVICE_DATA = {
             'drawer_num': 4,
             'drawer_type': 'real',
             'fan_num_per_drawer': 1,
-            'support_fan_direction': False,
+            'support_fan_direction': True,
             'hot_swappable': True
         },
         'psus': {
@@ -73,7 +73,7 @@ DEVICE_DATA = {
             'drawer_num': 4,
             'drawer_type': 'real',
             'fan_num_per_drawer': 2,
-            'support_fan_direction': False,
+            'support_fan_direction': True,
             'hot_swappable': True
         },
         'psus': {

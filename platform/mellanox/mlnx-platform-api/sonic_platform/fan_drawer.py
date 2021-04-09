@@ -51,14 +51,15 @@ class MellanoxFanDrawer(FanDrawerBase):
             return FanBase.FAN_DIRECTION_NOT_APPLICABLE
         
         try:
-            from .fan import FAN_DIR
-            with open(FAN_DIR, 'r') as fan_dir:
-                fan_dir_bits = int(fan_dir.read())
-                fan_mask = 1 << self._index - 1
-                if fan_dir_bits & fan_mask:
+            from .fan import FAN_DIR, FAN_DIR_VALUE_INTAKE, FAN_DIR_VALUE_EXHAUST
+            with open(FAN_DIR.format(self._index), 'r') as fan_dir:
+                fan_dir_value = int(fan_dir.read())
+                if fan_dir_value == FAN_DIR_VALUE_INTAKE:
                     return FanBase.FAN_DIRECTION_INTAKE
-                else:
+                elif fan_dir_value == FAN_DIR_VALUE_EXHAUST:
                     return FanBase.FAN_DIRECTION_EXHAUST
+                else:
+                    raise RuntimeError("Got wrong value {} for fan direction {}".format(fan_dir_value, self._index))
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to read fan direction status to {}".format(repr(e)))
 
