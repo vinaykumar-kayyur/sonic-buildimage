@@ -3,9 +3,9 @@ Index: sonic-linux-kernel/patch/kconfig-exclusions
 --- sonic-linux-kernel.orig/patch/kconfig-exclusions
 +++ sonic-linux-kernel/patch/kconfig-exclusions
 @@ -6,6 +6,8 @@ CONFIG_STRICT_DEVMEM
- # Unset X86_PAT according to Broadcom's requirement
  CONFIG_X86_PAT
  CONFIG_MLXSW_PCI
+ CONFIG_THERMAL_STATISTICS
 +# For Cisco 3132
 +CONFIG_SERIAL_8250_PNP
  
