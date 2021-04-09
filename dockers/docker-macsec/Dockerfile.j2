@@ -29,6 +29,4 @@ COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["etc/wpa_supplicant.conf", "/etc/wpa_supplicant.conf"]
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

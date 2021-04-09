@@ -55,6 +55,4 @@ RUN apt-get remove -y g++ python3-dev
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

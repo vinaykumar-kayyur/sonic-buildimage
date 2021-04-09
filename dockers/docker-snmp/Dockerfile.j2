@@ -79,6 +79,4 @@ COPY ["critical_processes", "/etc/supervisor"]
 # Although exposing ports is not needed for host net mode, keep it for possible bridge mode
 EXPOSE 161/udp 162/udp
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

@@ -33,6 +33,4 @@ COPY ["critical_processes", "/etc/supervisor/"]
 RUN apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
 RUN rm -rf /debs
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

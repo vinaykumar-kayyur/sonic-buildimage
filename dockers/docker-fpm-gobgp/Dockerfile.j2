@@ -30,6 +30,4 @@ COPY ["daemons", "/etc/quagga/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/local/bin/supervisord"]

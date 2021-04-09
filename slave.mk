@@ -744,7 +744,6 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		$(eval export version=$($*.gz_VERSION))
 		$(eval export name=$($*.gz_CONTAINER_NAME))
 		$(eval export package_name=$($*.gz_PACKAGE_NAME))
-		$(eval export base_os_ver=$(BASE_OS_COMPATIBILITY_VERSION))
 		$(eval export asic_service=$(shell [ -f files/build_templates/per_namespace/$(name).service.j2 ] && echo true || echo false))
 		$(eval export host_service=$(shell [ -f files/build_templates/$(name).service.j2 ] && echo true || echo false))
 		$(eval export depends=$($*.gz_PACKAGE_DEPENDS))
@@ -774,8 +773,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 			--build-arg frr_user_uid=$(FRR_USER_UID) \
 			--build-arg frr_user_gid=$(FRR_USER_GID) \
-			--build-arg manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--build-arg image_version=$(SONIC_IMAGE_VERSION) \
+			--label com.azure.sonic.manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 			-t $* $($*.gz_PATH) $(LOG)
 		scripts/collect_docker_version_files.sh $* $(TARGET_PATH)

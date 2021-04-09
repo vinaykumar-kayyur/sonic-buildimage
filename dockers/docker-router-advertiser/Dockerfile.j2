@@ -39,6 +39,4 @@ COPY ["radvd.conf.j2", "wait_for_link.sh.j2", "docker-router-advertiser.supervis
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/bin/docker-init.sh"]

@@ -62,6 +62,4 @@ COPY ["critical_processes", "/etc/supervisor"]
 COPY ["files/update_chassisdb_config", "/usr/local/bin/"]
 COPY ["flush_unused_database", "/usr/local/bin/"]
 
-LABEL com.azure.sonic.manifest="$manifest"
-
 ENTRYPOINT ["/usr/local/bin/docker-database-init.sh"]
