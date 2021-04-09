@@ -3,6 +3,7 @@
 
 """
 Usage: %(scriptName)s [options] command object
+
 options:
     -h | --help     : this help message
     -d | --debug    : run with debug mode
