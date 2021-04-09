@@ -38,7 +38,7 @@ module sonic-wred-profile {
 
                 key "name";
 
-                sonic-ext:custom-validation ValidateAtLeastOneColorEnabled;
+         //       sonic-ext:custom-validation ValidateAtLeastOneColorEnabled;
 
                 leaf name {
                     type string {
@@ -51,18 +51,21 @@ module sonic-wred-profile {
                 leaf yellow_min_threshold {
                     type uint64;
                     units bytes;
+                    default 0;
                     description "Yellow minimum threshold bytes";
                 }
 
                 leaf green_min_threshold {
                     type uint64;
                     units bytes;
+                    default 0;
                     description "Green minimum threshold bytes";
                 }
 
                 leaf red_min_threshold {
                     type uint64;
                     units bytes;
+                    default 0;
                     description "Red minimum threshold bytes";
                 }
 
@@ -72,6 +75,7 @@ module sonic-wred-profile {
                     must "(/stypes:operation/stypes:operation = 'DELETE') or (current() >= current()/../yellow_min_threshold)" {
                         error-message "Yellow max threshold must be greater than or equal to min threshold";
                     }
+                    default 0;
                     description "Yellow maximum threshold bytes";
                 }
 
@@ -79,8 +83,9 @@ module sonic-wred-profile {
                     type uint64;
                     units bytes;
                     must "(/stypes:operation/stypes:operation = 'DELETE') or (current() >= current()/../green_min_threshold)" {
-                        error-message "Green max threshold must be greater than or equal to min threshold";
+                         error-message "Green max threshold must be greater than or equal to min threshold";
                     }
+                    default 0;
                     description "Green maximum threshold bytes";
                 }
 
@@ -90,6 +95,7 @@ module sonic-wred-profile {
                     must "(/stypes:operation/stypes:operation = 'DELETE') or (current() >= current()/../red_min_threshold)" {
                         error-message "Red max threshold must be greater than or equal to min threshold";
                     }
+                    default 0;
                     description "Red maximum threshold bytes";
                 }
 
@@ -130,21 +136,25 @@ module sonic-wred-profile {
 
                         }
                     }
+                    default ecn_none;
                     description "ECN mode";
                 }
 
                 leaf wred_green_enable {
                     type boolean;
+                    default false;
                     description "Green enable";
                 }
 
                 leaf wred_yellow_enable {
                     type boolean;
+                    default false;
                     description "Yellow enable";
                 }
 
                 leaf wred_red_enable {
                     type boolean;
+                    default false;
                     description "Red enable";
                 }
 
@@ -153,6 +163,7 @@ module sonic-wred-profile {
                         range "0..100";
                     }
                     units percent;
+                    default 100;
                     description "Yellow drop probability";
                 }
 
@@ -161,6 +172,7 @@ module sonic-wred-profile {
                         range "0..100";
                     }
                     units percent;
+                    default 100;
                     description "Green drop probability";
                 }
 
@@ -169,6 +181,7 @@ module sonic-wred-profile {
                         range "0..100";
                     }
                     units percent;
+                    default 100;
                     description "Red drop probability";
                 }
             }

@@ -51,6 +51,7 @@ module sonic-scheduler {
                             description "Strict Scheduling";
                         }
                     }
+                    default WRR;
                     description "Scheduling algorithm type";
                 }
 
@@ -58,6 +59,7 @@ module sonic-scheduler {
                     type uint8 {
                         range "1..100";
                     }
+                    default 1;
                     description "Scheduling algorithm weight";
                 }
 
@@ -77,11 +79,13 @@ module sonic-scheduler {
                             description "Metering is based on bytes";
                         }
                     }
+                    default bytes;
                     description "meter type";
                 }
 
                 leaf cir {
                     type uint64;
+                    default 0;
                     description
                         "Committed information rate for the dual-rate token
                         bucket policer.This value represents the rate at which
@@ -91,7 +95,14 @@ module sonic-scheduler {
                 }
 
                 leaf pir {
+                    must "((current()/../cir) and (current()/../cir > 0))" {
+                        error-message "pir can't be configured without cir.";
+                    }
+                    must "(current() >= current()/../cir)" {
+                        error-message "pir must be greater than or equal to cir";
+                    }
                     type uint64;
+                    default 0;
                     description
                         "Peak information rate for the dual-rate token bucket
                         policer.This value represents the rate at which tokens
@@ -101,7 +112,13 @@ module sonic-scheduler {
                 }
 
                 leaf cbs {
+
+                    must "((current()/../cir) and (current()/../cir > 0))" {
+                        error-message "cbs can't be configured without cir.";
+                    }
+
                     type uint32;
+                    default 0;
                     description
                         "Committed burst size for the dual-rate token bucket
                         policer.This value represents the depth of the token
@@ -110,7 +127,16 @@ module sonic-scheduler {
                 }
 
                 leaf pbs {
+                    must "((current()/../pir) and (current()/../pir > 0))" {
+                       error-message "pbs can't be configured without pir.";
+                    }
+
+                    must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
+                        error-message "pbs must be greater than or equal to cbs";
+                    }
+
                     type uint32;
+                    default 0;
                     description
                         "Excess burst size for the dual-rate token bucket policer.
                         This value represents the depth of the secondary bucket.

@@ -114,4 +114,15 @@ module sonic-types {
             pattern "percentage|used|free|PERCENTAGE|USED|FREE";
         }
     }
+
+    container operation {
+        leaf operation {
+            type enumeration {
+                enum CREATE;
+                enum UPDATE;
+                enum DELETE;
+            }
+        }
+        description "Sonic data operation types required during validation";
+    }
 }
