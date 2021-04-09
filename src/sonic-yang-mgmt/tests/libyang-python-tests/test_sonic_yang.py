@@ -292,7 +292,7 @@ class Test_SonicYang(object):
         '''
         test_file = sonic_yang_data['test_file']
         syc = sonic_yang_data['syc']
-        # Currently only 2 YANG files are not directly related to config
+        # Currently only 3 YANG files are not directly related to config
         # which are: sonic-extension.yang, sonic-types.yang and sonic-bgp-common.yang. Hard coding
         # it right now.
         # If any more such helper yang files are added, we need to update here.

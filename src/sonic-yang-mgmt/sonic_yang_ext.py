@@ -83,7 +83,7 @@ class SonicYangExtMixin:
             # get module name
             moduleName = j['module']['@name']
             # Skip sonic-types and sonic-extensions modules
-            if moduleName.strip() == 'sonic-types' or moduleName.strip() == 'sonic-extension':
+            if moduleName.strip() == 'sonic-types':
                 continue
 
             # get top level container
