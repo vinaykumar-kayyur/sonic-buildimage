@@ -41,7 +41,7 @@ BUSTER_DEBS_PATH = $(TARGET_PATH)/debs/buster
 BUSTER_FILES_PATH = $(TARGET_PATH)/files/buster
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
-DPKG_ADMINDIR_PATH = /sonic/dpkg
+DPKG_ADMINDIR_PATH = /bld-tmp
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -84,7 +84,6 @@ configure :
 	@mkdir -p $(BUSTER_FILES_PATH)
 	@mkdir -p $(PYTHON_DEBS_PATH)
 	@mkdir -p $(PYTHON_WHEELS_PATH)
-	@mkdir -p $(DPKG_ADMINDIR_PATH)
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
 
@@ -849,6 +848,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(IFUPDOWN2) \
                 $(KDUMP_TOOLS) \
                 $(NTP) \
+                $(LIBPAM_RADIUS) \
+                $(LIBNSS_RADIUS) \
                 $(LIBPAM_TACPLUS) \
                 $(LIBNSS_TACPLUS) \
                 $(MONIT) \
