@@ -24,7 +24,8 @@
 
 try:
     import os
-    import sys, getopt
+    import sys
+    import getopt
     import logging
     import logging.config
     import logging.handlers
