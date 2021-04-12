@@ -1,4 +1,3 @@
-
 #############################################################################
 # Edgecore
 #
@@ -12,17 +11,18 @@ import os
 try:
     from sonic_platform_base.chassis_base import ChassisBase
     from .helper import APIHelper
+    from .event import SfpEvent
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-NUM_FAN_TRAY = 3
+NUM_FAN_TRAY = 5
 NUM_FAN = 2
 NUM_PSU = 2
-NUM_THERMAL = 3
-NUM_QSFP = 6
-PORT_START = 49
+NUM_THERMAL = 4
+NUM_QSFP = 54
+PORT_START = 1
 PORT_END = 54
-NUM_COMPONENT = 2
+NUM_COMPONENT = 4
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 PMON_REBOOT_CAUSE_PATH = "/usr/share/sonic/platform/api_files/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
@@ -83,12 +83,12 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
-
+    
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
     
-
+    
     def __is_host(self):
         return os.system(HOST_CHK_CMD) == 0
 
@@ -164,13 +164,22 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-      
+        
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         sw_reboot_cause = self._api_helper.read_txt_file(
             reboot_cause_path) or "Unknown"
 
 
         return ('REBOOT_CAUSE_NON_HARDWARE', sw_reboot_cause)
+
+    def get_change_event(self, timeout=0):
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+        
+        return status, sfp_event
 
     def get_sfp(self, index):
         """

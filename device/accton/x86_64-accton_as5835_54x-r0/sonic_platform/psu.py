@@ -22,23 +22,23 @@ PSU_NAME_LIST = ["PSU-1", "PSU-2"]
 PSU_NUM_FAN = [1, 1]
 PSU_HWMON_I2C_MAPPING = {
     0: {
-        "num": 10,
+        "num": 11,
         "addr": "58"
     },
     1: {
-        "num": 11,
-        "addr": "59"
+        "num": 12,
+        "addr": "5b"
     },
 }
 
 PSU_CPLD_I2C_MAPPING = {
     0: {
-        "num": 10,
+        "num": 11,
         "addr": "50"
     },
     1: {
-        "num": 11,
-        "addr": "51"
+        "num": 12,
+        "addr": "53"
     },
 }
 
@@ -155,7 +155,7 @@ class Psu(PsuBase):
             return float(val)/1000
         else:
             return 0
-                
+    
     def get_temperature_high_threshold(self):
         """
         Retrieves the high threshold temperature of PSU
@@ -178,7 +178,7 @@ class Psu(PsuBase):
             return float(vout_val)/ 1000
         else:
             return 0
-            
+
     def get_voltage_low_threshold(self):
         """
         Retrieves the low threshold PSU voltage output
@@ -192,7 +192,7 @@ class Psu(PsuBase):
             return float(vout_val)/ 1000
         else:
             return 0
-            
+
     def get_name(self):
         """
         Retrieves the name of the device
@@ -213,7 +213,6 @@ class Psu(PsuBase):
             return int(val, 10) == 1
         else:
             return 0
-            
 
     def get_status(self):
         """
