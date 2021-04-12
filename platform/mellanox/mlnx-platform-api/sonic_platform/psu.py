@@ -79,6 +79,9 @@ class Psu(PsuBase):
 
         self.psu_data = DEVICE_DATA[platform]['psus']
 
+        self.model = self._read_vpd_file(self.psu_vpd).get(PN_VPD_FIELD, "")
+        self.serial = self._read_vpd_file(self.psu_vpd).get(SN_VPD_FIELD, "")
+
         if not self.psu_data['hot_swappable']:
             self.always_present = True
             self.psu_voltage = None
@@ -138,8 +141,7 @@ class Psu(PsuBase):
                 return result
             with open(filename, 'r') as fileobj:
                 for line in fileobj.readlines():
-                    key = line.split(":")[0].strip()
-                    val = line.split(":")[1].strip()
+                    key, val = line.split(":")
                     result[key] = val
         except Exception as e:
             logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
@@ -166,9 +168,9 @@ class Psu(PsuBase):
         Retrieves the model number (or part number) of the device
 
         Returns:
-            string: Model/part number of devic
+            string: Model/part number of device
         """
-        return self._read_vpd_file(self.psu_vpd)[PN_VPD_FIELD]
+        return self.model
 
 
     def get_serial(self):
@@ -178,7 +180,7 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        return self._read_vpd_file(self.psu_vpd)[SN_VPD_FIELD]
+        return self.serial
 
 
     def get_powergood_status(self):
