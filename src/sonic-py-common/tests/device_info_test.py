@@ -55,14 +55,10 @@ EXPECTED_GET_MACHINE_INFO_RESULT = {
 class TestDeviceInfo(object):
     @pytest.fixture(scope="class", autouse=True)
     def sanitize_environment(self):
-        # Back up environment variables then clear them, in case an environment
-        # variable is set in the test environment (e.g., PLATFORM) which could
-        # modify the behavior of sonic-py-common
-        env_orig = os.environ.copy()
-        os.environ.clear()
-        yield
-        # Restore original environment variables
-        os.environ.update(env_orig)
+        # Clear environment variables, in case a variable is set in the test
+        # environment (e.g., PLATFORM) which could modify the behavior of sonic-py-common
+        with mock.patch.dict(os.environ, {}, clear=True):
+            yield
 
     def test_get_machine_info(self):
         with mock.patch("os.path.isfile") as mock_isfile:
