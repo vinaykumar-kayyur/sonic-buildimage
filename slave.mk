@@ -741,23 +741,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_pydebs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_PYTHON_DEBS)))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_whls=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_PYTHON_WHEELS)))\n" | awk '!a[$$0]++'))
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_PACKAGES)))\n" | awk '!a[$$0]++'))
-		$(eval export version=$($*.gz_VERSION))
-		$(eval export name=$($*.gz_CONTAINER_NAME))
-		$(eval export package_name=$($*.gz_PACKAGE_NAME))
-		$(eval export asic_service=$(shell [ -f files/build_templates/per_namespace/$(name).service.j2 ] && echo true || echo false))
-		$(eval export host_service=$(shell [ -f files/build_templates/$(name).service.j2 ] && echo true || echo false))
-		$(eval export depends=$($*.gz_PACKAGE_DEPENDS))
-		$(eval export requires=$($*.gz_SERVICE_REQUIRES))
-		$(eval export after=$($*.gz_SERVICE_AFTER))
-		$(eval export before=$($*.gz_SERVICE_BEFORE))
-		$(eval export dependent_of=$($*.gz_SERVICE_DEPENDENT_OF))
-		$(eval export privileged=$($*.gz_CONTAINER_PRIVILEGED))
-		$(eval export volumes=$($*.gz_CONTAINER_VOLUMES))
-		$(eval export tmpfs=$($*.gz_CONTAINER_TMPFS))
-		$(eval export config_cli_plugin=$($*.gz_CLI_CONFIG_PLUGIN))
-		$(eval export show_cli_plugin=$($*.gz_CLI_SHOW_PLUGIN))
-		j2 $($*.gz_PATH)/Dockerfile.j2 > $($*.gz_PATH)/Dockerfile
-		j2 --customize scripts/j2cli/json_filter.py files/build_templates/manifest.json.j2 > $($*.gz_PATH)/manifest.json
+		$(call generate_manifest,$*)
 		# Prepare docker build info
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
@@ -810,6 +794,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_IMAGE_PACKAGES)))\n" | awk '!a[$$0]++'))
 		./build_debug_docker_j2.sh $* $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs $(subst -,_,$(notdir $($*.gz_PATH)))_image_dbgs > $($*.gz_PATH)/Dockerfile-dbg.j2
 		j2 $($*.gz_PATH)/Dockerfile-dbg.j2 > $($*.gz_PATH)/Dockerfile-dbg
+		$(call generate_manifest,$*,-dbg)
 		# Prepare docker build info
 		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
@@ -821,6 +806,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
 			--build-arg http_proxy=$(HTTP_PROXY) \
 			--build-arg https_proxy=$(HTTPS_PROXY) \
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
+			--label com.azure.sonic.manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 			--file $($*.gz_PATH)/Dockerfile-dbg \
 			-t $*-dbg $($*.gz_PATH) $(LOG)
