@@ -29,7 +29,7 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
         mIoService
     )
 {
-    mMuxConfig.setTimeoutIpv4_msec(10);
+    mMuxConfig.setTimeoutIpv4_msec(1);
 }
 
 void LinkManagerStateMachineTest::suspendTxProbes()
@@ -481,6 +481,149 @@ TEST_F(LinkManagerStateMachineTest, MuxStandbyAsymetricLinkDrop)
     VALIDATE_STATE(Wait, Standby, Up);
     EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 4);
     EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+}
+
+TEST_F(LinkManagerStateMachineTest, ActiveStateToProberUnknownMuxUnknownLinkUp)
+{
+    setMuxActive();
+
+    postMuxEvent(mux_state::MuxState::Unknown);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    runIoService();
+    VALIDATE_STATE(Unknown, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    runIoService();
+    VALIDATE_STATE(Unknown, Wait, Up);
+
+    handleProbeMuxState("active", 3);
+    VALIDATE_STATE(Unknown, Active, Up);
+    EXPECT_EQ(mDbInterface.mGetMuxStateInvokeCount, 4);
+    EXPECT_EQ(mFakeMuxPort.mFakeLinkProber->mSuspendTxProbeCallCount, 1);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active);
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, StandbyStateToProberUnknownMuxUnknownLinkUp)
+{
+    setMuxStandby();
+
+    postMuxEvent(mux_state::MuxState::Unknown);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    runIoService();
+    VALIDATE_STATE(Unknown, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    runIoService();
+    VALIDATE_STATE(Unknown, Wait, Up);
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 0);
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+
+    // swss notification
+    handleMuxState("unknown");
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Active);
+    VALIDATE_STATE(Active, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("active");
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, ProberUnknownMuxUnknownLinkDown)
+{
+    setMuxActive();
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 0);
+    handleLinkState("down");
+
+    VALIDATE_STATE(Active, Wait, Down);
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+
+    // swss notification
+    handleMuxState("unknown");
+    VALIDATE_STATE(Active, Unknown, Down);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    VALIDATE_STATE(Unknown, Wait, Down);
+
+    handleProbeMuxState("unknown");
+    VALIDATE_STATE(Unknown, Wait, Down);
+}
+
+TEST_F(LinkManagerStateMachineTest, ProberWaitMuxUnknownLinkDown)
+{
+    setMuxStandby();
+
+    postMuxEvent(mux_state::MuxState::Unknown);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Standby, Wait, Up);
+
+    postLinkProberEvent(link_prober::LinkProberState::Unknown);
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    runIoService();
+    VALIDATE_STATE(Unknown, Wait, Up);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Unknown, Unknown, Up);
+
+    runIoService();
+    VALIDATE_STATE(Unknown, Wait, Up);
+
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 0);
+    handleProbeMuxState("standby", 3);
+    VALIDATE_STATE(Wait, Wait, Up);
+    EXPECT_EQ(mDbInterface.mSetMuxStateInvokeCount, 1);
+
+    // swss notification
+    handleMuxState("unknown");
+    VALIDATE_STATE(Wait, Wait, Up);
+
+    handleLinkState("down");
+    VALIDATE_STATE(Wait, Wait, Down);
+
+    // xcvrd notification
+    handleProbeMuxState("unknown", 3);
+    VALIDATE_STATE(Wait, Unknown, Down);
+
+    runIoService();
+    VALIDATE_STATE(Wait, Wait, Down);
+
 }
 
 } /* namespace test */
