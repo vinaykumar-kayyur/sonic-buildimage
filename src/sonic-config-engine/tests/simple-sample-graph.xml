@@ -173,6 +173,22 @@
           <Type>Tagged</Type>
           <Subnets>192.168.0.0/28</Subnets>
         </VlanInterface>
+        <VlanInterface>
+          <Name>ab2</Name>
+          <AttachTo>fortyGigE0/12</AttachTo>
+          <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
+          <VlanID>2000</VlanID>
+          <Tag>2000</Tag>
+          <Subnets>192.168.0.240/27</Subnets>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>ab3</Name>
+          <AttachTo>fortyGigE0/12</AttachTo>
+          <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
+          <VlanID>2001</VlanID>
+          <Tag>2001</Tag>
+          <Subnets>192.168.0.240/27</Subnets>
+        </VlanInterface>
       </VlanInterfaces>
       <IPInterfaces>
         <IPInterface>
@@ -232,7 +248,6 @@
     <DeviceInterfaceLinks>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
-        <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>1000</Bandwidth>
         <EndDevice>ARISTA01T1</EndDevice>
         <EndPort>et1</EndPort>
@@ -243,7 +258,6 @@
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
-        <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>10000</Bandwidth>
         <EndDevice>switch-t0</EndDevice>
         <EndPort>fortyGigE0/1</EndPort>
@@ -254,7 +268,6 @@
       </DeviceLinkBase>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
-        <AutoNegotiation>true</AutoNegotiation>
         <Bandwidth>10000</Bandwidth>
         <EndDevice>switch-t0</EndDevice>
         <EndPort>fortyGigE0/2</EndPort>
@@ -268,6 +281,7 @@
       <Device i:type="ToRRouter">
         <Hostname>switch-t0</Hostname>
         <HwSku>Force10-S6000</HwSku>
+        <ClusterName>AAA00PrdStr00</ClusterName>
       </Device>
       <Device i:type="LeafRouter">
         <Hostname>ARISTA01T1</Hostname>
@@ -289,12 +303,10 @@
   </PngDec>
   <DeviceInfos>
     <DeviceInfo>
-      <AutoNegotiation>true</AutoNegotiation>
       <EthernetInterfaces xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
         <a:EthernetInterface>
           <ElementType>DeviceInterface</ElementType>
           <AlternateSpeeds i:nil="true"/>
-          <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
           <InterfaceName>fortyGigE0/0</InterfaceName>
@@ -307,7 +319,6 @@
         <a:EthernetInterface>
           <ElementType>DeviceInterface</ElementType>
           <AlternateSpeeds i:nil="true"/>
-          <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
           <InterfaceName>Ethernet1</InterfaceName>
@@ -320,7 +331,6 @@
         <a:EthernetInterface>
           <ElementType>DeviceInterface</ElementType>
           <AlternateSpeeds i:nil="true"/>
-          <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
           <InterfaceName>Ethernet2</InterfaceName>
@@ -333,7 +343,6 @@
         <a:EthernetInterface>
           <ElementType>DeviceInterface</ElementType>
           <AlternateSpeeds i:nil="true"/>
-          <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
           <InterfaceName>fortyGigE0/4</InterfaceName>
@@ -346,7 +355,6 @@
         <a:EthernetInterface>
           <ElementType>DeviceInterface</ElementType>
           <AlternateSpeeds i:nil="true"/>
-          <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
           <InterfaceName>fortyGigE0/8</InterfaceName>
@@ -360,7 +368,6 @@
         <a:EthernetInterface>
           <ElementType>DeviceInterface</ElementType>
           <AlternateSpeeds i:nil="true"/>
-          <EnableAutoNegotiation>true</EnableAutoNegotiation>
           <EnableFlowControl>true</EnableFlowControl>
           <Index>1</Index>
           <InterfaceName>fortyGigE0/12</InterfaceName>
@@ -379,7 +386,6 @@
 	<a:ManagementInterface>
 	  <ElementType>DeviceInterface</ElementType>
 	  <AlternateSpeeds i:nil="true"/>
-	  <EnableAutoNegotiation>true</EnableAutoNegotiation>
 	  <Index>1</Index>
 	  <InterfaceName>Management1</InterfaceName>
 	  <MultiPortsInterface>false</MultiPortsInterface>

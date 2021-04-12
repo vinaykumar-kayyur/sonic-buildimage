@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y build-essential \
                                          gcc \
                                          git \
                                          inetutils-ping \
+                                         iproute2 \
+                                         isc-dhcp-client \
                                          libffi-dev \
                                          libssl-dev \
                                          libxml2 \
@@ -32,12 +34,13 @@ RUN apt-get update && apt-get install -y build-essential \
                                          vim
 
 RUN pip install cffi==1.10.0 \
-                "cryptography>=2.5" \
+                cryptography==3.3.2 \
                 "future>=0.16.0" \
                 gitpython \
                 ipaddr \
                 ipython==5.4.1 \
                 ixnetwork-restpy==1.0.52 \
+                ixnetwork-open-traffic-generator==0.0.70 \
                 jinja2==2.7.2 \
                 jsonpatch \
                 lxml \
@@ -97,6 +100,9 @@ RUN apt-get update                  \
     && apt-get update                                                                                              \
     && apt-get install -y docker-ce-cli
 
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
 # Install Microsoft Azure Kusto Library for Python
 RUN pip install azure-kusto-data==0.0.13 \
                 azure-kusto-ingest==0.0.13
@@ -154,17 +160,17 @@ RUN chmod go= /var/$user/.ssh -R
 RUN echo "$user ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers
 
 USER $user
-
-# Install Azure CLI
 WORKDIR /var/$user
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+# Add az symlink for backwards compatibility
+RUN mkdir bin && ln -s /usr/bin/az bin/az
 
 # Install Virtual Environments
 RUN python -m virtualenv --system-site-packages env-201811
-RUN env-201811/bin/pip install ansible==2.0.0.2
+RUN env-201811/bin/pip install cryptography==3.3.2 ansible==2.0.0.2
 
 RUN python3 -m venv env-python3
-RUN env-python3/bin/pip3 install azure-kusto-data azure-kusto-ingest defusedxml pytest
+RUN env-python3/bin/pip3 install cryptography==3.3.2 azure-kusto-data azure-kusto-ingest defusedxml pytest
 
 # NOTE: There is an ordering dependency for pycryptodome. Leaving this at
 #       the end until we figure that out.

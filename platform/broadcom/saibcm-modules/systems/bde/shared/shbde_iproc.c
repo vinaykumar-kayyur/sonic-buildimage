@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: $
@@ -290,13 +301,21 @@ shbde_iproc_paxb_init(shbde_hal_t *shbde, void *iproc_regs,
         }
     }
 
-    /* Configure MSIX interrupt page, only need for iproc ver == 0x10 */
-    if ((icfg->use_msi == 2) && (icfg->iproc_ver == 0x10)) {
+    /* Configure MSIX interrupt page, need for iproc ver 0x10 and 0x12 */
+    if ((icfg->use_msi == 2) &&
+        ((icfg->iproc_ver == 0x10)
+         || (icfg->iproc_ver == 0x12)
+         || (icfg->iproc_ver == 0x11))){
         unsigned int mask = (0x1 << PAXB_0_FUNC0_IMAP1_3_ADDR_SHIFT) - 1;
         reg = ROFFS(iproc_regs, PAXB_0_FUNC0_IMAP1_3);
         data = iproc32_read(shbde, reg);
         data &= mask;
-        data |= 0x410 << PAXB_0_FUNC0_IMAP1_3_ADDR_SHIFT;
+        if (icfg->iproc_ver == 0x11) {
+            data |= 0x400 << PAXB_0_FUNC0_IMAP1_3_ADDR_SHIFT;
+        } else {
+            data |= 0x410 << PAXB_0_FUNC0_IMAP1_3_ADDR_SHIFT;
+        }
+
         iproc32_write(shbde, reg, data);
     }
 
@@ -341,19 +360,23 @@ shbde_iproc_pci_read(shbde_hal_t *shbde, void *iproc_regs,
     subwin_base = (addr & ~0xfff);
 
     if((icfg->cmic_ver >= 4) &&
+       ((subwin_base == 0x10230000) || (subwin_base == 0x18012000))) {
+        /* Route the PAXB register through IMAP0_2 */
+        reg = ROFFS(iproc_regs, 0x2000 + (addr & 0xfff));
+    } else if((icfg->cmic_ver >= 4) &&
        ((subwin_base == 0x10231000) || (subwin_base == 0x18013000))) {
         /* Route the INTC block access through IMAP0_6 */
         reg = ROFFS(iproc_regs, 0x6000 + (addr & 0xfff));
     } else {
     /* Update base address for sub-window 7 */
         subwin_base |= 1; /* Valid bit */
-    reg = ROFFS(iproc_regs, BAR0_PAXB_IMAP0_7);
-    iproc32_write(shbde, reg, subwin_base);
+        reg = ROFFS(iproc_regs, BAR0_PAXB_IMAP0_7);
+        iproc32_write(shbde, reg, subwin_base);
         /* Read it to make sure the write actually goes through */
         subwin_base = iproc32_read(shbde, reg);
 
-    /* Read register through sub-window 7 */
-    reg = ROFFS(iproc_regs, 0x7000 + (addr & 0xfff));
+        /* Read register through sub-window 7 */
+        reg = ROFFS(iproc_regs, 0x7000 + (addr & 0xfff));
     }
 
     return iproc32_read(shbde, reg);
@@ -388,19 +411,23 @@ shbde_iproc_pci_write(shbde_hal_t *shbde, void *iproc_regs,
     subwin_base = (addr & ~0xfff);
 
     if((icfg->cmic_ver >= 4) &&
+       ((subwin_base == 0x10230000) || (subwin_base == 0x18012000))) {
+        /* Route the PAXB register through IMAP0_2 */
+        reg = ROFFS(iproc_regs, 0x2000 + (addr & 0xfff));
+    } else if((icfg->cmic_ver >= 4) &&
        ((subwin_base == 0x10231000) || (subwin_base == 0x18013000))) {
         /* Route the INTC block access through IMAP0_6 */
         reg = ROFFS(iproc_regs, 0x6000 + (addr & 0xfff));
     } else {
     /* Update base address for sub-window 7 */
         subwin_base |= 1; /* Valid bit */
-    reg = ROFFS(iproc_regs, BAR0_PAXB_IMAP0_7);
-    iproc32_write(shbde, reg, subwin_base);
+        reg = ROFFS(iproc_regs, BAR0_PAXB_IMAP0_7);
+        iproc32_write(shbde, reg, subwin_base);
         /* Read it to make sure the write actually goes through */
         subwin_base = iproc32_read(shbde, reg);
 
         /* Read register through sub-window 7 */
-    reg = ROFFS(iproc_regs, 0x7000 + (addr & 0xfff));
+        reg = ROFFS(iproc_regs, 0x7000 + (addr & 0xfff));
     }
 
     iproc32_write(shbde, reg, data);

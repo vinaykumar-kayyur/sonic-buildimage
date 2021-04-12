@@ -10,22 +10,21 @@
 
 try:
     import os
-    from sonic_platform_base.platform_base import PlatformBase
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.sfp import Sfp
     from sonic_platform.psu import Psu
-    from sonic_platform.fan import Fan
+    from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.module import Module
     from sonic_platform.thermal import Thermal
     from sonic_platform.component import Component
     from sonic_platform.watchdog import Watchdog
-    from eeprom import Eeprom
+    from sonic_platform.eeprom import Eeprom
     import time
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 MAX_S6100_MODULE = 4
-MAX_S6100_FAN = 4
+MAX_S6100_FANTRAY = 4
 MAX_S6100_PSU = 2
 MAX_S6100_THERMAL = 10
 MAX_S6100_COMPONENT = 3
@@ -55,9 +54,21 @@ class Chassis(ChassisBase):
     power_reason_dict[33] = ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_ASIC
     power_reason_dict[44] = ChassisBase.REBOOT_CAUSE_INSUFFICIENT_FAN_SPEED
 
+    status_led_reg_to_color = {
+        0x00: 'green', 0x01: 'blinking green', 0x02: 'amber',
+        0x04: 'amber', 0x08: 'blinking amber', 0x10: 'blinking amber'
+    }
+
+    color_to_status_led_reg = {
+        'green': 0x00, 'blinking green': 0x01,
+        'amber': 0x02, 'blinking amber': 0x08
+    }
+
     def __init__(self):
 
         ChassisBase.__init__(self)
+        self.status_led_reg = "sys_status_led"
+        self.supported_led_color = ['green', 'blinking green', 'amber', 'blinking amber']
         # Initialize EEPROM
         self._eeprom = Eeprom()
         for i in range(MAX_S6100_MODULE):
@@ -65,9 +76,10 @@ class Chassis(ChassisBase):
             self._module_list.append(module)
             self._sfp_list.extend(module._sfp_list)
 
-        for i in range(MAX_S6100_FAN):
-            fan = Fan(i)
-            self._fan_list.append(fan)
+        for i in range(MAX_S6100_FANTRAY):
+            fandrawer = FanDrawer(i)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
         for i in range(MAX_S6100_PSU):
             psu = Psu(i)
@@ -111,6 +123,23 @@ class Chassis(ChassisBase):
 
         rv = rv.rstrip('\r\n')
         rv = rv.lstrip(" ")
+        return rv
+
+    def _set_pmc_register(self, reg_name, value):
+        # On successful write, returns the length of value written on
+        # reg_name and on failure returns 'ERR'
+        rv = 'ERR'
+        mb_reg_file = self.MAILBOX_DIR + '/' + reg_name
+
+        if (not os.path.isfile(mb_reg_file)):
+            return rv
+
+        try:
+            with open(mb_reg_file, 'w') as fd:
+                rv = fd.write(str(value))
+        except IOError:
+            rv = 'ERR'
+
         return rv
 
     def _get_register(self, reg_file):
@@ -172,6 +201,23 @@ class Chassis(ChassisBase):
         """
         return True
 
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        Returns:
+            integer: The 1-based relative physical position in parent
+            device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether Chassis is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -181,16 +227,6 @@ class Chassis(ChassisBase):
             'XX:XX:XX:XX:XX:XX'
         """
         return self._eeprom.base_mac_addr()
-
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-
-        Returns:
-            A string containing the hardware serial number for this
-            chassis.
-        """
-        return self._eeprom.serial_number_str()
 
     def get_system_eeprom_info(self):
         """
@@ -335,3 +371,41 @@ class Chassis(ChassisBase):
                     break
 
         return True, ret_dict
+
+    def initizalize_system_led(self):
+        return True
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the system LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        if color not in self.supported_led_color:
+            return False
+
+        value = self.color_to_status_led_reg[color]
+        rv = self._set_pmc_register(self.status_led_reg, value)
+        if (rv != 'ERR'):
+            return True
+        else:
+            return False
+
+    def get_status_led(self):
+        """
+        Gets the state of the system LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be
+            vendor specified.
+        """
+        reg_val = self._get_pmc_register(self.status_led_reg)
+        if (reg_val != 'ERR'):
+            return self.status_led_reg_to_color.get(int(reg_val, 16), None)
+        else:
+            return None

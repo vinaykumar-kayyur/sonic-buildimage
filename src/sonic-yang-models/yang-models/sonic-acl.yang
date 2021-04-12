@@ -5,10 +5,6 @@ module sonic-acl {
 	namespace "http://github.com/Azure/sonic-acl";
 	prefix acl;
 
-	import ietf-yang-types {
-		prefix yang;
-	}
-
 	import ietf-inet-types {
 		prefix inet;
 	}
@@ -30,7 +26,6 @@ module sonic-acl {
 
 	import sonic-portchannel {
 		prefix lag;
-		revision-date 2019-07-01;
 	}
 
 	description "ACL YANG Module for SONiC OS";
@@ -48,10 +43,6 @@ module sonic-acl {
 			list ACL_RULE_LIST {
 
 				key "ACL_TABLE_NAME RULE_NAME";
-
-				ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)|([a-zA-Z0-9_-]+)$";
-
-				ext:key-regex-yang-to-configdb "<ACL_TABLE_NAME>|<RULE_NAME>";
 
 				leaf ACL_TABLE_NAME {
 					type leafref {
@@ -237,10 +228,6 @@ module sonic-acl {
 
 				key "ACL_TABLE_NAME";
 
-				ext:key-regex-configdb-to-yang "^([a-zA-Z0-9-_]+)$";
-
-				ext:key-regex-yang-to-configdb "<ACL_TABLE_NAME>";
-
 				leaf ACL_TABLE_NAME {
 					type string;
 				}
@@ -252,26 +239,39 @@ module sonic-acl {
 				}
 
 				leaf type {
+					mandatory true;
 					type stypes:acl_table_type;
 				}
 
 				leaf stage {
-					type enumeration {
-						enum INGRESS;
-						enum EGRESS;
+					type string {
+						pattern "ingress|egress|INGRESS|EGRESS";
 					}
+					default "INGRESS";
+				}
+
+				leaf-list services {
+					type string;
 				}
 
 				leaf-list ports {
-                    /* union of leafref is allowed in YANG 1.1 */
+					/* union of leafref is allowed in YANG 1.1 */
 					type union {
 						type leafref {
-							path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+							path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
 						}
 						type leafref {
-							path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name;
+							path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name;
+						}
+						type string {
+							pattern "";
 						}
 					}
+					/* Today in SONiC, we do not delete the list once
+					 * created, instead we set to empty list. Due to that
+					 * below default values are needed.
+					 */
+					default "";
 				}
 			}
 			/* end of ACL_TABLE_LIST */

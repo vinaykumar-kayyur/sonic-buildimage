@@ -207,8 +207,6 @@ class FanLed(Led):
             self._orange_led_path = os.path.join(Led.LED_PATH, "led_fan_orange")
             self._led_cap_path = os.path.join(Led.LED_PATH, "led_fan_capability")
 
-        self.set_status(Led.STATUS_LED_COLOR_GREEN)
-
     def get_green_led_path(self):
         return self._green_led_path
 
@@ -234,8 +232,6 @@ class PsuLed(Led):
             self._red_led_path = os.path.join(Led.LED_PATH, "led_psu_red")
             self._orange_led_path = os.path.join(Led.LED_PATH, "led_psu_orange")
             self._led_cap_path = os.path.join(Led.LED_PATH, "led_psu_capability")
-            
-        self.set_status(Led.STATUS_LED_COLOR_GREEN)
 
     def get_green_led_path(self):
         return self._green_led_path
@@ -286,9 +282,11 @@ class SharedLed(object):
     def update_status_led(self):
         target_color = Led.STATUS_LED_COLOR_GREEN
         for virtual_led in self._virtual_leds:
-            if SharedLed.LED_PRIORITY[virtual_led.get_led_color()] < SharedLed.LED_PRIORITY[target_color]:
-                target_color = virtual_led.get_led_color()
-
+            try:
+                if SharedLed.LED_PRIORITY[virtual_led.get_led_color()] < SharedLed.LED_PRIORITY[target_color]:
+                    target_color = virtual_led.get_led_color()
+            except KeyError:
+                return False
         return self._led.set_status(target_color)
 
     def get_status(self):
@@ -302,8 +300,13 @@ class ComponentFaultyIndicator(object):
         self._shared_led.add_virtual_leds(self)
 
     def set_status(self, color):
+        current_color = self._color
         self._color = color
-        return self._shared_led.update_status_led()
+        if self._shared_led.update_status_led():
+            return True
+        else:
+            self._color = current_color
+            return False
 
     def get_led_color(self):
         return self._color

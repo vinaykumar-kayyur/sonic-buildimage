@@ -20,6 +20,26 @@ _trap_push() {
 }
 _trap_push true
 
+read_conf_file() {
+    local conf_file=$1
+    while IFS='=' read -r var value || [ -n "$var" ]
+    do
+        # remove newline character
+        var=$(echo $var | tr -d '\r\n')
+        value=$(echo $value | tr -d '\r\n')
+        # remove comment string
+        var=${var%#*}
+        value=${value%#*}
+        # skip blank line
+        [ -z "$var" ] && continue
+        # remove double quote in the beginning
+        tmp_val=${value#\"}
+        # remove double quote in the end
+        value=${tmp_val%\"}
+        eval "$var=\"$value\""
+    done < "$conf_file"
+}
+
 # Main
 set -e
 cd $(dirname $0)
@@ -37,7 +57,7 @@ else
 fi
 
 if [ -r ./machine.conf ]; then
-. ./machine.conf
+    read_conf_file "./machine.conf"
 fi
 
 if [ -r ./onie-image.conf ]; then
@@ -54,9 +74,9 @@ fi
 
 # get running machine from conf file
 if [ -r /etc/machine.conf ]; then
-    . /etc/machine.conf
+    read_conf_file "/etc/machine.conf"
 elif [ -r /host/machine.conf ]; then
-    . /host/machine.conf
+    read_conf_file "/host/machine.conf"
 elif [ "$install_env" != "build" ]; then
     echo "cannot find machine.conf"
     exit 1
@@ -106,6 +126,11 @@ fi
 if [ "$install_env" != "build" ]; then
     onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
     blk_dev=$(echo $onie_dev | sed -e 's/[1-9][0-9]*$//' | sed -e 's/\([0-9]\)\(p\)/\1/')
+
+    # check if we have an nvme device
+    blk_suffix=
+    echo $blk_dev | grep -q nvme0 && blk_suffix="p"
+
     # Note: ONIE has no mount setting for / with device node, so below will be empty string
     cur_part=$(cat /proc/mounts | awk "{ if(\$2==\"/\") print \$1 }" | grep $blk_dev || true)
 
@@ -225,7 +250,7 @@ create_demo_gpt_partition()
     echo "Partition #$demo_part is available"
 
     # Create new partition
-    echo "Creating new $demo_volume_label partition ${blk_dev}$demo_part ..."
+    echo "Creating new $demo_volume_label partition ${blk_dev}${blk_suffix}$demo_part ..."
 
     if [ "$demo_type" = "DIAG" ] ; then
         # set the GPT 'system partition' attribute bit for the DIAG
@@ -424,6 +449,7 @@ image_dir="image-$image_version"
 if [ "$install_env" = "onie" ]; then
     eval $create_demo_partition $blk_dev
     demo_dev=$(echo $blk_dev | sed -e 's/\(mmcblk[0-9]\)/\1p/')$demo_part
+    echo $blk_dev | grep -q nvme0 && demo_dev=$(echo $blk_dev | sed -e 's/\(nvme[0-9]n[0-9]\)/\1p/')$demo_part
 
     # Make filesystem
     mkfs.ext4 -L $demo_volume_label $demo_dev
@@ -535,8 +561,18 @@ trap_push "rm $grub_cfg || true"
 
 [ -r ./platform.conf ] && . ./platform.conf
 
+# Check if the CPU vendor is 'Intel' and disable c-states if True
+CPUVENDOR="$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{print $3}')"
+echo "Switch CPU vendor is: $CPUVENDOR"
+if echo "$CPUVENDOR" | grep -i 'Intel' >/dev/null 2>&1; then
+    echo "Switch CPU cstates are: disabled"
+    CSTATES="intel_idle.max_cstate=0"
+else
+    CSTATES=""
+fi
+
 DEFAULT_GRUB_SERIAL_COMMAND="serial --port=${CONSOLE_PORT} --speed=${CONSOLE_SPEED} --word=8 --parity=no --stop=1"
-DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 quiet"
+DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 quiet $CSTATES"
 GRUB_SERIAL_COMMAND=${GRUB_SERIAL_COMMAND:-"$DEFAULT_GRUB_SERIAL_COMMAND"}
 GRUB_CMDLINE_LINUX=${GRUB_CMDLINE_LINUX:-"$DEFAULT_GRUB_CMDLINE_LINUX"}
 export GRUB_SERIAL_COMMAND
@@ -609,12 +645,13 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-4.19.0-9-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-4.19.0-12-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
+                systemd.unified_cgroup_hierarchy=0 \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-4.19.0-9-2-amd64
+        initrd  /$image_dir/boot/initrd.img-4.19.0-12-2-amd64
 }
 EOF
 

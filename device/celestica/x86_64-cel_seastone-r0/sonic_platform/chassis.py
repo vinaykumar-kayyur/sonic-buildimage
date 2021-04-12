@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -11,12 +9,14 @@
 try:
     import sys
     from sonic_platform_base.chassis_base import ChassisBase
-    from helper import APIHelper
+    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
+    from sonic_py_common import device_info
+    from .event import SfpEvent
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 NUM_FAN_TRAY = 5
-NUM_FAN = 2
 NUM_PSU = 2
 NUM_THERMAL = 5
 NUM_SFP = 32
@@ -27,6 +27,7 @@ REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
 GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
+STATUS_LED_PATH = "/sys/devices/platform/leds_dx010/leds/dx010:green:stat/brightness"
 
 
 class Chassis(ChassisBase):
@@ -39,17 +40,19 @@ class Chassis(ChassisBase):
         self.__initialize_eeprom()
         self.is_host = self._api_helper.is_host()
 
-        if not self.is_host:
-            self.__initialize_fan()
-            self.__initialize_psu()
-            self.__initialize_thermals()
-        else:
-            self.__initialize_components()
+        self.__initialize_fan()
+        self.__initialize_psu()
+        self.__initialize_thermals()
+        self.__initialize_components()
 
     def __initialize_sfp(self):
+        sfputil_helper = SfpUtilHelper()
+        port_config_file_path = device_info.get_path_to_port_config_file()
+        sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
+
         from sonic_platform.sfp import Sfp
         for index in range(0, NUM_SFP):
-            sfp = Sfp(index)
+            sfp = Sfp(index, sfputil_helper.logical[index])
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
@@ -60,16 +63,17 @@ class Chassis(ChassisBase):
             self._psu_list.append(psu)
 
     def __initialize_fan(self):
-        from sonic_platform.fan import Fan
-        for fant_index in range(0, NUM_FAN_TRAY):
-            for fan_index in range(0, NUM_FAN):
-                fan = Fan(fant_index, fan_index)
-                self._fan_list.append(fan)
+        from sonic_platform.fan_drawer import FanDrawer
+        for i in range(NUM_FAN_TRAY):
+            fandrawer = FanDrawer(i)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
+        airflow = self.__get_air_flow()
         for index in range(0, NUM_THERMAL):
-            thermal = Thermal(index)
+            thermal = Thermal(index, airflow)
             self._thermal_list.append(thermal)
 
     def __initialize_eeprom(self):
@@ -82,6 +86,13 @@ class Chassis(ChassisBase):
             component = Component(index)
             self._component_list.append(component)
 
+    def __get_air_flow(self):
+        air_flow_path = '/usr/share/sonic/device/{}/fan_airflow'.format(
+            self._api_helper.platform) \
+            if self.is_host else '/usr/share/sonic/platform/fan_airflow'
+        air_flow = self._api_helper.read_one_line_file(air_flow_path)
+        return air_flow or 'B2F'
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -90,14 +101,6 @@ class Chassis(ChassisBase):
             'XX:XX:XX:XX:XX:XX'
         """
         return self._eeprom.get_mac()
-
-    def get_serial_number(self):
-        """
-        Retrieves the hardware serial number for the chassis
-        Returns:
-            A string containing the hardware serial number for this chassis.
-        """
-        return self._eeprom.get_serial()
 
     def get_system_eeprom_info(self):
         """
@@ -151,6 +154,37 @@ class Chassis(ChassisBase):
 
         return prev_reboot_cause
 
+    def get_change_event(self, timeout=0):
+        """
+        Returns a nested dictionary containing all devices which have
+        experienced a change at chassis level
+        Args:
+            timeout: Timeout in milliseconds (optional). If timeout == 0,
+                this method will block until a change is detected.
+        Returns:
+            (bool, dict):
+                - True if call successful, False if not;
+                - A nested dictionary where key is a device type,
+                  value is a dictionary with key:value pairs in the format of
+                  {'device_id':'device_event'},
+                  where device_id is the device ID for this device and
+                        device_event,
+                             status='1' represents device inserted,
+                             status='0' represents device removed.
+                  Ex. {'fan':{'0':'0', '2':'1'}, 'sfp':{'11':'0'}}
+                      indicates that fan 0 has been removed, fan 2
+                      has been inserted and sfp 11 has been removed.
+        """
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+        if sfp_event:
+            return True, {'sfp': sfp_event}
+
+        return False, {'sfp': {}}
+
     ##############################################################
     ######################## SFP methods #########################
     ##############################################################
@@ -195,7 +229,7 @@ class Chassis(ChassisBase):
 
         try:
             # The index will start from 1
-            sfp = self._sfp_list[index-1]
+            sfp = self._sfp_list[index - 1]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (1-{})\n".format(
                              index, len(self._sfp_list)))
@@ -217,6 +251,10 @@ class Chassis(ChassisBase):
             self._watchdog = Watchdog()
 
         return self._watchdog
+
+    def get_thermal_manager(self):
+        from .thermal_manager import ThermalManager
+        return ThermalManager
 
     ##############################################################
     ###################### Device methods ########################
@@ -252,7 +290,7 @@ class Chassis(ChassisBase):
         Returns:
             string: Serial number of device
         """
-        return self.get_serial_number()
+        return self._eeprom.get_serial()
 
     def get_status(self):
         """
@@ -261,3 +299,54 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device. If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of entPhysicalContainedIn is '0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False
+
+    def set_status_led(self, color):
+        """
+        Sets the state of the PSU status LED
+        Args:
+            color: A string representing the color with which to set the PSU status LED
+                   Note: Only support green and off
+        Returns:
+            bool: True if status LED state is set successfully, False if not
+        """
+
+        set_status_str = {
+            self.STATUS_LED_COLOR_GREEN: '1',
+            self.STATUS_LED_COLOR_OFF: '0'
+        }.get(color, None)
+
+        if not set_status_str:
+            return False
+
+        return self._api_helper.write_txt_file(STATUS_LED_PATH, set_status_str)
+
+    def get_status_led(self):
+        """
+        Gets the state of the PSU status LED
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        status = self._api_helper.read_txt_file(STATUS_LED_PATH)
+        status_str = {
+            '255': self.STATUS_LED_COLOR_GREEN,
+            '0': self.STATUS_LED_COLOR_OFF
+        }.get(status, None)
+
+        return status_str

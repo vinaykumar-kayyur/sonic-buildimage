@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Celestica
 #
@@ -14,7 +12,7 @@ import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase
-    from helper import APIHelper
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -56,7 +54,7 @@ class Component(ComponentBase):
         # Retrieves the cpld register value
         cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
         p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         raw_data, err = p.communicate()
         if err is not '':
             return None
@@ -130,3 +128,61 @@ class Component(ComponentBase):
         #     install_command = "afulnx_64 %s /p /b /n /x /r" % image_path
 
         return self.__run_command(install_command)
+
+
+    ##############################################################
+    ###################### Device methods ########################
+    ##############################################################
+
+
+    def get_presence(self):
+        """
+        Retrieves the presence of the FAN
+        Returns:
+            bool: True if FAN is present, False if not
+        """
+        return True
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return 'N/A'
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        return 'N/A'
+
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
+
+    def get_position_in_parent(self):
+        """
+        Retrieves 1-based relative physical position in parent device.
+        If the agent cannot determine the parent-relative position
+        for some reason, or if the associated value of
+        entPhysicalContainedIn is'0', then the value '-1' is returned
+        Returns:
+            integer: The 1-based relative physical position in parent device
+            or -1 if cannot determine the position
+        """
+        return -1
+
+    def is_replaceable(self):
+        """
+        Indicate whether this device is replaceable.
+        Returns:
+            bool: True if it is replaceable.
+        """
+        return False

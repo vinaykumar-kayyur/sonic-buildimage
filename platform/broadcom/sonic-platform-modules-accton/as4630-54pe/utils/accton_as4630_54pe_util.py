@@ -29,13 +29,12 @@ command:
     set         : change board setting with fan|led|sfp
 """
 
-import os
 import commands
-import sys, getopt
+import getopt
+import sys
 import logging
 import re
 import time
-from collections import namedtuple
 
 PROJECT_NAME = 'as4630_54pe'
 version = '0.0.1'
@@ -53,7 +52,6 @@ hwmon_types = {'led': ['diag','fan','loc','psu1','psu2'],
                'fan2': ['fan'],
                'fan3': ['fan'],
                'fan4': ['fan'],
-               'fan5': ['fan'],
                'fan5': ['fan'],
               }
 hwmon_nodes = {'led': ['brightness'] ,
@@ -216,10 +214,12 @@ def log_os_system(cmd, show):
     return  status, output
 
 def driver_inserted():
-    ret, lsmod = log_os_system("lsmod| grep accton", 0)
+    ret, lsmod = log_os_system("ls /sys/module/*accton*", 0)
     logging.info('mods:'+lsmod)
-    if len(lsmod) ==0:
+    if ret :
         return False
+    else :
+        return True
 
 #'modprobe cpr_4011_4mxx',
 

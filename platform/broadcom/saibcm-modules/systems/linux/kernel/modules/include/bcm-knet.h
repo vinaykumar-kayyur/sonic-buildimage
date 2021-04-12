@@ -1,5 +1,10 @@
 /*
- * Copyright 2017 Broadcom
+ * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+ * 
+ * Permission is granted to use, copy, modify and/or distribute this
+ * software under either one of the licenses below.
+ * 
+ * License Option 1: GPL
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -12,6 +17,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * version 2 (GPLv2) along with this source code.
+ * 
+ * 
+ * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
+ * 
+ * This software is governed by the Broadcom Open Network Switch APIs license:
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
  */
 /*
  * $Id: bcm-knet.h,v 1.4 Broadcom SDK $
@@ -47,6 +58,8 @@ typedef struct {
     uint32 filter_user_data;
     uint16 dcb_type;
     int port;
+    uint64_t ts;
+    uint32 hwts;
 } knet_skb_cb_t;
 
 #define KNET_SKB_CB(_skb) ((knet_skb_cb_t *)_skb->cb)
@@ -59,19 +72,22 @@ typedef int
                     int chan, kcom_filter_t *filter);
 
 typedef int
-(*knet_hw_tstamp_enable_cb_f)(int dev_no, int port);
+(*knet_hw_tstamp_enable_cb_f)(int dev_no, int phys_port, int tx_type);
 
 typedef int
-(*knet_hw_tstamp_tx_time_get_cb_f)(int dev_no, int port, uint8_t *pkt, uint64_t *ts);
+(*knet_hw_tstamp_tx_time_get_cb_f)(int dev_no, int phys_port, uint8_t *pkt, uint64_t *ts);
 
 typedef int
-(*knet_hw_tstamp_tx_meta_get_cb_f)(int dev_no, struct sk_buff *skb, uint32_t **md);
+(*knet_hw_tstamp_tx_meta_get_cb_f)(int dev_no, int hwts, int hdrlen, struct sk_buff *skb, uint64_t *ts, uint32_t **md);
 
 typedef int
 (*knet_hw_tstamp_ptp_clock_index_cb_f)(int dev_no);
 
 typedef int
-(*knet_hw_tstamp_rx_time_upscale_cb_f)(int dev_no, uint64_t *ts);
+(*knet_hw_tstamp_rx_time_upscale_cb_f)(int dev_no, int phys_port, struct sk_buff *skb, uint32_t *meta, uint64_t *ts);
+
+typedef int
+(*knet_hw_tstamp_ioctl_cmd_cb_f)(kcom_msg_clock_cmd_t *kmsg, int len, int dcb_type);
 
 extern int
 bkn_rx_skb_cb_register(knet_skb_cb_f rx_cb);
@@ -127,6 +143,11 @@ bkn_hw_tstamp_rx_time_upscale_cb_register(knet_hw_tstamp_rx_time_upscale_cb_f hw
 extern int
 bkn_hw_tstamp_rx_time_upscale_cb_unregister(knet_hw_tstamp_rx_time_upscale_cb_f hw_tstamp_rx_time_upscale_cb);
 
+extern int
+bkn_hw_tstamp_ioctl_cmd_cb_register(knet_hw_tstamp_ioctl_cmd_cb_f hw_tstamp_ioctl_cmd_cb);
+
+extern int
+bkn_hw_tstamp_ioctl_cmd_cb_unregister(knet_hw_tstamp_ioctl_cmd_cb_f hw_tstamp_ioctl_cmd_cb);
 typedef struct {
     uint8 cmic_type;
     uint8 dcb_type;
@@ -153,6 +174,6 @@ bkn_netif_destroy_cb_register(knet_netif_cb_f netif_cb);
 extern int
 bkn_netif_destroy_cb_unregister(knet_netif_cb_f netif_cb);
 
-#endif /* __KERNEL__ */
+#endif
 
 #endif /* __LINUX_BCM_KNET_H__ */
