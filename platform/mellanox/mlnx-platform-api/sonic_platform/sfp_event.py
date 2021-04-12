@@ -24,13 +24,14 @@ SDK_SFP_STATE_ERR = 0x3
 SDK_SFP_STATE_DIS = 0x4
 
 # SFP status that will be handled by XCVRD 
-STATUS_PLUGIN = '1'
-STATUS_PLUGOUT = '0'
-STATUS_ERR_I2C_STUCK = '2'
-STATUS_ERR_BAD_EEPROM = '3'
-STATUS_ERR_UNSUPPORTED_CABLE = '4'
-STATUS_ERR_HIGH_TEMP = '5'
-STATUS_ERR_BAD_CABLE = '6'
+STATUS_PLUGIN = '1' # 00000001
+STATUS_PLUGOUT = '0' # 00000000
+# SFP error status always come with STATUS_PLUGIN, so the last bit is always 1
+STATUS_ERR_I2C_STUCK = '3'  # 00000011
+STATUS_ERR_BAD_EEPROM = '5' # 00000101
+STATUS_ERR_UNSUPPORTED_CABLE = '9' # 00001001
+STATUS_ERR_HIGH_TEMP = '17' # 00010001
+STATUS_ERR_BAD_CABLE = '33' # 00100001
 
 # SFP status used in this file only, will not expose to XCVRD
 # STATUS_ERROR will be mapped to different status according to the error code
