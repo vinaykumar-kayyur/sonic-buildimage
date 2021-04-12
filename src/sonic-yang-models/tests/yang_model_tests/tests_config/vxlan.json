@@ -71,7 +71,7 @@
             "sonic-vlan:VLAN": {
                 "VLAN_LIST": [
                     {
-                        "name": "Vlan100",
+                        "name": "Vlan100"
                     }
                 ]
             }
