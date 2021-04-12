@@ -135,6 +135,8 @@ void LinkProber::initialize()
     close(fileDescriptor);
 
     mStream.assign(mSocket);
+    initializeSendBuffer();
+
     startInitRecv();
 }
 
@@ -145,10 +147,9 @@ void LinkProber::initialize()
 //
 void LinkProber::startProbing()
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     mStream.cancel();
-    initializeSendBuffer();
     sendHeartbeat();
     startRecv();
     startTimer();
