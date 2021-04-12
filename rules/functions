@@ -168,9 +168,11 @@ trap "sudo umount $$mergedir && rm -rf $$mergedir $$upperdir $$workdir" EXIT
 endef
 
 
-###############################################################
+###############################################################################
 ## Manifest generation routine
-###
+###############################################################
+# call:
+#     generate_manifest some_docker.gz, version_suffix
 define generate_manifest
     $(eval export version=$($(1).gz_VERSION)$(2))
     $(eval export name=$($(1).gz_CONTAINER_NAME))
