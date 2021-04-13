@@ -31,9 +31,6 @@ import os
 import commands
 import sys, getopt
 import logging
-import re
-import time
-from collections import namedtuple
 
 DEBUG = False
 args = []
@@ -149,7 +146,7 @@ def system_install():
     global FORCE
 
     #setup driver dependency
-    status, output = exec_cmd("depmod -a ", 1)
+    exec_cmd("depmod -a ", 1)
     #install drivers
     for i in range(0,len(drivers)):
         status, output = exec_cmd("modprobe "+drivers[i], 1)
@@ -159,22 +156,22 @@ def system_install():
             return status
 
     #reload ethernet drivers for correct order
-    status, output = exec_cmd("rmmod ixgbe ", 1)
-    status, output = exec_cmd("rmmod igb ", 1)
-    status, output = exec_cmd("modprobe igb ", 1)
-    status, output = exec_cmd("modprobe ixgbe ", 1)
+    exec_cmd("rmmod ixgbe ", 1)
+    exec_cmd("rmmod igb ", 1)
+    exec_cmd("modprobe igb ", 1)
+    exec_cmd("modprobe ixgbe ", 1)
 
     #turn on module power
-    status, output = exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
-    status, output = exec_cmd("echo high > /sys/class/gpio/gpio21/direction ", 1)
+    exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
+    exec_cmd("echo high > /sys/class/gpio/gpio21/direction ", 1)
 
     #Reset fron-ports LED CPLD
-    status, output = exec_cmd("echo 33 > /sys/class/gpio/export ", 1)
+    exec_cmd("echo 33 > /sys/class/gpio/export ", 1)
     status, output = exec_cmd("cat /sys/class/gpio/gpio33/value", 1)
     if output != '1':
-        status, output = exec_cmd("echo out > /sys/class/gpio/gpio33/direction ", 1)
-        status, output = exec_cmd("echo 0 >/sys/class/gpio/gpio33/value", 1)
-        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio33/value", 1)
+        exec_cmd("echo out > /sys/class/gpio/gpio33/direction ", 1)
+        exec_cmd("echo 0 >/sys/class/gpio/gpio33/value", 1)
+        exec_cmd("echo 1 >/sys/class/gpio/gpio33/value", 1)
 
     #instantiate devices
     for i in range(0,len(instantiate)):

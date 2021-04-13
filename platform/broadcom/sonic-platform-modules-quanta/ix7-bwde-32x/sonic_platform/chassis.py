@@ -6,7 +6,6 @@
 #
 
 try:
-    import os
     import sys
     import time
     from sonic_platform_base.chassis_base import ChassisBase
@@ -48,7 +47,7 @@ class Chassis(ChassisBase):
                 self._fan_list.append(fan)
                 drawer_fan_list.append(fan)
             fan_drawer = FanDrawer(drawer_index, drawer_fan_list)
-            self._fan_drawer_list.append(fan_drawer)                
+            self._fan_drawer_list.append(fan_drawer)
 
         # Initialize thermal
         for index in range(1, self.__num_of_thermals + 1):

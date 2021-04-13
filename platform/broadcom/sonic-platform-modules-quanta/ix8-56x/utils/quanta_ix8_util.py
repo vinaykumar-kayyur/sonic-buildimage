@@ -31,9 +31,7 @@ import os
 import commands
 import sys, getopt
 import logging
-import re
 import time
-from collections import namedtuple
 
 DEBUG = False
 args = []
@@ -237,12 +235,12 @@ def system_install():
     global FORCE
 
     #remove default drivers to avoid modprobe order conflicts
-    status, output = exec_cmd("echo 'blacklist i2c-ismt' > /etc/modprobe.d/blacklist.conf", 1)
+    exec_cmd("echo 'blacklist i2c-ismt' > /etc/modprobe.d/blacklist.conf", 1)
     time.sleep(1)
-    status, output = exec_cmd("modprobe -r i2c-ismt ", 1)
-    status, output = exec_cmd("modprobe -r i2c-i801 ", 1)
+    exec_cmd("modprobe -r i2c-ismt ", 1)
+    exec_cmd("modprobe -r i2c-i801 ", 1)
     #setup driver dependency
-    status, output = exec_cmd("depmod -a ", 1)
+    exec_cmd("depmod -a ", 1)
     #install drivers
     for i in range(0,len(drivers)):
         status, output = exec_cmd("modprobe "+drivers[i], 1)
@@ -252,22 +250,22 @@ def system_install():
             return status
 
     #turn on module power
-    status, output = exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
-    status, output = exec_cmd("echo high > /sys/class/gpio/gpio21/direction ", 1)
+    exec_cmd("echo 21 > /sys/class/gpio/export ", 1)
+    exec_cmd("echo high > /sys/class/gpio/gpio21/direction ", 1)
 
     # qsfp reset gpio
     time.sleep(1)
     for qsfp_reset in [32, 36, 40, 44, 48, 52, 56, 60]:
-        status, output = exec_cmd("echo "+str(qsfp_reset)+" > /sys/class/gpio/export", 1)
-        status, output = exec_cmd("echo high > /sys/class/gpio/gpio"+str(qsfp_reset)+"/direction", 1)
+        exec_cmd("echo "+str(qsfp_reset)+" > /sys/class/gpio/export", 1)
+        exec_cmd("echo high > /sys/class/gpio/gpio"+str(qsfp_reset)+"/direction", 1)
 
     # Reset fron-ports LED CPLD
-    status, output = exec_cmd("echo 73 > /sys/class/gpio/export ", 1)
+    exec_cmd("echo 73 > /sys/class/gpio/export ", 1)
     status, output = exec_cmd("cat /sys/class/gpio/gpio73/value", 1)
     if output != '1':
-        status, output = exec_cmd("echo out > /sys/class/gpio/gpio73/direction ", 1)
-        status, output = exec_cmd("echo 0 >/sys/class/gpio/gpio73/value", 1)
-        status, output = exec_cmd("echo 1 >/sys/class/gpio/gpio73/value", 1)
+        exec_cmd("echo out > /sys/class/gpio/gpio73/direction ", 1)
+        exec_cmd("echo 0 >/sys/class/gpio/gpio73/value", 1)
+        exec_cmd("echo 1 >/sys/class/gpio/gpio73/value", 1)
 
     #instantiate devices
     for i in range(0,len(instantiate)):
@@ -289,8 +287,8 @@ def system_install():
 	      return status
 
     #Enable front-ports LED decoding
-    status, output = exec_cmd('echo 1 > /sys/class/cpld-led/CPLDLED-1/led_decode', 1)
-    status, output = exec_cmd('echo 1 > /sys/class/cpld-led/CPLDLED-2/led_decode', 1)
+    exec_cmd('echo 1 > /sys/class/cpld-led/CPLDLED-1/led_decode', 1)
+    exec_cmd('echo 1 > /sys/class/cpld-led/CPLDLED-2/led_decode', 1)
 
     return
 

@@ -214,4 +214,13 @@ class Fan(FanBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        return False
+        return True
+
+    def get_status_led(self):
+        """
+        Gets the state of the fan status LED
+
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        return None

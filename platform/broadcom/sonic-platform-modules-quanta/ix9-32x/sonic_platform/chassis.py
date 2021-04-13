@@ -6,10 +6,8 @@
 #
 
 try:
-    import os
     import sys
     import time
-    import syslog
     from sonic_platform_base.chassis_base import ChassisBase
     from sonic_platform.eeprom import Eeprom
     from sonic_platform.psu import Psu

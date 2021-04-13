@@ -28,7 +28,7 @@ class Fan(FanBase):
     """Platform-specific Fan class"""
 
     def __init__(self, index, is_psu_fan=False):
-        self.is_psu_fan = is_psu_fan        
+        self.is_psu_fan = is_psu_fan
         self.fan_index = index
         self.psu_fan_index_mapping = {
             1:39,
@@ -42,7 +42,7 @@ class Fan(FanBase):
             self.fan_presence_attr = "power{}_present".format(self.psu_index_mapping[index])
             self.fan_pwm_attr = "fan{}_pwm".format(self.psu_fan_index_mapping[index])
             self.fan_rpm_attr = "fan{}_input".format(self.psu_fan_index_mapping[index])
-            self.fan_direction_attr = "fan{}_direction".format(self.psu_fan_index_mapping[index])            
+            self.fan_direction_attr = "fan{}_direction".format(self.psu_fan_index_mapping[index])
         else:
             self.fan_presence_attr = "fan{}_present".format(FAN_INDEX_START+(index-1))
             self.fan_pwm_attr = "fan{}_pwm".format(FAN_INDEX_START+(index-1))
@@ -214,4 +214,13 @@ class Fan(FanBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        raise None
+        return True
+
+    def get_status_led(self):
+        """
+        Gets the state of the fan status LED
+
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        return None

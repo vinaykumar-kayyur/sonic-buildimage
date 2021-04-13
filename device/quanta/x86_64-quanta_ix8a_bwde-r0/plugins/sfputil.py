@@ -5,8 +5,6 @@
 
 try:
     import time
-    import string
-    from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -163,8 +161,6 @@ class SfpUtil(SfpUtilBase):
         except IOError as e:
             print("Error: unable to open file: %s" % str(e))
             return False
-
-        reg_value = int(reg_file.readline().rstrip())
 
         # LPMode is active high; set or clear the bit accordingly
         if lpmode is True:

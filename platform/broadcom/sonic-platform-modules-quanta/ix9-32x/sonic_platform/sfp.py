@@ -685,9 +685,7 @@ class Sfp(SfpBase):
         elif self.sfp_type == QSFP_TYPE:
             offset = 128
             vendor_rev_width = XCVR_HW_REV_WIDTH_QSFP
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_QSFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_QSFP
-            sfp_type = 'QSFP'
 
             sfpi_obj = sff8436InterfaceId()
             if sfpi_obj is None:
@@ -812,9 +810,7 @@ class Sfp(SfpBase):
         else:
             offset = 0
             vendor_rev_width = XCVR_HW_REV_WIDTH_SFP
-            cable_length_width = XCVR_CABLE_LENGTH_WIDTH_SFP
             interface_info_bulk_width = XCVR_INTFACE_BULK_WIDTH_SFP
-            sfp_type = 'SFP'
 
             sfpi_obj = sff8472InterfaceId()
             if sfpi_obj is None:
@@ -1399,19 +1395,19 @@ class Sfp(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             return None
             # page 11h
-            if self.dom_rx_tx_power_bias_supported:
-                offset = 512
-                dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_DD_CHANNL_TX_FAULT_STATUS_WIDTH)
-                if dom_channel_monitor_raw is not None:
-                    tx_fault_data = int(dom_channel_monitor_raw[0], 8)
-                    tx_fault_list.append(tx_fault_data & 0x01 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x02 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x04 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x08 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x10 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x20 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x40 != 0)
-                    tx_fault_list.append(tx_fault_data & 0x80 != 0)
+            #if self.dom_rx_tx_power_bias_supported:
+            #    offset = 512
+            #    dom_channel_monitor_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_CHANNL_TX_FAULT_STATUS_OFFSET), QSFP_DD_CHANNL_TX_FAULT_STATUS_WIDTH)
+            #    if dom_channel_monitor_raw is not None:
+            #        tx_fault_data = int(dom_channel_monitor_raw[0], 8)
+            #        tx_fault_list.append(tx_fault_data & 0x01 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x02 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x04 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x08 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x10 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x20 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x40 != 0)
+            #        tx_fault_list.append(tx_fault_data & 0x80 != 0)
 
         else:
             offset = 256
@@ -1703,7 +1699,7 @@ class Sfp(SfpBase):
                 if sfpd_obj is None:
                     return None
 
-                if dom_tx_bias_power_supported:
+                if self.dom_tx_bias_power_supported:
                     dom_tx_bias_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_TX_BIAS_OFFSET), QSFP_DD_TX_BIAS_WIDTH)
                     if dom_tx_bias_raw is not None:
                         dom_tx_bias_data = sfpd_obj.parse_dom_tx_bias(dom_tx_bias_raw, 0)
@@ -1850,24 +1846,24 @@ class Sfp(SfpBase):
         elif self.sfp_type == QSFP_DD_TYPE:
             return None
             # page 11
-            if self.dom_rx_tx_power_bias_supported:
-                offset = 512
-                sfpd_obj = qsfp_dd_Dom()
-                if sfpd_obj is None:
-                    return None
-
-                if self.dom_tx_power_supported:
-                    dom_tx_power_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_TX_POWER_OFFSET), QSFP_DD_TX_POWER_WIDTH)
-                    if dom_tx_power_raw is not None:
-                        dom_tx_power_data = sfpd_obj.parse_dom_tx_power(dom_tx_power_raw, 0)
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX1Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX2Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX3Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX4Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX5Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX6Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX7Power']['value']))
-                        tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX8Power']['value']))
+            #if self.dom_rx_tx_power_bias_supported:
+            #    offset = 512
+            #    sfpd_obj = qsfp_dd_Dom()
+            #    if sfpd_obj is None:
+            #        return None
+            #
+            #    if self.dom_tx_power_supported:
+            #        dom_tx_power_raw = self._read_eeprom_specific_bytes((offset + QSFP_DD_TX_POWER_OFFSET), QSFP_DD_TX_POWER_WIDTH)
+            #        if dom_tx_power_raw is not None:
+            #            dom_tx_power_data = sfpd_obj.parse_dom_tx_power(dom_tx_power_raw, 0)
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX1Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX2Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX3Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX4Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX5Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX6Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX7Power']['value']))
+            #            tx_power_list.append(self._convert_string_to_num(dom_tx_power_data['data']['TX8Power']['value']))
 
         else:
             offset = 256
@@ -1965,8 +1961,8 @@ class Sfp(SfpBase):
                         # Write to eeprom
                         sysfsfile_eeprom.seek(offset + SFP_STATUS_CONTROL_OFFSET)
                         sysfsfile_eeprom.write(buffer[0])
-                    except:
-                        #print("Error: unable to open file: %s" % str(e))
+                    except IOError as e:
+                        print("Error: unable to open file: %s" % str(e))
                         return False
                     finally:
                         if sysfsfile_eeprom:
