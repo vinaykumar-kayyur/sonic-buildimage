@@ -30,6 +30,7 @@ except ImportError as e:
 
 SYSLOG_IDENTIFIER = "eeprom.py"
 EEPROM_SYMLINK = "/var/run/hw-management/eeprom/vpd_info"
+CACHE_ROOT = "/var/cache/sonic/decode-syseeprom"
 CACHE_FILE = "/var/cache/sonic/decode-syseeprom/syseeprom_cache"
 
 
@@ -43,9 +44,11 @@ machine_info = get_machine_info()
 onie_platform = machine_info['onie_platform']
 if 'simx' in onie_platform:
     platform_path = os.path.join('/usr/share/sonic/device', onie_platform)
-    subprocess.check_call(['/usr/bin/xxd', '-r', '-p', 'syseeprom.hex', 'syseeprom.bin'], cwd=platform_path)
-    CACHE_FILE = os.path.join(platform_path, 'syseeprom.bin')
-
+    if not os.path.exists(platform_path):
+        platform_path = '/usr/share/sonic/platform'
+    if not os.path.exists(CACHE_ROOT):
+        os.makedirs(CACHE_ROOT)
+    subprocess.check_call(['/usr/bin/xxd', '-r', '-p', 'syseeprom.hex', CACHE_FILE], cwd=platform_path)
 
 class board(eeprom_tlvinfo.TlvInfoDecoder):
 
