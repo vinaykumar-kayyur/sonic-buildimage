@@ -41,7 +41,7 @@ BUSTER_DEBS_PATH = $(TARGET_PATH)/debs/buster
 BUSTER_FILES_PATH = $(TARGET_PATH)/files/buster
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
-DPKG_ADMINDIR_PATH = /bld-tmp
+DPKG_ADMINDIR_PATH = /sonic/dpkg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -84,6 +84,7 @@ configure :
 	@mkdir -p $(BUSTER_FILES_PATH)
 	@mkdir -p $(PYTHON_DEBS_PATH)
 	@mkdir -p $(PYTHON_WHEELS_PATH)
+	@mkdir -p $(DPKG_ADMINDIR_PATH)
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
 
