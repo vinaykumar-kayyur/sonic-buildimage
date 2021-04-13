@@ -18,7 +18,10 @@ stages:
 - stage: Build
   jobs:
   - job: Build
-    pool: sonicbld
+    pool:
+      vmImage: ubuntu-20.04
+    container:
+      image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster:latest
     timeoutInMinutes: 360
     steps:
     - template: ./template/cleanup.yml
