@@ -1,5 +1,4 @@
 import sys
-import json
 
 from collections import defaultdict
 from ipaddress import ip_interface
