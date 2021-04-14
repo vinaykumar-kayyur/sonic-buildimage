@@ -17,6 +17,7 @@ class TestJ2Files(TestCase):
         self.t0_mvrf_minigraph = os.path.join(self.test_dir, 't0-sample-graph-mvrf.xml')
         self.pc_minigraph = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
         self.mlnx_port_config = os.path.join(self.test_dir, 'sample-port-config-mlnx.ini')
         self.dell6100_t0_minigraph = os.path.join(self.test_dir, 'sample-dell-6100-t0-minigraph.xml')
@@ -133,7 +134,7 @@ class TestJ2Files(TestCase):
         self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
 
     def test_l2switch_template_dualtor(self):
-        argument = '-a \'{"is_dualtor": true}\' -k Mellanox-SN2700 --preset l2 -p ' + self.t0_port_config
+        argument = '-a \'{"is_dualtor": true}\' -k Arista-7050CX3-32S-D48C8 --preset l2 -p ' + self.t0_7050cx3_port_config
         output = self.run_script(argument)
         output_json = json.loads(output)
 
