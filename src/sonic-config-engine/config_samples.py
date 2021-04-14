@@ -48,35 +48,6 @@ def generate_empty_config(data):
         new_data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
     return new_data
 
-def port_is_uplink(port_info):
-    return len(port_info['lanes'].split(',')) == 4
-
-def port_is_downlink(port_info):
-    return len(port_info['lanes'].split(',')) == 2
-
-def get_uplinks_downlinks(port_table):
-    # sort the ports based on the first lane number
-    sorted_ports = sorted(port_table.items(), key=lambda x: int(x[1]['lanes'].split(',')[0]))
-    uplinks = []
-    downlinks = []
-    ports_iter = iter(sorted_ports)
-    for port_tuple in ports_iter:
-        # Iterate over ports two at a time so we can get
-        # used ports and the corresponding unused ports
-        port_a_name, port_a_info = port_tuple
-        port_b_name, port_b_info = next(ports_iter)
-        if port_is_uplink(port_a_info) and port_is_uplink(port_b_info) :
-            uplinks.append(port_a_name)
-            uplinks.append(port_b_name)
-        elif port_is_downlink(port_a_info) and port_is_downlink(port_b_info):
-            downlinks.append(port_a_name)
-            # don't use port_b in this case
-        # this shouldn't happen
-        else:
-            raise ValueError("Error parsing port_config.ini for dual ToR")
-    
-    return uplinks, downlinks
-
 def generate_global_dualtor_tables():
     data = defaultdict(lambda: defaultdict(dict))
     data['LOOPBACK_INTERFACE'] = {
@@ -109,6 +80,14 @@ def generate_l2_config(data):
     else:
         is_dualtor = False
 
+    if 'uplinks' in data:
+        uplinks = data['uplinks']
+        data.pop('uplinks')
+    
+    if 'downlinks' in data:
+        downlinks = data['downlinks']
+        data.pop('downlinks')
+
     # VLAN initial data
     data['VLAN'] = {'Vlan1000': {'vlanid': '1000'}}
     data['VLAN_MEMBER'] = {}
@@ -118,20 +97,15 @@ def generate_l2_config(data):
         data['DEVICE_METADATA']['localhost']['peer_switch'] = 'peer_switch_hostname'
         data.update(generate_global_dualtor_tables())
 
-        uplinks, downlinks = get_uplinks_downlinks(data['PORT'])
         server_ipv4_base = ip_interface(UNICODE_TYPE('192.168.0.1/32'))
         server_ipv6_base = ip_interface(UNICODE_TYPE('fc02:1000::1/128'))
-        server_offset = 0
+        server_offset = 1
     for port in natsorted(data['PORT']):
         if is_dualtor:
             # Ports in use should be admin up, unused ports default to admin down
             if port in downlinks or port in uplinks:
                 data['PORT'][port].setdefault('admin_status', 'up')
                 data['VLAN_MEMBER']['Vlan1000|{}'.format(port)] = {'tagging_mode': 'untagged'}
-
-            # 100G Uplinks (all 4 lanes assigned to one logical port) need FEC value set
-            if port in uplinks:
-                data['PORT'][port]['fec'] = 'rs'
 
             # Downlinks (connected to mux cable) need a MUX_CABLE entry
             # as well as the `mux_cable` field in the PORT table
