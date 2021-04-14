@@ -8,7 +8,14 @@ import sys, errno
 import os
 import time
 import select
-from python_sdk_api.sx_api import *
+if 'MLNX_PLATFORM_API_UNIT_TESTING' not in os.environ:
+    from python_sdk_api.sx_api import *
+else:
+    from mock import MagicMock
+    class MockSxFd(object):
+        fd = 99
+    new_sx_fd_t_p = MagicMock(return_value=MockSxFd())
+    new_sx_user_channel_t_p = MagicMock()
 from sonic_py_common.logger import Logger
 
 # SFP status from PMAOS register
