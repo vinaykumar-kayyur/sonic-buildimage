@@ -14,6 +14,10 @@ schedules:
 trigger: none
 pr: none
 
+parameters:
+- name: registry_server
+  default: soniccr2
+
 stages:
 - stage: Build
   jobs:
@@ -35,11 +39,11 @@ stages:
         docker load -i target/docker-sonic-mgmt.gz
         docker tag docker-sonic-mgmt $REGISTRY_SERVER/docker-sonic-mgmt:latest
       env:
-        REGISTRY_SERVER: soniccr2.azurecr.io
+        REGISTRY_SERVER: ${{ parameters.registry_server }}.azurecr.io
       displayName: Build docker-sonic-mgmt.gz
     - task: Docker@2
       inputs:
-        containerRegistry: soniccr2
+        containerRegistry: ${{ parameters.registry_server }}
         repository: docker-sonic-mgmt
         command: push
         tags: latest
