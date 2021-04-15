@@ -47,6 +47,7 @@ module sonic-routing-policy-sets {
 
                 leaf name {
                     type string;
+                    description "Prefix name";
                 }
 
                 leaf mode {
@@ -54,6 +55,7 @@ module sonic-routing-policy-sets {
                         enum IPv4;
                         enum IPv6;
                     }
+                    description "Address family of the prefix";
                 }
             }
         }
@@ -61,13 +63,14 @@ module sonic-routing-policy-sets {
         container PREFIX {
 
             list PREFIX_LIST { 
-                key "set_name sequence_number ip_prefix masklength_range";
+                key "name sequence_number ip_prefix masklength_range";
                 sonic-ext:custom-validation ValidateIpPrefixListCfg;
 
-                leaf set_name {
+                leaf name {
                     type leafref {
                         path "../../../PREFIX_SET/PREFIX_SET_LIST/name";
                     }
+                    description "Prefix name";
                 }   
 
                 leaf sequence_number {
@@ -120,6 +123,7 @@ module sonic-routing-policy-sets {
 
                 leaf name {
                     type string;
+                    description "Community name";
                 }
 
                 leaf set_type {
@@ -127,6 +131,7 @@ module sonic-routing-policy-sets {
                         enum STANDARD;
                         enum EXPANDED;
                     }
+                    description "Community type";
                 }
 
                 leaf match_action {
@@ -134,6 +139,7 @@ module sonic-routing-policy-sets {
                         enum ANY;
                         enum ALL;
                     }
+                    description "Match action any/all";
                 }
 
                 leaf action {
@@ -157,6 +163,7 @@ module sonic-routing-policy-sets {
 
                 leaf name {
                     type string;
+                    description "Extended community name";
                 }
 
                 leaf set_type {
@@ -164,6 +171,7 @@ module sonic-routing-policy-sets {
                         enum STANDARD;
                         enum EXPANDED;
                     }
+                    description "Extended community type";
                 }
 
                 leaf match_action {
@@ -171,6 +179,7 @@ module sonic-routing-policy-sets {
                         enum ANY;
                         enum ALL;
                     }
+                    description "Match action any/all";
                 }
 
                 leaf action {
@@ -194,6 +203,7 @@ module sonic-routing-policy-sets {
 
                 leaf name {
                     type string;
+                    description "AS PATH name";
                 }
 
                 leaf action {

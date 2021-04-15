@@ -70,7 +70,7 @@ module sonic-bgp-neighbor {
                             path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
                         }
                     }
-                    description "Neighbor description, it will be neighbor address or interface name";
+                    description "BGP Neighbor, it will be neighbor address or interface name";
                 }
 
                 leaf peer_group_name {
@@ -99,6 +99,7 @@ module sonic-bgp-neighbor {
                     type leafref {
                         path "../../../BGP_NEIGHBOR/BGP_NEIGHBOR_LIST[vrf_name=current()/../vrf_name]/neighbor";
                     }
+                    description "BGP Neighbor, it will be neighbor address or interface name";
                 }
                 uses sbc:sonic-bgp-cmn-af;
             }

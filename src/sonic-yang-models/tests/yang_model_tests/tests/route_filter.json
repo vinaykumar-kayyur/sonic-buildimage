@@ -2,6 +2,12 @@
     "ROUTE_REDISTRIBUTE_VALID": {
         "desc": "Configure route redistribution table."
     },
+    
+    "ROUTE_REDISTRIBUTE_INVALID_RT_MAP_CNT": {
+        "desc": "Referring 2 route map, when 1 allowed",
+        "eStrKey" : "LeafRef"
+    },
+
     "ROUTE_REDISTRIBUTE_NON_EXIST_RT_MAP": {
         "desc": "Referring non-existing ROUTE_MAP table",
         "eStrKey" : "LeafRef"
@@ -37,6 +43,10 @@
         "desc": "Configure route map table with invalid match neighbor.",
         "eStrKey": "InvalidValue",
         "eStr": ["match_neighbor"]
+    },
+    "ROUTE_MAP_MATCH_NEIGHBOR_MUST_COND_FALSE": {
+        "desc": "Configure route map table with more than one match neighbor in list.",
+        "eStr": "Too many match_neighbor elements"
     },
     "ROUTE_MAP_INVALID_MATCH_COMMUNITY": {
         "desc": "Configure route map table with non-existent match community set name.",
@@ -87,6 +97,11 @@
     },
     "BGP_AS_PATH_VALID": {
         "desc": "Configure BGP AS path table."
+    },
+    "ROUTE_MAP_MATCH_TAG_MUST_COND_FALSE": {
+        "desc": "Configure route map table with more than one match tag in list.",
+        "eStr": "Too many match_tag elements"
     }
+
 }
 

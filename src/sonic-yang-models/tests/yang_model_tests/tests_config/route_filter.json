@@ -156,7 +156,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map1",
+                    "name": "map1",
                     "stmt_name": 1,
                     "route_operation": "permit",
                     "match_interface": "Ethernet4",
@@ -189,8 +189,7 @@
                     "set_community_ref": "target_comm",
                     "set_ext_community_inline": ["soo:10:20", "rt:100:27"],
                     "set_ext_community_ref": "target_extcomm",
-                    "set_tag": 300,
-                    "set_weight": 2
+                    "set_tag": 300
                 }
                 ]
             }
@@ -201,7 +200,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map2",
+                    "name": "map2",
                     "stmt_name": 10000000
                 }
                 ]
@@ -213,7 +212,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map3",
+                    "name": "map3",
                     "stmt_name": 2,
                     "route_operation": "unknown"
                 }
@@ -226,7 +225,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map4",
+                    "name": "map4",
                     "stmt_name": 4,
                     "match_interface": "eth100"
                 }
@@ -239,7 +238,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map5",
+                    "name": "map5",
                     "stmt_name": 5,
                     "match_prefix_set": "test_pfx"
                 }
@@ -252,7 +251,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map6",
+                    "name": "map6",
                     "stmt_name": 6,
                     "match_src_vrf": "Vrf_red"
                 }
@@ -265,7 +264,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map7",
+                    "name": "map7",
                     "stmt_name": 7,
                     "match_neighbor": ["efgh"]
                 }
@@ -278,7 +277,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map8",
+                    "name": "map8",
                     "stmt_name": 8,
                     "match_neighbor": ["2.3.4.5", "10.1.1.1"]
                 }
@@ -291,7 +290,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map9",
+                    "name": "map9",
                     "stmt_name": 9,
                     "match_tag": [100, 200]
                 }
@@ -304,7 +303,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map10",
+                    "name": "map10",
                     "stmt_name": 10,
                     "match_community": "non_existent_comm"
                 }
@@ -317,7 +316,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map11",
+                    "name": "map11",
                     "stmt_name": 11,
                     "match_as_path": "as_path_1"
                 }
@@ -330,7 +329,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map12",
+                    "name": "map12",
                     "stmt_name": 12,
                     "call_route_map": "rmap002"
                 }
@@ -343,7 +342,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map13",
+                    "name": "map13",
                     "stmt_name": 13,
                     "set_metric_action": "METRIC_ADD_VALUE_0"
                 }
@@ -356,7 +355,7 @@
             "sonic-route-map:ROUTE_MAP": {
                 "ROUTE_MAP_LIST": [
                 {
-                    "route_map_name": "map14",
+                    "name": "map14",
                     "stmt_name": 14,
                     "set_ext_community_ref": "null"
                 }
@@ -377,14 +376,14 @@
             "sonic-routing-policy-sets:PREFIX": {
                 "PREFIX_LIST": [
                 {
-                    "set_name": "prefix1",
+                    "name": "prefix1",
                     "sequence_number": 10,
                     "ip_prefix": "20.0.0.0/8",
                     "masklength_range": "8..16",
                     "action": "permit"
                 },
                 {
-                    "set_name": "prefix1",
+                    "name": "prefix1",
                     "sequence_number": 11,
                     "ip_prefix": "21.0.0.0/8",
                     "masklength_range": "exact",
@@ -420,7 +419,7 @@
             "sonic-routing-policy-sets:PREFIX": {
                 "PREFIX_LIST": [
                 {
-                    "set_name": "prefix1",
+                    "name": "prefix1",
                     "sequence_number": "0",
                     "ip_prefix": "20.0.0.0/8",
                     "masklength_range": "8..16",
@@ -443,7 +442,7 @@
             "sonic-routing-policy-sets:PREFIX": {
                 "PREFIX_LIST": [
                 {
-                    "set_name": "prefix1",
+                    "name": "prefix1",
                     "sequence_number": 1,
                     "ip_prefix": "20.0.0.0.0/20",
                     "masklength_range": "8..16",

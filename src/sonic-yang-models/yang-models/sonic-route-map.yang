@@ -125,30 +125,36 @@ module sonic-route-map {
 
                 leaf name {
                     type string;
+                    description "Route map name";
                 }
             }
         }
 
         container ROUTE_MAP {
             list ROUTE_MAP_LIST {
-                key "route_map_name stmt_name";
+                key "name stmt_name";
 
-                leaf route_map_name {
+                leaf name {
                     type string;
+                    description "Route map name";
                 }
 
                 leaf stmt_name {
                     type uint16 {
                         range 1..65535;
                     }
+                    description "Statement name, this helps to provide multiple statements 
+                                 under a particular route-map";
                 }
 
                 leaf route_operation {
                     type srpolsets:routing-policy-action-type;
+                    description "permit/deny operation";
                 }
 
                 leaf match_interface{
                     type route-map-intf;
+                    description "Match based on interface";
                 }
 
                 leaf match_prefix_set{
@@ -169,12 +175,14 @@ module sonic-route-map {
 
                 leaf match_protocol {
                     type string;
+                    description "Match based on IP protocols bgp, connected, ospf, ospf3 and static";
                 }
 
                 leaf match_next_hop_set {
                     type leafref {
                         path "/srpolsets:sonic-routing-policy-sets/srpolsets:PREFIX_SET/srpolsets:PREFIX_SET_LIST/srpolsets:name";
                     }
+                    description "Match based on nexthop";
                 }
 
                 leaf match_src_vrf {
@@ -186,6 +194,7 @@ module sonic-route-map {
                             path "/svrf:sonic-vrf/svrf:VRF/svrf:VRF_LIST/svrf:vrf_name";
                         }
                     }
+                    description "Match based on source VRF";
                 }
 
                 leaf-list match_neighbor {
@@ -203,71 +212,76 @@ module sonic-route-map {
                     }
                     description
                         "IP addresse or interface for match operation.";
-                    must "(/cmn:operation/cmn:operation = 'DELETE') or (count(current()) = 1)" {
-                        error-app-tag "max-allowed-neighbor-reached";
-                        error-message "Only one neighbor or interface can be configured.";
-                    }
+                    max-elements 1;
                 }
 
                 leaf-list match_tag {
                     type uint32;
                     description
                         "Value of the tag match member";
-                    must "(/cmn:operation/cmn:operation = 'DELETE') or (count(current()) = 1)" {
-                        error-app-tag "max-allowed-tag-reached";
-                        error-message "Only one tag value can be configured.";
-                    }
+                    max-elements 1;
                 }
 
                 leaf match_med{
                     type uint32;
+                    description "Match based on MED value";
                 }
 
                 leaf match_origin{
                     type string;
+                    description "Match based on BGP route origin egp, igp and incomplete";
                 }
 
                 leaf match_local_pref{
                     type uint32;
+                    description "Match based on BGP local preference value";
                 }
 
                 leaf match_community{
                     type leafref {
                         path "/srpolsets:sonic-routing-policy-sets/srpolsets:COMMUNITY_SET/srpolsets:COMMUNITY_SET_LIST/srpolsets:name";
                     }
+                    description "Match based on community value";
                 }
 
                 leaf match_ext_community{
                     type leafref {
                         path "/srpolsets:sonic-routing-policy-sets/srpolsets:EXTENDED_COMMUNITY_SET/srpolsets:EXTENDED_COMMUNITY_SET_LIST/srpolsets:name";
                     }
+                    description "Match based on extended community value";
                 }
 
                 leaf match_as_path{
                     type leafref {
                         path "/srpolsets:sonic-routing-policy-sets/srpolsets:AS_PATH_SET/srpolsets:AS_PATH_SET_LIST/srpolsets:name";
                     }
+                    description "Match based on BGP AS-PATH";
                 }
                 leaf call_route_map {
                     type leafref {
                         path "../../../ROUTE_MAP_SET/ROUTE_MAP_SET_LIST/name";
                     }
+                    description "Invoke another route-map";
                 }
 
                 leaf set_origin{
                     type string;
+                    description "Set BGP origin value";
                 }
 
                 leaf set_local_pref{
                     type uint32;
+                    description "Set BGP local preference value";
                 }
 
                 leaf set_med {
                     type uint32;
+                    description "Set BGP MED value";
                 }
 
                 leaf set_metric_action {
                     type metric-action-type;
+                    description "Set metric action";
                 }
 
                 leaf set_metric {
@@ -277,50 +291,61 @@ module sonic-route-map {
                        "or ../set_metric_action = 'METRIC_SUBTRACT_VALUE'";
                      */
                     type uint32;
+                    description "Set metric value";
                 }
 
                 leaf set_next_hop{
                     type string;
+                    description "Set IP nexthop";
                 }
 
                 leaf set_ipv6_next_hop_global {
                     type string;
+                    description "Set IPv6 global next hop";
                 }
 
                 leaf set_ipv6_next_hop_prefer_global { 
                     type boolean;
+                    description "Set to prefer IPv6 nexthop global address";
                 }
 
                 leaf set_repeat_asn{
                     type uint8;
+                    description "Indicates number of times the ASN value to be repeated";
                 }
 
                 leaf set_asn{
                     type uint32;
+                    description "Set ASN value";
                 }
 
                 leaf set_asn_list{
                     type string;
+                    description "Set list of ASN values";
                 }
 
                 leaf-list set_community_inline {
                     type string;
+                    description "Set community string";
                 }
 
                 leaf set_community_ref {
                     type leafref {
                         path "/srpolsets:sonic-routing-policy-sets/srpolsets:COMMUNITY_SET/srpolsets:COMMUNITY_SET_LIST/srpolsets:name";
                     }
+                    description "Refer community from community list";
                 }
 
                 leaf-list set_ext_community_inline {
                     type string;
+                    description "Set extended community string";
                 }
 
                 leaf set_ext_community_ref {
                     type leafref {
                         path "/srpolsets:sonic-routing-policy-sets/srpolsets:EXTENDED_COMMUNITY_SET/srpolsets:EXTENDED_COMMUNITY_SET_LIST/srpolsets:name";
                     }
+                    description "Refer extended community from extended community list";
                 }
 
                 leaf set_tag {
@@ -328,11 +353,6 @@ module sonic-route-map {
                     description
                         "Value of the tag set member";
                 }
-
-                leaf set_weight{
-                    type uint32;
-                }
-
             }
         }
     }

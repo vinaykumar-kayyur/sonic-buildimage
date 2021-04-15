@@ -176,6 +176,7 @@ module sonic-bgp-common {
 
         leaf peer_type {
             type bgp_peer_type;
+            description "BGP peer type internal/external";
         }
 
         leaf ebgp_multihop {
@@ -391,20 +392,16 @@ module sonic-bgp-common {
             type leafref {
                 path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
             }
-            must "(/cmn:operation/cmn:operation = 'DELETE') or (count(current()) = 1)" {
-                error-app-tag "max-allowed-route-map-reached";
-                error-message "Only one route-map can be associated";
-            }
+            description "Route-map filter for incoming routes";
+            max-elements 1;
         }
 
         leaf-list route_map_out {
             type leafref {
                 path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
             }
-            must "(/cmn:operation/cmn:operation = 'DELETE') or (count(current()) = 1)" {
-                error-app-tag "max-allowed-route-map-reached";
-                error-message "Only one route-map can be associated";
-            }
+            description "Route-map filter for outgoing routes";
+            max-elements 1;
         }
 
         leaf soft_reconfiguration_in {
@@ -428,14 +425,17 @@ module sonic-bgp-common {
             type uint16 {
                 range 0..65535;
             }
+            description "Set default weight for routes from this neighbor";
         }
 
         leaf as_override {
             type boolean;
+            description "Override ASNs in outbound updates if aspath equals remote-as";
         }
 
         leaf send_community {
             type bgp_community_type;
+            description "Send Community attribute to this neighbor";
         }
 
         leaf tx_add_paths {

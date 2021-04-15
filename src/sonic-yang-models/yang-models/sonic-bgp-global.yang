@@ -55,28 +55,34 @@ module sonic-bgp-global {
                             path "/svrf:sonic-vrf/svrf:VRF/svrf:VRF_LIST/svrf:vrf_name";
                         }
                     }
+                    description "VRF name";
                 }
 
                 leaf router_id {
                     type inet:ipv4-address;
+                    description "Router identifier";
                 }
 
                 leaf local_asn {
                     type uint32 {
                         range "1..4294967295";
                     }
+                    description "local AS number";
                 }
 
                 leaf always_compare_med {
                     type boolean;
+                    description "Allow comparing MED from different neighbors";
                 }
 
                 leaf load_balance_mp_relax {
                     type boolean;
+                    description "Allow load sharing across routes that have different AS paths (but same length)";
                 }
 
                 leaf graceful_restart_enable {
                     type boolean;
+                    description "Enable graceful restart";
                 }
 
                 leaf gr_preserve_fw_state {
@@ -89,48 +95,59 @@ module sonic-bgp-global {
                     type uint16 {
                         range "1..3600";
                     }
+                    description "Set the time to wait to delete stale routes before a BGP open message is received";
                 }
 
                 leaf gr_stale_routes_time {
                     type uint16 {
                         range "1..3600";
                     }
+                    description "Set the max time to hold onto restarting peer's stale paths";
                 }
 
                 leaf external_compare_router_id {
                     type boolean;
+                    description "Compare router-id for identical EBGP paths";
                 }
 
                 leaf ignore_as_path_length {
                     type boolean;
+                    description "Ignore as-path length in selecting a route";
                 }
 
                 leaf log_nbr_state_changes {
                     type boolean;
+                    description "Log neighbor up/down and reset reason";
                 }
 
                 leaf rr_cluster_id {
                     type string;
+                    description "Route-Reflector Cluster-id";
                 }
 
                 leaf rr_allow_out_policy {
                     type boolean;
+                    description "Allow modifications made by out route-map";
                 }
 
                 leaf disable_ebgp_connected_rt_check {
                     type boolean;
+                    description "Disable checking if nexthop is connected on ebgp sessions";
                 }
 
                 leaf fast_external_failover {
                     type boolean;
+                    description "Immediately reset session if a link to a directly connected external peer goes down";
                 }
 
                 leaf network_import_check {
                     type boolean;
+                    description "Check BGP network route exists in IGP";
                 }
 
                 leaf graceful_shutdown {
                     type boolean;
+                    description "Enable graceful shutdown";
                 }
 
                 leaf rr_clnt_to_clnt_reflection {
@@ -319,22 +336,28 @@ module sonic-bgp-global {
                     type leafref {
                         path "../../../BGP_GLOBALS/BGP_GLOBALS_LIST/vrf_name";
                     }
+                    description "Vrf name";
                 }
 
                 leaf afi_safi {
                     type string;
+                    description "Address family name and subsequent address family name";
                 }
 
                 leaf max_ebgp_paths {
                     type uint16 {
                         range "1..256";
                     }
+                    description "Maximum eBGP paths";
+                    default 1;
                 }
 
                 leaf max_ibgp_paths {
                     type uint16 {
                         range "1..256";
                     }
+                    description "Maximum iBGP paths";
+                    default 1;
                 }
 
                 leaf import_vrf {
@@ -349,36 +372,42 @@ module sonic-bgp-global {
                     must "current() != current()/../vrf_name" {
                         error-message "Import VRF should be different than self!";
                     }
+                    description "Import routes from particular VRF";
                 }
 
                 leaf import_vrf_route_map {
                     type leafref {
                         path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
                     }
+                    description "Import routes from VRF with route filter";
                 }
 
                 leaf route_download_filter {
                     type leafref {
                         path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
                     }
+                    description "Route download filter";
                 }
 
                 leaf ebgp_route_distance {
                     type uint8 {
                         range "1..255";
                     }
+                    description "Distance for routes external to the AS";
                 }
 
                 leaf ibgp_route_distance {
                     type uint8 {
                         range "1..255";
                     }
+                    description "Distance for routes internal to the AS";
                 }
 
                 leaf local_route_distance {
                     type uint8 {
                         range "1..255";
                     }
+                    description "Distance for local routes";
                 }
 
                 leaf ibgp_equal_cluster_length {
@@ -390,6 +419,7 @@ module sonic-bgp-global {
                 leaf route_flap_dampen {
                     must "current()/../afi_safi = 'ipv4_unicast'" { error-message "Route flap dampening is supported only for IPv4 address family!"; }
                     type boolean;
+                    description "Enable route-flap dampening";
                 }
 
                 leaf route_flap_dampen_half_life {
@@ -397,6 +427,7 @@ module sonic-bgp-global {
                     type uint8 {
                         range "1..45";
                     }
+                    description "Half-life time for the penalty";
                 }
 
                 leaf route_flap_dampen_reuse_threshold {
@@ -404,6 +435,7 @@ module sonic-bgp-global {
                     type uint16 {
                         range "1..20000";
                     }
+                    description "Value to start reusing a route";
                 }
 
                 leaf route_flap_dampen_suppress_threshold {
@@ -411,6 +443,7 @@ module sonic-bgp-global {
                     type uint16 {
                         range "1..20000";
                     }
+                    description "Value to start suppressing a route";
                 }
 
                 leaf route_flap_dampen_max_suppress {
@@ -418,6 +451,7 @@ module sonic-bgp-global {
                     type uint8 {
                         range "1..255";
                     }
+                    description "Maximum duration to suppress a stable route";
                 }
             }
         }
@@ -430,28 +464,34 @@ module sonic-bgp-global {
                     type leafref {
                         path "../../../BGP_GLOBALS/BGP_GLOBALS_LIST/vrf_name";
                     }
+                    description "VRF name";
                 }
 
                 leaf afi_safi {
                     type string;
+                    description "Address family name and subsequent address family name";
                 }
 
                 leaf ip_prefix {
                     type inet:ip-prefix;
+                    description "Aggregate address";
                 }
 
                 leaf as_set {
                     type boolean;
+                    description "Generate AS set path information";
                 }
 
                 leaf summary_only {
                     type boolean;
+                    description "Filter more specific routes from updates";
                 }
 
                 leaf policy {
                     type leafref {
                         path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
                     }
+                    description "Apply route map to aggregate network";
                 }
             }
         }
@@ -464,25 +504,30 @@ module sonic-bgp-global {
                     type leafref {
                         path "../../../BGP_GLOBALS/BGP_GLOBALS_LIST/vrf_name";
                     }
+                    description "VRF name";
                 }
 
                 leaf afi_safi {
                     type string;
+                    description "Address family name and subsequent address family name";
                 }
 
                 leaf ip_prefix {
                     type inet:ip-prefix;
+                    description "Network address";
                 }
 
                 leaf policy {
                     type leafref {
                         path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
                     }
+                    description "Route-map to modify the attributes";
                 }
 
                 leaf backdoor {
                     type boolean;
                     sonic-ext:custom-validation ValidateAfisafiForBackdoor;
+                    description "Indicates the backdoor route";
                 }
             }
         }

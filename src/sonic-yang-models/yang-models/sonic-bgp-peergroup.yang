@@ -64,6 +64,7 @@ module sonic-bgp-peergroup {
                     type leafref {
                         path "../../../BGP_PEER_GROUP/BGP_PEER_GROUP_LIST[vrf_name=current()/../vrf_name]/peer_group_name";
                     }
+                    description "Peer group name";
                 }
 
                 uses sbc:sonic-bgp-cmn-af;
@@ -78,10 +79,12 @@ module sonic-bgp-peergroup {
                     type leafref {
                         path "/sbgpg:sonic-bgp-global/sbgpg:BGP_GLOBALS/sbgpg:BGP_GLOBALS_LIST/sbgpg:vrf_name";
                     }
+                    description "Network-instance/VRF name";
                 }
 
                 leaf ip_prefix {
                     type inet:ip-prefix;
+                    description "Configure BGP dynamic neighbors listen range";
                 }
 
                 leaf peer_group {
