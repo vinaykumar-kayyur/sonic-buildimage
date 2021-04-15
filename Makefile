@@ -7,11 +7,11 @@ NOSTRETCH ?= 0
 	@echo "+++ --- Making $@ --- +++"
 ifeq ($(NOJESSIE), 0)
 	EXTRA_DOCKER_TARGETS=$(notdir $@) make -f Makefile.work jessie
-endif
-ifeq ($(NOSTRETCH), 0)
+else ifeq ($(NOSTRETCH), 0)
 	EXTRA_DOCKER_TARGETS=$(notdir $@) BLDENV=stretch make -f Makefile.work stretch
-endif
+else
 	BLDENV=buster make -f Makefile.work $@
+endif
 
 jessie:
 	@echo "+++ Making $@ +++"
@@ -33,11 +33,11 @@ clean configure reset showtag sonic-slave-build sonic-slave-bash :
 	@echo "+++ Making $@ +++"
 ifeq ($(NOJESSIE), 0)
 	make -f Makefile.work $@
-endif
-ifeq ($(NOSTRETCH), 0)
+else ifeq ($(NOSTRETCH), 0)
 	BLDENV=stretch make -f Makefile.work $@
-endif
+else
 	BLDENV=buster make -f Makefile.work $@
+endif
 
 # Freeze the versions, see more detail options: scripts/versions_manager.py freeze -h
 freeze:
