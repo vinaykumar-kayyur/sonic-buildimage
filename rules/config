@@ -141,7 +141,7 @@ INCLUDE_NAT = y
 
 # TELEMETRY_WRITABLE - Enable write/config operations via the gNMI interface.
 # Uncomment to enable:
-# TELEMETRY_WRITABLE = y
+TELEMETRY_WRITABLE = y
 # INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES = n
