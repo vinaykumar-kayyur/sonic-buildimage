@@ -28,6 +28,10 @@ function startplatform() {
         debug "Firmware update procedure ended"
     fi
 
+    PLATFORM_DIR=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+    F="/usr/share/sonic/device/$PLATFORM_DIR/scripts/syncd.sh"
+    [ -e $F ] && source $F start $DEV
+
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         if [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh start
