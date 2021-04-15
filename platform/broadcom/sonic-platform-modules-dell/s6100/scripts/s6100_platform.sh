@@ -37,7 +37,6 @@ remove_python_api_package() {
 if [[ "$1" == "init" ]]; then
     modprobe i2c-dev
     modprobe i2c-mux-pca954x force_deselect_on_exit=1
-    modprobe dell_ich
     modprobe dell_s6100_iom_cpld
     modprobe dell_s6100_lpc
     track_reboot_reason
@@ -64,7 +63,6 @@ elif [[ "$1" == "deinit" ]]; then
     modprobe -r dell_s6100_iom_cpld
     modprobe -r i2c-mux-pca954x
     modprobe -r i2c-dev
-    modprobe -r dell_ich
     remove_python_api_package
 else
      echo "s6100_platform : Invalid option !"
