@@ -70,10 +70,10 @@ module sonic-port{
 						pattern "on|off";
 					}
 				}
-				
+
 				leaf-list adv_speeds {
 					description "Port advertised speeds, valid value could be a list of interger or all";
-
+					
 					type union {
 						type uint32 {
 							range 1..400000;
@@ -83,6 +83,8 @@ module sonic-port{
 						}
 					}
 				}
+
+				must "(count(adv_speeds[text()='all']) = 0) or (count(adv_speeds) = 1)";
 
 				leaf interface_type {
 					description "Port interface type";
@@ -101,6 +103,8 @@ module sonic-port{
 					}
 				}
 
+				must "(count(adv_interface_types[text()='all']) = 0) or (count(adv_interface_types) = 1)";
+					
 				leaf mtu {
 					type uint16 {
 						range 1..9216;
