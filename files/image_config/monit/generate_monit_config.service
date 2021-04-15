@@ -1,0 +1,12 @@
+[Unit]
+Description=Generate Monit configuration file from template
+Requires=updategraph.service
+After=updategraph.service
+Before=monit.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/generate_monit_config.sh
+
+[Install]
+WantedBy=multi-user.target
