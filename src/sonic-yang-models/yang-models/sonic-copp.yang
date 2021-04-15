@@ -4,6 +4,10 @@ module sonic-copp {
 
 	namespace "http://github.com/Azure/sonic-copp";
 	prefix copp;
+    
+    import sonic-types {
+		prefix stypes;
+	}
 
 	description "CoPP YANG Module for SONiC OS";
 
@@ -19,72 +23,55 @@ module sonic-copp {
 
 				leaf name {
 					type string;
-					description
-						"Control plane policing group name";
+					description "Control plane policing group name";
 				}
 
 				leaf queue {
-					type uint8 {
-						range "0..47" {
-							error-message "Invalid value passed for queue";
-						}
-					}
-					description
-						"CPU queue id";
+					type uint32;
+                    default 0;
+					description "CPU Rx queue id";
 				}
 
 				leaf trap_priority {
-					type uint16 {
-						range "0..1023" {
-							error-message "Invalid value passed for trap_priority";
-						}
-					}
-					description
-						"Trap priority";
+					type uint32;
+                    default 0;
+					description "Trap priority";
 				}
 
 				leaf trap_action {
-					type string {
-						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
-							error-message "Invalid value passed for trap_action";
-						}
-					}
-					description
-						"Trap action";
+                    mandatory true;
+                    type stypes:copp_packet_action;
+					description "Trap action";
 				}
 				
 				leaf meter_type {
-					type string {
-						pattern "(packets)|(bytes)" {
-							error-message "Invalid value passed for meter_type";
-						}
-					}
-					description
-						"Policer meter type";
+                    mandatory true;
+                    type stypes:meter_type;
+					description "Policer meter type";
 				}
 				
 				leaf mode {
-					type string {
-						pattern "(sr_tcm)|(tr_tcm)|(storm)" {
-							error-message "Invalid value passed for mode";
-						}
-					}
-					description
-						"Policer mode";
+                    mandatory true;
+                    type enumeration {
+                        enum sr_tcm;
+                        enum tr_tcm;
+                        enum storm;
+                    }
+					description "Policer mode";
 				}
 				
 				leaf color {
-					type string {
-						pattern "(aware)|(blind)" {
-							error-message "Invalid value passed for color";
-						}
-					}
-					description
-						"Policer color mode";
+                    type enumeration {
+                        enum blind;
+                        enum color;
+                    }
+                    default "color";
+					description "Policer color source";
 				}
 
 				leaf cir {
 					type uint64;
+                    default 0;
 					description
 						"Committed information rate for the dual-rate token
 						bucket policer.  This value represents the rate at which 
@@ -92,7 +79,14 @@ module sonic-copp {
 				}
 
 				leaf cbs {
+                    must "((current()/../cir) and (current()/../cir > 0))" {
+						error-message "cbs can't be configured without cir.";
+					}
+					must "(current() >= current()/../cir)" {
+						error-message "cbs must be greater than or equal to cir";
+					}
 					type uint64;
+                    default 0;
 					description
 						"Committed burst size for the dual-rate token bucket
 						policer.  This value represents the depth of the token
@@ -107,65 +101,51 @@ module sonic-copp {
 				}
 
 				leaf pir {
-					type uint64;
-					description
-						"Peak information rate for the dual-rate token bucket
-						policer.  This value represents the rate at which tokens
-						are added to the secondary bucket.";
-
+                    when "current()/../mode = 'tr_tcm'";
 					must "((current()/../cir) and (current()/../cir > 0))" {
 						error-message "pir can't be configured without cir.";
 					}
 					must "(current() >= current()/../cir)" {
 						error-message "pir must be greater than or equal to cir";
 					}
+					type uint64;
+                    default 0;
+					description
+						"Peak information rate for the dual-rate token bucket
+						policer.  This value represents the rate at which tokens
+						are added to the secondary bucket.";
 				}
 
 				leaf pbs {
-					type uint64;
-					description
-						"Excess burst size for the dual-rate token bucket policer.
-						This value represents the depth of the secondary bucket.";
-
 					must "((current()/../pir) and (current()/../pir > 0))" {
 						error-message "pbs can't be configured without pir.";
-					}
-					must "(current() >= current()/../pir)" {
-						error-message "pbs must be greater than or equal to pir";
 					}
 					must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
 						error-message "pbs must be greater than or equal to cbs";
 					}
+					type uint64;
+                    default 0;
+					description
+						"Excess burst size for the dual-rate token bucket policer.
+						This value represents the depth of the secondary bucket.";
 				}
 				
 				leaf green_action {
-					type string {
-						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
-							error-message "Invalid value passed for green_action";
-						}
-					}
-					description
-						"Green action";
+                    type stypes:copp_packet_action;
+                    default "forward";
+					description "Green action";
 				}
 				
 				leaf yellow_action {
-					type string {
-						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
-							error-message "Invalid value passed for yellow_action";
-						}
-					}
-					description
-						"Yellow action";
+                    type stypes:copp_packet_action;
+                    default "forward";
+					description "Yellow action";
 				}
 
 				leaf red_action {
-					type string {
-						pattern "(drop)|(forward)|(copy)|(copy_cancel)|(trap)|(log)|(deny)|(transit)" {
-							error-message "Invalid value passed for red_action";
-						}
-					}
-					description
-						"Red action";
+                    type stypes:copp_packet_action;
+                    default "forward";
+					description "Red action";
 				}
 				
 				leaf genetlink_name {
@@ -198,22 +178,68 @@ module sonic-copp {
 
 				leaf name {
 					type string;
-					description
-						"Control plane policing trap name";
+					description "Control plane policing trap name";
 				}
 
-				leaf trap_ids {
-					type string;
-					description
-						"Comma separated string of trap_ids";
+				leaf-list trap_ids {
+                    type enumeration {
+                        enum stp;
+                        enum lacp;
+                        enum eapol;
+                        enum lldp;
+                        enum pvrst;
+                        enum igmp_query;
+                        enum igmp_leave;
+                        enum igmp_v1_report;
+                        enum igmp_v2_report;
+                        enum igmp_v3_report;
+                        enum sample_packet;
+                        enum switch_cust_range;
+                        enum arp_req;
+                        enum arp_resp;
+                        enum dhcp;
+                        enum ospf;
+                        enum pim;
+                        enum vrrp;
+                        enum bgp;
+                        enum dhcpv6;
+                        enum ospfv6;
+                        enum vrrpv6;
+                        enum bgpv6;
+                        enum neigh_discovery;
+                        enum mld_v1_v2;
+                        enum mld_v1_report;
+                        enum mld_v1_done;
+                        enum mld_v2_report;
+                        enum ip2me;
+                        enum ssh;
+                        enum snmp;
+                        enum router_custom_range;
+                        enum l3_mtu_error;
+                        enum ttl_error;
+                        enum udld;
+                        enum bfd;
+                        enum bfdv6;
+                        enum src_nat_miss;
+                        enum dest_nat_miss;
+                        enum ptp;
+                        enum pim;
+                        enum arp_suppress;
+                        enum nd_suppress;
+                        enum icmp;
+                        enum icmpv6;
+                        enum iccp;
+                        enum dhcp_l2;
+                        enum dhcpv6_l2;
+                    }
+                    description "list of trap_ids";
 				}
 
 				leaf trap_group {
 					type leafref {
 						path "/sonic-copp/COPP_GROUP/COPP_GROUP_LIST/name";
 					}
-					description
-						"reference to CoPP group";
+					description "reference to CoPP group";
 				}
 			}
 			/* end of list COPP_TRAP_LIST */

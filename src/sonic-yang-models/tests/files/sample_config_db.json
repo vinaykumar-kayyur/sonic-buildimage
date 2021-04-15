@@ -905,7 +905,9 @@
         },
         "COPP_TRAP": {
             "ip2me": {
-                "trap_ids": "ip2me",
+                "trap_ids": [
+                    "ip2me"
+                ],
                 "trap_group": "queue1_group1"
             }
         }
