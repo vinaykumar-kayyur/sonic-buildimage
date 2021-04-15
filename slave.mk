@@ -648,7 +648,7 @@ $(SONIC_INSTALL_WHEELS) : $(PYTHON_WHEELS_PATH)/%-install : .platform $$(addsuff
 # start docker daemon
 docker-start :
 	@sudo sed -i '/http_proxy/d' /etc/default/docker
-	@sudo bash -c "echo \"export http_proxy=$$http_proxy\"; \
+	@sudo bash -c "{ echo \"export http_proxy=$$http_proxy\"; \
 	            echo \"export no_proxy=$$no_proxy\"; } >> /etc/default/docker"
 	@test x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) != x"y" && sudo service docker status &> /dev/null || ( sudo service docker start &> /dev/null && ./scripts/wait_for_docker.sh 60 )
 
