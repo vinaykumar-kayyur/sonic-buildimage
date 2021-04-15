@@ -17,6 +17,7 @@ _trap_push() {
 }
 _trap_push true
 
+
 ## Function: warn MESSAGE
 ## Print message to stderr
 warn() {
