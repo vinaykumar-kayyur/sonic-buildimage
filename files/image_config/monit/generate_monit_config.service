@@ -6,7 +6,8 @@ Before=monit.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/generate_monit_config.sh
+RemainAfterExit=yes
+ExecStart=/usr/bin/generate_monit_config
 
 [Install]
 WantedBy=multi-user.target
