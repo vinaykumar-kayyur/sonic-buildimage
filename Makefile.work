@@ -198,7 +198,7 @@ DOCKER_BASE_BUILD = docker build --no-cache \
 		    -t $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) \
 		    --build-arg http_proxy=$(http_proxy) \
 		    --build-arg https_proxy=$(https_proxy) \
-            --build-arg no_proxy=$(no_proxy) \
+		    --build-arg no_proxy=$(no_proxy) \
 		    $(SLAVE_DIR)
 
 DOCKER_BASE_PULL = docker pull \
