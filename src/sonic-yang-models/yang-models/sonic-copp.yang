@@ -91,13 +91,6 @@ module sonic-copp {
 						"Committed burst size for the dual-rate token bucket
 						policer.  This value represents the depth of the token
 						bucket.";
-
-					must "((current()/../cir) and (current()/../cir > 0))" {
-						error-message "cbs can't be configured without cir.";
-					}
-					must "(current() >= current()/../cir)" {
-						error-message "cbs must be greater than or equal to cir";
-					}
 				}
 
 				leaf pir {
@@ -109,7 +102,6 @@ module sonic-copp {
 						error-message "pir must be greater than or equal to cir";
 					}
 					type uint64;
-                    default 0;
 					description
 						"Peak information rate for the dual-rate token bucket
 						policer.  This value represents the rate at which tokens
@@ -117,14 +109,11 @@ module sonic-copp {
 				}
 
 				leaf pbs {
-					must "((current()/../pir) and (current()/../pir > 0))" {
-						error-message "pbs can't be configured without pir.";
-					}
-					must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
-						error-message "pbs must be greater than or equal to cbs";
-					}
+                    when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
+                    must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
+                        error-message "pbs must be greater than or equal to cbs";
+                    }
 					type uint64;
-                    default 0;
 					description
 						"Excess burst size for the dual-rate token bucket policer.
 						This value represents the depth of the secondary bucket.";
@@ -137,6 +126,7 @@ module sonic-copp {
 				}
 				
 				leaf yellow_action {
+                    when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
                     type stypes:copp_packet_action;
                     default "forward";
 					description "Yellow action";
@@ -181,57 +171,9 @@ module sonic-copp {
 					description "Control plane policing trap name";
 				}
 
-				leaf-list trap_ids {
-                    type enumeration {
-                        enum stp;
-                        enum lacp;
-                        enum eapol;
-                        enum lldp;
-                        enum pvrst;
-                        enum igmp_query;
-                        enum igmp_leave;
-                        enum igmp_v1_report;
-                        enum igmp_v2_report;
-                        enum igmp_v3_report;
-                        enum sample_packet;
-                        enum switch_cust_range;
-                        enum arp_req;
-                        enum arp_resp;
-                        enum dhcp;
-                        enum ospf;
-                        enum pim;
-                        enum vrrp;
-                        enum bgp;
-                        enum dhcpv6;
-                        enum ospfv6;
-                        enum vrrpv6;
-                        enum bgpv6;
-                        enum neigh_discovery;
-                        enum mld_v1_v2;
-                        enum mld_v1_report;
-                        enum mld_v1_done;
-                        enum mld_v2_report;
-                        enum ip2me;
-                        enum ssh;
-                        enum snmp;
-                        enum router_custom_range;
-                        enum l3_mtu_error;
-                        enum ttl_error;
-                        enum udld;
-                        enum bfd;
-                        enum bfdv6;
-                        enum src_nat_miss;
-                        enum dest_nat_miss;
-                        enum ptp;
-                        enum pim;
-                        enum arp_suppress;
-                        enum nd_suppress;
-                        enum icmp;
-                        enum icmpv6;
-                        enum iccp;
-                        enum dhcp_l2;
-                        enum dhcpv6_l2;
-                    }
+				leaf trap_ids {
+                    mandatory true;
+                    type string;
                     description "list of trap_ids";
 				}
 
