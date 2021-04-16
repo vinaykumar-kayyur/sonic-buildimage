@@ -28,6 +28,8 @@
 namespace link_manager
 {
 
+constexpr auto MAX_BACKOFF_FACTOR = 8;
+
 LinkManagerStateMachine::TransitionFunction
     LinkManagerStateMachine::mStateTransitionHandler[link_prober::LinkProberState::Label::Count]
                                                     [mux_state::MuxState::Label::Count]
@@ -428,6 +430,10 @@ void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state:
         mMuxPortPtr->getMuxState();
     }
 
+    if (ms(mCompositeState) != mux_state::MuxState::Unknown) {
+        mMuxUnknownBackoffFactor = 1;
+    }
+
     updateMuxLinkmgrState();
 }
 
@@ -665,14 +671,14 @@ void LinkManagerStateMachine::updateMuxLinkmgrState()
 }
 
 //
-// ---> startMuxProbeTimer();
+// ---> startMuxProbeTimer(uint32_t factor);
 //
 // start a timer to monitor the MUX state
 //
-void LinkManagerStateMachine::startMuxProbeTimer()
+void LinkManagerStateMachine::startMuxProbeTimer(uint32_t factor)
 {
     mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(
-        mMuxPortConfig.getNegativeStateChangeRetryCount() * mMuxPortConfig.getTimeoutIpv4_msec()
+        factor * mMuxPortConfig.getNegativeStateChangeRetryCount() * mMuxPortConfig.getTimeoutIpv4_msec()
     ));
     mDeadlineTimer.async_wait(getStrand().wrap(boost::bind(
         &LinkManagerStateMachine::handleMuxProbeTimeout,
@@ -864,7 +870,9 @@ void LinkManagerStateMachine::LinkProberUnknownMuxUnknownLinkUpTransitionFunctio
 {
     MUXLOGINFO(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mMuxUnknownBackoffFactor);
+    mMuxUnknownBackoffFactor <<= 1;
+    mMuxUnknownBackoffFactor = mMuxUnknownBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxUnknownBackoffFactor;
 }
 
 //
@@ -939,7 +947,9 @@ void LinkManagerStateMachine::LinkProberWaitMuxUnknownLinkUpTransitionFunction(C
 {
     MUXLOGERROR(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mMuxUnknownBackoffFactor);
+    mMuxUnknownBackoffFactor <<= 1;
+    mMuxUnknownBackoffFactor = mMuxUnknownBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxUnknownBackoffFactor;
 }
 
 //
@@ -975,7 +985,9 @@ void LinkManagerStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunct
 {
     MUXLOGERROR(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mMuxUnknownBackoffFactor);
+    mMuxUnknownBackoffFactor <<= 1;
+    mMuxUnknownBackoffFactor = mMuxUnknownBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxUnknownBackoffFactor;
 }
 
 //
@@ -1011,7 +1023,9 @@ void LinkManagerStateMachine::LinkProberWaitMuxUnknownLinkDownTransitionFunction
 {
     MUXLOGERROR(mMuxPortConfig.getPortName());
 
-    startMuxProbeTimer();
+    startMuxProbeTimer(mMuxUnknownBackoffFactor);
+    mMuxUnknownBackoffFactor <<= 1;
+    mMuxUnknownBackoffFactor = mMuxUnknownBackoffFactor > MAX_BACKOFF_FACTOR ? MAX_BACKOFF_FACTOR : mMuxUnknownBackoffFactor;
 }
 
 } /* namespace link_manager */

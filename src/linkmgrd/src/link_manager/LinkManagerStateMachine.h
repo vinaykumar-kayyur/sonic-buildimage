@@ -440,9 +440,11 @@ private:
     *
     *@brief start a timer to monitor the MUX state
     *
+    *@param factor      factor used to scale the timeout
+    *
     *@return none
     */
-    inline void startMuxProbeTimer();
+    inline void startMuxProbeTimer(uint32_t factor = 1);
 
     /**
     *@method handleLinkWaitTimeout
@@ -763,6 +765,7 @@ private:
     boost::function<void (uint32_t suspendTime_msec)> mSuspendTxFnPtr;
 
     uint32_t mWaitActiveUpCount = 0;
+    uint32_t mMuxUnknownBackoffFactor = 1;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
     Label mLabel = Uninitialized;
