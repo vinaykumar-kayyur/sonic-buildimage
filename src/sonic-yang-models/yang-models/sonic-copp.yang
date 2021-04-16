@@ -4,8 +4,8 @@ module sonic-copp {
 
 	namespace "http://github.com/Azure/sonic-copp";
 	prefix copp;
-    
-    import sonic-types {
+
+	import sonic-types {
 		prefix stypes;
 	}
 
@@ -28,50 +28,50 @@ module sonic-copp {
 
 				leaf queue {
 					type uint32;
-                    default 0;
+					default 0;
 					description "CPU Rx queue id";
 				}
 
 				leaf trap_priority {
 					type uint32;
-                    default 0;
+					default 0;
 					description "Trap priority";
 				}
 
 				leaf trap_action {
-                    mandatory true;
-                    type stypes:copp_packet_action;
+					mandatory true;
+					type stypes:copp_packet_action;
 					description "Trap action";
 				}
 				
 				leaf meter_type {
-                    mandatory true;
-                    type stypes:meter_type;
+					mandatory true;
+					type stypes:meter_type;
 					description "Policer meter type";
 				}
 				
 				leaf mode {
-                    mandatory true;
-                    type enumeration {
-                        enum sr_tcm;
-                        enum tr_tcm;
-                        enum storm;
-                    }
+					mandatory true;
+					type enumeration {
+						enum sr_tcm;
+						enum tr_tcm;
+						enum storm;
+					}
 					description "Policer mode";
 				}
 				
 				leaf color {
-                    type enumeration {
-                        enum blind;
-                        enum color;
-                    }
-                    default "color";
+					type enumeration {
+						enum blind;
+						enum color;
+					}
+					default "color";
 					description "Policer color source";
 				}
 
 				leaf cir {
 					type uint64;
-                    default 0;
+					default 0;
 					description
 						"Committed information rate for the dual-rate token
 						bucket policer.  This value represents the rate at which 
@@ -79,14 +79,14 @@ module sonic-copp {
 				}
 
 				leaf cbs {
-                    must "((current()/../cir) and (current()/../cir > 0))" {
+					must "((current()/../cir) and (current()/../cir > 0))" {
 						error-message "cbs can't be configured without cir.";
 					}
 					must "(current() >= current()/../cir)" {
 						error-message "cbs must be greater than or equal to cir";
 					}
 					type uint64;
-                    default 0;
+					default 0;
 					description
 						"Committed burst size for the dual-rate token bucket
 						policer.  This value represents the depth of the token
@@ -94,7 +94,7 @@ module sonic-copp {
 				}
 
 				leaf pir {
-                    when "current()/../mode = 'tr_tcm'";
+					when "current()/../mode = 'tr_tcm'";
 					must "((current()/../cir) and (current()/../cir > 0))" {
 						error-message "pir can't be configured without cir.";
 					}
@@ -109,10 +109,10 @@ module sonic-copp {
 				}
 
 				leaf pbs {
-                    when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
-                    must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
-                        error-message "pbs must be greater than or equal to cbs";
-                    }
+					when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
+					must "((not(current()/../cbs)) or (current() >= current()/../cbs))" {
+						error-message "pbs must be greater than or equal to cbs";
+					}
 					type uint64;
 					description
 						"Excess burst size for the dual-rate token bucket policer.
@@ -120,21 +120,21 @@ module sonic-copp {
 				}
 				
 				leaf green_action {
-                    type stypes:copp_packet_action;
-                    default "forward";
+					type stypes:copp_packet_action;
+					default "forward";
 					description "Green action";
 				}
 				
 				leaf yellow_action {
-                    when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
-                    type stypes:copp_packet_action;
-                    default "forward";
+					when "((current()/../mode = 'sr_tcm') or (current()/../mode = 'tr_tcm'))";
+					type stypes:copp_packet_action;
+					default "forward";
 					description "Yellow action";
 				}
 
 				leaf red_action {
-                    type stypes:copp_packet_action;
-                    default "forward";
+					type stypes:copp_packet_action;
+					default "forward";
 					description "Red action";
 				}
 				
@@ -172,9 +172,9 @@ module sonic-copp {
 				}
 
 				leaf trap_ids {
-                    mandatory true;
-                    type string;
-                    description "list of trap_ids";
+					mandatory true;
+					type string;
+					description "list of trap_ids";
 				}
 
 				leaf trap_group {
