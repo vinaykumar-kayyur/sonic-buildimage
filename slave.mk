@@ -110,6 +110,12 @@ export PACKAGE_URL_PREFIX
 export TRUSTED_GPG_URLS
 export SONIC_VERSION_CONTROL_COMPONENTS
 
+# Ensure platform has a chance to override defaults
+PLATFORM_CONFIG := platform/$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))/rules/config
+ifneq (,$(wildcard $(PLATFORM_CONFIG)))
+include $(PLATFORM_CONFIG)
+endif
+
 ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
 endif

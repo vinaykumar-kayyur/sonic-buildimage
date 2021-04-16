@@ -92,6 +92,13 @@ endif
 
 include rules/config
 
+# Ensure platform has a chance to override defaults
+CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
+PLATFORM_CONFIG := platform/$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))/rules/config
+ifneq (,$(wildcard $(PLATFORM_CONFIG)))
+include $(PLATFORM_CONFIG)
+endif
+
 ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
 endif
