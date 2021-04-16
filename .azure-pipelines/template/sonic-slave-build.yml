@@ -18,9 +18,9 @@ jobs:
   pool:
     vmImage: ubuntu-20.04
   container:
-    ${{ if eq(parameters.arch, amd64)}}:
+    ${{ if eq(parameters.arch, 'amd64')}}:
       image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster:latest
-    ${{ if ne(parameters.arch, arm64)}}:
+    ${{ if ne(parameters.arch, 'amd64')}}:
       image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster-${{ parameters.arch }}:latest
   steps:
   - template: cleanup.yml
