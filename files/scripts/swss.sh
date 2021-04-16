@@ -149,6 +149,13 @@ start() {
         clean_up_tables STATE_DB "'PORT_TABLE*', 'MGMT_PORT_TABLE*', 'VLAN_TABLE*', 'VLAN_MEMBER_TABLE*', 'LAG_TABLE*', 'LAG_MEMBER_TABLE*', 'INTERFACE_TABLE*', 'MIRROR_SESSION*', 'VRF_TABLE*', 'FDB_TABLE*', 'FG_ROUTE_TABLE*', 'BUFFER_POOL*', 'BUFFER_PROFILE*', '*MUX_CABLE_TABLE*'"
     fi
 
+    # This is a platform agnostic approach to check if 'platform'
+    # entry exists in the DEVICE_METADATA table. If it exits then
+    # source the script to perform platform specific checks
+    PLATFORM_DIR=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+    F="/usr/share/sonic/device/$PLATFORM_DIR/scripts/swss.sh"
+    [ -e $F ] && source $F start $DEV
+
     # start service docker
     /usr/bin/${SERVICE}.sh start $DEV
     debug "Started ${SERVICE}$DEV service..."
