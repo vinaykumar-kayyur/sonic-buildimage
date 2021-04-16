@@ -56,6 +56,7 @@ setup(
                          './yang-models/sonic-versions.yang',
                          './yang-models/sonic-vlan.yang',
                          './yang-models/sonic-vrf.yang',
+                         './yang-models/sonic-storm-control.yang',
                          './yang-models/sonic_yang_tree']),
     ],
     zip_safe=False,
