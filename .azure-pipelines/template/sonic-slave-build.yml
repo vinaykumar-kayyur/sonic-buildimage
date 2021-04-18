@@ -12,10 +12,7 @@ parameters:
 - name: registry_server
   default: soniccr2
 
-pool:
-  vmImage: ubuntu-20.04
-container:
-  image: sonicdev-microsoft.azurecr.io:443/sonic-slave-buster:latest
+pool: sonicbld
 
 jobs:
 - job: Build_${{ parameters.distro }}_${{ parameters.arch }}
