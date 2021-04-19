@@ -61,6 +61,7 @@ export CONFIGURED_ARCH
 export PYTHON_WHEELS_PATH
 export IMAGE_DISTRO
 export IMAGE_DISTRO_DEBS_PATH
+export MULTIARCH_QEMU_ENVIRON
 
 ###############################################################################
 ## Utility rules
@@ -274,6 +275,7 @@ $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "TELEMETRY_WRITABLE"              : "$(TELEMETRY_WRITABLE)")
 $(info "PDDF_SUPPORT"                    : "$(PDDF_SUPPORT)")
+$(info "MULTIARCH_QEMU_ENVIRON"          : "$(MULTIARCH_QEMU_ENVIRON)")
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
@@ -442,7 +444,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
 		# Build project and take package
 		$(SETUP_OVERLAYFS_FOR_DPKG_ADMINDIR)
-		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" make -j$(SONIC_CONFIG_MAKE_JOBS) DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 		# Clean up
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi
 
@@ -1034,6 +1036,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
 	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
 	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
 		./build_debian.sh $(LOG)
 
 	USERNAME="$(USERNAME)" \
