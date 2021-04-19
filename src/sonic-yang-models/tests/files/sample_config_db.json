@@ -1188,8 +1188,16 @@
                 "scheduler": "TEST@1",
                 "wred_profile": "Wred1"
             }
+         },		
+
+        "DSCP_TO_TC_MAP": {
+	        "Dscp_to_tc_map1": { 
+		        "24": "3", 
+		        "10": "1"
+            }	
         }
     },
+
 
     "SAMPLE_CONFIG_DB_UNKNOWN": {
         "UNKNOWN_TABLE": {
