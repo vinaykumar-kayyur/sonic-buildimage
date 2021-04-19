@@ -9,6 +9,39 @@ if sys.version_info.major == 3:
 else:
     UNICODE_TYPE = unicode
 
+
+# The new enhancements to this file provides capabilities to generate l1 & l3
+# configuration in addition the existing l2, t1 and empty configurations
+# So the following capabilities exits now:
+#    't1': generate_t1_sample_config,
+#    'l2': generate_l2_config,
+#    'empty': generate_empty_config,
+#    'l1': generate_l1_config,
+#    'l3': generate_l3_config
+
+def generate_l1_config(data):
+    data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
+    data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
+    for port in natsorted(data['PORT']):
+        data['PORT'][port]['admin_status'] = 'up'
+        data['PORT'][port]['mtu'] = '9100'
+    return data;
+
+def generate_l3_config(data):
+    data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
+    data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
+    data['DEVICE_METADATA']['localhost']['bgp_asn'] = '65100'
+    data['LOOPBACK_INTERFACE'] = {"Loopback0": {},
+                                  "Loopback0|10.1.0.1/32": {}}
+    data['BGP_NEIGHBOR'] = {}
+    data['DEVICE_NEIGHBOR'] = {}
+    data['INTERFACE'] = {}
+    for port in natsorted(data['PORT']):
+        data['PORT'][port]['admin_status'] = 'up'
+        data['PORT'][port]['mtu'] = '9100'
+        data['INTERFACE']['{}'.format(port)] = {}
+    return data;
+
 def generate_t1_sample_config(data):
     data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
     data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
@@ -95,7 +128,9 @@ def generate_l2_config(data):
 _sample_generators = {
         't1': generate_t1_sample_config,
         'l2': generate_l2_config,
-        'empty': generate_empty_config
+        'empty': generate_empty_config,
+        'l1': generate_l1_config,
+        'l3': generate_l3_config
         }
 
 def get_available_config():
