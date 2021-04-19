@@ -52,7 +52,7 @@ module sonic-bgp-global {
                             pattern "default";
                         }
                         type leafref {
-                            path "/svrf:sonic-vrf/svrf:VRF/svrf:VRF_LIST/svrf:vrf_name";
+                            path "/svrf:sonic-vrf/svrf:VRF/svrf:VRF_LIST/svrf:name";
                         }
                     }
                     description "VRF name";

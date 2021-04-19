@@ -4,7 +4,7 @@
             "sonic-vrf:VRF": {
                 "VRF_LIST": [
                 {
-                    "vrf_name":"Vrf1"
+                    "name":"Vrf1"
                 }
                 ]
             }
@@ -16,7 +16,7 @@
             "sonic-vrf:VRF": {
                 "VRF_LIST": [
                 {
-                    "vrf_name":"Vrf1"
+                    "name":"Vrf1"
                 }
                 ]
             }
@@ -123,7 +123,7 @@
             "sonic-vrf:VRF": {
                 "VRF_LIST": [
                 {
-                    "vrf_name":"Vrf1"
+                    "name":"Vrf1"
                 }
                 ]
             }
@@ -267,7 +267,7 @@
             "sonic-vrf:VRF": {
                 "VRF_LIST": [
                 {
-                    "vrf_name":"Vrf1"
+                    "name":"Vrf1"
                 }
                 ]
             }
