@@ -1,27 +1,41 @@
-From 780cc967a5544d3ab6f43cba4076b5e0dbb48395 Mon Sep 17 00:00:00 2001
+From 9a6f63427e843683234a8ea21435b9c69a7a418c Mon Sep 17 00:00:00 2001
 From: Pavel Shirshov <pavelsh@microsoft.com>
 Date: Tue, 3 Mar 2020 13:01:14 -0800
 Subject: [PATCH] Send LACP PDU immediately if our state changed
 
+Signed-off-by: Stepan Blyschak <stepanb@nvidia.com>
 ---
- teamd/teamd_runner_lacp.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ teamd/teamd_runner_lacp.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 diff --git a/teamd/teamd_runner_lacp.c b/teamd/teamd_runner_lacp.c
-index fa732ba..55abe88 100644
+index a1d487c..3e733ec 100644
 --- a/teamd/teamd_runner_lacp.c
 +++ b/teamd/teamd_runner_lacp.c
-@@ -1019,8 +1019,7 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
+@@ -963,6 +963,7 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
+ 			       enum lacp_port_state new_state)
+ {
+ 	int err;
++	bool linkup = team_is_port_link_up(lacp_port->tdport->team_port);
+ 
+ 	if (new_state == lacp_port->state)
+ 		return 0;
+@@ -1019,9 +1020,11 @@ static int lacp_port_set_state(struct lacp_port *lacp_port,
  		return err;
  
  	lacp_port_actor_update(lacp_port);
 -	if (lacp_port->periodic_on)
 -		return 0;
+-	return lacpdu_send(lacp_port);
 +
- 	return lacpdu_send(lacp_port);
++	if (linkup)
++		err = lacpdu_send(lacp_port);
++
++ 	return err;
  }
  
-@@ -1138,9 +1137,10 @@ static int lacpdu_recv(struct lacp_port *lacp_port)
+ static enum lacp_port_state lacp_port_get_state(struct lacp_port *lacp_port)
+@@ -1138,9 +1141,10 @@ static int lacpdu_recv(struct lacp_port *lacp_port)
  	if (err)
  		return err;
  
@@ -34,6 +48,3 @@ index fa732ba..55abe88 100644
  		   sizeof(struct lacpdu_info))) {
  		err = lacpdu_send(lacp_port);
  		if (err)
--- 
-2.17.1.windows.2
-
