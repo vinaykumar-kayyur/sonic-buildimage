@@ -16,24 +16,14 @@ module sonic-mgmt-vrf {
     container sonic-mgmt-vrf {
         container MGMT_VRF_CONFIG {
 
-            description "MANAGEMENT VRF part of config_db.json";            
-
-            list MGMT_VRF_CONFIG_LIST {
-                key "name";
-                max-elements 1;
-
-                leaf name {
-                    type enumeration {
-                        enum vrf_global;
-                    }
-                }   
+            container vrf_global {
 
                 leaf mgmtVrfEnabled {
                     type boolean;
                     default false;
                 }
 
-            } /* end of list MGMT_VRF_CONFIG_LIST */
+            } /* end of container vrf_global */
 
         } /* end of container MGMT_VRF_CONFIG */
 

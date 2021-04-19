@@ -32,14 +32,15 @@ module sonic-mgmt-port {
                 }
 
                 leaf speed {
-                    type uint64 {
+                    type uint16 {
                         range "10|100|1000"; 
                     }
                 }
 
                 leaf autoneg {
-                    type boolean;
-                    default true;
+                    type string {
+                        pattern "on|off";
+                    }
                 }
 
                 leaf alias {
@@ -51,7 +52,7 @@ module sonic-mgmt-port {
                 }
 
                 leaf mtu{
-                    type uint32 {
+                    type uint16 {
                         range "1500..9216"; 
                     }
                     default 1500;

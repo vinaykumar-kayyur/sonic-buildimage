@@ -1,7 +1,7 @@
 {
     "MGMT_INTERFACE_TEST": {
-        "sonic-mgmt-port:sonic-mgmt-port": {
-            "sonic-mgmt-port:MGMT_PORT": {
+        "sonic-mgmt_port:sonic-mgmt_port": {
+            "sonic-mgmt_port:MGMT_PORT": {
                 "MGMT_PORT_LIST": [
                     {
                         "name": "eth0"
@@ -9,14 +9,9 @@
                 ]
             }
         },
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
+        "sonic-mgmt_interface:sonic-mgmt_interface": {
+            "sonic-mgmt_interface:MGMT_INTERFACE": {
                 "MGMT_INTERFACE_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ],
-                "MGMT_INTERFACE_IPADDR_LIST": [
                     {
                         "name": "eth0",
                         "ip_prefix": "10.11.12.13/16",
@@ -36,19 +31,21 @@
         }
     },
     "MGMT_INTERFACE_WITH_NON_EXIST_PORT": {
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
+        "sonic-mgmt_interface:sonic-mgmt_interface": {
+            "sonic-mgmt_interface:MGMT_INTERFACE": {
                 "MGMT_INTERFACE_LIST": [
                     {
-                        "name": "eth0"
+                        "name": "eth0",
+                        "ip_prefix": "2001:aa:aa::aa/64",
+                        "gwaddr": "2001:aa:aa::fe"
                     }
                 ]
             }
         }
     },
     "MGMT_INTERFACE_WITH_WRONG_PORT": {
-        "sonic-mgmt-port:sonic-mgmt-port": {
-            "sonic-mgmt-port:MGMT_PORT": {
+        "sonic-mgmt_port:sonic-mgmt_port": {
+            "sonic-mgmt_port:MGMT_PORT": {
                 "MGMT_PORT_LIST": [
                     {
                         "name": "eth1"
@@ -56,9 +53,9 @@
                 ]
             }
         },
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
-                "MGMT_INTERFACE_IPADDR_LIST": [
+        "sonic-mgmt_interface:sonic-mgmt_interface": {
+            "sonic-mgmt_interface:MGMT_INTERFACE": {
+                "MGMT_INTERFACE_LIST": [
                     {
                         "name": "eth0",
                         "ip_prefix": "10.11.12.13/16",
@@ -68,9 +65,9 @@
             }
         }
     },
-    "MGMT_INTERFACE_WITH_INVALID_IPV4": {
-        "sonic-mgmt-port:sonic-mgmt-port": {
-            "sonic-mgmt-port:MGMT_PORT": {
+    "MGMT_INTERFACE_IPV4_ADDR_WITH_IPV6_GW": {
+        "sonic-mgmt_port:sonic-mgmt_port": {
+            "sonic-mgmt_port:MGMT_PORT": {
                 "MGMT_PORT_LIST": [
                     {
                         "name": "eth0"
@@ -78,25 +75,21 @@
                 ]
             }
         },
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
+        "sonic-mgmt_interface:sonic-mgmt_interface": {
+            "sonic-mgmt_interface:MGMT_INTERFACE": {
                 "MGMT_INTERFACE_LIST": [
                     {
-                        "name": "eth0"
-                    }
-                ],
-                "MGMT_INTERFACE_IPADDR_LIST": [
-                    {
                         "name": "eth0",
-                        "ip_prefix": "10.11.12/16"
+                        "ip_prefix": "10.11.12.13/24",
+                        "gwaddr": "2001:aa:aa::aa"
                     }
                 ]
             }
         }
     },
-    "MGMT_INTERFACE_WITH_INVALID_IPV6": {
-        "sonic-mgmt-port:sonic-mgmt-port": {
-            "sonic-mgmt-port:MGMT_PORT": {
+    "MGMT_INTERFACE_IPV6_ADDR_WITH_IPV4_GW": {
+        "sonic-mgmt_port:sonic-mgmt_port": {
+            "sonic-mgmt_port:MGMT_PORT": {
                 "MGMT_PORT_LIST": [
                     {
                         "name": "eth0"
@@ -104,71 +97,13 @@
                 ]
             }
         },
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
+        "sonic-mgmt_interface:sonic-mgmt_interface": {
+            "sonic-mgmt_interface:MGMT_INTERFACE": {
                 "MGMT_INTERFACE_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ],
-                "MGMT_INTERFACE_IPADDR_LIST": [
-                    {
-                        "name": "eth0",
-                        "ip_prefix": "2001:aa:aa:aa/64"
-                    }
-                ]
-            }
-        }
-    },
-    "MGMT_INTERFACE_WITH_INVALID_IPV4_GW": {
-        "sonic-mgmt-port:sonic-mgmt-port": {
-            "sonic-mgmt-port:MGMT_PORT": {
-                "MGMT_PORT_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ]
-            }
-        },
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
-                "MGMT_INTERFACE_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ],
-                "MGMT_INTERFACE_IPADDR_LIST": [
-                    {
-                        "name": "eth0",
-                        "ip_prefix": "10.11.12.13/16",
-                        "gwaddr": "10.11.12"
-                    }
-                ]
-            }
-        }
-    },
-    "MGMT_INTERFACE_WITH_INVALID_IPV6_GW": {
-        "sonic-mgmt-port:sonic-mgmt-port": {
-            "sonic-mgmt-port:MGMT_PORT": {
-                "MGMT_PORT_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ]
-            }
-        },
-        "sonic-mgmt-interface:sonic-mgmt-interface": {
-            "sonic-mgmt-interface:MGMT_INTERFACE": {
-                "MGMT_INTERFACE_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ],
-                "MGMT_INTERFACE_IPADDR_LIST": [
                     {
                         "name": "eth0",
                         "ip_prefix": "2001:aa:aa::aa/64",
-                        "gwaddr": "2001:aa:aa:aa"
+                        "gwaddr": "10.11.12.13"
                     }
                 ]
             }

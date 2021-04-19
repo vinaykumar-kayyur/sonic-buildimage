@@ -3,8 +3,8 @@
         "desc": "LOAD MGMT PORT WITH ALIAS AND ADMIN_STATUS SUCCESSFULLY. VERIFY ADMIN_STATUS",
         "eStrKey": "Verify",
         "verify": {
-            "xpath": "/sonic-mgmt-port:sonic-mgmt-port/MGMT_PORT/MGMT_PORT_LIST[name='eth0']/name",
-            "key": "sonic-mgmt-port:admin_status",
+            "xpath": "/sonic-mgmt_port:sonic-mgmt_port/MGMT_PORT/MGMT_PORT_LIST[name='eth0']/name",
+            "key": "sonic-mgmt_port:admin_status",
             "value": "up"
         }
     },
@@ -27,9 +27,13 @@
         "desc": "VALIDATE DEFAULT MTU",
         "eStrKey": "Verify",
         "verify": {
-            "xpath": "/sonic-mgmt-port:sonic-mgmt-port/MGMT_PORT/MGMT_PORT_LIST[name='eth0']/name",
-            "key": "sonic-mgmt-port:mtu",
+            "xpath": "/sonic-mgmt_port:sonic-mgmt_port/MGMT_PORT/MGMT_PORT_LIST[name='eth0']/name",
+            "key": "sonic-mgmt_port:mtu",
             "value": 1500
         }
+    },
+    "MGMT_PORT_INVALID_AUTONEG": {
+        "desc": "INVALID AUTONEG CONFIGURATION",
+        "eStrKey": "Pattern"
     } 
 }
