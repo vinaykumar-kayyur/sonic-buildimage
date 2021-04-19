@@ -15,7 +15,7 @@ module sonic-vrf {
     description
         "SONIC VRF";
 
-    revision 2021-02-26 {
+    revision 2021-03-30 {
         description
             "Initial revision.";
     }
@@ -25,9 +25,9 @@ module sonic-vrf {
             description "Vrf configuration.";            
 
             list VRF_LIST {
-                key "vrf_name";
+                key "name";
 
-                leaf vrf_name {
+                leaf name {
                     type string {
                         pattern "Vrf[a-zA-Z0-9_-]+" {
                             error-message "Invalid VRF name";
@@ -40,10 +40,10 @@ module sonic-vrf {
                     type  boolean;
                     default false;
                     description
-                        "Enalbe/disable fallback feature which is useful for specified VRF user to access internet through global/main route.";
+                        "Enable/disable fallback feature which is useful for specified VRF user to access internet through global/main route.";
                 }
 
-              }
-        }
-    }
-}
+            } /* end of list VRF_LISt */
+        } /* end of container VRf */
+    } /* end of container sonic-vrf */
+}/* end of module sonic-vrf */
