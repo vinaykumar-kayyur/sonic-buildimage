@@ -27,6 +27,7 @@ psu_list = []
 PSU_CURRENT = "current"
 PSU_VOLTAGE = "voltage"
 PSU_POWER = "power"
+PSU_VPD = "vpd"
 
 SN_VPD_FIELD = "SN_VPD_FIELD"
 PN_VPD_FIELD = "PN_VPD_FIELD"
@@ -36,20 +37,30 @@ PN_VPD_FIELD = "PN_VPD_FIELD"
 
 platform_dict_psu = {'x86_64-mlnx_msn3420-r0': 1, 'x86_64-mlnx_msn3700-r0': 1, 'x86_64-mlnx_msn3700c-r0': 1,
                      'x86_64-mlnx_msn3800-r0': 1, 'x86_64-mlnx_msn4600-r0': 1, 'x86_64-mlnx_msn4600c-r0': 1,
-                     'x86_64-mlnx_msn4700-r0': 1, 'x86_64-mlnx_msn4410-r0': 1}
+                     'x86_64-mlnx_msn4700-r0': 1, 'x86_64-mlnx_msn4410-r0': 1, 'x86_64-mlnx_msn2010-r0' : 2,
+                     'x86_64-mlnx_msn2100-r0': 2}
 
 psu_profile_list = [
     # default filename convention
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt",
-        PSU_POWER : "power/psu{}_power"
+        PSU_POWER : "power/psu{}_power",
+        PSU_VPD : "eeprom/psu{}_vpd"
     },
     # for 3420, 3700, 3700c, 3800, 4600c, 4700
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
         PSU_POWER : "power/psu{}_power"
+        PSU_VPD : "eeprom/psu{}_vpd"
+    },
+    # for fixed platforms 2100, 2010
+    {
+        PSU_CURRENT : "power/psu{}_curr",
+        PSU_VOLTAGE : "power/psu{}_volt_out2",
+        PSU_POWER : "power/psu{}_power"
+        PSU_VPD : None
     }
 ]
 
@@ -69,8 +80,6 @@ class Psu(PsuBase):
         #psu_oper_status should always be present for all platforms
         self.psu_oper_status = os.path.join(self.psu_path, psu_oper_status)
         self._name = "PSU{}".format(psu_index + 1)
-        psu_vpd = "eeprom/psu{}_vpd".format(self.index)
-        self.psu_vpd = os.path.join(self.psu_path, psu_vpd)
 
         if platform in platform_dict_psu:
             filemap = psu_profile_list[platform_dict_psu[platform]]
@@ -78,9 +87,27 @@ class Psu(PsuBase):
             filemap = psu_profile_list[0]
 
         self.psu_data = DEVICE_DATA[platform]['psus']
+        psu_path = filemap[PSU_VPD].format(self.index)
 
-        self.model = self._read_vpd_file(self.psu_vpd).get(PN_VPD_FIELD, "")
-        self.serial = self._read_vpd_file(self.psu_vpd).get(SN_VPD_FIELD, "")
+        if psu_path is not None:
+            self.psu_vpd = os.path.join(self.psu_path, psu_vpd)
+            self.vpd_data = self._read_vpd_file(self.psu_vpd)
+
+            if PN_VPD_FIELD in self.vpd_data:
+                self.model = self.vpd_data[PN_VPD_FIELD]
+            else:
+                self.model = ""
+                logger.log_error("Fail to read PSU{} model number: No key {} in VPD {}".format(self.index, PN_VPD_FIELD, self.psu_vpd))
+
+            if SN_VPD_FIELD in self.vpd_data:
+                self.serial = self.vpd_data[SN_VPD_FIELD]
+            else:
+                self.serial = ""
+                logger.log_error("Fail to read PSU{} serial number: No key {} in VPD {}".format(self.index, SN_VPD_FIELD, self.psu_vpd))
+
+        else: 
+            logger.log_info("Not reading PSU{} VPD data: Platform is fixed".format(self.index))
+
 
         if not self.psu_data['hot_swappable']:
             self.always_present = True
@@ -144,7 +171,7 @@ class Psu(PsuBase):
                     key, val = line.split(":")
                     result[key] = val
         except Exception as e:
-            logger.log_info("Fail to read file {} due to {}".format(filename, repr(e)))
+            logger.log_error("Fail to read VPD file {} due to {}".format(filename, repr(e)))
         return result
 
 
