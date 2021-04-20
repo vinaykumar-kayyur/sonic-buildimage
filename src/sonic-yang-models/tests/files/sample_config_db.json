@@ -265,7 +265,10 @@
         "NTP": {
             "global": {
                 "vrf": "mgmt",
-                "src_intf": "eth0"
+                "src_intf": [
+		    "eth0",
+		    "Loopback0"
+		]
             }
         },
         "NTP_SERVER": {

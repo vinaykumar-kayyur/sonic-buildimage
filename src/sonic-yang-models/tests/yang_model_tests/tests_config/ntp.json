@@ -118,11 +118,17 @@
         }
 
     },
-    "NTP_SRC_INTF_WITH_ETH_PORT": {
+    "NTP_SRC_INTF": {
         "sonic-ntp:sonic-ntp": {
             "sonic-ntp:NTP": {
                 "sonic-ntp:global": { 
-                    "src_intf": "Ethernet0"
+                    "src_intf": [
+			"Ethernet0",
+			"Vlan100",
+			"Loopback100",
+                        "PortChannel10",
+			"eth0"
+		    ]
                 }
             }
         },
@@ -140,24 +146,6 @@
                     }
                 ]
             }
-        }
-    },
-    "NTP_SRC_INTF_WITH_NONEXIST_ETH_PORT": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "Ethernet0"
-                }
-            }
-        }
-    },
-    "NTP_SRC_INTF_WITH_VLAN_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "Vlan100"
-                }
-            }
         },
         "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
@@ -170,24 +158,6 @@
                     }
                 ]
             }
-        }
-    },
-    "NTP_SRC_INTF_WITH_NONEXIST_VLAN_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "Vlan100"
-                }
-            }
-        }
-    },
-    "NTP_SRC_INTF_WITH_LOOPBACK_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "Loopback100"
-                }
-            }
         },
         "sonic-loopback-interface:sonic-loopback-interface": {
             "sonic-loopback-interface:LOOPBACK_INTERFACE": {
@@ -197,33 +167,57 @@
                     }
                 ]
             }
-        }
-    },
-    "NTP_SRC_INTF_WITH_NONEXIST_LOOPBACK_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "Loopback100"
-                }
-            }
-        }
-    },
-    "NTP_SRC_INTF_WITH_PORTCHANNEL_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "PortChannel10"
-                }
-            }
         },
         "sonic-portchannel:sonic-portchannel": {
             "sonic-portchannel:PORTCHANNEL": {
                 "PORTCHANNEL_LIST": [
                     {
                         "admin_status": "up",
-                        "name": "PortChannel10" 
+                        "name": "PortChannel10"
                     }
                 ]
+            }
+        },
+        "sonic-mgmt_port:sonic-mgmt_port": {
+            "sonic-mgmt_port:MGMT_PORT": {
+                "MGMT_PORT_LIST": [
+                    {
+                        "name": "eth0"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_ETH_PORT": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "sonic-ntp:global": { 
+                    "src_intf": [
+		        "Ethernet0"
+		    ]
+                }
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_VLAN_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "sonic-ntp:global": { 
+                    "src_intf": [
+                        "Vlan100"
+		    ]
+                }
+            }
+        }
+    },
+    "NTP_SRC_INTF_WITH_NONEXIST_LOOPBACK_INTF": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP": {
+                "sonic-ntp:global": { 
+                    "src_intf": [
+			"Loopback100"
+		    ]
+                }
             }
         }
     },
@@ -231,7 +225,9 @@
         "sonic-ntp:sonic-ntp": {
             "sonic-ntp:NTP": {
                 "sonic-ntp:global": { 
-                    "src_intf": "PortChannel10"
+                    "src_intf": [
+			"PortChannel10"
+		    ]
                 }
             }
         },
@@ -246,29 +242,13 @@
             }
         }
     },
-    "NTP_SRC_INTF_WITH_MGMT_INTF": {
-        "sonic-ntp:sonic-ntp": {
-            "sonic-ntp:NTP": {
-                "sonic-ntp:global": { 
-                    "src_intf": "eth0"
-                }
-            }
-        },
-        "sonic-mgmt_port:sonic-mgmt_port": {
-            "sonic-mgmt_port:MGMT_PORT": {
-                "MGMT_PORT_LIST": [
-                    {
-                        "name": "eth0"
-                    }
-                ]
-            }
-        }
-    },
     "NTP_SRC_INTF_WITH_NONEXIST_MGMT_INTF": {
         "sonic-ntp:sonic-ntp": {
             "sonic-ntp:NTP": {
                 "sonic-ntp:global": { 
-                    "src_intf": "eth1"
+                    "src_intf": [
+			"eth1"
+		    ]
                 }
             }
         },

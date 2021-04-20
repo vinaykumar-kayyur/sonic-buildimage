@@ -49,7 +49,7 @@ module sonic-ntp {
 
                 description "Global NTP part of config_db.json";
                 
-                leaf src_intf {
+                leaf-list src_intf {
                     type union {
                         type leafref {
                             path /prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name;
@@ -104,7 +104,7 @@ module sonic-ntp {
                     "Number of upstream NTP servers is discussed at
                      https://support.ntp.org/bin/view/Support/SelectingOffsiteNTPServers
                      (5.3.4. Excessive Number of Upstream Time Servers).";
- 
+
                 key "server_address";
 
                 leaf server_address {
