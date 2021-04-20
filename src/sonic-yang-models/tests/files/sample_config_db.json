@@ -764,6 +764,22 @@
         "PREFIX": {
             "prefix1|1|10.0.0.0/8|8..16": {
             }
+        },
+        "AAA": {
+            "authentication": {
+                "failthrough": "enable"
+            }
+        },
+        "TACPLUS": {
+            "global": {
+                "auth_type": "pap",
+                "timeout": "5"
+            }
+        },
+        "TACPLUS_SERVER": {
+            "192.168.1.1": {
+                "timeout": "10"
+            }
         }
     },
 

@@ -1,0 +1,13 @@
+{
+    "AAA_TEST": {
+        "desc": "Configure AAA table."
+    },
+    "AAA_TEST_WRONG_TYPE": {
+        "desc": "Configure wrong AAA type.",
+        "eStr" : ["Invalid"]
+    },
+    "AAA_TEST_WRONG_FAILTHROUGH": {
+        "desc": "Configure wrong AAA failthrough value.",
+        "eStr" : ["Invalid"]
+    }
+}
