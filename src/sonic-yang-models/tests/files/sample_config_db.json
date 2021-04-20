@@ -695,10 +695,6 @@
                 "polling_interval": "0"
             }
         },
-        "VRF": {
-            "Vrf1": {
-            }
-        },
         "BGP_GLOBALS": {
             "default": {
                 "router_id": "5.5.5.5",
