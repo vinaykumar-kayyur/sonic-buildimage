@@ -1,11 +1,11 @@
-module sonic-mgmt-interface {
+module sonic-mgmt_interface {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-mgmt-interface";
+    namespace "http://github.com/Azure/sonic-mgmt_interface";
     prefix mgmtintf;
 
-    import sonic-mgmt-port {
+    import sonic-mgmt_port {
         prefix mgmtprt;
     }
 
@@ -20,11 +20,11 @@ module sonic-mgmt-interface {
     description
         "SONiC MANAGEMENT INTERFACE";
 
-    revision 2019-11-13 {
+    revision 2021-04-07 {
         description "First revision";
     }
 
-    container sonic-mgmt-interface {
+    container sonic-mgmt_interface {
 
         container MGMT_INTERFACE {
 
@@ -36,7 +36,7 @@ module sonic-mgmt-interface {
 
                 leaf name{
                     type leafref {
-                        path /mgmtprt:sonic-mgmt-port/mgmtprt:MGMT_PORT/mgmtprt:MGMT_PORT_LIST/mgmtprt:name;
+                        path /mgmtprt:sonic-mgmt_port/mgmtprt:MGMT_PORT/mgmtprt:MGMT_PORT_LIST/mgmtprt:name;
                     }
                 }
 
@@ -52,12 +52,16 @@ module sonic-mgmt-interface {
 
                 leaf-list forced_mgmt_routes {
                     type stypes:sonic-ip-prefix;
+                    description
+                        "This configuration allows addtional routes to be added to default VRF table 
+                         or mgmt VRF table, based on if Management VRF is configured.
+                         Details can be found in interfaces.j2.";
                 }
  
             } /* end of list MGMT_INTERFACE_IPADDR_LIST */
 
         } /* end of container MGMT_INTERFACE */
 
-    } /* end of container sonic-mgmt-interface */
+    } /* end of container sonic-mgmt_interface */
 
-} /* end of module sonic-mgmt-interface */
+} /* end of module sonic-mgmt_interface */

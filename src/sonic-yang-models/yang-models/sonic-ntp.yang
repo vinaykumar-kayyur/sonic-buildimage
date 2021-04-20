@@ -36,7 +36,7 @@ module sonic-ntp {
     description
         "NTP yang Module for SONiC OS";
 
-    revision 2020-04-25 {
+    revision 2021-04-07 {
         description
             "First revision";
     }

@@ -1,8 +1,8 @@
-module sonic-mgmt-port {
+module sonic-mgmt_port {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-mgmt-port";
+    namespace "http://github.com/Azure/sonic-mgmt_port";
     prefix mgmtprt;
 
     import sonic-types {
@@ -11,11 +11,11 @@ module sonic-mgmt-port {
 
     description "MANAGEMENT PORT yang Module for SONiC OS";
 
-    revision 2019-11-13 {
+    revision 2021-04-07 {
         description "First Revision";
     }
 
-    container sonic-mgmt-port {
+    container sonic-mgmt_port {
 
         container MGMT_PORT {
 
@@ -35,6 +35,9 @@ module sonic-mgmt-port {
                     type uint16 {
                         range "10|100|1000"; 
                     }
+
+                    description
+                        "Management port speed in megabytes.";
                 }
 
                 leaf autoneg {
@@ -67,6 +70,6 @@ module sonic-mgmt-port {
 
         } /* end of container MGMT_PORT */
 
-    } /* end of container sonic-mgmt-port */
+    } /* end of container sonic-mgmt_port */
 
-} /* end of module sonic-mgmt-port */
+} /* end of module sonic-mgmt_port */
