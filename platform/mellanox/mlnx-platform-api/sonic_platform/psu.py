@@ -52,14 +52,14 @@ psu_profile_list = [
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
-        PSU_POWER : "power/psu{}_power"
+        PSU_POWER : "power/psu{}_power",
         PSU_VPD : "eeprom/psu{}_vpd"
     },
     # for fixed platforms 2100, 2010
     {
         PSU_CURRENT : "power/psu{}_curr",
         PSU_VOLTAGE : "power/psu{}_volt_out2",
-        PSU_POWER : "power/psu{}_power"
+        PSU_POWER : "power/psu{}_power",
         PSU_VPD : None
     }
 ]
