@@ -39,6 +39,9 @@ jobs:
         displayName: 'Checkout code'
       - script: |
           git checkout -b $(Build.SourceBranchName)
+          echo BUILD_NUMBER: $BUILD_NUMBER
+          . function.sh
+          sonic_get_version
           sudo modprobe overlay
           sudo apt-get install -y acl
           sudo bash -c "echo 1 > /proc/sys/vm/compact_memory"
