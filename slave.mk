@@ -87,8 +87,8 @@ configure :
 	@mkdir -p $(DPKG_ADMINDIR_PATH)
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
-	@if [ -x platform/$(PLATFORM)/patches/configure.sh ]; then \
-	    platform/$(PLATFORM)/patches/configure.sh; \
+	@if [ -x platform/$(PLATFORM)/configure.sh ]; then \
+	    platform/$(PLATFORM)/configure.sh; \
 	fi
 
 distclean : .platform clean
