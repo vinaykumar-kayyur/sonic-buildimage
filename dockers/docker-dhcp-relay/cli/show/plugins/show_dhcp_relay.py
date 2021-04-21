@@ -1,6 +1,5 @@
 from natsort import natsorted
-from .. import vlan
-
+import show.vlan as vlan
 
 def get_dhcp_helper_address(ctx, vlan):
     cfg, _ = ctx
@@ -19,4 +18,3 @@ vlan.VlanBrief.register_column('DHCP Helper Address', get_dhcp_helper_address)
 
 def register(cli):
     pass
-

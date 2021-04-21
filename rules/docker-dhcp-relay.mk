@@ -47,6 +47,6 @@ $(DOCKER_DHCP_RELAY)_CONTAINER_TMPFS += /tmp/
 $(DOCKER_DHCP_RELAY)_CONTAINER_TMPFS += /var/tmp/
 
 $(DOCKER_DHCP_RELAY)_CLI_CONFIG_PLUGIN = /cli/config/plugins/dhcp_relay.py
-$(DOCKER_DHCP_RELAY)_CLI_SHOW_PLUGIN = /cli/show/plugins/dhcp_relay.py
+$(DOCKER_DHCP_RELAY)_CLI_SHOW_PLUGIN = /cli/show/plugins/show_dhcp_relay.py
 
 $(DOCKER_DHCP_RELAY)_FILES += $(SUPERVISOR_PROC_EXIT_LISTENER_SCRIPT)
