@@ -11,7 +11,8 @@ setup(
     maintainer = 'Joe LeVeque',
     maintainer_email = 'jolevequ@microsoft.com',
     packages = [
-        'host_modules'
+        'host_modules',
+        'health_checker'
     ],
     scripts = [
         'scripts/caclmgrd',
@@ -20,7 +21,8 @@ setup(
         'scripts/procdockerstatsd',
         'scripts/determine-reboot-cause',
         'scripts/process-reboot-cause',
-        'scripts/sonic-host-server'
+        'scripts/sonic-host-server',
+        'scripts/healthd'
     ],
     install_requires = [
         'dbus-python',
@@ -29,6 +31,7 @@ setup(
         'sonic-py-common',
         'swsssdk>=2.0.1',
         'systemd-python',
+        'natsort'
     ],
     setup_requires = [
         'pytest-runner',
@@ -36,7 +39,8 @@ setup(
     ],
     tests_require = [
         'pytest',
-        'sonic-py-common'
+        'sonic-py-common',
+        'mock>=2.0.0'
     ],
     classifiers = [
         'Development Status :: 3 - Alpha',
