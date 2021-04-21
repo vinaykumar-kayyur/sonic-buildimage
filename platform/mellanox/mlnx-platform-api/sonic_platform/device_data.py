@@ -52,7 +52,7 @@ DEVICE_DATA = {
             'drawer_num': 1,
             'drawer_type': 'virtual',
             'fan_num_per_drawer': 4,
-            'support_fan_direction': False,
+            'support_fan_direction': True,
             'hot_swappable': False
         },
         'psus': {
@@ -94,7 +94,7 @@ DEVICE_DATA = {
             'drawer_num': 1,
             'drawer_type': 'virtual',
             'fan_num_per_drawer': 4,
-            'support_fan_direction': False,
+            'support_fan_direction': True,
             'hot_swappable': False
         },
         'psus': {
