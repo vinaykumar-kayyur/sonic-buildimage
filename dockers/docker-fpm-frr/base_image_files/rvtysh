@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# The command rtysh has root priviledge, only allow to execute readonly commands.
+# The command rvtysh can be run as root priviledge by any user without password, only allow to execute readonly commands.
 
 # The options in the show command cannot contains any charactors to run multiple sub-commands potentially, such as "\n", "\r", "|", "&", "$" and ";".
 if printf -- "$*" | grep -qPz '[\n\r|&$;]'; then
@@ -19,4 +19,4 @@ do
     LAST_PARA=$para
 done
 
-echo "$@"
+vtysh "$@"

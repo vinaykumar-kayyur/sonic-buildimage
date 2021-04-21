@@ -35,7 +35,6 @@ asic_config_checksum
 files/Aboot/boot0
 files/initramfs-tools/arista-convertfs
 files/initramfs-tools/union-mount
-dockers/docker-fpm-quagga/base_image_files/rvtysh
 
 # Debian byproduct files
 src/**/debian/stamp-*/
