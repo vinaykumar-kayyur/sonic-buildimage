@@ -5,8 +5,6 @@ from unittest import mock
 
 from click.testing import CliRunner
 
-import config.main as config
-import show.main as show
 import show.vlan as vlan
 from utilities_common.db import Db
 

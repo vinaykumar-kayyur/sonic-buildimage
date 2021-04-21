@@ -5,8 +5,6 @@ from unittest import mock
 
 from click.testing import CliRunner
 
-import config.main as config
-import show.main as show
 from utilities_common.db import Db
 
 import pytest
@@ -137,7 +135,7 @@ class TestConfigVlanDhcpRelay(object):
 
         # del relay dest
         with mock.patch("utilities_common.cli.run_command") as mock_run_command:
-            result = runner.invoke(config.config.commands["vlan"].commands["dhcp_relay"].commands["del"],
+            result = runner.invoke(dhcp_relay.vlan_dhcp_relay.commands["del"],
                                    ["1000", "192.0.0.100"], obj=db)
             print(result.exit_code)
             print(result.output)
@@ -152,7 +150,7 @@ class TestConfigVlanDhcpRelay(object):
         db.cfgdb = mock_cfgdb
 
         with mock.patch('utilities_common.cli.run_command') as mock_run_command:
-            result = runner.invoke(config.config.commands["vlan"].commands["dhcp_relay"].commands["del"],
+            result = runner.invoke(dhcp_relay.vlan_dhcp_relay.commands["del"],
                                    ["1000", "192.0.0.100"], obj=db)
             print(result.exit_code)
             print(result.output)
@@ -167,7 +165,7 @@ class TestConfigVlanDhcpRelay(object):
         db.cfgdb = mock_cfgdb
 
         with mock.patch('utilities_common.cli.run_command') as mock_run_command:
-            result = runner.invoke(config.config.commands["vlan"].commands["dhcp_relay"].commands["del"],
+            result = runner.invoke(dhcp_relay.vlan_dhcp_relay.commands["del"],
                                    ["1001", "192.0.0.1"], obj=Db)
             print(result.exit_code)
             print(result.output)

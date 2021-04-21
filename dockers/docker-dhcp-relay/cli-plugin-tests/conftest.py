@@ -1,4 +1,5 @@
 import pytest
+import mock_tables
 
 @pytest.fixture()
 def mock_cfgdb():
