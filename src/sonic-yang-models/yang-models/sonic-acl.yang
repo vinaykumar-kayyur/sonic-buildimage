@@ -26,7 +26,6 @@ module sonic-acl {
 
 	import sonic-portchannel {
 		prefix lag;
-		revision-date 2019-07-01;
 	}
 
 	description "ACL YANG Module for SONiC OS";
@@ -44,10 +43,6 @@ module sonic-acl {
 			list ACL_RULE_LIST {
 
 				key "ACL_TABLE_NAME RULE_NAME";
-
-				ext:key-regex-configdb-to-yang "^([a-zA-Z0-9_-]+)|([a-zA-Z0-9_-]+)$";
-
-				ext:key-regex-yang-to-configdb "<ACL_TABLE_NAME>|<RULE_NAME>";
 
 				leaf ACL_TABLE_NAME {
 					type leafref {
@@ -233,10 +228,6 @@ module sonic-acl {
 
 				key "ACL_TABLE_NAME";
 
-				ext:key-regex-configdb-to-yang "^([a-zA-Z0-9-_]+)$";
-
-				ext:key-regex-yang-to-configdb "<ACL_TABLE_NAME>";
-
 				leaf ACL_TABLE_NAME {
 					type string;
 				}
@@ -267,10 +258,10 @@ module sonic-acl {
 					/* union of leafref is allowed in YANG 1.1 */
 					type union {
 						type leafref {
-							path /port:sonic-port/port:PORT/port:PORT_LIST/port:port_name;
+							path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
 						}
 						type leafref {
-							path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:portchannel_name;
+							path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name;
 						}
 						type string {
 							pattern "";

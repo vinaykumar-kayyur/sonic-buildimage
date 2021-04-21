@@ -20,6 +20,26 @@ _trap_push() {
 }
 _trap_push true
 
+read_conf_file() {
+    local conf_file=$1
+    while IFS='=' read -r var value || [ -n "$var" ]
+    do
+        # remove newline character
+        var=$(echo $var | tr -d '\r\n')
+        value=$(echo $value | tr -d '\r\n')
+        # remove comment string
+        var=${var%#*}
+        value=${value%#*}
+        # skip blank line
+        [ -z "$var" ] && continue
+        # remove double quote in the beginning
+        tmp_val=${value#\"}
+        # remove double quote in the end
+        value=${tmp_val%\"}
+        eval "$var=\"$value\""
+    done < "$conf_file"
+}
+
 # Main
 set -e
 cd $(dirname $0)
@@ -37,7 +57,7 @@ else
 fi
 
 if [ -r ./machine.conf ]; then
-. ./machine.conf
+    read_conf_file "./machine.conf"
 fi
 
 if [ -r ./onie-image.conf ]; then
@@ -54,9 +74,9 @@ fi
 
 # get running machine from conf file
 if [ -r /etc/machine.conf ]; then
-    . /etc/machine.conf
+    read_conf_file "/etc/machine.conf"
 elif [ -r /host/machine.conf ]; then
-    . /host/machine.conf
+    read_conf_file "/host/machine.conf"
 elif [ "$install_env" != "build" ]; then
     echo "cannot find machine.conf"
     exit 1
@@ -447,7 +467,13 @@ if [ "$install_env" = "onie" ]; then
 
 elif [ "$install_env" = "sonic" ]; then
     demo_mnt="/host"
-    eval running_sonic_revision=$(cat /etc/sonic/sonic_version.yml | grep build_version | cut -f2 -d" ")
+    # Get current SONiC image (grub/aboot/uboot)
+    eval running_sonic_revision="$(cat /proc/cmdline | sed -n 's/^.*loop=\/*image-\(\S\+\)\/.*$/\1/p')"
+    # Verify SONiC image exists
+    if [ ! -d "$demo_mnt/image-$running_sonic_revision" ]; then
+        echo "ERROR: SONiC installation is corrupted: path $demo_mnt/image-$running_sonic_revision doesn't exist"
+        exit 1
+    fi
     # Prevent installing existing SONiC if it is running
     if [ "$image_dir" = "image-$running_sonic_revision" ]; then
         echo "Not installing SONiC version $running_sonic_revision, as current running SONiC has the same version"
@@ -542,9 +568,10 @@ trap_push "rm $grub_cfg || true"
 [ -r ./platform.conf ] && . ./platform.conf
 
 # Check if the CPU vendor is 'Intel' and disable c-states if True
-CPUVENDOR=$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{print $3}')
+CPUVENDOR="$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{print $3}')"
 echo "Switch CPU vendor is: $CPUVENDOR"
-if [[ $(echo $CPUVENDOR | grep -i "Intel") ]] ; then
+if echo "$CPUVENDOR" | grep -i 'Intel' >/dev/null 2>&1; then
+    echo "Switch CPU cstates are: disabled"
     CSTATES="intel_idle.max_cstate=0"
 else
     CSTATES=""
@@ -624,12 +651,13 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-4.19.0-9-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-4.19.0-12-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
+                systemd.unified_cgroup_hierarchy=0 \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-4.19.0-9-2-amd64
+        initrd  /$image_dir/boot/initrd.img-4.19.0-12-2-amd64
 }
 EOF
 

@@ -1,4 +1,4 @@
-*static anaylsis*:
+*static analysis*:
 
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/Azure/sonic-buildimage.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-buildimage/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Azure/sonic-buildimage.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-buildimage/context:python)
@@ -114,7 +114,7 @@ To build SONiC installer image and docker images, run the following commands:
     make all
 
 ## Usage for ARM Architecture
-To build Arm32 bit for (ARMHF) plaform
+To build Arm32 bit for (ARMHF) platform
     ARM build has dependency in docker version 18,
     if docker version is 19, downgrade to 18 as below
     sudo apt-get install --allow-downgrades  -y docker-ce=5:18.09.0~3-0~ubuntu-xenial
@@ -134,7 +134,7 @@ To build Arm32 bit for (ARMHF) plaform
 
 
 
-To build Arm64 bit for plaform
+To build Arm64 bit for platform
 
     # Execute make configure once to configure ASIC and ARCH
 
@@ -153,7 +153,7 @@ To build Arm64 bit for plaform
     `/usr/bin/tar: /path/to/sonic-buildimage/<some_file>: Cannot write: No space left on device`
 
     The solution is to [move the directory](https://linuxconfig.org/how-to-move-docker-s-default-var-lib-docker-to-another-directory-on-ubuntu-debian-linux) to a partition with more free space.
-- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] make` to enable http(s) proxy in the build process.
+- Use `http_proxy=[your_proxy] https_proxy=[your_proxy] no_proxy=[your_no_proxy] make` to enable http(s) proxy in the build process.
 - Add your user account to `docker` group and use your user account to make. `root` or `sudo` are not supported.
 
 The SONiC installer contains all docker images needed. SONiC uses one image for all devices of a same ASIC vendor. The supported ASIC vendors are:
@@ -196,7 +196,7 @@ Every target has a clean target, so in order to clean swss, execute:
 It is recommended to use clean targets to clean all packages that are built together, like dev packages for instance. In order to be more familiar with build process and make some changes to it, it is recommended to read this short [Documentation](README.buildsystem.md).
 
 ## Build debug dockers and debug SONiC installer image:
-SONiC build system supports building dockers and ONE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
+SONiC build system supports building dockers and ONIE-image with debug tools and debug symbols, to help with live & core debugging. For details refer to [(SONiC Buildimage Guide)](https://github.com/Azure/sonic-buildimage/blob/master/README.buildsystem.md).
 
 ## Notes:
 - If you are running make for the first time, a sonic-slave-${USER} docker image will be built automatically.

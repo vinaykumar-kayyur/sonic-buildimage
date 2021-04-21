@@ -13,6 +13,8 @@ import kube_commands
 
 
 KUBE_ADMIN_CONF = "/tmp/kube_admin.conf"
+FLANNEL_CONF_FILE = "/tmp/flannel.conf"
+CNI_DIR = "/tmp/cni/net.d"
 
 # kube_commands test cases
 # NOTE: Ensure state-db entry is complete in PRE as we need to
@@ -101,16 +103,16 @@ join_test_data = {
         common_test.RETVAL: 0,
         common_test.ARGS: ["10.3.157.24", 6443, True, False],
         common_test.PROC_CMD: [
-            'sed *',
-            'rm -f *',
             "kubectl --kubeconfig {} --request-timeout 20s drain None \
 --ignore-daemonsets".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
+            "mkdir -p {}".format(CNI_DIR),
+            "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
             "systemctl start kubelet",
             "kubeadm join --discovery-file {} --node-name None".format(
                 KUBE_ADMIN_CONF)
@@ -122,16 +124,16 @@ None".format(KUBE_ADMIN_CONF),
         common_test.RETVAL: 0,
         common_test.ARGS: ["10.3.157.24", 6443, False, False],
         common_test.PROC_CMD: [
-            'sed *',
-            'rm -f *',
             "kubectl --kubeconfig {} --request-timeout 20s drain None \
 --ignore-daemonsets".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "systemctl stop kubelet",
             "modprobe br_netfilter",
+            "mkdir -p {}".format(CNI_DIR),
+            "cp {} {}".format(FLANNEL_CONF_FILE, CNI_DIR),
             "systemctl start kubelet",
             "kubeadm join --discovery-file {} --node-name None".format(
                 KUBE_ADMIN_CONF)
@@ -148,51 +150,6 @@ None".format(KUBE_ADMIN_CONF),
         ]
     },
     3: {
-        common_test.DESCR: "Regular join: fail file update",
-        common_test.RETVAL: -1,
-        common_test.ARGS: ["10.3.157.24", 6443, False, False],
-        common_test.PROC_CMD: [
-            'sed *',
-            'rm -f *',
-            "kubectl --kubeconfig {} --request-timeout 20s drain None \
---ignore-daemonsets".format(KUBE_ADMIN_CONF),
-            "kubectl --kubeconfig {} --request-timeout 20s delete node \
-None".format(KUBE_ADMIN_CONF),
-            "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
-            "systemctl stop kubelet",
-            "modprobe br_netfilter",
-            "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF)
-        ],
-        common_test.PROC_RUN: [True, True],
-        common_test.PROC_FAIL: [True]
-    },
-    4: {
-        common_test.DESCR: "Regular join: fail file update",
-        common_test.RETVAL: -1,
-        common_test.ARGS: ["10.3.157.24", 6443, False, False],
-        common_test.PROC_CMD: [
-            'sed *',
-            'rm -f *',
-            "kubectl --kubeconfig {} --request-timeout 20s drain None \
---ignore-daemonsets".format(KUBE_ADMIN_CONF),
-            "kubectl --kubeconfig {} --request-timeout 20s delete node \
-None".format(KUBE_ADMIN_CONF),
-            "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
-            "systemctl stop kubelet",
-            "modprobe br_netfilter",
-            "systemctl start kubelet",
-            "kubeadm join --discovery-file {} --node-name None".format(
-                KUBE_ADMIN_CONF)
-        ],
-        common_test.PROC_RUN: [True, True],
-        common_test.PROC_FAIL: [True],
-        common_test.PROC_THROW: [True]
-    },
-    5: {
         common_test.DESCR: "Regular join: fail due to unable to lock",
         common_test.RETVAL: -1,
         common_test.ARGS: ["10.3.157.24", 6443, False, False],
@@ -213,7 +170,7 @@ reset_test_data = {
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "rm -f {}".format(KUBE_ADMIN_CONF),
             "systemctl stop kubelet"
         ]
@@ -228,7 +185,7 @@ None".format(KUBE_ADMIN_CONF),
             "kubectl --kubeconfig {} --request-timeout 20s delete node \
 None".format(KUBE_ADMIN_CONF),
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "rm -f {}".format(KUBE_ADMIN_CONF),
             "systemctl stop kubelet"
         ]
@@ -239,7 +196,7 @@ None".format(KUBE_ADMIN_CONF),
         common_test.ARGS: [True],
         common_test.PROC_CMD: [
             "kubeadm reset -f",
-            "rm -rf /etc/cni/net.d",
+            "rm -rf {}".format(CNI_DIR),
             "rm -f {}".format(KUBE_ADMIN_CONF),
             "systemctl stop kubelet"
         ]
@@ -269,7 +226,11 @@ clusters:\n\
         kubelet_yaml = "/tmp/kubelet_config.yaml"
         with open(kubelet_yaml, "w") as s:
             s.close()
+        with open(FLANNEL_CONF_FILE, "w") as s:
+            s.close()
         kube_commands.KUBELET_YAML = kubelet_yaml
+        kube_commands.CNI_DIR = CNI_DIR
+        kube_commands.FLANNEL_CONF_FILE = FLANNEL_CONF_FILE
         kube_commands.SERVER_ADMIN_URL = "file://{}".format(self.admin_conf_file)
         kube_commands.KUBE_ADMIN_CONF = KUBE_ADMIN_CONF
 
