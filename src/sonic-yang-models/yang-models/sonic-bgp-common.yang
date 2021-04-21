@@ -349,7 +349,7 @@ module sonic-bgp-common {
 
         leaf admin_status {
             type boolean;
-            description "Enabled status";
+            description "Indicates address family active/inactive status";
         }
 
         leaf send_default_route {
