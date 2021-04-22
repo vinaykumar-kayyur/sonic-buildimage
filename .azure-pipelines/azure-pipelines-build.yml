@@ -13,6 +13,9 @@ parameters:
 - name: 'postSteps'
   type: stepList
   default: []
+- name: 'jobGroups'
+  type: object
+  default: []
 
 jobs:
 - template: azure-pipelines-image-template.yml
@@ -30,51 +33,54 @@ jobs:
       raw_image: no
       sync_rpc_image: no
       platform_rpc: no
-    jobGroups:
-      - name: vs
-        variables:
-          dbg_image: yes
-      - name: barefoot
-        variables:
-          swi_image: yes
-      - name: broadcom
-        variables:
-          dbg_image: yes
-          swi_image: yes
-          raw_image: yes
-          sync_rpc_image: yes
-          platform_rpc: brcm
-      - name: centec
-        variables:
-          dbg_image: yes
-          sync_rpc_image: yes
-          platform_rpc: centec
-      - name: centec-arm64
-        pool: sonicbld_8c
-        timeoutInMinutes: 1800
-        variables:
-          PLATFORM_ARCH: arm64
-      - name: generic
-        variables:
-          dbg_image: yes
-      - name: innovium
-        variables:
-          swi_image: yes
-      - name: marvell-armhf
-        pool: sonicbld_8c
-        timeoutInMinutes: 1800
-        variables:
-          PLATFORM_ARCH: armhf
-      - name: mellanox
-        variables:
-          dbg_image: yes
-          sync_rpc_image: yes
-          platform_rpc: mlnx
-      - name: nephos
-        variables:
-          dbg_image: yes
-          sync_rpc_image: yes
-          platform_rpc: nephos
+    ${{ if ne(parameters.jobGroups, '') }}:
+      jobGroups: ${{ parameters.jobGroups }}
+    ${{ if eq(parameters.jobGroups, '') }}:
+      jobGroups:
+        - name: vs
+          variables:
+            dbg_image: yes
+        - name: barefoot
+          variables:
+            swi_image: yes
+        - name: broadcom
+          variables:
+            dbg_image: yes
+            swi_image: yes
+            raw_image: yes
+            sync_rpc_image: yes
+            platform_rpc: brcm
+        - name: centec
+          variables:
+            dbg_image: yes
+            sync_rpc_image: yes
+            platform_rpc: centec
+        - name: centec-arm64
+          pool: sonicbld_8c
+          timeoutInMinutes: 1800
+          variables:
+            PLATFORM_ARCH: arm64
+        - name: generic
+          variables:
+            dbg_image: yes
+        - name: innovium
+          variables:
+            swi_image: yes
+        - name: marvell-armhf
+          pool: sonicbld_8c
+          timeoutInMinutes: 1800
+          variables:
+            PLATFORM_ARCH: armhf
+        - name: mellanox
+          variables:
+            dbg_image: yes
+            sync_rpc_image: yes
+            platform_rpc: mlnx
+        - name: nephos
+          variables:
+            dbg_image: yes
+            sync_rpc_image: yes
+            platform_rpc: nephos
     buildSteps:
       - bash: |
           if [ $(GROUP_NAME) == vs ]; then
