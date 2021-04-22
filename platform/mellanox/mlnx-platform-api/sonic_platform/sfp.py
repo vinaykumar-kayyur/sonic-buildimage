@@ -1493,9 +1493,12 @@ class SFP(SfpBase):
         sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t()
         sx_mgmt_phy_mod_pwr_attr.power_attr_type = power_attr_type
         sx_mgmt_phy_mod_pwr_attr_t_p_assign(sx_mgmt_phy_mod_pwr_attr_p, sx_mgmt_phy_mod_pwr_attr)
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
         try:
-            rc = sx_mgmt_phy_mod_pwr_attr_get(sdk_handle, sdk_index, sx_mgmt_phy_mod_pwr_attr_p)
-            assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_mod_pwr_attr_get failed"
+            rc = sx_mgmt_phy_module_pwr_attr_get(sdk_handle, module_id_info, sx_mgmt_phy_mod_pwr_attr_p)
+            assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_pwr_attr_get failed {}".format(rc)
             sx_mgmt_phy_mod_pwr_attr = sx_mgmt_phy_mod_pwr_attr_t_p_value(sx_mgmt_phy_mod_pwr_attr_p)
             pwr_mode_attr = sx_mgmt_phy_mod_pwr_attr.pwr_mode_attr
             return pwr_mode_attr.admin_pwr_mode_e, pwr_mode_attr.oper_pwr_mode_e
@@ -1935,9 +1938,12 @@ class SFP(SfpBase):
 
     @classmethod
     def _reset(cls, sdk_handle, sdk_index):
-        rc = sx_mgmt_phy_mod_reset(sdk_handle, sdk_index)
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
+        rc = sx_mgmt_phy_module_reset(sdk_handle, module_id_info)
         if rc != SX_STATUS_SUCCESS:
-            logger.log_warning("sx_mgmt_phy_mod_reset failed, rc = %d" % rc)
+            logger.log_error("Error occurred when resetting SFP module {}, error code {}".format(sdk_index, rc))
 
         return rc == SX_STATUS_SUCCESS
 
@@ -2051,10 +2057,13 @@ class SFP(SfpBase):
         sx_mgmt_phy_mod_pwr_attr.pwr_mode_attr = sx_mgmt_phy_mod_pwr_mode_attr
         sx_mgmt_phy_mod_pwr_attr_p = new_sx_mgmt_phy_mod_pwr_attr_t_p()
         sx_mgmt_phy_mod_pwr_attr_t_p_assign(sx_mgmt_phy_mod_pwr_attr_p, sx_mgmt_phy_mod_pwr_attr)
+        module_id_info = sx_mgmt_module_id_info_t()
+        module_id_info.slot_id = 0
+        module_id_info.module_id = sdk_index
         try:
-            rc = sx_mgmt_phy_mod_pwr_attr_set(sdk_handle, SX_ACCESS_CMD_SET, sdk_index, sx_mgmt_phy_mod_pwr_attr_p)
+            rc = sx_mgmt_phy_module_pwr_attr_set(sdk_handle, SX_ACCESS_CMD_SET, module_id_info, sx_mgmt_phy_mod_pwr_attr_p)
             if SX_STATUS_SUCCESS != rc:
-                logger.log_error("sx_mgmt_phy_mod_pwr_attr_set failed, rc = %d" % rc)
+                logger.log_error("Error occurred when setting power mode for SFP module {}, error code {}".format(sdk_index, rc))
                 result = False
             else:
                 result = True
