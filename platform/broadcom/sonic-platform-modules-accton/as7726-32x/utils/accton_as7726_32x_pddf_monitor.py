@@ -25,25 +25,20 @@
 
 try:
     import os
-    import subprocess
     import sys
     import getopt
     import logging
     import logging.config
     import logging.handlers
     import time
-    import traceback    
-    from tabulate import tabulate
     from sonic_platform import platform
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
 # Deafults
 VERSION = '1.0'
-FUNCTION_NAME = '/usr/local/bin/accton_as7726_32x_monitor'
+FUNCTION_NAME = '/usr/local/bin/accton_as7726_32x_pddf_monitor'
 
-global log_file
-global log_level
 platform_chassis = None
  
 #  Air Flow Front to Back :
@@ -115,7 +110,7 @@ class device_monitor(object):
             console.setFormatter(formatter)
             logging.getLogger('').addHandler(console)
 
-        sys_handler = handler = logging.handlers.SysLogHandler(address = '/dev/log')
+        sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
         sys_handler.setLevel(logging.WARNING)       
         logging.getLogger('').addHandler(sys_handler)
           
@@ -166,7 +161,6 @@ class device_monitor(object):
            LEVEL_TEMP_CRITICAL: [100, 0xE, 59000, 200000],
         }
         
-        fan_policy = fan_policy_f2b
         fan_dir= platform_chassis.get_fan(0).get_direction()
         if fan_dir == 'EXHAUST':
             fan_policy = fan_policy_f2b
@@ -180,9 +174,6 @@ class device_monitor(object):
             temp4 = platform_chassis.get_thermal(3).get_temperature()*1000
             temp5 = platform_chassis.get_thermal(4).get_temperature()*1000
         else:
-            temp1 = test_temp_list[0]
-            temp2 = test_temp_list[1]
-            temp3 = test_temp_list[2]
             temp4 = test_temp_list[3]
             temp5 = test_temp_list[4]            
             fan_fail=0
