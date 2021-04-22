@@ -22,7 +22,6 @@ PAM_RADIUS_AUTH_CONF_TEMPLATE = "/usr/share/sonic/templates/pam_radius_auth.conf
 NSS_CONF = "/etc/nsswitch.conf"
 ETC_PAMD_SSHD = "/etc/pam.d/sshd"
 ETC_PAMD_LOGIN = "/etc/pam.d/login"
-ETC_PAMD_SUDO = "/etc/pam.d/sudo"
 
 # TACACS+
 TACPLUS_SERVER_PASSKEY_DEFAULT = ""
@@ -36,14 +35,6 @@ RADIUS_SERVER_RETRANSMIT_DEFAULT = "3"
 RADIUS_SERVER_TIMEOUT_DEFAULT = "5"
 RADIUS_SERVER_AUTH_TYPE_DEFAULT = "pap"
 RADIUS_PAM_AUTH_CONF_DIR = "/etc/pam_radius_auth.d/"
-
-def run_cmd(cmd, log_err = True):
-    try:
-        subprocess.check_call(cmd, shell = True)
-    except Exception as err:
-        if log_err:
-            syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
-                  .format(err.cmd, err.returncode, err.output))
 
 def is_true(val):
     if val == 'True' or val == 'true':
@@ -73,6 +64,7 @@ def run_cmd(cmd, log_err = True):
         if log_err:
             syslog.syslog(syslog.LOG_ERR, "{} - failed: return code - {}, output:\n{}"
                   .format(err.cmd, err.returncode, err.output))
+        return err.returncode
     return 0
 
 class Iptables(object):
@@ -208,7 +200,7 @@ class AaaCfg(object):
         if modify_conf:
             self.modify_conf_file()
 
-    def tacacs_get_source_intf_ip(self, keys, src_intf):
+    def pick_src_intf_ipaddrs(self, keys, src_intf):
         new_ipv4_addr = ""
         new_ipv6_addr = ""
 
@@ -247,7 +239,7 @@ class AaaCfg(object):
         if modify_conf:
             self.modify_conf_file()
 
-    def handle_radius_source_intf_ip_chg(self, key, keys):
+    def handle_radius_source_intf_ip_chg(self, key):
         modify_conf=False
         if 'src_intf' in self.radius_global:
             if key[0] == self.radius_global['src_intf']:
@@ -261,10 +253,10 @@ class AaaCfg(object):
         if not modify_conf:
             return
 
-        syslog.syslog(syslog.LOG_INFO, 'RADIUS IP change - key:{}, keys:{}, current server info {}'.format(key, keys, self.radius_servers))
+        syslog.syslog(syslog.LOG_INFO, 'RADIUS IP change - key:{}, current server info {}'.format(key, self.radius_servers))
         self.modify_conf_file()
 
-    def handle_radius_nas_ip_chg(self, key, keys):
+    def handle_radius_nas_ip_chg(self, key):
         modify_conf=False
         # Mgmt IP configuration affects only the default nas_ip
         if 'nas_ip' not in self.radius_global:
@@ -276,12 +268,14 @@ class AaaCfg(object):
         if not modify_conf:
             return
 
-        syslog.syslog(syslog.LOG_INFO, 'RADIUS (NAS) IP change - key:{}, keys:{}, current global info {}'.format(key, keys, self.radius_global))
+        syslog.syslog(syslog.LOG_INFO, 'RADIUS (NAS) IP change - key:{}, current global info {}'.format(key, self.radius_global))
         self.modify_conf_file()
 
     def radius_global_update(self, key, data, modify_conf=True):
         if key == 'global':
             self.radius_global = data
+            if 'statistics' in data:
+                self.radius_global['statistics'] = is_true(data['statistics'])
             if modify_conf:
                 self.modify_conf_file()
 
@@ -335,7 +329,7 @@ class AaaCfg(object):
 
         interface_ip = ""
         if keys != None:
-            ipv4_addr, ipv6_addr = self.tacacs_get_source_intf_ip(keys, source)
+            ipv4_addr, ipv6_addr = self.pick_src_intf_ipaddrs(keys, source)
             # Based on the type of addr, return v4 or v6
             if addr and isinstance(addr, ipaddress.IPv6Address):
                 interface_ip = ipv6_addr
@@ -393,12 +387,16 @@ class AaaCfg(object):
                     # RADIUS: Log a message if src_ip is already defined.
                     if 'src_ip' in server:
                         syslog.syslog(syslog.LOG_INFO, \
-            "RADIUS_SERVER|{}: src_intf found. May ignore src_ip".format(addr))
+            "RADIUS_SERVER|{}: src_intf found. Ignoring src_ip".format(addr))
                     # RADIUS: If server.src_intf, then get the corresponding
                     # src_ip based on the server.ip, and set it.
                     src_ip = self.get_interface_ip(server['src_intf'], addr)
                     if len(src_ip) > 0:
                         server['src_ip'] = src_ip
+                    elif 'src_ip' in server:
+                        syslog.syslog(syslog.LOG_INFO, \
+            "RADIUS_SERVER|{}: src_intf has no usable IP addr.".format(addr))
+                        del server['src_ip']
 
                 radsrvs_conf.append(server)
             radsrvs_conf = sorted(radsrvs_conf, key=lambda t: int(t['priority']), reverse=True)
@@ -418,15 +416,15 @@ class AaaCfg(object):
         os.chmod(PAM_AUTH_CONF + ".tmp", 0o644)
         os.rename(PAM_AUTH_CONF + ".tmp", PAM_AUTH_CONF)
 
-        # Modify common-auth include file in /etc/pam.d/login, sshd, and sudo
+        # Modify common-auth include file in /etc/pam.d/login, sshd.
+        # /etc/pam.d/sudo is not handled, because it would change the existing
+        # behavior. It can be modified once a config knob is added for sudo.
         if os.path.isfile(PAM_AUTH_CONF):
             self.modify_single_file(ETC_PAMD_SSHD,  [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
             self.modify_single_file(ETC_PAMD_LOGIN, [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
-            self.modify_single_file(ETC_PAMD_SUDO, [ "'/^@include/s/common-auth$/common-auth-sonic/'" ])
         else:
             self.modify_single_file(ETC_PAMD_SSHD,  [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
             self.modify_single_file(ETC_PAMD_LOGIN, [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
-            self.modify_single_file(ETC_PAMD_SUDO, [ "'/^@include/s/common-auth-sonic$/common-auth/'" ])
 
         # Add tacplus/radius in nsswitch.conf if TACACS+/RADIUS enable
         if 'tacacs+' in auth['login']:
@@ -470,8 +468,12 @@ class AaaCfg(object):
                 with open(pam_radius_auth_file, 'w+') as f:
                     f.write(pam_radius_auth_conf)
 
-        # Start the statistics service
-        cmd = 'service aaastatsd start'
+        # Start the statistics service. Only RADIUS implemented
+        if ('radius' in auth['login']) and ('statistics' in radius_global) and\
+                radius_global['statistics']:
+            cmd = 'service aaastatsd start'
+        else:
+            cmd = 'service aaastatsd stop'
         syslog.syslog(syslog.LOG_INFO, "cmd - {}".format(cmd))
         try:
             subprocess.check_call(cmd, shell=True)
@@ -830,8 +832,8 @@ class HostConfigDaemon:
 
     def mgmt_intf_handler(self, key, data):
         keys = self.config_db.get_keys('MGMT_INTERFACE')
-        self.aaacfg.handle_radius_source_intf_ip_chg(key, keys)
-        self.aaacfg.handle_radius_nas_ip_chg(key, keys)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
+        self.aaacfg.handle_radius_nas_ip_chg(key)
 
     def lpbk_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
@@ -844,32 +846,32 @@ class HostConfigDaemon:
 
         self.iptables.iptables_handler(key, data, add)
         self.ntpcfg.handle_ntp_source_intf_chg(key)
-        self.aaacfg.handle_radius_source_intf_ip_chg(key, keys)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def vlan_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
         #Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('VLAN_INTERFACE')
-        self.aaacfg.handle_radius_source_intf_ip_chg(key, keys)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def vlan_sub_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
         #Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('VLAN_SUB_INTERFACE')
-        self.aaacfg.handle_radius_source_intf_ip_chg(key, keys)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def portchannel_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
         #Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('PORTCHANNEL_INTERFACE')
-        self.aaacfg.handle_radius_source_intf_ip_chg(key, keys)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def phy_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
         #Check if delete operation by fetch existing keys
         keys = self.config_db.get_keys('INTERFACE')
         syslog.syslog(syslog.LOG_INFO, "phy_intf_handler:key:{},keys: {}".format(key, keys))
-        self.aaacfg.handle_radius_source_intf_ip_chg(key, keys)
+        self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def feature_state_handler(self, key, data):
         feature_name = key

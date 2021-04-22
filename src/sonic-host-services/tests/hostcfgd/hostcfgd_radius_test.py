@@ -67,7 +67,6 @@ class TestHostcfgdRADIUS(TestCase):
         hostcfgd.NSS_CONF = op_path + "/nsswitch.conf"
         hostcfgd.ETC_PAMD_SSHD = op_path + "/sshd"
         hostcfgd.ETC_PAMD_LOGIN = op_path + "/login"
-        hostcfgd.ETC_PAMD_SUDO = op_path + "/sudo"
         hostcfgd.RADIUS_PAM_AUTH_CONF_DIR = op_path + "/"
 
         shutil.rmtree( op_path, ignore_errors=True)
@@ -75,7 +74,6 @@ class TestHostcfgdRADIUS(TestCase):
 
         shutil.copyfile( sop_path + "/sshd.old", op_path + "/sshd")
         shutil.copyfile( sop_path + "/login.old", op_path + "/login")
-        shutil.copyfile( sop_path + "/sudo.old", op_path + "/sudo")
 
         MockConfigDb.set_config_db(test_data["config_db"])
         host_config_daemon = hostcfgd.HostConfigDaemon()

@@ -8,6 +8,9 @@ After=sonic.target
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/aaastatsd
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=3
 
 [Install]
 WantedBy=sonic.target

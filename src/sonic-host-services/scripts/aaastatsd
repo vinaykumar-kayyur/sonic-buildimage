@@ -1,5 +1,5 @@
-#!/usr/bin/python -u
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+#
 
 import os
 import syslog
@@ -174,14 +174,12 @@ class RadiusStatistics:
             if len(lines) > 0:
                 radius_counters = lines[0].split(' ')
                 entry = dict(zip(self.radius_counter_names, radius_counters))
-        counters_db = SonicV2Connector(host='127.0.0.1')
-        counters_db.connect(counters_db.COUNTERS_DB)
 
-        key = 'RADIUS_SERVER_STATS:' + srv
-        if entry != None:
-            counters_db.set_all(counters_db.COUNTERS_DB, key, entry)
-        else:
-            counters_db.delete(counters_db.COUNTERS_DB, key)
+        counters_db = ConfigDBConnector()
+        counters_db.db_connect('COUNTERS_DB', wait_for_init=False,
+		retry_on=False)
+
+        counters_db.set_entry('RADIUS_SERVER_STATS', srv, entry)
 
         counters_db.close(counters_db.COUNTERS_DB)
 
