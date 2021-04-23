@@ -170,7 +170,8 @@ endef
 
 ###############################################################################
 ## Manifest generation routine
-###############################################################
+## TODO: changelog generation
+###############################################################################
 # call:
 #     generate_manifest some_docker.gz, version_suffix
 define generate_manifest
