@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Mellanox
 #
@@ -1520,7 +1518,7 @@ class SFP(SfpBase):
             get_lpmode_code = 'from sonic_platform import sfp;\n' \
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._get_lpmode(sdk_handle, {}))'.format(self.sdk_index)
-            lpm_cmd = "docker exec pmon python -c \"{}\"".format(get_lpmode_code)
+            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(get_lpmode_code)
             try:
                 output = subprocess.check_output(lpm_cmd, shell=True, universal_newlines=True)
                 return 'True' in output
@@ -1924,7 +1922,7 @@ class SFP(SfpBase):
                          'with sfp.SdkHandleContext() as sdk_handle:' \
                          'print(sfp.SFP._reset(sdk_handle, {}))' \
                          .format(self.sdk_index)
-            reset_cmd = "docker exec pmon python -c \"{}\"".format(reset_code)
+            reset_cmd = "docker exec pmon python3 -c \"{}\"".format(reset_code)
 
             try:
                 output = subprocess.check_output(reset_cmd, shell=True, universal_newlines=True)
@@ -2113,7 +2111,7 @@ class SFP(SfpBase):
                               'with sfp.SdkHandleContext() as sdk_handle:' \
                               'print(sfp.SFP._set_lpmode({}, sdk_handle, {}))' \
                               .format('True' if lpmode else 'False', self.sdk_index)
-            lpm_cmd = "docker exec pmon python -c \"{}\"".format(set_lpmode_code)
+            lpm_cmd = "docker exec pmon python3 -c \"{}\"".format(set_lpmode_code)
 
             # Set LPM
             try:
