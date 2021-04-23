@@ -33,8 +33,18 @@
 	"desc": "DEVICE_METADATA_TYPE_INCORRECT_PATTERN pattern failure.",
 	"eStrKey" : "Pattern"
     },
+    "DEVICE_METADATA_CORRECT_BUFFER_MODEL_PATTERN": {
+        "desc": "DEVICE_METADATA correct value for BUFFER_MODEL field"
+    },
+    "DEVICE_METADATA_CORRECT_BUFFER_MODEL_PATTERN2": {
+        "desc": "DEVICE_METADATA correct value for BUFFER_MODEL field"
+    },
+    "DEVICE_METADATA_INCORRECT_BUFFER_MODEL_PATTERN": {
+        "desc": "DEVICE_METADATA wrong value for BUFFER_MODEL field.",
+        "eStr": ["pattern", "does not satisfy"]
+    },
     "DEVICE_METADATA_FRR_MGMT_FWK_CONFIG": {
-    "desc": "Verifying FRR MGMT framework configuration."
+        "desc": "Verifying FRR MGMT framework configuration."
     }
 
 }
