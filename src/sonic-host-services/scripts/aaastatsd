@@ -4,7 +4,6 @@
 import os
 import syslog
 import threading
-from swsssdk import SonicV2Connector
 from swsssdk import ConfigDBConnector
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler

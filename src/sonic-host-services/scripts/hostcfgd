@@ -831,7 +831,6 @@ class HostConfigDaemon:
         syslog.syslog(syslog.LOG_INFO, 'value of {} changed to {}'.format(key, log_data))
 
     def mgmt_intf_handler(self, key, data):
-        keys = self.config_db.get_keys('MGMT_INTERFACE')
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
         self.aaacfg.handle_radius_nas_ip_chg(key)
 
@@ -850,27 +849,18 @@ class HostConfigDaemon:
 
     def vlan_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
-        #Check if delete operation by fetch existing keys
-        keys = self.config_db.get_keys('VLAN_INTERFACE')
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def vlan_sub_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
-        #Check if delete operation by fetch existing keys
-        keys = self.config_db.get_keys('VLAN_SUB_INTERFACE')
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def portchannel_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
-        #Check if delete operation by fetch existing keys
-        keys = self.config_db.get_keys('PORTCHANNEL_INTERFACE')
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def phy_intf_handler(self, key, data):
         key = ConfigDBConnector.deserialize_key(key)
-        #Check if delete operation by fetch existing keys
-        keys = self.config_db.get_keys('INTERFACE')
-        syslog.syslog(syslog.LOG_INFO, "phy_intf_handler:key:{},keys: {}".format(key, keys))
         self.aaacfg.handle_radius_source_intf_ip_chg(key)
 
     def feature_state_handler(self, key, data):
