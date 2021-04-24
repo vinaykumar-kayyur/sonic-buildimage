@@ -63,6 +63,7 @@ module sonic-types {
             enum DROP;
             enum FORWARD;
             enum REDIRECT;
+            enum DO_NOT_NAT;
         }
     }
 

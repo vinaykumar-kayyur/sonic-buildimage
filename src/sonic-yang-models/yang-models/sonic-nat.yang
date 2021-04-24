@@ -173,12 +173,13 @@ module sonic-nat {
                     description "Admin mode of the NAT feature.";
 
                     type stypes:admin_mode;
-                    default enabled;
+                    default disabled;
                 }
 
                 leaf nat_timeout {
                     description "Timeout for the nat entries within the range of 300 sec to 432000 secs.";
 
+                    default "600";
                     type uint32 {
                         range "300..432000" {
                             error-message "Invalid NAT Timeout, valid range 300 sec to 432000 sec.";
@@ -189,6 +190,7 @@ module sonic-nat {
                 leaf nat_tcp_timeout {
                     description "Timeout for the nat tcp entries within the range of 300 sec to 432000 secs.";
 
+                    default "86400";
                     type uint32 {
                         range "300..432000" {
                             error-message "Invalid NAT TCP Timeout, valid range 300 sec to 432000 sec.";
@@ -199,6 +201,7 @@ module sonic-nat {
                 leaf nat_udp_timeout {
                     description "Timeout for the nat udp entries within the range of 120 sec to 600 secs.";
 
+                    default "300";
                     type uint16 {
                         range "120..600" {
                             error-message "Invalid NAT UDP Timeout, valid range 120 sec to 600 sec.";
@@ -282,8 +285,8 @@ module sonic-nat {
                     description "ACL table name mapping for the binding";
 
                     type union {
-                        type leafref {
-                            path "/sacl:sonic-acl/sacl:ACL_TABLE/sacl:ACL_TABLE_LIST/sacl:ACL_TABLE_NAME";
+                        type string {
+                            pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})';
                         }
 
                         type string {
