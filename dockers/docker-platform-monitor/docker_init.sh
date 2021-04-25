@@ -4,6 +4,7 @@
 mkdir -p /etc/supervisor/conf.d/
 
 SENSORS_CONF_FILE="/usr/share/sonic/platform/sensors.conf"
+SENSORS_CONF_PATH_GETTER="/usr/share/sonic/platform/get_sensors_conf_path"
 FANCONTROL_CONF_FILE="/usr/share/sonic/platform/fancontrol"
 
 SUPERVISOR_CONF_TEMPLATE="/usr/share/sonic/templates/docker-pmon.supervisord.conf.j2"
@@ -78,10 +79,14 @@ else
     SONIC_PLATFORM_API_PYTHON_VERSION=3
 fi
 
+if [ -e $SENSORS_CONF_PATH_GETTER ]; then
+    SENSORS_CONF_FILE=$($SENSORS_CONF_PATH_GETTER 2>&1)
+fi
+
 if [ -e $SENSORS_CONF_FILE ]; then
     HAVE_SENSORS_CONF=1
     mkdir -p /etc/sensors.d
-    /bin/cp -f $SENSORS_CONF_FILE /etc/sensors.d/
+    /bin/cp -f $SENSORS_CONF_FILE /etc/sensors.d/sensors.conf
 fi
 
 if [ -e $FANCONTROL_CONF_FILE ]; then
