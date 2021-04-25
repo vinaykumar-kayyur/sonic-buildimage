@@ -69,7 +69,8 @@ class Chassis(ChassisBase):
         
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
-        self.sfp_module_initialized = False
+        self.sfp_module_full_initialized = False
+        self.sfp_module_partial_initialized = False
         self.sfp_event_initialized = False
         self.reboot_cause_initialized = False
         self.sdk_handle = None
@@ -115,7 +116,17 @@ class Chassis(ChassisBase):
                 self._fan_list.append(fan)
 
 
-    def initialize_sfp(self):
+    def initialize_single_sfp(self, index):
+        if not self._sfp_list[index]:
+            if index >= self.QSFP_PORT_START and index < self.PORTS_IN_BLOCK:
+                sfp_module = self.sfp_module(index, 'QSFP', self.get_sdk_handle, self.platform_name)
+            else:
+                sfp_module = self.sfp_module(index, 'SFP', self.get_sdk_handle, self.platform_name)
+
+            self._sfp_list[index] = sfp_module
+
+
+    def initialize_sfp(self, index=None):
         from sonic_platform.sfp import SFP
 
         self.sfp_module = SFP
@@ -127,15 +138,22 @@ class Chassis(ChassisBase):
         self.PORT_END = port_position_tuple[2]
         self.PORTS_IN_BLOCK = port_position_tuple[3]
 
-        for index in range(self.PORT_START, self.PORT_END + 1):
-            if index in range(self.QSFP_PORT_START, self.PORTS_IN_BLOCK + 1):
-                sfp_module = SFP(index, 'QSFP', self.get_sdk_handle, self.platform_name)
-            else:
-                sfp_module = SFP(index, 'SFP', self.get_sdk_handle, self.platform_name)
+        if index is not None:
+            if not self.sfp_module_partial_initialized:
+                if index >= self.PORT_START and index < self.PORT_END:
+                    self._sfp_list = list([None]*(self.PORT_END + 1))
+                else:
+                    raise IndexError("{} is not a valid index of SPF modules. Valid index range:[{}, {}]".format(
+                        index, self.PORT_START + 1, self.PORT_END + 1))
+                self.sfp_module_partial_initialized = True
+        else:
+            if not self.sfp_module_partial_initialized:
+                self._sfp_list = list([None]*(self.PORT_END + 1))
+                self.sfp_module_partial_initialized = True
+            for index in range(self.PORT_START, self.PORT_END + 1):
+                self.initialize_single_sfp(index)
 
-            self._sfp_list.append(sfp_module)
-
-        self.sfp_module_initialized = True
+            self.sfp_module_full_initialized = True
 
 
     def get_sdk_handle(self):
@@ -206,7 +224,7 @@ class Chassis(ChassisBase):
         Returns:
             An integer, the number of sfps available on this chassis
         """
-        if not self.sfp_module_initialized:
+        if not self.sfp_module_full_initialized:
             self.initialize_sfp()
         return len(self._sfp_list)
 
@@ -219,7 +237,7 @@ class Chassis(ChassisBase):
             A list of objects derived from SfpBase representing all sfps 
             available on this chassis
         """
-        if not self.sfp_module_initialized:
+        if not self.sfp_module_full_initialized:
             self.initialize_sfp()
         return self._sfp_list
 
@@ -237,13 +255,17 @@ class Chassis(ChassisBase):
         Returns:
             An object dervied from SfpBase representing the specified sfp
         """
-        if not self.sfp_module_initialized:
-            self.initialize_sfp()
-
         sfp = None
         index -= 1
+
         try:
+            if not self.sfp_module_partial_initialized:
+                self.initialize_sfp(index)
+
             sfp = self._sfp_list[index]
+            if not sfp:
+                self.initialize_single_sfp(index)
+                sfp = self._sfp_list[index]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (0-{})\n".format(
                              index, len(self._sfp_list)-1))
@@ -488,7 +510,7 @@ class Chassis(ChassisBase):
         :return:
         """
         # SFP not initialize yet, do nothing
-        if not self.sfp_module_initialized:
+        if not self.sfp_module_full_initialized:
             return
 
         from . import sfp
