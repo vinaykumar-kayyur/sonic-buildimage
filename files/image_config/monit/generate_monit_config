@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Generate following files from templates:
+# Generate the following files from templates:
 # 1. Monit configuration file of radv container
 # 2. Monit configuration file of dhcp_relay container
 # 3. Monit configuration file of PMon container
