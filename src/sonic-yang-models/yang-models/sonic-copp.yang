@@ -137,26 +137,6 @@ module sonic-copp {
 					default "forward";
 					description "Red action";
 				}
-				
-				leaf genetlink_name {
-					type string {
-						pattern "(psample)" {
-							error-message "Invalid value passed for genetlink_name";
-						}
-					}
-					description
-						"genetlink name";
-				}
-				
-				leaf genetlink_mcgrp_name {
-					type string {
-						pattern "(packets)" {
-							error-message "Invalid value passed for genetlink_mcgrp_name";
-						}
-					}
-					description
-						"genetlink multicast group name";
-				}
 			}
 			/* end of list COPP_GROUP_LIST */
 		}
