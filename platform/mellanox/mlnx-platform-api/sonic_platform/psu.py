@@ -87,10 +87,10 @@ class Psu(PsuBase):
             filemap = psu_profile_list[0]
 
         self.psu_data = DEVICE_DATA[platform]['psus']
-        psu_path = filemap[PSU_VPD].format(self.index)
+        psu_vpd = filemap[PSU_VPD]
 
-        if psu_path is not None:
-            self.psu_vpd = os.path.join(self.psu_path, psu_vpd)
+        if psu_vpd is not None:
+            self.psu_vpd = os.path.join(self.psu_path, psu_vpd.format(self.index))
             self.vpd_data = self._read_vpd_file(self.psu_vpd)
 
             if PN_VPD_FIELD in self.vpd_data:
@@ -169,7 +169,7 @@ class Psu(PsuBase):
             with open(filename, 'r') as fileobj:
                 for line in fileobj.readlines():
                     key, val = line.split(":")
-                    result[key] = val
+                    result[key.strip()] = val.strip()
         except Exception as e:
             logger.log_error("Fail to read VPD file {} due to {}".format(filename, repr(e)))
         return result
