@@ -39,7 +39,9 @@ class TcpSession:
         self.dstip = target[1]
         self.dport = target[2]
         self.vlanid = target[3]
-        self.loopbackip = target[4]
+        self.vlanifname = target[4]
+        self.loopbackip = target[5]
+        self.dutmac = target[6]
         self._ackThread = None
         self._timeout = 3
         self.ip = IP(src=self.srcip, dst=self.dstip)
@@ -48,6 +50,7 @@ class TcpSession:
         self.receivedpackets = 0
         self.rttms = 0
         self.verbose = 0
+        self.random_mac = '00:01:02:03:04:05'
 
 
     #
@@ -59,12 +62,8 @@ class TcpSession:
 
         ip = IP(src=self.srcip, dst=self.dstip, ttl=self.ttl)
 
-        if self.vlanid is None:
-            tcpsync = ip/TCP(dport=self.dport, seq=self.seq, flags='S', options=[(configutil.DEFAULT_TCP_OPTIONS, b'\0')])
-        else:
-            tcpsync = Dot1Q(vlan=int(self.vlanid))/ip/TCP(dport=self.dport, seq=self.seq, flags='S', options=[(configutil.DEFAULT_TCP_OPTIONS, b'\0')])
-
-        syn_ack = sr1(tcpsync, timeout=self._timeout, verbose=self.verbose)
+        tcpsync = Ether(src=self.random_mac, dst=self.dutmac)/ip/TCP(dport=self.dport, seq=self.seq, flags='S', options=[(configutil.DEFAULT_TCP_OPTIONS, b'\0')])
+        syn_ack = srp1(tcpsync, iface=self.vlanifname, timeout=self._timeout, verbose=self.verbose)
         self.seq += 1
         self.sentpackets += 1
 
@@ -112,6 +111,12 @@ def main(argv):
     dstport = configutil.DEFAULT_TCP_PORT
     loopbackip = configutil.get_loopback_ipv4()
     monvlanid = configutil.get_mon_vlan_id(args.vnetinterface)
+    monvlanifname = configutil.get_mon_vlan_host_ifname(args.vnetinterface)
+    dutmac = configutil.get_localhost_mac()
+
+    if monvlanifname is None:
+        vnetlogger.log_error("monvlanifname can't be None", PRINT_TO_CONSOLE)
+        sys.exit(1)
 
     if srcip is None:
         if loopbackip is None:
@@ -120,7 +125,7 @@ def main(argv):
         else:
             srcip = loopbackip
 
-    tcp_hs = TcpSession((srcip, dstip, dstport, monvlanid, loopbackip))
+    tcp_hs = TcpSession((srcip, dstip, dstport, monvlanid, monvlanifname, loopbackip, dutmac))
 
     for x in range(4):
         tcp_hs.connect()

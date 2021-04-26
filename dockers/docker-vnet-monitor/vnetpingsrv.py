@@ -58,6 +58,7 @@ def tcpserver(serverport):
 #
 
 def main():
+    vnetlogger.set_min_log_priority_info()
     tcpserver(configutil.DEFAULT_VXLAN_PORT)
 
 
