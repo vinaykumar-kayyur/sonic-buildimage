@@ -18,21 +18,26 @@
                 "name": "CPLD2"
             }
         ],
-        "fans": [
+        "fans": [],
+        "fan_drawers": [
             {
-                "name": "fan1"
-            },
-            {
-                "name": "fan2"
-            },
-            {
-                "name": "fan3"
-            },
-            {
-                "name": "fan4"
-            }
-        ],
-        "fan_drawers": [],
+                "name": "N/A",
+                "fans": [
+                    {
+                        "name": "fan1"
+                    },
+                    {
+                        "name": "fan2"
+                    },
+                    {
+                        "name": "fan3"
+                    },
+                    {
+                        "name": "fan4"
+                    }
+                ]
+			}
+		],
         "psus": [
             {
                 "name": "PSU 1"
