@@ -1,4 +1,3 @@
-
 #############################################################################
 # Edgecore
 #
@@ -90,8 +89,6 @@ class Thermal(ThermalBase):
                 pass
 
     def __get_temp(self, temp_file):
-        temp = int()
-
         if not self.is_psu:
             temp_file_path = os.path.join(self.hwmon_path, temp_file)
         else:
@@ -119,8 +116,6 @@ class Thermal(ThermalBase):
             A float number of current temperature in Celsius up to nearest thousandth
             of one degree Celsius, e.g. 30.125
         """
-        temp_file = str()
-
         if not self.is_psu:
             temp_file = "temp{}_input".format(self.ss_index)
         else:

@@ -1,6 +1,5 @@
-
 #############################################################################
-# Edgecor
+# Edgecore
 #
 # Module contains an implementation of SONiC Platform Base API and
 # provides the fan status which are available in the platform

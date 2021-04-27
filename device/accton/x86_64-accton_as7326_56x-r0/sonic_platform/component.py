@@ -1,15 +1,10 @@
-#!/usr/bin/env python
-
 #############################################################################
-#  Edgecore
+# Edgecore
 #
 # Component contains an implementation of SONiC Platform Base API and
 # provides the components firmware management function
 #
 #############################################################################
-
-import shlex
-import subprocess
 
 try:
     from sonic_platform_base.component_base import ComponentBase

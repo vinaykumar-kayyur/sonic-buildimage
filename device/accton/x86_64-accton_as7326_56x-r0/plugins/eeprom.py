@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 try:
-    import exceptions
     import binascii
     import time
     import optparse

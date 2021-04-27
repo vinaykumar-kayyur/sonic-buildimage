@@ -1,4 +1,3 @@
-
 ########################################################################
 #
 # Module contains an implementation of SONiC Platform Base API and
@@ -8,7 +7,6 @@
 
 try:
     from sonic_platform_base.fan_drawer_base import FanDrawerBase
-    from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -23,8 +21,13 @@ class FanDrawer(FanDrawerBase):
         FanDrawerBase.__init__(self)
         # FanTray is 0-based in platforms
         self.fantrayindex = fantray_index
+        self.__initialize_fan_drawer()
+        
+
+    def __initialize_fan_drawer(self):
+        from sonic_platform.fan import Fan
         for i in range(FANS_PER_FANTRAY):
-            self._fan_list.append(Fan(fantray_index, i))
+            self._fan_list.append(Fan(self.fantrayindex, i))
 
     def get_name(self):
         """

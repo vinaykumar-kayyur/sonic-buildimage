@@ -1,4 +1,3 @@
-
 #############################################################################
 # Edgecore
 #
@@ -11,7 +10,6 @@
 
 try:
     from sonic_platform_base.psu_base import PsuBase
-    from sonic_platform.fan import Fan
     from sonic_platform.thermal import Thermal
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -59,7 +57,10 @@ class Psu(PsuBase):
         bus = PSU_CPLD_I2C_MAPPING[self.index]["bus"]
         addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(bus, addr)
-
+        self.__initialize_fan()
+        
+    def __initialize_fan(self):
+        from sonic_platform.fan import Fan
         self._fan_list.append(
             Fan(NUM_FAN_TRAY + self.index,
                 is_psu_fan=True,

@@ -9,6 +9,7 @@
 #############################################################################
 
 import os
+import sys
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
@@ -26,7 +27,7 @@ except ImportError as e:
 NUM_FAN_TRAY = 6
 NUM_PSU = 2
 NUM_THERMAL = 4
-NUM_PORT = 56
+NUM_PORT = 58
 NUM_COMPONENT = 4
 
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"

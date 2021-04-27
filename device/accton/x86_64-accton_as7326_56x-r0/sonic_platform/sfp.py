@@ -131,7 +131,7 @@ class Sfp(SfpBase):
 
     # Port number
     PORT_START = 1
-    PORT_END = 56
+    PORT_END = 58
 
     # Path to sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
@@ -198,6 +198,8 @@ class Sfp(SfpBase):
         54: [30],
         55: [31],
         56: [32],
+        57: [22],
+        58: [23]
     }
 
     def __init__(self, sfp_index=0):
@@ -343,14 +345,15 @@ class Sfp(SfpBase):
         ========================================================================
         """
         # check present status
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             sfpi_obj = sff8472InterfaceId()  #SFP
         elif self.port_num <= 56:
             sfpi_obj = sff8436InterfaceId()  #QSFP
+
         if not self.get_presence() or not sfpi_obj:
             return {}
 
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             offset = SFP_INFO_OFFSET
             sfp_interface_bulk_raw = self.__read_eeprom_specific_bytes(
                 (offset + XCVR_INTFACE_BULK_OFFSET),
@@ -373,7 +376,7 @@ class Sfp(SfpBase):
             (offset + XCVR_VENDOR_PN_OFFSET), XCVR_VENDOR_PN_WIDTH)
         sfp_vendor_pn_data = sfpi_obj.parse_vendor_pn(sfp_vendor_pn_raw, 0)
 
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             sfp_vendor_rev_raw = self.__read_eeprom_specific_bytes(
                 (offset + XCVR_HW_REV_OFFSET), XCVR_HW_REV_WIDTH_SFP)
         else:
@@ -431,7 +434,7 @@ class Sfp(SfpBase):
         transceiver_info_dict['cable_type'] = "Unknown"
         transceiver_info_dict['cable_length'] = "Unknown"
 
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             for key in sfp_cable_length_tup:
                 if key in sfp_interface_bulk_data['data']:
                     transceiver_info_dict['cable_type'] = key
@@ -498,7 +501,7 @@ class Sfp(SfpBase):
         ========================================================================
         """
         # check present status
-        if self.port_num <= 48:  #SFP case
+        if self.port_num <= 48  or self.port_num >=57:  #SFP case
             sfpd_obj = sff8472Dom()
             if not self.get_presence() or not sfpd_obj:
                 return {}
@@ -560,7 +563,7 @@ class Sfp(SfpBase):
                 (offset_xcvr + XCVR_DOM_CAPABILITY_OFFSET),
                 XCVR_DOM_CAPABILITY_WIDTH)
             if qsfp_dom_capability_raw is not None:
-                qspf_dom_capability_data = sfpi_obj.parse_qsfp_dom_capability(
+                qspf_dom_capability_data = sfpi_obj.parse_dom_capability(
                     qsfp_dom_capability_raw, 0)
             else:
                 return None
@@ -692,7 +695,7 @@ class Sfp(SfpBase):
         ========================================================================
         """
         # check present status
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             sfpd_obj = sff8472Dom()
 
             if not self.get_presence() and not sfpd_obj:
@@ -872,7 +875,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if reset enabled, False if disabled
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return False  # SPF port doesn't support this feature
 
         val = self.__read_txt_file(
@@ -887,7 +890,7 @@ class Sfp(SfpBase):
             Note : RX LOS status is latched until a call to get_rx_los or a reset.
         """
         rx_los = False
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             cpld_val = self.__read_txt_file(
                 self.cpld_path + "module_rx_los_" + str(self.port_num))
             rx_los = (int(cpld_val, 10) == 1)
@@ -919,7 +922,7 @@ class Sfp(SfpBase):
             Note : TX fault status is lached until a call to get_tx_fault or a reset.
         """
         tx_fault = False
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             cpld_val = self.__read_txt_file(
                 self.cpld_path + "module_tx_fault_" + str(self.port_num))
             tx_fault = (int(cpld_val, 10) == 1)
@@ -950,7 +953,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if tx_disable is enabled, False if disabled
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48 or self.port_num >=57:
             tx_disable = False
 
             status_control_raw = self.__read_eeprom_specific_bytes(
@@ -1000,7 +1003,7 @@ class Sfp(SfpBase):
             As an example, a returned value of 0x5 indicates that channel 0
             and channel 2 have been disabled.
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48 or self.port_num >=57:
             # SFP doesn't support this feature
             return False
         else:
@@ -1019,7 +1022,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48 or self.port_num >= 57:
             # SFP doesn't support this feature
             return False
 
@@ -1029,7 +1032,7 @@ class Sfp(SfpBase):
 
     def get_power_set(self):
 
-        if self.port_num <= 48:
+        if self.port_num <= 48 or self.port_num >= 57:
             # SFP doesn't support this feature
             return False
         else:
@@ -1056,7 +1059,7 @@ class Sfp(SfpBase):
         Returns:
             A Boolean, True if power-override is enabled, False if disabled
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48 or self.port_num >= 57:
             return False  # SFP doesn't support this feature
         else:
             power_override = False
@@ -1105,7 +1108,7 @@ class Sfp(SfpBase):
         transceiver_dom_info_dict = self.get_transceiver_bulk_status()
 
         tx1_bs = transceiver_dom_info_dict.get("tx1bias", "N/A")
-        if self.port_num <= 48:
+        if self.port_num <= 48 or self.port_num >=57:
             return [tx1_bs, "N/A", "N/A",
                     "N/A"] if transceiver_dom_info_dict else []
 
@@ -1126,7 +1129,7 @@ class Sfp(SfpBase):
         transceiver_dom_info_dict = self.get_transceiver_bulk_status()
 
         rx1_pw = transceiver_dom_info_dict.get("rx1power", "N/A")
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return [rx1_pw, "N/A", "N/A",
                     "N/A"] if transceiver_dom_info_dict else []
         rx2_pw = transceiver_dom_info_dict.get("rx2power", "N/A")
@@ -1145,7 +1148,7 @@ class Sfp(SfpBase):
         """
         transceiver_dom_info_dict = self.get_transceiver_bulk_status()
         tx1_pw = transceiver_dom_info_dict.get("tx1power", "N/A")
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return [tx1_pw, "N/A", "N/A",
                     "N/A"] if transceiver_dom_info_dict else []
         tx2_pw = transceiver_dom_info_dict.get("tx2power", "N/A")
@@ -1160,7 +1163,7 @@ class Sfp(SfpBase):
             A boolean, True if successful, False if not
         """
         # Check for invalid port_num
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return False  # SFP doesn't support this feature
 
         ret = self.__write_txt_file(
@@ -1183,7 +1186,7 @@ class Sfp(SfpBase):
         Returns:
             A boolean, True if tx_disable is set successfully, False if not
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             ret = self.__write_txt_file(
                 self.cpld_path + "module_tx_disable_" + str(self.port_num), 1
                 if tx_disable else 0)
@@ -1227,7 +1230,7 @@ class Sfp(SfpBase):
             A boolean, True if successful, False if not
         """
 
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return False  # SFP doesn't support this feature
         else:
             if not self.get_presence():
@@ -1275,7 +1278,7 @@ class Sfp(SfpBase):
         Returns:
             A boolean, True if lpmode is set successfully, False if not
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return False  # SFP doesn't support this feature
 
         if lpmode is True:
@@ -1300,7 +1303,7 @@ class Sfp(SfpBase):
             A boolean, True if power-override and power_set are set successfully,
             False if not
         """
-        if self.port_num <= 48:
+        if self.port_num <= 48  or self.port_num >=57:
             return False  # SFP doesn't support this feature
         else:
             if not self.get_presence():
