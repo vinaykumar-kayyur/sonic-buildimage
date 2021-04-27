@@ -66,11 +66,38 @@ class Chassis(ChassisBase):
 
         # Initialize Platform name
         self.platform_name = device_info.get_platform()
-        
+
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
-        self.sfp_module_full_initialized = False
+        #
+        # Multiple scenarios need to be taken into consideration regarding the SFP modules initialization.
+        # - Platform daemons
+        #   - Can access multiple or all SFP modules
+        # - sfputil
+        #   - Sometimes can access only one SFP module
+        #   - Call get_sfp to get one SFP module object
+        #
+        # We should initialize all SFP modules only if it is necessary because initializing SFP module is time-consuming.
+        # This means,
+        # - If get_sfp is called,
+        #    - If the _sfp_list isn't initialized, initialize it first.
+        #    - Only the SFP module being required should be initialized.
+        # - If get_all_sfps is called,
+        #    - If the _sfp_list isn't initialized, initialize it first.
+        #    - All SFP modules need to be initialized.
+        #      But the SFP modules that have already been initialized should not be initialized for the second time.
+        #      This can caused by get_sfp being called before.
+        #
+        # Due to the complexity of SFP modules initialization, we have to introduce two initialized flags for SFP modules
+        # - sfp_module_partial_initialized:
+        #    - False: The _sfp_list is [] (SFP stuff has never been accessed)
+        #    - True: The _sfp_list is a list whose length is number of SFP modules supported by the platform
+        # - sfp_module_full_initialized:
+        #    - False: All SFP modules have not been created
+        #    - True: All SFP modules have been created
+        #
         self.sfp_module_partial_initialized = False
+        self.sfp_module_full_initialized = False
         self.sfp_event_initialized = False
         self.reboot_cause_initialized = False
         self.sdk_handle = None
