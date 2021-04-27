@@ -1,6 +1,6 @@
 module sonic-vlan {
 
-	yang-version 1.1;
+    yang-version 1.1;
 
 	namespace "http://github.com/Azure/sonic-vlan";
 	prefix vlan;
@@ -126,7 +126,7 @@ module sonic-vlan {
 			list VLAN_LIST {
 
 				key "name";
-		
+        
 				leaf name {
 					type string {
 						pattern 'Vlan([0-9]{1,3}|[1-3][0-9]{3}|[4][0][0-8][0-9]|[4][0][9][0-4])';
@@ -169,7 +169,7 @@ module sonic-vlan {
 
 			list VLAN_MEMBER_LIST {
 
-				key "name ifname";
+				key "name port";
 
 				leaf name {
 					type leafref {
@@ -177,7 +177,7 @@ module sonic-vlan {
 					}
 				}
 
-				leaf ifname {
+				leaf port {
 					/* key elements are mandatory by default */
 					type union {
 						type leafref {
@@ -194,10 +194,10 @@ module sonic-vlan {
 					type stypes:vlan_tagging_mode;
 				}
 			}
-			/* end of list VLAN_MEMBER_LIST */
+            /* end of list VLAN_MEMBER_LIST */
 		}
-		/* end of container VLAN_MEMBER */
+        /* end of container VLAN_MEMBER */
 	}
-	/* end of container sonic-vlan */
+    /* end of container sonic-vlan */
 }
 /* end of module sonic-vlan */

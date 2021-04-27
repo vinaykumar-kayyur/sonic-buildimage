@@ -60,7 +60,7 @@
             "sonic-vlan:VLAN_MEMBER": {
                 "VLAN_MEMBER_LIST": [
                     {
-                        "ifname": "Ethernet0",
+                        "port": "Ethernet0",
                         "tagging_mode": "non-tagged",
                         "name": "Vlan100"
                     }
@@ -121,7 +121,7 @@
             "sonic-vlan:VLAN_MEMBER": {
                 "VLAN_MEMBER_LIST": [
                     {
-                        "ifname": "Ethernet0",
+                        "port": "Ethernet0",
                         "tagging_mode": "tagged",
                         "name": "Vlan200"
                     }
@@ -164,7 +164,7 @@
             "sonic-vlan:VLAN_MEMBER": {
                 "VLAN_MEMBER_LIST": [
                     {
-                        "ifname": "Ethernet156",
+                        "port": "Ethernet156",
                         "tagging_mode": "tagged",
                         "name": "Vlan100"
                     }
@@ -194,7 +194,7 @@
             "sonic-vlan:VLAN_MEMBER": {
                 "VLAN_MEMBER_LIST": [
                     {
-                        "ifname": "PortChannel5",
+                        "port": "PortChannel5",
                         "tagging_mode": "tagged",
                         "name": "Vlan200"
                     }
@@ -214,7 +214,7 @@
             "sonic-vlan:VLAN_MEMBER": {
                 "VLAN_MEMBER_LIST": [
                     {
-                        "ifname": "PortChannel1",
+                        "port": "PortChannel1",
                         "tagging_mode": "tagged",
                         "name": "Vlan100"
                     }
