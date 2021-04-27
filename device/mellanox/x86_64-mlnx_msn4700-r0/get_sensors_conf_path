@@ -2,7 +2,7 @@
 
 HW_VERSION="/var/run/hw-management/system/config1"
 SENSORS_CONF_FILE="/usr/share/sonic/platform/sensors.conf"
-SENSORS_CONF_FILE_NEW="/usr/share/sonic/platform/sensors.conf.new"
+SENSORS_CONF_FILE_NEW="/usr/share/sonic/platform/sensors.conf.a1"
 
 function get_sensor_conf_path() {
     local _HW_VERSION="0"
