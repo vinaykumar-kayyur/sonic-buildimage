@@ -31,11 +31,14 @@
 #define PORT_SL_ADDR	0x10
 #define PORT_CR_ADDR	0x11
 #define PORT_SR_ADDR	0x12
+#define PORT_INT_STAT   0x13
+
 
 #define CTRL_RST     4
 #define CTRL_LPMD    0
 #define SR_MODPRS    4  
 #define SR_INTN      0
+#define INT_STAT_LOS      0
 
 /* One switchboard CPLD control 16 QSFP ports*/
 #define QSFP_PORT_NUM 16 
@@ -44,6 +47,7 @@
 #define SWCPLD2_I2C_ADDR 0x31
 #define SWCPLD3_I2C_ADDR 0x32
 #define SWCPLD4_I2C_ADDR 0x33
+
 #define SWCPLD_NUM 4
 
 
@@ -277,12 +281,15 @@ static ssize_t port_led_color_store(struct device *dev,
 	return status;
 }
 
+
 DEVICE_ATTR_RO(version);
 DEVICE_ATTR_RW(scratch);
 DEVICE_ATTR_RW(getreg);
 DEVICE_ATTR_WO(setreg);
 DEVICE_ATTR_RW(port_led_mode);
 DEVICE_ATTR_RW(port_led_color);
+
+
 /* QSPF attributes */
 static ssize_t qsfp_reset_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -403,18 +410,67 @@ static ssize_t qsfp_modirq_show(struct device *dev, struct device_attribute *att
 
 }
 
+static ssize_t qsfp_modintl_show(struct device *dev, struct device_attribute *attr, char *buf){
+	u32 data;
+	int len = 0;
+    struct sff_device_data *drvdata = dev_get_drvdata(dev);
+	struct i2c_client *client = drvdata->client;
+	u8 portid = drvdata->portid;
+	
+    mutex_lock(&drvdata->lock);
+	i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
+	data = i2c_smbus_read_byte_data(client, PORT_INT_STAT);
+    len = sprintf(buf, "%x\n",(data >> INT_STAT_LOS) & 0x01);
+    mutex_unlock(&drvdata->lock);
+    return len;
+
+}
+
+
+#if 0
+
+static ssize_t qsfp_modintl_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t size){
+	ssize_t status;
+    long value;
+    u8 data;
+    struct sff_device_data *drvdata = dev_get_drvdata(dev);
+	struct i2c_client *client = drvdata->client;
+	u8 portid = drvdata->portid;
+
+    mutex_lock(&drvdata->lock);
+    status = kstrtol(buf, 0, &value);
+    if (status == 0) {
+		i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
+        // if value is 0, reset signal is low
+        data = i2c_smbus_read_byte_data(client, PORT_INT_MASk);
+        if (!value)
+            data = data & ~( (u8)0x1 << INT_MASk_LOS);
+        else
+            data = data | ((u8)0x1 << INT_MASk_LOS);
+		i2c_smbus_write_byte_data(client, PORT_INT_MASk, data);
+        status = size;
+    }
+    mutex_unlock(&drvdata->lock);
+    return status;
+
+}
+
+#endif
+
 DEVICE_ATTR_RW(qsfp_reset);
 DEVICE_ATTR_RW(qsfp_lpmode);
 DEVICE_ATTR_RO(qsfp_modprs);
 DEVICE_ATTR_RO(qsfp_modirq);
+DEVICE_ATTR_RO(qsfp_modintl);
+
 
 static struct attribute *switchboard_attrs[] = {
 	&dev_attr_version.attr,
 	&dev_attr_scratch.attr,
 	&dev_attr_getreg.attr,
-	&dev_attr_setreg.attr,
-	&dev_attr_port_led_mode.attr,
-        &dev_attr_port_led_color.attr,
+    &dev_attr_setreg.attr,
+    &dev_attr_port_led_mode.attr,
+    &dev_attr_port_led_color.attr,
 	NULL,
 };
 
@@ -423,6 +479,7 @@ static struct attribute *sff_attrs[] = {
 	&dev_attr_qsfp_modprs.attr,
 	&dev_attr_qsfp_lpmode.attr,
 	&dev_attr_qsfp_reset.attr,
+	&dev_attr_qsfp_modintl.attr,
 	NULL,
 };
 
