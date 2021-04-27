@@ -12,11 +12,10 @@ parameters:
 - name: registry_server
   default: soniccr2
 
-pool: sonicbld
-
 jobs:
 - job: Build_${{ parameters.distro }}_${{ parameters.arch }}
   timeoutInMinutes: 360
+  pool: sonicbld
   steps:
   - template: cleanup.yml
   - checkout: self
