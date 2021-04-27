@@ -35,7 +35,7 @@ stages:
 - stage: Build
   jobs:
   - ${{ each dist in parameters.dists }}:
-    - ${{ if endswith(variables['Build.DefinitionName'], ${{ dist }}) }}:
+    - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
       - ${{ each arch in parameters.arches }}:
         - job: Build_${{ dist }}_${{ arch }}
           timeoutInMinutes: 360
