@@ -45,7 +45,7 @@ import sys
 import logging
 import re
 import time
-
+import os
 
 
 
@@ -78,7 +78,7 @@ def main():
                                                        'debug',
                                                        'force',
                                                           ])
-    if DEBUG == True:                
+    if DEBUG == True:
         print options
         print args
         print len(sys.argv)
@@ -96,6 +96,10 @@ def main():
     for arg in args:
         if arg == 'install':
            do_install()
+        elif arg == 'api':
+           do_sonic_platform_install()
+        elif arg == 'api_clean':
+           do_sonic_platform_clean()
         elif arg == 'clean':
            do_uninstall()
         elif arg == 'show':
@@ -199,7 +203,7 @@ kos = [
 
 def driver_install():
     global FORCE
-    
+
     status, output = log_os_system('modprobe i2c_dev', 1)
     status, output = log_os_system("depmod", 1)
     for i in range(0,len(kos)):
@@ -268,7 +272,6 @@ mknod =[
 'echo pca9548 0x74 > /sys/bus/i2c/devices/i2c-36/new_device',
 'echo pca9548 0x75 > /sys/bus/i2c/devices/i2c-37/new_device',
 'echo pca9548 0x76 > /sys/bus/i2c/devices/i2c-38/new_device',
-'echo 24c04 0x56 > /sys/bus/i2c/devices/i2c-0/new_device',
 
 'echo as7326_56x_fan 0x66 > /sys/bus/i2c/devices/i2c-11/new_device ',
 'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-15/new_device',
@@ -286,11 +289,21 @@ mknod =[
 mknod2 =[
 ]
 
+#EERPOM
+eeprom_mknod =[
+'echo 24c04 0x56 > /sys/bus/i2c/devices/i2c-0/new_device',
+'echo 24c02 0x57 > /sys/bus/i2c/devices/i2c-0/new_device'
+]
 
 
 def i2c_order_check():
     # This project has only 1 i2c bus.
     return 0
+
+def eeprom_check():
+    cmd = "i2cget -y -f 0 0x56"
+    status, output = commands.getstatusoutput(cmd)
+    return status
 
 def device_install():
     global FORCE
@@ -320,6 +333,22 @@ def device_install():
                 print output
                 if FORCE == 0:
                     return status
+    
+    # initiate IDPROM
+    # Close 0x77 mux to make sure if the I2C address of IDPROM is 0x56 or 0x57
+    log_os_system("i2cset -f -y 0 0x77 0 ", 1)
+    ret=eeprom_check()
+    if ret==0:
+        log_os_system(eeprom_mknod[0], 1) #old board, 0x56 eeprom
+        time.sleep(0.2)
+        exists = os.path.isfile('/sys/bus/i2c/devices/0-0056/eeprom')
+        if (exists is False):
+            subprocess.call('echo 0x56 > /sys/bus/i2c/devices/i2c-0/delete_device', shell=True)
+            log_os_system(eeprom_mknod[1], 1)
+    else:
+        log_os_system(eeprom_mknod[1], 1) #new board, 0x57 eeprom                
+                    
+                    
     for i in range(0,len(sfp_map)):
         if i < qsfp_start or i >= qsfp_end:
             status, output =log_os_system("echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-"+str(sfp_map[i])+"/new_device", 1)
@@ -364,6 +393,23 @@ def device_uninstall():
             if FORCE == 0:
                 return status
 
+    #Deal with for del 0x56 or 0x57 sysfs device    
+    exists = os.path.isfile('/sys/bus/i2c/devices/0-0056/eeprom')
+        
+    if (exists is True):
+        target = eeprom_mknod[0] #0x56
+    else:
+        target = eeprom_mknod[1] #0x57
+    
+    temp = target.split()
+    del temp[1]
+    temp[-1] = temp[-1].replace('new_device', 'delete_device')
+    status, output = log_os_system(" ".join(temp), 1)
+    if status:
+        print output
+        if FORCE == 0:
+           return status
+
     return
 
 def system_ready():
@@ -372,6 +418,44 @@ def system_ready():
     if not device_exist():
         return False
     return True
+PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
+PLATFORM_API2_WHL_FILE_PY3 ='sonic_platform-1.0-py3-none-any.whl'
+def do_sonic_platform_install():
+    device_path = "{}{}{}{}".format(PLATFORM_ROOT_PATH, '/x86_64-accton_', PROJECT_NAME, '-r0')
+    SONIC_PLATFORM_BSP_WHL_PKG_PY3 = "/".join([device_path, PLATFORM_API2_WHL_FILE_PY3])
+
+    #Check API2.0 on py whl file
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
+    if status:
+        if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY3): 
+            status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY3, 1)
+            if status:
+                print "Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY3)
+                return status
+            else:
+                print "Successfully installed {} package".format(PLATFORM_API2_WHL_FILE_PY3)
+        else:
+            print('{} is not found'.format(PLATFORM_API2_WHL_FILE_PY3))
+    else:        
+        print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
+     
+    return 
+     
+def do_sonic_platform_clean():
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)   
+    if status:
+        print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY3))
+        
+    else:        
+        status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
+        if status:
+            print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY3))
+            return status
+        else:
+            print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
+    
+    
+    return
 
 def do_install():
     print "Checking system...."
@@ -394,6 +478,9 @@ def do_install():
                 return  status
     else:
         print PROJECT_NAME.upper()+" devices detected...."
+
+    do_sonic_platform_install()
+
     return
 
 def do_uninstall():
@@ -415,6 +502,8 @@ def do_uninstall():
         if status:
             if FORCE == 0:
                 return  status
+
+    do_sonic_platform_clean()
 
     return
 
