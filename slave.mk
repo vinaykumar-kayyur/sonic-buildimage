@@ -38,6 +38,7 @@ STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
 STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
+DPKG_ADMINDIR_PATH = /sonic/dpkg
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -68,6 +69,7 @@ configure :
 	@mkdir -p target/files/stretch
 	@mkdir -p target/python-debs
 	@mkdir -p target/python-wheels
+	@mkdir -p $(DPKG_ADMINDIR_PATH)
 	@echo $(PLATFORM) > .platform
 	@echo $(PLATFORM_ARCH) > .arch
 
@@ -88,8 +90,8 @@ ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
 endif
 
-ifeq ($(SONIC_ENABLE_SYSTEM_TELEMETRY),y)
-ENABLE_SYSTEM_TELEMETRY = y
+ifeq ($(SONIC_INCLUDE_SYSTEM_TELEMETRY),y)
+INCLUDE_SYSTEM_TELEMETRY = y
 endif
 
 ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
@@ -97,7 +99,11 @@ ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
     # Issue: qemu crashes when it uses "go get url"
     # Qemu Support: https://bugs.launchpad.net/qemu/+bug/1838946
     # Golang Support: https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!topic/golang-nuts/1txPOGa4aGc
-ENABLE_SYSTEM_TELEMETRY = N
+INCLUDE_SYSTEM_TELEMETRY = n
+endif
+
+ifeq ($(SONIC_INCLUDE_RESTAPI),y)
+INCLUDE_RESTAPI = y
 endif
 
 ifeq ($(SONIC_ENABLE_SYNCD_RPC),y)
@@ -108,9 +114,14 @@ ifeq ($(SONIC_INSTALL_DEBUG_TOOLS),y)
 INSTALL_DEBUG_TOOLS = y
 endif
 
-ifeq ($(SONIC_ENABLE_SFLOW),y)
-ENABLE_SFLOW = y
+ifeq ($(SONIC_INCLUDE_SFLOW),y)
+INCLUDE_SFLOW = y
 endif
+
+ifeq ($(SONIC_INCLUDE_NAT),y)
+INCLUDE_NAT = y
+endif
+
 
 include $(RULES_PATH)/functions
 include $(RULES_PATH)/*.mk
@@ -189,14 +200,19 @@ $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "ENABLE_ORGANIZATION_EXTENSIONS"  : "$(ENABLE_ORGANIZATION_EXTENSIONS)")
 $(info "HTTP_PROXY"                      : "$(HTTP_PROXY)")
 $(info "HTTPS_PROXY"                     : "$(HTTPS_PROXY)")
-$(info "ENABLE_SYSTEM_TELEMETRY"         : "$(ENABLE_SYSTEM_TELEMETRY)")
+$(info "ENABLE_ZTP"                      : "$(ENABLE_ZTP)")
 $(info "SONIC_DEBUGGING_ON"              : "$(SONIC_DEBUGGING_ON)")
 $(info "SONIC_PROFILING_ON"              : "$(SONIC_PROFILING_ON)")
 $(info "KERNEL_PROCURE_METHOD"           : "$(KERNEL_PROCURE_METHOD)")
 $(info "BUILD_TIMESTAMP"                 : "$(BUILD_TIMESTAMP)")
 $(info "BLDENV"                          : "$(BLDENV)")
 $(info "VS_PREPARE_MEM"                  : "$(VS_PREPARE_MEM)")
-$(info "ENABLE_SFLOW"                    : "$(ENABLE_SFLOW)")
+$(info "INCLUDE_MGMT_FRAMEWORK"          : "$(INCLUDE_MGMT_FRAMEWORK)")
+$(info "INCLUDE_SYSTEM_TELEMETRY"        : "$(INCLUDE_SYSTEM_TELEMETRY)")
+$(info "INCLUDE_RESTAPI"                 : "$(INCLUDE_RESTAPI)")
+$(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
+$(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
+$(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info )
 
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
@@ -295,6 +311,10 @@ $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES)) : $(FILES_PATH)/% : .platform $
 	make DEST=$(shell pwd)/$(FILES_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(FILES_PATH)/$* $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
+
+	# Uninstall unneeded build dependency
+	$(call UNINSTALL_DEBS,$($*_UNINSTALLS))
+
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
@@ -317,10 +337,15 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
 	# Apply series of patches if exist
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi
+	$(SETUP_OVERLAYFS_FOR_DPKG_ADMINDIR)
 	# Build project and take package
 	DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" make DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
+
+	# Uninstall unneeded build dependency
+	$(call UNINSTALL_DEBS,$($*_UNINSTALLS))
+
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS))
@@ -340,15 +365,20 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# Build project
 	pushd $($*_SRC_PATH) $(LOG)
 	[ ! -f ./autogen.sh ] || ./autogen.sh $(LOG)
+	$(SETUP_OVERLAYFS_FOR_DPKG_ADMINDIR)
 	$(if $($*_DPKG_TARGET),
-		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) $(LOG),
-		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) $(LOG)
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) --admindir $$mergedir $(LOG),
+		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $$mergedir $(LOG)
 	)
 	popd $(LOG)
 	# Clean up
 	if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; popd; fi
 	# Take built package(s)
 	mv $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS)) $(DEBS_PATH) $(LOG)
+
+	# Uninstall unneeded build dependency
+	$(call UNINSTALL_DEBS,$($*_UNINSTALLS))
+
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS))
@@ -392,14 +422,18 @@ SONIC_INSTALL_TARGETS = $(addsuffix -install,$(addprefix $(DEBS_PATH)/, \
 			$(SONIC_PYTHON_STDEB_DEBS) \
 			$(SONIC_DERIVED_DEBS) \
 			$(SONIC_EXTRA_DEBS)))
+
 $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) $(DEBS_PATH)/$$*
 	$(HEADER)
 	[ -f $(DEBS_PATH)/$* ] || { echo $(DEBS_PATH)/$* does not exist $(LOG) && false $(LOG) }
-	# put a lock here because dpkg does not allow installing packages in parallel
 	while true; do
-	if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
-	{ sudo dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && exit 1 ; }
-	fi
+		# wait for conflicted packages to be uninstalled
+		$(foreach deb, $($*_CONFLICT_DEBS), \
+			{ while dpkg -s $(firstword $(subst _, ,$(basename $(deb)))) &> /dev/null; do echo "waiting for $(deb) to be uninstalled" $(LOG); sleep 1; done } )
+		# put a lock here because dpkg does not allow installing packages in parallel
+		if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
+			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { rm -d $(DEBS_PATH)/dpkg_lock && exit 1 ; }
+		fi
 	done
 	$(FOOTER)
 
@@ -414,6 +448,7 @@ $(SONIC_INSTALL_TARGETS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -inst
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_PYTHON_STDEB_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PATH)/% : .platform \
+		$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEBS_DEPENDS))) \
 		$$(addsuffix -install,$$(addprefix $(PYTHON_DEBS_PATH)/,$$($$*_DEPENDS))) \
 		$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS)))
 	$(HEADER)
@@ -440,7 +475,8 @@ SONIC_TARGET_LIST += $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS
 #     $(SOME_NEW_WHL)_PYTHON_VERSION = 2 (or 3)
 #     $(SOME_NEW_WHL)_DEPENDS = $(SOME_OTHER_WHL1) $(SOME_OTHER_WHL2) ...
 #     SONIC_PYTHON_WHEELS += $(SOME_NEW_WHL)
-$(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS)))
+$(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_DEPENDS))) \
+			$$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEBS_DEPENDS)))
 	$(HEADER)
 	pushd $($*_SRC_PATH) $(LOG)
 	# apply series of patches if exist
@@ -614,12 +650,18 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(SONIC_DEVICE_DATA) \
                 $(PYTHON_CLICK) \
                 $(IFUPDOWN2) \
+                $(KDUMP_TOOLS) \
                 $(LIBPAM_TACPLUS) \
-                $(LIBNSS_TACPLUS)) \
+                $(LIBNSS_TACPLUS) \
+                $(MONIT) \
+                $(PYTHON_SWSSCOMMON)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
+	$(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(DEBS_PATH)/,$(SONIC_ZTP))) \
 	$(addprefix $(STRETCH_FILES_PATH)/, $(if $(filter $(CONFIGURED_ARCH),amd64), $(IXGBE_DRIVER))) \
         $(addprefix $(PYTHON_DEBS_PATH)/,$(SONIC_UTILS)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2)) \
+        $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2)) \
@@ -638,16 +680,28 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
 	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_dhcp_graph_service="$(ENABLE_DHCP_GRAPH_SERVICE)"
+	export enable_ztp="$(ENABLE_ZTP)"
+	export include_system_telemetry="$(INCLUDE_SYSTEM_TELEMETRY)"
+	export include_restapi="$(INCLUDE_RESTAPI)"
+	export include_nat="$(INCLUDE_NAT)"
+	export include_sflow="$(INCLUDE_SFLOW)"
+	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export shutdown_bgp_on_start="$(SHUTDOWN_BGP_ON_START)"
+	export include_kubernetes="$(INCLUDE_KUBERNETES)"
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
 	export installer_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($*_INSTALLS))"
 	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(STRETCH_DEBS_PATH)/$(deb))))"
 	export installer_images="$(addprefix $(TARGET_PATH)/,$($*_DOCKERS))"
+	export sonic_py_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2))"
+	export sonic_py_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3))"
 	export config_engine_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE))"
 	export swsssdk_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SWSSSDK_PY2))"
 	export platform_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PLATFORM_COMMON_PY2))"
 	export redis_dump_load_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(REDIS_DUMP_LOAD_PY2))"
 	export install_debug_image="$(INSTALL_DEBUG_TOOLS)"
+	export multi_instance="false"
+	export python_swss_debs="$(addprefix $(STRETCH_DEBS_PATH)/,$($(LIBSWSSCOMMON)_RDEPENDS))" 
+	export python_swss_debs+=" $(addprefix $(STRETCH_DEBS_PATH)/,$(LIBSWSSCOMMON)) $(addprefix $(STRETCH_DEBS_PATH)/,$(PYTHON_SWSSCOMMON))"
 
 	$(foreach docker, $($*_DOCKERS),\
 		export docker_image="$(docker)"
@@ -655,15 +709,46 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		export docker_container_name="$($(docker:-dbg.gz=.gz)_CONTAINER_NAME)"
 		$(eval $(docker:-dbg.gz=.gz)_RUN_OPT += $($(docker:-dbg.gz=.gz)_$($*_IMAGE_TYPE)_RUN_OPT))
 		export docker_image_run_opt="$($(docker:-dbg.gz=.gz)_RUN_OPT)"
-		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
+
 		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
 			j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+
+			# Set the flag GLOBAL for all the global system-wide dockers.
+			$(if $(shell ls files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
+			)
 		fi
+		# Any service template, inside instance directory, will be used to generate .service and @.service file.
+		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
+			export multi_instance="true"
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
+			$(if $(shell ls files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
+				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE = yes)
+			)
+			export multi_instance="false"
+			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+		fi
+		j2 files/build_templates/docker_image_ctl.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 	)
 
+	# Exported variables are used by sonic_debian_extension.sh
 	export installer_start_scripts="$(foreach docker, $($*_DOCKERS),$(addsuffix .sh, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)))"
-	export installer_services="$(foreach docker, $($*_DOCKERS),$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)))"
+
+	# Marks template services with an "@" according to systemd convention
+	# If the $($docker)_TEMPLATE) variable is set, the service will be treated as a template
+	# If the $($docker)_GLOBAL) and $($docker)_TEMPLATE) variables are set the service will be added both as a global and template service.
+	$(foreach docker, $($*_DOCKERS),\
+		$(if $($(docker:-dbg.gz=.gz)_TEMPLATE),\
+			$(if $($(docker:-dbg.gz=.gz)_GLOBAL),\
+				$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")\
+			)\
+			$(eval SERVICES += "$(addsuffix @.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
+			$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
+		)
+	)
+	export installer_services="$(SERVICES)"
+									
 	export installer_extra_files="$(foreach docker, $($*_DOCKERS), $(foreach file, $($(docker:-dbg.gz=.gz)_BASE_IMAGE_FILES), $($(docker:-dbg.gz=.gz)_PATH)/base_image_files/$(file)))"
 
 	j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
@@ -683,6 +768,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 	USERNAME="$(USERNAME)" \
 	PASSWORD="$(PASSWORD)" \
+	IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		./build_debian.sh $(LOG)
 
 	USERNAME="$(USERNAME)" \
@@ -694,6 +780,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
+		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
 	)
 
 	$(if $($*_DOCKERS),

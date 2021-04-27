@@ -11,6 +11,7 @@
 
 try:
     import os
+    import glob
     from sonic_platform_base.thermal_base import ThermalBase
     from sonic_platform.psu import Psu
 except ImportError as e:
@@ -36,13 +37,19 @@ class Thermal(ThermalBase):
     def __init__(self, thermal_index):
         self.index = thermal_index + 1
         self.is_psu_thermal = False
+        self.is_driver_initialized = True
         self.dependency = None
 
         if self.index < 9:
             i2c_path = self.I2C_DIR + self.I2C_DEV_MAPPING[self.index - 1][0]
             hwmon_temp_index = self.I2C_DEV_MAPPING[self.index - 1][1]
             hwmon_temp_suffix = "max"
-            hwmon_node = os.listdir(i2c_path)[0]
+            try:
+                hwmon_node = os.listdir(i2c_path)[0]
+            except OSError:
+                hwmon_node = "hwmon*"
+                self.is_driver_initialized = False
+
             self.HWMON_DIR = i2c_path + hwmon_node + '/'
 
             if self.index == 4:
@@ -55,7 +62,12 @@ class Thermal(ThermalBase):
             dev_path = "/sys/devices/platform/coretemp.0/hwmon/"
             hwmon_temp_index = self.index - 7
             hwmon_temp_suffix = "crit"
-            hwmon_node = os.listdir(dev_path)[0]
+            try:
+                hwmon_node = os.listdir(dev_path)[0]
+            except OSError:
+                hwmon_node = "hwmon*"
+                self.is_driver_initialized = False
+
             self.HWMON_DIR = dev_path + hwmon_node + '/'
 
         self.thermal_temperature_file = self.HWMON_DIR \
@@ -70,6 +82,14 @@ class Thermal(ThermalBase):
         # sysfs_file and on failure returns 'ERR'
         rv = 'ERR'
 
+        if not self.is_driver_initialized:
+            sysfs_file_path = glob.glob(sysfs_file)
+            if len(sysfs_file_path):
+                sysfs_file = sysfs_file_path[0]
+                self._get_sysfs_path()
+            else:
+                return rv
+
         if (not os.path.isfile(sysfs_file)):
             return rv
 
@@ -82,6 +102,19 @@ class Thermal(ThermalBase):
         rv = rv.rstrip('\r\n')
         rv = rv.lstrip(" ")
         return rv
+
+    def _get_sysfs_path(self):
+        temperature_path = glob.glob(self.thermal_temperature_file)
+        high_threshold_path = glob.glob(self.thermal_high_threshold_file)
+        low_threshold_path = glob.glob(self.thermal_low_threshold_file)
+
+        if len(temperature_path) and len(high_threshold_path):
+            self.thermal_temperature_file = temperature_path[0]
+            self.thermal_high_threshold_file = high_threshold_path[0]
+            if len(low_threshold_path):
+                self.thermal_low_threshold_file = low_threshold_path
+
+            self.is_driver_initialized = True
 
     def get_name(self):
         """
@@ -146,11 +179,11 @@ class Thermal(ThermalBase):
         thermal_temperature = self._read_sysfs_file(
             self.thermal_temperature_file)
         if (thermal_temperature != 'ERR'):
-            thermal_temperature = float(thermal_temperature) / 1000
+            thermal_temperature = float(thermal_temperature)
         else:
             thermal_temperature = 0
 
-        return "{:.3f}".format(thermal_temperature)
+        return thermal_temperature / 1000.0
 
     def get_high_threshold(self):
         """
@@ -164,11 +197,11 @@ class Thermal(ThermalBase):
         thermal_high_threshold = self._read_sysfs_file(
             self.thermal_high_threshold_file)
         if (thermal_high_threshold != 'ERR'):
-            thermal_high_threshold = float(thermal_high_threshold) / 1000
+            thermal_high_threshold = float(thermal_high_threshold)
         else:
             thermal_high_threshold = 0
 
-        return "{:.3f}".format(thermal_high_threshold)
+        return thermal_high_threshold / 1000.0
 
     def get_low_threshold(self):
         """
@@ -182,11 +215,11 @@ class Thermal(ThermalBase):
         thermal_low_threshold = self._read_sysfs_file(
             self.thermal_low_threshold_file)
         if (thermal_low_threshold != 'ERR'):
-            thermal_low_threshold = float(thermal_low_threshold) / 1000
+            thermal_low_threshold = float(thermal_low_threshold)
         else:
             thermal_low_threshold = 0
 
-        return "{:.3f}".format(thermal_low_threshold)
+        return thermal_low_threshold / 1000.0
 
     def set_high_threshold(self, temperature):
         """

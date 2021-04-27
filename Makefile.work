@@ -7,7 +7,9 @@
 #  * BUILD_NUMBER: Desired version-number to pass to the building-system.
 #  * ENABLE_DHCP_GRAPH_SERVICE: Enables get-graph service to fetch minigraph files
 #    through http.
+#  * ENABLE_ZTP: Enables zero touch provisioning.
 #  * SHUTDOWN_BGP_ON_START: Sets admin-down state for all bgp peerings after restart.
+#  * INCLUDE_KUBERNETES: Allows including Kubernetes
 #  * ENABLE_PFCWD_ON_START: Enable PFC Watchdog (PFCWD) on server-facing ports
 #  * by default for TOR switch.
 #  * ENABLE_SYNCD_RPC: Enables rpc-based syncd builds.
@@ -37,6 +39,7 @@ SHELL = /bin/bash
 
 USER := $(shell id -un)
 PWD := $(shell pwd)
+USER_LC := $(shell echo $(USER) | tr A-Z a-z)
 
 ifeq ($(USER), root)
 $(error Add your user account to docker group and use your user account to make. root or sudo are not supported!)
@@ -74,12 +77,12 @@ endif
 ifeq ($(BLDENV), stretch)
 SLAVE_DIR = sonic-slave-stretch
 else
-SLAVE_DIR = sonic-slave
+SLAVE_DIR = sonic-slave-jessie
 endif
 SLAVE_BASE_TAG = $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile && sha1sum $(SLAVE_DIR)/Dockerfile | awk '{print substr($$1,0,11);}')
 SLAVE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile.user $(SLAVE_DIR)/Dockerfile | sha1sum | awk '{print substr($$1,0,11);}')
-SLAVE_BASE_IMAGE = $(SLAVE_DIR)-base
-SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER)
+SLAVE_BASE_IMAGE = $(SLAVE_DIR)
+SLAVE_IMAGE = $(SLAVE_BASE_IMAGE)-$(USER_LC)
 
 OVERLAY_MODULE_CHECK := \
     lsmod | grep -q "^overlay " &>/dev/null || \
@@ -102,7 +105,7 @@ DOCKER_RUN := docker run --rm=true --privileged \
     -w $(DOCKER_BUILDER_WORKDIR) \
     -e "http_proxy=$(http_proxy)" \
     -e "https_proxy=$(https_proxy)" \
-    -i$(if $(TERM),t,)
+    -i$(shell { if [ -t 0 ]; then echo t; fi })
 
 include rules/config
 
@@ -126,9 +129,10 @@ ifneq (,$(filter $(CONFIGURED_ARCH), armhf arm64))
 
     DOCKER_MULTIARCH_CHECK := docker inspect --type image multiarch/qemu-user-static:register &> /dev/null || (echo "multiarch docker not found ..."; docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes)
 
-    DOCKER_SERVICE_MULTIARCH_CHECK := docker -H unix:///var/run/march/docker.sock info &> /dev/null || (echo "Docker march service not running..."; sudo rm -fr /var/run/march/; (sudo $(SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH) &) &>/dev/null ; sleep 1; sudo $(SONIC_USERFACL_DOCKERD_FOR_MUTLIARCH);)
+    DOCKER_SERVICE_SAFE_KILLER :=  (MARCH_PID=`ps -eo pid,cmd | grep "[0-9] dockerd.*march" | awk '{print $$1}'`; echo "Killing march docker $$MARCH_PID"; [ -z "$$MARCH_PID" ] || sudo kill -9 "$$MARCH_PID";)
+    DOCKER_SERVICE_MULTIARCH_CHECK := ($(DOCKER_SERVICE_SAFE_KILLER); sudo rm -fr /var/run/march/; (echo "Starting docker march service..."; sudo $(SONIC_NATIVE_DOCKERD_FOR_MUTLIARCH) &) &>/dev/null ; sleep 2; sudo $(SONIC_USERFACL_DOCKERD_FOR_MUTLIARCH);)
 
-   # Docker service to load the compiled dockers-*.gz 
+   # Docker service to load the compiled dockers-*.gz
     SONIC_NATIVE_DOCKERD_FOR_DOCKERFS := rm -fr $(PWD)/dockerfs/; mkdir -p $(PWD)/dockerfs/; sudo dockerd --storage-driver=overlay2 --iptables=false \
 	--data-root $(PWD)/dockerfs/var/lib/docker/ --exec-root=$(PWD)/dockerfs/var/run/docker/ \
 	-H unix://$(PWD)/dockerfs/var/run/docker.sock -p $(PWD)/dockerfs/var/run/docker.pid &
@@ -161,7 +165,12 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            BUILD_NUMBER=$(BUILD_NUMBER) \
                            BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) \
                            ENABLE_DHCP_GRAPH_SERVICE=$(ENABLE_DHCP_GRAPH_SERVICE) \
+                           ENABLE_ZTP=$(ENABLE_ZTP) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
+                           INCLUDE_KUBERNETES=$(INCLUDE_KUBERNETES) \
+                           KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
+                           KUBERNETES_CNI_VERSION=$(KUBERNETES_CNI_VERSION) \
+                           K8s_GCR_IO_PAUSE_VERSION=$(K8s_GCR_IO_PAUSE_VERSION) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
                            SONIC_ENABLE_SYNCD_RPC=$(ENABLE_SYNCD_RPC) \
                            SONIC_INSTALL_DEBUG_TOOLS=$(INSTALL_DEBUG_TOOLS) \
@@ -173,7 +182,8 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
-                           SONIC_ENABLE_SYSTEM_TELEMETRY=$(ENABLE_SYSTEM_TELEMETRY) \
+                           SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
+                           SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
@@ -190,7 +200,7 @@ ifneq ($(BLDENV), )
 endif
 endif
 	@$(OVERLAY_MODULE_CHECK)
-	
+
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
 	    { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Building... ; \
 	    $(DOCKER_BASE_BUILD) ; }
@@ -243,8 +253,8 @@ reset :
 	        fi
 	        git clean -xfdf;
 	        git reset --hard;
-	        git submodule foreach --recursive git clean -xfdf;
-	        git submodule foreach --recursive git reset --hard;
+	        git submodule foreach --recursive 'git clean -xfdf || true';
+	        git submodule foreach --recursive 'git reset --hard || true';
 	        git submodule update --init --recursive;
 	        echo "Reset complete!";
 	    else

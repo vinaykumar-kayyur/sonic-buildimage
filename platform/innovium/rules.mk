@@ -5,7 +5,6 @@ include $(PLATFORM_PATH)/docker-syncd-invm.mk
 include $(PLATFORM_PATH)/docker-syncd-invm-rpc.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
-include $(PLATFORM_PATH)/python-saithrift.mk
 include $(PLATFORM_PATH)/docker-ptf-invm.mk
 
 SONIC_ALL += $(SONIC_INVM_ONE_IMAGE) \
@@ -13,8 +12,9 @@ SONIC_ALL += $(SONIC_INVM_ONE_IMAGE) \
              $(DOCKER_PTF_INVM) \
              $(DOCKER_SYNCD_INVM_RPC)
 
-# Inject invm sai into sairedis
-$(LIBSAIREDIS)_DEPENDS += $(INVM_HSAI) $(INVM_LIBSAI) $(LIBSAITHRIFT_DEV_INVM)
+# Inject invm sai into syncd
+$(SYNCD)_DEPENDS += $(INVM_HSAI) $(INVM_LIBSAI) $(LIBSAITHRIFT_DEV_INVM)
+$(SYNCD)_UNINSTALLS += $(INVM_HSAI)
 
 # Runtime dependency on invm sai is set only for syncd
 $(SYNCD)_RDEPENDS += $(INVM_HSAI)

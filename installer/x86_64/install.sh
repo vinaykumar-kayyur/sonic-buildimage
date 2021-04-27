@@ -106,6 +106,11 @@ fi
 if [ "$install_env" != "build" ]; then
     onie_dev=$(blkid | grep ONIE-BOOT | head -n 1 | awk '{print $1}' |  sed -e 's/:.*$//')
     blk_dev=$(echo $onie_dev | sed -e 's/[1-9][0-9]*$//' | sed -e 's/\([0-9]\)\(p\)/\1/')
+
+    # check if we have an nvme device
+    blk_suffix=
+    echo $blk_dev | grep -q nvme0 && blk_suffix="p"
+
     # Note: ONIE has no mount setting for / with device node, so below will be empty string
     cur_part=$(cat /proc/mounts | awk "{ if(\$2==\"/\") print \$1 }" | grep $blk_dev || true)
 
@@ -225,7 +230,7 @@ create_demo_gpt_partition()
     echo "Partition #$demo_part is available"
 
     # Create new partition
-    echo "Creating new $demo_volume_label partition ${blk_dev}$demo_part ..."
+    echo "Creating new $demo_volume_label partition ${blk_dev}${blk_suffix}$demo_part ..."
 
     if [ "$demo_type" = "DIAG" ] ; then
         # set the GPT 'system partition' attribute bit for the DIAG
@@ -424,6 +429,7 @@ image_dir="image-$image_version"
 if [ "$install_env" = "onie" ]; then
     eval $create_demo_partition $blk_dev
     demo_dev=$(echo $blk_dev | sed -e 's/\(mmcblk[0-9]\)/\1p/')$demo_part
+    echo $blk_dev | grep -q nvme0 && demo_dev=$(echo $blk_dev | sed -e 's/\(nvme[0-9]n[0-9]\)/\1p/')$demo_part
 
     # Make filesystem
     mkfs.ext4 -L $demo_volume_label $demo_dev
@@ -535,8 +541,18 @@ trap_push "rm $grub_cfg || true"
 
 [ -r ./platform.conf ] && . ./platform.conf
 
+# Check if the CPU vendor is 'Intel' and disable c-states if True
+CPUVENDOR="$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{print $3}')"
+echo "Switch CPU vendor is: $CPUVENDOR"
+if echo "$CPUVENDOR" | grep -i 'Intel' >/dev/null 2>&1; then
+    echo "Switch CPU cstates are: disabled"
+    CSTATES="intel_idle.max_cstate=0"
+else
+    CSTATES=""
+fi
+
 DEFAULT_GRUB_SERIAL_COMMAND="serial --port=${CONSOLE_PORT} --speed=${CONSOLE_SPEED} --word=8 --parity=no --stop=1"
-DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 quiet"
+DEFAULT_GRUB_CMDLINE_LINUX="console=tty0 console=ttyS${CONSOLE_DEV},${CONSOLE_SPEED}n8 quiet $CSTATES"
 GRUB_SERIAL_COMMAND=${GRUB_SERIAL_COMMAND:-"$DEFAULT_GRUB_SERIAL_COMMAND"}
 GRUB_CMDLINE_LINUX=${GRUB_CMDLINE_LINUX:-"$DEFAULT_GRUB_CMDLINE_LINUX"}
 export GRUB_SERIAL_COMMAND
@@ -555,15 +571,21 @@ EOF
 # Add the logic to support grub-reboot and grub-set-default
 cat <<EOF >> $grub_cfg
 if [ -s \$prefix/grubenv ]; then
-  load_env
+    load_env
 fi
-if [ "\${saved_entry}" ] ; then
-   set default="\${saved_entry}"
+if [ "\${saved_entry}" ]; then
+    set default="\${saved_entry}"
 fi
-if [ "\${next_entry}" ] ; then
-   set default="\${next_entry}"
-   set next_entry=
-   save_env next_entry
+if [ "\${next_entry}" ]; then
+    set default="\${next_entry}"
+    unset next_entry
+    save_env next_entry
+fi
+if [ "\${onie_entry}" ]; then
+    set next_entry="\${default}"
+    set default="\${onie_entry}"
+    unset onie_entry
+    save_env onie_entry next_entry
 fi
 
 EOF
@@ -577,19 +599,22 @@ EOF
     $onie_root_dir/tools/bin/onie-boot-mode -q -o install
 fi
 
-# Add a menu entry for the DEMO OS
+# Add a menu entry for the SONiC OS
 # Note: assume that apparmor is supported in the kernel
 demo_grub_entry="$demo_volume_revision_label"
 if [ "$install_env" = "sonic" ]; then
     old_sonic_menuentry=$(cat /host/grub/grub.cfg | sed "/$running_sonic_revision/,/}/!d")
-    demo_dev=$(echo $old_sonic_menuentry | sed -e "s/.*root\=\(.*\)rw.*/\1/")
+    grub_cfg_root=$(echo $old_sonic_menuentry | sed -e "s/.*root\=\(.*\)rw.*/\1/")
     onie_menuentry=$(cat /host/grub/grub.cfg | sed "/menuentry ONIE/,/}/!d")
-fi
-
-if [ "$install_env" = "build" ]; then
+elif [ "$install_env" = "build" ]; then
     grub_cfg_root=%%SONIC_ROOT%%
-else
-    grub_cfg_root=$demo_dev
+else # install_env = "onie"
+    uuid=$(blkid "$demo_dev" | sed -ne 's/.* UUID=\"\([^"]*\)\".*/\1/p')
+    if [ -z "$uuid" ]; then
+        grub_cfg_root=$demo_dev
+    else
+        grub_cfg_root=UUID=$uuid
+    fi
 fi
 
 cat <<EOF >> $grub_cfg
@@ -600,12 +625,12 @@ menuentry '$demo_grub_entry' {
         if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi
         insmod part_msdos
         insmod ext2
-        linux   /$image_dir/boot/vmlinuz-4.9.0-9-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
+        linux   /$image_dir/boot/vmlinuz-4.9.0-14-2-amd64 root=$grub_cfg_root rw $GRUB_CMDLINE_LINUX  \
                 net.ifnames=0 biosdevname=0 \
                 loop=$image_dir/$FILESYSTEM_SQUASHFS loopfstype=squashfs                       \
                 apparmor=1 security=apparmor varlog_size=$VAR_LOG_SIZE usbcore.autosuspend=-1 $ONIE_PLATFORM_EXTRA_CMDLINE_LINUX
         echo    'Loading $demo_volume_label $demo_type initial ramdisk ...'
-        initrd  /$image_dir/boot/initrd.img-4.9.0-9-2-amd64
+        initrd  /$image_dir/boot/initrd.img-4.9.0-14-2-amd64
 }
 EOF
 

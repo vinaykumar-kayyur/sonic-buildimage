@@ -47,16 +47,16 @@ class SfpUtil(SfpUtilBase):
            8:  50,
            9:  48,
            10:  49,
-           11:  51,
-           12:  52,
+           11:  52,
+           12:  51,
            13:  53,
            14:  56,
            15:  55,
            16:  54,
            17:  58,
            18:  57,
-           19:  59,
-           20:  60,
+           19:  60,
+           20:  59,
            21:  61,
            22:  63,
            23:  62,
@@ -219,8 +219,30 @@ class SfpUtil(SfpUtilBase):
                 time.sleep(0.01)
 
     def reset(self, port_num):
-        raise NotImplementedError
+        if port_num < self.qsfp_port_start or port_num > self.qsfp_port_end:
+            return False
 
+        cpld_i = self.get_cpld_num(port_num)
+        cpld_ps = self._cpld_mapping[cpld_i]
+        path = "/sys/bus/i2c/devices/{0}/module_reset_{1}"
+        port_ps = path.format(cpld_ps, port_num)
+        
+        self.__port_to_mod_rst = port_ps
+        try:
+            reg_file = open(self.__port_to_mod_rst, 'r+', buffering=0)
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        #toggle reset
+        reg_file.seek(0)
+        reg_file.write('1')
+        time.sleep(1)
+        reg_file.seek(0)
+        reg_file.write('0')
+        reg_file.close()
+        
+        return True
     @property
     def _get_present_bitmap(self):
         nodes = []

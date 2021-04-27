@@ -1,25 +1,25 @@
 #!/bin/bash
 
-echo "Traffic Shift Check:"
-c=0
-config=$(vtysh -c "show run")
-echo "$config" | grep -q "route-map TO_BGP_PEER_V4 permit 2"
-c=$(($c+$?))
-echo "$config" | grep -q "route-map TO_BGP_PEER_V4 deny 3"
-c=$(($c+$?))
-echo "$config" | grep -q "route-map TO_BGP_PEER_V6 permit 2"
-c=$(($c+$?))
-echo "$config" | grep -q "route-map TO_BGP_PEER_V6 deny 3"
-c=$(($c+$?))
+# Load the common functions
+source /usr/bin/TS
 
-if [[ $c -eq 4 ]];
+find_num_routemap
+routemap_count=$?
+check_not_installed
+not_installed=$?
+
+check_installed
+installed=$?
+
+if [[ $routemap_count -eq 0 ]];
+then 
+  echo "System Mode: No external neighbors"
+elif [[ $installed -eq 0 ]];
 then
   echo "System Mode: Normal"
-elif [[ $c -eq 0 ]];
+elif [[ $not_installed -eq 0 ]];
 then
   echo "System Mode: Maintenance"
 else
   echo "System Mode: Not consistent"
 fi
-
-echo

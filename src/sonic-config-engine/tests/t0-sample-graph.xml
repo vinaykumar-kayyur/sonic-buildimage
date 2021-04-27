@@ -237,11 +237,56 @@
           <AttachTo>fortyGigE0/4;fortyGigE0/8;fortyGigE0/12;fortyGigE0/16;fortyGigE0/20;fortyGigE0/24;fortyGigE0/28;fortyGigE0/32;fortyGigE0/36;fortyGigE0/40;fortyGigE0/44;fortyGigE0/48;fortyGigE0/52;fortyGigE0/56;fortyGigE0/60;fortyGigE0/64;fortyGigE0/68;fortyGigE0/72;fortyGigE0/76;fortyGigE0/80;fortyGigE0/84;fortyGigE0/88;fortyGigE0/92;fortyGigE0/96</AttachTo>
           <NoDhcpRelay>False</NoDhcpRelay>
           <StaticDHCPRelay>0.0.0.0/0</StaticDHCPRelay>
+          <FhrpProtoType i:nil="true"/>
           <Type i:nil="true"/>
           <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
           <VlanID>1000</VlanID>
           <Tag>1000</Tag>
           <Subnets>192.168.0.0/27</Subnets>
+          <MacAddress i:nil="true"/>
+          <SecondarySubnets/>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan2000</Name>
+          <AttachTo>fortyGigE0/112;fortyGigE0/116;fortyGigE0/120</AttachTo>
+          <NoDhcpRelay>False</NoDhcpRelay>
+          <StaticDHCPRelay>0.0.0.0/0</StaticDHCPRelay>
+          <FhrpProtoType i:nil="true"/>
+          <Type i:nil="true"/>
+          <DhcpRelays></DhcpRelays>
+          <VlanID>2000</VlanID>
+          <Tag>2000</Tag>
+          <Subnets>192.168.200.0/27</Subnets>
+          <MacAddress i:nil="true"/>
+          <SecondarySubnets/>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan99</Name>
+          <AttachTo>fortyGigE0/100</AttachTo>
+          <NoDhcpRelay>False</NoDhcpRelay>
+          <StaticDHCPRelay>0.0.0.0/0</StaticDHCPRelay>
+          <FhrpProtoType i:nil="true"/>
+          <Type>UserDefinedL2Vlan</Type>
+          <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
+          <VlanID>99</VlanID>
+          <Tag>99</Tag>
+          <Subnets/>
+          <MacAddress i:nil="true"/>
+          <SecondarySubnets/>
+        </VlanInterface>
+        <VlanInterface>
+          <Name>Vlan98</Name>
+          <AttachTo>fortyGigE0/100;PortChannel01;PortChannel03</AttachTo>
+          <NoDhcpRelay>False</NoDhcpRelay>
+          <StaticDHCPRelay>0.0.0.0/0</StaticDHCPRelay>
+          <FhrpProtoType i:nil="true"/>
+          <Type>UserDefinedL2Vlan</Type>
+          <DhcpRelays>192.0.0.1;192.0.0.2</DhcpRelays>
+          <VlanID>98</VlanID>
+          <Tag>98</Tag>
+          <Subnets/>
+          <MacAddress i:nil="true"/>
+          <SecondarySubnets/>
         </VlanInterface>
       </VlanInterfaces>
       <IPInterfaces>
@@ -290,6 +335,11 @@
           <AttachTo>Vlan1000</AttachTo>
           <Prefix>192.168.0.1/27</Prefix>
         </IPInterface>
+        <IPInterface>
+          <Name i:nil="true"/>
+          <AttachTo>Vlan2000</AttachTo>
+          <Prefix>192.168.200.1/27</Prefix>
+        </IPInterface>
       </IPInterfaces>
       <DataAcls/>
       <AclInterfaces>
@@ -303,9 +353,19 @@
           <InAcl>everflowV6</InAcl>
           <Type>Everflow</Type>
         </AclInterface>
+	<AclInterface>
+          <AttachTo>EGRESS_ERSPAN</AttachTo>
+	  <OutAcl>everflow_egress</OutAcl>
+	  <Type>Everflow</Type>
+        </AclInterface>
         <AclInterface>
           <AttachTo>PortChannel01;PortChannel02;PortChannel03;PortChannel04</AttachTo>
-          <InAcl>DataAcl</InAcl>
+          <InAcl>DataAclIngress</InAcl>
+          <Type>DataPlane</Type>
+        </AclInterface>
+        <AclInterface>
+          <AttachTo>PortChannel01;PortChannel02;Vlan98</AttachTo>
+          <OutAcl>DataAclEgress</OutAcl>
           <Type>DataPlane</Type>
         </AclInterface>
         <AclInterface>
@@ -371,17 +431,31 @@
         <EndPort>Ethernet1/1</EndPort>
         <StartDevice>switch-t0</StartDevice>
         <StartPort>fortyGigE0/124</StartPort>
+        <Bandwidth>100000</Bandwidth>
       </DeviceLinkBase>
       <DeviceLinkBase>
         <ElementType>DeviceInterfaceLink</ElementType>
-        <AutoNegotiation>true</AutoNegotiation>
-        <Bandwidth>10000</Bandwidth>
+        <Bandwidth>100000</Bandwidth>
         <EndDevice>switch-t0</EndDevice>
-        <EndPort>fortyGigE0/2</EndPort>
+        <EndPort>fortyGigE0/4</EndPort>
         <FlowControl>true</FlowControl>
         <StartDevice>ARISTA05T1</StartDevice>
         <StartPort>Ethernet1/33</StartPort>
         <Validate>true</Validate>
+      </DeviceLinkBase>
+      <DeviceLinkBase>
+        <ElementType>DeviceInterfaceLink</ElementType>
+        <EndDevice>Servers0</EndDevice>
+        <EndPort>eth0</EndPort>
+        <StartDevice>switch-t0</StartDevice>
+        <StartPort>fortyGigE0/4</StartPort>
+      </DeviceLinkBase>
+      <DeviceLinkBase>
+        <ElementType>DeviceInterfaceLink</ElementType>
+        <EndDevice>Servers100</EndDevice>
+        <EndPort>eth0</EndPort>
+        <StartDevice>switch-t0</StartDevice>
+        <StartPort>fortyGigE0/100</StartPort>
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
@@ -422,6 +496,42 @@
     </Devices>
     <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
   </MetadataDeclaration>
+  <LinkMetadataDeclaration>
+    <Link xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
+      <a:LinkMetadata>
+        <a:Name i:nil="true"/>
+        <a:Properties>
+          <a:DeviceProperty>
+            <a:Name>AutoNegotiation</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>True</a:Value>
+          </a:DeviceProperty>
+          <a:DeviceProperty>
+            <a:Name>FECDisabled</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>True</a:Value>
+          </a:DeviceProperty>
+        </a:Properties>
+        <a:Key>ARISTA05T1:Ethernet1/33;switch-t0:fortyGigE0/4</a:Key>
+      </a:LinkMetadata>
+      <a:LinkMetadata>
+        <a:Name i:nil="true"/>
+        <a:Properties>
+          <a:DeviceProperty>
+            <a:Name>AutoNegotiation</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>False</a:Value>
+          </a:DeviceProperty>
+          <a:DeviceProperty>
+            <a:Name>FECDisabled</a:Name>
+            <a:Reference i:nil="true"/>
+            <a:Value>True</a:Value>
+          </a:DeviceProperty>
+        </a:Properties>
+        <a:Key>ARISTA06T1:Ethernet1/34;switch-t0:fortyGigE0/8</a:Key>
+      </a:LinkMetadata>
+    </Link>
+  </LinkMetadataDeclaration>
   <Hostname>switch-t0</Hostname>
   <HwSku>Force10-S6000</HwSku>
 </DeviceMiniGraph>

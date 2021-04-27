@@ -13,6 +13,9 @@ $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS) \
 
 $(DOCKER_SONIC_VS)_PYTHON_DEBS += $(SONIC_UTILS)
 
+$(DOCKER_SONIC_VS)_PYTHON_WHEELS += $(SWSSSDK_PY2) \
+                                    $(SONIC_PY_COMMON_PY2)
+
 ifeq ($(INSTALL_DEBUG_TOOLS), y)
 $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS_DBG) \
                               $(LIBSWSSCOMMON_DBG) \
@@ -31,6 +34,7 @@ endif
 
 $(DOCKER_SONIC_VS)_FILES += $(CONFIGDB_LOAD_SCRIPT) \
                             $(ARP_UPDATE_SCRIPT) \
+                            $(ARP_UPDATE_VARS_TEMPLATE) \
                             $(BUFFERS_CONFIG_TEMPLATE) \
                             $(QOS_CONFIG_TEMPLATE) \
                             $(SONIC_VERSION)

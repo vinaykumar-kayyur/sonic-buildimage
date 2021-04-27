@@ -45,6 +45,10 @@ RUN locale-gen
 # Install up-to-date version of pip
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3.6
 
+# pin down setuptools version for issues to install sonic_ax_impl
+# see https://github.com/Azure/sonic-buildimage/issues/5279
+RUN python3.6 -m pip install setuptools==49.6.0
+
 # Install pyyaml dependency for use by some plugins
 # Install smbus dependency for use by some plugins
 RUN python3.6 -m pip install --no-cache-dir \
@@ -84,6 +88,8 @@ RUN apt-get -y purge     \
 COPY ["start.sh", "/usr/bin/"]
 COPY ["supervisord.conf", "/etc/supervisor/conf.d/"]
 COPY ["*.j2", "/usr/share/sonic/templates/"]
+COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
+COPY ["critical_processes", "/etc/supervisor"]
 
 # Although exposing ports is not needed for host net mode, keep it for possible bridge mode
 EXPOSE 161/udp 162/udp

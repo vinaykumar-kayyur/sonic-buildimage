@@ -34,6 +34,7 @@ COPY ["sources.list.arm64", "/etc/apt/sources.list"]
 COPY ["sources.list", "/etc/apt/sources.list"]
 {% endif %}
 COPY ["no_install_recommend_suggest", "/etc/apt/apt.conf.d"]
+COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
 
 # Update apt cache and
 # pre-install fundamental packages
@@ -43,11 +44,19 @@ RUN apt-get update &&        \
         perl                 \
         procps               \
         python               \
-        rsyslog              \
+        python-pip           \
         vim-tiny             \
 # Install dependencies of supervisor
         python-pkg-resources \
-        python-meld3
+        python-meld3         \
+# dependencies of redis-tools
+        libatomic1           \
+        libjemalloc1         \
+        liblua5.1-0          \
+        lua-bitop            \
+        lua-cjson            \
+# for processing json files in bash environment
+        jq
 
 {% if CONFIGURED_ARCH == "armhf" %}
 # ip and ifconfig utility missing in docker for armhf
@@ -55,6 +64,12 @@ RUN apt-get -y install       \
         iproute2             \
         net-tools
 {% endif %}
+
+# Install a newer version of rsyslog from stretch-backports to support -iNONE
+RUN apt-get -y -t stretch-backports install rsyslog
+
+# For templating
+RUN pip install j2cli
 
 RUN mkdir -p /etc/supervisor /var/log/supervisor
 
@@ -72,6 +87,9 @@ RUN apt-get -y purge   \
 {{ install_debian_packages(docker_base_stretch_debs.split(' ')) }}
 {%- endif %}
 
+# Add support for supervisord to handle startup dependencies
+RUN pip install supervisord-dependent-startup==1.4.0
+
 # Clean up apt
 # Remove /var/lib/apt/lists/*, could be obsoleted for derived images
 RUN apt-get clean -y                     && \
@@ -82,5 +100,7 @@ RUN apt-get clean -y                     && \
 COPY ["etc/rsyslog.conf", "/etc/rsyslog.conf"]
 COPY ["etc/rsyslog.d/*", "/etc/rsyslog.d/"]
 COPY ["root/.vimrc", "/root/.vimrc"]
+
+RUN ln /usr/bin/vim.tiny /usr/bin/vim
 
 COPY ["etc/supervisor/supervisord.conf", "/etc/supervisor/"]
