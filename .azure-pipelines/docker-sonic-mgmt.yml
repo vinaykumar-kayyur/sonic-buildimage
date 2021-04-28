@@ -16,7 +16,9 @@ pr: none
 
 parameters:
 - name: registry_server
-  default: sonicdev-microsoft
+  default: sonicdev
+- name: registry_tail
+  default: -microsoft
 
 stages:
 - stage: Build
@@ -36,7 +38,7 @@ stages:
         docker load -i target/docker-sonic-mgmt.gz
         docker tag docker-sonic-mgmt $REGISTRY_SERVER/docker-sonic-mgmt:latest
       env:
-        REGISTRY_SERVER: ${{ parameters.registry_server }}.azurecr.io
+        REGISTRY_SERVER: ${{ parameters.registry_server }}${{ parameters.registry_tail }}.azurecr.io
       displayName: Build docker-sonic-mgmt.gz
     - task: Docker@2
       displayName: Upload image

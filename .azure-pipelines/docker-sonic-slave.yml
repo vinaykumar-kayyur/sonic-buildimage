@@ -29,7 +29,10 @@ parameters:
   - jessie
 - name: registry_server
   type: string
-  default: sonicdev-microsoft
+  default: sonicdev
+- name: registry_tail
+  type: string
+  default: -microsoft
 
 stages:
 - stage: Build
@@ -71,7 +74,7 @@ stages:
               echo "##vso[task.setvariable variable=VARIABLE_SLAVE_BASE_IMAGE]$SLAVE_BASE_IMAGE"
               echo "##vso[task.setvariable variable=VARIABLE_SLAVE_BASE_TAG]$SLAVE_BASE_TAG"
             env:
-              REGISTRY_SERVER: ${{ parameters.registry_server }}.azurecr.io
+              REGISTRY_SERVER: ${{ parameters.registry_server }}${{ parameters.registry_tail }}.azurecr.io
             displayName: Build sonic-slave-${{ dist }}-${{ arch }}
 
           - task: Docker@2
