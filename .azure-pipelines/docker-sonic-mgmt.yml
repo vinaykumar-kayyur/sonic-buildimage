@@ -15,12 +15,12 @@ trigger: none
 pr: none
 
 parameters:
-- name: registry_server
+- name: registry_url
+  type: string
+  default: sonicdev-microsoft.azurecr.io
+- name: registry_conn
   type: string
   default: sonicdev
-- name: registry_tail
-  type: string
-  default: -microsoft
 
 stages:
 - stage: Build
@@ -40,12 +40,12 @@ stages:
         docker load -i target/docker-sonic-mgmt.gz
         docker tag docker-sonic-mgmt $REGISTRY_SERVER/docker-sonic-mgmt:latest
       env:
-        REGISTRY_SERVER: ${{ parameters.registry_server }}${{ parameters.registry_tail }}.azurecr.io
+        REGISTRY_SERVER: ${{ parameters.registry_url }}
       displayName: Build docker-sonic-mgmt.gz
     - task: Docker@2
       displayName: Upload image
       inputs:
-        containerRegistry: ${{ parameters.registry_server }}
+        containerRegistry: ${{ parameters.registry_conn }}
         repository: docker-sonic-mgmt
         command: push
         tags: latest
