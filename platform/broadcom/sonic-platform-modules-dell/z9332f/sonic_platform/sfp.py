@@ -899,7 +899,7 @@ class Sfp(SfpBase):
         """
         Retrieves the RX LOS (lost-of-signal) status of SFP
         """
-        rx_los = False
+        rx_los_list = []
         try:
             if self.sfp_type == 'QSFP_DD':
                 offset = 512
@@ -909,21 +909,21 @@ class Sfp(SfpBase):
                 if dom_channel_monitor_raw is not None:
                     rx_los_data = int(dom_channel_monitor_raw[0], 8)
                     for mask in rx_los_mask:
-                        rx_los |= (rx_los_data & mask != 0)
+                        rx_los_list.append(rx_los_data & mask != 0)
 
             elif self.sfp_type == 'QSFP':
                 rx_los_data = self._get_eeprom_data('rx_los')
                 # As the function expects a single boolean, if any one channel experience LOS,
                 # is considered LOS for QSFP
                 for rx_los_id in ('Rx1LOS', 'Rx2LOS', 'Rx3LOS', 'Rx4LOS') :
-                    rx_los |= (rx_los_data['data'][rx_los_id]['value'] is 'On')
+                    rx_los_list.append(rx_los_data['data'][rx_los_id]['value'] == 'On')
             else:
                 rx_los_data = self._read_eeprom_bytes(self.eeprom_path, SFP_STATUS_CONTROL_OFFSET, SFP_STATUS_CONTROL_WIDTH)
                 data = int(rx_los_data[0], 16)
-                rx_los = sffbase().test_bit(data, 1) != 0
+                rx_los_list.append(sffbase().test_bit(data, 1) != 0)
         except (TypeError, ValueError):
             return 'N/A'
-        return rx_los
+        return rx_los_list
 
     def get_tx_fault(self):
         """
