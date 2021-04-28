@@ -16,7 +16,7 @@ pr: none
 
 parameters:
 - name: registry_server
-  default: sonicdev
+  default: sonicdev-microsoft
 
 stages:
 - stage: Build
