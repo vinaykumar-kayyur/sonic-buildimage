@@ -856,6 +856,16 @@ class HostConfigDaemon:
         ntp_global = self.config_db.get_table('NTP')
         self.ntpcfg.load(ntp_global, ntp_server)
 
+        try:
+            dev_meta = self.config_db.get_table('DEVICE_METADATA')
+            if 'localhost' in dev_meta:
+                if 'hostname' in dev_meta['localhost']:
+                    self.hostname_cache = dev_meta['localhost']['hostname']
+        except Exception as e:
+            pass
+        # Update AAA with the hostname
+        self.aaacfg.hostname_update(self.hostname_cache)
+
     def aaa_handler(self, key, data):
         self.aaacfg.aaa_update(key, data)
 
