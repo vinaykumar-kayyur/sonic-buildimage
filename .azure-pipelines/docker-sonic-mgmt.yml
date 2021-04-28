@@ -11,7 +11,11 @@ schedules:
     - master
   always: true
 
-trigger: none
+trigger:
+  batch: false
+  branches:
+    include:
+    - master
 pr: none
 
 parameters:
@@ -29,7 +33,7 @@ stages:
     pool: sonicbld
     timeoutInMinutes: 360
     steps:
-    - template: ./template/cleanup.yml
+    - template: cleanup.yml
     - checkout: self
       clean: true
       submodules: recursive

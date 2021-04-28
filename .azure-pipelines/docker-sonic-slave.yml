@@ -11,7 +11,11 @@ schedules:
     - master
   always: true
 
-trigger: none
+trigger:
+  batch: false
+  branches:
+    include:
+    - master
 pr: none
 
 parameters:
@@ -65,7 +69,7 @@ stages:
               if [ x${{ arch }} == x"amd64" ]; then
                 SLAVE_BASE_IMAGE=${SLAVE_DIR}
               else
-                SLAVE_BASE_IMAGE=${SLAVE_DIR}-${{ arch }}
+                SLAVE_BASE_IMAGE=${SLAVE_DIR}-march-${{ arch }}
               fi
 
               tmpfile=$(mktemp)
