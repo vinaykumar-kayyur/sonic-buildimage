@@ -16,8 +16,10 @@ pr: none
 
 parameters:
 - name: registry_server
+  type: string
   default: sonicdev
 - name: registry_tail
+  type: string
   default: -microsoft
 
 stages:
