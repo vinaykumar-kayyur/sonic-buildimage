@@ -188,4 +188,4 @@ SONIC_VERSION_CONTROL_COMPONENTS ?= none
 # Uncomment below line to enable pulling sonic-slave docker from registry
 # ENABLE_DOCKER_BASE_PULL = y
 REGISTRY_PORT=443
-REGISTRY_SERVER=sonicdev-microsoft.azurecr.io
+REGISTRY_SERVER=soniccr2.azurecr.io
