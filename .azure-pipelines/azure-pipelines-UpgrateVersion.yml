@@ -17,7 +17,7 @@ schedules:
 pool: sonicbld
 
 parameters:
-  - name: jobFilters:
+  - name: jobFilters
     type: object
     default:
     - vs
