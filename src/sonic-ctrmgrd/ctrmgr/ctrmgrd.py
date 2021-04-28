@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import datetime
 import inspect
 import json
@@ -8,6 +9,7 @@ import sys
 import syslog
 
 from collections import defaultdict
+from ctrmgr.ctrmgr_iptables import iptable_proxy_rule_upd
 
 from swsscommon import swsscommon
 from sonic_py_common import device_info
@@ -54,6 +56,7 @@ KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 
 remote_connected = False
+use_k8s_master_as_docker_proxy = False
 
 dflt_cfg_ser = {
         CFG_SER_IP: "",
@@ -309,6 +312,9 @@ class RemoteServerHandler:
 
         self.start_time = datetime.datetime.now()
 
+        if use_k8s_master_as_docker_proxy:
+            iptable_proxy_rule_upd(self.cfg_server[CFG_SER_IP])
+
         if not self.st_server[ST_FEAT_UPDATE_TS]:
             # This is upon system start. Sleep 10m before join
             self.start_time += datetime.timedelta(
@@ -336,6 +342,9 @@ class RemoteServerHandler:
         log_debug("Received config update: {}".format(str(data)))
         self.cfg_server = cfg_data
 
+        if use_k8s_master_as_docker_proxy:
+            iptable_proxy_rule_upd(self.cfg_server[CFG_SER_IP])
+
         if self.pending:
             tnow = datetime.datetime.now()
             if tnow < self.start_time:
@@ -359,7 +368,7 @@ class RemoteServerHandler:
 
         ip = self.cfg_server[CFG_SER_IP]
         disable = self.cfg_server[CFG_SER_DISABLE] != "false"
-        
+
         pre_state = dict(self.st_server)
         log_debug("server: handle_update: disable={} ip={}".format(disable, ip))
         if disable or not ip:
@@ -582,6 +591,14 @@ class LabelsPendingHandler:
 
 
 def main():
+    global use_k8s_master_as_docker_proxy
+
+    parser = argparse.ArgumentParser(description="ctrmgrd service")
+    parser.add_argument("-p", "--proxy", action='store_true',
+            help="Act as docker http-proxy", default=False)
+    args = parser.parse_args()
+    use_k8s_master_as_docker_proxy = args.proxy
+
     init()
     server = MainServer()
     RemoteServerHandler(server)

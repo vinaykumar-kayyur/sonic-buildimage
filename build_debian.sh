@@ -245,7 +245,7 @@ fi
 ## Add docker config drop-in to specify dockerd command line
 sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
 ## Note: $_ means last argument of last command
-sudo cp files/docker/docker.service.conf $_
+sudo cp files/docker/*.conf $_
 ## Fix systemd race between docker and containerd
 sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
