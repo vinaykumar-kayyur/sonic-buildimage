@@ -2,10 +2,10 @@
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
+# Build and push sonic-mgmt image
 
 schedules:
 - cron: "0 8 * * *"
-  displayName: Build and push sonic-mgmt image
   branches:
     include:
     - master

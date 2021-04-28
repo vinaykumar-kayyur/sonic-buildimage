@@ -2,10 +2,10 @@
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
+# Clean up the cache 30 days ago
 
 schedules:
 - cron: "0 0 * * *"
-  displayName: Clean up the cache 30 days ago
   branches:
     include:
     - master
