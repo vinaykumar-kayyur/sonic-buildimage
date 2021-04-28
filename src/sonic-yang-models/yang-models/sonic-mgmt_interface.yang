@@ -51,7 +51,11 @@ module sonic-mgmt_interface {
                 }
 
                 leaf-list forced_mgmt_routes {
-                    type stypes:sonic-ip-prefix;
+                    type union {
+                        type stypes:sonic-ip-prefix;
+                        type inet:ip-address;
+                    }
+
                     description
                         "This configuration allows addtional routes to be added to default VRF table 
                          or mgmt VRF table, based on if Management VRF is configured.
