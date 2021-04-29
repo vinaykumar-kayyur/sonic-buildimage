@@ -5,7 +5,6 @@ import os
 import re
 import socket
 import subprocess
-import sys
 import syslog
 
 UNIT_TESTING = 0
@@ -31,15 +30,15 @@ def _get_ip(ip_str):
     ret = ""
     if ip_str:
         try:
-            ip = ipaddress.ip_address(ip_str)
+            ipaddress.ip_address(ip_str)
             ret = ip_str
-        except:
+        except ValueError:
             pass
 
         if not ret:
             try:
                 ret = socket.gethostbyname(ip_str)
-            except:
+            except OSError,socket.error:
                 pass
         if not ret:
             syslog.syslog(syslog.LOG_ERR, "{} is neither IP nor resolves to IP".
