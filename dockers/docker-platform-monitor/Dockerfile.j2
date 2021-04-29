@@ -92,6 +92,6 @@ COPY ["critical_processes", "/etc/supervisor"]
 
 RUN sonic-cfggen -a "{\"CONFIGURED_PLATFORM\":\"{{CONFIGURED_PLATFORM}}\"}" -t /usr/share/sonic/templates/docker_init.j2 > /usr/bin/docker_init.sh
 RUN rm -f /usr/share/sonic/templates/docker_init.j2
-Run chmod 755 /usr/bin/docker_init.sh
+RUN chmod 755 /usr/bin/docker_init.sh
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]
