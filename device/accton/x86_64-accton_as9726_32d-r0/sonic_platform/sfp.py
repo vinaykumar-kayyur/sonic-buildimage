@@ -2013,12 +2013,12 @@ class Sfp(SfpBase):
             else:
                 reset_path = "{}{}{}".format(CPLD3_I2C_PATH, 'module_reset_', self._port_num)
 
-        ret = self.__write_txt_file(reset_path, 0) #sysfs 0: disable reset
+        ret = self.__write_txt_file(reset_path, 1) #sysfs 1: enable reset
         if ret is not True:
             return ret
         
         time.sleep(0.2)
-        ret = self.__write_txt_file(reset_path, 1) #sysfs 1: enable reset
+        ret = self.__write_txt_file(reset_path, 0) #sysfs 0: disable reset
         time.sleep(0.2)
         
         return ret
