@@ -38,7 +38,7 @@ class Fan(FanBase):
         self.fan_index = fan_index
         self.fan_tray_index = fan_tray_index
         self.is_psu_fan = is_psu_fan
-        
+
         if self.is_psu_fan:
             self.psu_index = psu_index
             self.psu_i2c_num = PSU_I2C_MAPPING[self.psu_index]['num']
