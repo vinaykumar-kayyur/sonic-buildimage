@@ -16,33 +16,12 @@ check program container_checker with path "/usr/bin/container_checker"
     if status != 0 for 5 times within 5 cycles then alert repeat every 1 cycles
 """
 
-import subprocess
+import docker
 import sys
 
 import swsssdk
 from sonic_py_common import multi_asic
-
-
-def get_command_result(command):
-    """
-    @summary: This function will execute the command and return the resulting output.
-    @return: A string which contains the output of command.
-    """
-    command_stdout = ""
-
-    try:
-        proc_instance = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                         shell=True, universal_newlines=True)
-        command_stdout, command_stderr = proc_instance.communicate()
-        if proc_instance.returncode != 0:
-            print("Failed to execute the command '{}'. Return code: '{}'".format(
-                command, proc_instance.returncode))
-            sys.exit(1)
-    except (OSError, ValueError) as err:
-        print("Failed to execute the command '{}'. Error: '{}'".format(command, err))
-        sys.exit(2)
-
-    return command_stdout.rstrip().split("\n")
+from swsscommon import swsscommon
 
 
 def get_expected_running_containers():
@@ -60,6 +39,7 @@ def get_expected_running_containers():
     feature_table = config_db.get_table("FEATURE")
 
     expected_running_containers = set()
+    always_running_containers = set()
 
     for container_name in feature_table.keys():
         if feature_table[container_name]["state"] not in ["disabled", "always_disabled"]:
@@ -70,10 +50,12 @@ def get_expected_running_containers():
                     num_asics = multi_asic.get_num_asics()
                     for asic_id in range(num_asics):
                         expected_running_containers.add(container_name + str(asic_id))
+            elif feature_table[container_name]["state"] == 'always_enabled':
+                always_running_containers.add(container_name)
             else:
                 expected_running_containers.add(container_name)
 
-    return expected_running_containers
+    return expected_running_containers, always_running_containers
 
 
 def get_current_running_containers():
@@ -84,12 +66,27 @@ def get_current_running_containers():
     """
     running_containers = set()
 
-    command = "docker ps"
-    command_stdout = get_command_result(command)
-    for line in command_stdout[1:]:
-        running_containers.add(line.split()[-1].strip())
+    state_db = swsscommon.DBConnector("STATE_DB", 0)
+    tbl = swsscommon.Table(state_db, "FEATURE")
+
+    for name in tbl.getKeys():
+        data = dict(tbl.get(name)[1])
+        if data.get('container_id'):
+            running_containers.add(name)
 
     return running_containers
+
+
+def check_dockers(always_running_containers):
+    DOCKER_CLIENT = docker.DockerClient(base_url='unix://var/run/docker.sock')
+    RUNNING = 'running'
+    not_running = set()
+    for name in always_running_containers:
+        container = DOCKER_CLIENT.containers.get(name)
+        container_state = container.attrs['State']
+        if container_state['Status'] != RUNNING:
+            not_running.add(name)
+    return not_running
 
 
 def main():
@@ -98,10 +95,11 @@ def main():
               and the containers which were expected to run. If containers which were exepcted
               to run were not running, then an alerting message will be written into syslog.
     """
-    expected_running_containers = get_expected_running_containers()
+    expected_running_containers, always_running_containers = get_expected_running_containers()
     current_running_containers = get_current_running_containers()
 
     not_running_containers = expected_running_containers.difference(current_running_containers)
+    not_running_containers |= check_dockers(always_running_containers)
     if not_running_containers:
         print("Expected containers not running: " + ", ".join(not_running_containers))
         sys.exit(3)
