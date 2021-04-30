@@ -66,6 +66,7 @@ module sonic-interface {
 							error-app-tag nat-zone-invalid;
 						}
 					}
+                                        default "0";
 				}
 			}
 			/* end of INTERFACE_LIST */

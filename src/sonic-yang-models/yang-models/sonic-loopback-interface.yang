@@ -55,6 +55,7 @@ module sonic-loopback-interface {
                             error-app-tag nat-zone-invalid;
                         }
                     }
+                    default "0";
                 }
             }
             /* end of LOOPBACK_INTERFACE_LIST */

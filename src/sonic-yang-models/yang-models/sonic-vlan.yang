@@ -70,6 +70,7 @@ module sonic-vlan {
 							error-app-tag nat-zone-invalid;
 						}
 					}
+                                        default "0";
 				}
 			}
 			/* end of VLAN_INTERFACE_LIST */
