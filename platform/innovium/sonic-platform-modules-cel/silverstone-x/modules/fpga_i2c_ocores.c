@@ -30,6 +30,7 @@
 #include <linux/of.h>
 #include <linux/clk.h>
 #include <linux/pm_runtime.h>
+#include <linux/spinlock.h>
 #include "fpga_i2c_ocores.h"
 
 #define DRIVER_NAME "fpga-xiic-i2c"
@@ -83,6 +84,11 @@ struct xiic_i2c {
 	bool dynamic;
 	bool prev_msg_tx;
 	bool smbus_block_read;
+    unsigned int gl_isr;
+	unsigned int gl_ier;
+	unsigned int i2c_isr;
+	unsigned int i2c_ier;
+    spinlock_t s_lock;
 };
 
 #define IIC_IN_GLINT_BIT_OFFSET     18
@@ -389,11 +395,11 @@ static int xiic_reinit(struct xiic_i2c *i2c)
 	xiic_setreg32(i2c, XIIC_DGIER_OFFSET, XIIC_GINTR_ENABLE_MASK);
 
 	/* Enable FPGA global interrupts bit0 */
-	gl_int_setreg32(i2c, GL_MER_OFFSET, 0x03);
+	//gl_int_setreg32(i2c, GL_MER_OFFSET, 0x03);
 	
 	/* Enable FPGA iic interrupts corresponding iic channel bit */
-	gl_irq_clr_en(i2c, 1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET));
-
+	//gl_irq_clr_en(i2c, 1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET));
+    gl_irq_clr(i2c, 1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET));
     /* Only enable ARB Lost interrupt first*/
 	xiic_irq_clr_en(i2c, XIIC_INTR_ARB_LOST_MASK);
 
@@ -646,8 +652,11 @@ static irqreturn_t xiic_process(int irq, void *dev_id)
 	mutex_lock(&i2c->lock);
 	isr = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
 	ier = xiic_getreg32(i2c, XIIC_IIER_OFFSET);
+	//isr = i2c->i2c_isr;
+	//ier = i2c->i2c_ier;
 	pend = isr & ier;
 
+	//printk(KERN_WARNING "gl_isr:0x%08x.gl_ier:0x%08x\n", i2c->gl_isr, i2c->gl_ier);
 	dev_dbg(i2c->adap.dev.parent, "%s: IER: 0x%x, ISR: 0x%x, pend: 0x%x\n",
 		__func__, ier, isr, pend);
 	dev_dbg(i2c->adap.dev.parent, "%s: SR: 0x%x, msg: %p, nmsgs: %d\n",
@@ -673,9 +682,9 @@ static irqreturn_t xiic_process(int irq, void *dev_id)
 		 * fifos and the next message is a TX with len 0 (only addr)
 		 * reset the IP instead of just flush fifos
 		 */
-		ret = xiic_reinit(i2c);
+		/*ret = xiic_reinit(i2c);
 		if (!ret)
-			dev_dbg(i2c->adap.dev.parent, "reinit failed\n");
+			dev_dbg(i2c->adap.dev.parent, "reinit failed\n");*/
 
 		if (i2c->rx_msg)
 			xiic_wakeup(i2c, STATE_ERROR);
@@ -785,7 +794,9 @@ static irqreturn_t xiic_process(int irq, void *dev_id)
 out:
 	dev_dbg(i2c->adap.dev.parent, "%s clr: 0x%x\n", __func__, clr);
 
-	xiic_setreg32(i2c, XIIC_IISR_OFFSET, clr);
+	//xiic_setreg32(i2c, XIIC_IISR_OFFSET, clr);
+	xiic_setreg32(i2c, XIIC_IISR_OFFSET, isr);
+    gl_irq_clr(i2c,  1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET)); 
 	mutex_unlock(&i2c->lock);
 	return IRQ_HANDLED;
 }
@@ -1043,27 +1054,46 @@ static irqreturn_t xiic_isr(int irq, void *dev_id)
 	u32 pend, isr, ier;
 	u32 gl_pend, gl_isr, gl_ier, gl_isr_mask;
 	irqreturn_t ret = IRQ_NONE;
+	unsigned long flag;
 	/* Do not processes a devices interrupts if the device has no
 	 * interrupts pending
 	 */
 
+	spin_lock_irqsave(&i2c->s_lock, flag);
 	dev_dbg(i2c->adap.dev.parent, "%s entry\n", __func__);
+    gl_isr_mask = 1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET);
+
+	gl_isr = gl_int_getreg32(i2c, GL_ISR_OFFSET);
+
+	if(gl_isr & gl_isr_mask){
+	}else{
+	    spin_unlock_irqrestore(&i2c->s_lock, flag);
+		return ret;
+    }
 
 	isr = xiic_getreg32(i2c, XIIC_IISR_OFFSET);
+    i2c->i2c_isr = isr;
+
 	ier = xiic_getreg32(i2c, XIIC_IIER_OFFSET);
-	gl_isr = gl_int_getreg32(i2c, GL_ISR_OFFSET);
+    i2c->i2c_ier = ier;
+
+	i2c->gl_isr = gl_isr;
 	gl_ier = gl_int_getreg32(i2c, GL_IER_OFFSET);
-	
+	i2c->gl_ier = gl_ier;	
 	pend = isr & ier;
 	gl_pend = gl_isr & gl_ier;
-	gl_isr_mask = 1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET);
-	if (pend && gl_pend && gl_isr & gl_isr_mask){
+
+	//if (pend && gl_pend && (gl_isr & gl_isr_mask)){
+	if (isr && (gl_isr & gl_isr_mask)){
 		ret = IRQ_WAKE_THREAD;
 		/* clear global interrupt flag here but not xiic interrupts, once xiic interrupts is
 		 * not cleared yet, the same interrupt won't be accept again. 
 		 */
-		gl_irq_clr_en(i2c, gl_isr_mask);
+		//gl_irq_clr_en(i2c, gl_isr_mask);
+	    //gl_irq_clr(i2c, gl_isr_mask);
 	}
+
+	spin_unlock_irqrestore(&i2c->s_lock, flag);
 	return ret;
 }
 
@@ -1302,13 +1332,16 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	pm_runtime_use_autosuspend(i2c->dev);
 	pm_runtime_set_active(i2c->dev);
 	pm_runtime_enable(i2c->dev);
-	
+
+    gl_irq_dis(i2c,	1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET));
 	ret = xiic_reinit(i2c);
 	if (ret < 0) {
 		dev_err(&pdev->dev, "Cannot xiic_reinit\n");
 		goto err_clk_dis;
 	}
-
+    xiic_setreg32(i2c, XIIC_DGIER_OFFSET, XIIC_GINTR_ENABLE_MASK);
+	gl_irq_en(i2c, 1 << (i2c->id + IIC_IN_GLINT_BIT_OFFSET));
+    gl_int_setreg32(i2c, GL_MER_OFFSET, 0x03);
 	printk("share msi irq num is %d\n", irq);
 	ret = devm_request_threaded_irq(&pdev->dev, irq, xiic_isr,
 					xiic_process, IRQF_SHARED,
@@ -1330,6 +1363,8 @@ static int xiic_i2c_probe(struct platform_device *pdev)
 	sr = xiic_getreg32(i2c, XIIC_SR_REG_OFFSET);
 	if (!(sr & XIIC_SR_TX_FIFO_EMPTY_MASK))
 		i2c->endianness = BIG;
+
+	spin_lock_init(&i2c->s_lock);
 #if 0
 	ret = xiic_reinit(i2c);
 	if (ret < 0) {
