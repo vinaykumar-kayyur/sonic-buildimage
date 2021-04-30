@@ -765,7 +765,6 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 			--build-arg frr_user_uid=$(FRR_USER_UID) \
 			--build-arg frr_user_gid=$(FRR_USER_GID) \
-			--build-arg manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--build-arg image_version=$(SONIC_IMAGE_VERSION) \
 			--label com.azure.sonic.manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
