@@ -1,0 +1,4 @@
+# net device ()
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?", ATTR{ifindex}=="4", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+# net device ()
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?", ATTR{ifindex}=="2", ATTR{type}=="1", KERNEL=="eth*", NAME="eth2"
