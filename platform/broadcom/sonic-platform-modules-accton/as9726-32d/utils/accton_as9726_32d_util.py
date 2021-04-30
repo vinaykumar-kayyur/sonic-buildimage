@@ -165,21 +165,7 @@ mknod = [
     'echo 24c02 0x56 > /sys/bus/i2c/devices/i2c-13/new_device',
 ]
 
-# Disable CPLD debug mode
-#cpld_set = [
-#    'i2cset -y -f 3 0x60 0x2a 0xff',
-#    'i2cset -y -f 3 0x60 0x2b 0xff',
-#    'i2cset -y -f 3 0x60 0x86 0x89'
-#]
-
 FORCE = 0
-#logging.basicConfig(filename= PROJECT_NAME+'.log', filemode='w',level=logging.DEBUG)
-# logging.basicConfig(level=logging.INFO)
-
-
-if DEBUG:
-    print 'ARGV      :', sys.argv[1:]
-
 
 def main():
     global DEBUG
@@ -371,8 +357,6 @@ def device_install():
 
 def device_uninstall():
     global FORCE
-
-    status, output = log_os_system("ls /sys/bus/i2c/devices/0-0070", 0)
 
     for i in range(0, len(sfp_map)):
         target = "/sys/bus/i2c/devices/i2c-" + \

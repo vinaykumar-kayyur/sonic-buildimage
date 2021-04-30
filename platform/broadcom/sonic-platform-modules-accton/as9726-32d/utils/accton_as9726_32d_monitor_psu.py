@@ -35,10 +35,6 @@ except ImportError as e:
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as9726_32d_monitor_psu'
 
-global log_file
-global log_level
-
-
 psu_state=[2, 2]
 psu_status_state=[2, 2]
 # Make a class we can use to capture stdout and sterr in the log

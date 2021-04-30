@@ -5,8 +5,6 @@
 
 try:
     import time
-    import os
-    import sys
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
@@ -111,7 +109,6 @@ class SfpUtil(SfpUtilBase):
             present_path = self.BASE_CPLD3_PATH + "module_present_" + str(port_num)
         self.__port_to_is_present = present_path
 
-        content = "0"
         try:
             val_file = open(present_path)
             content = val_file.readline().rstrip()
@@ -196,11 +193,6 @@ class SfpUtil(SfpUtilBase):
             mod_rst_path = self.BASE_CPLD3_PATH + "module_reset_" + str(port_num)
 
         self.__port_to_mod_rst = mod_rst_path
-        try:
-            reg_file = open(self.__port_to_mod_rst, 'r+')
-        except IOError as e:
-            print("Error: unable to open file: %s" % str(e))
-            return False
 
         ret = self.__write_txt_file(self.__port_to_mod_rst, 1)
         if ret is not True:
@@ -251,7 +243,6 @@ class SfpUtil(SfpUtilBase):
     def get_transceiver_change_event(self, timeout=0):
         start_time = time.time()
         port_dict = {}
-        ori_present = {}
         forever = False
 
         if timeout == 0:

@@ -20,12 +20,8 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
-    import time
     import logging
     import glob
-    import commands
-    from collections import namedtuple
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -75,7 +71,7 @@ class ThermalUtil(object):
                 return None
             try:
 		        val_file.close()
-            except:
+            except BaseException:
                 logging.debug('GET. unable to close file. device_path:%s', device_path)
                 return None
               
@@ -94,7 +90,6 @@ class ThermalUtil(object):
    
 
 def main():
-    thermal = ThermalUtil()   
 
 if __name__ == '__main__':
     main()

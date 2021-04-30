@@ -36,9 +36,6 @@ except ImportError as e:
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as9726_32d_monitor'
 
-global log_file
-global log_level
-
 class switch(object):
     def __init__(self, value):
         self.value = value
@@ -301,7 +298,7 @@ class device_monitor(object):
             console.setFormatter(formatter)
             logging.getLogger('').addHandler(console)
 
-        sys_handler = handler = logging.handlers.SysLogHandler(address = '/dev/log')
+        sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
         sys_handler.setLevel(logging.WARNING)       
         logging.getLogger('').addHandler(sys_handler)
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
@@ -326,7 +323,6 @@ class device_monitor(object):
         LEVEL_FAN_MIN=1
         LEVEL_FAN_MID=2       
         LEVEL_FAN_MAX=3
-        LEVEL_FAN_DEF=LEVEL_FAN_MAX
         LEVEL_FAN_YELLOW_ALARM=4
         LEVEL_FAN_RED_ALARM=5
         LEVEL_FAN_SHUTDOWN=6
@@ -375,7 +371,6 @@ class device_monitor(object):
             count_check=0
         
         thermal = self.thermal
-        fan_dir=1
         fan_dir=fan.get_fan_dir(1)
        
         if fan_dir==1:   # AFI

@@ -35,10 +35,6 @@ except ImportError as e:
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as9726_32d_monitor_fan'
 
-global log_file
-global log_level
-
-
 class switch(object):
     def __init__(self, value):
         self.value = value
