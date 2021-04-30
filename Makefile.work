@@ -99,11 +99,13 @@ else
 SLAVE_DIR = sonic-slave-jessie
 endif
 
-include rules/config
+# Define an empty target for rules/config.user so that when
+# the file is missng, make won't try to rebuld everything.
+rules/config.user:
+	@echo -n ""
 
-ifeq (rules/config.user, $(wildcard rules/config.user))
-    include rules/config.user
-endif
+include rules/config
+-include rules/config.user
 
 ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
