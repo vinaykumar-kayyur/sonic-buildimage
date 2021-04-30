@@ -11,11 +11,7 @@ schedules:
     - master
   always: true
 
-trigger:
-  batch: false
-  branches:
-    include:
-    - master
+trigger: none
 pr: none
 
 parameters:
