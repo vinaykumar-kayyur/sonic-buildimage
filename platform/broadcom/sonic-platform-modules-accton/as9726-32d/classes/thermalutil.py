@@ -87,9 +87,3 @@ class ThermalUtil(object):
 
     def get_thermal_path(self, thermal_num):
         return self.thermal_sysfspath[thermal_num][0]
-   
-
-def main():
-
-if __name__ == '__main__':
-    main()
