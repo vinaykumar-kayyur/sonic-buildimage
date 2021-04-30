@@ -293,7 +293,7 @@ RUN pip install Pympler==0.8
 RUN pip2 install redis==2.10.6
 RUN pip3 install redis==2.10.6
 
-# For snmpagent buld
+# For snmpagent build
 RUN pip3 install python-arptable>=0.0.1 psutil==5.7.0
 
 # Install dependencies for isc-dhcp-relay build
