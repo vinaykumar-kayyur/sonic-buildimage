@@ -12,7 +12,15 @@ schedules:
   always: true
 
 trigger: none
-pr: none
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - sonic-slave-jessie
+    - sonic-slave-stretch
+    - sonic-slave-buster   
 
 parameters:
 - name: 'arches'
