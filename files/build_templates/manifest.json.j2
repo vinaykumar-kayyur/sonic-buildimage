@@ -2,7 +2,6 @@
     "version": "1.0.0",
     "package": {
         "version": "{{ version }}",
-        "base-os-contraint": "^{{ base_os_ver.split('.')[0] }}.0.0",
         "depends": {{ depends.split()|json if depends is defined else []}},
         "name": "{{ package_name }}"
     },
