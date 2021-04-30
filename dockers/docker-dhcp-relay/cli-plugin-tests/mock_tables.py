@@ -1,7 +1,6 @@
 # MONKEY PATCH!!!
 import json
 import os
-import sys
 from unittest import mock
 
 import mockredis

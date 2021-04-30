@@ -1,5 +1,5 @@
 import pytest
-import mock_tables
+import mock_tables # lgtm [py/unused-import]
 
 @pytest.fixture()
 def mock_cfgdb():
