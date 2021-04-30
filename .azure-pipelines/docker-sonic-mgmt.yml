@@ -16,7 +16,13 @@ trigger:
   branches:
     include:
     - master
-pr: none
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - dockers/docker-sonic-mgmt
 
 parameters:
 - name: registry_url
