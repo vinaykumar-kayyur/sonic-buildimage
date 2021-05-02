@@ -38,7 +38,7 @@ def _get_ip(ip_str):
         if not ret:
             try:
                 ret = socket.gethostbyname(ip_str)
-            except OSError,socket.error:
+            except (OSError, socket.error):
                 pass
         if not ret:
             syslog.syslog(syslog.LOG_ERR, "{} is neither IP nor resolves to IP".
