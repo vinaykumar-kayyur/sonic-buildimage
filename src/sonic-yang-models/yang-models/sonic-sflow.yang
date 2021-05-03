@@ -17,6 +17,11 @@ module sonic-sflow{
     import sonic-vlan {
         prefix svlan;
     }
+    /*
+    import sonic-mgmt-port {
+        prefix smt;
+    }
+    */
 
     description "SFLOW yang Module for SONiC OS";
 
@@ -45,6 +50,7 @@ module sonic-sflow{
 
                 leaf collector_port {
                     type inet:port-number;
+                    default 6343;
                 }
 
             } /* end of list SFLOW_COLLECTOR_LIST */
@@ -62,6 +68,7 @@ module sonic-sflow{
 
                 leaf admin_state {
                     type stypes:admin_status;
+                    default up;
                 }
 
                 leaf sample_rate {
@@ -70,6 +77,7 @@ module sonic-sflow{
                             error-message "sFlow sample rate must be [256-8388608]";
                         }
                     }
+                    description "Sets the packet sampling rate.  The rate is expressed as an integer N, where the intended sampling rate is 1/N packets.";
                 }
             } /* end of list SFLOW_SESSION_LIST */
         } /* end of container SFLOW_SESSION */
@@ -80,6 +88,7 @@ module sonic-sflow{
 
                 leaf admin_state {
                     type stypes:admin_status;
+                    default down;
                 }
 
                 leaf polling_interval {
@@ -88,6 +97,8 @@ module sonic-sflow{
                             error-message "sFlow polling interval must be [0, 5-300]";
                         }
                     }
+                    description "The interval within which sFlow data is collected and sent to the configured collectors";
+                    default 20;
                 }
 
                 leaf agent_id {
@@ -95,6 +106,10 @@ module sonic-sflow{
                         type leafref {
                             path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
                         }
+                        /*
+                        type leafref {
+                            path "/smt:sonic-mgmt-port/smt:MGMT_PORT/smt:MGMT_PORT_LIST/smt:name";
+                        }*/
                         type leafref {
                             path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
                         }
