@@ -2,9 +2,7 @@
     "LLDP_GLOBAL_TEST": {
         "sonic-lldp:sonic-lldp": {
             "sonic-lldp:LLDP": {
-                "LLDP_LIST": [
-                    {
-                        "id": "GLOBAL",
+                "sonic-lldp:GLOBAL": {
                         "mode": "TRANSMIT",
                         "enabled": "true",
                         "hello_time": "20",
@@ -13,17 +11,14 @@
                         "supp_system_capabilities_tlv": "false",
                         "system_name": "sonic",
                         "system_description": "sonic-system"
-                    }
-                ]
+                }
             }
         }
     },
     "LLDP_GLOBAL_TEST_INVALID_ID": {
         "sonic-lldp:sonic-lldp": {
             "sonic-lldp:LLDP": {
-                "LLDP_LIST": [
-                    {
-                        "id": "GLOBALE",
+                "sonic-lldp:GLOBAL": {
                         "mode": "TRANSMIT",
                         "enabled": "true",
                         "hello_time": "10",
@@ -32,17 +27,14 @@
                         "supp_system_capabilities_tlv": "false",
                         "system_name": "sonic",
                         "system_description": "sonic-system"
-                    }
-                ]
+                }
             }
         }
     },
     "LLDP_GLOBAL_TEST_INVALID_HELLO": {
         "sonic-lldp:sonic-lldp": {
             "sonic-lldp:LLDP": {
-                "LLDP_LIST": [
-                    {
-                        "id": "GLOBAL",
+                "sonic-lldp:GLOBAL": {
                         "mode": "TRANSMIT",
                         "enabled": "true",
                         "hello_time": "test",
@@ -51,17 +43,14 @@
                         "supp_system_capabilities_tlv": "false",
                         "system_name": "sonic",
                         "system_description": "sonic-system"
-                    }
-                ]
+                }
             }
         }
     },
     "LLDP_GLOBAL_TEST_INVALID_MULTIPLIER": {
         "sonic-lldp:sonic-lldp": {
             "sonic-lldp:LLDP": {
-                "LLDP_LIST": [
-                    {
-                        "id": "GLOBAL",
+                "sonic-lldp:GLOBAL": {
                         "mode": "TRANSMIT",
                         "enabled": "true",
                         "hello_time": "10",
@@ -70,17 +59,14 @@
                         "supp_system_capabilities_tlv": "false",
                         "system_name": "sonic",
                         "system_description": "sonic-system"
-                    }
-                ]
+                }
             }
         }
     },
     "LLDP_GLOBAL_TEST_DEFAULT_SUPP_MGMT_ADDR_TLV": {
         "sonic-lldp:sonic-lldp": {
             "sonic-lldp:LLDP": {
-                "LLDP_LIST": [
-                    {
-                        "id": "GLOBAL",
+                "sonic-lldp:GLOBAL": {
                         "mode": "TRANSMIT",
                         "enabled": "true",
                         "hello_time": "10",
@@ -89,8 +75,7 @@
                         "supp_system_capabilities_tlv": "false",
                         "system_name": "sonic",
                         "system_description": "sonic-system"
-                    }
-                ]
+                }
             }
         }
     },

@@ -2,11 +2,6 @@
     "LLDP_GLOBAL_TEST": {
         "desc": "LLDP test global LLDP table"
     },
-    "LLDP_GLOBAL_TEST_INVALID_ID": {
-        "desc": "LLDP test global table with invalid id",
-        "eStrKey" : "InvalidValue",
-        "eStr": ["id"]
-    },
     "LLDP_GLOBAL_TEST_INVALID_HELLO": {
         "desc": "LLDP test global table with invalid hello value",
         "eStrKey" : "InvalidValue",

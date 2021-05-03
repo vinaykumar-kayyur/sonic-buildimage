@@ -45,17 +45,7 @@ module sonic-lldp {
 
     container sonic-lldp {
         container LLDP {
-            list LLDP_LIST {
-                key "id";
-
-                leaf id {
-                    type enumeration {
-                        enum GLOBAL;
-                    }
-                    description
-                        "It's value is always GLOBAL";
-                }
-
+            container GLOBAL {
 
                 leaf hello_time {
                     type uint8 {
