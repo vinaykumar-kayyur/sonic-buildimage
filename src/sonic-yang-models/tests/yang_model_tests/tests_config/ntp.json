@@ -123,11 +123,11 @@
             "sonic-ntp:NTP": {
                 "sonic-ntp:global": { 
                     "src_intf": [
-			"Ethernet0",
-			"Vlan100",
-			"Loopback100",
+                        "Ethernet0",
+                        "Vlan100",
+                        "Loopback100",
                         "PortChannel10",
-			"eth0"
+                        "eth0"
 		    ]
                 }
             }
