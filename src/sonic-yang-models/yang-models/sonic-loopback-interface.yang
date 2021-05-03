@@ -13,8 +13,16 @@ module sonic-loopback-interface {
         prefix ext;
     }
 
+    import sonic-vrf {
+        prefix vrf;
+    }
+
     description
         "SONIC LOOPBACK INTERFACE";
+
+    revision 2021-04-05 {
+        description "Modify the type of vrf name";
+    }
 
     revision 2020-02-05 {
         description "First Revision";
@@ -32,9 +40,8 @@ module sonic-loopback-interface {
                 }
 
                 leaf vrf_name {
-                    type string {
-                        pattern "Vrf[a-zA-Z0-9_-]+";
-                        length 3..255;
+                    type leafref {
+                        path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
                     }
                 }
             }
