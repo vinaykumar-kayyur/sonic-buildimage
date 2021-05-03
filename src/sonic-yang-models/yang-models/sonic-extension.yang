@@ -24,23 +24,6 @@ module sonic-extension {
         argument "value";
     }
 
-    extension key-delim {
-        description "Key delimeter, e.g. - |, :";
-        argument "value";
-    }
-
-    extension key-pattern {
-        description "Key pattern, e.g. - ACL_RULE|{aclname}|{rulename}";
-        argument "value";
-    }
-
-    extension map-leaf {
-        description
-           "Extension to indicate nested list and specify fields
-           mappings which are keys of inner list";
-        argument "value";
-    }
-
     extension custom-validation {
         description "Extension for registering custom validation handler.";
         argument "handler";
