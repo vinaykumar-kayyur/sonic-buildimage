@@ -300,6 +300,16 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libnss-tacplus_*.deb || \
 sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
 sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 
+# Install pam-radius-auth and nss-radius
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libpam-radius-auth_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libnss-radius_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+# Disable radius by default
+# radius does not have any profiles
+#sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove radius tacplus
+sudo sed -i -e '/^passwd/s/ radius//' $FILESYSTEM_ROOT/etc/nsswitch.conf
+
 # Install a custom version of kdump-tools  (and its dependencies via 'apt-get -y install -f')
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 sudo DEBIAN_FRONTEND=noninteractive dpkg --root=$FILESYSTEM_ROOT -i $debs_path/kdump-tools_*.deb || \
@@ -396,6 +406,9 @@ sudo cp files/dhcp/90-dhcp6-systcl.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMP
 # Copy initial interfaces configuration file, will be overwritten on first boot
 sudo cp $IMAGE_CONFIGS/interfaces/init_interfaces $FILESYSTEM_ROOT/etc/network/interfaces
 sudo mkdir -p $FILESYSTEM_ROOT/etc/network/interfaces.d
+
+# System'd network udev rules
+sudo cp $IMAGE_CONFIGS/systemd/network/* $FILESYSTEM_ROOT_ETC/systemd/network/
 
 # copy core file uploader files
 sudo cp $IMAGE_CONFIGS/corefile_uploader/core_uploader.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
@@ -606,17 +619,31 @@ sudo mount proc /proc -t proc
 sudo mkdir $FILESYSTEM_ROOT/target
 sudo mount --bind target $FILESYSTEM_ROOT/target
 sudo chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS info
-{% for image in installer_images.strip().split(' ') -%}
-{% set imagefilename = image.split('/')|last -%}
+
+{% for docker_installation_target in installer_images.strip().split() -%}
+{% set pkgname, docker_build_path, image = docker_installation_target.split('|') %}
+{% set imagefilepath = image.split(':')|first -%}
+{% set imagefilename = imagefilepath.split('/')|last -%}
 {% set imagename = imagefilename.split('.')|first -%}
-sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS load -i {{image}}
+sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS load -i {{imagefilepath}}
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagename}}:"${SONIC_IMAGE_VERSION}"
+# Check if manifest exists for {{imagename}} and it is a valid JSON
+sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS inspect {{imagename}}:latest \
+    | jq '.[0].Config.Labels["com.azure.sonic.manifest"]' -r > /tmp/manifest.json
+jq -e . /tmp/manifest.json || {
+    >&2 echo "docker image {{imagename}} has no manifest or manifest is not a valid JSON"
+    exit 1
+}
 {% if imagename.endswith('-dbg') %}
 {% set imagebasename = imagename.replace('-dbg', '') -%}
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagebasename}}:"${SONIC_IMAGE_VERSION}"
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagebasename}}:latest
 {% endif %}
 {% endfor %}
+
+SONIC_PACKAGE_MANAGER_FOLDER="/var/lib/sonic-package-manager/"
+sudo mkdir -p $FILESYSTEM_ROOT/$SONIC_PACKAGE_MANAGER_FOLDER
+j2 $BUILD_TEMPLATES/packages.json.j2 | sudo tee $FILESYSTEM_ROOT/$SONIC_PACKAGE_MANAGER_FOLDER/packages.json
 
 # Copy docker_image_ctl.j2 for SONiC Package Manager
 sudo cp $BUILD_TEMPLATES/docker_image_ctl.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/docker_image_ctl.j2

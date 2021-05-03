@@ -97,3 +97,18 @@ def get_mon_vlan_id(vlan_interface_name):
     return get_configdb_info(CFG_VLAN_TABLE_NAME, vlan_interface_name, CFG_VLAN_VLANID_KEY_NAME)
 
 
+#
+# Get the host ifname from Vlan interface name
+#
+
+def get_mon_vlan_host_ifname(vlan_interface_name):
+    return get_configdb_info(CFG_VLAN_TABLE_NAME, vlan_interface_name, CFG_VLAN_MONVLAN_KEY_NAME)
+
+
+#
+# Get the dut mac address from DEVICE_METADATA|localhost
+#
+
+def get_localhost_mac():
+    return get_configdb_info(swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, CFG_METADATA_LOCALHOST_ENTRY_NAME, CFG_METADATA_MAC_KEY_NAME)
+
