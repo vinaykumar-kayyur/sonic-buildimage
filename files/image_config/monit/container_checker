@@ -62,8 +62,12 @@ def get_expected_running_containers():
 def get_current_running_from_DB(always_running_containers):
     """
     @summary: This function will get the current running container list
-              from FEATURE table from STATE_DB.
-    @return:  A set which contains the current running containers.
+              from FEATURE table @ STATE_DB, if this table is available.
+    @return:  a tuple
+              First: Return value indicating if info can be obtained from
+              DB or not.
+              Second: A set which contains the current running containers,
+              if this info is available in DB
     """
     running_containers = set()
 
@@ -90,11 +94,9 @@ def get_current_running_from_DB(always_running_containers):
 
 def get_current_running_from_dockers():
     """
-    @summary: This function will verify whether docker for given
-              containers are in running state. This is required
-              as always-enabled containers do not update STATE-DB
-              FEATURE table.
-    @return:  A set which contains containers that are *not*
+    @summary: This function will get all running containers from
+              the list of docker containers in running state.
+    @return:  A set which contains containers that are
               in running state.
     """
     DOCKER_CLIENT = docker.DockerClient(base_url='unix://var/run/docker.sock')
