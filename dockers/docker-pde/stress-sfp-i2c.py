@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 try:
+
     import sys
+
     import time
     import imp
     from natsort import natsorted
@@ -151,6 +153,7 @@ if __name__ == '__main__':
     sec = 180
     if len(sys.argv) >= 2:
         sec = int(sys.argv[1])
+
 
 
     stress_sfp_i2c(sec)

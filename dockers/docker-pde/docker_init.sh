@@ -40,6 +40,7 @@ fi
 
 start_bcm
 
+<<<<<<< HEAD
 
 
 
@@ -47,3 +48,8 @@ exec /usr/bin/supervisord
 
 
 
+=======
+exec /usr/bin/supervisord
+
+
+>>>>>>> c1524191... Initial commit for introducing the SONiC Platform Development Env (Resubmit PR#3778)
