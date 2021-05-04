@@ -46,6 +46,11 @@ set_tmpfs_log_partition_size()
 {
   varlogsize=128
 
+  # 3132 and qx32 allows limited tmpfs partition size at startup time.
+  [ X"$aboot_platform" = X"x86_64-arista_7050_qx32"  ] && return
+  [ X"$onie_platform"  = X"x86_64-m3000-r0" ]          && return
+  [ X"$onie_platform"  = X"x86_64-m3000-r1" ]          && return
+
   # set varlogsize to existing var-log.ext4 size
   if [ -f ${rootmnt}/host/disk-img/var-log.ext4 ]; then
     varlogsize=$(ls -l ${rootmnt}/host/disk-img/var-log.ext4 | awk '{print $5}')
@@ -151,10 +156,13 @@ mount --bind ${rootmnt}/host/$image_dir/boot ${rootmnt}/boot
 
 ## Mount loop device or tmpfs for /var/log
 onie_platform=""
+aboot_platform=""
 . ${rootmnt}/host/machine.conf
 if $logs_inram ||
    [ X"$onie_platform"  = X"x86_64-m3000-r0" ] ||
-   [ X"$onie_platform"  = X"x86_64-m3000-r1" ]
+   [ X"$onie_platform"  = X"x86_64-m3000-r1" ] ||
+   [ X"$aboot_platform" = X"x86_64-arista_7050_qx32"  ] ||
+   [ X"$aboot_platform" = X"x86_64-arista_7050_qx32s" ]
 then
   # NOTE: some platforms, when reaching initramfs stage, have a small
   #       limit of mounting tmpfs partition, potentially due to amount
