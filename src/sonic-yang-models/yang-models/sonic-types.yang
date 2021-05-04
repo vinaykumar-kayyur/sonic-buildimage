@@ -160,10 +160,15 @@ module sonic-types {
     container operation {
         leaf operation {
             type enumeration {
+                enum NOP;
                 enum CREATE;
                 enum UPDATE;
                 enum DELETE;
             }
+            description
+                "This allows evaluation of must/when expression
+                for CREATE/UPDATE/DELETE operation.";
+            default NOP;
         }
         description "Sonic data operation types required during validation";
     }
