@@ -24,6 +24,7 @@ RUN apt-get install -y python-jsonschema
 
 RUN pip3 install pytest pexpect
 
+
 {% if docker_pde_debs.strip() -%}
 # Copy locally-built Debian package dependencies
 COPY \
@@ -62,6 +63,7 @@ python-wheels/{{ whl }}{{' '}}
 
 # Install locally-built Python wheel dependencies
 RUN pip3  install \
+
 {% for whl in docker_pde_whls.split(' ') -%}
 /python-wheels/{{ whl }}{{' '}}
 {%- endfor %}

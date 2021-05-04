@@ -357,6 +357,7 @@ initpde:
 	git submodule update --init --recursive $$submodule ; \
 	done
 	@git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
+
 init :
 	@git submodule update --init --recursive
 	@git submodule foreach --recursive '[ -f .git ] && echo "gitdir: $$(realpath --relative-to=. $$(cut -d" " -f2 .git))" > .git'
