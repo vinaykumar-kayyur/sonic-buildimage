@@ -72,15 +72,15 @@ def obfuscate(data):
 
 
 class Feature(object):
-    """ Represents a feature configuration from CONFIG DB data. """
+    """ Represents a feature configuration from CONFIG_DB data. """
 
     def __init__(self, feature_name, feature_cfg, device_config=None):
-        """ Initialize Feature object based on CONFIG DB data.
+        """ Initialize Feature object based on CONFIG_DB data.
 
         Args:
             feature_name (str): Feature name string
-            feature_cfg (dict): Feature CONFIG DB configuration
-            deviec_config (dict): DEVICE_METADATA section of CONFIG DB
+            feature_cfg (dict): Feature CONFIG_DB configuration
+            deviec_config (dict): DEVICE_METADATA section of CONFIG_DB
         """
 
         self.name = feature_name
@@ -94,8 +94,8 @@ class Feature(object):
         """ Returns the target state for the feature by rendering the state field as J2 template. 
         
         Args:
-            state_configuration (str): State configuration from CONFIG DB
-            deviec_config (dict): DEVICE_METADATA section of CONFIG DB
+            state_configuration (str): State configuration from CONFIG_DB
+            deviec_config (dict): DEVICE_METADATA section of CONFIG_DB
         Returns:
             (str): Target feature state
         """
@@ -114,7 +114,7 @@ class FeatureHandler(object):
     """ Handles FEATURE table updates. """
 
     SYSTEMD_SYSTEM_DIR = '/etc/systemd/system/'
-    SYSTEMD_SERVICE_CONF_D = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
+    SYSTEMD_SERVICE_CONF_DIR = os.path.join(SYSTEMD_SYSTEM_DIR, '{}.service.d/')
 
     def __init__(self, config_db, device_config):
         self._config_db = config_db
@@ -183,7 +183,7 @@ class FeatureHandler(object):
         feature_names, feature_suffixes = self.get_feature_attribute(feature)
 
         for feature_name in feature_names:
-            dir_name = self.SYSTEMD_SERVICE_CONF_D.format(feature_name)
+            dir_name = self.SYSTEMD_SERVICE_CONF_DIR.format(feature_name)
             if not os.path.exists(dir_name):
                 os.mkdir(dir_name)
             with open(os.path.join(dir_name, 'auto_restart.conf'), 'w') as cfgfile:

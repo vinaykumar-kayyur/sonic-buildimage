@@ -71,7 +71,7 @@ class TestHostcfgd(TestCase):
             "enabled": "always",
             "disabled": "no",
         }
-        auto_restart_conf = os.path.join(hostcfgd.FeatureHandler.SYSTEMD_SERVICE_CONF_D, "auto_restart.conf")
+        auto_restart_conf = os.path.join(hostcfgd.FeatureHandler.SYSTEMD_SERVICE_CONF_DIR, "auto_restart.conf")
 
         for feature in table:
             auto_restart = table[feature].get("auto_restart", "disabled")
