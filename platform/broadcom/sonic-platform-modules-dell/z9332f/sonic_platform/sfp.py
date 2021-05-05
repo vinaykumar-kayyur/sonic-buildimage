@@ -562,7 +562,7 @@ class Sfp(SfpBase):
             transceiver_info_dict['ext_rateselect_compliance'] = "Not supported"
 
             eeprom_raw = []
-            eeprom_raw = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_MEDIA_TYPE_OFFSET,\
+            eeprom_raw = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_MEDIA_TYPE_OFFSET,
                                                  QSFP_DD_MEDIA_TYPE_WIDTH)
             if eeprom_raw is not None:
                 transceiver_info_dict['specification_compliance'] = type_of_media_interface[eeprom_raw[0]]
@@ -596,7 +596,7 @@ class Sfp(SfpBase):
             if self.qsfp_dd_Info is None:
                 return None
 
-            sfp_media_type_raw = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_MEDIA_TYPE_OFFSET,\
+            sfp_media_type_raw = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_MEDIA_TYPE_OFFSET,
                                                          QSFP_DD_MEDIA_TYPE_WIDTH)
             if sfp_media_type_raw is not None:
                 sfp_media_type_dict = self.qsfp_dd_Info.parse_media_type(sfp_media_type_raw, 0)
@@ -606,12 +606,12 @@ class Sfp(SfpBase):
             host_media_list = ""
             if self.qsfp_dd_Info is None:
                 return None
-            qsfp_dd_app1_list = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_APP1_ADV_OFFSET,\
+            qsfp_dd_app1_list = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_APP1_ADV_OFFSET,
                                                                       QSFP_DD_APP1_ADV_WIDTH)
             if self.qsfp_dd_app2_list:
                 possible_application_count = 15
                 #Additional application advertisement
-                qsfp_dd_app2_list = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_APP2_ADV_OFFSET,\
+                qsfp_dd_app2_list = self._read_eeprom_bytes(self.eeprom_path, QSFP_DD_APP2_ADV_OFFSET,
                                                                            QSFP_DD_APP2_ADV_WIDTH)
                 if qsfp_dd_app1_list is not None and qsfp_dd_app2_list is not None:
                     sfp_application_type_list = qsfp_dd_app1_list + qsfp_dd_app2_list
@@ -904,7 +904,7 @@ class Sfp(SfpBase):
             if self.sfp_type == 'QSFP_DD':
                 offset = 512
                 rx_los_mask = [ 0x01, 0x02, 0x04, 0x08 ,0x10, 0x20, 0x40, 0x80 ]
-                dom_channel_monitor_raw = self._read_eeprom_bytes(self.eeprom_path,\
+                dom_channel_monitor_raw = self._read_eeprom_bytes(self.eeprom_path,
                     offset + QSFP_DD_RXLOS_OFFSET, QSFP_DD_RXLOS_WIDTH)
                 if dom_channel_monitor_raw is not None:
                     rx_los_data = int(dom_channel_monitor_raw[0], 8)
@@ -1055,7 +1055,7 @@ class Sfp(SfpBase):
                 voltage_data = self.qsfp_dd_DomInfo.parse_voltage(dom_data_raw, 0)
 
             elif self.sfp_type == 'QSFP':
-               voltage_data = self._get_eeprom_data('Voltage')
+                voltage_data = self._get_eeprom_data('Voltage')
 
             voltage = self._strip_unit_from_str(voltage_data['data']['Vcc']['value'])
 
@@ -1142,7 +1142,7 @@ class Sfp(SfpBase):
                 if not self.dom_tx_power_supported:
                     return None
 
-                tx_power_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXPOWER_OFFSET,\
+                tx_power_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXPOWER_OFFSET,
                                                          QSFP_DD_TXPOWER_WIDTH)
                 tx_power_data = self.qsfp_dd_DomInfo.parse_dom_tx_power(tx_power_data_raw, 0)
 
@@ -1340,19 +1340,19 @@ class Sfp(SfpBase):
 
             #Avoid re-initialization of the QSFP/SFP optic on QSFP/SFP port.
             if self.sfp_type == 'SFP' and\
-                (driver_name == 'optoe1' or driver_name == 'optoe3'):
+                driver_name in ['optoe1', 'optoe3']:
                 subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
                 new_device = "echo optoe2 0x50 >" + new_sfp_path
                 subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
                 time.sleep(2)
             elif self.sfp_type == 'QSFP' and\
-                 (driver_name == 'optoe2' or driver_name  == 'optoe3'):
+                 driver_name in ['optoe2', 'optoe3']:
                 subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
                 new_device = "echo optoe1 0x50 >" + new_sfp_path
                 subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
                 time.sleep(2)
             elif self.sfp_type == 'QSFP_DD' and\
-                 (driver_name == 'optoe1' or driver_name  == 'optoe2'):
+                 driver_name in ['optoe1', 'optoe2']:
                 subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
                 new_device = "echo optoe3 0x50 >" + new_sfp_path
                 subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
