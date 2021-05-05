@@ -52,6 +52,7 @@ endif
 IMAGE_DISTRO := buster
 IMAGE_DISTRO_DEBS_PATH = $(TARGET_PATH)/debs/$(IMAGE_DISTRO)
 IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
+PLATFORM_RULES_PATH = $(PLATFORM_PATH)/rules
 
 export BUILD_NUMBER
 export BUILD_TIMESTAMP
@@ -101,7 +102,7 @@ list :
 
 include $(RULES_PATH)/config
 -include $(RULES_PATH)/config.user
-
+-include $(PLATFORM_RULES_PATH)/config
 
 ###############################################################################
 ## Version control related exports
@@ -109,12 +110,6 @@ include $(RULES_PATH)/config
 export PACKAGE_URL_PREFIX
 export TRUSTED_GPG_URLS
 export SONIC_VERSION_CONTROL_COMPONENTS
-
-# Ensure platform has a chance to override defaults
-PLATFORM_CONFIG := platform/$(if $(PLATFORM),$(PLATFORM),$(CONFIGURED_PLATFORM))/rules/config
-ifneq (,$(wildcard $(PLATFORM_CONFIG)))
-include $(PLATFORM_CONFIG)
-endif
 
 ifeq ($(SONIC_ENABLE_PFCWD_ON_START),y)
 ENABLE_PFCWD_ON_START = y
