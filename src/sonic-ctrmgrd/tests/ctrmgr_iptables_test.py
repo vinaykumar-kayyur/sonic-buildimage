@@ -8,7 +8,6 @@ import pytest
 from . import common_test
 
 sys.path.append("ctrmgr")
-# import ctrmgr.ctrmgr_iptables
 import ctrmgr_iptables
 
 

@@ -11,7 +11,7 @@ UNIT_TESTING = 0
 
 # NOTE:
 # Unable to use python-iptables as that does not create rules per ip-tables default
-# which is nf_tables. So rules adde via iptc package will not be listed under
+# which is nf_tables. So rules added via iptc package will not be listed under
 # "sudo iptables -t nat -L -n". But available in kernel. To list, we need to 
 # use legacy mode as "sudo iptables-legacy -t nat -L -n".
 # As we can't use two modes and using non-default could make any debugging effort
@@ -20,7 +20,6 @@ UNIT_TESTING = 0
 
 from urllib.parse import urlparse
 
-TABLE_NAME = "nat"
 DST_FILE = "/etc/systemd/system/docker.service.d/http_proxy.conf"
 DST_IP = None
 DST_PORT = None
@@ -61,7 +60,7 @@ def _get_dst_info():
                     DST_PORT = url.port
                     break
     else:
-        print("{} not availabl".format(DST_FILE))
+        print("{} not available".format(DST_FILE))
     print("DST_IP={}".format(DST_IP))
 
 
@@ -84,7 +83,7 @@ def check_proc(proc):
         syslog.syslog(syslog.LOG_ERR, "Failed to run: stdout: {}".format(proc.stdout))
         syslog.syslog(syslog.LOG_ERR, "Failed to run: stderr: {}".format(proc.stderr))
         if not UNIT_TESTING:
-            assert proc.returncode == 0
+            assert False
 
 
 def iptable_proxy_rule_upd(ip_str, port = SQUID_PORT):
