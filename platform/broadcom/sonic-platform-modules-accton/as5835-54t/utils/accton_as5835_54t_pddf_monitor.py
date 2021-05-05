@@ -23,18 +23,12 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import sys, getopt
-    import subprocess
-    import click
-    import imp
     import logging
     import logging.config
     import types
     import time  # this is only being used as part of the example
-    import traceback
     import signal
-    from tabulate import tabulate
     from sonic_platform import platform
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
@@ -44,8 +38,6 @@ VERSION = '1.0'
 FUNCTION_NAME = 'accton_as5835_54t_pddf_monitor'
 DUTY_MAX = 100
 
-global log_file
-global log_level
 platform_chassis = None
 
 test_temp = 0
@@ -88,7 +80,6 @@ class accton_as5835_54t_monitor(object):
         
         THERMAL_NUM_MAX=4
         FAN_LEV1_UP_TEMP = 57700  # temperature
-        FAN_LEV1_DOWN_TEMP = 0    # unused
         FAN_LEV1_SPEED_PERC = DUTY_MAX # percentage*/
 
         FAN_LEV2_UP_TEMP = 53000
@@ -99,7 +90,6 @@ class accton_as5835_54t_monitor(object):
         FAN_LEV3_DOWN_TEMP = 47700
         FAN_LEV3_SPEED_PERC = 65
 
-        FAN_LEV4_UP_TEMP = 0     # unused
         FAN_LEV4_DOWN_TEMP = 42700
         FAN_LEV4_SPEED_PERC = 40
         
