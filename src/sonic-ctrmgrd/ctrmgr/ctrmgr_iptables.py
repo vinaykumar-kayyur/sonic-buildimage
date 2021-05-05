@@ -114,7 +114,7 @@ def iptable_proxy_rule_upd(ip_str, port = SQUID_PORT):
             # No more rule
             break
 
-        rule_dest = _is_rule_match(proc.stdout)
+        rule_dest = _is_rule_match(proc.stdout.decode("utf-8").strip())
         if rule_dest:
             if not found and destination and (rule_dest == destination):
                 found = True
