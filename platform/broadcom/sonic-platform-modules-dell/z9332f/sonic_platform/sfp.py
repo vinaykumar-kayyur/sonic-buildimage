@@ -627,7 +627,7 @@ class Sfp(SfpBase):
             for i in range(0, possible_application_count):
                 if sfp_application_type_list[i * 4] == 'ff':
                     break
-                host_electrical, media_interface = self.qsfp_dd_Info.parse_application(sfp_media_type_dict,\
+                host_electrical, media_interface = self.qsfp_dd_Info.parse_application(sfp_media_type_dict,
                                             sfp_application_type_list[i * 4], sfp_application_type_list[i * 4 + 1])
                 host_media_list = host_media_list + host_electrical + ' - ' + media_interface
             transceiver_info_dict['application_advertisement'] = host_media_list
@@ -1078,7 +1078,7 @@ class Sfp(SfpBase):
                 tx_bias_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_TXBIAS_OFFSET, QSFP_DD_TXBIAS_WIDTH)
                 tx_bias_data = self.qsfp_dd_DomInfo.parse_dom_tx_bias(tx_bias_data_raw, 0)
 
-                for tx_bias_id in ('TX1Bias', 'TX2Bias', 'TX3Bias', 'TX4Bias',\
+                for tx_bias_id in ('TX1Bias', 'TX2Bias', 'TX3Bias', 'TX4Bias',
                                    'TX5Bias', 'TX6Bias', 'TX7Bias', 'TX8Bias'):
                     tx_bias = self._strip_unit_from_str(tx_bias_data['data'][tx_bias_id]['value'])
                     tx_bias_list.append(tx_bias)
@@ -1111,7 +1111,7 @@ class Sfp(SfpBase):
                 rx_power_data_raw = self._read_eeprom_bytes(self.eeprom_path, offset + QSFP_DD_RXPOWER_OFFSET, QSFP_DD_TXPOWER_WIDTH)
                 rx_power_data = self.qsfp_dd_DomInfo.parse_dom_rx_power(rx_power_data_raw, 0)
 
-                for rx_power_id in ('RX1Power', 'RX2Power', 'RX3Power', 'RX4Power',\
+                for rx_power_id in ('RX1Power', 'RX2Power', 'RX3Power', 'RX4Power',
                                      'RX5Power', 'RX6Power', 'RX7Power', 'RX8Power'):
                     rx_power = self._strip_unit_from_str(rx_power_data['data'][rx_power_id]['value'])
                     rx_power_list.append(rx_power)
@@ -1146,7 +1146,7 @@ class Sfp(SfpBase):
                                                          QSFP_DD_TXPOWER_WIDTH)
                 tx_power_data = self.qsfp_dd_DomInfo.parse_dom_tx_power(tx_power_data_raw, 0)
 
-                for tx_power_id in ('TX1Power', 'TX2Power', 'TX3Power', 'TX4Power',\
+                for tx_power_id in ('TX1Power', 'TX2Power', 'TX3Power', 'TX4Power',
                                      'TX5Power', 'TX6Power', 'TX7Power', 'TX8Power'):
                     tx_pw = self._strip_unit_from_str(tx_power_data['data'][tx_power_id]['value'])
                     tx_power_list.append(tx_pw)
