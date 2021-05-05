@@ -33,7 +33,7 @@ def get_expected_running_containers():
               'has_per_asic_scope'.
               If the device has single ASIC, the container name was put into the list.
     @return:  A set which contains the expected running containers and a set that has 
-              containers marked as "always_enabled"
+              containers marked as "always_enabled".
     """
     config_db = swsssdk.ConfigDBConnector()
     config_db.connect()
@@ -67,7 +67,7 @@ def get_current_running_from_DB(always_running_containers):
               First: Return value indicating if info can be obtained from
               DB or not.
               Second: A set which contains the current running containers,
-              if this info is available in DB
+              if this info is available in DB.
     """
     running_containers = set()
 
@@ -108,6 +108,20 @@ def get_current_running_from_dockers():
     return running_containers
 
 
+def get_current_running_containers(always_running_containers):
+    """
+    @summary: This function will get the list of currently running containers.
+              If available in STATE-DB, get from DB else from list of dockers.
+              
+    @return:  A set of currently running containers.
+    """
+
+    ret, current_running_containers = get_current_running_from_DB(always_running_containers)
+    if not ret:
+        current_running_containers = get_current_running_from_dockers()
+    return current_running_containers
+
+
 def main():
     """
     @summary: This function will compare the difference between the current running containers
@@ -115,9 +129,7 @@ def main():
               to run were not running, then an alerting message will be written into syslog.
     """
     expected_running_containers, always_running_containers = get_expected_running_containers()
-    ret, current_running_containers = get_current_running_from_DB(always_running_containers)
-    if not ret:
-        current_running_containers = get_current_running_from_dockers()
+    current_running_containers = get_current_running_containers(always_running_containers)
 
     expected_running_containers |= always_running_containers
     not_running_containers = expected_running_containers.difference(current_running_containers)
