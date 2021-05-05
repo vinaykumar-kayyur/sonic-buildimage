@@ -12,30 +12,6 @@ import pytest
 sys.path.append('../cli/config/plugins/')
 import dhcp_relay
 
-@pytest.fixture()
-def mock_cfgdb():
-    cfgdb = mock.Mock()
-    CONFIG = {
-        'VLAN': {
-            'Vlan1000': {
-                'dhcp_servers': ['192.0.0.1']
-            }
-        }
-    }
-
-    def get_entry(table, key):
-        return CONFIG[table][key]
-
-    def set_entry(table, key, data):
-        CONFIG[table].setdefault(key, {})
-        CONFIG[table][key] = data
-
-    cfgdb.get_entry = mock.Mock(side_effect=get_entry)
-    cfgdb.set_entry = mock.Mock(side_effect=set_entry)
-
-    yield cfgdb
-
-
 config_vlan_add_dhcp_relay_output="""\
 Added DHCP relay destination address 192.0.0.100 to Vlan1000
 Restarting DHCP relay service...
@@ -47,16 +23,6 @@ Restarting DHCP relay service...
 """
 
 class TestConfigVlanDhcpRelay(object):
-    @classmethod
-    def setup_class(cls):
-        os.environ['UTILITIES_UNIT_TESTING'] = "1"
-        print("SETUP")
-
-    @classmethod
-    def teardown_class(cls):
-        os.environ['UTILITIES_UNIT_TESTING'] = "0"
-        print("TEARDOWN")
-
     def test_plugin_registration(self):
         cli = mock.MagicMock()
         dhcp_relay.register(cli)
@@ -130,7 +96,7 @@ class TestConfigVlanDhcpRelay(object):
             assert result.output == config_vlan_add_dhcp_relay_output
             assert mock_run_command.call_count == 3
             db.cfgdb.set_entry.assert_called_once_with('VLAN', 'Vlan1000', {'dhcp_servers': ['192.0.0.1', '192.0.0.100']})
-        
+
         db.cfgdb.set_entry.reset_mock()
 
         # del relay dest

@@ -13,16 +13,6 @@ import show_dhcp_relay
 
 
 class TestVlanDhcpRelay(object):
-    @classmethod
-    def setup_class(cls):
-        os.environ['UTILITIES_UNIT_TESTING'] = "1"
-        print("SETUP")
-
-    @classmethod
-    def teardown_class(cls):
-        os.environ['UTILITIES_UNIT_TESTING'] = "0"
-        print("TEARDOWN")
-
     def test_plugin_registration(self):
         cli = mock.MagicMock()
         show_dhcp_relay.register(cli)
@@ -34,5 +24,5 @@ class TestVlanDhcpRelay(object):
             (),
         )
         assert show_dhcp_relay.get_dhcp_helper_address(ctx, 'Vlan100') == '192.0.0.1\n192.168.0.2'
-    
+
 
