@@ -26,8 +26,7 @@ try:
     import sys, getopt
     import logging
     import logging.config
-    import types
-    import time  # this is only being used as part of the example
+    import time
     import signal
     from sonic_platform import platform
 except ImportError as e:
