@@ -18,12 +18,11 @@
 namespace mux
 {
 //
-// ---> MuxManager(std::string &configFilename);
+// ---> MuxManager();
 //
 // class constructor
 //
-MuxManager::MuxManager(std::string &configFilename) :
-    mConfigFilename(configFilename),
+MuxManager::MuxManager() :
     mMuxConfig(),
     mWork(mIoService),
     mSignalSet(boost::asio::signal_set(mIoService, SIGINT, SIGTERM)),

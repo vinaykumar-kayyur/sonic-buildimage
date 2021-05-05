@@ -36,7 +36,7 @@ public:
     *
     *@brief class default constructor
     */
-    MuxManager() = delete;
+    MuxManager();
 
     /**
     *@method MuxManager
@@ -46,15 +46,6 @@ public:
     *@param MuxManager (in)  reference to MuxManager object to be copied
     */
     MuxManager(const MuxManager &) = delete;
-
-    /**
-    *@method MuxManager
-    *
-    *@brief class constructor
-    *
-    *@param configFilename (in)   json file contain linkmgrd config (deprecated)
-    */
-    MuxManager(std::string &configFilename);
 
     /**
     *@method ~MuxManager
@@ -305,7 +296,6 @@ private:
     void handleProcessTerminate();
 
 private:
-    std::string mConfigFilename;
     common::MuxConfig mMuxConfig;
 
     boost::asio::io_service mIoService;

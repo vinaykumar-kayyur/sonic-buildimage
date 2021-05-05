@@ -25,7 +25,6 @@ namespace {
     // Some namespace and type aliases...
     namespace program_options = boost::program_options;
 
-    static auto DEFAULT_CONFIG_FILE = "linkmgrd-config.json";
     static auto DEFAULT_LOGGING_FILTER_LEVEL = boost::log::trivial::debug;
 
     void InitializeLogger(std::string execName, boost::log::trivial::severity_level level)
@@ -50,16 +49,11 @@ int main(int argc, const char* argv[])
     // Constants for command line argument strings:
     //
     boost::log::trivial::severity_level level;
-    std::string configFile;
 
     program_options::options_description description("linkmgrd options");
     description.add_options()
         ("help,h",
          "Print usage information.")
-        ("linkmgrd-config,l",
-          program_options::value<std::string>(&configFile)->value_name("<string>")->
-          default_value(DEFAULT_CONFIG_FILE),
-          "Link Manager configuration file.")
         ("verbosity,v",
          program_options::value<boost::log::trivial::severity_level>(&level)->value_name("<severity_level>")->
          default_value(DEFAULT_LOGGING_FILTER_LEVEL),
@@ -94,15 +88,14 @@ int main(int argc, const char* argv[])
     if (retValue == EXIT_SUCCESS) {
         InitializeLogger(argv[0], level);
         std::stringstream ss;
-        ss << "configFile: " << configFile
-           << ", level: " << level;
+        ss << ", level: " << level;
         MUXLOGINFO(ss.str());
 
         // initialize static data
         link_prober::IcmpPayload::generateGuid();
         link_manager::LinkManagerStateMachine::initializeTransitionFunctionTable();
 
-        std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> (configFile);
+        std::shared_ptr<mux::MuxManager> muxManagerPtr = std::make_shared<mux::MuxManager> ();
         muxManagerPtr->initialize();
         muxManagerPtr->run();
         muxManagerPtr->deinitialize();

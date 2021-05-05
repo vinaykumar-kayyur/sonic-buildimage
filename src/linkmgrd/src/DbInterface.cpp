@@ -249,9 +249,9 @@ void DbInterface::getLoopback2InterfaceInfo(
     MUXLOGINFO("Reading Loopback2 interface information");
     std::string loopback2 = "Loopback2|";
     swss::Table configDbLoopbackTable(configDbConnector.get(), CFG_LOOPBACK_INTERFACE_TABLE_NAME);
-    swss::Table stateDbInterfaceTable(stateDbConnector.get(), STATE_INTERFACE_TABLE_NAME);
-    std::string loopback2IntfKey;
     std::vector<std::string> loopbackIntfs;
+    bool loopback2IPv4Found = false;
+
     configDbLoopbackTable.getKeys(loopbackIntfs);
     for (auto &loopbackIntf: loopbackIntfs) {
         size_t pos = loopbackIntf.find(loopback2);
@@ -268,7 +268,7 @@ void DbInterface::getLoopback2InterfaceInfo(
             if (!errorCode) {
                 if (ipAddress.is_v4()) {
                     mMuxManagerPtr->setLoopbackIpv4Address(ipAddress);
-                    loopback2IntfKey = loopbackIntf;
+                    loopback2IPv4Found = true;
                 } else if (ipAddress.is_v6()) {
                     // handle IPv6 probing
                 }
@@ -278,26 +278,8 @@ void DbInterface::getLoopback2InterfaceInfo(
         }
     }
 
-    while (true) {
-        std::vector<swss::FieldValueTuple> fieldValues;
-        stateDbInterfaceTable.get(loopback2IntfKey, fieldValues);
-        std::vector<swss::FieldValueTuple>::const_iterator cit = std::find_if(
-            fieldValues.cbegin(),
-            fieldValues.cend(),
-            [] (const swss::FieldValueTuple &fv) {return fvField(fv) == "state";}
-        );
-        if (cit != fieldValues.cend()) {
-            const std::string f = cit->first;
-            const std::string v = cit->second;
-
-            MUXLOGINFO(boost::format("key: %s: f: %s, v: %s") % loopback2IntfKey % f % v);
-            if (v == "ok") {
-                break;
-            }
-        }
-
-        MUXLOGWARNING("Loopback2 interface is not ready.");
-        boost::this_thread::sleep(boost::posix_time::milliseconds(DEFAULT_TIMEOUT_MSEC));
+    if (!loopback2IPv4Found) {
+        throw MUX_ERROR(ConfigNotFound, "Loopback2 IPv4 address missing");
     }
 }
 

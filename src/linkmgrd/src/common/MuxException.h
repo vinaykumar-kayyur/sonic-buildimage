@@ -27,13 +27,18 @@ public:
         unsigned int excLine
     ) noexcept
     {
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wterminate"
-        throw std::string(excFile) + ":" + std::to_string(excLine) + ": " + excStr;
-        #pragma GCC diagnostic pop
-    };
+        mExcStr = std::string(excFile) + ":" + std::to_string(excLine) + ": " + excStr;
+    }
+
+    virtual const char* what() const throw()
+    {
+        return mExcStr.c_str();
+    }
 
     virtual ~MuxException () noexcept {};
+
+private:
+    std::string mExcStr;
 };
 
 /**
@@ -49,15 +54,15 @@ public:
 };
 
 /**
-* Exception for receiving invalid arguments.
+* Exception for missing configuration.
 *
-* This is thrown when invalid arguments are received
+* This is thrown when requied configuration is missing.
 */
-class InvalidArgsException : public RunTimeErrorException {
+class ConfigNotFoundException : public RunTimeErrorException {
 public:
     using RunTimeErrorException::RunTimeErrorException;
 
-    virtual ~InvalidArgsException () noexcept {};
+    virtual ~ConfigNotFoundException () noexcept {};
 };
 
 /**
@@ -97,18 +102,6 @@ public:
 };
 
 /**
-* Exception for File Not Found
-*
-* This is thrown when unsupported platform is detected
-*/
-class FileNotFoundException : public RunTimeErrorException {
-public:
-    using RunTimeErrorException::RunTimeErrorException;
-
-    virtual ~FileNotFoundException () noexcept {};
-};
-
-/**
 * Exception for Internal Error
 *
 * This is thrown when unexpected behavior is detected. This should never happen.
@@ -118,18 +111,6 @@ public:
     using MuxException::MuxException;
 
     virtual ~InternalErrorException () noexcept {};
-};
-
-/**
-* Exception for IO Error
-*
-* This is thrown when failing to read signal list file.
-*/
-class IOErrorException : public MuxException {
-public:
-    using MuxException::MuxException;
-
-    virtual ~IOErrorException () noexcept {};
 };
 
 } /* namespace common */
