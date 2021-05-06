@@ -110,6 +110,7 @@ def get_current_running_from_dockers():
         for ctr in lst:
             running_containers.add(ctr.name)
     except docker.errors.APIError:
+        print("Failed to retrieve the running container list. Error: '{}'".format(err))
         pass
     return running_containers
 
