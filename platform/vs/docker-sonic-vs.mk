@@ -34,8 +34,12 @@ $(DOCKER_SONIC_VS)_DEPENDS += $(SWSS_DBG) \
                               $(SYNCD_VS_DBG)
 endif
 
-ifeq ($(SONIC_ROUTING_STACK), frr)
+ifeq ($(SONIC_ROUTING_STACK), quagga)
+$(DOCKER_SONIC_VS)_DEPENDS += $(QUAGGA)
+else ifeq ($(SONIC_ROUTING_STACK), frr)
 $(DOCKER_SONIC_VS)_DEPENDS += $(FRR)
+else
+$(DOCKER_SONIC_VS)_DEPENDS += $(GOBGP)
 endif
 
 $(DOCKER_SONIC_VS)_FILES += $(CONFIGDB_LOAD_SCRIPT) \
