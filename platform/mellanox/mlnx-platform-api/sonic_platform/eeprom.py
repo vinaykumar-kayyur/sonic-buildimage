@@ -55,7 +55,7 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
         if not (os.path.exists(EEPROM_SYMLINK) \
                 or os.path.isfile(os.path.join(CACHE_ROOT, CACHE_FILE))):
-            log_error("Nowhere to read syseeprom from! No symlink or cache file found")
+            logger.log_error("Nowhere to read syseeprom from! No symlink or cache file found")
             raise RuntimeError("No syseeprom symlink or cache file found")
 
         self.eeprom_path = EEPROM_SYMLINK
@@ -66,18 +66,6 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
 
     def _load_eeprom(self):
         cache_file = os.path.join(CACHE_ROOT, CACHE_FILE)
-        if not os.path.exists(CACHE_ROOT):
-            try:
-                os.makedirs(CACHE_ROOT)
-            except:
-                pass
-        else:
-            try:
-                # Make sure first time always read eeprom data from hardware
-                if os.path.exists(cache_file):
-                    os.remove(cache_file)
-            except Exception as e:
-                logger.log_error('Failed to remove cache file {} - {}'.format(cache_file, repr(e)))
 
         try:
             self.set_cache_name(cache_file)

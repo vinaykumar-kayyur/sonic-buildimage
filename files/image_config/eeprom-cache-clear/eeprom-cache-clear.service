@@ -1,0 +1,11 @@
+[Unit]
+Description=Clear EEPROM cache file
+After=rc.local.service database.service
+Before=pmon.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/eeprom-cache-clear.sh
+
+[Install]
+WantedBy=multi-user.target

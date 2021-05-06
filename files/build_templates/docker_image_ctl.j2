@@ -393,6 +393,7 @@ start() {
         -v mlnx_sdk_ready:/tmp \
         -e SX_API_SOCKET_FILE=/var/run/sx_sdk/sx_api.sock \
         -v /dev/shm:/dev/shm:rw \
+        -v /var/cache/sonic/decode-syseeprom:/var/cache/sonic/decode-syseeprom:rw \
 {%- else %}
 {%- if mount_default_tmpfs|default("n") == "y" %}
         --tmpfs /tmp \
