@@ -97,8 +97,8 @@ class proc:
 
     def __init__(self, ret, stdout, stderr):
         self.returncode = ret
-        self.stdout = stdout
-        self.stderr = stderr
+        self.stdout = bytearray(stdout, 'utf-8')
+        self.stderr = bytearray(stderr, 'utf-8')
         print("out={} err={}".format(stdout, stderr))
 
 
