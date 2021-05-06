@@ -84,10 +84,13 @@ def get_current_running_from_DB(always_running_containers):
     DOCKER_CLIENT = docker.DockerClient(base_url='unix://var/run/docker.sock')
     RUNNING = 'running'
     for name in always_running_containers:
-        container = DOCKER_CLIENT.containers.get(name)
-        container_state = container.attrs['State']
-        if container_state['Status'] == RUNNING:
-            running_containers.add(name)
+        try:
+            container = DOCKER_CLIENT.containers.get(name)
+            container_state = container.attrs.get('State', {})
+            if container_state.get('Status', "") == RUNNING:
+                running_containers.add(name)
+        except (docker.errors.NotFound, docker.errors.APIError):
+            pass
 
     return True, running_containers
 
@@ -102,9 +105,12 @@ def get_current_running_from_dockers():
     DOCKER_CLIENT = docker.DockerClient(base_url='unix://var/run/docker.sock')
     running_containers = set()
     ctrs = DOCKER_CLIENT.containers
-    lst = ctrs.list(filters={"status": "running"})
-    for ctr in lst:
-        running_containers.add(ctr.name)
+    try:
+        lst = ctrs.list(filters={"status": "running"})
+        for ctr in lst:
+            running_containers.add(ctr.name)
+    except docker.errors.APIError:
+        pass
     return running_containers
 
 
