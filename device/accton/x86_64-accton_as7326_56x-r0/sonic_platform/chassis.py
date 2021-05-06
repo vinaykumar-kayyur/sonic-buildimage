@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 # Edgecore
 #
@@ -9,16 +7,10 @@
 #############################################################################
 
 import os
-import sys
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.sfp import Sfp
-    from sonic_platform.fan_drawer import FanDrawer
-    from sonic_platform.psu import Psu
-    from sonic_platform.thermal import Thermal
-    from sonic_platform.eeprom import Tlv
-    from sonic_platform.component import Component
+    from .event import SfpEvent
     from sonic_py_common import device_info
 
 except ImportError as e:
@@ -53,31 +45,37 @@ class Chassis(ChassisBase):
         self.__initialize_eeprom()
 
     def __initialize_sfp(self):
+        from sonic_platform.sfp import Sfp
         for index in range(NUM_PORT):
             sfp = Sfp(index)
             self._sfp_list.append(sfp)
         self.sfp_module_initialized = True
 
     def __initialize_fan(self):
+        from sonic_platform.fan_drawer import FanDrawer
         for fant_index in range(NUM_FAN_TRAY):
             fandrawer = FanDrawer(fant_index)
             self._fan_drawer_list.append(fandrawer)
             self._fan_list.extend(fandrawer._fan_list)
 
     def __initialize_psu(self):
+        from sonic_platform.psu import Psu
         for index in range(NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
 
     def __initialize_thermals(self):
+        from sonic_platform.thermal import Thermal
         for index in range(NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
 
     def __initialize_eeprom(self):
+        from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
 
     def __initialize_components(self):
+        from sonic_platform.component import Component
         for index in range(NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
@@ -104,6 +102,21 @@ class Chassis(ChassisBase):
         """
         return self.hwsku
 
+    def get_presence(self):
+        """
+        Retrieves the presence of the Chassis
+        Returns:
+            bool: True if Chassis is present, False if not
+        """
+        return True
+    
+    def get_status(self):
+        """
+        Retrieves the operational status of the device
+        Returns:
+            A boolean value, True if device is operating properly, False if not
+        """
+        return True
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -113,6 +126,14 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.get_mac()
 
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return self._eeprom.get_pn()
+        
     def get_serial_number(self):
         """
         Retrieves the hardware serial number for the chassis
@@ -160,7 +181,16 @@ class Chassis(ChassisBase):
             description = prev_sw_reboot_cause
 
         return (reboot_cause, description)
-    
+
+    def get_change_event(self, timeout=0):
+        # SFP event
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        status, sfp_event = SfpEvent(self._sfp_list).get_sfp_event(timeout)
+        
+        return status, sfp_event
+
     def get_sfp(self, index):
         """
         Retrieves sfp represented by (1-based) index <index>

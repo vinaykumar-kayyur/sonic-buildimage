@@ -83,7 +83,10 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         val = self.__read_txt_file(self.hwmon_path + "psu_v_out")
-        return float(val) / 1000
+        if val is not None:
+            return float(val)/ 1000
+        else:
+            return 0
 
     def get_current(self):
         """
@@ -92,7 +95,10 @@ class Psu(PsuBase):
             A float number, the electric current in amperes, e.g 15.4
         """
         val = self.__read_txt_file(self.hwmon_path + "psu_i_out")
-        return float(val) / 1000
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
 
     def get_power(self):
         """
@@ -101,8 +107,11 @@ class Psu(PsuBase):
             A float number, the power in watts, e.g. 302.6
         """
         val = self.__read_txt_file(self.hwmon_path + "psu_p_out")
-        return float(val) / 1000
-
+        if val is not None:
+            return float(val)/1000
+        else:
+            return 0
+        
     def get_powergood_status(self):
         """
         Retrieves the powergood status of PSU
@@ -130,8 +139,15 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-
-        return False  #Controlled by HW
+        status=self.get_status()
+        if not status:
+            return  self.STATUS_LED_COLOR_RED
+        
+        if status==1:
+            return self.STATUS_LED_COLOR_GREEN
+        else:
+            return self.STATUS_LED_COLOR_RED
+        
 
     def get_temperature(self):
         """
@@ -159,7 +175,10 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         val = self.__read_txt_file(self.hwmon_path + "psu_mfr_vout_max")
-        return float(val) / 1000
+        if val is not None:
+            return float(val)/ 1000
+        else:
+            return 0
 
     def get_voltage_low_threshold(self):
         """
@@ -169,7 +188,10 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         val = self.__read_txt_file(self.hwmon_path + "psu_mfr_vout_min")
-        return float(val) / 1000
+        if val is not None:
+            return float(val)/ 1000
+        else:
+            return 0
 
     def get_name(self):
         """
@@ -186,7 +208,10 @@ class Psu(PsuBase):
             bool: True if PSU is present, False if not
         """
         val = self.__read_txt_file(self.cpld_path + "psu_present")
-        return int(val, 10) == 1
+        if val is not None:
+            return int(val, 10) == 1
+        else:
+            return 0
 
     def get_status(self):
         """
@@ -195,4 +220,29 @@ class Psu(PsuBase):
             A boolean value, True if device is operating properly, False if not
         """
         val = self.__read_txt_file(self.cpld_path + "psu_power_good")
-        return int(val, 10) == 1
+        if val is not None:
+            return int(val, 10) == 1
+        else:
+            return 0
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        model = self.__read_txt_file(self.cpld_path + "psu_model_name")
+        if not model:
+            return "N/A"
+        return model
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        serial = self.__read_txt_file(self.cpld_path + "psu_serial_numer")
+        if not serial:
+            return "N/A"
+        return serial
