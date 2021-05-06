@@ -3,11 +3,11 @@
 import logging
 import time
 
+from sonic_py_common import logger as log
 from swsscommon.swsscommon import ConfigDBConnector, DBConnector, FieldValuePairs, ProducerStateTable, SonicV2Connector
 from swsscommon.swsscommon import APPL_DB, ASIC_DB
 
-logger = logging.getLogger(__name__)
-
+logger = log.Logger('write_standby')
 
 REDIS_SOCK_PATH = '/var/run/redis/redis.sock'
 
@@ -87,7 +87,7 @@ class MuxStateWriter:
             (bool) True if the tunnel has been created
                    False if the timeout period is exceeded
         """
-        logger.info("Waiting for tunnel {} with timeout {} seconds".format(self.tunnel_name, timeout))
+        logger.log_info("Waiting for tunnel {} with timeout {} seconds".format(self.tunnel_name, timeout))
         start = time.time()
         curr_time = time.time()
 
@@ -106,14 +106,14 @@ class MuxStateWriter:
         intfs = self.get_all_mux_intfs()
         state = 'standby'
         if self.wait_for_tunnel():
-            logger.warning("Applying {} state to interfaces {}".format(state, intfs))
+            logger.log_warning("Applying {} state to interfaces {}".format(state, intfs))
             producer_state_table = ProducerStateTable(self.appl_db, 'MUX_CABLE_TABLE')
             fvs = create_fvs(state=state)
 
             for intf in intfs:
                 producer_state_table.set(intf, fvs)
         else:
-            logger.error("Timed out waiting for tunnel {}, mux state will not be written".format(self.tunnel_name))
+            logger.log_error("Timed out waiting for tunnel {}, mux state will not be written".format(self.tunnel_name))
 
 
 if __name__ == '__main__':
