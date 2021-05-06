@@ -305,14 +305,6 @@ class Sfp(SfpBase):
                 self.dom_tx_power_supported = False
                 self.dom_tx_bias_supported = False
 
-    def _strip_unit_from_str(self, value_str):
-        match = re.match(r'(.*)C$|(.*)Volts$|(.*)mA$|(.*)dBm$', value_str)
-        if match:
-            for value in match.groups():
-                if value is not None:
-                    return float(value)
-        return None
-
     def pci_mem_read(self, mm, offset):
         mm.seek(offset)
         read_data_stream = mm.read(4)
@@ -499,7 +491,7 @@ class Sfp(SfpBase):
             transceiver_info_dict['ext_identifier'] = ext_id
             transceiver_info_dict['ext_rateselect_compliance'] = rate_identifier
             transceiver_info_dict['cable_type'] = cable_type
-            transceiver_info_dict['cable_length'] = cable_length
+            transceiver_info_dict['cable_length'] = str(float(cable_length))
             transceiver_info_dict['nominal_bit_rate'] = bit_rate
             transceiver_info_dict['specification_compliance'] = str(compliance_code_dict)
 
@@ -1035,7 +1027,7 @@ class Sfp(SfpBase):
             elif self.sfp_type == 'QSFP':
                 temperature_data = self._get_eeprom_data('Temperature')
 
-            temperature = self._strip_unit_from_str(temperature_data['data']['Temperature']['value'])
+            temperature = temperature_data['data']['Temperature']['value']
         except (TypeError, ValueError):
             return None
         return temperature
@@ -1057,7 +1049,7 @@ class Sfp(SfpBase):
             elif self.sfp_type == 'QSFP':
                 voltage_data = self._get_eeprom_data('Voltage')
 
-            voltage = self._strip_unit_from_str(voltage_data['data']['Vcc']['value'])
+            voltage = voltage_data['data']['Vcc']['value']
 
         except (TypeError, ValueError):
             return None
@@ -1080,16 +1072,16 @@ class Sfp(SfpBase):
 
                 for tx_bias_id in ('TX1Bias', 'TX2Bias', 'TX3Bias', 'TX4Bias',
                                    'TX5Bias', 'TX6Bias', 'TX7Bias', 'TX8Bias'):
-                    tx_bias = self._strip_unit_from_str(tx_bias_data['data'][tx_bias_id]['value'])
+                    tx_bias = tx_bias_data['data'][tx_bias_id]['value']
                     tx_bias_list.append(tx_bias)
 
             elif self.sfp_type == 'QSFP':
                 tx_bias_data = self._get_eeprom_data('ChannelMonitor')
                 for tx_bias_id in ('TX1Bias', 'TX2Bias', 'TX3Bias', 'TX4Bias'):
-                    tx_bias = self._strip_unit_from_str(tx_bias_data['data'][tx_bias_id]['value'])
+                    tx_bias = tx_bias_data['data'][tx_bias_id]['value']
                     tx_bias_list.append(tx_bias)
             else:
-                tx1_bias = self._strip_unit_from_str(tx_bias_data['data']['TXBias']['value'])
+                tx1_bias = tx_bias_data['data']['TXBias']['value']
                 tx_bias_list.append(tx1_bias)
 
         except (TypeError, ValueError):
@@ -1113,7 +1105,7 @@ class Sfp(SfpBase):
 
                 for rx_power_id in ('RX1Power', 'RX2Power', 'RX3Power', 'RX4Power',
                                      'RX5Power', 'RX6Power', 'RX7Power', 'RX8Power'):
-                    rx_power = self._strip_unit_from_str(rx_power_data['data'][rx_power_id]['value'])
+                    rx_power = rx_power_data['data'][rx_power_id]['value']
                     rx_power_list.append(rx_power)
 
             elif self.sfp_type == 'QSFP':
@@ -1122,7 +1114,7 @@ class Sfp(SfpBase):
                     rx_power = rx_power_data['data'][rx_power_id]['value']
                     rx_power_list.append(rx_power)
             else:
-                rx1_pw = self._strip_unit_from_str(rx_power_data['data']['RXPower']['value'])
+                rx1_pw = rx_power_data['data']['RXPower']['value']
                 rx_power_list.append(rx1_pw)
         except (TypeError, ValueError):
             return None
@@ -1148,7 +1140,7 @@ class Sfp(SfpBase):
 
                 for tx_power_id in ('TX1Power', 'TX2Power', 'TX3Power', 'TX4Power',
                                      'TX5Power', 'TX6Power', 'TX7Power', 'TX8Power'):
-                    tx_pw = self._strip_unit_from_str(tx_power_data['data'][tx_power_id]['value'])
+                    tx_pw = tx_power_data['data'][tx_power_id]['value']
                     tx_power_list.append(tx_pw)
 
             elif self.sfp_type == 'QSFP':
@@ -1167,11 +1159,11 @@ class Sfp(SfpBase):
                     return None
                 channel_monitor_data = self._get_eeprom_data('ChannelMonitor_TxPower')
                 for tx_power_id in ('TX1Power', 'TX2Power', 'TX3Power', 'TX4Power'):
-                    tx_pw = self._strip_unit_from_str(channel_monitor_data['data'][tx_power_id]['value'])
+                    tx_pw = channel_monitor_data['data'][tx_power_id]['value']
                     tx_power_list.append(tx_pw)
             else:
                 channel_monitor_data = self._get_eeprom_data('ChannelMonitor')
-                tx1_pw = self._strip_unit_from_str(channel_monitor_data['data']['TXPower']['value'])
+                tx1_pw = channel_monitor_data['data']['TXPower']['value']
                 tx_power_list.append(tx1_pw)
         except (TypeError, ValueError):
             return None
