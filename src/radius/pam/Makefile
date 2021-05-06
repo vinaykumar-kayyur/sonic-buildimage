@@ -16,6 +16,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	patch -p1 < ../patches/freeradius_configure.patch
 	patch -p1 < ../patches/freeradius_2007-04-06.patch
 	patch -p1 < ../patches/freeradius_libeap_deprecated_openssl_1_0.patch
+	cp ../patches/config.sub .
+	cp ../patches/config.guess .
 	./configure --disable-static --enable-libtool-lock
 	make
 	popd
@@ -34,6 +36,8 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git apply patches/0001-chap-support.patch
 	git apply patches/0002-peap-mschapv2-support.patch
 	git apply patches/0003-nas-ip-address-config.patch
+	cp ../patches/config.sub .
+	cp ../patches/config.guess .
 
 	dpkg-buildpackage -rfakeroot -b -us -uc -nc
 	popd
