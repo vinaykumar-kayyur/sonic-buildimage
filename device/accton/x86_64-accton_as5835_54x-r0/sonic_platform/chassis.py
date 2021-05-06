@@ -100,7 +100,15 @@ class Chassis(ChassisBase):
         except IOError:
             pass
         return None
-
+        
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return self._eeprom.get_pn()
+    
     def get_name(self):
         """
         Retrieves the name of the device

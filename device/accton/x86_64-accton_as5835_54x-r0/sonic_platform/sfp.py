@@ -8,7 +8,6 @@
 
 import os
 import time
-
 import sys
 
 from ctypes import create_string_buffer
@@ -207,7 +206,8 @@ class Sfp(SfpBase):
             self.port_to_eeprom_mapping[x] = eeprom_path.format(self._port_to_i2c_mapping[x])
         
         self.info_dict_keys = ['type', 'hardware_rev', 'serial', 'manufacturer', 'model', 'connector', 'encoding', 'ext_identifier',
-                               'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui']
+                               'ext_rateselect_compliance', 'cable_type', 'cable_length', 'nominal_bit_rate', 'specification_compliance', 'vendor_date', 'vendor_oui',
+                               'application_advertisement', 'type_abbrv_name']
 
         self.dom_dict_keys = ['rx_los', 'tx_fault', 'reset_status', 'power_lpmode', 'tx_disable', 'tx_disable_channel', 'temperature', 'voltage',
                               'rx1power', 'rx2power', 'rx3power', 'rx4power', 'tx1bias', 'tx2bias', 'tx3bias', 'tx4bias', 'tx1power', 'tx2power', 'tx3power', 'tx4power']
@@ -294,7 +294,7 @@ class Sfp(SfpBase):
         keys                       |Value Format   |Information
         ---------------------------|---------------|----------------------------
         type                       |1*255VCHAR     |type of SFP
-        hardware_rev                |1*255VCHAR     |hardware version of SFP
+        hardware_rev               |1*255VCHAR     |hardware version of SFP
         serial                     |1*255VCHAR     |serial number of the SFP
         manufacturer               |1*255VCHAR     |SFP vendor name
         model                      |1*255VCHAR     |SFP model name
@@ -307,6 +307,7 @@ class Sfp(SfpBase):
         specification_compliance   |1*255VCHAR     |specification compliance
         vendor_date                |1*255VCHAR     |vendor date
         vendor_oui                 |1*255VCHAR     |vendor OUI
+        application_advertisement  |1*255VCHAR     |supported applications advertisement
         ========================================================================
         """
         # check present status
@@ -500,7 +501,7 @@ class Sfp(SfpBase):
             qsfp_dom_capability_raw = self.__read_eeprom_specific_bytes(
                 (offset_xcvr + XCVR_DOM_CAPABILITY_OFFSET), XCVR_DOM_CAPABILITY_WIDTH)
             if qsfp_dom_capability_raw is not None:
-                qspf_dom_capability_data = sfpi_obj.parse_dom_capabilityy(
+                qspf_dom_capability_data = sfpi_obj.parse_dom_capability(
                     qsfp_dom_capability_raw, 0)
             else:
                 return None
@@ -799,7 +800,7 @@ class Sfp(SfpBase):
             cpld_i = self.__get_cpld_num(self.port_num)
             cpld_path = self._cpld_mapping[cpld_i]        
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)
-            
+
             tx_disable=self._api_helper.read_txt_file(tx_path)
             
             #status_control_raw = self.__read_eeprom_specific_bytes(
@@ -1029,7 +1030,7 @@ class Sfp(SfpBase):
             cpld_path = self._cpld_mapping[cpld_i]        
             tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_disable_', self.port_num)      
             ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)
-            
+
             if ret is not None:
                 time.sleep(0.01)
                 return ret
@@ -1051,7 +1052,7 @@ class Sfp(SfpBase):
                 sysfsfile_eeprom = open(
                     self.port_to_eeprom_mapping[self.port_num], "r+b")
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
-                
+
                 sysfsfile_eeprom.write(buffer[0])
             except IOError as e:
                 print ('Error: unable to open file: ',str(e))

@@ -36,7 +36,7 @@ class Fan(FanBase):
         self._api_helper=APIHelper()
         self.fan_index = fan_index
         self.fan_tray_index = fan_tray_index
-        self.is_psu_fan = is_psu_fan       
+        self.is_psu_fan = is_psu_fan
         if self.is_psu_fan:
             self.psu_index = psu_index
             self.psu_i2c_num = PSU_I2C_MAPPING[self.psu_index]['num']
@@ -93,8 +93,8 @@ class Fan(FanBase):
         if self.is_psu_fan:
             psu_fan_path= "{}{}".format(self.psu_hwmon_path, 'psu_fan1_speed_rpm')
             fan_speed_rpm = self._api_helper.read_txt_file(psu_fan_path)
-            speed = (int(fan_speed_rpm,10))*100/26688
-            if speed is not None:
+            if fan_speed_rpm is not None:
+                speed = (int(fan_speed_rpm,10))*100/26688               
                 if speed > 100:
                     speed=100
             else:
@@ -166,9 +166,8 @@ class Fan(FanBase):
             bool: True if FAN is present, False if not
         """
         present_path = "{}{}{}".format(CPLD_I2C_PATH, self.fan_tray_index+1, '_present')
-        
-        
-        val=self._api_helper.read_txt_file(present_path)       
+        val=self._api_helper.read_txt_file(present_path)
+
         if not self.is_psu_fan:
             if val is not None:
                 return int(val, 10)==1
