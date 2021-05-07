@@ -15,7 +15,7 @@
 {%     elif device_type in ['ToRRouter', 'BackEndToRRouter'] %}
 {%         if deployment_id is defined and deployment_id == '26' %}
 {%             include path_template % "v4.tor.rotterdam" %}
-{%         if neighbor_type == 'BackEndToRRouter' %}
+{%         elif neighbor_type == 'BackEndToRRouter' %}
 {%             include path_template % "v4.tor.frontend" %}
 {%         elif neighbor_type == 'ToRRouter' %}
 {%             include path_template % "v4.tor.backend" %}
