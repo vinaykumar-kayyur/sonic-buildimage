@@ -188,7 +188,7 @@ class Sfp(SfpBase):
         except Exception:
             return False
         return True
-    
+
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -667,7 +667,7 @@ class Sfp(SfpBase):
             return False
             
         if self.port_num < 53:
-            rx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_rx_los_', self.port_num)           
+            rx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_rx_los_', self.port_num)
             rx_los=self._api_helper.read_txt_file(rx_path)
             if rx_los is None:
                 return False
@@ -702,7 +702,7 @@ class Sfp(SfpBase):
             return False
         
         if self.port_num < 53:
-            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_fault_', self.port_num)           
+            tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_fault_', self.port_num)
             tx_fault=self._api_helper.read_txt_file(tx_path)
             if tx_fault is None:
                 return False
@@ -971,7 +971,7 @@ class Sfp(SfpBase):
         
         if self.port_num < 53:
             tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)      
-            ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)           
+            ret = self.__write_txt_file(tx_path,  1 if tx_disable else 0)
             if ret is not None:
                 time.sleep(0.01)
                 return ret

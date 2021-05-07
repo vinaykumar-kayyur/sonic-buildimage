@@ -36,7 +36,7 @@ class Component(ComponentBase):
         self._api_helper=APIHelper()
         ComponentBase.__init__(self)
         self.index = component_index
-        self.name = self.get_name()        
+        self.name = self.get_name()
 
     def __run_command(self, command):
         # Run bash command and print output to stdout
@@ -101,11 +101,10 @@ class Component(ComponentBase):
             string: The firmware versions of the module
         """
         fw_version = None
-
         if self.name == "BIOS":
             fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
-            cpld_version = self.__get_cpld_version()           
+            cpld_version = self.__get_cpld_version()
             fw_version = cpld_version.get(self.name)
 
         return fw_version

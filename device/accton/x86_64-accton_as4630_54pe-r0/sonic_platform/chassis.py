@@ -134,6 +134,14 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.get_mac()
 
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        return self._eeprom.get_pn()
+        
     def get_serial_number(self):
         """
         Retrieves the hardware serial number for the chassis

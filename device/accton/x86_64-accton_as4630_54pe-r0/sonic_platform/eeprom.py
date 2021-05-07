@@ -13,7 +13,7 @@ except ImportError as e:
 
 CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
 CACHE_FILE = 'syseeprom_cache'
-
+NULL = 'N/A'
 
 class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
@@ -41,7 +41,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
                 _eeprom_info_dict[idx] = value
             except Exception:
                 pass
-               
+
         return _eeprom_info_dict
 
     def _load_eeprom(self):
@@ -92,11 +92,40 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
         return self.__parse_output(decode_output)
 
-    def get_eeprom(self):
-        return self._eeprom
+    def _valid_tlv(self, eeprom_data):
+        tlvinfo_type_codes_list = [
+            self._TLV_CODE_PRODUCT_NAME,
+            self._TLV_CODE_PART_NUMBER,
+            self._TLV_CODE_SERIAL_NUMBER,
+            self._TLV_CODE_MAC_BASE,
+            self._TLV_CODE_MANUF_DATE,
+            self._TLV_CODE_DEVICE_VERSION,
+            self._TLV_CODE_LABEL_REVISION,
+            self._TLV_CODE_PLATFORM_NAME,
+            self._TLV_CODE_ONIE_VERSION,
+            self._TLV_CODE_MAC_SIZE,
+            self._TLV_CODE_MANUF_NAME,
+            self._TLV_CODE_MANUF_COUNTRY,
+            self._TLV_CODE_VENDOR_NAME,
+            self._TLV_CODE_DIAG_VERSION,
+            self._TLV_CODE_SERVICE_TAG,
+            self._TLV_CODE_VENDOR_EXT,
+            self._TLV_CODE_CRC_32
+        ]
 
+        for code in tlvinfo_type_codes_list:
+            code_str = "0x{:X}".format(code)
+            eeprom_data[code_str] = eeprom_data.get(code_str, NULL)
+        return eeprom_data
+
+    def get_eeprom(self):
+        return self._valid_tlv(self._eeprom)
+
+    def get_pn(self):
+        return self._eeprom.get('0x22', NULL)
+        
     def get_serial(self):
-        return self._eeprom.get('0x23', "Undefined.")
+        return self._eeprom.get('0x23', NULL)
 
     def get_mac(self):
-        return self._eeprom.get('0x24', "Undefined.")
+        return self._eeprom.get('0x24', NULL)

@@ -47,7 +47,7 @@ class Fan(FanBase):
                 self.psu_i2c_num, self.psu_i2c_addr)
 
         FanBase.__init__(self)  
-        
+
 
     def get_direction(self):
         """

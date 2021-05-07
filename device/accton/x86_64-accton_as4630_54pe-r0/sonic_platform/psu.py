@@ -58,13 +58,6 @@ class Psu(PsuBase):
         self.i2c_addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
         self.__initialize_fan()
-        '''
-        for fan_index in range(0, PSU_NUM_FAN[self.index]):
-            #def __init__(self, fan_tray_index, fan_index=0, is_psu_fan=False, psu_index=0):
-            #fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
-            fan = Fan(fan_index, 0, True, self.index)
-            self._fan_list.append(fan)
-        '''
 
     def __initialize_fan(self):
         from sonic_platform.fan import Fan
@@ -111,7 +104,7 @@ class Psu(PsuBase):
             return float(val)/1000
         else:
             return 0
-        
+
     def get_powergood_status(self):
         """
         Retrieves the powergood status of PSU
@@ -130,7 +123,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        
+
         return False  #Controlled by HW
 
     def get_status_led(self):
@@ -139,8 +132,14 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
+        status=self.get_status()
+        if not status:
+            return  self.STATUS_LED_COLOR_RED
         
-        return False  #Controlled by HW
+        if status==1:
+            return self.STATUS_LED_COLOR_GREEN
+        else:
+            return False
 
     def get_temperature(self):
         """
@@ -155,7 +154,7 @@ class Psu(PsuBase):
             return float(val)/1000
         else:
             return 0
-                
+
     def get_temperature_high_threshold(self):
         """
         Retrieves the high threshold temperature of PSU
@@ -178,7 +177,7 @@ class Psu(PsuBase):
             return float(vout_val)/ 1000
         else:
             return 0
-            
+
     def get_voltage_low_threshold(self):
         """
         Retrieves the low threshold PSU voltage output
@@ -192,7 +191,7 @@ class Psu(PsuBase):
             return float(vout_val)/ 1000
         else:
             return 0
-            
+
     def get_name(self):
         """
         Retrieves the name of the device
@@ -213,7 +212,6 @@ class Psu(PsuBase):
             return int(val, 10) == 1
         else:
             return 0
-            
 
     def get_status(self):
         """
@@ -227,3 +225,27 @@ class Psu(PsuBase):
             return int(val, 10) == 1
         else:
             return 0
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        model_path="{}{}".format(self.cpld_path, 'psu_model_name')
+        model=self._api_helper.read_txt_file(model_path)
+        if not model:
+            return "N/A"
+        return model
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        serial_path="{}{}".format(self.cpld_path, 'psu_serial_number')
+        serial=self._api_helper.read_txt_file(serial_path)
+        if not serial:
+            return "N/A"
+        return serial
