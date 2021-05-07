@@ -2,11 +2,11 @@
 Description=TACACS application
 Requires=updategraph.service
 After=updategraph.service
+BindsTo=sonic.target
+After=sonic.target
 
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/config-setup apply_tacacs
 RemainAfterExit=yes
 
-[Install]
-WantedBy=multi-user.target

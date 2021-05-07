@@ -9,4 +9,4 @@ OnBootSec=5min 30 sec
 Unit=tacacs.service
 
 [Install]
-WantedBy=timers.target
+WantedBy=timers.target updategraph.service
