@@ -242,7 +242,7 @@ class Psu(PsuBase):
         Returns:
             string: Serial number of device
         """
-        serial = self.__read_txt_file(self.cpld_path + "psu_serial_numer")
+        serial = self.__read_txt_file(self.cpld_path + "psu_serial_number")
         if not serial:
             return "N/A"
         return serial
