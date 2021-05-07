@@ -554,6 +554,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth0",
+                        "lanes": "65",
                         "name": "Ethernet0"
                     }
                 ]
@@ -578,7 +579,7 @@
                         "local_asn": 1,
                         "name": "BGP nbr 1",
                         "asn": 65003,
-                        "ttl_security_hops": 2
+                        "ttl_security_hops": 255
                     }
                 ]
             }
