@@ -7,6 +7,7 @@
 #############################################################################
 
 import os
+import sys
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
