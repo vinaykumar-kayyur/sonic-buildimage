@@ -12,9 +12,9 @@
 #include "common/MuxException.h"
 #include "MuxPort.h"
 
-#define LOG_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+#define LOG_MUX_STATE_TRANSITION(level, portName, currentState, nextState) \
     do { \
-            MUXLOGINFO(boost::format("%s: (P: %s, M: %s, L: %s) -> (P: %s, M: %s, L: %s)") % \
+            MUXLOG##level(boost::format("%s: (P: %s, M: %s, L: %s) -> (P: %s, M: %s, L: %s)") % \
             portName % \
             mLinkProberStateName[ps(currentState)] % \
             mMuxStateName[ms(currentState)] % \
@@ -24,6 +24,12 @@
             mLinkStateName[ls(nextState)] \
         ); \
     } while (0)
+
+#define LOGINFO_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+    LOG_MUX_STATE_TRANSITION(INFO, portName, currentState, nextState)
+
+#define LOGDEBUG_MUX_STATE_TRANSITION(portName, currentState, nextState) \
+    LOG_MUX_STATE_TRANSITION(DEBUG, portName, currentState, nextState)
 
 namespace link_manager
 {
@@ -310,6 +316,7 @@ void LinkManagerStateMachine::switchMuxState(
         enterMuxState(nextState, mux_state::MuxState::Label::Wait);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->setMuxState(label);
+        mMuxPortPtr->postMetricsEvent(Metrics::SwitchingStart, label);
         mDeadlineTimer.cancel();
     } else {
         enterMuxWaitState(nextState);
@@ -372,7 +379,7 @@ void LinkManagerStateMachine::activateStateMachine()
         // make link prober state match the MUX state since the state machine is activated for the first time
         CompositeState nextState = mCompositeState;
         initLinkProberState(nextState);
-        LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
 
         mLinkProberPtr->initialize();
@@ -398,7 +405,7 @@ void LinkManagerStateMachine::handleStateChange(LinkProberEvent &event, link_pro
         CompositeState nextState = mCompositeState;
         ps(nextState) = state;
         mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
-        LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
 
@@ -421,7 +428,7 @@ void LinkManagerStateMachine::handleStateChange(MuxStateEvent &event, mux_state:
         CompositeState nextState = mCompositeState;
         ms(nextState) = state;
         mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
-        LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
 
@@ -467,7 +474,7 @@ void LinkManagerStateMachine::handleStateChange(LinkStateEvent &event, link_stat
         } else {
             mStateTransitionHandler[ps(nextState)][ms(nextState)][ls(nextState)](this, nextState);
         }
-        LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+        LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
         mCompositeState = nextState;
     }
 
@@ -568,6 +575,7 @@ void LinkManagerStateMachine::handleMuxStateNotification(mux_state::MuxState::La
         }
 
         postMuxStateEvent(label);
+        mMuxPortPtr->postMetricsEvent(Metrics::SwitchingEnd, label);
     } else if (label == mux_state::MuxState::Unknown) {
         // state db may not have been initialized with up-to-date mux state
         // probe xcvrd to read the current mux state
@@ -617,7 +625,7 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
             CompositeState nextState = mCompositeState;
             enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
             switchMuxState(nextState, mux_state::MuxState::Label::Active);
-            LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
+            LOGINFO_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), mCompositeState, nextState);
             mCompositeState = nextState;
         } else if (mode == common::MuxPortConfig::Mode::Auto) {
             mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::DriverUpdate);
@@ -637,7 +645,7 @@ void LinkManagerStateMachine::handleMuxConfigNotification(const common::MuxPortC
 //
 void LinkManagerStateMachine::handleSuspendTimerExpiry()
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
     // Note: suspend timer is started when Mux state is active and link is in unknown state.
     //       If standby (peer) ToR fails to pull the link, this ToR will loop between those states
     //       Prober: Unknown, Mux: Active, Link: Up --Suspend Timer Expires--> Wait, Wait, UP -> (probe)
@@ -647,7 +655,7 @@ void LinkManagerStateMachine::handleSuspendTimerExpiry()
         ls(mCompositeState) == link_state::LinkState::Label::Up) {
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
-        LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
+        LOGDEBUG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
     }
 }
 
@@ -658,13 +666,13 @@ void LinkManagerStateMachine::handleSuspendTimerExpiry()
 //
 void LinkManagerStateMachine::updateMuxLinkmgrState()
 {
-    Label label = Unhealthy;
+    Label label = Label::Unhealthy;
     if (ls(mCompositeState) == link_state::LinkState::Label::Up &&
         ((ps(mCompositeState) == link_prober::LinkProberState::Label::Active &&
          ms(mCompositeState) == mux_state::MuxState::Label::Active) ||
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Standby &&
          ms(mCompositeState) == mux_state::MuxState::Label::Standby))) {
-        label = Healthy;
+        label = Label::Healthy;
     }
 
     setLabel(label);
@@ -694,7 +702,7 @@ void LinkManagerStateMachine::startMuxProbeTimer(uint32_t factor)
 //
 void LinkManagerStateMachine::handleMuxProbeTimeout(boost::system::error_code errorCode)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if (errorCode == boost::system::errc::success &&
         (ps(mCompositeState) == link_prober::LinkProberState::Label::Wait ||
@@ -702,7 +710,7 @@ void LinkManagerStateMachine::handleMuxProbeTimeout(boost::system::error_code er
          ls(mCompositeState) == link_state::LinkState::Label::Down)) {
         CompositeState currState = mCompositeState;
         enterMuxWaitState(mCompositeState);
-        LOG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
+        LOGDEBUG_MUX_STATE_TRANSITION(mMuxPortConfig.getPortName(), currState, mCompositeState);
     }
 }
 
@@ -772,13 +780,13 @@ void LinkManagerStateMachine::noopTransitionFunction(CompositeState &nextState)
 //
 // ---> LinkProberStandbyMuxActiveLinkUpTransitionFunction(CompositeState &nextState);
 //
-// transition function when entering {LinkProberUnknown, MuxActive, LinkUp} state
+// transition function when entering {LinkProberStandby, MuxActive, LinkUp} state
 //
 void LinkManagerStateMachine::LinkProberStandbyMuxActiveLinkUpTransitionFunction(
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
     // Probe the MUX state as internal MUX state is active while LP reports standby link
     enterMuxWaitState(nextState);
 }
@@ -792,7 +800,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxActiveLinkUpTransitionFunction
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
     // Suspend TX probes to help peer ToR takes over in case active link is bad
     mSuspendTxFnPtr(mMuxPortConfig.getLinkWaitTimeout_msec());
     mWaitActiveUpCount = 0;
@@ -807,7 +815,7 @@ void LinkManagerStateMachine::LinkProberActiveMuxStandbyLinkUpTransitionFunction
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     enterMuxWaitState(nextState);
 }
@@ -821,7 +829,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxStandbyLinkUpTransitionFunctio
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     enterLinkProberState(nextState, link_prober::LinkProberState::Wait);
 
@@ -840,7 +848,7 @@ void LinkManagerStateMachine::LinkProberActiveMuxUnknownLinkUpTransitionFunction
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     enterMuxWaitState(nextState);
 }
@@ -854,7 +862,7 @@ void LinkManagerStateMachine::LinkProberStandbyMuxUnknownLinkUpTransitionFunctio
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     enterMuxWaitState(nextState);
 }
@@ -868,7 +876,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxUnknownLinkUpTransitionFunctio
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer(mMuxUnknownBackoffFactor);
     mMuxUnknownBackoffFactor <<= 1;
@@ -884,7 +892,7 @@ void LinkManagerStateMachine::LinkProberActiveMuxErrorLinkUpTransitionFunction(
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
          ps(nextState) == link_prober::LinkProberState::Label::Standby)) {
@@ -901,7 +909,7 @@ void LinkManagerStateMachine::LinkProberStandbyMuxErrorLinkUpTransitionFunction(
     CompositeState &nextState
 )
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     if ((ps(mCompositeState) != ps(nextState)) &&
         (ps(nextState) == link_prober::LinkProberState::Label::Active ||
@@ -917,7 +925,7 @@ void LinkManagerStateMachine::LinkProberStandbyMuxErrorLinkUpTransitionFunction(
 //
 void LinkManagerStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
 
@@ -933,7 +941,7 @@ void LinkManagerStateMachine::LinkProberWaitMuxActiveLinkUpTransitionFunction(Co
 //
 void LinkManagerStateMachine::LinkProberWaitMuxStandbyLinkUpTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
 }
@@ -959,7 +967,7 @@ void LinkManagerStateMachine::LinkProberWaitMuxUnknownLinkUpTransitionFunction(C
 //
 void LinkManagerStateMachine::LinkProberUnknownMuxActiveLinkDownTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
 }
@@ -971,7 +979,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxActiveLinkDownTransitionFuncti
 //
 void LinkManagerStateMachine::LinkProberUnknownMuxStandbyLinkDownTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
 }
@@ -997,7 +1005,7 @@ void LinkManagerStateMachine::LinkProberUnknownMuxUnknownLinkDownTransitionFunct
 //
 void LinkManagerStateMachine::LinkProberWaitMuxActiveLinkDownTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
 }
@@ -1009,7 +1017,7 @@ void LinkManagerStateMachine::LinkProberWaitMuxActiveLinkDownTransitionFunction(
 //
 void LinkManagerStateMachine::LinkProberWaitMuxStandbyLinkDownTransitionFunction(CompositeState &nextState)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     startMuxProbeTimer();
 }

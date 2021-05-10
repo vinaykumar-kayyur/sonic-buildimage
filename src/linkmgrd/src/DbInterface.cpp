@@ -10,6 +10,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/bind/bind.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "swss/netdispatcher.h"
@@ -27,6 +28,7 @@ namespace mux
 constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 std::vector<std::string> DbInterface::mMuxState = {"active", "standby", "unknown", "Error"};
 std::vector<std::string> DbInterface::mMuxLinkmgrState = {"uninitialized", "unhealthy", "healthy"};
+std::vector<std::string> DbInterface::mMuxMetrics = {"start", "end"};
 
 //
 // ---> DbInterface(mux::MuxManager *muxManager);
@@ -65,7 +67,7 @@ void DbInterface::getMuxState(const std::string &portName)
 //
 void DbInterface::setMuxState(const std::string &portName, mux_state::MuxState::Label label)
 {
-    MUXLOGINFO(boost::format("%s: setting mux to %s") % portName % mMuxState[label]);
+    MUXLOGDEBUG(boost::format("%s: setting mux to %s") % portName % mMuxState[label]);
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
@@ -83,7 +85,7 @@ void DbInterface::setMuxState(const std::string &portName, mux_state::MuxState::
 //
 void DbInterface::probeMuxState(const std::string &portName)
 {
-    MUXLOGINFO(portName);
+    MUXLOGDEBUG(portName);
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
@@ -100,7 +102,7 @@ void DbInterface::probeMuxState(const std::string &portName)
 //
 void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label)
 {
-    MUXLOGDEBUG(boost::format("%s: setting mux linkmgr to %s") % portName % mMuxLinkmgrState[label]);
+    MUXLOGDEBUG(boost::format("%s: setting mux linkmgr to %s") % portName % mMuxLinkmgrState[static_cast<int> (label)]);
 
     boost::asio::io_service &ioService = mStrand.context();
     ioService.post(mStrand.wrap(boost::bind(
@@ -108,6 +110,37 @@ void DbInterface::setMuxLinkmgrState(const std::string &portName, link_manager::
         this,
         portName,
         label
+    )));
+}
+
+//
+// ---> postMetricsEvent(
+//          const std::string &portName,
+//          link_manager::LinkManagerStateMachine::Metrics metrics
+//          mux_state::MuxState::Label label);
+//
+// post MUX metrics event
+//
+void DbInterface::postMetricsEvent(
+    const std::string &portName,
+    link_manager::LinkManagerStateMachine::Metrics metrics,
+    mux_state::MuxState::Label label
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting mux metrics event linkmgrd_switch_%s_%s") %
+        portName %
+        mMuxState[label] %
+        mMuxMetrics[static_cast<int> (metrics)]
+    );
+
+    boost::asio::io_service &ioService = mStrand.context();
+    ioService.post(mStrand.wrap(boost::bind(
+        &DbInterface::handlePostMuxMetrics,
+        this,
+        portName,
+        metrics,
+        label,
+        boost::posix_time::microsec_clock::universal_time()
     )));
 }
 
@@ -130,6 +163,9 @@ void DbInterface::initialize()
         );
         mStateDbMuxLinkmgrTablePtr = std::make_shared<swss::Table> (
             mStateDbPtr.get(), STATE_MUX_LINKMGR_TABLE_NAME
+        );
+        mStateDbMuxMetricsTablePtr = std::make_shared<swss::Table> (
+            mStateDbPtr.get(), STATE_MUX_METRICS_TABLE_NAME
         );
         mMuxStateTablePtr = std::make_shared<swss::Table> (mStateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
@@ -194,9 +230,9 @@ void DbInterface::handleGetMuxState(const std::string portName)
 //
 void DbInterface::handleSetMuxState(const std::string portName, mux_state::MuxState::Label label)
 {
-    MUXLOGINFO(boost::format("%s: setting mux state to %s") % portName % mMuxState[label]);
+    MUXLOGDEBUG(boost::format("%s: setting mux state to %s") % portName % mMuxState[label]);
 
-    if (label <= mux_state::MuxState::Unknown) {
+    if (label <= mux_state::MuxState::Label::Unknown) {
         std::vector<swss::FieldValueTuple> values = {
             {"state", mMuxState[label]},
         };
@@ -226,11 +262,44 @@ void DbInterface::handleSetMuxLinkmgrState(
     link_manager::LinkManagerStateMachine::Label label
 )
 {
-    MUXLOGDEBUG(boost::format("%s: setting mux linkmgr state to %s") % portName % mMuxLinkmgrState[label]);
+    MUXLOGDEBUG(boost::format("%s: setting mux linkmgr state to %s") % portName % mMuxLinkmgrState[static_cast<int> (label)]);
 
-    if (label < link_manager::LinkManagerStateMachine::Count) {
-        mStateDbMuxLinkmgrTablePtr->hset(portName, "state", mMuxLinkmgrState[label]);
+    if (label < link_manager::LinkManagerStateMachine::Label::Count) {
+        mStateDbMuxLinkmgrTablePtr->hset(portName, "state", mMuxLinkmgrState[static_cast<int> (label)]);
     }
+}
+
+//
+// ---> handlePostMuxMetrics(
+//          const std::string portName,
+//          link_manager::LinkManagerStateMachine::Metrics metrics,
+//          mux_state::MuxState::Label label,
+//          boost::posix_time::ptime time);
+//
+// set MUX metrics to state db
+//
+void DbInterface::handlePostMuxMetrics(
+    const std::string portName,
+    link_manager::LinkManagerStateMachine::Metrics metrics,
+    mux_state::MuxState::Label label,
+    boost::posix_time::ptime time
+)
+{
+    MUXLOGDEBUG(boost::format("%s: posting mux metrics event linkmgrd_switch_%s_%s") %
+        portName %
+        mMuxState[label] %
+        mMuxMetrics[static_cast<int> (metrics)]
+    );
+
+    if (metrics == link_manager::LinkManagerStateMachine::Metrics::SwitchingStart) {
+        mStateDbMuxMetricsTablePtr->del(portName);
+    }
+
+    mStateDbMuxMetricsTablePtr->hset(
+        portName,
+        "linkmgrd_switch_" + mMuxState[label] + "_" + mMuxMetrics[static_cast<int> (metrics)],
+        boost::posix_time::to_simple_string(time)
+    );
 }
 
 //

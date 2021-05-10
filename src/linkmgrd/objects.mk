@@ -3,7 +3,6 @@ USER_OBJS :=
 
 LIBS := \
     -lswsscommon \
-    -lboost_system \
     -lboost_date_time \
     -lboost_thread \
     -lboost_log \

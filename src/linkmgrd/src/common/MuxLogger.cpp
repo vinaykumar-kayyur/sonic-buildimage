@@ -5,13 +5,10 @@
  *      Author: tamer
  */
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include "boost/log/utility/setup/from_settings.hpp"
 #include <boost/log/utility/exception_handler.hpp>
 #include <boost/filesystem.hpp>
 
@@ -82,14 +79,16 @@ void MuxLogger::initialize(
     mLevel = level;
 
     boost::log::register_simple_formatter_factory<trivial::severity_level, char> ("Severity");
+
+    boost::log::settings settings;
+    boost::log::init_from_settings(settings);
+
 //    boost::filesystem::remove(path);
 
 //    boost::log::add_file_log(
 //        keywords::file_name = path,
 //        keywords::format = "[%TimeStamp%] [%Severity%] %Message%"
 //    );
-
-    boost::log::core::get()->set_filter(trivial::severity >= level);
 
     boost::log::add_common_attributes();
     boost::log::core::get()->set_exception_handler(
@@ -120,21 +119,25 @@ void MuxLogger::setLevel(const boost::log::trivial::severity_level level)
 void MuxLogger::addSyslogSink(std::string &prog)
 {
     namespace sinks = boost::log::sinks;
-    namespace expressions = boost::log::expressions;
     try {
         // Create a syslog sink
-        boost::shared_ptr<sinks::synchronous_sink<sinks::syslog_backend>> sink(
-            new sinks::synchronous_sink<sinks::syslog_backend> ()
-        );
+        boost::shared_ptr<sinks::syslog_backend> sink(new sinks::syslog_backend(
+            boost::log::keywords::facility = sinks::syslog::user,
+            boost::log::keywords::use_impl = sinks::syslog::native
+        ));
 
-        sink->set_formatter(expressions::format(prog + ": %1%") % expressions::smessage);
-
-        sink->locked_backend()->set_severity_mapper(
-            sinks::syslog::direct_severity_mapping<int> ("Severity")
-        );
+        // Create and fill in another level translator for "Severity" attribute of type string
+        sinks::syslog::custom_severity_mapping<boost::log::trivial::severity_level> mapping("Severity");
+        mapping[boost::log::trivial::trace] = sinks::syslog::debug;
+        mapping[boost::log::trivial::debug] = sinks::syslog::debug;
+        mapping[boost::log::trivial::info] = sinks::syslog::info;
+        mapping[boost::log::trivial::warning] = sinks::syslog::warning;
+        mapping[boost::log::trivial::error] = sinks::syslog::error;
+        mapping[boost::log::trivial::fatal] = sinks::syslog::alert;
+        sink->set_severity_mapper(mapping);
 
         // Add the sink to the core
-        boost::log::core::get()->add_sink(sink);
+        boost::log::core::get()->add_sink(boost::make_shared<sinks::synchronous_sink<sinks::syslog_backend>> (sink));
     }
     catch (std::exception& ex) {
         std::ostringstream errMsg;

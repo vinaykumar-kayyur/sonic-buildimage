@@ -222,7 +222,7 @@ public:
     inline boost::asio::ip::address getLoopbackIpv4Address() {return mLoopbackIpv4Address;};
 
 private:
-    uint8_t mNumberOfThreads = 4;
+    uint8_t mNumberOfThreads = 5;
     uint32_t mTimeoutIpv4_msec = 100;
     uint32_t mTimeoutIpv6_msec = 1000;
     uint32_t mPositiveStateChangeRetryCount = 1;

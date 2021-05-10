@@ -140,7 +140,7 @@ void MuxManager::addOrUpdateMuxPortLinkState(const std::string &portName, const 
 //
 void MuxManager::addOrUpdateMuxPortMuxState(const std::string &portName, const std::string &muxState)
 {
-    MUXLOGINFO(boost::format("%s: state db mux state: %s") % portName % muxState);
+    MUXLOGDEBUG(boost::format("%s: state db mux state: %s") % portName % muxState);
 
     std::shared_ptr<MuxPort> muxPortPtr = getMuxPortPtrOrThrow(portName);
     muxPortPtr->handleMuxState(muxState);
@@ -171,7 +171,7 @@ void MuxManager::processGetServerMacAddress(
 //
 void MuxManager::processGetMuxState(const std::string &portName, const std::string &muxState)
 {
-    MUXLOGINFO(boost::format("%s: state db mux state: %s") % portName % muxState);
+    MUXLOGDEBUG(boost::format("%s: state db mux state: %s") % portName % muxState);
 
     PortMapIterator portMapIterator = mPortMap.find(portName);
     if (portMapIterator != mPortMap.end()) {
@@ -186,7 +186,7 @@ void MuxManager::processGetMuxState(const std::string &portName, const std::stri
 //
 void MuxManager::processProbeMuxState(const std::string &portName, const std::string &muxState)
 {
-    MUXLOGINFO(boost::format("%s: app db mux state: %s") % portName % muxState);
+    MUXLOGDEBUG(boost::format("%s: app db mux state: %s") % portName % muxState);
 
     PortMapIterator portMapIterator = mPortMap.find(portName);
     if (portMapIterator != mPortMap.end()) {

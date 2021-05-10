@@ -36,4 +36,13 @@ void FakeDbInterface::setMuxLinkmgrState(const std::string &portName, link_manag
     mSetMuxLinkmgrStateInvokeCount++;
 }
 
+void FakeDbInterface::postMetricsEvent(
+    const std::string &portName,
+    link_manager::LinkManagerStateMachine::Metrics metrics,
+    mux_state::MuxState::Label label
+)
+{
+    mPostMetricsInvokeCount++;
+}
+
 } /* namespace test */

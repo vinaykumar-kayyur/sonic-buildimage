@@ -7,6 +7,7 @@ CP := cp
 MKDIR := mkdir
 CC := g++
 MV := mv
+BOOST_MACROS = -DBOOST_LOG_USE_NATIVE_SYSLOG -DBOOST_LOG_DYN_LINK
 CPP_FLAGS := -O3 -Wall -c -fmessage-length=0 -fPIC
 TOPDIR := $(dir $(firstword $(MAKEFILE_LIST)))
 

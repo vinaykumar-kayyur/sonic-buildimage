@@ -26,6 +26,11 @@ public:
         const std::string &portName,
         link_manager::LinkManagerStateMachine::Label label
     ) override;
+    virtual void postMetricsEvent(
+        const std::string &portName,
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label
+    ) override;
 
     void setNextMuxState(mux_state::MuxState::Label label) {mNextMuxState = label;};
 
@@ -38,6 +43,7 @@ public:
     uint32_t mGetMuxStateInvokeCount = 0;
     uint32_t mProbeMuxStateInvokeCount = 0;
     uint32_t mSetMuxLinkmgrStateInvokeCount = 0;
+    uint32_t mPostMetricsInvokeCount = 0;
 };
 
 } /* namespace test */

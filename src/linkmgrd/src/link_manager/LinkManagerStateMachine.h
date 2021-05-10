@@ -80,10 +80,22 @@ public:
      *
      *@brief Label corresponding to each LINKMGR Health State
      */
-    enum Label {
+    enum class Label {
         Uninitialized,
         Unhealthy,
         Healthy,
+
+        Count
+    };
+
+    /**
+     *@enum Metrics
+     *
+     *@brief Metrics Data to be written to MUX_METRICS state db table
+     */
+    enum class Metrics {
+        SwitchingStart,
+        SwitchingEnd,
 
         Count
     };
@@ -768,7 +780,7 @@ private:
     uint32_t mMuxUnknownBackoffFactor = 1;
 
     std::bitset<ComponentCount> mComponentInitState = {0};
-    Label mLabel = Uninitialized;
+    Label mLabel = Label::Uninitialized;
 };
 
 } /* namespace link_manager */

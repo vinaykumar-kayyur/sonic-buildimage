@@ -162,7 +162,7 @@ void LinkProber::startProbing()
 //
 void LinkProber::suspendTxProbes(uint32_t suspendTime_msec)
 {
-    MUXLOGINFO(mMuxPortConfig.getPortName());
+    MUXLOGDEBUG(mMuxPortConfig.getPortName());
 
     mSuspendTimer.expires_from_now(boost::posix_time::milliseconds(suspendTime_msec));
     mSuspendTimer.async_wait(mStrand.wrap(boost::bind(

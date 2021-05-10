@@ -14,7 +14,6 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sinks/sync_frontend.hpp>
 
 
 namespace common
@@ -129,7 +128,7 @@ public:
     *
     *@return severity logger instance
     */
-    boost::log::sources::severity_logger<boost::log::trivial::severity_level>&
+    boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>&
     getLogger() {return mSeverityLogger;};
 
 private:
@@ -149,7 +148,7 @@ private:
 private:
     boost::log::trivial::severity_level mLevel = boost::log::trivial::info;
 
-    boost::log::sources::severity_logger<boost::log::trivial::severity_level> mSeverityLogger;
+    boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level> mSeverityLogger;
 };
 
 } /* namespace common */

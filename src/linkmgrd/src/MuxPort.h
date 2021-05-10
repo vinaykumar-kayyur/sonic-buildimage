@@ -132,6 +132,23 @@ public:
     };
 
     /**
+    *@method postMetricsEvent
+    *
+    *@brief post MUX metrics event
+    *
+    *@param metrics (in)    metrics to post
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    inline void postMetricsEvent(
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label
+    ) {
+        mDbInterface->postMetricsEvent(mMuxPortConfig.getPortName(), metrics, label);
+    };
+
+    /**
     *@method setServerIpv4Address
     *
     *@brief setter for server/blade IPv4 address

@@ -13,6 +13,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/thread/barrier.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "swss/dbconnector.h"
 #include "swss/producerstatetable.h"
@@ -136,6 +137,23 @@ public:
     virtual void setMuxLinkmgrState(const std::string &portName, link_manager::LinkManagerStateMachine::Label label);
 
     /**
+    *@method postMetricsEvent
+    *
+    *@brief post MUX metrics event
+    *
+    *@param portName (in)   MUX/port name
+    *@param metrics (in)    metrics data
+    *@param label (in)      label of target state
+    *
+    *@return none
+    */
+    virtual void postMetricsEvent(
+        const std::string &portName,
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label
+    );
+
+    /**
     *@method initialize
     *
     *@brief initialize DB and start SWSS listening thread
@@ -220,6 +238,25 @@ private:
     *@return none
     */
     void handleSetMuxLinkmgrState(const std::string portName, link_manager::LinkManagerStateMachine::Label label);
+
+    /**
+    *@method handlePostMuxMetrics
+    *
+    *@brief set MUX metrics to state db
+    *
+    *@param portName (in)   MUX/port name
+    *@param metrics (in)    metrics data
+    *@param label (in)      label of target state
+    *@param time (in)       current time
+    *
+    *@return none
+    */
+    void handlePostMuxMetrics(
+        const std::string portName,
+        link_manager::LinkManagerStateMachine::Metrics metrics,
+        mux_state::MuxState::Label label,
+        boost::posix_time::ptime time
+    );
 
     /**
     *@method getLoopback2InterfaceInfo
@@ -314,6 +351,7 @@ private:
 private:
     static std::vector<std::string> mMuxState;
     static std::vector<std::string> mMuxLinkmgrState;
+    static std::vector<std::string> mMuxMetrics;
 
 private:
     mux::MuxManager *mMuxManagerPtr;
@@ -329,9 +367,9 @@ private:
     std::shared_ptr<swss::Table> mAppDbMuxCommandTablePtr;
     // for writing the current mux linkmgr health
     std::shared_ptr<swss::Table> mStateDbMuxLinkmgrTablePtr;
+    // for writing mux metrics
+    std::shared_ptr<swss::Table> mStateDbMuxMetricsTablePtr;
 
-    std::shared_ptr<boost::thread> mMuxStateDbThreadPtr;
-    std::shared_ptr<boost::thread> mConfigDbThreadPtr;
     std::shared_ptr<boost::thread> mSwssThreadPtr;
 
     boost::barrier mBarrier;
