@@ -6,8 +6,6 @@
 #
 #############################################################################
 
-#import sonic_platform
-
 try:
     from sonic_platform_base.psu_base import PsuBase
     #from sonic_platform.fan import Fan
