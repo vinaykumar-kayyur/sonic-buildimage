@@ -11,6 +11,7 @@ else:
 
 from sonic_py_common import device_info
 
+from . import mock_swsssdk
 
 # TODO: Remove this if/else block once we no longer support Python 2
 if sys.version_info.major == 3:
@@ -49,7 +50,6 @@ EXPECTED_GET_MACHINE_INFO_RESULT = {
     'onie_kernel_version': '4.10.11'
 }
 
-
 class TestDeviceInfo(object):
     @classmethod
     def setup_class(cls):
@@ -69,6 +69,14 @@ class TestDeviceInfo(object):
             get_machine_info_mocked.return_value = EXPECTED_GET_MACHINE_INFO_RESULT
             result = device_info.get_platform()
             assert result == "x86_64-mlnx_msn2700-r0"
+
+    def test_get_chassis_info(self):
+        with mock.patch("device_info.swsssdk", new=mock_swsssdk):
+            result = device_info.get_chassis_info()
+            truth = {"serial": self.TEST_SERIAL, 
+                     "model": self.TEST_MODEL, 
+                     "revision": self.TEST_REV}
+            assert result == truth
 
     @classmethod
     def teardown_class(cls):
