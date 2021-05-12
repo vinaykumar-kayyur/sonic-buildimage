@@ -9,7 +9,6 @@
 
 try:
     from sonic_platform_base.fan_drawer_base import FanDrawerBase
-    from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -20,12 +19,17 @@ class FanDrawer(FanDrawerBase):
     """Platform-specific Fan class"""
 
     def __init__(self, fantray_index):
-
         FanDrawerBase.__init__(self)
-        # FanTray is 0-based in platforms
         self.fantrayindex = fantray_index
+
+        # FanTray is 0-based in platforms
+        self.__initialize_fan()
+
+    def __initialize_fan(self):
+        from sonic_platform.fan import Fan
+
         for i in range(FANS_PER_FANTRAY):
-            self._fan_list.append(Fan(fantray_index, i))
+            self._fan_list.append(Fan(self.fantrayindex, i))
 
     def get_name(self):
         """

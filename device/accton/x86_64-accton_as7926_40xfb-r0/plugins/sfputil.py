@@ -6,7 +6,6 @@
 try:
     import sys
     import time
-    import string
     from ctypes import create_string_buffer
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
