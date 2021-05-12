@@ -7,6 +7,8 @@ import subprocess
 import yaml
 from natsort import natsorted
 
+from . import multi_asic
+
 # TODO: Replace with swsscommon
 from swsssdk import ConfigDBConnector, SonicDBConfig, SonicV2Connector
 
@@ -31,6 +33,52 @@ NAMESPACE_PATH_GLOB = "/run/netns/*"
 ASIC_CONF_FILENAME = "asic.conf"
 FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
+
+# Chassis STATE_DB keys
+CHASSIS_INFO_TABLE = 'CHASSIS_INFO|chassis {}'
+CHASSIS_INFO_CARD_NUM_FIELD = 'module_num'
+CHASSIS_INFO_SERIAL_FIELD = 'serial'
+CHASSIS_INFO_MODEL_FIELD = 'model'
+CHASSIS_INFO_REV_FIELD = 'revision'
+
+# Get hardware information
+def get_platform_info():
+    """
+    This function is used to get the HW info helper function
+    """
+
+    hw_info_dict = {}
+
+    version_info = device_info.get_sonic_version_info()
+
+    hw_info_dict['platform'] = device_info.get_platform()
+    hw_info_dict['hwsku'] = device_info.get_hwsku()
+    hw_info_dict['asic_type'] = version_info['asic_type']
+    hw_info_dict['asic_count'] = multi_asic.get_num_asics()
+
+    return hw_info_dict
+
+
+def get_chassis_info():
+    """
+    This function is used to get the Chassis serial / model / rev number
+    """
+
+    chassis_info_dict = {}
+
+    try:
+        # Init statedb connection
+        db = swsscommon.SonicV2Connector()
+        db.connect(db.STATE_DB)
+        table = CHASSIS_INFO_TABLE.format(1)
+
+        chassis_info_dict['serial'] = db.get(db.STATE_DB, table, CHASSIS_INFO_SERIAL_FIELD)
+        chassis_info_dict['model'] = db.get(db.STATE_DB, table, CHASSIS_INFO_MODEL_FIELD)
+        chassis_info_dict['revision'] = db.get(db.STATE_DB, table, CHASSIS_INFO_REV_FIELD)
+    except:
+        pass
+
+    return chassis_info_dict
 
 
 def get_localhost_info(field):
