@@ -27,26 +27,17 @@
 try:
     import os
     import sys, getopt
-    import subprocess
-    import click
-    import imp
     import logging
     import logging.config
-    import types
     import time  # this is only being used as part of the example
-    import traceback
     import signal
     import glob
-    from tabulate import tabulate
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
 # Deafults
 VERSION = '1.0'
 FUNCTION_NAME = 'accton_as7926_40xfb_monitor'
-
-global log_file
-global log_level
 
 # Make a class we can use to capture stdout and sterr in the log
 class accton_as7926_40xfb_monitor(object):
@@ -115,7 +106,7 @@ class accton_as7926_40xfb_monitor(object):
                 return None
             try:
 		        val_file.close()
-            except:
+             except BaseException:
                 logging.debug('GET. unable to close file. device_path:%s', device_path)
                 return None
             return int(content)
@@ -146,7 +137,7 @@ class accton_as7926_40xfb_monitor(object):
 
         try:
 		    val_file.close()
-        except:
+         except BaseException:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
 
