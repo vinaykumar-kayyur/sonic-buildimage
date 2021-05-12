@@ -106,7 +106,7 @@ class accton_as7926_40xfb_monitor(object):
                 return None
             try:
 		        val_file.close()
-             except BaseException:
+            except BaseException:
                 logging.debug('GET. unable to close file. device_path:%s', device_path)
                 return None
             return int(content)
@@ -137,7 +137,7 @@ class accton_as7926_40xfb_monitor(object):
 
         try:
 		    val_file.close()
-         except BaseException:
+        except BaseException:
             logging.debug('GET. unable to close file. device_path:%s', device_path)
             return None
 
