@@ -1,2 +1,5 @@
 #DPKG FRK
 $(SONIC_ONE_IMAGE)_CACHE_MODE  := none
+
+# DNX build
+$(SONIC_ONE_DNX_IMAGE)_CACHE_MODE  := none
