@@ -17,16 +17,42 @@ start)
         echo -n "Setting up board... "
 
         modprobe i2c-dev
-        modprobe baseboard-lpc
-        modprobe switchboard
-        modprobe mc24lc64t
         modprobe ipmi_devintf
+	modprobe fpga_device
+	modprobe fpga_i2c_core
+	modprobe fpga
+	modprobe i2c_switchcpld
+	modprobe lpc_basecpld
+	modprobe mc24lc64t
+	modprobe optoe
+	modprobe xcvr-cls
 
         # Instantiate TLV EEPROM device on I801 bus 
         devname=`cat /sys/bus/i2c/devices/i2c-0/name`
-        if [[ $devname == 'SMBus I801 adapter at '* ]]; then
+        if [[ $devname == 'SMBus'* ]]; then
                 echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
         fi
+	devname=`cat /sys/bus/i2c/devices/i2c-10/name`
+	if [[ $devname == 'ocores-i2c-cls' ]]; then
+		echo switchboard 0x30 > /sys/bus/i2c/devices/i2c-10/new_device
+		echo switchboard 0x31 > /sys/bus/i2c/devices/i2c-10/new_device
+		echo switchboard 0x32 > /sys/bus/i2c/devices/i2c-10/new_device
+		echo switchboard 0x33 > /sys/bus/i2c/devices/i2c-10/new_device
+	fi
+
+	devname=`cat /sys/bus/i2c/devices/i2c-19/name`
+	if [[ $devname == *'mux'* ]]; then
+		for i in {16..79}; do
+			echo optoel 0x50 > /sys/bus/i2c/devices/i2c-"$i"/new_device
+			port='expr $i - 15'
+			echo QSFP$port > /sys/bus/i2c/devices/i2c-"$i"/"$i"-0050/port_name
+		done
+		echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-13/new_device
+		echo SFP1 > /sys/bus/i2c/devices/i2c-13/13-0050/port_name
+		echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-14/new_device
+                echo SFP2 > /sys/bus/i2c/devices/i2c-14/14-0050/port_name
+	fi
+
         decode-syseeprom --init 2> /dev/null &
 
         /bin/sh /usr/local/bin/platform_api_mgnt.sh init
