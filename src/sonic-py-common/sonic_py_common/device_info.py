@@ -7,8 +7,6 @@ import subprocess
 import yaml
 from natsort import natsorted
 
-from . import multi_asic
-
 # TODO: Replace with swsscommon
 from swsssdk import ConfigDBConnector, SonicDBConfig, SonicV2Connector
 
@@ -46,15 +44,16 @@ def get_platform_info():
     """
     This function is used to get the HW info helper function
     """
+    from .multi_asic import get_num_asics
 
     hw_info_dict = {}
 
-    version_info = device_info.get_sonic_version_info()
+    version_info = get_sonic_version_info()
 
-    hw_info_dict['platform'] = device_info.get_platform()
-    hw_info_dict['hwsku'] = device_info.get_hwsku()
+    hw_info_dict['platform'] = get_platform()
+    hw_info_dict['hwsku'] = get_hwsku()
     hw_info_dict['asic_type'] = version_info['asic_type']
-    hw_info_dict['asic_count'] = multi_asic.get_num_asics()
+    hw_info_dict['asic_count'] = get_num_asics()
 
     return hw_info_dict
 
