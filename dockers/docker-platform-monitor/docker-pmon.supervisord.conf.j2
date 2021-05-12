@@ -41,8 +41,8 @@ dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
 {% endif %}
 
-[program:chassisshow]
-command=/usr/local/bin/chassisshow
+[program:chassis_db_init]
+command=/usr/local/bin/chassis_db_init
 priority=3
 autostart=false
 autorestart=false
