@@ -67,7 +67,7 @@ def get_chassis_info():
 
     try:
         # Init statedb connection
-        db = swsscommon.SonicV2Connector()
+        db = SonicV2Connector()
         db.connect(db.STATE_DB)
         table = CHASSIS_INFO_TABLE.format(1)
 

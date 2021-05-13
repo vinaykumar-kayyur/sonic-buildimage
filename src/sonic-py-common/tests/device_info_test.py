@@ -11,7 +11,7 @@ else:
 
 from sonic_py_common import device_info
 
-from . import mock_swsssdk
+from .mock_swsssdk import SonicV2Connector
 
 # TODO: Remove this if/else block once we no longer support Python 2
 if sys.version_info.major == 3:
@@ -71,11 +71,11 @@ class TestDeviceInfo(object):
             assert result == "x86_64-mlnx_msn2700-r0"
 
     def test_get_chassis_info(self):
-        with mock.patch("device_info.swsssdk", new=mock_swsssdk):
+        with mock.patch("sonic_py_common.device_info.SonicV2Connector", new=SonicV2Connector):
             result = device_info.get_chassis_info()
-            truth = {"serial": self.TEST_SERIAL, 
-                     "model": self.TEST_MODEL, 
-                     "revision": self.TEST_REV}
+            truth = {"serial": SonicV2Connector.TEST_SERIAL, 
+                     "model": SonicV2Connector.TEST_MODEL, 
+                     "revision": SonicV2Connector.TEST_REV}
             assert result == truth
 
     @classmethod
