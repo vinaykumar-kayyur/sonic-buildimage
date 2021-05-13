@@ -10,7 +10,7 @@ module sonic-ntp {
     }
 
     import sonic-port {
-        prefix prt;
+        prefix port;
     }
 
     import sonic-mgmt_vrf {
@@ -18,7 +18,7 @@ module sonic-ntp {
     }
 
     import sonic-portchannel {
-        prefix po;
+        prefix lag;
     }
 
     import sonic-vlan {
@@ -52,10 +52,10 @@ module sonic-ntp {
                 leaf-list src_intf {
                     type union {
                         type leafref {
-                            path /prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name;
+                            path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
                         }
                         type leafref {
-                            path /po:sonic-portchannel/po:PORTCHANNEL/po:PORTCHANNEL_LIST/po:name;
+                            path /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name;
                         }
                         type leafref {
                             path /vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name;
