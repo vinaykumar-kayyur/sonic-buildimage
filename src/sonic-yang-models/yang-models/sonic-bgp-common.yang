@@ -1,6 +1,6 @@
 module sonic-bgp-common {
     namespace "http://github.com/Azure/sonic-bgp-common";
-    prefix sbc;
+    prefix bgpcmn;
     yang-version 1.1;
 
     import ietf-inet-types {
@@ -20,31 +20,19 @@ module sonic-bgp-common {
     }
 
     import sonic-loopback-interface {
-        prefix lo;
+        prefix lointf;
     }
 
     import sonic-routing-policy-sets {
-        prefix srpolsets;
+        prefix rpolsets;
     }
 
     import sonic-route-map {
-        prefix srmap;
-    }
-
-    import sonic-types {
-        prefix cmn;
-    }
-
-    import ietf-yang-types {
-        prefix ietf-yang;
-    }
-
-    import sonic-interface {
-        prefix sintf;
+        prefix rmap;
     }
 
     import sonic-extension {
-        prefix sonic-ext;
+        prefix ext;
     }
 
     organization
@@ -233,7 +221,7 @@ module sonic-bgp-common {
                     path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                 }
                 type leafref {
-                    path "/lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name";
+                    path "/lointf:sonic-loopback-interface/lointf:LOOPBACK_INTERFACE/lointf:LOOPBACK_INTERFACE_LIST/lointf:name";
                 }
             }
             description "Local source address or interface name to use for connection.";
@@ -252,7 +240,7 @@ module sonic-bgp-common {
         leaf disable_ebgp_connected_route_check {
             type boolean;
             description "Connected checked disabled";
-            sonic-ext:custom-validation ValidateDisableConnectedCheck;
+            ext:custom-validation ValidateDisableConnectedCheck;
         }
 
         leaf enforce_first_as {
@@ -316,7 +304,7 @@ module sonic-bgp-common {
 
         leaf strict_capability_match {
             type boolean;
-            sonic-ext:custom-validation ValidateStrictAndOverRideCapability;
+            ext:custom-validation ValidateStrictAndOverRideCapability;
             description "Strict capability negotiation match";
         }
 
@@ -356,7 +344,7 @@ module sonic-bgp-common {
 
         leaf default_rmap {
             type leafref {
-                path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
+                path "/rmap:sonic-route-map/rmap:ROUTE_MAP_SET/rmap:ROUTE_MAP_SET_LIST/rmap:name";
             }
             description "Default route map to originate";
         }
@@ -387,7 +375,7 @@ module sonic-bgp-common {
 
         leaf-list route_map_in {
             type leafref {
-                path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
+                path "/rmap:sonic-route-map/rmap:ROUTE_MAP_SET/rmap:ROUTE_MAP_SET_LIST/rmap:name";
             }
             description "Route-map filter for incoming routes";
             max-elements 1;
@@ -395,7 +383,7 @@ module sonic-bgp-common {
 
         leaf-list route_map_out {
             type leafref {
-                path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
+                path "/rmap:sonic-route-map/rmap:ROUTE_MAP_SET/rmap:ROUTE_MAP_SET_LIST/rmap:name";
             }
             description "Route-map filter for outgoing routes";
             max-elements 1;
@@ -408,7 +396,7 @@ module sonic-bgp-common {
 
         leaf unsuppress_map_name {
             type leafref {
-                path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
+                path "/rmap:sonic-route-map/rmap:ROUTE_MAP_SET/rmap:ROUTE_MAP_SET_LIST/rmap:name";
             }
             description "Route map";
         }
@@ -457,14 +445,14 @@ module sonic-bgp-common {
 
         leaf filter_list_in {
             type leafref {
-                path "/srpolsets:sonic-routing-policy-sets/srpolsets:AS_PATH_SET/srpolsets:AS_PATH_SET_LIST/srpolsets:name";
+                path "/rpolsets:sonic-routing-policy-sets/rpolsets:AS_PATH_SET/rpolsets:AS_PATH_SET_LIST/rpolsets:name";
             }
             description "Filter list name";
         }
 
         leaf filter_list_out {
             type leafref {
-                path "/srpolsets:sonic-routing-policy-sets/srpolsets:AS_PATH_SET/srpolsets:AS_PATH_SET_LIST/srpolsets:name";
+                path "/rpolsets:sonic-routing-policy-sets/rpolsets:AS_PATH_SET/rpolsets:AS_PATH_SET_LIST/rpolsets:name";
             }
             description "Filter list name";
         }
@@ -481,14 +469,14 @@ module sonic-bgp-common {
 
         leaf prefix_list_in {
             type leafref {
-                path "/srpolsets:sonic-routing-policy-sets/srpolsets:PREFIX_SET/srpolsets:PREFIX_SET_LIST/srpolsets:name";
+                path "/rpolsets:sonic-routing-policy-sets/rpolsets:PREFIX_SET/rpolsets:PREFIX_SET_LIST/rpolsets:name";
             }
             description "Prefix list name";
         }
 
         leaf prefix_list_out {
             type leafref {
-                path "/srpolsets:sonic-routing-policy-sets/srpolsets:PREFIX_SET/srpolsets:PREFIX_SET_LIST/srpolsets:name";
+                path "/rpolsets:sonic-routing-policy-sets/rpolsets:PREFIX_SET/rpolsets:PREFIX_SET_LIST/rpolsets:name";
             }
             description "Prefix list name";
         }

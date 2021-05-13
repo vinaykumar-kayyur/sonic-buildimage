@@ -1,6 +1,6 @@
 module sonic-bgp-neighbor {
     namespace "http://github.com/Azure/sonic-bgp-neighbor";
-    prefix sbnbr;
+    prefix bgpnbr;
     yang-version 1.1;
 
     import ietf-inet-types {
@@ -8,7 +8,7 @@ module sonic-bgp-neighbor {
     }
 
     import sonic-bgp-common {
-        prefix sbc;
+        prefix bgpcmn;
     }
 
     import sonic-port {
@@ -24,11 +24,11 @@ module sonic-bgp-neighbor {
     }
 
     import sonic-bgp-global {
-        prefix sbgpg;
+        prefix bgpg;
     }
 
     import sonic-bgp-peergroup {
-        prefix pg;
+        prefix bgppg;
     }
 
     organization
@@ -52,7 +52,7 @@ module sonic-bgp-neighbor {
 
                 leaf vrf_name {
                     type leafref {
-                        path "/sbgpg:sonic-bgp-global/sbgpg:BGP_GLOBALS/sbgpg:BGP_GLOBALS_LIST/sbgpg:vrf_name";
+                        path "/bgpg:sonic-bgp-global/bgpg:BGP_GLOBALS/bgpg:BGP_GLOBALS_LIST/bgpg:vrf_name";
                     }
                     description "Network-instance/VRF name";
                 }
@@ -75,12 +75,12 @@ module sonic-bgp-neighbor {
 
                 leaf peer_group_name {
                     type leafref {
-                        path "/pg:sonic-bgp-peergroup/pg:BGP_PEER_GROUP/pg:BGP_PEER_GROUP_LIST[pg:vrf_name=current()/../vrf_name]/pg:peer_group_name";
+                        path "/bgppg:sonic-bgp-peergroup/bgppg:BGP_PEER_GROUP/bgppg:BGP_PEER_GROUP_LIST[bgppg:vrf_name=current()/../vrf_name]/bgppg:peer_group_name";
                     }
                     description "Peer group name";
                 }
 
-                uses sbc:sonic-bgp-cmn;
+                uses bgpcmn:sonic-bgp-cmn;
             }
         }
 
@@ -90,7 +90,7 @@ module sonic-bgp-neighbor {
 
                 leaf vrf_name {
                     type leafref {
-                        path "/sbgpg:sonic-bgp-global/sbgpg:BGP_GLOBALS/sbgpg:BGP_GLOBALS_LIST/sbgpg:vrf_name";
+                        path "/bgpg:sonic-bgp-global/bgpg:BGP_GLOBALS/bgpg:BGP_GLOBALS_LIST/bgpg:vrf_name";
                     }
                     description "Network-instance/VRF name";
                 }
@@ -101,7 +101,7 @@ module sonic-bgp-neighbor {
                     }
                     description "BGP Neighbor, it will be neighbor address or interface name";
                 }
-                uses sbc:sonic-bgp-cmn-af;
+                uses bgpcmn:sonic-bgp-cmn-af;
             }
         }
     }

@@ -1,6 +1,6 @@
 module sonic-routing-policy-sets {
     namespace "http://github.com/Azure/sonic-routing-policy-lists";
-    prefix srpolsets;
+    prefix rpolsets;
     yang-version 1.1;
 
     import ietf-inet-types {
@@ -8,7 +8,7 @@ module sonic-routing-policy-sets {
     }
 
     import sonic-extension {
-        prefix sonic-ext;
+        prefix ext;
     }
 
     organization
@@ -64,7 +64,7 @@ module sonic-routing-policy-sets {
 
             list PREFIX_LIST { 
                 key "name sequence_number ip_prefix masklength_range";
-                sonic-ext:custom-validation ValidateIpPrefixListCfg;
+                ext:custom-validation ValidateIpPrefixListCfg;
 
                 leaf name {
                     type leafref {

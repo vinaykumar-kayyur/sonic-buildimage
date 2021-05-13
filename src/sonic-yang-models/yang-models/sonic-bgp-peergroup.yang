@@ -8,11 +8,11 @@ module sonic-bgp-peergroup {
     }
 
     import sonic-bgp-common {
-        prefix sbc;
+        prefix bgpcmn;
     }
 
     import sonic-bgp-global {
-        prefix sbgpg;
+        prefix bgpg;
     }
 
     organization
@@ -36,7 +36,7 @@ module sonic-bgp-peergroup {
 
                 leaf vrf_name {
                     type leafref {
-                        path "/sbgpg:sonic-bgp-global/sbgpg:BGP_GLOBALS/sbgpg:BGP_GLOBALS_LIST/sbgpg:vrf_name";
+                        path "/bgpg:sonic-bgp-global/bgpg:BGP_GLOBALS/bgpg:BGP_GLOBALS_LIST/bgpg:vrf_name";
                     }
                     description "Network-instance/VRF name";
                 }
@@ -45,7 +45,7 @@ module sonic-bgp-peergroup {
                     type string;
                     description "Peer group name";
                 }
-                uses sbc:sonic-bgp-cmn;
+                uses bgpcmn:sonic-bgp-cmn;
             }
         }
 
@@ -55,7 +55,7 @@ module sonic-bgp-peergroup {
 
                 leaf vrf_name {
                     type leafref {
-                        path "/sbgpg:sonic-bgp-global/sbgpg:BGP_GLOBALS/sbgpg:BGP_GLOBALS_LIST/sbgpg:vrf_name";
+                        path "/bgpg:sonic-bgp-global/bgpg:BGP_GLOBALS/bgpg:BGP_GLOBALS_LIST/bgpg:vrf_name";
                     }
                     description "Network-instance/VRF name";
                 }
@@ -67,7 +67,7 @@ module sonic-bgp-peergroup {
                     description "Peer group name";
                 }
 
-                uses sbc:sonic-bgp-cmn-af;
+                uses bgpcmn:sonic-bgp-cmn-af;
             }
         }
 
@@ -77,7 +77,7 @@ module sonic-bgp-peergroup {
 
                 leaf vrf_name {
                     type leafref {
-                        path "/sbgpg:sonic-bgp-global/sbgpg:BGP_GLOBALS/sbgpg:BGP_GLOBALS_LIST/sbgpg:vrf_name";
+                        path "/bgpg:sonic-bgp-global/bgpg:BGP_GLOBALS/bgpg:BGP_GLOBALS_LIST/bgpg:vrf_name";
                     }
                     description "Network-instance/VRF name";
                 }

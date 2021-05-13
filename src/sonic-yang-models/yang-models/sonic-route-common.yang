@@ -1,6 +1,6 @@
 module sonic-route-common {
     namespace "http://github.com/Azure/sonic-route-common";
-    prefix srtcmn;
+    prefix rtcmn;
     yang-version 1.1;
 
     import sonic-vrf {
@@ -8,11 +8,7 @@ module sonic-route-common {
     }
 
     import sonic-route-map {
-        prefix srmap;
-    }
-
-    import sonic-types {
-        prefix cmn;
+        prefix rmap;
     }
 
     organization
@@ -63,7 +59,7 @@ module sonic-route-common {
 
                 leaf-list route_map {
                     type leafref {
-                        path "/srmap:sonic-route-map/srmap:ROUTE_MAP_SET/srmap:ROUTE_MAP_SET_LIST/srmap:name";
+                        path "/rmap:sonic-route-map/rmap:ROUTE_MAP_SET/rmap:ROUTE_MAP_SET_LIST/rmap:name";
                     }
                     max-elements 1;
                     description "Router filter to apply while redistributing the routes from another protocol.";
