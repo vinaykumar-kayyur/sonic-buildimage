@@ -101,16 +101,13 @@ class accton_as7926_40xfb_monitor(object):
                     logging.error('GET. unable to open file: %s', str(e))
                     return None
             content = val_file.readline().rstrip()
+            val_file.close()
+
             if content == '':
                 logging.debug('GET. content is NULL. device_path:%s', device_path)
                 return None
-            try:
-		        val_file.close()
-            except BaseException:
-                logging.debug('GET. unable to close file. device_path:%s', device_path)
-                return None
-            return int(content)
 
+            return int(content)
         else:
             print "No such device_path=%s"%device_path
             return 0
@@ -134,12 +131,7 @@ class accton_as7926_40xfb_monitor(object):
             return None
 
         val_file.write(str(int(max_value/1000)))
-
-        try:
-		    val_file.close()
-        except BaseException:
-            logging.debug('GET. unable to close file. device_path:%s', device_path)
-            return None
+        val_file.close()
 
         return True
 
