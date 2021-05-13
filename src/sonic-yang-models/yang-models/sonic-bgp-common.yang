@@ -8,15 +8,15 @@ module sonic-bgp-common {
     }
 
     import sonic-port {
-        prefix prt;
+        prefix port;
     }
 
     import sonic-portchannel {
-        prefix spc;
+        prefix lag;
     }
 
     import sonic-vlan {
-        prefix svlan;
+        prefix vlan;
     }
 
     import sonic-loopback-interface {
@@ -224,13 +224,13 @@ module sonic-bgp-common {
             type union {
                 type inet:ip-address;
                 type leafref {
-                    path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                    path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                 }
                 type leafref {
-                    path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
+                    path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                 }
                 type leafref {
-                    path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                    path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                 }
                 type leafref {
                     path "/lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name";

@@ -12,11 +12,11 @@ module sonic-route-map {
     }
 
     import sonic-port {
-        prefix prt;
+        prefix port;
     }
 
     import sonic-portchannel {
-        prefix spc;
+        prefix lag;
     }
 
     import sonic-routing-policy-sets {
@@ -24,11 +24,11 @@ module sonic-route-map {
     }
 
     import sonic-vlan {
-        prefix svlan;
+        prefix vlan;
     }
 
     import sonic-vrf {
-        prefix svrf;
+        prefix vrf;
     }
 
     import sonic-interface {
@@ -52,13 +52,13 @@ module sonic-route-map {
     typedef route-map-intf {
         type union {
             type leafref {
-                path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
             }
             type leafref {
-                path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
+                path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
             }
             type leafref {
-                path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
             }
         }
     }
@@ -191,7 +191,7 @@ module sonic-route-map {
                             pattern "default";
                         }
                         type leafref {
-                            path "/svrf:sonic-vrf/svrf:VRF/svrf:VRF_LIST/svrf:name";
+                            path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
                         }
                     }
                     description "Match based on source VRF";
@@ -201,13 +201,13 @@ module sonic-route-map {
                     type union {
                         type inet:ip-address;
                         type leafref {
-                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                         }
                         type leafref {
-                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
                         type leafref {
-                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                            path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                         }
                     }
                     description

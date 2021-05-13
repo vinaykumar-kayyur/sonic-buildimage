@@ -1,7 +1,4 @@
 {
-    "VRF_VALID": {
-        "desc": "Configure VRF table."
-    },
     "BGP_GLOBAL_VALID": {
         "desc": "Configure BGP global table."
     },

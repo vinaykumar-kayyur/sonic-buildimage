@@ -1,16 +1,4 @@
 {
-    "VRF_VALID": {
-        "sonic-vrf:sonic-vrf":{
-            "sonic-vrf:VRF": {
-                "VRF_LIST": [
-                {
-                    "name":"Vrf1"
-                }
-                ]
-            }
-        }
-    },
-
     "BGP_GLOBAL_VALID": {
         "sonic-vrf:sonic-vrf":{
             "sonic-vrf:VRF": {

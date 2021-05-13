@@ -4,7 +4,7 @@ module sonic-route-common {
     yang-version 1.1;
 
     import sonic-vrf {
-        prefix svrf;
+        prefix vrf;
     }
 
     import sonic-route-map {
@@ -40,7 +40,7 @@ module sonic-route-common {
                             pattern "default";
                         }
                         type leafref {
-                            path "/svrf:sonic-vrf/svrf:VRF/svrf:VRF_LIST/svrf:name";
+                            path "/vrf:sonic-vrf/vrf:VRF/vrf:VRF_LIST/vrf:name";
                         }
                     }
                     description "VRF name";
