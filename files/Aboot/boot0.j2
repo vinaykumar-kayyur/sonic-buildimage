@@ -615,8 +615,8 @@ write_image_specific_cmdline() {
     # disable deterministic interface naming
     cmdline_add net.ifnames=0
 
-    # disable unified cgroup hierarchy to workaround dockerd limitation
-    cmdline_add systemd.unified_cgroup_hierarchy=0
+    # enable cgroup swap limit capabilities for cgroupv2
+    cmdline_add cgroup_enable=memory swapaccount=1
 
     # verbosity
     cmdline_add quiet

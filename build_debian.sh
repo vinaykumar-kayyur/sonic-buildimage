@@ -31,7 +31,7 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:18.09.8~3-0~debian-$IMAGE_DISTRO
+DOCKER_VERSION=5:20.10.6~3-0~debian-$IMAGE_DISTRO
 LINUX_KERNEL_VERSION=4.19.0-12-2
 
 ## Working directory to prepare the file system
