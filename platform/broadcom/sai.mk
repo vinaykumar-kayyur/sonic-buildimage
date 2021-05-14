@@ -1,4 +1,4 @@
-ifeq ($(ASIC_FAMILY),dnx)
+ifeq ($(CONFIG_ASIC_FAMILY),dnx)
 BRCM_SAI = libsaibcm_dnx_5.0.0.1_amd64.deb
 $(BRCM_SAI)_URL = "https://sonicstorage.blob.core.windows.net/packages/bcmsai/5.0/master/libsaibcm_dnx_5.0.0.1_amd64.deb?sv=2015-04-05&sr=b&sig=iUW4ZSz43oeOSe21%2BFaNTG1phTr6qgAfeeEN2mCXBWU%3D&se=2035-01-17T05%3A15%3A51Z&sp=r"
 BRCM_SAI_DEV = libsaibcm-dev_dnx_5.0.0.1_amd64.deb
