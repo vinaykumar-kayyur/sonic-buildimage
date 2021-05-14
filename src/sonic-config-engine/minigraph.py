@@ -1450,6 +1450,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for port in ports.values():
         port['pfc_asym'] = 'off'
 
+    # make admin status to down if port not parsed from minigraph
+    for port in ports.keys():
+        if 'admin_status' in ports[port] and port not in port_speeds_default:
+            ports[port]['admin_status'] = 'down'
+
     # set physical port default admin status up
     for port in phyport_intfs:
         if port[0] in ports:
