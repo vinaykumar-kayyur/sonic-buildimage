@@ -30,14 +30,6 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	git checkout -f 149c25df84cf5cd0e9addd9346699a9ca8fdddd2
 
 	cp -r ../debian .
-	cp -r ../patches .
-
-	# Apply patch
-	git apply patches/0001-chap-support.patch
-	git apply patches/0002-peap-mschapv2-support.patch
-	git apply patches/0003-nas-ip-address-config.patch
-	cp ../patches/config.sub .
-	cp ../patches/config.guess .
 
 	dpkg-buildpackage -rfakeroot -b -us -uc -nc
 	popd
