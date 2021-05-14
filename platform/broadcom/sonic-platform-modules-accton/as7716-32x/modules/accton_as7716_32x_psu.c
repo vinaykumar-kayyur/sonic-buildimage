@@ -248,20 +248,23 @@ static int as7716_32x_psu_read_block(struct i2c_client *client, u8 command, u8 *
 enum psu_type {
     PSU_TYPE_AC_110V,
     PSU_TYPE_DC_48V,
-    PSU_TYPE_DC_12V
+    PSU_TYPE_DC_12V,
+    PSU_TYPE_AC_ACBEL_FSF019
 };
 
 struct model_name_info {
     enum psu_type type;
     u8 offset;
     u8 length;
+    u8 chk_length;
     char* model_name;
 };
 
 struct model_name_info models[] = {
-{PSU_TYPE_AC_110V, 0x20, 8,  "YM-2651Y"},
-{PSU_TYPE_DC_48V,  0x20, 8,  "YM-2651V"},
-{PSU_TYPE_DC_12V,  0x00, 11, "PSU-12V-750"},
+{PSU_TYPE_AC_110V, 0x20, 8, 8,  "YM-2651Y"},
+{PSU_TYPE_DC_48V,  0x20, 8, 8,  "YM-2651V"},
+{PSU_TYPE_DC_12V,  0x00, 11, 11, "PSU-12V-750"},
+{PSU_TYPE_AC_ACBEL_FSF019, 0x15, 10, 7, "FSF019-"}
 };
 
 static int as7716_32x_psu_model_name_get(struct device *dev)
@@ -287,7 +290,7 @@ static int as7716_32x_psu_model_name_get(struct device *dev)
 
         /* Determine if the model name is known, if not, read next index
          */
-        if (strncmp(data->model_name, models[i].model_name, models[i].length) == 0) {
+        if (strncmp(data->model_name, models[i].model_name, models[i].chk_length) == 0) {
             return 0;
         }
         else {
