@@ -85,7 +85,7 @@ class Chassis(ChassisBase):
         self.platform_name = device_info.get_platform()
 
         # Initialize DMI data
-        self.dmi_data = self._parse_dmi(DMI_FILE)
+        self.dmi_data = None
         
         # move the initialization of each components to their dedicated initializer
         # which will be called from platform
@@ -268,6 +268,9 @@ class Chassis(ChassisBase):
         Returns:
             string: Revision value of device
         """
+        if self.dmi_data is None:
+            self.dmi_data = self._parse_dmi(DMI_FILE)
+
         return self.dmi_data.get(DMI_VERSION, "N/A")
         
     ##############################################
