@@ -23,7 +23,9 @@
             }
         },
         "PORTCHANNEL_INTERFACE": {
-                "PortChannel0003": {},
+                "PortChannel0003": {
+                    "nat_zone": "1"
+                },
                 "PortChannel0004": {"vrf_name": "Vrf_blue"}
         },
         "PORTCHANNEL_MEMBER": {
@@ -703,7 +705,6 @@
         },
         "NAT_BINDINGS": {
             "bind1": {
-                "access_list": "",
                 "nat_pool": "pool1",
                 "nat_type": "snat",
                 "twice_nat_id": "1"
