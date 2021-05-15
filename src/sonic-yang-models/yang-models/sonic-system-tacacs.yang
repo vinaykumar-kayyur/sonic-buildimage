@@ -8,27 +8,27 @@ module sonic-system-tacacs {
     }
 
     import sonic-port {
-        prefix prt;
+        prefix port;
     }
 
     import sonic-portchannel {
-        prefix spc;
+        prefix lag;
     }
 
     import sonic-vlan {
-        prefix svlan;
+        prefix vlan;
     }
 
     import sonic-loopback-interface {
-        prefix lo;
+        prefix loopback;
     }
 
     import sonic-interface {
-        prefix sintf;
+        prefix interface;
     }
 
 //    import sonic-mgmt-port {
-//        prefix smt;
+//        prefix mgmt-port;
 //    }
 
     revision 2021-04-15 {
@@ -142,19 +142,19 @@ module sonic-system-tacacs {
                 leaf src_intf {
                     type union {
                         type leafref {
-                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                         }
                         type leafref {
-                            path "/spc:sonic-portchannel/spc:PORTCHANNEL/spc:PORTCHANNEL_LIST/spc:name";
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
                         type leafref {
-                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                            path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                         }
                         type leafref {
-                            path "/lo:sonic-loopback-interface/lo:LOOPBACK_INTERFACE/lo:LOOPBACK_INTERFACE_LIST/lo:name";
+                            path "/loopback:sonic-loopback-interface/loopback:LOOPBACK_INTERFACE/loopback:LOOPBACK_INTERFACE_LIST/loopback:name";
                         }
                         //type leafref {
-                        // path "/smt:sonic-mgmt-port/smt:MGMT_PORT/smt:MGMT_PORT_LIST/smt:name";
+                        // path "/mgmt-port:sonic-mgmt-port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
                         //}
                     }
                     description "Source IP to use from source interface for TACACS+ server communication.";

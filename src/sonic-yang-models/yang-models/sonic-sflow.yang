@@ -12,14 +12,17 @@ module sonic-sflow{
         prefix stypes;
     }
     import sonic-port {
-        prefix prt;
+        prefix port;
     }
     import sonic-vlan {
-        prefix svlan;
+        prefix vlan;
+    }
+    import sonic-portchannel {
+        prefix lag;
     }
     /*
     import sonic-mgmt-port {
-        prefix smt;
+        prefix mgmt-port;
     }
     */
 
@@ -62,7 +65,7 @@ module sonic-sflow{
 
                 leaf port {
                     type leafref {
-                        path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                        path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
                     }
                 }
 
@@ -104,14 +107,17 @@ module sonic-sflow{
                 leaf agent_id {
                     type union {
                         type leafref {
-                            path "/prt:sonic-port/prt:PORT/prt:PORT_LIST/prt:name";
+                            path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                        }
+                        type leafref {
+                            path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
                         }
                         /*
                         type leafref {
-                            path "/smt:sonic-mgmt-port/smt:MGMT_PORT/smt:MGMT_PORT_LIST/smt:name";
+                            path "/mgmt-port:sonic-mgmt-port/mgmt-port:MGMT_PORT/mgmt-port:MGMT_PORT_LIST/mgmt-port:name";
                         }*/
                         type leafref {
-                            path "/svlan:sonic-vlan/svlan:VLAN/svlan:VLAN_LIST/svlan:name";
+                            path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
                         }
                     }
                     description "Interface name";
