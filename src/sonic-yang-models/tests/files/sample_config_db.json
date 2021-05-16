@@ -706,6 +706,7 @@
         "NAT_BINDINGS": {
             "bind1": {
                 "nat_pool": "pool1",
+                "access_list": "V4-ACL-TABLE",
                 "nat_type": "snat",
                 "twice_nat_id": "1"
             }

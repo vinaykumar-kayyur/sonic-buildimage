@@ -421,7 +421,6 @@
                 "PORT_LIST": [
                     {
                         "admin_status": "up",
-                        "alias": "eth0",
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "lanes": "1",
