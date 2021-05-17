@@ -66,6 +66,7 @@ struct ym2651y_data {
     u16  fan_duty_cycle[2];  /* Register value */
     u8   fan_dir[4];     /* Register value */
     u8   pmbus_revision; /* Register value */
+    u8   serial_num[20]; /* Register value */
     u8   mfr_id[10];     /* Register value */
     u8   mfr_model[10];  /* Register value */
     u8   mfr_revsion[3]; /* Register value */
@@ -113,6 +114,7 @@ enum ym2651y_sysfs_attributes {
     PSU_FAN1_SPEED,
     PSU_FAN1_DUTY_CYCLE,
     PSU_PMBUS_REVISION,
+    PSU_SERIAL_NUM,
     PSU_MFR_ID,
     PSU_MFR_MODEL,
     PSU_MFR_REVISION,
@@ -141,6 +143,7 @@ static SENSOR_DEVICE_ATTR(psu_fan1_speed_rpm, S_IRUGO, show_linear, NULL, PSU_FA
 static SENSOR_DEVICE_ATTR(psu_fan1_duty_cycle_percentage, S_IWUSR | S_IRUGO, show_linear, set_fan_duty_cycle, PSU_FAN1_DUTY_CYCLE);
 static SENSOR_DEVICE_ATTR(psu_fan_dir,     S_IRUGO, show_ascii,     NULL, PSU_FAN_DIRECTION);
 static SENSOR_DEVICE_ATTR(psu_pmbus_revision, S_IRUGO, show_byte,   NULL, PSU_PMBUS_REVISION);
+static SENSOR_DEVICE_ATTR(psu_serial_num,         S_IRUGO, show_ascii,  NULL, PSU_SERIAL_NUM);
 static SENSOR_DEVICE_ATTR(psu_mfr_id,         S_IRUGO, show_ascii,  NULL, PSU_MFR_ID);
 static SENSOR_DEVICE_ATTR(psu_mfr_model,      S_IRUGO, show_ascii,  NULL, PSU_MFR_MODEL);
 static SENSOR_DEVICE_ATTR(psu_mfr_revision,    S_IRUGO, show_ascii, NULL, PSU_MFR_REVISION);
@@ -175,6 +178,7 @@ static struct attribute *ym2651y_attributes[] = {
     &sensor_dev_attr_psu_fan1_duty_cycle_percentage.dev_attr.attr,
     &sensor_dev_attr_psu_fan_dir.dev_attr.attr,
     &sensor_dev_attr_psu_pmbus_revision.dev_attr.attr,
+    &sensor_dev_attr_psu_serial_num.dev_attr.attr,
     &sensor_dev_attr_psu_mfr_id.dev_attr.attr,
     &sensor_dev_attr_psu_mfr_model.dev_attr.attr,
     &sensor_dev_attr_psu_mfr_revision.dev_attr.attr,
@@ -361,6 +365,9 @@ static ssize_t show_ascii(struct device *dev, struct device_attribute *da,
             data->fan_dir[3]='\0';
         }
         ptr = data->fan_dir;
+        break;
+    case PSU_SERIAL_NUM: /* psu_serial_num */
+        ptr = data->serial_num;
         break;
     case PSU_MFR_ID: /* psu_mfr_id */
         ptr = data->mfr_id;
@@ -630,6 +637,15 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
 
         strncpy(data->fan_dir, fan_dir+1, ARRAY_SIZE(data->fan_dir)-1);
         data->fan_dir[ARRAY_SIZE(data->fan_dir)-1] = '\0';
+
+        /* Read serial_num */
+        command = 0x9e;
+        status = ym2651y_read_block(client, command, data->serial_num,
+                                    ARRAY_SIZE(data->serial_num)-1);
+        data->serial_num[ARRAY_SIZE(data->serial_num)-1] = '\0';
+
+        if (status < 0)
+            dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
 
         /* Read mfr_id */
         command = 0x99;
