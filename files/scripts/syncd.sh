@@ -28,12 +28,9 @@ function startplatform() {
         debug "Firmware update procedure ended"
     fi
 
-    # This is a platform agnostic approach to check if 'platform'
-    # entry exists in the DEVICE_METADATA table. If it exits then
-    # source the script to perform platform specific checks
-
-    PLATFORM_DIR=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
-    F="/usr/share/sonic/device/$PLATFORM_DIR/scripts/syncd.sh"
+    # Run platform specific checks in case one exists
+    # i.e. Source the file under sonic_asic_paltform path
+    F="/usr/share/sonic/device/$sonic_asic_platform/swss.sh"
     [ -e $F ] && source $F start $DEV
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
