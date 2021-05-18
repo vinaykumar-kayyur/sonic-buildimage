@@ -512,12 +512,12 @@ class ComponentSSD(Component):
         try:
             if self.get_firmware_update_notification(image_path) is None:
                 # No power cycle required
-                supported_boot += ['warm', 'fast']
+                supported_boot += ['warm', 'fast', 'none', 'any']
         except RuntimeError:
             # Unknown error from firmware probe
             return -3
 
-        if boot_action in default_supported_boot:
+        if boot_action in supported_boot:
             if self.install_firmware(image_path):
                 # Successful update
                 return 2 
