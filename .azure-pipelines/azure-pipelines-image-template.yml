@@ -26,7 +26,6 @@ jobs:
     jobVariables: ${{ parameters.jobVariables }}
     preSteps:
       - template: cleanup.yml
-      - ${{ parameters. preSteps }}
       - script: |
           if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox)$"; then
             CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(CACHE_MODE) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(PLATFORM_AZP)"
@@ -46,13 +45,14 @@ jobs:
           sudo bash -c "echo 1 > /proc/sys/vm/compact_memory"
           ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$(PLATFORM_AZP) PLATFORM_ARCH=$(PLATFORM_ARCH) configure
         displayName: 'Make configure'
+      - ${{ parameters.preSteps }}
     postSteps:
+      - ${{ parameters.postSteps }}
       - script: cp target -r $(Build.ArtifactStagingDirectory)/
         displayName: Copy Artifacts
       - publish:  $(Build.ArtifactStagingDirectory)
         artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
         displayName: "Archive sonic image"
-      - ${{ parameters.postSteps }}
       - template: cleanup.yml
     jobGroups: ${{ parameters.jobGroups }}
     buildSteps: ${{ parameters.buildSteps }}

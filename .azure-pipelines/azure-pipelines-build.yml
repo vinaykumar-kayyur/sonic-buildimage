@@ -101,10 +101,7 @@ jobs:
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
           else
-            if [ $(dbg_image) == yes ]; then
-              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin && \
-                mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
-            fi
+            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
             if [ $(swi_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
             fi
@@ -114,6 +111,11 @@ jobs:
             if [ $(sync_rpc_image) == yes ]; then
               make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
             fi
-            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
+            if [ $(dbg_image) == yes ]; then
+              mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME).bin-tem
+              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin && \
+                mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
+              mv target/sonic-$(GROUP_NAME).bin-tem target/sonic-$(GROUP_NAME).bin
+            fi
           fi
         displayName: "Build sonic image"
