@@ -19,22 +19,22 @@ const char* CONFIG_FILE = "/etc/sonic/generated_services.conf";
 const char* MACHINE_CONF_FILE = "/host/machine.conf";
 const char* ASIC_CONF_FORMAT = "/usr/share/sonic/device/%s/asic.conf";
 
-const char* g_unit_file_prefix;
+const char* g_unit_file_prefix = NULL;
 const char* get_unit_file_prefix() {
     return (g_unit_file_prefix) ? g_unit_file_prefix : UNIT_FILE_PREFIX;
 }
 
-const char* g_config_file;
+const char* g_config_file = NULL;
 const char* get_config_file() {
     return (g_config_file) ? g_config_file : CONFIG_FILE;
 }
 
-const char* g_machine_config_file;
+const char* g_machine_config_file = NULL;
 const char* get_machine_config_file() {
     return (g_machine_config_file) ? g_machine_config_file : MACHINE_CONF_FILE;
 }
 
-const char* g_asic_conf_format;
+const char* g_asic_conf_format = NULL;
 const char* get_asic_conf_format() {
     return (g_asic_conf_format) ? g_asic_conf_format : ASIC_CONF_FORMAT;
 }

@@ -65,7 +65,7 @@ const std::vector<std::string> generated_services = {
 
 static std::mutex g_ssg_test_mutex;
 
-class SystemdSonicGeneratorFixture: public testing::Test {
+class SystemdSonicGeneratorFixture : public testing::Test {
   protected:
     /* Save global variables before running tests */
     virtual void SetUp() {
@@ -99,7 +99,7 @@ class SystemdSonicGeneratorFixture: public testing::Test {
  * class SsgFunctionTest
  * Implements functions to execute functional level tests.
  */
-class SsgFunctionTest: public SystemdSonicGeneratorFixture {
+class SsgFunctionTest : public SystemdSonicGeneratorFixture {
   protected:
     /* This function generates the generated_services.conf file */
     void generate_generated_services_conf() {
@@ -167,7 +167,7 @@ class SsgFunctionTest: public SystemdSonicGeneratorFixture {
  * class SsgMainTest
  * Implements functions to test ssg_main routine.
  */
-class SsgMainTest: public SsgFunctionTest {
+class SsgMainTest : public SsgFunctionTest {
   protected:
     /* Retrun true if string belongs to a multi instance service */
     bool is_multi_instance(const std::string str) {
