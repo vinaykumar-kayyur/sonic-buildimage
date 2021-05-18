@@ -1,4 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+"""
+restart_service
+
+This script is part of the feature which will restart the container if memory
+usage of it is larger than the threshold value.
+
+This script is intended to be run by Monit and is used to restart the specified
+container if the memory usage of it is larger than the threshold value for X
+times within Y cycles/minutes.
+
+The following is an example in Monit configuration file to show how Monit will run
+this script:
+
+check program container_memory_<container_name> with path "/usr/bin/memory_checker <container_name> <threshold_value>"
+    if status == 3 for X times within Y cycles exec "/usr/bin/restart_service <container_name>"
+"""
 
 import argparse
 import sys
