@@ -30,7 +30,7 @@ function startplatform() {
 
     # Run platform specific checks in case one exists
     # i.e. Source the file under sonic_asic_paltform path
-    F="/usr/share/sonic/device/$sonic_asic_platform/swss.sh"
+    F="/usr/share/sonic/device/$sonic_asic_platform/syncd.sh"
     [ -e $F ] && source $F start $DEV
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
