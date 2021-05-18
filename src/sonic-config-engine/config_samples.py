@@ -20,17 +20,12 @@ else:
 #    'l3': generate_l3_config
 
 def generate_l1_config(data):
-    data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
-    data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
     for port in natsorted(data['PORT']):
         data['PORT'][port]['admin_status'] = 'up'
         data['PORT'][port]['mtu'] = '9100'
     return data;
 
 def generate_l3_config(data):
-    data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
-    data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
-    data['DEVICE_METADATA']['localhost']['bgp_asn'] = '65100'
     data['LOOPBACK_INTERFACE'] = {"Loopback0": {},
                                   "Loopback0|10.1.0.1/32": {}}
     data['BGP_NEIGHBOR'] = {}
