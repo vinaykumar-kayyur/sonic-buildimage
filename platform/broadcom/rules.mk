@@ -21,6 +21,9 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/raw-image.mk
 include $(PLATFORM_PATH)/one-aboot.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
+include $(PLATFORM_PATH)/syncd-brcm-dnx.mk
+include $(PLATFORM_PATH)/docker-syncd-brcm-dnx.mk
+include $(PLATFORM_PATH)/docker-syncd-brcm-dnx-rpc.mk
 
 BCMCMD = bcmcmd
 $(BCMCMD)_URL = "https://sonicstorage.blob.core.windows.net/packages/20190307/bcmcmd?sv=2015-04-05&sr=b&sig=sUdbU7oVbh5exbXXHVL5TDFBTWDDBASHeJ8Cp0B0TIc%3D&se=2038-05-06T22%3A34%3A19Z&sp=r"
@@ -30,10 +33,11 @@ $(DSSERVE)_URL = "https://sonicstorage.blob.core.windows.net/packages/20190307/d
 
 SONIC_ONLINE_FILES += $(BCMCMD) $(DSSERVE)
 
-SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT_IMAGE) $(SONIC_ONE_DNX_IMAGE) $(SONIC_ONE_DNX_ABOOT_IMAGE) \
+SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_ONE_ABOOT_IMAGE) \
              $(DOCKER_FPM)
 
 # Inject brcm sai into syncd
+$(SYNCD)_AFTER = $(BRCM_OPENNSL_KERNEL)
 $(SYNCD)_DEPENDS += $(BRCM_SAI) $(BRCM_SAI_DEV)
 $(SYNCD)_UNINSTALLS += $(BRCM_SAI_DEV)
 
@@ -41,5 +45,17 @@ ifeq ($(ENABLE_SYNCD_RPC),y)
 $(SYNCD)_DEPENDS += $(LIBSAITHRIFT_DEV)
 endif
 
+# Runtime dependency on brcm DNX sai is set only for syncd-dnx
+$(SYNCD_DNX)_RDEPENDS += $(BRCM_DNX_SAI)
+
+# Inject brcm sai into syncd
+$(SYNCD_DNX)_AFTER = $(BRCM_DNX_OPENNSL_KERNEL)
+$(SYNCD_DNX)_DEPENDS += $(BRCM_DNX_SAI) $(BRCM_SAI_DEV)
+$(SYNCD_DNX)_UNINSTALLS += $(BRCM_SAI_DEV)
+
+ifeq ($(ENABLE_SYNCD_RPC),y)
+$(SYNCD_DNX)_DEPENDS += $(LIBSAITHRIFT_DEV)
+endif
+
 # Runtime dependency on brcm sai is set only for syncd
-$(SYNCD)_RDEPENDS += $(BRCM_SAI)
+$(SYNCD_DNX)_RDEPENDS += $(BRCM_DNX_SAI)

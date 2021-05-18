@@ -1,0 +1,15 @@
+#DPKG FRK
+SPATH       := $($(SYNCD_DNX)_SRC_PATH)
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) platform/broadcom/syncd-brcm-dnx.mk platform/broadcom/syncd-brcm-dnx.dep
+DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
+
+SMDEP_PATHS := $(SPATH) $(SPATH)/SAI $(SPATH)/SAI/bm/behavioral-model $(SPATH)/SAI/test/ptf $(SPATH)/SAI/test/saithrift/ctypesgen
+$(foreach path, $(SMDEP_PATHS), $(eval $(path) :=$(filter-out $(SMDEP_PATHS),$(addprefix $(path)/, \
+					$(shell cd $(path)  && git ls-files | grep -v " ")))))
+
+
+$(SYNCD_DNX)_CACHE_MODE  := GIT_CONTENT_SHA
+$(SYNCD_DNX)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST)
+$(SYNCD_DNX)_DEP_FILES   := $(DEP_FILES)
+$(SYNCD_DNX)_SMDEP_FILES := $(foreach path, $(SMDEP_PATHS), $($(path)))
+$(SYNCD_DNX)_SMDEP_PATHS := $(SMDEP_PATHS)
