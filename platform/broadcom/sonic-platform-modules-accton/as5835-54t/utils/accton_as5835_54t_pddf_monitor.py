@@ -181,10 +181,9 @@ class accton_as5835_54t_monitor(object):
         return True
 
 def handler(signum, frame):
-        fan = FanUtil()
-        logging.debug('INFO:Cause signal %d, set fan speed max.', signum)
-        fan.set_fan_duty_cycle(DUTY_MAX)
-        sys.exit(0)
+    logging.debug('INFO:Cause signal %d, set fan speed max.', signum)
+    platform_chassis.get_fan(0).set_speed(DUTY_MAX)
+    sys.exit(0)
 
 def main(argv):
     global test_temp
