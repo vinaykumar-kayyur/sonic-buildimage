@@ -8,7 +8,7 @@ port_init_speed=53125
 
 appl_enable_intr_init=0
 bcm_linkscan_interval=0
-bcm_stat_interval=0
+bcm_stat_interval=1000000
 bist_enable=0
 
 lane_to_serdes_map_fabric_lane0=rx0:tx2
