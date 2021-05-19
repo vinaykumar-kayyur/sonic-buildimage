@@ -207,7 +207,7 @@ class Sfp(SfpBase):
         self.index = sfp_index
         self.port_num = self.index + 1
 
-        cpld_idx = 0 if self.port_num >= 30 else 1
+        cpld_idx = 0 if self.port_num > 30 else 1
         bus = CPLD_ADDR_MAPPING[cpld_idx]["bus"]
         addr = CPLD_ADDR_MAPPING[cpld_idx]["addr"]
         self.cpld_path = CPLD_I2C_PATH.format(bus, addr)
