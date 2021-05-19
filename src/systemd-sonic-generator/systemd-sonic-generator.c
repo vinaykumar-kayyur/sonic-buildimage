@@ -210,8 +210,7 @@ static void replace_multi_inst_dep(char *src) {
                 } else {
                     service_name = strdup(word);
                     service_name = strtok_r(service_name, ".", &save_ptr2);
-                    type = strtok_r(NULL, "", &save_ptr2);
-                    type = strtok(type, "\n");
+                    type = strtok_r(NULL, "\n", &save_ptr2);
                     if (is_multi_instance_service(word)) {
                         for(i = 0; i < num_asics; i++) {
                             snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
