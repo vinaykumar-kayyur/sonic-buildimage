@@ -133,13 +133,14 @@ class Psu(PsuBase):
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
         status=self.get_status()
-        if not status:
-            return  self.STATUS_LED_COLOR_RED
+        if status is None:
+            return  self.STATUS_LED_COLOR_OFF
         
-        if status==1:
-            return self.STATUS_LED_COLOR_GREEN
-        else:
-            return False
+        return {
+            1: self.STATUS_LED_COLOR_GREEN,
+            0: self.STATUS_LED_COLOR_RED            
+        }.get(status, self.STATUS_LED_COLOR_OFF)
+
 
     def get_temperature(self):
         """
