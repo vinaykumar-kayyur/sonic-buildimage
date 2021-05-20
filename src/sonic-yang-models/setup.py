@@ -53,8 +53,6 @@ setup(
                          './yang-models/sonic-port.yang',
                          './yang-models/sonic-portchannel.yang',
                          './yang-models/sonic-sflow.yang',
-                         './yang-models/sonic-system-aaa.yang',
-                         './yang-models/sonic-system-tacacs.yang',
                          './yang-models/sonic-types.yang',
                          './yang-models/sonic-versions.yang',
                          './yang-models/sonic-vlan.yang',
