@@ -44,16 +44,11 @@ PSU_HWMON_I2C_MAPPING = {
 }
 
 def log_os_system(cmd):
-    #logging.info('Run :'+cmd)
-    status = 1
     output = ""
     status, output = subprocess.getstatusoutput(cmd)
     if status:
         logging.info('Failed :'+cmd)
     return  status, output
-
-
-
 
 class Psu(PsuBase):
     """Platform-specific Psu class"""

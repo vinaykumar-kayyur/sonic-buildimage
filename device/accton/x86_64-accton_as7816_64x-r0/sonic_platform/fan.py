@@ -14,8 +14,6 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-PSU_FAN_MAX_RPM = 26688
-
 CPLD_I2C_PATH = "/sys/bus/i2c/devices/17-0068/fan"
 PSU_HWMON_I2C_PATH ="/sys/bus/i2c/devices/{}-00{}/"
 PSU_I2C_MAPPING = {
@@ -30,7 +28,7 @@ PSU_I2C_MAPPING = {
 }
 
 FAN_NAME_LIST = ["FAN-1F", "FAN-1R", "FAN-2F", "FAN-2R",
-                 "FAN-3F", "FAN-3R", "FAN-4F", "FAN-4R", "FAN-5F", "FAN-5R"]
+                 "FAN-3F", "FAN-3R", "FAN-4F", "FAN-4R"]
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
