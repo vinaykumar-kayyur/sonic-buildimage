@@ -1043,7 +1043,7 @@ class Sfp(SfpBase):
                 return False
 
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_POWEROVERRIDE_OFFSET,
+                QSFP_CONTROL_OFFSET,
                 QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(
@@ -1069,7 +1069,7 @@ class Sfp(SfpBase):
                 return False
 
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_POWEROVERRIDE_OFFSET,
+                QSFP_CONTROL_OFFSET,
                 QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(
