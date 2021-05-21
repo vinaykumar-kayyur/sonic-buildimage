@@ -18,7 +18,6 @@ try:
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
-    #from sonic_platform_base.sonic_sfp.sff8472 import sffbase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from .helper import APIHelper
 except ImportError as e:
@@ -188,7 +187,7 @@ class Sfp(SfpBase):
         except Exception:
             return False
         return True
-
+    
     def __is_host(self):
         return os.system(self.HOST_CHK_CMD) == 0
 
@@ -827,7 +826,7 @@ class Sfp(SfpBase):
                 return False
     
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_POWEROVERRIDE_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
+                QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_set = (
@@ -852,7 +851,7 @@ class Sfp(SfpBase):
                 return False
     
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_POWEROVERRIDE_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
+                QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_override = (
