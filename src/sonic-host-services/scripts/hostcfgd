@@ -91,8 +91,8 @@ class Feature(object):
         self.has_per_asic_scope = ast.literal_eval(feature_cfg.get('has_per_asic_scope', 'False'))
 
     def _get_target_state(self, state_configuration, device_config):
-        """ Returns the target state for the feature by rendering the state field as J2 template. 
-        
+        """ Returns the target state for the feature by rendering the state field as J2 template.
+
         Args:
             state_configuration (str): State configuration from CONFIG_DB
             deviec_config (dict): DEVICE_METADATA section of CONFIG_DB
@@ -123,6 +123,11 @@ class FeatureHandler(object):
         self.is_multi_npu = device_info.is_multi_npu()
 
     def handle(self, feature_name, feature_cfg):
+        if not feature_cfg:
+            self._cached_config.pop(feature_name)
+            syslog.syslog(syslog.LOG_INFO, "Deregistering feature {}".format(feature_name))
+            return
+
         feature = Feature(feature_name, feature_cfg, self._device_config)
         self._cached_config.setdefault(feature_name, Feature(feature_name, {}))
 
@@ -137,8 +142,10 @@ class FeatureHandler(object):
 
         # Enable/disable the container service if the feature state was changed from its previous state.
         if self._cached_config[feature_name].state != feature.state:
-            self.update_feature_state(feature)
-            self._cached_config[feature_name].state = feature.state
+            if self.update_feature_state(feature):
+                self._cached_config[feature_name].state = feature.state
+            else:
+                self.resync_feature_state(self._cached_config[feature_name])
 
     def update_all_features_config(self):
         feature_table = self._config_db.get_table('FEATURE')
@@ -157,25 +164,43 @@ class FeatureHandler(object):
 
     def update_feature_state(self, feature):
         cached_feature = self._cached_config[feature.name]
+        enable = False
+        disable = False
 
-        if self.is_invariant_feature_state(cached_feature.state):
-            if cached_feature.state != feature.state:
-                syslog.syslog(syslog.LOG_INFO, "Feature {} service is {}".format(feature.name, feature.state))
-                self.resync_feature_state(cached_feature)
-            if feature.state == 'always_disabled':
-                self.disable_feature(feature)
-                syslog.syslog(syslog.LOG_INFO, "Feature {} is stopped and disabled".format(feature.name))
-            return
-
-        if feature.state == "enabled":
-            self.enable_feature(feature)
-            syslog.syslog(syslog.LOG_INFO, "Feature {} is enabled and started".format(feature.name))
-        elif feature.state == "disabled":
-            self.disable_feature(feature)
-            syslog.syslog(syslog.LOG_INFO, "Feature {} is stopped and disabled".format(feature.name))
+        # Allowed transitions:
+        #  None           -> always_enabled
+        #                 -> always_disabled
+        #                 -> enabled
+        #                 -> disabled
+        #  always_enabled -> always_disabled
+        #  enabled        -> disabled
+        #  disabled       -> enabled
+        if cached_feature.state is None:
+            enable = feature.state in ("always_enabled", "enabled")
+            disable = feature.state in ("always_disabled", "disabled")
+        elif cached_feature.state == ("always_enabled", "always_disabled"):
+            disable = feature.state == "always_disabled"
+        elif cached_feature.state in ("enabled", "disabled"):
+            enable = feature.state == "enabled"
+            disable = feature.state == "disabled"
         else:
+            syslog.syslog(syslog.LOG_INFO, "Feature {} service is {}".format(feature.name, cached_feature.state))
+            return False
+
+        if not enable and not disable:
             syslog.syslog(syslog.LOG_ERR, "Unexpected state value '{}' for feature {}"
                           .format(feature.state, feature.name))
+            return False
+
+        if enable:
+            self.enable_feature(feature)
+            syslog.syslog(syslog.LOG_INFO, "Feature {} is enabled and started".format(feature.name))
+
+        if disable:
+            self.disable_feature(feature)
+            syslog.syslog(syslog.LOG_INFO, "Feature {} is stopped and disabled".format(feature.name))
+
+        return True
 
     def update_feature_auto_restart(self, feature):
         restart_config = "always" if feature.auto_restart == "enabled" else "no"
@@ -196,10 +221,10 @@ class FeatureHandler(object):
             return
 
     def get_feature_attribute(self, feature):
-        # Create feature name suffix depending feature is running in host or namespace or in both 
+        # Create feature name suffix depending feature is running in host or namespace or in both
         feature_names = (
             ([feature.name] if feature.has_global_scope or not self.is_multi_npu else []) +
-            ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus()) 
+            ([(feature.name + '@' + str(asic_inst)) for asic_inst in range(device_info.get_num_npus())
                 if feature.has_per_asic_scope and self.is_multi_npu])
         )
 
@@ -210,9 +235,6 @@ class FeatureHandler(object):
         feature_suffixes = ["service"] + (["timer"] if feature.has_timer else [])
 
         return feature_names, feature_suffixes
-
-    def is_invariant_feature_state(self, state):
-        return state in ('always_enabled', 'always_disabled')
 
     def enable_feature(self, feature):
         cmds = []
@@ -990,4 +1012,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
