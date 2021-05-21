@@ -867,6 +867,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $$(addsuffix -install,$$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_DEPENDS))) \
         $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_INSTALLS)) \
         $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
+        $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_LAZY_BUILD_INSTALLS)) \
         $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
                 $(SONIC_DEVICE_DATA) \
@@ -932,10 +933,12 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_pfcwd_on_start="$(ENABLE_PFCWD_ON_START)"
 	export installer_debs="$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$($*_INSTALLS))"
 	export lazy_installer_debs="$(foreach deb, $($*_LAZY_INSTALLS),$(foreach device, $($(deb)_PLATFORM),$(addprefix $(device)@, $(IMAGE_DISTRO_DEBS_PATH)/$(deb))))"
+	export lazy_build_installer_debs="$(foreach deb, $($*_LAZY_BUILD_INSTALLS), $(addprefix $($(deb)_MACHINE)|,$(deb)))"
 	export installer_images="$(foreach docker, $($*_DOCKERS),\
 				$(addprefix $($(docker)_PACKAGE_NAME)|,\
 					$(addprefix $($(docker)_PATH)|,\
-						$(addprefix $(TARGET_PATH)/,$(addsuffix :$($(docker)_VERSION),$(docker))))))"
+					$(addprefix $($(docker)_MACHINE)|,\
+						$(addprefix $(TARGET_PATH)/,$(addsuffix :$($(docker)_VERSION),$(docker)))))))"
 	export sonic_py_common_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2))"
 	export sonic_py_common_py3_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3))"
 	export config_engine_py2_wheel_path="$(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_CONFIG_ENGINE_PY2))"
@@ -1057,6 +1060,35 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	CA_CERT="$(CA_CERT)" \
 	TARGET_PATH="$(TARGET_PATH)" \
 		./build_image.sh $(LOG)
+
+	$(if $($*_DEPENDENT_MACHINE),
+		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
+		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
+		USERNAME="$(USERNAME)" \
+		PASSWORD="$(PASSWORD)" \
+		IMAGE_TYPE=$($*_IMAGE_TYPE) \
+		TARGET_DEPENDENT_MACHINE=$($*_DEPENDENT_MACHINE) \
+		TARGET_PATH=$(TARGET_PATH) \
+		ASIC_FAMILY="$(ASIC_FAMILY)" \
+		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
+		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
+		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+		MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
+			./build_debian.sh $(LOG)
+
+		USERNAME="$(USERNAME)" \
+		PASSWORD="$(PASSWORD)" \
+		TARGET_MACHINE=$($*_MACHINE) \
+		TARGET_DEPENDENT_MACHINE=$($*_DEPENDENT_MACHINE) \
+		IMAGE_TYPE=$($*_IMAGE_TYPE) \
+		SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
+		SIGNING_KEY="$(SIGNING_KEY)" \
+		ASIC_FAMILY="$(ASIC_FAMILY)" \
+		SIGNING_CERT="$(SIGNING_CERT)" \
+		CA_CERT="$(CA_CERT)" \
+		TARGET_PATH="$(TARGET_PATH)" \
+			./build_image.sh $(LOG)
+	)
 
 	$(foreach docker, $($*_DOCKERS), \
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
