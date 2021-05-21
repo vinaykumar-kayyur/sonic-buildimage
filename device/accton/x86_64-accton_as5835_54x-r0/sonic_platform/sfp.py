@@ -730,7 +730,8 @@ class Sfp(SfpBase):
         if self.port_num < 49:
             cpld_i = self.__get_cpld_num(self.port_num)
             cpld_path = self._cpld_mapping[cpld_i]        
-            rx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_rx_los_', self.port_num)           
+            rx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_rx_los_', self.port_num)
+
             rx_los=self._api_helper.read_txt_file(rx_path)
             if rx_los is None:
                 return False
@@ -765,7 +766,8 @@ class Sfp(SfpBase):
         if self.port_num < 49:
             cpld_i = self.__get_cpld_num(self.port_num)
             cpld_path = self._cpld_mapping[cpld_i]        
-            tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_fault_', self.port_num)            
+            tx_path = "{}{}{}{}".format(CPLD_I2C_PATH, cpld_path, '/module_tx_fault_', self.port_num)
+
             tx_fault=self._api_helper.read_txt_file(tx_path)
             if tx_fault is None:
                 return False
@@ -888,7 +890,7 @@ class Sfp(SfpBase):
                 return False
     
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_POWEROVERRIDE_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
+                QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_set = (
@@ -913,7 +915,7 @@ class Sfp(SfpBase):
                 return False
     
             dom_control_raw = self.__read_eeprom_specific_bytes(
-                QSFP_POWEROVERRIDE_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
+                QSFP_CONTROL_OFFSET, QSFP_CONTROL_WIDTH) if self.get_presence() else None
             if dom_control_raw is not None:
                 dom_control_data = sfpd_obj.parse_control_bytes(dom_control_raw, 0)
                 power_override = (
