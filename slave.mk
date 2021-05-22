@@ -1055,7 +1055,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		./build_image.sh $(LOG)
 
         # Build an additional image for the DEPENDENT_MACHINE defined.
-        $(foreach dep_machine, $($*_DEPENDENT_MACHINE),\	
+	$(foreach dep_machine, $($*_DEPENDENT_MACHINE), \
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
 		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 		USERNAME="$(USERNAME)" \
