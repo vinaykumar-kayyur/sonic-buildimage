@@ -40,6 +40,18 @@ def generate_t1_sample_config(data):
         port_count += 1
     return data
 
+def generate_minimal_config(data):
+    """
+    Generate minimal configuration without local non-loopback address/interface information or BGP configuration
+    """
+    data['DEVICE_METADATA']['localhost']['hostname'] = 'sonic'
+    data['DEVICE_METADATA']['localhost']['type'] = 'LeafRouter'
+    data['LOOPBACK_INTERFACE'] = {"Loopback0|127.1.1.1/16": {}}
+    for port in natsorted(data['PORT']):
+        data['PORT'][port]['admin_status'] = 'up'
+        data['PORT'][port]['mtu'] = '9100'
+    return data
+
 def generate_empty_config(data):
     new_data = {'DEVICE_METADATA': data['DEVICE_METADATA']}
     if 'hostname' not in new_data['DEVICE_METADATA']['localhost']:
@@ -126,6 +138,7 @@ def generate_l2_config(data):
 _sample_generators = {
         't1': generate_t1_sample_config,
         'l2': generate_l2_config,
+        'minimal': generate_minimal_config,
         'empty': generate_empty_config
         }
 
