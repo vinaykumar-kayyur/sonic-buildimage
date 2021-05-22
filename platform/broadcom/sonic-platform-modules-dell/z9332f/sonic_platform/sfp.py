@@ -618,7 +618,7 @@ class Sfp(SfpBase):
                     break
                 host_electrical, media_interface = self.qsfp_dd_Info.parse_application(sfp_media_type_dict,
                                             sfp_application_type_list[i * 4], sfp_application_type_list[i * 4 + 1])
-                host_media_list = host_media_list + host_electrical + ' - ' + media_interface + '\n\t\t\t\t   '
+                host_media_list = host_media_list + host_electrical + ' - ' + media_interface + '    '
             transceiver_info_dict['application_advertisement'] = host_media_list
 
         return transceiver_info_dict
