@@ -47,7 +47,7 @@ def to_str(s):
     return str(s)
 
 def get_device_name():
-    return device_info.get_hostname().lower()
+    return str(device_info.get_hostname()).lower()
 
 
 def _run_command(cmd, timeout=5):
