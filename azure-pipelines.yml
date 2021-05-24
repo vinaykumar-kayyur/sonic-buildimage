@@ -57,7 +57,7 @@ stages:
 
   jobs:
   - job:
-    pool: sonictest
+    pool: testlsl
     displayName: "vstest"
     timeoutInMinutes: 60
     steps:
@@ -104,7 +104,7 @@ stages:
         testRunTitle: vstest
 
   - job:
-    pool: sonictest
+    pool: testlsl
     displayName: "kvmtest-t0"
     timeoutInMinutes: 240
 
