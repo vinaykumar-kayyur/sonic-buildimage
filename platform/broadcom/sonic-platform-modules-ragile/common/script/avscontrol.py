@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 import click
 import time
-import syslog
 import traceback
 from ragileutil import wait_docker, STARTMODULE, AVSUTIL
 from rgutil.logutil import Logger

@@ -126,8 +126,8 @@ __all__ = [
     "hex_to_str",
     "str_to_bin",
     "bin_to_str",
-    "getMacTemp",
-    "getMacTemp_sysfs",
+    "get_mac_temp",
+    "get_mac_temp_sysfs",
     "restartDockerService",
     "wait_dhcp",
     "wait_sdk",
@@ -803,7 +803,7 @@ def bin_to_str(s):
     return "".join([chr(i) for i in [int(b, 2) for b in s.split(" ")]])
 
 
-def getMacTemp():
+def get_mac_temp():
     result = {}
     # wait_docker()
     # exec twice, get the second result
@@ -824,7 +824,7 @@ def getMacTemp():
     return True, result
 
 
-def getMacTemp_sysfs(mactempconf):
+def get_mac_temp_sysfs(mactempconf):
     try:
         temp = -1000000
         temp_list = []

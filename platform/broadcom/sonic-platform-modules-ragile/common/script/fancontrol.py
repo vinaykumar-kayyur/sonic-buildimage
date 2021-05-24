@@ -6,6 +6,7 @@ import time
 import traceback
 import glob
 from rgutil.logutil import Logger
+from ragileutil import wait_docker
 
 from ragileconfig import (
     MONITOR_CONST,
@@ -24,7 +25,8 @@ from ragileconfig import (
 
 from ragileutil import (
     rgi2cget,
-    getMacTemp_sysfs,
+    get_mac_temp_sysfs,
+    get_mac_temp,
     write_sysfs_value,
     get_sysfs_value,
     strtoint,
@@ -392,7 +394,9 @@ class FanControl(object):
         for item in fanloc:
             try:
                 loc = item.get("location", "")
-                write_sysfs_value(loc, "0x%02x" % level)
+                # write_sysfs_value(loc, "0x%02x" % level)
+                # pddf support dicimal number
+                write_sysfs_value(loc, "%d" % level)
             except Exception as e:
                 logger.error(str(e))
                 logger.error("%%policy: config fan runlevel error")
@@ -405,11 +409,11 @@ class FanControl(object):
             logger.error("%%policy:set_fan_max_speed failed")
             logger.error(str(e))
 
-    def check_fan_status(self):  # fan status check , max speed if fan error
+    def detect_fan_status(self):
+        """
+        fan status check , max speed if fan error
+        """
         if self.normal_fans < MONITOR_CONST.FAN_TOTAL_NUM:
-            fanwarninglog(
-                "%%DEV_MONITOR-FAN: Normal fan number: %d" % (self.normal_fans)
-            )
             logger.warn(
                 "%%DEV_MONITOR-FAN: Normal fan number: %d" % (self.normal_fans),
             )
@@ -505,8 +509,8 @@ class FanControl(object):
 
     def get_mac_status_bcmcmd(self):
         try:
-            if waitForDocker(timeout=0) == True:
-                sta, ret = getMacTemp()
+            if wait_docker(timeout=0) == True:
+                sta, ret = get_mac_temp()
                 if sta == True:
                     self._mac_aver = float(ret.get("average", self._mac_aver))
                     self._mac_max = float(ret.get("maximum", self._mac_max))
@@ -525,7 +529,7 @@ class FanControl(object):
 
     def get_mac_status_sysfs(self, conf):
         try:
-            sta, ret = getMacTemp_sysfs(conf)
+            sta, ret = get_mac_temp_sysfs(conf)
             if sta == True:
                 self._mac_aver = float(ret) / 1000
                 self._mac_max = float(ret) / 1000
@@ -618,13 +622,15 @@ class FanControl(object):
         except Exception as e:
             logger.error("%%policy: fancontrol error")
 
-    # start speed-adjustment
     def start_fan_ctrl(self):
+        """
+        start speed-adjustment
+        """
         self.check_crit()
         if (
             self.critnum == 0
             and self.check_warn() == False
-            and self.check_fan_status() == True
+            and self.detect_fan_status() == True
         ):
             self.fanctrol()
             self.check_dev_err()
@@ -882,9 +888,7 @@ class FanControl(object):
                 logger.debug(DEBUG_FANCONTROL, "anti-shake end")
                 self.board_moni_msg()  # re-read
                 if self.check_temp_warn() == True:
-                    fanwarninglog(
-                        "%%DEV_MONITOR-TEMP:The temperature of device is over warning value."
-                    )
+                    logger.warn("%%DEV_MONITOR-TEMP:The temperature of device is over warning value.")
                     self.set_fan_max_speed()  # fan full speed
                     return True
         except Exception as e:

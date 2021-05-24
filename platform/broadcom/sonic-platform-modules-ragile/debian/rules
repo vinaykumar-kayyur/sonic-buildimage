@@ -11,13 +11,12 @@ CUSTOM_RULES_DIR := $(shell pwd)/debian
 
 PLATFORM_PREFIX = "x86_64-ragile"
 PLATFORM_VER = "r0"
-BDIST_DIR = "bdist_dir"
+BDIST_DIR = "dist"
+BDIST_TARGET = "bdist_t"
 
 export  INSTALL_MOD_DIR top_srcdir KVERSION  KERNEL_SRC CC  KBUILD_OUTPUT
 
-currentdir = $(shell pwd)
-MODULE_DIRS := ra-b6510-48v8c
-export CUSTOMS_DIRS MODULE_DIRS
+include $(CUSTOM_RULES_DIR)/rule-ragile.mk
 
 #all product need common
 COMPILE_DIRS = $(MODULE_DIRS)
@@ -50,22 +49,19 @@ $(COMPILE_DIRS): common_build
 		$(MOD_SRC_DIR)/common/lib/eepromutil \
 		$(MOD_SRC_DIR)/$@/; \
 	cd $(MOD_SRC_DIR)/$@; \
-	python3 setup.py bdist_wheel -d $(BDIST_DIR); \
+	python3 setup.py bdist_wheel --bdist-dir $(BDIST_DIR) -d $(BDIST_TARGET); \
 	mkdir -p build/usr/share/sonic/device/$(PLATFORM_PREFIX)_$@-$(PLATFORM_VER); \
 	mkdir -p build/usr/share/sonic/device/$(PLATFORM_PREFIX)_$@-$(PLATFORM_VER)/pddf; \
-	cp $(BDIST_DIR)/*.whl build/usr/share/sonic/device/$(PLATFORM_PREFIX)_$@-$(PLATFORM_VER); \
-	cp $(BDIST_DIR)/*.whl build/usr/share/sonic/device/$(PLATFORM_PREFIX)_$@-$(PLATFORM_VER)/pddf/; \
+	cp $(BDIST_TARGET)/*.whl build/usr/share/sonic/device/$(PLATFORM_PREFIX)_$@-$(PLATFORM_VER); \
+	cp $(BDIST_TARGET)/*.whl build/usr/share/sonic/device/$(PLATFORM_PREFIX)_$@-$(PLATFORM_VER)/pddf/; \
 	cd $(MOD_SRC_DIR); \
 	rm -rf \
 		$(MOD_SRC_DIR)/$@/rgutil \
 		$(MOD_SRC_DIR)/$@/eepromutil \
-		$(BDIST_DIR)
-
-	echo $(PACKAGE_PRE_NAME)
+		$(MOD_SRC_DIR)/$@/$(BDIST_TARGET)
 
 	cp -r $(MOD_SRC_DIR)/common/build/*  debian/platform-modules-ragile-$@/
 	cp -r $(MOD_SRC_DIR)/$@/build/*  debian/platform-modules-ragile-$@/
-
 
 binary: binary-indep
 	@echo "======================================================="
