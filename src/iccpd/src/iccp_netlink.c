@@ -451,6 +451,12 @@ int iccp_netlink_if_hwaddr_set(uint32_t ifindex, uint8_t *addr, unsigned int add
              macArray[0], macArray[1], macArray[2], \
              macArray[3], macArray[4], macArray[5]);
 
+#define MAC_TO_LINKLOCAL_STR(buf, macArray) \
+    snprintf(buf, INET6_ADDRSTRLEN, "fe80::%02x%02x:%02xff:fe%02x:%02x%02x/64", \
+             macArray[0]^2, macArray[1], macArray[2], \
+             macArray[3], macArray[4], macArray[5]);
+
+#define CMD_LEN 256
 void iccp_set_interface_ipadd_mac(struct LocalInterface *lif, char * mac_addr )
 {
     struct IccpSyncdHDr * msg_hdr;
@@ -547,6 +553,7 @@ errout:
     rtnl_link_put(link);
     return err;
 }
+
 void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
 {
     struct CSM* csm;
@@ -557,6 +564,9 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
     struct LocalInterface* lif_Bri;
     char macaddr[64];
     int ret = 0;
+    char old_linklocal_str[INET6_ADDRSTRLEN];
+    char new_linklocal_str[INET6_ADDRSTRLEN];
+    char syscmd[CMD_LEN];
 
     if (!csm)
         return;
@@ -573,7 +583,7 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
         return;
 
     /*Set new mac*/
-    if (memcmp( lif_po->mac_addr, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN) != 0)
+    if (memcmp(lif_po->mac_addr, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN) != 0)
     {
         /*Backup old sysmac*/
         memcpy(lif_po->mac_addr_ori, lif_po->mac_addr, ETHER_ADDR_LEN);
@@ -591,8 +601,17 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
         }
 
         /* Refresh link local address according the new MAC */
-        iccp_netlink_if_shutdown_set(lif_po->ifindex);
-        iccp_netlink_if_startup_set(lif_po->ifindex);
+        MAC_TO_LINKLOCAL_STR(old_linklocal_str, lif_po->mac_addr_ori);
+        MAC_TO_LINKLOCAL_STR(new_linklocal_str, MLACP(csm).remote_system.system_id);
+        sprintf(syscmd, "ip -6 addr del %s dev %s > /dev/null 2>&1", old_linklocal_str, lif_po->name);
+        ret = system(syscmd);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+        sprintf(syscmd, "ip -6 addr add %s dev %s > /dev/null 2>&1", new_linklocal_str, lif_po->name);
+        ret = system(syscmd);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+
+        /*iccp_netlink_if_shutdown_set(lif_po->ifindex);
+        iccp_netlink_if_startup_set(lif_po->ifindex);*/
     }
 
     /*Set portchannel ip mac */
@@ -602,8 +621,8 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
     {
         if (memcmp(lif_po->l3_mac_addr, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN) != 0)
         {
-            iccp_set_interface_ipadd_mac(lif_po, macaddr );
             memcpy(lif_po->l3_mac_addr, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN);
+            iccp_set_interface_ipadd_mac(lif_po, macaddr);
         }
     }
     else
@@ -625,11 +644,20 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
                     }
 
                     /* Refresh link local address according the new MAC */
-                    iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
-                    iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);
+                    MAC_TO_LINKLOCAL_STR(old_linklocal_str, vlan->vlan_itf->mac_addr);
+                    MAC_TO_LINKLOCAL_STR(new_linklocal_str, MLACP(csm).remote_system.system_id);
+                    sprintf(syscmd, "ip -6 addr del %s dev %s > /dev/null 2>&1", old_linklocal_str, vlan->vlan_itf->name);
+                    ret = system(syscmd);
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+                    sprintf(syscmd, "ip -6 addr add %s dev %s > /dev/null 2>&1", new_linklocal_str, vlan->vlan_itf->name);
+                    ret = system(syscmd);
+                    ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
 
-                    iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
+                    /*iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
+                    iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);*/
+
                     memcpy(vlan->vlan_itf->l3_mac_addr, MLACP(csm).remote_system.system_id, ETHER_ADDR_LEN);
+                    iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
                 }
             }
         }
@@ -641,12 +669,14 @@ void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
 void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
 {
     struct CSM* csm;
-    uint8_t null_mac[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     struct VLAN_ID *vlan = NULL;
 
     csm = lif_po->csm;
     char macaddr[64];
     int ret = 0;
+    char old_linklocal_str[INET6_ADDRSTRLEN];
+    char new_linklocal_str[INET6_ADDRSTRLEN];
+    char syscmd[CMD_LEN];
 
     if (!csm)
         return;
@@ -660,7 +690,7 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
     }
 
     /*Recover mac to origin mac, it is the 'mac' value in 'localhost' currently*/
-    if (memcmp( lif_po->mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN) != 0)
+    if (memcmp(lif_po->mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN) != 0)
     {
         ICCPD_LOG_NOTICE(__FUNCTION__,
                         "%s Recover the system-id of %s from [%02X:%02X:%02X:%02X:%02X:%02X] to [%02X:%02X:%02X:%02X:%02X:%02X].",
@@ -675,8 +705,17 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
         }
 
         /* Refresh link local address according the new MAC */
-        iccp_netlink_if_shutdown_set(lif_po->ifindex);
-        iccp_netlink_if_startup_set(lif_po->ifindex);
+        MAC_TO_LINKLOCAL_STR(old_linklocal_str, lif_po->mac_addr);
+        MAC_TO_LINKLOCAL_STR(new_linklocal_str, MLACP(csm).system_id);
+        sprintf(syscmd, "ip -6 addr del %s dev %s > /dev/null 2>&1", old_linklocal_str, lif_po->name);
+        ret = system(syscmd);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+        sprintf(syscmd, "ip -6 addr add %s dev %s > /dev/null 2>&1", new_linklocal_str, lif_po->name);
+        ret = system(syscmd);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+
+        /*iccp_netlink_if_shutdown_set(lif_po->ifindex);
+        iccp_netlink_if_startup_set(lif_po->ifindex);*/
     }
 
     /*Set portchannel ip mac */
@@ -684,8 +723,8 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
     SET_MAC_STR(macaddr, MLACP(csm).system_id);
     if (local_if_is_l3_mode(lif_po))
     {
-        iccp_set_interface_ipadd_mac(lif_po, macaddr );
         memcpy(lif_po->l3_mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN);
+        iccp_set_interface_ipadd_mac(lif_po, macaddr);
     }
     else
     {
@@ -704,11 +743,20 @@ void recover_if_ipmac_on_standby(struct LocalInterface* lif_po)
                 }
 
                 /* Refresh link local address according the new MAC */
-                iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
-                iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);
+                MAC_TO_LINKLOCAL_STR(old_linklocal_str, vlan->vlan_itf->mac_addr);
+                MAC_TO_LINKLOCAL_STR(new_linklocal_str, MLACP(csm).system_id);
+                sprintf(syscmd, "ip -6 addr del %s dev %s > /dev/null 2>&1", old_linklocal_str, vlan->vlan_itf->name);
+                ret = system(syscmd);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
+                sprintf(syscmd, "ip -6 addr add %s dev %s > /dev/null 2>&1", new_linklocal_str, vlan->vlan_itf->name);
+                ret = system(syscmd);
+                ICCPD_LOG_DEBUG(__FUNCTION__, "  %s  ret = %d", syscmd, ret);
 
-                iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
+                /*iccp_netlink_if_shutdown_set(vlan->vlan_itf->ifindex);
+                iccp_netlink_if_startup_set(vlan->vlan_itf->ifindex);*/
+
                 memcpy(vlan->vlan_itf->l3_mac_addr, MLACP(csm).system_id, ETHER_ADDR_LEN);
+                iccp_set_interface_ipadd_mac(vlan->vlan_itf, macaddr);
             }
         }
     }
