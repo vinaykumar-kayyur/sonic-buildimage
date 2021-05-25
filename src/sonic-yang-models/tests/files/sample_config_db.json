@@ -700,6 +700,11 @@
                 "nexthop_group_threshold_type": "percentage",
                 "polling_interval": "0"
             }
+        },
+        "WARM_RESTART": {
+            "bgp": {
+                "bgp_timer": "500"
+            }
         }
     },
 
