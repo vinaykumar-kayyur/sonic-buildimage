@@ -6,7 +6,7 @@ import time
 
 while(True):
     output = subprocess.Popen(['sonic-db-cli', 'PING'], stdout=subprocess.PIPE).communicate()[0]
-    if 'PONG' in output:
+    if b'PONG' in output:
         break
     time.sleep(1)
 
