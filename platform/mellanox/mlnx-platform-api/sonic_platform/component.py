@@ -20,7 +20,11 @@ try:
     else:
         import ConfigParser as configparser
 
-    from sonic_platform_base.component_base import ComponentBase
+    from sonic_platform_base.component_base import ComponentBase,
+                                                    FW_AUTO_UPDATED,
+                                                    FW_AUTO_ERR_BOOT_TYPE,
+                                                    FW_AUTO_ERR_IMAGE,
+                                                    FW_AUTO_ERR_UKNOWN
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -346,17 +350,17 @@ class Component(ComponentBase):
         # Verify image path exists
         if not os.path.exists(image_path):
             # Invalid image path
-            return -2
+            return FW_AUTO_ERR_IMAGE
 
         if boot_action in default_supported_boot:
             if self.install_firmware(image_path):
                 # Successful update
-                return 2 
+                return FW_AUTO_UPDATED
             # Failed update (unknown reason)
-            return -3
+            return FW_AUTO_ERR_UKNOWN
 
         # boot_type did not match (skip)
-        return -1
+        return FW_AUTO_ERR_BOOT_TYPE
 
     @staticmethod
     def _read_generic_file(filename, len, ignore_errors=False):
@@ -506,7 +510,7 @@ class ComponentSSD(Component):
         # Verify image path exists
         if not os.path.exists(image_path):
             # Invalid image path
-            return -2
+            return FW_AUTO_ERR_IMAGE
 
         # Check if post_install reboot is required
         try:
@@ -515,17 +519,17 @@ class ComponentSSD(Component):
                 supported_boot += ['warm', 'fast', 'none', 'any']
         except RuntimeError:
             # Unknown error from firmware probe
-            return -3
+            return FW_AUTO_ERR_UKNOWN
 
         if boot_action in supported_boot:
             if self.install_firmware(image_path):
                 # Successful update
-                return 2 
+                return FW_AUTO_UPDATED
             # Failed update (unknown reason)
-            return -3
+            return FW_AUTO_ERR_UKNOWN
 
         # boot_type did not match (skip)
-        return -1
+        return FW_AUTO_ERR_BOOT_TYPE
 
     def get_firmware_version(self):
         cmd = self.SSD_INFO_COMMAND
