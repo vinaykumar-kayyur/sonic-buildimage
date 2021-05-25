@@ -451,7 +451,7 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
         },
     },
     {
-        .dev_type          = {0x404c},   /*RA-B6910-64C*/
+        .dev_type          = {0x404c},
         .pca9548_cfg_info  = {
             /* psu fan */
             {
