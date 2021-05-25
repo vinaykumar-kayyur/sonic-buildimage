@@ -346,7 +346,7 @@ def get_chassis_info():
         chassis_info_dict['serial'] = db.get(db.STATE_DB, table, CHASSIS_INFO_SERIAL_FIELD)
         chassis_info_dict['model'] = db.get(db.STATE_DB, table, CHASSIS_INFO_MODEL_FIELD)
         chassis_info_dict['revision'] = db.get(db.STATE_DB, table, CHASSIS_INFO_REV_FIELD)
-    except:
+    except Exception:
         pass
 
     return chassis_info_dict
