@@ -43,6 +43,7 @@ from portconfig import get_port_config, get_breakout_mode
 from redis_bcc import RedisBytecodeCache
 from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id
 from sonic_py_common import device_info
+from sonic_yang_cfg_generator import SonicYangCfgDbGenerator
 from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
 
 
@@ -258,6 +259,7 @@ def main():
     parser=argparse.ArgumentParser(description="Render configuration file from minigraph data and jinja2 template.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-m", "--minigraph", help="minigraph xml file", nargs='?', const='/etc/sonic/minigraph.xml')
+    group.add_argument("-Y", "--yang", help="yang data json file", nargs='?', const='/etc/sonic/sonic_yang.data')
     group.add_argument("-M", "--device-description", help="device description xml file")
     group.add_argument("-k", "--hwsku", help="HwSKU")
     parser.add_argument("-n", "--namespace", help="namespace name", nargs='?', const=None, default=None)
@@ -324,6 +326,12 @@ def main():
             deep_update(data, {'BREAKOUT_CFG': brkout_table})
 
     _process_json(args, data)
+
+    if args.yang is not None:
+        yang_file = args.yang
+        config_db_json = SonicYangCfgDbGenerator().generate_config(
+            yang_data_file=yang_file)
+        deep_update(data, config_db_json)
 
     if args.minigraph is not None:
         minigraph = args.minigraph
