@@ -287,7 +287,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-ztp_*.deb || \
 
 {% for machine_debs in lazy_build_installer_debs.strip().split() -%}
 {% set machine, pkgname = machine_debs.split('|') %}
-if [[ -z "{{machine}}" || -n "{{machine}}" && $TARGET_DEPENDENT_MACHINE == "{{machine}}" ]]; then
+if [[ -z "{{machine}}" || -n "{{machine}}" && $TARGET_MACHINE == "{{machine}}" ]]; then
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/{{pkgname}} || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 fi
@@ -665,7 +665,7 @@ sudo chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS info
 {% set imagefilepath = image.split(':')|first -%}
 {% set imagefilename = imagefilepath.split('/')|last -%}
 {% set imagename = imagefilename.split('.')|first -%}
-if [[ -z "{{machine}}" || -n "{{machine}}" && $TARGET_DEPENDENT_MACHINE == "{{machine}}" ]]; then
+if [[ -z "{{machine}}" || -n "{{machine}}" && $TARGET_MACHINE == "{{machine}}" ]]; then
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS load -i {{imagefilepath}}
 sudo LANG=C chroot $FILESYSTEM_ROOT docker $SONIC_NATIVE_DOCKERD_FOR_DOCKERFS tag {{imagename}}:latest {{imagename}}:"${SONIC_IMAGE_VERSION}"
 # Check if manifest exists for {{imagename}} and it is a valid JSON
