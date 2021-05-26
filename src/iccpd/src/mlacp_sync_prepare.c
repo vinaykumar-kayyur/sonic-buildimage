@@ -489,7 +489,7 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
     tlv->icc_parameter.type = htons(TLV_T_MLACP_PORT_CHANNEL_INFO);
     tlv->icc_parameter.len = htons(sizeof(struct mLACPPortChannelInfoTLV) - sizeof(ICCParameter) + sizeof(struct mLACPVLANData) * num_of_vlan_id);
     tlv->agg_id = htons(port_channel->po_id);
-    tlv->ipv4_addr = htonl(port_channel->ipv4_addr);
+    /*tlv->ipv4_addr = htonl(port_channel->ipv4_addr);*/
     tlv->l3_mode = port_channel->l3_mode;
     tlv->po_id = htons(port_channel->po_id);
 
@@ -507,11 +507,11 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
             tlv->vlanData[num_of_vlan_id].vlan_id = htons(vlan_id->vid);
 
             num_of_vlan_id++;
-            ICCPD_LOG_DEBUG(__FUNCTION__, "PortChannel%d: ipv4 addr = %s vlan id %d num %d ", port_channel->po_id, show_ip_str( tlv->ipv4_addr), vlan_id->vid, num_of_vlan_id );
+            /*ICCPD_LOG_DEBUG(__FUNCTION__, "PortChannel%d: ipv4 addr = %s vlan id %d num %d ", port_channel->po_id, show_ip_str(tlv->ipv4_addr), vlan_id->vid, num_of_vlan_id );*/
         }
     }
 
-    ICCPD_LOG_DEBUG(__FUNCTION__, "PortChannel%d: ipv4 addr = %s  l3 mode %d", port_channel->po_id, show_ip_str( tlv->ipv4_addr),  tlv->l3_mode);
+    /*ICCPD_LOG_DEBUG(__FUNCTION__, "PortChannel%d: ipv4 addr = %s l3 mode %d", port_channel->po_id, show_ip_str( tlv->ipv4_addr),  tlv->l3_mode);*/
 
     return msg_len;
 }

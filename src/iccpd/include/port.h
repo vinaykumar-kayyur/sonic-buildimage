@@ -100,9 +100,9 @@ struct LocalInterface
     uint8_t mac_addr[ETHER_ADDR_LEN];
     uint8_t mac_addr_ori[ETHER_ADDR_LEN];
     uint8_t state;
-    uint32_t ipv4_addr;
+    /*uint32_t ipv4_addr;*/
     uint8_t prefixlen;
-    uint32_t ipv6_addr[4];
+    /*uint32_t ipv6_addr[4];*/
     uint8_t prefixlen_v6;
 
     uint8_t l3_mode;
@@ -121,6 +121,7 @@ struct LocalInterface
     uint8_t port_config_sync;
 
     LIST_HEAD(local_vlan_list, VLAN_ID) vlan_list;
+    LIST_HEAD(ipaddr_list, ipaddr) ipaddr_list;
 
     LIST_ENTRY(LocalInterface) system_next;
     LIST_ENTRY(LocalInterface) system_purge_next;
@@ -152,6 +153,7 @@ int peer_if_clean_unused_vlan(struct PeerInterface* peer_if);
 int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid);
 void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid);
 void local_if_del_all_vlan(struct LocalInterface* lif);
+void local_if_del_all_ip_address(struct LocalInterface* lif);
 
 /* ARP manipulation */
 int set_sys_arp_accept_flag(char* ifname, int flag);

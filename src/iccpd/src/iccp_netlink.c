@@ -58,6 +58,22 @@
 #include "../include/msg_format.h"
 #include "../include/iccp_netlink.h"
 
+#include <malloc.h>
+#include <arpa/inet.h> /* for inet_pton */
+#include <fcntl.h>
+#include <signal.h>
+#include <errno.h>
+#include <netinet/icmp6.h>
+#include <netinet/ip6.h>
+#include <net/ethernet.h>
+
+#ifndef OCF_IPV6_HELPER_H
+#define OCF_IPV6_HELPER_H
+#include <netinet/icmp6.h>
+
+#define BCAST_ADDR "ff02::1"
+#endif
+
 /**
  * SECTION: Netlink helpers
  */
@@ -141,7 +157,7 @@ int iccp_send_and_recv(struct System *sys, struct nl_msg *msg,
     }
 
     err = 0;
- put_cb:
+put_cb:
     nl_cb_put(cb);
     return err;
 }
@@ -451,7 +467,232 @@ int iccp_netlink_if_hwaddr_set(uint32_t ifindex, uint8_t *addr, unsigned int add
              macArray[0], macArray[1], macArray[2], \
              macArray[3], macArray[4], macArray[5]);
 
-void iccp_set_interface_ipadd_mac(struct LocalInterface *lif, char * mac_addr )
+#define MAC_TO_LINKLOCAL_STR(buf, macArray) \
+    snprintf(buf, INET6_ADDRSTRLEN, "fe80::%02x%02x:%02xff:fe%02x:%02x%02x/64", \
+             macArray[0]^2, macArray[1], macArray[2], \
+             macArray[3], macArray[4], macArray[5]);
+
+/* IPv6 pseudoheader */
+struct ipv6_ph {
+	struct in6_addr src;
+	struct in6_addr dst;
+	uint32_t ulpl;
+	uint8_t zero[3];
+	uint8_t next_hdr;
+} __attribute__((packed));
+
+/* return checksum in low-order 16 bits */
+int in_cksum(void *parg, int nbytes)
+{
+    unsigned short *ptr = parg;
+    register long sum; /* assumes long == 32 bits */
+    unsigned short oddbyte;
+    register unsigned short answer; /* assumes unsigned short == 16 bits */
+
+    /*
+     * Our algorithm is simple, using a 32-bit accumulator (sum),
+     * we add sequential 16-bit words to it, and at the end, fold back
+     * all the carry bits from the top 16 bits into the lower 16 bits.
+     */
+
+    sum = 0;
+    while (nbytes > 1)
+    {
+        sum += *ptr++;
+        nbytes -= 2;
+    }
+
+    /* mop up an odd byte, if necessary */
+    if (nbytes == 1)
+    {
+        oddbyte = 0; /* make sure top half is zero */
+        *((uint8_t *)&oddbyte) = *(uint8_t *)ptr; /* one byte only */
+        sum += oddbyte;
+    }
+
+    /*
+     * Add back carry outs from top 16 bits to low 16 bits.
+     */
+
+    sum = (sum >> 16) + (sum & 0xffff); /* add high-16 to low-16 */
+    sum += (sum >> 16);		    /* add carry */
+    answer = ~sum; /* ones-complement, then truncate to 16 bits */
+
+    return (answer);
+}
+
+int in_cksum_with_ph6(struct ipv6_ph *ph, void *data, int nbytes)
+{
+    uint8_t dat[sizeof(struct ipv6_ph) + nbytes];
+
+    memcpy(dat, ph, sizeof(struct ipv6_ph));
+    memcpy(dat + sizeof(struct ipv6_ph), data, nbytes);
+    return in_cksum(dat, sizeof(dat));
+}
+
+#define ICCP_NDISC_SIZE                                                \
+        ETHER_HDR_LEN + sizeof(struct ip6_hdr)                         \
+        + sizeof(struct nd_neighbor_advert)                            \
+        + sizeof(struct nd_opt_hdr) + ETH_ALEN
+
+static int iccp_ndisc_una_build(struct LocalInterface *lif, struct in6_addr* src_ip,
+                                        uint8_t *buf, size_t bufsiz)
+{
+    if (bufsiz < ICCP_NDISC_SIZE)
+        return -1;
+
+    memset(buf, 0x00, bufsiz);
+
+    struct ether_header *eth = (struct ether_header *)buf;
+    struct ip6_hdr *ip6h = (struct ip6_hdr *)((char *)eth + ETHER_HDR_LEN);
+    struct nd_neighbor_advert *ndh =
+    (struct nd_neighbor_advert *)((char *)ip6h + sizeof(struct ip6_hdr));
+    struct icmp6_hdr *icmp6h = &ndh->nd_na_hdr;
+    struct nd_opt_hdr *nd_opt_h = (struct nd_opt_hdr *)((char *)ndh
+                                  + sizeof(struct nd_neighbor_advert));
+    char *nd_opt_lladdr = (char *)((char *)nd_opt_h + sizeof(struct nd_opt_hdr));
+
+    /*
+    * An IPv6 packet with a multicast destination address DST, consisting
+    * of the sixteen octets DST[1] through DST[16], is transmitted to the
+    * Ethernet multicast address whose first two octets are the value 3333
+    * hexadecimal and whose last four octets are the last four octets of
+    * DST.
+    *    - RFC2464.7
+    *
+    * In this case we are sending to the all nodes multicast address, so
+    * the last four octets are 0x00 0x00 0x00 0x01.
+    */
+    memset(eth->ether_dhost, 0, ETH_ALEN);
+    eth->ether_dhost[0] = 0x33;
+    eth->ether_dhost[1] = 0x33;
+    eth->ether_dhost[5] = 1;
+
+    /* Set source Ethernet address to interface link layer address */
+    memcpy(eth->ether_shost, &(lif->l3_mac_addr), ETH_ALEN);
+    eth->ether_type = htons(ETHERTYPE_IPV6);
+
+    /* IPv6 Header */
+    ip6h->ip6_vfc = 6 << 4;
+    ip6h->ip6_plen = htons(sizeof(struct nd_neighbor_advert)
+                           + sizeof(struct nd_opt_hdr) + ETH_ALEN);
+    ip6h->ip6_nxt = IPPROTO_ICMPV6;
+    ip6h->ip6_hlim = 255;
+    memcpy(&ip6h->ip6_src, src_ip, sizeof(struct in6_addr));
+    /* All nodes multicast address */
+    ip6h->ip6_dst.s6_addr[0] = 0xFF;
+    ip6h->ip6_dst.s6_addr[1] = 0x02;
+    ip6h->ip6_dst.s6_addr[15] = 0x01;
+
+    /* ICMPv6 Header */
+    ndh->nd_na_type = ND_NEIGHBOR_ADVERT;
+    /*ndh->nd_na_flags_reserved |= ND_NA_FLAG_ROUTER;*/
+    ndh->nd_na_flags_reserved |= ND_NA_FLAG_OVERRIDE;
+    memcpy(&ndh->nd_na_target, src_ip, sizeof(struct in6_addr));
+
+    /* NDISC Option header */
+    nd_opt_h->nd_opt_type = ND_OPT_TARGET_LINKADDR;
+    nd_opt_h->nd_opt_len = 1;
+    memcpy(nd_opt_lladdr, &(lif->l3_mac_addr), ETH_ALEN);
+
+    /* Compute checksum */
+    uint32_t len = sizeof(struct nd_neighbor_advert)
+                   + sizeof(struct nd_opt_hdr) + ETH_ALEN;
+    struct ipv6_ph ph = {};
+
+    ph.src = ip6h->ip6_src;
+    ph.dst = ip6h->ip6_dst;
+    ph.ulpl = htonl(len);
+    ph.next_hdr = IPPROTO_ICMPV6;
+
+    /* Suppress static analysis warnings about accessing icmp6 oob */
+    void *offset = icmp6h;
+    icmp6h->icmp6_cksum = in_cksum_with_ph6(&ph, offset, len);
+
+    return 0;
+}
+
+int iccp_send_ndisc_una(struct in6_addr* src_ip, struct LocalInterface *lif)
+{
+    int ret = 0;
+    uint8_t buf[ICCP_NDISC_SIZE];
+    int fd;
+
+    fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_IPV6));
+    if (fd < 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "ERROR: socket(ETH_P_IPV6) failed: %s", strerror(errno));
+        return -1;
+    }
+
+    ret = iccp_ndisc_una_build(lif, src_ip, buf, sizeof(buf));
+
+    if (ret == -1)
+    {
+        close(fd);
+        return ret;
+    }
+
+    struct sockaddr_ll sll;
+    ssize_t len = 0;
+
+    /* Build the dst device */
+    memset(&sll, 0, sizeof(sll));
+    sll.sll_family = AF_PACKET;
+    memcpy(sll.sll_addr, lif->l3_mac_addr, ETH_ALEN);
+    sll.sll_halen = ETH_ALEN;
+    sll.sll_ifindex = (int)lif->ifindex;
+
+    char ipbuf[INET6_ADDRSTRLEN];
+
+    inet_ntop(AF_INET6, src_ip, ipbuf, sizeof(ipbuf));
+
+    len = sendto(fd, buf, ICCP_NDISC_SIZE, 0, (struct sockaddr *)&sll, sizeof(sll));
+
+    if (len < 0)
+    {
+        ICCPD_LOG_ERR(__FUNCTION__, "Error sending unsolicited Neighbor Advertisement on %s for %s, err %s", lif->name, ipbuf, strerror(errno));
+        ret = -1;
+    } else {
+        ICCPD_LOG_NOTICE(__FUNCTION__, "Sending unsolicited Neighbor Advertisement on %s for %s", lif->name, ipbuf);
+    }
+
+    close(fd);
+    return ret;
+}
+
+#define BUFFER_LEN 10000
+#define CMD_LEN 256
+
+int iccp_send_gratuitious_neighbor(struct LocalInterface *lif)
+{
+
+    struct ipaddr *ip = NULL;
+    int ret = 0;
+
+    LIST_FOREACH(ip, &(lif->ipaddr_list), ipaddr_next)
+    {
+        if (ip->ipa_type == IPADDR_V4)
+        {
+            char syscmd[CMD_LEN];
+            char ipv4_addr_str[INET_ADDRSTRLEN];
+            sprintf(ipv4_addr_str, "%s", show_ip_in_str(ip->ipaddr_v4));
+            ICCPD_LOG_NOTICE(__FUNCTION__, "Send gratuitious ARP for %s via %s", ipv4_addr_str, lif->name);
+            sprintf(syscmd, "arping -c 1 -A -I %s %s > /dev/null 2>&1", lif->name, ipv4_addr_str);
+            ret = system(syscmd);
+            ICCPD_LOG_DEBUG(__FUNCTION__, "%s  ret = %d", syscmd, ret);
+        }
+        else if (ip->ipa_type == IPADDR_V6)
+        {
+            ICCPD_LOG_NOTICE(__FUNCTION__, "Send gratuitious ND for %s via %s", show_ipv6_in_str(ip->ipaddr_v6), lif->name);
+            iccp_send_ndisc_una(&(ip->ipaddr_v6), lif);
+        }
+    }
+
+    return 0;
+}
+
+void iccp_set_interface_ipadd_mac(struct LocalInterface *lif, char * mac_addr)
 {
     struct IccpSyncdHDr * msg_hdr;
     mclag_sub_option_hdr_t * sub_msg;
@@ -489,7 +730,7 @@ void iccp_set_interface_ipadd_mac(struct LocalInterface *lif, char * mac_addr )
     dst_len = strlen(mac_addr);
     memcpy(sub_msg->data, mac_addr, dst_len);
 
-    ICCPD_LOG_NOTICE(__FUNCTION__, "If name %s ip %s mac %s", lif->name, show_ip_str(htonl(lif->ipv4_addr)), sub_msg->data);
+    ICCPD_LOG_NOTICE(__FUNCTION__, "If name %s mac %s", lif->name, sub_msg->data);
 
     sub_msg->op_len = dst_len;
     msg_hdr->len += sizeof(mclag_sub_option_hdr_t);
@@ -497,8 +738,16 @@ void iccp_set_interface_ipadd_mac(struct LocalInterface *lif, char * mac_addr )
 
     /*send msg*/
     if (sys->sync_fd)
-        write(sys->sync_fd, msg_buf, msg_hdr->len);
-
+    {
+        if (write(sys->sync_fd,msg_buf, msg_hdr->len) == -1)
+        {
+            ICCPD_LOG_ERR(__FUNCTION__, "If name %s mac %s", lif->name, sub_msg->data);
+        }
+        else
+        {
+            iccp_send_gratuitious_neighbor(lif);
+        }
+    }
     return;
 }
 
@@ -547,6 +796,7 @@ errout:
     rtnl_link_put(link);
     return err;
 }
+
 void update_if_ipmac_on_standby(struct LocalInterface* lif_po)
 {
     struct CSM* csm;
@@ -930,6 +1180,8 @@ void iccp_event_handler_obj_input_newaddr(struct nl_object *obj, void *arg)
     uint32_t ifindex;
     char addrStr[65] = { 0 };
     char addr_null[16] = { 0 };
+    struct ipaddr *new = (struct ipaddr*)malloc(sizeof(struct ipaddr));
+
     addr = (struct rtnl_addr *)obj;
 
     ifindex = rtnl_addr_get_ifindex(addr);
@@ -938,15 +1190,33 @@ void iccp_event_handler_obj_input_newaddr(struct nl_object *obj, void *arg)
     if (!(lif = local_if_find_by_ifindex(ifindex)))
         return;
 
+    if (iccp_check_if_addr(rtnl_addr_get_family(addr), (uint8_t *)(nl_addr_get_binary_addr(nl_addr)), lif))
+    {
+        ICCPD_LOG_DEBUG(__FUNCTION__, "IP is identical with the ip address of interface %s", lif->name);
+        return;
+    }
+
     if (rtnl_addr_get_family(addr) == AF_INET)
     {
-        lif->ipv4_addr = *(uint32_t *) nl_addr_get_binary_addr(nl_addr);
+        new->ipa_type = IPADDR_V4;
+        memcpy(&(new->ipaddr_v4), nl_addr_get_binary_addr(nl_addr), sizeof(struct in_addr));
         lif->prefixlen = nl_addr_get_prefixlen(nl_addr);
         lif->l3_mode = 1;
         lif->port_config_sync = 1;
-        if (memcmp((char *)lif->ipv6_addr, addr_null, 16) == 0)
-            update_if_ipmac_on_standby(lif);
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Ifname %s index %d address %s", lif->name, lif->ifindex, show_ip_str(lif->ipv4_addr));
+        if (LIST_EMPTY(&(lif->ipaddr_list)))
+        {
+            /* If set vlan addr, check whether mclag enabled intf is member of this vlan */
+            /*if (strncmp(lif->name, VLAN_PREFIX, 4) == 0)
+            {
+                iccp_set_vlan_ipadd_mac_by_portchannel(lif->name);
+            }
+            else*/
+            {
+                update_if_ipmac_on_standby(lif);
+            }
+        }
+        LIST_INSERT_HEAD(&(lif->ipaddr_list), new, ipaddr_next);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Ifname %s index %d address %s", lif->name, lif->ifindex, show_ip_in_str(new->ipaddr_v4));
     }
     else if (rtnl_addr_get_family(addr) == AF_INET6)
     {
@@ -954,13 +1224,25 @@ void iccp_event_handler_obj_input_newaddr(struct nl_object *obj, void *arg)
             || memcmp(show_ipv6_str((char *)nl_addr_get_binary_addr(nl_addr)), "fe80", 4) == 0)
             return;
 
-        memcpy((char *)lif->ipv6_addr, nl_addr_get_binary_addr(nl_addr), 16);
+        new->ipa_type = IPADDR_V6;
+        memcpy(&(new->ipaddr_v6), nl_addr_get_binary_addr(nl_addr), sizeof(struct in6_addr));
         lif->prefixlen = nl_addr_get_prefixlen(nl_addr);
         lif->l3_mode = 1;
         lif->port_config_sync = 1;
-        if (lif->ipv4_addr == 0)
-            update_if_ipmac_on_standby(lif);
-        ICCPD_LOG_DEBUG(__FUNCTION__, "Ifname %s index %d address %s", lif->name, lif->ifindex, show_ipv6_str((char *)lif->ipv6_addr));
+        if (LIST_EMPTY(&(lif->ipaddr_list)))
+        {
+            /* If set vlan addr, check whether mclag enabled intf is member of this vlan */
+            /*if (strncmp(lif->name, VLAN_PREFIX, 4) == 0)
+            {
+                iccp_set_vlan_ipadd_mac_by_portchannel(lif->name);
+            }
+            else*/
+            {
+                update_if_ipmac_on_standby(lif);
+            }
+        }
+        LIST_INSERT_HEAD(&(lif->ipaddr_list), new, ipaddr_next);
+        ICCPD_LOG_DEBUG(__FUNCTION__, "Ifname %s index %d address %s", lif->name, lif->ifindex, show_ipv6_in_str(new->ipaddr_v6));
     }
 
     return;
@@ -973,6 +1255,7 @@ void iccp_event_handler_obj_input_deladdr(struct nl_object *obj, void *arg)
     struct LocalInterface *lif;
     uint32_t ifindex;
     char addr_null[16] = { 0 };
+    struct ipaddr *ip = NULL;
 
     addr = (struct rtnl_addr *)obj;
 
@@ -984,7 +1267,16 @@ void iccp_event_handler_obj_input_deladdr(struct nl_object *obj, void *arg)
 
     if (rtnl_addr_get_family(addr) == AF_INET)
     {
-        lif->ipv4_addr = 0;
+        LIST_FOREACH(ip, &(lif->ipaddr_list), ipaddr_next)
+        {
+            if (ip->ipa_type == IPADDR_V4 && 
+                memcmp(&(ip->ipaddr_v4), nl_addr_get_binary_addr(nl_addr), sizeof(struct in_addr)) == 0)
+            {
+                LIST_REMOVE(ip, ipaddr_next);
+                free (ip);
+                break;
+            }
+        }
         lif->prefixlen = 0;
     }
     else if (rtnl_addr_get_family(addr) == AF_INET6)
@@ -993,11 +1285,20 @@ void iccp_event_handler_obj_input_deladdr(struct nl_object *obj, void *arg)
             || memcmp(show_ipv6_str((char *)nl_addr_get_binary_addr(nl_addr)), "fe80", 4) == 0)
             return;
 
-        memset((char *)lif->ipv6_addr, 0, 16);
+        LIST_FOREACH(ip, &(lif->ipaddr_list), ipaddr_next)
+        {
+            if (ip->ipa_type == IPADDR_V6 && 
+                memcmp(&(ip->ipaddr_v6), nl_addr_get_binary_addr(nl_addr), sizeof(struct in6_addr)) == 0)
+            {
+                LIST_REMOVE(ip, ipaddr_next);
+                free (ip);
+                break;
+            }
+        }
         lif->prefixlen_v6 = 0;
     }
 
-    if (lif->ipv4_addr == 0 && memcmp((char *)lif->ipv6_addr, addr_null, 16) == 0)
+    if (LIST_EMPTY(&(lif->ipaddr_list)))
     {
         lif->l3_mode = 0;
         memset(lif->l3_mac_addr, 0, ETHER_ADDR_LEN);
@@ -1019,7 +1320,7 @@ int iccp_addr_valid_handler(struct nl_msg *msg, void *arg)
     return 0;
 }
 
-int iccp_check_if_addr_from_netlink(int family, uint8_t *addr, struct LocalInterface *lif)
+/*int iccp_check_if_addr_from_netlink(int family, uint8_t *addr, struct LocalInterface *lif)
 {
     struct
     {
@@ -1119,6 +1420,36 @@ int iccp_check_if_addr_from_netlink(int family, uint8_t *addr, struct LocalInter
     }
 
     free(buf);
+
+    return 0;
+}*/
+
+int iccp_check_if_addr(int family, uint8_t *addr, struct LocalInterface *lif)
+{
+    struct ipaddr *ip = NULL;
+
+    if (family == AF_INET)
+    {
+        LIST_FOREACH(ip, &(lif->ipaddr_list), ipaddr_next)
+        {
+            if (ip->ipa_type == IPADDR_V4 && 
+                !memcmp(&(ip->ipaddr_v4), addr, sizeof(struct in_addr)))
+            {
+                return 1;
+            }
+        }
+    }
+    else if (family == AF_INET6)
+    {
+        LIST_FOREACH(ip, &(lif->ipaddr_list), ipaddr_next)
+        {
+            if (ip->ipa_type == IPADDR_V6 && 
+                !memcmp(&(ip->ipaddr_v6), addr, sizeof(struct in6_addr)))
+            {
+                return 1;
+            }
+        }
+    }
 
     return 0;
 }
