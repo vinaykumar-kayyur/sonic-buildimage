@@ -142,9 +142,15 @@ INCLUDE_NAT = y
 # TELEMETRY_WRITABLE - Enable write/config operations via the gNMI interface.
 # Uncomment to enable:
 # TELEMETRY_WRITABLE = y
+
 # INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES = n
+
+# USE_K8S_AS_HTTP_PROXY - if set to y the Kubernetes server is used as
+# HTTP-proxy for docker daemon to reach registry repo.
+# This would be effective only when INCLUDE_KUBERNETES is set to "y"
+USE_K8S_AS_HTTP_PROXY = y
 
 # INCLUDE_MACSEC - build docker-macsec for macsec support
 INCLUDE_MACSEC = y

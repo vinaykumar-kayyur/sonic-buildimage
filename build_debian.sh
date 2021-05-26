@@ -223,6 +223,13 @@ fi
 # pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
+## Add docker config drop-in to specify dockerd command line
+sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
+## Note: $_ means last argument of last command
+sudo cp files/docker/*.conf $_
+## Fix systemd race between docker and containerd
+sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
+
 if [ "$INCLUDE_KUBERNETES" == "y" ]
 then
     ## Install Kubernetes
@@ -238,16 +245,22 @@ then
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${KUBERNETES_VERSION}-00
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${KUBERNETES_VERSION}-00
     # kubeadm package auto install kubelet & kubectl
+    if [ "$USE_K8S_AS_HTTP_PROXY" == "y" ]
+    then
+        PROXY_INFO="http://172.16.1.1:3128/"
+        cat <<EOT | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/http_proxy.conf > /dev/null
+[Service]
+Environment="HTTP_PROXY=${PROXY_INFO}"
+EOT
+        cat <<EOT | sudo tee $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/https_proxy.conf > /dev/null
+[Service]
+Environment="HTTPS_PROXY=${PROXY_INFO}"
+EOT
+    fi
+
 else
     echo '[INFO] Skipping Install kubernetes'
 fi
-
-## Add docker config drop-in to specify dockerd command line
-sudo mkdir -p $FILESYSTEM_ROOT/etc/systemd/system/docker.service.d/
-## Note: $_ means last argument of last command
-sudo cp files/docker/*.conf $_
-## Fix systemd race between docker and containerd
-sudo sed -i '/After=/s/$/ containerd.service/' $FILESYSTEM_ROOT/lib/systemd/system/docker.service
 
 ## Create default user
 ## Note: user should be in the group with the same name, and also in sudo/docker/redis groups

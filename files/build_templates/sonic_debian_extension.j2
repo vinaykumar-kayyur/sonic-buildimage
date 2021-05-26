@@ -452,7 +452,15 @@ sudo cp ${files_path}/container_startup.py ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCR
 sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_startup.py
 
 # Config file used by container mgmt scripts/service
+{% if use_k8s_as_http_proxy == "y" %}
+fl="${files_path}/remote_ctr.config.json"
+python3 -c 'import json
+with open("'${fl}'", "r") as s:
+    d=json.load(s);d["use_k8s_as_http_proxy"] = "y"; print(json.dumps(d, indent=4))
+' |  sudo tee ${FILESYSTEM_ROOT_ETC_SONIC}/remote_ctr.config.json
+{% else %}
 sudo cp ${files_path}/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
+{% endif %}
 
 # Remote container management service files
 sudo cp ${files_path}/ctrmgrd.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
