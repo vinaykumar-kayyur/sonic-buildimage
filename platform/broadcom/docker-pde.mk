@@ -1,6 +1,4 @@
 # Docker image for SONiC Platform Development Environment (PDE)
-
-
 ifeq ($(ENABLE_PDE), y)
 
 DOCKER_PDE_STEM = docker-pde
@@ -16,6 +14,7 @@ $(DOCKER_PDE_RDEPENDS += $(PYTHON_NETIFACES)
 
 $(DOCKER_PDE)_PYTHON_DEBS += $(SONIC_UTILS)
 $(DOCKER_PDE)_PYTHON_WHEELS += $(SONIC_PLATFORM_COMMON_PY3)
+
 ifeq ($(PDDF_SUPPORT), y)
 $(DOCKER_PDE)_PYTHON_WHEELS += $(PDDF_PLATFORM_API_BASE_PY3)
 endif
@@ -39,7 +38,6 @@ $(DOCKER_PDE)_RUN_OPT += --net=host --privileged -t
 $(DOCKER_PDE)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 $(DOCKER_PDE)_RUN_OPT += -v /host/machine.conf:/host/machine.conf:ro
 $(DOCKER_PDE)_RUN_OPT += -v /usr/lib/python2.7/dist-packages:/usr/share/sonic/classes:ro
-
 $(DOCKER_PDE)_RUN_OPT += -v /usr/local/lib/python3.7/dist-packages/utilities_common:/usr/local/lib/python3.7/dist-packages/utilities_common:ro
 $(DOCKER_PDE)_RUN_OPT += -v /var/log/syslog:/var/log/syslog:ro
 $(DOCKER_PDE)_RUN_OPT += -v /lib/modules:/lib/modules:ro
