@@ -51,8 +51,8 @@ PY3x = sys.version_info >= (3, 0)
 #TODO: Remove STR_TYPE, FILE_TYPE once SONiC moves to Python 3.x
 #TODO: Remove the import SonicYangCfgDbGenerator once SONiC moves to python3.x
 if PY3x:
-    from sonic_yang_cfg_generator import SonicYangCfgDbGenerator
     from io import IOBase
+    from sonic_yang_cfg_generator import SonicYangCfgDbGenerator
     STR_TYPE = str
     FILE_TYPE = IOBase
 else:
