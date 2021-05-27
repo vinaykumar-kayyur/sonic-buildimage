@@ -44,6 +44,7 @@ jobs:
         - name: barefoot
           variables:
             swi_image: yes
+            BUILD_OPTIONS: ${{ parameters.buildOptions }} SONIC_VERSION_CONTROL_COMPONENTS=
         - name: broadcom
           variables:
             dbg_image: yes
