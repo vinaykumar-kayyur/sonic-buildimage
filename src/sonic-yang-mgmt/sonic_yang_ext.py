@@ -584,7 +584,7 @@ class SonicYangExtMixin:
                 names = container.split(':')
                 if len(names) > 2:
                     raise SonicYangException("Invalid Yang data file structure")
-                table = names if len(names) == 1 else names[1]
+                table = names[0] if len(names) == 1 else names[1]
                 #print("revXlate " + table)
                 cmap = self.confDbYangMap[table]
                 cDbJson[table] = dict()

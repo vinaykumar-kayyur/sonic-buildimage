@@ -1,15 +1,25 @@
 import json
+import pytest
 import subprocess
 import os
 
 import tests.common_utils as utils
 
-from unittest import TestCase
+
+#TODO: Remove this fixuture once SONiC moves to python3.x
+@pytest.fixture(scope="class")
+def is_test_supported():
+    if not utils.PY3x:
+        pytest.skip('module not support in python2')
+    else:
+        pass
 
 
-class TestCfgGen(TestCase):
+@pytest.mark.usefixtures("is_test_supported")
+class TestCfgGen(object):
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
         self.script_file = utils.PYTHON_INTERPRETTER + ' ' + os.path.join(
             self.test_dir, '..', 'sonic-cfggen')
@@ -46,43 +56,39 @@ class TestCfgGen(TestCase):
         args = "-Y {} {}".format(self.sample_yang_file, arg)
         return self.run_script(arg=args, check_stderr=check_stderr)
 
-    def test_dummy_run(self):
-        arg = ''
-        output = self.run_script(arg)
-        self.assertEqual(output, '')
-
     def test_print_data(self):
         arg = "--print-data"
         output = self.run_script_with_yang_arg(arg)
-        self.assertGreater(len(output.strip()), 0)
-    
+        assert len(output.strip()) > 0
+
+
     def test_jinja_expression(self, expected_router_type='LeafRouter'):
         arg = " -v \"DEVICE_METADATA[\'localhost\'][\'type\']\" "
         output = self.run_script_with_yang_arg(arg)
-        self.assertEqual(output.strip(), expected_router_type)
+        assert output.strip() == expected_router_type
 
     def test_hwsku(self):
         arg = "-v \"DEVICE_METADATA[\'localhost\'][\'hwsku\']\" "
         output = self.run_script_with_yang_arg(arg)
-        self.assertEqual(output.strip(), "Force10-S6000")
+        assert output.strip() == "Force10-S6000"
 
     def test_device_metadata(self):
         arg = "--var-json \"DEVICE_METADATA\" "
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertIn('localhost', output)
-        self.assertDictEqual(output['localhost'],\
-            {'bgp_asn': '65100',
+        assert (output['localhost'] ==  {\
+            'bgp_asn': '65100',
             'docker_routing_config_mode': 'unified',
             'hostname': 'sonic',
             'hwsku': 'Force10-S6000',
             'platform': 'x86_64-kvm_x86_64-r0',
-            'type': 'LeafRouter'}
-            )
+            'type': 'LeafRouter'
+        })
+
 
     def test_port_table(self):
         arg = "--var-json \"PORT\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, \
+        assert(output == \
             {'Ethernet0': {'admin_status': 'up', 'alias': 'eth0', 'description': 'Ethernet0', 'fec': 'rs', 'lanes': '65, 66', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000'},
             'Ethernet4': {'admin_status': 'up', 'alias': 'eth4', 'description': 'Ethernet4', 'fec': 'rs', 'lanes': '67, 68', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000'},
             'Ethernet8': {'admin_status': 'up', 'alias': 'eth8', 'description': 'Ethernet8', 'fec': 'rs', 'lanes': '69, 70', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000'},
@@ -96,7 +102,7 @@ class TestCfgGen(TestCase):
     def test_portchannel_table(self):
         arg = "--var-json \"PORTCHANNEL\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, \
+        assert(output == \
             {'PortChannel1001': {'admin_status': 'up',
                       'lacp_key': 'auto',
                       'members': ['Ethernet0', 'Ethernet4'],
@@ -111,7 +117,7 @@ class TestCfgGen(TestCase):
     def test_portchannel_member_table(self):
         arg = "--var-json \"PORTCHANNEL_MEMBER\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output,\
+        assert(output ==\
             {   "PortChannel1001|Ethernet0": {},
                 "PortChannel1001|Ethernet4": {},
                 "PortChannel1002|Ethernet16": {},
@@ -121,7 +127,7 @@ class TestCfgGen(TestCase):
     def test_interface_table(self):
         arg = "--var-json \"INTERFACE\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output,{\
+        assert(output =={\
             "Ethernet8": {},
             "Ethernet12": {},
             "Ethernet8|10.0.0.8/31": {
@@ -145,7 +151,7 @@ class TestCfgGen(TestCase):
     def test_portchannel_interface_table(self):
         arg = "--var-json \"PORTCHANNEL_INTERFACE\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output,{\
+        assert(output =={\
             "PortChannel1001|10.0.0.1/31": {},
             "PortChannel1002|10.0.0.60/31": {}
             })
@@ -153,7 +159,7 @@ class TestCfgGen(TestCase):
     def test_loopback_table(self):
         arg = "--var-json \"LOOPBACK_INTERFACE\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             "Loopback0": {},
             "Loopback0|aa::01/64": {
                 "family": "IPv6",
@@ -168,7 +174,7 @@ class TestCfgGen(TestCase):
     def test_acl_table(self):
         arg = "--var-json \"ACL_TABLE\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             'DATAACL':   {'policy_desc': 'DATAACL',    'ports': ['PortChannel1001','PortChannel1002'], 'stage': 'ingress', 'type': 'L3'},
             'EVERFLOW':  {'policy_desc': 'EVERFLOW',   'ports': ['PortChannel1001','PortChannel1002'], 'stage': 'ingress', 'type': 'MIRROR'},
             'EVERFLOWV6': {'policy_desc': 'EVERFLOWV6', 'ports': ['PortChannel1001','PortChannel1002'], 'stage': 'ingress', 'type': 'MIRRORV6'},
@@ -178,7 +184,7 @@ class TestCfgGen(TestCase):
     def test_acl_rule(self):
         arg = "--var-json \"ACL_RULE\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             "DATAACL|Rule1": {
                 "DST_IP": "192.168.1.1/24",
                 "SRC_IP": "10.10.1.1/16",
@@ -192,11 +198,11 @@ class TestCfgGen(TestCase):
                 "IP_TYPE": "IPV4"
             }
         })
-    
+
     def test_vlan_table(self):
         arg = "--var-json \"VLAN\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             "Vlan100": {
                 "admin_status": "up",
                 "description": "server_vlan",
@@ -213,7 +219,7 @@ class TestCfgGen(TestCase):
     def test_vlan_interface(self):
         arg = "--var-json \"VLAN_INTERFACE\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             "Vlan100": {},
             "Vlan100|bb::01/64": {
                 "family": "IPv6",
@@ -228,7 +234,7 @@ class TestCfgGen(TestCase):
     def test_vlan_member(self):
         arg = "--var-json \"VLAN_MEMBER\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             "Vlan100|Ethernet24": {
                 "tagging_mode": "untagged"
             },
@@ -240,7 +246,7 @@ class TestCfgGen(TestCase):
     def test_vlan_crm(self):
         arg = "--var-json \"CRM\""
         output = json.loads(self.run_script_with_yang_arg(arg))
-        self.assertDictEqual(output, {\
+        assert(output == {\
             "Config": {
                 "acl_counter_high_threshold": "85",
                 "acl_counter_low_threshold": "25",
@@ -259,5 +265,3 @@ class TestCfgGen(TestCase):
                 "ipv6_neighbor_threshold_type": "used"
             }
         })
-
-
