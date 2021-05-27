@@ -281,21 +281,6 @@ module sonic-nat {
                     }
                 }
 
-                leaf access_list {
-                    description "ACL table name mapping for the binding";
-
-                    type union {
-                        type leafref {
-                            path "/sacl:sonic-acl/sacl:ACL_TABLE/sacl:ACL_TABLE_LIST/sacl:ACL_TABLE_NAME";
-                        }
-
-                        type string {
-                            pattern "";
-                        }
-                    }
-                    default "";
-                }
-
                 leaf nat_type {
                     description "Nat type for the binding - snat or dnat";
 

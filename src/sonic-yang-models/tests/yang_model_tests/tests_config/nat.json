@@ -310,29 +310,6 @@
             }
         }
     },
-    "NAT_BINDING_WITHOUT_ACL_TABLE": {
-        "sonic-nat:sonic-nat": {
-            "sonic-nat:NAT_POOL": {
-                "NAT_POOL_LIST": [
-                    {
-                        "name": "pool1",
-                        "nat_ip": "125.56.90.1-125.56.90.100",
-                        "nat_port": "500-1000"
-                    }
-                ]
-            },
-            "sonic-nat:NAT_BINDINGS": {
-                "NAT_BINDINGS_LIST": [
-                    {
-                        "name": "bind1",
-                        "nat_pool": "pool1", 
-                        "nat_type": "snat",
-                        "twice_nat_id": "100"
-                    }
-                ]
-            }
-        }
-    },
     "NAT_BINDING_WITH_INVALID_BINDING_NAME": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_POOL": {
@@ -415,53 +392,12 @@
             }
         }
     },
-    "NAT_BINDING_WITH_ACL_TABLE": {
-        "sonic-port:sonic-port": {
-            "sonic-port:PORT": {
-                "PORT_LIST": [
-                    {
-                        "admin_status": "up",
-                        "description": "Ethernet0",
-                        "mtu": 9000,
-                        "lanes": "1",
-                        "name": "Ethernet0",
-                        "speed": 25000
-                    }
-                ]
-            }
-        },
-        "sonic-acl:sonic-acl": {
-            "sonic-acl:ACL_RULE": {
-                "ACL_RULE_LIST": [
-                    {
-                        "ACL_TABLE_NAME": "NAT_ACL",
-                        "SRC_IP": "125.56.90.1/24",
-                        "IP_TYPE": "IPV4",
-                        "PACKET_ACTION": "FORWARD",
-                        "PRIORITY": 999980,
-                        "RULE_NAME": "Rule_20"
-                    }
-                ]
-            },
-            "sonic-acl:ACL_TABLE": {
-                "ACL_TABLE_LIST": [
-                    {
-                        "ACL_TABLE_NAME": "NAT_ACL",
-                        "policy_desc": "Filter IPv6",
-                        "ports": [
-                            "Ethernet0"
-                        ],
-                        "stage": "INGRESS",
-                        "type": "L3"
-                    }
-                ]
-            }
-        },
+    "NAT_BINDING_WITHOUT_ACL_TABLE": {
         "sonic-nat:sonic-nat": {
             "sonic-nat:NAT_POOL": {
                 "NAT_POOL_LIST": [
                     {
-                        "name": "pool6",
+                        "name": "pool1",
                         "nat_ip": "125.56.90.1-125.56.90.100",
                         "nat_port": "500-1000"
                     }
@@ -470,9 +406,8 @@
             "sonic-nat:NAT_BINDINGS": {
                 "NAT_BINDINGS_LIST": [
                     {
-                        "name": "bind6",
-                        "nat_pool": "pool6",
-                        "access_list": "NAT_ACL",
+                        "name": "bind1",
+                        "nat_pool": "pool1",
                         "nat_type": "snat",
                         "twice_nat_id": "100"
                     }

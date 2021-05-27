@@ -82,9 +82,6 @@
         "desc": "Configuring a invalid nat port in NAT Pool table.",
         "eStrKey" : "Pattern"
     },
-    "NAT_BINDING_WITHOUT_ACL_TABLE": {
-        "desc": "Configuring a NAT Binding table without acl."
-    },
     "NAT_BINDING_WITH_INVALID_BINDING_NAME": {
         "desc": "Configuring a invalid binding name in NAT Binding table.",
         "eStr": "Invalid length for the binding name."
@@ -101,7 +98,7 @@
         "desc": "Configuring a invalid twice nat id in NAT Binding table.",
         "eStrKey": "InvalidValue"
     },
-    "NAT_BINDING_WITH_ACL_TABLE": {
-        "desc": "Configuring a NAT Binding table with acl."
+    "NAT_BINDING_WITHOUT_ACL_TABLE": {
+        "desc": "Configuring a NAT Binding table without acl."
     }
 }
