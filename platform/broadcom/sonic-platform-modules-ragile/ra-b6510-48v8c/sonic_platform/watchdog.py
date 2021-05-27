@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #############################################################################
 #
 # Module contains an implementation of platform specific watchdog API's

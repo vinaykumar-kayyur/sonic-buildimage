@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 try:
     from sonic_platform_pddf_base.pddf_thermal import PddfThermal
 except ImportError as e:

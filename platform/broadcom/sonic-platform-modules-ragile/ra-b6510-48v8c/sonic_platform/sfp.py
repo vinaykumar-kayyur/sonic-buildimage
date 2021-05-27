@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 try:
     from sonic_platform_pddf_base.pddf_sfp import PddfSfp
 except ImportError as e:
