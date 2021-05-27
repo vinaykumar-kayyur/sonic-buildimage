@@ -21,8 +21,8 @@ if sys.version_info.major == 3:
         # dependencies section of setuptools followed by uninstall of enum43
         # 'pyangbind==0.8.1',
         'Jinja2>=2.10',
-        'sonic-yang-mgmt',
-        'sonic-yang-models'
+        'sonic-yang-mgmt>=1.0',
+        'sonic-yang-models>=1.0'
     ]
 else:
     # Python 2-only dependencies
