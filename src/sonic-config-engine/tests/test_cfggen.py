@@ -21,6 +21,7 @@ class TestCfgGen(TestCase):
         self.sample_graph_metadata = os.path.join(self.test_dir, 'simple-sample-graph-metadata.xml')
         self.sample_graph_pc_test = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.sample_graph_bgp_speaker = os.path.join(self.test_dir, 't0-sample-bgp-speaker.xml')
+        self.sample_graph_voq = os.path.join(self.test_dir, 'sample-voq-graph.xml')
         self.sample_device_desc = os.path.join(self.test_dir, 'device.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.port_config_autoneg = os.path.join(self.test_dir, 't0-sample-autoneg-port-config.ini')
@@ -67,6 +68,11 @@ class TestCfgGen(TestCase):
         argument = '-v "(MGMT_INTERFACE.keys()|list)[0]" -M "' + self.sample_device_desc + '"'
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "('eth0', '10.0.1.5/28')")
+
+    def test_minigraph_hostname(self):
+        argument = '-v "DEVICE_METADATA[\'localhost\'][\'hostname\']" -m "' + self.sample_graph + '"'
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), 'OCPSCH01040DDLF')
 
     def test_minigraph_sku(self):
         argument = '-v "DEVICE_METADATA[\'localhost\'][\'hwsku\']" -m "' + self.sample_graph + '"'
@@ -336,7 +342,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on'}")
+            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
         )
 
     def test_minigraph_port_autonegotiation(self):
@@ -347,8 +353,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'fortyGigE0/12', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/12', 'admin_status': 'up'}, "
                 "'Ethernet16': {'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/16', 'admin_status': 'up'}, "
                 "'Ethernet20': {'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/20', 'admin_status': 'up'}, "
@@ -388,8 +394,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100', 'alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'autoneg': 'off'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'fortyGigE0/12', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'autoneg': 'off'}, "
                 "'Ethernet16': {'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/16', 'admin_status': 'up', 'autoneg': 'off'}, "
                 "'Ethernet20': {'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/20', 'admin_status': 'up', 'autoneg': 'off'}, "
@@ -665,3 +671,39 @@ class TestCfgGen(TestCase):
         argument = '-a \'{"key1":"value"}\' --var-json INTERFACE'
         output = self.run_script(argument)
         self.assertEqual(output, '')
+
+    def test_minigraph_voq_metadata(self):
+        argument = "-m {} --var-json DEVICE_METADATA".format(self.sample_graph_voq)
+        output = json.loads(self.run_script(argument))
+        self.assertEqual(output['localhost']['asic_name'], 'Asic0')
+        self.assertEqual(output['localhost']['switch_id'], '0')
+        self.assertEqual(output['localhost']['switch_type'], 'voq')
+        self.assertEqual(output['localhost']['max_cores'], '16')
+
+    def test_minigraph_voq_system_ports(self):
+        argument = "-m {} --var-json SYSTEM_PORT".format(self.sample_graph_voq)
+        self.assertDictEqual(
+            json.loads(self.run_script(argument)),
+            {
+                "linecard-1|Asic0|Cpu0": { "core_port_index": "0", "num_voq": "8", "switch_id": "0", "speed": "1000", "core_index": "0", "system_port_id": "1" },
+                "linecard-1|Asic0|Ethernet1/1": { "core_port_index": "1", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "0", "system_port_id": "2" },
+                "linecard-1|Asic0|Ethernet1/2": { "core_port_index": "2", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "0", "system_port_id": "3" },
+                "linecard-1|Asic0|Ethernet1/3": { "core_port_index": "3", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "1", "system_port_id": "4" },
+                "linecard-1|Asic0|Ethernet1/4": { "core_port_index": "4", "num_voq": "8", "switch_id": "0", "speed": "40000", "core_index": "1", "system_port_id": "5" },
+                "linecard-2|Asic0|Cpu0": { "core_port_index": "0", "num_voq": "8", "switch_id": "2", "speed": "1000", "core_index": "0", "system_port_id": "256" },
+                "linecard-2|Asic0|Ethernet1/5": { "core_port_index": "1", "num_voq": "8", "switch_id": "2", "speed": "40000", "core_index": "0", "system_port_id": "257" },
+                "linecard-2|Asic0|Ethernet1/6": { "core_port_index": "2", "num_voq": "8", "switch_id": "2", "speed": "40000", "core_index": "1", "system_port_id": "258" },
+                "linecard-2|Asic1|Cpu0": { "core_port_index": "0", "num_voq": "8", "switch_id": "4", "speed": "1000", "core_index": "0", "system_port_id": "259" },
+                "linecard-2|Asic1|Ethernet1/7": { "core_port_index": "1", "num_voq": "8", "switch_id": "4", "speed": "40000", "core_index": "0", "system_port_id": "260" },
+                "linecard-2|Asic1|Ethernet1/8": { "core_port_index": "2", "num_voq": "8", "switch_id": "4", "speed": "40000", "core_index": "1", "system_port_id": "261" }
+            }
+        )
+
+    def test_minigraph_voq_inband_interface(self):
+        argument = "-m {} --var-json VOQ_INBAND_INTERFACE".format(self.sample_graph_voq)
+        self.assertDictEqual(
+            json.loads(self.run_script(argument)),
+            { 'Vlan3094': {'inband_type': 'Vlan'},
+              'Vlan3094|1.1.1.1/24': {}
+            }
+        )
