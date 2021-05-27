@@ -606,7 +606,11 @@ def parse_dpg(dpg, hname):
                         if panel_port not in intfs_inpc and panel_port not in acl_intfs:
                             acl_intfs.append(panel_port)
                     break
-            if acl_intfs:
+            # if acl is classified as mirror (erpsan) or acl interface 
+            # are binded then do not classify as Control plane.
+            # For multi-asic platforms it's possible there is no
+            # interface are binded to everflow in host namespace.
+            if acl_intfs or is_mirror_v6 or is_mirror:
                 # Remove duplications
                 dedup_intfs = []
                 for intf in acl_intfs:
@@ -1325,9 +1329,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
         alias = port.get('alias', port_name)
-        # generate default 100G FEC
+        # generate default 100G FEC only if FECDisabled is not true and 'fec' is not defined in port_config.ini
         # Note: FECDisabled only be effective on 100G port right now
-        if port.get('speed') == '100000' and linkmetas.get(alias, {}).get('FECDisabled', '').lower() != 'true':
+        if linkmetas.get(alias, {}).get('FECDisabled', '').lower() == 'true':
+            port['fec'] = 'none'
+        elif not port.get('fec') and port.get('speed') == '100000':
             port['fec'] = 'rs'
 
         # If AutoNegotiation is available in the minigraph, we override any value we may have received from port_config.ini
