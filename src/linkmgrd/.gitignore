@@ -1,5 +1,9 @@
 **/*.o
 **/*.d
+**/*.gcda
+**/*.gcno
+**/*.gcov
+**/*.html
 debian/debhelper-build-stamp
 debian/sonic-linkmgrd/
 linkmgrd
