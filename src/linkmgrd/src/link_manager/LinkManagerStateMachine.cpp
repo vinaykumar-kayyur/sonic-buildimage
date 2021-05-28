@@ -310,9 +310,15 @@ void LinkManagerStateMachine::enterMuxWaitState(CompositeState &nextState)
 void LinkManagerStateMachine::switchMuxState(
     CompositeState &nextState,
     mux_state::MuxState::Label label,
-    bool forceSwitch)
+    bool forceSwitch
+)
 {
     if (forceSwitch || mMuxPortConfig.getMode() == common::MuxPortConfig::Mode::Auto) {
+        MUXLOGINFO(boost::format("%s: Switching MUX state from '%s' to '%s'") %
+            mMuxPortConfig.getPortName() %
+            mMuxStateName[ms(nextState)] %
+            mMuxStateName[label]
+        );
         enterMuxState(nextState, mux_state::MuxState::Label::Wait);
         mMuxStateMachine.setWaitStateCause(mux_state::WaitState::WaitStateCause::SwssUpdate);
         mMuxPortPtr->setMuxState(label);

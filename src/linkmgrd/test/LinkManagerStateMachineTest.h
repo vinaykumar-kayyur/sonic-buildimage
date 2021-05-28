@@ -22,8 +22,6 @@ public:
     LinkManagerStateMachineTest();
     virtual ~LinkManagerStateMachineTest() = default;
 
-    virtual void suspendTxProbes();
-
     void runIoService(uint32_t count = 0);
     void postLinkProberEvent(link_prober::LinkProberState::Label label, uint32_t count = 0);
     void postMuxEvent(mux_state::MuxState::Label label);
@@ -48,8 +46,6 @@ public:
 
     FakeMuxPort mFakeMuxPort;
     link_manager::LinkManagerStateMachine::CompositeState mTestCompositeState;
-
-    uint32_t mSuspendTxProbeCallCount = 0;
 };
 
 } /* namespace test */

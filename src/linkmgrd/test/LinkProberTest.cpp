@@ -1,0 +1,125 @@
+/*
+ * LinkProberTest.cpp
+ *
+ *  Created on: May 12, 2021
+ *      Author: taahme
+ */
+
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
+#include "link_prober/IcmpPayload.h"
+#include "LinkProberTest.h"
+
+namespace test
+{
+
+LinkProberTest::LinkProberTest() :
+    mDbInterface(&mIoService),
+    mFakeMuxPort(
+        &mDbInterface,
+        mMuxConfig,
+        mPortName,
+        mServerId,
+        mIoService
+    ),
+    mLinkProber(const_cast<common::MuxPortConfig&> (
+        mFakeMuxPort.getMuxPortConfig()),
+        mIoService,
+        mFakeMuxPort.getLinkProberStateMachine()
+    )
+{
+    mMuxConfig.setTimeoutIpv4_msec(1);
+}
+
+TEST_F(LinkProberTest, InitializeSendBuffer)
+{
+    initializeSendBuffer();
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
+
+    ether_header *ethHeader = reinterpret_cast<ether_header *> (txBuffer.data());
+    EXPECT_TRUE(memcmp(
+        ethHeader->ether_dhost,
+        mFakeMuxPort.getMuxPortConfig().getBladeMacAddress().data(),
+        sizeof(ethHeader->ether_dhost)
+    ) == 0);
+    EXPECT_TRUE(ethHeader->ether_type == htons(ETHERTYPE_IP));
+
+    iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
+    EXPECT_TRUE(ipHeader->ihl == sizeof(iphdr) >> 2);
+    EXPECT_TRUE(ipHeader->version == IPVERSION);
+    EXPECT_TRUE(ipHeader->tos == 0);
+    EXPECT_TRUE(ipHeader->tot_len == htons(sizeof(iphdr) + sizeof(icmphdr) + sizeof(link_prober::IcmpPayload)));
+    EXPECT_TRUE(ipHeader->frag_off == 0);
+    EXPECT_TRUE(ipHeader->ttl == 64);
+    EXPECT_TRUE(ipHeader->protocol == IPPROTO_ICMP);
+    EXPECT_TRUE(ipHeader->check == 45256);
+    EXPECT_TRUE(ipHeader->saddr == htonl(mFakeMuxPort.getMuxPortConfig().getLoopbackIpv4Address().to_v4().to_uint()));
+    EXPECT_TRUE(ipHeader->daddr == htonl(mFakeMuxPort.getMuxPortConfig().getBladeIpv4Address().to_v4().to_uint()));
+
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    EXPECT_TRUE(icmpHeader->type == ICMP_ECHO);
+    EXPECT_TRUE(icmpHeader->code == 0);
+    EXPECT_TRUE(icmpHeader->un.echo.id == htons(mFakeMuxPort.getMuxPortConfig().getServerId()));
+    EXPECT_TRUE(icmpHeader->un.echo.sequence == htons(0xffff));
+    EXPECT_TRUE(icmpHeader->checksum == 12355);
+
+    link_prober::IcmpPayload *icmpPayload = new (
+        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+    ) link_prober::IcmpPayload();
+
+    EXPECT_TRUE(icmpPayload->cookie == htonl(link_prober::IcmpPayload::getCookie()));
+    EXPECT_TRUE(icmpPayload->version == htonl(link_prober::IcmpPayload::getVersion()));
+    EXPECT_TRUE(memcmp(
+        icmpPayload->un.uuid.data,
+        link_prober::IcmpPayload::getGuidData(),
+        link_prober::IcmpPayload::getGuid().size()
+    ) == 0);
+}
+
+TEST_F(LinkProberTest, CalculateChecksum)
+{
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
+    link_prober::IcmpPayload *icmpPayload = new (
+        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+    ) link_prober::IcmpPayload();
+    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
+    memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
+    initializeSendBuffer();
+
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    EXPECT_TRUE(icmpHeader->checksum == 48830);
+}
+
+TEST_F(LinkProberTest, UpdateEthernetFrame)
+{
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
+    link_prober::IcmpPayload *icmpPayload = new (
+        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+    ) link_prober::IcmpPayload();
+    boost::uuids::uuid guid = boost::lexical_cast<boost::uuids::uuid> ("44f49d86-c312-414b-b6a1-be82901ac459");
+    memcpy(icmpPayload->un.uuid.data, guid.data, guid.size());
+    handleUpdateEthernetFrame();
+    mIoService.run();
+
+    icmphdr *icmpHeader = reinterpret_cast<icmphdr *> (txBuffer.data() + sizeof(ether_header) + sizeof(iphdr));
+    EXPECT_TRUE(icmpHeader->checksum == 48830);
+}
+
+TEST_F(LinkProberTest, GenerateGuid)
+{
+    link_prober::IcmpPayload::generateGuid();
+    initializeSendBuffer();
+
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
+    link_prober::IcmpPayload *icmpPayload = new (
+        txBuffer.data() + sizeof(ether_header) + sizeof(iphdr) + sizeof(icmphdr)
+    ) link_prober::IcmpPayload();
+    EXPECT_TRUE(memcmp(
+        icmpPayload->un.uuid.data,
+        link_prober::IcmpPayload::getGuidData(),
+        link_prober::IcmpPayload::getGuid().size()
+    ) == 0);
+}
+
+} /* namespace test */

@@ -19,6 +19,10 @@
 #include "LinkProberStateMachine.h"
 #include "common/MuxPortConfig.h"
 
+namespace test {
+class LinkProberTest;
+}
+
 namespace link_prober
 {
 using SockFilter = struct sock_filter;
@@ -283,6 +287,17 @@ private:
     *@return CRC checksum
     */
     void updateIcmpSequenceNo();
+
+    /**
+    *@method getTxBuffer
+    *
+    *@brief getter for TxBuffer used for testing
+    *
+    *@return CRC checksum
+    */
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> getTxBuffer() {return mTxBuffer;};
+
+    friend class test::LinkProberTest;
 
 private:
     static SockFilter mIcmpFilter[];

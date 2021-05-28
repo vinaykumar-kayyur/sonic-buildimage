@@ -61,7 +61,10 @@ LinkProber::LinkProber(
     mStream(mIoService)
 {
     try {
-        mSockFilterPtr = std::shared_ptr<SockFilter> (new SockFilter[sizeof(mIcmpFilter) / sizeof(*mIcmpFilter)]);
+        mSockFilterPtr = std::shared_ptr<SockFilter> (
+            new SockFilter[sizeof(mIcmpFilter) / sizeof(*mIcmpFilter)],
+            std::default_delete<SockFilter[]>()
+        );
         memcpy(mSockFilterPtr.get(), mIcmpFilter, sizeof(mIcmpFilter));
 
         mSockFilterProg.len = sizeof(mIcmpFilter) / sizeof(*mIcmpFilter);

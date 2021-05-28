@@ -32,11 +32,6 @@ LinkManagerStateMachineTest::LinkManagerStateMachineTest() :
     mMuxConfig.setTimeoutIpv4_msec(1);
 }
 
-void LinkManagerStateMachineTest::suspendTxProbes()
-{
-    mSuspendTxProbeCallCount++;
-}
-
 void LinkManagerStateMachineTest::runIoService(uint32_t count)
 {
     if (count == 0) {
