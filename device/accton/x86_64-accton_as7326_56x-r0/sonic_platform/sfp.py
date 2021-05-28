@@ -277,7 +277,7 @@ class Sfp(SfpBase):
 
     def __write_txt_file(self, file_path, value):
         try:
-            with open(file_path, 'w', buffering=0) as fd:
+            with open(file_path, 'w') as fd:
                 fd.write(str(value))
         except Exception:
             return False
