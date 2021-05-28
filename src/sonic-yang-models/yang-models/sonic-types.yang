@@ -114,4 +114,10 @@ module sonic-types {
             pattern "percentage|used|free|PERCENTAGE|USED|FREE";
         }
     }
+
+    typedef tpid_type {
+        type string {
+            pattern "0x8100|0x9100|0x9200|0x88a8|0x88A8";
+        }
+    }
 }
