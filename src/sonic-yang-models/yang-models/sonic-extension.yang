@@ -24,8 +24,8 @@ module sonic-extension {
         argument "value";
     }
 
-    extension custom-validation {
-        description "Extension for registering custom validation handler.";
+    extension custom-validation-cvl {
+        description "Extension for registering cvl based custom validation handler.";
         argument "handler";
     }
 
