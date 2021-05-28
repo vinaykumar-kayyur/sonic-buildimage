@@ -8,7 +8,7 @@
 
 
 import logging
-import subprocess
+
 try:
     from sonic_platform_base.psu_base import PsuBase
     from .helper import APIHelper

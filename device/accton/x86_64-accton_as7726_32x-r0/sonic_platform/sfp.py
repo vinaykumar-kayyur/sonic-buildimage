@@ -18,7 +18,6 @@ try:
     from sonic_platform_base.sonic_sfp.sff8436 import sff8436InterfaceId
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472Dom
     from sonic_platform_base.sonic_sfp.sff8472 import sff8472InterfaceId
-    from sonic_platform_base.sonic_sfp.sff8472 import sffbase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
     from .helper import APIHelper
 except ImportError as e:
@@ -270,7 +269,6 @@ class Sfp(SfpBase):
         application_advertisement  |1*255VCHAR     |supported applications advertisement
         ========================================================================
         """
-        sfpi_obj = sff8436InterfaceId() #QSFP
         if self.port_num >= 33:
             sfpi_obj = sff8472InterfaceId() #SFP
         else:    
