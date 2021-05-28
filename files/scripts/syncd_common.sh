@@ -11,6 +11,8 @@
 # For examples of these, see gbsyncd.sh and syncd.sh.
 #
 
+. /usr/local/bin/asic_status.sh
+
 function debug()
 {
     /usr/bin/logger $1
@@ -104,14 +106,16 @@ start() {
 
     startplatform
 
-    # start service docker
-    /usr/bin/${SERVICE}.sh start $DEV
-    debug "Started ${SERVICE} service..."
+    # For fixed platforms start syncd service here
+    start_service start
 
     unlock_service_state_change
 }
 
 wait() {
+    # For chassis platforms start syncd service here
+    start_service wait
+
     waitplatform
 
     /usr/bin/${SERVICE}.sh wait $DEV

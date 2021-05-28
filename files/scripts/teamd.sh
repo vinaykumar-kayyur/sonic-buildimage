@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. /usr/local/bin/asic_status.sh
+
 function debug()
 {
     /usr/bin/logger $1
@@ -48,12 +50,14 @@ start() {
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${Fast_BOOT}."
 
-    # start service docker
-    /usr/bin/${SERVICE}.sh start $DEV
-    debug "Started ${SERVICE}$DEV service..."
+    # For fixed platforms start teamd service here
+    start_service start
 }
 
 wait() {
+    # For chassis platforms start teamd service here
+    start_service wait
+
     /usr/bin/${SERVICE}.sh wait $DEV
 }
 
