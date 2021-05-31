@@ -422,7 +422,7 @@ int mlacp_prepare_for_ndisc_info(struct CSM *csm, char *buf, size_t max_buf_size
         tlv->icc_parameter.type = htons(TLV_T_MLACP_NDISC_INFO);
     }
 
-    NdiscData = (struct mLACPMACData *)&buf[sizeof(ICCHdr) + sizeof(struct mLACPNDISCInfoTLV) + sizeof(struct NDISCMsg) * count];
+    NdiscData = (struct NDISCMsg *)&buf[sizeof(ICCHdr) + sizeof(struct mLACPNDISCInfoTLV) + sizeof(struct NDISCMsg) * count];
 
     NdiscData->op_type = ndisc_msg->op_type;
     sprintf(NdiscData->ifname, "%s", ndisc_msg->ifname);
