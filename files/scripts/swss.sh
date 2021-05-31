@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEPENDENT="radv"
+DEPENDENT="radv dhcp_relay"
 MULTI_INST_DEPENDENT="teamd"
 
 # Update dependent list based on other packages requirements
