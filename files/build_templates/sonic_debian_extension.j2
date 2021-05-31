@@ -339,6 +339,11 @@ sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/container_checker
 # Install custom-built openssh sshd
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_*.deb
 
+if [[ $CONFIGURED_ARCH == amd64 ]]; then
+    # Install custom-built flashrom
+    sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/flashrom_*.deb
+fi
+
 # Copy crontabs
 sudo cp -f $IMAGE_CONFIGS/cron.d/* $FILESYSTEM_ROOT/etc/cron.d/
 

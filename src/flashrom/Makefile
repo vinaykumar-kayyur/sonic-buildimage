@@ -3,7 +3,7 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 
-MAIN_TARGET = flashrom_$(FLASHROM_VERSION_FULL)_$(CONFIGURED_ARCH).deb
+MAIN_TARGET = $(FLASHROM)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	rm -rf ./flashrom-$(FLASHROM_VERSION_FULL)
