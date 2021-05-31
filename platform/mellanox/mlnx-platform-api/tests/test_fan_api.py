@@ -11,20 +11,18 @@ sys.path.insert(0, modules_path)
 from sonic_platform.fan import Fan
 from sonic_platform.led import FanLed
 from sonic_platform.fan_drawer import RealDrawer
-from sonic_platform.device_data import DEVICE_DATA
 
 
 def test_get_absence_fan_direction():
-    fan_drawer = RealDrawer(0, DEVICE_DATA['x86_64-mlnx_msn2700-r0']['fans'])
+    fan_drawer = RealDrawer(0)
     fan = Fan(0, fan_drawer, 1)
     fan_drawer.get_presence = MagicMock(return_value=False)
 
-    assert not fan.is_psu_fan
     assert fan.get_direction() == Fan.FAN_DIRECTION_NOT_APPLICABLE
 
 
 def test_fan_drawer_set_status_led():
-    fan_drawer = RealDrawer(0, DEVICE_DATA['x86_64-mlnx_msn2700-r0']['fans'])
+    fan_drawer = RealDrawer(0)
     with pytest.raises(Exception):
         fan_drawer.set_status_led(None, 'Invalid color')
 

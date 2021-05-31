@@ -1,7 +1,5 @@
 import os
 import sys
-import pytest
-from mock import MagicMock
 from .mock_platform import MockFan
 
 test_path = os.path.dirname(os.path.abspath(__file__))

@@ -8,7 +8,11 @@ import sys, errno
 import os
 import time
 import select
-from python_sdk_api.sx_api import *
+try:
+    if 'MLNX_PLATFORM_API_UNIT_TESTING' not in os.environ:
+        from python_sdk_api.sx_api import *
+except KeyError:
+    pass
 from sonic_py_common.logger import Logger
 
 # SFP status from PMAOS register
@@ -293,6 +297,7 @@ class sfp_event:
             module_state = pmpe_t.module_state
             error_type = pmpe_t.error_type
             module_id = pmpe_t.module_id
+            slot_id = pmpe_t.slot_id # For non-modular chassis, it should return 0
 
             if module_state == SDK_SFP_STATE_ERR:
                 logger.log_error("Receive PMPE error event on module {}: status {} error type {}".format(module_id, module_state, error_type))
@@ -310,7 +315,7 @@ class sfp_event:
                 for i in range(port_cnt):
                     port_attributes = sx_port_attributes_t_arr_getitem(port_attributes_list,i)
                     if port_attributes.log_port == logical_port:
-                        label_port = port_attributes.port_mapping.module_port
+                        label_port = port_attributes.port_mapping.module_port + (slot_id << 16) # TODO: align with final design
                         break
 
                 if label_port is not None:

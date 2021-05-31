@@ -1,3 +1,4 @@
+import functools
 import subprocess
 
 # flags to indicate whether this process is running in docker or host
@@ -35,6 +36,26 @@ def read_int_from_file(file_path, default=0, raise_exception=False):
     try:
         with open(file_path, 'r') as f:
             value = int(f.read().strip())
+    except (ValueError, IOError) as e:
+        if not raise_exception:
+            value = default
+        else:
+            raise e
+
+    return value
+
+
+def read_float_from_file(file_path, default=0.0, raise_exception=False):
+    """
+    Read content from file and cast it to integer
+    :param file_path: File path
+    :param default: Default return value if any exception occur
+    :param raise_exception: Raise exception to caller if True else just return default value
+    :return: Integer value of the file content
+    """
+    try:
+        with open(file_path, 'r') as f:
+            value = float(f.read().strip())
     except (ValueError, IOError) as e:
         if not raise_exception:
             value = default
@@ -89,3 +110,41 @@ def is_host():
         pass
 
     return _is_host
+
+
+def pre_initialize(init_func):
+    def decorator(method):
+        @functools.wraps(method)
+        def _impl(self, *args, **kwargs):
+            init_func(self)
+            return method(self, *args, **kwargs)
+        return _impl
+    return decorator
+
+
+def pre_initialize_one(init_func):
+    def decorator(method):
+        @functools.wraps(method)
+        def _impl(self, index):
+            init_func(self, index)
+            return method(self, index)
+        return _impl
+    return decorator
+
+
+def read_only_cache():
+    """Decorator to cache return value for a method/function once.
+       This decorator should be used for method/function when:
+       1. Executing the method/function takes time. e.g. reading sysfs.
+       2. The return value of this method/function never changes.
+    """
+    def decorator(method):
+        method.return_value = None
+
+        @functools.wraps(method)
+        def _impl(*args, **kwargs):
+            if not method.return_value:
+                method.return_value = method(*args, **kwargs)
+            return method.return_value
+        return _impl
+    return decorator

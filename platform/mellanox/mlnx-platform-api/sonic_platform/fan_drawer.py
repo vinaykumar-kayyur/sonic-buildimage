@@ -20,11 +20,10 @@ except ImportError as e:
 
 
 class MellanoxFanDrawer(FanDrawerBase):
-    def __init__(self, index, fan_data):
+    def __init__(self, index):
         from .fan import FAN_PATH
         super(MellanoxFanDrawer, self).__init__()
         self._index = index + 1
-        self._fan_data = fan_data
         self._presence_path = os.path.join(FAN_PATH, 'fan{}_status'.format(self._index))
         self._led = None
 
@@ -35,9 +34,6 @@ class MellanoxFanDrawer(FanDrawerBase):
         return self._led
 
     def get_presence(self):
-        if not self._fan_data['hot_swappable']:
-            return True
-
         status = 0
         try:
             with open(self._presence_path, 'r') as presence_status:
@@ -48,7 +44,7 @@ class MellanoxFanDrawer(FanDrawerBase):
         return status == 1
 
     def get_direction(self):
-        if not self._fan_data['support_fan_direction'] or not self.get_presence():
+        if not self.get_presence():
             return FanBase.FAN_DIRECTION_NOT_APPLICABLE
         
         try:
@@ -99,12 +95,12 @@ class MellanoxFanDrawer(FanDrawerBase):
         Returns:
             bool: True if it is replaceable.
         """
-        return self._fan_data['hot_swappable']
+        return True
 
 
 class RealDrawer(MellanoxFanDrawer):
-    def __init__(self, index, fan_data):
-        super(RealDrawer, self).__init__(index, fan_data)
+    def __init__(self, index):
+        super(RealDrawer, self).__init__(index)
         self._name = 'drawer{}'.format(self._index)
         self._led = SharedLed(FanLed(self._index))
 
@@ -113,9 +109,15 @@ class RealDrawer(MellanoxFanDrawer):
 
     
 class VirtualDrawer(MellanoxFanDrawer):
-    def __init__(self, index, fan_data):
-        super(VirtualDrawer, self).__init__(index, fan_data)
+    def __init__(self, index):
+        super(VirtualDrawer, self).__init__(index)
         self._led = SharedLed(FanLed(None))
 
     def get_name(self):
         return 'N/A'
+
+    def get_presence(self):
+        return True
+
+    def is_replaceable(self):
+        return False
