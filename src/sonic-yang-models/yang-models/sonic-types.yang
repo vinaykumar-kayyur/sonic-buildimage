@@ -58,6 +58,13 @@ module sonic-types {
         }
     }
 
+    typedef oper_status {
+        type enumeration {
+            enum up;
+            enum down;
+        }
+    }
+
     typedef packet_action{
         type enumeration {
             enum DROP;

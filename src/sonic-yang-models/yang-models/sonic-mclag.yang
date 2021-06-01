@@ -12,8 +12,8 @@ module sonic-mclag {
 		prefix inet;
 	}
 
-    import sonic-common {
-        prefix scommon;
+    import sonic-types {
+        prefix stypes;
     }
 
     import sonic-extension {
@@ -173,7 +173,7 @@ module sonic-mclag {
                 }
 
                 leaf oper_status {
-                    type scommon:oper-status;
+                    type stypes:oper-status;
                 }
 
                 leaf role {
@@ -235,7 +235,7 @@ module sonic-mclag {
                 }
 
                 leaf oper_status {
-                    type scommon:oper-status;
+                    type stypes:oper-status;
                 }
             }
         }
