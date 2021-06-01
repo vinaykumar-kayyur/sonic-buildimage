@@ -5,12 +5,23 @@ try:
     import re
     import sys
 
-    from swsscommon.swsscommon import ConfigDBConnector
-    from swsscommon.swsscommon import SonicDBConfig
+    from swsscommon import swsscommon
     from sonic_py_common import device_info
     from sonic_py_common.multi_asic import get_asic_id_from_name
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
+
+try:
+    if os.environ["UTILITIES_UNIT_TESTING"] == "2":
+        modules_path = os.path.join(os.path.dirname(__file__), ".")
+        tests_path = os.path.join(modules_path, "tests")
+        sys.path.insert(0, modules_path)
+        sys.path.insert(0, tests_path)
+        import mock_tables.dbconnector
+        mock_tables.dbconnector.load_namespace_config()
+
+except KeyError:
+    pass
 
 # Global Variable
 PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
@@ -53,8 +64,8 @@ def db_connect_configdb(namespace=None):
     """
     try:
         if namespace is not None:
-            SonicDBConfig.load_sonic_global_db_config(namespace=namespace)
-        config_db = ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
+            swsscommon.SonicDBConfig.load_sonic_global_db_config(namespace=namespace)
+        config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True, namespace=namespace)
     except Exception as e:
         return None
     if config_db is None:
