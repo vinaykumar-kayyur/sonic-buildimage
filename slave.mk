@@ -997,8 +997,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 
 		$(if $($(docker:-dbg.gz=.gz)_MACHINE),\
-			mv $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh $($(docker:-dbg.gz=.gz)_MACHINE)_$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh)
+			mv $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh $($(docker:-dbg.gz=.gz)_MACHINE)_$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		)
+	)
 
 
 	# Exported variables are used by sonic_debian_extension.sh
@@ -1032,43 +1033,19 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x sonic_debian_extension.sh,
 	)
 
-	DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
-	DEBUG_SRC_ARCHIVE_DIRS="$(DBG_SRC_ARCHIVE)" \
-	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
-		scripts/dbg_files.sh
+	# Build images for the MACHINE, DEPENDENT_MACHINE defined.
+	$(foreach dep_machine, $($*_MACHINE) $($*_DEPENDENT_MACHINE), \
+		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
+		DEBUG_SRC_ARCHIVE_DIRS="$(DBG_SRC_ARCHIVE)" \
+		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
+			scripts/dbg_files.sh
 
-	DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
-	DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
-	USERNAME="$(USERNAME)" \
-	PASSWORD="$(PASSWORD)" \
-	TARGET_MACHINE=$($*_MACHINE) \
-	IMAGE_TYPE=$($*_IMAGE_TYPE) \
-	TARGET_PATH=$(TARGET_PATH) \
-	SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
-	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
-	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
-	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
-		./build_debian.sh $(LOG)
-
-	USERNAME="$(USERNAME)" \
-	PASSWORD="$(PASSWORD)" \
-	TARGET_MACHINE=$($*_MACHINE) \
-	IMAGE_TYPE=$($*_IMAGE_TYPE) \
-	SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
-	SIGNING_KEY="$(SIGNING_KEY)" \
-	SIGNING_CERT="$(SIGNING_CERT)" \
-	CA_CERT="$(CA_CERT)" \
-	TARGET_PATH="$(TARGET_PATH)" \
-		./build_image.sh $(LOG)
-
-        # Build an additional image for the DEPENDENT_MACHINE defined.
-	$(foreach dep_machine, $($*_DEPENDENT_MACHINE), \
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
 		DEBUG_SRC_ARCHIVE_FILE="$(DBG_SRC_ARCHIVE_FILE)" \
 		USERNAME="$(USERNAME)" \
 		PASSWORD="$(PASSWORD)" \
-		IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		TARGET_MACHINE=$(dep_machine) \
+		IMAGE_TYPE=$($*_IMAGE_TYPE) \
 		TARGET_PATH=$(TARGET_PATH) \
 		SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
 		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
@@ -1089,7 +1066,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	)
 
 	$(foreach docker, $($*_DOCKERS), \
-		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
+		rm -f *$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).sh
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
 		rm -f $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.service
 	)
