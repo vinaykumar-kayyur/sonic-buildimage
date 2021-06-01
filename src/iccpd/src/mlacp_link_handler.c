@@ -1182,7 +1182,7 @@ static void update_l2_mac_state(struct CSM *csm,
                     }
 
                     ICCPD_LOG_NOTICE(__FUNCTION__, "Intf %s down, redirect MAC %s vlan-id %d to peer-link %s",
-                                    mac_msg->ifname, mac_msg->mac_str, mac_msg->vid, csm->peer_itf_name);
+                                    mac_msg->origin_ifname, mac_msg->mac_str, mac_msg->vid, csm->peer_itf_name);
                 }
                 else
                 {
