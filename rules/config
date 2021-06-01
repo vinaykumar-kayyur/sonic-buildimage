@@ -147,11 +147,6 @@ INCLUDE_NAT = y
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES = n
 
-# USE_K8S_AS_HTTP_PROXY - if set to y the Kubernetes server is used as
-# HTTP-proxy for docker daemon to reach registry repo.
-# This would be effective only when INCLUDE_KUBERNETES is set to "y"
-USE_K8S_AS_HTTP_PROXY = y
-
 # INCLUDE_MACSEC - build docker-macsec for macsec support
 INCLUDE_MACSEC = y
 
@@ -160,8 +155,8 @@ INCLUDE_MACSEC = y
 # These are Used *only* when INCLUDE_KUBERNETES=y
 # NOTE: As a worker node it has to run version compatible to kubernetes master.
 #
-KUBERNETES_VERSION = 1.18.6
-KUBERNETES_CNI_VERSION = 0.8.6
+KUBERNETES_VERSION = 1.21.1
+KUBERNETES_CNI_VERSION = 0.8.7
 K8s_GCR_IO_PAUSE_VERSION = 3.2
 
 # SONIC_ENABLE_IMAGE_SIGNATURE - enable image signature

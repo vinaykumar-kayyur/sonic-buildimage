@@ -56,7 +56,6 @@ KUBE_LABEL_TABLE = "KUBE_LABELS"
 KUBE_LABEL_SET_KEY = "SET"
 
 remote_connected = False
-use_k8s_master_as_docker_proxy = False
 
 dflt_cfg_ser = {
         CFG_SER_IP: "",
@@ -593,14 +592,6 @@ class LabelsPendingHandler:
 
 
 def main():
-    global use_k8s_master_as_docker_proxy
-
-    parser = argparse.ArgumentParser(description="ctrmgrd service")
-    parser.add_argument("-p", "--proxy", action='store_true',
-            help="Act as docker http-proxy", default=False)
-    args = parser.parse_args()
-    use_k8s_master_as_docker_proxy = args.proxy
-
     init()
     server = MainServer()
     RemoteServerHandler(server)
