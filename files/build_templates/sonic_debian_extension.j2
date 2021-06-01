@@ -460,7 +460,7 @@ fl="${files_path}/remote_ctr.config.json"
 use_k8s_as_http_proxy=$(python3 -c 'import json
 with open("'${fl}'", "r") as s:
     d=json.load(s);print(d.get("use_k8s_as_http_proxy", ""))
-'
+')
 if [ "${use_k8s_as_http_proxy}" == "y" ]; then
     # create proxy files for docker using private IP which will
     # be later directed to k8s master upon config
@@ -475,7 +475,6 @@ Environment="HTTPS_PROXY=${PROXY_INFO}"
 EOT
 fi
 
-endif
 sudo cp ${files_path}/remote_ctr.config.json ${FILESYSTEM_ROOT_ETC_SONIC}/
 
 # Remote container management service files
