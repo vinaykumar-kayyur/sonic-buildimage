@@ -52,6 +52,16 @@ struct CSM;
     #define MAX_BUFSIZE 4096
 #endif
 
+RB_HEAD(lif_rb_tree, LocalInterface);
+RB_PROTOTYPE(lif_rb_tree, LocalInterface, lif_entry, lif_node_compare);
+
+#define LIF_RB_REMOVE(name, head, elm) do {  \
+    RB_REMOVE(name, head, elm);              \
+    (elm)->lif_entry.rbt_parent = NULL;   \
+    (elm)->lif_entry.rbt_left = NULL;     \
+    (elm)->lif_entry.rbt_right = NULL;    \
+} while (0)
+
 struct System
 {
     int server_fd;/* Peer-Link Socket*/
@@ -76,7 +86,7 @@ struct System
 
     /* Info List*/
     LIST_HEAD(csm_list, CSM) csm_list;
-    LIST_HEAD(lif_all_list, LocalInterface) lif_list;
+    struct lif_rb_tree lif_tree;
     LIST_HEAD(lif_purge_all_list, LocalInterface) lif_purge_list;
 
     /* Settings */

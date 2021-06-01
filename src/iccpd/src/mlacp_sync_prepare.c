@@ -465,9 +465,9 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
         return MCLAG_ERROR;
 
     /* Calculate VLAN ID Length */
-    LIST_FOREACH(vlan_id, &(port_channel->vlan_list), port_next)
-    if (vlan_id != NULL)
-        num_of_vlan_id++;
+    RB_FOREACH(vlan_id, vlan_rb_tree, &(port_channel->vlan_tree))
+        if (vlan_id != NULL)
+            num_of_vlan_id++;
 
     tlv_len = sizeof(struct mLACPPortChannelInfoTLV) + sizeof(struct mLACPVLANData) * num_of_vlan_id;
 
@@ -500,7 +500,7 @@ int mlacp_prepare_for_port_channel_info(struct CSM* csm, char* buf,
     tlv->num_of_vlan_id = htons(num_of_vlan_id);
 
     num_of_vlan_id = 0;
-    LIST_FOREACH(vlan_id, &(port_channel->vlan_list), port_next)
+    RB_FOREACH(vlan_id, vlan_rb_tree, &(port_channel->vlan_tree))
     {
         if (vlan_id != NULL )
         {

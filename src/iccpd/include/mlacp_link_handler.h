@@ -44,7 +44,7 @@ void peerlink_port_isolate_cleanup(struct CSM* csm);
 void update_peerlink_isolate_from_all_csm_lif(struct CSM* csm);
 
 void del_mac_from_chip(struct MACMsg *mac_msg);
-void add_mac_to_chip(struct MACMsg *mac_msg, uint8_t mac_type);
+void add_mac_to_chip(struct CSM *csm, struct MACMsg *mac_msg, uint8_t mac_type);
 uint8_t set_mac_local_age_flag(struct CSM *csm, struct MACMsg *mac_msg, uint8_t set);
 void iccp_get_fdb_change_from_syncd(void);
 

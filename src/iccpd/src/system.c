@@ -53,6 +53,7 @@ void system_init(struct System* sys)
     if (sys == NULL )
         return;
 
+    memset(sys, 0, sizeof(struct System));
     sys->server_fd = -1;
     sys->sync_fd = -1;
     sys->sync_ctrl_fd = -1;
@@ -63,7 +64,7 @@ void system_init(struct System* sys)
     sys->warmboot_start = 0;
     sys->warmboot_exit = 0;
     LIST_INIT(&(sys->csm_list));
-    LIST_INIT(&(sys->lif_list));
+    RB_INIT(lif_rb_tree, &sys->lif_tree);
     LIST_INIT(&(sys->lif_purge_list));
 
     sys->log_file_path = strdup("/var/log/iccpd.log");
@@ -88,6 +89,7 @@ void system_finalize()
     struct System* sys = NULL;
     struct CSM* csm = NULL;
     struct LocalInterface* local_if = NULL;
+    struct LocalInterface* lif_temp = NULL;
 
     if ((sys = system_get_instance()) == NULL )
         return;
@@ -101,10 +103,9 @@ void system_finalize()
     }
 
     /* Release all port objects */
-    while (!LIST_EMPTY(&(sys->lif_list)))
+    RB_FOREACH_SAFE(local_if, lif_rb_tree, &(sys->lif_tree), lif_temp)
     {
-        local_if = LIST_FIRST(&(sys->lif_list));
-        LIST_REMOVE(local_if, system_next);
+        LIF_RB_REMOVE(lif_rb_tree, &(sys->lif_tree), local_if);
         local_if_finalize(local_if);
     }
 

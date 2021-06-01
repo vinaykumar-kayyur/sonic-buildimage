@@ -28,8 +28,11 @@
 #include <time.h>
 #include <sys/queue.h>
 
+#include "../include/openbsd_tree.h"
+
 #define ETHER_ADDR_LEN 6
 #define ETHER_ADDR_STR_LEN 18
+
 /*
  * RFC 7275
  * 7.2.4.  mLACP Port Config TLV
@@ -47,9 +50,10 @@
 #define IF_T_UNKNOW        -1
 #define IF_T_PORT           0
 #define IF_T_PORT_CHANNEL   1
-#define IF_T_VLAN         2
-#define IF_T_VXLAN       3
-#define IF_T_BRIDGE      4
+#define IF_T_VLAN           2
+#define IF_T_VXLAN          3
+#define IF_T_BRIDGE         4
+
 typedef struct
 {
     char *ifname;
@@ -67,8 +71,18 @@ struct VLAN_ID
     uint16_t vid;
     uint16_t vlan_removed;
     struct LocalInterface* vlan_itf; /* loacl vlan interface */
-    LIST_ENTRY(VLAN_ID) port_next;
+    RB_ENTRY(VLAN_ID) vlan_entry;
 };
+
+RB_HEAD(vlan_rb_tree, VLAN_ID);
+RB_PROTOTYPE(vlan_rb_tree, VLAN_ID, vlan_entry, vlan_node_compare);
+
+#define VLAN_RB_REMOVE(name, head, elm) do {  \
+    RB_REMOVE(name, head, elm);              \
+    (elm)->vlan_entry.rbt_parent = NULL;   \
+    (elm)->vlan_entry.rbt_left = NULL;     \
+    (elm)->vlan_entry.rbt_right = NULL;    \
+} while (0)
 
 struct PeerInterface
 {
@@ -88,7 +102,13 @@ struct PeerInterface
     struct CSM* csm;
 
     LIST_ENTRY(PeerInterface) mlacp_next;
-    LIST_HEAD(peer_vlan_list, VLAN_ID) vlan_list;
+    struct vlan_rb_tree vlan_tree;
+};
+
+struct PortChannel_member 
+{
+    char name[MAX_L_PORT_NAME];
+    LIST_ENTRY(PortChannel_member) member_next;
 };
 
 struct LocalInterface
@@ -108,7 +128,6 @@ struct LocalInterface
     uint8_t l3_mode;
     uint8_t l3_mac_addr[ETHER_ADDR_LEN];
     uint8_t is_peer_link;
-    char portchannel_member_buf[512];
     uint8_t is_arp_accept;
     int po_id;          /* Port Channel ID */
     uint8_t po_active;  /* Port Channel is in active status? */
@@ -120,9 +139,12 @@ struct LocalInterface
     uint8_t changed;
     uint8_t port_config_sync;
 
-    LIST_HEAD(local_vlan_list, VLAN_ID) vlan_list;
+    struct vlan_rb_tree vlan_tree;
 
-    LIST_ENTRY(LocalInterface) system_next;
+    LIST_HEAD(member_list, PortChannel_member) member_list;
+    int portchannel_member_count;
+
+    RB_ENTRY(LocalInterface) lif_entry;
     LIST_ENTRY(LocalInterface) system_purge_next;
     LIST_ENTRY(LocalInterface) mlacp_next;
     LIST_ENTRY(LocalInterface) mlacp_purge_next;
@@ -131,9 +153,9 @@ struct LocalInterface
 struct LocalInterface* local_if_create(int ifindex, char* ifname, int type);
 struct LocalInterface* local_if_find_by_name(const char* ifname);
 struct LocalInterface* local_if_find_by_ifindex(int ifindex);
-struct LocalInterface* local_if_find_by_po_id(int po_id);
+/*struct LocalInterface* local_if_find_by_po_id(int po_id);*/
 
-void local_if_destroy(char *ifname);
+void local_if_destroy(struct LocalInterface *lif);
 void local_if_change_flag_clear(void);
 void local_if_purge_clear(void);
 int local_if_is_l3_mode(struct LocalInterface* local_if);
@@ -152,6 +174,7 @@ int peer_if_clean_unused_vlan(struct PeerInterface* peer_if);
 int local_if_add_vlan(struct LocalInterface* local_if, uint16_t vid);
 void local_if_del_vlan(struct LocalInterface* local_if, uint16_t vid);
 void local_if_del_all_vlan(struct LocalInterface* lif);
+void local_if_del_all_portchannel_member(struct LocalInterface* lif);
 
 /* ARP manipulation */
 int set_sys_arp_accept_flag(char* ifname, int flag);

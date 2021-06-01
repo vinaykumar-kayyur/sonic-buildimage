@@ -18,10 +18,14 @@
  *  Maintainer: Jim Jiang from nephos
  */
 
+#define CONFIG_MCLAG_ENABLE_INTF_LEN  8320 /*max number of mclag enable portchannel is 520*/
+
 #define MCLAGDCTL_PARA1_LEN 16
 #define MCLAGDCTL_PARA2_LEN 32
 #define MCLAGDCTL_PARA3_LEN 64
-#define MCLAGDCTL_CMD_SIZE 4096
+#define MCLAGDCTL_CMD_SIZE CONFIG_MCLAG_ENABLE_INTF_LEN + 4096
+#define MCLAGDCTL_VLAN_BMP_MAX 128
+#define MCLAGDCTL_VLAN_MAX 4095
 
 #define MCLAGDCTL_MAX_L_PORT_NANE 32
 #define MCLAGDCTL_INET_ADDR_LEN 32
@@ -29,6 +33,61 @@
 #define MCLAGDCTL_ETHER_ADDR_LEN 6
 #define MCLAGDCTL_PORT_MEMBER_BUF_LEN 512
 #define ETHER_ADDR_STR_LEN 18
+
+#define BMAP_ADD(bmap, id) \
+    (bmap)[(id)>>5] |= (1<<((id)%32))
+
+#define BMAP_DEL(bmap, id) \
+    (bmap)[(id)>>5] & = ~(1<<((id)%32))
+
+#define BMAP_MEMBER(bmap, id) \
+    (((bmap)[(id)>>5] & (1<<((id)%32))) != 0)
+
+#define BMAP_CLEAR(bmap, len) \
+    bmap_clr((bmap), (len))
+
+#define FORECH_BMAP_FROM_LOW(bmap_all, id, max_id) \    
+    for((id)=0;(id)<=max_id;(id)++) \
+        if(BMAP_MEMBER(bmap_all,id))
+
+static unsigned int get_next_bit(unsigned int bitmap[], int bit, unsigned int max_bit)
+{
+    bit++;
+    while (bit < max_bit && bitmap[bit>>5]>>(bit%32)==0)
+    {
+        /*All of the rest bits of this array element are 0, 
+          jump to the start bit of next bitmap array element*/
+        bit = ((bit>>5) + 1)*32;
+        if (bit >= max_bit)
+        {
+            bit = max_bit;
+            return bit;
+        }
+    }
+
+    if (bit >= max_bit)
+    {
+        bit = max_bit;
+    }
+    else
+    {
+        /*Traverses each bit of the current array element, 
+          if not zero, return this bit*/
+        int bit_end = ((bit>>5) + 1)*32;
+        for (; bit < bit_end; bit++)
+        {
+            if (bitmap[bit>>5] & (1<<(bit%32)))
+            {
+                return bit;
+            }
+        }
+    }
+
+    return bit;
+}
+#define get_first_bit(bitmap, max_bit) get_next_bit(bitmap,-1, max_bit)
+#define FOREACH_BIT_IN_BMP(bitmap, bit, max_bit)\
+    for (bit = get_first_bit(bitmap, max_bit); bit < max_bit; bit = get_next_bit(bitmap, bit, max_bit))
 
 typedef int (*call_enca_msg_fun)(char *msg, int mclag_id,  int argc, char **argv);
 typedef int (*call_parse_msg_fun)(char *msg, int data_len);
@@ -127,7 +186,7 @@ struct mclagd_state
     char peer_link_if[MCLAGDCTL_MAX_L_PORT_NANE];
     unsigned char peer_link_mac[MCLAGDCTL_ETHER_ADDR_LEN];
     int role;
-    char enabled_po[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
+    char enabled_po[CONFIG_MCLAG_ENABLE_INTF_LEN];
     char loglevel[MCLAGDCTL_PARA1_LEN];
 };
 
@@ -173,13 +232,13 @@ struct mclagd_local_if
 
     unsigned char l3_mode;
     unsigned char is_peer_link;
-    char portchannel_member_buf[MCLAGDCTL_PORT_MEMBER_BUF_LEN];
     int po_id; /* Port Channel ID */
     unsigned char po_active;
     char mlacp_state[MCLAGDCTL_PARA1_LEN];
     unsigned char isolate_to_peer_link;
 
-    char vlanlist[MCLAGDCTL_PARA3_LEN];
+    unsigned int vlan_map[MCLAGDCTL_VLAN_BMP_MAX];
+    int portchannel_member_count;
 };
 
 struct mclagd_peer_if

@@ -33,6 +33,7 @@
 #define MLACP_SYSCONF_NODEID_NODEID_MASK    0x70
 #define MLACP_SYSCONF_NODEID_FREE_MASK      0x0F
 
+#define NEIGH_SYNC_TIME 240
 /*
  * RFC 7275
  * 7.2.3.  mLACP System Config TLV
@@ -369,17 +370,19 @@ struct mLACPMACInfoTLV
 struct ARPMsg
 {
     uint8_t     op_type;
-    char     ifname[MAX_L_PORT_NAME];
+    char        ifname[MAX_L_PORT_NAME];
     uint32_t    ipv4_addr;
     uint8_t     mac_addr[ETHER_ADDR_LEN];
+    time_t      sync_time;
 };
 
 struct NDISCMsg
 {
-    uint8_t op_type;
-    char ifname[MAX_L_PORT_NAME];
+    uint8_t  op_type;
+    char     ifname[MAX_L_PORT_NAME];
     uint32_t ipv6_addr[4];
-    uint8_t mac_addr[ETHER_ADDR_LEN];
+    uint8_t  mac_addr[ETHER_ADDR_LEN];
+    time_t   sync_time;
 };
 
 /*

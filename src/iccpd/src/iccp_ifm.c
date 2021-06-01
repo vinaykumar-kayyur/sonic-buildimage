@@ -144,7 +144,7 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
     if (tb[NDA_LLADDR])
         memcpy(arp_msg->mac_addr, RTA_DATA(tb[NDA_LLADDR]), RTA_PAYLOAD(tb[NDA_LLADDR]));
 
-    arp_msg->ipv4_addr = arp_msg->ipv4_addr;
+    /*arp_msg->ipv4_addr = arp_msg->ipv4_addr;*/
 
     ICCPD_LOG_NOTICE(__FUNCTION__, "ARP type %s, state (%04X)(%d) ifindex [%d] (%s) ip %s, mac [%02X:%02X:%02X:%02X:%02X:%02X]",
                     msgtype == RTM_NEWNEIGH ? "New":"Del", ndm->ndm_state, fwd_neigh_state_valid(ndm->ndm_state),
@@ -161,10 +161,10 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
             if (lif_po->type != IF_T_PORT_CHANNEL)
                 continue;
 
-            if (!local_if_is_l3_mode(lif_po))
+            if (!local_if_is_l3_mode(lif_po) && strncmp(arp_lif->name, "Vlan", 4) == 0)
             {
                 /* Is the L2 MLAG itf belong to a vlan?*/
-                LIST_FOREACH(vlan_id_list, &(lif_po->vlan_list), port_next)
+                RB_FOREACH(vlan_id_list, vlan_rb_tree, &(lif_po->vlan_tree))
                 {
                     if ( !(vlan_id_list->vlan_itf
                            && vlan_id_list->vlan_itf->ifindex == ndm->ndm_ifindex))
@@ -173,6 +173,9 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                 }
 
                 if (!vlan_id_list)
+                    continue;
+
+                if (vlan_id_list->vlan_itf && !local_if_is_l3_mode(vlan_id_list->vlan_itf))
                     continue;
 
                 ICCPD_LOG_DEBUG(__FUNCTION__, "ARP is from mclag enabled member port of vlan %s",
@@ -220,13 +223,11 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
         else
         {
             /* update ARP*/
-            if (arp_info->op_type != arp_msg->op_type
-                || strcmp(arp_info->ifname, arp_msg->ifname) != 0
+            if (strcmp(arp_info->ifname, arp_msg->ifname) != 0
                 || memcmp(arp_info->mac_addr, arp_msg->mac_addr,
                           ETHER_ADDR_LEN) != 0)
             {
                 arp_update = 1;
-                arp_info->op_type = arp_msg->op_type;
                 sprintf(arp_info->ifname, "%s", arp_msg->ifname);
                 memcpy(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Update ARP for %s", show_ip_str(arp_msg->ipv4_addr));
@@ -255,12 +256,16 @@ static void do_arp_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], int
                                 arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
         }
 
+        arp_info = (struct ARPMsg*)msg->buf;
+
         /* enqueue iccp_msg (add)*/
-        if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+        if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE && 
+           (arp_update == 1 || (time(NULL) - arp_info->sync_time) >= NEIGH_SYNC_TIME))
         {
             arp_msg->op_type = NEIGH_SYNC_ADD;
             if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, msg_len) == 0)
             {
+                time(&arp_info->sync_time);
                 TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
                 /*ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] message for %s",
                                 show_ip_str(arp_msg->ipv4_addr));*/
@@ -343,10 +348,10 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
             if (lif_po->type != IF_T_PORT_CHANNEL)
                 continue;
 
-            if (!local_if_is_l3_mode(lif_po))
+            if (!local_if_is_l3_mode(lif_po)  && strncmp(ndisc_lif->name, "Vlan", 4) == 0)
             {
                 /* Is the L2 MLAG itf belong to a vlan? */
-                LIST_FOREACH(vlan_id_list, &(lif_po->vlan_list), port_next)
+                RB_FOREACH(vlan_id_list, vlan_rb_tree, &(lif_po->vlan_tree))
                 {
                     if (!(vlan_id_list->vlan_itf && vlan_id_list->vlan_itf->ifindex == ndm->ndm_ifindex))
                         continue;
@@ -354,6 +359,9 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
                 }
 
                 if (!vlan_id_list)
+                    continue;
+
+                if (vlan_id_list->vlan_itf && !local_if_is_l3_mode(vlan_id_list->vlan_itf))
                     continue;
 
                 ICCPD_LOG_DEBUG(__FUNCTION__, "ND is from mclag enabled member port of vlan %s", vlan_id_list->vlan_itf->name);
@@ -401,12 +409,10 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
         else
         {
             /* update ND */
-            if (ndisc_info->op_type != ndisc_info->op_type
-                || strcmp(ndisc_info->ifname, ndisc_info->ifname) != 0
-                || memcmp(ndisc_info->mac_addr, ndisc_info->mac_addr, ETHER_ADDR_LEN) != 0)
+            if (strcmp(ndisc_info->ifname, ndisc_msg->ifname) != 0
+                || memcmp(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN) != 0)
             {
                 neigh_update = 1;
-                ndisc_info->op_type = ndisc_msg->op_type;
                 sprintf(ndisc_info->ifname, "%s", ndisc_msg->ifname);
                 memcpy(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN);
                 ICCPD_LOG_DEBUG(__FUNCTION__, "Update neighbor for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr));
@@ -434,12 +440,16 @@ static void do_ndisc_learn_from_kernel(struct ndmsg *ndm, struct rtattr *tb[], i
                                 ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr));
         }
 
+        ndisc_info = (struct NDISCMsg *)msg->buf;
+
         /* enqueue iccp_msg (add) */
-        if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+        if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE && 
+           (neigh_update == 1 || (time(NULL) - ndisc_info->sync_time) >= NEIGH_SYNC_TIME))
         {
             ndisc_msg->op_type = NEIGH_SYNC_ADD;
             if (iccp_csm_init_msg(&msg_send, (char *)ndisc_msg, msg_len) == 0)
             {
+                time(&ndisc_info->sync_time);
                 TAILQ_INSERT_TAIL(&(MLACP(csm).ndisc_msg_list), msg_send, tail);
                 /* ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue Ndisc[ADD] for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr)); */
             }
@@ -622,6 +632,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
     struct LocalInterface *lif_po = NULL, *arp_lif = NULL;
 
     int verify_arp = 0;
+    bool sync_to_peer = false;
 
     if (!(sys = system_get_instance()))
         return;
@@ -656,7 +667,7 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
             if (!local_if_is_l3_mode(lif_po))
             {
                 /* Is the L2 MLAG itf belong to a vlan?*/
-                LIST_FOREACH(vlan_id_list, &(lif_po->vlan_list), port_next)
+                RB_FOREACH(vlan_id_list, vlan_rb_tree, &(lif_po->vlan_tree))
                 {
                     if ( !(vlan_id_list->vlan_itf
                            && vlan_id_list->vlan_itf->ifindex == ifindex))
@@ -706,14 +717,13 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
             continue;
 
         /* update ARP*/
-        if (arp_info->op_type != arp_msg->op_type
-            || strcmp(arp_info->ifname, arp_msg->ifname) != 0
+        if (strcmp(arp_info->ifname, arp_msg->ifname) != 0
             || memcmp(arp_info->mac_addr, arp_msg->mac_addr,
                       ETHER_ADDR_LEN) != 0)
         {
-            arp_info->op_type = arp_msg->op_type;
             sprintf(arp_info->ifname, "%s", arp_msg->ifname);
             memcpy(arp_info->mac_addr, arp_msg->mac_addr, ETHER_ADDR_LEN);
+            sync_to_peer = true;
             ICCPD_LOG_NOTICE(__FUNCTION__, "Update ARP for %s by ARP reply, intf %s mac [%02X:%02X:%02X:%02X:%02X:%02X]",
                             show_ip_str(arp_msg->ipv4_addr), arp_msg->ifname,
                             arp_msg->mac_addr[0], arp_msg->mac_addr[1], arp_msg->mac_addr[2], arp_msg->mac_addr[3], arp_msg->mac_addr[4], arp_msg->mac_addr[5]);
@@ -736,12 +746,16 @@ void do_arp_update_from_reply_packet(unsigned int ifindex, unsigned int addr, ui
                             arp_msg->ifname, show_ip_str(arp_msg->ipv4_addr));
     }
 
+    arp_info = (struct ARPMsg*)msg->buf;
+
     /* enqueue iccp_msg (add)*/
-    if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+    if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE && 
+       (sync_to_peer == true || (time(NULL) - arp_info->sync_time) >= NEIGH_SYNC_TIME))
     {
         arp_msg->op_type = NEIGH_SYNC_ADD;
         if (iccp_csm_init_msg(&msg_send, (char*)arp_msg, msg_len) == 0)
         {
+            time(&arp_info->sync_time);
             TAILQ_INSERT_TAIL(&(MLACP(csm).arp_msg_list), msg_send, tail);
             /*ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ARP[ADD] for %s",
                             show_ip_str(arp_msg->ipv4_addr));*/
@@ -767,6 +781,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
 
     char buf[MAX_BUFSIZE];
     size_t msg_len = 0;
+    bool sync_to_peer = false;
 
     struct LocalInterface *lif_po = NULL, *ndisc_lif = NULL;
 
@@ -804,7 +819,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
             if (!local_if_is_l3_mode(lif_po))
             {
                 /* Is the L2 MLAG itf belong to a vlan? */
-                LIST_FOREACH(vlan_id_list, &(lif_po->vlan_list), port_next)
+                RB_FOREACH(vlan_id_list, vlan_rb_tree, &(lif_po->vlan_tree))
                 {
                     if (!(vlan_id_list->vlan_itf && vlan_id_list->vlan_itf->ifindex == ifindex))
                         continue;
@@ -861,13 +876,12 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
         }
 
         /* update ND */
-        if (ndisc_info->op_type != ndisc_msg->op_type
-            || strcmp(ndisc_info->ifname, ndisc_msg->ifname) != 0
+        if (strcmp(ndisc_info->ifname, ndisc_msg->ifname) != 0
             || memcmp(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN) != 0)
         {
-            ndisc_info->op_type = ndisc_msg->op_type;
             sprintf(ndisc_info->ifname, "%s", ndisc_msg->ifname);
             memcpy(ndisc_info->mac_addr, ndisc_msg->mac_addr, ETHER_ADDR_LEN);
+            sync_to_peer = true;
             ICCPD_LOG_DEBUG(__FUNCTION__, "Update ND for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr));
         }
         break;
@@ -892,6 +906,7 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
             ICCPD_LOG_WARN(__FUNCTION__, "Failed to enqueue NDISC-list: %s, add %s", ndisc_msg->ifname, show_ipv6_str((char *)ndisc_msg->ipv6_addr));
     }
 
+    /*If ND request is not sent by this switch, linux kernel don't learn this ND reply, install the ND item to kernel*/
     if (iccp_netlink_neighbor_request(AF_INET6, (uint8_t *)ndisc_msg->ipv6_addr, 1, ndisc_msg->mac_addr, ndisc_msg->ifname) < 0)
     {
         ICCPD_LOG_WARN(__FUNCTION__, "Failed to add ND entry(%s, %s, %s) to kernel",
@@ -899,12 +914,16 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
         return;
     }
 
+    ndisc_info = (struct NDISCMsg *)msg->buf;
+
     /* enqueue iccp_msg (add) */
-    if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE)
+    if (MLACP(csm).current_state == MLACP_STATE_EXCHANGE && 
+       (sync_to_peer == true || (time(NULL) - ndisc_info->sync_time) >= NEIGH_SYNC_TIME))
     {
         ndisc_msg->op_type = NEIGH_SYNC_ADD;
         if (iccp_csm_init_msg(&msg_send, (char *)ndisc_msg, msg_len) == 0)
         {
+            time(&ndisc_info->sync_time);
             TAILQ_INSERT_TAIL(&(MLACP(csm).ndisc_msg_list), msg_send, tail);
             /* ICCPD_LOG_DEBUG(__FUNCTION__, "Enqueue ND[ADD] for %s", show_ipv6_str((char *)ndisc_msg->ipv6_addr)); */
         }
@@ -914,7 +933,8 @@ void do_ndisc_update_from_reply_packet(unsigned int ifindex, char *ipv6_addr, ui
 
     return;
 }
-void iccp_from_netlink_port_state_handler( char * ifname, int state)
+
+void iccp_from_netlink_port_state_handler(char * ifname, int state)
 {
     struct CSM *csm = NULL;
     struct LocalInterface *lif_po = NULL;
@@ -955,10 +975,195 @@ void iccp_from_netlink_port_state_handler( char * ifname, int state)
     return;
 }
 
+#define BUF_LEN 10000000
+void iccp_get_if_vlan_info_from_netlink()
+{
+    struct LocalInterface *lif = NULL;
+    struct {
+        struct nlmsghdr nlh;
+        struct ifinfomsg ifm;
+        /* Attribute has to be NLMSG aligned */
+        struct rtattr ext_req __attribute__ ((aligned(NLMSG_ALIGNTO)));
+        __u32 ext_filter_mask;
+    }req;
+
+    struct sockaddr_nl nladdr;
+    struct iovec iov;
+    struct msghdr msg = {
+        .msg_name = &nladdr,
+        .msg_namelen = sizeof(nladdr),
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+    };
+    char *buf = malloc(BUF_LEN);
+    struct nl_sock *sk;
+    int fd;
+    uint16_t vid_range_start = 0;
+    uint16_t vid_range_flags = -1;
+
+    struct System *sys;
+
+    if ((sys = system_get_instance()) == NULL)
+    {
+        ICCPD_LOG_WARN(__FUNCTION__, "Failed to obtain System instance.");
+        free(buf);
+        return;
+    }
+    fd = nl_socket_get_fd(sys->route_sock);
+
+    memset(&req, 0, sizeof(req));
+    req.nlh.nlmsg_len = sizeof(req);
+    req.nlh.nlmsg_type = RTM_GETLINK;
+    req.nlh.nlmsg_flags = NLM_F_DUMP|NLM_F_REQUEST;
+    req.nlh.nlmsg_pid = 0;
+    req.nlh.nlmsg_seq =0;
+    req.ifm.ifi_family = PF_BRIDGE;
+
+    req.ext_req.rta_type = IFLA_EXT_MASK;
+    req.ext_req.rta_len = RTA_LENGTH(sizeof(__u32));
+    req.ext_filter_mask = RTEXT_FILTER_BRVLAN;
+
+    send(fd, (void*)&req, sizeof(req), 0);
+
+    iov.iov_base = buf;
+    while (1)
+    {
+        int status;
+        int msglen = 0;
+
+        iov.iov_len = BUF_LEN;
+
+        status = recvmsg(fd, &msg, 0);
+
+        if (status < 0 || status == 0)
+        {
+            ICCPD_LOG_WARN(__FUNCTION__, "netlink receive error (%d) status %d", fd, status);
+            free(buf);
+            return;
+        }
+
+        struct nlmsghdr *n = (struct nlmsghdr *)buf;
+
+        msglen = status;
+
+        while (NLMSG_OK(n, msglen))
+        {
+            struct ifinfomsg *ifm = NLMSG_DATA(n);
+            int len = n->nlmsg_len;
+            struct rtattr *tb[IFLA_MAX+1] = {0};
+
+            if (n->nlmsg_type != RTM_NEWLINK)
+            {
+                free(buf);
+                return;
+            }
+
+            len -= NLMSG_LENGTH(sizeof(*ifm));
+            if (len < 0)
+            {
+                ICCPD_LOG_WARN(__FUNCTION__, "BUG: wrong nlmsg len %d", len);
+                free(buf);
+                return;
+            }
+
+            if (ifm->ifi_family != AF_BRIDGE)
+            {
+                free(buf);
+                return;
+            }
+
+            if (lif = local_if_find_by_ifindex(ifm->ifi_index))
+            {
+                parse_rtattr(tb, IFLA_MAX, IFLA_RTA(ifm), len);
+
+                /* if AF_SPEC isn't there, vlan table is not preset for this port */
+                if (!tb[IFLA_AF_SPEC])
+                {
+                    ICCPD_LOG_WARN(__FUNCTION__, "Vlan table is not preset for %d", ifm->ifi_index);
+                    /*return;*/
+                }
+                else
+                {
+                    struct rtattr *i, *list = tb[IFLA_AF_SPEC];
+                    int rem = RTA_PAYLOAD(list);
+                    struct VLAN_ID *vlan = NULL;
+                    struct VLAN_ID *vlan_temp = NULL;
+
+                    /*set vlan flag is removed*/
+                    RB_FOREACH (vlan, vlan_rb_tree, &(lif->vlan_tree))
+                    {
+                        vlan->vlan_removed = 1;
+                    }
+
+                    for (i = RTA_DATA(list); RTA_OK(i, rem); i = RTA_NEXT(i, rem))
+                    {
+                        struct bridge_vlan_info *vinfo;
+
+                        if (i->rta_type != IFLA_BRIDGE_VLAN_INFO)
+                            continue;
+
+                        vinfo = RTA_DATA(i);
+                        ICCPD_LOG_NOTICE(__FUNCTION__, "%s: add vlan .", lif->name);
+
+                        if (vinfo->flags & BRIDGE_VLAN_INFO_RANGE_BEGIN) 
+                        {
+                            vid_range_start = vinfo->vid;
+                            vid_range_flags = (vinfo->flags ^ BRIDGE_VLAN_INFO_RANGE_BEGIN);
+                            continue;
+                        }
+
+                        if (vinfo->flags & BRIDGE_VLAN_INFO_RANGE_END)
+                        {
+                         /* sanity check the range flags */
+                            if (vid_range_flags != (vinfo->flags ^ BRIDGE_VLAN_INFO_RANGE_END)) 
+                            {
+                                ICCPD_LOG_ERR(__FUNCTION__, "VLAN range flags differ; can not handle it .The %s of VLAN %d", lif->name, vinfo->vid);
+                                return;
+                            }
+                        }
+                        else 
+                        {
+                            vid_range_start = vinfo->vid;
+                        }
+
+                        for (; vid_range_start <= vinfo->vid; vid_range_start++) 
+                        {
+                            local_if_add_vlan(lif, vid_range_start);
+                            ICCPD_LOG_NOTICE(__FUNCTION__, "add %s to VLAN %d success", lif->name, vid_range_start);
+                        }
+                        vid_range_flags = -1;
+                    }
+
+                    /*After update vlan list, remove unused item*/
+                    RB_FOREACH_SAFE (vlan, vlan_rb_tree, &(lif->vlan_tree), vlan_temp)
+                    {
+                        if (vlan->vlan_removed == 1)
+                        {
+                            local_if_del_vlan(lif, vlan->vid);
+
+                            ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", lif->name, vlan->vid);
+
+                            VLAN_RB_REMOVE(vlan_rb_tree, &(lif->vlan_tree), vlan);
+                            free(vlan);
+                        }
+                    }
+                }
+            }
+
+            n = NLMSG_NEXT(n, msglen);
+        }
+    }
+
+    free(buf);
+    return;
+}
+
 void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
 {
     struct LocalInterface *lif = NULL;
     int msglen = 0;
+    uint16_t vid_range_start = 0;
+    uint16_t vid_range_flags = -1;
 
     msglen = n->nlmsg_len;
 
@@ -1000,9 +1205,10 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
                 struct rtattr *i, *list = tb[IFLA_AF_SPEC];
                 int rem = RTA_PAYLOAD(list);
                 struct VLAN_ID *vlan = NULL;
+                struct VLAN_ID *vlan_temp = NULL;
 
                 /*set vlan flag is removed*/
-                LIST_FOREACH(vlan, &(lif->vlan_list), port_next)
+                RB_FOREACH (vlan, vlan_rb_tree, &(lif->vlan_tree))
                 {
                     vlan->vlan_removed = 1;
                 }
@@ -1016,17 +1222,45 @@ void iccp_parse_if_vlan_info_from_netlink(struct nlmsghdr *n)
 
                     vinfo = RTA_DATA(i);
 
-                    local_if_add_vlan(lif, vinfo->vid);
+                    if (vinfo->flags & BRIDGE_VLAN_INFO_RANGE_BEGIN) 
+                    {
+                        vid_range_start = vinfo->vid;
+                        vid_range_flags = (vinfo->flags ^ BRIDGE_VLAN_INFO_RANGE_BEGIN);
+                        continue;
+                    }
+
+                    if (vinfo->flags & BRIDGE_VLAN_INFO_RANGE_END)
+                    {
+                        /* sanity check the range flags */
+                        if (vid_range_flags != (vinfo->flags ^ BRIDGE_VLAN_INFO_RANGE_END)) 
+                        {
+                            ICCPD_LOG_ERR(__FUNCTION__, "VLAN range flags differ; can not handle it .The %s of VLAN %d", lif->name, vinfo->vid);
+                            return;
+                        }
+                    }
+                    else 
+                    {
+                        vid_range_start = vinfo->vid;
+                    }
+
+                    for (; vid_range_start <= vinfo->vid; vid_range_start++) 
+                    {
+                        local_if_add_vlan(lif, vid_range_start);
+                        ICCPD_LOG_NOTICE(__FUNCTION__, "Add %s to VLAN %d success", lif->name, vid_range_start);
+                    }
+                    vid_range_flags = -1;					
                 }
 
                 /*After update vlan list, remove unused item*/
-                LIST_FOREACH(vlan, &(lif->vlan_list), port_next)
+                RB_FOREACH_SAFE (vlan, vlan_rb_tree, &(lif->vlan_tree), vlan_temp)
                 {
                     if (vlan->vlan_removed == 1)
                     {
+                        local_if_del_vlan(lif, vlan->vid);
+
                         ICCPD_LOG_DEBUG(__FUNCTION__, "Remove %s from VLAN %d", lif->name, vlan->vid);
 
-                        LIST_REMOVE(vlan, port_next);
+                        VLAN_RB_REMOVE(vlan_rb_tree, &(lif->vlan_tree), vlan);
                         free(vlan);
                     }
                 }

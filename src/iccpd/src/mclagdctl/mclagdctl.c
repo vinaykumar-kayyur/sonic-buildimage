@@ -30,6 +30,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "mclagdctl.h"
+#include "../../include/port.h"
 
 static int mclagdctl_sock_fd = -1;
 char *mclagdctl_sock_path = "/var/run/iccpd/mclagdctl.sock";
@@ -470,15 +471,19 @@ int mclagdctl_enca_dump_local_portlist(char *msg, int mclag_id, int argc, char *
 int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
 {
     struct mclagd_local_if * lif_info = NULL;
-    int len = 0;
-    int count = 0;
     int pos = 0;
+    int vid;
+    int vid_range_start = 0, vid_range_end = 0;
+    int lif_info_base = 0;
+    int i = 0;
+    char member_name[MAX_L_PORT_NAME];
 
-    len = sizeof(struct mclagd_local_if);
-
-    for (; data_len >= len; data_len -= len, count++)
+    while (lif_info_base < data_len)
     {
-        lif_info = (struct mclagd_local_if*)(msg + len * count);
+        lif_info = (struct mclagd_local_if*)(msg + lif_info_base);
+        lif_info_base += sizeof(struct mclagd_local_if);
+        vid_range_start = 0;
+        vid_range_end = 0;
 
         for (pos = 0; pos < 60; ++pos)
             fprintf(stdout, "-");
@@ -496,17 +501,64 @@ int mclagdctl_parse_dump_local_portlist(char *msg, int data_len)
                     lif_info->mac_addr[2], lif_info->mac_addr[3],
                     lif_info->mac_addr[4], lif_info->mac_addr[5]);
 
-            fprintf(stdout, "%s: %s\n", "IPv4Address", lif_info->ipv4_addr);
-            fprintf(stdout, "%s: %d\n", "Prefixlen", lif_info->prefixlen);
+            /*fprintf(stdout, "%s: %s\n", "IPv4Address", lif_info->ipv4_addr);
+            fprintf(stdout, "%s: %d\n", "Prefixlen", lif_info->prefixlen);*/
             fprintf(stdout, "%s: %s\n", "State", lif_info->state);
             fprintf(stdout, "%s: %s\n", "IsL3Interface", lif_info->l3_mode ? "Yes" : "No");
             /*fprintf(stdout, "%s: %s\n", "IsPeerlink", lif_info->is_peer_link ? "Yes" : "No");*/
-            fprintf(stdout, "%s: %s\n", "MemberPorts", lif_info->portchannel_member_buf);
             /*fprintf(stdout,"%s: %d\n" ,"PortchannelId", lif_info->po_id);
-               fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
-               fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state);*/
+            fprintf(stdout,"%s: %d\n" ,"PortchannelIsUp", lif_info->po_active);
+            fprintf(stdout,"%s: %s\n", "MlacpState", lif_info->mlacp_state);*/
             fprintf(stdout, "%s: %s\n", "IsIsolateWithPeerlink", lif_info->isolate_to_peer_link ? "Yes" : "No");
-            fprintf(stdout, "%s: %s\n", "VlanList", lif_info->vlanlist);
+            fprintf(stdout, "%s: ", "VlanList");
+            FOREACH_BIT_IN_BMP(lif_info->vlan_map, vid, MCLAGDCTL_VLAN_MAX)
+            {
+                if (vid_range_start == 0)
+                {
+                    goto initvars;
+                }
+                else if ((vid - vid_range_end) == 1)
+                {
+                    vid_range_end = vid;
+                    continue;
+                }
+                if (vid_range_start == vid_range_end)
+                {
+                    fprintf(stdout, "%d ", vid_range_start);
+                }
+                else
+                {
+                    fprintf(stdout, "%d-%d ",  vid_range_start, vid_range_end);
+                }
+initvars:
+                vid_range_start = vid;
+                vid_range_end = vid;
+            }
+            if (vid_range_start != 0)
+            {
+                if(vid_range_start == vid_range_end)
+                {
+                    fprintf(stdout, "%d ", vid_range_start);
+                }
+                else
+                {
+                    fprintf(stdout, "%d-%d ",  vid_range_start, vid_range_end);
+                }
+            }
+            fprintf(stdout, "\n");
+
+            fprintf(stdout, "%s: ", "MemberPorts");
+            for (i = 0; i < lif_info->portchannel_member_count; i++)
+            {
+                memcpy(member_name, msg + lif_info_base, MAX_L_PORT_NAME);
+                fprintf(stdout, "%s", member_name);
+                if(i != (lif_info->portchannel_member_count-1))
+                {
+                    fprintf(stdout, ",");
+                }
+                lif_info_base += MAX_L_PORT_NAME;
+            }
+            fprintf(stdout, "\n");
         }
         else
         {
@@ -932,7 +984,7 @@ int main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
- mclagdctl_disconnect:
+mclagdctl_disconnect:
     mclagdctl_sock_close();
 
     if (rcv_buf)
