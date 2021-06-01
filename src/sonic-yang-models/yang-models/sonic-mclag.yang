@@ -32,10 +32,6 @@ module sonic-mclag {
         prefix svlan;
     }
 
-    import sonic-vlan-interface {
-        prefix svlan-intf;
-    }
-
 	organization
 		"SONiC";
 
@@ -139,7 +135,8 @@ module sonic-mclag {
                     error-app-tag mclag-invalid;
                 }
 
-                must "count(/svlan-intf:sonic-vlan-interface/svlan-intf:VLAN_INTERFACE/svlan-intf:VLAN_INTERFACE_IPADDR_LIST[svlan-intf:vlanName=current()/if_name]) = 0" {
+                must
+                    "count(/svlan-intf:sonic-vlan-interface/svlan:VLAN_INTERFACE/svlan:VLAN_INTERFACE_IPPREFIX_LIST[svlan:name=current()/if_name]) = 0" {
                     error-message "remove configured ip/v6 address and reconfigure after separate ip configuration";
                     error-app-tag vlan-intf-ip-invalid;
                 }
