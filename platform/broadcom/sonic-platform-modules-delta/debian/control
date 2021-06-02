@@ -34,3 +34,13 @@ Package: platform-modules-agc032
 Architecture: amd64
 Depends: linux-image-4.19.0-12-2-amd64-unsigned
 Description: kernel modules for platform devices such as fan, led, sfp
+
+Package: platform-modules-ag7648v2
+Architecture: amd64
+Depends: linux-image-4.19.0-12-2-amd64-unsigned
+Description: kernel modules for platform devices such as fan, led, sfp
+
+Package: platform-modules-agv848v1
+Architecture: amd64
+Depends: linux-image-4.19.0-12-2-amd64-unsigned
+Description: kernel modules for platform devices such as fan, led, sfp

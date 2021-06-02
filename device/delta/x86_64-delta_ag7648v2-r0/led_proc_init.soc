@@ -1,0 +1,9 @@
+port xe en=1 an=0 if=sfi
+port ce en=1 an=0 if=cr4
+rcload /usr/share/sonic/platform/100G_CR4_preemphasis.soc
+rcload /usr/share/sonic/platform/10G_preemphasis.soc
+led auto off
+led stop
+led auto on
+led start
+echo "PORT ENABLED, PREEMPHASIS and LED START: Done."

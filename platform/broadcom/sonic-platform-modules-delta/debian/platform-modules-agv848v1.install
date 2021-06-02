@@ -1,0 +1,6 @@
+agv848v1/scripts/agv848v1_platform_init.sh usr/local/bin
+agv848v1/cfg/agv848v1-modules.conf etc/modules-load.d
+systemd/platform-modules-agv848v1.service lib/systemd/system
+agv848v1/modules/sonic_platform-1.0-py2-none-any.whl usr/share/sonic/device/x86_64-delta_agv848v1-r0
+agv848v1/modules/sonic_platform-1.0-py3-none-any.whl usr/share/sonic/device/x86_64-delta_agv848v1-r0
+
