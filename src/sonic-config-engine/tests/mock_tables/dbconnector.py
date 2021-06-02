@@ -32,7 +32,6 @@ def load_namespace_config():
     SonicDBConfig.load_sonic_global_db_config(
         global_db_file_path=os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'database_global.json'))
-    foo = ConfigDBConnector(use_unix_socket_path=True, namespace='asic0')
 
 def load_database_config():
     # Load local database_config.json for single namespace test scenario
