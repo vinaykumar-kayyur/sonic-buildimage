@@ -12,6 +12,12 @@
             "unix_socket_path": "/var/run/redis-chassis/redis_chassis.sock",
             "persistence_for_warm_boot" : "yes"
         }
+        "redis4":{
+            "hostname" : "{{HOST_IP}}",
+            "port" : 6381,
+            "unix_socket_path" : "/var/run/redis{{NAMESPACE_ID}}/redis4.sock",
+            "persistence_for_warm_boot" : "yes"
+        },
     },
     "DATABASES" : {
         "APPL_DB" : {
@@ -88,6 +94,11 @@
             "id" : 13,
             "separator": "|",
             "instance" : "redis_chassis"
+        },
+        "EVENT_DB" : {
+            "id" : 14,
+            "separator": "|",
+            "instance" : "redis4"
         }
     },
     "VERSION" : "1.0"

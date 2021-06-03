@@ -1,0 +1,6 @@
+{
+    "__README__": "Specify size of event history table. Whichever limit is hit first, eventd wraps event history table around and deletes older records.",
+    "no-of-records": 40000,
+    "no-of-days": 30
+}
+

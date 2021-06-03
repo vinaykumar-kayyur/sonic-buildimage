@@ -1,0 +1,2 @@
+#! /usr/bin/dh-exec
+/usr/lib/x86_64-linux-gnu/libeventnotify.so.0 /usr/lib/x86_64-linux-gnu/libeventnotify.so
