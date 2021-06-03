@@ -122,4 +122,31 @@ TEST_F(LinkProberTest, GenerateGuid)
     ) == 0);
 }
 
+TEST_F(LinkProberTest, UpdateToRMac)
+{
+    link_prober::IcmpPayload::generateGuid();
+
+    std::array<uint8_t, ETHER_ADDR_LEN> torMac = {0, 'b', 2, 'd', 4, 'f'};
+    mMuxConfig.setTorMacAddress(torMac);
+
+    boost::asio::ip::address ipAddress = boost::asio::ip::address::from_string("192.168.1.100");
+    mFakeMuxPort.setServerIpv4Address(ipAddress);
+
+    initializeSendBuffer();
+
+    std::array<uint8_t, MUX_MAX_ICMP_BUFFER_SIZE> txBuffer = getTxBuffer();
+    ether_header *ethHeader = reinterpret_cast<ether_header *> (txBuffer.data());
+
+    EXPECT_TRUE(ethHeader->ether_shost[0] == torMac[0]);
+    EXPECT_TRUE(ethHeader->ether_shost[1] == torMac[1]);
+    EXPECT_TRUE(ethHeader->ether_shost[2] == torMac[2]);
+    EXPECT_TRUE(ethHeader->ether_shost[3] == torMac[3]);
+    EXPECT_TRUE(ethHeader->ether_shost[4] == torMac[4]);
+    EXPECT_TRUE(ethHeader->ether_shost[5] == torMac[5]);
+
+    iphdr *ipHeader = reinterpret_cast<iphdr *> (txBuffer.data() + sizeof(ether_header));
+
+    EXPECT_TRUE(ipHeader->daddr == htonl(ipAddress.to_v4().to_uint()));
+}
+
 } /* namespace test */

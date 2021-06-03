@@ -186,6 +186,8 @@ void MuxPort::handleMuxConfig(const std::string &config)
     common::MuxPortConfig::Mode mode = common::MuxPortConfig::Auto;
     if (config == "active") {
         mode = common::MuxPortConfig::Active;
+    } else if (config == "manual") {
+        mode = common::MuxPortConfig::Manual;
     }
 
     boost::asio::io_service &ioService = mStrand.context();

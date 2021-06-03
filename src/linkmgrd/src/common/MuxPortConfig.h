@@ -32,6 +32,7 @@ public:
      */
     enum Mode {
         Auto,
+        Manual,
         Active
     };
 
@@ -162,6 +163,15 @@ public:
     inline uint32_t getLinkStateChangeRetryCount() const {return mMuxConfig.getLinkStateChangeRetryCount();};
 
     /**
+    *@method getTorMacAddress
+    *
+    *@brief getter for ToR MAC address
+    *
+    *@return ToR MAC address
+    */
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getTorMacAddress() const {return mMuxConfig.getTorMacAddress();};
+
+    /**
     *@method getLoopbackIpv4Address
     *
     *@brief getter for Loopback IPv4 address
@@ -193,7 +203,7 @@ public:
     *
     *@brief getter for server/blade MAC address
     *
-    *@return IPv4 address
+    *@return MAC address
     */
     inline const std::array<uint8_t, ETHER_ADDR_LEN>& getBladeMacAddress() const {return mBladeMacAddress;};
 

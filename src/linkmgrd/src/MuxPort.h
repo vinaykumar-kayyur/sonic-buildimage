@@ -226,9 +226,9 @@ public:
     /**
     *@method handleMuxConfig
     *
-    *@brief handles MUX config updates when switching between auto/active
+    *@brief handles MUX config updates when switching between auto/active/manual
     *
-    *@param config (in)     MUX new config; auto/active
+    *@param config (in)     MUX new config; auto/active/manual
     *
     *@return none
     */

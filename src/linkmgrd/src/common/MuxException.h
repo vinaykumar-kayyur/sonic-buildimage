@@ -11,6 +11,8 @@
 #include <exception>
 #include <string>
 
+#include "MuxLogger.h"
+
 /**
  * A macro for generating an MuxException with file path and line number.
  */
@@ -25,13 +27,12 @@ public:
         std::string excStr,
         const char *excFile,
         unsigned int excLine
-    ) noexcept
-    {
+    ) noexcept {
         mExcStr = std::string(excFile) + ":" + std::to_string(excLine) + ": " + excStr;
+        MUXLOGERROR(mExcStr);
     }
 
-    virtual const char* what() const throw()
-    {
+    virtual const char* what() const throw() {
         return mExcStr.c_str();
     }
 

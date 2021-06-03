@@ -262,6 +262,38 @@ TEST_F(LinkManagerStateMachineTest, MuxActiveCliSwitchOver)
     VALIDATE_STATE(Active, Active, Up);
 }
 
+TEST_F(LinkManagerStateMachineTest, MuxActiveCliAuto)
+{
+    setMuxActive();
+
+    handleMuxConfig("auto");
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxAStandbyCliAuto)
+{
+    setMuxStandby();
+
+    handleMuxConfig("auto");
+    VALIDATE_STATE(Standby, Standby, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxActiveCliManual)
+{
+    setMuxActive();
+
+    handleMuxConfig("manual");
+    VALIDATE_STATE(Active, Active, Up);
+}
+
+TEST_F(LinkManagerStateMachineTest, MuxAStandbyCliManual)
+{
+    setMuxStandby();
+
+    handleMuxConfig("manual");
+    VALIDATE_STATE(Standby, Standby, Up);
+}
+
 TEST_F(LinkManagerStateMachineTest, MuxStandbyCliSwitchOverMuxFirst)
 {
     setMuxStandby();

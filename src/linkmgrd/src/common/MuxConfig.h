@@ -9,6 +9,7 @@
 #define MUXCONFIG_H_
 
 #include <string>
+#include <net/ethernet.h>
 
 #include <boost/asio.hpp>
 
@@ -139,6 +140,17 @@ public:
     inline void setLinkStateChangeRetryCount(uint32_t linkStateChangeRetryCount) {mLinkStateChangeRetryCount = linkStateChangeRetryCount;};
 
     /**
+    *@method setTorMacAddress
+    *
+    *@brief setter for ToR MAC address
+    *
+    *@param address (in) ToR MAC address
+    *
+    *@return none
+    */
+    inline void setTorMacAddress(const std::array<uint8_t, ETHER_ADDR_LEN> &address) {mTorMacAddress = address;};
+
+    /**
     *@method setLoopbackIpv4Address
     *
     *@brief setter for Loopback IPv4 address
@@ -213,6 +225,15 @@ public:
     inline uint32_t getLinkStateChangeRetryCount() const {return mLinkStateChangeRetryCount;};
 
     /**
+    *@method getTorMacAddress
+    *
+    *@brief getter for ToR MAC address
+    *
+    *@return ToR MAC address
+    */
+    inline const std::array<uint8_t, ETHER_ADDR_LEN>& getTorMacAddress() const {return mTorMacAddress;};
+
+    /**
     *@method getLoopbackIpv4Address
     *
     *@brief getter for Loopback IPv4 address
@@ -231,6 +252,7 @@ private:
     uint32_t mMuxStateChangeRetryCount = 1;
     uint32_t mLinkStateChangeRetryCount = 1;
 
+    std::array<uint8_t, ETHER_ADDR_LEN> mTorMacAddress;
     boost::asio::ip::address mLoopbackIpv4Address = boost::asio::ip::make_address("10.212.64.0");
 };
 

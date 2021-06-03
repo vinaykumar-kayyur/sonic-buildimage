@@ -15,6 +15,7 @@
 
 #include "swss/netdispatcher.h"
 #include "swss/netlink.h"
+#include "swss/macaddress.h"
 #include "swss/select.h"
 
 #include "DbInterface.h"
@@ -303,17 +304,40 @@ void DbInterface::handlePostMuxMetrics(
 }
 
 //
-// ---> getLoopback2InterfaceInfo(
-//          std::shared_ptr<swss::DBConnector> configDbConnector,
-//          std::shared_ptr<swss::DBConnector> stateDbConnector
-//      );
+// ---> getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+//
+// retrieve ToR MAC address information
+//
+void DbInterface::getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector)
+{
+    MUXLOGINFO("Reading ToR MAC Address");
+    swss::Table configDbMetadataTable(configDbConnector.get(), CFG_DEVICE_METADATA_TABLE_NAME);
+    std::string localhost = "localhost";
+    std::string key = "mac";
+    std::string mac;
+
+    if (configDbMetadataTable.hget(localhost, key, mac)) {
+        try {
+            swss::MacAddress swssMacAddress(mac);
+            std::array<uint8_t, ETHER_ADDR_LEN> macAddress;
+
+            memcpy(macAddress.data(), swssMacAddress.getMac(), macAddress.size());
+            mMuxManagerPtr->setTorMacAddress(macAddress);
+        }
+        catch (const std::invalid_argument &invalidArgument) {
+            throw MUX_ERROR(ConfigNotFound, "Invalid ToR MAC address " + mac);
+        }
+    } else {
+        throw MUX_ERROR(ConfigNotFound, "ToR MAC address is not found");
+    }
+}
+
+//
+// ---> getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
 //
 // retrieve Loopback2 interface information and block until it shows as OK in the state db
 //
-void DbInterface::getLoopback2InterfaceInfo(
-    std::shared_ptr<swss::DBConnector> configDbConnector,
-    std::shared_ptr<swss::DBConnector> stateDbConnector
-)
+void DbInterface::getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector)
 {
     MUXLOGINFO("Reading Loopback2 interface information");
     std::string loopback2 = "Loopback2|";
@@ -613,7 +637,8 @@ void DbInterface::handleSwssNotification()
     // for getting state db MUX state when orchagent updates it
     swss::SubscriberStateTable stateDbPortTable(stateDbPtr.get(), STATE_MUX_CABLE_TABLE_NAME);
 
-    getLoopback2InterfaceInfo(configDbPtr, stateDbPtr);
+    getTorMacAddress(configDbPtr);
+    getLoopback2InterfaceInfo(configDbPtr);
     getServerIpAddress(configDbPtr);
 
     NetMsgInterface netMsgInterface(*this);

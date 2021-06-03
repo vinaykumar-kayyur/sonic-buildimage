@@ -140,6 +140,17 @@ public:
     *
     *@return none
     */
+    inline void setTorMacAddress(std::array<uint8_t, ETHER_ADDR_LEN> &address) {mMuxConfig.setTorMacAddress(address);};
+
+    /**
+    *@method setSuspendTimeout_msec
+    *
+    *@brief setter for LinkProber suspend timer timeout
+    *
+    *@param suspendTimeout_msec (in)  suspend timer timeout
+    *
+    *@return none
+    */
     inline void setLoopbackIpv4Address(boost::asio::ip::address& address) {mMuxConfig.setLoopbackIpv4Address(address);};
 
     /**

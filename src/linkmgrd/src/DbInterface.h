@@ -259,19 +259,26 @@ private:
     );
 
     /**
-    *@method getLoopback2InterfaceInfo
+    *@method getTorMacAddress
     *
-    *@brief retrieve Loopback2 interface information and block until it shows as OK in the state db
+    *@brief retrieve ToR MAC address information
     *
     *@param configDbConnector   config db connector
-    *@param configDbConnector   state db connector
     *
     *@return none
     */
-    void getLoopback2InterfaceInfo(
-        std::shared_ptr<swss::DBConnector> configDbConnector,
-        std::shared_ptr<swss::DBConnector> stateDbConnector
-    );
+    void getTorMacAddress(std::shared_ptr<swss::DBConnector> configDbConnector);
+
+    /**
+    *@method getLoopback2InterfaceInfo
+    *
+    *@brief retrieve Loopback2 interface information
+    *
+    *@param configDbConnector   config db connector
+    *
+    *@return none
+    */
+    void getLoopback2InterfaceInfo(std::shared_ptr<swss::DBConnector> configDbConnector);
 
     /**
     *@method getServerIpAddress

@@ -314,8 +314,6 @@ private:
     uint32_t mIcmpChecksum = 0;
     uint32_t mIpChecksum = 0;
 
-    std::array<uint8_t, ETHER_ADDR_LEN> mTorPortMac;
-
     boost::asio::io_service::strand mStrand;
     boost::asio::deadline_timer mDeadlineTimer;
     boost::asio::deadline_timer mSuspendTimer;

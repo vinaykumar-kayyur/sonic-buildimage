@@ -23,19 +23,19 @@ namespace link_prober
 // Berkeley Packet Filter program that captures incoming ICMP traffic
 //
 SockFilter LinkProber::mIcmpFilter[] = {
-    [0]  = { .code = 0x28, .jt = 0, .jf = 0,  .k = 0x0000000c },
-    [1]  = { .code = 0x15, .jt = 0, .jf = 10, .k = 0x00000800 },
-    [2]  = { .code = 0x20, .jt = 0, .jf = 0,  .k = 0x0000001a },
-    [3]  = { .code = 0x15, .jt = 0, .jf = 8,  .k = 0x00000000 },
-    [4]  = { .code = 0x30, .jt = 0, .jf = 0,  .k = 0x00000017 },
-    [5]  = { .code = 0x15, .jt = 0, .jf = 6,  .k = 0x00000001 },
-    [6]  = { .code = 0x28, .jt = 0, .jf = 0,  .k = 0x00000014 },
-    [7]  = { .code = 0x45, .jt = 4, .jf = 0,  .k = 0x00001fff },
-    [8]  = { .code = 0xb1, .jt = 0, .jf = 0,  .k = 0x0000000e },
-    [9]  = { .code = 0x50, .jt = 0, .jf = 0,  .k = 0x0000000e },
-    [10] = { .code = 0x15, .jt = 0, .jf = 1,  .k = 0x00000000 },
-    [11] = { .code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00040000 },
-    [12] = { .code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00000000 },
+    [0]  = {.code = 0x28, .jt = 0, .jf = 0,  .k = 0x0000000c},
+    [1]  = {.code = 0x15, .jt = 0, .jf = 10, .k = 0x00000800},
+    [2]  = {.code = 0x20, .jt = 0, .jf = 0,  .k = 0x0000001a},
+    [3]  = {.code = 0x15, .jt = 0, .jf = 8,  .k = 0x00000000},
+    [4]  = {.code = 0x30, .jt = 0, .jf = 0,  .k = 0x00000017},
+    [5]  = {.code = 0x15, .jt = 0, .jf = 6,  .k = 0x00000001},
+    [6]  = {.code = 0x28, .jt = 0, .jf = 0,  .k = 0x00000014},
+    [7]  = {.code = 0x45, .jt = 4, .jf = 0,  .k = 0x00001fff},
+    [8]  = {.code = 0xb1, .jt = 0, .jf = 0,  .k = 0x0000000e},
+    [9]  = {.code = 0x50, .jt = 0, .jf = 0,  .k = 0x0000000e},
+    [10] = {.code = 0x15, .jt = 0, .jf = 1,  .k = 0x00000000},
+    [11] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00040000},
+    [12] = {.code = 0x6,  .jt = 0, .jf = 0,  .k = 0x00000000},
 };
 
 //
@@ -121,19 +121,6 @@ void LinkProber::initialize()
                << std::endl;
         throw MUX_ERROR(SocketError, errMsg.str());
     }
-
-    // Get ToR MAC address
-    ifreq ifRequest;
-    ifRequest.ifr_addr.sa_family = AF_INET;
-    strncpy(ifRequest.ifr_name, mMuxPortConfig.getPortName().c_str(), sizeof(ifRequest.ifr_name) - 1);
-    ifRequest.ifr_name[sizeof(ifRequest.ifr_name) - 1] = '\0';
-    if (ioctl(fileDescriptor, SIOCGIFHWADDR, &ifRequest) == -1) {
-        std::ostringstream errMsg;
-        errMsg << "Failed to obtain hardware address for interface '" << mMuxPortConfig.getPortName()
-               << "' with '" << strerror(errno) << "'" << std::endl;
-        throw MUX_ERROR(SocketError, errMsg.str());
-    }
-    memcpy(mTorPortMac.data(), ifRequest.ifr_hwaddr.sa_data, mTorPortMac.size());
 
     close(fileDescriptor);
 
@@ -410,7 +397,7 @@ void LinkProber::startInitRecv()
 void LinkProber::startTimer()
 {
     MUXLOGDEBUG(mMuxPortConfig.getPortName());
-    // time out these hearbeats
+    // time out these heartbeats
     mDeadlineTimer.expires_from_now(boost::posix_time::milliseconds(mMuxPortConfig.getTimeoutIpv4_msec()));
     mDeadlineTimer.async_wait(mStrand.wrap(boost::bind(
         &LinkProber::handleTimeout,
@@ -485,7 +472,7 @@ void LinkProber::initializeSendBuffer()
 {
     ether_header *ethHeader = reinterpret_cast<ether_header *> (mTxBuffer.data());
     memcpy(ethHeader->ether_dhost, mMuxPortConfig.getBladeMacAddress().data(), sizeof(ethHeader->ether_dhost));
-    memcpy(ethHeader->ether_shost, mTorPortMac.data(), sizeof(ethHeader->ether_shost));
+    memcpy(ethHeader->ether_shost, mMuxPortConfig.getTorMacAddress().data(), sizeof(ethHeader->ether_shost));
     ethHeader->ether_type = htons(ETHERTYPE_IP);
 
     iphdr *ipHeader = reinterpret_cast<iphdr *> (mTxBuffer.data() + sizeof(ether_header));
