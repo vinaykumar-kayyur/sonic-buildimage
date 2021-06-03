@@ -29,7 +29,7 @@ class TestMultiNpuCfgGen(TestCase):
         for asic in range(NUM_ASIC):
             self.port_config.append(os.path.join(self.test_data_dir, "sample_port_config-{}.ini".format(asic)))
         self.output_file = os.path.join(self.test_dir, 'output')
-        os.environ["UTILITIES_UNIT_TESTING"] = "2"
+        os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
     def run_script(self, argument, check_stderr=False):
         print('\n    Running sonic-cfggen ' + argument)
@@ -425,4 +425,4 @@ class TestMultiNpuCfgGen(TestCase):
         self.assertTrue(*self.run_frr_asic_case('bgpd/bgpd.conf.j2', 'bgpd_frr_backend_asic.conf', "asic3", self.port_config[3]))
 
     def tearDown(self):
-        os.environ["UTILITIES_UNIT_TESTING"] = ""
+        os.environ["CFGGEN_UNIT_TESTING"] = ""

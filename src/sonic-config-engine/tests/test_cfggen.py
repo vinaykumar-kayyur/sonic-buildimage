@@ -30,10 +30,10 @@ class TestCfgGen(TestCase):
         self.output2_file = os.path.join(self.test_dir, 'output2')
         self.ecmp_graph = os.path.join(self.test_dir, 'fg-ecmp-sample-minigraph.xml')
         # To ensure that mock config_db data is used for unit-test cases
-        os.environ["UTILITIES_UNIT_TESTING"] = "2"
+        os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
     def tearDown(self):
-        os.environ["UTILITIES_UNIT_TESTING"] = ""
+        os.environ["CFGGEN_UNIT_TESTING"] = ""
         try:
             os.remove(self.output_file)
             os.remove(self.output2_file)

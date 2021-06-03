@@ -12,7 +12,7 @@ except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
 try:
-    if os.environ["UTILITIES_UNIT_TESTING"] == "2":
+    if os.environ["CFGGEN_UNIT_TESTING"] == "2":
         modules_path = os.path.join(os.path.dirname(__file__), ".")
         tests_path = os.path.join(modules_path, "tests")
         sys.path.insert(0, modules_path)
