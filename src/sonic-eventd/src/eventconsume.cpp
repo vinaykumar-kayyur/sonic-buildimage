@@ -82,7 +82,6 @@ EventConsume::EventConsume(DBConnector* dbConn) :
     openSyslog();
 
     // intialize statistics
-    initEventStats();
     initAlarmStats();
 
     // populate local queue of event histor table
@@ -405,9 +404,14 @@ void EventConsume::handle_notification(std::deque<KeyOpFieldsValuesTuple> kco)
 void EventConsume::read_events() {
     vector<KeyOpFieldsValuesTuple> tuples;
     m_eventTable.getContent(tuples);
+    int total = 0;
+    int raised = 0;
+    int acked = 0;
+    int cleared = 0;
 
     SWSS_LOG_ENTER();
     for (auto tuple: tuples) {
+	total++;
         for (auto fv: kfvFieldsValues(tuple)) {
             if (fvField(fv) == "time-created") {
                 char* end;
@@ -418,8 +422,18 @@ void EventConsume::read_events() {
                 uint64_t val = strtoull(fvValue(fv).c_str(), &end,10);
                 event_history_list.push(make_pair( seq, val ));
             }
+            if (fvField(fv) == "action") {
+                if (!fvValue(fv).compare(EVENT_ACTION_RAISE_STR)) {
+	            raised++;
+		} else if (!fvValue(fv).compare(EVENT_ACTION_CLEAR_STR)) {
+	            cleared++;
+	        } else if (!fvValue(fv).compare(EVENT_ACTION_ACK_STR)) {
+	            acked++;
+		}
+	    }
         }
     }
+    initEventStats(total, raised, cleared, acked);
     SWSS_LOG_NOTICE("eventd sequence-id intialized to %lu", seq_id);
 }
 
@@ -645,16 +659,16 @@ void EventConsume::handle_custom_evprofile(std::deque<KeyOpFieldsValuesTuple> en
     }
 }
 
-void EventConsume::initEventStats() {
+void EventConsume::initEventStats(int total, int raised, int cleared, int acked) {
     vector<FieldValueTuple> temp;
     FieldValueTuple fv;
-    fv = FieldValueTuple("events", "0");
+    fv = FieldValueTuple("events", to_string(total));
     temp.push_back(fv);
-    fv = FieldValueTuple("raised", "0");
+    fv = FieldValueTuple("raised", to_string(raised));
     temp.push_back(fv);
-    fv = FieldValueTuple("cleared", "0");
+    fv = FieldValueTuple("cleared", to_string(cleared));
     temp.push_back(fv);
-    fv = FieldValueTuple("acked", "0");
+    fv = FieldValueTuple("acked", to_string(acked));
     temp.push_back(fv);
     m_eventStatsTable.set("state", temp);
 }

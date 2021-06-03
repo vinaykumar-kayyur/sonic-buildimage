@@ -44,7 +44,7 @@ private:
     void update_events(string seq_id, string ts, vector<FieldValueTuple> vec);
     void purge_events();
     void modifyEventStats(string seq_id);
-    void initEventStats();
+    void initEventStats(int, int, int, int);
     void initAlarmStats();
 };
 }

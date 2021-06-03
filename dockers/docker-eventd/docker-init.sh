@@ -6,5 +6,5 @@ sed -i '/password=/d' /etc/supervisor/supervisord.conf
 
 cp /var/evprofile/default.json /etc/evprofile/default.json
 
-exec /usr/bin/supervisord
+exec /usr/local/bin/supervisord
 
