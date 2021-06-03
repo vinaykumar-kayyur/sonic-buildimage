@@ -207,15 +207,10 @@ MONITOR_CRITICAL_NUM = 3  # retry times
 MONITOR_SHAKE_TIME = 20  # anti-shake times
 MONITOR_INTERVAL = 60
 
-MONITOR_MAC_SOURCE_SYSFS = (
-    0  # 1 get mac temperature from sysfs ,0 get mac temperature from bcmcmd
-)
+# 1 get mac temperature from sysfs ,0 get mac temperature from bcmcmd
+MONITOR_MAC_SOURCE_SYSFS = (0)
 MONITOR_MAC_SOURCE_PATH = None  # sysfs path
 
-###################################################################
-
-
-#####################MAC调压parameters (B6510)####################################
 MAC_AVS_PARAM = {
     0x72: 0x0384,
     0x73: 0x037E,
@@ -307,7 +302,7 @@ fanloc = {"name": "fanset", "location": "0-0032/fan_speed_set"}
 
 ####================================Adaption-Area================================
 #### RAGILE_COMMON common configuration head
-#### “platform”    specific configuration head
+#### "platform"   specific configuration head
 ####
 PCA9548START = 11
 PCA9548BUSEND = 74
@@ -337,9 +332,9 @@ INIT_PARAM = [
 INIT_COMMAND = []
 
 CPLDVERSIONS = [
-    {"loc": "2-0033/cpld_version", "des": "MAC Board 上CPLDA"},
-    {"loc": "2-0035/cpld_version", "des": "MAC Board 上CPLDB"},
-    {"loc": "2-0037/cpld_version", "des": "CPU Board 上cpld"},
+    {"loc": "2-0033/cpld_version", "des": "MAC Board CPLDA"},
+    {"loc": "2-0035/cpld_version", "des": "MAC Board CPLDB"},
+    {"loc": "2-0037/cpld_version", "des": "CPU Board CPLD"},
 ]
 
 ## Driver List

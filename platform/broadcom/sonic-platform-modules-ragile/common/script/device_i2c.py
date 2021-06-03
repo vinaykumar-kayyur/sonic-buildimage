@@ -154,7 +154,7 @@ def add_dev(name, bus, loc):
     if name == "lm75":
         time.sleep(0.1)
     pdevpath = "/sys/bus/i2c/devices/i2c-%d/" % (bus)
-    for i in range(1, 100):#wait for mother-bus generation，maximum wait time is 10s
+    for i in range(1, 100):#wait for mother-bus generation, maximum wait time is 10s
         if os.path.exists(pdevpath) == True:
             break
         time.sleep(0.1)

@@ -259,7 +259,7 @@ static int pca954x_hw_do_reset(int busid, int addr)
     return 0;
 }
 /***************************************9548 reset*****************************************/
-#define DEV_TYPE                0x404a  /* BT2575 */
+#define DEV_TYPE                0x404a
 #define PCA9548_MAX_CPLD_NUM    (32)    /* PCA9548 max number */
 #define PCA9548_MAX_CPLD_LAYER  (8)     /* PCA9548 max layer */
 #define DFD_PID_BUF_LEN         (32)
@@ -326,7 +326,7 @@ typedef struct fpga_pcie_card_info_s {
 
 static pca9548_card_info_t g_pca9548_card_info[] = {
     {
-        .dev_type          = {0x404a,0x4061,0x4071}, /*RA-B6510-48V8C,BT2575,TCS81*/
+        .dev_type          = {0x404a,0x4061,0x4071}, /*RA-B6510-48V8C*/
         .pca9548_cfg_info  = {
             /* psu fan */
             {
@@ -591,9 +591,8 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
         },
     },
     {
-        .dev_type          = {0x4044,0x4072,0x4048},    /*B6920,TCS83,BS100R0*/
+        .dev_type          = {0x4044,0x4072,0x4048},
         .pca9548_cfg_info  = {
-            /* һ��9548 */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 2,
@@ -608,7 +607,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(4), -1},
                 },
             },
-            /* �װ� */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 8,
@@ -623,7 +621,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(4), -1},
                 },
             },
-            /* �ӿ�1 */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 9,
@@ -638,7 +635,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(0), -1},
                 },
             },
-            /* �ӿ�2 */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 12,
@@ -653,7 +649,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(1), -1},
                 },
             },
-            /* �ӿ�3 */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 11,
@@ -668,7 +663,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(2), -1},
                 },
             },
-            /* �ӿ�4 */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 7,
@@ -683,7 +677,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(3), -1},
                 },
             },
-            /* ����A */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 14,
@@ -698,7 +691,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(5), -1},
                 },
             },
-            /* ����B */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 13,
@@ -713,7 +705,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(7), -1},
                 },
             },
-            /* �ӿ�1 ��ģ�� */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 3,
@@ -770,7 +761,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(0), -1},
                 },
             },
-            /* �ӿ�2 ��ģ�� */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 4,
@@ -827,7 +817,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(1), -1},
                 },
             },
-            /* �ӿ�3 ��ģ�� */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 5,
@@ -884,7 +873,6 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
                     .func_attr.umask          = {BIT(2), -1},
                 },
             },
-            /* �ӿ�4 ��ģ�� */
             {
                 .pca9548_reset_type = PCA9548_RESET_FUNC,
                 .pca9548_bus        = 6,
@@ -944,7 +932,7 @@ static pca9548_card_info_t g_pca9548_card_info[] = {
         },
     },
     {
-        .dev_type          = {0x404b,0x4073}, /* RA-B6510-32C, TCS82 */
+        .dev_type          = {0x404b,0x4073},
         .pca9548_cfg_info  = {
             /* psu */
             {
@@ -1492,7 +1480,6 @@ static int pca954x_deselect_mux(struct i2c_mux_core *muxc, u32 chan)
 
 	ret = pca954x_reg_write(muxc->parent, client, data->last_chan);
     if (ret < 0) {
-        /* ʹ��i2c��ʽ�ر�ͨ��ʧ�ܣ�����ʹ��reset��ʽ */
         new_client =(struct i2c_client *) client;
         dev_warn(&new_client->dev, "pca954x close chn failed, do reset.\n");
         rv = pca954x_do_reset(client->adapter, client, chan);

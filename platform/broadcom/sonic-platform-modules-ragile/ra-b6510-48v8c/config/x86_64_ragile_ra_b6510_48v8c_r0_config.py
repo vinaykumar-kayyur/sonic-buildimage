@@ -63,7 +63,7 @@ DEV_MONITOR_PARAM = {
 }
 
 fanlevel = {
-    "tips":["低","中","高"],
+    "tips":["LOW","MEDIUM","HIGH"],
     "level":[51,150,255],
     "low_speed":[500,7500,17000],
     "high_speed":[11000,22500,28500]
@@ -72,46 +72,46 @@ fanlevel = {
 # fit with pddf
 fanloc = [
     {
-        "name": "风扇1/风扇2/风扇3/风扇4",
+        "name": "FAN1/FAN2/FAN3/FAN4",
         "location": "2-0066/fan1_pwm",
         "childfans": [
-            {"name": "风扇1", "location": "2-0066/fan1_input"},
-            {"name": "风扇2", "location": "2-0066/fan2_input"},
-            {"name": "风扇3", "location": "2-0066/fan3_input"},
-            {"name": "风扇4", "location": "2-0066/fan4_input"},
+            {"name": "FAN1", "location": "2-0066/fan1_input"},
+            {"name": "FAN2", "location": "2-0066/fan2_input"},
+            {"name": "FAN3", "location": "2-0066/fan3_input"},
+            {"name": "FAN4", "location": "2-0066/fan4_input"},
         ],
     },
 ]
 
 
 
-MONITOR_TEMP_MIN           = 38
-MONITOR_K                  = 11
-MONITOR_MAC_IN             = 35
-MONITOR_DEFAULT_SPEED      = 0x60
-MONITOR_MAX_SPEED          = 0xFF
-MONITOR_MIN_SPEED          = 0x33
-MONITOR_MAC_ERROR_SPEED    = 0XBB
-MONITOR_FAN_TOTAL_NUM      = 4
-MONITOR_MAC_UP_TEMP        = 50
-MONITOR_MAC_LOWER_TEMP     = -50
-MONITOR_MAC_MAX_TEMP       = 100   #
+MONITOR_TEMP_MIN                     = 38
+MONITOR_K                            = 11
+MONITOR_MAC_IN                       = 35
+MONITOR_DEFAULT_SPEED                = 0x60
+MONITOR_MAX_SPEED                    = 0xFF
+MONITOR_MIN_SPEED                    = 0x33
+MONITOR_MAC_ERROR_SPEED              = 0XBB
+MONITOR_FAN_TOTAL_NUM                = 4
+MONITOR_MAC_UP_TEMP                  = 50
+MONITOR_MAC_LOWER_TEMP               = -50
+MONITOR_MAC_MAX_TEMP                 = 100
 
-MONITOR_FALL_TEMP = 4
-MONITOR_MAC_WARNING_THRESHOLD =  100 #100
-MONITOR_OUTTEMP_WARNING_THRESHOLD = 85
-MONITOR_BOARDTEMP_WARNING_THRESHOLD = 85
-MONITOR_CPUTEMP_WARNING_THRESHOLD = 85
-MONITOR_INTEMP_WARNING_THRESHOLD =  70  #70
+MONITOR_FALL_TEMP                    = 4
+MONITOR_MAC_WARNING_THRESHOLD        = 100
+MONITOR_OUTTEMP_WARNING_THRESHOLD    = 85
+MONITOR_BOARDTEMP_WARNING_THRESHOLD  = 85
+MONITOR_CPUTEMP_WARNING_THRESHOLD    = 85
+MONITOR_INTEMP_WARNING_THRESHOLD     = 70
 
-MONITOR_MAC_CRITICAL_THRESHOLD = 105  #105
-MONITOR_OUTTEMP_CRITICAL_THRESHOLD = 90 #90
-MONITOR_BOARDTEMP_CRITICAL_THRESHOLD = 90 #90
-MONITOR_CPUTEMP_CRITICAL_THRESHOLD = 100 #100
-MONITOR_INTEMP_CRITICAL_THRESHOLD = 80  # 80
-MONITOR_CRITICAL_NUM              = 3
-MONITOR_SHAKE_TIME                = 20
-MONITOR_INTERVAL                   = 60
+MONITOR_MAC_CRITICAL_THRESHOLD       = 105
+MONITOR_OUTTEMP_CRITICAL_THRESHOLD   = 90
+MONITOR_BOARDTEMP_CRITICAL_THRESHOLD = 90
+MONITOR_CPUTEMP_CRITICAL_THRESHOLD   = 100
+MONITOR_INTEMP_CRITICAL_THRESHOLD    = 80
+MONITOR_CRITICAL_NUM                 = 3
+MONITOR_SHAKE_TIME                   = 20
+MONITOR_INTERVAL                     = 60
 
 MONITOR_SYS_LED = [
           {"bus":2,"devno":0x33, "addr":0xb2, "yellow":0x03, "red":0x02,"green":0x01},
@@ -128,10 +128,10 @@ MONITOR_FANS_LED = [
 
 
 CPLDVERSIONS = [
-        {"bus":2, "devno":0x33, "name":"MAC板CPLD-A"},
-        {"bus":2, "devno":0x35, "name":"MAC板CPLD-B"},
-        {"bus":2, "devno":0x37, "name":"CONNECT板CPLD-A"},
-        {"bus":0, "devno":0x0d, "name":"CPU板CPLD"},
+        {"bus":2, "devno":0x33, "name":"MAC BOARD CPLD-A"},
+        {"bus":2, "devno":0x35, "name":"MAC BOARD CPLD-B"},
+        {"bus":2, "devno":0x37, "name":"CONNECT BOARD CPLD-A"},
+        {"bus":0, "devno":0x0d, "name":"CPU BOARD CPLD"},
 ]
 
 MONITOR_SYS_PSU_LED =[

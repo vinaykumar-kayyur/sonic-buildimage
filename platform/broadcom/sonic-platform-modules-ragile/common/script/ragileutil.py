@@ -382,7 +382,7 @@ def getInputSetmac(val):
 
 
 class fan_tlv(object):
-    VERSION = 0x01  # E2PROM Version，start from 0x01
+    VERSION = 0x01  # E2PROM Version, start from 0x01
     FLAG = 0x7E  # New E2PROM version flag is 0x7E
     HW_VER = 0x01  # compose by master version and fixed version
     TYPE = 0xF1  # hw type defination
@@ -1293,17 +1293,14 @@ def fan_setmac():
 
 def checkfansninput(fan_sn, fansntemp):
     if fan_sn in fansntemp:
-        RJPRINTERR("exist same Serial Number，please input again")
+        RJPRINTERR("exist same Serial Number, please input again")
         return False
     if len(fan_sn) != 13:
-        RJPRINTERR("Serial Number length incorrect，please input again")
+        RJPRINTERR("Serial Number length incorrect, please input again")
         return False
     return True
 
-
-# check 输入的hardware version
-
-
+# check hw version
 def checkfanhwinput(hw):
     if len(hw) != 4:
         RJPRINTERR("hardware version length incorrect, please input again")

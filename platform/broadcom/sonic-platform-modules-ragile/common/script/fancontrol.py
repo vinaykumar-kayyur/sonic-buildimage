@@ -666,7 +666,7 @@ class FanControl(object):
             logger.error(str(e))
         return False
 
-    # device error algorithm    Tmac-Tin≥50℃, or Tmac-Tin≤-50℃
+    # device error algorithm    Tmac-Tin >= 50, or Tmac-Tin <= -50
     def check_dev_err(self):
         try:
             if (self.mac_aver - self.intemp) >= MONITOR_CONST.MAC_UP_TEMP or (
@@ -911,7 +911,7 @@ class FanControl(object):
                     self.critnum += 1  # anti-shake
                     if self.critnum >= MONITOR_CONST.CRITICAL_NUM:
                         os.system("reboot")
-                    logger.debug(DEBUG_FANCONTROL, "crit次数:%d" % self.critnum)
+                    logger.debug(DEBUG_FANCONTROL, "crit times:%d" % self.critnum)
                 else:
                     self.critnum = 0
             else:
