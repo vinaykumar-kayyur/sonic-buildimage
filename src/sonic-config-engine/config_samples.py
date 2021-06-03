@@ -9,10 +9,7 @@ if sys.version_info.major == 3:
 else:
     UNICODE_TYPE = unicode
 
-
-# The new enhancements to this file provides capabilities to generate l1 & l3
-# configuration in addition the existing l2, t1 and empty configurations
-# So the following capabilities exits now:
+# The following config generation methods exits:
 #    't1': generate_t1_sample_config,
 #    'l2': generate_l2_config,
 #    'empty': generate_empty_config,
