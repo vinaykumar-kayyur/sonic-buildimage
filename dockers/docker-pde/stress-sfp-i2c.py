@@ -153,4 +153,8 @@ if __name__ == '__main__':
     sec = 180
     if len(sys.argv) >= 2:
         sec = int(sys.argv[1])
+<<<<<<< HEAD
     stress_sfp_i2c(sec)
+=======
+    stress_sfp_i2c(sec)
+>>>>>>> d0f6bb2d... Fix review comment

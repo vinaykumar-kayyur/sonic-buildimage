@@ -40,4 +40,8 @@ fi
 
 start_bcm
 
+<<<<<<< HEAD
 exec /usr/bin/supervisord
+=======
+exec /usr/bin/supervisord
+>>>>>>> d0f6bb2d... Fix review comment
