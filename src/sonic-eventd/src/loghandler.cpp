@@ -8,7 +8,7 @@ extern "C" void openSyslog() {
 extern "C" void writeToSyslog(std::string ev_id, int ev_sev, std::string ev_type, std::string ev_act, std::string ev_msg, std::string ev_static_msg) {
     int SYSLOG_FACILITY = LOG_LOCAL4;
     if (ev_act.empty()) {
-        const char LOG_FORMAT[] = "[%s], %%%s : %s - %s"; 
+        const char LOG_FORMAT[] = "[%s], %%%s: %s %s"; 
                                                       // event Type
                                                       // Event Name
                                                       // Static Desc
@@ -19,7 +19,7 @@ extern "C" void writeToSyslog(std::string ev_id, int ev_sev, std::string ev_type
             ev_type.c_str(), 
             ev_id.c_str(), ev_static_msg.c_str(), ev_msg.c_str());
     } else {
-        const char LOG_FORMAT[] = "[%s] (%s), %%%s : %s - %s"; 
+        const char LOG_FORMAT[] = "[%s] (%s), %%%s: %s %s"; 
                                                       // event Type
                                                       // event action
                                                       // Event Name
