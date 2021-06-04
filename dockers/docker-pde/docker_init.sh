@@ -41,5 +41,3 @@ fi
 start_bcm
 
 exec /usr/bin/supervisord
-
-
